@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "line_correct",
-    "Line defect correction, mostly experimental algorithms.",
+    N_("Line defect correction, mostly experimental algorithms."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -54,7 +54,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo line_correct_modus_func_info = {
         "line_correct_modus",
-        "/_Correct Data/_Modus Line Correction",
+        N_("/_Correct Data/_Modus Line Correction"),
         (GwyProcessFunc)&line_correct_modus,
         LINECORR_RUN_MODES,
         0,

@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "level",
-    "Simple automatic levelling.",
+    N_("Simple automatic levelling."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -56,21 +56,21 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo level_func_info = {
         "level",
-        "/_Level/Level",
+        N_("/_Level/Level"),
         (GwyProcessFunc)&level,
         LEVEL_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
-        "/_Level/Level Rotate",
+        N_("/_Level/Level Rotate"),
         (GwyProcessFunc)&level_rotate,
         LEVEL_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo fixzero_func_info = {
         "fixzero",
-        "/_Level/Fix Zero",
+        N_("/_Level/Fix Zero"),
         (GwyProcessFunc)&fixzero,
         LEVEL_RUN_MODES,
         0,
@@ -107,7 +107,6 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gdouble a, b, c;
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
-    g_warning("level_rotate is borken!");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);

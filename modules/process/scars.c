@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "scars",
-    "Scar detection and removal.",
+    N_("Scar detection and removal."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -109,14 +109,14 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo scars_mark_func_info = {
         "scars_mark",
-        "/_Correct Data/M_ark Scars",
+        N_("/_Correct Data/M_ark Scars"),
         (GwyProcessFunc)&scars_mark,
         SCARS_MARK_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo scars_remove_func_info = {
         "scars_remove",
-        "/_Correct Data/Remove _Scars",
+        N_("/_Correct Data/Remove _Scars"),
         (GwyProcessFunc)&scars_remove,
         SCARS_RUN_MODES,
         0,
@@ -372,11 +372,11 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gint row;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Mark scars"),
+    dialog = gtk_dialog_new_with_buttons(_("Mark Scars"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Update preview"), RESPONSE_PREVIEW,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Update preview"), RESPONSE_PREVIEW,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -406,19 +406,19 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 
     controls.max_width = gtk_adjustment_new(args->max_width,
                                             1.0, 16.0, 1, 3, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("Maximum width"),
-                                       "samples", controls.max_width);
+    spin = gwy_table_attach_spinbutton(table, row++, _("Maximum _width:"),
+                                       _("px"), controls.max_width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
 
     controls.min_len = gtk_adjustment_new(args->min_len,
                                           1.0, 1024.0, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("Minimum length"),
-                                       "samples", controls.min_len);
+    spin = gwy_table_attach_spinbutton(table, row++, _("Minimum _length:"),
+                                       _("px"), controls.min_len);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
 
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, row++, _("Hard threshold"),
+    spin = gwy_table_attach_spinbutton(table, row++, _("_Hard threshold:"),
                                        "% RMS", controls.threshold_high);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_high, "value_changed",
@@ -427,7 +427,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
 
     controls.threshold_low = gtk_adjustment_new(args->threshold_low,
                                                 0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Soft threshold"),
+    spin = gwy_table_attach_spinbutton(table, row, _("_Soft threshold:"),
                                        "% RMS", controls.threshold_low);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_low, "value_changed",
@@ -441,6 +441,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label,  0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.color_button);
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
     load_mask_color(controls.color_button,

@@ -179,7 +179,7 @@ unrotate_dialog(UnrotateArgs *args,
 
     dialog = gtk_dialog_new_with_buttons(_("Correct Rotation"), NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

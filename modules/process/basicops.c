@@ -48,7 +48,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "basicops",
-    "Basic operations like inversion or flipping.",
+    N_("Basic operations like inversion or flipping."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -64,42 +64,42 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo flip_horizontally_func_info = {
         "flip_horizontally",
-        "/_Basic Operations/Flip _Horizontally",
+        N_("/_Basic Operations/Flip _Horizontally"),
         (GwyProcessFunc)&flip_horizontally,
         BASICOPS_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo flip_vertically_func_info = {
         "flip_vertically",
-        "/_Basic Operations/Flip _Vertically",
+        N_("/_Basic Operations/Flip _Vertically"),
         (GwyProcessFunc)&flip_vertically,
         BASICOPS_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo invert_value_func_info = {
         "invert_value",
-        "/_Basic Operations/_Invert Value",
+        N_("/_Basic Operations/_Invert Value"),
         (GwyProcessFunc)&invert_value,
         BASICOPS_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
-        "/_Basic Operations/_Rotate Clockwise",
+        N_("/_Basic Operations/_Rotate Clockwise"),
         (GwyProcessFunc)&rotate_clockwise_90,
         BASICOPS_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
-        "/_Basic Operations/Rotate _Counterclockwise",
+        N_("/_Basic Operations/Rotate _Counterclockwise"),
         (GwyProcessFunc)&rotate_counterclockwise_90,
         BASICOPS_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
-        "/_Basic Operations/Flip _Both",
+        N_("/_Basic Operations/Flip _Both"),
         (GwyProcessFunc)&rotate_180,
         BASICOPS_RUN_MODES,
         0,

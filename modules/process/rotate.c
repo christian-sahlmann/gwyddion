@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "rotate",
-    "Rotation by an arbitrary angle.",
+    N_("Rotation by an arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -89,7 +89,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo rotate_func_info = {
         "rotate",
-        "/_Basic Operations/Rotate by _Angle...",
+        N_("/_Basic Operations/Rotate by _Angle..."),
         (GwyProcessFunc)&rotate,
         ROTATE_RUN_MODES,
         0,
@@ -183,7 +183,7 @@ rotate_dialog(RotateArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Rotate"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -206,7 +206,7 @@ rotate_dialog(RotateArgs *args)
                          controls.interp);
 
     controls.expand
-        = gtk_check_button_new_with_mnemonic(_("_Expand result to fit "
+        = gtk_check_button_new_with_mnemonic(_("E_xpand result to fit "
                                                "complete data"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.expand),
                                  args->expand);

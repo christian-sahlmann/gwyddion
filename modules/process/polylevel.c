@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "poly_level",
-    "Subtract a polynomial background of specified degrees.",
+    N_("Subtract polynomial background."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -178,7 +178,7 @@ poly_level_dialog(PolyLevelArgs *args)
     dialog = gtk_dialog_new_with_buttons(_("Remove Polynomial Background"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

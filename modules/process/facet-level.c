@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "facet_level",
-    "Automatic facet-orientation based levelling.",
+    N_("Automatic facet-orientation based levelling."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -54,7 +54,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo facet_level_func_info = {
         "facet_level",
-        "/_Level/_Facet Level",
+        N_("/_Level/_Facet Level"),
         (GwyProcessFunc)&facet_level,
         LEVEL_RUN_MODES,
         0,
@@ -122,7 +122,7 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     if (xres < 2 || yres < 2) {
-        g_warning("Cannot facet-level datafield with dimension less than 2");
+        g_warning("Cannot facet-level datafield of size smaller than 2");
         *bx = *by = 0;
         return;
     }

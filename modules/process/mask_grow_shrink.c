@@ -64,7 +64,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "mask_grow_shrink",
-    "Grows and shrinks masks.",
+    N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -80,14 +80,14 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mask_grow_func_info = {
         "mask_grow",
-        "/_Mask Operations/_Grow Mask...",
+        N_("/_Mask Operations/_Grow Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_shrink_func_info = {
         "mask_shrink",
-        "/_Mask Operations/_Shrink Mask...",
+        N_("/_Mask Operations/_Shrink Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
@@ -109,8 +109,18 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
         void (*func)(GwyDataField*, gint);
     }
     const grow_shrink_meta[] = {
-        { "mask_grow",   "Grow Mask",   "Grow mask by",   &mask_grow_do },
-        { "mask_shrink", "Shrink Mask", "Shrink mask by", &mask_shrink_do },
+        {
+            "mask_grow",
+            N_("Grow Mask"),
+            N_("Grow mask by:"),
+            &mask_grow_do
+        },
+        {
+            "mask_shrink",
+            N_("Shrink Mask"),
+            N_("Shrink mask by:"),
+            &mask_shrink_do
+        },
     };
     GwyContainer *settings;
     GwyDataField *dfield;
@@ -157,10 +167,10 @@ mask_grow_dialog(MaskGrowArgs *args,
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(title,
+    dialog = gtk_dialog_new_with_buttons(_(title),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -170,7 +180,7 @@ mask_grow_dialog(MaskGrowArgs *args,
                        FALSE, FALSE, 4);
 
     controls.pixels = gtk_adjustment_new(args->pixels, 1, 1024, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, desc, _("samples"),
+    spin = gwy_table_attach_spinbutton(table, 0, _(desc), _("px"),
                                        controls.pixels);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
 

@@ -93,12 +93,12 @@ static void       gwy_data_field_maximum2     (GwyDataField *dfield1,
                                                GwyDataField *dfield2);
 
 static const GwyEnum operations[] = {
-    { "Add",       GWY_ARITH_ADD },
-    { "Subtract",  GWY_ARITH_SUBSTRACT },
-    { "Multiply",  GWY_ARITH_MULTIPLY },
-    { "Divide",    GWY_ARITH_DIVIDE },
-    { "Minimum",   GWY_ARITH_MINIMUM },
-    { "Maximum",   GWY_ARITH_MAXIMUM },
+    { N_("Add"),       GWY_ARITH_ADD },
+    { N_("Subtract"),  GWY_ARITH_SUBSTRACT },
+    { N_("Multiply"),  GWY_ARITH_MULTIPLY },
+    { N_("Divide"),    GWY_ARITH_DIVIDE },
+    { N_("Minimum"),   GWY_ARITH_MINIMUM },
+    { N_("Maximum"),   GWY_ARITH_MAXIMUM },
 };
 
 static const ArithmeticArgs arithmetic_defaults = {
@@ -110,7 +110,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "arithmetic",
-    "Simple arithmetic with two data fields (or a data field and a scalar).",
+    N_("Simple arithmetic with two data fields "
+       "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -126,7 +127,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo arithmetic_func_info = {
         "arithmetic",
-        "/M_ultidata/_Arithmetic",
+        N_("/M_ultidata/_Arithmetic"),
         (GwyProcessFunc)&arithmetic,
         ARITH_RUN_MODES,
         0,
@@ -233,6 +234,7 @@ arithmetic_window_construct(ArithmeticArgs *args)
                                    G_CALLBACK(arithmetic_operation_cb),
                                    args,
                                    args->operation);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
 
     /***** Second operand *****/
@@ -421,7 +423,7 @@ arithmetic_check(ArithmeticArgs *args,
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_INFO,
                                             GTK_BUTTONS_CLOSE,
-                                            _("The dimensions differ.\n"));
+                                            _("Data dimensions differ.\n"));
             gtk_dialog_run(GTK_DIALOG(dialog));
             gtk_widget_destroy(dialog);
             return FALSE;
@@ -434,7 +436,7 @@ arithmetic_check(ArithmeticArgs *args,
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_INFO,
                                             GTK_BUTTONS_CLOSE,
-                                            _("The real dimensions differ.\n"));
+                                            _("Physical dimensions differ.\n"));
             gtk_dialog_run(GTK_DIALOG(dialog));
             gtk_widget_destroy(dialog);
             return FALSE;

@@ -100,7 +100,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "slope_dist",
-    "Slope distribution.",
+    N_("Slope distribution."),
     "Yeti <yeti@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -116,7 +116,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo slope_dist_func_info = {
         "slope_dist",
-        "/_Statistics/_Slope Distribution...",
+        N_("/_Statistics/_Slope Distribution..."),
         (GwyProcessFunc)&slope_dist,
         SLOPE_DIST_RUN_MODES,
         0,
@@ -179,8 +179,8 @@ static gboolean
 slope_dialog(SlopeArgs *args)
 {
     static const GwyEnum output_types[] = {
-        { "_Two-dimensional distribution", SLOPE_DIST_2D_DIST },
-        { "Per-angle _graph",              SLOPE_DIST_GRAPH },
+        { N_("_Two-dimensional distribution"), SLOPE_DIST_2D_DIST },
+        { N_("Per-angle _graph"),              SLOPE_DIST_GRAPH },
     };
     GtkWidget *dialog, *table, *spin, *label;
     GSList *group;
@@ -191,7 +191,7 @@ slope_dialog(SlopeArgs *args)
 
     dialog = gtk_dialog_new_with_buttons(_("Slope Distribution"), NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -221,7 +221,7 @@ slope_dialog(SlopeArgs *args)
     }
 
     controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Output size:"), "samples",
+    spin = gwy_table_attach_spinbutton(table, row, _("Output _size:"), _("px"),
                                        controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
@@ -242,7 +242,7 @@ slope_dialog(SlopeArgs *args)
 
     controls.kernel_size = gtk_adjustment_new(args->kernel_size,
                                               2, 16, 1, 4, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), "samples",
+    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), _("px"),
                                        controls.kernel_size);
     controls.kernel_size_spin = spin;
     row++;

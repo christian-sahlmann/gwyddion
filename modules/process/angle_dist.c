@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "angle_dist",
-    "Angle distribution.",
+    N_("Angle distribution."),
     "Yeti <yeti@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -115,7 +115,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo angle_dist_func_info = {
         "angle_dist",
-        "/_Statistics/_Angle Distribution...",
+        N_("/_Statistics/_Angle Distribution..."),
         (GwyProcessFunc)&angle_dist,
         ANGLE_DIST_RUN_MODES,
         0,
@@ -179,7 +179,7 @@ angle_dialog(AngleArgs *args)
 
     dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -190,13 +190,13 @@ angle_dialog(AngleArgs *args)
     row = 0;
 
     controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Output size:"), "samples",
-                                       controls.size);
+    spin = gwy_table_attach_spinbutton(table, row, _("Output _size:"),
+                                       _("px"), controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
     controls.steps = gtk_adjustment_new(args->steps, 6, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Number of steps:"), "",
+    spin = gwy_table_attach_spinbutton(table, row, _("_Number of steps:"), "",
                                        controls.steps);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
@@ -217,8 +217,8 @@ angle_dialog(AngleArgs *args)
 
     controls.kernel_size = gtk_adjustment_new(args->kernel_size,
                                               2, 16, 1, 4, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), "samples",
-                                       controls.kernel_size);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"),
+                                       _("px"), controls.kernel_size);
     controls.kernel_size_spin = spin;
     row++;
 

@@ -35,7 +35,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "presenationops",
-    "Basic operations with presentation.",
+    N_("Basic operations with presentation."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -51,7 +51,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo presentation_remove_func_info = {
         "presentation_remove",
-        "/_Display/_Remove Presentation",
+        N_("/_Display/_Remove Presentation"),
         (GwyProcessFunc)&presentation_remove,
         PRESENTATIONOPS_RUN_MODES,
         GWY_MENU_FLAG_DATA_SHOW,
