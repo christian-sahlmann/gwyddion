@@ -1043,12 +1043,12 @@ void
 gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
 {
     guint i, n, val, imin;
-    n = data_line->res;
     gdouble step;
-    
+    n = data_line->res;
+
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
-    
+
     /*if ymin==ymax==0 we want to set up histogram area*/
     if ((ymin == ymax) && (ymin == 0))
     {
@@ -1086,12 +1086,12 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
 {
     /*not yet...*/
     guint i, n, val, imin;
-    n = data_line->res;
     gdouble step, angle;
-    
+
+    n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
-    
+
     /*if ymin==ymax==0 we want to set up histogram area*/
     if ((ymin == ymax) && (ymin == 0))
     {
