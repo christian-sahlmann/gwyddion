@@ -385,6 +385,13 @@ interp_changed_cb(GObject *item, NanoindentAdjustArgs *args)
     
 }
 
+static gdouble
+dist(gint x1, gint y1, gint x2, gint y2)
+{
+    return sqrt(((gdouble)x2 - (gdouble)x1)*((gdouble)x2 - (gdouble)x1) 
+                + ((gdouble)y2 - (gdouble)y1)*((gdouble)y2 - (gdouble)y1));
+}
+
 /*compute weighted minimum*/
 static void
 get_weighted_minimum(GwyDataField *dfield, gint *x, gint *y)
@@ -392,16 +399,29 @@ get_weighted_minimum(GwyDataField *dfield, gint *x, gint *y)
     gint i, j;
     gdouble xc, yc, wc, weight;
     gdouble min, max;
-
+    gdouble mmin = G_MAXDOUBLE;
+    
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
+
+    for (i = 0; i < dfield->yres; i++) { /*row*/
+         for (j = 0; j < dfield->xres; j++) { /*column*/
+             if (mmin > dfield->data[j + dfield->xres*i]){ 
+                 mmin = dfield->data[j + dfield->xres*i]; 
+                 *x = j; 
+                 *y = i;
+             }
+         }
+    }
     
     xc = 0;
     yc = 0;
     wc = 0;
     for (i = 0; i < dfield->yres; i++) { /*row*/
          for (j = 0; j < dfield->xres; j++) { /*column*/
-             weight = (max-min)/(dfield->data[j + dfield->xres*i] - 1.001*min);  
+             weight = min/(dfield->data[j + dfield->xres*i]
+                           *MAX(dist(*x, *y, j, i), 1.0));
+             weight *= weight;
              xc += weight*(gdouble)j;
              yc += weight*(gdouble)i;
              wc += weight;
