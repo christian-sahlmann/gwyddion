@@ -489,6 +489,9 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
+    if (select_layer->selected)
+        gwy_layer_select_draw(layer, window);
+
     select_layer->button = 0;
     x = event->x;
     y = event->y;
@@ -514,11 +517,10 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     i = gwy_layer_select_near_point(select_layer, xreal, yreal);
     gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
 
-    /* XXX: this assures no artifacts ...  */
-    gtk_widget_queue_draw(GTK_WIDGET(data_view));
-
-    if (select_layer->selected)
+    if (select_layer->selected) {
+        gwy_layer_select_draw(layer, window);
         gwy_vector_layer_selection_finished(layer);
+    }
 
     return FALSE;
 }
@@ -590,8 +592,7 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
 
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
     if (parent)
-        gtk_widget_queue_draw(parent);
-
+        gwy_layer_select_draw(layer, parent->window);
     gwy_vector_layer_selection_finished(layer);
 }
 
