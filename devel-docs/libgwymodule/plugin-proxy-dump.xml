@@ -149,6 +149,34 @@
       <filename>plugins/file</filename> and the <filename>README</filename>
       there).
     </para>
+    <para>
+      For several languages they were implemented as [language] modules that
+      can be simply imported and used in your plug-in.  The others have to
+      carry the implementation with them if they want to use it.
+    </para>
+    <sect2>
+      <title>Using library implementations directly</title>
+      <para>
+        Following languages can benefit from language modules: Perl, Python,
+        and Ruby.  As of <application>Gwyddion</application> 1.6 their
+        installation and import was finally standardized (in previous
+        versions they were be installed into a hardly predictable directory
+        that might or might not be in actual module search path for the
+        language).
+      </para>
+      <para>
+        Plugin-proxy
+        export an environment variable <varname>GWYPLUGINLIB</varname> that
+        points to top-level directory of plug-in library modules.  It
+        contains a subdirectory for each language (<filename>perl</filename>,
+        <filename>python</filename>, etc.).  A plug-in should add
+        corresponding subdirectory to its module search path –
+        that is to <varname>@INC</varname> in Perl, <varname>sys.path</varname>
+        in Python, and <varname>$:</varname> in Ruby.  Then the module can
+        be imported as usual.  Please see the sample modules for possible
+        implementations.
+      </para>
+    </sect2>
     <sect2>
       <title>C</title>
       <para>
