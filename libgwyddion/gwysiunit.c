@@ -28,17 +28,16 @@
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
 
-static void     gwy_si_unit_class_init        (GwySIUnitClass *klass);
-static void     gwy_si_unit_init              (GwySIUnit *si_unit);
-static void     gwy_si_unit_finalize          (GwySIUnit *si_unit);
-static void     gwy_si_unit_serializable_init (GwySerializableIface *iface);
-static guchar*  gwy_si_unit_serialize         (GObject *obj,
-                                              guchar *buffer,
-                                              gsize *size);
-static GObject* gwy_si_unit_deserialize       (const guchar *buffer,
-                                              gsize size,
-                                              gsize *position);
-static GObject* gwy_si_unit_duplicate         (GObject *object);
+static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
+static void        gwy_si_unit_init              (GwySIUnit *si_unit);
+static void        gwy_si_unit_finalize          (GwySIUnit *si_unit);
+static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
+static GByteArray* gwy_si_unit_serialize         (GObject *obj,
+                                                  GByteArray *buffer);
+static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position);
+static GObject*    gwy_si_unit_duplicate         (GObject *object);
 
 
 GType
@@ -115,10 +114,9 @@ gwy_si_unit_finalize(GwySIUnit *si_unit)
     si_unit->unitstr = NULL;
 }
 
-static guchar*
+static GByteArray*
 gwy_si_unit_serialize(GObject *obj,
-                      guchar *buffer,
-                      gsize *size)
+                      GByteArray *buffer)
 {
     GwySIUnit *si_unit;
 
@@ -130,7 +128,7 @@ gwy_si_unit_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 's', "unitstr", &si_unit->unitstr, NULL, },
         };
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_SI_UNIT_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }

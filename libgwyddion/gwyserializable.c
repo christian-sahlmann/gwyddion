@@ -18,12 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- * FIXME: the serialization should use something like GArray, or directly
- * GString or GByteArray to avoid frequent reallocations.
- * TODO: 2.0.
- */
-
 #include <string.h>
 #include <glib-object.h>
 #include <glib/gutils.h>
@@ -70,7 +64,7 @@ gwy_serializable_get_type(void)
 }
 
 static void
-gwy_serializable_base_init(gpointer g_class)
+gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
 {
     static gboolean initialized = FALSE;
 
@@ -91,10 +85,9 @@ gwy_serializable_base_init(gpointer g_class)
  * Returns: A reallocated block of memory of size @size containing the
  *          current contents of @buffer with object representation appended.
  **/
-guchar*
+GByteArray*
 gwy_serializable_serialize(GObject *serializable,
-                           guchar *buffer,
-                           gsize *size)
+                           GByteArray *buffer)
 {
     GwySerializeFunc serialize_method;
 
@@ -109,7 +102,7 @@ gwy_serializable_serialize(GObject *serializable,
                 g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
         return NULL;
     }
-    return serialize_method(serializable, buffer, size);
+    return serialize_method(serializable, buffer);
 }
 
 /**
@@ -201,27 +194,29 @@ gwy_serializable_duplicate(GObject *object)
     if (duplicate_method)
         return duplicate_method(object);
 
-    g_warning("%s doesn't have its own duplicate() method, "
-              "forced to duplicate it the hard way.",
-              g_type_name(G_TYPE_FROM_INSTANCE(object)));
     return gwy_serializable_duplicate_hard_way(object);
 }
 
 static GObject*
 gwy_serializable_duplicate_hard_way(GObject *object)
 {
-    guchar *buffer = NULL;
-    gsize size = 0, position = 0;
+    GByteArray *buffer = NULL;
+    gsize position = 0;
     GObject *duplicate;
 
-    buffer = gwy_serializable_serialize(object, buffer, &size);
+    g_warning("%s doesn't have its own duplicate() method, "
+              "forced to duplicate it the hard way.",
+              g_type_name(G_TYPE_FROM_INSTANCE(object)));
+
+    buffer = gwy_serializable_serialize(object, NULL);
     if (!buffer) {
         g_critical("%s serialization failed",
                    g_type_name(G_TYPE_FROM_INSTANCE(object)));
         return NULL;
     }
-    duplicate = gwy_serializable_deserialize(buffer, size, &position);
-    g_free(buffer);
+    duplicate = gwy_serializable_deserialize(buffer->data, buffer->len,
+                                             &position);
+    g_byte_array_free(buffer, TRUE);
 
     return duplicate;
 }
@@ -231,12 +226,15 @@ gwy_serializable_duplicate_hard_way(GObject *object)
  * @buffer: A buffer to which the value should be stored.
  * @value: A 32bit integer.
  *
- * Stored a 32bit integer to a buffer.
+ * Stores a 32bit integer to a buffer.
  **/
 void
-gwy_serialize_store_int32(guchar *buffer, guint32 value)
+gwy_serialize_store_int32(GByteArray *buffer,
+                          gsize position,
+                          guint32 value)
 {
-    memcpy(buffer, &value, sizeof(guint32));
+    /* TODO value = GINT32_TO_LE(value); */
+    memcpy(buffer->data + position, &value, sizeof(guint32));
 }
 
 /**
@@ -269,228 +267,164 @@ gwy_serialize_store_int32(guchar *buffer, guint32 value)
  *
  * Returns: The buffer with serialization of given values appended.
  **/
-guchar*
-gwy_serialize_pack(guchar *buffer,
-                   gsize *size,
+GByteArray*
+gwy_serialize_pack(GByteArray *buffer,
                    const gchar *templ,
                    ...)
 {
     va_list ap;
-    gsize nargs, i, pos;
-    guchar *p = NULL;
-    gboolean do_copy = FALSE;
-    gboolean did_copy = FALSE;
-    gsize nobjs;  /* number of items which are objects */
-    struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
+    gsize nargs, i;
 
     gwy_debug("templ: %s", templ);
     nargs = strlen(templ);
     if (!nargs)
         return buffer;
 
-    for (nobjs = i = 0; i < nargs; i++) {
-        if (templ[i] == 'o')
-            nobjs++;
-    }
-    objects = g_new(struct o, nobjs);
+    gwy_debug("nargs = %d, buffer = %p", nargs, buffer);
+    if (!buffer)
+        buffer = g_byte_array_new();
 
-    while (!did_copy) {
-        va_start(ap, templ);
-        nobjs = 0;
-        pos = 0;
+    va_start(ap, templ);
+    for (i = 0; i < nargs; i++) {
+        gwy_debug("<%c> %lu", templ[i], buffer->len);
+        switch (templ[i]) {
+            case 'b':
+            {
+                char value = va_arg(ap, gboolean);  /* store it as char */
 
-        for (i = 0; i < nargs; i++) {
-            switch (templ[i]) {
-                case 'b':
-                {
-                    char value = va_arg(ap, gboolean);  /* store it as char */
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(char));
-                    pos += sizeof(char);
-                }
-                break;
-
-                case 'c':
-                {
-                    char value = va_arg(ap, int);
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(char));
-                    pos += sizeof(char);
-                }
-                break;
-
-                case 'C':
-                {
-                    gint32 alen = va_arg(ap, gsize);
-                    guchar *value = va_arg(ap, guchar*);
-
-                    if (do_copy) {
-                        memcpy(p + pos, &alen, sizeof(gint32));
-                        memcpy(p + pos + sizeof(gint32), value,
-                               alen*sizeof(char));
-                    }
-                    pos += sizeof(gint32) + alen*sizeof(char);
-                }
-                break;
-
-                case 'i':
-                {
-                    gint32 value = va_arg(ap, gint32);
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(gint32));
-                    pos += sizeof(gint32);
-                }
-                break;
-
-                case 'I':
-                {
-                    gint32 alen = va_arg(ap, gsize);
-                    gint32 *value = va_arg(ap, gint32*);
-
-                    if (do_copy) {
-                        memcpy(p + pos, &alen, sizeof(gint32));
-                        memcpy(p + pos + sizeof(gint32), value,
-                               alen*sizeof(gint32));
-                    }
-                    pos += sizeof(gint32) + alen*sizeof(gint32);
-                }
-                break;
-
-                case 'q':
-                {
-                    gint64 value = va_arg(ap, gint64);
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(gint64));
-                    pos += sizeof(gint64);
-                }
-                break;
-
-                case 'Q':
-                {
-                    gint32 alen = va_arg(ap, gsize);
-                    gint64 *value = va_arg(ap, gint64*);
-
-                    if (do_copy) {
-                        memcpy(p + pos, &alen, sizeof(gint32));
-                        memcpy(p + pos + sizeof(gint32), value,
-                               alen*sizeof(gint64));
-                    }
-                    pos += sizeof(gint32) + alen*sizeof(gint64);
-                }
-                break;
-
-                case 'd':
-                {
-                    double value = va_arg(ap, double);
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(double));
-                    pos += sizeof(double);
-                }
-                break;
-
-                case 'D':
-                {
-                    gint32 alen = va_arg(ap, gsize);
-                    double *value = va_arg(ap, double*);
-
-                    if (do_copy) {
-                        memcpy(p + pos, &alen, sizeof(gint32));
-                        memcpy(p + pos + sizeof(gint32), value,
-                               alen*sizeof(double));
-                    }
-                    pos += sizeof(gint32) + alen*sizeof(double);
-                }
-                break;
-
-                case 's':
-                {
-                    guchar *value = va_arg(ap, guchar*);
-
-                    if (!value) {
-                        g_warning("representing NULL string "
-                                  "as an empty string");
-                        if (do_copy)
-                            p[pos] = '\0';
-                        p++;
-                    }
-                    else {
-                        gsize l = strlen(value) + 1;
-
-                        if (do_copy)
-                            memcpy(p + pos, value, l);
-                        pos += l;
-                    }
-                }
-                break;
-
-                case 'o':
-                {
-                    GObject *value = va_arg(ap, GObject*);
-
-                    g_assert(value);
-                    g_assert(GWY_IS_SERIALIZABLE(value));
-                    if (do_copy) {
-                        memcpy(p + pos,
-                               objects[nobjs].buffer, objects[nobjs].size);
-                        g_free(objects[nobjs].buffer);
-                    }
-                    else {
-                        objects[nobjs].size = 0;
-                        objects[nobjs].buffer =
-                            gwy_serializable_serialize(value, NULL,
-                                                       &objects[nobjs].size);
-                    }
-                    pos += objects[nobjs].size;
-                    nobjs++;
-                }
-                break;
-
-                default:
-                g_error("wrong spec `%c' in templ `%s'", templ[i], templ);
-                g_assert(!do_copy);
-                g_free(p);
-                va_end(ap);
-                /* FIXME: we may leak some objects[] here */
-                return buffer;
-                break;
+                g_byte_array_append(buffer, &value, 1);
             }
-        }
+            break;
 
-        va_end(ap);
-        if (do_copy)
-            did_copy = TRUE;
-        else {
-            buffer = g_renew(guchar, buffer, *size + pos);
-            p = buffer + *size;
-            *size += pos;
-            do_copy = TRUE;
+            case 'c':
+            {
+                char value = va_arg(ap, int);
+
+                g_byte_array_append(buffer, &value, 1);
+            }
+            break;
+
+            case 'C':
+            {
+                gint32 alen = va_arg(ap, gsize);
+                guchar *value = va_arg(ap, guchar*);
+
+                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
+                g_byte_array_append(buffer, value, alen*sizeof(char));
+            }
+            break;
+
+            case 'i':
+            {
+                gint32 value = va_arg(ap, gint32);
+
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint32));
+            }
+            break;
+
+            case 'I':
+            {
+                gint32 alen = va_arg(ap, gsize);
+                gint32 *value = va_arg(ap, gint32*);
+
+                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
+                g_byte_array_append(buffer, (guint8*)value,
+                                    alen*sizeof(gint32));
+            }
+            break;
+
+            case 'q':
+            {
+                gint64 value = va_arg(ap, gint64);
+
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint64));
+            }
+            break;
+
+            case 'Q':
+            {
+                gint32 alen = va_arg(ap, gsize);
+                gint64 *value = va_arg(ap, gint64*);
+
+                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
+                g_byte_array_append(buffer, (guint8*)value,
+                                    alen*sizeof(gint64));
+            }
+            break;
+
+            case 'd':
+            {
+                double value = va_arg(ap, double);
+
+                g_byte_array_append(buffer, (guint8*)&value, sizeof(double));
+            }
+            break;
+
+            case 'D':
+            {
+                gint32 alen = va_arg(ap, gsize);
+                double *value = va_arg(ap, double*);
+
+                g_byte_array_append(buffer, (guint8*)&alen, sizeof(gint32));
+                g_byte_array_append(buffer, (guint8*)value,
+                                    alen*sizeof(double));
+            }
+            break;
+
+            case 's':
+            {
+                guchar *value = va_arg(ap, guchar*);
+
+                if (!value) {
+                    g_warning("representing NULL string "
+                                "as an empty string");
+                    g_byte_array_append(buffer, "", 1);
+                }
+                else
+                    g_byte_array_append(buffer, value, strlen(value) + 1);
+            }
+            break;
+
+            case 'o':
+            {
+                GObject *value = va_arg(ap, GObject*);
+
+                g_assert(value);
+                g_assert(GWY_IS_SERIALIZABLE(value));
+                gwy_serializable_serialize(value, buffer);
+            }
+            break;
+
+            default:
+            g_error("wrong spec `%c' in templ `%s'", templ[i], templ);
+            va_end(ap);
+            return buffer;
+            break;
         }
     }
-    g_free(objects);
+
+    va_end(ap);
 
     return buffer;
 }
 
-guchar*
-gwy_serialize_pack_object_struct(guchar *buffer,
-                                 gsize *size,
+GByteArray*
+gwy_serialize_pack_object_struct(GByteArray *buffer,
                                  const guchar *object_name,
                                  gsize nspec,
                                  const GwySerializeSpec *spec)
 {
-    gsize oldsize;
+    gsize before_obj;
 
-    buffer = gwy_serialize_pack(buffer, size, "si", object_name, 0);
-    oldsize = *size;
+    gwy_debug("init size: %lu, buffer = %p", buffer ? buffer->len : 0, buffer);
+    buffer = gwy_serialize_pack(buffer, "si", object_name, 0);
+    before_obj = buffer->len;
+    gwy_debug("+head size: %lu", buffer->len);
 
-    buffer = gwy_serialize_pack_struct(buffer, size, nspec, spec);
-    gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                              *size - oldsize);
+    gwy_serialize_pack_struct(buffer, nspec, spec);
+    gwy_debug("+body size: %lu", buffer->len);
+    gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
+                              buffer->len - before_obj);
     return buffer;
 }
 
@@ -508,204 +442,132 @@ gwy_serialize_pack_object_struct(guchar *buffer,
  *
  * Returns: The buffer with serialization of @spec components appended.
  **/
-guchar*
-gwy_serialize_pack_struct(guchar *buffer,
-                          gsize *size,
+GByteArray*
+gwy_serialize_pack_struct(GByteArray *buffer,
                           gsize nspec,
                           const GwySerializeSpec *spec)
 {
     const GwySerializeSpec *sp;
-    gsize i, pos;
     guint32 asize = 0;
-    guchar *p = NULL;
-    gboolean do_copy = FALSE;
-    gboolean did_copy = FALSE;
-    gsize nobjs;  /* number of items which are objects */
-    struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
+    guint8 *arr;
+    gsize i;
 
-    gwy_debug("nspec = %d", nspec);
+    gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
     if (!nspec)
         return buffer;
 
-    for (nobjs = i = 0; i < nspec; i++) {
-        if (spec[i].ctype == 'o')
-            nobjs++;
-    }
-    objects = g_new(struct o, nobjs);
+    if (!buffer)
+        buffer = g_byte_array_new();
 
-    while (!did_copy) {
-        nobjs = 0;
-        pos = 0;
-
-        for (sp = spec; (gsize)(sp - spec) < nspec; sp++) {
-            g_assert(sp->value);
-            if (g_ascii_isupper(sp->ctype)) {
-                g_assert(sp->array_size);
-                g_assert(*(gpointer*)sp->value);
-                asize = *sp->array_size;
-            }
-            i = strlen(sp->name) + 1;
-            if (do_copy)
-                memcpy(p + pos, sp->name, i);
-            pos += i;
-            if (do_copy)
-                *(p + pos) = sp->ctype;
-            pos++;
-            switch (sp->ctype) {
-                case 'b':
-                {
-                    /* store it as char */
-                    char value = *(gboolean*)sp->value;
-
-                    if (do_copy)
-                        memcpy(p + pos, &value, sizeof(char));
-                    pos += sizeof(char);
-                }
-                break;
-
-                case 'c':
-                {
-                    if (do_copy)
-                        *(p + pos) = *(guchar*)sp->value;
-                    pos += sizeof(char);
-                }
-                break;
-
-                case 'C':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->array_size, sizeof(guint32));
-                    pos += sizeof(guint32);
-                    if (do_copy)
-                        memcpy(p + pos, *(guchar**)sp->value,
-                               asize*sizeof(char));
-                    pos += asize*sizeof(char);
-                }
-                break;
-
-                case 'i':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->value, sizeof(gint32));
-                    pos += sizeof(gint32);
-                }
-                break;
-
-                case 'I':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->array_size, sizeof(gint32));
-                    pos += sizeof(guint32);
-                    if (do_copy)
-                        memcpy(p + pos, *(guint32**)sp->value,
-                               asize*sizeof(gint32));
-                    pos += asize*sizeof(gint32);
-                }
-                break;
-
-                case 'q':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->value, sizeof(gint64));
-                    pos += sizeof(gint64);
-                }
-                break;
-
-                case 'Q':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->array_size, sizeof(gint32));
-                    pos += sizeof(guint32);
-                    if (do_copy)
-                        memcpy(p + pos, *(guint64**)sp->value,
-                               asize*sizeof(gint64));
-                    pos += asize*sizeof(gint64);
-                }
-                break;
-
-                case 'd':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->value, sizeof(double));
-                    pos += sizeof(double);
-
-                }
-                break;
-
-                case 'D':
-                {
-                    if (do_copy)
-                        memcpy(p + pos, sp->array_size, sizeof(gint32));
-                    pos += sizeof(guint32);
-                    if (do_copy)
-                        memcpy(p + pos, *(gdouble**)sp->value,
-                               asize*sizeof(double));
-                    pos += asize*sizeof(double);
-                }
-                break;
-
-                case 's':
-                {
-                    guchar *value = *(guchar**)sp->value;
-
-                    if (!value) {
-                        g_warning("representing NULL string "
-                                  "as an empty string");
-                        if (do_copy)
-                            p[pos] = '\0';
-                        p++;
-                    }
-                    else {
-                        asize = strlen(value) + 1;
-                        if (do_copy)
-                            memcpy(p + pos, value, asize);
-                        pos += asize;
-                    }
-                }
-                break;
-
-                case 'o':
-                {
-                    GObject *value = *(GObject**)sp->value;
-
-                    g_assert(value);
-                    g_assert(GWY_IS_SERIALIZABLE(value));
-                    if (do_copy) {
-                        memcpy(p + pos,
-                               objects[nobjs].buffer, objects[nobjs].size);
-                        g_free(objects[nobjs].buffer);
-                    }
-                    else {
-                        objects[nobjs].size = 0;
-                        objects[nobjs].buffer =
-                            gwy_serializable_serialize(value, NULL,
-                                                       &objects[nobjs].size);
-                    }
-                    pos += objects[nobjs].size;
-                    nobjs++;
-                }
-                break;
-
-                default:
-                g_error("wrong spec `%c' at pos %d", sp->ctype, sp - spec);
-                g_assert(!do_copy);
-                g_free(p);
-                /* FIXME: we may leak some objects[] here */
-                return buffer;
-                break;
-            }
+    sp = spec;
+    for (i = 0; i < nspec; i++) {
+        sp = spec + i;
+        g_assert(sp->value);
+        if (g_ascii_isupper(sp->ctype)) {
+            g_assert(sp->array_size);
+            g_assert(*(gpointer*)sp->value);
+            asize = *sp->array_size;
+            arr = *(guint8**)sp->value;
         }
+        g_byte_array_append(buffer, sp->name, strlen(sp->name) + 1);
+        g_byte_array_append(buffer, &sp->ctype, 1);
+        gwy_debug("%d <%s> <%c> %lu", i, sp->name, sp->ctype, buffer->len);
+        switch (sp->ctype) {
+            case 'b':
+            {
+                /* store it as char */
+                char value = *(gboolean*)sp->value;
 
-        if (do_copy)
-            did_copy = TRUE;
-        else {
-            buffer = g_renew(guchar, buffer, *size + pos);
-            p = buffer + *size;
-            *size += pos;
-            do_copy = TRUE;
+                g_byte_array_append(buffer, &value, 1);
+            }
+            break;
+
+            case 'c':
+            {
+                g_byte_array_append(buffer, sp->value, 1);
+            }
+            break;
+
+            case 'C':
+            {
+                g_byte_array_append(buffer, (guint8*)sp->array_size,
+                                    sizeof(gint32));
+                g_byte_array_append(buffer, arr, asize*sizeof(char));
+            }
+            break;
+
+            case 'i':
+            {
+                g_byte_array_append(buffer, sp->value, sizeof(gint32));
+            }
+            break;
+
+            case 'I':
+            {
+                g_byte_array_append(buffer, (guint8*)sp->array_size,
+                                    sizeof(gint32));
+                g_byte_array_append(buffer, arr, asize*sizeof(gint32));
+            }
+            break;
+
+            case 'q':
+            {
+                g_byte_array_append(buffer, sp->value, sizeof(gint64));
+            }
+            break;
+
+            case 'Q':
+            {
+                g_byte_array_append(buffer, (guint8*)sp->array_size,
+                                    sizeof(gint32));
+                g_byte_array_append(buffer, arr, asize*sizeof(gint64));
+            }
+            break;
+
+            case 'd':
+            {
+                g_byte_array_append(buffer, sp->value, sizeof(double));
+            }
+            break;
+
+            case 'D':
+            {
+                g_byte_array_append(buffer, (guint8*)sp->array_size,
+                                    sizeof(gint32));
+                g_byte_array_append(buffer, arr, asize*sizeof(double));
+            }
+            break;
+
+            case 's':
+            {
+                guchar *value = *(guchar**)sp->value;
+
+                if (!value) {
+                    g_warning("representing NULL string "
+                                "as an empty string");
+                    g_byte_array_append(buffer, "", 1);
+                }
+                else
+                    g_byte_array_append(buffer, arr, strlen(sp->value) + 1);
+            }
+            break;
+
+            case 'o':
+            {
+                GObject *value = *(GObject**)sp->value;
+
+                g_assert(value);
+                g_assert(GWY_IS_SERIALIZABLE(value));
+                gwy_serializable_serialize(value, buffer);
+            }
+            break;
+
+            default:
+            g_error("wrong spec `%c' at pos %d", sp->ctype, sp - spec);
+            return buffer;
+            break;
         }
     }
-    g_free(objects);
 
     return buffer;
 }

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <string.h>
 #include <stdio.h>
 #include <glib-object.h>
@@ -27,18 +27,17 @@
 
 #define GWY_TEST_SER_TYPE_NAME "GwyTestSer"
 
-static void       gwy_test_ser_class_init        (GwyTestSerClass *klass);
-static void       gwy_test_ser_init              (GwyTestSer *test_ser);
-static void       gwy_test_ser_finalize          (GwyTestSer *test_ser);
-static void       gwy_test_ser_serializable_init (GwySerializableIface *iface);
-static void       gwy_test_ser_watchable_init    (GwyWatchableIface *iface);
-static guchar*    gwy_test_ser_serialize         (GObject *obj,
-                                                  guchar *buffer,
-                                                  gsize *size);
-static GObject*   gwy_test_ser_deserialize       (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-static void       gwy_test_ser_value_changed     (GObject *test_ser);
+static void        gwy_test_ser_class_init        (GwyTestSerClass *klass);
+static void        gwy_test_ser_init              (GwyTestSer *test_ser);
+static void        gwy_test_ser_finalize          (GwyTestSer *test_ser);
+static void        gwy_test_ser_serializable_init (GwySerializableIface *iface);
+static void        gwy_test_ser_watchable_init    (GwyWatchableIface *iface);
+static GByteArray* gwy_test_ser_serialize         (GObject *obj,
+                                                   GByteArray *buffer);
+static GObject*    gwy_test_ser_deserialize       (const guchar *buffer,
+                                                   gsize size,
+                                                   gsize *position);
+static void        gwy_test_ser_value_changed     (GObject *test_ser);
 
 GType
 gwy_test_ser_get_type(void)
@@ -142,10 +141,9 @@ gwy_test_ser_new(gdouble theta,
     return (GObject*)(test_ser);
 }
 
-static guchar*
+static GByteArray*
 gwy_test_ser_serialize(GObject *obj,
-                       guchar *buffer,
-                       gsize *size)
+                       GByteArray *buffer)
 {
     GwyTestSer *test_ser;
 
@@ -158,7 +156,7 @@ gwy_test_ser_serialize(GObject *obj,
             { 'd', "theta", &test_ser->theta, NULL, },
             { 'D', "r", &test_ser->radius, &test_ser->history_size, },
         };
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_TEST_SER_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }

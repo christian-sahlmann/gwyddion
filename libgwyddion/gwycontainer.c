@@ -31,11 +31,6 @@
 #define GWY_CONTAINER_TYPE_NAME "GwyContainer"
 
 typedef struct {
-    guchar *buffer;
-    gsize size;
-} SerializeData;
-
-typedef struct {
     GwyContainer *container;
     const gchar *prefix;
     gsize prefix_length;
@@ -79,9 +74,8 @@ static void     gwy_container_set_by_name_valist (GwyContainer *container,
                                                   va_list ap,
                                                   gboolean do_replace,
                                                   gboolean do_create);
-static guchar*  gwy_container_serialize          (GObject *object,
-                                                  guchar *buffer,
-                                                  gsize *size);
+static GByteArray* gwy_container_serialize       (GObject *object,
+                                                  GByteArray *buffer);
 static void     hash_serialize_func              (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
@@ -1736,28 +1730,24 @@ gwy_container_set_object(GwyContainer *container,
     g_object_unref(value);
 }
 
-static guchar*
+static GByteArray*
 gwy_container_serialize(GObject *object,
-                        guchar *buffer,
-                        gsize *size)
+                        GByteArray *buffer)
 {
     GwyContainer *container;
-    SerializeData sdata;
+    gsize before_obj;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_CONTAINER(object), NULL);
-
     container = GWY_CONTAINER(object);
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_CONTAINER_TYPE_NAME, 0);
-    sdata.buffer = buffer;
-    sdata.size = *size;
-    g_hash_table_foreach(container->values, hash_serialize_func, &sdata);
-    gwy_serialize_store_int32(sdata.buffer + *size - sizeof(guint32),
-                              sdata.size - *size);
-    *size = sdata.size;
 
-    return sdata.buffer;
+    buffer = gwy_serialize_pack(buffer, "si", GWY_CONTAINER_TYPE_NAME, 0);
+    before_obj = buffer->len;
+    g_hash_table_foreach(container->values, hash_serialize_func, buffer);
+    gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
+                              buffer->len - before_obj);
+
+    return buffer;
 }
 
 static void
@@ -1765,45 +1755,37 @@ hash_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 {
     GQuark key = GPOINTER_TO_UINT(hkey);
     GValue *value = (GValue*)hvalue;
-    SerializeData *sdata = (SerializeData*)hdata;
+    GByteArray *buffer = (GByteArray*)hdata;
     GType type = G_VALUE_TYPE(value);
 
-    sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "is",
-                                       type, g_quark_to_string(key));
+    buffer = gwy_serialize_pack(buffer, "is", type, g_quark_to_string(key));
     switch (type) {
         case G_TYPE_OBJECT:
-        sdata->buffer = gwy_serializable_serialize(g_value_get_object(value),
-                                                   sdata->buffer, &sdata->size);
+        buffer = gwy_serializable_serialize(g_value_get_object(value), buffer);
         break;
 
         case G_TYPE_BOOLEAN:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "b",
-                                           g_value_get_boolean(value));
+        buffer = gwy_serialize_pack(buffer, "b", g_value_get_boolean(value));
         break;
 
         case G_TYPE_UCHAR:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "c",
-                                           g_value_get_uchar(value));
+        buffer = gwy_serialize_pack(buffer, "c", g_value_get_uchar(value));
         break;
 
         case G_TYPE_INT:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "i",
-                                           g_value_get_int(value));
+        buffer = gwy_serialize_pack(buffer, "i", g_value_get_int(value));
         break;
 
         case G_TYPE_INT64:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "q",
-                                           g_value_get_int64(value));
+        buffer = gwy_serialize_pack(buffer, "q", g_value_get_int64(value));
         break;
 
         case G_TYPE_DOUBLE:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "d",
-                                           g_value_get_double(value));
+        buffer = gwy_serialize_pack(buffer, "d", g_value_get_double(value));
         break;
 
         case G_TYPE_STRING:
-        sdata->buffer = gwy_serialize_pack(sdata->buffer, &sdata->size, "s",
-                                           g_value_get_string(value));
+        buffer = gwy_serialize_pack(buffer, "s", g_value_get_string(value));
         break;
 
         default:
@@ -2040,8 +2022,8 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     GPtrArray *pa = (GPtrArray*)hdata;
     GType type = G_VALUE_TYPE(value);
     gchar *k, *v, *s;
-    guchar *b;
-    gsize len, i, j;
+    GByteArray *b;
+    gsize i, j;
     guchar c;
 
     k = g_strescape(g_quark_to_string(key), NULL);
@@ -2083,20 +2065,19 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         case G_TYPE_OBJECT:
         g_warning("Forced to serialize object %s to text",
                   g_type_name(G_TYPE_FROM_INSTANCE(g_value_get_object(value))));
-        len = 0;
-        b = gwy_serializable_serialize(g_value_get_object(value), NULL, &len);
+        b = gwy_serializable_serialize(g_value_get_object(value), NULL);
         g_assert(b);
         j = strlen(k);
-        v = g_new(gchar, 1 + j + 2 + sizeof("object") + 2*len + 1);
+        v = g_new(gchar, 1 + j + 2 + sizeof("object") + 2*b->len + 1);
         v[0] = '"';
         memcpy(v+1, k, j);
         memcpy(v+j+1, "\" object ", sizeof("\" object ") - 1);
-        for (i = 0; i < len; i++) {
-            v[3 + j + sizeof("object") + 2*i] = hexdigits[b[i] >> 4];
-            v[4 + j + sizeof("object") + 2*i] = hexdigits[b[i] & 0xf];
+        for (i = 0; i < b->len; i++) {
+            v[3 + j + sizeof("object") + 2*i] = hexdigits[b->data[i] >> 4];
+            v[4 + j + sizeof("object") + 2*i] = hexdigits[b->data[i] & 0xf];
         }
-        v[3 + j + sizeof("object") + 2*len] = '\0';
-        g_free(b);
+        v[3 + j + sizeof("object") + 2*b->len] = '\0';
+        g_byte_array_free(b, TRUE);
         break;
 
         default:

@@ -37,8 +37,9 @@ static void
 test_serializable_iface(void)
 {
     GObject *ser;
-    gsize size, pos;
+    gsize pos, size;
     guchar *buffer;
+    GByteArray *array;
     FILE *fh;
     GError *err = NULL;
     gint x[128];
@@ -50,10 +51,8 @@ test_serializable_iface(void)
     g_message("===== SERIALIZABLE INTERFACE ========================");
     print(ser, "created");
 
-    size = 0;
-    buffer = NULL;
-    buffer = gwy_serializable_serialize(ser, buffer, &size);
-    g_message("size of first object: %u", size);
+    array = gwy_serializable_serialize(ser, NULL);
+    g_message("size of first object: %u", array->len);
     g_object_unref(ser);
 
     /* create, write and free another object */
@@ -64,14 +63,14 @@ test_serializable_iface(void)
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 1e44);
     print(ser, "created");
 
-    buffer = gwy_serializable_serialize(ser, buffer, &size);
+    array = gwy_serializable_serialize(ser, array);
     g_message("size of both objects: %u", size);
     g_object_unref(ser);
     g_message("writing objects to %s", FILENAME);
     fh = fopen(FILENAME, "wb");
-    fwrite(buffer, 1, size, fh);
+    fwrite(array->data, 1, array->len, fh);
     fclose(fh);
-    g_free(buffer);
+    g_byte_array_free(array, TRUE);
 
     /* create and free yet another object just to overwrite memory */
     ser = gwy_test_ser_new(1.618, 0.33333333);
@@ -204,6 +203,7 @@ test_container_serialization(void)
     GQuark q;
     GObject *ser;
     gsize size, pos;
+    GByteArray *array;
     guchar *buffer;
     GwyContainer *container;
     FILE *fh;
@@ -234,22 +234,20 @@ test_container_serialization(void)
     ser = gwy_container_get_object_by_name(container, "ser");
     g_assert(G_OBJECT(ser)->ref_count == 2);
 
-    size = 0;
-    buffer = NULL;
-    buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
+    array = gwy_serializable_serialize(G_OBJECT(container), NULL);
     g_object_unref(container);
     g_assert(G_OBJECT(ser)->ref_count == 1);
     g_object_unref(ser);
 
     g_message("serializing an empty container");
     container = GWY_CONTAINER(gwy_container_new());
-    buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
+    array = gwy_serializable_serialize(G_OBJECT(container), array);
     g_object_unref(container);
 
     fh = fopen(FILENAME, "wb");
-    fwrite(buffer, 1, size, fh);
+    fwrite(array->data, 1, array->len, fh);
     fclose(fh);
-    g_free(buffer);
+    g_byte_array_free(array, TRUE);
 
     g_message("reading objects from %s", FILENAME);
     if (!gwy_file_get_contents(FILENAME, &buffer, &size, &err)) {
@@ -616,11 +614,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_serializable_iface();
-    test_container();
-    test_watchable_iface();
-    test_container_serialization();
-    test_duplication();
+    test_all();
 
     return 0;
 }
