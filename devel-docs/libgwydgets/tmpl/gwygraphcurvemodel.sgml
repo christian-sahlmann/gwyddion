@@ -26,6 +26,23 @@ graph widgets and should be mostly ignored for now.
 @GWY_GRAPH_CURVE_LINE: 
 @GWY_GRAPH_CURVE_LINE_POINTS: 
 
+<!-- ##### STRUCT GwyGraphCurveModel ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphCurveModelClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+@reserved1: 
+@reserved2: 
+@reserved3: 
+
 <!-- ##### FUNCTION gwy_graph_curve_model_new ##### -->
 <para>
 

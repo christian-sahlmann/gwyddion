@@ -474,6 +474,18 @@ The "Scale" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_SCARS ##### -->
+<para>
+The "Scars" stock icon.
+<inlinegraphic fileref="gwy_mask_scars-24.png" format="PNG"></inlinegraphic>
+</para>
+
+<para>
+Since: 1.7
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_SHADER ##### -->
 <para>
 The "Shader" stock icon.

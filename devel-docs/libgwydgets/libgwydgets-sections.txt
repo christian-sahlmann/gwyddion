@@ -352,6 +352,8 @@ GWY_LAYER_BASIC_GET_CLASS
 <FILE>gwygraphcurvemodel</FILE>
 GwyGraphCurveType
 <TITLE>GwyGraphCurveModel</TITLE>
+GwyGraphCurveModel
+GwyGraphCurveModelClass
 gwy_graph_curve_model_new
 gwy_graph_curve_model_save_curve
 gwy_graph_add_curve_from_model
@@ -364,6 +366,7 @@ GWY_GRAPH_CURVE_MODEL_CLASS
 GWY_IS_GRAPH_CURVE_MODEL_CLASS
 GWY_GRAPH_CURVE_MODEL_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyvectorshade</FILE>
 <TITLE>GwyVectorShade</TITLE>
@@ -511,6 +514,8 @@ GWY_DATA_VIEW_GET_CLASS
 <SECTION>
 <FILE>gwygraphmodel</FILE>
 <TITLE>GwyGraphModel</TITLE>
+GwyGraphModel
+GwyGraphModelClass
 gwy_graph_model_new
 gwy_graph_new_from_model
 gwy_graph_model_get_n_curves
@@ -523,6 +528,7 @@ GWY_GRAPH_MODEL_CLASS
 GWY_IS_GRAPH_MODEL_CLASS
 GWY_GRAPH_MODEL_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwygrapharea</FILE>
 GwyGraphAreaCurvePoints
@@ -804,6 +810,7 @@ GWY_STOCK_POLYNOM_REMOVE
 GWY_STOCK_PROFILE
 GWY_STOCK_ROTATE
 GWY_STOCK_SCALE
+GWY_STOCK_SCARS
 GWY_STOCK_SHADER
 GWY_STOCK_SPOT_REMOVE
 GWY_STOCK_STAT_QUANTITIES
