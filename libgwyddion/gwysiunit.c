@@ -20,7 +20,7 @@
 
 #include <math.h>
 #include <string.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -510,9 +510,126 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 void
 gwy_si_unit_value_format_free(GwySIValueFormat *format)
 {
-    
-    if (format->units != NULL) g_free(format->units);
+    g_free(format->units);
     g_free(format);
+}
+
+
+/************************** Parser ***********************************/
+
+typedef struct {
+    gdouble prefix_affinity;
+    gint base_power10;
+} GwyUnitTraits;
+
+typedef struct {
+    GQuark unit;
+    gshort power;
+    gshort traits;
+} GwySimpleUnit;
+
+typedef struct {
+    gint power10;
+    GArray *units;
+} GwySIUnit2;
+
+static const GwyUnitTraits unit_traits[] = {
+    { 1.0,   0 },    /* normal unit */
+    { 1.0,   3 },    /* kilogram */
+    { 0.0,   0 },    /* does not take prefixes */
+};
+
+GwySIUnit2*
+gwy_si_unit_parse(const gchar *string)
+{
+    GwySIUnit2 *siunit;
+    GwySimpleUnit unit;
+    gdouble q;
+    const gchar *end;
+    gint n;
+    gchar buf[8];
+    gboolean dividing = FALSE;
+
+    siunit = g_new0(GwySIUnit2, 1);
+    siunit->units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
+
+    /* give up when it looks too wild */
+    end = strpbrk(string,
+                  "\177\001\002\003\004\005\006\007"
+                  "\010\011\012\013\014\015\016\017"
+                  "\020\021\022\023\024\025\026\027"
+                  "\030\031\032\033\034\035\036\037"
+                  "!#$&()*,:;=?@\\[]_`|{}");
+    if (end) {
+        g_warning("Invalid character 0x%02x", *end);
+        return siunit;
+    }
+
+    /* may start with a multiplier */
+    q = g_ascii_strtod(string, (gchar**)&end);
+    if (end != string) {
+        string = end;
+        siunit->power10 = ROUND(log(q)/G_LN10);
+        if (q <= 0 || fabs(log(q/exp(G_LN10*siunit->power10))) > 1e-14) {
+            g_warning("Bad multiplier %g", q);
+            siunit->power10 = 0;
+        }
+        else if (g_str_has_prefix(string, "<sup>")) {
+            n = strtol(string, (gchar**)&end, 10);
+            if (end == string)
+                g_warning("Bad exponent %s", string);
+            else if (!g_str_has_prefix(end, "</sup>"))
+                g_warning("Expected </sup> after exponent");
+            else
+                siunit->power10 *= n;
+            string = end;
+        }
+        else if (g_str_has_prefix(string, "^")) {
+            n = strtol(string, (gchar**)&end, 10);
+            if (end == string)
+                g_warning("Bad exponent %s", string);
+            else
+                siunit->power10 *= n;
+            string = end;
+        }
+    }
+
+    /* the rest are units */
+    while (*string) {
+        end = strpbrk(string, " /");
+        if (!end)
+            end = string + strlen(string);
+
+        /* TODO: fix silly units (~m, us, latin1 degree, latin1 micro)*/
+        /* TODO: scan known obscure units */
+        unit.traits = 0;
+        /* TODO: get prefix */
+        /* get unit */
+        strncpy(buf, string, 4);
+        buf[4] = '\0';
+        unit.unit = g_quark_from_string(buf);
+
+        /* TODO: get unit power */
+        unit.power = dividing ? -1 : 1;
+
+        /* append it */
+        g_array_append_val(siunit->units, unit);
+
+        /* get to the next token, looking for division */
+        while (g_ascii_isspace(*end))
+            end++;
+        if (*end == '/') {
+            if (dividing)
+                g_warning("Cannot group multiple divisions");
+            dividing = TRUE;
+            end++;
+            while (g_ascii_isspace(*end))
+                end++;
+        }
+        string = end;
+    }
+
+    return siunit;
 }
 
 /************************** Documentation ****************************/
