@@ -972,4 +972,108 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     /* XXX: gwy_data_line_value_changed(G_OBJECT(ra));*/
 }
 
+void
+gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
+{
+    gint i, j;
+    gint n = data_line->res;
+    gdouble val;
+
+    gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(target_line, 0);
+    
+    for (i=0; i<n; i++)
+    {
+        for (j=0; j<(n-i); j++)
+        {
+            val = data_line->data[n+i]*data_line->data[n];
+            target_line->data[i] += val*val;
+        }
+        target_line->data[i]/=(n-i);
+    }
+}
+
+void
+gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
+{
+    gint i, j;
+    gint n = data_line->res;
+    gdouble val;
+
+    gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(target_line, 0);
+    
+    for (i=0; i<n; i++)
+    {
+        for (j=0; j<(n-i); j++)
+        {
+            val = data_line->data[n+i] - data_line->data[n];
+            target_line->data[i] += val*val;
+        }
+        target_line->data[i]/=(n-i);
+    }
+}
+
+void
+gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line)
+{
+    /*provisory...*/
+    gwy_data_line_hhcf(data_line, target_line);
+}
+
+void
+gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gdouble nsteps)
+{
+    gint i, n, val, imin;
+    n = data_line->res;
+    gdouble step;
+    
+    gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(target_line, 0);
+    
+    /*if ymin==ymax==0 we want to set up histogram area*/
+    if ((ymin == ymax) && (ymin == 0))
+    {
+        ymin = gwy_data_line_get_min(data_line);
+        ymax = gwy_data_line_get_max(data_line);
+    }
+    step = (ymax - ymin)/nsteps;
+    imin = (int)(ymin/step);
+
+    for (i=0; i<n; i++)
+    {
+        val = (gint)(data_line->data[i]*step/(ymax - ymin) - imin);
+        target_line->data[val] += 1;
+    }
+}
+
+
+void
+gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gdouble nsteps)
+{
+    /*not yet...*/
+    gint i, n, val, imin;
+    n = data_line->res;
+    gdouble step;
+    
+    gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
+    gwy_data_line_fill(target_line, 0);
+    
+    /*if ymin==ymax==0 we want to set up histogram area*/
+    if ((ymin == ymax) && (ymin == 0))
+    {
+        ymin = gwy_data_line_get_min(data_line);
+        ymax = gwy_data_line_get_max(data_line);
+    }
+    step = (ymax - ymin)/nsteps;
+    imin = (int)(ymin/step);
+
+    for (i=0; i<n; i++)
+    {
+        val = (gint)(data_line->data[i]*step/(ymax - ymin) - imin);
+        target_line->data[val] += 1;
+    }
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
