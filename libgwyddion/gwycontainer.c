@@ -35,6 +35,7 @@ typedef struct {
     const gchar *prefix;
     gsize prefix_length;
     gsize count;
+    gboolean closed_prefix;
     GHFunc func;
     gpointer user_data;
 } PrefixData;
@@ -43,6 +44,7 @@ typedef struct {
     GwyContainer *container;
     gint nprefixes;
     const gchar **prefixes;
+    gboolean *pfxclosed;
     gsize *pfxlengths;
 } PrefixListData;
 
@@ -364,6 +366,9 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     pfdata.prefix = prefix;
     pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
     pfdata.count = 0;
+    pfdata.closed_prefix = !pfdata.prefix_length
+                           || prefix[pfdata.prefix_length - 1]
+                              == GWY_CONTAINER_PATHSEP;
     g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
                                 &pfdata);
 
@@ -382,7 +387,8 @@ hash_remove_prefix_func(gpointer hkey,
     if (pfdata->prefix
         && (!(name = g_quark_to_string(key))
             || !g_str_has_prefix(name, pfdata->prefix)
-            || (name[pfdata->prefix_length] != '\0'
+            || (!pfdata->closed_prefix
+                && name[pfdata->prefix_length] != '\0'
                 && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
         return FALSE;
 
@@ -422,6 +428,9 @@ gwy_container_foreach(GwyContainer *container,
     pfdata.container = container;
     pfdata.prefix = prefix;
     pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
+    pfdata.closed_prefix = !pfdata.prefix_length
+                           || prefix[pfdata.prefix_length - 1]
+                              == GWY_CONTAINER_PATHSEP;
     pfdata.count = 0;
     pfdata.func = function;
     pfdata.user_data = user_data;
@@ -441,7 +450,8 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     if (pfdata->prefix
         && (!(name = g_quark_to_string(key))
             || !g_str_has_prefix(name, pfdata->prefix)
-            || (name[pfdata->prefix_length] != '\0'
+            || (!pfdata->closed_prefix
+                && name[pfdata->prefix_length] != '\0'
                 && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
         return;
 
@@ -1923,8 +1933,13 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
         prefix = va_arg(ap, const gchar*);
     }
     pfxlist.pfxlengths = g_new(gsize, n);
-    for (n = 0; n < pfxlist.nprefixes; n++)
+    pfxlist.pfxclosed = g_new(gboolean, n);
+    for (n = 0; n < pfxlist.nprefixes; n++) {
         pfxlist.pfxlengths[n] = strlen(pfxlist.prefixes[n]);
+        pfxlist.pfxclosed[n] = !pfxlist.pfxlengths[n]
+                               || pfxlist.prefixes[n][pfxlist.pfxlengths[n] - 1]
+                                  == GWY_CONTAINER_PATHSEP;
+    }
 
     duplicate = (GwyContainer*)gwy_container_new();
     pfxlist.container = duplicate;
@@ -1932,6 +1947,7 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
                          hash_prefix_duplicate_func, &pfxlist);
 
     g_free(pfxlist.prefixes);
+    g_free(pfxlist.pfxclosed);
     g_free(pfxlist.pfxlengths);
 
     return duplicate;
@@ -1957,7 +1973,8 @@ hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
     for (n = 0; n < pfxlist->nprefixes; n++) {
         if (strncmp(name, pfxlist->prefixes[n], pfxlist->pfxlengths[n]) == 0
-            && (name[pfxlist->pfxlengths[n]] == '\0'
+            && (pfxlist->pfxclosed[n]
+                || name[pfxlist->pfxlengths[n]] == '\0'
                 || name[pfxlist->pfxlengths[n]] == GWY_CONTAINER_PATHSEP)) {
             ok = TRUE;
             break;
