@@ -52,6 +52,9 @@ typedef struct {
 
 static gboolean    gwy_si_unit_parse         (GwySIUnit *siunit,
                                               const gchar *string);
+GwySIUnit*         gwy_si_unit_power_real    (GwySIUnit *siunit,
+                                              gint power,
+                                              GwySIUnit *result);
 static GwySIUnit*  gwy_si_unit_power_multiply(GwySIUnit *siunit1,
                                               gint power1,
                                               GwySIUnit *siunit2,
@@ -74,7 +77,9 @@ static GByteArray* gwy_si_unit_serialize         (GObject *obj,
 static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
-static GObject*    gwy_si_unit_duplicate_real     (GObject *object);
+static GObject*    gwy_si_unit_duplicate_real    (GObject *object);
+static void        gwy_si_unit_clone_real        (GObject *source,
+                                                  GObject *copy);
 
 
 /* FIXME: unused */
@@ -187,6 +192,7 @@ gwy_si_unit_serializable_init(GwySerializableIface *iface)
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;
     iface->duplicate = gwy_si_unit_duplicate_real;
+    iface->clone = gwy_si_unit_clone_real;
 }
 
 
@@ -290,6 +296,26 @@ gwy_si_unit_duplicate_real(GObject *object)
     return (GObject*)duplicate;
 }
 
+static void
+gwy_si_unit_clone_real(GObject *source, GObject *copy)
+{
+    GwySIUnit *si_unit, *clone;
+
+    g_return_if_fail(GWY_IS_SI_UNIT(source));
+    g_return_if_fail(GWY_IS_SI_UNIT(copy));
+
+    si_unit = GWY_SI_UNIT(source);
+    clone = GWY_SI_UNIT(copy);
+    if (gwy_si_unit_equal(si_unit, clone))
+        return;
+
+    g_array_set_size(clone->units, 0);
+    g_array_append_vals(clone->units,
+                        si_unit->units->data, si_unit->units->len);
+    clone->power10 = si_unit->power10;
+    g_signal_emit_by_name(copy, "value_changed");
+}
+
 /**
  * gwy_si_unit_new:
  * @unit_string: Unit string.
@@ -378,6 +404,8 @@ gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
     gwy_si_unit_parse(siunit, unit_string);
     if (power10)
         *power10 = siunit->power10;
+
+    g_signal_emit_by_name(siunit, "value_changed");
 }
 
 /**
@@ -856,12 +884,23 @@ gwy_si_unit_power(GwySIUnit *siunit,
                   gint power,
                   GwySIUnit *result)
 {
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+
+    gwy_si_unit_power_real(siunit, power, result);
+    g_signal_emit_by_name(result, "value_changed");
+
+    return result;
+}
+
+GwySIUnit*
+gwy_si_unit_power_real(GwySIUnit *siunit,
+                       gint power,
+                       GwySIUnit *result)
+{
     GArray *units;
     GwySimpleUnit *unit;
     gint j;
-
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
 
     units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
     result->power10 = power*siunit->power10;
@@ -895,7 +934,7 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         GWY_SWAP(GwySIUnit*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
-    gwy_si_unit_power(siunit1, power1, result);
+    gwy_si_unit_power_real(siunit1, power1, result);
     if (!power2) {
         gwy_si_unit_canonicalize(result);
         return result;
@@ -922,6 +961,7 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         }
     }
     gwy_si_unit_canonicalize(result);
+    g_signal_emit_by_name(result, "value_changed");
 
     return result;
 }
