@@ -29,6 +29,7 @@
 #include <glib/gmessages.h>
 
 #define _(x) (x)
+#define N_(x) x
 
 #define gwy_object_unref(obj) \
     do { \
