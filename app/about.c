@@ -111,11 +111,11 @@ gwy_app_about(void)
                           "David Nečas (Yeti)\n"
                           "Petr Klapetek\n"
                           "\n"
-                          "<b>Contributors</b>\n"
+                          "<b>Developers</b>\n"
                           "Martin Šiler\n"
                           "Jindřich Bílek\n"
                           "\n"
-                          "%s development was funded by "
+                          "%s development is supported by "
                           "the Czech Metrology Insitute "
                           "(<i>http://www.cmi.cz/</i>).\n"),
                           g_get_application_name());
