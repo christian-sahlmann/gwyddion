@@ -132,19 +132,32 @@
     <title>Reference Implementations</title>
     <para>
       A few sample dump format implementations are included in Gwyddion
-      source distribution.
+      source distribution (see the directory
+      <filename>plugins/file</filename> and the <filename>README</filename>
+      there).
     </para>
     <sect2>
-      <title>C/C++</title>
+      <title>C</title>
       <para>
         The plug-in proxy itself is always the most complete reference
-        C/C++ implementation.  See namely
+        C implementation.  See namely
         <function>text_dump_export()</function> and
         <function>text_dump_import()</function> functions
         in <filename>modules/plugin-proxy.c</filename>.
         Note this file has a special licensing exception, you can
         freely study it for the purpose of creation of Gwyddion plug-ins
         without becoming `tainted'.
+      </para>
+    </sect2>
+    <sect2>
+      <title>C++</title>
+      <para>
+        A sample C++ data-processing plug-in is included in Gwyddion
+        distribution since version 1.4.
+        It is divided to a simple class implementing dump file reading and
+        writing (<filename>dump.cc</filename>, <filename>dump.hh</filename>)
+        and the plug-in itself (<filename>invert_cpp.cc</filename>).
+        These files are in the public domain.
       </para>
     </sect2>
     <sect2>
@@ -173,6 +186,28 @@
         in the source distribution:
         <filename>plugins/process/invert_python.py</filename>.
         This script is in the public domain.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Pascal/Delphi</title>
+      <para>
+        A sample Pascal/Delphi data-processing plug-in is included in Gwyddion
+        distribution since version 1.4.
+        The plug-in is implemented in the Delphi Pascal dialect, so it
+        should work with FreePascal and Delphi.
+      </para>
+      <para>
+        It is divied to GwyddionDump unit
+        (<filename>GwyddionDump.pas</filename>) implementing dump format
+        reading and writing and the plug-in itself
+        (<filename>invert_pascal.pas</filename>).
+        These files are in the public domain.
+      </para>
+    </sect2>
+    <sect2>
+      <title>FORTRAN</title>
+      <para>
+        Work on a sample FORTRAN plug-in is in progress.
       </para>
     </sect2>
   </refsect1>
