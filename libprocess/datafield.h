@@ -128,13 +128,13 @@ GwySIValueFormat* gwy_data_field_get_value_format_z  (GwyDataField *data_field,
                                                       GwySIValueFormat *format);
 
 gdouble           gwy_data_field_itor                (GwyDataField *data_field,
-                                                      gdouble pixval);
+                                                      gdouble row);
 gdouble           gwy_data_field_jtor                (GwyDataField *data_field,
-                                                      gdouble pixval);
+                                                      gdouble col);
 gdouble           gwy_data_field_rtoi                (GwyDataField *data_field,
-                                                      gdouble realval);
+                                                      gdouble realy);
 gdouble           gwy_data_field_rtoj                (GwyDataField *data_field,
-                                                      gdouble realval);
+                                                      gdouble realx);
 
 
 gboolean          gwy_data_field_outside             (GwyDataField *data_field,

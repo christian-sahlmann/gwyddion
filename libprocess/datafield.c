@@ -489,12 +489,12 @@ gwy_data_field_area_copy(GwyDataField *src,
 
 /**
  * gwy_data_field_resample:
- * @data_field: A data field to be resampled
- * @xres: desired X resolution
- * @yres: desired Y resolution
- * @interpolation: interpolation method
+ * @data_field: A data field to be resampled.
+ * @xres: Desired X resolution.
+ * @yres: Desired Y resolution.
+ * @interpolation: Interpolation method.
  *
- * Resamples GwyDataField using given interpolation method
+ * Resamples a data field using given interpolation method
  **/
 void
 gwy_data_field_resample(GwyDataField *a,
@@ -507,6 +507,8 @@ gwy_data_field_resample(GwyDataField *a,
 
     if (a->xres == xres && a->yres == yres)
         return;
+
+    gwy_data_field_invalidate(a);
 
     if (interpolation != GWY_INTERPOLATION_NONE) {
         gwy_data_field_alloc(&b, a->xres, a->yres);
@@ -552,17 +554,18 @@ gwy_data_field_confirmsize(GwyDataField *a, gint xres, gint yres)
 /**
  * gwy_data_field_resize:
  * @data_field: A data field to be resized
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate (exclusive)
- * @brrow: bottom-right row coordinate (exclusive)
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
  *
  * Resizes (crops) the GwyDataField.
  *
- * Extracts part of the GwyDataField.between
- * upper-left and bottom-right points.
+ * Extracts part of the GwyDataField.between upper-left and bottom-right
+ * points.
  *
- * Returns: %TRUE on success.
+ * Returns: Always %TRUE.  The return value should be ignored as it can
+ *          be removed.
  **/
 gboolean
 gwy_data_field_resize(GwyDataField *a,
@@ -600,13 +603,17 @@ gwy_data_field_resize(GwyDataField *a,
 /**
  * gwy_data_field_get_dval:
  * @data_field: A data field
- * @x: x position
- * @y: y postition
- * @interpolation: interpolation method to be used
+ * @x: X position in pixel units.
+ * @y: Y postition in pixel units.
+ * @interpolation: Interpolation method to be used.
  *
- * Interpolates to extract a value of the field in arbitrary position.
+ * Gets interpolated value at arbitrary data field point indexed by pixel
+ * coordinates.
  *
- * Returns: value at the position (x,y).
+ * See also gwy_data_field_get_dval_real() that does the same, but takes
+ * real coordinates.
+ *
+ * Returns: Value at position (@x,@y).
  **/
 gdouble
 gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
@@ -706,7 +713,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
  * gwy_data_field_get_data:
  * @data_field: A data field
  *
- * Gets the data of the field.
+ * Gets the data of a data field.
  *
  * This function invalidates any cached information, use
  * gwy_data_field_get_data_const() if you are not going to change the data.
@@ -725,9 +732,9 @@ gwy_data_field_get_data(GwyDataField *data_field)
 
 /**
  * gwy_data_field_get_data_const:
- * @data_field: A data field
+ * @data_field: A data field.
  *
- * Gets the data of the field, read-only.
+ * Gets the data of a data field, read-only.
  *
  * Use gwy_data_field_get_data() if you want to change the data.
  *
@@ -746,11 +753,11 @@ gwy_data_field_get_data_const(GwyDataField *data_field)
 
 /**
  * gwy_data_field_get_xres:
- * @data_field: A data field
+ * @data_field: A data field.
  *
- * Get X resolution of the field.
+ * Gets X resolution (number of columns) of a data field.
  *
- * Returns:X resolution
+ * Returns: X resolution.
  **/
 gint
 gwy_data_field_get_xres(GwyDataField *data_field)
@@ -760,11 +767,11 @@ gwy_data_field_get_xres(GwyDataField *data_field)
 
 /**
  * gwy_data_field_get_yres:
- * @data_field: A data field
+ * @data_field: A data field.
  *
- * Get Y resolution of the field.
+ * Gets Y resolution (number of rows) of the field.
  *
- * Returns: Y resolution
+ * Returns: Y resolution.
  **/
 gint
 gwy_data_field_get_yres(GwyDataField *data_field)
@@ -774,11 +781,11 @@ gwy_data_field_get_yres(GwyDataField *data_field)
 
 /**
  * gwy_data_field_get_xreal:
- * @data_field: A data field
+ * @data_field: A data field.
  *
- * Get the X real size value
+ * Gets the X real (physical) size of a data field.
  *
- * Returns:X real size value
+ * Returns: X real size value.
  **/
 gdouble
 gwy_data_field_get_xreal(GwyDataField *data_field)
@@ -790,9 +797,9 @@ gwy_data_field_get_xreal(GwyDataField *data_field)
  * gwy_data_field_get_yreal:
  * @data_field: A data field
  *
- * Get the Y real size value
+ * Gets the Y real (physical) size of a data field.
  *
- * Returns: Y real size value
+ * Returns: Y real size value.
  **/
 gdouble
 gwy_data_field_get_yreal(GwyDataField *data_field)
@@ -802,10 +809,10 @@ gwy_data_field_get_yreal(GwyDataField *data_field)
 
 /**
  * gwy_data_field_set_xreal:
- * @data_field: A data field
- * @xreal: new X real size value
+ * @data_field: A data field.
+ * @xreal: New X real size value.
  *
- * Set the X real size value
+ * Sets X real (physical) size value of a data field.
  **/
 void
 gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
@@ -815,10 +822,10 @@ gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
 
 /**
  * gwy_data_field_set_yreal:
- * @data_field: A data field
- * @yreal: new Y real size value
+ * @data_field: A data field.
+ * @yreal: New Y real size value.
  *
- * Set the Y real size value
+ * Sets Y real (physical) size value of a data field.
  **/
 void
 gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
@@ -829,11 +836,12 @@ gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
 
 /**
  * gwy_data_field_get_si_unit_xy:
- * @data_field: A data field
+ * @data_field: A data field.
  *
  * Returns lateral SI unit of a data field.
  *
- * Returns: SI unit corresponding to the lateral (XY) dimensions of the field
+ * Returns: SI unit corresponding to the lateral (XY) dimensions of the data
+ *          field.  Its reference count is not incremented.
  **/
 GwySIUnit*
 gwy_data_field_get_si_unit_xy(GwyDataField *a)
@@ -846,11 +854,12 @@ gwy_data_field_get_si_unit_xy(GwyDataField *a)
 
 /**
  * gwy_data_field_get_si_unit_z:
- * @data_field: A data field
+ * @data_field: A data field.
  *
  * Returns value SI unit of a data field.
  *
- * Returns: SI unit corresponding to the "height" (Z) dimension of the field
+ * Returns: SI unit corresponding to the "height" (Z) dimension of the data
+ *          field.  Its reference count is not incremented.
  **/
 GwySIUnit*
 gwy_data_field_get_si_unit_z(GwyDataField *a)
@@ -863,10 +872,14 @@ gwy_data_field_get_si_unit_z(GwyDataField *a)
 
 /**
  * gwy_data_field_set_si_unit_xy:
- * @data_field: A data field
- * @si_unit: SI unit to be set
+ * @data_field: A data field.
+ * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the lateral (XY) dimensions of the field.
+ * Sets the SI unit corresponding to the lateral (XY) dimensions of a data
+ * field.
+ *
+ * It does not assume a reference on @si_unit, instead it adds its own
+ * reference.
  **/
 void
 gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
@@ -881,10 +894,14 @@ gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
 
 /**
  * gwy_data_field_set_si_unit_z:
- * @data_field: A data field
- * @si_unit: SI unit to be set
+ * @data_field: A data field.
+ * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the "height" (Z) dimension of the field.
+ * Sets the SI unit corresponding to the "height" (Z) dimension of a data
+ * field.
+ *
+ * It does not assume a reference on @si_unit, instead it adds its own
+ * reference.
  **/
 void
 gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
@@ -902,9 +919,9 @@ gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
  * @data_field: A data field.
  * @format: A SI value format to modify, or %NULL to allocate a new one.
  *
- * Finds value format good for displaying coordinates of @data_field.
+ * Finds value format good for displaying coordinates of a data field.
  *
- * Returns: The value format.  If @format was %NULL, a newly allocated format
+ * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
  **/
 GwySIValueFormat*
@@ -927,9 +944,9 @@ gwy_data_field_get_value_format_xy(GwyDataField *data_field,
  * @data_field: A data field.
  * @format: A SI value format to modify, or %NULL to allocate a new one.
  *
- * Finds value format good for displaying values of @data_field.
+ * Finds value format good for displaying values of a data field.
  *
- * Returns: The value format.  If @format was %NULL, a newly allocated format
+ * Returns: The value format.  If @format is %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
  **/
 GwySIValueFormat*
@@ -949,70 +966,67 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
 
 /**
  * gwy_data_field_itor:
- * @data_field: A data field
- * @pixval: value at data (pixel) coordinates
+ * @data_field: A data field.
+ * @row: Row (pixel) coordinate.
  *
- * recomputes row pixel coordinate to real coordinate
+ * Transforms row pixel coordinate to real (physical) Y coordinate.
  *
- * Returns: recomputed value
+ * Returns: Real Y coordinate.
  **/
 gdouble
-gwy_data_field_itor(GwyDataField *a, gdouble pixval)
+gwy_data_field_itor(GwyDataField *a, gdouble row)
 {
-    return (gdouble)pixval*a->yreal/a->yres;
+    return row * a->yreal/a->yres;
 }
 
 /**
  * gwy_data_field_jtor:
- * @data_field: A data field
- * @pixval:  value at real coordinates
+ * @data_field: A data field.
+ * @col: Column (pixel) coordinate.
  *
- * recomputes column real coordinate to pixel coordinate
+ * Transforms column pixel coordinate to real (physical) X coordinate.
  *
- * Note: for field represented by square grid (same distance
- * between adjacent pixels in X and Y dimension, the
- * functions gwy_data_field_itor() and gwy_data_field_jtor()
- * are  identical.
- * Returns: recomputed value
+ * Returns: Real X coordinate.
  **/
 gdouble
-gwy_data_field_jtor(GwyDataField *a, gdouble pixval)
+gwy_data_field_jtor(GwyDataField *a, gdouble col)
 {
-    return (gdouble)pixval*a->xreal/a->xres;
+    return col * a->xreal/a->xres;
 }
 
 
 /**
  * gwy_data_field_rtoi:
- * @data_field: A data field
- * @realval:  value at real coordinates
+ * @data_field: A data field.
+ * @realy: Real (physical) Y coordinate.
  *
- * recomputes row real coordinate to pixel coordinate
+ * Transforms real (physical) Y coordinate to row.
  *
- * Returns: recomputed value
+ * Returns: Row pixel coodinate.
  **/
 gdouble
-gwy_data_field_rtoi(GwyDataField *a, gdouble realval)
+gwy_data_field_rtoi(GwyDataField *a, gdouble realy)
 {
-    return realval*a->yres/a->yreal;
+    return realy * a->yres/a->yreal;
 }
 
 
 /**
  * gwy_data_field_rtoj:
- * @data_field: A data field
- * @realval:  value at real coordinates
+ * @data_field: A data field.
+ * @realx: Real (physical) X coodinate.
  *
- * recomputes column real coordinate to pixel coordinate
+ * Transforms real (physical) X coordinate to column.
  *
- * Returns: recomputed value
+ * Returns: Column pixel coordinate.
  **/
 gdouble
-gwy_data_field_rtoj(GwyDataField *a, gdouble realval)
+gwy_data_field_rtoj(GwyDataField *a, gdouble realx)
 {
-    return realval*a->xres/a->xreal;
+    return realx * a->xres/a->xreal;
 }
 
+/* FIXME: should be exported or not? */
 gboolean
 gwy_data_field_inside(GwyDataField *a, gint i, gint j)
 {
@@ -1025,13 +1039,13 @@ gwy_data_field_inside(GwyDataField *a, gint i, gint j)
 
 /**
  * gwy_data_field_get_val:
- * @data_field: A data field
- * @col: column position
- * @row: row position
+ * @data_field: A data field.
+ * @col: Column index.
+ * @row: Row index.
  *
- * Get value at given pixel
+ * Gets value at given position in a data field.
  *
- * Returns: value at (i, j)
+ * Returns: Value at (@col, @row).
  **/
 gdouble
 gwy_data_field_get_val(GwyDataField *a, gint col, gint row)
@@ -1042,12 +1056,12 @@ gwy_data_field_get_val(GwyDataField *a, gint col, gint row)
 
 /**
  * gwy_data_field_set_val:
- * @data_field: A data field
- * @col: column position
- * @row: row position
- * @value: value to set
+ * @data_field: A data field.
+ * @col: Column index.
+ * @row: Row index.
+ * @value: Value to set.
  *
- * Set @value at given pixel
+ * Sets value at given position in a data field.
  **/
 void
 gwy_data_field_set_val(GwyDataField *a, gint col, gint row, gdouble value)
@@ -1059,17 +1073,18 @@ gwy_data_field_set_val(GwyDataField *a, gint col, gint row, gdouble value)
 
 /**
  * gwy_data_field_get_dval_real:
- * @data_field: A data field
- * @x: x postion in real coordinates
- * @y: y postition in real coordinates
- * @interpolation: interpolation method
+ * @data_field: A data field.
+ * @x: X postion in real coordinates.
+ * @y: Y postition in real coordinates.
+ * @interpolation: Interpolation method to use.
  *
- * Get value at arbitrary point given by real values.
+ * Gets interpolated value at arbitrary data field point indexed by real
+ * coordinates.
  *
- * See also gwy_data_field_get_dval() that does the same for arbitrary point
- * given by data (pixel) coordinate values.
+ * See also gwy_data_field_get_dval() that does the same, but takes pixel
+ * coordinates.
  *
- * Returns: value at point x, y
+ * Returns: Value at position (@x,@y).
  **/
 gdouble
 gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
@@ -1083,14 +1098,15 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
 
 /**
  * gwy_data_field_rotate:
- * @data_field: A data field
- * @angle: angle (in degrees)
- * @interpolation: interpolation method
+ * @data_field: A data field.
+ * @angle: Angle (in degrees).
+ * @interpolation: Interpolation method to use.
  *
- * Rotates field by a given angle.
+ * Rotates a data field by a given angle.
  *
- * The values that will be outside of square after rotation will
- * be lost. The new unknown values will be set to field minimum value.
+ * Values that get outside of data field by the rotation are lost.
+ * Undefined values from outside of data field that get inside are set to
+ * data field minimum value.
  **/
 void
 gwy_data_field_rotate(GwyDataField *a, gdouble angle,
@@ -1167,12 +1183,12 @@ gwy_data_field_rotate(GwyDataField *a, gdouble angle,
 
 /**
  * gwy_data_field_invert:
- * @data_field: pointer fo field
- * @x: invert in X direction?
- * @y: invert in Y direction?
- * @z: invert in Z direction?
+ * @data_field: A data field.
+ * @x: Whether reflect about X axis.
+ * @y: Whether reflect about Y axis.
+ * @z: Whether to invert in Z direction (i.e., invert values).
  *
- * Make requested inversion(s).
+ * Reflects or inverts a data field.
  **/
 void
 gwy_data_field_invert(GwyDataField *a,
@@ -1229,10 +1245,10 @@ gwy_data_field_invert(GwyDataField *a,
 
 /**
  * gwy_data_field_fill:
- * @data_field: A data field
- * @value: value to be entered
+ * @data_field: A data field.
+ * @value: Value to be entered.
  *
- * Fill GwyDataField with given value
+ * Fills a data field with given value.
  **/
 void
 gwy_data_field_fill(GwyDataField *a, gdouble value)
@@ -1247,14 +1263,14 @@ gwy_data_field_fill(GwyDataField *a, gdouble value)
 
 /**
  * gwy_data_field_area_fill:
- * @data_field: A data field
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate + 1
- * @brrow: bottom-right row coordinate + 1
- * @value: value to be entered
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @value: Value to be entered
  *
- * Fill a specified part of the field witha given  value
+ * Fills a rectangular part of a data field with given value.
  **/
 void
 gwy_data_field_area_fill(GwyDataField *a,
@@ -1283,10 +1299,10 @@ gwy_data_field_area_fill(GwyDataField *a,
 
 /**
  * gwy_data_field_multiply:
- * @data_field: A data field
- * @value: value to be used for multiplication
+ * @data_field: A data field.
+ * @value: Value to multiply @data_field with.
  *
- * Multiply GwyDataField by given value.
+ * Multiplies a data field by given value.
  **/
 void
 gwy_data_field_multiply(GwyDataField *a, gdouble value)
@@ -1301,14 +1317,14 @@ gwy_data_field_multiply(GwyDataField *a, gdouble value)
 
 /**
  * gwy_data_field_area_multiply:
- * @data_field: A data field
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate + 1
- * @brrow: bottom-right row coordinate + 1
- * @value: value to be used
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @value: Value to multiply area with.
  *
- * Multiply a specified part of the field by the given value
+ * Multiplies a rectangular part of a data field by given value
  **/
 void
 gwy_data_field_area_multiply(GwyDataField *a,
@@ -1337,10 +1353,10 @@ gwy_data_field_area_multiply(GwyDataField *a,
 
 /**
  * gwy_data_field_add:
- * @data_field: A data field
- * @value: value to be added
+ * @data_field: A data field.
+ * @value: Value to be added to data field values.
  *
- * Add given value to GwyDataField
+ * Adds given value to a data field.
  **/
 void
 gwy_data_field_add(GwyDataField *a, gdouble value)
@@ -1355,14 +1371,14 @@ gwy_data_field_add(GwyDataField *a, gdouble value)
 
 /**
  * gwy_data_field_area_add:
- * @data_field: A data field
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate + 1
- * @brrow: bottom-right row coordinate + 1
- * @value: value to be used
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @value: Value to be added to area values.
  *
- * Add the given value to a specified part of the field
+ * Adds given value to a rectangular part of a data field.
  **/
 void
 gwy_data_field_area_add(GwyDataField *a,
@@ -1391,17 +1407,17 @@ gwy_data_field_area_add(GwyDataField *a,
 
 /**
  * gwy_data_field_threshold:
- * @data_field: A data field
- * @threshval: threshold value
- * @bottom: lower value
- * @top: upper value
+ * @data_field: A data field.
+ * @threshval: Threshold value.
+ * @bottom: Lower replacement value.
+ * @top: Upper replacement value.
  *
- * Tresholds values of GwyDataField. Values
- * smaller than @threshold will be set to value
- * @bottom, values higher than @threshold or equal to it will be set to value
- * @top
+ * Tresholds values of a data field.
  *
- * Returns: total number of values above threshold.
+ * Values smaller than @threshold are set to value @bottom, values higher
+ * than @threshold or equal to it are set to value @top
+ *
+ * Returns: The total number of values above threshold.
  **/
 gint
 gwy_data_field_threshold(GwyDataField *a,
@@ -1426,6 +1442,24 @@ gwy_data_field_threshold(GwyDataField *a,
 }
 
 
+/**
+ * gwy_data_field_area_threshold:
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @threshval: Threshold value.
+ * @bottom: Lower replacement value.
+ * @top: Upper replacement value.
+ *
+ * Tresholds values of a rectangular part of a data field.
+ *
+ * Values smaller than @threshold are set to value @bottom, values higher
+ * than @threshold or equal to it are set to value @top
+ *
+ * Returns: The total number of values above threshold.
+ **/
 gint
 gwy_data_field_area_threshold(GwyDataField *a,
                               gint ulcol, gint ulrow, gint brcol, gint brrow,
@@ -1462,17 +1496,16 @@ gwy_data_field_area_threshold(GwyDataField *a,
     return tot;
 }
 
-
-
 /**
  * gwy_data_field_clamp:
- * @data_field: A data field
+ * @data_field: A data field.
  * @bottom: Lower limit value.
  * @top: Upper limit value.
  *
- * Limits data field values to the range [@bottom, @top].
+ * Limits data field values to a range.
  *
- * Returns: The number of changed values.
+ * Returns: The number of changed values, i.e., values that were outside
+ *          [@bottom, @top].
  **/
 gint
 gwy_data_field_clamp(GwyDataField *a,
@@ -1501,18 +1534,18 @@ gwy_data_field_clamp(GwyDataField *a,
 
 /**
  * gwy_data_field_area_clamp:
- * @data_field: A data field
- * @ulcol: Upper-left column coordinate (inclusive).
- * @ulrow: Upper-left row coordinate (inclusive).
- * @brcol: Bottom-right column coordinate (exclusive).
- * @brrow: Bottom-right row coordinate (exclusive).
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
  * @bottom: Lower limit value.
  * @top: Upper limit value.
  *
- * Limits values in a rectangular part of a data field to the range
- * [@bottom, @top].
+ * Limits values in a rectangular part of a data field to a range.
  *
- * Returns: The number of changed values.
+ * Returns: The number of changed values, i.e., values that were outside
+ *          [@bottom, @top].
  **/
 gint
 gwy_data_field_area_clamp(GwyDataField *a,
@@ -1559,11 +1592,11 @@ gwy_data_field_area_clamp(GwyDataField *a,
 
 /**
  * gwy_data_field_get_row:
- * @data_field: A data field
- * @data_line: A data line
- * @row: index of row
+ * @data_field: A data field.
+ * @data_line: A data line.  It will be resized to width ot @data_field.
+ * @row: Row index.
  *
- * Extracts row into data line. Data line should be allocated allready.
+ * Extracts a data field row into a data line.
  **/
 void
 gwy_data_field_get_row(GwyDataField *a, GwyDataLine* b, gint row)
@@ -1578,10 +1611,10 @@ gwy_data_field_get_row(GwyDataField *a, GwyDataLine* b, gint row)
 /**
  * gwy_data_field_get_column:
  * @data_field: A data field
- * @data_line: A data line
- * @col: index of column
+ * @data_line: A data line.  It will be resized to height of @data_field.
+ * @col: Column index.
  *
- *  Extracts column into data line. Data line should be allocated allready.
+ * Extracts a data field column into a data line.
  **/
 void
 gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint col)
@@ -1599,17 +1632,17 @@ gwy_data_field_get_column(GwyDataField *a, GwyDataLine* b, gint col)
 
 /**
  * gwy_data_field_get_row_part:
- * @data_field: A data field
- * @data_line: A data line
- * @row: index of row
- * @from: beginning index
- * @to: end index
+ * @data_field: A data field.
+ * @data_line: A data line.  It will be resized to the row part width.
+ * @row: Row index.
+ * @from: Start column index.
+ * @to: End column index + 1.
  *
- * Extracts row part into data line. Data line should be allocated allready.
+ * Extracts part of a data field row into a data line.
  **/
 void
 gwy_data_field_get_row_part(GwyDataField *a,
-                            GwyDataLine* b,
+                            GwyDataLine *b,
                             gint row,
                             gint from,
                             gint to)
@@ -1624,20 +1657,19 @@ gwy_data_field_get_row_part(GwyDataField *a,
     memcpy(b->data, a->data + row*a->xres + from, (to-from)*sizeof(gdouble));
 }
 
-
 /**
  * gwy_data_field_get_column_part:
- * @data_field: A data field
- * @data_line: A data line
- * @col: index of column
- * @from: beginning index
- * @to: end index
+ * @data_field: A data field.
+ * @data_line: A data line.  It will be resized to the column part height.
+ * @col: Column index.
+ * @from: Start row index.
+ * @to: End row index + 1.
  *
- * Extracts column part into data line. Data line should be allocated allready.
+ * Extracts part of a data field column into a data line.
  **/
 void
 gwy_data_field_get_column_part(GwyDataField *a,
-                               GwyDataLine* b,
+                               GwyDataLine *b,
                                gint col,
                                gint from,
                                gint to)
@@ -1657,17 +1689,19 @@ gwy_data_field_get_column_part(GwyDataField *a,
 
 /**
  * gwy_data_field_set_row_part:
- * @data_field: A data field
- * @data_line: A data line
- * @row: index of row
- * @from: beginning index
- * @to: end index
+ * @data_field: A data field.
+ * @data_line: A data line.
+ * @row: Row index.
+ * @from: Start row index.
+ * @to: End row index + 1.
  *
- * Puts data line into datafield. 
+ * Puts a data line into a data field row.
+ *
+ * If data line length differs from @to-@from, it is resampled to this length.
  **/
 void
 gwy_data_field_set_row_part(GwyDataField *a,
-                            GwyDataLine* b,
+                            GwyDataLine *b,
                             gint row,
                             gint from,
                             gint to)
@@ -1686,13 +1720,15 @@ gwy_data_field_set_row_part(GwyDataField *a,
 
 /**
  * gwy_data_field_set_column_part:
- * @data_field: A data field
- * @data_line: A data line
- * @col: index of column
- * @from: beginning index
- * @to: end index
+ * @data_field: A data field.
+ * @data_line: A data line.
+ * @col: Column index.
+ * @from: Start row index.
+ * @to: End row index + 1.
  *
- *  Puts data line into datafield.
+ * Puts a data line into data field column.
+ *
+ * If data line length differs from @to-@from, it is resampled to this length.
  **/
 void
 gwy_data_field_set_column_part(GwyDataField *a,
@@ -1717,11 +1753,13 @@ gwy_data_field_set_column_part(GwyDataField *a,
 
 /**
  * gwy_data_field_set_row:
- * @data_field: A data field
- * @data_line: A data line
- * @row: index of row
+ * @data_field: A data field.
+ * @data_line: A data line.
+ * @row: Row index.
  *
- * Sets the row in the data field to values of data line.
+ * Sets a row in the data field to values of a data line.
+ *
+ * Data line length must be equal to width of data field.
  **/
 void
 gwy_data_field_set_row(GwyDataField *a, GwyDataLine* b, gint row)
@@ -1736,11 +1774,13 @@ gwy_data_field_set_row(GwyDataField *a, GwyDataLine* b, gint row)
 
 /**
  * gwy_data_field_set_column:
- * @data_field: A data field
- * @data_line: A data line
- * @col: index of column
+ * @data_field: A data field.
+ * @data_line: A data line.
+ * @col: Column index.
  *
- * Sets the column in the data field to values of data line.
+ * Sets a column in the data field to values of a data line.
+ *
+ * Data line length must be equal to height of data field.
  **/
 void
 gwy_data_field_set_column(GwyDataField *a, GwyDataLine* b, gint col)
@@ -1759,20 +1799,19 @@ gwy_data_field_set_column(GwyDataField *a, GwyDataLine* b, gint col)
 
 /**
  * gwy_data_field_get_data_line:
- * @data_field: A data field
- * @data_line: A data line
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate + 1
- * @brrow: bottom-right row coordinate + 1
- * @res: requested resolution of data line
- * @interpolation: interpolation type
+ * @data_field: A data field.
+ * @data_line: A data line.  It will be resized to @res samples.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @res: Requested resolution of data line.
+ * @interpolation: Interpolation type to use.
  *
- * Extracts a profile from data field and
- * puts it into data line. It is expected that the data
- * line is allready allocated.
+ * Extracts a profile from a data field to a data line.
  *
- * Returns: true at success
+ * Returns: Always %TRUE.  The return value should be ignored as it can
+ *          be removed.
  **/
 gboolean
 gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
@@ -1811,21 +1850,20 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
 
 /**
  * gwy_data_field_get_data_line_averaged:
- * @data_field: A data field
- * @data_line: A data line
- * @ulcol: upper-left column coordinate
- * @ulrow: upper-left row coordinate
- * @brcol: bottom-right column coordinate + 1
- * @brrow: bottom-right row coordinate + 1
- * @res: requested resolution of data line
- * @thickness: thickness of line to be averaged
- * @interpolation: interpolation type
+ * @data_field: A data field.
+ * @data_line: A data line.  It will be resized to @res samples.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @res: Requested resolution of data line.
+ * @thickness: Thickness of line to be averaged.
+ * @interpolation: Interpolation type to use.
  *
- * Extracts an averaged  profile from data field and
- * puts it into data line. It is expected that the data
- * line is allready allocated.
+ * Extracts an averaged profile from data field to a data line.
  *
- * Returns: %TRUE on success.
+ * Returns: Always %TRUE.  The return value should be ignored as it can
+ *          be removed.
  *
  * Since: 1.2
  **/
@@ -1891,13 +1929,15 @@ gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
 
 /**
  * gwy_data_field_get_xder:
- * @data_field: A data field
- * @col: column coordinate
- * @row: row coordinate
+ * @data_field: A data field.
+ * @col: Column index.
+ * @row: Row index.
  *
- * Computes derivative in x-direction.
+ * Computes central derivative in X direction.
  *
- * Returns: Derivative in x-direction
+ * On border points, one-side derivative is returned.
+ *
+ * Returns: Derivative in X direction.
  **/
 gdouble
 gwy_data_field_get_xder(GwyDataField *a, gint col, gint row)
@@ -1916,13 +1956,15 @@ gwy_data_field_get_xder(GwyDataField *a, gint col, gint row)
 
 /**
  * gwy_data_field_get_yder:
- * @data_field: A data field
- * @col: column coordinate
- * @row: row coordinate
+ * @data_field: A data field.
+ * @col: Column index.
+ * @row: Row index.
  *
- *  Computes derivative in y-direction.
+ * Computes central derivative in Y direction.
  *
- * Returns: Derivative in y-direction
+ * On border points, one-side derivative is returned.
+ *
+ * Returns: Derivative in Y direction
  **/
 gdouble
 gwy_data_field_get_yder(GwyDataField *a, gint col, gint row)
@@ -1943,15 +1985,14 @@ gwy_data_field_get_yder(GwyDataField *a, gint col, gint row)
 
 /**
  * gwy_data_field_get_angder:
- * @data_field: A data field
- * @col: column coordinate
- * @row: row coordinate
- * @theta: angle specifying direction
+ * @data_field: A data field.
+ * @col: Column index.
+ * @row: Row index.
+ * @theta: Angle defining the direction (in degrees, CCW).
  *
  * Computes derivative in direction specified by given angle.
- * Angle is given in degrees.
  *
- * Returns: Derivative in direction given by angle @theta
+ * Returns: Derivative in direction given by angle @theta.
  **/
 gdouble
 gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
@@ -1963,13 +2004,13 @@ gwy_data_field_get_angder(GwyDataField *a, gint col, gint row, gdouble theta)
 
 /**
  * gwy_data_field_shade:
- * @data_field: A data field
- * @target_field: A shaded data field
- * @theta: shading angle
- * @phi: shading angle
+ * @data_field: A data field.
+ * @target_field: A data field to put the shade to.  It will be resized to
+ *                match @data_field.
+ * @theta: Shading angle (in degrees, from north pole).
+ * @phi: Shade orientation in xy plane (in degrees, CCW).
  *
- * Creates a shaded data field. Target field should
- * be allready allocated.
+ * Shades a data field.
  **/
 void
 gwy_data_field_shade(GwyDataField *data_field,
@@ -1998,87 +2039,119 @@ gwy_data_field_shade(GwyDataField *data_field,
     maxval = G_PI*theta/180.0*max;
     for (i = 0; i < data_field->xres*data_field->yres; i++)
         target_field->data[i] = max - fabs(maxval-target_field->data[i]);
-
-    gwy_data_field_invalidate(target_field);
 }
 
 
-/* XXX: why this function does not have `area' in name? */
+/**
+ * gwy_data_field_fit_lines:
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @fit_type: Fitted polynom degree.
+ * @exclude: If %TRUE, outside of area selected by @ulcol, @ulrow, @brcol,
+ *           @brrow will be used for polynom coefficients computation, instead
+ *           of inside.
+ * @orientation: Line orientation.
+ *
+ * Independently levels profiles on each row/column in a data field.
+ *
+ * Lines that have no intersection with area selected by @ulcol, @ulrow,
+ * @brcol, @brrow are always leveled as a whole.  Lines that have intersection
+ * with selected area, are leveled using polynom coefficients computed only
+ * from data inside (or outside for @exclude = %TRUE) the area.
+ **/
 void
-gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow,
-                         gint brcol, gint brrow, GwyFitLineType fit_type,
-                         gboolean exclude, GtkOrientation orientation)
+gwy_data_field_fit_lines(GwyDataField *data_field,
+                         gint ulcol, gint ulrow,
+                         gint brcol, gint brrow,
+                         GwyFitLineType fit_type,
+                         gboolean exclude,
+                         GtkOrientation orientation)
 {
 
-    gint i, xres, yres, n;
-    gdouble coefs[4];
-    GwyDataLine *hlp;
+    gint i, j, xres, yres, res, n;
+    gdouble real, coefs[4];
+    GwyDataLine *hlp, *xdata = NULL, *ydata = NULL;
 
     gwy_debug("");
 
     xres = data_field->xres;
     yres = data_field->yres;
-    hlp = (GwyDataLine *) gwy_data_line_new(xres, data_field->xreal, FALSE);
+    res = (orientation == GTK_ORIENTATION_HORIZONTAL) ? xres : yres;
+    real = (orientation == GTK_ORIENTATION_HORIZONTAL)
+           ? data_field->xreal : data_field->yreal;
+    hlp = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
+    if (exclude) {
+        xdata = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
+        ydata = (GwyDataLine*)gwy_data_line_new(res, real, FALSE);
+    }
 
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
-
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
     n = (gint)fit_type;
 
-    if (exclude) {
-        if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-            if ((xres - brcol) > ulcol) {
-                ulcol = brcol;
-                brcol = xres;
-            }
-            else {
-                brcol = ulcol;
-                ulcol = 0;
-            }
-        }
-        else if (orientation == GTK_ORIENTATION_VERTICAL) {
-            if ((yres - brrow) > ulrow) {
-                ulrow = brrow;
-                brrow = yres;
-            }
-            else {
-                brrow = ulrow;
-                ulrow = 0;
-            }
-        }
-    }
-
     if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+        if (exclude) {
+            for (i = j = 0; i < xres; i++) {
+                if (i < ulcol || i >= brcol)
+                    xdata->data[j++] = i;
+            }
+        }
+
         for (i = 0; i < yres; i++) {
             gwy_data_field_get_row(data_field, hlp, i);
-            if (i > ulrow && i <= brrow) {
-                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
+            if (i >= ulrow && i < brrow) {
+                if (exclude) {
+                    memcpy(ydata->data, hlp->data, ulcol*sizeof(gdouble));
+                    memcpy(ydata->data + ulcol, hlp->data + brcol,
+                           (xres - brcol)*sizeof(gdouble));
+                    gwy_math_fit_polynom(xres - (brcol - ulcol),
+                                         xdata->data, ydata->data, n, coefs);
+                }
+                else
+                    gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
             }
-            else {
+            else
                 gwy_data_line_fit_polynom(hlp, n, coefs);
-            }
             gwy_data_line_subtract_polynom(hlp, n, coefs);
             gwy_data_field_set_row(data_field, hlp, i);
         }
     }
     else if (orientation == GTK_ORIENTATION_VERTICAL) {
+        if (exclude) {
+            for (i = j = 0; i < yres; i++) {
+                if (i < ulrow || i >= brrow)
+                    xdata->data[j++] = i;
+            }
+        }
+
         for (i = 0; i < xres; i++) {
             gwy_data_field_get_column(data_field, hlp, i);
-            if (i > ulcol && i <= brcol) {
-                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulrow, brrow);
+            if (i >= ulcol && i < brcol) {
+                if (exclude) {
+                    memcpy(ydata->data, hlp->data, ulrow*sizeof(gdouble));
+                    memcpy(ydata->data + ulrow, hlp->data + brrow,
+                           (yres - brrow)*sizeof(gdouble));
+                    gwy_math_fit_polynom(yres - (brrow - ulrow),
+                                         xdata->data, ydata->data, n, coefs);
+                }
+                else
+                    gwy_data_line_part_fit_polynom(hlp, n, coefs, ulrow, brrow);
             }
-            else {
+            else
                 gwy_data_line_fit_polynom(hlp, n, coefs);
-            }
             gwy_data_line_subtract_polynom(hlp, n, coefs);
             gwy_data_field_set_column(data_field, hlp, i);
         }
     }
-    gwy_data_field_invalidate(data_field);
     g_object_unref(hlp);
+    gwy_object_unref(xdata);
+    gwy_object_unref(ydata);
 }
 
 /************************** Documentation ****************************/
