@@ -268,7 +268,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         g_free(format->units);
     }
     printf("************************* allocating unit (format=%d)\n",(gint)siunit);
-    format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+1)*sizeof(gchar));
+    format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+2)*sizeof(gchar));
   
     format->units = strcpy(format->units, gwy_math_SI_prefix(format->magnitude));
     format->units = strcat(format->units, gwy_si_unit_get_unit_string(siunit));
@@ -302,8 +302,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
 
-    gwy_si_unit_get_format(siunit, maximum, format);
-    return format;
+    return gwy_si_unit_get_format(siunit, maximum, format);
 }
 
 /**
