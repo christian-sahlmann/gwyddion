@@ -125,7 +125,7 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message("Initializing GUI");
     toolbox = gwy_app_toolbox_create();
-    gwy_app_recent_file_list_update(NULL, NULL);
+    gwy_app_recent_file_list_update(NULL, NULL, NULL);
     gwy_app_splash_close();
 
     gwy_app_file_open_initial(argv + 1, argc - 1);

@@ -246,7 +246,7 @@ gwy_app_graph_list_construct(GwyContainer *data,
     renderer = gtk_cell_renderer_toggle_new();
     g_signal_connect(renderer, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggled), list);
-    column = gtk_tree_view_column_new_with_attributes(columns[0].title,
+    column = gtk_tree_view_column_new_with_attributes(_(columns[0].title),
                                                       renderer,
                                                       "activatable",
                                                       GRAPHLIST_EDITABLE,
@@ -261,7 +261,7 @@ gwy_app_graph_list_construct(GwyContainer *data,
     /* other columns */
     for (i = 1; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(columns[i].title,
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
                                                           renderer,
                                                           NULL);
         gtk_tree_view_column_set_cell_data_func

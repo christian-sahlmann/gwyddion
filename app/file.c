@@ -253,6 +253,7 @@ static gboolean
 file_real_open(gchar *filename_sys,
                const gchar *name)
 {
+    GtkWidget *data_window;
     const gchar *filename_utf8;  /* in UTF-8 */
     GwyContainer *data;
     gchar *dirname;
@@ -265,8 +266,9 @@ file_real_open(gchar *filename_sys,
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     if (data) {
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
-        gwy_app_data_window_create(data);
-        gwy_app_recent_file_list_update(g_strdup(filename_utf8),
+        data_window = gwy_app_data_window_create(data);
+        gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
+                                        g_strdup(filename_utf8),
                                         filename_sys);
 
         /* change directory to that of the loaded file */
@@ -327,7 +329,8 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         g_object_set_data(G_OBJECT(data), "gwy-app-modified", NULL);
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
-        gwy_app_recent_file_list_update(g_strdup(filename_utf8),
+        gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
+                                        g_strdup(filename_utf8),
                                         g_strdup(filename_sys));
     }
 
