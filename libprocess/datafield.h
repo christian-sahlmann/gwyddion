@@ -256,6 +256,7 @@ gdouble gwy_data_field_get_min(GwyDataField *a);
 gdouble gwy_data_field_get_avg(GwyDataField *a);
 gdouble gwy_data_field_get_rms(GwyDataField *a);
 gdouble gwy_data_field_get_sum(GwyDataField *a);
+gdouble gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation);
 
 gdouble gwy_data_field_get_area_max(GwyDataField *a,
                                     gint ulcol,
@@ -282,6 +283,12 @@ gdouble gwy_data_field_get_area_sum(GwyDataField *a,
                                     gint ulrow,
                                     gint brcol,
                                     gint brrow);
+gdouble gwy_data_field_get_area_surface_area(GwyDataField *a,
+                                        gint ulcol,
+                                        gint ulrow,
+                                        gint brcol,
+                                        gint brrow,
+                                        GwyInterpolationType interpolation);
 
 /*threshold dividing at thresval and setting to top and bottom*/
 gint gwy_data_field_threshold(GwyDataField *a,
@@ -678,14 +685,27 @@ void gwy_data_field_fractal_psdf(GwyDataField *data_field,
                                          GwyInterpolationType interpolation);
 
 
-gdouble gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+gdouble gwy_data_field_fractal_cubecounting_dim(GwyDataLine *xresult, 
+                                                GwyDataLine *yresult, 
+                                                gdouble *a, 
+                                                gdouble *b);
 
-gdouble gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+gdouble gwy_data_field_fractal_triangulation_dim(GwyDataLine *xresult, 
+                                                 GwyDataLine *yresult, 
+                                                 gdouble *a, 
+                                                 gdouble *b);
 
-gdouble gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
+gdouble gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult, 
+                                                GwyDataLine *yresult, 
+                                                gdouble *a, 
+                                                gdouble *b);
 
-gdouble gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult, gdouble *a, gdouble *b);
-    
+gdouble gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, 
+                                        GwyDataLine *yresult, 
+                                        gdouble *a, 
+                                        gdouble *b);
+
+
  
 void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                     GwyDataField *mask_field,

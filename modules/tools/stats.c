@@ -295,6 +295,8 @@ dialog_update(GwyUnitoolState *state,
     else
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
 
+    printf("value = %g\n", gwy_data_field_get_surface_area(dfield, GWY_INTERPOLATION_BILINEAR));
+    
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
     gwy_unitool_update_label(state->value_format, controls->rms, rms);
     g_snprintf(buffer, sizeof(buffer), "%2.3g", skew);

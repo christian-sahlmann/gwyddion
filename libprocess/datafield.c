@@ -51,6 +51,10 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 
 static gdouble  edist                            (gint xc1, gint yc1,
                                                   gint xc2, gint yc2);
+static gdouble  square_area                      (GwyDataField *data_field,
+                                                  gint ulcol, gint ulrow, gint brcol, gint brrow,
+                                                  gint division, GwyInterpolationType interpolation);
+
 
 GType
 gwy_data_field_get_type(void)
@@ -1380,6 +1384,22 @@ gwy_data_field_get_sum(GwyDataField *a)
     for (i = a->xres * a->yres; i; i--, p++)
         sum += *p;
 
+    return sum;
+}
+
+gdouble
+gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
+{
+    gint i, j;
+    gdouble sum;
+    
+    for (i=0; i<(a->xres-1); i++)
+    {
+        for (j=0; j<(a->yres-1); j++)
+        {
+            sum += square_area(a, i, j, i+1, j+1, 10, interpolation);
+        }
+    }
     return sum;
 }
 
@@ -3515,5 +3535,32 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
         if (*iteration == (xres-search_height/2)) *state = GWY_COMP_FINISHED;
      }
 }
+
+static gdouble  
+square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow, gint division, GwyInterpolationType interpolation)
+{
+    gdouble lamdax, lamday, s;
+    gint tox, toy, l;
+    
+    lamdax = data_field->xreal/data_field->xres;
+    lamday = data_field->yreal/data_field->yres;
+    tox = brcol - ulcol;
+    toy = brrow - ulrow;
+
+    s = 0;
+    for(l=0; l<division; l++)
+    {
+        s += toy*lamday/division * 
+            sqrt(lamdax*lamdax + 
+                 (gwy_data_field_get_dval(data_field, ulcol, ulrow+toy*(l+0.5)/division, interpolation) 
+                  - gwy_data_field_get_dval(data_field, ulcol+tox, ulrow+toy*(l+0.5)/division, interpolation))*
+                 (gwy_data_field_get_dval(data_field, ulcol, ulrow+toy*(l+0.5)/division, interpolation)
+                  - gwy_data_field_get_dval(data_field, ulcol+tox, ulrow+toy*(l+0.5)/division, interpolation))
+                 );
+    }  
+
+    return s;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
