@@ -38,8 +38,8 @@ static gulong response_id = 0;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph unzoom",
-    "Reset graph boundaries",
+    "graph_unzoom",
+    "Zoom out",
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -54,8 +54,8 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
-        "graph unzoom",
-        "/_Reset graph boundaries",
+        "graph_unzoom",
+        "Zoom /_out",
         (GwyGraphFunc)&unzoom,
     };
 

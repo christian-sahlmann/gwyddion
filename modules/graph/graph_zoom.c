@@ -38,7 +38,7 @@ static gulong response_id = 0;
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "graph zoom",
+    "graph_zoom",
     "Zoom graph by mouse",
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
@@ -54,8 +54,8 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
-        "graph zoom",
-        "/_Zoom",
+        "graph_zoom",
+        "/_Zoom in",
         (GwyGraphFunc)&zoom,
     };
 

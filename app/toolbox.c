@@ -151,6 +151,14 @@ gwy_app_toolbox_create(void)
                        _("Read coordinates"), NULL, GWY_STOCK_GRAPH_MEASURE,
                        G_CALLBACK(gwy_app_run_graph_func_cb), "read");
 
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Zoom in"), NULL, "gwy_graph_zoom_in",
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_zoom");
+
+    gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
+                       _("Zoom out"), NULL, "gwy_graph_zoom_out",
+                       G_CALLBACK(gwy_app_run_graph_func_cb), "graph_unzoom");
+
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
