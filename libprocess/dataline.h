@@ -163,6 +163,48 @@ void gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia,
                            GwyDataLine *rb, GwyDataLine *ib,
                            gint interpolation);
 
+/*distribution of heights*/
+void gwy_data_line_dh(GwyDataLine *data_line, 
+                      GwyDataLine *target_line, 
+                      gdouble ymin, 
+                      gdouble ymax,
+                      gdouble nsteps);
+
+/*cumulative distribution of heights*/
+void gwy_data_line_cdh(GwyDataLine *data_line, 
+                      GwyDataLine *target_line, 
+                      gdouble ymin, 
+                      gdouble ymax,
+                      gdouble nsteps);
+
+/*distribution of slopes*/
+void gwy_data_line_ds(GwyDataLine *data_line, 
+                      GwyDataLine *target_line, 
+                      gdouble ymin, 
+                      gdouble ymax,
+                      gdouble nsteps);
+
+/*cumulative distribution of slopes*/
+void gwy_data_line_cds(GwyDataLine *data_line, 
+                      GwyDataLine *target_line, 
+                      gdouble ymin, 
+                      gdouble ymax,
+                      gdouble nsteps);
+
+/*autocorrelation function*/
+void gwy_data_line_acf(GwyDataLine *data_line, 
+                      GwyDataLine *target_line);
+
+/*height-height correlation function*/
+void gwy_data_line_hhcf(GwyDataLine *data_line, 
+                      GwyDataLine *target_line);
+
+/*power spectral density function*/
+void gwy_data_line_psdf(GwyDataLine *data_line, 
+                      GwyDataLine *target_line);
+
+
+
 
 #ifdef __cplusplus
 }
