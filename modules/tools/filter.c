@@ -500,7 +500,7 @@ size_changed_cb(GwyUnitoolState *state)
 
     gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
-    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    controls->siz = gwy_adjustment_get_int(controls->size);
     if (controls->upd) {
         controls->state_changed = TRUE;
         dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
