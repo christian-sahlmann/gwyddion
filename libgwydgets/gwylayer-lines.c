@@ -553,8 +553,15 @@ gwy_layer_lines_unselect(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
 
+    if (GWY_LAYER_LINES(layer)->nselected == 0)
+        return;
+
+    /* this is in fact undraw */
+    if (layer->parent)
+        gwy_layer_lines_draw(layer, layer->parent->window);
     GWY_LAYER_LINES(layer)->nselected = 0;
     gwy_layer_lines_save(layer, -1);
+    gwy_data_view_layer_updated(layer);
 }
 
 static void

@@ -426,8 +426,15 @@ gwy_layer_select_unselect(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
 
+    if (!GWY_LAYER_SELECT(layer)->selected)
+        return;
+
+    /* this is in fact undraw */
+    if (layer->parent)
+        gwy_layer_select_draw(layer, layer->parent->window);
     GWY_LAYER_SELECT(layer)->selected = FALSE;
     gwy_layer_select_save(layer);
+    gwy_data_view_layer_updated(layer);
 }
 
 static void

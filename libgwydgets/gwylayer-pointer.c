@@ -301,8 +301,12 @@ gwy_layer_pointer_unselect(GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_LAYER_POINTER(layer));
 
+    if (!GWY_LAYER_POINTER(layer)->selected)
+        return;
+
     GWY_LAYER_POINTER(layer)->selected = FALSE;
     gwy_layer_pointer_save(layer);
+    gwy_data_view_layer_updated(layer);
 }
 
 static void
