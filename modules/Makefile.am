@@ -2,7 +2,8 @@
 
 SUBDIRS = \
 	file \
-	process
+	process \
+        graph
 
 EXTRA_DIST = \
 	plugin-proxy-common.c

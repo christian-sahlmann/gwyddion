@@ -141,6 +141,8 @@ typedef struct {
 /*graph area class*/
 typedef struct {
      GtkLayoutClass parent_class;
+
+     void (* gwygrapharea) (GwyGraphArea *area);
 } GwyGraphAreaClass;
 
 
@@ -156,6 +158,7 @@ void gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve);
 
 void gwy_graph_area_clear(GwyGraphArea *area);
 
+void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 #ifdef __cplusplus
 }

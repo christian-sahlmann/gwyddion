@@ -31,6 +31,12 @@
 
 #define GWY_GRAPH_AREA_TYPE_NAME "GwyGraphArea"
 
+enum {
+          SELECTED_SIGNAL,
+          LAST_SIGNAL
+};
+
+
 /* Forward declarations - widget related*/
 static void     gwy_graph_area_class_init           (GwyGraphAreaClass *klass);
 static void     gwy_graph_area_init                 (GwyGraphArea *area);
@@ -82,6 +88,8 @@ static void            gwy_graph_area_clamp_coords_for_child(GwyGraphArea *area,
 
 static GtkWidgetClass *parent_class = NULL;
 
+static guint gwygrapharea_signals[LAST_SIGNAL] = { 0 };
+
 
 GType
 gwy_graph_area_get_type(void)
@@ -132,6 +140,16 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->button_press_event = gwy_graph_area_button_press;
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
+
+    gwygrapharea_signals[SELECTED_SIGNAL] = g_signal_new ("gwygrapharea-selected",
+                                                          G_TYPE_FROM_CLASS (klass),
+                                                          G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                                          G_STRUCT_OFFSET (GwyGraphAreaClass, gwygrapharea),
+                                                          NULL,
+                                                          NULL,
+                                                          g_cclosure_marshal_VOID__VOID,
+                                                          G_TYPE_NONE, 0);
+    
 }
 
 static void
@@ -433,6 +451,7 @@ gwy_graph_area_draw_selection_points(GtkWidget *widget)
     }    
 }
 
+
 static gboolean
 gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 {
@@ -468,13 +487,15 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         {
             area->seldata->scr_start = x;
             area->seldata->scr_end = x;
-            area->seldata->data_start = 0;
+            area->seldata->data_start = scr_to_data_x(widget, x);
+            area->seldata->data_end = scr_to_data_x(widget, x);
         }
         else if (area->status == GWY_GRAPH_STATUS_YSEL)
         {
             area->seldata->scr_start = y;
             area->seldata->scr_end = y;
-            area->seldata->data_start = 0;
+            area->seldata->data_start = scr_to_data_y(widget, y);
+            area->seldata->data_end = scr_to_data_y(widget, y);
         }
         area->selecting = 1;
         printf("Sel started\n");
@@ -487,8 +508,8 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         {
             scrpnt.i = x;
             scrpnt.j = y;
-            datpnt.x = 0;
-            datpnt.y = 0;
+            datpnt.x = scr_to_data_x(widget, x);;
+            datpnt.y = scr_to_data_y(widget, y);;
         
             g_array_append_val(area->pointsdata->scr_points, scrpnt);
             g_array_append_val(area->pointsdata->data_points, datpnt);
@@ -536,12 +557,12 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         if (area->status == GWY_GRAPH_STATUS_XSEL)
         {
             area->seldata->scr_end = x;
-            area->seldata->data_end = 0;
+            area->seldata->data_end = scr_to_data_x(widget, x);
         }
         else if (area->status == GWY_GRAPH_STATUS_YSEL)
         {
             area->seldata->scr_end = y;
-            area->seldata->data_end = 0;
+            area->seldata->data_end = scr_to_data_y(widget, y);
         }
         printf("Sel: %d, %d finished.\n", area->seldata->scr_start, area->seldata->scr_end);
         area->selecting = 0;
@@ -611,11 +632,11 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         if (area->status == GWY_GRAPH_STATUS_XSEL)
         {
             area->seldata->scr_end = x;
-            area->seldata->data_end = 0;
+            area->seldata->data_end = scr_to_data_x(widget, x);
         }
         else if (area->status == GWY_GRAPH_STATUS_YSEL)
         {
-            area->seldata->scr_end = y;
+            area->seldata->scr_end = scr_to_data_y(widget, y);
             area->seldata->data_end = 0;
         }
         printf("Sel: %d, %d\n", area->seldata->scr_start, area->seldata->scr_end);
@@ -827,7 +848,11 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     return area->y_min + (widget->allocation.height - scr)*(area->y_max - area->y_min)/(widget->allocation.height-1);     
 }
 
-
+void
+gwy_graph_area_signal_selected(GwyGraphArea *area)
+{
+    g_signal_emit (G_OBJECT (area), gwygrapharea_signals[SELECTED_SIGNAL], 0);
+}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

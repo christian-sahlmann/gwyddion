@@ -17,6 +17,7 @@ AC_CONFIG_FILES(\
   modules/Makefile \
   modules/file/Makefile \
   modules/process/Makefile \
+  modules/graph/Makefile \
   plugins/Makefile \
   plugins/file/Makefile \
   plugins/process/Makefile \

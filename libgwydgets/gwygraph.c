@@ -31,6 +31,7 @@
 
 #define GWY_GRAPH_TYPE_NAME "GwyGraph"
 
+
 static void     gwy_graph_class_init           (GwyGraphClass *klass);
 static void     gwy_graph_init                 (GwyGraph *graph);
 static void     gwy_graph_finalize             (GObject *object);
@@ -42,6 +43,7 @@ static void     gwy_graph_size_allocate        (GtkWidget *widget,
 static void gwy_graph_make_curve_data(GwyGraph *graph, GwyGraphAreaCurve *curve, gdouble *xvals, gdouble *yvals, gint n);
 static void     gwy_graph_synchronize          (GwyGraph *graph);
 static GtkWidgetClass *parent_class = NULL;
+
 
 GType
 gwy_graph_get_type(void)
@@ -83,6 +85,7 @@ gwy_graph_class_init(GwyGraphClass *klass)
 
     widget_class->size_request = gwy_graph_size_request;
     widget_class->size_allocate = gwy_graph_size_allocate;
+
 }
 
 
@@ -443,6 +446,5 @@ gwy_graph_get_status_data(GwyGraph *graph, GwyGraphStatusType status)
     g_assert_not_reached();
     return NULL;
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

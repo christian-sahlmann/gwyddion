@@ -123,7 +123,7 @@ GwyGraphStatusType gwy_graph_get_status(GwyGraph *graph);
 gpointer           gwy_graph_get_status_data(GwyGraph *graph, 
 					     GwyGraphStatusType status);
 
-
+void		   gwy_graph_signal_selected(GwyGraph *graph);
 
 #ifdef __cplusplus
 }
