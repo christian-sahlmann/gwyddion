@@ -60,7 +60,8 @@ static GQuark sensitive_state_key = 0;
 
 static GtkWidget *recent_files_menu = NULL;
 
-#ifdef DEBUG
+/* FIXME: how can MSVC can get to needing this when we are not DEBUGging? */
+#if (defined(DEBUG) || defined(_MSC_VER))
 static gchar*
 debug_menu_sens_flags(guint flags)
 {
