@@ -680,4 +680,12 @@ compare_data_window_data_cb(GwyDataWindow *window,
     return gwy_data_window_get_data(window) != data;
 }
 
+void
+gwy_app_clean_up_data(GwyContainer *data)
+{
+    /* TODO: Container */
+    /* FIXME: This is dirty. Clean-up various individual stuff. */
+    gwy_container_remove_by_prefix(data, "/0/select");
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

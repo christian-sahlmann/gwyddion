@@ -253,14 +253,6 @@ file_real_open(const gchar *filename_sys,
     return data != NULL;
 }
 
-void
-gwy_app_clean_up_data(GwyContainer *data)
-{
-    /* TODO: Container */
-    /* FIXME: This is dirty. Clean-up various individual stuff. */
-    gwy_container_remove_by_prefix(data, "/0/select");
-}
-
 static void
 file_save_as_ok_cb(GtkFileSelection *selector)
 {

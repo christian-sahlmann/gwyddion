@@ -40,9 +40,6 @@ void gwy_app_file_export_cb      (const gchar *name);
 void gwy_app_file_import_cb      (const gchar *name);
 void gwy_app_file_open_initial   (gchar **args);
 
-/* FIXME: to be moved somewhere? refactored? */
-void       gwy_app_clean_up_data            (GwyContainer *data);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

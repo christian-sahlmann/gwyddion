@@ -45,6 +45,8 @@ void            gwy_app_undo_checkpoint           (GwyContainer *data,
 void            gwy_app_undo_undo                 (void);
 void            gwy_app_undo_redo                 (void);
 
+/* FIXME: ugly. to be moved somewhere? refactored? */
+void       gwy_app_clean_up_data            (GwyContainer *data);
 
 #ifdef __cplusplus
 }
