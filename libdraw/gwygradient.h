@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-#ifdef GWY_ENABLE_GWYDDION2
-
 #define GWY_TYPE_GRADIENT                  (gwy_gradient_get_type())
 #define GWY_GRADIENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRADIENT, GwyGradient))
 #define GWY_GRADIENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT, GwyGradient))
@@ -52,6 +50,7 @@ struct _GwyGradient {
 
     gchar *name;
     gboolean modifiable;
+    gboolean boolean1;
     GArray *points;
     guchar *pixels;
 
@@ -63,13 +62,17 @@ struct _GwyGradientClass {
     GObjectClass parent_class;
 
     GHashTable *gradients;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 GType             gwy_gradient_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_gradient_get_name              (GwyGradient *gradient);
 gboolean          gwy_gradient_is_modifiable         (GwyGradient *gradient);
-GwyRGBA           gwy_gradient_get_color             (GwyGradient *gradient,
-                                                      gdouble x);
+void              gwy_gradient_get_color             (GwyGradient *gradient,
+                                                      gdouble x,
+                                                      GwyRGBA *color);
 const guchar*     gwy_gradient_get_samples           (GwyGradient *gradient,
                                                       gint *nsamples);
 guchar*           gwy_gradient_sample                (GwyGradient *gradient,
@@ -115,8 +118,6 @@ gboolean          gwy_gradients_delete_gradient      (const gchar *name);
 void              gwy_gradients_foreach              (GwyGradientFunc function,
                                                       gpointer user_data);
 void              gwy_gradients_setup_presets        (void);
-
-#endif
 
 G_END_DECLS
 

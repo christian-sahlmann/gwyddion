@@ -42,7 +42,6 @@ enum {
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
-#ifdef GWY_ENABLE_GWYDDION2
 static void         gwy_gradient_class_init       (GwyGradientClass *klass);
 static void         gwy_gradient_init             (GwyGradient *gradient);
 static void         gwy_gradient_finalize         (GObject *object);
@@ -183,7 +182,7 @@ gwy_gradient_finalize(GObject *object)
  * Returns: Name of @gradient.  The string is owned by @gradient and must not
  *          be modfied or freed.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 const gchar*
 gwy_gradient_get_name(GwyGradient *gradient)
@@ -203,7 +202,7 @@ gwy_gradient_get_name(GwyGradient *gradient)
  *
  * Returns: %TRUE if gradient is modifiable, %FALSE if it's system gradient.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 gboolean
 gwy_gradient_is_modifiable(GwyGradient *gradient)
@@ -216,44 +215,44 @@ gwy_gradient_is_modifiable(GwyGradient *gradient)
  * gwy_palette_def_get_color:
  * @gradient: A color gradient.
  * @x: Position in gradient, in range 0..1.
+ * @color: Color to fill with color at position @x.
  *
  * Computes color at given position of a color gradient.
  *
  * Returns: The interpolated color sample.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
-GwyRGBA
+void
 gwy_gradient_get_color(GwyGradient *gradient,
-                       gdouble x)
+                       gdouble x,
+                       GwyRGBA *color)
 {
-    GwyRGBA ret;
     GArray *points;
     GwyGradientPoint *pt = NULL, *pt2;
     guint i;
 
-    g_return_val_if_fail(GWY_IS_GRADIENT(gradient), null_color);
-    g_return_val_if_fail(x >= 0.0 && x <= 1.0, null_color);
+    g_return_if_fail(GWY_IS_GRADIENT(gradient));
+    g_return_if_fail(color);
+    g_return_if_fail(x >= 0.0 && x <= 1.0);
 
     points = gradient->points;
-    if (x == 1.0)
-        return g_array_index(points, GwyGradientPoint, points->len-1).color;
 
     /* find the right subinterval */
-    for (i = 0; i < points->len-1; i++) {
+    for (i = 0; i < points->len; i++) {
         pt = &g_array_index(points, GwyGradientPoint, i);
-        if (pt->x == x)
-            return pt->color;
-        if (pt->x < x)
+        if (pt->x == x) {
+            *color = pt->color;
+            return;
+        }
+        if (pt->x > x)
             break;
     }
-    g_assert(i < points->len-1);
-    pt2 = &g_array_index(points, GwyGradientPoint, i+1);
+    g_assert(i);
+    pt2 = &g_array_index(points, GwyGradientPoint, i-1);
 
-    gwy_rgba_interpolate(&pt->color, &pt2->color, (x - pt->x)/(pt2->x - pt->x),
-                         &ret);
-
-    return ret;
+    gwy_rgba_interpolate(&pt2->color, &pt->color, (x - pt2->x)/(pt->x - pt2->x),
+                         color);
 }
 
 /**
@@ -272,7 +271,7 @@ gwy_gradient_get_color(GwyGradient *gradient,
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 const guchar*
 gwy_gradient_get_samples(GwyGradient *gradient,
@@ -302,7 +301,7 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 guchar*
 gwy_gradient_sample(GwyGradient *gradient,
@@ -322,7 +321,7 @@ gwy_gradient_sample(GwyGradient *gradient,
     for (i = k = 0; i < nsamples; i++) {
         /* FIXME: this is slow for gradients with many colors.  Use hints
          * to find the color faster */
-        color = gwy_gradient_get_color(gradient, i*q);
+        gwy_gradient_get_color(gradient, i*q, &color);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.r);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.g);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.b);
@@ -340,7 +339,7 @@ gwy_gradient_sample(GwyGradient *gradient,
  *
  * Returns: The number of points in @gradient.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 gint
 gwy_gradient_get_npoints(GwyGradient *gradient)
@@ -358,7 +357,7 @@ gwy_gradient_get_npoints(GwyGradient *gradient)
  *
  * Returns: Color point at @index_.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradientPoint
 gwy_gradient_get_point(GwyGradient *gradient,
@@ -421,7 +420,7 @@ gwy_gradient_fix_position(GArray *points,
  * It is an error to try to move points beyond is neighbours, or to move first
  * (or last) point from 0 (or 1).
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_set_point(GwyGradient *gradient,
@@ -450,7 +449,7 @@ gwy_gradient_set_point(GwyGradient *gradient,
  *
  * Sets a color of color gradient point without moving it.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_set_point_color(GwyGradient *gradient,
@@ -479,7 +478,7 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
  * It is an error to try to position a outside its future neighbours, or to
  * move first (or last) point from 0 (or 1).
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_insert_point(GwyGradient *gradient,
@@ -529,7 +528,7 @@ gwy_gradient_insert_point(GwyGradient *gradient,
  *
  * Returns: The index @point was inserted at.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 gint
 gwy_gradient_insert_point_sorted(GwyGradient *gradient,
@@ -572,7 +571,7 @@ gwy_gradient_insert_point_sorted(GwyGradient *gradient,
  * First and last points should not be deleted unless there's another point
  * with @x = 0 or @x = 1 present.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_delete_point(GwyGradient *gradient,
@@ -611,7 +610,7 @@ gwy_gradient_delete_point(GwyGradient *gradient,
  *
  * Resets a gradient to default two-point gray scale.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_reset(GwyGradient *gradient)
@@ -642,7 +641,7 @@ gwy_gradient_reset(GwyGradient *gradient)
  * Returns: Complete set @gradient's color points.  The returned array is
  *          owned by @gradient and must not be modified or freed.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 const GwyGradientPoint*
 gwy_gradient_get_points(GwyGradient *gradient,
@@ -719,7 +718,7 @@ gwy_gradient_sanitize(GwyGradient *gradient)
  * The point positions should be ordered, and first point should start at 0.0,
  * last end at 1.0.  There should be no redundant points.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_set_points(GwyGradient *gradient,
@@ -747,7 +746,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
  *
  * The result is usually approximate.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradient_set_from_samples(GwyGradient *gradient,
@@ -784,7 +783,7 @@ gwy_gradient_changed(GwyGradient *gradient)
  *
  * Returns: %TRUE if gradient @name exists, %FALSE if there's no such gradient.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 gboolean
 gwy_gradients_gradient_exists(const gchar *name)
@@ -809,7 +808,7 @@ gwy_gradients_gradient_exists(const gchar *name)
  *          the gradient object to survive gwy_gradients_delete_gradient(),
  *          you have to add a reference yourself.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_get_gradient(const gchar *name)
@@ -835,7 +834,7 @@ gwy_gradients_get_gradient(const gchar *name)
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_new_gradient(const gchar *newname)
@@ -861,7 +860,7 @@ gwy_gradients_new_gradient(const gchar *newname)
  * Returns: The newly created gradient.  Its name is guaranteed to be unique
  *          and thus may differ from @newname in the case of name clash.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_new_gradient_as_copy(const gchar *name,
@@ -932,7 +931,7 @@ gwy_gradient_invent_name(GHashTable *gradients,
  *
  * Returns: %TRUE if there was such a gradient and was deleted.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 gboolean
 gwy_gradients_delete_gradient(const gchar *name)
@@ -964,7 +963,7 @@ gwy_gradients_delete_gradient(const gchar *name)
  *
  * Returns: The renamed gradient, for convenience.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradient*
 gwy_gradients_rename_gradient(const gchar *name,
@@ -998,7 +997,7 @@ gwy_gradients_rename_gradient(const gchar *name,
  *
  * Calls a function for each color gradient.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradients_foreach(GwyGradientFunc function,
@@ -1029,7 +1028,7 @@ gwy_gradient_preset(const gchar *name,
  *
  * Preset (system) gradients are not modifiable.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 void
 gwy_gradients_setup_presets(void)
@@ -1467,7 +1466,7 @@ gwy_gradient_duplicate(GObject *object)
  *
  * Returns: A #GString with gradient text representation.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GString*
 gwy_gradient_dump(GwyGradient *gradient)
@@ -1477,7 +1476,7 @@ gwy_gradient_dump(GwyGradient *gradient)
     gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
     guint i;
 
-    g_return_val_if_fail(GWY_IS_PALETTE_DEF(gradient), NULL);
+    g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
     g_return_val_if_fail(gradient->points->len > 0, NULL);
 
     str = g_string_sized_new(64*gradient->points->len);
@@ -1519,7 +1518,7 @@ gwy_gradient_dump(GwyGradient *gradient)
  *
  * Returns: The reconstructed gradient.
  *
- * Since: 1.7
+ * Since: 1.8
  **/
 GwyGradient*
 gwy_gradient_parse(const gchar *text)
@@ -1532,7 +1531,7 @@ gwy_gradient_parse(const gchar *text)
     gchar *str, *p, *line, *end;
 
     g_return_val_if_fail(text, NULL);
-    klass = g_type_class_peek(GWY_TYPE_PALETTE_DEF);
+    klass = g_type_class_peek(GWY_TYPE_GRADIENT);
     g_return_val_if_fail(klass, NULL);
 
     p = str = g_strdup(text);
@@ -1605,7 +1604,6 @@ fail:
     g_free(str);
     return gradient;
 }
-#endif
 
 /************************** Documentation ****************************/
 
