@@ -89,6 +89,7 @@ gboolean gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b);
 /*Get and set values of the struct members*/
 
 /*simple operations*/
+gdouble *gwy_data_line_get_data(GwyDataLine *a);
 gint gwy_data_line_get_res(GwyDataLine *a);
 gdouble gwy_data_line_get_real(GwyDataLine *a);
 void gwy_data_line_set_real(GwyDataLine *a, gdouble real);

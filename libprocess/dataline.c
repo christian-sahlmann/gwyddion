@@ -413,6 +413,21 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 }
 
 /**
+ * gwy_data_line_get_data:
+ * @a: data line
+ *
+ * Returns the line data.
+ *
+ * Returns: The data as an array of doubles of length gwy_data_line_get_res().
+ **/
+gdouble*
+gwy_data_line_get_data(GwyDataLine *a)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), NULL);
+    return a->data;
+}
+
+/**
  * gwy_data_line_get_res:
  * @a: data line
  *
@@ -423,6 +438,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 gint
 gwy_data_line_get_res(GwyDataLine *a)
 {
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
     return a->res;
 }
 
@@ -437,6 +453,7 @@ gwy_data_line_get_res(GwyDataLine *a)
 gdouble
 gwy_data_line_get_real(GwyDataLine *a)
 {
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
     return a->real;
 }
 
@@ -450,6 +467,7 @@ gwy_data_line_get_real(GwyDataLine *a)
 void
 gwy_data_line_set_real(GwyDataLine *a, gdouble real)
 {
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
     a->real = real;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
