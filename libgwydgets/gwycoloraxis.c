@@ -127,7 +127,7 @@ gwy_color_axis_init(GwyColorAxis *axis)
 }
 
 /**
- * gwy_color_axis_new:
+ * gwy_color_axis_new_with_range:
  * @orientation: The orientation of the axis.
  * @min: The minimum.
  * @max: The maximum.
@@ -170,6 +170,14 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
     return GTK_WIDGET(axis);
 }
 
+/**
+ * gwy_color_axis_new_with_range:
+ * @orientation: The orientation of the axis.
+ *
+ * Creates a new color axis.
+ *
+ * Returns: The newly created color axis as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_color_axis_new(GtkOrientation orientation)
 {
