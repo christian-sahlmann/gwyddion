@@ -1,0 +1,26 @@
+
+TOP_SRCDIR = ../..
+MOD_TYPE = layer
+<[[:MODULES:]]>
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+# NOT MOD_CFLAGS!
+LIB_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
+	$(GTK_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
+	-DG_LOG_DOMAIN=\"Module\"
+
+## targets
+all: mod
+
+mod: $(MODULES)
+
+install: install-mod
+
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
+<[[:MOD_DLL_RULES:]]>
+
+# vim: ft=make

@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+main
+*.lo
+*.la
+.libs
+.deps
+core.*
+*.def
+makefile.msc

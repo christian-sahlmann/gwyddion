@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20040130, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20040203, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -18,6 +18,7 @@ AC_CONFIG_FILES(\
   modules/process/Makefile \
   modules/graph/Makefile \
   modules/tools/Makefile \
+  modules/layer/Makefile \
   plugins/Makefile \
   plugins/file/Makefile \
   plugins/process/Makefile \
