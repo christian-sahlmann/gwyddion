@@ -249,23 +249,8 @@ gwy_gradient_get_color(GwyGradient *gradient,
     g_assert(i < points->len-1);
     pt2 = &g_array_index(points, GwyGradientPoint, i+1);
 
-    /* interpolate the result */
-    ret.r = gwy_interpolation_get_dval(x,
-                                       pt->x, pt->color.r,
-                                       pt2->x, pt2->color.r,
-                                       GWY_INTERPOLATION_BILINEAR);
-    ret.g = gwy_interpolation_get_dval(x,
-                                       pt->x, pt->color.g,
-                                       pt2->x, pt2->color.g,
-                                       GWY_INTERPOLATION_BILINEAR);
-    ret.b = gwy_interpolation_get_dval(x,
-                                       pt->x, pt->color.b,
-                                       pt2->x, pt2->color.b,
-                                       GWY_INTERPOLATION_BILINEAR);
-    ret.a = gwy_interpolation_get_dval(x,
-                                       pt->x, pt->color.a,
-                                       pt2->x, pt2->color.a,
-                                       GWY_INTERPOLATION_BILINEAR);
+    gwy_rgba_interpolate(&pt->color, &pt2->color, (x - pt->x)/(pt2->x - pt->x),
+                         &ret);
 
     return ret;
 }

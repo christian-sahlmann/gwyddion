@@ -40,18 +40,22 @@ struct _GwyRGBA {
 GType         gwy_rgba_get_type                 (void) G_GNUC_CONST;
 GwyRGBA*      gwy_rgba_copy                     (const GwyRGBA *rgba);
 void          gwy_rgba_free                     (GwyRGBA *rgba);
-void          gwy_rgba_to_gdk_color             (GwyRGBA *rgba,
+void          gwy_rgba_to_gdk_color             (const GwyRGBA *rgba,
                                                  GdkColor *gdkcolor);
-guint16       gwy_rgba_to_gdk_alpha             (GwyRGBA *rgba);
+guint16       gwy_rgba_to_gdk_alpha             (const GwyRGBA *rgba);
 void          gwy_rgba_from_gdk_color           (GwyRGBA *rgba,
-                                                 GdkColor *gdkcolor);
+                                                 const GdkColor *gdkcolor);
 void          gwy_rgba_from_gdk_color_and_alpha (GwyRGBA *rgba,
-                                                 GdkColor *gdkcolor,
+                                                 const GdkColor *gdkcolor,
                                                  guint16 gdkalpha);
+void          gwy_rgba_interpolate              (const GwyRGBA *src1,
+                                                 const GwyRGBA *src2,
+                                                 gdouble x,
+                                                 GwyRGBA *rgba);
 gboolean      gwy_rgba_get_from_container       (GwyRGBA *rgba,
                                                  GwyContainer *container,
                                                  const gchar *prefix);
-void          gwy_rgba_store_to_container       (GwyRGBA *rgba,
+void          gwy_rgba_store_to_container       (const GwyRGBA *rgba,
                                                  GwyContainer *container,
                                                  const gchar *prefix);
 
