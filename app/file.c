@@ -117,7 +117,7 @@ gwy_app_file_duplicate_cb(void)
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
     data_window = gwy_app_data_window_create(duplicate);
-    g_object_set_data(G_OBJECT(data), "modified", GINT_TO_POINTER(1));
+    g_object_set_data(G_OBJECT(duplicate), "modified", GINT_TO_POINTER(1));
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
