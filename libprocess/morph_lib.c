@@ -592,7 +592,7 @@ static gint
 itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                    gint tip_ysiz, gint xc, gint yc, gint **tip0, gint thresh,
                    gboolean use_edges, GwySetFractionFunc set_fraction,
-                   GwySetMessageFunc set_message)
+                   G_GNUC_UNUSED GwySetMessageFunc set_message)
 {
     gint ixp, jxp;           /* index into the image (x') */
     gint **open;
