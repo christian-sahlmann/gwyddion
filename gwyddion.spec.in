@@ -106,6 +106,8 @@ your own plug-ins.
 %dir %{_datadir}/gtk-doc/html/libgwydgets
 %dir %{_datadir}/gtk-doc/html/libgwymodule
 %dir %{_datadir}/gtk-doc/html
+%{_libdir}/pkgconfig/%{name}.pc
+%dir %{_libdir}/pkgconfig
 %{_libdir}/libgwyddion.so
 %{_libdir}/libgwydgets.so
 %{_libdir}/libgwydraw.so
