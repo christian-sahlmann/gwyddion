@@ -27,7 +27,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/file.h>
-#include <app/app.h>
+#include <app/gwyapp.h>
 
 #define SHADE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -116,7 +116,7 @@ shade(GwyContainer *data, GwyRunType run)
     ok = (run != GWY_RUN_MODAL) || shade_dialog(&args);
     if (ok) {
 
-       /* gwy_app_undo_checkpoint(data, "/0/show");*/
+        gwy_app_undo_checkpoint(data, "/0/show", NULL);
         if (gwy_container_contains_by_name(data, "/0/show")) {
             shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                          "/0/show"));
