@@ -1,0 +1,52 @@
+<!-- ##### SECTION Title ##### -->
+GwyValUnit
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_val_unit_new ##### -->
+<para>
+
+</para>
+
+@label_text: 
+@unit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_val_unit_set_value ##### -->
+<para>
+
+</para>
+
+@val_unit: 
+@value: 
+
+
+<!-- ##### FUNCTION gwy_val_unit_get_value ##### -->
+<para>
+
+</para>
+
+@val_unit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_val_unit_signal_value_changed ##### -->
+<para>
+
+</para>
+
+@val_unit: 
+
+

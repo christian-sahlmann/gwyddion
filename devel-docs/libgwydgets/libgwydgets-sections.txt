@@ -198,6 +198,22 @@ GWY_GRAPH_LABEL_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyvalunit</FILE>
+<TITLE>GwyValUnit</TITLE>
+gwy_val_unit_new
+gwy_val_unit_set_value
+gwy_val_unit_get_value
+gwy_val_unit_signal_value_changed
+<SUBSECTION Standard>
+GWY_VAL_UNIT
+GWY_IS_VAL_UNIT
+GWY_TYPE_VAL_UNIT
+gwy_val_unit_get_type
+GWY_VAL_UNIT_CLASS
+GWY_IS_VAL_UNIT_CLASS
+GWY_VAL_UNIT_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwyscitext</FILE>
 GwySciTextParams
 <TITLE>GwySciText</TITLE>

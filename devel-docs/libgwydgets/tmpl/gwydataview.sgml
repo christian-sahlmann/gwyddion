@@ -20,6 +20,13 @@ Data field displaying area
 </para>
 
 
+<!-- ##### SIGNAL GwyDataView::redrawn ##### -->
+<para>
+
+</para>
+
+@gwydataview: the object which received the signal.
+
 <!-- ##### SIGNAL GwyDataView::updated ##### -->
 <para>
 
@@ -34,7 +41,7 @@ Data field displaying area
 
 @parent_class: 
 @updated: 
-@reserved1: 
+@redrawn: 
 @reserved2: 
 
 <!-- ##### FUNCTION gwy_data_view_new ##### -->
