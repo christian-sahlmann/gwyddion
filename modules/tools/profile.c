@@ -373,6 +373,7 @@ apply(GwyUnitoolState *state)
     gchar *z_unit;
     gdouble z_mag, z_max;
     GwyGraphAutoProperties prop;
+    gchar buf[8];
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
@@ -404,6 +405,8 @@ apply(GwyUnitoolState *state)
                                               units->units, z_unit);
 
             window = gwy_app_graph_window_create(graph);
+            g_snprintf(buf, sizeof(buf), _("Profile %d"), i+1);
+            gtk_window_set_title(GTK_WINDOW(window), buf);
         }
     }
     else {
@@ -421,6 +424,7 @@ apply(GwyUnitoolState *state)
                                               units->units, z_unit);
         }
         window = gwy_app_graph_window_create(graph);
+        gtk_window_set_title(GTK_WINDOW(window), _("Profiles"));
     }
 }
 

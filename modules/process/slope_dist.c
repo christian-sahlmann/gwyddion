@@ -385,7 +385,7 @@ static GtkWidget*
 slope_do_graph(GwyDataField *dfield,
                SlopeArgs *args)
 {
-    GtkWidget *graph;
+    GtkWidget *graph, *window;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GString *lab;
@@ -420,10 +420,11 @@ slope_do_graph(GwyDataField *dfield,
     g_free(yder);
     g_free(xder);
 
-    lab = g_string_new("Angular slope distribution");
+    lab = g_string_new(_("Angular slope distribution"));
     gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                       1, 1, "deg", " ");
-    gwy_app_graph_window_create(graph);
+    window = gwy_app_graph_window_create(graph);
+    gtk_window_set_title(GTK_WINDOW(window), _("Slope Distribution"));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
