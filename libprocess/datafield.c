@@ -2994,27 +2994,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     yres = data_field->yres;
     hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
 
-    switch(fit_type){
-        case (GWY_FIT_POLY_0):
-        n = 0;
-        break;
-        
-        case (GWY_FIT_POLY_1):
-        n=1;
-        break;
-
-        case (GWY_FIT_POLY_2):
-        n=2;
-        break;
-
-        case (GWY_FIT_POLY_3):
-        n=3;
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
+    n = (gint)fit_type;;
  
     if (orientation == GTK_ORIENTATION_HORIZONTAL)
     {
@@ -3023,13 +3003,13 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
             gwy_data_field_get_row(data_field, hlp, i);
             if (i>ulrow && i<=brrow)
             {
-                gwy_data_line_part_fit_polynom(hlp, 2, coefs, ulcol, brcol);
+                gwy_data_line_part_fit_polynom(hlp, n, coefs, ulcol, brcol);
             }
             else
             {
-                gwy_data_line_fit_polynom(hlp, 2, coefs);
+                gwy_data_line_fit_polynom(hlp, n, coefs);
             }
-            gwy_data_line_subtract_polynom(hlp, 2, coefs);
+            gwy_data_line_subtract_polynom(hlp, n, coefs);
             gwy_data_field_set_row(data_field, hlp, i);
         }
     }
