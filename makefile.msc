@@ -6,16 +6,23 @@ SUBDIRS = \
 	libgwydgets \
 	libgwymodule \
 	app \
+	modules \
+	pixmaps
 
-#	modules \
-#	pixmaps
+DOCUMENTS = \
+	COPYING.wri
 
-all: sub-all
+## targets
+all: sub-all $(DOCUMENTS)
 
-sub-all:
-	for %d in ($(SUBDIRS)) do nmake -nologo -f makefile.msc sub-one THIS=%d
+clean: sub-clean
 
-sub-one:
-	cd $(THIS)
-	nmake -nologo -f makefile.msc
-	cd ..
+install: sub-install
+
+!INCLUDE rules.msc
+
+# FIXME:
+COPYING.wri: COPYING
+	copy COPYING COPYING.wri
+
+# vim: ft=make
