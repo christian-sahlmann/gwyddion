@@ -406,9 +406,10 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
     for (br = dfield->xres; br>4; br>>=1)
     {
 	ul = br/2;
-
+	
 	ulcol = ul; ulrow = ul;
 	brcol = br; brrow = br;
+	
 	switch (type){
 	    case(GWY_DWT_DENOISE_SCALE_ADAPTIVE):
 	    count = remove_by_threshold(dfield, ulcol, ulrow, brcol, brrow, hard, multiple_threshold, noise_variance);
@@ -427,7 +428,9 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    break;
 	}
 	printf("Level %d, diagonal: %d removed\n", br, count);
+	
 
+	
 	ulcol = 0; ulrow = ul;
 	brcol = ul; brrow = br;
 	switch (type){
@@ -448,7 +451,9 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    break;
 	}
 	printf("Level %d, horizontal: %d removed\n", br, count);
+	
 
+	
 	ulcol = ul; ulrow = 0;
 	brcol = br; brrow = ul;
 	switch (type){
@@ -469,6 +474,7 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 	    break;
 	}
 	printf("Level %d, vertical: %d removed\n", br, count);
+	
     }
     
     gwy_data_field_dwt(dfield, wt_coefs, -1, 4);    
@@ -508,7 +514,7 @@ GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataFi
     {
 	ul = br/2;
 
-	count = find_anisotropy(buffer, mask, ul, br, ratio, 4);	
+	count = find_anisotropy(buffer, mask, ul, br, ratio, 3);	
 	printf("Level %d: found %d anisotropy suspections.\n", br, count);
     }
         
@@ -541,45 +547,56 @@ GwyDataField *gwy_data_field_dwt_correction(GwyDataField *dfield, GwyDataField *
 					       dfield->xreal, dfield->yreal,
 					       FALSE));
      
-    average_under_mask(dfield, mask);
+/*    average_under_mask(dfield, mask);*/
+//    gwy_data_field_fill(mask, 1);
 
     for (i=0; i<nsteps; i++)
     {
 
-	    dfield = gwy_data_field_dwt(dfield, wt_coefs, 1, 32);
-
+	    dfield = gwy_data_field_dwt(dfield, wt_coefs, 1, 4);
+	    
 	    ulcol = dfield->xres/2; ulrow = dfield->xres/2;
 	    brcol = dfield->xres; brrow = dfield->xres;
 	 
 	    median = smedian(dfield, ulcol, ulrow, brcol, brrow);
 	    noise_variance = median/0.6745;
-	    mult*=0.7;
-
+	    mult*=0.7;	    
+	    
 	    count = 0;
-	    for (br = dfield->xres; br>32; br>>=1)
+	    for (br = dfield->xres; br>4; br>>=1)
 	    {	
-		gwy_data_field_copy(mask, maskbuffer);
+/*		gwy_data_field_copy(mask, maskbuffer);
 		mask_grow_do(maskbuffer, (nsteps-i)/20);
-		gwy_data_field_resample(maskbuffer, br/2, br/2, GWY_INTERPOLATION_ROUND);
-		ul = br/2;
+		gwy_data_field_resample(maskbuffer, br/2, br/2, GWY_INTERPOLATION_ROUND);*/
+		if (br <= 16)
+		{
+		    gwy_data_field_copy(mask, maskbuffer);
+		    gwy_data_field_resample(maskbuffer, br/2, br/2, GWY_INTERPOLATION_ROUND);
+			ul = br/2;
 	
-		ulcol = ul; ulrow = ul;
-		brcol = br; brrow = br;
-		    count += remove_by_threshold_under_mask(dfield, maskbuffer,
+			ulcol = ul; ulrow = ul;
+			brcol = br; brrow = br;
+/*		gwy_data_field_area_fill(dfield, ulcol, ulrow, brcol, brrow, 0);*/
+			    count += remove_by_threshold_under_mask(dfield, maskbuffer,
 							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
-		ulcol = 0; ulrow = ul;
-		brcol = ul; brrow = br;
-		    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
+			ulcol = 0; ulrow = ul;
+			brcol = ul; brrow = br;
+/*		gwy_data_field_area_fill(dfield, ulcol, ulrow, brcol, brrow, 0);*/
+			    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
 							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
-		ulcol = ul; ulrow = 0;
-		brcol = br; brrow = ul;
-		    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
-							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
-		    
-	        gwy_data_field_resample(maskbuffer, dfield->xres, dfield->xres, GWY_INTERPOLATION_NONE);
+			ulcol = ul; ulrow = 0;
+			brcol = br; brrow = ul;
+/*		gwy_data_field_area_fill(dfield, ulcol, ulrow, brcol, brrow, 0);*/
+			    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
+								   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
+		}
+/*	        gwy_data_field_resample(maskbuffer, dfield->xres, dfield->xres, GWY_INTERPOLATION_NONE);*/
 	    }
+	   
+	    
 	    printf("iteration %d: %d removed\n", i, count);
-	    dfield = gwy_data_field_dwt(dfield, wt_coefs, -1, 32);
+	    dfield = gwy_data_field_dwt(dfield, wt_coefs, -1, 4);
+	    break;
     }
     
     g_object_unref(maskbuffer);
@@ -807,6 +824,7 @@ remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ul
 
     n = (brrow-ulrow)*(brcol-ulcol);
     
+    gdouble max = gwy_data_field_area_get_max(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
     rms = gwy_data_field_area_get_rms(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
     if ((rms*rms - noise_variance*noise_variance) > 0)
     {
@@ -826,13 +844,9 @@ remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ul
        gdouble *drow = datapos + i*dfield->xres;
 
        for (j = 0; j < (brcol - ulcol); j++) {
-	   if (mask->data[j + i*mask->xres] > 0 && fabs(*drow) < threshold*100)
+	   if (mask->data[j + i*mask->xres] > 0)
 	   {
-	       if (hard) *drow = 0;
-	       else {
-		   if (*drow<0) (*drow)+=threshold;
-		   else (*drow)-=threshold;
-	       }
+	       *drow = 0;
 	       count++;
 	   }
 	   drow++;
@@ -855,7 +869,7 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
     blpos = dfield->data + ul*dfield->xres;
 
     /*ratio between all field and its fraction*/
-    cor = dfield->xres/(br-ul);
+    cor = dfield->xres/(gdouble)(br-ul);
     rms = gwy_data_field_area_get_rms(dfield, ul, ul, br-ul, br-ul);
     
     for (i = 0; i < (br - ul); i++) {
@@ -868,18 +882,19 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
 	   {
 	       if (fabs(*bldrow)>fabs(*trdrow))
 	       {
-		   mincol = MAX(j*cor - setsize/2, 0);
-		   maxcol = MIN(j*cor + setsize/2, mask->xres);
-		   minrow = MAX(i*cor - cor*setsize/2, 0);
-		   maxrow = MIN(i*cor + cor*setsize/2, mask->yres);
+		   mincol = MAX(j*cor - cor*(gdouble)setsize/2.0, 0);
+		   maxcol = MIN(j*cor + cor*(gdouble)setsize/2.0, mask->xres);
+		   minrow = MAX(5+i*cor - (gdouble)setsize/2.0, 0);
+		   maxrow = MIN(5+i*cor + (gdouble)setsize/2.0, mask->yres);		  
 	       }
 	       else
 	       {
-		   mincol = MAX(j*cor - cor*setsize/2, 0);
-		   maxcol = MIN(j*cor + cor*setsize/2, mask->xres);
-		   minrow = MAX(i*cor - setsize/2, 0);
-		   maxrow = MIN(i*cor + setsize/2, mask->yres);			   
+		   mincol = MAX(j*cor - cor*(gdouble)setsize/2.0, 0);
+		   maxcol = MIN(j*cor + cor*(gdouble)setsize/2.0, mask->xres);
+		   minrow = MAX(5+i*cor - (gdouble)setsize/2.0, 0);
+		   maxrow = MIN(5+i*cor + (gdouble)setsize/2.0, mask->yres);			   
 	       }
+	       if (minrow>maxrow) continue;
 	       gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);
 	       count++;
 	   }

@@ -289,16 +289,17 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     else
     {
         if (value==0) format->magnitude = 1;
-        else format->magnitude = pow(10, (gint)(log10(fabs(value))));
+//        else format->magnitude = pow(10, (gint)(log10(fabs(value))));
+	else format->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0));
 
        if (siunit->unitstr!=NULL)
             format->units = (gchar*)g_malloc((strlen(siunit->unitstr)+23)*sizeof(gchar));
         else
             format->units = (gchar*)g_malloc(23*sizeof(gchar));
         
-        if ((gint)(log10(fabs(format->magnitude))) > 3)
+        if (fabs((gint)(3*ROUND(((gint)(log10(fabs(value))))/3.0))) > 2)
         {
-            sprintf(num, "× 10<sup>%d</sup> ", (gint)(log10(fabs(format->magnitude))));
+            sprintf(num, "× 10<sup>%d</sup> ", (gint)(3*ROUND(((gint)(log10(fabs(value))))/3.0)));
             if (siunit->unitstr==NULL || strlen(siunit->unitstr)==0) 
             {
                 format->units = strcpy(format->units, num);
