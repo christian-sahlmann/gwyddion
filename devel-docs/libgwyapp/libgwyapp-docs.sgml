@@ -9,7 +9,6 @@
   <chapter>
     <title>Gwyddion Application Library</title>
     <xi:include href="xml/app.xml"/>
-    <xi:include href="xml/file.xml"/>
     <xi:include href="xml/settings.xml"/>
     <xi:include href="xml/menu.xml"/>
     <xi:include href="xml/menu-windowlist.xml"/>
