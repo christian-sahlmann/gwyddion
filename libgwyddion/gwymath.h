@@ -49,6 +49,11 @@ gdouble*     gwy_math_lin_solve_rewrite  (gint n,
                                           gdouble *matrix,
                                           gdouble *rhs,
                                           gdouble *result);
+gdouble*     gwy_math_fit_polynom        (gint ndata,
+                                          gdouble *xdata,
+                                          gdouble *ydata,
+                                          gint n,
+                                          gdouble *coeffs);
 
 G_END_DECLS
 

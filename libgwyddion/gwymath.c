@@ -311,6 +311,69 @@ gwy_math_lin_solve_rewrite(gint n, gdouble *matrix,
     return result;
 }
 
+/**
+ * gwy_math_fit_polynom:
+ * @ndata: The number of items in @xdata, @ydata.
+ * @xdata: Independent variable data (of size @ndata).
+ * @ydata: Dependent variable data (of size @ndata).
+ * @n: The degree of polynom to fit.
+ * @coeffs: An array of size @n+1 to store the coefficients to, or %NULL
+ *          (a fresh array is allocated then).
+ *
+ * Fits a polynom through a general (x, y) data set.
+ *
+ * Returns: The coefficients of the polynom (@coeffs when it was not %NULL,
+ *          otherwise a newly allocated array).
+ **/
+gdouble*
+gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
+                     gint n, gdouble *coeffs)
+{
+    gdouble *sumx, *sumy, *m;
+    gint i, j;
+
+    g_return_val_if_fail(ndata >= 0, NULL);
+    g_return_val_if_fail(n >= 0, NULL);
+
+    sumx = g_new(gdouble, 2*n+1);
+    for (j = 0; j <= 2*n; j++)
+        sumx[j] = 0.0;
+    sumy = g_new(gdouble, n+1);
+    for (j = 0; j <= n; j++)
+        sumy[j] = 0.0;
+
+    for (i = 0; i < ndata; i++) {
+        gdouble x = xdata[i];
+        gdouble y = ydata[i];
+        gdouble xp;
+
+        xp = 1.0;
+        for (j = 0; j <= n; j++) {
+            sumx[j] += xp;
+            sumy[j] += xp*y;
+            xp *= x;
+        }
+        for (j = n+1; j <= 2*n; j++) {
+            sumx[j] += xp;
+            xp *= x;
+        }
+    }
+
+    m = g_new(gdouble, (n+1)*(n+1));
+    for (i = 0; i <= n; i++) {
+        gdouble *row = m + i*(n+1);
+
+        for (j = 0; j <= n; j++)
+            row[j] = sumx[i+j];
+    }
+    coeffs = gwy_math_lin_solve(n+1, m, sumy, coeffs);
+    g_free(m);
+    g_free(sumx);
+    g_free(sumy);
+
+    return coeffs;
+}
+
 /************************** Documentation ****************************/
 
 /**
