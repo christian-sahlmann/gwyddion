@@ -245,7 +245,10 @@ dialog_create(GwyUnitoolState *state)
     gtk_toggle_button_set_active(controls->exclude, controls->exc);
     g_signal_connect(controls->exclude, "toggled", G_CALLBACK(exclude_changed_cb), controls);
 
- 
+    label = gtk_label_new("(otherwise will be used for fitting)");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
+                       FALSE, FALSE, 0);
     
     
     return dialog;
