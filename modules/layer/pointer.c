@@ -18,13 +18,35 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: this should be placed somewhere...
+ * gwy_layer_pointer_new:
+ *
+ * Creates a new pointer layer.
+ *
+ * Container keys: "/0/select/pointer/x", "/0/select/pointer/y".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of a couple (array of size two) points: x and y.
+ *
+ * Returns: The newly created layer.
+ */
+
 #include <string.h>
-#include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-pointer.h"
-#include "gwydataview.h"
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwymodule/gwymodule.h>
+
+#define GWY_TYPE_LAYER_POINTER            (gwy_layer_pointer_get_type())
+#define GWY_LAYER_POINTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_POINTER, GwyLayerPointer))
+#define GWY_LAYER_POINTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_LAYER_POINTER, GwyLayerPointerClass))
+#define GWY_IS_LAYER_POINTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_POINTER))
+#define GWY_IS_LAYER_POINTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_LAYER_POINTER))
+#define GWY_LAYER_POINTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_POINTER, GwyLayerPointerClass))
 
 #define GWY_LAYER_POINTER_TYPE_NAME "GwyLayerPointer"
 
@@ -32,8 +54,28 @@
 
 #define BITS_PER_SAMPLE 8
 
+typedef struct _GwyLayerPointer      GwyLayerPointer;
+typedef struct _GwyLayerPointerClass GwyLayerPointerClass;
+
+struct _GwyLayerPointer {
+    GwyVectorLayer parent_instance;
+
+    guint button;
+    gboolean selected;
+    gdouble x;
+    gdouble y;
+};
+
+struct _GwyLayerPointerClass {
+    GwyVectorLayerClass parent_class;
+
+    GdkCursor *point_cursor;
+};
+
 /* Forward declarations */
 
+static gboolean module_register                   (const gchar *name);
+static GType    gwy_layer_pointer_get_type        (void) G_GNUC_CONST;
 static void     gwy_layer_pointer_class_init      (GwyLayerPointerClass *klass);
 static void     gwy_layer_pointer_init            (GwyLayerPointer *layer);
 static void     gwy_layer_pointer_finalize        (GObject *object);
@@ -55,9 +97,40 @@ static void     gwy_layer_pointer_restore         (GwyLayerPointer *layer);
 
 /* Local data */
 
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "layer-pointer",
+    "Layer allowing selection of a single point, more precisely "
+        "just reading pointer coordinates.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
 static GtkObjectClass *parent_class = NULL;
 
-GType
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyLayerFuncInfo func_info = {
+        "pointer",
+        0,
+    };
+
+    func_info.type = gwy_layer_pointer_get_type();
+    gwy_layer_func_register(name, &func_info);
+
+    return TRUE;
+}
+
+static GType
 gwy_layer_pointer_get_type(void)
 {
     static GType gwy_layer_pointer_type = 0;
@@ -139,29 +212,6 @@ gwy_layer_pointer_finalize(GObject *object)
     gwy_vector_layer_cursor_free_or_unref(&klass->point_cursor);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
-}
-
-/**
- * gwy_layer_pointer_new:
- *
- * Creates a new pointer layer.
- *
- * Container keys: "/0/select/pointer/x", "/0/select/pointer/y".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of a couple (array of size two) points: x and y.
- *
- * Returns: The newly created layer.
- **/
-GtkObject*
-gwy_layer_pointer_new(void)
-{
-    GtkObject *object;
-
-    gwy_debug("");
-    object = g_object_new(GWY_TYPE_LAYER_POINTER, NULL);
-
-    return object;
 }
 
 static void

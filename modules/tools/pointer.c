@@ -68,6 +68,7 @@ static GwyUnitoolSlots func_slots = {
     NULL,                          /* apply action */
     NULL,                          /* nonstandard response handler */
 };
+
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)

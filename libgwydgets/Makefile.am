@@ -19,13 +19,8 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphcorner.h \
 	gwygraphlabel.h \
 	gwyhruler.h \
-	gwylayer-axes.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
-	gwylayer-lines.h \
-	gwylayer-pointer.h \
-	gwylayer-points.h \
-	gwylayer-select.h \
 	gwyoptionmenus.h \
 	gwypixmaplayer.h \
 	gwyruler.h \
@@ -60,17 +55,12 @@ libgwydgets_la_SOURCES = \
 	gwygradsphere.c \
 	gwygraph.c \
 	gwygrapharea.c \
-        gwygraphexport.c \
+	gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
 	gwyhruler.c \
-	gwylayer-axes.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
-	gwylayer-lines.c \
-	gwylayer-pointer.c \
-	gwylayer-points.c \
-	gwylayer-select.c \
 	gwyoptionmenus.c \
 	gwypixmaplayer.c \
 	gwyruler.c \

@@ -7,6 +7,7 @@ module_ldflags = -shared -Wl,-soname
 SUBDIRS = \
 	file \
 	graph \
+	layer \
 	process \
 	tools
 

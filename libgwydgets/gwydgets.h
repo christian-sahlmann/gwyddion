@@ -33,13 +33,8 @@
 #include <libgwydgets/gwygraphcorner.h>
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwyhruler.h>
-#include <libgwydgets/gwylayer-axes.h>
 #include <libgwydgets/gwylayer-basic.h>
-#include <libgwydgets/gwylayer-lines.h>
 #include <libgwydgets/gwylayer-mask.h>
-#include <libgwydgets/gwylayer-pointer.h>
-#include <libgwydgets/gwylayer-points.h>
-#include <libgwydgets/gwylayer-select.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libgwydgets/gwyruler.h>

@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-layerdir = $(gwymoduledir)/tool
+layerdir = $(gwymoduledir)/layer
 
 module_ldflags = -shared -Wl,-soname
 

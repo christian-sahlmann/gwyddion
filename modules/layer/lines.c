@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,14 +18,39 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: this should be placed somewhere...
+ * gwy_layer_lines_new:
+ *
+ * Creates a new line selection layer.
+ *
+ * The default number of lines to select is three.
+ *
+ * Container keys: "/0/select/lines/0/x0", "/0/select/lines/0/y0",
+ * "/0/select/lines/0/x1", "/0/select/lines/0/y1", "/0/select/lines/1/x0",
+ * "/0/select/lines/1/y0", etc., and "/0/select/lines/nselected".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of quadruples of line coordinates x0, y0, x1, y1.
+ *
+ * Returns: The newly created layer.
+ */
+
 #include <string.h>
-#include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-lines.h"
-#include "gwydataview.h"
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwymodule/gwymodule.h>
+
+#define GWY_TYPE_LAYER_LINES            (gwy_layer_lines_get_type())
+#define GWY_LAYER_LINES(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_LINES, GwyLayerLines))
+#define GWY_LAYER_LINES_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_LAYER_LINES, GwyLayerLinesClass))
+#define GWY_IS_LAYER_LINES(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_LINES))
+#define GWY_IS_LAYER_LINES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_LAYER_LINES))
+#define GWY_LAYER_LINES_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_LINES, GwyLayerLinesClass))
 
 #define GWY_LAYER_LINES_TYPE_NAME "GwyLayerLines"
 
@@ -40,8 +65,34 @@ enum {
     PROP_LAST
 };
 
+typedef struct _GwyLayerLines      GwyLayerLines;
+typedef struct _GwyLayerLinesClass GwyLayerLinesClass;
+
+struct _GwyLayerLines {
+    GwyVectorLayer parent_instance;
+
+    gint nlines;
+    gint nselected;
+    gint inear;
+    gboolean moving_line;
+    gdouble lmove_x;
+    gdouble lmove_y;
+    guint button;
+    gdouble *lines;
+};
+
+struct _GwyLayerLinesClass {
+    GwyVectorLayerClass parent_class;
+
+    GdkCursor *near_cursor;
+    GdkCursor *nearline_cursor;
+    GdkCursor *move_cursor;
+};
+
 /* Forward declarations */
 
+static gboolean   module_register                 (const gchar *name);
+static GType      gwy_layer_lines_get_type        (void);
 static void       gwy_layer_lines_class_init      (GwyLayerLinesClass *klass);
 static void       gwy_layer_lines_init            (GwyLayerLines *layer);
 static void       gwy_layer_lines_finalize        (GObject *object);
@@ -87,9 +138,39 @@ static gint       gwy_layer_lines_near_point      (GwyLayerLines *layer,
 
 /* Local data */
 
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "layer-lines",
+    "Layer allowing selection of arbitrary straight lines.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
 static GtkObjectClass *parent_class = NULL;
 
-GType
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyLayerFuncInfo func_info = {
+        "lines",
+        0,
+    };
+
+    func_info.type = gwy_layer_lines_get_type();
+    gwy_layer_func_register(name, &func_info);
+
+    return TRUE;
+}
+
+static GType
 gwy_layer_lines_get_type(void)
 {
     static GType gwy_layer_lines_type = 0;
@@ -232,33 +313,6 @@ gwy_layer_lines_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-}
-
-/**
- * gwy_layer_lines_new:
- *
- * Creates a new line selection layer.
- *
- * The default number of lines to select is three.
- *
- * Container keys: "/0/select/lines/0/x0", "/0/select/lines/0/y0",
- * "/0/select/lines/0/x1", "/0/select/lines/0/y1", "/0/select/lines/1/x0",
- * "/0/select/lines/1/y0", etc., and "/0/select/lines/nselected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of quadruples of line coordinates x0, y0, x1, y1.
- *
- * Returns: The newly created layer.
- **/
-GtkObject*
-gwy_layer_lines_new(void)
-{
-    GtkObject *object;
-
-    gwy_debug("");
-    object = g_object_new(GWY_TYPE_LAYER_LINES, NULL);
-
-    return object;
 }
 
 static void

@@ -59,14 +59,6 @@ gwy_app_init(void)
     optimization_fooler += gwy_palette_def_get_type();
     optimization_fooler += gwy_container_get_type();
 
-    /* FIXME: this is to be removed once layers are modularized, then loading
-     * of the layer module will initiate class instantiation. */
-    optimization_fooler += gwy_layer_axes_get_type();
-    optimization_fooler += gwy_layer_lines_get_type();
-    optimization_fooler += gwy_layer_pointer_get_type();
-    optimization_fooler += gwy_layer_points_get_type();
-    optimization_fooler += gwy_layer_select_get_type();
-
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(_(PACKAGE_NAME));
     gwy_palette_def_setup_presets();

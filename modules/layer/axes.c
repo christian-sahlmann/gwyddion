@@ -18,14 +18,41 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: this should be placed somewhere...
+ * gwy_layer_axes_new:
+ *
+ * Creates a new vertical/horizontal line selection layer.
+ *
+ * The default number of axes to select is three and the default orientation
+ * os horizontal.
+ *
+ * Container keys: "/0/select/axes/0/x", "/0/select/axes/0/y",
+ * "/0/select/axes/1/x", "/0/select/axes/1/y", etc.,
+ * and "/0/select/axes/nselected".
+ *
+ * The selection (obtained from gwy_vector_layer_get_selection()) consists
+ * of a list of x-coordinates alone (for vertical lines) or y-coordinates
+ * alone (for horizontal lines).
+ *
+ * Returns: The newly created layer.
+ */
+
 #include <string.h>
-#include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-axes.h"
-#include "gwydataview.h"
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwymodule/gwymodule.h>
+
+#define GWY_TYPE_LAYER_AXES            (gwy_layer_axes_get_type())
+#define GWY_LAYER_AXES(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_AXES, GwyLayerAxes))
+#define GWY_LAYER_AXES_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_LAYER_AXES, GwyLayerAxesClass))
+#define GWY_IS_LAYER_AXES(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_AXES))
+#define GWY_IS_LAYER_AXES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_LAYER_AXES))
+#define GWY_LAYER_AXES_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_AXES, GwyLayerAxesClass))
 
 #define GWY_LAYER_AXES_TYPE_NAME "GwyLayerAxes"
 
@@ -41,8 +68,31 @@ enum {
     PROP_LAST
 };
 
+typedef struct _GwyLayerAxes      GwyLayerAxes;
+typedef struct _GwyLayerAxesClass GwyLayerAxesClass;
+
+struct _GwyLayerAxes {
+    GwyVectorLayer parent_instance;
+
+    GtkOrientation orientation;
+    gint naxes;
+    gint nselected;
+    gint inear;
+    guint button;
+    gdouble *axes;
+};
+
+struct _GwyLayerAxesClass {
+    GwyVectorLayerClass parent_class;
+
+    GdkCursor *near_cursor;
+    GdkCursor *move_cursor;
+};
+
 /* Forward declarations */
 
+static gboolean   module_register                (const gchar *name);
+static GType      gwy_layer_axes_get_type        (void) G_GNUC_CONST;
 static void       gwy_layer_axes_class_init      (GwyLayerAxesClass *klass);
 static void       gwy_layer_axes_init            (GwyLayerAxes *layer);
 static void       gwy_layer_axes_finalize        (GObject *object);
@@ -77,16 +127,45 @@ static void       gwy_layer_axes_unselect        (GwyVectorLayer *layer);
 static void       gwy_layer_axes_save            (GwyLayerAxes *layer,
                                                   gint i);
 static void       gwy_layer_axes_restore         (GwyLayerAxes *layer);
-
 static gint       gwy_layer_axes_near_point      (GwyLayerAxes *layer,
                                                   gdouble xreal,
                                                   gdouble yreal);
 
 /* Local data */
 
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "layer-axes",
+    "Layer allowing selection of horizontal or vertical lines.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
 static GtkObjectClass *parent_class = NULL;
 
-GType
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyLayerFuncInfo func_info = {
+        "axes",
+        0,
+    };
+
+    func_info.type = gwy_layer_axes_get_type();
+    gwy_layer_func_register(name, &func_info);
+
+    return TRUE;
+}
+
+static GType
 gwy_layer_axes_get_type(void)
 {
     static GType gwy_layer_axes_type = 0;
@@ -244,35 +323,6 @@ gwy_layer_axes_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-}
-
-/**
- * gwy_layer_axes_new:
- *
- * Creates a new vertical/horizontal line selection layer.
- *
- * The default number of axes to select is three and the default orientation
- * os horizontal.
- *
- * Container keys: "/0/select/axes/0/x", "/0/select/axes/0/y",
- * "/0/select/axes/1/x", "/0/select/axes/1/y", etc.,
- * and "/0/select/axes/nselected".
- *
- * The selection (obtained from gwy_vector_layer_get_selection()) consists
- * of a list of x-coordinates alone (for vertical lines) or y-coordinates
- * alone (for horizontal lines).
- *
- * Returns: The newly created layer.
- **/
-GtkObject*
-gwy_layer_axes_new(void)
-{
-    GtkObject *object;
-
-    gwy_debug("");
-    object = g_object_new(GWY_TYPE_LAYER_AXES, NULL);
-
-    return object;
 }
 
 static void

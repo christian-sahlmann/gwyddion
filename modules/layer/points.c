@@ -18,14 +18,39 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: this should be placed somewhere...
+ * gwy_layer_points_new:
+ *
+ * Creates a new point selection layer.
+ *
+ * The default number of points to select is three.
+ *
+ * Container keys: "/0/select/points/0/x", "/0/select/points/0/y",
+ * "/0/select/points/1/x", "/0/select/points/1/y", etc.,
+ * and "/0/select/points/nselected".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of array of coordinate couples x, y.
+ *
+ * Returns: The newly created layer.
+ */
+
 #include <string.h>
-#include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-points.h"
-#include "gwydataview.h"
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwymodule/gwymodule.h>
+
+#define GWY_TYPE_LAYER_POINTS            (gwy_layer_points_get_type())
+#define GWY_LAYER_POINTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_POINTS, GwyLayerPoints))
+#define GWY_LAYER_POINTS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_LAYER_POINTS, GwyLayerPointsClass))
+#define GWY_IS_LAYER_POINTS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_POINTS))
+#define GWY_IS_LAYER_POINTS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_LAYER_POINTS))
+#define GWY_LAYER_POINTS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_POINTS, GwyLayerPointsClass))
 
 #define GWY_LAYER_POINTS_TYPE_NAME "GwyLayerPoints"
 
@@ -40,8 +65,30 @@ enum {
     PROP_LAST
 };
 
+typedef struct _GwyLayerPoints      GwyLayerPoints;
+typedef struct _GwyLayerPointsClass GwyLayerPointsClass;
+
+struct _GwyLayerPoints {
+    GwyVectorLayer parent_instance;
+
+    gint npoints;
+    gint nselected;
+    gint inear;
+    guint button;
+    gdouble *points;
+};
+
+struct _GwyLayerPointsClass {
+    GwyVectorLayerClass parent_class;
+
+    GdkCursor *near_cursor;
+    GdkCursor *move_cursor;
+};
+
 /* Forward declarations */
 
+static gboolean   module_register                 (const gchar *name);
+static GType      gwy_layer_points_get_type        (void) G_GNUC_CONST;
 static void       gwy_layer_points_class_init      (GwyLayerPointsClass *klass);
 static void       gwy_layer_points_init            (GwyLayerPoints *layer);
 static void       gwy_layer_points_finalize        (GObject *object);
@@ -83,7 +130,37 @@ static gint       gwy_layer_points_near_point      (GwyLayerPoints *layer,
 
 static GtkObjectClass *parent_class = NULL;
 
-GType
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "layer-points",
+    "Layer allowing selection of horizontal or vertical lines.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyLayerFuncInfo func_info = {
+        "points",
+        0,
+    };
+
+    func_info.type = gwy_layer_points_get_type();
+    gwy_layer_func_register(name, &func_info);
+
+    return TRUE;
+}
+
+static GType
 gwy_layer_points_get_type(void)
 {
     static GType gwy_layer_points_type = 0;
@@ -223,33 +300,6 @@ gwy_layer_points_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-}
-
-/**
- * gwy_layer_points_new:
- *
- * Creates a new point selection layer.
- *
- * The default number of points to select is three.
- *
- * Container keys: "/0/select/points/0/x", "/0/select/points/0/y",
- * "/0/select/points/1/x", "/0/select/points/1/y", etc.,
- * and "/0/select/points/nselected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of array of coordinate couples x, y.
- *
- * Returns: The newly created layer.
- **/
-GtkObject*
-gwy_layer_points_new(void)
-{
-    GtkObject *object;
-
-    gwy_debug("");
-    object = g_object_new(GWY_TYPE_LAYER_POINTS, NULL);
-
-    return object;
 }
 
 static void

@@ -18,14 +18,37 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * XXX: this should be placed somewhere...
+ * gwy_layer_select_new:
+ *
+ * Creates a new rectangular selection layer.
+ *
+ * Container keys: "/0/select/rect/x0", "/0/select/x1", "/0/select/y0",
+ * "/0/select/rect/y1", and "/0/select/selected".
+ *
+ * The selection (as returned by gwy_vector_layer_get_selection()) consists
+ * of list of four coordinates: xmin, ymin, xmax, ymax.
+ *
+ * Returns: The newly created layer.
+ */
+
 #include <string.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include "gwylayer-select.h"
-#include "gwydataview.h"
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwymodule/gwymodule.h>
+
+#define GWY_TYPE_LAYER_SELECT            (gwy_layer_select_get_type())
+#define GWY_LAYER_SELECT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_SELECT, GwyLayerSelect))
+#define GWY_LAYER_SELECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_LAYER_SELECT, GwyLayerSelectClass))
+#define GWY_IS_LAYER_SELECT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_SELECT))
+#define GWY_IS_LAYER_SELECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_LAYER_SELECT))
+#define GWY_LAYER_SELECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_SELECT, GwyLayerSelectClass))
 
 #define GWY_LAYER_SELECT_TYPE_NAME "GwyLayerSelect"
 
@@ -39,8 +62,33 @@ enum {
     PROP_LAST
 };
 
+typedef struct _GwyLayerSelect      GwyLayerSelect;
+typedef struct _GwyLayerSelectClass GwyLayerSelectClass;
+
+struct _GwyLayerSelect {
+    GwyVectorLayer parent_instance;
+
+    gboolean is_crop;
+    gboolean selected;
+    gint inear;
+    guint button;
+    gdouble x0;
+    gdouble y0;
+    gdouble x1;
+    gdouble y1;
+};
+
+struct _GwyLayerSelectClass {
+    GwyVectorLayerClass parent_class;
+
+    GdkCursor *corner_cursor[4];
+    GdkCursor *resize_cursor;
+};
+
 /* Forward declarations */
 
+static gboolean   module_register                    (const gchar *name);
+static GType      gwy_layer_select_get_type          (void) G_GNUC_CONST;
 static void       gwy_layer_select_class_init        (GwyLayerSelectClass *klass);
 static void       gwy_layer_select_init              (GwyLayerSelect *layer);
 static void       gwy_layer_select_finalize          (GObject *object);
@@ -75,9 +123,39 @@ static gint       gwy_layer_select_near_point        (GwyLayerSelect *layer,
 
 /* Local data */
 
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "layer-select",
+    "Layer allowing selection of rectangular areas.",
+    "Yeti <yeti@physics.muni.cz>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
 static GtkObjectClass *parent_class = NULL;
 
-GType
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyLayerFuncInfo func_info = {
+        "select",
+        0,
+    };
+
+    func_info.type = gwy_layer_select_get_type();
+    gwy_layer_func_register(name, &func_info);
+
+    return TRUE;
+}
+
+static GType
 gwy_layer_select_get_type(void)
 {
     static GType gwy_layer_select_type = 0;
@@ -216,30 +294,6 @@ gwy_layer_select_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-}
-
-/**
- * gwy_layer_select_new:
- *
- * Creates a new rectangular selection layer.
- *
- * Container keys: "/0/select/rect/x0", "/0/select/x1", "/0/select/y0",
- * "/0/select/rect/y1", and "/0/select/selected".
- *
- * The selection (as returned by gwy_vector_layer_get_selection()) consists
- * of list of four coordinates: xmin, ymin, xmax, ymax.
- *
- * Returns: The newly created layer.
- **/
-GtkObject*
-gwy_layer_select_new(void)
-{
-    GtkObject *object;
-
-    gwy_debug("");
-    object = g_object_new(GWY_TYPE_LAYER_SELECT, NULL);
-
-    return object;
 }
 
 static void
