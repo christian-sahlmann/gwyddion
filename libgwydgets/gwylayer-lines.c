@@ -509,7 +509,8 @@ gwy_layer_lines_button_released(GwyDataViewLayer *layer,
 /**
  * gwy_layer_lines_get_lines:
  * @layer: A #GwyLayerLines.
- * @lines: Where the point coordinates should be stored in.
+ * @lines: Where the point coordinates should be stored in, or NULL (to get
+ *         only the number of selected lines).
  *
  * Obtains the selected lines.
  *
@@ -530,11 +531,11 @@ gwy_layer_lines_get_lines(GwyDataViewLayer *layer,
     g_return_val_if_fail(lines, 0);
 
     lines_layer = (GwyLayerLines*)layer;
-    if (!lines_layer->nselected)
-        return 0;
+    if (lines && lines_layer->nselected) {
+        memcpy(lines, lines_layer->lines,
+               4*lines_layer->nselected*sizeof(gdouble));
+    }
 
-    memcpy(lines, lines_layer->lines,
-           4*lines_layer->nselected*sizeof(gdouble));
     return lines_layer->nselected;
 }
 

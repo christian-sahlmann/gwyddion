@@ -395,7 +395,8 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
  *
  * Obtains the selected rectangle in real (i.e., physical) coordinates.
  *
- * FIXME: this should be done through container.
+ * The @xmin, @ymin, @xmax, @ymax arguments can be NULL if you are not
+ * interested in the particular coordinates.
  *
  * Returns: %TRUE when there is some selection present (and some values were
  *          stored), %FALSE

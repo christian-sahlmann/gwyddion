@@ -266,7 +266,8 @@ gwy_layer_pointer_button_released(GwyDataViewLayer *layer,
  *
  * Obtains the point in real (i.e., physical) coordinates.
  *
- * FIXME: this should be done through container.
+ * The @x and @y arguments can be NULL if you are not interested in the
+ * particular coordinate.
  *
  * Returns: %TRUE when there is some selection present (and some values were
  *          stored), %FALSE

@@ -413,7 +413,8 @@ gwy_layer_points_button_released(GwyDataViewLayer *layer,
 /**
  * gwy_layer_points_get_points:
  * @layer: A #GwyLayerPoints.
- * @points: Where the point coordinates should be stored in.
+ * @points: Where the point coordinates should be stored in, or NULL (to get
+ *          only the number of selected points).
  *
  * Obtains the selected points.
  *
@@ -434,11 +435,11 @@ gwy_layer_points_get_points(GwyDataViewLayer *layer,
     g_return_val_if_fail(points, 0);
 
     points_layer = (GwyLayerPoints*)layer;
-    if (!points_layer->nselected)
-        return 0;
+    if (points && points_layer->nselected) {
+        memcpy(points, points_layer->points,
+               2*points_layer->nselected*sizeof(gdouble));
+    }
 
-    memcpy(points, points_layer->points,
-           2*points_layer->nselected*sizeof(gdouble));
     return points_layer->nselected;
 }
 
