@@ -517,16 +517,27 @@ gwy_data_view_expose(GtkWidget *widget,
                      GdkEventExpose *event)
 {
     GwyDataView *data_view;
+    gint xs, ys, xe, ye, w, h;
+    GdkRectangle rect;
     gboolean emit_redrawn = FALSE;
 
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
+    data_view = GWY_DATA_VIEW(widget);
 
-    if (event->count > 0)
+    gdk_region_get_clipbox(event->region, &rect);
+    gwy_debug("bbox = %dx%d  at (%d,%d)",
+              rect.width, rect.height, rect.x, rect.y);
+    w = gdk_pixbuf_get_width(data_view->pixbuf);
+    h = gdk_pixbuf_get_height(data_view->pixbuf);
+    xs = MAX(rect.x, data_view->xoff) - data_view->xoff;
+    ys = MAX(rect.y, data_view->yoff) - data_view->yoff;
+    xe = MIN(rect.x + rect.width, data_view->xoff + w) - data_view->xoff;
+    ye = MIN(rect.y + rect.height, data_view->yoff + h) - data_view->yoff;
+    if (xs >= xe || ys >= ye)
         return FALSE;
 
-    gdk_window_set_back_pixmap(widget->window, NULL, FALSE);
+    /*gdk_window_set_back_pixmap(widget->window, NULL, FALSE);*/
 
-    data_view = GWY_DATA_VIEW(widget);
     /* FIXME: ask the layers, if they want to repaint themselves */
     if (data_view->force_update
         || gwy_data_view_layer_wants_repaint(data_view->base_layer)
@@ -539,9 +550,9 @@ gwy_data_view_expose(GtkWidget *widget,
     gdk_draw_pixbuf(widget->window,
                     NULL,
                     data_view->pixbuf,
-                    0, 0,
-                    data_view->xoff, data_view->yoff,
-                    -1, -1,
+                    xs, ys,
+                    xs + data_view->xoff, ys + data_view->yoff,
+                    xe - xs, ye - ys,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
 
