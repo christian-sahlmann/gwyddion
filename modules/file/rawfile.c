@@ -446,8 +446,8 @@ rawfile_dialog(RawFileArgs *args,
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_MODAL
                                          | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          _("Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     controls.dialog = dialog;
