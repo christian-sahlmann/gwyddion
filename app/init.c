@@ -52,6 +52,7 @@ gwy_app_init(void)
 {
     g_assert(palettes == NULL);
 
+    optimization_fooler += gwy_si_unit_get_type();
     optimization_fooler += gwy_sphere_coords_get_type();
     optimization_fooler += gwy_data_field_get_type();
     optimization_fooler += gwy_data_line_get_type();
