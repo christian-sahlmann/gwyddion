@@ -247,6 +247,10 @@ gwy_hruler_real_draw_ticks(GwyRuler *ruler,
     range = upper - lower;
     format = gwy_si_unit_get_format_with_resolution(ruler->units,
                                                     max, max/12, NULL);
+    if (format->precision > 1)
+        format = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                        max/12, max/24,
+                                                        format);
     measure = range/format->magnitude / pixelsize;
     max /= format->magnitude;
 
