@@ -28,7 +28,7 @@
 #include <app/settings.h>
 #include <app/gwyapp.h>
 
-#define GRADIENT_RUN_MODES \
+#define EDGE_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 
@@ -47,9 +47,9 @@ static GwyModuleInfo module_info = {
     "edge",
     N_("Edge detection presentations"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -63,14 +63,14 @@ module_register(const gchar *name)
         "laplacian",
         N_("/_Display/_Edge detection/_Laplacian of Gaussian"),
         (GwyProcessFunc)&laplacian,
-        GRADIENT_RUN_MODES,
+        EDGE_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo canny_func_info = {
         "canny",
         N_("/_Display/_Edge detection/_Canny"),
         (GwyProcessFunc)&canny,
-        GRADIENT_RUN_MODES,
+        EDGE_RUN_MODES,
         0,
     };
 

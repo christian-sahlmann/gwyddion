@@ -52,9 +52,9 @@ static GwyModuleInfo module_info = {
     "gradient",
     N_("Gradient presentations"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2003",
+    "2004",
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
