@@ -69,7 +69,8 @@ static gboolean      count_angles             (gint n,
                                                gint size,
                                                gulong *count,
                                                gint steps);
-static GwyDataField* make_datafield           (gint res,
+static GwyDataField* make_datafield           (GwyDataField *old,
+                                               gint res,
                                                gulong *count,
                                                gdouble real,
                                                gboolean logscale);
@@ -260,7 +261,7 @@ angle_do(GwyDataField *dfield,
         return NULL;
     }
 
-    return make_datafield(args->size, count, 2.0*G_PI, args->logscale);
+    return make_datafield(dfield, args->size, count, 2.0*G_PI, args->logscale);
 }
 
 static gdouble
@@ -350,18 +351,22 @@ count_angles(gint n, gdouble *xder, gdouble *yder,
 }
 
 static GwyDataField*
-make_datafield(gint res, gulong *count,
+make_datafield(G_GNUC_UNUSED GwyDataField *old,
+               gint res, gulong *count,
                gdouble real, gboolean logscale)
 {
     GwyDataField *dfield;
-    GwySIUnit *zunit;
+    GwySIUnit *unit;
     gdouble *d;
     gint i;
 
     dfield = GWY_DATA_FIELD(gwy_data_field_new(res, res, real, real, FALSE));
-    zunit = GWY_SI_UNIT(gwy_si_unit_new(""));
-    gwy_data_field_set_si_unit_z(dfield, zunit);
-    g_object_unref(zunit);
+    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    gwy_data_field_set_si_unit_z(dfield, unit);
+    g_object_unref(unit);
+    unit = GWY_SI_UNIT(gwy_si_unit_new(""));
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_object_unref(unit);
 
     d = gwy_data_field_get_data(dfield);
     if (logscale) {

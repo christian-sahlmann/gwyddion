@@ -303,7 +303,7 @@ make_datafield(GwyDataField *old,
         unit = GWY_SI_UNIT(gwy_si_unit_new(u));
         g_free(u);
     }
-  
+
     gwy_data_field_set_si_unit_xy(dfield, unit);
     g_free(xyu);
     g_free(zu);
