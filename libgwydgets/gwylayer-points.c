@@ -526,7 +526,7 @@ gwy_layer_points_near_point(GwyLayerPoints *layer,
         return -1;
 
     i = gwy_math_find_nearest_point(xreal, yreal, &d2min,
-                                    2*layer->nselected, layer->points);
+                                    layer->nselected, layer->points);
 
     dlayer = (GwyDataViewLayer*)layer;
     /* FIXME: this is simply nonsense when x measure != y measure */
