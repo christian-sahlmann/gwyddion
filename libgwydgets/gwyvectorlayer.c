@@ -42,6 +42,7 @@ static void     gwy_vector_layer_init         (GwyVectorLayer *layer);
 static void     gwy_vector_layer_finalize     (GObject *object);
 static void     gwy_vector_layer_plugged      (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_unplugged    (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_real_updated (GwyDataViewLayer *layer);
 static gboolean gwy_vector_layer_timer        (GwyVectorLayer *layer);
 
 /* Local data */
@@ -95,6 +96,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
     layer_class->wants_repaint = NULL;  /* always wants */
+    layer_class->updated = gwy_vector_layer_real_updated;
 
     klass->draw = NULL;
 
@@ -403,6 +405,18 @@ gwy_vector_layer_timer(GwyVectorLayer *layer)
 
     layer->timer = 0;
     return FALSE;
+}
+
+static void
+gwy_vector_layer_real_updated(GwyDataViewLayer *layer)
+{
+    GwyVectorLayer *vector_layer;
+
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    if (vector_layer->timer) {
+        gtk_timeout_remove(vector_layer->timer);
+        vector_layer->timer = 0;
+    }
 }
 
 static void
