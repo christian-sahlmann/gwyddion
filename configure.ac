@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041009, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041010, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -151,7 +151,7 @@ case $target_os in
     TARGET_LDFLAGS="-mwindows"
     ;;
   *)
-    STRIP="echo"
+    #STRIP="echo"  FIXME: WTF?
     ;;
 esac
 TARGET_CFLAGS="$TARGET_CFLAGS -march=$target_cpu"
@@ -164,6 +164,10 @@ else
   LDFLAGS="$LDFLAGS -L$prefix/lib"
   CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
+
+AC_PATH_X
+test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
+test "x$x_libraries" = "x" || CPPFLAGS="$CPPFLAGS -L$x_libraries"
 
 PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.2.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
