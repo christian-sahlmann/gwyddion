@@ -150,10 +150,11 @@ gwy_sci_text_init(GwySciText *sci_text)
     sci_text->entry = GTK_ENTRY(gtk_entry_new());
     sci_text->label = gtk_label_new(" ");
     sci_text->entities = gtk_combo_new(); 
-    lower = gwy_button_new_with_markup("x<sub>y</sub>");
-    upper = gwy_button_new_with_markup("x<sup>y</sup>");
-    bold = gwy_button_new_with_markup("<b>B</b>");
-    italic = gwy_button_new_with_markup("<i>I</i>");
+    lower = gwy_button_new_with_markup("<sup> </sup>x<sub>y </sub>");
+    upper = gwy_button_new_with_markup("<sub> </sub>x<sup>y </sup>");
+    bold = gwy_button_new_with_markup("<sup> </sup><b>B</b><sub> </sub>");
+    italic = gwy_button_new_with_markup("<sup> </sup><i>I</i><sub> </sub>");
+                
     hbox = gtk_hbox_new(0,0);
 
     items = g_list_append (items,"choose symbol"); 
