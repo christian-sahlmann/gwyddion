@@ -51,7 +51,7 @@ typedef struct _Gwy3DLabelsClass           Gwy3DLabelsClass;
 
 
 typedef enum {
-    GWY_3D_VIEW_LABEL_X,
+    GWY_3D_VIEW_LABEL_X = 0,
     GWY_3D_VIEW_LABEL_Y,
     GWY_3D_VIEW_LABEL_MIN,
     GWY_3D_VIEW_LABEL_MAX

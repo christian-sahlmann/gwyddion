@@ -279,6 +279,7 @@ gwy_3d_labels_new(GwyContainer * container)
     labels->labels_count = 4;
     labels->labels = g_new(Gwy3DLabelDescription*, labels->labels_count);
 
+    /* XXX: use symbolic constants GWY_3D_LABEL_FOO instead of numbers */
     labels->labels[0] = gwy_3d_label_description_new(
                             "x: $X", "/0/3d/labels/x/", 0, 0, 0.0f, 1, labels);
     labels->labels[1] = gwy_3d_label_description_new(
@@ -340,14 +341,14 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
 {
     GwySIValueFormat * format;
     gchar buffer[50];
-    gdouble xreal, yreal, data_min, data_max;
+    gdouble xreal, yreal, data_min, data_max, range, maximum;
     GwyDataField * data_field;
     int i;
 
     gwy_debug(" ");
 
     g_return_if_fail(gwy_container_gis_object_by_name(
-                         labels->container, "/0/data", (GObject**) &data_field));
+                         labels->container, "/0/data", (GObject**)&data_field));
 
     for (i = 0; i < labels->variables_count; i++)
        g_free(labels->values[i]);
@@ -356,11 +357,13 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
     yreal    = gwy_data_field_get_yreal(data_field);
     data_min = gwy_data_field_get_min(data_field);
     data_max = gwy_data_field_get_max(data_field);
+    range = fabs(data_max - data_min);
+    maximum = MAX(fabs(data_min), fabs(data_max));
 
     format = gwy_si_unit_get_format_with_resolution(
                      si_unit,
                      xreal,
-                     xreal,
+                     xreal/3,
                      NULL);
     g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
                    xreal/format->magnitude,
@@ -370,7 +373,7 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
     gwy_si_unit_get_format_with_resolution(
                      si_unit,
                      yreal,
-                     yreal,
+                     yreal/3,
                      format);
     g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
                    yreal/format->magnitude,
@@ -379,19 +382,14 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
 
     gwy_si_unit_get_format_with_resolution(
                      si_unit,
-                     data_min,
-                     data_min,
+                     maximum,
+                     range/3,
                      format);
     g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
                    data_min/format->magnitude,
                    format->units);
     labels->values[2] = g_strdup(buffer); /* $MIN */
 
-    gwy_si_unit_get_format_with_resolution(
-                     si_unit,
-                     data_max,
-                     data_max,
-                     format);
     g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
                    data_max/format->magnitude,
                    format->units);
