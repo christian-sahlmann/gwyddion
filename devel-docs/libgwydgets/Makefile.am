@@ -87,7 +87,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_zoom_out-24.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files =
+content_files = standard-vector-layers.xml
 
 # Other files to distribute.
 extra_files = $(DOC_MODULE).types makefile.msc
