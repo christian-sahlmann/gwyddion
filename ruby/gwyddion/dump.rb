@@ -9,7 +9,7 @@ module Gwyddion
 
 	class Dump < Hash
 		SIZE_OF_DOUBLE= 8
-		L_BRACKET= '['.unpack( 'C').first
+		L_BRACKET= '['[0]
 		LINE = /^([^=]+)=(.*)\n/
 		FIELD= /^([^=]+)=\[\n/
 		CONV= { 'xres'=> :to_i, 'yres'=> :to_i, 'xreal'=> :to_f, 'yreal'=> :to_f}
