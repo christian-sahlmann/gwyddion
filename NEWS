@@ -1,12 +1,15 @@
-
+1.5cvs20040925
 
 1.6
+Application:
+- Crashes when a top-level menus is detached was fixed (bug #30)
+
 Modules:
 - Plug-in proxy: Dump files are always written with POSIX real number format
   (bug #31)
 
-Plug-ins:
-- dump.c: Compilation problems on FreeBSD fixed.
+Other:
+- Various build time problems on FreeBSD were fixed.
 
 
 1.5
