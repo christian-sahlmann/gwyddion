@@ -8,6 +8,7 @@ file_PROGRAMS = \
 	asciiexport.so \
 	gwyfile.so \
 	nanoscope.so \
+	nt-mdt.so \
 	pixmap.so \
 	rawfile.so \
 	sis.so
@@ -23,6 +24,9 @@ gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
 
 nanoscope_so_SOURCES = nanoscope.c
 nanoscope_so_LDFLAGS = $(module_ldflags),nanoscope.so
+
+nt_mdt_so_SOURCES = nt-mdt.c
+nt_mdt_so_LDFLAGS = $(module_ldflags),nt-mdt.so
 
 pixmap_so_SOURCES = pixmap.c
 pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so
