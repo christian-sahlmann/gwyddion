@@ -41,6 +41,7 @@ typedef struct {
 GtkWidget *gwy_app_main_window = NULL;
 
 static GList *current_data = NULL;
+static GList *current_graphs = NULL;
 static GwyToolUseFunc current_tool_use_func = NULL;
 static gint untitled_no = 0;
 
@@ -329,6 +330,77 @@ gwy_app_data_window_create(GwyContainer *data)
     gtk_window_present(GTK_WINDOW(data_window));
 
     return data_window;
+}
+
+GwyGraph*
+gwy_app_graph_window_get_current(void)
+{
+    return current_graphs ? (GwyGraph*)current_graphs->data : NULL;
+}
+
+void
+gwy_app_graph_window_set_current(GwyGraph *graph)
+{
+    GList *item;
+
+    gwy_debug("%s: %p", __FUNCTION__, graph);
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+  
+    item = g_list_find(current_graphs, graph);
+    if (item) {
+        current_graphs = g_list_remove_link(current_graphs, item);
+        current_graphs = g_list_concat(item, current_graphs);
+    }
+    else
+        current_graphs = g_list_prepend(current_graphs, graph);
+}
+
+void
+gwy_app_graph_window_remove(GwyGraph *graph)
+{
+    GList *item;
+
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+
+    item = g_list_find(current_graphs, graph);
+    if (!item) {
+        g_critical("Trying to remove GwyGraph %p not present in the list",
+                   graph);
+        return;
+    }
+    current_graphs = g_list_delete_link(current_graphs, item);
+    if (current_graphs) {
+        gwy_app_graph_window_set_current(GWY_GRAPH(current_graphs->data));
+        return;
+    }
+}
+
+GtkWidget*
+gwy_app_graph_window_create(GtkWidget *graph)
+{
+    
+    GtkWidget *window;
+
+    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+
+    if (graph == NULL) graph = gwy_graph_new();
+    
+    
+    g_signal_connect(window, "focus-in-event",
+                     G_CALLBACK(gwy_app_graph_window_set_current), NULL);
+    g_signal_connect(window, "destroy",
+                     G_CALLBACK(gwy_app_graph_window_remove), NULL);
+    g_signal_connect_swapped(window, "destroy",
+                             G_CALLBACK(g_object_unref), graph);
+
+    gtk_container_add (GTK_CONTAINER (window), graph);
+    gtk_widget_show(graph);
+    gtk_widget_show_all(window);
+    gtk_window_present(GTK_WINDOW(window));
+
+    return window;
 }
 
 /**
