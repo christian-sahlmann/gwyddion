@@ -205,7 +205,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(9, 4, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(NULL);
@@ -243,19 +243,19 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     controls.inverted = gtk_check_button_new_with_mnemonic(_("_Invert height"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
                                  args->inverted);
-    gtk_table_attach(GTK_TABLE(table), controls.inverted,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.inverted, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls.merge = gwy_option_menu_mergegrain(NULL, NULL, args->merge_type);
     gwy_table_attach_hscale(table, row, _("_Selection mode:"), NULL,
-                            controls.merge, GWY_HSCALE_WIDGET);
+                            GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);

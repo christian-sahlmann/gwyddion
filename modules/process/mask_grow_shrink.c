@@ -28,6 +28,10 @@
 #define MASK_GROW_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    MAX_AMOUNT = 1024
+};
+
 /* Data for this function. */
 typedef struct {
     gint pixels;
@@ -66,7 +70,7 @@ static GwyModuleInfo module_info = {
     "mask_grow_shrink",
     N_("Grows and shrinks masks."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -162,7 +166,7 @@ mask_grow_dialog(MaskGrowArgs *args,
                  const gchar *title,
                  const gchar *desc)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     MaskGrowControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -172,6 +176,7 @@ mask_grow_dialog(MaskGrowArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(1, 3, FALSE);
@@ -180,10 +185,9 @@ mask_grow_dialog(MaskGrowArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.pixels = gtk_adjustment_new(args->pixels, 1, 1024, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _(desc), _("px"),
-                                       controls.pixels);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    controls.pixels = gtk_adjustment_new(args->pixels, 1, MAX_AMOUNT, 1, 10, 0);
+    gwy_table_attach_hscale(table, 0, _(desc), "px",
+                            controls.pixels, GWY_HSCALE_SQRT);
 
     gtk_widget_show_all(dialog);
     do {
@@ -191,9 +195,8 @@ mask_grow_dialog(MaskGrowArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            args->pixels
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.pixels));
-            args->pixels = CLAMP(args->pixels, 1, 1024);
+            args->pixels = gwy_adjustment_get_int(controls.pixels);
+            args->pixels = CLAMP(args->pixels, 1, MAX_AMOUNT);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
@@ -214,8 +217,8 @@ mask_grow_dialog(MaskGrowArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->pixels = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.pixels));
-    args->pixels = CLAMP(args->pixels, 1, 1024);
+    args->pixels = gwy_adjustment_get_int(controls.pixels);
+    args->pixels = CLAMP(args->pixels, 1, MAX_AMOUNT);
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -346,7 +349,7 @@ mask_grow_load_args(GwyContainer *container,
 
     s = g_strdup_printf(pixels_key, name);
     gwy_container_gis_int32_by_name(container, s, &args->pixels);
-    args->pixels = CLAMP(args->pixels, 1, 1024);
+    args->pixels = CLAMP(args->pixels, 1, MAX_AMOUNT);
     g_free(s);
 }
 

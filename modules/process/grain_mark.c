@@ -230,7 +230,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(10, 4, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(NULL);
@@ -278,7 +278,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.color_button);
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),

@@ -21,6 +21,7 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
@@ -203,7 +204,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(9, 4, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     label = gtk_label_new(NULL);
@@ -275,7 +276,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.inverted),
                                  args->inverted);
     gtk_table_attach(GTK_TABLE(table), controls.inverted,
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.inverted, "toggled",
                      G_CALLBACK(wshed_invalidate), &controls);
     row++;
@@ -283,7 +284,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 1, row, row+1, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();
     gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.color_button),
                                    TRUE);
@@ -362,14 +363,11 @@ static void
 wshed_dialog_update_values(WshedControls *controls,
                            WshedArgs *args)
 {
-    args->locate_steps
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
-    args->locate_thresh
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
+    args->locate_steps = gwy_adjustment_get_int(controls->locate_steps);
+    args->locate_thresh = gwy_adjustment_get_int(controls->locate_thresh);
     args->locate_dropsize
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
-    args->wshed_steps
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
+    args->wshed_steps = gwy_adjustment_get_int(controls->wshed_steps);
     args->wshed_dropsize
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
     args->inverted
@@ -457,18 +455,7 @@ preview(WshedControls *controls,
 
     }
 
-    args->locate_steps
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_steps));
-    args->locate_thresh
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_thresh));
-    args->locate_dropsize
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->locate_dropsize));
-    args->wshed_steps
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_steps));
-    args->wshed_dropsize
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->wshed_dropsize));
-
-
+    wshed_dialog_update_values(controls, args);
     controls->computed = mask_process(dfield, maskfield, args,
                                       controls->dialog);
 

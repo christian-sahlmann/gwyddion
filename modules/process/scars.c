@@ -34,7 +34,8 @@
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 enum {
-    PREVIEW_SIZE = 320
+    PREVIEW_SIZE = 320,
+    MAX_LENGTH = 1024
 };
 
 typedef struct {
@@ -408,7 +409,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
     table = gtk_table_new(10, 4, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
     row = 0;
 
     controls.max_width = gtk_adjustment_new(args->max_width,
@@ -417,9 +418,9 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
                             controls.max_width, 0);
 
     controls.min_len = gtk_adjustment_new(args->min_len,
-                                          1.0, 1024.0, 1, 10, 0);
+                                          1.0, MAX_LENGTH, 1, 10, 0);
     gwy_table_attach_hscale(table, row++, _("Minimum _length:"), "px",
-                            controls.min_len, 0);
+                            controls.min_len, GWY_HSCALE_SQRT);
 
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
@@ -550,10 +551,8 @@ scars_mark_dialog_update_values(ScarsControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_high));
     args->threshold_low
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_low));
-    args->min_len
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->min_len));
-    args->max_width
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->max_width));
+    args->min_len = gwy_adjustment_get_int(controls->min_len);
+    args->max_width = gwy_adjustment_get_int(controls->max_width);
 }
 
 static void
@@ -643,7 +642,7 @@ scars_mark_sanitize_args(ScarsArgs *args)
     args->inverted = !!args->inverted;
     args->threshold_low = MAX(args->threshold_low, 0.0);
     args->threshold_high = MAX(args->threshold_low, args->threshold_high);
-    args->min_len = MAX(args->min_len, 1);
+    args->min_len = CLAMP(args->min_len, 1, MAX_LENGTH);
     args->max_width = CLAMP(args->max_width, 1, 16);
 }
 

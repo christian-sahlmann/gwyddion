@@ -32,6 +32,10 @@
 #define SLOPE_DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    MAX_OUT_SIZE = 1024
+};
+
 typedef enum {
     SLOPE_DIST_2D_DIST,
     SLOPE_DIST_GRAPH,
@@ -222,7 +226,7 @@ slope_dialog(SlopeArgs *args)
         group = g_slist_next(group);
     }
 
-    controls.size = gtk_adjustment_new(args->size, 10, 1024, 1, 10, 0);
+    controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
                             controls.size, 0);
     row++;
@@ -304,9 +308,8 @@ static void
 slope_dialog_update_values(SlopeControls *controls,
                            SlopeArgs *args)
 {
-    args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
-    args->kernel_size =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->kernel_size));
+    args->size = gwy_adjustment_get_int(controls->size);
+    args->kernel_size = gwy_adjustment_get_int(controls->kernel_size);
     args->logscale =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->logscale));
     args->fit_plane =
@@ -529,7 +532,7 @@ static void
 sanitize_args(SlopeArgs *args)
 {
     args->output_type = MIN(args->output_type, SLOPE_DIST_LAST-1);
-    args->size = CLAMP(args->size, 1, 16384);
+    args->size = CLAMP(args->size, 1, MAX_OUT_SIZE);
     args->kernel_size = CLAMP(args->kernel_size, 2, 16);
     args->logscale = !!args->logscale;
     args->fit_plane = !!args->fit_plane;

@@ -33,6 +33,10 @@
 #define ANGLE_DIST_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    MAX_OUT_SIZE = 1024,
+    MAX_STEPS = 65536
+};
 /* Data for this function. */
 typedef struct {
     gint size;
@@ -48,9 +52,6 @@ typedef struct {
     GtkWidget *logscale;
     GtkWidget *fit_plane;
     GtkObject *kernel_size;
-    GtkWidget *kernel_size_spin;
-    GtkWidget *kernel_size_label;
-    GtkWidget *kernel_size_units;
     gboolean in_update;
 } AngleControls;
 
@@ -103,7 +104,7 @@ static GwyModuleInfo module_info = {
     "angle_dist",
     N_("Angle distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4.1",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -184,48 +185,44 @@ angle_dialog(AngleArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(5, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
     row = 0;
 
-    controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Output _size:"),
-                                       _("px"), controls.size);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    controls.size = gtk_adjustment_new(args->size, 10, MAX_OUT_SIZE, 1, 10, 0);
+    gwy_table_attach_hscale(table, row, _("Output _size:"), "px",
+                            controls.size, 0);
     row++;
 
-    controls.steps = gtk_adjustment_new(args->steps, 6, 16384, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Number of steps:"), "",
-                                       controls.steps);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    controls.steps = gtk_adjustment_new(args->steps, 6, MAX_STEPS, 1, 10, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Number of steps:"), NULL,
+                                   controls.steps, GWY_HSCALE_SQRT);
     row++;
 
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
     controls.fit_plane
         = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
     gtk_table_attach(GTK_TABLE(table), controls.fit_plane,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.fit_plane, "toggled",
                      G_CALLBACK(angle_fit_plane_cb), &controls);
     row++;
 
     controls.kernel_size = gtk_adjustment_new(args->kernel_size,
                                               2, 16, 1, 4, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"),
-                                       _("px"), controls.kernel_size);
-    controls.kernel_size_spin = spin;
-    controls.kernel_size_label = gwy_table_get_child_widget(table, row, 0);
-    controls.kernel_size_units = gwy_table_get_child_widget(table, row, 2);
+    gwy_table_attach_hscale(table, row, _("_Plane size:"), "px",
+                            controls.kernel_size, 0);
     row++;
 
     angle_dialog_update_controls(&controls, args);
@@ -276,21 +273,18 @@ angle_dialog_update_controls(AngleControls *controls,
                                  args->logscale);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_label, args->fit_plane);
-    gtk_widget_set_sensitive(controls->kernel_size_units, args->fit_plane);
+    gwy_table_hscale_set_sensitive(controls->kernel_size, args->fit_plane);
 }
 
 static void
 angle_dialog_update_values(AngleControls *controls,
                            AngleArgs *args)
 {
-    args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
-    args->steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->steps));
+    args->size = gwy_adjustment_get_int(controls->size);
+    args->steps = gwy_adjustment_get_int(controls->steps);
     args->logscale
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->logscale));
-    args->kernel_size =
-        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->kernel_size));
+    args->kernel_size = gwy_adjustment_get_int(controls->kernel_size);
     args->fit_plane =
         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
 }
@@ -299,12 +293,8 @@ static void
 angle_fit_plane_cb(GtkToggleButton *check,
                    AngleControls *controls)
 {
-    gboolean active;
-
-    active = gtk_toggle_button_get_active(check);
-    gtk_widget_set_sensitive(controls->kernel_size_spin, active);
-    gtk_widget_set_sensitive(controls->kernel_size_label, active);
-    gtk_widget_set_sensitive(controls->kernel_size_units, active);
+    gwy_table_hscale_set_sensitive(controls->kernel_size,
+                                   gtk_toggle_button_get_active(check));
 }
 
 static GwyDataField*
@@ -483,7 +473,7 @@ static const gchar *kernel_size_key = "/module/angle_dist/kernel_size";
 static void
 sanitize_args(AngleArgs *args)
 {
-    args->size = CLAMP(args->size, 1, 16384);
+    args->size = CLAMP(args->size, 1, MAX_OUT_SIZE);
     args->steps = CLAMP(args->steps, 1, 16384);
     args->kernel_size = CLAMP(args->kernel_size, 2, 16);
     args->logscale = !!args->logscale;
