@@ -237,7 +237,7 @@ dialog_create(GwyUnitoolState *state)
     row += NPROFILE;
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    table = gtk_table_new(3 + NPROFILE, 3, FALSE);
+    table = gtk_table_new(5, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_table_set_col_spacing(GTK_TABLE(table), 2, 8);
@@ -405,7 +405,7 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble lines[12];
+    gdouble lines[4*NPROFILE];
     gint i, j, nselected;
     gchar *z_unit;
     gdouble z_mag, z_max;
