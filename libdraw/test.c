@@ -14,12 +14,11 @@
 int main(int argc, char *argv[])
 {
     GError *error=NULL;
-    const guchar *buffer;
+    guchar *buffer;
     gsize size, pos;
     FILE *fh;
 
     GwyPalette *p, *r;
-    GwyRGBA pec;
 
     GwyDataField *a;
     GdkPixbuf *pxb;
@@ -37,11 +36,7 @@ int main(int argc, char *argv[])
 
     /*gwy_palette_def_print(p->def);*/
 
-    /*
-    pec.r=10, pec.g=20; pec.b=30; pec.a=0;
-    gwy_palette_set_color(p, &pec, 500);
-    */
-    buffer = gwy_palette_get_samples(p, &i);
+    buffer = (guchar*)gwy_palette_get_samples(p, &i);
     printf("%d %d %d %d\n",
            (gint32)256*buffer[40], (gint32)256*buffer[41],
            (gint32)256*buffer[42], (gint32)256*buffer[43]);

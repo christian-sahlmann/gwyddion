@@ -58,6 +58,10 @@ typedef struct{
     GHashTable *palettes;
 } GwyPaletteDefClass;
 
+typedef void (*GwyPaletteDefFunc)(const gchar *name,
+                                  GwyPaletteDef *palette_def,
+                                  gpointer user_data);
+
 GType         gwy_palette_def_get_type         (void) G_GNUC_CONST;
 GObject*      gwy_palette_def_new              (const gchar *name);
 GObject*      gwy_palette_def_new_as_copy      (GwyPaletteDef *src_palette_def);
@@ -66,6 +70,8 @@ gchar*        gwy_palette_def_get_name         (GwyPaletteDef *palette_def);
 gboolean      gwy_palette_def_set_name         (GwyPaletteDef *palette_def,
                                                 const gchar *name);
 gboolean      gwy_palette_def_exists           (const gchar *name);
+void          gwy_palette_def_foreach          (GwyPaletteDefFunc callback,
+                                                gpointer user_data);
 GwyRGBA       gwy_palette_def_get_color        (GwyPaletteDef *palette_def,
                                                 gdouble x,
                                                 GwyInterpolationType interpolation);

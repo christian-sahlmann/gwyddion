@@ -774,6 +774,23 @@ gwy_palette_def_exists(const gchar *name)
 }
 
 /**
+ * gwy_palette_def_foreach:
+ * @callback: A callback.
+ * @user_data: User data passed to the callback.
+ *
+ * Runs @callback for each existing palette definition.
+ **/
+void
+gwy_palette_def_foreach(GwyPaletteDefFunc callback,
+                        gpointer user_data)
+{
+    GwyPaletteDefClass *klass;
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE_DEF);
+    g_hash_table_foreach(klass->palettes, (GHFunc)callback, user_data);
+}
+
+/**
  * gwy_palette_def_print:
  * @a: palette definition to be outputted
  *
