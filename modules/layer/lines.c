@@ -589,8 +589,6 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
         }
         gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
     }
-    if (lines_layer->nselected == lines_layer->nlines)
-        gwy_vector_layer_selection_finished(layer);
 
     layer->in_selection = FALSE;
     klass = GWY_LAYER_LINES_GET_CLASS(lines_layer);
@@ -600,6 +598,9 @@ gwy_layer_lines_button_released(GwyVectorLayer *layer,
         gdk_window_set_cursor(window, klass->nearline_cursor);
     else
         gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+
+    if (lines_layer->nselected == lines_layer->nlines)
+        gwy_vector_layer_selection_finished(layer);
 
     return FALSE;
 }

@@ -484,14 +484,15 @@ gwy_layer_points_button_released(GwyVectorLayer *layer,
     gwy_layer_points_save(points_layer, i);
     gwy_layer_points_draw_point(points_layer, window, i);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-    if (points_layer->nselected == points_layer->npoints)
-        gwy_vector_layer_selection_finished(layer);
 
     layer->in_selection = FALSE;
     klass = GWY_LAYER_POINTS_GET_CLASS(points_layer);
     i = gwy_layer_points_near_point(points_layer, xreal, yreal);
     gdk_window_set_cursor(window,
                           (i == -1 || outside) ? NULL : klass->near_cursor);
+
+    if (points_layer->nselected == points_layer->npoints)
+        gwy_vector_layer_selection_finished(layer);
 
     return FALSE;
 }

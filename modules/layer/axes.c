@@ -536,14 +536,15 @@ gwy_layer_axes_button_released(GwyVectorLayer *layer,
     gwy_layer_axes_save(axes_layer, i);
     gwy_layer_axes_draw_line(axes_layer, window, i);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-    if (axes_layer->nselected == axes_layer->naxes)
-        gwy_vector_layer_selection_finished(layer);
 
     layer->in_selection = FALSE;
     klass = GWY_LAYER_AXES_GET_CLASS(axes_layer);
     i = gwy_layer_axes_near_point(axes_layer, xreal, yreal);
     gdk_window_set_cursor(window,
                           (i == -1 || outside) ? NULL : klass->near_cursor);
+
+    if (axes_layer->nselected == axes_layer->naxes)
+        gwy_vector_layer_selection_finished(layer);
 
     return FALSE;
 }

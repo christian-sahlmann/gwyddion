@@ -496,8 +496,6 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
     }
     gwy_layer_select_save(select_layer);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-    if (select_layer->selected)
-        gwy_vector_layer_selection_finished(layer);
 
     layer->in_selection = FALSE;
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
@@ -506,6 +504,9 @@ gwy_layer_select_button_released(GwyVectorLayer *layer,
 
     /* XXX: this assures no artifacts ...  */
     gtk_widget_queue_draw(GTK_WIDGET(data_view));
+
+    if (select_layer->selected)
+        gwy_vector_layer_selection_finished(layer);
 
     return FALSE;
 }
