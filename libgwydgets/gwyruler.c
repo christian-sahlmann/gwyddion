@@ -498,8 +498,8 @@ gwy_ruler_size_allocate(GtkWidget     *widget,
 }
 
 static gint
-gwy_ruler_expose(GtkWidget      *widget,
-                 GdkEventExpose *event)
+gwy_ruler_expose(GtkWidget *widget,
+                 G_GNUC_UNUSED GdkEventExpose *event)
 {
     GwyRuler *ruler;
 

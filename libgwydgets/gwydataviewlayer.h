@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,10 +28,6 @@
 #  include <libgwyddion/gwycontainer.h>
 #endif /* no GWY_TYPE_CONTAINER */
 
-#ifndef GWY_TYPE_PALETTE
-#  include <libdraw/gwypalette.h>
-#endif /* no GWY_TYPE_PALETTE */
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -51,57 +47,23 @@ struct _GwyDataViewLayer {
 
     GtkWidget *parent;
     GwyContainer *data;
-    GdkPixbuf *pixbuf;
-    GwyPalette *palette;
-    GdkGC *gc;
-    PangoLayout *layout;
 };
 
 struct _GwyDataViewLayerClass {
     GtkObjectClass parent_class;
 
-    /* renderers */
-    GdkPixbuf* (*paint)(GwyDataViewLayer *layer);
-    void (*draw)(GwyDataViewLayer *layer, GdkDrawable *drawable);
     gboolean (*wants_repaint)(GwyDataViewLayer *layer);
-    /* events */
-    gboolean (*button_press)(GwyDataViewLayer *layer, GdkEventButton *event);
-    gboolean (*button_release)(GwyDataViewLayer *layer, GdkEventButton *event);
-    gboolean (*motion_notify)(GwyDataViewLayer *layer, GdkEventMotion *event);
-    gboolean (*key_press)(GwyDataViewLayer *layer, GdkEventKey *event);
-    gboolean (*key_release)(GwyDataViewLayer *layer, GdkEventKey *event);
     /* signal functions */
     void (*plugged)(GwyDataViewLayer *layer);
     void (*unplugged)(GwyDataViewLayer *layer);
     void (*updated)(GwyDataViewLayer *layer);
-    void (*finished)(GwyDataViewLayer *layer);
 };
 
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
-
-gboolean         gwy_data_view_layer_is_vector       (GwyDataViewLayer *layer) G_GNUC_CONST;
 gboolean         gwy_data_view_layer_wants_repaint   (GwyDataViewLayer *layer);
-void             gwy_data_view_layer_draw            (GwyDataViewLayer *layer,
-                                                      GdkDrawable *drawable);
-GdkPixbuf*       gwy_data_view_layer_paint           (GwyDataViewLayer *layer);
-gboolean         gwy_data_view_layer_button_press    (GwyDataViewLayer *layer,
-                                                      GdkEventButton *event);
-gboolean         gwy_data_view_layer_button_release  (GwyDataViewLayer *layer,
-                                                      GdkEventButton *event);
-gboolean         gwy_data_view_layer_motion_notify   (GwyDataViewLayer *layer,
-                                                      GdkEventMotion *event);
-gboolean         gwy_data_view_layer_key_press       (GwyDataViewLayer *layer,
-                                                      GdkEventKey *event);
-gboolean         gwy_data_view_layer_key_release     (GwyDataViewLayer *layer,
-                                                      GdkEventKey *event);
 void             gwy_data_view_layer_plugged         (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);
-void             gwy_data_view_layer_finished        (GwyDataViewLayer *layer);
-
-void             gwy_layer_cursor_new_or_ref         (GdkCursor **cursor,
-                                                      GdkCursorType type);
-void             gwy_layer_cursor_free_or_unref      (GdkCursor **cursor);
 
 #ifdef __cplusplus
 }

@@ -95,8 +95,9 @@ static void
 crop_use(GwyDataWindow *data_window,
          GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
+    GtkWidget *parent;
 
     gwy_debug("%p", data_window);
 
@@ -107,22 +108,23 @@ crop_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == select_layer)
+    if (layer && (GwyDataViewLayer*)layer == select_layer)
         return;
     if (select_layer) {
         if (layer_updated_id)
         g_signal_handler_disconnect(select_layer, layer_updated_id);
-        if (select_layer->parent && data_updated_id)
-            g_signal_handler_disconnect(select_layer->parent, data_updated_id);
+        parent = GWY_DATA_VIEW_LAYER(select_layer)->parent;
+        if (parent && data_updated_id)
+            g_signal_handler_disconnect(parent, data_updated_id);
     }
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
-        select_layer = layer;
+        select_layer = GWY_DATA_VIEW_LAYER(layer);
     else {
         select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
-        gwy_data_view_set_top_layer(data_view, select_layer);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(select_layer));
     }
-    gwy_layer_select_set_is_crop(select_layer, TRUE);
+    gwy_layer_select_set_is_crop(GWY_LAYER_SELECT(select_layer), TRUE);
     if (!crop_dialog)
         crop_dialog = crop_dialog_create(data_window);
 
@@ -146,15 +148,17 @@ static void
 crop_do(void)
 {
     GtkWidget *data_window;
+    GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble xmin, ymin, xmax, ymax;
 
-    if (!gwy_layer_select_get_selection(select_layer,
+    if (!gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
                                         &xmin, &ymin, &xmax, &ymax))
         return;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(select_layer)->parent);
+    data = gwy_data_view_get_data(data_view);
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -166,8 +170,8 @@ crop_do(void)
                           (gint)xmin, (gint)ymin, (gint)xmax, (gint)ymax);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    gwy_layer_select_unselect(select_layer);
-    gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
+    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(select_layer));
+    gwy_data_view_update(data_view);
     gwy_debug("%d %d",
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
@@ -175,12 +179,15 @@ crop_do(void)
 static void
 crop_dialog_abandon(void)
 {
+    GtkWidget *parent;
+
     gwy_debug("");
     if (select_layer) {
         if (layer_updated_id)
         g_signal_handler_disconnect(select_layer, layer_updated_id);
-        if (select_layer->parent && data_updated_id)
-            g_signal_handler_disconnect(select_layer->parent, data_updated_id);
+        parent = GWY_DATA_VIEW_LAYER(select_layer)->parent;
+        if (parent && data_updated_id)
+            g_signal_handler_disconnect(parent, data_updated_id);
     }
     layer_updated_id = 0;
     data_updated_id = 0;
@@ -294,7 +301,7 @@ crop_selection_updated_cb(void)
     gboolean is_selected;
 
     gwy_debug("");
-    is_selected = gwy_layer_select_get_selection(select_layer,
+    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
                                                  NULL, NULL, NULL, NULL);
     crop_update_view();
     if (is_selected && !controls.is_visible)
@@ -316,7 +323,7 @@ crop_update_view(void)
 
     gwy_debug("");
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_select_get_selection(select_layer,
+    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
                                                  &xmin, &ymin, &xmax, &ymax);
     if (!is_visible && !is_selected)
         return;

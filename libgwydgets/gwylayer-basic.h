@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,9 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
-#endif /* no GWY_TYPE_DATA_VIEW_LAYER */
+#ifndef GWY_TYPE_PIXMAP_LAYER
+#  include <libgwydgets/gwypixmaplayer.h>
+#endif /* no GWY_TYPE_PIXMAP_LAYER */
 
 #ifndef GWY_TYPE_PALETTE
 #  include <libdraw/gwypalette.h>
@@ -47,21 +47,22 @@ typedef struct _GwyLayerBasic      GwyLayerBasic;
 typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 
 struct _GwyLayerBasic {
-    GwyDataViewLayer parent_instance;
+    GwyPixmapLayer parent_instance;
 
+    GwyPalette *palette;
     gboolean changed;
 };
 
 struct _GwyLayerBasicClass {
-    GwyDataViewLayerClass parent_class;
+    GwyPixmapLayerClass parent_class;
 };
 
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;
 
 GtkObject*       gwy_layer_basic_new             (void);
-void             gwy_layer_basic_set_palette     (GwyDataViewLayer *layer,
+void             gwy_layer_basic_set_palette     (GwyLayerBasic *layer,
                                                   GwyPalette *palette);
-GwyPalette*      gwy_layer_basic_get_palette     (GwyDataViewLayer *layer);
+GwyPalette*      gwy_layer_basic_get_palette     (GwyLayerBasic *layer);
 
 #ifdef __cplusplus
 }

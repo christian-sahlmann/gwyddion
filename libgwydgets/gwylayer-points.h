@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
+#  include <libgwydgets/gwyvectorlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
 #ifdef __cplusplus
@@ -43,7 +43,7 @@ typedef struct _GwyLayerPoints      GwyLayerPoints;
 typedef struct _GwyLayerPointsClass GwyLayerPointsClass;
 
 struct _GwyLayerPoints {
-    GwyDataViewLayer parent_instance;
+    GwyVectorLayer parent_instance;
 
     gint npoints;
     gint nselected;
@@ -53,22 +53,19 @@ struct _GwyLayerPoints {
 };
 
 struct _GwyLayerPointsClass {
-    GwyDataViewLayerClass parent_class;
+    GwyVectorLayerClass parent_class;
 
     GdkCursor *near_cursor;
     GdkCursor *move_cursor;
 };
 
 GType            gwy_layer_points_get_type        (void) G_GNUC_CONST;
-
 GtkObject*       gwy_layer_points_new             (void);
-void             gwy_layer_points_set_max_points  (GwyDataViewLayer *layer,
+void             gwy_layer_points_set_max_points  (GwyLayerPoints *layer,
                                                    gint npoints);
-gint             gwy_layer_points_get_max_points  (GwyDataViewLayer *layer);
-gint             gwy_layer_points_get_points      (GwyDataViewLayer *layer,
+gint             gwy_layer_points_get_max_points  (GwyLayerPoints *layer);
+gint             gwy_layer_points_get_points      (GwyLayerPoints *layer,
                                                    gdouble *points);
-gint             gwy_layer_points_get_nselected   (GwyDataViewLayer *layer);
-void             gwy_layer_points_unselect        (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
 }

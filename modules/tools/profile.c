@@ -112,7 +112,7 @@ static void
 profile_use(GwyDataWindow *data_window,
             GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
     GwyContainer *data;
     gint i;
@@ -128,7 +128,7 @@ profile_use(GwyDataWindow *data_window,
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == lines_layer)
+    if (layer && (GwyDataViewLayer*)layer == lines_layer)
         return;
     if (lines_layer) {
         if (layer_updated_id)
@@ -138,10 +138,10 @@ profile_use(GwyDataWindow *data_window,
     }
 
     if (layer && GWY_IS_LAYER_LINES(layer))
-        lines_layer = layer;
+        lines_layer = GWY_DATA_VIEW_LAYER(layer);
     else {
         lines_layer = (GwyDataViewLayer*)gwy_layer_lines_new();
-        gwy_data_view_set_top_layer(data_view, lines_layer);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(lines_layer));
     }
 
     profile_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent)),
@@ -192,7 +192,9 @@ profile_do(void)
     gint precision;
     GwyGraphAutoProperties prop;
 
-    if (!(is_selected=gwy_layer_lines_get_lines(lines_layer, lines)))
+    is_selected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(lines_layer),
+                                            lines);
+    if (!is_selected)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
@@ -413,7 +415,7 @@ update_labels()
     gint n_of_lines=0;
 
     gwy_debug("");
-    n_of_lines = gwy_layer_lines_get_lines(lines_layer, lines);
+    n_of_lines = gwy_layer_lines_get_lines(GWY_LAYER_LINES(lines_layer), lines);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(lines_layer->parent));
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -430,22 +432,26 @@ update_labels()
                    (gint)gwy_data_field_rtoj(datafield, lines[j+1])
                    );
             j += 2;
-            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i+1]), buffer);
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i+1]),
+                               buffer);
 
             g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
                    (gint)gwy_data_field_rtoj(datafield, lines[j]),
                    (gint)gwy_data_field_rtoj(datafield, lines[j+1])
                    );
             j += 2;
-            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]),
+                               buffer);
             i++;
         }
         else
         {
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]), buffer);
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i++]),
+                               buffer);
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]), buffer);
+            gtk_label_set_text(GTK_LABEL(controls.positions->pdata[i]),
+                               buffer);
         }
      }
 }
@@ -456,7 +462,7 @@ profile_selection_updated_cb(void)
     gint nselected;
 
     gwy_debug("");
-    nselected = gwy_layer_lines_get_lines(lines_layer, NULL);
+    nselected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(lines_layer));
     profile_update_view();
     if (nselected && !controls.is_visible)
         profile_dialog_set_visible(TRUE);
@@ -488,7 +494,8 @@ profile_update_view(void)
     gwy_debug("");
 
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_lines_get_lines(lines_layer, lines);
+    is_selected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(lines_layer),
+                                            lines);
     if (!is_visible && !is_selected)
         return;
 
@@ -552,7 +559,7 @@ profile_update_view(void)
 static void
 profile_clear(void)
 {
-    gwy_layer_lines_unselect(lines_layer);
+    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(lines_layer));
     gwy_graph_clear(GWY_GRAPH(controls.graph));
     gtk_widget_queue_draw(controls.graph);
     update_labels();

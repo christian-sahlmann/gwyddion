@@ -44,11 +44,13 @@ LIB_OBJECTS = \
 	gwylayer-points.obj \
 	gwylayer-select.obj \
 	gwyoptionmenus.obj \
+	gwypixmaplayer.obj \
 	gwyruler.obj \
 	gwyscitext.obj \
 	gwyspherecoords.obj \
 	gwystock.obj \
 	gwytoolbox.obj \
+	gwyvectorlayer.obj \
 	gwyvectorshade.obj \
 	gwyvruler.obj
 
@@ -73,11 +75,13 @@ LIB_HEADERS = \
 	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyoptionmenus.h \
+	gwypixmaplayer.h \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyspherecoords.h \
 	gwystock.h \
 	gwytoolbox.h \
+	gwyvectorlayer.h \
 	gwyvectorshade.h \
 	gwyvruler.h
 

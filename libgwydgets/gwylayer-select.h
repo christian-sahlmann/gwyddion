@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
+#  include <libgwydgets/gwyvectorlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
 #ifdef __cplusplus
@@ -43,7 +43,7 @@ typedef struct _GwyLayerSelect      GwyLayerSelect;
 typedef struct _GwyLayerSelectClass GwyLayerSelectClass;
 
 struct _GwyLayerSelect {
-    GwyDataViewLayer parent_instance;
+    GwyVectorLayer parent_instance;
 
     gboolean is_crop;
     gboolean selected;
@@ -56,24 +56,21 @@ struct _GwyLayerSelect {
 };
 
 struct _GwyLayerSelectClass {
-    GwyDataViewLayerClass parent_class;
+    GwyVectorLayerClass parent_class;
 
     GdkCursor *corner_cursor[4];
     GdkCursor *resize_cursor;
 };
 
 GType            gwy_layer_select_get_type        (void) G_GNUC_CONST;
-
 GtkObject*       gwy_layer_select_new             (void);
-gboolean         gwy_layer_select_get_selection   (GwyDataViewLayer *layer,
+gboolean         gwy_layer_select_get_selection   (GwyLayerSelect *layer,
                                                    gdouble *xmin,
                                                    gdouble *ymin,
                                                    gdouble *xmax,
                                                    gdouble *ymax);
-gint             gwy_layer_select_get_nselected   (GwyDataViewLayer *layer);
-void             gwy_layer_select_unselect        (GwyDataViewLayer *layer);
-gboolean         gwy_layer_select_get_is_crop     (GwyDataViewLayer *layer);
-void             gwy_layer_select_set_is_crop     (GwyDataViewLayer *layer,
+gboolean         gwy_layer_select_get_is_crop     (GwyLayerSelect *layer);
+void             gwy_layer_select_set_is_crop     (GwyLayerSelect *layer,
                                                    gboolean is_crop);
 
 #ifdef __cplusplus

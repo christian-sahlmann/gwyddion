@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -177,7 +177,7 @@ gwy_app_data_window_create(GwyContainer *data)
     data_view = gwy_data_view_new(data);
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
-                                 GWY_DATA_VIEW_LAYER(layer));
+                                 GWY_PIXMAP_LAYER(layer));
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     gtk_window_add_accel_group(GTK_WINDOW(data_window),
                                g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
@@ -314,7 +314,8 @@ gwy_app_data_view_update(GtkWidget *data_view)
         }
 
         layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view),
+                                      GWY_PIXMAP_LAYER(layer));
     }
     else if (!has_mask && has_alpha) {
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), NULL);

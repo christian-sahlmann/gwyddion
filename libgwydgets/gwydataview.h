@@ -29,9 +29,13 @@
 #  include <libgwyddion/gwycontainer.h>
 #endif /* no GWY_TYPE_CONTAINER */
 
-#ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
-#endif /* no GWY_TYPE_DATA_VIEW_LAYER */
+#ifndef GWY_TYPE_VECTOR_LAYER
+#  include <libgwydgets/gwyvectorlayer.h>
+#endif /* no GWY_TYPE_VECTOR_LAYER */
+
+#ifndef GWY_TYPE_PIXMAP_LAYER
+#  include <libgwydgets/gwypixmaplayer.h>
+#endif /* no GWY_TYPE_PIXMAP_LAYER */
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,15 +83,15 @@ struct _GwyDataViewClass {
 GtkWidget*        gwy_data_view_new               (GwyContainer *data);
 GType             gwy_data_view_get_type          (void) G_GNUC_CONST;
 
-GwyDataViewLayer* gwy_data_view_get_base_layer    (GwyDataView *data_view);
-GwyDataViewLayer* gwy_data_view_get_alpha_layer   (GwyDataView *data_view);
-GwyDataViewLayer* gwy_data_view_get_top_layer     (GwyDataView *data_view);
+GwyPixmapLayer*   gwy_data_view_get_base_layer    (GwyDataView *data_view);
+GwyPixmapLayer*   gwy_data_view_get_alpha_layer   (GwyDataView *data_view);
+GwyVectorLayer*   gwy_data_view_get_top_layer     (GwyDataView *data_view);
 void              gwy_data_view_set_base_layer    (GwyDataView *data_view,
-                                                   GwyDataViewLayer *layer);
+                                                   GwyPixmapLayer *layer);
 void              gwy_data_view_set_alpha_layer   (GwyDataView *data_view,
-                                                   GwyDataViewLayer *layer);
+                                                   GwyPixmapLayer *layer);
 void              gwy_data_view_set_top_layer     (GwyDataView *data_view,
-                                                   GwyDataViewLayer *layer);
+                                                   GwyVectorLayer *layer);
 gdouble           gwy_data_view_get_hexcess       (GwyDataView* data_view);
 gdouble           gwy_data_view_get_vexcess       (GwyDataView* data_view);
 void              gwy_data_view_set_zoom          (GwyDataView *data_view,

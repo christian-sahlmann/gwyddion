@@ -26,11 +26,13 @@ libgwydgetsinclude_HEADERS = \
 	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyoptionmenus.h \
+	gwypixmaplayer.h \
 	gwyruler.h \
 	gwyscitext.h \
 	gwyspherecoords.h \
 	gwystock.h \
 	gwytoolbox.h \
+	gwyvectorlayer.h \
 	gwyvectorshade.h \
 	gwyvruler.h 
 
@@ -67,11 +69,13 @@ libgwydgets_la_SOURCES = \
 	gwylayer-points.c \
 	gwylayer-select.c \
 	gwyoptionmenus.c \
+	gwypixmaplayer.c \
 	gwyruler.c \
 	gwyscitext.c \
 	gwyspherecoords.c \
 	gwystock.c \
 	gwytoolbox.c \
+	gwyvectorlayer.c \
 	gwyvectorshade.c \
 	gwyvruler.c 
 

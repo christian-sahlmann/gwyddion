@@ -100,7 +100,7 @@ static void
 stats_use(GwyDataWindow *data_window,
           GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
 
     gwy_debug("%p", data_window);
@@ -112,7 +112,7 @@ stats_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == select_layer)
+    if (layer && (GwyDataViewLayer*)layer == select_layer)
         return;
     if (select_layer) {
         if (layer_updated_id)
@@ -122,12 +122,12 @@ stats_use(GwyDataWindow *data_window,
     }
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
-        select_layer = layer;
+        select_layer = GWY_DATA_VIEW_LAYER(layer);
     else {
         select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
-        gwy_data_view_set_top_layer(data_view, select_layer);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(select_layer));
     }
-    gwy_layer_select_set_is_crop(select_layer, FALSE);
+    gwy_layer_select_set_is_crop(GWY_LAYER_SELECT(select_layer), FALSE);
     if (!stats_dialog)
         stats_dialog = stats_dialog_create(data_window);
 
@@ -160,17 +160,15 @@ stats_do(void)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
 
-    if (gwy_layer_select_get_selection(select_layer,
-                                        &xmin, &ymin, &xmax, &ymax))
-    {
+    if (gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
+                                       &xmin, &ymin, &xmax, &ymax)) {
         gwy_data_field_get_area_stats(dfield, gwy_data_field_rtoj(dfield, xmin),
                                       gwy_data_field_rtoj(dfield, ymin),
                                       gwy_data_field_rtoj(dfield, xmax),
                                       gwy_data_field_rtoj(dfield, ymax),
                                       &avg, &ra, &rms, &skew, &kurtosis);
     }
-    else
-    {
+    else {
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
         xmin = ymin = 0;
         xmax = gwy_data_field_get_xreal(dfield);
@@ -344,8 +342,7 @@ stats_selection_updated_cb(void)
     gboolean is_selected;
 
     gwy_debug("");
-    is_selected = gwy_layer_select_get_selection(select_layer,
-                                                 NULL, NULL, NULL, NULL);
+    is_selected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(select_layer));
     stats_update_view();
     if (is_selected && !controls.is_visible)
         stats_dialog_set_visible(TRUE);
@@ -374,7 +371,7 @@ stats_update_view(void)
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    is_selected = gwy_layer_select_get_selection(select_layer,
+    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
                                                  &xmin, &ymin, &xmax, &ymax);
     if (is_selected)
         gwy_data_field_get_area_stats(dfield,

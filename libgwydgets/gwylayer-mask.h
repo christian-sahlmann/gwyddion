@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,9 +24,9 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
-#endif /* no GWY_TYPE_DATA_VIEW_LAYER */
+#ifndef GWY_TYPE_PIXMAP_LAYER
+#  include <libgwydgets/gwypixmaplayer.h>
+#endif /* no GWY_TYPE_PIXMAP_LAYER */
 
 #ifndef GWY_TYPE_PALETTE_DEF
 #  include <libdraw/gwypalettedef.h>
@@ -47,22 +47,22 @@ typedef struct _GwyLayerMask      GwyLayerMask;
 typedef struct _GwyLayerMaskClass GwyLayerMaskClass;
 
 struct _GwyLayerMask {
-    GwyDataViewLayer parent_instance;
+    GwyPixmapLayer parent_instance;
 
     GwyRGBA color;
     gboolean changed;
 };
 
 struct _GwyLayerMaskClass {
-    GwyDataViewLayerClass parent_class;
+    GwyPixmapLayerClass parent_class;
 };
 
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;
 
 GtkObject*       gwy_layer_mask_new             (void);
-void             gwy_layer_mask_set_color       (GwyDataViewLayer *layer,
+void             gwy_layer_mask_set_color       (GwyLayerMask *layer,
                                                  GwyRGBA *color);
-GwyRGBA          gwy_layer_mask_get_color       (GwyDataViewLayer *layer);
+GwyRGBA          gwy_layer_mask_get_color       (GwyLayerMask *layer);
 
 #ifdef __cplusplus
 }

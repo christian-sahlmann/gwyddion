@@ -66,13 +66,11 @@ struct _GwyLayerLinesClass {
 GType            gwy_layer_lines_get_type       (void) G_GNUC_CONST;
 
 GtkObject*       gwy_layer_lines_new            (void);
-void             gwy_layer_lines_set_max_lines  (GwyDataViewLayer *layer,
+void             gwy_layer_lines_set_max_lines  (GwyLayerLines *layer,
                                                  gint nlines);
-gint             gwy_layer_lines_get_max_lines  (GwyDataViewLayer *layer);
-gint             gwy_layer_lines_get_lines      (GwyDataViewLayer *layer,
+gint             gwy_layer_lines_get_max_lines  (GwyLayerLines *layer);
+gint             gwy_layer_lines_get_lines      (GwyLayerLines *layer,
                                                  gdouble *lines);
-gint             gwy_layer_lines_get_nselected  (GwyDataViewLayer *layer);
-void             gwy_layer_lines_unselect       (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
 }

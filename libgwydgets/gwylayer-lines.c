@@ -40,30 +40,32 @@
 static void       gwy_layer_lines_class_init      (GwyLayerLinesClass *klass);
 static void       gwy_layer_lines_init            (GwyLayerLines *layer);
 static void       gwy_layer_lines_finalize        (GObject *object);
-static void       gwy_layer_lines_draw            (GwyDataViewLayer *layer,
+static void       gwy_layer_lines_draw            (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable);
-static void       gwy_layer_lines_draw_line       (GwyDataViewLayer *layer,
+static void       gwy_layer_lines_draw_line       (GwyLayerLines *layer,
                                                    GdkDrawable *drawable,
                                                    gint i);
-static gboolean   gwy_layer_lines_motion_notify   (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_lines_motion_notify   (GwyVectorLayer *layer,
                                                    GdkEventMotion *event);
-static gboolean   gwy_layer_lines_do_move_line    (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_lines_do_move_line    (GwyLayerLines *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
-static gboolean   gwy_layer_lines_button_pressed  (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_lines_button_pressed  (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
-static gboolean   gwy_layer_lines_button_released (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_lines_button_released (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
+static gint       gwy_layer_lines_get_nselected   (GwyVectorLayer *layer);
+static void       gwy_layer_lines_unselect        (GwyVectorLayer *layer);
 static void       gwy_layer_lines_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_lines_unplugged       (GwyDataViewLayer *layer);
-static void       gwy_layer_lines_save            (GwyDataViewLayer *layer,
+static void       gwy_layer_lines_save            (GwyLayerLines *layer,
                                                    gint i);
-static void       gwy_layer_lines_restore         (GwyDataViewLayer *layer);
+static void       gwy_layer_lines_restore         (GwyLayerLines *layer);
 
-static int        gwy_layer_lines_near_line       (GwyLayerLines *layer,
+static gint       gwy_layer_lines_near_line       (GwyLayerLines *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
-static int        gwy_layer_lines_near_point      (GwyLayerLines *layer,
+static gint       gwy_layer_lines_near_point      (GwyLayerLines *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
 
@@ -91,7 +93,7 @@ gwy_layer_lines_get_type(void)
         };
         gwy_debug("");
         gwy_layer_lines_type
-            = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
+            = g_type_register_static(GWY_TYPE_VECTOR_LAYER,
                                      GWY_LAYER_LINES_TYPE_NAME,
                                      &gwy_layer_lines_info,
                                      0);
@@ -105,6 +107,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
+    GwyVectorLayerClass *vector_class = GWY_VECTOR_LAYER_CLASS(klass);
 
     gwy_debug("");
 
@@ -112,12 +115,15 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
 
     gobject_class->finalize = gwy_layer_lines_finalize;
 
-    layer_class->draw = gwy_layer_lines_draw;
-    layer_class->motion_notify = gwy_layer_lines_motion_notify;
-    layer_class->button_press = gwy_layer_lines_button_pressed;
-    layer_class->button_release = gwy_layer_lines_button_released;
     layer_class->plugged = gwy_layer_lines_plugged;
     layer_class->unplugged = gwy_layer_lines_unplugged;
+
+    vector_class->draw = gwy_layer_lines_draw;
+    vector_class->motion_notify = gwy_layer_lines_motion_notify;
+    vector_class->button_press = gwy_layer_lines_button_pressed;
+    vector_class->button_release = gwy_layer_lines_button_released;
+    vector_class->get_nselected = gwy_layer_lines_get_nselected;
+    vector_class->unselect = gwy_layer_lines_unselect;
 
     klass->near_cursor = NULL;
     klass->nearline_cursor = NULL;
@@ -132,9 +138,9 @@ gwy_layer_lines_init(GwyLayerLines *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_LINES_GET_CLASS(layer);
-    gwy_layer_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
-    gwy_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
-    gwy_layer_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
+    gwy_vector_layer_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
+    gwy_vector_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    gwy_vector_layer_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
 
     layer->nlines = 3;
     layer->nselected = 0;
@@ -155,9 +161,9 @@ gwy_layer_lines_finalize(GObject *object)
 
     layer = (GwyLayerLines*)object;
     klass = GWY_LAYER_LINES_GET_CLASS(object);
-    gwy_layer_cursor_free_or_unref(&klass->near_cursor);
-    gwy_layer_cursor_free_or_unref(&klass->move_cursor);
-    gwy_layer_cursor_free_or_unref(&klass->nearline_cursor);
+    gwy_vector_layer_cursor_free_or_unref(&klass->near_cursor);
+    gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
+    gwy_vector_layer_cursor_free_or_unref(&klass->nearline_cursor);
 
     g_free(layer->lines);
 
@@ -199,21 +205,17 @@ gwy_layer_lines_new(void)
  * lines to be selected to emit the "finished" signal.
  **/
 void
-gwy_layer_lines_set_max_lines(GwyDataViewLayer *layer,
+gwy_layer_lines_set_max_lines(GwyLayerLines *layer,
                               gint nlines)
 {
-    GwyLayerLines *lines_layer;
-
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(nlines > 0 && nlines < 1024);
 
-    lines_layer = (GwyLayerLines*)layer;
-    lines_layer->nlines = nlines;
-    lines_layer->nselected = MIN(lines_layer->nselected, nlines);
-    if (lines_layer->inear >= nlines)
-        lines_layer->inear = -1;
-    lines_layer->lines = g_renew(gdouble, lines_layer->lines,
-                                 4*lines_layer->nlines);
+    layer->nlines = nlines;
+    layer->nselected = MIN(layer->nselected, nlines);
+    if (layer->inear >= nlines)
+        layer->inear = -1;
+    layer->lines = g_renew(gdouble, layer->lines, 4*layer->nlines);
 }
 
 /**
@@ -225,31 +227,15 @@ gwy_layer_lines_set_max_lines(GwyDataViewLayer *layer,
  * Returns: The number of lines to select.
  **/
 gint
-gwy_layer_lines_get_max_lines(GwyDataViewLayer *layer)
+gwy_layer_lines_get_max_lines(GwyLayerLines *layer)
 {
     g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
 
-    return GWY_LAYER_LINES(layer)->nlines;
+    return layer->nlines;
 }
 
 static void
-gwy_layer_lines_setup_gc(GwyDataViewLayer *layer)
-{
-    GdkColor fg, bg;
-
-    if (!GTK_WIDGET_REALIZED(layer->parent))
-        return;
-
-    layer->gc = gdk_gc_new(layer->parent->window);
-    gdk_gc_set_function(layer->gc, GDK_INVERT);
-    fg.pixel = 0xFFFFFFFF;
-    bg.pixel = 0x00000000;
-    gdk_gc_set_foreground(layer->gc, &fg);
-    gdk_gc_set_background(layer->gc, &bg);
-}
-
-static void
-gwy_layer_lines_draw(GwyDataViewLayer *layer,
+gwy_layer_lines_draw(GwyVectorLayer *layer,
                      GdkDrawable *drawable)
 {
     GwyLayerLines *lines_layer;
@@ -258,59 +244,65 @@ gwy_layer_lines_draw(GwyDataViewLayer *layer,
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
-    lines_layer = (GwyLayerLines*)layer;
+    lines_layer = GWY_LAYER_LINES(layer);
     for (i = 0; i < lines_layer->nselected; i++)
-        gwy_layer_lines_draw_line(layer, drawable, i);
+        gwy_layer_lines_draw_line(lines_layer, drawable, i);
 }
 
 static void
-gwy_layer_lines_draw_line(GwyDataViewLayer *layer,
+gwy_layer_lines_draw_line(GwyLayerLines *layer,
                           GdkDrawable *drawable,
                           gint i)
 {
-    GwyLayerLines *lines_layer;
+    GwyDataView *data_view;
+    GwyVectorLayer *vector_layer;
     gint xi0, yi0, xi1, yi1;
 
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_if_fail(data_view);
+    g_return_if_fail(i >= 0 && i < layer->nselected);
 
-    lines_layer = (GwyLayerLines*)layer;
-    g_return_if_fail(i >= 0 && i < lines_layer->nselected);
+    if (!vector_layer->gc)
+        gwy_vector_layer_setup_gc(vector_layer);
 
-    if (!layer->gc)
-        gwy_layer_lines_setup_gc(layer);
-
-    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
-                                    lines_layer->lines[4*i],
-                                    lines_layer->lines[4*i + 1],
+    gwy_data_view_coords_real_to_xy(data_view,
+                                    layer->lines[4*i],
+                                    layer->lines[4*i + 1],
                                     &xi0, &yi0);
-    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
-                                    lines_layer->lines[4*i + 2],
-                                    lines_layer->lines[4*i + 3],
+    gwy_data_view_coords_real_to_xy(data_view,
+                                    layer->lines[4*i + 2],
+                                    layer->lines[4*i + 3],
                                     &xi1, &yi1);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xi0, &yi0);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &xi1, &yi1);
-    gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
+    gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
+    gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
+    gdk_draw_line(drawable, vector_layer->gc, xi0, yi0, xi1, yi1);
 }
 
 static gboolean
-gwy_layer_lines_motion_notify(GwyDataViewLayer *layer,
+gwy_layer_lines_motion_notify(GwyVectorLayer *layer,
                               GdkEventMotion *event)
 {
+    GwyDataView *data_view;
     GwyLayerLinesClass *klass;
     GwyLayerLines *lines_layer;
+    GdkWindow *window;
     gint x, y, i, j;
     gdouble xreal, yreal;
 
-    lines_layer = (GwyLayerLines*)layer;
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    window = GTK_WIDGET(data_view)->window;
+
+    lines_layer = GWY_LAYER_LINES(layer);
     i = lines_layer->inear;
     x = event->x;
     y = event->y;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (lines_layer->button && lines_layer->moving_line)
-        return gwy_layer_lines_do_move_line(layer, xreal, yreal);
+        return gwy_layer_lines_do_move_line(lines_layer, xreal, yreal);
     if (i > -1
         && xreal == lines_layer->lines[2*i]
         && yreal == lines_layer->lines[2*i + 1])
@@ -321,45 +313,43 @@ gwy_layer_lines_motion_notify(GwyDataViewLayer *layer,
         j = gwy_layer_lines_near_line(lines_layer, xreal, yreal);
         i = gwy_layer_lines_near_point(lines_layer, xreal, yreal);
         if (i == -1 && j >= 0)
-            gdk_window_set_cursor(layer->parent->window,
-                                  klass->nearline_cursor);
+            gdk_window_set_cursor(window, klass->nearline_cursor);
         else
-            gdk_window_set_cursor(layer->parent->window,
-                                  i == -1 ? NULL : klass->near_cursor);
+            gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
         return FALSE;
     }
 
     g_assert(lines_layer->inear != -1);
-    gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
+    gwy_layer_lines_draw_line(lines_layer, window, i/2);
     lines_layer->lines[2*i] = xreal;
     lines_layer->lines[2*i + 1] = yreal;
-    gwy_layer_lines_save(layer, i/2);
-    gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
-    gwy_data_view_layer_updated(layer);
+    gwy_layer_lines_save(lines_layer, i/2);
+    gwy_layer_lines_draw_line(lines_layer, window, i/2);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_lines_do_move_line(GwyDataViewLayer *layer,
+gwy_layer_lines_do_move_line(GwyLayerLines *layer,
                              gdouble xreal, gdouble yreal)
 {
-    GwyLayerLines *lines_layer;
     GwyDataView *data_view;
+    GdkWindow *window;
     gdouble coords[4];
     gdouble *line;
     gint x, y, i;
 
-    lines_layer = GWY_LAYER_LINES(layer);
-    data_view = GWY_DATA_VIEW(layer->parent);
-    g_return_val_if_fail(lines_layer->inear != -1, FALSE);
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    window = GTK_WIDGET(data_view)->window;
+    g_return_val_if_fail(layer->inear != -1, FALSE);
 
-    i = lines_layer->inear;
-    line = lines_layer->lines + 4*i;
+    i = layer->inear;
+    line = layer->lines + 4*i;
 
     /* compute wanted new coordinates of the first endpoint */
-    coords[0] = xreal + lines_layer->lmove_x;
-    coords[1] = yreal + lines_layer->lmove_y;
+    coords[0] = xreal + layer->lmove_x;
+    coords[1] = yreal + layer->lmove_y;
     if (coords[0] == line[0] && coords[1] == line[1])
         return FALSE;
 
@@ -387,40 +377,43 @@ gwy_layer_lines_do_move_line(GwyDataViewLayer *layer,
     if (coords[0] == line[0] && coords[1] == line[1])
         return FALSE;
 
-    gwy_layer_lines_draw_line(layer, layer->parent->window, i);
+    gwy_layer_lines_draw_line(layer, window, i);
     gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
     memcpy(line, coords, 4*sizeof(gdouble));
     gwy_layer_lines_save(layer, i);
-    gwy_layer_lines_draw_line(layer, layer->parent->window, i);
-    gwy_data_view_layer_updated(layer);
+    gwy_layer_lines_draw_line(layer, window, i);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
+gwy_layer_lines_button_pressed(GwyVectorLayer *layer,
                                GdkEventButton *event)
 {
+    GwyDataView *data_view;
+    GdkWindow *window;
+    GwyLayerLinesClass *klass;
     GwyLayerLines *lines_layer;
     gint x, y, i, j;
     gdouble xreal, yreal;
 
     gwy_debug("");
-    lines_layer = (GwyLayerLines*)layer;
-    if (lines_layer->button)
-        g_warning("unexpected mouse button press when already pressed");
+    lines_layer = GWY_LAYER_LINES(layer);
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    window = GTK_WIDGET(data_view)->window;
 
     x = event->x;
     y = event->y;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
 
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     /* handle existing lines */
+    klass = GWY_LAYER_LINES_GET_CLASS(lines_layer);
     j = gwy_layer_lines_near_line(lines_layer, xreal, yreal);
     i = gwy_layer_lines_near_point(lines_layer, xreal, yreal);
     if (i == -1 && j >= 0) {
@@ -433,7 +426,7 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
     else {
         if (i >= 0) {
             lines_layer->inear = i;
-            gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
+            gwy_layer_lines_draw_line(lines_layer, window, i/2);
         }
         else {
             /* add a line, or do nothing when maximum is reached */
@@ -448,60 +441,61 @@ gwy_layer_lines_button_pressed(GwyDataViewLayer *layer,
         lines_layer->moving_line = FALSE;
         lines_layer->lines[2*i] = xreal;
         lines_layer->lines[2*i + 1] = yreal;
-        gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
+        gwy_layer_lines_draw_line(lines_layer, window, i/2);
     }
     lines_layer->button = event->button;
 
-    gdk_window_set_cursor(layer->parent->window,
-                          GWY_LAYER_LINES_GET_CLASS(layer)->move_cursor);
+    gdk_window_set_cursor(window, klass->move_cursor);
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_lines_button_released(GwyDataViewLayer *layer,
+gwy_layer_lines_button_released(GwyVectorLayer *layer,
                                 GdkEventButton *event)
 {
+    GwyDataView *data_view;
+    GdkWindow *window;
     GwyLayerLinesClass *klass;
     GwyLayerLines *lines_layer;
     gint x, y, i, j;
     gdouble xreal, yreal;
     gboolean outside;
 
-    lines_layer = (GwyLayerLines*)layer;
+    lines_layer = GWY_LAYER_LINES(layer);
     if (!lines_layer->button)
         return FALSE;
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    window = GTK_WIDGET(data_view)->window;
+
     lines_layer->button = 0;
     x = event->x;
     y = event->y;
     i = lines_layer->inear;
     gwy_debug("i = %d", i);
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (lines_layer->moving_line)
-        gwy_layer_lines_do_move_line(layer, xreal, yreal);
+        gwy_layer_lines_do_move_line(lines_layer, xreal, yreal);
     else {
-        gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
+        gwy_layer_lines_draw_line(lines_layer, window, i/2);
         lines_layer->lines[2*i] = xreal;
         lines_layer->lines[2*i + 1] = yreal;
-        gwy_layer_lines_save(layer, i/2);
-        gwy_layer_lines_draw_line(layer, layer->parent->window, i/2);
-        gwy_data_view_layer_updated(layer);
+        gwy_layer_lines_save(lines_layer, i/2);
+        gwy_layer_lines_draw_line(lines_layer, window, i/2);
+        gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
     }
     if (lines_layer->nselected == lines_layer->nlines)
-        gwy_data_view_layer_finished(layer);
+        gwy_vector_layer_selection_finished(layer);
 
     klass = GWY_LAYER_LINES_GET_CLASS(lines_layer);
     j = gwy_layer_lines_near_line(lines_layer, xreal, yreal);
     i = gwy_layer_lines_near_point(lines_layer, xreal, yreal);
     if (i == -1 && j >= 0)
-        gdk_window_set_cursor(layer->parent->window,
-                              klass->nearline_cursor);
+        gdk_window_set_cursor(window, klass->nearline_cursor);
     else
-        gdk_window_set_cursor(layer->parent->window,
-                              i == -1 ? NULL : klass->near_cursor);
+        gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
 
     return FALSE;
 }
@@ -522,71 +516,57 @@ gwy_layer_lines_button_released(GwyDataViewLayer *layer,
  * Returns: The number of actually selected lines.
  **/
 gint
-gwy_layer_lines_get_lines(GwyDataViewLayer *layer,
+gwy_layer_lines_get_lines(GwyLayerLines *layer,
                           gdouble *lines)
 {
-    GwyLayerLines *lines_layer;
-
     g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
 
-    lines_layer = (GwyLayerLines*)layer;
-    if (lines && lines_layer->nselected) {
-        memcpy(lines, lines_layer->lines,
-               4*lines_layer->nselected*sizeof(gdouble));
-    }
+    if (lines && layer->nselected)
+        memcpy(lines, layer->lines, 4*layer->nselected*sizeof(gdouble));
 
-    return lines_layer->nselected;
+    return layer->nselected;
 }
 
-/**
- * gwy_layer_lines_get_nselected:
- * @layer: A #GwyLayerLines.
- *
- * Returns the number of selected lines in @layer.
- *
- * Returns: The number of selected lines.
- **/
-gint
-gwy_layer_lines_get_nselected(GwyDataViewLayer *layer)
+static gint
+gwy_layer_lines_get_nselected(GwyVectorLayer *layer)
 {
     g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
     return GWY_LAYER_LINES(layer)->nselected;
 }
 
-/**
- * gwy_layer_lines_unselect:
- * @layer: A #GwyLayerLines.
- *
- * Clears the selected lines.
- *
- * Note: may have unpredictable effects when called while user is dragging
- * some lines.
- **/
-void
-gwy_layer_lines_unselect(GwyDataViewLayer *layer)
+static void
+gwy_layer_lines_unselect(GwyVectorLayer *layer)
 {
-    g_return_if_fail(GWY_IS_LAYER_LINES(layer));
+    GwyLayerLines *lines_layer;
+    GtkWidget *parent;
 
-    if (GWY_LAYER_LINES(layer)->nselected == 0)
+    g_return_if_fail(GWY_IS_LAYER_LINES(layer));
+    lines_layer = GWY_LAYER_LINES(layer);
+
+    if (lines_layer->nselected == 0)
         return;
 
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
     /* this is in fact undraw */
-    if (layer->parent)
-        gwy_layer_lines_draw(layer, layer->parent->window);
-    GWY_LAYER_LINES(layer)->nselected = 0;
-    gwy_layer_lines_save(layer, -1);
-    gwy_data_view_layer_updated(layer);
+    if (parent)
+        gwy_layer_lines_draw(layer, parent->window);
+    lines_layer->nselected = 0;
+    gwy_layer_lines_save(lines_layer, -1);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 static void
 gwy_layer_lines_plugged(GwyDataViewLayer *layer)
 {
+    GwyLayerLines *lines_layer;
+
     gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_LINES(layer));
+    lines_layer = GWY_LAYER_LINES(layer);
 
-    GWY_LAYER_LINES(layer)->nselected = 0;
+    lines_layer->nselected = 0;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
-    gwy_layer_lines_restore(layer);
+    gwy_layer_lines_restore(lines_layer);
     gwy_data_view_layer_updated(layer);
 }
 
@@ -601,78 +581,80 @@ gwy_layer_lines_unplugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_lines_save(GwyDataViewLayer *layer,
+gwy_layer_lines_save(GwyLayerLines *layer,
                      gint i)
 {
-    GwyLayerLines *l = GWY_LAYER_LINES(layer);
-    gchar key[64];
+    GwyContainer *data;
+    gchar key[32];
     gint from, to, n;
 
+    data = GWY_DATA_VIEW_LAYER(layer)->data;
     /* TODO Container */
-    gwy_container_set_int32_by_name(layer->data, "/0/select/lines/nselected",
-                                    l->nselected);
+    gwy_container_set_int32_by_name(data, "/0/select/lines/nselected",
+                                    layer->nselected);
     if (i < 0) {
         from = 0;
-        to = l->nselected - 1;
+        to = layer->nselected - 1;
     }
     else
         from = to = i;
 
     for (i = from; i <= to; i++) {
-        gdouble *coords = l->lines + 4*i;
+        gdouble *coords = layer->lines + 4*i;
 
-        gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
+        gwy_debug("%d %g %g %g %g",
+                  i, coords[0], coords[1], coords[2], coords[3]);
         n = g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
-        gwy_container_set_double_by_name(layer->data, key, coords[0]);
+        gwy_container_set_double_by_name(data, key, coords[0]);
         key[n-2] = 'y';
-        gwy_container_set_double_by_name(layer->data, key, coords[1]);
+        gwy_container_set_double_by_name(data, key, coords[1]);
         key[n-1] = '1';
-        gwy_container_set_double_by_name(layer->data, key, coords[3]);
+        gwy_container_set_double_by_name(data, key, coords[3]);
         key[n-2] = 'x';
-        gwy_container_set_double_by_name(layer->data, key, coords[2]);
+        gwy_container_set_double_by_name(data, key, coords[2]);
     }
 }
 
 static void
-gwy_layer_lines_restore(GwyDataViewLayer *layer)
+gwy_layer_lines_restore(GwyLayerLines *layer)
 {
-    GwyLayerLines *l = GWY_LAYER_LINES(layer);
+    GwyContainer *data;
     GwyDataField *dfield;
     gchar key[24];
     gdouble xreal, yreal;
     gint i, n, nsel;
 
+    data = GWY_DATA_VIEW_LAYER(layer)->data;
     /* TODO Container */
-    if (!gwy_container_contains_by_name(layer->data,
-                                        "/0/select/lines/nselected"))
+    if (!gwy_container_contains_by_name(data, "/0/select/lines/nselected"))
         return;
 
-    nsel = gwy_container_get_int32_by_name(layer->data,
-                                           "/0/select/lines/nselected");
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
-                                                             "/0/data"));
+    nsel = gwy_container_get_int32_by_name(data, "/0/select/lines/nselected");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
-    for (i = l->nselected = 0; i < nsel && l->nselected < l->nlines; i++) {
-        gdouble *coords = l->lines + 4*l->nselected;
+    for (i = layer->nselected = 0;
+         i < nsel && layer->nselected < layer->nlines;
+         i++) {
+        gdouble *coords = layer->lines + 4*layer->nselected;
 
         n = g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
-        coords[0] = gwy_container_get_double_by_name(layer->data, key);
+        coords[0] = gwy_container_get_double_by_name(data, key);
         key[n-2] = 'y';
-        coords[1] = gwy_container_get_double_by_name(layer->data, key);
+        coords[1] = gwy_container_get_double_by_name(data, key);
         key[n-1] = '1';
-        coords[3] = gwy_container_get_double_by_name(layer->data, key);
+        coords[3] = gwy_container_get_double_by_name(data, key);
         key[n-2] = 'x';
-        coords[2] = gwy_container_get_double_by_name(layer->data, key);
+        coords[2] = gwy_container_get_double_by_name(data, key);
         if (coords[0] >= 0.0 && coords[0] <= xreal
             && coords[1] >= 0.0 && coords[1] <= yreal
             && coords[2] >= 0.0 && coords[2] <= xreal
             && coords[3] >= 0.0 && coords[3] <= yreal)
-            l->nselected++;
+            layer->nselected++;
     }
 }
 
-static int
+static gint
 gwy_layer_lines_near_line(GwyLayerLines *layer,
                           gdouble xreal, gdouble yreal)
 {
@@ -698,7 +680,7 @@ gwy_layer_lines_near_line(GwyLayerLines *layer,
     return i;
 }
 
-static int
+static gint
 gwy_layer_lines_near_point(GwyLayerLines *layer,
                            gdouble xreal, gdouble yreal)
 {

@@ -43,39 +43,39 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_grad_sphere_class_init           (GwyGradSphereClass *klass);
-static void     gwy_grad_sphere_init                 (GwyGradSphere *grad_sphere);
-GtkWidget*      gwy_grad_sphere_new                  (GwySphereCoords *sphere_coords);
-static void     gwy_grad_sphere_finalize             (GObject *object);
-static void     gwy_grad_sphere_set_property         (GObject *object,
-                                                      guint prop_id,
-                                                      const GValue *value,
-                                                      GParamSpec *pspec);
-static void     gwy_grad_sphere_get_property         (GObject*object,
-                                                      guint prop_id,
-                                                      GValue *value,
-                                                      GParamSpec *pspec);
-static void     gwy_grad_sphere_realize              (GtkWidget *widget);
-static void     gwy_grad_sphere_unrealize            (GtkWidget *widget);
-static void     gwy_grad_sphere_size_request         (GtkWidget *widget,
-                                                      GtkRequisition *requisition);
-static void     gwy_grad_sphere_size_allocate        (GtkWidget *widget,
-                                                      GtkAllocation *allocation);
-static void     gwy_grad_sphere_make_pixmap          (GwyGradSphere *grad_sphere);
-static void     gwy_grad_sphere_paint                (GwyGradSphere *grad_sphere);
-static gboolean gwy_grad_sphere_expose               (GtkWidget *widget,
-                                                      GdkEventExpose *event);
-static gboolean gwy_grad_sphere_button_press         (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static gboolean gwy_grad_sphere_button_release       (GtkWidget *widget,
-                                                      GdkEventButton *event);
-static gboolean gwy_grad_sphere_motion_notify        (GtkWidget *widget,
-                                                      GdkEventMotion *event);
-static gboolean gwy_grad_sphere_timer                (GwyGradSphere *grad_sphere);
-static void     gwy_grad_sphere_update_mouse         (GwyGradSphere *grad_sphere, gint x, gint y);
-static void     gwy_grad_sphere_update               (GwyGradSphere *grad_sphere);
-static void     gwy_grad_sphere_coords_value_changed (GwySphereCoords *sphere_coords,
-                                                      gpointer data);
+static void     gwy_grad_sphere_class_init     (GwyGradSphereClass *klass);
+static void     gwy_grad_sphere_init           (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_finalize       (GObject *object);
+static void     gwy_grad_sphere_set_property   (GObject *object,
+                                                guint prop_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec);
+static void     gwy_grad_sphere_get_property   (GObject*object,
+                                                guint prop_id,
+                                                GValue *value,
+                                                GParamSpec *pspec);
+static void     gwy_grad_sphere_realize        (GtkWidget *widget);
+static void     gwy_grad_sphere_unrealize      (GtkWidget *widget);
+static void     gwy_grad_sphere_size_request   (GtkWidget *widget,
+                                                GtkRequisition *requisition);
+static void     gwy_grad_sphere_size_allocate  (GtkWidget *widget,
+                                                GtkAllocation *allocation);
+static void     gwy_grad_sphere_make_pixmap    (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_paint          (GwyGradSphere *grad_sphere);
+static gboolean gwy_grad_sphere_expose         (GtkWidget *widget,
+                                                GdkEventExpose *event);
+static gboolean gwy_grad_sphere_button_press   (GtkWidget *widget,
+                                                GdkEventButton *event);
+static gboolean gwy_grad_sphere_button_release (GtkWidget *widget,
+                                                GdkEventButton *event);
+static gboolean gwy_grad_sphere_motion_notify  (GtkWidget *widget,
+                                                GdkEventMotion *event);
+static gboolean gwy_grad_sphere_timer          (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_update_mouse   (GwyGradSphere *grad_sphere,
+                                                gint x, gint y);
+static void     gwy_grad_sphere_update         (GwyGradSphere *grad_sphere);
+static void     gwy_grad_sphere_coords_changed (GwySphereCoords *sphere_coords,
+                                                gpointer data);
 
 
 /* Local data */
@@ -390,7 +390,7 @@ gwy_grad_sphere_set_sphere_coords(GwyGradSphere *grad_sphere,
          g_object_unref(old);
 
     g_signal_connect(G_OBJECT(sphere_coords), "value_changed",
-                     G_CALLBACK(gwy_grad_sphere_coords_value_changed),
+                     G_CALLBACK(gwy_grad_sphere_coords_changed),
                      grad_sphere);
 
     grad_sphere->old_phi = sphere_coords->phi;
@@ -442,7 +442,7 @@ gwy_grad_sphere_realize(GtkWidget *widget)
 }
 
 static void
-gwy_grad_sphere_size_request(GtkWidget *widget,
+gwy_grad_sphere_size_request(G_GNUC_UNUSED GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     gwy_debug("");
@@ -775,8 +775,8 @@ gwy_grad_sphere_update(GwyGradSphere *grad_sphere)
 }
 
 static void
-gwy_grad_sphere_coords_value_changed(GwySphereCoords *sphere_coords,
-                                     gpointer data)
+gwy_grad_sphere_coords_changed(GwySphereCoords *sphere_coords,
+                               gpointer data)
 {
     GwyGradSphere *grad_sphere;
 

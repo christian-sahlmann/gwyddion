@@ -100,7 +100,7 @@ static void
 pointer_use(GwyDataWindow *data_window,
             GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
 
     gwy_debug("%p", data_window);
@@ -112,7 +112,7 @@ pointer_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == pointer_layer)
+    if (layer && (GwyDataViewLayer*)layer == pointer_layer)
         return;
     if (pointer_layer) {
         if (layer_updated_id)
@@ -122,10 +122,10 @@ pointer_use(GwyDataWindow *data_window,
     }
 
     if (layer && GWY_IS_LAYER_POINTER(layer))
-        pointer_layer = layer;
+        pointer_layer = GWY_DATA_VIEW_LAYER(layer);
     else {
         pointer_layer = (GwyDataViewLayer*)gwy_layer_pointer_new();
-        gwy_data_view_set_top_layer(data_view, pointer_layer);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(pointer_layer));
     }
     if (!pointer_dialog)
         pointer_dialog = pointer_dialog_create(data_window);

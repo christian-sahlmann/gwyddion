@@ -111,7 +111,7 @@ static void
 sfunctions_use(GwyDataWindow *data_window,
             GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
 
     gwy_debug("%p", data_window);
@@ -124,17 +124,17 @@ sfunctions_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-/*    if (layer && layer == select_layer)
-        return;*/
+    if (layer && (GwyDataViewLayer*)layer == select_layer)
+        return;
 
     if (select_layer && updated_id)
         g_signal_handler_disconnect(select_layer, updated_id);
 
     if (layer && GWY_IS_LAYER_SELECT(layer))
-        select_layer = layer;
+        select_layer = GWY_DATA_VIEW_LAYER(layer);
     else {
         select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
-        gwy_data_view_set_top_layer(data_view, select_layer);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(select_layer));
     }
 
     sfunctions_load_args(gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent)),
@@ -151,11 +151,11 @@ sfunctions_use(GwyDataWindow *data_window,
                                    NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         sfunctions_dialog_set_visible(TRUE);
-    
+
     if (controls.is_visible)
         sfunctions_selection_updated_cb();
 
-    
+
 }
 
 static void
@@ -169,27 +169,27 @@ sfunctions_do(void)
     gchar *x_unit, *z_unit;
     gdouble x_mag, z_mag;
     gdouble xreal, yreal, x_max, unit;
-    gdouble x1, x2, y1, y2;
+    gdouble xm1, xm2, ym1, ym2;
     gdouble z_max;
     gint precision;
     GwyGraphAutoProperties prop;
 
-    
+
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
-    
-    
-    if (!(is_selected=gwy_layer_select_get_selection(select_layer,
-                                                   &xmin, &ymin, &xmax, &ymax)))
-    {
-        xmin = 0; 
+
+
+    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
+                                                 &xmin, &ymin, &xmax, &ymax);
+    if (!is_selected) {
+        xmin = 0;
         ymin = 0;
         xmax = xreal;
-        ymax = yreal;   
+        ymax = yreal;
     }
-    
+
     x_max = MAX(xreal, yreal);
     unit = MIN(xreal/gwy_data_field_get_xres(datafield),
                yreal/gwy_data_field_get_yres(datafield));
@@ -207,20 +207,21 @@ sfunctions_do(void)
     prop.is_line = 1;
     gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
-    x1 = gwy_data_field_rtoj(datafield, xmin);
-    y1 = gwy_data_field_rtoj(datafield, ymin);
-    x2 = gwy_data_field_rtoj(datafield, xmax);
-    y2 = gwy_data_field_rtoj(datafield, ymax);
+    /* XXX: WFT? */
+    xm1 = gwy_data_field_rtoj(datafield, xmin);
+    ym1 = gwy_data_field_rtoj(datafield, ymin);
+    xm2 = gwy_data_field_rtoj(datafield, xmax);
+    ym2 = gwy_data_field_rtoj(datafield, ymax);
 
-        /*    
+        /*
                gwy_graph_add_dataline_with_units(graph, dtl->pdata[i],
                                0, str->pdata[i], NULL,
                                x_mag, z_mag,
                                x_unit,
                                z_unit
                                );*/
-    window = gwy_app_graph_window_create(GWY_GRAPH(graph));
-        
+    window = gwy_app_graph_window_create(graph);
+
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
 }
 
@@ -252,7 +253,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
 
     gwy_debug("");
     data = gwy_data_view_get_data(data_view);
-    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, 
+    datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                 "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
@@ -262,9 +263,9 @@ sfunctions_dialog_create(GwyDataView *data_view)
                  yreal/gwy_data_field_get_yres(datafield));
     controls.mag = gwy_math_humanize_numbers(unit, max, &controls.precision);
     controls.units = g_strconcat(gwy_math_SI_prefix(controls.mag), "m", NULL);
-                
-    
-    
+
+
+
     dialog = gtk_dialog_new_with_buttons(_("Statistical functions"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -292,7 +293,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Area of computation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, 0, 0, 0);
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Origin: (x, y)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -309,7 +310,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
 
     controls.wh = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.wh), 1.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.wh, 0, 0, 0);    
+    gtk_box_pack_start(GTK_BOX(vbox), controls.wh, 0, 0, 0);
 
 
     label = gtk_label_new(NULL);
@@ -327,7 +328,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
                                         &controls, controls.out);
     gtk_box_pack_start(GTK_BOX(vbox), controls.output, 0, 0, 2);
 
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Computation direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -338,7 +339,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
                                         &controls, controls.dir);
     gtk_box_pack_start(GTK_BOX(vbox), controls.direction, 0, 0, 2);
 
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -357,7 +358,7 @@ sfunctions_dialog_create(GwyDataView *data_view)
                      GTK_FILL, 0, 2, 2);
 
     gtk_widget_show_all(table);
- 
+
     controls.is_visible = FALSE;
 
     return dialog;
@@ -369,22 +370,22 @@ update_labels()
 {
     GwyContainer *data;
     GwyDataField *datafield;
-    gdouble xreal, yreal, xmin, xmax, ymin, ymax;    
+    gdouble xreal, yreal, xmin, xmax, ymin, ymax;
     gchar buffer[50];
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
-    
-    
-    if (!(gwy_layer_select_get_selection(select_layer,
-                                          &xmin, &ymin, &xmax, &ymax)))
+
+
+    if (!(gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
+                                         &xmin, &ymin, &xmax, &ymax)))
     {
-        xmin = 0; 
+        xmin = 0;
         ymin = 0;
         xmax = xreal;
-        ymax = yreal;   
+        ymax = yreal;
     }
 
     g_snprintf(buffer, sizeof(buffer), "%.*f, %.*f %s",
@@ -395,9 +396,9 @@ update_labels()
                controls.precision, fabs(xmax-xmin)/controls.mag, controls.precision, fabs(ymax-ymin)/controls.mag, controls.units);
     gtk_label_set_text(GTK_LABEL(controls.wh), buffer);
 
-                       
 
-    
+
+
 }
 
 
@@ -409,7 +410,7 @@ sfunctions_selection_updated_cb(void)
     GwyDataLine dataline;
     gboolean is_visible, is_selected;
     gint j;
-    gint x1, x2, y1, y2;
+    gint xm1, xm2, ym1, ym2;
     GwyGraphAutoProperties prop;
     GString *lab;
     gchar *x_unit, *z_unit;
@@ -420,25 +421,25 @@ sfunctions_selection_updated_cb(void)
     gint precision;
 
     gwy_debug("");
-    
+
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     datafield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(datafield);
     yreal = gwy_data_field_get_yreal(datafield);
-    
-    
-    if (!(is_selected=gwy_layer_select_get_selection(select_layer,
-                                                   &xmin, &ymin, &xmax, &ymax)))
-    {
-        xmin = 0; 
+
+
+    is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(select_layer),
+                                                 &xmin, &ymin, &xmax, &ymax);
+    if (!is_selected) {
+        xmin = 0;
         ymin = 0;
         xmax = xreal;
-        ymax = yreal;   
+        ymax = yreal;
     }
-    
+
 
     is_visible = controls.is_visible;
-    
+
     if (!is_visible)
         return;
 
@@ -448,7 +449,7 @@ sfunctions_selection_updated_cb(void)
     gwy_graph_set_autoproperties(GWY_GRAPH(controls.graph), &prop);
 
 
-    gwy_graph_clear(controls.graph);
+    gwy_graph_clear(GWY_GRAPH(controls.graph));
 
     x_max = MAX(xreal, yreal);
     unit = MIN(xreal/gwy_data_field_get_xres(datafield),
@@ -457,35 +458,35 @@ sfunctions_selection_updated_cb(void)
     x_unit = g_strconcat(gwy_math_SI_prefix(x_mag), "m", NULL);
 
     j = 0;
-    x1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
-    y1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
-    x2 = (gint)floor(gwy_data_field_rtoj(datafield, xmax)+0.5);
-    y2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
+    xm1 = (gint)floor(gwy_data_field_rtoj(datafield, xmin)+0.5);
+    ym1 = (gint)floor(gwy_data_field_rtoj(datafield, ymin)+0.5);
+    xm2 = (gint)floor(gwy_data_field_rtoj(datafield, xmax)+0.5);
+    ym2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
 
 
     gwy_data_line_initialize(&dataline, 10, 10, 0);
 
- printf("out=%d\n", controls.out);   
+ printf("out=%d\n", controls.out);
     gwy_data_field_get_line_stat_function(datafield,
                                           &dataline,
-                                          x1,
-                                          y1,
-                                          x2,
-                                          y2,
+                                          xm1,
+                                          ym1,
+                                          xm2,
+                                          ym2,
                                           controls.out,
                                           controls.dir,
                                           controls.interp,
                                           GWY_WINDOWING_HANN,
                                           100);
-  
+
 /*    for (j=0; j<dataline.res; j++) {printf("%e\n", dataline.data[j]); dataline.data[j]=j;}*/
 
     z_max = gwy_data_line_get_max(&dataline) -  gwy_data_line_get_min(&dataline);
     z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
     z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
-  
+
     lab = g_string_new("ble");
-    gwy_graph_add_dataline(controls.graph, &dataline, 0, lab, NULL);
+    gwy_graph_add_dataline(GWY_GRAPH(controls.graph), &dataline, 0, lab, NULL);
     /*
     gwy_graph_add_dataline_with_units(controls.graph, &dataline,
               0, "line", NULL,
@@ -511,7 +512,7 @@ sfunctions_selection_updated_cb(void)
 static void
 sfunctions_clear(void)
 {
-    gwy_layer_select_unselect(select_layer);
+    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(select_layer));
     gwy_graph_clear(GWY_GRAPH(controls.graph));
     gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
     update_labels();
@@ -520,7 +521,8 @@ sfunctions_clear(void)
 }
 
 static void
-sfunctions_dialog_response_cb(gpointer unused, gint response)
+sfunctions_dialog_response_cb(G_GNUC_UNUSED gpointer unused,
+                              gint response)
 {
     gwy_debug("response %d", response);
     switch (response) {
@@ -622,7 +624,7 @@ sfunctions_save_args(GwyContainer *container, SFunctionsControls *pcontrols)
     gwy_container_set_int32_by_name(container, interp_key, controls.interp);
     gwy_container_set_int32_by_name(container, dir_key, controls.dir);
     gwy_container_set_int32_by_name(container, out_key, controls.out);
-    
+
 }
 
 

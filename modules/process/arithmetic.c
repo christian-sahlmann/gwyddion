@@ -208,7 +208,6 @@ gwy_data_arith_append_line(GwyDataWindow *data_window,
 {
     GtkWidget *item, *data_view, *image;
     GdkPixbuf *pixbuf;
-    const gchar *fnm;
     gchar *filename;
 
     data_view = gwy_data_window_get_data_view(data_window);

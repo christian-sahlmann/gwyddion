@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,21 +34,23 @@
 
 /* Forward declarations */
 
-static void       gwy_layer_pointer_class_init        (GwyLayerPointerClass *klass);
-static void       gwy_layer_pointer_init              (GwyLayerPointer *layer);
-static void       gwy_layer_pointer_finalize          (GObject *object);
-static void       gwy_layer_pointer_draw              (GwyDataViewLayer *layer,
-                                                       GdkDrawable *drawable);
-static gboolean   gwy_layer_pointer_motion_notify     (GwyDataViewLayer *layer,
-                                                       GdkEventMotion *event);
-static gboolean   gwy_layer_pointer_button_pressed    (GwyDataViewLayer *layer,
-                                                       GdkEventButton *event);
-static gboolean   gwy_layer_pointer_button_released   (GwyDataViewLayer *layer,
-                                                       GdkEventButton *event);
-static void       gwy_layer_pointer_plugged           (GwyDataViewLayer *layer);
-static void       gwy_layer_pointer_unplugged         (GwyDataViewLayer *layer);
-static void       gwy_layer_pointer_save              (GwyDataViewLayer *layer);
-static void       gwy_layer_pointer_restore           (GwyDataViewLayer *layer);
+static void     gwy_layer_pointer_class_init      (GwyLayerPointerClass *klass);
+static void     gwy_layer_pointer_init            (GwyLayerPointer *layer);
+static void     gwy_layer_pointer_finalize        (GObject *object);
+static void     gwy_layer_pointer_draw            (GwyVectorLayer *layer,
+                                                   GdkDrawable *drawable);
+static gboolean gwy_layer_pointer_motion_notify   (GwyVectorLayer *layer,
+                                                   GdkEventMotion *event);
+static gboolean gwy_layer_pointer_button_pressed  (GwyVectorLayer *layer,
+                                                   GdkEventButton *event);
+static gboolean gwy_layer_pointer_button_released (GwyVectorLayer *layer,
+                                                   GdkEventButton *event);
+static gint     gwy_layer_pointer_get_nselected   (GwyVectorLayer *layer);
+static void     gwy_layer_pointer_unselect        (GwyVectorLayer *layer);
+static void     gwy_layer_pointer_plugged         (GwyDataViewLayer *layer);
+static void     gwy_layer_pointer_unplugged       (GwyDataViewLayer *layer);
+static void     gwy_layer_pointer_save            (GwyLayerPointer *layer);
+static void     gwy_layer_pointer_restore         (GwyLayerPointer *layer);
 
 /* Local data */
 
@@ -74,7 +76,7 @@ gwy_layer_pointer_get_type(void)
         };
         gwy_debug("");
         gwy_layer_pointer_type
-            = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
+            = g_type_register_static(GWY_TYPE_VECTOR_LAYER,
                                      GWY_LAYER_POINTER_TYPE_NAME,
                                      &gwy_layer_pointer_info,
                                      0);
@@ -88,6 +90,7 @@ gwy_layer_pointer_class_init(GwyLayerPointerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
+    GwyVectorLayerClass *vector_class = GWY_VECTOR_LAYER_CLASS(klass);
 
     gwy_debug("");
 
@@ -95,12 +98,15 @@ gwy_layer_pointer_class_init(GwyLayerPointerClass *klass)
 
     gobject_class->finalize = gwy_layer_pointer_finalize;
 
-    layer_class->draw = gwy_layer_pointer_draw;
-    layer_class->motion_notify = gwy_layer_pointer_motion_notify;
-    layer_class->button_press = gwy_layer_pointer_button_pressed;
-    layer_class->button_release = gwy_layer_pointer_button_released;
     layer_class->plugged = gwy_layer_pointer_plugged;
     layer_class->unplugged = gwy_layer_pointer_unplugged;
+
+    vector_class->draw = gwy_layer_pointer_draw;
+    vector_class->motion_notify = gwy_layer_pointer_motion_notify;
+    vector_class->button_press = gwy_layer_pointer_button_pressed;
+    vector_class->button_release = gwy_layer_pointer_button_released;
+    vector_class->unselect = gwy_layer_pointer_unselect;
+    vector_class->get_nselected = gwy_layer_pointer_get_nselected;
 
     klass->point_cursor = NULL;
 }
@@ -113,7 +119,7 @@ gwy_layer_pointer_init(GwyLayerPointer *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_POINTER_GET_CLASS(layer);
-    gwy_layer_cursor_new_or_ref(&klass->point_cursor, GDK_CROSS);
+    gwy_vector_layer_cursor_new_or_ref(&klass->point_cursor, GDK_CROSS);
     layer->x = 0.0;
     layer->y = 0.0;
     layer->selected = FALSE;
@@ -129,7 +135,7 @@ gwy_layer_pointer_finalize(GObject *object)
     g_return_if_fail(GWY_IS_LAYER_POINTER(object));
 
     klass = GWY_LAYER_POINTER_GET_CLASS(object);
-    gwy_layer_cursor_free_or_unref(&klass->point_cursor);
+    gwy_vector_layer_cursor_free_or_unref(&klass->point_cursor);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -155,7 +161,7 @@ gwy_layer_pointer_new(void)
 }
 
 static void
-gwy_layer_pointer_draw(GwyDataViewLayer *layer,
+gwy_layer_pointer_draw(GwyVectorLayer *layer,
                        GdkDrawable *drawable)
 {
     g_return_if_fail(GWY_IS_LAYER_POINTER(layer));
@@ -165,95 +171,98 @@ gwy_layer_pointer_draw(GwyDataViewLayer *layer,
 }
 
 static gboolean
-gwy_layer_pointer_motion_notify(GwyDataViewLayer *layer,
+gwy_layer_pointer_motion_notify(GwyVectorLayer *layer,
                                 GdkEventMotion *event)
 {
+    GwyDataView *data_view;
     GwyLayerPointer *pointer_layer;
     gint x, y;
     gdouble oldx, oldy, xreal, yreal;
 
-    pointer_layer = (GwyLayerPointer*)layer;
+    pointer_layer = GWY_LAYER_POINTER(layer);
     if (!pointer_layer->button)
         return FALSE;
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+
     oldx = pointer_layer->x;
     oldy = pointer_layer->y;
     x = event->x;
     y = event->y;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     if (xreal == oldx && yreal == oldy)
         return FALSE;
 
     pointer_layer->x = xreal;
     pointer_layer->y = yreal;
-    gwy_layer_pointer_save(layer);
-    gwy_data_view_layer_updated(layer);
+    gwy_layer_pointer_save(pointer_layer);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_pointer_button_pressed(GwyDataViewLayer *layer,
+gwy_layer_pointer_button_pressed(GwyVectorLayer *layer,
                                  GdkEventButton *event)
 {
+    GwyDataView *data_view;
     GwyLayerPointerClass *klass;
     GwyLayerPointer *pointer_layer;
     gint x, y;
     gdouble xreal, yreal;
 
     gwy_debug("");
-    pointer_layer = (GwyLayerPointer*)layer;
-    if (pointer_layer->button)
-        g_warning("unexpected mouse button press when already pressed");
+    pointer_layer = GWY_LAYER_POINTER(layer);
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
 
     x = event->x;
     y = event->y;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
     if (x != event->x || y != event->y)
         return FALSE;
 
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     pointer_layer->button = event->button;
     pointer_layer->x = xreal;
     pointer_layer->y = yreal;
     pointer_layer->selected = TRUE;
     klass = GWY_LAYER_POINTER_GET_CLASS(layer);
-    gdk_window_set_cursor(layer->parent->window, klass->point_cursor);
+    gdk_window_set_cursor(GTK_WIDGET(data_view)->window, klass->point_cursor);
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_pointer_button_released(GwyDataViewLayer *layer,
-                                 GdkEventButton *event)
+gwy_layer_pointer_button_released(GwyVectorLayer *layer,
+                                  GdkEventButton *event)
 {
+    GwyDataView *data_view;
     GwyLayerPointerClass *klass;
     GwyLayerPointer *pointer_layer;
     gint x, y;
     gdouble xreal, yreal;
 
-    pointer_layer = (GwyLayerPointer*)layer;
+    pointer_layer = GWY_LAYER_POINTER(layer);
     if (!pointer_layer->button)
         return FALSE;
+    data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+
     pointer_layer->button = 0;
     x = event->x;
     y = event->y;
-    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
-    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
-                                    x, y, &xreal, &yreal);
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     pointer_layer->x = xreal;
     pointer_layer->y = yreal;
     pointer_layer->selected = TRUE;
-    gwy_layer_pointer_save(layer);
-    gwy_data_view_layer_updated(layer);
-    gwy_data_view_layer_finished(layer);
+    gwy_layer_pointer_save(pointer_layer);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    gwy_vector_layer_selection_finished(layer);
 
     klass = GWY_LAYER_POINTER_GET_CLASS(pointer_layer);
-    gdk_window_set_cursor(layer->parent->window, NULL);
+    gdk_window_set_cursor(GTK_WIDGET(data_view)->window, NULL);
 
     return FALSE;
 }
@@ -280,7 +289,7 @@ gwy_layer_pointer_get_point(GwyDataViewLayer *layer,
     GwyLayerPointer *pointer_layer;
 
     g_return_val_if_fail(GWY_IS_LAYER_POINTER(layer), FALSE);
-    pointer_layer = (GwyLayerPointer*)layer;
+    pointer_layer = GWY_LAYER_POINTER(layer);
     if (!pointer_layer->selected)
         return FALSE;
 
@@ -291,49 +300,41 @@ gwy_layer_pointer_get_point(GwyDataViewLayer *layer,
     return TRUE;
 }
 
-/**
- * gwy_layer_lines_get_nselected:
- * @layer: A #GwyLayerPointer.
- *
- * Returns the number of selected points in @layer.
- *
- * Returns: The number of selected points (i.e., 0 or 1).
- **/
-gint
-gwy_layer_pointer_get_nselected(GwyDataViewLayer *layer)
+static gint
+gwy_layer_pointer_get_nselected(GwyVectorLayer *layer)
 {
     g_return_val_if_fail(GWY_IS_LAYER_POINTER(layer), 0);
     return GWY_LAYER_POINTER(layer)->selected;
 }
 
-/**
- * gwy_layer_pointer_unselect:
- * @layer: A #GwyLayerPointer.
- *
- * Clears the selected point.
- **/
-void
-gwy_layer_pointer_unselect(GwyDataViewLayer *layer)
+static void
+gwy_layer_pointer_unselect(GwyVectorLayer *layer)
 {
-    g_return_if_fail(GWY_IS_LAYER_POINTER(layer));
+    GwyLayerPointer *pointer_layer;
 
-    if (!GWY_LAYER_POINTER(layer)->selected)
+    g_return_if_fail(GWY_IS_LAYER_POINTER(layer));
+    pointer_layer = GWY_LAYER_POINTER(layer);
+
+    if (!pointer_layer->selected)
         return;
 
-    GWY_LAYER_POINTER(layer)->selected = FALSE;
-    gwy_layer_pointer_save(layer);
-    gwy_data_view_layer_updated(layer);
+    pointer_layer->selected = FALSE;
+    gwy_layer_pointer_save(pointer_layer);
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 static void
 gwy_layer_pointer_plugged(GwyDataViewLayer *layer)
 {
+    GwyLayerPointer *pointer_layer;
+
     gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_POINTER(layer));
+    pointer_layer = GWY_LAYER_POINTER(layer);
 
-    GWY_LAYER_POINTER(layer)->selected = FALSE;
+    pointer_layer->selected = FALSE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
-    gwy_layer_pointer_restore(layer);
+    gwy_layer_pointer_restore(pointer_layer);
     gwy_data_view_layer_updated(layer);
 }
 
@@ -348,37 +349,38 @@ gwy_layer_pointer_unplugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_pointer_save(GwyDataViewLayer *layer)
+gwy_layer_pointer_save(GwyLayerPointer *layer)
 {
-    GwyLayerPointer *s = GWY_LAYER_POINTER(layer);
+    GwyContainer *data;
 
+    data = GWY_DATA_VIEW_LAYER(layer)->data;
     /* TODO Container */
-    gwy_container_set_double_by_name(layer->data, "/0/select/pointer/x", s->x);
-    gwy_container_set_double_by_name(layer->data, "/0/select/pointer/y", s->y);
+    gwy_container_set_double_by_name(data, "/0/select/pointer/x", layer->x);
+    gwy_container_set_double_by_name(data, "/0/select/pointer/y", layer->y);
 }
 
 static void
-gwy_layer_pointer_restore(GwyDataViewLayer *layer)
+gwy_layer_pointer_restore(GwyLayerPointer *layer)
 {
-    GwyLayerPointer *s = GWY_LAYER_POINTER(layer);
+    GwyContainer *data;
     GwyDataField *dfield;
     gdouble xreal, yreal;
 
+    data = GWY_DATA_VIEW_LAYER(layer)->data;
     /* TODO Container */
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
-                                                             "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
 
-    if (gwy_container_contains_by_name(layer->data, "/0/select/pointer/x")) {
-        s->x = gwy_container_get_double_by_name(layer->data,
-                                                "/0/select/pointer/x");
-        s->x = CLAMP(s->x, 0.0, xreal);
+    if (gwy_container_contains_by_name(data, "/0/select/pointer/x")) {
+        layer->x
+            = gwy_container_get_double_by_name(data, "/0/select/pointer/x");
+        layer->x = CLAMP(layer->x, 0.0, xreal);
     }
-    if (gwy_container_contains_by_name(layer->data, "/0/select/pointer/y")) {
-        s->y = gwy_container_get_double_by_name(layer->data,
-                                                "/0/select/pointer/y");
-        s->y = CLAMP(s->y, 0.0, yreal);
+    if (gwy_container_contains_by_name(data, "/0/select/pointer/y")) {
+        layer->y
+            = gwy_container_get_double_by_name(data, "/0/select/pointer/y");
+        layer->y = CLAMP(layer->y, 0.0, yreal);
     }
 }
 

@@ -102,7 +102,7 @@ static void
 level3_use(GwyDataWindow *data_window,
            GwyToolSwitchEvent reason)
 {
-    GwyDataViewLayer *layer;
+    GwyVectorLayer *layer;
     GwyDataView *data_view;
 
     gwy_debug("%p", data_window);
@@ -114,7 +114,7 @@ level3_use(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = (GwyDataView*)gwy_data_window_get_data_view(data_window);
     layer = gwy_data_view_get_top_layer(data_view);
-    if (layer && layer == points_layer)
+    if (layer && (GwyDataViewLayer*)layer == points_layer)
         return;
     if (points_layer) {
         if (layer_updated_id)
@@ -124,13 +124,13 @@ level3_use(GwyDataWindow *data_window,
     }
 
     if (layer && GWY_IS_LAYER_POINTS(layer)) {
-        points_layer = layer;
-        gwy_layer_points_set_max_points(layer, 3);
+        points_layer = GWY_DATA_VIEW_LAYER(layer);
+        gwy_layer_points_set_max_points(GWY_LAYER_POINTS(layer), 3);
     }
     else {
         points_layer = (GwyDataViewLayer*)gwy_layer_points_new();
-        gwy_layer_points_set_max_points(points_layer, 3);
-        gwy_data_view_set_top_layer(data_view, points_layer);
+        gwy_layer_points_set_max_points(GWY_LAYER_POINTS(points_layer), 3);
+        gwy_data_view_set_top_layer(data_view, GWY_VECTOR_LAYER(points_layer));
     }
     if (!level3_dialog)
         level3_dialog = level3_dialog_create(data_window);
@@ -160,7 +160,7 @@ level3_do(void)
     gdouble bx, by, c, det;
     gint i, radius;
 
-    if (gwy_layer_points_get_points(points_layer, points) < 3)
+    if (gwy_layer_points_get_points(GWY_LAYER_POINTS(points_layer), points) < 3)
         return;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(points_layer->parent));
@@ -205,7 +205,7 @@ level3_do(void)
               level3_get_z_average(dfield, points[0], points[1], radius),
               level3_get_z_average(dfield, points[2], points[3], radius),
               level3_get_z_average(dfield, points[4], points[5], radius));
-    gwy_layer_points_unselect(points_layer);
+    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(points_layer));
     gwy_data_view_update(GWY_DATA_VIEW(points_layer->parent));
 }
 
@@ -384,7 +384,7 @@ level3_selection_updated_cb(void)
     gint nselected;
 
     gwy_debug("");
-    nselected = gwy_layer_points_get_points(points_layer, NULL);
+    nselected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(points_layer));
     level3_update_view();
     if (nselected && !controls.is_visible)
         level3_dialog_set_visible(TRUE);
@@ -414,7 +414,8 @@ level3_update_view(void)
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
 
     is_visible = controls.is_visible;
-    nselected = gwy_layer_points_get_points(points_layer, points);
+    nselected = gwy_layer_points_get_points(GWY_LAYER_POINTS(points_layer),
+                                            points);
     if (!is_visible && !nselected)
         return;
     for (i = 0; i < 6; i++) {

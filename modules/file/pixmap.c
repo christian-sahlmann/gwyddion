@@ -257,7 +257,7 @@ pixmap_save(GwyContainer *data,
 {
     GwyDataWindow *data_window;
     GwyDataView *data_view;
-    GwyDataViewLayer *layer;
+    GwyPixmapLayer *layer;
     GdkPixbuf *pixbuf = NULL;
     gsize i;
     FILE *fh = NULL;
@@ -276,7 +276,7 @@ pixmap_save(GwyContainer *data,
 
     layer = gwy_data_view_get_base_layer(data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
-    pixbuf = gwy_data_view_layer_paint(layer);
+    pixbuf = gwy_pixmap_layer_paint(layer);
 
     layer = gwy_data_view_get_alpha_layer(data_view);
     if (layer)

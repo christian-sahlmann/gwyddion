@@ -1,6 +1,7 @@
 EXPORTS
 	gwy_option_menu_zoom_mode
 	gwy_data_window_set_zoom
+	gwy_vector_layer_unselect
 	gwy_data_view_set_base_layer
 	gwy_data_window_get_type
 	gwy_graph_get_status
@@ -13,11 +14,10 @@ EXPORTS
 	gwy_graph_area_get_type
 	gwy_option_menu_sfunctions_output
 	gwy_vector_shade_get_sphere_coords
-	gwy_data_view_layer_is_vector
 	gwy_data_view_get_base_layer
 	gwy_graph_corner_new
 	gwy_toolbox_append
-	gwy_layer_lines_get_nselected
+	gwy_vector_layer_button_release
 	gwy_layer_basic_new
 	gwy_data_view_set_top_layer
 	gwy_data_view_set_alpha_layer
@@ -26,23 +26,26 @@ EXPORTS
 	gwy_data_view_layer_get_type
 	gwy_axis_set_style
 	gwy_layer_points_new
-	gwy_layer_lines_unselect
 	gwy_graph_area_signal_selected
 	gwy_vector_shade_get_type
 	gwy_graph_set_status
 	gwy_axis_get_reqminimum
+	gwy_vector_layer_key_release
 	gwy_data_window_set_units
 	gwy_graph_get_type
 	gwy_axis_dialog_new
 	gwy_data_window_get_zoom_mode
 	gwy_data_view_new
 	gwy_option_menu_2dcwt
+	gwy_vector_layer_draw
+	gwy_vector_layer_cursor_free_or_unref
+	gwy_vector_layer_get_nselected
 	gwy_option_menu_direction
 	gwy_data_view_get_zoom
 	gwy_axis_new
 	gwy_data_view_update
+	gwy_vector_layer_cursor_new_or_ref
 	gwy_graph_get_autoproperties
-	gwy_data_view_layer_finished
 	gwy_data_window_get_data
 	gwy_sci_text_set_text
 	gwy_graph_new
@@ -53,13 +56,14 @@ EXPORTS
 	gwy_graph_add_dataline_with_units
 	gwy_layer_lines_get_max_lines
 	gwy_sci_text_get_type
-	gwy_data_view_layer_button_release
+	gwy_vector_layer_get_type
 	gwy_ruler_draw_pos
 	gwy_data_view_get_thumbnail
 	gwy_axis_set_auto
 	gwy_data_window_set_zoom_mode
 	gwy_color_axis_new
 	gwy_layer_points_get_points
+	gwy_vector_layer_selection_finished
 	gwy_grad_sphere_set_sphere_coords
 	gwy_grad_sphere_set_palette
 	gwy_graph_area_new
@@ -70,24 +74,21 @@ EXPORTS
 	gwy_axis_set_label
 	gwy_toolbox_get_type
 	gwy_axis_get_reqmaximum
+	gwy_pixmap_layer_get_type
 	gwy_ruler_get_units
 	gwy_layer_select_get_selection
 	gwy_axis_get_maximum
-	gwy_layer_select_get_nselected
 	gwy_ruler_get_type
-	gwy_layer_points_get_nselected
-	gwy_layer_cursor_new_or_ref
 	gwy_grad_sphere_new
-	gwy_layer_cursor_free_or_unref
 	gwy_layer_basic_get_palette
+	gwy_vector_layer_motion_notify
 	gwy_data_view_get_ymeasure
 	gwy_hruler_new
 	gwy_data_view_coords_xy_clamp
 	gwy_vector_shade_new
-	gwy_layer_pointer_unselect
-	gwy_layer_select_unselect
 	gwy_sphere_coords_new
 	gwy_layer_lines_get_lines
+	gwy_vector_layer_setup_gc
 	gwy_data_view_get_top_layer
 	gwy_data_view_set_zoom
 	gwy_table_attach_row
@@ -96,11 +97,10 @@ EXPORTS
 	gwy_layer_mask_set_color
 	gwy_graph_draw_point
 	gwy_graph_label_get_type
-	gwy_layer_pointer_get_nselected
-	gwy_data_view_layer_button_press
 	gwy_data_view_get_alpha_layer
 	gwy_data_view_get_hexcess
 	gwy_ruler_get_range
+	gwy_pixmap_layer_paint
 	gwy_grad_sphere_get_update_policy
 	gwy_graph_get_status_data
 	gwy_axis_set_visible
@@ -113,7 +113,6 @@ EXPORTS
 	gwy_option_menu_palette
 	gwy_option_menu_interpolation
 	gwy_data_view_get_vexcess
-	gwy_data_view_layer_draw
 	gwy_ruler_set_units_placement
 	gwy_vruler_new
 	gwy_table_attach_spinbutton
@@ -121,13 +120,13 @@ EXPORTS
 	gwy_toolbox_new
 	gwy_data_window_update_title
 	gwy_option_menu_set_history
-	gwy_data_view_layer_motion_notify
 	gwy_layer_pointer_get_type
 	gwy_stock_register_stock_items
 	gwy_axis_set_logarithmic
 	gwy_data_view_coords_xy_to_real
 	gwy_graph_add_dataline
 	gwy_graph_area_set_boundaries
+	gwy_vector_layer_button_press
 	gwy_sci_text_new
 	gwy_data_view_get_xmeasure
 	gwy_layer_lines_set_max_lines
@@ -154,10 +153,8 @@ EXPORTS
 	gwy_color_axis_get_type
 	gwy_data_view_layer_updated
 	gwy_grad_sphere_set_update_policy
-	gwy_layer_points_unselect
 	gwy_sphere_coords_get_theta
 	gwy_layer_pointer_new
-	gwy_data_view_layer_key_release
 	gwy_color_axis_set_range
 	gwy_graph_area_clear
 	gwy_layer_points_get_type
@@ -166,6 +163,7 @@ EXPORTS
 	gwy_grad_sphere_get_palette
 	gwy_graph_corner_get_type
 	gwy_sphere_coords_get_type
+	gwy_vector_layer_key_press
 	gwy_option_menu_create
 	gwy_data_view_get_type
 	gwy_dialog_prevent_delete_cb
@@ -174,8 +172,6 @@ EXPORTS
 	gwy_vector_shade_set_sphere_coords
 	gwy_layer_pointer_get_point
 	gwy_sphere_coords_set_value
-	gwy_data_view_layer_paint
-	gwy_data_view_layer_key_press
 	gwy_layer_select_new
 	gwy_layer_mask_new
 	gwy_data_window_get_base_name

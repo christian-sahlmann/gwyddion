@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -145,7 +145,7 @@ GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {
     GwyDataWindow *data_window;
-    GwyDataViewLayer *layer;
+    GwyPixmapLayer *layer;
     GwyPalette *palette;
     GtkWidget *vbox, *hbox, *widget;
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
@@ -230,7 +230,7 @@ gwy_data_window_new(GwyDataView *data_view)
     /***** rhs stuff *****/
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     g_assert(GWY_IS_LAYER_BASIC(layer));
-    palette = gwy_layer_basic_get_palette(layer);
+    palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL,
                                                 0, 1, palette);
     data_view_updated_cb(data_window);
@@ -591,7 +591,7 @@ static void
 palette_selected_cb(GtkWidget *item,
                     GwyDataWindow *data_window)
 {
-    GwyDataViewLayer *layer;
+    GwyPixmapLayer *layer;
     GwyPalette *palette;
     const gchar *name;
 
@@ -601,7 +601,7 @@ palette_selected_cb(GtkWidget *item,
 
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-    palette = gwy_layer_basic_get_palette(layer);
+    palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
     g_return_if_fail(GWY_IS_PALETTE(palette));
     gwy_palette_set_by_name(palette, name);
     gwy_data_view_update(GWY_DATA_VIEW(data_window->data_view));

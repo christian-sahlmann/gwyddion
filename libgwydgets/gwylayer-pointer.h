@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
-#  include <libgwydgets/gwydataviewlayer.h>
+#  include <libgwydgets/gwyvectorlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
 #ifdef __cplusplus
@@ -43,7 +43,7 @@ typedef struct _GwyLayerPointer      GwyLayerPointer;
 typedef struct _GwyLayerPointerClass GwyLayerPointerClass;
 
 struct _GwyLayerPointer {
-    GwyDataViewLayer parent_instance;
+    GwyVectorLayer parent_instance;
 
     guint button;
     gboolean selected;
@@ -52,19 +52,16 @@ struct _GwyLayerPointer {
 };
 
 struct _GwyLayerPointerClass {
-    GwyDataViewLayerClass parent_class;
+    GwyVectorLayerClass parent_class;
 
     GdkCursor *point_cursor;
 };
 
 GType            gwy_layer_pointer_get_type       (void) G_GNUC_CONST;
-
 GtkObject*       gwy_layer_pointer_new            (void);
 gboolean         gwy_layer_pointer_get_point      (GwyDataViewLayer *layer,
                                                    gdouble *x,
                                                    gdouble *y);
-gint             gwy_layer_pointer_get_nselected  (GwyDataViewLayer *layer);
-void             gwy_layer_pointer_unselect       (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
 }
