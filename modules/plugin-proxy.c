@@ -134,7 +134,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -895,6 +895,7 @@ dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
 static void
 dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 {
+    gchar *unit;
     gint xres, yres;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -903,6 +904,12 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     fprintf(fh, "%s/yres=%d\n", name, yres);
     fprintf(fh, "%s/xreal=%.16g\n", name, gwy_data_field_get_xreal(dfield));
     fprintf(fh, "%s/yreal=%.16g\n", name, gwy_data_field_get_yreal(dfield));
+    unit = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(dfield));
+    fprintf(fh, "%s/unit-xy=%s\n", name, unit);
+    g_free(unit);
+    unit = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_z(dfield));
+    fprintf(fh, "%s/unit-z=%s\n", name, unit);
+    g_free(unit);
     fprintf(fh, "%s=[\n[", name);
     fflush(fh);
     fwrite(dfield->data, sizeof(gdouble), xres*yres, fh);
@@ -963,6 +970,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
     GwyDataField *dfield;
     gdouble xreal, yreal;
     gint xres, yres;
+    GObject *uxy, *uz;
+    const guchar *s;
     gsize n;
 
     if (old_data) {
@@ -999,17 +1008,14 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             goto fail;
         }
         pos++;
-        if (gwy_container_contains_by_name(data, line))
-            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                     line));
-        else
-            dfield = NULL;
+        dfield = NULL;
+        gwy_container_gis_object_by_name(data, line, (GObject**)&dfield);
 
         /* get datafield parameters from already read values, failing back
          * to values of original data field */
         key = g_strconcat(line, "/xres", NULL);
-        if (gwy_container_contains_by_name(data, key))
-            xres = atoi(gwy_container_get_string_by_name(data, key));
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            xres = atoi(s);
         else if (dfield)
             xres = gwy_data_field_get_xres(dfield);
         else {
@@ -1019,8 +1025,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         g_free(key);
 
         key = g_strconcat(line, "/yres", NULL);
-        if (gwy_container_contains_by_name(data, key))
-            yres = atoi(gwy_container_get_string_by_name(data, key));
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            yres = atoi(s);
         else if (dfield)
             yres = gwy_data_field_get_yres(dfield);
         else {
@@ -1030,9 +1036,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         g_free(key);
 
         key = g_strconcat(line, "/xreal", NULL);
-        if (gwy_container_contains_by_name(data, key))
-            xreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
-                                   NULL);
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            xreal = g_ascii_strtod(s, NULL);
         else if (dfield)
             xreal = gwy_data_field_get_xreal(dfield);
         else {
@@ -1042,9 +1047,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         g_free(key);
 
         key = g_strconcat(line, "/yreal", NULL);
-        if (gwy_container_contains_by_name(data, key))
-            yreal = g_ascii_strtod(gwy_container_get_string_by_name(data, key),
-                                   NULL);
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            yreal = g_ascii_strtod(s, NULL);
         else if (dfield)
             yreal = gwy_data_field_get_yreal(dfield);
         else {
@@ -1058,6 +1062,32 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             goto fail;
         }
 
+        key = g_strconcat(line, "/unit-xy", NULL);
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            uxy = gwy_si_unit_new((const gchar*)s);
+        else if (dfield) {
+            uxy = G_OBJECT(gwy_data_field_get_si_unit_xy(dfield));
+            uxy = gwy_serializable_duplicate(uxy);
+        }
+        else {
+            g_warning("Broken dump doesn't specify lateral units.");
+            uxy = gwy_si_unit_new("m");
+        }
+        g_free(key);
+
+        key = g_strconcat(line, "/unit-z", NULL);
+        if (gwy_container_gis_string_by_name(data, key, &s))
+            uz = gwy_si_unit_new((const gchar*)s);
+        else if (dfield) {
+            uz = G_OBJECT(gwy_data_field_get_si_unit_z(dfield));
+            uz = gwy_serializable_duplicate(uz);
+        }
+        else {
+            g_warning("Broken dump doesn't specify value units.");
+            uz = gwy_si_unit_new("m");
+        }
+        g_free(key);
+
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
             g_warning("Unexpected end of file (truncated datafield).");
@@ -1065,6 +1095,10 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
                                                    FALSE));
+        gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(uxy));
+        gwy_object_unref(uxy);
+        gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(uz));
+        gwy_object_unref(uz);
         memcpy(dfield->data, pos, n);
         pos += n;
         val = next_line(&pos);
