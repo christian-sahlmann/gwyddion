@@ -1,0 +1,17 @@
+
+$(LIBRARY)-$(LIB_VER).def: $(LIBRARY).def
+	copy $(LIBRARY).def $(LIBRARY)-$(LIB_VER).def
+
+$(LIBRARY)-$(LIB_VER).dll: $(OBJECTS) $(LIBRARY)-$(LIB_VER).def
+	$(LINK32) $(OBJECTS) $(LIB_LINK) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /out:$(LIBRARY)-$(LIB_VER).dll /def:$(LIBRARY)-$(LIB_VER).def /dll /implib:$(LIBRARY)-$(LIB_VER).lib
+
+.c.obj:
+	$(CC) $(CFLAGS) -GD -c $(LIB_CFLAGS) $<
+
+install: all "$(TOP_SRCDIR)\inst.stamp"
+	$(INSTALL) $(LIBRARY)-$(LIB_VER).dll "$(DEST_DIR)"
+	$(INSTALL) $(LIBRARY)-$(LIB_VER).lib "$(DEST_DIR)\lib"
+	$(INSTALL) $(LIBRARY)-$(LIB_VER).def "$(DEST_DIR)\lib"
+	for %h in ($(HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XLIBRARY)"
+
+# vim: ft=make
