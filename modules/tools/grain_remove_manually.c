@@ -27,23 +27,16 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/unitool.h>
-
+#include <app/undo.h>
 
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
-typedef struct {
-    gint ble;
-} ToolControls;
-
-static gboolean   module_register  (const gchar *name);
-static gboolean   use              (GwyDataWindow *data_window,
-                                    GwyToolSwitchEvent reason);
-static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state,
-                                    GwyUnitoolUpdateType reason);
-static void       dialog_abandon   (GwyUnitoolState *state);
-static void       sel_finished_cb  (GwyUnitoolState *state);
+static gboolean   module_register       (const gchar *name);
+static gboolean   use                   (GwyDataWindow *data_window,
+                                         GwyToolSwitchEvent reason);
+static GtkWidget* dialog_create         (GwyUnitoolState *state);
+static void       selection_finished_cb (GwyUnitoolState *state);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -52,7 +45,7 @@ static GwyModuleInfo module_info = {
     "grain_remove_manually",
     N_("Grain (mask) removal tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -61,8 +54,8 @@ static GwyUnitoolSlots func_slots = {
     0,                             /* layer type, must be set runtime */
     NULL,                          /* layer setup func */
     dialog_create,                 /* dialog constructor */
-    dialog_update,                 /* update view and controls */
-    dialog_abandon,                /* dialog abandon hook */
+    NULL,                          /* update view and controls */
+    NULL,                          /* dialog abandon hook */
     NULL,                          /* apply action */
     NULL,                          /* nonstandard response handler */
 };
@@ -77,7 +70,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "grain_remove_manually",
         GWY_STOCK_GRAINS_REMOVE,
-        N_("Grain (mask) removal tool."),
+        N_("Manually remove grains (continuous parts of mask)"),
         98,
         &use,
     };
@@ -97,12 +90,12 @@ use(GwyDataWindow *data_window,
     if (!state) {
         func_slots.layer_type = g_type_from_name(layer_name);
         if (!func_slots.layer_type) {
-            g_warning(_("Layer type `%s' not available"), layer_name);
+            g_warning("Layer type `%s' not available", layer_name);
             return FALSE;
         }
         state = g_new0(GwyUnitoolState, 1);
         state->func_slots = &func_slots;
-        state->user_data = g_new0(ToolControls, 1);
+        state->user_data = NULL;
     }
     return gwy_unitool_use(state, data_window, reason);
 }
@@ -126,50 +119,34 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
 
-    label = gtk_label_new("This tool has no options.");
+    label = gtk_label_new(_("This tool has no options."));
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
     g_signal_connect_swapped(state->layer, "selection-finished",
-                             G_CALLBACK(sel_finished_cb), state);
+                             G_CALLBACK(selection_finished_cb), state);
 
     return dialog;
 }
 
 
 static void
-dialog_update(G_GNUC_UNUSED GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
-{
-}
-
-static void
-dialog_abandon(G_GNUC_UNUSED GwyUnitoolState *state)
-{
-}
-
-static void
-sel_finished_cb(GwyUnitoolState *state)
+selection_finished_cb(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[2];
-    gint xres, col, row;
+    gint col, row;
     gboolean is_visible, is_selected;
 
     gwy_debug("");
-
-
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-       dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    else {
+    if (!gwy_container_gis_object_by_name(data, "/0/mask",
+                                          (GObject**)&dfield)) {
         gwy_debug("No mask");
         return;
     }
-
-    xres = gwy_data_field_get_xres(dfield);
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
@@ -180,14 +157,13 @@ sel_finished_cb(GwyUnitoolState *state)
     if (!is_visible && !is_selected)
         return;
 
-    if (is_selected) {
-        gwy_data_field_grains_remove_manually(dfield,
-                                              col + xres*row);
+    if (!gwy_data_field_get_val(dfield, col, row))
+        return;
 
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(dfield));
-        gwy_vector_layer_unselect(state->layer);
-        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
-    }
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    gwy_data_field_grains_remove_grain(dfield, col, row);
+    gwy_vector_layer_unselect(state->layer);
+    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
