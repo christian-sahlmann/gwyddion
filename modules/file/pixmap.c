@@ -1353,6 +1353,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     const guchar *samples;
     guchar *pixels;
     gint width, height, zwidth, zheight, hrh, vrw, scw, nsamp, y, lw;
+    gdouble min, max;
     gint border = 20;
     gint gap = 20;
     gint fmw = 18;
@@ -1404,10 +1405,11 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
                       args->zoom, siunit_xy);
     vrw = gdk_pixbuf_get_width(vrpixbuf);
     if (args->otype == PIXMAP_EVERYTHING) {
-        scalepixbuf = fmscale(zheight + 2*lw,
-                            gwy_data_field_get_min(dfield),
-                            gwy_data_field_get_max(dfield),
-                            args->zoom, siunit_z);
+        min = gwy_data_field_get_min(dfield);
+        gwy_container_gis_double_by_name(data, "/0/base/min", &min);
+        max = gwy_data_field_get_max(dfield);
+        gwy_container_gis_double_by_name(data, "/0/base/max", &max);
+        scalepixbuf = fmscale(zheight + 2*lw, min, max, args->zoom, siunit_z);
         scw = gdk_pixbuf_get_width(scalepixbuf);
     }
     else {
