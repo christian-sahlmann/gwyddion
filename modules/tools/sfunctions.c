@@ -379,8 +379,9 @@ apply(GwyUnitoolState *state)
         gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
 
     window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(window, gtk_label_get_text(GTK_LABEL(state->windowname)));
-    
+    gtk_window_set_title(GTK_WINDOW(window),
+                         gtk_label_get_text(GTK_LABEL(state->windowname)));
+
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
 }
