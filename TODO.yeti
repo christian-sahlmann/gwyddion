@@ -1,8 +1,7 @@
-- Add default actions to dialogs
-- Use gtk_dialog_set_response_sensitive() in unitool
-- Add gwyddion-keepup to CVS
-- Scale verb/noun tralsation
 - I18n under MS Windows
+- Add gwyddion-keepup to CVS
+- Fix cluttered left column layout in Profiles, SFunctions.
+- Make 3D save the larger view, not the small with full controls
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
