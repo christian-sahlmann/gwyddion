@@ -702,5 +702,14 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
  * Tool update slot function signature.
  **/
 
+/**
+ * GwyUnitoolUpdateType:
+ * GWY_UNITOOL_UPDATED_SELECTION: Selection have changed.
+ * GWY_UNITOOL_UPDATED_DATA: Data have changed.
+ * GWY_UNITOOL_UPDATED_CONTROLS: Unused.
+ *
+ * Reason why dialog_update() tool function was called.
+ */
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
