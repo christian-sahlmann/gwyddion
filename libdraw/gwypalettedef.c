@@ -774,6 +774,15 @@ gwy_palette_def_exists(const gchar *name)
 }
 
 /**
+ * GwyPaletteDefFunc:
+ * @name: Palette definition name.
+ * @palette_def: Palette definition.
+ * @user_data: A user-specified pointer.
+ *
+ * Callback function type for gwy_palette_def_foreach().
+ **/
+
+/**
  * gwy_palette_def_foreach:
  * @callback: A callback.
  * @user_data: User data passed to the callback.
@@ -817,5 +826,105 @@ gwy_palette_def_print(GwyPaletteDef *a)
     g_print("###############################################\n");
 
 }
+
+/**
+ * GwyRGBA:
+ * @r: The red component.
+ * @g: The green component.
+ * @b: The blue component.
+ * @a: The alpha (opacity) value.
+ *
+ * RGB[A] color specification type.
+ *
+ * All values are from the range [0,1].
+ **/
+
+/**
+ * GwyPaletteDefEntry:
+ * @x: Position of @color in the palette definition.
+ * @color: The color at position @x.
+ *
+ * Palette definition entry type.
+ *
+ * The @x coordinate is from the range [0,1].
+ **/
+
+/**
+ * GWY_PALETTE_GRAY:
+ *
+ * A gray palette.
+ *
+ * This is the default palette.
+ **/
+
+/**
+ * GWY_PALETTE_RED:
+ *
+ * A red palette.
+ **/
+
+/**
+ * GWY_PALETTE_GREEN:
+ *
+ * A green palette.
+ **/
+
+/**
+ * GWY_PALETTE_BLUE:
+ *
+ * A blue palette.
+ **/
+
+/**
+ * GWY_PALETTE_YELLOW:
+ *
+ * A yellowi palette.
+ **/
+
+/**
+ * GWY_PALETTE_PINK:
+ *
+ * A pink palette.
+ **/
+
+/**
+ * GWY_PALETTE_OLIVE:
+ *
+ * A plive palette.
+ **/
+
+/**
+ * GWY_PALETTE_BW1:
+ *
+ * A striped black-and-white palette with blended stripes.
+ **/
+
+/**
+ * GWY_PALETTE_BW2:
+ *
+ * A striped black-and-white palette with sharp stripes.
+ **/
+
+/**
+ * GWY_PALETTE_RAINBOW1:
+ *
+ * A colorful rainbow palette.
+ **/
+
+/**
+ * GWY_PALETTE_RAINBOW2:
+ *
+ * A black-red-green-blue-white palette.
+ **/
+
+/**
+ * gwy_palette_def_is_set:
+ * @pd: A palette definition.
+ *
+ * Expands to %TRUE if the palette definition contains any colors.
+ *
+ * XXX: This is flawed. Unset palette definitions should not exist, though
+ * currently gwy_palette_def_new() creates them.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
