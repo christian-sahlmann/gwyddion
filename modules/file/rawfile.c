@@ -226,7 +226,7 @@ static gboolean      rawfile_read_ascii            (RawFileArgs *args,
                                                     guchar *buffer,
                                                     gdouble *data,
                                                     GError **error);
-gdouble              gwy_comma_strtod              (const gchar *nptr,
+static gdouble       gwy_comma_strtod              (const gchar *nptr,
                                                     gchar **endptr);
 static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
@@ -2144,7 +2144,7 @@ rawfile_read_ascii(RawFileArgs *args,
     return TRUE;
 }
 
-gdouble
+static gdouble
 gwy_comma_strtod(const gchar *nptr, gchar **endptr)
 {
     gchar *fail_pos;

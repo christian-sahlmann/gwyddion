@@ -148,7 +148,7 @@ module_register(const gchar *name)
  *
  * Since: 1.4.
  **/
-void
+static void
 gwy_data_field_mark_scars(GwyDataField *data_field,
                           GwyDataField *scar_field,
                           gdouble threshold_high,

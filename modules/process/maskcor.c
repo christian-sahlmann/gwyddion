@@ -243,7 +243,7 @@ maskcor_data_cb(GtkWidget *item)
     *pp = p;
 }
 
-void
+static void
 plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
                 gdouble threshold)
 {
@@ -263,7 +263,7 @@ plot_correlated(GwyDataField * retfield, gint xsize, gint ysize,
 
 }
 
-void
+static void
 plot_maxima(GwyDataField * retfield, gdouble threshold)
 {
     gint i, j;

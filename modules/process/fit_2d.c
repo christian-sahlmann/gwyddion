@@ -91,7 +91,7 @@ static gdouble     fit_sphere		(gdouble x,
 					   gdouble *dimdata,
 					   gboolean *fres);
 
-GwyNLFitter*	   gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
+static GwyNLFitter*	   gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 		    		    	      GwyNLFitDerFunc df,		      
 					      GwyDataField *dfield,		     
 					      GwyDataField *weight,
@@ -522,7 +522,7 @@ fit_sphere(gdouble x,
     
 }
 
-GwyNLFitter*
+static GwyNLFitter*
 gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 		      GwyNLFitDerFunc df,		      
 		      GwyDataField *dfield,		     
