@@ -16,11 +16,18 @@
 #include <app/settings.h>
 #include <app/file.h>
 
-#define PLUGIN_PROXY_RUN_MODES \
-    (GWY_RUN_NONINTERACTIVE | GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
+typedef enum {
+    PLUGIN_LOAD = 1 << 0,
+    PLUGIN_SAVE = 1 << 1,
+    PLUGIN_ANY  = 0x03
+} GwyLoadSave;
 
 typedef struct {
-    GwyProcessFuncInfo func;
+    GwyFileFuncInfo func;
+    GwyLoadSave run;
+    gchar *glob;
+    GPatternSpec *pattern;
+    glong specificity;
     gchar *file;
 } PluginInfo;
 
@@ -29,8 +36,13 @@ static GList*         register_plugins           (GList *plugins,
                                                   const gchar *name,
                                                   const gchar *dir,
                                                   gchar *buffer);
-static gboolean       plugin_proxy               (GwyContainer *data,
-                                                  GwyRunType run,
+static GwyContainer*  plugin_proxy_load          (const gchar *filename,
+                                                  const gchar *name);
+static gboolean       plugin_proxy_save          (GwyContainer *data,
+                                                  const gchar *filename,
+                                                  const gchar *name);
+static gint           plugin_proxy_detect        (const gchar *filename,
+                                                  gboolean only_name,
                                                   const gchar *name);
 static FILE*          text_dump_export           (GwyContainer *data,
                                                   gchar **filename);
@@ -44,19 +56,20 @@ static GwyContainer*  text_dump_import           (GwyContainer *old_data,
                                                   gchar *buffer,
                                                   gsize size);
 static PluginInfo*    find_plugin                (const gchar *name,
-                                                  GwyRunType run);
-static GwyRunType     str_to_run_modes           (const gchar *str);
-static const char*    run_mode_to_str            (GwyRunType run);
+                                                  GwyLoadSave run);
+static glong          pattern_specificity        (const gchar *pattern);
+static GwyLoadSave    str_to_run_modes           (const gchar *str);
+static const char*    run_mode_to_str            (GwyLoadSave run);
 static gchar*         next_line                  (gchar **buffer);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "plugin-proxy-process",
+    "plugin-proxy-file",
     "Plug-in proxy is a module capable of querying, registering, and running "
-        "external programs (plug-ins) on data pretending they are data "
-        "processing modules.",
+        "external programs (plug-ins) on data pretending they are file "
+        "loading and saving modules.",
     "Yeti",
     "1.0",
     "Yeti",
@@ -72,13 +85,11 @@ static GList *plugins = NULL;
 
 static struct {
     const gchar *str;
-    GwyRunType run;
+    gint run;
 }
 const run_mode_names[] = {
-    { "interactive", GWY_RUN_INTERACTIVE },
-    { "noninteractive", GWY_RUN_NONINTERACTIVE },
-    { "modal", GWY_RUN_MODAL },
-    { "with_defaults", GWY_RUN_WITH_DEFAULTS },
+    { "load", PLUGIN_LOAD },
+    { "save", PLUGIN_SAVE },
 };
 
 static gboolean
@@ -98,7 +109,7 @@ module_register(const gchar *name)
     g_return_val_if_fail(plugin_path, FALSE);
     gwy_debug("%s: plug-in path is: %s", __FUNCTION__, plugin_path);
 
-    dir = g_build_filename(plugin_path, "process", NULL);
+    dir = g_build_filename(plugin_path, "file", NULL);
     gdir = g_dir_open(dir, 0, &err);
     if (err) {
         g_warning("Cannot open plug-in directory %s: %s", dir, err->message);
@@ -145,28 +156,35 @@ register_plugins(GList *plugins,
                  gchar *buffer)
 {
     PluginInfo *info;
-    gchar *pname, *menu_path, *run_modes;
-    GwyRunType run;
+    gchar *pname, *file_desc, *run_modes, *glob;
+    GwyLoadSave run;
 
     while (buffer) {
         if ((pname = next_line(&buffer))
             && *pname
-            && (menu_path = next_line(&buffer))
-            && menu_path[0] == '/'
+            && (file_desc = next_line(&buffer))
+            && *file_desc
+            && (glob = next_line(&buffer))
+            && *glob
             && (run_modes = next_line(&buffer))
             && (run = str_to_run_modes(run_modes))) {
             info = g_new(PluginInfo, 1);
             info->func.name = g_strdup(pname);
-            info->func.menu_path = g_strconcat("/_Plug-Ins", menu_path, NULL);
-            info->func.process = plugin_proxy;
-            info->func.run = run;
-            if (gwy_process_func_register(name, &info->func)) {
+            info->func.file_desc = g_strdup(file_desc);
+            info->func.detect = plugin_proxy_detect;
+            info->func.load = plugin_proxy_load;
+            info->func.save = plugin_proxy_save;
+            if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
+                info->run = run;
+                info->glob = g_strdup(glob);
+                info->pattern = g_pattern_spec_new(glob);
+                info->specificity = pattern_specificity(glob);
                 plugins = g_list_prepend(plugins, info);
             }
             else {
                 g_free((gpointer)info->func.name);
-                g_free((gpointer)info->func.menu_path);
+                g_free((gpointer)info->func.file_desc);
                 g_free(info);
             }
         }
@@ -177,55 +195,114 @@ register_plugins(GList *plugins,
     return plugins;
 }
 
-static gboolean
-plugin_proxy(GwyContainer *data, GwyRunType run, const gchar *name)
+static GwyContainer*
+plugin_proxy_load(const gchar *filename,
+                  const gchar *name)
 {
-    GtkWidget *data_window;
     PluginInfo *info;
-    gchar *filename, *buffer = NULL;
+    GwyContainer *data = NULL;
+    gchar *tmpname = NULL, *buffer = NULL;
     GError *err = NULL;
     gint exit_status;
     gsize size = 0;
     FILE *fh;
-    gchar *args[] = { NULL, "run", NULL, NULL, NULL };
+    gchar *args[] = { NULL, NULL, NULL, NULL, NULL };
     gboolean ok;
+    gint fd;
 
-    gwy_debug("%s: called as %s with run mode %d", __FUNCTION__, name, run);
-    if (!(info = find_plugin(name, run)))
+    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    if (!(info = find_plugin(name, PLUGIN_LOAD)))
         return FALSE;
 
-    fh = text_dump_export(data, &filename);
+    fd = g_file_open_tmp("gwydXXXXXXXX", &tmpname, &err);
+    if (fd < 0) {
+        g_warning("Cannot create a temporary file: %s", err->message);
+        return FALSE;
+    }
+    fh = fdopen(fd, "wb");
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
-    args[2] = g_strdup(run_mode_to_str(run));
-    args[3] = filename;
+    args[1] = g_strdup(run_mode_to_str(PLUGIN_LOAD));
+    args[2] = tmpname;
+    args[3] = g_strdup(filename);
     gwy_debug("%s: %s %s %s %s", __FUNCTION__,
               args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
     if (!err)
-        ok &= g_file_get_contents(filename, &buffer, &size, &err);
+        ok &= g_file_get_contents(tmpname, &buffer, &size, &err);
+    unlink(tmpname);
+    fclose(fh);
+    gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
+              ok, exit_status, err);
+    ok &= !exit_status;
+    if (!ok || !(data = text_dump_import(data, buffer, size))) {
+        g_warning("Cannot run plug-in %s: %s",
+                    info->file,
+                    err ? err->message : "it returned garbage.");
+    }
+    g_free(args[1]);
+    g_free(args[3]);
+    g_clear_error(&err);
+    g_free(buffer);
+    g_free(tmpname);
+
+    return data;
+}
+
+static gboolean
+plugin_proxy_save(GwyContainer *data,
+                  const gchar *filename,
+                  const gchar *name)
+{
+    PluginInfo *info;
+    gchar *tmpname = NULL;
+    GError *err = NULL;
+    gint exit_status;
+    FILE *fh;
+    gchar *args[] = { NULL, NULL, NULL, NULL, NULL };
+    gboolean ok;
+
+    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    if (!(info = find_plugin(name, PLUGIN_SAVE)))
+        return FALSE;
+
+    fh = text_dump_export(data, &tmpname);
+    g_return_val_if_fail(fh, FALSE);
+    args[0] = info->file;
+    args[1] = g_strdup(run_mode_to_str(PLUGIN_SAVE));
+    args[2] = tmpname;
+    args[3] = g_strdup(filename);
+    gwy_debug("%s: %s %s %s %s", __FUNCTION__,
+              args[0], args[1], args[2], args[3]);
+    ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
+                      NULL, NULL, &exit_status, &err);
     unlink(filename);
     fclose(fh);
     gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
               ok, exit_status, err);
     ok &= !exit_status;
-    if (ok && (data = text_dump_import(data, buffer, size))) {
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
-    }
-    else {
+    if (!ok) {
         g_warning("Cannot run plug-in %s: %s",
                     info->file,
                     err ? err->message : "it returned garbage.");
         ok = FALSE;
     }
-    g_free(args[2]);
+    g_free(args[1]);
+    g_free(args[3]);
     g_clear_error(&err);
-    g_free(buffer);
-    g_free(filename);
+    g_free(tmpname);
 
     return ok;
+}
+
+static gint
+plugin_proxy_detect(const gchar *filename,
+                    gboolean only_name,
+                    const gchar *name)
+{
+    gwy_debug("%s: called as %s with file `%s'", __FUNCTION__, name, filename);
+    return 0;
 }
 
 static FILE*
@@ -386,7 +463,7 @@ fail:
 
 static PluginInfo*
 find_plugin(const gchar *name,
-            GwyRunType run)
+            GwyLoadSave run)
 {
     PluginInfo *info;
     GList *l;
@@ -400,19 +477,25 @@ find_plugin(const gchar *name,
         g_critical("Don't know anything about plug-in `%s'.", name);
         return NULL;
     }
-    if (!(info->func.run & run)) {
-        g_critical("Plug-in `%s' doesn't suport this run mode.", name);
+    if (!(info->run & run)) {
+        g_critical("Plug-in `%s' doesn't suport this operation.", name);
         return NULL;
     }
 
     return info;
 }
 
-static GwyRunType
+static glong
+pattern_specificity(const gchar *pattern)
+{
+    return strlen(pattern);
+}
+
+static GwyLoadSave
 str_to_run_modes(const gchar *str)
 {
     gchar **modes;
-    GwyRunType run = 0;
+    GwyLoadSave run = 0;
     gsize i, j;
 
     modes = g_strsplit(str, " ", 0);
@@ -430,7 +513,7 @@ str_to_run_modes(const gchar *str)
 }
 
 static const char*
-run_mode_to_str(GwyRunType run)
+run_mode_to_str(GwyLoadSave run)
 {
     gsize j;
 
