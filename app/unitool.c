@@ -40,6 +40,7 @@ static void       gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
 static GtkWidget* gwy_unitool_dialog_find_button   (GwyUnitoolState *state,
                                                     gint response_id);
 static void       gwy_unitool_setup_accel_group    (GwyUnitoolState *state);
+static void       gwy_unitool_update_thumbnail     (GwyUnitoolState *state);
 
 /***** Public ***************************************************************/
 
@@ -66,6 +67,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     GwyUnitoolSlots *slot;
     GwyVectorLayer *layer;
     GwyDataView *data_view;
+    gulong *thumbnail_id;
 
     gwy_debug("%p", data_window);
     g_return_val_if_fail(state, FALSE);
@@ -132,11 +134,23 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    G_CALLBACK(gwy_unitool_dialog_response_cb),
                                    state);
 
+    /* FIXME: should be in state, but it would break binary compatibility */
+    thumbnail_id = g_new(gulong, 1);
+    *thumbnail_id = g_signal_connect_swapped
+                       (gwy_data_window_get_data_view(state->data_window),
+                        "redrawn",
+                        G_CALLBACK(gwy_unitool_update_thumbnail),
+                        state);
+    g_object_set_data(G_OBJECT(state->windowname),
+                      "gwy-unitool-thumbnail-id", thumbnail_id);
+
     /* setup based on switch reason */
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
-    if (reason == GWY_TOOL_SWITCH_WINDOW)
+    if (reason == GWY_TOOL_SWITCH_WINDOW) {
         gwy_unitool_name_changed_cb(state);
+        gwy_unitool_update_thumbnail(state);
+    }
 
     if (state->is_visible)
         gwy_unitool_selection_updated_cb(state);
@@ -181,6 +195,23 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
     state->data_updated_id = 0;
     state->response_id = 0;
     state->windowname_id = 0;
+
+    /* FIXME: should be in state, but it would break binary compatibility */
+    if (state->windowname) {
+        gulong *thumbnail_id;
+        GtkWidget *data_view;
+
+        thumbnail_id = g_object_get_data(G_OBJECT(state->windowname),
+                                         "gwy-unitool-thumbnail-id");
+        g_object_set_data(G_OBJECT(state->windowname),
+                          "gwy-unitool-thumbnail-id", NULL);
+        if (thumbnail_id && *thumbnail_id) {
+            gwy_debug("removing \"redrawn\" handler");
+            data_view = gwy_data_window_get_data_view(state->data_window);
+            g_signal_handler_disconnect(data_view, *thumbnail_id);
+        }
+        g_free(thumbnail_id);
+    }
 }
 
 static void
@@ -342,6 +373,30 @@ gwy_unitool_setup_accel_group(GwyUnitoolState *state)
     gtk_window_add_accel_group(GTK_WINDOW(state->dialog), accel_group);
 }
 
+static void
+gwy_unitool_update_thumbnail(GwyUnitoolState *state)
+{
+    GtkWidget *box, *data_view, *image = NULL;
+    GdkPixbuf *pixbuf;
+    GList *children, *c;
+
+    box = gtk_widget_get_ancestor(state->windowname, GTK_TYPE_HBOX);
+    c = children = gtk_container_get_children(GTK_CONTAINER(box));
+    while (c) {
+        if (GTK_IS_IMAGE(c->data)) {
+            image = GTK_WIDGET(c->data);
+            break;
+        }
+        c = g_list_next(c);
+    }
+    g_assert(image);
+
+    data_view = gwy_data_window_get_data_view(state->data_window);
+    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view), 16);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+    g_object_unref(pixbuf);
+}
+
 /***** Helpers *************************************************************/
 
 /**
@@ -444,7 +499,8 @@ gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
 GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
-    GtkWidget *frame, *label;
+    GtkWidget *frame, *label, *image, *hbox;
+    gulong *thumbnail_id;
 
     g_return_val_if_fail(state, NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
@@ -452,11 +508,28 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     frame = gtk_frame_new(NULL);
     gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
 
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_container_add(GTK_CONTAINER(frame), hbox);
+
+    image = gtk_image_new();
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+
     label = gtk_label_new(gwy_data_window_get_base_name(state->data_window));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 4, 2);
-    gtk_container_add(GTK_CONTAINER(frame), label);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     state->windowname = label;
+
+    gwy_unitool_update_thumbnail(state);
+    /* FIXME: should be in state, but it would break binary compatibility */
+    thumbnail_id = g_new(gulong, 1);
+    *thumbnail_id = g_signal_connect_swapped
+                       (gwy_data_window_get_data_view(state->data_window),
+                        "redrawn",
+                        G_CALLBACK(gwy_unitool_update_thumbnail),
+                        state);
+    g_object_set_data(G_OBJECT(state->windowname),
+                      "gwy-unitool-thumbnail-id", thumbnail_id);
 
     return frame;
     /*
