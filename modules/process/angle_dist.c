@@ -38,47 +38,64 @@ typedef struct {
     gint size;
     gint steps;
     gboolean logscale;
+    gboolean fit_plane;
+    gint kernel_size;
 } AngleArgs;
 
 typedef struct {
     GtkObject *size;
     GtkObject *steps;
     GtkWidget *logscale;
+    GtkWidget *fit_plane;
+    GtkObject *kernel_size;
+    GtkWidget *kernel_size_spin;
     gboolean in_update;
 } AngleControls;
 
-static gboolean      module_register          (const gchar *name);
-static gboolean      angle_dist               (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean      angle_dialog             (AngleArgs *args);
-static void          angle_dialog_update      (AngleControls *controls,
-                                               AngleArgs *args);
-static GwyDataField* angle_do                 (GwyDataField *dfield,
-                                               AngleArgs *args);
-static void          load_args                (GwyContainer *container,
-                                               AngleArgs *args);
-static void          save_args                (GwyContainer *container,
-                                               AngleArgs *args);
-static gdouble       compute_slopes           (GwyDataField *dfield,
-                                               gdouble *xder,
-                                               gdouble *yder);
-static gboolean      count_angles             (gint n,
-                                               gdouble *xder,
-                                               gdouble *yder,
-                                               gdouble max,
-                                               gint size,
-                                               gulong *count,
-                                               gint steps);
-static GwyDataField* make_datafield           (GwyDataField *old,
-                                               gint res,
-                                               gulong *count,
-                                               gdouble real,
-                                               gboolean logscale);
+static gboolean      module_register              (const gchar *name);
+static gboolean      angle_dist                   (GwyContainer *data,
+                                                   GwyRunType run);
+static gboolean      angle_dialog                 (AngleArgs *args);
+static void          angle_dialog_update_controls (AngleControls *controls,
+                                                   AngleArgs *args);
+static void          angle_dialog_update_values   (AngleControls *controls,
+                                                   AngleArgs *args);
+static void          angle_fit_plane_cb           (GtkToggleButton *check,
+                                                   AngleControls *controls);
+static void          plane_coeffs                 (gdouble *datapos,
+                                                   gint rowstride,
+                                                   gint kernel_size,
+                                                   gdouble *bx,
+                                                   gdouble *by);
+static GwyDataField* angle_do                     (GwyDataField *dfield,
+                                                   AngleArgs *args);
+static void          load_args                    (GwyContainer *container,
+                                                   AngleArgs *args);
+static void          save_args                    (GwyContainer *container,
+                                                   AngleArgs *args);
+static gdouble       compute_slopes               (GwyDataField *dfield,
+                                                   gint kernel_size,
+                                                   gdouble *xder,
+                                                   gdouble *yder);
+static gboolean      count_angles                 (gint n,
+                                                   gdouble *xder,
+                                                   gdouble *yder,
+                                                   gdouble max,
+                                                   gint size,
+                                                   gulong *count,
+                                                   gint steps);
+static GwyDataField* make_datafield               (GwyDataField *old,
+                                                   gint res,
+                                                   gulong *count,
+                                                   gdouble real,
+                                                   gboolean logscale);
 
 AngleArgs angle_defaults = {
     200,
     360,
     FALSE,
+    FALSE,
+    5,
 };
 
 /* The module info. */
@@ -88,7 +105,7 @@ static GwyModuleInfo module_info = {
     "angle_dist",
     "Angle distribution.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -161,6 +178,7 @@ angle_dialog(AngleArgs *args)
     AngleControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
+    gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -169,26 +187,45 @@ angle_dialog(AngleArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
-    table = gtk_table_new(3, 3, FALSE);
+    table = gtk_table_new(5, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
+    row = 0;
 
-    controls.size = gtk_adjustment_new(args->size, 10, 1000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("Output size:"), "samples",
+    controls.size = gtk_adjustment_new(args->size, 10, 16384, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("Output size:"), "samples",
                                        controls.size);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    row++;
 
-    controls.steps = gtk_adjustment_new(args->steps, 6, 1000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 1, _("Number of steps:"), "",
+    controls.steps = gtk_adjustment_new(args->steps, 6, 16384, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("Number of steps:"), "",
                                        controls.steps);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    row++;
 
     controls.logscale
         = gtk_check_button_new_with_mnemonic(_("_Logarithmic value scale"));
     gtk_table_attach(GTK_TABLE(table), controls.logscale,
-                     0, 3, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
-    angle_dialog_update(&controls, args);
+    controls.fit_plane
+        = gtk_check_button_new_with_mnemonic(_("Use local plane _fitting"));
+    gtk_table_attach(GTK_TABLE(table), controls.fit_plane,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    g_signal_connect(controls.fit_plane, "toggled",
+                     G_CALLBACK(angle_fit_plane_cb), &controls);
+    row++;
+
+    controls.kernel_size = gtk_adjustment_new(args->kernel_size,
+                                              2, 16, 1, 4, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Plane size:"), "samples",
+                                       controls.kernel_size);
+    controls.kernel_size_spin = spin;
+    row++;
+
+    angle_dialog_update_controls(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -206,7 +243,7 @@ angle_dialog(AngleArgs *args)
 
             case RESPONSE_RESET:
             *args = angle_defaults;
-            angle_dialog_update(&controls, args);
+            angle_dialog_update_controls(&controls, args);
             break;
 
             default:
@@ -215,25 +252,49 @@ angle_dialog(AngleArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.size));
-    args->steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.steps));
-    args->logscale
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls.logscale));
+    angle_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
 
     return TRUE;
 }
 
 static void
-angle_dialog_update(AngleControls *controls,
-                    AngleArgs *args)
+angle_dialog_update_controls(AngleControls *controls,
+                             AngleArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->steps),
                              args->steps);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->kernel_size),
+                             args->kernel_size);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->logscale),
                                  args->logscale);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
+                                 args->fit_plane);
+    gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
+}
+
+static void
+angle_dialog_update_values(AngleControls *controls,
+                           AngleArgs *args)
+{
+    args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    args->steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->steps));
+    args->logscale
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->logscale));
+    args->kernel_size =
+        gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->kernel_size));
+    args->fit_plane =
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fit_plane));
+}
+
+static void
+angle_fit_plane_cb(GtkToggleButton *check,
+                   AngleControls *controls)
+{
+    gtk_widget_set_sensitive(controls->kernel_size_spin,
+                             gtk_toggle_button_get_active(check));
 }
 
 static GwyDataField*
@@ -242,19 +303,21 @@ angle_do(GwyDataField *dfield,
 {
     gdouble *xder, *yder;
     gdouble max;
-    gint xres, yres;
+    gint xres, yres, n;
     gulong *count;
     gboolean ok;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
 
-    xder = g_new(gdouble, xres*yres);
-    yder = g_new(gdouble, xres*yres);
-    max = compute_slopes(dfield, xder, yder);
+    n = args->fit_plane ? args->kernel_size : 2;
+    n = (xres - n)*(yres - n);
+    xder = g_new(gdouble, n);
+    yder = g_new(gdouble, n);
+    max = compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0,
+                         xder, yder);
     count = g_new0(gulong, args->size*args->size);
-    ok = count_angles((xres - 2)*(yres - 2), xder, yder,
-                      max, args->size, count, args->steps);
+    ok = count_angles(n, xder, yder, max, args->size, count, args->steps);
     g_free(yder);
     g_free(xder);
     if (!ok) {
@@ -265,14 +328,46 @@ angle_do(GwyDataField *dfield,
     return make_datafield(dfield, args->size, count, 2.0*G_PI, args->logscale);
 }
 
+static void
+plane_coeffs(gdouble *datapos, gint rowstride, gint kernel_size,
+             gdouble *bx, gdouble *by)
+{
+    gdouble sumxi, sumxixi, sumyi, sumyiyi;
+    gdouble sumsi = 0.0;
+    gdouble sumsixi = 0.0;
+    gdouble sumsiyi = 0.0;
+    gint i, j;
+
+    sumxi = sumyi = (kernel_size-1.0)/2;
+    sumxixi = sumyiyi = (2*kernel_size-1.0)*(kernel_size-1.0)/6;
+
+    for (i = 0; i < kernel_size; i++) {
+        gdouble *row = datapos + i*rowstride;
+
+        for (j = 0; j < kernel_size; j++) {
+            sumsi += row[j];
+            sumsixi += row[j]*j;
+            sumsiyi += row[j]*i;
+        }
+    }
+    sumsi /= kernel_size*kernel_size;
+    sumsixi /= kernel_size*kernel_size;
+    sumsiyi /= kernel_size*kernel_size;
+
+    *bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+    *by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+}
+
 static gdouble
 compute_slopes(GwyDataField *dfield,
+               gint kernel_size,
                gdouble *xder,
                gdouble *yder)
 {
     gdouble *data;
     gdouble qx, qy;
-    gdouble dx, dy, max;
+    gdouble dx, dy;
+    gdouble d, max;
     gint xres, yres;
     gint col, row;
 
@@ -282,21 +377,38 @@ compute_slopes(GwyDataField *dfield,
     qx = xres/gwy_data_field_get_xreal(dfield);
     qy = yres/gwy_data_field_get_yreal(dfield);
     max = 0.0;
-    for (row = 1; row + 1 < yres; row++) {
-        for (col = 1; col + 1 < xres; col++) {
-            dx = data[row*xres + col + 1] - data[row*xres + col - 1];
-            dx *= qx;
-            *(xder++) = dx;
-            dy = data[row*xres + xres + col] - data[row*xres - xres + col];
-            dy *= qy;
-            *(yder++) = dy;
-            if (dx*dx + dy*dy > max)
-                max = dx*dx + dy*dy;
+    if (kernel_size) {
+        for (row = 0; row + kernel_size < yres; row++) {
+            for (col = 0; col + kernel_size < xres; col++) {
+                plane_coeffs(data + xres*row + col, xres, kernel_size,
+                             &dx, &dy);
+                dx *= qx;
+                *(xder++) = dx;
+                dx *= qy;
+                *(yder++) = dy;
+                d = dx*dx + dy*dy;
+                max = MAX(d, max);
+            }
+        }
+    }
+    else {
+        for (row = 1; row + 1 < yres; row++) {
+            for (col = 1; col + 1 < xres; col++) {
+                dx = data[row*xres + col + 1] - data[row*xres + col - 1];
+                dx *= qx;
+                *(xder++) = dx;
+                dy = data[row*xres + xres + col] - data[row*xres - xres + col];
+                dy *= qy;
+                *(yder++) = dy;
+                d = dx*dx + dy*dy;
+                max = MAX(d, max);
+            }
         }
     }
 
     return max;
 }
+
 
 static gboolean
 count_angles(gint n, gdouble *xder, gdouble *yder,
@@ -386,6 +498,8 @@ make_datafield(G_GNUC_UNUSED GwyDataField *old,
 static const gchar *size_key = "/module/angle_dist/size";
 static const gchar *steps_key = "/module/angle_dist/steps";
 static const gchar *logscale_key = "/module/angle_dist/logscale";
+static const gchar *fit_plane_key = "/module/angle_dist/fit_plane";
+static const gchar *kernel_size_key = "/module/angle_dist/kernel_size";
 
 static void
 load_args(GwyContainer *container,
@@ -394,8 +508,15 @@ load_args(GwyContainer *container,
     *args = angle_defaults;
 
     gwy_container_gis_int32_by_name(container, size_key, &args->size);
+    args->size = CLAMP(args->size, 1, 16384);
     gwy_container_gis_int32_by_name(container, steps_key, &args->steps);
+    args->steps = CLAMP(args->steps, 1, 16384);
     gwy_container_gis_boolean_by_name(container, logscale_key, &args->logscale);
+    gwy_container_gis_boolean_by_name(container, fit_plane_key,
+                                      &args->fit_plane);
+    gwy_container_gis_int32_by_name(container, kernel_size_key,
+                                    &args->kernel_size);
+    args->kernel_size = CLAMP(args->kernel_size, 2, 16);
 }
 
 static void
@@ -405,6 +526,10 @@ save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, size_key, args->size);
     gwy_container_set_int32_by_name(container, steps_key, args->steps);
     gwy_container_set_boolean_by_name(container, logscale_key, args->logscale);
+    gwy_container_set_boolean_by_name(container, fit_plane_key,
+                                      args->fit_plane);
+    gwy_container_set_int32_by_name(container, kernel_size_key,
+                                    args->kernel_size);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
