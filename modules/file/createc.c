@@ -32,7 +32,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <app/gwyapp.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -95,7 +94,7 @@ createc_detect(const gchar *filename,
     FILE *fh;
     gchar magic[MAGIC_SIZE];
 
-    if (strstr(filename, ".dat"))
+    if (g_str_has_suffix(filename, ".dat"))
         score += 10;
 
     if (only_name)
