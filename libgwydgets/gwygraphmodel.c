@@ -143,7 +143,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->y_unit = gwy_si_unit_new("");
 
     /* XXX: GwyGraph has no such thing */
-    gmodel->title = g_string_new("There's no way to get the title!");
+    gmodel->title = g_string_new("FIXME: Mysterious Graph");
     gmodel->top_label = g_string_new("");
     gmodel->bottom_label = g_string_new("");
     gmodel->left_label = g_string_new("");
@@ -166,6 +166,7 @@ GObject*
 gwy_graph_model_new(GwyGraph *graph)
 {
     GwyGraphModel *gmodel;
+    GtkWidget *window;
 
     gwy_debug("");
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL, NULL);
@@ -173,6 +174,10 @@ gwy_graph_model_new(GwyGraph *graph)
     gmodel->graph = graph;
     if (graph) {
         g_assert(GWY_IS_GRAPH(graph));
+        window = gtk_widget_get_ancestor(GTK_WIDGET(graph), GTK_TYPE_WINDOW);
+        if (window)
+            g_string_assign(gmodel->title,
+                            gtk_window_get_title(GTK_WINDOW(window)));
         gmodel->graph_destroy_hid
             = g_signal_connect(graph, "destroy",
                                G_CALLBACK(gwy_graph_model_graph_destroyed),
