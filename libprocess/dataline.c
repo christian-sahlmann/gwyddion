@@ -1300,14 +1300,14 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
                   gboolean level)
 {
     gint i, n;
-    gdouble rmsa, rmsb, av, bv;
+    gdouble rmsa, rmsb;
     GwyDataLine multra, multia;
     gdouble coefs[4];
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(ra), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(ia), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(rb), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_LINE(ib), NULL);
+    g_return_if_fail(GWY_IS_DATA_LINE(ra));
+    g_return_if_fail(GWY_IS_DATA_LINE(ia));
+    g_return_if_fail(GWY_IS_DATA_LINE(rb));
+    g_return_if_fail(GWY_IS_DATA_LINE(ib));
     
    /* gwy_debug("");*/
     if (ia->res != ra->res)
@@ -1442,7 +1442,7 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
     GwyDataLine *iin, *rout, *iout;
     gint i;
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     
     iin = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
     rout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, FALSE);

@@ -42,7 +42,7 @@ void
 gwy_data_field_fractal_partitioning(GwyDataField *data_field, GwyDataLine *xresult, GwyDataLine *yresult, GwyInterpolationType interpolation)
 {
     GwyDataField *buffer;
-    gint i, j, l, m, n, rp, dimexp, xnewres;
+    gint i, j, l, rp, dimexp, xnewres;
     gdouble rms;
     
    
@@ -79,9 +79,9 @@ void
 gwy_data_field_fractal_cubecounting(GwyDataField *data_field, GwyDataLine *xresult, GwyDataLine *yresult, GwyInterpolationType interpolation)
 {
     GwyDataField *buffer;
-    gint i, j, l, m, n, rp, rp2, count, dimexp;
+    gint i, j, l, m, n, rp, rp2, dimexp;
 
-    gdouble a, max, min, imin, hlp, height, xorder, xnewres, yorder, ynewres;
+    gdouble a, max, min, imin, hlp, height, xnewres;
 
     dimexp = (gint) floor(log ((gdouble)data_field->xres)/log (2.0)+0.5);
     xnewres = (gint) pow(2, dimexp)+1;
@@ -132,7 +132,7 @@ void
 gwy_data_field_fractal_triangulation(GwyDataField *data_field, GwyDataLine *xresult, GwyDataLine *yresult, GwyInterpolationType interpolation)
 {
     GwyDataField *buffer;
-    gint i, j, l, rp, rp2, dimexp, xorder, xnewres, yorder, ynewres;
+    gint i, j, l, rp, rp2, dimexp, xnewres;
 
     gdouble dil, a, b, c, d, e, s1, s2, s, z1, z2, z3, z4, height;
 

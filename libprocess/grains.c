@@ -319,6 +319,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *g
 gdouble
 gwy_data_field_grains_get_average(GwyDataField G_GNUC_UNUSED *grain_field)
 {
+    return 0;
 }
 
 void
