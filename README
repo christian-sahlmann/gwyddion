@@ -1,3 +1,5 @@
+This is more-or-less README-devel...
+
 run ./configure (or ./autogen) with --enable-maintainer-mode
 if you want to make docs or build tarballs
 
@@ -10,9 +12,19 @@ use ccache
 
 see devel-docs/README for HTML doc info
 
-subdir dependency tree:
-libgyddion
-+--libprocess
-|  +--libdraw
-|     +--libgwydgets
-+--libgwymodule
+note stuff in the plugins/ directory is public domain.
+
+note library sonames are kept constant in spite of their neverending changes
+till a official version is released
+
+subdir dependencies (fully resolved):
+    libgwyddion:  (none)
+    libprocess:   libgwyddion
+    libgwymodule: libgwyddion
+    libdraw:      libgwyddion libprocess
+    libgwydgets:  libgwyddion libprocess libdraw
+    app:          libgwyddion libprocess libdraw libgwydgets libgwymodule
+    modules:      libgwyddion libprocess libdraw libgwydgets libgwymodule app
+    plugins:      (none)
+    pixmaps:      (none)
+    devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule

@@ -1,0 +1,132 @@
+Summary: A SPM data analysis framework.
+Name: @PACKAGE_TARNAME@
+Version: @RPM_VERSION@
+Release: @RPM_RELEASE@
+License: GNU GPL
+Group: Applications/Engineering
+Source: http://trific.ath.cx/Ftp/%{name}/@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2
+URL: @PACKAGE_URL@
+Prefix: %{_prefix}
+BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
+Prereq: /sbin/ldconfig
+BuildPrereq: gtk2-devel >= 2.2
+BuildPrereq: libpng-devel
+BuildPrereq: libjpeg-devel
+BuildPrereq: gtk-doc >= 1.0
+
+%package devel
+Summary: Headers, libraries and tools for Gwyddion module development.
+Group: Development/Libraries
+Requires: %{name} = %{version}
+
+%package plugins
+Summary: Example plugins for Gwyddion.
+License: public domain
+Group: Applications/Engineering
+
+%description
+Gwyddion is a modular SPM (scanning probe microscope) data analysis framework.
+It uses Gtk+.
+
+%description devel
+Header files, libraries and tools for Gwyddion module development.  This
+package also contains the API docmentation.
+
+%description plugins
+Example plug-ins for Gwyddion. They are mostly useless except as a basis for
+your own plug-ins.
+
+%prep
+%setup -q
+
+%build
+%configure
+%__make
+
+%install
+[ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
+%makeinstall \
+  gwymoduledir=$RPM_BUILD_ROOT%{_libdir}/%{name}/modules \
+  gwyplugindir=$RPM_BUILD_ROOT%{_libexecdir}/%{name}/plugins \
+  gwypixmapdir=$RPM_BUILD_ROOT%{_datadir}/%{name}/pixmaps \
+  HTML_DIR=$RPM_BUILD_ROOT%{_datadir}/gtk-doc/html
+
+%clean
+[ "$RPM_BUILD_ROOT" != "/" ] && %__rm -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%defattr(755,root,root)
+%{_bindir}/%{name}
+%defattr(-,root,root)
+%doc AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS
+%{_datadir}/%{name}/pixmaps/*.png
+%dir %{_datadir}/%{name}/pixmaps
+%dir %{_datadir}/%{name}
+%{_libdir}/%{name}/modules/file/*.so
+%{_libdir}/%{name}/modules/process/*.so
+%dir %{_libdir}/%{name}/modules/file
+%dir %{_libdir}/%{name}/modules/process
+%dir %{_libdir}/%{name}/modules
+%dir %{_libdir}/%{name}
+%{_libdir}/libgwyddion.so.*
+%{_libdir}/libgwydgets.so.*
+%{_libdir}/libgwydraw.so.*
+%{_libdir}/libgwymodule.so.*
+%{_libdir}/libgwyprocess.so.*
+
+%files devel
+%defattr(-,root,root)
+%doc CODING-STANDARDS
+%{_includedir}/%{name}/app/*.h
+%{_includedir}/%{name}/libdraw/*.h
+%{_includedir}/%{name}/libprocess/*.h
+%{_includedir}/%{name}/libgwyddion/*.h
+%{_includedir}/%{name}/libgwydgets/*.h
+%{_includedir}/%{name}/libgwymodule/*.h
+%dir %{_includedir}/%{name}/libdraw
+%dir %{_includedir}/%{name}/app
+%dir %{_includedir}/%{name}/libprocess
+%dir %{_includedir}/%{name}/libgwyddion
+%dir %{_includedir}/%{name}/libgwydgets
+%dir %{_includedir}/%{name}/libgwymodule
+%dir %{_includedir}/%{name}
+%{_datadir}/gtk-doc/html/libgwydraw/*
+%{_datadir}/gtk-doc/html/libgwyprocess/*
+%{_datadir}/gtk-doc/html/libgwyddion/*
+%{_datadir}/gtk-doc/html/libgwydgets/*
+%{_datadir}/gtk-doc/html/libgwymodule/*
+%dir %{_datadir}/gtk-doc/html/libgwydraw
+%dir %{_datadir}/gtk-doc/html/libgwyprocess
+%dir %{_datadir}/gtk-doc/html/libgwyddion
+%dir %{_datadir}/gtk-doc/html/libgwydgets
+%dir %{_datadir}/gtk-doc/html/libgwymodule
+%dir %{_datadir}/gtk-doc/html
+%{_libdir}/libgwyddion.so
+%{_libdir}/libgwydgets.so
+%{_libdir}/libgwydraw.so
+%{_libdir}/libgwymodule.so
+%{_libdir}/libgwyprocess.so
+%{_libdir}/libgwyddion.a
+%{_libdir}/libgwydgets.a
+%{_libdir}/libgwydraw.a
+%{_libdir}/libgwymodule.a
+%{_libdir}/libgwyprocess.a
+%{_libdir}/libgwyddion.la
+%{_libdir}/libgwydgets.la
+%{_libdir}/libgwydraw.la
+%{_libdir}/libgwymodule.la
+%{_libdir}/libgwyprocess.la
+
+%files plugins
+%defattr(755,root,root)
+%{_libexecdir}/%{name}/plugins/file/*
+%{_libexecdir}/%{name}/plugins/process/*
+%dir %{_libexecdir}/%{name}/plugins/file
+%dir %{_libexecdir}/%{name}/plugins/process
+%dir %{_libexecdir}/%{name}/plugins
+%dir %{_libexecdir}/%{name}
+

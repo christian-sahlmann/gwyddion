@@ -1,8 +1,8 @@
 # @(#) $Id$
 
-datadir = $(gwypixmapdir)
+pixmapdatadir = $(gwypixmapdir)
 
-data_DATA = \
+pixmapdata_DATA = \
 	gwy_bold-24.png \
 	gwy_crop-24.png \
 	gwy_fit_plane-24.png \
@@ -22,4 +22,4 @@ data_DATA = \
 	gwy_zoom_in-24.png \
 	gwy_zoom_out-24.png
 
-EXTRA_DIST = $(data_DATA)
+EXTRA_DIST = $(pixmapdata_DATA)

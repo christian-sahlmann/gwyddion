@@ -1,0 +1,5 @@
+Too many things.  Use
+
+  find . -name \*.\[ch] | xargs grep -ir '\<\(XXX\|TODO\|FIXME\|fuck\|shit\)\>'
+
+to locate them.

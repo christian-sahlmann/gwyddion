@@ -17,4 +17,6 @@ M4TESTS = \
 EXTRA_DIST = \
 	CODING-STANDARDS \
 	autogen.sh \
+	gwyddion.spec.in \
+	gwyddion.spec\
 	$(M4TESTS)
