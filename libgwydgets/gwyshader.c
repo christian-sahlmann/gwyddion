@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtkmain.h>
@@ -400,9 +400,9 @@ gwy_shader_set_phi(GwyShader *shader,
 }
 
 void
-gwy_shader_set_spherical_angle(GwyShader *shader,
-                               gdouble theta,
-                               gdouble phi)
+gwy_shader_set_angle(GwyShader *shader,
+                     gdouble theta,
+                     gdouble phi)
 {
     g_return_if_fail(GWY_IS_SHADER(shader));
 
@@ -665,7 +665,8 @@ gwy_shader_button_release(GtkWidget *widget,
     gtk_grab_remove(widget);
     shader->button = 0;
 
-    if (shader->update_policy == GTK_UPDATE_DELAYED) {
+    if (shader->update_policy == GTK_UPDATE_DELAYED
+        && shader->timer_id) {
         g_source_remove(shader->timer_id);
         shader->timer_id = 0;
     }

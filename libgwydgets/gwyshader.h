@@ -79,7 +79,7 @@ void           gwy_shader_set_theta            (GwyShader *shader,
                                                 gdouble theta);
 void           gwy_shader_set_phi              (GwyShader *shader,
                                                 gdouble phi);
-void           gwy_shader_set_spherical_angle  (GwyShader *shader,
+void           gwy_shader_set_angle            (GwyShader *shader,
                                                 gdouble theta,
                                                 gdouble phi);
 const gchar*   gwy_shader_get_gradient         (GwyShader *shader);
