@@ -34,7 +34,7 @@ gwy_app_file_close_cb(void)
 {
     GwyDataWindow *data_window;
 
-    data_window = gwy_app_get_current_data_window();
+    data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     gtk_widget_destroy(GTK_WIDGET(data_window));
 }
@@ -48,7 +48,7 @@ gwy_app_file_save_as_cb(void)
     const gchar *filename_utf8;  /* in UTF-8 */
     const gchar *filename_sys;  /* in system (disk) encoding */
 
-    data_window = gwy_app_get_current_data_window();
+    data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data = gwy_app_get_current_data();
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -103,7 +103,7 @@ gwy_app_file_duplicate_cb(void)
     g_return_if_fail(GWY_IS_CONTAINER(data));
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
-    data_window = gwy_app_create_data_window(duplicate);
+    data_window = gwy_app_data_window_create(duplicate);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
 }
 
@@ -126,12 +126,12 @@ file_open_ok_cb(GtkFileSelection *selector)
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
     gtk_widget_destroy(GTK_WIDGET(selector));
-    gwy_app_create_data_window(data);
+    gwy_app_data_window_create(data);
 }
 
 /* FIXME: to be moved somewhere? refactored? */
 GtkWidget*
-gwy_app_create_data_window(GwyContainer *data)
+gwy_app_data_window_create(GwyContainer *data)
 {
     GtkWidget *data_window, *data_view;
     GwyDataViewLayer *layer;
@@ -145,9 +145,9 @@ gwy_app_create_data_window(GwyContainer *data)
                                g_object_get_data(G_OBJECT(gwy_app_main_window),
                                                  "accel_group"));
     g_signal_connect(data_window, "focus-in-event",
-                     G_CALLBACK(gwy_app_set_current_data_window), NULL);
+                     G_CALLBACK(gwy_app_data_window_get_current), NULL);
     g_signal_connect(data_window, "destroy",
-                     G_CALLBACK(gwy_app_remove_data_window), NULL);
+                     G_CALLBACK(gwy_app_data_window_remove), NULL);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
 

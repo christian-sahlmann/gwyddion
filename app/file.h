@@ -17,7 +17,7 @@ void gwy_app_file_duplicate_cb  (void);
 void gwy_app_file_close_cb      (void);
 
 /* FIXME: to be moved somewhere? refactored? */
-GtkWidget* gwy_app_create_data_window       (GwyContainer *data);
+GtkWidget* gwy_app_data_window_create       (GwyContainer *data);
 void       gwy_app_clean_up_data            (GwyContainer *data);
 gint       gwy_app_data_window_set_untitled (GwyDataWindow *data_window);
 

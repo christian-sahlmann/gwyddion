@@ -23,6 +23,7 @@ gwyddion_SOURCES = \
 	file.c \
 	menu.c \
 	settings.c \
+	arith.c \
 	app.c
 
 gwyddion_LDADD = \
