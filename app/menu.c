@@ -161,6 +161,7 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
 
     }
     if (GTK_IS_ALIGNMENT(widget)
+        || GTK_IS_MENU(widget)
         || GTK_IS_MENU_BAR(widget)
         || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
@@ -202,6 +203,7 @@ gwy_app_menu_set_flags_recursive(GtkWidget *widget,
     }
 
     if (GTK_IS_ALIGNMENT(widget)
+        || GTK_IS_MENU(widget)
         || GTK_IS_MENU_BAR(widget)
         || GWY_IS_TOOLBOX(widget)) {
         gtk_container_foreach(GTK_CONTAINER(widget),
