@@ -137,7 +137,6 @@ data_view_test(void)
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);
 
     g_object_unref(data);
-    g_object_unref(data_field);
 
     window = gwy_data_window_new(GWY_DATA_VIEW(view));
 
