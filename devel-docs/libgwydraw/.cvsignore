@@ -1,7 +1,7 @@
 Makefile
 Makefile.in
 html
-sgml
+xml
 libgwydraw-decl-list.txt
 libgwydraw-decl.txt
 libgwydraw.args

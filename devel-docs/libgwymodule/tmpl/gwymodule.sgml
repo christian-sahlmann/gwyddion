@@ -46,25 +46,6 @@ gwymodule
 @GWY_RUN_WITH_DEFAULTS: 
 @GWY_RUN_MASK: 
 
-<!-- ##### USER_FUNCTION GwyModuleRegisterFunc ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### USER_FUNCTION GwyProcessFunc ##### -->
-<para>
-
-</para>
-
-@data: 
-@run: 
-@Returns: 
-
-
 <!-- ##### STRUCT GwyModuleInfo ##### -->
 <para>
 
@@ -79,6 +60,36 @@ gwymodule
 @copyright: 
 @date: 
 
+<!-- ##### STRUCT GwyProcessFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@menu_path: 
+@process: 
+@run: 
+
+<!-- ##### STRUCT GwyFileFuncInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@file_desc: 
+@detect: 
+@load: 
+@save: 
+
+<!-- ##### USER_FUNCTION GwyModuleRegisterFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
 <!-- ##### USER_FUNCTION GwyModuleQueryFunc ##### -->
 <para>
 
@@ -87,15 +98,44 @@ gwymodule
 @Returns: 
 
 
-<!-- ##### STRUCT GwyProcessFuncInfo ##### -->
+<!-- ##### USER_FUNCTION GwyProcessFunc ##### -->
 <para>
 
 </para>
 
-@name: 
-@function: 
+@data: 
 @run: 
-@menu_path: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyFileDetectFunc ##### -->
+<para>
+
+</para>
+
+@filename: 
+@only_name: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyFileLoadFunc ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION GwyFileSaveFunc ##### -->
+<para>
+
+</para>
+
+@data: 
+@filename: 
+@Returns: 
+
 
 <!-- ##### FUNCTION gwy_module_register_modules ##### -->
 <para>
@@ -115,11 +155,34 @@ gwymodule
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_register_file_func ##### -->
+<para>
+
+</para>
+
+@modname: 
+@func_info: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_build_process_menu ##### -->
 <para>
 
 </para>
 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_module_browser ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### TYPEDEF _GwyModuleInfoInternal ##### -->
+<para>
+
+</para>
 
 

@@ -14,7 +14,9 @@ extern "C" {
 #define GWY_MODULE_ABI_VERSION 0
 
 /**
- * GWY_MODULE_QUERY:
+ * GWY_MODULE_QUERY(mod_info):
+ * @mod_info: The %GwyModuleInfo structure to return as module info.
+ *
  * The declaration of module info query (the ONLY exported symbol from
  * a module).
  **/

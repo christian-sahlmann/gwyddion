@@ -1,7 +1,7 @@
 Makefile
 Makefile.in
 html
-sgml
+xml
 libgwymodule-decl-list.txt
 libgwymodule-decl.txt
 libgwymodule.args

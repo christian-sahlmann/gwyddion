@@ -1,7 +1,7 @@
 Makefile
 Makefile.in
 html
-sgml
+xml
 libgwydgets-decl-list.txt
 libgwydgets-decl.txt
 libgwydgets.args

@@ -1,8 +1,10 @@
-<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-<!ENTITY libgwyddion-GwyWatchable SYSTEM "sgml/gwywatchable.sgml">
-<!ENTITY libgwyddion-GwyTestSer SYSTEM "sgml/gwytestser.sgml">
-<!ENTITY libgwyddion-GwySerializable SYSTEM "sgml/gwyserializable.sgml">
-<!ENTITY libgwyddion-GwyContainer SYSTEM "sgml/gwycontainer.sgml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY libgwyddion-GwyWatchable SYSTEM "xml/gwywatchable.xml">
+<!ENTITY libgwyddion-GwyTestSer SYSTEM "xml/gwytestser.xml">
+<!ENTITY libgwyddion-GwySerializable SYSTEM "xml/gwyserializable.xml">
+<!ENTITY libgwyddion-GwyContainer SYSTEM "xml/gwycontainer.xml">
 ]>
 <book id="index">
   <bookinfo>

@@ -20,6 +20,7 @@ SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
 	$(DOC_MODULE).hierarchy \
 	$(DOC_MODULE).signals \
+	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE).intefraces
 
 if ENABLE_GTK_DOC
@@ -63,7 +64,7 @@ tmpl.stamp: tmpl-build.stamp
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
 	cd $(srcdir) && \
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
@@ -73,7 +74,8 @@ sgml.stamp: sgml-build.stamp
 
 html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
 	@echo '*** Building HTML ***'
-	test -d $(srcdir)/html || mkdir $(srcdir)/html
+	rm -rf $(srcdir)/html
+	mkdir $(srcdir)/html
 	cd $(srcdir)/html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
 	test "x$(HTML_IMAGES)" = "x" || ( cd $(srcdir) && cp $(HTML_IMAGES) html )
 	@echo '-- Fixing Crossreferences' 
@@ -88,7 +90,7 @@ clean-local:
 	rm -f *~ *.bak $(SCANOBJ_FILES) *-unused.txt $(DOC_STAMPS)
 
 maintainer-clean-local: clean
-	cd $(srcdir) && rm -rf sgml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
+	cd $(srcdir) && rm -rf xml html $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(TARGET_DIR)
@@ -130,10 +132,10 @@ endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/tmpl
-	mkdir $(distdir)/sgml
+	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
 	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
-	-cp $(srcdir)/sgml/*.sgml $(distdir)/sgml
+	-cp $(srcdir)/xml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 

@@ -1,7 +1,7 @@
 Makefile
 Makefile.in
 html
-sgml
+xml
 libgwyddion-decl-list.txt
 libgwyddion-decl.txt
 libgwyddion.args

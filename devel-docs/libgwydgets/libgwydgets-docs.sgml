@@ -1,19 +1,21 @@
-<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-<!ENTITY libgwydgets-GwySphereCoords SYSTEM "sgml/gwyspherecoords.sgml">
-<!ENTITY libgwydgets-GwyVectorShade SYSTEM "sgml/gwyvectorshade.sgml">
-<!ENTITY libgwydgets-GwyGradSphere SYSTEM "sgml/gwygradsphere.sgml">
-<!ENTITY libgwydgets-GwyDataWindow SYSTEM "sgml/gwydatawindow.sgml">
-<!ENTITY libgwydgets-GwyDataView SYSTEM "sgml/gwydataview.sgml">
-<!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "sgml/gwydataviewlayer.sgml">
-<!ENTITY libgwydgets-GwyLayerBasic SYSTEM "sgml/gwylayer-basic.sgml">
-<!ENTITY libgwydgets-GwyLayerSelect SYSTEM "sgml/gwylayer-select.sgml">
-<!ENTITY libgwydgets-GwyRuler SYSTEM "sgml/gwyruler.sgml">
-<!ENTITY libgwydgets-GwyHRuler SYSTEM "sgml/gwyhruler.sgml">
-<!ENTITY libgwydgets-GwyVRuler SYSTEM "sgml/gwyvruler.sgml">
-<!ENTITY libgwydgets-GwyAxis SYSTEM "sgml/gwyaxis.sgml">
-<!ENTITY libgwydgets-GwyGraphCorner SYSTEM "sgml/gwygraphcorner.sgml">
-<!ENTITY libgwydgets-GwyGraphLabel SYSTEM "sgml/gwygraphlabel.sgml">
-<!ENTITY libgwydgets-GwyGraph SYSTEM "sgml/gwygraph.sgml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY libgwydgets-GwySphereCoords SYSTEM "xml/gwyspherecoords.xml">
+<!ENTITY libgwydgets-GwyVectorShade SYSTEM "xml/gwyvectorshade.xml">
+<!ENTITY libgwydgets-GwyGradSphere SYSTEM "xml/gwygradsphere.xml">
+<!ENTITY libgwydgets-GwyDataWindow SYSTEM "xml/gwydatawindow.xml">
+<!ENTITY libgwydgets-GwyDataView SYSTEM "xml/gwydataview.xml">
+<!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "xml/gwydataviewlayer.xml">
+<!ENTITY libgwydgets-GwyLayerBasic SYSTEM "xml/gwylayer-basic.xml">
+<!ENTITY libgwydgets-GwyLayerSelect SYSTEM "xml/gwylayer-select.xml">
+<!ENTITY libgwydgets-GwyRuler SYSTEM "xml/gwyruler.xml">
+<!ENTITY libgwydgets-GwyHRuler SYSTEM "xml/gwyhruler.xml">
+<!ENTITY libgwydgets-GwyVRuler SYSTEM "xml/gwyvruler.xml">
+<!ENTITY libgwydgets-GwyAxis SYSTEM "xml/gwyaxis.xml">
+<!ENTITY libgwydgets-GwyGraphCorner SYSTEM "xml/gwygraphcorner.xml">
+<!ENTITY libgwydgets-GwyGraphLabel SYSTEM "xml/gwygraphlabel.xml">
+<!ENTITY libgwydgets-GwyGraph SYSTEM "xml/gwygraph.xml">
 ]>
 <book id="index">
   <bookinfo>

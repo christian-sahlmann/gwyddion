@@ -1,7 +1,9 @@
-<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-<!ENTITY libgwydraw-GwyPalette SYSTEM "sgml/gwypalette.sgml">
-<!ENTITY libgwydraw-GwyPaletteDef SYSTEM "sgml/gwypalettedef.sgml">
-<!ENTITY libgwydraw-gwypixfield SYSTEM "sgml/gwypixfield.sgml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY libgwydraw-GwyPalette SYSTEM "xml/gwypalette.xml">
+<!ENTITY libgwydraw-GwyPaletteDef SYSTEM "xml/gwypalettedef.xml">
+<!ENTITY libgwydraw-gwypixfield SYSTEM "xml/gwypixfield.xml">
 ]>
 <book id="index">
   <bookinfo>

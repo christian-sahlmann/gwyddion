@@ -1,8 +1,10 @@
-<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
-<!ENTITY libgwyprocess-GwyDataField SYSTEM "sgml/datafield.sgml">
-<!ENTITY libgwyprocess-GwyDataLine SYSTEM "sgml/dataline.sgml">
-<!ENTITY libgwyprocess-interpolation SYSTEM "sgml/interpolation.sgml">
-<!ENTITY libgwyprocess-simplefft SYSTEM "sgml/simplefft.sgml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY libgwyprocess-GwyDataField SYSTEM "xml/datafield.xml">
+<!ENTITY libgwyprocess-GwyDataLine SYSTEM "xml/dataline.xml">
+<!ENTITY libgwyprocess-interpolation SYSTEM "xml/interpolation.xml">
+<!ENTITY libgwyprocess-simplefft SYSTEM "xml/simplefft.xml">
 ]>
 <book id="index">
   <bookinfo>
