@@ -25,7 +25,9 @@ libgwydgetsinclude_HEADERS = \
 	gwyruler.h \
 	gwyspherecoords.h \
 	gwyvectorshade.h \
-	gwyvruler.h
+	gwyvruler.h \
+	gwyaxisdialog.h \
+	gwyscitext.h
 
 lib_LTLIBRARIES = libgwydgets.la
 
@@ -55,7 +57,9 @@ libgwydgets_la_SOURCES = \
 	gwyruler.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c \
-	gwyvruler.c
+	gwyvruler.c \
+	gwyaxisdialog.c \
+	gwyscitext.c
 #	mylayout.c
 
 # Note these are test programs not to be included in the distro

@@ -6,6 +6,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
+#include "gwyaxisdialog.h"
 
 
 #ifdef __cplusplus
@@ -79,6 +80,8 @@ typedef struct {
     gint label_x_pos;		/*label position*/
     gint label_y_pos;
     GString *label_text;
+
+    GwyAxisDialog *dialog;      /*axis label and other properties dialog*/
     
 } GwyAxis;
 

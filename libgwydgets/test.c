@@ -11,7 +11,8 @@
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraph.h>
-
+#include <libgwydgets/gwyaxisdialog.h>
+#include <libgwydgets/gwyscitext.h>
 
 
 static void destroy( GtkWidget *widget, gpointer data )
@@ -23,7 +24,7 @@ int
 main(int argc, char *argv[])
 {
     GtkWidget *window;
-    GtkWidget *axis, *label, *area, *graph, *foo;
+    GtkWidget *axis, *label, *area, *graph, *foo, *dialog, *sci;
     GError *err = NULL;
     gint i;
     GString *str1, *str2, *str3, *str4, *str5;
@@ -57,13 +58,32 @@ main(int argc, char *argv[])
         }
     
     gtk_init(&argc, &argv);
-    
+
+
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
     g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
 
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
+  
 
+    /* 
+    sci = gwy_sci_text_new();
+
+    gtk_container_add (GTK_CONTAINER (window), sci);
+    gtk_widget_show (sci);
+    */
+    
+  /*  dialog = gwy_axis_dialog_new();*/
+    
+   
+  /*  gtk_container_add (GTK_CONTAINER (window), dialog);*/
+/*    printf("Now showind dialog...\n");*/
+/*    
+    gtk_widget_show_all(dialog);*/
+    /*gtk_dialog_run(dialog);*/
+   
+    
     /* 
     axis = gwy_axis_new(1, 0, 112.00, "ble");
     
@@ -87,6 +107,7 @@ main(int argc, char *argv[])
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
+    
     str1 = g_string_new("parabola");
     str2 = g_string_new("kousek");
     str3 = g_string_new("sinus");
@@ -120,6 +141,8 @@ main(int argc, char *argv[])
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
     
+
+
     gtk_widget_show_all(window);
     
     gtk_main();

@@ -5,6 +5,8 @@
 #include <gtk/gtk.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 
 #include <glib-object.h>
 
@@ -46,6 +48,7 @@ void            gwy_axis_draw_tlabels         (GtkWidget *widget);
 void            gwy_axis_draw_label           (GtkWidget *widget);
 void            gwy_axis_autoset              (GwyAxis *axis, gint width, gint height);
 void            gwy_axis_adjust               (GwyAxis *axis, gint width, gint height);
+static void     gwy_axis_entry                (GwyAxisDialog *dialog, gint arg1, gpointer user_data);
 
 /* Local data */
 
@@ -166,6 +169,9 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     pango_font_description_set_variant(axis->par.label_font, PANGO_VARIANT_NORMAL);
     pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
+
+    axis->dialog = gwy_axis_dialog_new();
+    g_signal_connect(axis->dialog, "response", G_CALLBACK(gwy_axis_entry), axis);
 
      return GTK_WIDGET(axis);
 }
@@ -633,7 +639,6 @@ gwy_axis_button_press(GtkWidget *widget,
                              GdkEventButton *event)
 {
     GwyAxis *axis;
-    double x, y;
 
     gwy_debug("%s", __FUNCTION__);
             g_return_val_if_fail(widget != NULL, FALSE);
@@ -641,6 +646,8 @@ gwy_axis_button_press(GtkWidget *widget,
     g_return_val_if_fail(event != NULL, FALSE);
 
     axis = GWY_AXIS(widget);
+
+    gtk_widget_show_all(axis->dialog);
 
 
     return FALSE;
@@ -665,6 +672,30 @@ gwy_axis_button_release(GtkWidget *widget,
 
     return FALSE;
 }
+
+static void     
+gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
+{
+    GwyAxis *axis;
+    GdkRectangle rec;
+    GdkEventExpose exp;
+    gwy_debug("%s", __FUNCTION__);
+
+    axis = GWY_AXIS(user_data);    
+    g_assert(GWY_IS_AXIS(axis));
+
+    rec.x = GTK_WIDGET(axis)->allocation.x;
+    rec.y = GTK_WIDGET(axis)->allocation.y;
+    rec.width = GTK_WIDGET(axis)->allocation.width;
+    rec.height = GTK_WIDGET(axis)->allocation.height;
+     
+    if (arg1 == GTK_RESPONSE_APPLY)
+    {
+        g_string_assign(axis->label_text, gwy_sci_text_get_text(dialog->sci_text));
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
+    }
+}
+
 
 static gdouble
 gwy_axis_dbl_raise(gdouble x, gint y)
