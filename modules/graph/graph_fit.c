@@ -227,6 +227,8 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     {
         if ((xdata->data[i] >= args->from && xdata->data[i] <= args->to) || (args->from == args->to))
         {
+            if (args->function_type == GWY_NLFIT_PRESET_GAUSSIAN_PSDF && i == 0) continue;
+            
             xdata->data[j] = args->parent_xs[curve][i];
             ydata->data[j] = args->parent_ys[curve][i];
             j++;
@@ -602,6 +604,7 @@ recompute(FitArgs *args, FitControls *controls)
     for (i=0; i<xdata->res; i++)
     {
         ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
+        if (i<20) printf("%g  %g\n", xdata->data[i], ydata->data[i]);
     }
    
     graph_update(controls, args);
