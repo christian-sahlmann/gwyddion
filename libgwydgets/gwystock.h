@@ -23,6 +23,7 @@
 
 G_BEGIN_DECLS
 
+#define GWY_STOCK_3D_BASE         "gwy_3d_base"
 #define GWY_STOCK_BOLD            "gwy_bold"
 #define GWY_STOCK_CROP            "gwy_crop"
 #define GWY_STOCK_CWT             "gwy_cwt"
@@ -50,6 +51,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_GRAPH_ZOOM_OUT  "gwy_graph_zoom_out"
 #define GWY_STOCK_GWYDDION        "gwy_gwyddion"
 #define GWY_STOCK_ITALIC          "gwy_italic"
+#define GWY_STOCK_LIGHT_ROTATE    "gwy_light_rotate"
 #define GWY_STOCK_NONE            "gwy_none"
 #define GWY_STOCK_POINTER         "gwy_pointer"
 #define GWY_STOCK_POINTER_MEASURE "gwy_pointer_measure"
@@ -63,6 +65,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_SUBSCRIPT       "gwy_subscript"
 #define GWY_STOCK_SUPERSCRIPT     "gwy_superscript"
 #define GWY_STOCK_UNROTATE        "gwy_unrotate"
+#define GWY_STOCK_Z_SCALE         "gwy_z_scale"
 #define GWY_STOCK_ZOOM_1_1        "gwy_zoom_1_1"
 #define GWY_STOCK_ZOOM_FIT        "gwy_zoom_fit"
 #define GWY_STOCK_ZOOM_IN         "gwy_zoom_in"
