@@ -355,7 +355,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *d
         }
     }
     gwy_data_line_resize(distribution, 0, sqrt(maxpnt));
-    gwy_data_line_set_real(distribution, sqrt(maxpnt));
+    gwy_data_line_set_real(distribution, gwy_data_field_itor(grain_field, sqrt(maxpnt)));
     g_object_unref(buffer);
 }
 

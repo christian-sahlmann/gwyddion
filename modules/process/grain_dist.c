@@ -76,6 +76,7 @@ dist(GwyContainer *data, GwyRunType run)
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GwyDataField *dfield;
+    GwySIValueFormat *units;
     gint i;
 
     g_assert(run & DIST_RUN_MODES);
@@ -93,12 +94,16 @@ dist(GwyContainer *data, GwyRunType run)
         /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
         gwy_data_field_grains_get_distribution(dfield, dataline);
 
-        lab = g_string_new("Dist");
-        gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
+        lab = g_string_new("Grain size histogram");
+        units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
+        gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
+                                          units->magnitude, 1, units->units, "cnt"); 
 
         window = gwy_app_graph_window_create(graph);
+        
         g_string_free(lab, TRUE);
         g_object_unref(dataline);
+        /*g_object_unref(units);*/
     }
     return TRUE;
 }
