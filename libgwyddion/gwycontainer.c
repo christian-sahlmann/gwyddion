@@ -117,7 +117,7 @@ static int      pstring_compare_callback         (const void *p,
                                                   const void *q);
 static guint    token_length                     (const gchar *text);
 static gchar*   dequote_token                    (const gchar *tok,
-                                                  guint *len);
+                                                  gsize *len);
 
 static GObjectClass *parent_class = NULL;
 
@@ -2444,7 +2444,7 @@ gwy_container_deserialize_from_text(const gchar *text)
             gsize vallen;
 
             vallen = len;
-            s = dequote_token(tok, &vallen);  /* FIXME: 64bit */
+            s = dequote_token(tok, &vallen);
             gwy_container_set_string(container, key, s);
         }
         /* object */
@@ -2476,7 +2476,8 @@ gwy_container_deserialize_from_text(const gchar *text)
                 g_object_unref(object);
             }
             else
-                g_warning("cannot deserialize object %.*s", namelen, name);
+                g_warning("cannot deserialize object %.*s",
+                          (guint)namelen, name);
         }
         /* UFO */
         else {
