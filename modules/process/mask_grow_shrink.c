@@ -80,14 +80,14 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mask_grow_func_info = {
         "mask_grow",
-        N_("/_Mask Operations/_Grow Mask..."),
+        N_("/_Mask/_Grow Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
     };
     static GwyProcessFuncInfo mask_shrink_func_info = {
         "mask_shrink",
-        N_("/_Mask Operations/_Shrink Mask..."),
+        N_("/_Mask/_Shrink Mask..."),
         (GwyProcessFunc)&mask_grow,
         MASK_GROW_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
