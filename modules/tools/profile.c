@@ -259,18 +259,18 @@ update_labels(GwyUnitoolState *state)
             g_snprintf(buffer, sizeof(buffer), "x1 = %d, y1 = %d",
                        (gint)gwy_data_field_rtoj(dfield, lines[4*i]),
                        (gint)gwy_data_field_rtoi(dfield, lines[4*i+1]));
-            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i]), buffer);
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i]), buffer);
 
             g_snprintf(buffer, sizeof(buffer), "x2 = %d, y2 = %d",
                        (gint)gwy_data_field_rtoj(dfield, lines[4*i+2]),
                        (gint)gwy_data_field_rtoi(dfield, lines[4*i+3]));
-            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i+1]), buffer);
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i+1]), buffer);
         }
         else {
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i]), buffer);
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i]), buffer);
             g_snprintf(buffer, sizeof(buffer), " ");
-            gtk_label_set_text(GTK_LABEL(positions->pdata[2*i+1]), buffer);
+            gtk_label_set_markup(GTK_LABEL(positions->pdata[2*i+1]), buffer);
         }
     }
 }

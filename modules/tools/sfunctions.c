@@ -270,13 +270,13 @@ update_labels(GwyUnitoolState *state)
                units->precision, xmin/units->magnitude,
                units->precision, ymin/units->magnitude,
                units->units);
-    gtk_label_set_text(GTK_LABEL(controls->xy), buffer);
+    gtk_label_set_markup(GTK_LABEL(controls->xy), buffer);
 
     g_snprintf(buffer, sizeof(buffer), "%.*f × %.*f %s",
                units->precision, fabs(xmax-xmin)/units->magnitude,
                units->precision, fabs(ymax-ymin)/units->magnitude,
                units->units);
-    gtk_label_set_text(GTK_LABEL(controls->wh), buffer);
+    gtk_label_set_markup(GTK_LABEL(controls->wh), buffer);
 }
 
 static void
