@@ -30,6 +30,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwyentities.h>
 #include <libgwyddion/gwysiunit.h>
+#include <libgwyddion/gwymd5.h>
 #include <libgwyddion/gwydebugobjects.h>
 
 G_BEGIN_DECLS

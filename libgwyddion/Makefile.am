@@ -8,6 +8,7 @@ libgwyddioninclude_HEADERS = \
 	gwyentities.h \
 	gwymacros.h \
 	gwymath.h \
+	gwymd5.h \
 	gwynlfit.h \
 	gwyserializable.h \
 	gwyutils.h \
@@ -34,6 +35,7 @@ libgwyddion_la_SOURCES = \
 	gwydebugobjects.c \
 	gwyentities.c \
 	gwymath.c \
+	gwymd5.c \
 	gwynlfit.c \
 	gwyserializable.c \
 	gwyutils.c \
