@@ -52,6 +52,7 @@ typedef struct {
     GtkWidget *dialog;
 
     GwySIValueFormat *coord_units;
+    GwySIValueFormat *value_units;
 
     /*< private >*/
     gulong layer_updated_id;

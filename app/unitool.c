@@ -28,7 +28,7 @@
 static void gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
 static void gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
 static void gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
-static void gwy_unitool_compute_coord_units  (GwyUnitoolState *state);
+static void gwy_unitool_compute_units        (GwyUnitoolState *state);
 static void gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
 static void gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
 static void gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
@@ -126,7 +126,7 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    state);
 
     /* setup based on switch reason */
-    gwy_unitool_compute_coord_units(state);
+    gwy_unitool_compute_units(state);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
     if (reason == GWY_TOOL_SWITCH_WINDOW)
@@ -188,7 +188,9 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state)
         gtk_widget_destroy(state->dialog);
     }
     g_free(state->coord_units);
+    g_free(state->value_units);
     state->coord_units = NULL;
+    state->value_units = NULL;
     state->layer = NULL;
     state->dialog = NULL;
     state->windowname = NULL;
@@ -197,21 +199,24 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-gwy_unitool_compute_coord_units(GwyUnitoolState *state)
+gwy_unitool_compute_units(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
     GwySIUnit *siunits;
     GwySIValueFormat *cunits;
-    gdouble xreal, yreal, max, unit;
+    gdouble xreal, yreal, max, min, unit;
 
     /* TODO remove once GwySIUnit works... */
     if (!state->coord_units)
         state->coord_units = g_new(GwySIValueFormat, 1);
+    if (!state->value_units)
+        state->value_units = g_new(GwySIValueFormat, 1);
 
-    cunits = state->coord_units;
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+
+    cunits = state->coord_units;
     siunits = gwy_data_field_get_si_unit_xy(dfield);
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -219,6 +224,13 @@ gwy_unitool_compute_coord_units(GwyUnitoolState *state)
     unit = MIN(xreal/gwy_data_field_get_xres(dfield),
                yreal/gwy_data_field_get_yres(dfield));
     gwy_si_unit_get_format_with_resolution(siunits, max, unit, cunits);
+
+    cunits = state->value_units;
+    siunits = gwy_data_field_get_si_unit_z(dfield);
+    max = gwy_data_field_get_max(dfield);
+    min = gwy_data_field_get_min(dfield);
+    max = MAX(fabs(max), fabs(min));
+    gwy_si_unit_get_format(siunits, max, cunits);
 }
 
 /*
@@ -432,8 +444,10 @@ gwy_unitool_update_label(GwySIValueFormat *units,
  * @is_visible: %TRUE if the dialog is visible, %FALSE if it's hidden.
  * @windowname: The name of @data_window.
  * @dialog: The tool dialog.
- * @coord_units: Units specification good for coordinate representation
+ * @coord_units: Units format good for coordinate representation
  *               (to be used in gwy_unitool_update_label() for coordinates).
+ * @value_units: Units format good for value representation
+ *               (to be used in gwy_unitool_update_label() for values).
  *
  * Universal tool state.
  *
