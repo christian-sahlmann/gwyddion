@@ -617,7 +617,7 @@ gwy_3d_view_set_palette       (Gwy3DView *gwy3dview,
 Gwy3DMovement
 gwy_3d_view_get_status (Gwy3DView * gwy3dview)
 {
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_ROTATION);
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), GWY_3D_NONE);
 
     return gwy3dview->movement_status;
 }
@@ -636,6 +636,7 @@ void
 gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    g_return_if_fail(mv > GWY_3D_LIGHT_MOVEMENT);
 
     gwy3dview->movement_status = mv;
 }
@@ -1489,7 +1490,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
     float h = widget->allocation.height;
     float x = event->x;
     float y = event->y;
-    gboolean redraw = FALSE;
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
     g_return_val_if_fail(event, FALSE);
@@ -1502,6 +1502,9 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
     if (event->state & GDK_BUTTON1_MASK)
         switch (gwy3dview->movement_status)
         {
+            case GWY_3D_NONE:
+            break;
+
             case GWY_3D_ROTATION:
                 gtk_adjustment_set_value(gwy3dview->rot_x,
                                          gwy3dview->rot_x->value
@@ -1509,7 +1512,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                 gtk_adjustment_set_value(gwy3dview->rot_y,
                                          gwy3dview->rot_y->value
                                          + y - gwy3dview->mouse_begin_y);
-                redraw = TRUE;
                 break;
 
             case GWY_3D_SCALE:
@@ -1520,7 +1522,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                     gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_max);
                 else if (gwy3dview->view_scale->value < gwy3dview->view_scale_min)
                     gtk_adjustment_set_value(gwy3dview->view_scale, gwy3dview->view_scale_min);
-                redraw = TRUE;
                 break;
 
             case GWY_3D_DEFORMATION:
@@ -1534,7 +1535,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                     for (i = 0; i < gwy3dview->mouse_begin_y - y; i++)
                         dz *= GWY_3D_Z_DEFORMATION;
                 gtk_adjustment_set_value(gwy3dview->deformation_z, dz);
-                redraw = TRUE;
                 break;
             }
             case GWY_3D_LIGHT_MOVEMENT:
@@ -1544,7 +1544,6 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
                 gtk_adjustment_set_value(gwy3dview->light_y,
                                          gwy3dview->light_y->value
                                          + y - gwy3dview->mouse_begin_y);
-                redraw = TRUE;
                 break;
         }
 
@@ -2192,5 +2191,16 @@ gwy_3d_print_text(Gwy3DView      *gwy3dview,
     return ;
 }
 
+/************************** Documentation ****************************/
+/**
+ * Gwy3DMovement:
+ * @GWY_3D_NONE: View cannot be changed by user.
+ * @GWY_3D_ROTATION: View can be rotated.
+ * @GWY_3D_SCALE: View can be scaled.
+ * @GWY_3D_DEFORMATION: View can be scaled.
+ * @GWY_3D_LIGHT_MOVEMENT: Light position can be changed.
+ *
+ * The type of 3D view change that happens when user drags it with mouse.
+ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

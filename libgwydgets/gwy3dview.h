@@ -51,6 +51,7 @@ typedef struct _Gwy3DView      Gwy3DView;
 typedef struct _Gwy3DViewClass Gwy3DViewClass;
 
 typedef enum {
+    GWY_3D_NONE           = 0,
     GWY_3D_ROTATION       = 1,
     GWY_3D_SCALE          = 2,
     GWY_3D_DEFORMATION    = 3,
