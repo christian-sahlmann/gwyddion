@@ -23,8 +23,6 @@ static void     measure_changed                (GwyDataWindow *data_window,
                                                 GtkAllocation *allocation,
                                                 gpointer data);
 static void     lame_window_resize             (GwyDataWindow *data_window);
-static void     zoom_set                       (GtkWidget *button,
-                                                gpointer user_data);
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
@@ -170,6 +168,7 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /* FIXME: this makes the buttons extremely wide
      * data_window->sidebuttons = gtk_hbutton_box_new();*/
+    /*
     data_window->sidebuttons = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(data_window->sidebox), data_window->sidebuttons,
                        FALSE, FALSE, 0);
@@ -191,6 +190,7 @@ gwy_data_window_new(GwyDataView *data_view)
                        FALSE, FALSE, 0);
     g_signal_connect(widget, "clicked",
                      G_CALLBACK(zoom_set), GINT_TO_POINTER(-1));
+                     */
 
     /* show everything except the table */
     gtk_widget_show_all(vbox);
@@ -203,18 +203,18 @@ gwy_data_window_new(GwyDataView *data_view)
 
 /**
  * gwy_data_window_get_data_view:
- * @window: A data view window.
+ * @data_window: A data view window.
  *
  * Returns the data view widget this data view window currently shows.
  *
  * Returns: The currently shown #GwyDataView.
  **/
 GtkWidget*
-gwy_data_window_get_data_view(GwyDataWindow *window)
+gwy_data_window_get_data_view(GwyDataWindow *data_window)
 {
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(window), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
-    return GWY_DATA_WINDOW(window)->data_view;
+    return data_window->data_view;
 }
 
 static void
@@ -268,17 +268,27 @@ lame_window_resize(GwyDataWindow *data_window)
     gtk_window_resize(GTK_WINDOW(data_window), width, height);
 }
 
-static void
-zoom_set(GtkWidget *button,
-         gpointer data)
+/**
+ * gwy_data_window_set_zoom:
+ * @data_window: A data window.
+ * @izoom: The new zoom value (as an integer).
+ *
+ * Sets the zoom of a data window to @izoom.
+ *
+ * When @izoom is -1 it zooms out; when @izoom is 1 it zooms out.
+ * Otherwise the new zoom value is set to @izoom/01000.
+ **/
+void
+gwy_data_window_set_zoom(GwyDataWindow *data_window,
+                         gint izoom)
 {
-    GwyDataWindow *data_window;
-    gint zoom = GPOINTER_TO_INT(data);
     gdouble rzoom;
 
-    data_window = GWY_DATA_WINDOW(gtk_widget_get_toplevel(button));
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_if_fail(izoom == -1 || izoom == 1
+                     || (izoom >= 625 && izoom <= 160000));
 
-    switch (zoom) {
+    switch (izoom) {
         case -1:
         rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view))
                 / ZOOM_FACTOR;
@@ -290,7 +300,7 @@ zoom_set(GtkWidget *button,
         break;
 
         default:
-        rzoom = zoom/10000.0;
+        rzoom = izoom/10000.0;
         break;
     }
     rzoom = CLAMP(rzoom, 1/8.0, 8.0);
