@@ -351,17 +351,17 @@ _gwy_data_field_initialize(GwyDataField *a,
                            gdouble xreal, gdouble yreal,
                            gboolean nullme)
 {
-    int i;
-
     gwy_debug("(%dx%d)", xres, yres);
 
-    gwy_data_field_alloc(a, xres, yres);
     a->xreal = xreal;
     a->yreal = yreal;
-    if (nullme) {
-        for (i = 0; i < (a->xres*a->yres); i++)
-            a->data[i] = 0;
-    }
+    a->xres = xres;
+    a->yres = yres;
+    if (nullme)
+        a->data = g_new0(gdouble, a->xres*a->yres);
+    else
+        a->data = g_new(gdouble, a->xres*a->yres);
+
     a->si_unit_xy = (GwySIUnit*)gwy_si_unit_new("m");
     a->si_unit_z = (GwySIUnit*)gwy_si_unit_new("m");
 }
