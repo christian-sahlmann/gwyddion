@@ -117,6 +117,13 @@ gwy_app_about(void)
         g_string_append_c(str, '\n');
     }
     g_string_append_c(str, '\n');
+    g_string_append(str, _("<b>Translators</b>\n"));
+    for (i = 0; i < G_N_ELEMENTS(translators); i++) {
+        g_string_append(str, translators[i]);
+        g_string_append_c(str, '\n');
+    }
+    g_string_append_c(str, '\n');
+
     g_string_append(str, _("Development is supported by "
                           "the Czech Metrology Insitute "
                           "(<i>http://www.cmi.cz/</i>).\n"));

@@ -89,6 +89,12 @@ authors.h: ${top_srcdir}/AUTHORS
 			-e 's/ *<.*//' -e 's/.*/    "&",/' -e p -e '}' \
 			${top_srcdir}/AUTHORS; \
 		echo '};'; \
+		echo 'static const gchar *translators[] = {'; \
+		sed -n -e '/=== Translators ===/,/^$$/{' \
+			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
+			-e 's/ *<.*//' -e 's/.*/    "&",/' -e p -e '}' \
+			${top_srcdir}/AUTHORS; \
+		echo '};'; \
 	} >authors.h
 
 INCLUDES = -I$(top_srcdir)

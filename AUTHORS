@@ -2,10 +2,11 @@
 === Core developers ===
 David Nečas (Yeti) <yeti@gwyddion.net>
     Infrastructure, main app, module and plug-in system, data windows,
-    utilities, packaging, artwork, developer docs, web site, bugzilla.
+    file import, utilities, packaging, artwork, developer docs, web site,
+    bugzilla, translation coordination.
 Petr Klapetek <klapetek@gwyddion.net>
-    1D and 2D data processing, graphs, most of nontrivial tools and data
-    filters, user guide.
+    SPM expertise, 1D and 2D data processing, graphs, most of nontrivial
+    tools and data filters, user guide.
 
 
 === Developers ===
@@ -16,7 +17,12 @@ Jindřich Bílek <bilek@physics.muni.cz>
 Nenad Ocelic <ocelic@biochem.mpg.de>
     Ruby dump module and plug-ins, Distance tool.
 Rok Zitko <rok.zitko@ijs.si>
-    Createc and stmprg import modules.
+    Createc and stmprg import modules, Kuwahara filter.
+
+
+=== Translators ===
+Livia Della Seta <livia.dellaseta@casaccia.enea.it>
+    Italian.
 
 
 === Copies ===
