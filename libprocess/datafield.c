@@ -767,7 +767,7 @@ gwy_data_field_get_dval_real(GwyDataField *a, gdouble x, gdouble y,
  *
  * The values that will be outside of square after rotation will
  * be lost. The new unknown values will be set to field minimum value.
- * */
+ **/
 void
 gwy_data_field_rotate(GwyDataField *a, gdouble angle,
                       GwyInterpolationType interpolation)
