@@ -31,39 +31,52 @@
 #define UNROTATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    MAX_DEGREE = 5
+};
+
 /* Data for this function. */
 typedef struct {
     gint col_degree;
     gint row_degree;
     gboolean do_extract;
+    gboolean same_degree;
 } PolyLevelArgs;
 
 typedef struct {
+    PolyLevelArgs *args;
     GtkObject *col_degree;
     GtkObject *row_degree;
     GtkWidget *do_extract;
+    GtkWidget *same_degree;
+    gboolean in_update;
 } PolyLevelControls;
 
-static gboolean         module_register          (const gchar *name);
-static gboolean         poly_level               (GwyContainer *data,
+static gboolean module_register                  (const gchar *name);
+static gboolean poly_level                       (GwyContainer *data,
                                                   GwyRunType run);
-static void             poly_level_do            (GwyContainer *data,
+static void     poly_level_do                    (GwyContainer *data,
                                                   PolyLevelArgs *args);
-static gboolean         poly_level_dialog        (PolyLevelArgs *args);
-static void             poly_level_dialog_update (PolyLevelControls *controls,
+static gboolean poly_level_dialog                (PolyLevelArgs *args);
+static void     poly_level_dialog_update         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
-static void             poly_level_update_values (PolyLevelControls *controls,
+static void     poly_level_update_values         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
-static void             load_args                (GwyContainer *container,
+static void     poly_level_same_degree_changed   (GtkWidget *button,
+                                                  PolyLevelControls *controls);
+static void     poly_level_degree_changed        (GtkObject *spin,
+                                                  PolyLevelControls *controls);
+static void     load_args                        (GwyContainer *container,
                                                   PolyLevelArgs *args);
-static void             save_args                (GwyContainer *container,
+static void     save_args                        (GwyContainer *container,
                                                   PolyLevelArgs *args);
-static void             sanitize_args            (PolyLevelArgs *args);
+static void     sanitize_args                    (PolyLevelArgs *args);
 
 PolyLevelArgs poly_level_defaults = {
     3,
     3,
-    FALSE
+    FALSE,
+    TRUE,
 };
 
 /* The module info. */
@@ -175,6 +188,8 @@ poly_level_dialog(PolyLevelArgs *args)
     gint response;
     gint row;
 
+    controls.args = args;
+    controls.in_update = TRUE;
     dialog = gtk_dialog_new_with_buttons(_("Remove Polynomial Background"),
                                          NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -189,15 +204,32 @@ poly_level_dialog(PolyLevelArgs *args)
                        FALSE, FALSE, 4);
     row = 0;
 
-    controls.col_degree = gtk_adjustment_new(args->col_degree, 0, 5, 1, 1, 0);
+    controls.col_degree = gtk_adjustment_new(args->col_degree,
+                                             0, MAX_DEGREE, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
                                 _("_Horizontal polynom degree:"), "",
                                 controls.col_degree);
+    g_signal_connect(controls.col_degree, "value_changed",
+                     G_CALLBACK(poly_level_degree_changed), &controls);
 
-    controls.row_degree = gtk_adjustment_new(args->row_degree, 0, 5, 1, 1, 0);
+    controls.row_degree = gtk_adjustment_new(args->row_degree,
+                                             0, MAX_DEGREE, 1, 1, 0);
     gwy_table_attach_spinbutton(table, row++,
                                 _("_Vertical polynom degree:"), "",
                                 controls.row_degree);
+    g_signal_connect(controls.row_degree, "value_changed",
+                     G_CALLBACK(poly_level_degree_changed), &controls);
+
+    controls.same_degree
+        = gtk_check_button_new_with_mnemonic(_("_Same degrees"));
+    gtk_table_attach(GTK_TABLE(table), controls.same_degree,
+                     0, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.same_degree),
+                                 args->same_degree);
+    g_signal_connect(controls.same_degree, "toggled",
+                     G_CALLBACK(poly_level_same_degree_changed), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
@@ -207,6 +239,7 @@ poly_level_dialog(PolyLevelArgs *args)
                                  args->do_extract);
     row++;
 
+    controls.in_update = FALSE;
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -249,6 +282,8 @@ poly_level_dialog_update(PolyLevelControls *controls,
                              args->row_degree);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
                                  args->do_extract);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->same_degree),
+                                 args->same_degree);
 }
 
 static void
@@ -261,18 +296,75 @@ poly_level_update_values(PolyLevelControls *controls,
         = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->row_degree));
     args->do_extract
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->do_extract));
+    args->same_degree
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->same_degree));
+}
+
+static void
+poly_level_same_degree_changed(GtkWidget *button,
+                               PolyLevelControls *controls)
+{
+    PolyLevelArgs *args;
+
+    args = controls->args;
+    args->same_degree = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+    gwy_debug("same_degree = %d", args->same_degree);
+    if (!args->same_degree || controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args->row_degree = args->col_degree;
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree),
+                             args->row_degree);
+    controls->in_update = FALSE;
+}
+
+static void
+poly_level_degree_changed(GtkObject *spin,
+                          PolyLevelControls *controls)
+{
+    PolyLevelArgs *args;
+
+    if (controls->in_update)
+        return;
+
+    args = controls->args;
+    if (spin == controls->col_degree)
+        args->col_degree = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
+    else
+        args->row_degree = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(spin));
+
+    if (!args->same_degree)
+        return;
+
+    controls->in_update = TRUE;
+    if (spin == controls->col_degree) {
+        gwy_debug("syncing row := col");
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->row_degree),
+                                 args->col_degree);
+    }
+    else {
+        gwy_debug("syncing col := row");
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->col_degree),
+                                 args->row_degree);
+    }
+    controls->in_update = FALSE;
 }
 
 static const gchar *col_degree_key = "/module/poly_level/col_degree";
 static const gchar *row_degree_key = "/module/poly_level/row_degree";
 static const gchar *do_extract_key = "/module/poly_level/do_extract";
+static const gchar *same_degree_key = "/module/poly_level/same_degree";
 
 static void
 sanitize_args(PolyLevelArgs *args)
 {
-    args->col_degree = CLAMP(args->col_degree, 0, 3);
-    args->row_degree = CLAMP(args->row_degree, 0, 3);
+    args->col_degree = CLAMP(args->col_degree, 0, MAX_DEGREE);
+    args->row_degree = CLAMP(args->row_degree, 0, MAX_DEGREE);
     args->do_extract = !!args->do_extract;
+    args->same_degree = !!args->same_degree;
+    if (args->same_degree)
+        args->row_degree = args->col_degree;
 }
 
 static void
@@ -287,6 +379,8 @@ load_args(GwyContainer *container,
                                     &args->row_degree);
     gwy_container_gis_boolean_by_name(container, do_extract_key,
                                       &args->do_extract);
+    gwy_container_gis_boolean_by_name(container, same_degree_key,
+                                      &args->same_degree);
     sanitize_args(args);
 }
 
@@ -300,6 +394,8 @@ save_args(GwyContainer *container,
                                     args->row_degree);
     gwy_container_set_boolean_by_name(container, do_extract_key,
                                       args->do_extract);
+    gwy_container_set_boolean_by_name(container, same_degree_key,
+                                      args->same_degree);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
