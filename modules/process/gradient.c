@@ -104,30 +104,29 @@ module_register(const gchar *name)
 static gboolean
 sobel_horizontal(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
 
     g_assert(run & GRADIENT_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+        gwy_data_field_resample(shadefield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
     }
     else {
-        shadefield = gwy_serializable_duplicate(G_OBJECT(dfield));
+        shadefield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(data, "/0/show", shadefield);
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
-                             0, 0, gwy_data_field_get_xres(dfield),
+    gwy_data_field_area_copy(dfield, shadefield, 0, 0,
+                             gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_sobel(GWY_DATA_FIELD(shadefield), GTK_ORIENTATION_HORIZONTAL, 
+
+    gwy_data_field_area_filter_sobel(shadefield, GTK_ORIENTATION_HORIZONTAL,
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
                                      gwy_data_field_get_yres(dfield));
@@ -137,15 +136,14 @@ sobel_horizontal(GwyContainer *data, GwyRunType run)
 static gboolean
 sobel_vertical(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
 
     g_assert(run & GRADIENT_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+        gwy_data_field_resample(shadefield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
@@ -156,11 +154,11 @@ sobel_vertical(GwyContainer *data, GwyRunType run)
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
-                             0, 0, gwy_data_field_get_xres(dfield),
+    gwy_data_field_area_copy(dfield, shadefield, 0, 0,
+                             gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_sobel(GWY_DATA_FIELD(shadefield), GTK_ORIENTATION_VERTICAL, 
+
+    gwy_data_field_area_filter_sobel(shadefield, GTK_ORIENTATION_VERTICAL,
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
                                      gwy_data_field_get_yres(dfield));
@@ -170,15 +168,14 @@ sobel_vertical(GwyContainer *data, GwyRunType run)
 static gboolean
 prewitt_horizontal(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
 
     g_assert(run & GRADIENT_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+        gwy_data_field_resample(shadefield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
@@ -189,11 +186,11 @@ prewitt_horizontal(GwyContainer *data, GwyRunType run)
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
+    gwy_data_field_area_copy(dfield, shadefield,
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_prewitt(GWY_DATA_FIELD(shadefield), GTK_ORIENTATION_HORIZONTAL, 
+
+    gwy_data_field_area_filter_prewitt(shadefield, GTK_ORIENTATION_HORIZONTAL,
                                      0, 0,
                                      gwy_data_field_get_xres(dfield),
                                      gwy_data_field_get_yres(dfield));
@@ -202,15 +199,14 @@ prewitt_horizontal(GwyContainer *data, GwyRunType run)
 static gboolean
 prewitt_vertical(GwyContainer *data, GwyRunType run)
 {
-    GObject *shadefield;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *shadefield;
 
     g_assert(run & GRADIENT_RUN_MODES);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
     if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
-        gwy_data_field_resample(GWY_DATA_FIELD(shadefield),
+        gwy_data_field_resample(shadefield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
@@ -221,14 +217,14 @@ prewitt_vertical(GwyContainer *data, GwyRunType run)
         g_object_unref(shadefield);
     }
 
-    gwy_data_field_area_copy(dfield, GWY_DATA_FIELD(shadefield), 
+    gwy_data_field_area_copy(dfield, shadefield,
                              0, 0, gwy_data_field_get_xres(dfield),
                              gwy_data_field_get_yres(dfield), 0, 0);
-    
-    gwy_data_field_area_filter_prewitt(GWY_DATA_FIELD(shadefield), GTK_ORIENTATION_VERTICAL, 
-                                     0, 0,
-                                     gwy_data_field_get_xres(dfield),
-                                     gwy_data_field_get_yres(dfield));
+
+    gwy_data_field_area_filter_prewitt(shadefield, GTK_ORIENTATION_VERTICAL,
+                                       0, 0,
+                                       gwy_data_field_get_xres(dfield),
+                                       gwy_data_field_get_yres(dfield));
     return TRUE;
 }
 

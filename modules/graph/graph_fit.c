@@ -568,8 +568,8 @@ plot_inits(FitArgs *args, FitControls *controls)
     GString *label;
     GwyGraphAreaCurveParams par;
 
-    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xdata = gwy_data_line_new(10, 10, FALSE);
+    ydata = gwy_data_line_new(10, 10, FALSE);
 
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
@@ -597,10 +597,10 @@ plot_inits(FitArgs *args, FitControls *controls)
     par.color.pixel = 0x00000000;
 
     gwy_graph_add_datavalues(GWY_GRAPH(controls->graph),
-                                 xdata->data,
-                                 ydata->data,
-                                 xdata->res,
-                                 label, &par);
+                             xdata->data,
+                             ydata->data,
+                             xdata->res,
+                             label, &par);
     g_object_unref(xdata);
     g_object_unref(ydata);
 
@@ -620,8 +620,8 @@ recompute(FitArgs *args, FitControls *controls)
     GString *label;
     GwyGraphAreaCurveParams par;
 
-    xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xdata = gwy_data_line_new(10, 10, FALSE);
+    ydata = gwy_data_line_new(10, 10, FALSE);
 
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));

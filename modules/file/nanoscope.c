@@ -433,8 +433,7 @@ hash_to_data_field(GHashTable *hash,
     if (!unitz)
         return NULL;
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
-                                               FALSE));
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     switch (file_type) {
         case NANOSCOPE_FILE_TYPE_TXT:
@@ -534,8 +533,7 @@ selection_changed(GtkWidget *button,
     g_assert(i != (guint)-1);
     l = g_list_nth(controls->list, i);
     dfield = ((NanoscopeData*)l->data)->data_field;
-    gwy_container_set_object_by_name(controls->data, "/0/data",
-                                     G_OBJECT(dfield));
+    gwy_container_set_object_by_name(controls->data, "/0/data", dfield);
     gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
@@ -618,10 +616,9 @@ select_which_data(GList *list)
     l = g_list_nth(controls.list, 0);
     dfield = ((NanoscopeData*)l->data)->data_field;
     controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "/0/data",
-                                     G_OBJECT(dfield));
-    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     zoomval = 120.0/MAX(xres, yres);
 
     controls.data_view = gwy_data_view_new(controls.data);

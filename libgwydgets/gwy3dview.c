@@ -563,8 +563,7 @@ gwy_3d_view_new(GwyContainer *data)
     if (gwy3dview->data != NULL) {
         guint rx, ry;
 
-        gwy3dview->downsampled = GWY_DATA_FIELD(gwy_serializable_duplicate
-                                                   (G_OBJECT(gwy3dview->data)));
+        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
         rx = gwy_data_field_get_xres(gwy3dview->downsampled);
         ry = gwy_data_field_get_yres(gwy3dview->downsampled);
         if (rx > ry) {
@@ -1078,8 +1077,7 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
         return;
     gwy3dview->reduced_size = reduced_size;
     gwy_object_unref(gwy3dview->downsampled);
-    gwy3dview->downsampled = GWY_DATA_FIELD(gwy_serializable_duplicate
-                                            (G_OBJECT(gwy3dview->data)));
+    gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
     rx = gwy_data_field_get_xres(gwy3dview->downsampled);
     ry = gwy_data_field_get_yres(gwy3dview->downsampled);
     if (rx > ry) {
@@ -1091,9 +1089,7 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
                       * (gdouble)gwy3dview->reduced_size);
         ry = gwy3dview->reduced_size;
     }
-    gwy_data_field_resample(gwy3dview->downsampled,
-                            rx,
-                            ry,
+    gwy_data_field_resample(gwy3dview->downsampled, rx, ry,
                             GWY_INTERPOLATION_BILINEAR);
 
     if (GTK_WIDGET_REALIZED(gwy3dview)) {

@@ -934,8 +934,8 @@ gwy_data_field_fractal_correction(GwyDataField *data_field,
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_field_resample(maskbuffer, xnewres, xnewres, interpolation);
 
-    xresult = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    yresult = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xresult = gwy_data_line_new(10, 10, FALSE);
+    yresult = gwy_data_line_new(10, 10, FALSE);
 
     fractal_partitioning_nomask(data_field, mask_field,
                                         xresult, yresult, interpolation);
@@ -953,8 +953,6 @@ gwy_data_field_fractal_correction(GwyDataField *data_field,
     g_object_unref(maskbuffer);
     g_object_unref(xresult);
     g_object_unref(yresult);
-
-    return TRUE;
 }
 
 

@@ -158,8 +158,7 @@ poly_level_do(GwyContainer *data,
         return;
     }
 
-    dfield = (GwyDataField*)gwy_serializable_duplicate(G_OBJECT(dfield));
-    gwy_data_field_fill(dfield, 0.0);
+    dfield = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_area_subtract_polynom(dfield, 0, 0, xres, yres,
                                          args->col_degree, args->row_degree,
                                          coeffs);

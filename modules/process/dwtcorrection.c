@@ -135,7 +135,7 @@ dwt_correction(GwyContainer *data, GwyRunType run)
         return FALSE;
 
     if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject*)&mask)) {
-        mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
+        mask = gwy_data_field_new_alike(dfield, TRUE);
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
         g_object_unref(mask);
     }

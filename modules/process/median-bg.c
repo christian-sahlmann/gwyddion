@@ -316,7 +316,7 @@ median_background(gint size,
     gint i, j, xres, yres, buflen;
 
     data = gwy_data_field_get_data(dfield);
-    rfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    rfield = gwy_data_field_duplicate(dfield);
     xres = gwy_data_field_get_xres(rfield);
     yres = gwy_data_field_get_yres(rfield);
     rdata = gwy_data_field_get_data(rfield);

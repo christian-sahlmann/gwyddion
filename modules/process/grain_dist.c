@@ -87,7 +87,7 @@ dist(GwyContainer *data, GwyRunType run)
     gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    dataline = (GwyDataLine *)gwy_data_line_new(10, 10, TRUE);
+    dataline = gwy_data_line_new(10, 10, TRUE);
     /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
     gwy_data_field_grains_get_distribution(dfield, dataline);
 

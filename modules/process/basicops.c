@@ -118,7 +118,7 @@ module_register(const gchar *name)
 static gboolean
 flip_horizontally(GwyContainer *data, GwyRunType run)
 {
-    GObject *dfield;
+    GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
@@ -130,12 +130,12 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
         keys[n++] = "/0/show";
     gwy_app_undo_checkpointv(data, n, keys);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_invert(GWY_DATA_FIELD(dfield), FALSE, TRUE, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_invert(GWY_DATA_FIELD(dfield), FALSE, TRUE, FALSE);
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_invert(GWY_DATA_FIELD(dfield), FALSE, TRUE, FALSE);
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
 
     return TRUE;
 }
@@ -143,7 +143,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 static gboolean
 flip_vertically(GwyContainer *data, GwyRunType run)
 {
-    GObject *dfield;
+    GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
@@ -155,12 +155,12 @@ flip_vertically(GwyContainer *data, GwyRunType run)
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
         keys[n++] = "/0/show";
     gwy_app_undo_checkpointv(data, n, keys);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_invert(GWY_DATA_FIELD(dfield), TRUE, FALSE, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_invert(GWY_DATA_FIELD(dfield), TRUE, FALSE, FALSE);
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_invert(GWY_DATA_FIELD(dfield), TRUE, FALSE, FALSE);
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return TRUE;
 }
@@ -168,7 +168,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 static gboolean
 invert_value(GwyContainer *data, GwyRunType run)
 {
-    GObject *dfield;
+    GwyDataField *dfield;
     const gchar *keys[2];
     gsize n;
 
@@ -178,10 +178,10 @@ invert_value(GwyContainer *data, GwyRunType run)
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
         keys[n++] = "/0/show";
     gwy_app_undo_checkpointv(data, n, keys);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_invert(GWY_DATA_FIELD(dfield), FALSE, FALSE, TRUE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_invert(GWY_DATA_FIELD(dfield), FALSE, FALSE, TRUE);
+        gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
     return TRUE;
 }
@@ -190,22 +190,23 @@ static gboolean
 rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield, *old;
+    GwyDataField *dfield, *old;
     GwyContainer *newdata;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = gwy_container_get_object_by_name(data, "/0/data");
+    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(newdata);
-    dfield = gwy_container_get_object_by_name(newdata, "/0/data");
-    flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
+                                                             "/0/data"));
+    flip_xy(old, dfield, FALSE);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &old)) {
         dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
-        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+        flip_xy(old, dfield, FALSE);
     }
     if (gwy_container_gis_object_by_name(data, "/0/show", &old)) {
         dfield = gwy_container_get_object_by_name(newdata, "/0/show");
-        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), FALSE);
+        flip_xy(old, dfield, FALSE);
     }
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
@@ -217,22 +218,23 @@ static gboolean
 rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
-    GObject *dfield, *old;
+    GwyDataField *dfield, *old;
     GwyContainer *newdata;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
-    old = gwy_container_get_object_by_name(data, "/0/data");
+    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     newdata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(newdata);
-    dfield = gwy_container_get_object_by_name(newdata, "/0/data");
-    flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
+                                                             "/0/data"));
+    flip_xy(old, dfield, TRUE);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &old)) {
         dfield = gwy_container_get_object_by_name(newdata, "/0/mask");
-        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+        flip_xy(old, dfield, TRUE);
     }
     if (gwy_container_gis_object_by_name(data, "/0/show", &old)) {
         dfield = gwy_container_get_object_by_name(newdata, "/0/show");
-        flip_xy(GWY_DATA_FIELD(old), GWY_DATA_FIELD(dfield), TRUE);
+        flip_xy(old, dfield, TRUE);
     }
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
@@ -272,7 +274,7 @@ flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
 static gboolean
 rotate_180(GwyContainer *data, GwyRunType run)
 {
-    GObject *dfield;
+    GwyDataField *dfield;
     const gchar *keys[3];
     gsize n;
 
@@ -284,15 +286,12 @@ rotate_180(GwyContainer *data, GwyRunType run)
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
         keys[n++] = "/0/show";
     gwy_app_undo_checkpointv(data, n, keys);
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
-    gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
-                          GWY_INTERPOLATION_ROUND);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
-                              GWY_INTERPOLATION_ROUND);
+        gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_rotate(GWY_DATA_FIELD(dfield), G_PI,
-                              GWY_INTERPOLATION_ROUND);
+        gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
 }

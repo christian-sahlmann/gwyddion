@@ -276,7 +276,7 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_set_autoproperties(GWY_GRAPH(controls->graph), &prop);
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
-    dataline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new(gwy_enum_to_string(controls->out,
                                           sf_types, G_N_ELEMENTS(sf_types)));
 
@@ -326,7 +326,7 @@ apply(GwyUnitoolState *state)
     xm2 = ROUND(gwy_data_field_rtoj(dfield, xmax));
     ym2 = ROUND(gwy_data_field_rtoi(dfield, ymax));
 
-    dataline = (GwyDataLine *)gwy_data_line_new(10, 10, 0);
+    dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new(gwy_enum_to_string(controls->out,
                                           sf_types, G_N_ELEMENTS(sf_types)));
 

@@ -151,11 +151,9 @@ aafm_load(const gchar *filename)
         return NULL;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(afmfile.res,
-                                               afmfile.res,
-                                               afmfile.real,
-                                               afmfile.real,
-                                               FALSE));
+    dfield = gwy_data_field_new(afmfile.res, afmfile.res,
+                                afmfile.real, afmfile.real,
+                                FALSE);
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
     afmfile.range = get_FLOAT(&p);

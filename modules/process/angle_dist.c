@@ -442,7 +442,7 @@ make_datafield(G_GNUC_UNUSED GwyDataField *old,
     gdouble *d;
     gint i;
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(res, res, real, real, FALSE));
+    dfield = gwy_data_field_new(res, res, real, real, FALSE);
     unit = GWY_SI_UNIT(gwy_si_unit_new(""));
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);

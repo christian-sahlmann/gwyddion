@@ -229,8 +229,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 0);
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(MAX_SIZE, MAX_SIZE,
-                                               1.0, 1.0, FALSE));
+    dfield = gwy_data_field_new(MAX_SIZE, MAX_SIZE, 1.0, 1.0, FALSE);
     data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
     gwy_container_set_double_by_name(data, "/0/base/min", min);
@@ -440,8 +439,8 @@ laplace_average(GwyDataField *dfield,
     gwy_debug("laplace: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
     /* do pseudo-laplace as the first step to make it converge faster */
     pseudo_laplace_average(dfield, ximin, yimin, ximax, yimax);
-    buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
-    mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+    buffer = gwy_data_field_new_alike(dfield, FALSE);
+    mask = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_fill(mask, 0.0);
     gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
 
@@ -464,7 +463,7 @@ fractal_average(GwyDataField *dfield,
     GwyDataField *mask;
 
     gwy_debug("fractal: (%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
-    mask = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    mask = gwy_data_field_duplicate(dfield);
     gwy_data_field_fill(mask, 0.0);
     gwy_data_field_area_fill(mask, ximin, yimin, ximax, yimax, 1.0);
     gwy_data_field_fractal_correction(dfield, mask, GWY_INTERPOLATION_BILINEAR);

@@ -438,8 +438,7 @@ preview(WshedControls *controls,
         }
     }
     else {
-        maskfield
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+        maskfield = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask",
                                          G_OBJECT(maskfield));
         g_object_unref(maskfield);

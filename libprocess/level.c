@@ -514,9 +514,8 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
     yreal = qy*height;
     for (ri = 0; ri < nresults; ri++) {
         if (!results[ri])
-            results[ri] = GWY_DATA_FIELD(gwy_data_field_new(width, height,
-                                                            xreal, yreal,
-                                                            FALSE));
+            results[ri] = gwy_data_field_new(width, height, xreal, yreal,
+                                             FALSE);
         else {
             gwy_data_field_resample(results[ri], width, height,
                                     GWY_INTERPOLATION_NONE);

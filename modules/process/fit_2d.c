@@ -478,8 +478,9 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
     fitfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->data,
                                                                 "/0/data"));
 
-    resultfield = GWY_DATA_FIELD(gwy_data_field_new(originalfield->xres, originalfield->yres,
-                                     originalfield->xreal, originalfield->yreal, TRUE));
+    resultfield = gwy_data_field_new(originalfield->xres, originalfield->yres,
+                                     originalfield->xreal, originalfield->yreal,
+                                     TRUE);
 
     g_return_if_fail(GWY_IS_DATA_FIELD(originalfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(fitfield));
@@ -599,7 +600,8 @@ fit_2d_run(Fit2dControls *controls,
     gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(args->original_data)),
                         _("Initializing"));
 
-    weight = GWY_DATA_FIELD(gwy_data_field_new(original_field->xres, original_field->yres, 10, 10, FALSE));
+    weight = gwy_data_field_new(original_field->xres, original_field->yres,
+                                10, 10, FALSE);
     gwy_data_field_fill(weight, 1);
 
 

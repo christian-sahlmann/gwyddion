@@ -551,8 +551,8 @@ select_which_data(SISFile *sisfile,
                                      G_OBJECT(dfield));
     g_object_unref(dfield);
     add_metadata(sisfile, i/1024, i %1024, controls.data);
-    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     zoomval = 120.0/MAX(xres, yres);
 
     controls.data_view = gwy_data_view_new(controls.data);
@@ -617,8 +617,9 @@ extract_data(SISFile *sisfile,
         yreal = *d * 1e-9;
     if ((d = g_hash_table_lookup(sisfile->params, GUINT_TO_POINTER(4))))
         zreal = *d * 1e-9;
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(image->width, image->height,
-                                               xreal, yreal, FALSE));
+    dfield = gwy_data_field_new(image->width, image->height,
+                                xreal, yreal,
+                                FALSE);
 
     d = gwy_data_field_get_data(dfield);
     switch (image->bpp) {

@@ -1160,10 +1160,9 @@ rawfile_read_data_field(GtkWidget *parent,
     m = pow10(args->xyexponent);
     switch (args->format) {
         case RAW_BINARY:
-        dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
-                                                   m*args->xreal,
-                                                   m*args->yreal,
-                                                   FALSE));
+        dfield = gwy_data_field_new(args->xres, args->yres,
+                                    m*args->xreal, m*args->yreal,
+                                    FALSE);
         if (args->builtin)
             rawfile_read_builtin(args, file->buffer,
                                  gwy_data_field_get_data(dfield));
@@ -1173,10 +1172,9 @@ rawfile_read_data_field(GtkWidget *parent,
         break;
 
         case RAW_TEXT:
-        dfield = GWY_DATA_FIELD(gwy_data_field_new(args->xres, args->yres,
-                                                   m*args->xreal,
-                                                   m*args->yreal,
-                                                   FALSE));
+        dfield = gwy_data_field_new(args->xres, args->yres,
+                                    m*args->xreal, m*args->yreal,
+                                    FALSE);
         if (!rawfile_read_ascii(args, file->buffer,
                                 gwy_data_field_get_data(dfield), &err)) {
             rawfile_warn_parse_error(parent, file, err);

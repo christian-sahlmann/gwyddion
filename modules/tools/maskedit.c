@@ -267,8 +267,7 @@ static void
 selection_finished_cb(GwyUnitoolState *state)
 {
     GwyContainer *data;
-    GObject *dfield;
-    GwyDataField *mask = NULL;
+    GwyDataField *dfield, *mask = NULL;
     GwyDataViewLayer *layer;
     ToolControls *controls;
     GwySIUnit *siunit;
@@ -277,7 +276,7 @@ selection_finished_cb(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = gwy_container_get_object_by_name(data, "/0/data");
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
@@ -285,7 +284,7 @@ selection_finished_cb(GwyUnitoolState *state)
         case MASK_EDIT_SET:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         if (!mask) {
-            mask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+            mask = gwy_data_field_duplicate(dfield);
             siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
             gwy_data_field_set_si_unit_z(mask, siunit);
             g_object_unref(siunit);
@@ -300,7 +299,7 @@ selection_finished_cb(GwyUnitoolState *state)
         case MASK_EDIT_ADD:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         if (!mask) {
-            mask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+            mask = gwy_data_field_duplicate(dfield);
             siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
             gwy_data_field_set_si_unit_z(mask, siunit);
             g_object_unref(siunit);

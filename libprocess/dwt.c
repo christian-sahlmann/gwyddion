@@ -200,7 +200,7 @@ gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
 GwyDataLine*
 gwy_dwt_plot_wavelet(GwyDataLine *dline, G_GNUC_UNUSED GwyDataLine *wt_coefs)
 {
-    GwyDataLine *hlp = GWY_DATA_LINE(gwy_data_line_new(dline->res, dline->real, FALSE));
+    GwyDataLine *hlp = gwy_data_line_new(dline->res, dline->real, FALSE);
 
     /*TODO fill this*/
 
@@ -221,7 +221,7 @@ gwy_dwt_plot_wavelet(GwyDataLine *dline, G_GNUC_UNUSED GwyDataLine *wt_coefs)
 GwyDataLine*
 gwy_dwt_plot_scaling_function(GwyDataLine *dline, G_GNUC_UNUSED GwyDataLine *wt_coefs)
 {
-    GwyDataLine *hlp = GWY_DATA_LINE(gwy_data_line_new(dline->res, dline->real, FALSE));
+    GwyDataLine *hlp = gwy_data_line_new(dline->res, dline->real, FALSE);
 
     /*TODO fill this*/
 
@@ -245,7 +245,10 @@ gwy_dwt_plot_scaling_function(GwyDataLine *dline, G_GNUC_UNUSED GwyDataLine *wt_
  * Returns: transformed GwyDataLine.
  **/
 GwyDataLine*
-gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign, gint minsize)
+gwy_data_line_dwt(GwyDataLine *dline,
+                  GwyDataLine *wt_coefs,
+                  gint isign,
+                  gint minsize)
 {
     gint nn;
     gint n = dline->res;
@@ -254,7 +257,7 @@ gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign, gint mi
     GwyDWTFilter *wt;
     if (n < 4) return NULL;
 
-    shiftedline = GWY_DATA_LINE(gwy_data_line_new(dline->res + 1, dline->real, FALSE));
+    shiftedline = gwy_data_line_new(dline->res + 1, dline->real, FALSE);
 
     wt = wtset(wt_coefs);
 
@@ -288,12 +291,15 @@ gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign, gint mi
  * Returns: transformed GwyDataField.
  **/
 GwyDataField*
-gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
+gwy_data_field_xdwt(GwyDataField *dfield,
+                    GwyDataLine *wt_coefs,
+                    gint isign,
+                    gint minsize)
 {
     gint k;
     GwyDataLine *rin;
 
-    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->xres, dfield->xreal, FALSE));
+    rin = gwy_data_line_new(dfield->xres, dfield->xreal, FALSE);
 
     for (k = 0; k < dfield->yres; k++) {
         gwy_data_field_get_row(dfield, rin, k);
@@ -319,12 +325,15 @@ gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gin
  * Returns: transformed GwyDataField.
  **/
 GwyDataField*
-gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
+gwy_data_field_ydwt(GwyDataField *dfield,
+                    GwyDataLine *wt_coefs,
+                    gint isign,
+                    gint minsize)
 {
     gint k;
     GwyDataLine *rin;
 
-    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->yres, dfield->yreal, FALSE));
+    rin = gwy_data_line_new(dfield->yres, dfield->yreal, FALSE);
 
     for (k = 0; k < dfield->xres; k++) {
         gwy_data_field_get_column(dfield, rin, k);
@@ -350,7 +359,10 @@ gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gin
  * Returns: transformed GwyDataField.
  **/
 GwyDataField*
-gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
+gwy_data_field_dwt(GwyDataField *dfield,
+                   GwyDataLine *wt_coefs,
+                   gint isign,
+                   gint minsize)
 {
     GwyDataLine *rin;
     gint nn, k;
@@ -358,7 +370,7 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
     if (!dfield || !wt_coefs)
         return NULL;
 
-    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->xres, dfield->xreal, FALSE));
+    rin = gwy_data_line_new(dfield->xres, dfield->xreal, FALSE);
 
     if (isign >= 0)
     {
@@ -644,7 +656,7 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
     GwyDataLine *wksp;
 
     if (n < 4) return NULL;
-    wksp = GWY_DATA_LINE(gwy_data_line_new(n+1, n+1, TRUE));
+    wksp = gwy_data_line_new(n+1, n+1, TRUE);
 
     nmod = wt->ncof*n;
     n1 = n-1;

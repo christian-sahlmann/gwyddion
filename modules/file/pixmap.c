@@ -587,8 +587,7 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(width, height,
-                                               args.xreal, args.yreal, FALSE));
+    dfield = gwy_data_field_new(width, height, args.xreal, args.yreal, FALSE);
     val = gwy_data_field_get_data(dfield);
     for (i = 0; i < height; i++) {
         p = pixels + i*rowstride;

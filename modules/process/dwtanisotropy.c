@@ -158,12 +158,12 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
         gwy_data_field_resample(mask, newsize, newsize,
                                 GWY_INTERPOLATION_NONE);
     else {
-        mask = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
+        mask = gwy_data_field_new_alike(dfield, TRUE);
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
         g_object_unref(mask);
     }
 
-    wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
+    wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
 
     /*justo for sure clamp the lowlimit again*/

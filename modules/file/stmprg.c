@@ -155,8 +155,7 @@ read_datafield(gchar *buffer, guint size)
                   bpp * xres * yres);
     }
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
-                                               FALSE));
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     if (!read_binary_ubedata(xres * yres, data, buffer, bpp)) {
         g_object_unref(dfield);

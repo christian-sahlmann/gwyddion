@@ -422,8 +422,8 @@ crosscor_do(CrosscorArgs *args)
     /*result fields - after computation result should be at dfieldx */
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    dfieldy = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
-    score = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
+    dfieldy = gwy_data_field_duplicate(dfieldx);
+    score = gwy_data_field_duplicate(dfieldx);
 
     /*compute crosscorelation */
 

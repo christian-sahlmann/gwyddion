@@ -311,9 +311,7 @@ dialog_update(GwyUnitoolState *state,
         controls->max = controls->datamax;
 
         if (!controls->heightdist)
-            controls->heightdist = GWY_DATA_LINE(gwy_data_line_new(HIST_RES,
-                                                                   1.0,
-                                                                   TRUE));
+            controls->heightdist = gwy_data_line_new(HIST_RES, 1.0, TRUE);
 
         gwy_data_field_dh(dfield, controls->heightdist, HIST_RES);
 
@@ -557,7 +555,7 @@ gwy_data_field_dh(GwyDataField *dfield,
     GwyDataLine *dirty_trick;
     gdouble *orig_data;
 
-    dirty_trick = GWY_DATA_LINE(gwy_data_line_new(1, 1.0, FALSE));
+    dirty_trick = gwy_data_line_new(1, 1.0, FALSE);
     dirty_trick->res = gwy_data_field_get_xres(dfield)
                        * gwy_data_field_get_yres(dfield);
     orig_data = dirty_trick->data;

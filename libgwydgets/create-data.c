@@ -45,8 +45,8 @@ main(void)
     g_type_init();
     srand(42);
     container = (GwyContainer*)gwy_container_new();
-    df = (GwyDataField*)gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
-    kernel = (GwyDataField*)gwy_data_field_new(R, R, 1, 1, FALSE);
+    df = gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
+    kernel = gwy_data_field_new(R, R, 1, 1, FALSE);
     r1 = rand()/(gdouble)RAND_MAX;
     r2 = rand()/(gdouble)RAND_MAX;
     r3 = rand()/(gdouble)RAND_MAX;
@@ -85,7 +85,7 @@ main(void)
     gwy_data_field_area_convolve(df, kernel, 0, 0, N, N);
     gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
     /*
-       df = (GwyDataField*)gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
+       df = gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
        data = df->data;
        for (i = 0; i < N; i++) {
        row = data + N*i;

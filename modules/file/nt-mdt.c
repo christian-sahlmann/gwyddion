@@ -493,12 +493,11 @@ select_which_data(MDTFile *mdtfile,
     sdframe = (MDTScannedDataFrame*)mdtfile->frames[i].frame_data;
     dfield = extract_scanned_data(sdframe);
     controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "/0/data",
-                                     G_OBJECT(dfield));
+    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
     g_object_unref(dfield);
     add_metadata(mdtfile, i, controls.data);
-    xres = gwy_data_field_get_xres(GWY_DATA_FIELD(dfield));
-    yres = gwy_data_field_get_yres(GWY_DATA_FIELD(dfield));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     zoomval = 120.0/MAX(xres, yres);
 
     controls.data_view = gwy_data_view_new(controls.data);
@@ -843,9 +842,9 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     siunitz = GWY_SI_UNIT(gwy_si_unit_new_parse(unit, &power10z));
     zscale = exp(G_LN10*power10z)*dataframe->z_scale.step;
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(dataframe->fm_xres,
-                                               dataframe->fm_yres,
-                                               xreal, yreal, FALSE));
+    dfield = gwy_data_field_new(dataframe->fm_xres, dataframe->fm_yres,
+                                xreal, yreal,
+                                FALSE);
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
     gwy_data_field_set_si_unit_z(dfield, siunitz);

@@ -349,8 +349,7 @@ dialog_update(GwyUnitoolState *state,
             gwy_data_field_copy(dfield, shadefield);
         }
         else {
-            shadefield
-                = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+            shadefield = gwy_data_field_duplicate(dfield);
             gwy_container_set_object_by_name(data, "/0/show",
                                              G_OBJECT(shadefield));
             g_object_unref(shadefield);

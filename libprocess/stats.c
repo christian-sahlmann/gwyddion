@@ -544,8 +544,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         }
 
         realsize = gwy_data_field_jtor(data_field, size);
-        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
-        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
+        hlp_line = gwy_data_line_new(size, realsize, FALSE);
+        hlp_tarline = gwy_data_line_new(size, realsize, FALSE);
 
         if (nstats <= 0) {
             nstats = size;
@@ -616,8 +616,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         }
 
         realsize = gwy_data_field_itor(data_field, size);
-        hlp_line = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
-        hlp_tarline = GWY_DATA_LINE(gwy_data_line_new(size, realsize, FALSE));
+        hlp_line = gwy_data_line_new(size, realsize, FALSE);
+        hlp_tarline = gwy_data_line_new(size, realsize, FALSE);
 
         if (nstats <= 0) {
             nstats = size;

@@ -258,8 +258,7 @@ hash_to_data_field(GHashTable *hash,
     q *= 20.0/65536.0 * ti2; /* voltage per dac */
     q *= td * 1.0e-10; /* piezoconstant [A/V] */
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
-                                               FALSE));
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     if (!read_binary_data(xres*yres, data, buffer + offset, bpp)) {
         g_object_unref(dfield);

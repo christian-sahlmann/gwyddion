@@ -395,7 +395,7 @@ arithmetic_do(ArithmeticArgs *args)
         if (first && args->pos[i]) {
             first = FALSE;
             n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
-            result = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+            result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
         }
         max = MAX(max, args->pos[i]);

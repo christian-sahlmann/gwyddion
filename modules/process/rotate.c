@@ -132,8 +132,8 @@ rotate_datafield(GwyDataField *dfield,
     xborder -= xres/2;
     yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
     yborder -= yres/2;
-    df = GWY_DATA_FIELD(gwy_data_field_new(xres + 2*xborder, yres + 2*yborder,
-                                           1.0, 1.0, FALSE));
+    df = gwy_data_field_new(xres + 2*xborder, yres + 2*yborder, 1.0, 1.0,
+                            FALSE);
     gwy_data_field_fill(df, min);
     gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres, xborder, yborder);
     gwy_data_field_rotate(df, args->angle, args->interp);

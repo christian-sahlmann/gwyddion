@@ -253,7 +253,7 @@ static void
 gwy_data_line_value_changed(GObject *object)
 {
     gwy_debug("signal: GwyDataLine changed");
-    g_signal_emit_by_name(GWY_DATA_LINE(object), "value_changed", NULL);
+    g_signal_emit_by_name(object, "value_changed", NULL);
 }
 */
 

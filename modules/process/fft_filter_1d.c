@@ -438,7 +438,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gdouble xdata[200];
     gint i;
 
-    dline = GWY_DATA_LINE(gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE));
+    dline = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
                                                              "/0/data"));
 
@@ -450,7 +450,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                                           GWY_WINDOWING_RECT,
                                           MAX_PREV);
 
-    if (args->weights == NULL) args->weights = GWY_DATA_LINE(gwy_data_line_new(dline->res, dline->res, FALSE));
+    if (!args->weights)
+        args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
     gwy_data_line_fill(args->weights, 1);
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 

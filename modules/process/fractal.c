@@ -436,10 +436,10 @@ update_graph(FractalArgs *args,
     g_return_val_if_fail(args->out < G_N_ELEMENTS(methods), FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    xline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    yline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    xnline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
-    ynline = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    xline = gwy_data_line_new(10, 10, FALSE);
+    yline = gwy_data_line_new(10, 10, FALSE);
+    xnline = gwy_data_line_new(10, 10, FALSE);
+    ynline = gwy_data_line_new(10, 10, FALSE);
 
     method_funcs[args->out](dfield, xline, yline, args->interp);
     if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)))
@@ -462,8 +462,8 @@ update_graph(FractalArgs *args,
 
     res = gwy_data_line_get_res(xnline);
     if (is_line) {
-        xfit = GWY_DATA_LINE(gwy_serializable_duplicate(G_OBJECT(xnline)));
-        yfit = GWY_DATA_LINE(gwy_data_line_new(res, res, FALSE));
+        xfit = gwy_data_line_duplicate(xnline);
+        yfit = gwy_data_line_new(res, res, FALSE);
         xdata = gwy_data_line_get_data(xfit);
         ydata = gwy_data_line_get_data(yfit);
         for (i = 0; i < res; i++)

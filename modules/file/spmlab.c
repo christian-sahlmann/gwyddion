@@ -238,8 +238,7 @@ read_data_field(const guchar *buffer, guint size, guchar version)
         return NULL;
     }
 
-    dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
-                                               FALSE));
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     for (i = 0; i < xres*yres; i++)
         data[i] = (p[2*i] + 256.0*p[2*i + 1])*q + z0;

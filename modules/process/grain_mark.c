@@ -507,12 +507,7 @@ mask_process(GwyDataField *dfield,
     gboolean is_field;
 
     is_field = FALSE;
-    output_field = GWY_DATA_FIELD(gwy_data_field_new
-                                          (gwy_data_field_get_xres(dfield),
-                                           gwy_data_field_get_yres(dfield),
-                                           gwy_data_field_get_xreal(dfield),
-                                           gwy_data_field_get_yreal(dfield),
-                                           FALSE));
+    output_field = gwy_data_field_new_alike(dfield, FALSE);
 
     if (args->is_height) {
         gwy_data_field_grains_mark_height(dfield, maskfield,
