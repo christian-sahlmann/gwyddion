@@ -1118,7 +1118,7 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         gpointer cbdata;
     }
     const menu_items[] = {
-        { N_("/_Remove Mask"), gwy_app_mask_kill_cb, NULL },
+        { N_("/Remove _Mask"), gwy_app_mask_kill_cb, NULL },
         { N_("/Mask _Color"),  gwy_app_change_mask_color_cb, NULL },
         { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fixzero" },
         { N_("/Reset Color _Range"), gwy_app_reset_color_range, NULL },
