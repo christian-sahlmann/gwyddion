@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,11 +40,13 @@
 #include <libgwydgets/gwylayer-points.h>
 #include <libgwydgets/gwylayer-select.h>
 #include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwypixmaplayer.h>
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
+#include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
 
