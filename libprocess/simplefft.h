@@ -9,8 +9,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/* TODO: change gint arguments to GwyWindowingType (and probably change
- * GWY_WINDOW -> GWY_WINDOWING, GWY_WINDOW could be a widget...) */
 typedef enum {
   GWY_WINDOWING_NONE       = 0,
   GWY_WINDOWING_HANN       = 1,

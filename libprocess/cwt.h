@@ -12,13 +12,13 @@ extern "C" {
 
 typedef enum {
   GWY_2DCWT_GAUSS       = 0,
-  GWY_2DCWT_HAT         = 1,
+  GWY_2DCWT_HAT         = 1
 } Gwy2DCWTWaveletType;
 
 typedef enum {
   GWY_CWT_GAUSS       = 0,
   GWY_CWT_HAT         = 1,
-  GWY_CWT_MORLET      = 2,
+  GWY_CWT_MORLET      = 2
 } GwyCWTWaveletType;
 
 
