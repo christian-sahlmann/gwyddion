@@ -84,7 +84,7 @@ register_toolbox_icons(const gchar *pixmap_path,
         GtkIconSource *icon_source = gtk_icon_source_new();
         gchar *filename;
 
-        filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 48);
+        filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 60);
         gwy_debug("%s: `%s': %d",
                   __FUNCTION__, filename,
                   g_file_test(filename, G_FILE_TEST_EXISTS));

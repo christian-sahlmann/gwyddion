@@ -9,9 +9,11 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libtools = tools/libtools.la
 
+appincludedir = $(includedir)/gwyddion/app
+
 bin_PROGRAMS = gwyddion
 
-noinst_HEADERS = \
+appinclude_HEADERS = \
 	about.h \
 	app.h \
 	arith.h \

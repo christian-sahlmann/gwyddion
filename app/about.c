@@ -42,13 +42,13 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(hbox), widget, TRUE, TRUE, 0);
     s = g_strdup_printf(
             _("<big><b>%s</b> %s</big>\n"
-              "SPM data analysis framework.\n"
+              "A SPM data analysis framework.\n"
               "\n"
-              "Copyright © 2003 David Nečas (Yeti) and Petr Klapetek\n"
+              "Copyright © 2003 David Nečas (Yeti) and Petr Klapetek.\n"
               "E-mail: <i>%s</i>\n"
               "Web: <i>%s</i>\n"
               "\n"
-              "<small>This program is free software; "
+              "<small>%s is free software; "
               "you can redistribute it and/or modify it "
               "under the terms of the GNU General Public License "
               "as published by the Free Software Foundation; "
@@ -58,7 +58,8 @@ gwy_app_about(void)
             g_get_application_name(),
             PACKAGE_VERSION,
             PACKAGE_BUGREPORT,
-            PACKAGE_URL);
+            PACKAGE_URL,
+            g_get_application_name());
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
     gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
