@@ -12,5 +12,10 @@ data_DATA = \
 	gwy_graph-24.png \
 	gwy_crop-24.png \
 	gwy_scale-24.png \
-	gwy_rotate-24.png
+	gwy_rotate-24.png \
+	gwy_shader-24.png \
+	gwy_bold-24.png \
+	gwy_italic-24.png \
+	gwy_subscript-24.png \
+	gwy_superscript-24.png
 
