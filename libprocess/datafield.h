@@ -90,10 +90,10 @@ void gwy_data_field_resample(GwyDataField *a,
 /*resize data field according to UL (upper left) and BR (bottom right) points 
   (crop and change resolution if necessary)*/
 gboolean gwy_data_field_resize(GwyDataField *a,
-                               gint uli,
-                               gint ulj,
-                               gint bri,
-                               gint brj);
+                               gint ulcol,
+                               gint ulrow,
+                               gint brcol,
+                               gint brrow);
 
 /*copy everything to field (allrady allocated)*/
 gboolean gwy_data_field_copy(GwyDataField *a,
@@ -127,14 +127,14 @@ gdouble gwy_data_field_rtoj(GwyDataField *a,
 
 /*data value at given pixel*/
 gboolean gwy_data_field_outside(GwyDataField *a,
-                                gint i,
-                                gint j);
+                                gint col,
+                                gint row);
 gdouble gwy_data_field_get_val(GwyDataField *a,
-                               gint i,
-                               gint j);
+                               gint col,
+                               gint row);
 void gwy_data_field_set_val(GwyDataField *a,
-                            gint i,
-                            gint j,
+                            gint col,
+                            gint row,
                             gdouble value);
 
 /*data value interpolated somewhere between given pixels*/
@@ -169,22 +169,22 @@ void gwy_data_field_multiply(GwyDataField *a,
 void gwy_data_field_add(GwyDataField *a,
                         gdouble value);
 void gwy_data_field_area_fill(GwyDataField *a,
-                              gint uli,
-                              gint ulj,
-                              gint bri,
-                              gint brj,
+                              gint ulcol,
+                              gint ulrow,
+                              gint brcol,
+                              gint brrow,
                               gdouble value);
 void gwy_data_field_area_multiply(GwyDataField *a,
-                                  gint uli,
-                                  gint ulj,
-                                  gint bri,
-                                  gint brj,
+                                  gint ulcol,
+                                  gint ulrow,
+                                  gint brcol,
+                                  gint brrow,
                                   gdouble value);
 void gwy_data_field_area_add(GwyDataField *a,
-                             gint uli,
-                             gint ulj,
-                             gint bri,
-                             gint brj,
+                             gint ulcol,
+                             gint ulrow,
+                             gint brcol,
+                             gint brrow,
                              gdouble value);
 
 /*get some basic properties:*/
@@ -194,30 +194,30 @@ gdouble gwy_data_field_get_avg(GwyDataField *a);
 gdouble gwy_data_field_get_rms(GwyDataField *a);
 gdouble gwy_data_field_get_sum(GwyDataField *a);
 gdouble gwy_data_field_get_area_max(GwyDataField *a,
-                                    gint uli,
-                                    gint ulj,
-                                    gint bri,
-                                    gint brj);
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
 gdouble gwy_data_field_get_area_min(GwyDataField *a,
-                                    gint uli,
-                                    gint ulj,
-                                    gint bri,
-                                    gint brj);
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
 gdouble gwy_data_field_get_area_avg(GwyDataField *a,
-                                    gint uli,
-                                    gint ulj,
-                                    gint bri,
-                                    gint brj);
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
 gdouble gwy_data_field_get_area_rms(GwyDataField *a,
-                                    gint uli,
-                                    gint ulj,
-                                    gint bri,
-                                    gint brj);
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
 gdouble gwy_data_field_get_area_sum(GwyDataField *a,
-                                    gint uli,
-                                    gint ulj,
-                                    gint bri,
-                                    gint brj);
+                                    gint ulcol,
+                                    gint ulrow,
+                                    gint brcol,
+                                    gint brrow);
 
 /*threshold dividing at thresval and setting to top and bottom*/
 gint gwy_data_field_threshold(GwyDataField *a,
@@ -225,10 +225,10 @@ gint gwy_data_field_threshold(GwyDataField *a,
                               gdouble bottom,
                               gdouble top);
 gint gwy_data_field_area_threshold(GwyDataField *a,
-                                   gint uli,
-                                   gint ulj,
-                                   gint bri,
-                                   gint brj,
+                                   gint ulcol,
+                                   gint ulrow,
+                                   gint brcol,
+                                   gint brrow,
                                    gdouble threshval,
                                    gdouble bottom,
                                    gdouble top);
@@ -236,34 +236,34 @@ gint gwy_data_field_clamp(GwyDataField *a,
                           gdouble bottom,
                           gdouble top);
 gint gwy_data_field_area_clamp(GwyDataField *a,
-                               gint uli,
-                               gint ulj,
-                               gint bri,
-                               gint brj,
+                               gint ulcol,
+                               gint ulrow,
+                               gint brcol,
+                               gint brrow,
                                gdouble bottom,
                                gdouble top);
 
 /*data_line extraction*/
 gboolean gwy_data_field_get_data_line(GwyDataField *a,
                                       GwyDataLine* b,
-                                      gint uli,
-                                      gint ulj,
-                                      gint bri,
-                                      gint brj,
+                                      gint ulcol,
+                                      gint ulrow,
+                                      gint brcol,
+                                      gint brrow,
                                       gint res,
                                       GwyInterpolationType interpolation);
 void gwy_data_field_get_row(GwyDataField *a,
                             GwyDataLine* b,
-                            gint i);
+                            gint row);
 void gwy_data_field_get_column(GwyDataField *a,
                                GwyDataLine* b,
-                               gint i);
+                               gint col);
 void gwy_data_field_set_row(GwyDataField *a,
                             GwyDataLine* b,
-                            gint i);
+                            gint row);
 void gwy_data_field_set_column(GwyDataField *a,
                                GwyDataLine* b,
-                               gint i);
+                               gint col);
 
 /*get 1st order plane leveling coefficients*/
 void gwy_data_field_plane_coeffs(GwyDataField *a,
@@ -285,14 +285,14 @@ void gwy_data_field_plane_rotate(GwyDataField *a,
 
 /*get derivations (according to "real" sizes of field)*/
 gdouble gwy_data_field_get_xder(GwyDataField *a,
-                                gint i,
-                                gint j);
+                                gint col,
+                                gint row);
 gdouble gwy_data_field_get_yder(GwyDataField *a,
-                                gint i,
-                                gint j);
+                                gint col,
+                                gint row);
 gdouble gwy_data_field_get_angder(GwyDataField *a,
-                                  gint i,
-                                  gint j,
+                                  gint col,
+                                  gint row,
                                   gdouble theta);
 
 /*2DFFT using algorithm fft*/
