@@ -533,9 +533,9 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
     if (x<0 && x>-0.1) x = 0;
     if (y<0 && x>-0.1) y = 0;
-    if (!(x >= 0 && y >= 0 && y < a->yres && x < a->xres))
+    if (!(x >= 0 && y >= 0 && y < a->xres && x < a->yres))
         printf("GRRRRRRRRRRRR: %f %f\n", x, y);
-    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres,
+    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->xres && x < a->yres,
                          0.0);
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:

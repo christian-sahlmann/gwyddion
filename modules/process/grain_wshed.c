@@ -323,13 +323,11 @@ preview(WshedControls *controls,
     gboolean is_field;
     GwyPixmapLayer *layer;
    
-   printf("***preview\n"); 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask"))
     {
-        printf("***mask found\n");
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                   "/0/mask"));
         gwy_data_field_resample(maskfield,
@@ -340,7 +338,6 @@ preview(WshedControls *controls,
     }
     else
     {
-        printf("***mask not found\n");
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", G_OBJECT(maskfield));
         layer = gwy_layer_mask_new();
@@ -404,14 +401,12 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
     args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
     args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
 
-    printf("Uaaa!\n");
     gwy_data_field_grains_mark_watershed(dfield, maskfield, 
                                          args->locate_steps,
                                          args->locate_thresh,
                                          args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
                                          args->wshed_dropsize*(max-min)/5000.0);
-    printf("Uuuu!\n");
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
