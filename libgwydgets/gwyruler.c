@@ -469,6 +469,7 @@ gwy_ruler_size_allocate(GtkWidget     *widget,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
 
+        gwy_ruler_update_value_format(ruler);
         gwy_ruler_make_pixmap(ruler);
     }
 }
