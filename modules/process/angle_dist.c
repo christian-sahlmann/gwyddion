@@ -177,8 +177,7 @@ angle_dialog(AngleArgs *args)
     gint response;
     gint row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Angle Distribution"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,

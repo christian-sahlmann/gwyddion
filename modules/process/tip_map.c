@@ -138,9 +138,7 @@ tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
     GtkWidget *dialog, *table, *omenu, *label;
     gint row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Certainty map analysis"),
-                                         GTK_WINDOW(gwy_app_main_window_get()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Certainty Map Analysis"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

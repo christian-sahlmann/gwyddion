@@ -159,9 +159,7 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
 
     controls->args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Mask by correlation"),
-                                         GTK_WINDOW(gwy_app_main_window_get()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Mask by correlation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

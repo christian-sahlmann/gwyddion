@@ -177,10 +177,8 @@ shade_dialog(ShadeArgs *args,
     gint response;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Shading"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+    dialog = gtk_dialog_new_with_buttons(_("Shading"), NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

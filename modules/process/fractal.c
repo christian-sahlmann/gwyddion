@@ -180,11 +180,9 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
          };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Fractal dimension"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Recompute"), RESPONSE_RECOMPUTE,
-                                         _("Reset"), RESPONSE_RESET,
+    dialog = gtk_dialog_new_with_buttons(_("Fractal Dimension"), NULL, 0,
+                                         _("Re_compute"), RESPONSE_RECOMPUTE,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

@@ -190,9 +190,7 @@ arithmetic_window_construct(ArithmeticArgs *args)
     GtkWidget *dialog, *table, *omenu, *entry, *label;
     gchar *text;
 
-    dialog = gtk_dialog_new_with_buttons(_("Data Arithmetic"),
-                                         GTK_WINDOW(gwy_app_main_window_get()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Data Arithmetic"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

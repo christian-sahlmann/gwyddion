@@ -136,9 +136,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     GtkWidget *dialog, *table, *omenu, *label, *spin;
     gint row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Tip Dilation"),
-                                         GTK_WINDOW(gwy_app_main_window_get()),
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Tip Dilation"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -270,7 +268,7 @@ tip_dilation_do(TipDilationArgs *args)
                               gwy_app_wait_set_message);
     gwy_app_wait_finish();
     /*set right output */
-    
+
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
