@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-lines",
-    "Layer allowing selection of arbitrary straight lines.",
+    N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

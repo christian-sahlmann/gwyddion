@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-points",
-    "Layer allowing selection of several points.",
+    N_("Layer allowing selection of several points, displayed as crosses."),
     "Yeti <yeti@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",

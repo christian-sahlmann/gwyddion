@@ -146,9 +146,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "plugin-proxy",
-    "Plug-in proxy is a module capable of querying, registering, and running "
-        "external programs (plug-ins) on data pretending they are data "
-        "processing or file loading/saving modules.",
+    N_("Plug-in proxy is a module capable of querying, registering, and "
+       "running external programs (plug-ins) on data pretending they are "
+       "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
     "3.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -456,7 +456,8 @@ proc_register_plugins(GList *plugins,
                                           run_mode_names, -1, NULL))) {
             info = g_new(ProcPluginInfo, 1);
             info->func.name = g_strdup(pname);
-            info->func.menu_path = g_strconcat("/_Plug-Ins", menu_path, NULL);
+            info->func.menu_path = g_strconcat(_("/_Plug-Ins"), menu_path,
+                                               NULL);
             info->func.process = proc_plugin_proxy_run;
             info->func.run = run;
             info->func.sens_flags = 0;

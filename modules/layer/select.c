@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "layer-select",
-    "Layer allowing selection of rectangular areas.",
+    N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
