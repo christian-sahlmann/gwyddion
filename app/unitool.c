@@ -910,6 +910,12 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
  * @hpix: Selection height in pixels widget.
  * @unselected_is_full: If %TRUE, no selection is displayed as full data range,
  *                      if %FALSE, labels are cleared when nothing is selected.
+ * @rwidget1: Reserved.
+ * @rwidget2: Reserved.
+ * @rwidget3: Reserved.
+ * @rwidget4: Reserved.
+ * @reserved1: Reserved.
+ * @reserved2: Reserved.
  *
  * Widgets and flags for rectangular selection display.
  *
