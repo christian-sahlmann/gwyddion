@@ -1015,16 +1015,34 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 }
 
 void
-gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line)
+gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint windowing, gint interpolation)
 {
-    /*provisory...*/
-    gwy_data_line_hhcf(data_line, target_line);
+    GwyDataLine iin, rout, iout;
+    gint i;
+    
+    gwy_data_line_initialize(&iin, data_line->res, data_line->real, FALSE);
+    gwy_data_line_initialize(&rout, data_line->res, data_line->real, FALSE);
+    gwy_data_line_initialize(&iout, data_line->res, data_line->real, FALSE);
+    
+    gwy_data_line_fft(data_line, &iin, &rout, &iout, gwy_data_line_fft_hum,
+                   windowing, 1, interpolation,
+                   1, 1);
+
+    gwy_data_line_resample(target_line, rout.res, GWY_INTERPOLATION_NONE);
+    for (i=0; i<rout.res; i++)
+    {
+        target_line->data[i] = rout.data[i]*rout.data[i] + iout.data[i]*iout.data[i];
+    }
+    gwy_data_line_free(&rout);
+    gwy_data_line_free(&iin);
+    gwy_data_line_free(&iout);
+            
 }
 
 void
-gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gdouble nsteps)
+gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
 {
-    gint i, n, val, imin;
+    guint i, n, val, imin;
     n = data_line->res;
     gdouble step;
     
@@ -1043,18 +1061,33 @@ gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     for (i=0; i<n; i++)
     {
         val = (gint)(data_line->data[i]*step/(ymax - ymin) - imin);
-        target_line->data[val] += 1;
+        target_line->data[val] += 1.0/n/step;
+    }
+
+    
+}
+
+void
+gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+{
+    guint i;
+    gdouble sum=0;
+    gwy_data_line_dh(data_line, target_line, ymin, ymax, nsteps);
+    
+    for (i=0; i<nsteps; i++)
+    {
+        sum += target_line->data[i];
+        target_line->data[i] = sum;
     }
 }
 
-
 void
-gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gdouble nsteps)
+gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
 {
     /*not yet...*/
-    gint i, n, val, imin;
+    guint i, n, val, imin;
     n = data_line->res;
-    gdouble step;
+    gdouble step, angle;
     
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
@@ -1062,18 +1095,39 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
     /*if ymin==ymax==0 we want to set up histogram area*/
     if ((ymin == ymax) && (ymin == 0))
     {
-        ymin = gwy_data_line_get_min(data_line);
-        ymax = gwy_data_line_get_max(data_line);
+        ymin = G_MAXDOUBLE;
+        ymax = -G_MAXDOUBLE;
+        for (i=0; i<n; i++)
+        {
+            angle = gwy_data_line_get_der(data_line, i);
+            if (ymin > angle) ymin = angle;
+            if (ymax < angle)  ymax = angle;
+        }
     }
     step = (ymax - ymin)/nsteps;
     imin = (int)(ymin/step);
 
     for (i=0; i<n; i++)
     {
-        val = (gint)(data_line->data[i]*step/(ymax - ymin) - imin);
-        target_line->data[val] += 1;
+        val = (gint)(gwy_data_line_get_der(data_line, i)*step/(ymax - ymin) - imin);
+        target_line->data[val] += 1.0/n/step;
     }
 }
+
+void
+gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, guint nsteps)
+{
+    guint i;
+    gdouble sum=0;
+    gwy_data_line_da(data_line, target_line, ymin, ymax, nsteps);
+    
+    for (i=0; i<nsteps; i++)
+    {
+        sum += target_line->data[i];
+        target_line->data[i] = sum;
+    }
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
