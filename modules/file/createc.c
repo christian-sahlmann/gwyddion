@@ -61,7 +61,7 @@ static GwyModuleInfo module_info = {
     "createc",
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.2",
+    "0.3",
     "Rok Zitko",
     "2004",
 };
@@ -135,16 +135,23 @@ createc_load(const gchar *filename)
 
     dfield = hash_to_data_field(hash, buffer);
 
-    object = gwy_container_new();
-    gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
-                                     G_OBJECT(dfield));
+    if (dfield) { 
+      object = gwy_container_new();
+      gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
+                                       G_OBJECT(dfield));
 
-    store_metadata(GWY_CONTAINER(object), hash);
-
-    g_hash_table_destroy(hash);
-    g_free(buffer);
-
-    return (GwyContainer*)object;
+      store_metadata(GWY_CONTAINER(object), hash);
+      
+      g_hash_table_destroy(hash);
+      g_free(buffer);
+      
+      return (GwyContainer*)object;
+    } else {
+      g_hash_table_destroy(hash);
+      g_free(buffer);
+      
+      return NULL;
+    }
 }
 
 /* Read the ASCII header and fill the hash with key/value pairs */
@@ -171,8 +178,10 @@ read_hash(gchar *buffer)
         if (!eq)
             goto fail;
         *eq = '\0';
-        g_hash_table_insert(hash, g_strdup(line), g_strdup(eq + 1));
-        gwy_debug("<%s>: <%s>\n", line, eq + 1);
+        if (*line != '\0') { /* drop entries without keyword */
+          g_hash_table_insert(hash, g_strdup(line), g_strdup(eq + 1));
+          gwy_debug("<%s>: <%s>\n", line, eq + 1);
+        }
     }
 
     return hash;
@@ -184,17 +193,32 @@ fail:
 
 #define createc_atof(x) g_ascii_strtod(x, NULL)
 
-/* Macros to extract integer/double variables */
+/* Macros to extract integer/double variables in hash_to_data_field() */
+/* Any missing keyword/value pair is fatal, so we return a NULL pointer. */
 #define HASH_GET(key, var, typeconv) \
     if (!(s = g_hash_table_lookup(hash, key))) { \
-        g_warning("%s not found", key); \
+        g_warning("Fatal: %s not found", key); \
         return NULL; \
+    } \
+    var = typeconv(s)
+
+/* Support for alternative keywords in some versions of dat files */
+#define HASH_GET2(key1, key2, var, typeconv) \
+    if (!(s = g_hash_table_lookup(hash, key1))) { \
+      if (!(s = g_hash_table_lookup(hash, key2))) { \
+        g_warning("Fatal: Neither %s nor %s found.", key1, key2); \
+        return NULL; \
+      } \
     } \
     var = typeconv(s)
 
 #define HASH_INT(key, var)    HASH_GET(key, var, atoi)
 #define HASH_DOUBLE(key, var) HASH_GET(key, var, createc_atof)
 #define HASH_STRING(key, var) HASH_GET(key, var, /* */)
+
+#define HASH_INT2(key1, key2, var)    HASH_GET2(key1, key2, var, atoi)
+#define HASH_DOUBLE2(key1, key2, var) HASH_GET2(key1, key2, var, createc_atof)
+#define HASH_STRING2(key1, key2, var) HASH_GET2(key1, key2, var, /* */)
 
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
@@ -214,24 +238,24 @@ hash_to_data_field(GHashTable *hash,
     offset = 16384 + 2; /* header + 2 offset bytes */
     is_current = FALSE;
 
-    HASH_INT("Num.X", xres);
-    HASH_INT("Num.Y", yres);
+    HASH_INT2("Num.X", "Num.X / Num.X", xres);
+    HASH_INT2("Num.Y", "Num.Y / Num.Y", yres);
 
-    HASH_INT("Delta X", ti1);
-    HASH_INT("GainX", ti2);
+    HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1);
+    HASH_INT2("GainX", "GainX / GainX", ti2);
     HASH_DOUBLE("Xpiezoconst", td); /* lowcase p, why? */
     xreal = xres * ti1; /* dacs */
     xreal *= 20.0/65536.0 * ti2; /* voltage per dac */
     xreal *= td * 1.0e-10; /* piezoconstant [A/V] */
 
-    HASH_INT("Delta Y", ti1);
-    HASH_INT("GainY", ti2);
+    HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1);
+    HASH_INT2("GainY", "GainY / GainY", ti2);
     HASH_DOUBLE("YPiezoconst", td); /* upcase P */
     yreal = yres * ti1;
     yreal *= 20.0/65536.0 * ti2;
     yreal *= td * 1.0e-10;
 
-    HASH_INT("GainZ", ti2);
+    HASH_INT2("GainZ", "GainZ / GainZ", ti2);
     HASH_DOUBLE("ZPiezoconst", td); /* upcase P */
     q = 1.0; /* unity dac */
     q *= 20.0/65536.0 * ti2; /* voltage per dac */
@@ -262,23 +286,58 @@ hash_to_data_field(GHashTable *hash,
 #define HASH_STORE(key) \
     if (!(val = g_hash_table_lookup(hash, key))) { \
         g_warning("%s not found",key); \
-    } \
-    g_string_printf(metakey, "/meta/%s", key); \
-    gwy_debug("key = %s, val = %s\n", key, val); \
-    gwy_container_set_string_by_name(data, metakey->str, g_strdup(val))
+    } else { \
+        g_string_printf(metakey, "/meta/%s", key); \
+        gwy_debug("key = %s, val = %s\n", key, val); \
+        gwy_container_set_string_by_name(data, metakey->str, g_strdup(val)); \
+    }
 
 static void
 store_metadata(GwyContainer *data, GHashTable *hash)
 {
     gchar *val;
     GString *metakey; /* for HASH_STORE macro */
-    gchar *tobestored[] = {
-        "Titel", "Delta X", "Delta Y", "Delay X+", "Delay X-",
-        "Delay Y", "Rotation", "GainX", "GainY", "GainZ",
-        "BiasVoltage", "Gainpreamp", "Chan(1,2,4)", "Scancoarse",
-        "FBIset", "FBRC", "ZPiezoconst", "Xpiezoconst", "YPiezoconst",
-        "Dactonmx", "Dactonmz", "Scantype", "memo:0",
-        "memo:1", "memo:2", NULL
+    gchar *tobestored[] = { 
+        "Titel", "Titel / Titel", 
+        "Length x[A]",
+        "Length y[A]",
+        "Z-Res. [A]: +/- ",
+        "BiasVoltage", "BiasVoltage / BiasVolt.[mV]",
+        "Current[A]",
+        "Delta X", "Delta X / Delta X [Dac]",
+        "Delta Y", "Delta Y / Delta Y [Dac]", 
+        "Delay X+", "Delay X+ / Delay X+",
+        "Delay X-", "Delay X- / Delay X-",
+        "Delay Y", "Delay Y / Delay Y",
+        "D-DeltaX", "D-DeltaX / D-DeltaX",
+        "Rotation", "Rotation / Rotation",
+        "GainX", "GainX / GainX",
+        "GainY", "GainY / GainY",
+        "GainZ", "GainZ / GainZ",
+        "Gainpreamp", "Gainpreamp / GainPre 10^",
+        "Chan(1,2,4)", "Chan(1,2,4) / Chan(1,2,4)",
+        "Scancoarse", "Scancoarse / Scancoarse",
+        "Scantype", "Scantype / Scantype",
+        "FBIset", 
+        "FBLogIset", 
+        "FBRC", 
+        "FBLingain", 
+        "FBLog",
+        "FBPropGain",
+        "ZPiezoconst", 
+        "Xpiezoconst", 
+        "YPiezoconst",
+        "Sec/line:", 
+        "Sec/Image:", 
+        "Channels", "Channels / Channels",
+        "Dactonmx", "Dacto[A]xy",
+        "Dactonmz", "Dacto[A]z",
+        "memo:0",
+        "memo:1", 
+        "memo:2", 
+        "T_ADC2[K]",
+        "T_ADC3[K]",
+        NULL
     };
     gint ctr = 0;
 
