@@ -6,7 +6,8 @@ PLUGINS = \
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
-PLUGIN_CFLAGS = \
+# lib, because .c.obj rule uses LIB_CFLAGS...
+LIB_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(PRG_CRUNTIME)
 
 PLUGIN_LINK = \
