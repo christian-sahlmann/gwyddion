@@ -148,14 +148,23 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
                               data);
 }
 
+/* Changed in rev 1.52: use logical OR with existing flags.  There is no
+ * way to clear existing flags. */
 void
 gwy_app_menu_set_flags_recursive(GtkWidget *widget,
                                  GwyMenuSensData *data)
 {
     setup_sensitivity_keys();
 
-    if (!GTK_IS_TEAROFF_MENU_ITEM(widget))
-        set_sensitive_both(widget, data->flags, data->set_to);
+    if (!GTK_IS_TEAROFF_MENU_ITEM(widget)) {
+        GwyMenuSensFlags flags, state;
+        GObject *obj;
+
+        obj = G_OBJECT(widget);
+        flags = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
+        state = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));
+        set_sensitive_both(widget, data->flags | flags, data->set_to | state);
+    }
 
     if (GTK_IS_ALIGNMENT(widget)
         || GTK_IS_MENU_BAR(widget)
@@ -216,6 +225,7 @@ gwy_app_run_process_func_cb(gchar *name)
     GtkWidget *data_view, *menu;
     GwyContainer *data;
     gsize i;
+    gboolean ok;
 
     gwy_debug("`%s'", name);
     data_window = gwy_app_data_window_get_current();
@@ -227,13 +237,21 @@ gwy_app_run_process_func_cb(gchar *name)
     for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
         if (!(run & run_types[i]))
             continue;
-        if (!gwy_process_func_run(name, data, run_types[i]))
-            return;
-        /* FIXME: the ugliest hack! */
-        gwy_app_data_view_update(data_view);
+        ok = gwy_process_func_run(name, data, run_types[i]);
+
+        /* update the menus regardless the function returns TRUE or not.
+         * functions changing nothing would never appear in the last-used
+         * menu and/or it would never become sensitive */
         menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                             "<proc>"));
         gwy_app_update_last_process_func(menu, name);
+        /* FIXME: the ugliest hack! */
+        if (ok)
+            gwy_app_data_view_update(data_view);
+
+        /* re-get current data window, it may have changed */
+        data_window = gwy_app_data_window_get_current();
+        data = gwy_data_window_get_data(GWY_DATA_WINDOW(data_window));
         if (gwy_container_contains_by_name(data, "/0/mask"))
             sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
         if (gwy_container_contains_by_name(data, "/0/show"))

@@ -23,6 +23,8 @@
 
 #include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
+/* XXX: GwyMenuSensFlags */
+#include <app/menu.h>
 
 G_BEGIN_DECLS
 
@@ -48,17 +50,19 @@ struct _GwyProcessFuncInfo {
     GwyRunType run;
 };
 
-gboolean     gwy_process_func_register      (const gchar *modname,
-                                             GwyProcessFuncInfo *func_info);
-gboolean     gwy_process_func_run           (const guchar *name,
-                                             GwyContainer *data,
-                                             GwyRunType run);
-GwyRunType   gwy_process_func_get_run_types (const gchar *name);
+gboolean       gwy_process_func_register      (const gchar *modname,
+                                               GwyProcessFuncInfo *func_info);
+gboolean       gwy_process_func_run           (const guchar *name,
+                                               GwyContainer *data,
+                                               GwyRunType run);
+GwyRunType     gwy_process_func_get_run_types (const gchar *name);
 G_CONST_RETURN
-gchar*       gwy_process_func_get_menu_path (const gchar *name);
-GtkObject*   gwy_process_func_build_menu    (GtkObject *item_factory,
-                                             const gchar *prefix,
-                                             GCallback item_callback);
+gchar*         gwy_process_func_get_menu_path (const gchar *name);
+GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
+                                               const gchar *prefix,
+                                               GCallback item_callback);
+void           gwy_process_func_set_sensitivity_flags (const gchar *name,
+                                                       GwyMenuSensFlags flags);
 
 G_END_DECLS
 
