@@ -112,6 +112,29 @@ Gwyddion application directories.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_file_get_contents ##### -->
+<para>
+
+</para>
+
+@filename: 
+@buffer: 
+@size: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_file_abandon_contents ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@error: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_find_self_dir ##### -->
 <para>
 

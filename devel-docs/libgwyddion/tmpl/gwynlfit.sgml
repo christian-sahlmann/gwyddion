@@ -2,7 +2,7 @@
 gwynlfit
 
 <!-- ##### SECTION Short_Description ##### -->
-Marquardt-Levenbert nonlinear least square fitter.
+Marquardt-Levenberg nonlinear least square fitter.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -327,6 +327,7 @@ Marquardt-Levenbert nonlinear least square fitter.
 @y: 
 @n_param: 
 @param: 
+@err: 
 @fixed_param: 
 @user_data: 
 @Returns: 
