@@ -43,6 +43,9 @@ gwy_module_browser(void)
     GtkWidget *window, *browser;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Gwyddion Module Browser");
+    gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
+                           g_get_application_name());
     browser = gwy_module_browser_construct();
     gtk_container_add(GTK_CONTAINER(window), browser);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
