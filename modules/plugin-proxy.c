@@ -37,6 +37,8 @@
  * Win32 too, but one never knows...
  *
  * XXX: the `dump' should probably be `dumb'...
+ *
+ * XXX: Plug-ins cannot specify sens_flags.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -154,7 +156,7 @@ static GwyModuleInfo module_info = {
         "external programs (plug-ins) on data pretending they are data "
         "processing or file loading/saving modules.",
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -380,6 +382,7 @@ proc_register_plugins(GList *plugins,
             info->func.menu_path = g_strconcat("/_Plug-Ins", menu_path, NULL);
             info->func.process = proc_plugin_proxy_run;
             info->func.run = run;
+            info->func.sens_flags = 0;
             if (gwy_process_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 plugins = g_list_prepend(plugins, info);
