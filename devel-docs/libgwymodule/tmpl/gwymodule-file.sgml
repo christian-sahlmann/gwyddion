@@ -110,6 +110,15 @@ gwymodule-file
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_file_func_get_operations ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_file_detect ##### -->
 <para>
 

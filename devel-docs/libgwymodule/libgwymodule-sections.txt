@@ -43,6 +43,7 @@ gwy_file_func_register
 gwy_file_func_run_detect
 gwy_file_func_run_load
 gwy_file_func_run_save
+gwy_file_func_get_operations
 gwy_file_detect
 gwy_file_load
 gwy_file_save

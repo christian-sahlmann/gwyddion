@@ -123,8 +123,10 @@ gwy_math_find_nearest_point
 
 <SECTION>
 <FILE>gwyentities</FILE>
+GwyTextEntity
 gwy_entities_entity_to_utf8
 gwy_entities_text_to_utf8
+gwy_entities_get_entities
 </SECTION>
 
 <SECTION>

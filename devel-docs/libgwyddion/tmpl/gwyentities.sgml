@@ -14,6 +14,12 @@ gwyentities
 
 </para>
 
+<!-- ##### TYPEDEF GwyTextEntity ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_entities_entity_to_utf8 ##### -->
 <para>
 
@@ -29,6 +35,14 @@ gwyentities
 </para>
 
 @text: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_entities_get_entities ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 
