@@ -5,13 +5,12 @@ Too many things.  Use
 to locate them ;-)
 
 Particularly (overall app issues, module issues not listed):
-- Quite a large part of graph functionality
 - Printing
-- User documentation, even better, integrated help
+- Integrated help
 - Proper associations and drag'n'drop support
-- Palette editor
+- Palette, GL material editor
 - Editable metadata
-- Use GtkAction (Gtk+ 2.4) for module actions
+- Module profiles
 - Sessions
 - ...
 
@@ -20,8 +19,6 @@ unstable version.
 
 ============================================================================
 Worst API bugs and otherwise things that will probably change in 2.0:
-- Specifically, there's no tooltip entry in Process and Graph function info
-  so they are hardcoded in the application
 - GwyDataField function naming is a mess, some are functions don't have _area
   in name at all, some have it in silly places, there are two different
   area border conventions; GwyDataLine is not much better
@@ -44,17 +41,18 @@ Unimplemented stuff:
 
 ============================================================================
 Release checklist:
+- must build on Linux from tarballs
+- must build on MS Windows
 - update splashscreen
 - update translation(s)
-- make sure global library headers (libfoo.h) include all ohters
+- make sure global library headers (libfoo.h) include all others
 - update library versions, if something changed
-- make sure gwyddion.iss.in contains all translation (XXX: automatize this)
+- make sure gwyddion.iss.in contains all translations (XXX: automatize this)
 - update version in configure.ac
 - update version in gwyddion-night-build
 - switch segfault on critical messages off
-- must build on Linux from tarballs
-- must build on Windows
 - check and update NEWS, generate HTML version
+- generate on-line module list
 - make sure devel-docs/libfoo/libfoo.types loads all new types
 - make sure stock icon images are included in libgwydgets API docs
 - generate stable API docs for gwyddion.net and upload them
