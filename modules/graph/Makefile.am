@@ -9,7 +9,7 @@ graph_PROGRAMS = \
 	graph_export_ascii.so \
 	graph_zoom.so \
 	graph_unzoom.so \
-        graph_points.so \
+	graph_points.so \
 	graph_fit.so \
 	graph_cd.so
  
@@ -39,7 +39,7 @@ graph_cd_so_SOURCES = graph_cd.c
 graph_cd_so_LDFLAGS = $(module_ldflags),graph_cd.so
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fpic
 
 clean-local:
 	rm -f core.* *~
