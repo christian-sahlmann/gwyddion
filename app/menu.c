@@ -174,8 +174,17 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
                               (gpointer)data);
 }
 
-/* Changed in rev 1.52: use logical OR with existing flags.  There is no
+/* Changed in rev 1.52: now uses bitwise OR with existing flags.  There is no
  * way to clear existing flags. */
+/**
+ * gwy_app_menu_set_flags_recursive:
+ * @widget: A menu widget (a menu bar, menu, or an item).
+ * @data: Sensitivity data.
+ *
+ * Adds item sensitivity data @data to a menu subtree @widget.
+ *
+ * Adding means bitwise OR with existing flags, so existing flags are kept.
+ **/
 void
 gwy_app_menu_set_flags_recursive(GtkWidget *widget,
                                  const GwyMenuSensData *data)
@@ -429,6 +438,12 @@ gwy_app_recent_file_list_cb(void)
     gtk_widget_show(recent_file_list);
 }
 
+/**
+ * gwy_app_menu_recent_files_update:
+ * @recent_files: A list of recent file names, in UTF-8.
+ *
+ * Updates recent file menu to show @recent_files.
+ **/
 void
 gwy_app_menu_recent_files_update(GList *recent_files)
 {

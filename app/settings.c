@@ -51,7 +51,7 @@ static GwyContainer *gwy_settings = NULL;
 /**
  * gwy_app_settings_get:
  *
- * Gets the gwyddion settings.
+ * Gets the Gwyddion settings.
  *
  * The settings are a #GwyContainer automatically loaded at program startup
  * and saved ad its exit.  For storing persistent module data you should
@@ -71,6 +71,13 @@ gwy_app_settings_get(void)
     return gwy_settings;
 }
 
+/**
+ * gwy_app_settings_free:
+ *
+ * Frees Gwyddion settings.
+ *
+ * Should not be called only by main application.
+ **/
 void
 gwy_app_settings_free(void)
 {
