@@ -64,7 +64,7 @@ static GwyDataField* make_datafield           (gint res,
                                                gboolean logscale);
 
 SlopeArgs slope_defaults = {
-    120,
+    200,
     FALSE,
 };
 
