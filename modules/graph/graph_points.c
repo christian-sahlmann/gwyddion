@@ -20,6 +20,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -257,17 +258,39 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
     cd = (GwyGraphStatus_PointsData*)gwy_graph_get_status_data(graph);
 
     /*update mouse data*/
-    if (cd->actual_data_point.x_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->actual_data_point.x, cd->actual_data_point.x_unit);
+    if (graph->x_unit != NULL)
+    {
+        if ((fabs(cd->actual_data_point.x)<=1e5 && fabs(cd->actual_data_point.x)>1e-2) || fabs(cd->actual_data_point.x)==0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f %s ", cd->actual_data_point.x, graph->x_unit);
+        else
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e %s ", cd->actual_data_point.x, graph->x_unit);
+            
+    }
     else
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->actual_data_point.x);
+    {
+        if ((fabs(cd->actual_data_point.x)<=1e5 && fabs(cd->actual_data_point.x)>1e-2) || fabs(cd->actual_data_point.x)==0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f ", cd->actual_data_point.x);
+        else
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e ", cd->actual_data_point.x);
+            
+    }
     
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
-    if (cd->actual_data_point.y_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->actual_data_point.y, cd->actual_data_point.y_unit);
+    if (graph->y_unit != NULL)
+    {
+        if ((fabs(cd->actual_data_point.y)<=1e5 && fabs(cd->actual_data_point.y)>1e-2) || fabs(cd->actual_data_point.y)==0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->actual_data_point.y, graph->y_unit);
+        else
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e %s", cd->actual_data_point.y, graph->y_unit);
+    }
     else
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->actual_data_point.y);
+    {
+        if ((fabs(cd->actual_data_point.y)<=1e5 && fabs(cd->actual_data_point.y)>1e-2) || fabs(cd->actual_data_point.y)==0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f ", cd->actual_data_point.y);
+        else
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e ", cd->actual_data_point.y);
+    }
      
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
 
@@ -278,22 +301,90 @@ selection_updated_cb(GtkWidget *widget, gpointer data)
         if (i<n)
         {
             pnt = g_array_index(cd->data_points, GwyGraphDataPoint, i);
-            g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.x);
+            if ((fabs(pnt.x)<=1e5 && fabs(pnt.x)>1e-2) || fabs(pnt.x)==0)           
+            {
+                if (graph->x_unit != NULL)
+                    g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.x, graph->x_unit);
+                else
+                    g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.x);
+            }
+            else
+            {
+                if (graph->x_unit != NULL)
+                    g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.x, graph->x_unit);
+                else
+                    g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.x);
+            }
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)), buffer);
         
-            g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.y);
+            
+            if ((fabs(pnt.y)<=1e5 && fabs(pnt.y)>1e-2) || fabs(pnt.y)==0)
+            {
+                if (graph->y_unit != NULL)
+                    g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.y, graph->y_unit);
+                else
+                    g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.y);
+            }
+            else
+            {
+                if (graph->y_unit != NULL)
+                    g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.y, graph->y_unit);
+                else
+                    g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.y);
+            }
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointy, i)), buffer);
         
             if (i>0)
             {
                 ppnt = g_array_index(cd->data_points, GwyGraphDataPoint, i-1);
-                g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.x - ppnt.x);
+                if ((fabs(pnt.x - ppnt.x)<=1e5 && fabs(pnt.x - ppnt.x)>1e-2) || fabs(pnt.x - ppnt.x)==0)
+                {
+                    if (graph->x_unit != NULL)
+                        g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.x - ppnt.x, graph->x_unit);
+                    else
+                        g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.x - ppnt.x);
+                }
+                else
+                {
+                    if (graph->x_unit != NULL)
+                        g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.x - ppnt.x, graph->x_unit);
+                    else
+                        g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.x - ppnt.x);
+                }
                 gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.distx, i)), buffer);
             
-                g_snprintf(buffer, sizeof(buffer), "%.3f", pnt.y - ppnt.y);
+                if ((fabs(pnt.y - ppnt.y)<=1e5 && fabs(pnt.y - ppnt.y)>1e-2) || fabs(pnt.y - ppnt.y)==0)
+                {
+                    if (graph->y_unit != NULL)
+                        g_snprintf(buffer, sizeof(buffer), "%.3f %s ", pnt.y - ppnt.y, graph->y_unit);
+                    else
+                        g_snprintf(buffer, sizeof(buffer), "%.3f ", pnt.y - ppnt.y);
+                }
+                else
+                {
+                    if (graph->y_unit != NULL)
+                        g_snprintf(buffer, sizeof(buffer), "%.3e %s ", pnt.y - ppnt.y, graph->y_unit);
+                    else
+                        g_snprintf(buffer, sizeof(buffer), "%.3e ", pnt.y - ppnt.y);
+                }
                 gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
 
-                g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x))/3.141592);
+                /*XXX FIXME follows extremely stupid block that should be changed immediately after 1.0 release*/
+                if ((graph->x_unit==0 || graph->y_unit==0) || strstr(graph->x_unit, graph->y_unit)==graph->x_unit)
+                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x))/3.141592);
+                else if ((strstr(graph->x_unit, "µ")==graph->x_unit && strstr(graph->y_unit, "n")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "m")==graph->x_unit && strstr(graph->y_unit,"µ")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "k")==graph->x_unit && strstr(graph->y_unit,"m")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "n")==graph->x_unit && strstr(graph->y_unit,"p")==graph->y_unit)) 
+                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x)*1000)/3.141592);
+                else if ((strstr(graph->x_unit, "µ")==graph->x_unit && strstr(graph->y_unit,"m")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "m")==graph->x_unit && strstr(graph->y_unit,"k")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "p")==graph->x_unit && strstr(graph->y_unit,"n")==graph->y_unit) ||
+                         (strstr(graph->x_unit, "n")==graph->x_unit && strstr(graph->y_unit,"µ")==graph->y_unit))
+                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x)/1000)/3.141592);
+                else g_snprintf(buffer, sizeof(buffer), " ");
+                /*XXX FIXME end of extremely stupid block*/
+                    
                 gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
              }
         }
