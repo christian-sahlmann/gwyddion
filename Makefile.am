@@ -11,6 +11,7 @@ gwyddionapp_DATA = \
 	x-gwyddion.desktop
 
 SUBDIRS = \
+	m4 \
 	libgwyddion \
 	libprocess \
 	libdraw \
@@ -24,19 +25,6 @@ SUBDIRS = \
 	perl \
 	python \
 	devel-docs
-
-M4TESTS = \
-	m4/cc-options.m4 \
-	m4/codeset.m4 \
-	m4/gettext.m4 \
-	m4/glibc21.m4 \
-	m4/gtk-doc.m4 \
-	m4/iconv.m4 \
-	m4/isc-posix.m4 \
-	m4/lcmessage.m4 \
-	m4/pkg.m4 \
-	m4/progtest.m4 \
-	m4/tools.m4
 
 EXTRA_DIST = \
 	make.msc \
@@ -58,8 +46,7 @@ EXTRA_DIST = \
 	utils/vim-syn-gen.py \
 	utils/gwyddion-cfg.py \
 	utils/gwyddion.vim \
-	$(gwyddionapp_DATA) \
-	$(M4TESTS)
+	$(gwyddionapp_DATA)
 
 if MAINTAINER_MODE
 dist-check-maintainer:
