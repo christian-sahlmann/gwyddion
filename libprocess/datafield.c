@@ -44,12 +44,12 @@ gwy_datafield_get_type(void)
         GInterfaceInfo gwy_serializable_info = {
             gwy_datafield_serializable_init,
             NULL,
-            GUINT_TO_POINTER(42)
+            NULL
         };
         GInterfaceInfo gwy_watchable_info = {
             gwy_datafield_watchable_init,
             NULL,
-            GUINT_TO_POINTER(37)
+            NULL
         };
 
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -156,7 +156,8 @@ gwy_datafield_serialize(GObject *obj,
 			      datafield->yres,
                               datafield->xreal,
 			      datafield->yreal,
-                              datafield->data);
+                              datafield->yreal*datafield->xreal,
+			      datafield->data);
 
 }
 
@@ -208,6 +209,9 @@ gwy_datafield_value_changed(GObject *datafield)
 gint 
 gwy_datafield_alloc(GwyDataField *a, gint xres, gint yres)
 {
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     a->xres = xres;
     a->yres = yres;
     if ((a->data = (gdouble *) g_try_malloc(a->xres*a->yres*sizeof(gdouble))) == NULL) return -1;
@@ -218,6 +222,9 @@ gint
 gwy_datafield_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean nullme)
 {
     int i;
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (%dx%d)", __FUNCTION__, xres, yres);
+    #endif
     if (gwy_datafield_alloc(a, xres, yres) != 0) return -1;
     a->xreal = xreal;
     a->yreal = yreal;
@@ -230,6 +237,9 @@ gwy_datafield_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, g
 void 
 gwy_datafield_free(GwyDataField *a)
 {
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     g_free(a->data);
 }
 
