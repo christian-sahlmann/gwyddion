@@ -10,6 +10,14 @@ Ideally, with both.
 
 Use ccache.
 
+Note several auxiliary tools are written in Python, most notably
+utils/update-msvc.py -- incorporating changes in Makefile.am's into MSC
+    makefiles and generating MSC .def files
+devel-docs/add-objects.py -- addind object structs to gtkdoc-generated
+    section files
+You don't need Python to compile Gwyddion, but you may need it to
+develop Gwyddion.
+
 See devel-docs/README for HTML doc info (make docs generates it).
 
 Note the stuff in the plugins/ directory is public domain.

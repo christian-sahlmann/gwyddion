@@ -36,9 +36,9 @@ EXTRA_DIST = \
 	gwyddion.pc.in \
 	version.h.in \
 	version.h \
-	update-msvc.py \
-	vim-syn-gen.py \
-	gwyddion.vim \
+	utils/update-msvc.py \
+	utils/vim-syn-gen.py \
+	utils/gwyddion.vim \
 	$(M4TESTS)
 
 if MAINTAINER_MODE
@@ -53,7 +53,7 @@ docs:
 	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
 
 # FIXME: depdendencies?
-gwyddion.vim: devel-docs/*/*-decl.txt
-	./vim-syn-gen.py >$@
+utils/gwyddion.vim: devel-docs/*/*-decl.txt
+	./utils/vim-syn-gen.py >$@
 
 .PHONY: docs
