@@ -122,6 +122,18 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
 
 }
 
+static GtkButton*
+gwy_button_new_with_markup(const gchar *markup)
+{
+    GtkWidget *label, *button;
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), markup);
+    button = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(button), label);
+    return GTK_BUTTON(button);
+}
+
 static void
 gwy_sci_text_init(GwySciText *sci_text)
 {
@@ -138,8 +150,8 @@ gwy_sci_text_init(GwySciText *sci_text)
     sci_text->entry = GTK_ENTRY(gtk_entry_new());
     sci_text->label = gtk_label_new(" ");
     sci_text->entities = gtk_combo_new(); 
-    lower = gtk_button_new_with_label("x_y");
-    upper = gtk_button_new_with_label("x^y");
+    lower = gwy_button_new_with_markup("x<sub>y</sub>");
+    upper = gwy_button_new_with_markup("x<sup>y</sup>");
     bold = gtk_button_new_with_label("B");
     italic = gtk_button_new_with_label("I");
     hbox = gtk_hbox_new(0,0);
