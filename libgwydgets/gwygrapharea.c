@@ -50,6 +50,8 @@ static gboolean gwy_graph_area_button_release       (GtkWidget *widget,
 /* Forward declarations - area related*/
 void            gwy_graph_area_draw_area            (GtkWidget *widget);
 void            gwy_graph_area_draw_curves          (GtkWidget *widget);
+void            gwy_graph_area_draw_selection       (GtkWidget *widget);
+void            gwy_graph_area_draw_selection_points(GtkWidget *widget);
 void            gwy_graph_area_plot_refresh         (GwyGraphArea *area);
 /* Local data */
 
@@ -147,6 +149,15 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->pointsdata = g_new(GwyGraphStatus_PointsData, 1);
     area->cursordata = g_new(GwyGraphStatus_CursorData, 1);
 
+    area->seldata->scr_start = 0;
+    area->seldata->scr_end = 0;
+    area->seldata->data_start = 0;
+    area->seldata->data_end = 0;
+
+    area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
+    area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
+    area->pointsdata->n = 0;
+     
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
@@ -188,6 +199,8 @@ gwy_graph_area_finalize(GObject *object)
     area = GWY_GRAPH_AREA(object);
     
     g_ptr_array_free(area->curves, 1);
+    g_array_free(area->pointsdata->scr_points, 1);
+    g_array_free(area->pointsdata->data_points, 1);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -269,7 +282,9 @@ gwy_graph_area_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
+    gwy_graph_area_draw_selection(widget);
     gwy_graph_area_draw_curves(widget);
+    gwy_graph_area_draw_selection_points(widget);
     gwy_graph_area_draw_area(widget);
 
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
@@ -341,11 +356,86 @@ void gwy_graph_area_draw_curves(GtkWidget *widget)
     gdk_gc_set_foreground(area->gc, &fg);
 }
 
+
+void
+gwy_graph_area_draw_selection(GtkWidget *widget)
+{
+    GwyGraphArea *area;
+    GdkColor fg, sg;
+    gint start, end;
+    
+    area = GWY_GRAPH_AREA(widget);
+
+    fg.pixel = 0x00000000;
+    sg.pixel = 0xFFAA55FF;
+    
+    if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
+    {
+        start = area->seldata->scr_start;
+        end = area->seldata->scr_end;
+        if (start > end) GWY_SWAP(gint, start, end);
+        else if (start == end) return;
+       
+        gdk_gc_set_foreground(area->gc, &sg); 
+        if (area->status == GWY_GRAPH_STATUS_XSEL)
+        {
+            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc, 
+                               1, start, 0, end-start, widget->allocation.height-1);
+        }
+        else if (area->status == GWY_GRAPH_STATUS_YSEL)
+        {
+            gdk_draw_rectangle(GTK_LAYOUT(widget)->bin_window, area->gc,
+                               1, 0, start, widget->allocation.width-1, end-start);
+        }
+        gdk_gc_set_foreground(area->gc, &fg);
+        printf("Sel started\n");
+    }    
+
+    
+}
+
+void
+gwy_graph_area_draw_selection_points(GtkWidget *widget)
+{
+    GwyGraphArea *area;
+    GdkColor fg, sg;
+    GwyGraphScrPoint scrpnt;
+    guint n;
+    
+    area = GWY_GRAPH_AREA(widget);
+
+    fg.pixel = 0x00000000;
+    sg.pixel = 0xFFAA55FF;
+    
+    if (area->status == GWY_GRAPH_STATUS_POINTS)
+    {
+        gdk_gc_set_foreground(area->gc, &sg);
+
+        for (n=0; n<area->pointsdata->scr_points->len; n++)
+        {
+            scrpnt = g_array_index(area->pointsdata->scr_points, GwyGraphScrPoint, n);
+            gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
+                               scrpnt.i-5,
+                               scrpnt.j,
+                               scrpnt.i+5,
+                               scrpnt.j);
+            gdk_draw_line(GTK_LAYOUT(widget)->bin_window, area->gc,
+                               scrpnt.i,
+                               scrpnt.j-5,
+                               scrpnt.i,
+                               scrpnt.j+5);
+        }
+        gdk_gc_set_foreground(area->gc, &fg);
+    }    
+}
+
 static gboolean
 gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGraphArea *area;
     GtkLayoutChild *child;
+    GwyGraphScrPoint scrpnt;
+    GwyGraphDataPoint datpnt;
     gint x, y;
 
     gwy_debug("%s", __FUNCTION__);
@@ -373,17 +463,49 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         if (area->status == GWY_GRAPH_STATUS_XSEL)
         {
             area->seldata->scr_start = x;
+            area->seldata->scr_end = x;
             area->seldata->data_start = 0;
         }
         else if (area->status == GWY_GRAPH_STATUS_YSEL)
         {
             area->seldata->scr_start = y;
+            area->seldata->scr_end = y;
             area->seldata->data_start = 0;
         }
         area->selecting = 1;
         printf("Sel started\n");
+        gtk_widget_queue_draw(widget);
     }    
 
+    if (area->status == GWY_GRAPH_STATUS_POINTS)
+    {
+        if (event->button==1)
+        {
+            scrpnt.i = x;
+            scrpnt.j = y;
+            datpnt.x = 0;
+            datpnt.y = 0;
+        
+            g_array_append_val(area->pointsdata->scr_points, scrpnt);
+            g_array_append_val(area->pointsdata->data_points, datpnt);
+            area->pointsdata->n++;
+            printf("Point added.\n");
+        }
+        else
+        {
+            g_array_free(area->pointsdata->scr_points, 1);
+            g_array_free(area->pointsdata->data_points, 1);
+
+            area->pointsdata->scr_points = g_array_new(0, 1, sizeof(GwyGraphScrPoint));
+            area->pointsdata->data_points = g_array_new(0, 1, sizeof(GwyGraphDataPoint));
+            area->pointsdata->n = 0;
+            printf("Points removed.\n");            
+        }
+        
+        
+        gtk_widget_queue_draw(widget);
+    }    
+    
     return FALSE;
 }
 
@@ -419,6 +541,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         }
         printf("Sel: %d, %d finished.\n", area->seldata->scr_start, area->seldata->scr_end);
         area->selecting = 0;
+        gtk_widget_queue_draw(widget);
     }
     
     if (area->active)
@@ -494,6 +617,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             area->seldata->data_end = 0;
         }
         printf("Sel: %d, %d\n", area->seldata->scr_start, area->seldata->scr_end);
+        gtk_widget_queue_draw(widget);
     }
     
     /*widget (label) movement*/
