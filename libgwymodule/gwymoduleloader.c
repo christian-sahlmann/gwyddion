@@ -300,10 +300,15 @@ gwy_module_lookup(const gchar *name)
 
 /**
  * GWY_MODULE_QUERY(mod_info):
- * @mod_info: The %GwyModuleInfo structure to return as module info.
+ * @mod_info: The #GwyModuleInfo structure to return as module info.
  *
  * The declaration of module info query (the ONLY exported symbol from
  * a module).
+ *
+ * This macro does The Right Thing necessary to export module info in a way
+ * Gwyddion understands it. Put #GWY_MODULE_QUERY with the module info
+ * (#GwyModuleInfo) of your module as its argument on a line (with NO
+ * semicolon after).
  **/
 
 /**
