@@ -73,6 +73,7 @@ static void       do_preview_updated          (GtkWidget *toggle,
                                                GwyUnitoolState *state);
 static void       histogram_selection_changed (GwyUnitoolState *state);
 static void       update_percentages          (ToolControls *controls);
+static void       update_graph_selection      (ToolControls *controls);
 static void       load_args                   (GwyContainer *container,
                                                ToolControls *controls);
 static void       save_args                   (GwyContainer *container,
@@ -175,21 +176,20 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(9, 4, FALSE);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
-    row = 0;
-
     controls->histogram = gwy_graph_new();
     /* XXX */
     gtk_widget_set_size_request(controls->histogram, 240, 160);
-    gtk_table_attach(GTK_TABLE(table), controls->histogram, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gwy_graph_set_status(GWY_GRAPH(controls->histogram),
-                         GWY_GRAPH_STATUS_XSEL);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->histogram,
+                       TRUE, TRUE, 2);
+    gwy_graph_set_status(GWY_GRAPH(controls->histogram), GWY_GRAPH_STATUS_XSEL);
     g_signal_connect_swapped(GWY_GRAPH(controls->histogram)->area, "selected",
                              G_CALLBACK(histogram_selection_changed), state);
-    row++;
+
+    table = gtk_table_new(2, 3, TRUE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 0);
+    row = 0;
 
     controls->cmin = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->cmin), 0.0, 0.5);
@@ -226,8 +226,13 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    row += gwy_unitool_rect_info_table_setup(&controls->labels,
-                                             GTK_TABLE(table), 0, row);
+    table = gtk_table_new(8, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 0);
+    row = 0;
+    row = gwy_unitool_rect_info_table_setup(&controls->labels,
+                                            GTK_TABLE(table), 0, row);
     controls->labels.unselected_is_full = TRUE;
 
     controls->cdo_preview
@@ -345,41 +350,44 @@ dialog_update(GwyUnitoolState *state,
             controls->max = controls->datamax;
         }
         update_percentages(controls);
-
-        /* XXX */
-        if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
-            gwy_graph_area_set_selection(graph->area,
-                                         graph->area->x_min,
-                                         graph->area->x_min);
-        else {
-            gdouble graph_min, graph_max, graph_range;
-
-            graph_range = graph->area->x_max - graph->area->x_min;
-            graph_min = controls->rel_min*graph_range + graph->area->x_min;
-            graph_max = controls->rel_max*graph_range + graph->area->x_min;
-            gwy_graph_area_set_selection(graph->area,
-                                         graph_min, graph_max);
-        }
+        update_graph_selection(controls);
     }
 
     if (controls->range_source == USE_HISTOGRAM) {
-        GwyGraphStatus_SelData *fuck;
+        if (reason == GWY_UNITOOL_UPDATED_DATA) {
+            if (controls->rel_min == 0.0 && controls->rel_max == 1.0) {
+                controls->min = controls->datamin;
+                controls->max = controls->datamax;
+            }
+            else {
+                gdouble range;
 
-        fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
-        gwy_debug("graph selection: [%d, %d]", fuck->scr_start, fuck->scr_end);
-        if (fuck->scr_start == fuck->scr_end) {
-            controls->min = controls->datamin;
-            controls->max = controls->datamax;
-            controls->rel_min = 0.0;
-            controls->rel_max = 1.0;
+                range = controls->datamax - controls->datamin;
+                controls->min = controls->datamin + range*controls->rel_min;
+                controls->max = controls->datamin + range*controls->rel_max;
+            }
+            update_graph_selection(controls);
         }
         else {
-            controls->min = MIN(fuck->data_start, fuck->data_end);
-            controls->max = MAX(fuck->data_end, fuck->data_start);
-            controls->min += controls->datamin;
-            controls->max += controls->datamin;
+            GwyGraphStatus_SelData *fuck;
+
+            fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
+            gwy_debug("graph selection: [%d, %d]",
+                      fuck->scr_start, fuck->scr_end);
+            if (fuck->scr_start == fuck->scr_end) {
+                controls->min = controls->datamin;
+                controls->max = controls->datamax;
+                controls->rel_min = 0.0;
+                controls->rel_max = 1.0;
+            }
+            else {
+                controls->min = MIN(fuck->data_start, fuck->data_end);
+                controls->max = MAX(fuck->data_end, fuck->data_start);
+                controls->min += controls->datamin;
+                controls->max += controls->datamin;
+            }
+            update_percentages(controls);
         }
-        update_percentages(controls);
     }
 
     if (is_visible) {
@@ -475,6 +483,27 @@ update_percentages(ToolControls *controls)
         controls->rel_max = (controls->max - controls->datamin)/range;
     }
     gwy_debug("%f %f", controls->rel_min, controls->rel_max);
+}
+
+static void
+update_graph_selection(ToolControls *controls)
+{
+    GwyGraph *graph;
+    gdouble graph_min, graph_max, graph_range;
+
+    graph = GWY_GRAPH(controls->histogram);
+
+    /* XXX */
+    if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
+        gwy_graph_area_set_selection(graph->area,
+                                     graph->area->x_min,
+                                     graph->area->x_min);
+    else {
+        graph_range = graph->area->x_max - graph->area->x_min;
+        graph_min = controls->rel_min*graph_range + graph->area->x_min;
+        graph_max = controls->rel_max*graph_range + graph->area->x_min;
+        gwy_graph_area_set_selection(graph->area, graph_min, graph_max);
+    }
 }
 
 static const gchar *range_source_key = "/tool/icolorange/range_source";
