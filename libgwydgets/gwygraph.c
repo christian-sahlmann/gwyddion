@@ -366,7 +366,11 @@ gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
     g_free(curve.data.yvals);
 
     graph->n_of_curves++;
-    if (params == NULL) graph->n_of_autocurves++;
+    if (params == NULL)
+        graph->n_of_autocurves++;
+
+    /* FIXME: why here? why not... */
+    gtk_widget_queue_draw(GTK_WIDGET(graph));
 }
 
 static void
@@ -397,6 +401,9 @@ gwy_graph_clear(GwyGraph *graph)
     graph->y_reqmax = G_MINDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
     graph->x_reqmin = G_MAXDOUBLE;
+
+    /* FIXME: why here? why not... */
+    gtk_widget_queue_draw(GTK_WIDGET(graph));
 }
 
 void
