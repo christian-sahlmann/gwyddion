@@ -126,6 +126,7 @@ gwy_graph_label_init(GwyGraphLabel *label)
  * 
  * creates new graph label. 
  *
+ * Returns: new graph label 
  **/
 GtkWidget*
 gwy_graph_label_new()

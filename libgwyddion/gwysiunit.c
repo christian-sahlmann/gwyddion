@@ -274,7 +274,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
 /**
  * gwy_si_unit_get_format_with_resolution:
  * @siunit: A SI unit.
- * @value: The maximum value to be represented.
+ * @maximum: The maximum value to be represented.
  * @resolution: The smallest step (approximately) that should make a visible
  *              difference in the representation.
  * @format: A value format to set-up, may be %NULL, a new value format is

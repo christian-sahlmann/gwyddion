@@ -2968,7 +2968,7 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
 {
     gint xres, yres, kxres, kyres, i, j, m, n, k;
     gint xsize, ysize, nb;
-    gdouble medval, maxval, minval, *neighbours;
+    gdouble maxval, minval, *neighbours;
     GwyDataField *hlp_df;
 
     gwy_debug("");

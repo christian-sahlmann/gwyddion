@@ -438,16 +438,16 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 
 /**
  * gwy_axis_set_logarithmic:
- * @a: axis 
+ * @axis: axis 
  * @is_logarithmic: logarithimc mode
  *
  * Sets logarithmic mode. Untested.
  **/
 void
-gwy_axis_set_logarithmic(GwyAxis *a,
+gwy_axis_set_logarithmic(GwyAxis *axis,
                          gboolean is_logarithmic)
 {
-    a->is_logarithmic = is_logarithmic;
+    axis->is_logarithmic = is_logarithmic;
 }
 
 static gboolean

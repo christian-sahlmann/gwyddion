@@ -199,7 +199,7 @@ gwy_data_line_deserialize(const guchar *buffer,
         g_free(data);
         return NULL;
     }
-    if (fsize != res) {
+    if (fsize != (guint)res) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_LINE_TYPE_NAME, fsize, res);
         g_free(data);
@@ -1282,7 +1282,7 @@ gwy_data_line_fft_hum(gint direction,
  * @ia: imaginary input
  * @rb: real output
  * @ib: imaginary output
- * @(*fft)(): fft alorithm
+ * @fft: fft alorithm
  * @windowing: windowing mode
  * @direction: FFT direction (1 or -1)
  * @interpolation: interpolation mode

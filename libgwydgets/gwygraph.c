@@ -580,7 +580,7 @@ gwy_graph_get_status_data(GwyGraph *graph)
  * @y_min: y axis minimum value
  * @y_max: y axis maximum value
  *
- * Returns actual axis boundaries of graph.
+ * Returns: actual axis boundaries of graph.
  **/
 void 
 gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max)

@@ -137,7 +137,7 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
 
     min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
     water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
-    mark_dfield = gwy_serializable_duplicate(data_field);
+    mark_dfield = gwy_serializable_duplicate(G_OBJECT(data_field));
 
     gwy_data_field_resample(grain_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(grain_field, 0);
@@ -245,8 +245,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *g
             col = i - xres*row;
             gwy_data_field_grains_remove_manually(grain_field, i);                                                         
         }
-    }
-    
+    }    
 }
 
 gdouble 
