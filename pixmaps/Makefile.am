@@ -17,5 +17,6 @@ data_DATA = \
 	gwy_bold-24.png \
 	gwy_italic-24.png \
 	gwy_subscript-24.png \
-	gwy_superscript-24.png
+	gwy_superscript-24.png \
+	gwy_pointer-24.png
 
