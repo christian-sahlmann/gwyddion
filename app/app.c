@@ -395,9 +395,9 @@ gwy_app_graph_window_create(GtkWidget *graph)
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
     g_signal_connect(window, "destroy",
                      G_CALLBACK(gwy_app_graph_window_remove), NULL);
-    g_signal_connect_swapped(window, "destroy",
+/*    g_signal_connect_swapped(window, "destroy",
                              G_CALLBACK(g_object_unref), graph);
-
+*/
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show(graph);
     gtk_widget_show_all(window);
