@@ -36,7 +36,8 @@ process_PROGRAMS = \
 	tip_dilation.so \
 	tip_reconstruction.so \
 	tip_map.so \
-	tip_model.so
+	tip_model.so \
+	tip_blind.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -136,6 +137,10 @@ tip_map_so_LDFLAGS = $(module_ldflags),tip_map.so
 
 tip_model_so_SOURCES = tip_model.c
 tip_model_so_LDFLAGS = $(module_ldflags),tip_model.so
+
+tip_blind_so_SOURCES = tip_blind.c
+tip_blind_so_LDFLAGS = $(module_ldflags),tip_blind.so
+
 
 
 INCLUDES = -I$(top_srcdir)

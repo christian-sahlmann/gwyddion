@@ -371,7 +371,7 @@ tip_process(TipModelControls *controls, TipModelArgs *args)
     if (xres>1000) xres = 1000;
     if (yres>1000) yres = 1000;
     
-    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+/*    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);*/
     
     preset->func(dfield, gwy_data_field_get_max(dfield), args->radius, NULL);
 }
