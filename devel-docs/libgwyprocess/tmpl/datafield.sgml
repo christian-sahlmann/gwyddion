@@ -39,6 +39,14 @@ as they are connected with GwyDataField.
 @GWY_COMP_ITERATE: 
 @GWY_COMP_FINISHED: 
 
+<!-- ##### MACRO gwy_data_field_invalidate ##### -->
+<para>
+
+</para>
+
+@data_field: 
+
+
 <!-- ##### FUNCTION gwy_data_field_new ##### -->
 <para>
 
@@ -57,10 +65,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @xres: 
 @yres: 
 @interpolation: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_resize ##### -->
@@ -68,12 +78,14 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_copy ##### -->
@@ -107,7 +119,18 @@ as they are connected with GwyDataField.
 
 </para>
 
+@data_field: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @a: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_data_const ##### -->
+<para>
+
+</para>
+
+@data_field: 
 @Returns: 
 
 
@@ -116,8 +139,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_yres ##### -->
@@ -125,8 +150,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_xreal ##### -->
@@ -134,8 +161,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_yreal ##### -->
@@ -143,8 +172,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_xreal ##### -->
@@ -152,8 +183,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @xreal: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_yreal ##### -->
@@ -161,8 +194,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @yreal: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_si_unit_xy ##### -->
@@ -170,8 +205,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_si_unit_z ##### -->
@@ -179,8 +216,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_si_unit_xy ##### -->
@@ -188,8 +227,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @si_unit: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_si_unit_z ##### -->
@@ -197,8 +238,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @si_unit: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_value_format_xy ##### -->
@@ -226,9 +269,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@pixval: 
+@data_field: 
+@row: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pixval: 
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_jtor ##### -->
@@ -236,9 +282,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@pixval: 
+@data_field: 
+@col: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@pixval: 
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_rtoi ##### -->
@@ -246,9 +295,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@realval: 
+@data_field: 
+@realy: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@realval: 
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_rtoj ##### -->
@@ -256,9 +308,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@realval: 
+@data_field: 
+@realx: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@realval: 
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_outside ##### -->
@@ -266,10 +321,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_val ##### -->
@@ -277,10 +334,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_val ##### -->
@@ -288,10 +347,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_dval ##### -->
@@ -299,11 +360,13 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @x: 
 @y: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_dval_real ##### -->
@@ -311,11 +374,13 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @x: 
 @y: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_rotate ##### -->
@@ -323,9 +388,11 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @angle: 
 @interpolation: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_invert ##### -->
@@ -333,10 +400,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @x: 
 @y: 
 @z: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_fill ##### -->
@@ -344,8 +413,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_multiply ##### -->
@@ -353,8 +424,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_add ##### -->
@@ -362,8 +435,10 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_fill ##### -->
@@ -371,12 +446,14 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_multiply ##### -->
@@ -384,12 +461,14 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_add ##### -->
@@ -397,12 +476,14 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @value: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_threshold ##### -->
@@ -410,11 +491,13 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @threshval: 
 @bottom: 
 @top: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_threshold ##### -->
@@ -422,7 +505,7 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -431,6 +514,8 @@ as they are connected with GwyDataField.
 @bottom: 
 @top: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_clamp ##### -->
@@ -438,10 +523,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @bottom: 
 @top: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_clamp ##### -->
@@ -449,7 +536,7 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -457,6 +544,8 @@ as they are connected with GwyDataField.
 @bottom: 
 @top: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_data_line ##### -->
@@ -464,8 +553,8 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@b: 
+@data_field: 
+@data_line: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -473,6 +562,9 @@ as they are connected with GwyDataField.
 @res: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_data_line_averaged ##### -->
@@ -480,8 +572,8 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@b: 
+@data_field: 
+@data_line: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -490,6 +582,9 @@ as they are connected with GwyDataField.
 @thickness: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_row ##### -->
@@ -497,9 +592,12 @@ as they are connected with GwyDataField.
 
 </para>
 
+@data_field: 
+@data_line: 
+@row: 
+<!-- # Unused Parameters # -->
 @a: 
 @b: 
-@row: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_column ##### -->
@@ -507,9 +605,12 @@ as they are connected with GwyDataField.
 
 </para>
 
+@data_field: 
+@data_line: 
+@col: 
+<!-- # Unused Parameters # -->
 @a: 
 @b: 
-@col: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_row ##### -->
@@ -517,9 +618,12 @@ as they are connected with GwyDataField.
 
 </para>
 
+@data_field: 
+@data_line: 
+@row: 
+<!-- # Unused Parameters # -->
 @a: 
 @b: 
-@row: 
 
 
 <!-- ##### FUNCTION gwy_data_field_set_column ##### -->
@@ -527,9 +631,12 @@ as they are connected with GwyDataField.
 
 </para>
 
+@data_field: 
+@data_line: 
+@col: 
+<!-- # Unused Parameters # -->
 @a: 
 @b: 
-@col: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_row_part ##### -->
@@ -537,11 +644,14 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@b: 
+@data_field: 
+@data_line: 
 @row: 
 @from: 
 @to: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_column_part ##### -->
@@ -549,11 +659,44 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
-@b: 
+@data_field: 
+@data_line: 
 @col: 
 @from: 
 @to: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_row_part ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@data_line: 
+@row: 
+@from: 
+@to: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_column_part ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@data_line: 
+@col: 
+@from: 
+@to: 
+<!-- # Unused Parameters # -->
+@a: 
+@b: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_xder ##### -->
@@ -561,10 +704,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_yder ##### -->
@@ -572,10 +717,12 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_angder ##### -->
@@ -583,11 +730,13 @@ as they are connected with GwyDataField.
 
 </para>
 
-@a: 
+@data_field: 
 @col: 
 @row: 
 @theta: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_shade ##### -->

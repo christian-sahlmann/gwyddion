@@ -111,6 +111,17 @@ are provided.
 @gdkalpha: 
 
 
+<!-- ##### FUNCTION gwy_rgba_interpolate ##### -->
+<para>
+
+</para>
+
+@src1: 
+@src2: 
+@x: 
+@rgba: 
+
+
 <!-- ##### FUNCTION gwy_rgba_get_from_container ##### -->
 <para>
 

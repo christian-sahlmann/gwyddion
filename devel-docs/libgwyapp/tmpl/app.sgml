@@ -97,12 +97,32 @@ Core application interface.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_app_data_window_get_for_data ##### -->
+<para>
+
+</para>
+
+@data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_app_graph_window_create ##### -->
 <para>
 
 </para>
 
 @graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_graph_window_create_for_window ##### -->
+<para>
+
+</para>
+
+@graph: 
+@data_window: 
+@title: 
 @Returns: 
 
 

@@ -19,8 +19,10 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_min ##### -->
@@ -28,8 +30,10 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_avg ##### -->
@@ -37,8 +41,10 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_rms ##### -->
@@ -46,8 +52,10 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_sum ##### -->
@@ -55,8 +63,21 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@dfield: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_surface_area ##### -->
@@ -64,9 +85,11 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_get_max ##### -->
@@ -74,13 +97,14 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
 @height: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -93,13 +117,14 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
 @height: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -112,13 +137,14 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
 @height: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -131,13 +157,14 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
 @height: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -150,13 +177,14 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
 @height: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -164,12 +192,27 @@ stats
 @brrow: 
 
 
+<!-- ##### FUNCTION gwy_data_field_area_get_median ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@dfield: 
+
+
 <!-- ##### FUNCTION gwy_data_field_area_get_surface_area ##### -->
 <para>
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
@@ -177,6 +220,7 @@ stats
 @interpolation: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
@@ -202,7 +246,7 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @col: 
 @row: 
 @width: 
@@ -213,7 +257,7 @@ stats
 @skew: 
 @kurtosis: 
 <!-- # Unused Parameters # -->
-@data_field: 
+@dfield: 
 @ulcol: 
 @ulrow: 
 @brcol: 
@@ -244,9 +288,11 @@ stats
 
 </para>
 
-@dfield: 
+@data_field: 
 @derdist: 
 @kernel_size: 
+<!-- # Unused Parameters # -->
+@dfield: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_max ##### -->
@@ -254,12 +300,14 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_min ##### -->
@@ -267,12 +315,14 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_avg ##### -->
@@ -280,12 +330,14 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_rms ##### -->
@@ -293,12 +345,14 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_sum ##### -->
@@ -306,12 +360,14 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_surface_area ##### -->
@@ -319,13 +375,15 @@ stats
 
 </para>
 
-@a: 
+@data_field: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
 @interpolation: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@a: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_area_stats ##### -->

@@ -55,6 +55,8 @@ Mask processing merging (namely used in grain processing).
 @data_field: 
 @grain_field: 
 @threshval: 
+@below: 
+<!-- # Unused Parameters # -->
 @dir: 
 
 
@@ -87,6 +89,17 @@ Mask processing merging (namely used in grain processing).
 @data_field: 
 
 
+<!-- ##### FUNCTION gwy_data_field_grains_remove_grain ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@col: 
+@row: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_grains_remove_by_size ##### -->
 <para>
 
@@ -94,6 +107,7 @@ Mask processing merging (namely used in grain processing).
 
 @grain_field: 
 @size: 
+@Returns: 
 <!-- # Unused Parameters # -->
 @data_field: 
 
@@ -143,6 +157,8 @@ Mask processing merging (namely used in grain processing).
 @data_field: 
 @grain_field: 
 @threshval: 
+@below: 
+<!-- # Unused Parameters # -->
 @dir: 
 
 
@@ -154,6 +170,8 @@ Mask processing merging (namely used in grain processing).
 @data_field: 
 @grain_field: 
 @threshval: 
+@below: 
+<!-- # Unused Parameters # -->
 @dir: 
 
 

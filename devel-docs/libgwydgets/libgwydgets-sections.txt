@@ -350,6 +350,7 @@ GWY_LAYER_BASIC_GET_CLASS
 
 <SECTION>
 <FILE>gwygraphcurvemodel</FILE>
+GwyGraphCurveType
 <TITLE>GwyGraphCurveModel</TITLE>
 gwy_graph_curve_model_new
 gwy_graph_curve_model_save_curve
@@ -786,6 +787,15 @@ GWY_STOCK_GWYDDION
 GWY_STOCK_ITALIC
 GWY_STOCK_LESS
 GWY_STOCK_LIGHT_ROTATE
+GWY_STOCK_MASK_ADD
+GWY_STOCK_MASK_GROW
+GWY_STOCK_MASK_EDITOR
+GWY_STOCK_MASK_INTERSECT
+GWY_STOCK_MASK_INVERT
+GWY_STOCK_MASK_REMOVE
+GWY_STOCK_MASK_SET
+GWY_STOCK_MASK_SHRINK
+GWY_STOCK_MASK_SUBTRACT
 GWY_STOCK_MORE
 GWY_STOCK_NONE
 GWY_STOCK_POINTER
@@ -819,6 +829,7 @@ gwy_option_menu_interpolation
 gwy_option_menu_windowing
 gwy_option_menu_zoom_mode
 gwy_option_menu_2dcwt
+gwy_option_menu_dwt
 gwy_option_menu_sfunctions_output
 gwy_option_menu_direction
 gwy_option_menu_filter

@@ -50,3 +50,46 @@ Draw GwyDataFields to GdkPixbufs
 @color: 
 
 
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@gradient: 
+
+
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field_with_range ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@gradient: 
+@minimum: 
+@maximum: 
+
+
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field_with_rms ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@gradient: 
+@rmsrange: 
+
+
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field_as_mask ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@color: 
+
+

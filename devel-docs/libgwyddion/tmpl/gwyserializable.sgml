@@ -93,6 +93,16 @@ old Gwyddion versions to safely ignore (skip) these new objects.
 @value: 
 @array_size: 
 
+<!-- ##### STRUCT GwySerializeItem ##### -->
+<para>
+
+</para>
+
+@ctype: 
+@name: 
+@value: 
+@array_size: 
+
 <!-- ##### FUNCTION gwy_serializable_serialize ##### -->
 <para>
 
@@ -125,16 +135,6 @@ old Gwyddion versions to safely ignore (skip) these new objects.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_serialize_store_int32 ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@position: 
-@value: 
-
-
 <!-- ##### FUNCTION gwy_serialize_pack ##### -->
 <para>
 
@@ -146,6 +146,16 @@ old Gwyddion versions to safely ignore (skip) these new objects.
 @Returns: 
 <!-- # Unused Parameters # -->
 @size: 
+
+
+<!-- ##### FUNCTION gwy_serialize_store_int32 ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@position: 
+@value: 
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_boolean ##### -->
@@ -380,5 +390,30 @@ my_object_deserialize(const guchar *buffer,
 @spec: The components to deserialize.
 @Returns: Whether the unpacking succeeded
           (see gwy_serialize_unpack_struct() for definition of success).
+
+
+<!-- ##### FUNCTION gwy_serialize_object_items ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@object_name: 
+@nitems: 
+@items: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_deserialize_object_hash ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@object_name: 
+@nitems: 
+@Returns: 
 
 

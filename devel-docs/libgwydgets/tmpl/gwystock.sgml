@@ -298,6 +298,69 @@ Since: 1.5
 
 
 
+<!-- ##### MACRO GWY_STOCK_MASK_ADD ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_GROW ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_EDITOR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_INTERSECT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_INVERT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_REMOVE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_SET ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_SHRINK ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_MASK_SUBTRACT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_MORE ##### -->
 <para>
 The "More" stock icon.

@@ -146,6 +146,17 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_option_menu_dwt ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_sfunctions_output ##### -->
 <para>
 

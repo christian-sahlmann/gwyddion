@@ -12,10 +12,12 @@
   </para>
   <xi:include href="xml/dataline.xml"/>
   <xi:include href="xml/datafield.xml"/>
+  <xi:include href="xml/arithmetic.xml"/>
   <xi:include href="xml/cdline.xml"/>
   <xi:include href="xml/correct.xml"/>
   <xi:include href="xml/correlation.xml"/>
   <xi:include href="xml/cwt.xml"/>
+  <xi:include href="xml/dwt.xml"/>
   <xi:include href="xml/filters.xml"/>
   <xi:include href="xml/fractals.xml"/>
   <xi:include href="xml/grains.xml"/>

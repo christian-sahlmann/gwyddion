@@ -14,6 +14,16 @@ GwyGraphCurveModel
 
 </para>
 
+<!-- ##### ENUM GwyGraphCurveType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPH_CURVE_HIDDEN: 
+@GWY_GRAPH_CURVE_POINTS: 
+@GWY_GRAPH_CURVE_LINE: 
+@GWY_GRAPH_CURVE_LINE_POINTS: 
+
 <!-- ##### FUNCTION gwy_graph_curve_model_new ##### -->
 <para>
 

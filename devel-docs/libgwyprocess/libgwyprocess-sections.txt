@@ -4,12 +4,14 @@
 GwyDataField
 GwyDataFieldClass
 GwyComputationStateType
+gwy_data_field_invalidate
 gwy_data_field_new
 gwy_data_field_resample
 gwy_data_field_resize
 gwy_data_field_copy
 gwy_data_field_area_copy
 gwy_data_field_get_data
+gwy_data_field_get_data_const
 gwy_data_field_get_xres
 gwy_data_field_get_yres
 gwy_data_field_get_xreal
@@ -51,6 +53,8 @@ gwy_data_field_set_row
 gwy_data_field_set_column
 gwy_data_field_get_row_part
 gwy_data_field_get_column_part
+gwy_data_field_set_row_part
+gwy_data_field_set_column_part
 gwy_data_field_get_xder
 gwy_data_field_get_yder
 gwy_data_field_get_angder
@@ -78,6 +82,7 @@ gwy_data_line_resample
 gwy_data_line_resize
 gwy_data_line_copy
 gwy_data_line_get_data
+gwy_data_line_get_data_const
 gwy_data_line_get_res
 gwy_data_line_get_real
 gwy_data_line_set_real
@@ -130,6 +135,16 @@ GWY_DATA_LINE_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>arithmetic</FILE>
+gwy_data_field_sum_fields
+gwy_data_field_subtract_fields
+gwy_data_field_divide_fields
+gwy_data_field_multiply_fields
+gwy_data_field_min_of_fields
+gwy_data_field_max_of_fields
+</SECTION>
+
+<SECTION>
 <FILE>interpolation</FILE>
 GwyInterpolationType
 gwy_interpolation_get_dval
@@ -144,6 +159,22 @@ gwy_cwt_wfunc_2d
 </SECTION>
 
 <SECTION>
+<FILE>dwt</FILE>
+GwyDWTType
+GwyDWTDenoiseType
+gwy_dwt_set_coefficients
+gwy_dwt_plot_wavelet
+gwy_dwt_plot_scaling_function
+gwy_data_line_dwt
+gwy_data_field_xdwt
+gwy_data_field_ydwt
+gwy_data_field_dwt
+gwy_data_field_dwt_denoise
+gwy_data_field_dwt_mark_anisotropy
+gwy_data_field_dwt_correction
+</SECTION>
+
+<SECTION>
 <FILE>grains</FILE>
 GwyMergeType
 GwyWatershedStateType
@@ -151,6 +182,7 @@ GwyWatershedStatus
 gwy_data_field_grains_mark_curvature
 gwy_data_field_grains_mark_watershed
 gwy_data_field_grains_remove_manually
+gwy_data_field_grains_remove_grain
 gwy_data_field_grains_remove_by_size
 gwy_data_field_grains_remove_by_height
 gwy_data_field_grains_watershed_iteration
@@ -244,12 +276,14 @@ gwy_data_field_get_min
 gwy_data_field_get_avg
 gwy_data_field_get_rms
 gwy_data_field_get_sum
+gwy_data_field_get_median
 gwy_data_field_get_surface_area
 gwy_data_field_area_get_max
 gwy_data_field_area_get_min
 gwy_data_field_area_get_avg
 gwy_data_field_area_get_rms
 gwy_data_field_area_get_sum
+gwy_data_field_area_get_median
 gwy_data_field_area_get_surface_area
 gwy_data_field_get_stats
 gwy_data_field_area_get_stats

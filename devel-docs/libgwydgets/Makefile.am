@@ -47,8 +47,9 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_color_range-24.png \
 	$(top_srcdir)/pixmaps/gwy_crop-24.png \
 	$(top_srcdir)/pixmaps/gwy_cwt-24.png \
-	$(top_srcdir)/pixmaps/gwy_distance-24.png \
+	$(top_srcdir)/pixmaps/gwy_dwt-24.png \
 	$(top_srcdir)/pixmaps/gwy_data_arithmetic-24.png \
+	$(top_srcdir)/pixmaps/gwy_distance-24.png \
 	$(top_srcdir)/pixmaps/gwy_facet_level-24.png \
 	$(top_srcdir)/pixmaps/gwy_filter-24.png \
 	$(top_srcdir)/pixmaps/gwy_fit_plane-24.png \
@@ -74,10 +75,12 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_in-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_out-24.png \
 	$(top_srcdir)/pixmaps/gwy_gwyddion-60.png \
+	$(top_srcdir)/pixmaps/gwy_gwyddion-32.png \
 	$(top_srcdir)/pixmaps/gwy_less-24.png \
 	$(top_srcdir)/pixmaps/gwy_light_rotate-24.png \
 	$(top_srcdir)/pixmaps/gwy_line_correction-24.png \
 	$(top_srcdir)/pixmaps/gwy_mask_add-24.png \
+	$(top_srcdir)/pixmaps/gwy_mask_editor-24.png \
 	$(top_srcdir)/pixmaps/gwy_mask_grow-24.png \
 	$(top_srcdir)/pixmaps/gwy_mask_intersect-24.png \
 	$(top_srcdir)/pixmaps/gwy_mask_invert-24.png \
