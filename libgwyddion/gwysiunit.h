@@ -74,6 +74,9 @@ gchar*            gwy_si_unit_get_unit_string       (GwySIUnit *siunit);
 GwySIUnit*        gwy_si_unit_multiply              (GwySIUnit *siunit1,
                                                      GwySIUnit *siunit2,
                                                      GwySIUnit *result);
+GwySIUnit*        gwy_si_unit_divide                (GwySIUnit *siunit1,
+                                                     GwySIUnit *siunit2,
+                                                     GwySIUnit *result);
 GwySIUnit*        gwy_si_unit_power                 (GwySIUnit *siunit,
                                                      gint power,
                                                      GwySIUnit *result);

@@ -456,6 +456,49 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
 }
 
 /**
+ * gwy_si_unit_divide:
+ * @siunit1: An SI unit.
+ * @siunit2: An SI unit.
+ * @result:  An SI unit to set to quotient of @siunit1 and @siunit2.  It can be
+ *           one of @siunit1, @siunit2.
+ *
+ * Divides two SI units.
+ *
+ * Returns: @result, for convenience.
+ *
+ * Since: 1.8
+ **/
+GwySIUnit*
+gwy_si_unit_divide(GwySIUnit *siunit1,
+                   GwySIUnit *siunit2,
+                   GwySIUnit *result)
+{
+    GwySIUnit2 *siunit12, *siunit22, *result2, *oldresult2;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+
+    siunit12 = (GwySIUnit2*)g_object_get_data((GObject*)siunit1,
+                                              "gwy-si-unit2");
+    siunit22 = (GwySIUnit2*)g_object_get_data((GObject*)siunit2,
+                                              "gwy-si-unit2");
+    result2 = (GwySIUnit2*)g_object_get_data((GObject*)result,
+                                              "gwy-si-unit2");
+    oldresult2 = result2;
+    g_free(result->unitstr);
+
+    result2 = gwy_si_unit2_power_multiply(siunit12, 1, siunit22, -1);
+    gwy_si_unit2_free(oldresult2);
+    result2->power10 = 0;
+    result->unitstr = gwy_si_unit2_format_as_plain_string(result2,
+                                                          &format_style_plain);
+    g_object_set_data((GObject*)result, "gwy-si-unit2", result2);
+
+    return result;
+}
+
+/**
  * gwy_si_unit_power:
  * @siunit: An SI unit.
  * @power: Power to power @siunit to.
