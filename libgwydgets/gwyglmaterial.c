@@ -423,6 +423,31 @@ gwy_gl_material_setup_presets(void)
         {0.508273, 0.508273, 0.508273, 1.0},
         0.4
     };
+    static GwyGLMaterialPreset mat_green_plastic = {
+        {0.0, 0.0, 0.0, 1.0},
+        {0.12, 0.42, 0.12, 1.0},
+        {0.55, 0.66, 0.54, 1.0},
+        0.25
+    };
+    static GwyGLMaterialPreset mat_red_plastic = {
+        {0.0, 0.0, 0.0, 1.0},
+        {0.6, 0.0, 0.0, 1.0},
+        {0.84, 0.72, 0.72, 1.0},
+        0.25
+    };
+    static GwyGLMaterialPreset mat_cyan_rubber = {
+        {0.0,  0.05, 0.05, 1.0},
+        {0.4,  0.5,  0.5,  1.0},
+        {0.04, 0.7, 0.7,   1.0},
+        0.078125
+    };
+    static GwyGLMaterialPreset mat_white_rubber = {
+        {0.05, 0.05, 0.05, 1.0},
+        {0.5,  0.5,  0.5,  1.0},
+        {0.7,  0.7,  0.7,  1.0},
+        0.078125
+    };
+
     static GwyGLMaterialPreset mat_none = {
         {0.0, 0.0, 0.0, 0.0},
         {0.0, 0.0, 0.0, 0.0},
@@ -440,6 +465,11 @@ gwy_gl_material_setup_presets(void)
     gwy_gl_material_create_preset(&mat_copper,     GWY_GL_MATERIAL_COPPER   );
     gwy_gl_material_create_preset(&mat_gold,       GWY_GL_MATERIAL_GOLD     );
     gwy_gl_material_create_preset(&mat_silver,     GWY_GL_MATERIAL_SILVER   );
+    /* Don't define macros, too experimental... */
+    gwy_gl_material_create_preset(&mat_green_plastic, "Green plastic");
+    gwy_gl_material_create_preset(&mat_red_plastic,   "Red plastic");
+    gwy_gl_material_create_preset(&mat_cyan_rubber,   "Cyan rubber");
+    gwy_gl_material_create_preset(&mat_white_rubber,  "White rubber");
 }
 
 
