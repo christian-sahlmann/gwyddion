@@ -18,7 +18,8 @@ process_PROGRAMS = \
 	rotate.so \
 	scale.so \
 	shade.so \
-	slope_dist.so
+	slope_dist.so \
+	fractal.so
 
 EXTRA_DIST = \
 	makefile.msc
@@ -65,6 +66,8 @@ slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 angle_dist_so_SOURCES = angle_dist.c
 angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
 
+fractal_so_SOURCES = fractal.c
+fractal_so_LDFLAGS = $(module_ldflags),fractal.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
