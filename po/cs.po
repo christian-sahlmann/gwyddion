@@ -3,15 +3,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-03-03 04:14+0100\n"
-"PO-Revision-Date: 2005-03-03 22:00+0100\n"
+"POT-Creation-Date: 2005-03-05 04:14+0100\n"
+"PO-Revision-Date: 2005-03-06 18:08+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: libgwyddion/gwyinventory.c:1047 libdraw/gwygradient.c:919
+#: libgwyddion/gwyinventory.c:1047 libdraw/gwygradient.c:950
 #: libdraw/gwypalettedef.c:544 libgwydgets/gwyglmaterial.c:306
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -1202,7 +1202,8 @@ msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
 msgstr ""
-""
+"Načítá surové datové soubory, textové i binární, ve formátu specifikovaném "
+"uživatelem."
 
 #: modules/file/rawfile.c:387
 msgid "User-specified"
@@ -1696,8 +1697,9 @@ msgstr "Od"
 msgid "To"
 msgstr "Do"
 
-#: modules/graph/graph_fit.c:679
-msgid "N. A."
+#: modules/graph/graph_fit.c:679 modules/tools/stats.c:309
+#: modules/tools/stats.c:310 modules/tools/stats.c:311
+msgid "N.A."
 msgstr ""
 
 #: modules/graph/graph_fit.c:1116 modules/process/fit_2d.c:1088
@@ -1860,8 +1862,8 @@ msgid ""
 "Simple arithmetic operations with two data fields (or a data field and a "
 "scalar)."
 msgstr ""
-"Jednoduché aritmetické operace se dvěma datovými poli (nebo datovými poli "
-"a skaláry)."
+"Jednoduché aritmetické operace se dvěma datovými poli (nebo datovými poli a "
+"skaláry)."
 
 #: modules/process/arithmetic.c:104
 msgid "/M_ultidata/_Arithmetic..."
@@ -1892,8 +1894,8 @@ msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
 msgstr ""
-"Základní operace, jako překlápěni, inverze hodnot a rotace o násobky "
-"90 stupňů."
+"Základní operace, jako překlápěni, inverze hodnot a rotace o násobky 90 "
+"stupňů."
 
 #: modules/process/basicops.c:68
 msgid "/_Basic Operations/Flip _Horizontally"
@@ -2581,8 +2583,7 @@ msgstr "Označuji hranice"
 #: modules/process/laplace.c:45
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
-msgstr ""
-"Odstraňuje data pod maskou, interpoluje je řešním Laplaceovy rovnice."
+msgstr "Odstraňuje data pod maskou, interpoluje je řešním Laplaceovy rovnice."
 
 #: modules/process/laplace.c:62
 msgid "/_Correct Data/_Remove Data Under Mask"
@@ -2620,13 +2621,17 @@ msgstr "/_Vyrovnání/Oprava _nuly"
 msgid "/_Level/Zero _Mean Value"
 msgstr "/_Vyrovnání/Vynulování _střední hodnoty"
 
-#: modules/process/linecorrect.c:41
+#: modules/process/linecorrect.c:58
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Opravuje řádkové defekty (převážně experimentální algoritmy)."
 
-#: modules/process/linecorrect.c:57
-msgid "/_Correct Data/_Modus Line Correction"
-msgstr "/_Korekce dat/_Odstranění chyb v řádcích"
+#: modules/process/linecorrect.c:74
+msgid "/_Correct Data/M_odus Line Correction"
+msgstr "/_Korekce dat/M_odusová korekce řádků"
+
+#: modules/process/linecorrect.c:81
+msgid "/_Correct Data/M_edian Line Correction"
+msgstr "/_Korekce dat/M_ediánová korekce řádků"
 
 #: modules/process/local_contrast.c:77
 msgid "Maximizes local contrast."
@@ -3188,8 +3193,7 @@ msgstr "Hexagonální"
 #: modules/process/unrotate.c:93
 msgid ""
 "Rotates data to make characteristic directions parallel with x or y axis."
-msgstr ""
-"Rotuje data, aby sronval charakteristické směry s osou x či y."
+msgstr "Rotuje data, aby sronval charakteristické směry s osou x či y."
 
 #: modules/process/unrotate.c:110
 msgid "/_Correct Data/_Unrotate..."
@@ -3248,8 +3252,8 @@ msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
 msgstr ""
-"Nástroj filtr, zpracovává vybranou část dat filtrem (konzervativní "
-"odšumění, střední hodnota, medián, Kuwahara, minimum, maximum)."
+"Nástroj filtr, zpracovává vybranou část dat filtrem (konzervativní odšumění, "
+"střední hodnota, medián, Kuwahara, minimum, maximum)."
 
 #: modules/tools/filter.c:112
 msgid "Basic filters"
@@ -3275,8 +3279,8 @@ msgstr "_Automaticky aktualizuj náhled"
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
-"Nástroj odstraňování zrn, odstraňuje souvislé části masky a/nebo data "
-"ležící pod ní."
+"Nástroj odstraňování zrn, odstraňuje souvislé části masky a/nebo data ležící "
+"pod ní."
 
 #: modules/tools/grain_remove_manually.c:96
 msgid "_Mask"
@@ -3319,8 +3323,8 @@ msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
 msgstr ""
-"Nástroj interaktivní nastavení barevného rozsahu, umožňuje vybrat rozsah, "
-"na nějž se mapuje barevá škála, na datech či histogramu rozdělení výšky."
+"Nástroj interaktivní nastavení barevného rozsahu, umožňuje vybrat rozsah, na "
+"nějž se mapuje barevá škála, na datech či histogramu rozdělení výšky."
 
 #: modules/tools/icolorange.c:125
 msgid "Stretch color range to part of data."
@@ -3347,8 +3351,8 @@ msgid ""
 "Three-point level tool, levels data by subtracting a plane fitted through "
 "three selected points."
 msgstr ""
-"Nástroj tříbodové vyrovnání, vyrovnává data odečtením roviny proložené "
-"třemi vybranými body."
+"Nástroj tříbodové vyrovnání, vyrovnává data odečtením roviny proložené třemi "
+"vybranými body."
 
 #: modules/tools/level3.c:87
 msgid "Level data using three points."
@@ -3608,10 +3612,8 @@ msgstr "Statistické veličiny"
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
 
-#: modules/tools/stats.c:309 modules/tools/stats.c:310
-#: modules/tools/stats.c:311
-msgid "N.A."
-msgstr ""
+#~ msgid "/_Correct Data/_Modus Line Correction"
+#~ msgstr "/_Korekce dat/_Odstranění chyb v řádcích"
 
 #~ msgid "The result is %g, but no data to operate on were selected.\n"
 #~ msgstr "Výsledek je %g, ale nevybral jsi žádná data.\n"
