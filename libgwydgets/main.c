@@ -13,7 +13,7 @@
 #include <libprocess/datafield.h>
 
 /***** VECTOR SHADE [[[ *****************************************************/
-#define N 4
+#define N 5
 
 static gulong hid[N];
 static GwySphereCoords *coords[N];
@@ -53,8 +53,7 @@ vector_shade_test(void)
     gtk_container_add(GTK_CONTAINER(win), box);
     for (i = 0; i < N; i++) {
         widget = gwy_vector_shade_new(NULL);
-        pal = gwy_palette_new(512);
-        gwy_palette_setup_predef(GWY_PALETTE(pal), g_random_int()%10);
+        pal = gwy_palette_new(g_random_int()%10);
         gwy_grad_sphere_set_palette(
             GWY_GRAD_SPHERE(gwy_vector_shade_get_grad_sphere(GWY_VECTOR_SHADE(widget))),
             GWY_PALETTE(pal));

@@ -17,8 +17,6 @@
 #define SCROLL_DELAY_LENGTH  300
 #define GRAD_SPHERE_DEFAULT_SIZE 80
 
-#define GRADIENT_SIZE 64
-
 enum {
     PROP_0,
     PROP_SPHERE_COORDS,
@@ -61,7 +59,6 @@ static void     gwy_grad_sphere_update_mouse         (GwyGradSphere *grad_sphere
 static void     gwy_grad_sphere_update               (GwyGradSphere *grad_sphere);
 static void     gwy_grad_sphere_coords_value_changed (GwySphereCoords *sphere_coords,
                                                       gpointer data);
-static void     render_gradient                      (GwyGradSphere *grad_sphere);
 
 
 /* Local data */
@@ -161,7 +158,6 @@ gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
     grad_sphere->old_theta = 0.0;
     grad_sphere->sphere_coords = NULL;
     grad_sphere->palette = NULL;
-    grad_sphere->gradient = NULL;
     grad_sphere->sphere_pixbuf = NULL;
 }
 
@@ -181,7 +177,8 @@ gwy_grad_sphere_init(GwyGradSphere *grad_sphere)
 GtkWidget*
 gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
 {
-    GtkWidget *grad_sphere;
+    GtkWidget *widget;
+    GwyGradSphere *grad_sphere;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -194,12 +191,14 @@ gwy_grad_sphere_new(GwySphereCoords *sphere_coords)
     g_object_ref(G_OBJECT(sphere_coords));
     gtk_object_sink(GTK_OBJECT(sphere_coords));
 
-    grad_sphere = gtk_widget_new(GWY_TYPE_GRAD_SPHERE,
-                                 "sphere_coords", sphere_coords,
-                                 NULL);
+    widget = gtk_widget_new(GWY_TYPE_GRAD_SPHERE,
+                            "sphere_coords", sphere_coords,
+                            NULL);
+    grad_sphere = (GwyGradSphere*)widget;
     g_object_unref(sphere_coords);
+    grad_sphere->palette = GWY_PALETTE(gwy_palette_new(GWY_PALETTE_GRAY));
 
-    return grad_sphere;
+    return widget;
 }
 
 static void
@@ -252,8 +251,6 @@ gwy_grad_sphere_unrealize(GtkWidget *widget)
     g_object_unref(grad_sphere->sphere_pixbuf);
     grad_sphere->sphere_pixbuf = NULL;
     grad_sphere->radius = -1;
-
-    g_free(grad_sphere->gradient);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -440,7 +437,6 @@ gwy_grad_sphere_realize(GtkWidget *widget)
     widget->style = gtk_style_attach(widget->style, widget->window);
     gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
 
-    render_gradient(grad_sphere);
     gwy_grad_sphere_make_pixmap(grad_sphere);
 }
 
@@ -509,7 +505,7 @@ gwy_grad_sphere_make_pixmap(GwyGradSphere *grad_sphere)
 static void
 gwy_grad_sphere_paint(GwyGradSphere *grad_sphere)
 {
-    gint i, j, r2;
+    gint i, j, r2, grad_size;
     gint height, width;
     gdouble sphi, cphi, sth, cth;
     guchar *pixels;
@@ -520,7 +516,8 @@ gwy_grad_sphere_paint(GwyGradSphere *grad_sphere)
     cphi = cos(grad_sphere->phi);
     sth = sin(grad_sphere->theta);
     cth = cos(grad_sphere->theta);
-    gradient = (guint32*)grad_sphere->gradient;
+    gradient = (guint32*)gwy_palette_get_samples(grad_sphere->palette,
+                                                 &grad_size);
     pixels = gdk_pixbuf_get_pixels(grad_sphere->sphere_pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(grad_sphere->sphere_pixbuf);
 
@@ -540,7 +537,7 @@ gwy_grad_sphere_paint(GwyGradSphere *grad_sphere)
             gdouble x = (gdouble)j2/r2 - 1.0;
             gdouble z = (x*cphi + y*sphi) * sth
                         + sqrt(1.0 - x*x - y*y) * cth;
-            gint v = (GRADIENT_SIZE - 0.001)*(0.5*z + 0.5);
+            gint v = (grad_size - 0.001)*(0.5*z + 0.5);
 
             *(guint32*)row = gradient[v];
             row += 4;
@@ -796,38 +793,6 @@ gwy_grad_sphere_coords_value_changed(GwySphereCoords *sphere_coords,
         gwy_grad_sphere_update(grad_sphere);
 }
 
-static void
-render_gradient(GwyGradSphere *grad_sphere)
-{
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-
-    if (grad_sphere->palette) {
-        grad_sphere->gradient = gwy_palette_int32_render(grad_sphere->palette,
-                                                         GRADIENT_SIZE,
-                                                         grad_sphere->gradient);
-    }
-    else {
-        gint i = 0;
-        guchar *p;
-
-        if (!grad_sphere->gradient)
-            grad_sphere->gradient = g_new(guchar, 4*GRADIENT_SIZE);
-        p = grad_sphere->gradient;
-        /* when no palette is set, use a default black-to-white gradient */
-        while (i < GRADIENT_SIZE) {
-            guchar c = 255*i/(GRADIENT_SIZE - 1);
-
-            *p++ = c;
-            *p++ = c;
-            *p++ = c;
-            *p++ = 255;
-            i++;
-        }
-    }
-}
-
 GwyPalette*
 gwy_grad_sphere_get_palette(GwyGradSphere *grad_sphere)
 {
@@ -842,13 +807,10 @@ gwy_grad_sphere_set_palette(GwyGradSphere *grad_sphere,
 {
     g_return_if_fail(grad_sphere);
 
-    if (grad_sphere->palette)
-        g_object_unref(grad_sphere->palette);
-    if (palette)
-        g_object_ref(palette);
+    g_object_ref(palette);
+    g_object_unref(grad_sphere->palette);
     grad_sphere->palette = palette;
 
-    render_gradient(grad_sphere);
     gwy_grad_sphere_update(grad_sphere);
 }
 

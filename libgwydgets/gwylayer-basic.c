@@ -119,8 +119,7 @@ gwy_layer_basic_new(GwyContainer *data)
     g_object_ref(data);
     layer->data = data;
 
-    layer->palette = (GwyPalette*)gwy_palette_new(512);
-    gwy_palette_setup_predef(layer->palette, GWY_PALETTE_OLIVE); /* XXX: fun */
+    layer->palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_OLIVE);
 
     /* TODO Container */
     data_field = GWY_DATA_FIELD(

@@ -36,7 +36,6 @@ struct _GwyGradSphere {
     guint8 button;    /* Whether we have grabbed focus (mouse button pressed) */
     gint radius;    /* Dimensions */
     GwyPalette *palette;    /* The gradient */
-    guchar *gradient;    /* The gradient, rendered */
     guint32 timer;    /* ID of update timer, or 0 if none */
 
     /* Current angles */
