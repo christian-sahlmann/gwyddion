@@ -124,7 +124,7 @@ static void
 gwy_option_menu_data_window_append(GwyDataWindow *data_window,
                                    GtkWidget *menu)
 {
-    GtkWidget *item, *data_view, *image;
+    GtkWidget *item, *data_view, *image, *label, *hbox;
     GdkPixbuf *pixbuf;
     gchar *filename;
 
@@ -136,8 +136,13 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
                                          THUMBNAIL_SIZE);
     image = gtk_image_new_from_pixbuf(pixbuf);
     gwy_object_unref(pixbuf);
-    item = gtk_image_menu_item_new_with_label(filename);
-    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item), image);
+    hbox = gtk_hbox_new(FALSE, 6);
+    item = gtk_menu_item_new();
+    label = gtk_label_new(filename);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(item), hbox);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
     g_object_set_qdata(G_OBJECT(item), omenu_data_window_key, data_window);
     g_free(filename);
