@@ -890,25 +890,30 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             break;
 
             case 's':
+            g_free(*(guchar**)p);
             *(guchar**)p = gwy_serialize_unpack_string(buffer, size, &position);
             break;
 
             case 'C':
+            g_free(*(guchar**)p);
             *(guchar**)p = gwy_serialize_unpack_char_array(buffer, size,
                                                             &position, a);
             break;
 
             case 'I':
+            g_free(*(guint32**)p);
             *(gint32**)p = gwy_serialize_unpack_int32_array(buffer, size,
                                                             &position, a);
             break;
 
             case 'Q':
+            g_free(*(guint64**)p);
             *(gint64**)p = gwy_serialize_unpack_int64_array(buffer, size,
                                                             &position, a);
             break;
 
             case 'D':
+            g_free(*(gdouble**)p);
             *(gdouble**)p = gwy_serialize_unpack_double_array(buffer, size,
                                                               &position, a);
             break;
