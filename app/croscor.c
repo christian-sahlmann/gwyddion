@@ -54,19 +54,20 @@ typedef struct {
 typedef struct {
     GtkWidget *dialog;
     GtkWidget *result;
-    GtkWidget *search_area_x;
-    GtkWidget *search_area_y;
-    GtkWidget *window_area_x;
-    GtkWidget *window_area_y;
-    GtkWidget *rotation_neg;
-    GtkWidget *rotation_pos;
+    GtkObject *search_area_x;
+    GtkObject *search_area_y;
+    GtkObject *window_area_x;
+    GtkObject *window_area_y;
+    GtkObject *rotation_neg;
+    GtkObject *rotation_pos;
 } GwyCroscorControls;
 
 static void       gwy_data_croscor_load_args         (GwyContainer *settings,
                                                     GwyCroscorArgs *args);
 static void       gwy_data_croscor_save_args         (GwyContainer *settings,
                                                     GwyCroscorArgs *args);
-static GtkWidget* gwy_data_croscor_window_construct  (GwyCroscorArgs *args);
+static GtkWidget* gwy_data_croscor_window_construct  (GwyCroscorArgs *args,
+                                                      GwyCroscorControls *controls);
 static GtkWidget* gwy_data_croscor_data_option_menu  (GtkWidget *entry,
                                                     GwyDataWindow **operand);
 static void       gwy_data_croscor_append_line       (GwyDataWindow *data_window,
@@ -79,7 +80,8 @@ static void       gwy_data_croscor_data_cb           (GtkWidget *item);
 static void       gwy_data_croscor_entry_cb          (GtkWidget *entry,
                                                     gpointer data);
 static gboolean   gwy_data_croscor_do                (GwyCroscorArgs *args,
-                                                    GtkWidget *croscor_window);
+                                                    GtkWidget *croscor_window,
+                                                    GwyCroscorControls *controls);
 
 
 static const GwyEnum results[] = {
@@ -91,13 +93,14 @@ static const GwyEnum results[] = {
 };
 
 static const GwyCroscorArgs gwy_data_croscor_defaults = {
-    GWY_CROSCOR_ABS, 6, 6, 20, 20, 0.0, 0.0, NULL, NULL
+    GWY_CROSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL
 };
 
 void
 gwy_app_data_croscor(void)
 {
     static GwyCroscorArgs *args = NULL;
+    static GwyCroscorControls *controls = NULL;
     static GtkWidget *croscor_window = NULL;
     static gpointer win1 = NULL, win2 = NULL;
     GwyContainer *settings;
@@ -107,6 +110,10 @@ gwy_app_data_croscor(void)
         args = g_new(GwyCroscorArgs, 1);
         *args = gwy_data_croscor_defaults;
     }
+    if (!controls) {
+        controls = g_new(GwyCroscorControls, 1);
+    }
+     
     settings = gwy_app_settings_get();
     if (!croscor_window) {
         args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
@@ -114,7 +121,7 @@ gwy_app_data_croscor(void)
 
         /* this may set win1, win2 back to NULL is operands are to be scalars */
         gwy_data_croscor_load_args(settings, args);
-        croscor_window = gwy_data_croscor_window_construct(args);
+        croscor_window = gwy_data_croscor_window_construct(args, controls);
     }
     gtk_window_present(GTK_WINDOW(croscor_window));
     do {
@@ -126,7 +133,7 @@ gwy_app_data_croscor(void)
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = gwy_data_croscor_do(args, croscor_window);
+            ok = gwy_data_croscor_do(args, croscor_window, controls);
             if (ok) {
                 gwy_data_croscor_save_args(settings, args);
                 if (win1)
@@ -153,7 +160,7 @@ gwy_app_data_croscor(void)
 }
 
 static GtkWidget*
-gwy_data_croscor_window_construct(GwyCroscorArgs *args)
+gwy_data_croscor_window_construct(GwyCroscorArgs *args, GwyCroscorControls *controls)
 {
     GtkWidget *dialog, *table, *omenu, *entry, *label;
     gchar *text;
@@ -194,87 +201,33 @@ gwy_data_croscor_window_construct(GwyCroscorArgs *args)
 
     /**** Parameters ********/
     /*search size*/
-    label = gtk_label_new_with_mnemonic(_("_Search size (x,y) [pixels]"));
+    label = gtk_label_new_with_mnemonic(_("_Search size [pixels]"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 2, 3);
 
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 0, 1, 3, 4);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%d", args->search_x);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->search_x);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, 3, 4);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%d", args->search_y);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->search_y);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
-    /*window size*/
-    label = gtk_label_new_with_mnemonic(_("_Window size (x,y) [pixels]"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 4, 5);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 0, 1, 5, 6);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%d", args->window_x);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->window_x);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, 5, 6);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%d", args->window_y);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->window_y);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
-    /*allowed rotation*/
-    label = gtk_label_new_with_mnemonic(_("R_otation (min, max) [deg]"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 6, 7);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 0, 1, 7, 8);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%g", args->rot_pos);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->rot_pos);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
-    entry = gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 2, 7, 8);
-    gtk_entry_set_max_length(GTK_ENTRY(entry), 16);
-    gtk_entry_set_width_chars(GTK_ENTRY(entry), 16);
-    text = g_strdup_printf("%g", args->rot_neg);
-    gtk_entry_set_text(GTK_ENTRY(entry), text);
-    g_free(text);
-    g_object_set_data(G_OBJECT(entry), "scalar", &args->rot_neg);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_croscor_entry_cb), NULL);
-
+    controls->search_area_x = gtk_adjustment_new(args->search_x, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 3, _("width"), _(""), controls->search_area_x);
+    controls->search_area_y = gtk_adjustment_new(args->search_y, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 4, _("height"), _(""), controls->search_area_y);
     
+    /*window size*/
+    label = gtk_label_new_with_mnemonic(_("_Window size [pixels]"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 5, 6);
+
+    controls->window_area_x = gtk_adjustment_new(args->window_x, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 6, _("width"), _(""), controls->window_area_x);
+    controls->window_area_y = gtk_adjustment_new(args->window_y, 0.0, 100.0, 0.1, 5, 0);
+    gwy_table_attach_spinbutton(table, 7, _("height"), _(""), controls->window_area_x);
+    
+    /*allowed rotation*/
+/*    label = gtk_label_new_with_mnemonic(_("R_otation (min, max) [deg]"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 8, 9);
+
+    controls->rotation_neg =gtk_adjustment_new(args->rot_neg, 0.0, 100.0, 0.1, 5, 0);
+    controls->rotation_pos =gtk_adjustment_new(args->rot_pos, 0.0, 100.0, 0.1, 5, 0);
+*/  
     /***** Result *****/
     label = gtk_label_new_with_mnemonic(_("_Result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -384,68 +337,51 @@ gwy_data_croscor_data_cb(GtkWidget *item)
     *pp = p;
 }
 
-static void
-gwy_data_croscor_entry_cb(GtkWidget *entry,
-                        gpointer data)
-{
-    GtkEditable *editable;
-    gint pos;
-    gchar *s, *end;
-    gdouble *scalar;
-
-    scalar = (gdouble*)g_object_get_data(G_OBJECT(entry), "scalar");
-    editable = GTK_EDITABLE(entry);
-    /* validate whether it looks as a number of something like start of a
-     * number */
-    s = end = gtk_editable_get_chars(editable, 0, -1);
-    for (pos = 0; s[pos]; pos++)
-        s[pos] = g_ascii_tolower(s[pos]);
-    *scalar = strtod(s, &end);
-    if (*end == '-' && end == s)
-        end++;
-    else if (*end == 'e' && strchr(s, 'e') == end) {
-        end++;
-        if (*end == '-')
-            end++;
-    }
-    /*gwy_debug("<%s> <%s>", s, end);*/
-    if (!*end) {
-        g_free(s);
-        return;
-    }
-
-    g_signal_handlers_block_by_func(editable,
-                                    G_CALLBACK(gwy_data_croscor_entry_cb),
-                                    data);
-    gtk_editable_delete_text(editable, 0, -1);
-    pos = 0;
-    gtk_editable_insert_text(editable, s, end - s, &pos);
-    g_signal_handlers_unblock_by_func(editable,
-                                      G_CALLBACK(gwy_data_croscor_entry_cb),
-                                      data);
-    g_free(s);
-    g_signal_stop_emission_by_name(editable, "changed");
-}
 
 static gboolean
 gwy_data_croscor_do(GwyCroscorArgs *args,
-                  GtkWidget *croscor_window)
+                  GtkWidget *croscor_window,
+                  GwyCroscorControls *controls)
 {
     GtkWidget *dialog, *data_window;
     GwyContainer *data;
-    GwyDataField *dfield, *dfield1, *dfield2;
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2;
     GwyDataWindow *operand1, *operand2;
 
     operand1 = args->win1;
     operand2 = args->win2;
+
+    /*get all parameters back*/
+    args->search_x = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_x));
+    args->search_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_y));
+    args->window_x = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_x));
+    args->window_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_y));
+    
     
     data = gwy_data_window_get_data(operand1);
+    dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    data = gwy_data_window_get_data(operand2);
+    dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+        
+    /*result fields - after computation result should be at dfieldx*/
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+    dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
+    dfieldy = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
+
+    /*compute crosscorelation*/
+
+    gwy_data_field_croscorrelate(dfield1, dfield2, dfieldx, dfieldy, 
+                                 args->search_x, args->search_y,
+                                 args->window_x, args->window_y);
+
+    /*set right output*/
+    
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
+    
+    g_object_unref(dfieldy);
     return TRUE;
 }
 

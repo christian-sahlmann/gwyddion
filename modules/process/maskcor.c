@@ -76,7 +76,7 @@ static const GwyEnum results[] = {
 };
 
 static const GwyMaskcorArgs gwy_data_maskcor_defaults = {
-    GWY_MASKCOR_OBJECTS, 0.5, NULL, NULL
+    GWY_MASKCOR_OBJECTS, 0.95, NULL, NULL
 };
 
 void
@@ -347,25 +347,90 @@ gwy_data_maskcor_entry_cb(GtkWidget *entry,
     g_signal_stop_emission_by_name(editable, "changed");
 }
 
+void 
+plot_correlated(GwyDataField *retfield, gint xsize, gint ysize, gdouble threshold)
+{
+    GwyDataField *field;
+    gint i, j, k;
+    
+    field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
+    gwy_data_field_fill(retfield, 0);
+
+    for (i=0; i<retfield->xres; i++)
+    {
+        for (j=0; j<retfield->yres; j++)
+        {
+            if ((field->data[i + retfield->xres*j]) > threshold)
+                gwy_data_field_area_fill(retfield, i-xsize/2, j-ysize/2, i+xsize/2, j+ysize/2, 1.0);
+        }
+    }
+    
+}
+
+void 
+plot_maxima(GwyDataField *retfield, gdouble threshold)
+{
+    GwyDataField *field;
+    gint i, j, k;
+    
+    field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
+    gwy_data_field_fill(retfield, 0);
+
+    for (i=0; i<retfield->xres; i++)
+    {
+        for (j=0; j<retfield->yres; j++)
+        {
+                retfield->data[i + retfield->xres*j] = 1;
+        }
+    }
+    
+}
+
 static gboolean
 gwy_data_maskcor_do(GwyMaskcorArgs *args,
                   GtkWidget *maskcor_window)
 {
     GtkWidget *dialog, *data_window;
-    GwyContainer *data;
-    GwyDataField *dfield, *dfield1, *dfield2;
+    GwyContainer *data, *ret, *kernel;
+    GwyDataField *dfield, *kernelfield, *retfield;
     GwyDataWindow *operand1, *operand2;
 
     operand1 = args->win1;
     operand2 = args->win2;
     
     data = gwy_data_window_get_data(operand1);
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    
+    ret = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    retfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
+                                                             "/0/data"));
 
+    kernel = gwy_data_window_get_data(operand2);
+    kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel, "/0/data"));
+
+    gwy_data_field_correlate(dfield, kernelfield, retfield);
+    
+    /*score - do new data with score*/
+    if (args->result == GWY_MASKCOR_SCORE)
+    {
+        data_window = gwy_app_data_window_create(ret);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    }
+    else /*add mask*/
+    {
+        if (args->result == GWY_MASKCOR_OBJECTS)
+        {
+            plot_correlated(retfield, kernelfield->xres, kernelfield->yres, args->threshold);
+        }
+        else if (args->result == GWY_MASKCOR_MAXIMA)
+        {
+            plot_maxima(retfield, args->threshold);
+        }
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(retfield));
+    }
+    gwy_app_data_view_update(GWY_DATA_VIEW(gwy_data_window_get_data_view(operand1)));
+    
     return TRUE;
 }
 
