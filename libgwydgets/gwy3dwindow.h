@@ -50,7 +50,6 @@ struct _Gwy3DWindow {
     GtkWidget *palette_label;
     GtkWidget *material_menu;
     GtkWidget *material_label;
-    GtkWidget *lights_check;
     GtkWidget *lights_spin1;
     GtkWidget *lights_spin2;
     GtkWidget *move_light_button;

@@ -161,9 +161,9 @@ gboolean         gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
                                                 gboolean  show_labels);
 
-gboolean         gwy_3d_view_get_lights        (Gwy3DView *gwy3dview);
-void             gwy_3d_view_set_lights        (Gwy3DView *gwy3dview,
-                                                gboolean  enable_labels);
+gboolean         gwy_3d_view_get_use_lights    (Gwy3DView *gwy3dview);
+void             gwy_3d_view_set_use_lights    (Gwy3DView *gwy3dview,
+                                                gboolean  use_lights);
 
 guint            gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
 void             gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,

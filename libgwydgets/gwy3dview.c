@@ -792,17 +792,17 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
 }
 
 /**
- * gwy_3d_view_get_lights:
+ * gwy_3d_view_get_use_lights:
  * @gwy3dview: A 3D data view widget.
  *
  * Returns whether the lighst are on or off within the @gwy3dview.
  *
- * Returns: Whwteher the lights are on.
+ * Returns: %TRUE if the lights are on, %FALSE if they are off.
  *
  * Since: 1.5
  **/
 gboolean
-gwy_3d_view_get_lights(Gwy3DView *gwy3dview)
+gwy_3d_view_get_use_lights(Gwy3DView *gwy3dview)
 {
     gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
@@ -811,27 +811,29 @@ gwy_3d_view_get_lights(Gwy3DView *gwy3dview)
 }
 
 /**
- * gwy_3d_view_set_show_labels:
+ * gwy_3d_view_set_use_lights:
  * @gwy3dview: A 3D data view widget.
- * @show_labels: Turn Lights On/Off
+ * @use_lights: %TRUE if lights should be used, %FALSE to use palette.
  *
- * Turn Lights On/Off within @gwy3dview.
+ * Turn lights on/off within @gwy3dview.
+ *
  * Widget is invalidated if necessary.
  *
  * Since: 1.5
  **/
 void
-gwy_3d_view_set_lights(Gwy3DView *gwy3dview,
-                       gboolean  enable_lights)
+gwy_3d_view_set_use_lights(Gwy3DView *gwy3dview,
+                           gboolean  use_lights)
 {
      gwy_debug(" ");
      g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (enable_lights == gwy3dview->enable_lights) return;
-    gwy3dview->enable_lights = enable_lights;
+    if (use_lights == gwy3dview->enable_lights)
+        return;
+    gwy3dview->enable_lights = use_lights;
     gwy_container_set_boolean_by_name(gwy3dview->container,
                                       "/0/3d/enable_lights",
-                                      enable_lights);
+                                      use_lights);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
