@@ -39,7 +39,7 @@ HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = gwyddion.h
+IGNORE_HFILES = gwyappinternal.h gwyddion.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
