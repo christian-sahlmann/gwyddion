@@ -107,7 +107,7 @@ gwy_module_browser_construct(GtkWidget *parent)
 
     GtkWidget *tree;
     GtkListStore *store;
-    GtkTreeSelection *select;
+    GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     GSList *l, *list = NULL;
@@ -140,8 +140,8 @@ gwy_module_browser_construct(GtkWidget *parent)
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
-    select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(select, GTK_SELECTION_SINGLE);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
     g_signal_connect(G_OBJECT(tree), "cursor-changed",
                      G_CALLBACK(update_module_info_cb), parent);
@@ -218,16 +218,16 @@ update_module_info_cb(GtkWidget *tree,
 {
     GtkLabel *label;
     GtkTreeModel *store;
-    GtkTreeSelection *select;
+    GtkTreeSelection *selection;
     _GwyModuleInfoInternal *iinfo;
     GtkTreeIter iter;
     GSList *l;
     gchar *s;
     gsize n;
 
-    select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    g_return_if_fail(select);
-    if (!gtk_tree_selection_get_selected(select, &store, &iter))
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    g_return_if_fail(selection);
+    if (!gtk_tree_selection_get_selected(selection, &store, &iter))
         return;
 
     gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_MOD_INFO, &iinfo,
