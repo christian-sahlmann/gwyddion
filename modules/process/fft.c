@@ -476,7 +476,8 @@ static void
 fft_sanitize_args(FFTArgs *args)
 {
     args->preserve = !!args->preserve;
-    args->interp = MIN(args->interp, GWY_INTERPOLATION_NNA);
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->window = MIN(args->window, GWY_WINDOWING_RECT);
     args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
 }

@@ -34,6 +34,7 @@
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
+/* XXX: one parameter? try to read what you are copying */
 typedef struct {
     gdouble from_cubecounting;
     gdouble to_cubecounting;
@@ -67,19 +68,15 @@ typedef struct {
 
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    fractal                        (GwyContainer *data,
+static gboolean    fractal                    (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    fractal_dialog                 (FractalArgs *args,
-                                                   GwyContainer *data);
+static gboolean    fractal_dialog             (FractalArgs *args,
+                                               GwyContainer *data);
 static void        interp_changed_cb          (GObject *item,
                                                FractalArgs *args);
 static void        out_changed_cb             (GObject *item,
                                                FractalArgs *args);
-static void        fractal_load_args              (GwyContainer *container,
-                                               FractalArgs *args);
-static void        fractal_save_args              (GwyContainer *container,
-                                               FractalArgs *args);
-static void        fractal_dialog_update          (FractalControls *controls,
+static void        fractal_dialog_update      (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
 static void        fractal_dialog_recompute    (FractalControls *controls,
@@ -87,15 +84,18 @@ static void        fractal_dialog_recompute    (FractalControls *controls,
                                                GwyContainer *data);
 static void        graph_selected             (GwyGraphArea *area,
                                                FractalArgs *args);
-
-static gboolean        remove_datapoints          (GwyDataLine *xline,
+static gboolean    remove_datapoints          (GwyDataLine *xline,
                                                GwyDataLine *yline,
                                                GwyDataLine *newxline,
                                                GwyDataLine *newyline,
                                                FractalArgs *args);
-
-static void update_labels                       (FractalControls *controls,
-                                                 FractalArgs *args);
+static void        update_labels              (FractalControls *controls,
+                                               FractalArgs *args);
+static void        fractal_load_args          (GwyContainer *container,
+                                               FractalArgs *args);
+static void        fractal_save_args          (GwyContainer *container,
+                                               FractalArgs *args);
+static void        fractal_sanitize_args      (FractalArgs *args);
 
 FractalControls *global_controls = NULL;
 GwyContainer *global_data = NULL;
@@ -371,34 +371,8 @@ out_changed_cb(GObject *item,
 }
 
 
-static const gchar *interp_key = "/module/fractal/interp";
-static const gchar *out_key = "/module/fractal/out";
-
-
-/*load last used parameters*/
-static void
-fractal_load_args(GwyContainer *container,
-                 FractalArgs *args)
-{
-    *args = fractal_defaults;
-
-    if (gwy_container_contains_by_name(container, interp_key))
-        args->interp = gwy_container_get_int32_by_name(container, interp_key);
-    if (gwy_container_contains_by_name(container, out_key))
-        args->out = gwy_container_get_int32_by_name(container, out_key);
-}
-
-/*save preferences (last used)*/
-static void
-fractal_save_args(GwyContainer *container,
-                 FractalArgs *args)
-{
-    gwy_container_set_int32_by_name(container, interp_key, args->interp);
-    gwy_container_set_int32_by_name(container, out_key, args->out);
-}
-
-
 /*update dialog after any recomputation.*/
+/* XXX: set text width to 80, learn to use switch */
 static void
 fractal_dialog_update(FractalControls *controls,
                      FractalArgs *args, GwyContainer *data)
@@ -531,13 +505,12 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
     gchar buffer[20];
     gdouble from, to;
 
-    if (area->seldata->data_start == area->seldata->data_end)
-    {
+    if (area->seldata->data_start == area->seldata->data_end) {
         g_snprintf(buffer, sizeof(buffer), "minimum");
         gtk_label_set_text(GTK_LABEL(global_controls->from), buffer);
         g_snprintf(buffer, sizeof(buffer), "maximum");
         gtk_label_set_text(GTK_LABEL(global_controls->to), buffer);
-        switch (args->out){
+        switch (args->out) {
             case (GWY_FRACTAL_CUBECOUNTING):
             args->from_cubecounting = 0;
             args->to_cubecounting = 0;
@@ -557,19 +530,17 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
             args->from_psdf = 0;
             args->to_psdf = 0;
             break;
-         }
+        }
 
     }
-    else
-    {
+    else {
         from = area->seldata->data_start;
         to = area->seldata->data_end;
 
         if (from > to)
-        {
             GWY_SWAP(gdouble, from, to);
-        }
-        switch (args->out){
+
+        switch (args->out) {
             case (GWY_FRACTAL_CUBECOUNTING):
             args->from_cubecounting = from;
             args->to_cubecounting = to;
@@ -599,10 +570,10 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
 static void
 update_labels(FractalControls *controls, FractalArgs *args)
 {
-    gdouble from=0, to=0;
+    gdouble from = 0, to = 0;
     gchar buffer[16];
 
-    switch (args->out){
+    switch (args->out) {
        case (GWY_FRACTAL_CUBECOUNTING):
        from = args->from_cubecounting;
        to = args->to_cubecounting;
@@ -644,12 +615,13 @@ update_labels(FractalControls *controls, FractalArgs *args)
  evaluation.*/
 static gboolean
 remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
-                  GwyDataLine *newxline, GwyDataLine *newyline, FractalArgs *args)
+                  GwyDataLine *newxline, GwyDataLine *newyline,
+                  FractalArgs *args)
 {
     gint i, j;
-    gdouble from=0, to=0;
+    gdouble from = 0, to = 0;
 
-    switch (args->out){
+    switch (args->out) {
         case (GWY_FRACTAL_CUBECOUNTING):
         from = args->from_cubecounting;
         to = args->to_cubecounting;
@@ -673,24 +645,22 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
     gwy_data_line_resample(newxline, xline->res, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(newyline, yline->res, GWY_INTERPOLATION_NONE);
 
-    if (from == to)
-    {
+    if (from == to) {
         gwy_data_line_copy(xline, newxline);
         gwy_data_line_copy(yline, newyline);
         return 1;
     }
 
-    j=0;
-    for (i=0; i<xline->res; i++)
-    {
-        if (xline->data[i] >= from && xline->data[i] <= to)
-        {
+    j = 0;
+    for (i = 0; i < xline->res; i++) {
+        if (xline->data[i] >= from && xline->data[i] <= to) {
             newxline->data[j] = xline->data[i];
             newyline->data[j] = yline->data[i];
             j++;
         }
     }
-    if (j<2) return 0;
+    if (j < 2)
+        return 0;
 
     gwy_data_line_resize(newxline, 0, j);
     gwy_data_line_resize(newyline, 0, j);
@@ -698,6 +668,36 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
     return 1;
 }
 
+static const gchar *interp_key = "/module/fractal/interp";
+static const gchar *out_key = "/module/fractal/out";
 
+static void
+fractal_sanitize_args(FractalArgs *args)
+{
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
+    args->out = MIN(args->out, GWY_FRACTAL_PSDF);
+}
+
+/*load last used parameters*/
+static void
+fractal_load_args(GwyContainer *container,
+                 FractalArgs *args)
+{
+    *args = fractal_defaults;
+
+    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
+    gwy_container_gis_enum_by_name(container, out_key, &args->out);
+    fractal_sanitize_args(args);
+}
+
+/*save preferences (last used)*/
+static void
+fractal_save_args(GwyContainer *container,
+                 FractalArgs *args)
+{
+    gwy_container_set_enum_by_name(container, interp_key, args->interp);
+    gwy_container_set_enum_by_name(container, out_key, args->out);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

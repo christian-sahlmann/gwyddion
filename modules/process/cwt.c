@@ -287,7 +287,8 @@ static void
 cwt_sanitize_args(CWTArgs *args)
 {
     args->preserve = !!args->preserve;
-    args->interp = MIN(args->interp, GWY_INTERPOLATION_NNA);
+    args->interp = CLAMP(args->interp,
+                         GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->wavelet = MIN(args->wavelet, GWY_CWT_MORLET);
     args->scale = CLAMP(args->scale, 0.0, 1000.0);
 }
