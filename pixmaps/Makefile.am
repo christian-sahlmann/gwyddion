@@ -12,6 +12,7 @@ pixmapdata_DATA = \
 	gwy_fit_triangle-24.png \
 	gwy_fix_zero-24.png \
 	gwy_fft-24.png \
+	gwy_fractal-24.png \
 	gwy_grains-24.png \
 	gwy_grains_graph-24.png \
 	gwy_grains_remove-24.png \

@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_FIT_TRIANGLE    "gwy_fit_triangle"
 #define GWY_STOCK_FIX_ZERO        "gwy_fix_zero"
 #define GWY_STOCK_FFT             "gwy_fft"
+#define GWY_STOCK_FRACTAL         "gwy_fractal"
 #define GWY_STOCK_GRAINS          "gwy_grains"
 #define GWY_STOCK_GRAINS_GRAPH    "gwy_grains_graph"
 #define GWY_STOCK_GRAINS_REMOVE   "gwy_grains_remove"
