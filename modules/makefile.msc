@@ -40,9 +40,9 @@ install: install-mod sub-install
 
 clean:: sub-clean
 
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
 plugin-proxy.dll: plugin-proxy.obj
 	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:plugin-proxy.dll /dll /implib:plugin-proxy.lib
-
-!INCLUDE $(TOP_SRCDIR)\rules.msc
 
 # vim: ft=make

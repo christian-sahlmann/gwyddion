@@ -45,4 +45,25 @@ install: install-mod
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
+basicops.dll: basicops.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:basicops.dll /dll /implib:basicops.lib
+
+cwt.dll: cwt.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:cwt.dll /dll /implib:cwt.lib
+
+fft.dll: fft.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:fft.dll /dll /implib:fft.lib
+
+level.dll: level.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:level.dll /dll /implib:level.lib
+
+rotate.dll: rotate.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:rotate.dll /dll /implib:rotate.lib
+
+scale.dll: scale.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:scale.dll /dll /implib:scale.lib
+
+shade.dll: shade.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:shade.dll /dll /implib:shade.lib
+
 # vim: ft=make

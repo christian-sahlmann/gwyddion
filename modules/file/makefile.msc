@@ -40,4 +40,10 @@ install: install-mod
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
+gwyfile.dll: gwyfile.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:gwyfile.dll /dll /implib:gwyfile.lib
+
+pixmap.dll: pixmap.obj
+	$(LINK32) plugin-plugin.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:pixmap.dll /dll /implib:pixmap.lib
+
 # vim: ft=make
