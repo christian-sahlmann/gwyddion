@@ -32,6 +32,7 @@ extern "C" {
 #define GWY_MODULE_PREFIX_FILE     "file::"
 #define GWY_MODULE_PREFIX_TOOL     "tool::"
 #define GWY_MODULE_PREFIX_GRAPH    "graph::"
+#define GWY_MODULE_PREFIX_LAYER    "layer::"
 
 /* internal module info */
 typedef struct {
@@ -48,11 +49,13 @@ gboolean                gwy_file_func_remove        (const gchar *name);
 gboolean                gwy_process_func_remove     (const gchar *name);
 gboolean                gwy_tool_func_remove        (const gchar *name);
 gboolean                gwy_graph_func_remove       (const gchar *name);
+gboolean                gwy_layer_func_remove       (const gchar *name);
 
 void  _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname));
-void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullname));
 void  _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname));
 void  _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname));
+void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullname));
+void  _gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname));
 
 #ifdef __cplusplus
 }

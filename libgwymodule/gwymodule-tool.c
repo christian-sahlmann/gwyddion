@@ -21,8 +21,6 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libprocess/datafield.h>
 #include <libgwydgets/gwytoolbox.h>
 
 #include "gwymoduleinternal.h"
@@ -194,7 +192,7 @@ gwy_tool_func_remove(const gchar *name)
 
 /**
  * GwyToolFuncInfo:
- * @name: An unique data processing function name.
+ * @name: An unique tool function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).
  * @tooltip: Tooltip for this tool.
  * @toolbox_position: Position in the toolbox, the tools are sorted by this
