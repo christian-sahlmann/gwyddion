@@ -1,8 +1,9 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
-- Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
-- RMS based autogrange in LayerBasic (a 2.0 thing?)
-- Test GwyGradient, mark #ifdef GWY_ENABLE_GWYDDION2
+- Speed up Document History
 - Callibrate forgets coefficients and shows inconsistent values
+- Fix overstretched graph selection
+- Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
+- Test GwyGradient, New SIUnit parser, mark them #ifdef GWY_ENABLE_GWYDDION2
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere

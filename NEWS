@@ -1,12 +1,12 @@
-1.6cvs20041201
+1.6cvs20041203
 
 1.7
 Application:
 - Graphs are associated with their data window, it's possible show/hide them
-  and they are saved with data.  Version 1.4 and older may fail to load files
-  containing graphs due to forward compatibility bugs.
+  and they are saved with data.  Note version 1.4 and older may fail to load
+  files containing graphs due to forward compatibility bugs.
 - Crashing Metadata browser was fixed.
-- Translations work on Win32 too.
+- Translations work on Win32 too, Czech translation updated.
 
 Modules:
 - Simple mask editor (new).
@@ -27,6 +27,9 @@ Modules:
 Library:
 - libgwyddion, libgwyprocess: Median calculation functions.
 - libgwyprocess: Data field arithmetic functions.
+- libgwyprocess: Speed of most grain methods was considerably improved.
+- libgwydgets: 3D View light position marker was fixed to reflect actual light
+               position
 
 Other:
 - pkg-config file broken by 1.6 build system clean up was updated.
