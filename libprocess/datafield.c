@@ -35,9 +35,25 @@
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
+enum {
+    PROP_0,
+    PROP_XREAL,
+    PROP_YREAL,
+    PROP_UNIT_XY,
+    PROP_UNIT_Z
+};
+
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GObject *object);
 static void     gwy_data_field_finalize          (GObject *object);
+static void     gwy_data_field_set_property      (GObject*object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_data_field_get_property      (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
 static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_data_field_serialize      (GObject *obj,
@@ -124,6 +140,46 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_field_finalize;
+    gobject_class->set_property = gwy_data_field_set_property;
+    gobject_class->get_property = gwy_data_field_get_property;
+
+    /**
+     * GwyDataField:xreal:
+     *
+     * The :xreal property represents label rotation in radians,
+     * counterclokwise (on screen, after mapping from 3D to 2D).
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_XREAL,
+         g_param_spec_double("xreal",
+                             "Real x dimension",
+                             "X dimension in physical units",
+                             G_MINDOUBLE, G_MAXDOUBLE, 1.0, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_YREAL,
+         g_param_spec_double("yreal",
+                             "Real y dimension",
+                             "Y dimension in physical units",
+                             G_MINDOUBLE, G_MAXDOUBLE, 1.0, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_UNIT_XY,
+         g_param_spec_object("unit_xy",
+                             "Units of x, y",
+                             "SI unit of lateral dimensions (x, y)",
+                             GWY_TYPE_SI_UNIT, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_UNIT_Z,
+         g_param_spec_object("unit_z",
+                             "Units of z",
+                             "SI unit of values (z)",
+                             GWY_TYPE_SI_UNIT, G_PARAM_READWRITE));
 }
 
 static void
@@ -144,6 +200,68 @@ gwy_data_field_finalize(GObject *object)
     g_free(data_field->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_data_field_set_property(GObject *object,
+                            guint prop_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyDataField *data_field = GWY_DATA_FIELD(object);
+
+    switch (prop_id) {
+        case PROP_XREAL:
+        gwy_data_field_set_xreal(data_field, g_value_get_double(value));
+        break;
+
+        case PROP_YREAL:
+        gwy_data_field_set_yreal(data_field, g_value_get_double(value));
+        break;
+
+        case PROP_UNIT_XY:
+        gwy_data_field_set_si_unit_xy(data_field, g_value_get_object(value));
+        break;
+
+        case PROP_UNIT_Z:
+        gwy_data_field_set_si_unit_z(data_field, g_value_get_object(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_data_field_get_property(GObject *object,
+                            guint prop_id,
+                            GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyDataField *data_field = GWY_DATA_FIELD(object);
+
+    switch (prop_id) {
+        case PROP_XREAL:
+        g_value_set_double(value, data_field->xreal);
+        break;
+
+        case PROP_YREAL:
+        g_value_set_double(value, data_field->yreal);
+        break;
+
+        case PROP_UNIT_XY:
+        g_value_set_object(value, gwy_data_field_get_si_unit_xy(data_field));
+        break;
+
+        case PROP_UNIT_Z:
+        g_value_set_object(value, gwy_data_field_get_si_unit_z(data_field));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -367,20 +485,30 @@ gwy_data_field_copy(GwyDataField *src,
     g_return_if_fail(src->xres == dest->xres && src->yres == dest->yres);
 
     memcpy(dest->data, src->data, src->xres*src->yres*sizeof(gdouble));
+
+    g_object_freeze_notify(G_OBJECT(dest));
     dest->xreal = src->xreal;
     dest->yreal = src->yreal;
+    g_object_notify(G_OBJECT(dest), "xreal");
+    g_object_notify(G_OBJECT(dest), "yreal");
 
     dest->cached = src->cached;
     memcpy(dest->cache, src->cache, GWY_DATA_FIELD_CACHE_SIZE*sizeof(gdouble));
 
-    if (!nondata_too)
+    if (!nondata_too) {
+        g_object_thaw_notify(G_OBJECT(dest));
         return;
+    }
 
     gwy_object_unref(dest->si_unit_xy);
     dest->si_unit_xy = gwy_si_unit_duplicate(src->si_unit_xy);
+    g_object_notify(G_OBJECT(dest), "unit_xy");
 
     gwy_object_unref(dest->si_unit_z);
     dest->si_unit_z = gwy_si_unit_duplicate(src->si_unit_z);
+    g_object_notify(G_OBJECT(dest), "unit_z");
+
+    g_object_thaw_notify(G_OBJECT(dest));
 }
 
 /**
@@ -541,6 +669,9 @@ gwy_data_field_resize(GwyDataField *data_field,
 
     yres = brrow - ulrow;
     xres = brcol - ulcol;
+    if (xres == data_field->xres && yres == data_field->yres)
+        return;
+
     /* FIXME: don't allocate second field, use memmove */
     b = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
 
@@ -557,6 +688,11 @@ gwy_data_field_resize(GwyDataField *data_field,
     data_field->yreal *= yres/data_field->yres;
 
     gwy_data_field_invalidate(data_field);
+
+    g_object_freeze_notify(G_OBJECT(data_field));
+    g_object_notify(G_OBJECT(data_field), "xreal");
+    g_object_notify(G_OBJECT(data_field), "yreal");
+    g_object_thaw_notify(G_OBJECT(data_field));
 }
 
 /**
@@ -667,7 +803,6 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
                                                        interpolation);
     }
 }
-
 
 /**
  * gwy_data_field_get_data:
@@ -786,7 +921,11 @@ void
 gwy_data_field_set_xreal(GwyDataField *data_field, gdouble xreal)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (data_field->xreal == xreal)
+        return;
+
     data_field->xreal = xreal;
+    g_object_notify(G_OBJECT(data_field), "xreal");
 }
 
 /**
@@ -800,7 +939,11 @@ void
 gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (data_field->yreal == yreal)
+        return;
+
     data_field->yreal = yreal;
+    g_object_notify(G_OBJECT(data_field), "yreal");
 }
 
 
@@ -821,7 +964,6 @@ gwy_data_field_get_si_unit_xy(GwyDataField *a)
     if (!a->si_unit_xy)
         a->si_unit_xy = gwy_si_unit_new("m");
 
-    gwy_debug("xy unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_xy));
     return a->si_unit_xy;
 }
 
@@ -842,7 +984,6 @@ gwy_data_field_get_si_unit_z(GwyDataField *a)
     if (!a->si_unit_z)
         a->si_unit_z = gwy_si_unit_new("m");
 
-    gwy_debug("z unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_z));
     return a->si_unit_z;
 }
 
@@ -858,14 +999,18 @@ gwy_data_field_get_si_unit_z(GwyDataField *a)
  * reference.
  **/
 void
-gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
+gwy_data_field_set_si_unit_xy(GwyDataField *data_field,
+                              GwySIUnit *si_unit)
 {
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
-    gwy_object_unref(a->si_unit_xy);
+    if (data_field->si_unit_xy == si_unit)
+        return;
+
+    gwy_object_unref(data_field->si_unit_xy);
     g_object_ref(si_unit);
-    a->si_unit_xy = si_unit;
-    gwy_debug("xy unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_xy));
+    data_field->si_unit_xy = si_unit;
+    g_object_notify(G_OBJECT(data_field), "unit_xy");
 }
 
 /**
@@ -880,14 +1025,18 @@ gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit)
  * reference.
  **/
 void
-gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
+gwy_data_field_set_si_unit_z(GwyDataField *data_field,
+                             GwySIUnit *si_unit)
 {
-    g_return_if_fail(GWY_IS_DATA_FIELD(a));
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
-    gwy_object_unref(a->si_unit_z);
+    if (data_field->si_unit_z == si_unit)
+        return;
+
+    gwy_object_unref(data_field->si_unit_z);
     g_object_ref(si_unit);
-    a->si_unit_z = si_unit;
-    gwy_debug("z unit = <%s>", gwy_si_unit_get_unit_string(a->si_unit_z));
+    data_field->si_unit_z = si_unit;
+    g_object_notify(G_OBJECT(data_field), "unit_z");
 }
 
 /**
@@ -2051,7 +2200,7 @@ gwy_data_field_get_yder(GwyDataField *a, gint col, gint row)
     if (row == 0)
         return (*p - *(p+xres)) * a->yres/a->yreal;
     if (row == a->yres-1)
-        return ( *(p-xres) - *p) * a->yres/a->yreal;
+        return (*(p-xres) - *p) * a->yres/a->yreal;
     return (*(p-xres) - *(p+xres)) * a->yres/a->yreal/2;
 }
 
