@@ -79,7 +79,7 @@ static void        wshed_load_args            (GwyContainer *container,
 static void        wshed_save_args            (GwyContainer *container,
                                                WshedArgs *args);
 static void        wshed_sanitize_args        (WshedArgs *args);
-static void        run_noninteractive         (WshedArgs *args, 
+static void        run_noninteractive         (WshedArgs *args,
                                                GwyContainer *data);
 
 WshedArgs wshed_defaults = {
@@ -184,7 +184,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
+                                                             "/0/data"));
 
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
                 zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
@@ -207,28 +208,28 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
     controls.entry_locate_steps = gtk_adjustment_new(args->locate_steps,
                                                      0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Number of steps"), _(""),
+    gwy_table_attach_spinbutton(table, 2, _("Number of steps"), "",
                                 controls.entry_locate_steps);
     controls.entry_locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
                                                         0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 3, _("Drop size [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 3, _("Drop size"), "%",
                                 controls.entry_locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     controls.entry_locate_thresh = gtk_adjustment_new(args->locate_thresh,
                                                       0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 4, _("Threshold [size in pixels]"), _(""),
+    gwy_table_attach_spinbutton(table, 4, _("Threshold"), _("pixels"),
                                 controls.entry_locate_thresh);
     controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps,
                                                     0.0, 1000.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Number of steps"), _(""),
+    gwy_table_attach_spinbutton(table, 6, _("Number of steps"), "",
                                 controls.entry_wshed_steps);
-    
+
     controls.entry_wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
                                                        0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 7, _("Drop size [fractile]"), _(""),
+    spin = gwy_table_attach_spinbutton(table, 7, _("Drop size"), "%",
                                 controls.entry_wshed_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    
+
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Segmentation:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
