@@ -134,6 +134,10 @@ GwySIUnit* gwy_data_field_get_si_unit_xy(GwyDataField *a);
 GwySIUnit* gwy_data_field_get_si_unit_z(GwyDataField *a);
 void gwy_data_field_set_si_unit_xy(GwyDataField *a, GwySIUnit *si_unit);
 void gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit);
+GwySIValueFormat* gwy_data_field_get_value_format_xy(GwyDataField *data_field,
+                                                     GwySIValueFormat *format);
+GwySIValueFormat* gwy_data_field_get_value_format_z(GwyDataField *data_field,
+                                                    GwySIValueFormat *format);
 
 /*pixel <-> real coords transform*/
 gdouble gwy_data_field_itor(GwyDataField *a,

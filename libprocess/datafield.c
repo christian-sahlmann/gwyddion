@@ -678,6 +678,56 @@ gwy_data_field_set_si_unit_z(GwyDataField *a, GwySIUnit *si_unit)
 }
 
 /**
+ * gwy_data_field_get_value_format_xy:
+ * @data_field: A data field.
+ * @format: A SI value format to modify, or %NULL to allocate a new one.
+ *
+ * Finds value format good for displaying coordinates of @data_field.
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_data_field_get_value_format_xy(GwyDataField *data_field,
+                                   GwySIValueFormat *format)
+{
+    gdouble max, unit;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+
+    max = MAX(data_field->xreal, data_field->yreal);
+    unit = MIN(data_field->xreal/data_field->xres,
+               data_field->yreal/data_field->yres);
+    return gwy_si_unit_get_format_with_resolution(data_field->si_unit_xy,
+                                                  max, unit, format);
+}
+
+/**
+ * gwy_data_field_get_value_format_z:
+ * @data_field: A data field.
+ * @format: A SI value format to modify, or %NULL to allocate a new one.
+ *
+ * Finds value format good for displaying values of @data_field.
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_data_field_get_value_format_z(GwyDataField *data_field,
+                                  GwySIValueFormat *format)
+{
+    gdouble max, min;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+
+    max = fabs(gwy_data_field_get_max(data_field));
+    min = fabs(gwy_data_field_get_min(data_field));
+    max = MAX(min, max);
+
+    return gwy_si_unit_get_format(data_field->si_unit_z, max, format);
+}
+
+/**
  * gwy_data_field_itor:
  * @a: A data field
  * @pixval: value at data (pixel) coordinates
