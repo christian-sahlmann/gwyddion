@@ -307,7 +307,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
     for (i = 0; i < size; i++) {
         gdouble *mrow = m + i*(i+1)/2;
 
-        for (j = 0; j < i; j++) {
+        for (j = 0; j <= i; j++) {
             gint pow_x, pow_y;
 
             pow_x = i % (col_degree+1) + j % (col_degree+1);
@@ -316,8 +316,10 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
         }
     }
 
-     if (!gwy_math_choleski_decompose(size, m))
+    if (!gwy_math_choleski_decompose(size, m)) {
+        g_warning("Fuck!");
         memset(coeffs, 0, size*sizeof(gdouble));
+    }
     else
         gwy_math_choleski_solve(size, m, coeffs);
 
@@ -325,6 +327,66 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
     g_free(sums);
 
     return coeffs;
+}
+
+/**
+ * gwy_data_field_area_subtract_polynom:
+ * @dfield: A data field
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @col_degree: Degree of polynom to subtract column-wise (x-coordinate).
+ * @row_degree: Degree of polynom to subtract row-wise (y-coordinate).
+ * @coeffs: An array of size (@row_degree+1)*(@col_degree+1) with coefficients
+ *          in the same order as gwy_data_field_area_fit_polynom() uses.
+ *
+ * Subtract a two-dimensional polynom from a part of a #GwyDataField.
+ *
+ * Since: 1.6
+ **/
+void
+gwy_data_field_area_subtract_polynom(GwyDataField *dfield,
+                                     gint col, gint row,
+                                     gint width, gint height,
+                                     gint col_degree, gint row_degree,
+                                     gdouble *coeffs)
+{
+    gint r, c, i, j, size, xres, yres;
+    gdouble *data;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(coeffs);
+    g_return_if_fail(row_degree >= 0 && col_degree >= 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= dfield->xres
+                     && row + height <= dfield->yres);
+
+    data = dfield->data;
+    xres = dfield->xres;
+    yres = dfield->yres;
+    size = (row_degree+1)*(col_degree+1);
+
+    for (r = row; r < row + height; r++) {
+        for (c = col; c < col + width; c++) {
+            gdouble ry = 1.0;
+            gdouble z = data[r*xres + c];
+
+            for (i = 0; i <= row_degree; i++) {
+                gdouble cx = 1.0;
+
+                for (j = 0; j <= col_degree; j++) {
+                    /* FIXME: this is wrong, use Horner schema */
+                    z -= coeffs[i*(col_degree+1) + j]*cx*ry;
+                    cx *= c;
+                }
+                ry *= r;
+            }
+
+            data[r*xres + c] = z;
+        }
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
