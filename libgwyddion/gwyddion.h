@@ -3,6 +3,7 @@
 #ifndef __GWY_GWYDDION_H__
 #define __GWY_GWYDDION_H__
 
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
@@ -10,8 +11,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-/* XXX: nothing here yet */
 
 #ifdef __cplusplus
 }

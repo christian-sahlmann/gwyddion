@@ -3,6 +3,7 @@
 include_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
+	gwymacros.h \
 	gwyserializable.h \
 	gwytestser.h \
 	gwywatchable.h
