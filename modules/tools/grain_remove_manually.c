@@ -279,7 +279,7 @@ selection_finished_cb(GwyUnitoolState *state)
     ToolControls *controls;
     gdouble xy[2];
     gint col, row, i;
-    gdouble error, maxer, cor = 0.2;
+    gdouble error, maxer, cor;
     gboolean is_visible, is_selected;
 
     gwy_debug(" ");
@@ -319,7 +319,10 @@ selection_finished_cb(GwyUnitoolState *state)
         switch (controls->algorithm) {
             case GRAIN_REMOVE_LAPLACE:
             maxer = gwy_data_field_get_rms(dfield)/1.0e3;
+            gwy_data_field_correct_average(dfield, tmp);
             buffer = GWY_DATA_FIELD(gwy_data_field_new_alike(mask, FALSE));
+            cor = 0.2;
+            error = 0;
             i = 0;
             do {
                 gwy_data_field_correct_laplace_iteration(dfield, tmp, buffer,
