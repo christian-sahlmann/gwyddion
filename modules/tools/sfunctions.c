@@ -407,7 +407,7 @@ sfunctions_selection_updated_cb(void)
 {
     GwyContainer *data;
     GwyDataField *datafield;
-    GwyDataLine dataline;
+    GwyDataLine *dataline;
     gboolean is_visible, is_selected;
     gint j;
     gint xm1, xm2, ym1, ym2;
@@ -464,11 +464,11 @@ sfunctions_selection_updated_cb(void)
     ym2 = (gint)floor(gwy_data_field_rtoj(datafield, ymax)+0.5);
 
 
-    gwy_data_line_initialize(&dataline, 10, 10, 0);
+    dataline = gwy_data_line_new(10, 10, 0);
+    lab = g_string_new("ble");
 
- printf("out=%d\n", controls.out);
-    gwy_data_field_get_line_stat_function(datafield,
-                                          &dataline,
+    if (gwy_data_field_get_line_stat_function(datafield,
+                                          dataline,
                                           xm1,
                                           ym1,
                                           xm2,
@@ -477,32 +477,36 @@ sfunctions_selection_updated_cb(void)
                                           controls.dir,
                                           controls.interp,
                                           GWY_WINDOWING_HANN,
-                                          100);
+                                          10)) 
+    {
 
-/*    for (j=0; j<dataline.res; j++) {printf("%e\n", dataline.data[j]); dataline.data[j]=j;}*/
+        /*this is to prevent problems with numbers as 1e34 in axis widget. FIXME by using appropriate units*/
+        gwy_data_line_multiply(dataline, 100.0/gwy_data_line_get_max(dataline));
+    
+        z_max = gwy_data_line_get_max(dataline) -  gwy_data_line_get_min(dataline);
+        z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
+        z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
-    z_max = gwy_data_line_get_max(&dataline) -  gwy_data_line_get_min(&dataline);
-    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
-    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
+        gwy_graph_add_dataline(GWY_GRAPH(controls.graph), dataline, 0, lab, NULL);
+        /*
+        gwy_graph_add_dataline_with_units(controls.graph, dataline,
+                  0, "line", NULL,
+                  x_mag, z_mag,
+                  x_unit,
+                  z_unit
+                  );
+       */
 
-    lab = g_string_new("ble");
-    gwy_graph_add_dataline(GWY_GRAPH(controls.graph), &dataline, 0, lab, NULL);
-    /*
-    gwy_graph_add_dataline_with_units(controls.graph, &dataline,
-              0, "line", NULL,
-              x_mag, z_mag,
-              x_unit,
-              z_unit
-              );
-   */
-
-    gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
-    update_labels();
-
+        gtk_widget_queue_draw(GTK_WIDGET(controls.graph));
+        update_labels();
+        
+        g_free(z_unit);
+  
+    }
     g_free(x_unit);
-    g_free(z_unit);
     g_string_free(lab, TRUE);
-    gwy_data_line_free(&dataline);
+
+    gwy_data_line_free(dataline); 
 
     if (!is_visible)
         sfunctions_dialog_set_visible(TRUE);

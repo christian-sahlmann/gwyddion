@@ -22,6 +22,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <stdio.h>
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
@@ -218,10 +219,14 @@ gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
 
     gwy_debug("");
     n = gwy_data_line_get_res(dataline);
+  printf("$$$$$$$$$$$$$ Added dataline with %d values\n", n);
 
     xdata = (gdouble *) g_malloc(n*sizeof(gdouble));
     for (i = 0; i < n; i++)
+    {
         xdata[i] = i*gwy_data_line_get_real(dataline)/(gdouble)n;
+        if (i<20) printf("%f\n", dataline->data[i]);
+    }
 
     gwy_graph_add_datavalues(graph, xdata, dataline->data,
                              n, label, NULL);

@@ -406,7 +406,7 @@ void gwy_data_field_get_area_stats(GwyDataField *data_field,
                                     gdouble *skew, 
                                     gdouble *kurtosis);
 
-void gwy_data_field_get_line_stat_function(GwyDataField *data_field,
+gint gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                            GwyDataLine *target_line,
                                            gint ulcol,
                                            gint ulrow,

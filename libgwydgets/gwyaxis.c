@@ -22,7 +22,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib-object.h>
-
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwyaxis.h"
 
@@ -890,6 +890,7 @@ gwy_axis_normalscale(GwyAxis *a)
     /*minor tics*/
     do {
         mit.value = minorbase;
+        /*printf("gwyaxis.c:893: appending %f (%dth)\n", (gdouble)mit.value, i);*/
         g_array_append_val(a->miticks, mit);
         minorbase += minortickstep;
         i++;

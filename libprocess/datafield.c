@@ -2341,14 +2341,14 @@ gwy_data_field_get_area_stats(GwyDataField *data_field, gint ulcol, gint ulrow, 
 }
 
 
-void
+gint
 gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *target_line, 
                                       gint ulcol, gint ulrow, gint brcol, gint brrow, GwySFOutputType type, GtkOrientation orientation,
                                       GwyInterpolationType interpolation, GwyWindowingType windowing, gint nstats)
 {
     gint i, k, j, size;
-    GwyDataLine hlp_line;
-    GwyDataLine hlp_tarline;
+    GwyDataLine *hlp_line;
+    GwyDataLine *hlp_tarline;
     gdouble min, max, val;
 
     gwy_debug("");
@@ -2395,45 +2395,58 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field, GwyDataLine *tar
     if (orientation == GTK_ORIENTATION_HORIZONTAL || orientation == GTK_ORIENTATION_VERTICAL)
     {
         size = brcol-ulcol;
-        if (size < 10) {printf("Field too small\n"); return;}
+        if (size < 10) {printf("Field too small\n"); return 0;}
         
-        gwy_data_line_initialize(&hlp_line, size, gwy_data_field_jtor(data_field, size), FALSE);
-        gwy_data_line_initialize(&hlp_tarline, size, gwy_data_field_jtor(data_field, size), FALSE);
+        hlp_line = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
+        hlp_tarline = gwy_data_line_new(size, gwy_data_field_jtor(data_field, size), FALSE);
         
-        gwy_data_line_resample(target_line, size, interpolation);
+        if (nstats <= 0) {
+            nstats = size;
+        }
+        if (type==GWY_SF_OUTPUT_DH || type==GWY_SF_OUTPUT_DA || type==GWY_SF_OUTPUT_CDA || type==GWY_SF_OUTPUT_CDH)
+        {
+            gwy_data_line_resample(target_line, nstats, interpolation);
+        }
+        else
+        {
+            gwy_data_line_resample(target_line, size, interpolation);
+        }
         gwy_data_line_fill(target_line, 0);
 
 
         for (k = ulrow; k < brrow; k++) {
-            gwy_data_field_get_row_part(data_field, &hlp_line, k, ulcol, brcol);
+            gwy_data_field_get_row_part(data_field, hlp_line, k, ulcol, brcol);
 
             if (type==GWY_SF_OUTPUT_DH) 
-                gwy_data_line_dh(&hlp_line, &hlp_tarline, min, max, nstats);
+                gwy_data_line_dh(hlp_line, hlp_tarline, min, max, nstats);
             else if (type==GWY_SF_OUTPUT_CDH)
-                gwy_data_line_cdh(&hlp_line, &hlp_tarline, min, max, nstats);
+                gwy_data_line_cdh(hlp_line, hlp_tarline, min, max, nstats);
             else if (type==GWY_SF_OUTPUT_DA)
-                gwy_data_line_da(&hlp_line, &hlp_tarline, min, max, nstats);
+                gwy_data_line_da(hlp_line, hlp_tarline, min, max, nstats);
             else if (type==GWY_SF_OUTPUT_CDA)
-                gwy_data_line_cda(&hlp_line, &hlp_tarline, min, max, nstats);
+                gwy_data_line_cda(hlp_line, hlp_tarline, min, max, nstats);
             else if (type==GWY_SF_OUTPUT_ACF)
-                gwy_data_line_acf(&hlp_line, &hlp_tarline);
+                gwy_data_line_acf(hlp_line, hlp_tarline);
             else if (type==GWY_SF_OUTPUT_HHCF)
-                gwy_data_line_hhcf(&hlp_line, &hlp_tarline);    
+                gwy_data_line_hhcf(hlp_line, hlp_tarline);    
             else if (type==GWY_SF_OUTPUT_PSDF)
-                gwy_data_line_psdf(&hlp_line, &hlp_tarline, windowing, interpolation);
+                gwy_data_line_psdf(hlp_line, hlp_tarline, windowing, interpolation);
         
             for (j=0; j<size; j++)
             {
-                target_line->data[j] += hlp_tarline.data[j]/((gdouble)(brrow-ulrow));
+                target_line->data[j] += hlp_tarline->data[j]/((gdouble)(brrow-ulrow));
             }
         }
-        gwy_data_line_free(&hlp_line);
-        gwy_data_line_free(&hlp_tarline);
+        gwy_data_line_free(hlp_line);
+        gwy_data_line_free(hlp_tarline);
+        
     }
     else if (orientation == GTK_ORIENTATION_VERTICAL)
     {
     }
 
+    for (k=0; k<nstats; k++) printf("%f\n", target_line->data[k]);
+    return 1;
  
 }
 

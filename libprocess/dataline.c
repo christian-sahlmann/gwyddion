@@ -266,7 +266,13 @@ void
 gwy_data_line_free(GwyDataLine *a)
 {
 /*    gwy_debug("");*/
-    g_free(a->data);
+    if (a->data != NULL)
+    {
+        g_free(a->data);
+        a->data = NULL;
+    }
+    else {gwy_debug("Neco tady smrdi. Proc me podruhe uvolnujes?");}
+   
 }
 
 void
