@@ -704,7 +704,6 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
 
     return TRUE;
 }
-
 /*********************** gaussian *****************************/
 static gdouble
 fit_gauss(gdouble x,
@@ -721,7 +720,6 @@ fit_gauss(gdouble x,
        }
        *fres = TRUE;
        c = (x - b[0])/b[3];
-
        return b[2] * exp(-c*c/2) + b[1];
 }
 
@@ -745,7 +743,7 @@ guess_gauss(gdouble *x,
         if (param[2] < y[i])
             param[2] = y[i];
     }
-    param[2] -= param[2];
+    param[2] -= param[1];
 
     param[3] = (x[n_dat-1] - x[0])/4;
 
@@ -981,7 +979,7 @@ guess_exp(gdouble *x,
         if (param[2] < y[i])
             param[2] = y[i];
     }
-    param[2] -= param[2];
+    param[2] -= param[1];
 
     param[3] = (x[n_dat-1] - x[0])/4;
 
