@@ -193,7 +193,7 @@ dialog_create(GwyUnitoolState *state)
     gwy_container_gis_int32_by_name(settings, radius_key, &radius);
     radius = CLAMP(radius, 1, 16);
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, _("Averaging _radius"), _("px"),
+    gwy_table_attach_spinbutton(table, 9, _("Averaging _radius:"), _("px"),
                                 controls->radius);
     g_signal_connect_swapped(controls->radius, "value_changed",
                              G_CALLBACK(dialog_update), state);

@@ -262,7 +262,7 @@ dialog_create(GwyUnitoolState *state)
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    label = gtk_label_new_with_mnemonic(_("Removal _method"));
+    label = gtk_label_new_with_mnemonic(_("Removal _method:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
                      GTK_FILL, 0, 2, 2);

@@ -122,7 +122,7 @@ dialog_create(GwyUnitoolState *state)
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
 
-    dialog = gtk_dialog_new_with_buttons(_("Show value"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Read Value"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);
@@ -174,7 +174,7 @@ dialog_create(GwyUnitoolState *state)
     else
         radius = 1;
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
-    gwy_table_attach_spinbutton(table, 9, _("Averaging _radius"), _("px"),
+    gwy_table_attach_spinbutton(table, 9, _("Averaging _radius:"), _("px"),
                                 controls->radius);
     g_signal_connect_swapped(controls->radius, "value_changed",
                              G_CALLBACK(dialog_update), state);
