@@ -31,6 +31,7 @@
 #endif
 
 #include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
@@ -45,6 +46,30 @@ typedef enum {
     NANOSCOPE_FILE_TYPE_TXT
 } NanoscopeFileType;
 
+typedef enum {
+    NANOSCOPE_VALUE_OLD = 0,
+    NANOSCOPE_VALUE_VALUE,
+    NANOSCOPE_VALUE_SCALE,
+    NANOSCOPE_VALUE_SELECT
+} NanoscopeValueType;
+
+/*
+ * Old-style record is
+ * \Foo: HardValue
+ * New-style record is
+ * \@Bar: V [SoftScale] (HardScale) HardValue
+ * where SoftScale and HardScale are optional.
+ */
+typedef struct {
+    NanoscopeValueType type;
+    const gchar *soft_scale;
+    gdouble hard_scale;
+    const gchar *hard_scale_units;
+    gdouble hard_value;
+    const gchar *hard_value_str;
+    const gchar *hard_value_units;
+} NanoscopeValue;
+
 typedef struct {
     GHashTable *hash;
     GwyDataField *data_field;
@@ -56,40 +81,43 @@ typedef struct {
     GList *list;
 } NanoscopeDialogControls;
 
-static gboolean       module_register     (const gchar *name);
-static gint           nanoscope_detect    (const gchar *filename,
-                                           gboolean only_name);
-static GwyContainer*  nanoscope_load      (const gchar *filename);
-static GwyDataField*  hash_to_data_field  (GHashTable *hash,
-                                           GHashTable *scannerlist,
-                                           NanoscopeFileType file_type,
-                                           gsize bufsize,
-                                           gchar *buffer,
-                                           gint gxres,
-                                           gint gyres,
-                                           gchar **p);
-static NanoscopeData* select_which_data   (GList *list);
-static gboolean       read_ascii_data     (gint n,
-                                           gdouble *data,
-                                           gchar **buffer,
-                                           gint bpp);
-static gboolean       read_binary_data    (gint n,
-                                           gdouble *data,
-                                           gchar *buffer,
-                                           gint bpp);
-static GHashTable*    read_hash           (gchar **buffer);
-static gchar*         next_line           (gchar **buffer);
+static gboolean        module_register     (const gchar *name);
+static gint            nanoscope_detect    (const gchar *filename,
+                                            gboolean only_name);
+static GwyContainer*   nanoscope_load      (const gchar *filename);
+static GwyDataField*   hash_to_data_field  (GHashTable *hash,
+                                            GHashTable *scannerlist,
+                                            NanoscopeFileType file_type,
+                                            gsize bufsize,
+                                            gchar *buffer,
+                                            gint gxres,
+                                            gint gyres,
+                                            gchar **p);
+static NanoscopeData*  select_which_data   (GList *list);
+static gboolean        read_ascii_data     (gint n,
+                                            gdouble *data,
+                                            gchar **buffer,
+                                            gint bpp);
+static gboolean        read_binary_data    (gint n,
+                                            gdouble *data,
+                                            gchar *buffer,
+                                            gint bpp);
+static GHashTable*     read_hash           (gchar **buffer);
+static gchar*          next_line           (gchar **buffer);
 
-static void           get_scan_list_res   (GHashTable *hash,
-                                           gint *xres,
-                                           gint *yres);
-static gchar*         get_data_name       (GHashTable *hash);
-static GObject*       get_physical_scale  (GHashTable *hash,
-                                           GHashTable *scannerlist,
-                                           gdouble *scale);
-static void           fill_metadata       (GwyContainer *data,
-                                           GHashTable *hash,
-                                           GList *list);
+static void            get_scan_list_res   (GHashTable *hash,
+                                            gint *xres,
+                                            gint *yres);
+static GObject*        get_physical_scale  (GHashTable *hash,
+                                            GHashTable *scannerlist,
+                                            gdouble *scale);
+static void            fill_metadata       (GwyContainer *data,
+                                            GHashTable *hash,
+                                            GList *list);
+static NanoscopeValue* parse_value         (const gchar *key,
+                                            gchar *line);
+static gboolean        require_keys        (GHashTable *hash,
+                                            ...);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -98,7 +126,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -156,6 +184,7 @@ nanoscope_load(const gchar *filename)
     gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
+    NanoscopeValue *val;
     GHashTable *hash, *scannerlist = NULL;
     GList *l, *list = NULL;
     gint xres = 0, yres = 0;
@@ -214,9 +243,11 @@ nanoscope_load(const gchar *filename)
         object = gwy_container_new();
         gwy_container_set_object_by_name(GWY_CONTAINER(object), "/0/data",
                                          G_OBJECT(ndata->data_field));
-        if ((p = get_data_name(ndata->hash)))
+        if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
+            && val->soft_scale)
             gwy_container_set_string_by_name(GWY_CONTAINER(object),
-                                             "/filename/title", p);
+                                             "/filename/title",
+                                             g_strdup(val->soft_scale));
         fill_metadata(GWY_CONTAINER(object), ndata->hash, list);
     }
 
@@ -238,34 +269,16 @@ static void
 get_scan_list_res(GHashTable *hash,
                   gint *xres, gint *yres)
 {
-    const gchar *s;
+    NanoscopeValue *val;
 
     /* XXX: Some observed files contained correct dimensions only in
      * a global section, sizes in `image list' sections were bogus.
      * Version: 0x05300001 */
-    if ((s = g_hash_table_lookup(hash, "Samps/line")))
-        *xres = atoi(s);
-    if ((s = g_hash_table_lookup(hash, "Lines")))
-        *yres = atoi(s);
+    if ((val = g_hash_table_lookup(hash, "Samps/line")))
+        *xres = ROUND(val->hard_value);
+    if ((val = g_hash_table_lookup(hash, "Lines")))
+        *yres = ROUND(val->hard_value);
     gwy_debug("Global xres, yres = %d, %d", *xres, *yres);
-}
-
-static gchar*
-get_data_name(GHashTable *hash)
-{
-    gchar *name, *p1, *p2;
-
-    name = g_hash_table_lookup(hash, "@2:Image Data");
-    if (!name)
-        return NULL;
-
-    if ((p1 = strchr(name, '[')) && (p2 = strchr(p1+1, ']')))
-        return g_strndup(p1 + 1, p2 - p1 - 1);
-
-    if ((p1 = strchr(name, '"')) && (p2 = strchr(p1+1, '"')))
-        return g_strndup(p1 + 1, p2 - p1 - 1);
-
-    return NULL;
 }
 
 static void
@@ -275,17 +288,19 @@ add_metadata(gpointer hkey,
 {
     static gchar buffer[256];
     gchar *key = (gchar*)hkey;
-    gchar *value = (gchar*)hvalue;
+    NanoscopeValue *val = (NanoscopeValue*)hvalue;
     gchar *s;
 
-    if (!strcmp(key, "#self") || key[0] == '@' || !value[0])
+    if (!strcmp(key, "#self")
+        || !val->hard_value_str
+        || !val->hard_value_str[0])
         return;
 
     /* FIXME: naughty /-avoiding trick */
     s = gwy_strreplace(hkey, "/", "∕", (gsize)-1);
     g_snprintf(buffer, sizeof(buffer), "/meta/%s", s);
     gwy_container_set_string_by_name(GWY_CONTAINER(user_data),
-                                     buffer, g_strdup(value));
+                                     buffer, g_strdup(val->hard_value_str));
     g_free(s);
 }
 
@@ -323,60 +338,44 @@ hash_to_data_field(GHashTable *hash,
                    gint gyres,
                    gchar **p)
 {
+    NanoscopeValue *val;
     GwyDataField *dfield;
     GObject *unit;
     const gchar *s;
-    gchar *t, *end;
+    gchar *end;
     gchar un[5];
     gint xres, yres, bpp, offset, size;
     gdouble xreal, yreal, q;
     gdouble *data;
-    gboolean is_current;  /* assume height if not current, and ignore phase,
-                             etc. FIXME: should try to interpret the units */
 
-    if (!(s = g_hash_table_lookup(hash, "@2:Image Data"))) {
-        g_warning("No `@2 Image Data' found");
+    if (!require_keys(hash, "Samps/line", "Number of lines", "Bytes/pixel",
+                      "Scan size", "Data offset", "Data length", NULL))
         return NULL;
-    }
-    is_current = strstr(s, "[Current]") || strstr(s, "\"Current\"");
-    gwy_debug("is current = %d", is_current);
 
-    if (!(s = g_hash_table_lookup(hash, "Samps/line"))) {
-        g_warning("`Samps/line' not found");
-        return NULL;
-    }
-    xres = atoi(s);
+    val = g_hash_table_lookup(hash, "Samps/line");
+    xres = ROUND(val->hard_value);
 
-    if (!(s = g_hash_table_lookup(hash, "Number of lines"))) {
-        g_warning("`Number of lines' not found");
-        return NULL;
-    }
-    yres = atoi(s);
+    val = g_hash_table_lookup(hash, "Number of lines");
+    yres = ROUND(val->hard_value);
 
-    if (!(s = g_hash_table_lookup(hash, "Bytes/pixel"))) {
-        g_warning("`Bytes/pixel' not found");
-        return NULL;
-    }
-    bpp = atoi(s);
+    val = g_hash_table_lookup(hash, "Bytes/pixel");
+    bpp = ROUND(val->hard_value);
 
     /* scan size */
-    if (!(s = g_hash_table_lookup(hash, "Scan size"))) {
-        g_warning("`Scan size' not found");
+    val = g_hash_table_lookup(hash, "Scan size");
+    xreal = g_ascii_strtod(val->hard_value_str, &end);
+    if (errno || *end != ' ') {
+        g_warning("Cannot parse <Scan size>: <%s>", val->hard_value_str);
         return NULL;
     }
-    xreal = g_ascii_strtod(s, &end);
+    s = end+1;
+    yreal = g_ascii_strtod(s, &end);
     if (errno || *end != ' ') {
-        g_warning("Cannot parse `Scan size': <%s>", s);
-        return NULL;
-    }
-    t = end+1;
-    yreal = g_ascii_strtod(t, &end);
-    if (errno || *end != ' ') {
-        g_warning("Cannot parse `Scan size': <%s>", s);
+        g_warning("Cannot parse <Scan size>: <%s>", s);
         return NULL;
     }
     if (sscanf(end+1, "%4s", un) != 1) {
-        g_warning("Cannot parse `Scan size': <%s>", s);
+        g_warning("Cannot parse <Scan size>: <%s>", s);
         return NULL;
     }
     if (strcmp(un, "nm") == 0) {
@@ -395,22 +394,21 @@ hash_to_data_field(GHashTable *hash,
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
-        if (!(s = g_hash_table_lookup(hash, "Data offset"))) {
-            g_warning("`Data offset' not found");
-            return NULL;
-        }
-        offset = atoi(s);
+        val = g_hash_table_lookup(hash, "Data offset");
+        offset = ROUND(val->hard_value);
 
-        if (!(s = g_hash_table_lookup(hash, "Data length"))) {
-            g_warning("`Data length' not found");
-            return NULL;
-        }
-        size = atoi(s);
+        val = g_hash_table_lookup(hash, "Data length");
+        size = ROUND(val->hard_value);
         if (size != bpp*xres*yres) {
-            if (gxres)
+            /* Keep square pixels */
+            if (gxres) {
+                xreal *= (gdouble)gxres/xres;
                 xres = gxres;
-            if (gyres)
+            }
+            if (gyres) {
+                yreal *= (gdouble)gyres/yres;
                 yres = gyres;
+            }
             if (size != bpp*xres*yres) {
                g_warning("Data size %d != %d bpp*xres*yres",
                          size, bpp*xres*yres);
@@ -452,7 +450,7 @@ hash_to_data_field(GHashTable *hash,
         break;
     }
     gwy_data_field_multiply(dfield, q);
-    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
     g_object_unref(unit);
 
@@ -469,73 +467,37 @@ get_physical_scale(GHashTable *hash,
                    gdouble *scale)
 {
     GObject *siunit;
-    const gchar *l, *k, *s, *p;
-    gdouble hard, soft;
-    gchar *key, *t;
+    NanoscopeValue *val, *sval;
+    gchar *key, *s;
 
-    if (!(l = g_hash_table_lookup(hash, "@2:Z scale"))) {
+    if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
         g_warning("`@2:Z scale' not found");
         return NULL;
     }
+    key = g_strdup_printf("@%s", val->soft_scale);
 
-    if (!(k = strchr(l, '['))) {
-        g_warning("Cannot parse `@2:Z scale': <%s>", l);
-        return NULL;
-    }
-    k++;
-    if (!(p = strchr(k, ']'))) {
-        g_warning("Cannot parse `@2:Z scale': <%s>", l);
-        return NULL;
-    }
-    key = g_strdup_printf("@%.*s", p-k, k);
-
-    if (!(s = strchr(p, ')'))) {
-        g_warning("Cannot parse `@2:Z scale': <%s>", l);
-        return NULL;
-    }
-    hard = g_ascii_strtod(s+1, &t);
-    gwy_debug("Hardscale: %g", hard);
-    if (t == s+1) {
-        g_warning("Cannot parse `@2:Z scale' value: <%s>", s+1);
-        return NULL;
-    }
-
-    if (!(l = g_hash_table_lookup(scannerlist, key))) {
+    if (!(sval = g_hash_table_lookup(scannerlist, key))) {
         g_warning("`%s' not found", key);
         g_free(key);
         /* XXX */
-        *scale = hard;
+        *scale = val->hard_value;
         return gwy_si_unit_new("");
-        return NULL;
     }
 
-    if (l[0] != 'V') {
-        g_warning("Cannot parse `%s': <%s>", key, l);
-        g_free(key);
-        return NULL;
-    }
+    *scale = val->hard_value*sval->hard_value;
 
-    soft = g_ascii_strtod(l+2, &t);
-    if (t == l+2) {
-        g_warning("Cannot parse `%s' value: <%s>", key, l+2);
-        g_free(key);
-        return NULL;
-    }
-    gwy_debug("Softscale: %g", soft);
-    *scale = hard*soft;
-
-    while (g_ascii_isspace(*t))
-        t++;
-
-    if (!(s = strchr(t, '/')) || s[1] != 'V') {
-        g_warning("Cannot parse `%s' units: <%s>", key, t);
+    if (!sval->hard_value_units
+        || !(s = strchr(sval->hard_value_units, '/'))
+        || s[1] != 'V') {
+        g_warning("Cannot parse `%s' units", key);
         g_free(key);
         return NULL;
     }
     g_free(key);
-    key = g_strndup(t, s-t);
-    siunit = gwy_si_unit_new(key);
-    g_free(key);
+
+    s = g_strndup(sval->hard_value_units, s - sval->hard_value_units);
+    siunit = gwy_si_unit_new(s);
+    g_free(s);
 
     return siunit;
 }
@@ -566,6 +528,7 @@ select_which_data(GList *list)
 {
     NanoscopeData *ndata, *ndata0;
     NanoscopeDialogControls controls;
+    NanoscopeValue *val;
     GtkObject *layer;
     GwyDataField *dfield;
     GtkWidget *dialog, *label, *hbox, *vbox, *align;
@@ -599,9 +562,12 @@ select_which_data(GList *list)
     i = 0;
     for (l = controls.list; l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
-        choices[i].name = g_hash_table_lookup(ndata->hash, "@2:Image Data");
+        val = g_hash_table_lookup(ndata->hash, "@2:Image Data");
+        choices[i].name = val->hard_value_str;
+        /*
         if (choices[i].name[0] && choices[i].name[1])
             choices[i].name += 2;
+            */
         choices[i].value = i;
         i++;
     }
@@ -765,6 +731,7 @@ static GHashTable*
 read_hash(gchar **buffer)
 {
     GHashTable *hash;
+    NanoscopeValue *value;
     gchar *line, *colon;
 
     line = next_line(buffer);
@@ -780,14 +747,19 @@ read_hash(gchar **buffer)
     gwy_debug("hash table <%s>", line + 2);
     while ((*buffer)[0] == '\\' && (*buffer)[1] && (*buffer)[1] != '*') {
         line = next_line(buffer) + 1;
-        if (!line || !line[0] || !line[1] || !line[2])
+        if (!line || !line[0] || !line[1] || !line[2]) {
+            g_warning("Truncated line <%s>", line ? line : "(null)");
             goto fail;
+        }
         colon = strchr(line + 3, ':');
-        if (!colon || !isspace(colon[1]))
+        if (!colon || !isspace(colon[1])) {
+            g_warning("No colon in line <%s>", line);
             goto fail;
+        }
         *colon = '\0';
-        g_hash_table_insert(hash, line, colon + 2);
-        gwy_debug("<%s>: <%s>", line, colon + 2);
+        value = parse_value(line, colon+2);
+        if (value)
+            g_hash_table_insert(hash, line, value);
     }
 
     return hash;
@@ -796,7 +768,6 @@ fail:
     g_hash_table_destroy(hash);
     return NULL;
 }
-
 
 /**
  * next_line:
@@ -831,6 +802,140 @@ next_line(gchar **buffer)
         *buffer = NULL;
 
     return q;
+}
+
+/* General parameter line parser */
+static NanoscopeValue*
+parse_value(const gchar *key, gchar *line)
+{
+    NanoscopeValue *val;
+    gchar *p, *q;
+
+    val = g_new0(NanoscopeValue, 1);
+
+    /* old-style values */
+    if (key[0] != '@') {
+        val->hard_value = g_ascii_strtod(line, &p);
+        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' '))
+            val->hard_value_units = p+1;
+        val->hard_value_str = line;
+        return val;
+    }
+
+    /* type */
+    switch (line[0]) {
+        case 'V':
+        val->type = NANOSCOPE_VALUE_VALUE;
+        break;
+
+        case 'S':
+        val->type = NANOSCOPE_VALUE_SELECT;
+        break;
+
+        case 'C':
+        val->type = NANOSCOPE_VALUE_SCALE;
+        break;
+
+        default:
+        g_warning("Cannot parse value type <%s> for key <%s>", line, key);
+        g_free(val);
+        return NULL;
+        break;
+    }
+
+    if (line[1] != ' ') {
+        g_warning("Cannot parse value type <%s> for key <%s>", line, key);
+        g_free(val);
+        return NULL;
+    }
+    line += 2;
+
+    /* softscale */
+    if (line[0] == '[') {
+        if (!(p = strchr(line, ']'))) {
+            g_warning("Cannot parse soft scale <%s> for key <%s>", line, key);
+            g_free(val);
+            return NULL;
+        }
+        if (p-line-1 > 0) {
+            *p = '\0';
+            val->soft_scale = line+1;
+        }
+        line = p+1;
+        if (line[0] != ' ') {
+            g_warning("Cannot parse soft scale <%s> for key <%s>", line, key);
+            g_free(val);
+            return NULL;
+        }
+        line++;
+    }
+
+    /* hardscale (probably useless) */
+    if (line[0] == '(') {
+        if (!(p = strchr(line, ')'))) {
+            g_warning("Cannot parse hard scale <%s> for key <%s>", line, key);
+            g_free(val);
+            return NULL;
+        }
+        val->hard_scale = g_ascii_strtod(line+1, &q);
+        while (g_ascii_isspace(*q))
+            q++;
+        if (p-q > 0) {
+            *p = '\0';
+            val->hard_scale_units = q;
+        }
+        line = p+1;
+        if (line[0] != ' ') {
+            g_warning("Cannot parse hard scale <%s> for key <%s>", line, key);
+            g_free(val);
+            return NULL;
+        }
+        line++;
+    }
+
+    /* hard value (everything else) */
+    switch (val->type) {
+        case NANOSCOPE_VALUE_SELECT:
+        val->hard_value_str = line;
+        break;
+
+        case NANOSCOPE_VALUE_SCALE:
+        val->hard_value = g_ascii_strtod(line, &p);
+        break;
+
+        case NANOSCOPE_VALUE_VALUE:
+        val->hard_value = g_ascii_strtod(line, &p);
+        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' '))
+            val->hard_value_units = p+1;
+        val->hard_value_str = line;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    return val;
+}
+
+static gboolean
+require_keys(GHashTable *hash,
+             ...)
+{
+    va_list ap;
+    const gchar *key;
+
+    va_start(ap, hash);
+    while ((key = va_arg(ap, const gchar *))) {
+        if (!g_hash_table_lookup(hash, key)) {
+            g_warning("Parameter <%s> not found", key);
+            va_end(ap);
+            return FALSE;
+        }
+    }
+    va_end(ap);
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
