@@ -316,10 +316,8 @@ gwy_data_field_area_fit_polynom(GwyDataField *dfield,
         }
     }
 
-    if (!gwy_math_choleski_decompose(size, m)) {
-        g_warning("Fuck!");
+    if (!gwy_math_choleski_decompose(size, m))
         memset(coeffs, 0, size*sizeof(gdouble));
-    }
     else
         gwy_math_choleski_solve(size, m, coeffs);
 
