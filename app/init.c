@@ -32,9 +32,10 @@
 static GType optimization_fooler = 0;
 static GSList *palettes = NULL;
 
-static void ref_palette      (const gchar *name,
-                              GwyPaletteDef *pdef);
-static void unref_palettes   (void);
+static void gwy_app_init_set_window_icon (void);
+static void ref_palette                  (const gchar *name,
+                                          GwyPaletteDef *pdef);
+static void unref_palettes               (void);
 
 /**
  * gwy_app_init:
@@ -63,6 +64,30 @@ gwy_app_init(void)
     gwy_palette_def_setup_presets();
     gwy_palette_def_foreach((GwyPaletteDefFunc)ref_palette, NULL);
     g_atexit(unref_palettes);
+
+    gwy_app_init_set_window_icon();
+
+}
+
+static void
+gwy_app_init_set_window_icon(void)
+{
+    gchar *filename, *p;
+    GError *err = NULL;
+
+#ifdef G_OS_WIN32
+    p = gwy_find_self_dir("pixmaps");
+#else
+    p = g_strdup(GWY_PIXMAP_DIR);
+#endif
+    filename = g_build_filename(p, "gwy_gwyddion-32.ico", NULL);
+    gtk_window_set_default_icon_from_file(filename, &err);
+    if (err) {
+        g_warning("Cannot load window icon: %s", err->message);
+        g_clear_error(&err);
+    }
+    g_free(filename);
+    g_free(p);
 }
 
 /* The purpose of this function is to instantiate all palettes and keep them
