@@ -28,6 +28,8 @@ Requires: %{name} = %{version}
 Summary: Example plugins for Gwyddion.
 License: public domain
 Group: Applications/Engineering
+Requires: %{name}
+Requires: %{name}-devel
 
 %description
 Gwyddion is a modular SPM (scanning probe microscope) data analysis framework.
