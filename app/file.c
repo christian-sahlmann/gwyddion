@@ -425,7 +425,8 @@ recent_files_to_settings(void)
 
 /**
  * gwy_app_file_open_initial:
- * @args: %NULL-terminated file list.
+ * @args: A file list.
+ * @n: The number of items in @args.
  *
  * Opens a list of files [given on command line] and created recent-files
  * menu.
@@ -434,14 +435,14 @@ recent_files_to_settings(void)
  * who knows, what we get on the command line...
  **/
 void
-gwy_app_file_open_initial(gchar **args)
+gwy_app_file_open_initial(gchar **args, gint n)
 {
     gchar **p;
     gchar *cwd, *filename;
 
     /* FIXME: cwd is probably in UTF-8?! */
     cwd = g_get_current_dir();
-    for (p = args; *p; p++) {
+    for (p = args; n; p++, n--) {
         if (g_path_is_absolute(*p))
             filename = g_strdup(*p);
         else

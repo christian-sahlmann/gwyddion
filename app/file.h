@@ -38,7 +38,8 @@ void gwy_app_file_duplicate_cb   (void);
 void gwy_app_file_close_cb       (void);
 void gwy_app_file_export_cb      (const gchar *name);
 void gwy_app_file_import_cb      (const gchar *name);
-void gwy_app_file_open_initial   (gchar **args);
+void gwy_app_file_open_initial   (gchar **args,
+                                  gint n);
 
 #ifdef __cplusplus
 }

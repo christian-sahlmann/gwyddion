@@ -92,7 +92,7 @@ main(int argc, char *argv[])
     gwy_app_settings_get();
     gwy_module_register_modules(module_dirs);
     gwy_app_create_toolbox();
-    gwy_app_file_open_initial(argv + 1);
+    gwy_app_file_open_initial(argv + 1, argc - 1);
     gtk_main();
     gwy_app_settings_save(config_file);
     gwy_app_settings_free();
