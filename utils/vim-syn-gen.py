@@ -15,7 +15,7 @@ Config-file options:
   syntax_name          Vim syntax name (mandatory)
   file_glob            SOMETHING-decl.txt files to scan (mandatory)
   description          Syntax file Language field
-  base_url             Syntax file URL field (w/o actual filename)
+  url                  Syntax file URL field
   mantainer            Syntax file Maintainer field
   filter_regexp        Exclude matching symbols (default: r'^_')""" \
           % sys.argv[0]
@@ -31,8 +31,8 @@ if not options.has_key('maintainer'):
 if not options.has_key('description'):
     options['description'] = 'C %s extension' % syntax_name
 
-if options.has_key('url_base'):
-    url_line = '" URL: %s/%s.vim\n' % (options['url_base'], syntax_name)
+if options.has_key('url'):
+    url_line = '" URL: %s\n' % options['url']
 else:
     url_line = ''
 
