@@ -63,8 +63,6 @@ static void       filter_changed_cb (GObject *item,
                                     ToolControls *controls);
 static void       update_changed_cb (GtkToggleButton *button,
                                     ToolControls *controls);
-static void       my_undo_save (GwyDataField *dfield);
-static void       my_undo_load (GwyDataField *dfield);
 
 static void       load_args        (GwyContainer *container,
                                     ToolControls *controls);
@@ -72,12 +70,10 @@ static void       save_args        (GwyContainer *container,
                                     ToolControls *controls);
 
 
-GwyDataField *undo_dfield = NULL;
 gint old_ulcol = 0;
 gint old_ulrow = 0;
 gint old_brcol = 0;
 gint old_brrow = 0;
-gint unchanged = 1;
 gint state_changed = 0;
 
 /* The module info. */
@@ -285,7 +281,10 @@ apply(GwyUnitoolState *state)
 
     gwy_debug("");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    gwy_container_remove_by_name(data, "/0/show");
+    
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
@@ -309,7 +308,6 @@ apply(GwyUnitoolState *state)
         brrow = gwy_data_field_get_yres(dfield);
     }
   
-    my_undo_load(dfield);    
     gwy_app_undo_checkpoint(data, "/0/data");
     
     switch (controls->fil){
@@ -352,7 +350,7 @@ dialog_update(GwyUnitoolState *state)
     GwyUnitoolUnits *units;
     ToolControls *controls;
     GwyContainer *data;
-    GwyDataField *dfield;
+    GwyDataField *shadefield, *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gboolean is_visible, is_selected;
@@ -405,58 +403,67 @@ dialog_update(GwyUnitoolState *state)
         brrow = gwy_data_field_get_yres(dfield);
     }
    
-    if (unchanged) {my_undo_save(dfield); unchanged = 0;}
-    
-    if (state_changed || (old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))
-    {
-        my_undo_load(dfield);
-    }
 
-    if (is_selected && controls->upd && (state_changed || (old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))) 
+    if ((old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))
     {
+        state_changed = 1;
         old_ulcol = ulcol;
         old_ulrow = ulrow;
         old_brcol = brcol;
         old_brrow = brrow;
-        if (state_changed) state_changed = 0;
-   
-    switch (controls->fil){
+    }
+  
+    if (state_changed)
+    {
+       if (gwy_container_contains_by_name(data, "/0/show")) 
+       {
+          printf("Presentation found\n");
+          shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                               "/0/show"));
+          gwy_data_field_resample(shadefield,
+                                  gwy_data_field_get_xres(dfield),
+                                  gwy_data_field_get_yres(dfield),
+                                  GWY_INTERPOLATION_NONE);
+          gwy_data_field_copy(dfield, shadefield);
+       }
+       else
+       {
+          printf("Presentation not found\n");
+          shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+          gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
+       }
+     switch (controls->fil){
         case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_mean(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
         break;
 
         case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_median(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
         break;
 
         case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_conservative(shadefield, controls->siz, ulcol, ulrow, brcol, brrow); 
         break;
 
         case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(dfield, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_laplacian(shadefield, ulcol, ulrow, brcol, brrow); 
         break;
 
         case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_sobel(shadefield, controls->dir, ulcol, ulrow, brcol, brrow); 
         break;
 
         case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
+        gwy_data_field_filter_prewitt(shadefield, controls->dir, ulcol, ulrow, brcol, brrow); 
         break;
 
         default:
         g_assert_not_reached();
         break;
     }
+        state_changed = 0;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
-    }
-
-    if (state_changed) 
-    {
-        state_changed=0;
-        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
-    }
+   }
 
 }
 
@@ -470,11 +477,6 @@ dialog_abandon(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     save_args(settings, controls);
     
-    if (undo_dfield)
-    {
-        g_object_unref(undo_dfield);
-        undo_dfield = NULL;
-    }
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
@@ -505,27 +507,6 @@ update_changed_cb (GtkToggleButton *button, ToolControls *controls)
     dialog_update(controls->state);
 }
 
-static void
-my_undo_save(GwyDataField *dfield)
-{
-    if (undo_dfield==NULL)
-    {
-        undo_dfield = (GwyDataField *)gwy_data_field_new(gwy_data_field_get_xres(dfield),
-                                                         gwy_data_field_get_yres(dfield),
-                                                         gwy_data_field_get_xreal(dfield),
-                                                         gwy_data_field_get_yreal(dfield),
-                                                         FALSE);   
-    }
-    gwy_data_field_copy(dfield, undo_dfield);
-
-}
-
-static void
-my_undo_load(GwyDataField *dfield)
-{
-    if (undo_dfield==NULL) return;
-    gwy_data_field_copy(undo_dfield, dfield);
-}
 
 static const gchar *upd_key = "/tool/filter/update";
 static const gchar *siz_key = "/tool/profile/size";
