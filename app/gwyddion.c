@@ -8,6 +8,9 @@
 /* TODO */
 static GwyContainer *current_data = NULL;
 
+GwyContainer* gwy_app_get_current_data (void);
+void          gwy_app_set_current_data (GwyContainer *data);
+
 GtkWidget*
 create_aligned_menu(GtkItemFactoryEntry *menu_items,
                     gint nitems,
@@ -25,13 +28,61 @@ create_aligned_menu(GtkItemFactoryEntry *menu_items,
     return alignment;
 }
 
+void
+file_open_ok_cb(GtkFileSelection *selector)
+{
+    const gchar *filename_sys;  /* in system (disk) encoding */
+    const gchar *filename_utf8;  /* in UTF-8 */
+    GwyContainer *data;
+    GtkWidget *data_window, *data_view;
+    GwyDataViewLayer *layer;
+
+    filename_sys = gtk_file_selection_get_filename(selector);
+    if (!g_file_test(filename_sys,
+                     G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK))
+        return;
+
+    data = gwy_file_load(filename_sys);
+    if (!data)
+        return;
+
+    filename_utf8 = g_filename_to_utf8(filename_sys, 0, NULL, NULL, NULL);
+    gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+    gtk_widget_destroy(GTK_WIDGET(selector));
+
+    data_view = gwy_data_view_new(data);
+    layer = (GwyDataViewLayer*)gwy_layer_basic_new();
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
+
+    data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    gwy_app_set_current_data(data);
+    gtk_widget_show_all(data_window);
+}
+
+void
+file_open_cb(void)
+{
+    GtkFileSelection *selector;
+
+    selector = GTK_FILE_SELECTION(gtk_file_selection_new("Open file"));
+    gtk_file_selection_set_filename(selector, "");
+
+    g_signal_connect_swapped(selector->ok_button, "clicked",
+                             G_CALLBACK(file_open_ok_cb), selector);
+    g_signal_connect_swapped(selector->cancel_button, "clicked",
+                             G_CALLBACK(gtk_widget_destroy), selector);
+
+    gtk_widget_show_all(GTK_WIDGET(selector));
+}
+
+
 GtkWidget*
 create_file_menu(void)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/_New...", "<control>N", NULL, TRUE, "<StockItem>", GTK_STOCK_NEW },
-        { "/File/_Open...", "<control>O", NULL, 0, "<StockItem>", GTK_STOCK_OPEN },
+        { "/File/_Open...", "<control>O", file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
@@ -69,7 +120,6 @@ create_data_menu(void)
 void
 foo(void)
 {
-    GtkItemFactory *item_factory;
     GtkWidget *window, *vbox, *toolbar, *widget, *alignment;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
