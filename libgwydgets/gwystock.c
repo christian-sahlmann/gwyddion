@@ -121,6 +121,7 @@ guess_pixmap_path(void)
         }
         g_free(p);
     }
+    g_free(b);
 
     /* try to find gwyddion in path, this is namely for windows */
     p = g_find_program_in_path("gwyddion");
@@ -144,7 +145,6 @@ guess_pixmap_path(void)
     /* try GWY_PIXMAP_DIR, try it after the previous ones, so an uninstalled
      * version gets its own directory, not the system one */
     if (g_file_test(GWY_PIXMAP_DIR, G_FILE_TEST_IS_DIR)) {
-        g_free(b);
         gwy_debug("Icon path (from GWY_PIXMAP_DIR): %s", GWY_PIXMAP_DIR);
         return g_strdup(GWY_PIXMAP_DIR);
     }
@@ -152,7 +152,6 @@ guess_pixmap_path(void)
     /* as last resort, try current directory */
     p = g_get_current_dir();
     q = g_build_filename(p, b, "pixmaps", NULL);
-    g_free(b);
     g_free(p);
     if (g_file_test(q, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Icon path (from cwd): %s", q);
