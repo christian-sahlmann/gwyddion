@@ -177,7 +177,6 @@ gwy_palette_deserialize(const guchar *stream,
     GwyPalette *palette;
     GwyPaletteDef *pdef;
     gsize pos, fsize;
-    guint n;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -211,6 +210,18 @@ gwy_palette_value_changed(GObject *palette)
     g_signal_emit_by_name(GWY_PALETTE(palette), "value_changed", NULL);
 }
 
+/**
+ * gwy_palette_set_def:
+ * @a: palette we want to be set
+ * @b: palette definition to be used
+ *
+ * Sets the palette definition. 
+ *
+ * Makes a deep copy of @b and puts it into
+ * palette structure. This function does not recompute the color tables
+ * inside palette. Call gwy_palette_recompute_table() to do this afterwards
+ * or use gwy_palette_setup() instead of this function.
+ **/
 void 
 gwy_palette_set_def(GwyPalette *a, GwyPaletteDef* b)
 {
@@ -220,6 +231,17 @@ gwy_palette_set_def(GwyPalette *a, GwyPaletteDef* b)
      gwy_palette_def_copy(b, a->def); 
 }
 
+/**
+ * gwy_palette_recompute_table:
+ * @a: palette to be recomputed
+ *
+ * Recomputes all the color tables inside palette. 
+ *
+ * Call this function if you changed the palette definition
+ * directly or by calling gwy_palette_set_def().
+ *
+ * Returns: 0 at success
+ **/
 gint 
 gwy_palette_recompute_table(GwyPalette *a)
 {
@@ -234,17 +256,43 @@ gwy_palette_recompute_table(GwyPalette *a)
 	pe = (gwy_palette_def_get_color(a->def, i, GWY_INTERPOLATION_BILINEAR));
 	a->color[i] = pe;
     }
-    a->ints = gwy_palette_int32_render(a, a->ints);
+    a->ints = gwy_palette_int32_render(a, a->nofvals, a->ints);
 	
     return 0;
 }
 
-gint gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef)
+/**
+ * gwy_palette_setup:
+ * @a: palette we want to set up
+ * @pdef: palette definition
+ *
+ * Sets the palette definition and recomputes all the color tables inside palette
+ *
+ * Use this function to set up the palette if you have allready prepared
+ * the palette definition.
+ *
+ * Returns: 0 at success
+ **/
+gint 
+gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef)
 {
     gwy_palette_set_def(a, pdef);
     return gwy_palette_recompute_table(a);
 }
 
+/**
+ * gwy_palette_set_color:
+ * @a: palette we want to change
+ * @val: palette entry to add
+ * @i: position inside palette to put the entry
+ *
+ * Puts the color entry inside palette color table and recomputes palette definition
+ *
+ * Note: this is not the best way of changing palette. Better choice is 
+ * to change the palette definition and recompute the color table.
+ *
+ * Returns: 0 at success
+ **/
 gint 
 gwy_palette_set_color(GwyPalette *a, GwyPaletteEntry *val, gint i)
 {
@@ -274,6 +322,23 @@ gwy_palette_is_bigslopechange(GwyPaletteEntry a, GwyPaletteEntry am, GwyPaletteE
     else return 0;
 }
 
+/**
+ * gwy_palette_recompute_palette:
+ * @a: palette which definition is to be recomputed
+ * @istep: maximum distance of definition entries
+ *
+ * Fits the palette color tables with to obtain palette definition.
+ *
+ * The function does the reverse of gwy_palette_recompute_table().
+ * It finds the extrema points inside palette color tables and
+ * tries to setup the palette definition to fit the color tables.
+ * This fucntion should be used only when there is a reason
+ * for doing this, for example after some graphical entry
+ * of palette color table values. Parameter @istep controls
+ * the precision of the linear fit.
+ *
+ * Returns: 0 at success
+ **/
 gint 
 gwy_palette_recompute_palette(GwyPalette *a, gint istep)
 {
@@ -317,33 +382,149 @@ gwy_palette_recompute_palette(GwyPalette *a, gint istep)
     return 0;
 }
    
-guchar* gwy_palette_int32_render(GwyPalette *a, guchar *oldpal)
+/**
+ * gwy_palette_int32_render:
+ * @a: palette to be rendered
+ * @oldpal: pointer to field to be filled
+ *
+ * Fills the GPixmap-like field of integer values representing palette.
+ *
+ * Returns:
+ **/
+guchar* 
+gwy_palette_int32_render(GwyPalette *a, gint size, guchar *oldpal)
 {
     gint i, k;
-    gint32 rval, gval, bval, aval;
+    gdouble cor;
+    GwyPaletteEntry pe;
 
     if (oldpal==NULL)
     {
-    	oldpal = (guchar *) g_try_malloc(a->nofvals*sizeof(guchar)*4);
+    	oldpal = (guchar *) g_try_malloc(size*sizeof(guchar)*4);
     }
-    else oldpal = (guchar *) g_try_realloc(oldpal, a->nofvals*sizeof(guchar)*4); 
+    else oldpal = (guchar *) g_try_realloc(oldpal, size*sizeof(guchar)*4); 
 	
-    k=0;
-    for (i=0; i<a->nofvals; i++)
+    k = 0;
+    cor = a->def->n/(gdouble)size;
+    for (i=0; i<size; i++)
     {
-	rval = (gint32) a->color[i].r;
-	gval = (gint32) a->color[i].g;
-	bval = (gint32) a->color[i].b;
-	aval = (gint32) a->color[i].a;
+	pe = gwy_palette_def_get_color(a->def, i*cor, GWY_INTERPOLATION_BILINEAR);
 	
-	oldpal[k++] = (guchar)rval; 
-	oldpal[k++] = (guchar)gval; 
-	oldpal[k++] = (guchar)bval; 
-	oldpal[k++] = (guchar)aval; 
+	oldpal[k++] = (guchar)((gint32) pe.r); 
+	oldpal[k++] = (guchar)((gint32) pe.g); 
+	oldpal[k++] = (guchar)((gint32) pe.b); 
+	oldpal[k++] = (guchar)((gint32) pe.a); 
     }
     return oldpal;
 }
 
+/**
+ * gwy_palette_setup_predef:
+ * @a: palette to be filled
+ * @pal: palette index 
+ *
+ * Fills palette with some predefined colors
+ *
+ * Returns: 0 at success
+ **/
+gint
+gwy_palette_setup_predef(GwyPalette *a, gint pal)
+{
+    GwyPaletteDefEntry cval;
+    gint i;
+    
+    /*remove every previous items in the palette definition*/
+    g_array_free(a->def->data, 0);
+    a->def->data = g_array_new(0, 0, sizeof(GwyPaletteDefEntry));
+  
+    cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 0;
+    gwy_palette_def_set_color(a->def, &cval);
+    cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; cval.x = 511;
+    gwy_palette_def_set_color(a->def, &cval);
+    
+    if (pal == GWY_PALETTE_GRAY)
+    {
+	
+    }
+    else if (pal == GWY_PALETTE_RED)
+    {
+	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+    else if (pal == GWY_PALETTE_GREEN)
+    {
+	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+
+    else if (pal == GWY_PALETTE_BLUE)
+    {
+	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+
+    else if (pal == GWY_PALETTE_YELLOW)
+    {
+	cval.color.r = 212; cval.color.g = 183; cval.color.b = 42; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+
+    else if (pal == GWY_PALETTE_PINK)
+    {
+	cval.color.r = 255; cval.color.g = 20; cval.color.b = 160; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+
+    else if (pal == GWY_PALETTE_OLIVE)
+    {
+	cval.color.r = 94; cval.color.g = 176; cval.color.b = 117; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+    }
+
+    else if (pal == GWY_PALETTE_BW)
+    {
+	for (i=0; i<10; i++)
+	{
+	    if (i%2==0) {cval.color.r = 255; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; }
+	    else {cval.color.r = 0; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255;}
+	    cval.x = (gdouble)i*(256/10.0);
+	    gwy_palette_def_set_color(a->def, &cval);
+	}
+    }
+
+    else if (pal == GWY_PALETTE_RAINBOW)
+    {
+	cval.color.r = 255; cval.color.g = 0; cval.color.b = 0; cval.color.a = 255; cval.x = 64;
+	gwy_palette_def_set_color(a->def, &cval);
+   	cval.color.r = 255; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 128;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 0; cval.color.g = 255; cval.color.b = 255; cval.color.a = 255; cval.x = 192;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 255; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 256;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 0; cval.color.g = 255; cval.color.b = 0; cval.color.a = 255; cval.x = 320;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 0; cval.color.g = 0; cval.color.b = 255; cval.color.a = 255; cval.x = 384;
+	gwy_palette_def_set_color(a->def, &cval);
+	cval.color.r = 128; cval.color.g = 128; cval.color.b = 128; cval.color.a = 255; cval.x = 448;
+	gwy_palette_def_set_color(a->def, &cval);
+ 
+    }
+
+
+    else {g_warning("Palette not implemented yet."); return 1;}
+   
+    gwy_palette_def_sort(a->def);
+    return gwy_palette_recompute_table(a);;
+}
+
+/**
+ * gwy_palette_print:
+ * @a: palette to be outputted
+ *
+ * Debugging function that prints full palette color tables to stdout.
+ * 
+ **/
 void
 gwy_palette_print(GwyPalette *a)
 {

@@ -246,6 +246,14 @@ gwy_palette_def_value_changed(GObject *palette_def)
     g_signal_emit_by_name(GWY_PALETTEDEF(palette_def), "value_changed", NULL);
 }
 
+/**
+ * gwy_palette_def_copy:
+ * @a: source
+ * @b: destination
+ *
+ * Copies data from one palette definition to another.
+ * 
+ **/
 void 
 gwy_palette_def_copy(GwyPaletteDef *a, GwyPaletteDef *b)
 {
@@ -267,19 +275,43 @@ gwy_palette_def_copy(GwyPaletteDef *a, GwyPaletteDef *b)
     }
 }
 
+/**
+ * gwy_palette_def_get_n:
+ * @a: palette definition of interest
+ *
+ * Returns maximal x range of palette.
+ *
+ * Returns:
+ **/
 gint 
 gwy_palette_def_get_n(GwyPaletteDef *a)
 {
     return a->n;
 }
 
-GwyPaletteEntry gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
+/**
+ * gwy_palette_def_get_color:
+ * @a: palette definition of interest
+ * @x: position (0-N)
+ * @interpolation: interpolation method
+ *
+ * Finds the color at position @x between 0 and gwy_palette_def_get_n(). 
+ * 
+ * Interpolates between palette definition entries closest to @x
+ * and returns the resulting color.
+ *
+ * Returns: color found
+ **/
+GwyPaletteEntry 
+gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint interpolation)
 {
     GwyPaletteEntry ret;
     GwyPaletteDefEntry pe, pf;
     guint i;
     gdouble rlow, rhigh, blow, bhigh, glow, ghigh, alow, ahigh, xlow, xhigh;
 
+    rlow =rhigh = blow = bhigh = glow = ghigh = alow = ahigh = xlow = xhigh = 0;
+    
     if (x<0 || x>a->n) {g_warning("Trying t oreach value outside of palette."); return ret;}
    
     /*find the closest color index*/
@@ -323,6 +355,15 @@ GwyPaletteEntry gwy_palette_def_get_color(GwyPaletteDef *a, gdouble x, gint inte
     return ret;
 }
 
+/**
+ * gwy_palette_def_set_color:
+ * @a: palette definition to be changed
+ * @val: entry to be added
+ *
+ * Adds entry to palette definition and resorts this definiton.
+ *
+ * Returns: 0 at success
+ **/
 gint 
 gwy_palette_def_set_color(GwyPaletteDef *a, GwyPaletteDefEntry *val)
 {
@@ -346,7 +387,14 @@ gwy_palette_def_sort_func(GwyPaletteDefEntry *a, GwyPaletteDefEntry *b)
     else return 1;
 }
 
-void gwy_palette_def_sort(GwyPaletteDef *a)
+/**
+ * gwy_palette_def_sort:
+ * @a: palette definition to be resorted
+ *
+ * Resorts the palette definition.
+ **/
+void 
+gwy_palette_def_sort(GwyPaletteDef *a)
 {
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -357,6 +405,13 @@ void gwy_palette_def_sort(GwyPaletteDef *a)
 
 
 
+/**
+ * gwy_palette_def_print:
+ * @a: palette definition to be outputted
+ *
+ * Outputs the debugging information about palette definition.
+ * 
+ **/
 void
 gwy_palette_def_print(GwyPaletteDef *a)
 {

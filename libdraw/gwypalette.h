@@ -8,6 +8,17 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#define GWY_PALETTE_GRAY     0
+#define GWY_PALETTE_RED      1
+#define GWY_PALETTE_GREEN    2
+#define GWY_PALETTE_BLUE     3
+#define GWY_PALETTE_YELLOW   4
+#define GWY_PALETTE_PINK     5
+#define GWY_PALETTE_OLIVE    6
+#define GWY_PALETTE_BW       7
+#define GWY_PALETTE_RAINBOW  8
+
+    
 #define GWY_TYPE_PALETTE                  (gwy_palette_get_type())
 #define GWY_PALETTE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_PALETTE, GwyPalette))
 #define GWY_PALETTE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_PALETTE, GwyPalette))
@@ -21,10 +32,10 @@ extern "C" {
 typedef struct{
     GObject parent_instance;
     
-    GwyPaletteEntry *color;
-    GwyPaletteDef *def;
-    guchar *ints;
-    gint nofvals;
+    GwyPaletteEntry *color; /*generated table of doubles*/
+    GwyPaletteDef *def;     /*palette definition*/
+    guchar *ints;           /*generated table of int32s*/
+    gint nofvals;           /*maximum N (size of tables)*/
 } GwyPalette;
 
 typedef struct{
@@ -42,6 +53,9 @@ void gwy_palette_free(GwyPalette *a);
 /*fill the palette table using given definition*/
 gint gwy_palette_setup(GwyPalette *a, GwyPaletteDef *pdef);
 
+/*fill the palette with predefined values*/
+gint gwy_palette_setup_predef(GwyPalette *a, gint pal);
+
 /*set palette definition*/
 void gwy_palette_set_def(GwyPalette *a, GwyPaletteDef* b);
 
@@ -58,7 +72,7 @@ GwyPaletteEntry* gwy_palette_get_color(GwyPalette *a, gint i);
 gint gwy_palette_set_color(GwyPalette *a, GwyPaletteEntry *val, gint i); 
 
 /*render Pixmap like palette for quick acces*/
-guchar* gwy_palette_int32_render(GwyPalette *a, guchar *oldpal);
+guchar* gwy_palette_int32_render(GwyPalette *a, gint size, guchar *oldpal);
 
 
 /*output to stdout (for debgging namely)*/
