@@ -1,0 +1,53 @@
+<!-- ##### SECTION Title ##### -->
+simplefft
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GwyWindowingType ##### -->
+<para>
+
+</para>
+
+@GWY_WINDOWING_NONE: 
+@GWY_WINDOWING_HANN: 
+@GWY_WINDOWING_HAMMING: 
+@GWY_WINDOWING_BLACKMANN: 
+@GWY_WINDOWING_LANCZOS: 
+@GWY_WINDOWING_WELCH: 
+@GWY_WINDOWING_RECT: 
+
+<!-- ##### FUNCTION gwy_fft_hum ##### -->
+<para>
+
+</para>
+
+@dir: 
+@re_in: 
+@im_in: 
+@re_out: 
+@im_out: 
+@n: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_fft_window ##### -->
+<para>
+
+</para>
+
+@data: 
+@n: 
+@windowing: 
+
+

@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+html
+sgml
+libgwyprocess-decl-list.txt
+libgwyprocess-decl.txt
+libgwyprocess.args
+libgwyprocess.hierarchy
+libgwyprocess.interfaces
+libgwyprocess.prerequisites
+libgwyprocess.signals

@@ -1,0 +1,16 @@
+<SECTION>
+<FILE>gwymodule</FILE>
+GWY_MODULE_ABI_VERSION
+GWY_MODULE_QUERY_NAME
+GWY_MODULE_QUERY
+GwyRunType
+GwyModuleRegisterFunc
+GwyProcessFunc
+GwyModuleInfo
+GwyModuleQueryFunc
+GwyProcessFuncInfo
+gwy_module_register_modules
+gwy_register_process_func
+gwy_build_process_menu
+</SECTION>
+

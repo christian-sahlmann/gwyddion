@@ -1,0 +1,19 @@
+<!DOCTYPE book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<!ENTITY libgwyprocess-GwyDataField SYSTEM "sgml/datafield.sgml">
+<!ENTITY libgwyprocess-GwyDataLine SYSTEM "sgml/dataline.sgml">
+<!ENTITY libgwyprocess-interpolation SYSTEM "sgml/interpolation.sgml">
+<!ENTITY libgwyprocess-simplefft SYSTEM "sgml/simplefft.sgml">
+]>
+<book id="index">
+  <bookinfo>
+    <title>[Insert name here] Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>[Insert title here]</title>
+    &libgwyprocess-GwyDataField;
+    &libgwyprocess-GwyDataLine;
+    &libgwyprocess-interpolation;
+    &libgwyprocess-simplefft;
+  </chapter>
+</book>

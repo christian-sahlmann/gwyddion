@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+html
+sgml
+libgwymodule-decl-list.txt
+libgwymodule-decl.txt
+libgwymodule.args
+libgwymodule.hierarchy
+libgwymodule.interfaces
+libgwymodule.prerequisites
+libgwymodule.signals
