@@ -1,3 +1,17 @@
+1.7cvs20041214
+
+1.8
+Modules:
+- Blind tip estimate: Insensitive OK button when full estimate was run without
+  partial estimate first was fixed.
+
+Libraries:
+- libgwyddion: Better SI unit parsing, multiplication, division and powers.
+- libgwyddion: Value formatting bug causing data ranges consisting entirely
+  of negative values to be displayed as (NaN, NaN) was fixed
+- libgwyddion, libgwyprocess: Convenience macros and methods for duplication,
+  creation of similar data fields and lines.
+
 
 1.7
 Application:
