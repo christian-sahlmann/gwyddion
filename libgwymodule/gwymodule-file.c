@@ -8,8 +8,6 @@
 
 #include "gwymodule-file.h"
 
-static GHashTable *file_funcs = NULL;
-
 typedef struct {
     const gchar *filename;
     const gchar *winner;
@@ -18,6 +16,19 @@ typedef struct {
     gboolean must_have_load;
     gboolean must_have_save;
 } GwyFileDetectData;
+
+static void file_detect_max_score      (const gchar *key,
+                                        GwyFileFuncInfo *func_info,
+                                        GwyFileDetectData *ddata);
+static void gwy_hash_table_to_slist_cb (gpointer key,
+                                        gpointer value,
+                                        gpointer user_data);
+static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
+                                        GwyFileFuncInfo *b);
+
+static GHashTable *file_funcs = NULL;
+
+static const gsize bufsize = 1024;
 
 /**
  * gwy_file_func_register:
@@ -250,6 +261,80 @@ gwy_file_save(GwyContainer *data,
         return FALSE;
 
     return gwy_file_func_run_save(ddata.winner, data, filename);
+}
+
+/**
+ * gwy_build_file_menu:
+ * @item_factory: A #GtkItemFactory to add items to.
+ * @prefix: Where to add the menu items to the factory.
+ * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
+ *                 menu is selected.
+ *
+ * Creates #GtkItemFactory for a file type menu with all registered file type
+ * functions.
+ *
+ * Returns: The menu item factory as a #GtkObject.
+ **/
+GtkObject*
+gwy_build_file_menu(GtkObject *item_factory,
+                    const gchar *prefix,
+                    GCallback item_callback)
+{
+    GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
+    GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
+    GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
+    GtkItemFactory *factory;
+    gchar *path;
+    GSList *l, *entries = NULL;
+    gint dp_len;
+
+    g_return_val_if_fail(GTK_IS_ITEM_FACTORY(item_factory), NULL);
+    factory = GTK_ITEM_FACTORY(item_factory);
+
+    g_hash_table_foreach(file_funcs, gwy_hash_table_to_slist_cb, &entries);
+    entries = g_slist_sort(entries, (GCompareFunc)file_menu_entry_compare);
+
+    dp_len = strlen(prefix);
+
+    /* the root branch */
+    path = strncpy(g_new(gchar, bufsize), prefix, bufsize);
+    branch.path = path;
+    gtk_item_factory_create_item(factory, &branch, NULL, 1);
+
+    /* the root tearoff */
+    g_strlcpy(path + dp_len, "/---", bufsize - dp_len);
+    tearoff.path = path;
+    gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
+
+    item.path = path;
+    for (l = entries; l; l = g_slist_next(l)) {
+        GwyFileFuncInfo *func_info = (GwyFileFuncInfo*)l->data;
+        g_strlcpy(path + dp_len+1, func_info->file_desc, bufsize - dp_len-1);
+        gtk_item_factory_create_item(factory, &item, func_info->name, 1);
+    }
+
+    g_free(path);
+    g_slist_free(entries);
+
+    return item_factory;
+}
+
+static void
+gwy_hash_table_to_slist_cb(gpointer key,
+                           gpointer value,
+                           gpointer user_data)
+{
+    GSList **list = (GSList**)user_data;
+
+    *list = g_slist_prepend(*list, value);
+}
+
+static gint
+file_menu_entry_compare(GwyFileFuncInfo *a,
+                        GwyFileFuncInfo *b)
+{
+    g_assert(a->file_desc && b->file_desc);
+    return strcmp(a->file_desc, b->file_desc);
 }
 
 /************************** Documentation ****************************/

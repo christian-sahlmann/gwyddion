@@ -9,7 +9,13 @@
 
 #include "gwymodule-process.h"
 
-static GHashTable *process_funcs;
+static void gwy_hash_table_to_slist_cb (gpointer key,
+                                        gpointer value,
+                                        gpointer user_data);
+static gint process_menu_entry_compare (GwyProcessFuncInfo *a,
+                                        GwyProcessFuncInfo *b);
+
+static GHashTable *process_funcs = NULL;
 
 static const gsize bufsize = 1024;
 
@@ -91,41 +97,10 @@ gwy_process_func_run(const guchar *name,
     return status;
 }
 
-static void
-gwy_hash_table_to_slist_cb(gpointer key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GSList **list = (GSList**)user_data;
-
-    *list = g_slist_prepend(*list, value);
-}
-
-static gint
-process_menu_entry_compare(GwyProcessFuncInfo *a,
-                           GwyProcessFuncInfo *b)
-{
-    gchar p[bufsize], q[bufsize];
-    gsize i, j;
-
-    g_assert(a->menu_path && b->menu_path);
-    for (i = j = 0; a->menu_path[i] && j < bufsize-1; i++) {
-        if (a->menu_path[i] != '_')
-            p[j++] = a->menu_path[i];
-    }
-    p[j] = '\0';
-    for (i = j = 0; b->menu_path[i] && j < bufsize-1; i++) {
-        if (b->menu_path[i] != '_')
-            q[j++] = b->menu_path[i];
-    }
-    q[j] = '\0';
-    return strcmp(p, q);
-}
-
 /**
  * gwy_build_process_menu:
- * @accel_group: The accelerator group the menu should use (%NULL for a new
- *               one).
+ * @item_factory: A #GtkItemFactory to add items to.
+ * @prefix: Where to add the menu items to the factory.
  * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
  *                 menu is selected.
  *
@@ -135,35 +110,36 @@ process_menu_entry_compare(GwyProcessFuncInfo *a,
  * Returns: The menu item factory as a #GtkObject.
  **/
 GtkObject*
-gwy_build_process_menu(GtkAccelGroup *accel_group,
+gwy_build_process_menu(GtkObject *item_factory,
+                       const gchar *prefix,
                        GCallback item_callback)
 {
-    GtkItemFactory *item_factory;
     GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
     GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
-    gchar *current, *prev, *dp_str;
+    GtkItemFactory *factory;
+    gchar *current, *prev;
     GSList *l, *entries = NULL;
     gint i, dp_len;
 
+    g_return_val_if_fail(GTK_IS_ITEM_FACTORY(item_factory), NULL);
+    factory = GTK_ITEM_FACTORY(item_factory);
+
     g_hash_table_foreach(process_funcs, gwy_hash_table_to_slist_cb, &entries);
     entries = g_slist_sort(entries, (GCompareFunc)process_menu_entry_compare);
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<proc>",
-                                        accel_group);
 
-    dp_str = "/_Data Process";
-    dp_len = strlen(dp_str);
+    dp_len = strlen(prefix);
 
     /* the root branch */
-    current = strncpy(g_new(gchar, bufsize), dp_str, bufsize);
+    current = strncpy(g_new(gchar, bufsize), prefix, bufsize);
     branch.path = current;
-    gtk_item_factory_create_item(item_factory, &branch, NULL, 1);
+    gtk_item_factory_create_item(factory, &branch, NULL, 1);
 
     /* the root tearoff */
-    prev = strncpy(g_new(gchar, bufsize), dp_str, bufsize);
+    prev = strncpy(g_new(gchar, bufsize), prefix, bufsize);
     g_strlcpy(prev + dp_len, "/---", bufsize - dp_len);
     tearoff.path = prev;
-    gtk_item_factory_create_item(item_factory, &tearoff, NULL, 1);
+    gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
 
     /* create missing branches
      * XXX: Gtk+ essentially can do this itself
@@ -199,12 +175,12 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
             /* create a branch with a tearoff */
             current[i] = '\0';
             branch.path = current;
-            gtk_item_factory_create_item(item_factory, &branch, NULL, 1);
+            gtk_item_factory_create_item(factory, &branch, NULL, 1);
 
             strcpy(prev, current);
             g_strlcat(prev, "/---", bufsize);
             tearoff.path = prev;
-            gtk_item_factory_create_item(item_factory, &tearoff, NULL, 1);
+            gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
             current[i] = '/';
 
             /* find where the next / is  */
@@ -216,7 +192,7 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
         /* XXX: passing directly func_info->name may be a little dangerous,
          * OTOH who would eventually free a newly allocated string? */
         item.path = current;
-        gtk_item_factory_create_item(item_factory, &item, func_info->name, 1);
+        gtk_item_factory_create_item(factory, &item, func_info->name, 1);
 
         GWY_SWAP(gchar*, current, prev);
     }
@@ -225,7 +201,38 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
     g_free(current);
     g_slist_free(entries);
 
-    return (GtkObject*)item_factory;
+    return item_factory;
+}
+
+static void
+gwy_hash_table_to_slist_cb(gpointer key,
+                           gpointer value,
+                           gpointer user_data)
+{
+    GSList **list = (GSList**)user_data;
+
+    *list = g_slist_prepend(*list, value);
+}
+
+static gint
+process_menu_entry_compare(GwyProcessFuncInfo *a,
+                           GwyProcessFuncInfo *b)
+{
+    gchar p[bufsize], q[bufsize];
+    gsize i, j;
+
+    g_assert(a->menu_path && b->menu_path);
+    for (i = j = 0; a->menu_path[i] && j < bufsize-1; i++) {
+        if (a->menu_path[i] != '_')
+            p[j++] = a->menu_path[i];
+    }
+    p[j] = '\0';
+    for (i = j = 0; b->menu_path[i] && j < bufsize-1; i++) {
+        if (b->menu_path[i] != '_')
+            q[j++] = b->menu_path[i];
+    }
+    q[j] = '\0';
+    return strcmp(p, q);
 }
 
 /**

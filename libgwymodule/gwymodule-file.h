@@ -3,6 +3,7 @@
 #ifndef __GWY_MODULE_FILE_H__
 #define __GWY_MODULE_FILE_H__
 
+#include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleloader.h>
 
@@ -46,6 +47,9 @@ GwyContainer*   gwy_file_load               (const gchar *filename);
 gboolean        gwy_file_save               (GwyContainer *data,
                                              const gchar *filename);
 
+GtkObject*      gwy_build_file_menu         (GtkObject *item_factory,
+                                             const gchar *prefix,
+                                             GCallback item_callback);
 
 #ifdef __cplusplus
 }

@@ -15,6 +15,8 @@ void gwy_app_file_save_as_cb    (void);
 void gwy_app_file_save_cb       (void);
 void gwy_app_file_duplicate_cb  (void);
 void gwy_app_file_close_cb      (void);
+void gwy_app_file_export_cb     (const gchar *name);
+void gwy_app_file_import_cb     (const gchar *name);
 
 /* FIXME: to be moved somewhere? refactored? */
 GtkWidget* gwy_app_data_window_create       (GwyContainer *data);

@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
 #include "app.h"
 #include "file.h"
@@ -45,7 +46,6 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
-    /* TODO must use one accel group for all menus, otherwise they don't work */
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, root_path,
                                         accel_group);
     gtk_item_factory_create_items(item_factory, nitems, menu_items, NULL);
@@ -61,22 +61,22 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
 GtkWidget*
 gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
-    GtkWidget *widget, *alignment;
-    GtkObject *item_factory;
+    GtkWidget *menu, *alignment;
+    GtkItemFactory *item_factory;
     GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
-    item_factory
-        = gwy_build_process_menu(accel_group,
-                                 G_CALLBACK(gwy_app_run_process_func_cb));
-    widget = gtk_item_factory_get_widget(GTK_ITEM_FACTORY(item_factory),
-                                         "<proc>");
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<proc>",
+                                        accel_group);
+    gwy_build_process_menu(GTK_OBJECT(item_factory), "/_Data Process",
+                           G_CALLBACK(gwy_app_run_process_func_cb));
+    menu = gtk_item_factory_get_widget(item_factory, "<proc>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
-    gtk_container_add(GTK_CONTAINER(alignment), widget);
+    gtk_container_add(GTK_CONTAINER(alignment), menu);
 
     /* set up sensitivity: all items need an active data window */
     setup_sensitivity_keys();
-    gwy_menu_set_flags_recursive(widget, &sens_data);
-    gwy_menu_set_sensitive_recursive(widget, &sens_data);
+    gwy_menu_set_flags_recursive(menu, &sens_data);
+    gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
     return alignment;
 }
@@ -97,7 +97,8 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
     setup_sensitivity_keys();
     menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
                                         "<xtns>", accel_group, &item_factory);
-    item = gtk_item_factory_get_item(item_factory, "<file>/Externs/Metadata browser...");
+    item = gtk_item_factory_get_item(item_factory,
+                                     "<file>/Externs/Metadata browser...");
     set_sensitive(item, GWY_MENU_FLAG_DATA);
     sens_data.flags = GWY_MENU_FLAG_DATA;
     sens_data.set_to = 0;
@@ -109,22 +110,35 @@ gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
 GtkWidget*
 gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
 {
-    static GtkItemFactoryEntry menu_items[] = {
+    static GtkItemFactoryEntry menu_items1[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/---", NULL, NULL, 0, "<Tearoff>", NULL },
         { "/File/_Open...", "<control>O", gwy_app_file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", gwy_app_file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", gwy_app_file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+    };
+    static GtkItemFactoryEntry menu_items2[] = {
         { "/File/_Close", "<control>W", gwy_app_file_close_cb, 0, "<StockItem>", GTK_STOCK_CLOSE },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
         { "/File/_Quit...", "<control>Q", gwy_app_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
     GtkItemFactory *item_factory;
-    GtkWidget *menu, *item;
+    GtkWidget *alignment, *menu, *item;
     GwyMenuSensitiveData sens_data;
 
-    menu = gwy_menu_create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items),
-                                        "<file>", accel_group, &item_factory);
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<file>",
+                                        accel_group);
+    gtk_item_factory_create_items(item_factory,
+                                  G_N_ELEMENTS(menu_items1), menu_items1, NULL);
+    gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Export To",
+                        G_CALLBACK(gwy_app_file_export_cb));
+    gwy_build_file_menu(GTK_OBJECT(item_factory), "/File/_Import From",
+                        G_CALLBACK(gwy_app_file_import_cb));
+    gtk_item_factory_create_items(item_factory,
+                                  G_N_ELEMENTS(menu_items2), menu_items2, NULL);
+    menu = gtk_item_factory_get_widget(item_factory, "<file>");
+    alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
+    gtk_container_add(GTK_CONTAINER(alignment), menu);
 
     /* set up sensitivity  */
     setup_sensitivity_keys();
@@ -138,7 +152,7 @@ gwy_menu_create_file_menu(GtkAccelGroup *accel_group)
     sens_data.set_to = 0;
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
 
-    return menu;
+    return alignment;
 }
 
 GtkWidget*

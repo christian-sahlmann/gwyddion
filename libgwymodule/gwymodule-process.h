@@ -4,9 +4,6 @@
 #define __GWY_MODULE_PROCESS_H__
 
 #include <gtk/gtkobject.h>
-/* FIXME: it should not require anything from Gtk+, move the menu-builder
- * somewhere else. */
-#include <gtk/gtkaccelgroup.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleloader.h>
 
@@ -33,7 +30,8 @@ gboolean     gwy_process_func_run           (const guchar *name,
                                              GwyContainer *data,
                                              GwyRunType run);
 GwyRunType   gwy_process_func_get_run_types (const gchar *name);
-GtkObject*   gwy_build_process_menu         (GtkAccelGroup *accel_group,
+GtkObject*   gwy_build_process_menu         (GtkObject *item_factory,
+                                             const gchar *prefix,
                                              GCallback item_callback);
 
 #ifdef __cplusplus
