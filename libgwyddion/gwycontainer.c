@@ -903,6 +903,9 @@ gwy_container_set_string(GwyContainer *container,
  *
  * Stores an object into @container, identified by @key.
  *
+ * The container claims ownership on the object, i.e. its reference count is
+ * incremented.
+ *
  * The object must implement #GwySerializable interface to allow serialization
  * of the container.  It also has to implement #GwyWatchable interface to
  * allow watching of value changes.
@@ -1022,6 +1025,7 @@ gwy_container_deserialize(const guchar *buffer,
         GType type;
         guchar *name;
         GQuark key;
+        GObject *object;
 
         type = gwy_serialize_unpack_int32(buf, mysize, &pos);
         name = gwy_serialize_unpack_string(buf, mysize, &pos);
@@ -1031,9 +1035,9 @@ gwy_container_deserialize(const guchar *buffer,
 
         switch (type) {
             case G_TYPE_OBJECT:
-            gwy_container_set_object(container, key,
-                                     gwy_serializable_deserialize(buf, mysize,
-                                                                  &pos));
+            object = gwy_serializable_deserialize(buf, mysize, &pos);
+            gwy_container_set_object(container, key, object);
+            g_object_unref(object);
             break;
 
             case G_TYPE_BOOLEAN:
