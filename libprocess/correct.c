@@ -24,6 +24,9 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 
+static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
+                                                  guint m,
+                                                  gdouble phi);
 /**
  * gwy_data_field_correct_laplace_iteration:
  * @data_field: data field to be corrected
@@ -284,6 +287,189 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
             }
         }
     }
+}
+
+/**
+ * gwy_data_field_unrotate_find_corrections:
+ * @derdist: Angular derivation distribution (normally obrained from
+ *           gwy_data_field_slope_distribution()).
+ * @correction: Corrections for particular symmetry types will be stored
+ *              here (indexed by GwyPlaneSymmetry). @correction[0] contains
+ *              the most probable correction.  The angles are in radians.
+ *
+ * Finds corrections for all possible symmetries and guess which one should
+ * be used.
+ *
+ * Returns: The guessed type of symmetry.
+ *
+ * Since: 1.4.
+ **/
+GwyPlaneSymmetry
+gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
+                                         gdouble *correction)
+{
+    static const guint symm[] = { 2, 3, 4, 6 };
+    GwyPlaneSymmetry guess, t;
+    gint i, nder;
+    gsize j, m;
+    gdouble x, avg, max, total, phi;
+    gdouble *der;
+    gdouble sint[G_N_ELEMENTS(symm)], cost[G_N_ELEMENTS(symm)];
+
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
+    avg = gwy_data_line_get_avg(derdist);
+    gwy_data_line_add(derdist, -avg);
+
+    guess = GWY_SYMMETRY_AUTO;
+    max = -G_MAXDOUBLE;
+    for (j = 0; j < G_N_ELEMENTS(symm); j++) {
+        m = symm[j];
+        sint[j] = cost[j] = 0.0;
+        for (i = 0; i < nder; i++) {
+            x = 2*G_PI*(i + 0.5)/nder;
+
+            sint[j] += sin(m*x)*der[i];
+            cost[j] += cos(m*x)*der[i];
+        }
+
+        phi = atan2(-sint[j], cost[j]);
+        total = sqrt(sint[j]*sint[j] + cost[j]*cost[j]);
+
+        gwy_debug("sc%d = (%f, %f), total%d = (%f, %f)",
+                  m, sint[j], cost[j], m, total, 180.0/G_PI*phi);
+
+        phi /= 2*G_PI*m;
+        phi = unrotate_refine_correction(derdist, m, phi);
+        t = sizeof("Die, die GCC warning!");
+        /*
+         *             range from             smallest possible
+         *  symmetry   compute_correction()   range                ratio
+         *    m        -1/2m .. 1/2m
+         *
+         *    2        -1/4  .. 1/4           -1/8  .. 1/8         1/2
+         *    3        -1/6  .. 1/6           -1/12 .. 1/12        1/2
+         *    4        -1/8  .. 1/8           -1/8  .. 1/8 (*)     1
+         *    6        -1/12 .. 1/12          -1/12 .. 1/12        1
+         *
+         *  (*) not counting rhombic
+         */
+        switch (m) {
+            case 2:
+            t = GWY_SYMMETRY_PARALLEL;
+            /* align with any x or y */
+            if (phi >= 0.25/m)
+                phi -= 0.5/m;
+            else if (phi <= -0.25/m)
+                phi += 0.5/m;
+            correction[t] = phi;
+            total /= 1.25;
+            break;
+
+            case 3:
+            t = GWY_SYMMETRY_TRIANGULAR;
+            /* align with any x or y */
+            if (phi >= 0.125/m)
+                phi -= 0.25/m;
+            else if (phi <= -0.125/m)
+                phi += 0.25/m;
+            correction[t] = phi;
+            break;
+
+            case 4:
+            t = GWY_SYMMETRY_SQUARE;
+            correction[t] = phi;
+            /* decide square/rhombic */
+            phi += 0.5/m;
+            if (phi > 0.5/m)
+                phi -= 1.0/m;
+            t = GWY_SYMMETRY_RHOMBIC;
+            correction[t] = phi;
+            if (fabs(phi) > fabs(correction[GWY_SYMMETRY_SQUARE]))
+                t = GWY_SYMMETRY_SQUARE;
+            total /= 1.4;
+            break;
+
+            case 6:
+            t = GWY_SYMMETRY_HEXAGONAL;
+            correction[t] = phi;
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+
+        if (total > max) {
+            max = total;
+            guess = t;
+        }
+    }
+    gwy_data_line_add(derdist, avg);
+    g_assert(guess != GWY_SYMMETRY_AUTO);
+    gwy_debug("SELECTED: %s",
+              gwy_enum_to_string(guess, unrotate_symmetry,
+                                 G_N_ELEMENTS(unrotate_symmetry)));
+    correction[GWY_SYMMETRY_AUTO] = correction[guess];
+
+    for (j = 0; j < GWY_SYMMETRY_LAST; j++)
+        correction[j] *= 2.0*G_PI;
+
+    return guess;
+}
+
+/**
+ * unrotate_refine_correction:
+ * @derdist: Angular derivation distribution (as in Slope dist. graph).
+ * @m: Symmetry.
+ * @phi: Initial correction guess (in the range 0..1!).
+ *
+ * Compute correction assuming symmetry @m and initial guess @phi.
+ *
+ * Returns: The correction (again in the range 0..1!).
+ **/
+static gdouble
+unrotate_refine_correction(GwyDataLine *derdist,
+                           guint m, gdouble phi)
+{
+    gdouble sum, wsum;
+    gdouble *der;
+    guint i, j, nder;
+
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
+
+    phi -= floor(phi) + 1.0;
+    sum = wsum = 0.0;
+    for (j = 0; j < m; j++) {
+        gdouble low = (j + 5.0/6.0)/m - phi;
+        gdouble high = (j + 7.0/6.0)/m - phi;
+        gdouble s, w;
+        guint ilow, ihigh;
+
+        ilow = (guint)floor(low*nder);
+        ihigh = (guint)floor(high*nder);
+        gwy_debug("[%u] peak %u low = %f, high = %f, %u, %u",
+                  m, j, low, high, ilow, ihigh);
+        s = w = 0.0;
+        for (i = ilow; i <= ihigh; i++) {
+            s += (i + 0.5)*der[i % nder];
+            w += der[i % nder];
+        }
+
+        s /= nder*w;
+        gwy_debug("[%u] peak %u center: %f", m, j, 360*s);
+        sum += (s - (gdouble)j/m)*w*w;
+        wsum += w*w;
+    }
+    phi = sum/wsum;
+    gwy_debug("[%u] FITTED phi = %f (%f)", m, phi, 360*phi);
+    phi = fmod(phi + 1.0, 1.0/m);
+    if (phi > 0.5/m)
+        phi -= 1.0/m;
+    gwy_debug("[%u] MINIMIZED phi = %f (%f)", m, phi, 360*phi);
+
+    return phi;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

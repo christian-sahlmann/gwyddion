@@ -90,6 +90,9 @@ gint   gwy_data_field_get_line_stat_function (GwyDataField *data_field,
                                               GwyInterpolationType interpolation,
                                               GwyWindowingType windowing,
                                               gint nstats);
+void   gwy_data_field_slope_distribution     (GwyDataField *dfield,
+                                              GwyDataLine *derdist,
+                                              gint kernel_size);
 
 #ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_get_area_max(GwyDataField *a,

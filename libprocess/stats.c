@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
@@ -907,6 +909,65 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
         res = sb;
 
     return res;
+}
+
+/**
+ * gwy_data_field_slope_distribution:
+ * @dfield: A data field.
+ * @derdist: A data line to fill with angular slope distribution. Its
+ *           resolution determines resolution of the distribution.
+ * @kernel_size: If positive, local plane fitting will be used for slope
+ *               computation; if nonpositive, plain central derivations
+ *               will be used.
+ *
+ * Computes angular slope distribution.
+ *
+ * Since 1.4.
+ **/
+void
+gwy_data_field_slope_distribution(GwyDataField *dfield,
+                                  GwyDataLine *derdist,
+                                  gint kernel_size)
+{
+    gdouble *data, *der;
+    gdouble bx, by, phi;
+    gint xres, yres, nder;
+    gint col, row, iphi;
+
+    nder = gwy_data_line_get_res(derdist);
+    der = gwy_data_line_get_data(derdist);
+    data = gwy_data_field_get_data(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    memset(der, 0, nder*sizeof(gdouble));
+    if (kernel_size > 0) {
+        for (row = 0; row + kernel_size < yres; row++) {
+            for (col = 0; col + kernel_size < xres; col++) {
+                gwy_data_field_area_fit_plane(dfield, col, row,
+                                              kernel_size, kernel_size,
+                                              NULL, &bx, &by);
+                phi = atan2(by, bx);
+                iphi = (gint)floor(nder*(phi + G_PI)/(2.0*G_PI));
+                iphi = CLAMP(iphi, 0, nder-1);
+                der[iphi] += sqrt(bx*bx + by*by);
+            }
+        }
+    }
+    else {
+        gdouble qx = xres/gwy_data_field_get_xreal(dfield);
+        gdouble qy = yres/gwy_data_field_get_yreal(dfield);
+
+        for (row = 1; row + 1 < yres; row++) {
+            for (col = 1; col + 1 < xres; col++) {
+                bx = data[row*xres + col + 1] - data[row*xres + col - 1];
+                by = data[row*xres + xres + col] - data[row*xres - xres + col];
+                phi = atan2(by*qy, bx*qx);
+                iphi = (gint)floor(nder*(phi + G_PI)/(2.0*G_PI));
+                iphi = CLAMP(iphi, 0, nder-1);
+                der[iphi] += sqrt(bx*bx + by*by);
+            }
+        }
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

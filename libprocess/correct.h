@@ -25,6 +25,16 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_SYMMETRY_AUTO = 0,
+    GWY_SYMMETRY_PARALLEL,
+    GWY_SYMMETRY_TRIANGULAR,
+    GWY_SYMMETRY_SQUARE,
+    GWY_SYMMETRY_RHOMBIC,
+    GWY_SYMMETRY_HEXAGONAL,
+    GWY_SYMMETRY_LAST
+} GwyPlaneSymmetry;
+
 void gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
                                               GwyDataField *mask_field,
                                               GwyDataField *buffer_field,
@@ -44,6 +54,9 @@ void gwy_data_field_mark_scars(GwyDataField *data_field,
                                gdouble threshold_low,
                                gdouble min_scar_len,
                                gdouble max_scar_width);
+
+GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
+                                                          gdouble *correction);
 
 G_END_DECLS
 
