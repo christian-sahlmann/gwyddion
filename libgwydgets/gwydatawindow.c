@@ -25,6 +25,9 @@ static void     compute_statusbar_units        (GwyDataWindow *data_window);
 static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
                                                 GdkEventMotion *event,
                                                 GwyDataWindow *data_window);
+static void     zoom_changed_cb                (GtkWidget *data_view,
+                                                GtkAllocation *allocation,
+                                                GwyDataWindow *data_window);
 
 /* Local data */
 
@@ -114,7 +117,10 @@ gwy_data_window_new(GwyDataView *data_view)
                                   &geom,
                                   GDK_HINT_MIN_SIZE);
 
+    /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
+    g_signal_connect_after(data_view, "size-allocate",
+                           G_CALLBACK(zoom_changed_cb), data_window);
 
     vbox = gtk_vbox_new(0, FALSE);
     gtk_container_add(GTK_CONTAINER(data_window), vbox);
@@ -122,6 +128,7 @@ gwy_data_window_new(GwyDataView *data_view)
     hbox = gtk_hbox_new(0, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, TRUE, TRUE, 0);
 
+    /***** statusbar *****/
     data_window->statusbar = gtk_statusbar_new();
     gtk_box_pack_start(GTK_BOX(vbox), data_window->statusbar, FALSE, FALSE, 0);
     data_window->statusbar_context_id
@@ -131,6 +138,7 @@ gwy_data_window_new(GwyDataView *data_view)
     g_signal_connect(GTK_WIDGET(data_view), "motion_notify_event",
                      G_CALLBACK(gwy_data_view_update_statusbar), data_window);
 
+    /***** main table *****/
     data_window->table = gtk_table_new(2, 2, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->table, TRUE, TRUE, 0);
 
@@ -144,6 +152,7 @@ gwy_data_window_new(GwyDataView *data_view)
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
+    /***** rulers *****/
     data_window->hruler = gwy_hruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->hruler),
                                   GWY_UNITS_PLACEMENT_AT_ZERO);
@@ -164,6 +173,7 @@ gwy_data_window_new(GwyDataView *data_view)
                      0, 1, 1, 2,
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
+    /***** rhs stuff TODO *****/
     data_window->sidebox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->sidebox, FALSE, FALSE, 0);
 
@@ -267,6 +277,7 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
 {
     gdouble rzoom;
 
+    gwy_debug("%s: %d", __FUNCTION__, izoom);
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(izoom == -1 || izoom == 1
                      || (izoom >= 625 && izoom <= 160000));
@@ -338,5 +349,54 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
                              data_window->statusbar_message_id);
     data_window->statusbar_message_id = id;
 }
+
+void
+gwy_data_window_update_title(GwyDataWindow *data_window)
+{
+    gchar *window_title, *filename, zoomstr[8];
+    GwyDataView *data_view;
+    GwyContainer *data;
+    gdouble zoom;
+    gint prec;
+
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(data_view);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
+    if (gwy_container_contains_by_name(data, "/filename"))
+        filename = g_path_get_basename(
+                       gwy_container_get_string_by_name(data, "/filename"));
+    else
+        filename = g_strdup(_("Untitled"));
+
+    zoom = gwy_data_view_get_zoom(data_view);
+    gwy_debug("%s: %g", __FUNCTION__, zoom);
+    prec = (zoom == floor(zoom)) ? 0 : 1;
+    g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",
+               prec, zoom > 1.0 ? zoom : 1.0/zoom);
+
+    window_title = g_strdup_printf("%s %s:%s (Gwyddion)",
+                                   filename,
+                                   zoom > 1.0 ? zoomstr : "1",
+                                   zoom > 1.0 ? "1" : zoomstr);
+    gtk_window_set_title(GTK_WINDOW(data_window), window_title);
+    g_free(window_title);
+    g_free(filename);
+}
+
+static void
+zoom_changed_cb(GtkWidget *data_view,
+                GtkAllocation *allocation,
+                GwyDataWindow *data_window)
+{
+    gwy_debug("%s", __FUNCTION__);
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    g_return_if_fail(data_window->data_view == data_view);
+    gwy_data_window_update_title(data_window);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
