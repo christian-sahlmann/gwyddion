@@ -173,7 +173,7 @@ calibrate(GwyContainer *data, GwyRunType run)
 static gboolean
 calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *spin, *hbox, *label;
+    GtkWidget *dialog, *spin, *table, *label;
     GwyDataField *dfield;
     CalibrateControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -190,107 +190,78 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     controls.in_update = TRUE;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    table = gtk_table_new(8, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>New Real Dimensions</b>");
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>New Real Dimensions</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
-                       FALSE, FALSE, 4);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 0, 1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
     controls.xreal = gwy_val_unit_new(_("_X range:"),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
+    gtk_table_attach(GTK_TABLE(table), controls.xreal, 0, 3, 1, 2,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(GWY_VAL_UNIT(controls.xreal), "value_changed",
                      G_CALLBACK(width_changed_cb), args);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
-                       FALSE, FALSE, 4);
     controls.yreal = gwy_val_unit_new(_("_Y range:"),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
+    gtk_table_attach(GTK_TABLE(table), controls.yreal, 0, 3, 2, 3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(GWY_VAL_UNIT(controls.yreal), "value_changed",
                      G_CALLBACK(height_changed_cb), args);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
-                       FALSE, FALSE, 4);
     controls.zreal = gwy_val_unit_new(_("_Z range:"),
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zreal), args->zreal);
+    gtk_table_attach(GTK_TABLE(table), controls.zreal, 0, 3, 3, 4,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(GWY_VAL_UNIT(controls.zreal), "value_changed",
                      G_CALLBACK(z_changed_cb), args);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zreal,
-                       FALSE, FALSE, 4);
-
-
+    gtk_table_set_row_spacing(GTK_TABLE(table), 3, 8);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Calibration Coefficients</b>");
+    gtk_label_set_markup(GTK_LABEL(label),
+                         _("<b>Calibration Coefficients</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
-                       FALSE, FALSE, 4);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 4, 5,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-
-    hbox = gtk_hbox_new(FALSE, 2);
-
-    label = gtk_label_new_with_mnemonic(_("_X calibration factor:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), label,
-                       FALSE, FALSE, 4);
     controls.xratio = gtk_adjustment_new(args->xratio,
-                                        0.01, 10000, 1, 10, 0);
+                                         0.01, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 5,
+                                       _("_X calibration factor:"), NULL,
+                                       controls.xratio);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_object_set_data(G_OBJECT(controls.xratio), "controls", &controls);
     g_signal_connect(controls.xratio, "value_changed",
                      G_CALLBACK(xcalibrate_changed_cb), args);
 
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xratio), 1, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
-    gtk_box_pack_start(GTK_BOX(hbox), spin,
-                       FALSE, FALSE, 4);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
-
-    hbox = gtk_hbox_new(FALSE, 2);
-
-    label = gtk_label_new_with_mnemonic(_("_Y calibration factor:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), label,
-                       FALSE, FALSE, 4);
     controls.yratio = gtk_adjustment_new(args->yratio,
-                                        0.01, 10000, 1, 10, 0);
+                                         0.01, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 6,
+                                       _("_Y calibration factor:"), NULL,
+                                       controls.yratio);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_object_set_data(G_OBJECT(controls.yratio), "controls", &controls);
     g_signal_connect(controls.yratio, "value_changed",
                      G_CALLBACK(ycalibrate_changed_cb), args);
 
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yratio), 1, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
-    gtk_box_pack_start(GTK_BOX(hbox), spin,
-                       FALSE, FALSE, 4);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
-
-    hbox = gtk_hbox_new(FALSE, 2);
-
-    label = gtk_label_new_with_mnemonic(_("_Z calibration factor:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), label,
-                       FALSE, FALSE, 4);
     controls.zratio = gtk_adjustment_new(args->zratio,
-                                        0.01, 10000, 1, 10, 0);
+                                         0.01, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 7,
+                                       _("_Z calibration factor:"), NULL,
+                                       controls.zratio);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_object_set_data(G_OBJECT(controls.zratio), "controls", &controls);
     g_signal_connect(controls.zratio, "value_changed",
                      G_CALLBACK(zcalibrate_changed_cb), args);
-
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zratio), 1, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
-    gtk_box_pack_start(GTK_BOX(hbox), spin,
-                       FALSE, FALSE, 4);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
 
     controls.in_update = FALSE;
 
