@@ -305,7 +305,6 @@ dialog_update(GwyUnitoolState *state,
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
-    gint i;
     ToolControls *controls;
 
     controls = (ToolControls*)state->user_data;
