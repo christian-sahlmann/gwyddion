@@ -18,6 +18,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygraph.h \
 	gwygrapharea.h \
 	gwygraphcorner.h \
+	gwygraphepitome.h \
 	gwygraphlabel.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
@@ -60,6 +61,7 @@ libgwydgets_la_SOURCES = \
 	gwygradsphere.c \
 	gwygraph.c \
 	gwygrapharea.c \
+	gwygraphepitome.c \
 	gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
