@@ -197,20 +197,20 @@ shade_dialog(ShadeArgs *args,
 
     hbox = gtk_hbox_new(FALSE, 8);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
     table = gtk_table_new(3, 3, FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     row = 0;
 
     palette = gwy_container_get_string_by_name(data, "/0/base/palette");
     controls.shader = gwy_shader_new(palette);
     gwy_shader_set_angle(GWY_SHADER(controls.shader), args->theta, args->phi);
+    gtk_widget_set_size_request(controls.shader, 72, 72);
     g_signal_connect(controls.shader, "angle_changed",
                      G_CALLBACK(shade_changed_cb), &controls);
-    gtk_table_attach(GTK_TABLE(table), controls.shader,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.shader, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
