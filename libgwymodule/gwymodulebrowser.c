@@ -114,13 +114,7 @@ gwy_module_browser_construct(GtkWidget *parent)
     GtkTreeIter iter;
     gsize i;
 
-    store = gtk_list_store_new(MODULE_LAST,
-                               G_TYPE_POINTER, /* module info itself */
-                               G_TYPE_STRING,  /* name */
-                               G_TYPE_STRING,  /* loaded? */
-                               G_TYPE_STRING,  /* version */
-                               G_TYPE_STRING   /* author */
-                              );
+    store = gtk_list_store_new(1, G_TYPE_POINTER);
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
@@ -137,7 +131,6 @@ gwy_module_browser_construct(GtkWidget *parent)
         renderer = gtk_cell_renderer_text_new();
         column = gtk_tree_view_column_new_with_attributes(columns[i].title,
                                                           renderer,
-                                                          "text", columns[i].id,
                                                           NULL);
         gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                 gwy_module_browser_cell_renderer,
