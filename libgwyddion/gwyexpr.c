@@ -250,6 +250,17 @@ gwy_expr_check_call_table_sanity(void)
     return ok;
 }
 
+/**
+ * gwy_expr_error_quark:
+ *
+ * Returns error domain for expression parsin and evaluation.
+ *
+ * See and use %GWY_EXPR_ERROR.
+ *
+ * Returns: The error domain.
+ *
+ * Since: 1.9
+ **/
 GQuark
 gwy_expr_error_quark(void)
 {
@@ -1339,7 +1350,7 @@ gwy_expr_compile(GwyExpr *expr,
  *
  * Returns: The length of array stored to @names.  This is the number of
  *          variables plus one (for the first reserved item).
- *          On failure, -1 is returned.
+ *          On failure, 0 is returned.
  *
  * Since: 1.9
  **/
@@ -1456,8 +1467,18 @@ gwy_expr_execute(GwyExpr *expr,
 /**
  * GWY_EXPR_ERROR:
  *
- * Error domain for expression parsing. Errors in this domain will be from the
- * #GwyExprError enumeration. See #GError for information on error domains.
+ * Error domain for expression parsing and evaluation. Errors in this domain
+ * will be from the #GwyExprError enumeration. See #GError for information on
+ * error domains.
+ *
+ * Since: 1.9
+ **/
+
+/**
+ * GwyExpr:
+ *
+ * #GwyExpr is an opaque data structure and should be only manipulated with the
+ * functions below.
  *
  * Since: 1.9
  **/
