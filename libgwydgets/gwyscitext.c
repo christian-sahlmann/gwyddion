@@ -275,15 +275,6 @@ gwy_sci_text_size_allocate(GtkWidget *widget,
     widget->allocation = *allocation;
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
 
-    sci_text = GWY_SCI_TEXT(widget);
-    if (GTK_WIDGET_REALIZED(widget)) {
-
-        gdk_window_move_resize(widget->window,
-                               allocation->x, allocation->y,
-                               allocation->width, allocation->height);
-    }
-    
-
 }
 
 static void
