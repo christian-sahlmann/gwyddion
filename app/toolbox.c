@@ -409,7 +409,8 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/Change Mask _Color", NULL, gwy_app_change_mask_color_cb, 0, NULL, NULL },
         { "/Edit/Change Default Mask _Color", NULL, gwy_app_change_mask_color_cb, 1, NULL, NULL },
         { "/Edit/---", NULL, NULL, 0, "<Separator>", NULL },
-        { "/Edit/Data _Cross-correlation", NULL, gwy_app_data_croscor, 0, NULL, NULL },
+        { "/Edit/Mask by c_orrelation", NULL, gwy_app_data_maskcor, 0, NULL, NULL },
+        { "/Edit/Data Cro_ss-correlation", NULL, gwy_app_data_croscor, 0, NULL, NULL },
     };
     static const gchar *items_need_data[] = {
         "/Edit/Duplicate", "/Edit/Data Arithmetic", NULL
