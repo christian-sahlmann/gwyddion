@@ -147,17 +147,18 @@ dialog_create(GwyUnitoolState *state)
     str = g_string_new("");
 
     label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b>X</b> [%s]"), state->coord_format->units);
+    g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b>Y</b> [%s]"), state->coord_format->units);
+    g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(NULL);
-    g_string_printf(str, _("<b>Value</b> [%s]"), state->value_format->units);
+    g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
+                    state->value_format->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
 
