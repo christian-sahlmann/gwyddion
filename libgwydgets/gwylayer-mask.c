@@ -154,12 +154,7 @@ gwy_layer_mask_paint(GwyDataViewLayer *layer)
                                                       "/0/mask"));
     g_return_val_if_fail(data_field, layer->pixbuf);
     /*if (GWY_LAYER_MASK(layer)->changed)*/ {
-        GTimer *timer;
-
-        timer = g_timer_new();
         gwy_pixfield_mask(layer->pixbuf, data_field, &mask_layer->color);
-        gwy_debug("%s: %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-        g_timer_destroy(timer);
         GWY_LAYER_MASK(layer)->changed = FALSE;
     }
 

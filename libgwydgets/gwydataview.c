@@ -618,6 +618,16 @@ gwy_data_view_key_release(GtkWidget *widget,
     return gwy_data_view_layer_key_release(data_view->top_layer, event);
 }
 
+/**
+ * gwy_data_view_update:
+ * @data_view: A #GwyDataView.
+ *
+ * Instructs a data view to update self and repaint.
+ *
+ * FIXME: This function exists because it's impossible [now?] to watch changes
+ * of datafields (and other things) properly.  Call it when you changed data
+ * and want the view to reflect the change.
+ **/
 void
 gwy_data_view_update(GwyDataView *data_view)
 {

@@ -42,25 +42,31 @@ main(void)
     gsize size = 0;
 
     g_type_init();
-    df = (GwyDataField*)gwy_data_field_new(N, N, G_PI, G_PI, FALSE);
+    df = (GwyDataField*)gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
     data = df->data;
     for (i = 0; i < N; i++) {
       row = data + N*i;
       y = 2*G_PI*(double)i/(N-1);
       for (j = 0; j < N; j++) {
         x = 2*G_PI*(double)j/(N-1);
-        /*
-        row[j] = 1e-9*sin(x*y + x-3.0*y);
-        if (row[j] < 0)
-          row[j] = 1e-9*(x+y)/G_PI/G_PI;
-          */
         row[j] = (3*(i/(N/3)) + j/(N/2))*1e-9;
       }
     }
-    gwy_data_field_set_xreal(df, 4.1e-8);
-    gwy_data_field_set_yreal(df, 4.1e-8);
     container = (GwyContainer*)gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
+    df = (GwyDataField*)gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
+    for (i = 0; i < N; i++) {
+      row = data + N*i;
+      y = 2*G_PI*(double)i/(N-1);
+      for (j = 0; j < N; j++) {
+        x = 2*G_PI*(double)j/(N-1);
+        row[j] = sin(x*y + x-3.0*y);
+        if (row[j] < 0)
+          row[j] = (x+y)/G_PI/G_PI;
+        row[j] = CLAMP(row[j], 0.0, 1.0);
+      }
+    }
+    gwy_container_set_object_by_name(container, "/0/mask", G_OBJECT(df));
     gwy_container_set_string_by_name(container, "/meta/Created by",
                                      "$Id$");
     buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);

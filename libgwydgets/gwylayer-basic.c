@@ -157,12 +157,7 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
     g_return_val_if_fail(data_field, layer->pixbuf);
     /* FIXME FIXME FIXME */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
-        GTimer *timer;
-
-        timer = g_timer_new();
         gwy_pixfield_do(layer->pixbuf, data_field, layer->palette);
-        gwy_debug("%s: %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-        g_timer_destroy(timer);
         GWY_LAYER_BASIC(layer)->changed = FALSE;
     }
 
