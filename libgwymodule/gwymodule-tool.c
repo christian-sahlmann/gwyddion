@@ -84,7 +84,7 @@ gwy_tool_func_register(const gchar *modname,
 }
 
 /**
- * gwy_tool_func_run:
+ * gwy_tool_func_use:
  * @name: Tool use function name.
  * @data_window: A data window the tool should be set for.
  * @event: The tool change event.
@@ -200,13 +200,14 @@ gwy_tool_func_try_remove(const gchar *name)
  * GwyToolFuncInfo:
  * @name: An unique data processing function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).
+ * @tooltip: Tooltip for this tool.
  * @use: The tool use function itself.
  *
  * Information about one tool use function.
  **/
 
 /**
- * GwyToolFunc:
+ * GwyToolUseFunc:
  * @data_window: A data window the tool should be set for.
  * @event: The tool change event.
  *
@@ -218,7 +219,7 @@ gwy_tool_func_try_remove(const gchar *name)
  **/
 
 /**
- * GwyRunType:
+ * GwyToolSwitchEvent:
  * @GWY_TOOL_SWITCH_WINDOW: The tool should be set for the data window
  *                          because the user switched windows.
  * @GWY_TOOL_SWITCH_TOOL: The tool should be set for the data window

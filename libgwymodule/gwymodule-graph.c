@@ -250,22 +250,19 @@ gwy_graph_func_try_remove(const gchar *name)
  * @menu_path: A path under "/Data Graph" where the function should appear.
  *             It must start with "/".
  * @graph: The function itself.
- * @run: Possible run-modes for this function.
  *
- * Information about one data graphing function.
+ * Information about one graph function.
  **/
 
 /**
  * GwyGraphFunc:
- * @data: The data container to operate on.
- * @run: Run mode.
+ * @graph: Graph (a #GwyGraph) to operate on.
  * @name: Function name from #GwyGraphFuncInfo (most modules can safely
  *        ignore this argument)
  *
- * The type of data graphing function.
+ * The type of graph function.
  *
- * Returns: Whether it succeeded (XXX: this means exactly what? mostly it
- *          means it really changed the data).
+ * Returns: Whether it succeeded (XXX: this means exactly what?).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
