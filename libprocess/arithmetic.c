@@ -25,6 +25,17 @@
  * simply expand to data_field->valid = 0 to clear them all. */
 #define gwy_data_field_invalidate(data_field) /* */
 
+/**
+ * gwy_data_field_sum_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Sums two data fields.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_sum_fields(GwyDataField *result,
                           GwyDataField *operand1,
@@ -52,6 +63,17 @@ gwy_data_field_sum_fields(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+/**
+ * gwy_data_field_subtract_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Subtracts one data field from another.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_subtract_fields(GwyDataField *result,
                                GwyDataField *operand1,
@@ -79,6 +101,17 @@ gwy_data_field_subtract_fields(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+/**
+ * gwy_data_field_multiply_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Multiplies two data fields.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_multiply_fields(GwyDataField *result,
                                GwyDataField *operand1,
@@ -106,6 +139,17 @@ gwy_data_field_multiply_fields(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+/**
+ * gwy_data_field_divide_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Divides one data field with another.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_divide_fields(GwyDataField *result,
                              GwyDataField *operand1,
@@ -133,6 +177,17 @@ gwy_data_field_divide_fields(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+/**
+ * gwy_data_field_min_of_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Finds point-wise maxima of two data fields.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_min_of_fields(GwyDataField *result,
                              GwyDataField *operand1,
@@ -160,6 +215,17 @@ gwy_data_field_min_of_fields(GwyDataField *result,
     gwy_data_field_invalidate(result);
 }
 
+/**
+ * gwy_data_field_max_of_fields:
+ * @result: A data field to put the result to.  May be one of @operand1,
+ *          @operand2.
+ * @operand1: First data field operand.
+ * @operand2: Second data field operand.
+ *
+ * Finds point-wise minima of two data fields.
+ *
+ * Since: 1.7
+ **/
 void
 gwy_data_field_max_of_fields(GwyDataField *result,
                              GwyDataField *operand1,
