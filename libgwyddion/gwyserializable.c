@@ -457,7 +457,7 @@ gwy_serialize_pack(GByteArray *buffer,
     if (!nargs)
         return buffer;
 
-    gwy_debug("nargs = %d, buffer = %p", nargs, buffer);
+    gwy_debug("nargs = %" G_GSIZE_FORMAT ", buffer = %p", nargs, buffer);
     if (!buffer)
         buffer = g_byte_array_new();
 
@@ -699,7 +699,8 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     gsize i;
 
     g_return_val_if_fail(spec, buffer);
-    gwy_debug("nspec = %d, buffer = %p, len = %u", nspec, buffer, buffer->len);
+    gwy_debug("nspec = %" G_GSIZE_FORMAT ", buffer = %p, len = %u",
+              nspec, buffer, buffer->len);
     if (!nspec)
         return buffer;
 
@@ -951,8 +952,8 @@ gwy_serialize_skip_type(const guchar *buffer,
                         guchar ctype)
 {
     static const gchar *too_short_msg =
-        "Truncated or corrupted buffer, need %u bytes "
-        "to skip <%c>, but only %u bytes remain.";
+        "Truncated or corrupted buffer, need %" G_GSIZE_FORMAT " bytes "
+        "to skip <%c>, but only %" G_GSIZE_FORMAT " bytes remain.";
     static const gchar *no_string_msg =
         "Expected a string, trying to skip to end of [sub]buffer.";
 
@@ -1486,7 +1487,8 @@ gwy_serialize_unpack_boolean(const guchar *buffer,
 {
     gboolean value;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(guchar) <= size, FALSE);
@@ -1516,7 +1518,8 @@ gwy_serialize_unpack_char(const guchar *buffer,
 {
     guchar value;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(guchar) <= size, '\0');
@@ -1549,7 +1552,8 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
     guchar *value;
     gsize newasize;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
@@ -1559,7 +1563,7 @@ gwy_serialize_unpack_char_array(const guchar *buffer,
     *position += newasize*sizeof(guchar);
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1582,7 +1586,8 @@ gwy_serialize_unpack_int32(const guchar *buffer,
 {
     gint32 value;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(gint32) <= size, 0);
@@ -1616,7 +1621,8 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
     gint32 *value;
     gsize newasize;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
@@ -1632,7 +1638,7 @@ gwy_serialize_unpack_int32_array(const guchar *buffer,
     *position += newasize*sizeof(gint32);
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1655,7 +1661,8 @@ gwy_serialize_unpack_int64(const guchar *buffer,
 {
     gint64 value;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(gint64) <= size, 0);
@@ -1689,7 +1696,8 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
     gint64 *value;
     gsize newasize;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
@@ -1705,7 +1713,7 @@ gwy_serialize_unpack_int64_array(const guchar *buffer,
     *position += newasize*sizeof(gint64);
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1728,7 +1736,8 @@ gwy_serialize_unpack_double(const guchar *buffer,
 {
     gdouble value;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position + sizeof(gdouble) <= size, 0.0);
@@ -1766,7 +1775,8 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
     gdouble *value;
     gsize newasize;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
@@ -1782,7 +1792,7 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
     *position += newasize*sizeof(gdouble);
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1806,7 +1816,8 @@ gwy_serialize_unpack_string(const guchar *buffer,
     guchar *value;
     const guchar *p;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
     g_assert(buffer);
     g_assert(position);
     g_return_val_if_fail(*position < size, NULL);
@@ -1841,7 +1852,8 @@ gwy_deserialize_string_array(const guchar *buffer,
     guchar **value;
     gsize newasize, j;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     if (!(newasize = gwy_serialize_unpack_int32(buffer, size, position)))
@@ -1861,7 +1873,7 @@ gwy_deserialize_string_array(const guchar *buffer,
     }
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1887,7 +1899,8 @@ gwy_deserialize_object_array(const guchar *buffer,
     GObject **value;
     gsize j, newasize, minsize;
 
-    gwy_debug("buf = %p, size = %u, pos = %u", buffer, size, *position);
+    gwy_debug("buf = %p, size = %" G_GSIZE_FORMAT ", pos = %" G_GSIZE_FORMAT,
+              buffer, size, *position);
 
     g_return_val_if_fail(*position + sizeof(gint32) <= size, NULL);
     minsize = 2*sizeof(guchar) + sizeof(gint32);  /* Size of empty object */
@@ -1908,7 +1921,7 @@ gwy_deserialize_object_array(const guchar *buffer,
     }
     *asize = newasize;
 
-    gwy_debug("|value| = %u", newasize);
+    gwy_debug("|value| = %" G_GSIZE_FORMAT, newasize);
     return value;
 }
 
@@ -1936,7 +1949,8 @@ gwy_serialize_check_string(const guchar *buffer,
 {
     const guchar *p;
 
-    gwy_debug("<%s> buf = %p, size = %u, pos = %u",
+    gwy_debug("<%s> buf = %p, size = %" G_GSIZE_FORMAT ", pos = %"
+              G_GSIZE_FORMAT,
               compare_to ? compare_to : (const guchar*)"(null)",
               buffer, size, position);
     g_assert(buffer);

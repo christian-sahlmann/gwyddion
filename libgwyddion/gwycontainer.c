@@ -1929,7 +1929,8 @@ gwy_container_deserialize2(const guchar *buffer,
     container = (GwyContainer*)gwy_container_new();
     for (i = 0; i < nitems; i++) {
         it = items + i;
-        gwy_debug("value: #%u: <%s> of <%c>", i, it->name, it->ctype);
+        gwy_debug("value: #%" G_GSIZE_FORMAT ": <%s> of <%c>",
+                  i, it->name, it->ctype);
         key = g_quark_from_string(it->name);
         switch (it->ctype) {
             case 'b':
@@ -2390,7 +2391,7 @@ gwy_container_deserialize_from_text(const gchar *text)
             goto fail;
         type = tok;
         typelen = len;
-        gwy_debug("got type <%.*s>", typelen, type);
+        gwy_debug("got type <%.*s>", (guint)typelen, type);
 
         /* value */
         for (tok = tok + len; g_ascii_isspace(*tok); tok++)
