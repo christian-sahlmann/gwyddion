@@ -47,12 +47,18 @@ libgwydgets_la_SOURCES = \
 	gwygraphcorner.c \
 	gwyaxis.c
 
+TEST_PROG_LIBS = libgwydgets.la \
+	../libgwyddion/libgwyddion.la \
+	../libprocess/libgwyprocess.la \
+	../libdraw/libgwydraw.la
 main_SOURCES = main.c
 test_SOURCES = test.c
-main_LDADD = libgwydgets.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la ../libdraw/libdraw.la
-test_LDADD = libgwydgets.la ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la ../libdraw/libdraw.la
+main_LDADD = $(TEST_PROG_LIBS)
+test_LDADD = $(TEST_PROG_LIBS)
 create_data_SOURCES = create-data.c
-create_data_LDADD = ../libgwyddion/libgwyddion.la ../libprocess/libprocess.la
+create_data_LDADD = \
+	../libgwyddion/libgwyddion.la \
+	../libprocess/libgwyprocess.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\" -DG_LOG_DOMAIN=\"Gwydgets\"

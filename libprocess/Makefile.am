@@ -5,7 +5,7 @@ include_HEADERS = \
 	dataline.h \
 	interpolation.h \
 	simplefft.h
-lib_LTLIBRARIES = libprocess.la
+lib_LTLIBRARIES = libgwyprocess.la
 
 noinst_PROGRAMS = test
 
@@ -14,8 +14,8 @@ noinst_PROGRAMS = test
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Chaning ifraces     C:   R:   0
-libprocess_la_LDFLAGS = -version-info 0:0:0
-libprocess_la_SOURCES = \
+libgwyprocess_la_LDFLAGS = -version-info 0:0:0
+libgwyprocess_la_SOURCES = \
 	datafield.c \
 	dataline.c \
 	interpolation.c \
@@ -23,11 +23,12 @@ libprocess_la_SOURCES = \
 
 test_SOURCES = \
 	test.c
-test_LDADD = libprocess.la ../libgwyddion/libgwyddion.la
+test_LDADD = libgwyprocess.la \
+	../libgwyddion/libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Process\"
-libprocessincludedir = $(includedir)/gwyddion/libprocess
+AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"GwyProcess\"
+libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 
 clean-local:
 	rm -f core.* *~
