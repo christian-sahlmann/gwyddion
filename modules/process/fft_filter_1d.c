@@ -27,6 +27,8 @@
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraphermodel.h>
+#include <libgwydgets/gwygrapher.h>
 #include <app/gwyapp.h>
 
 #define FFTF_1D_RUN_MODES \
@@ -72,6 +74,8 @@ typedef struct {
     GtkWidget *menu_interpolation;
     GtkWidget *menu_suppress;
     GtkWidget *menu_view_type;
+    GtkWidget *graph;
+    GwyGrapherModel *gmodel;
 } Fftf1dControls;
 
 static gboolean    module_register          (const gchar *name);
@@ -264,6 +268,22 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     /*settings*/
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+   
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Power spectrum (select areas by mouse):</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
+
+    controls.gmodel = GWY_GRAPHER_MODEL(gwy_grapher_model_new(NULL));
+    controls.graph = gwy_grapher_new(controls.gmodel);
+    gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_top, FALSE);
+    gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_left, FALSE);
+    gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_bottom, FALSE);
+    gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_right, FALSE);
+    gwy_grapher_set_status(GWY_GRAPHER(controls.graph), GWY_GRAPHER_STATUS_XSEL); 
+
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, FALSE, FALSE, 4);
+    
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Settings:</b>"));
@@ -327,7 +347,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                                       G_CALLBACK(update_changed_cb), args);
      
     
-    
+
+    restore_ps(&controls, args);
     update_view(&controls, args);
      
     gtk_widget_show_all(dialog);
@@ -383,7 +404,35 @@ update_view(Fftf1dControls *controls, Fftf1dArgs *args)
 static void        
 restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 {
+    GwyDataField *dfield;
+    GwyDataLine *dline;
+    GwyGrapherCurveModel *cmodel;
+    gdouble xdata[200];
+    gint i, MAX_PREV = 200; /*move upwards*/
 
+    dline = GWY_DATA_LINE(gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
+                                                             "/0/data"));
+    gwy_data_field_get_line_stat_function(dfield, dline,
+                                          0, 0, dfield->xres, dfield->yres,
+                                          GWY_SF_OUTPUT_PSDF,
+                                          args->direction,
+                                          args->interpolation,
+                                          GWY_WINDOWING_RECT,
+                                          MAX_PREV);
+
+    for (i=0; i<MAX_PREV; i++) xdata[i] = dline->real*i/200.0;
+    
+    cmodel = gwy_grapher_curve_model_new();
+    cmodel->xdata = xdata;
+    cmodel->ydata = dline->data;
+    cmodel->n = MAX_PREV;
+    cmodel->description = g_string_new("PSDF");
+
+    gwy_grapher_model_remove_all_curves(controls->gmodel);
+    gwy_grapher_model_add_curve(controls->gmodel, cmodel);
+
+    
     gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
 }
 

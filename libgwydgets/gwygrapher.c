@@ -94,8 +94,8 @@ static void
 gwy_grapher_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
     GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
-    requisition->width = 500;
-    requisition->height = 400;
+    requisition->width = 300;
+    requisition->height = 200;
 }
 
 static void
@@ -225,30 +225,34 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     
     if (grapher->grapher_model == NULL) return;
     model = GWY_GRAPHER_MODEL(grapher->grapher_model);
-    
-    /*refresh axis and reset axis requirements*/
-    x_reqmin = y_reqmin = G_MAXDOUBLE;
-    x_reqmax = y_reqmax = -G_MAXDOUBLE;
-    for (i=0; i<model->ncurves; i++)
-    {
-        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
-        for (j=0; j<curvemodel->n; j++)
-        {
-            if (x_reqmin > curvemodel->xdata[j]) x_reqmin = curvemodel->xdata[j];
-            if (y_reqmin > curvemodel->ydata[j]) y_reqmin = curvemodel->ydata[j];
-            if (x_reqmax < curvemodel->xdata[j]) x_reqmax = curvemodel->xdata[j];
-            if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
-        }
-    }
-    gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
-    gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
-    gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
-    gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
 
-    model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
-    model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
-    model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
-    model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+    if (model->ncurves > 0)
+    {
+    
+        /*refresh axis and reset axis requirements*/
+        x_reqmin = y_reqmin = G_MAXDOUBLE;
+        x_reqmax = y_reqmax = -G_MAXDOUBLE;
+        for (i=0; i<model->ncurves; i++)
+        {
+            curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+            for (j=0; j<curvemodel->n; j++)
+            {
+                if (x_reqmin > curvemodel->xdata[j]) x_reqmin = curvemodel->xdata[j];
+                if (y_reqmin > curvemodel->ydata[j]) y_reqmin = curvemodel->ydata[j];
+                if (x_reqmax < curvemodel->xdata[j]) x_reqmax = curvemodel->xdata[j];
+                if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
+            }
+        }
+        gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
+        gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
+        gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
+        gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
+
+        model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
+        model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
+        model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
+        model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+    }
 
     /*refresh widgets*/
     gwy_grapher_area_refresh(grapher->area);
@@ -285,5 +289,10 @@ rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
     gwy_grapher_area_refresh(grapher->area);
 }
 
+void
+gwy_grapher_set_status(GwyGrapher *grapher, GwyGrapherStatusType status)
+{
+    grapher->area->status = status;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -102,6 +102,7 @@ gint       gwy_grapher_model_get_n_curves   (GwyGrapherModel *gmodel);
 
 void       gwy_grapher_model_add_curve      (GwyGrapherModel *gmodel,
                                              GwyGrapherCurveModel *curve);
+void       gwy_grapher_model_remove_all_curves(GwyGrapherModel *gmodel);
 
 G_END_DECLS
 

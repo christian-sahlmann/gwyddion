@@ -351,14 +351,20 @@ gwy_axiser_size_request(GtkWidget *widget,
 
     axiser = GWY_AXISER(widget);
 
-    if (axiser->orientation == GWY_AXISER_EAST 
-        || axiser->orientation == GWY_AXISER_WEST) {
-        requisition->width = 80;
-        requisition->height = 100;
+    if (axiser->is_visible) {
+        if (axiser->orientation == GWY_AXISER_EAST 
+            || axiser->orientation == GWY_AXISER_WEST) {
+            requisition->width = 80;
+            requisition->height = 100;
+        }
+        else {
+            requisition->width = 100;
+            requisition->height = 80;
+        }
     }
     else {
-        requisition->width = 100;
-        requisition->height = 80;
+        requisition->width = 5;
+        requisition->height = 5;
     }
 
 }

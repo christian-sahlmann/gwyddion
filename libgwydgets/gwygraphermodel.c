@@ -322,6 +322,23 @@ gwy_grapher_model_grapher_destroyed(GwyGrapher *grapher,
     gmodel->grapher = NULL;
 }
 
+void
+gwy_grapher_model_remove_all_curves(GwyGrapherModel *gmodel)
+{
+    gint i;
+
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+        g_object_unref(gmodel->curves[i]);
+    g_free(gmodel->curves);    
+
+    
+    gmodel->ncurves = 0;
+    
+    g_object_notify(gmodel, "n");
+    
+}
+
 /* actually copy save from a -- usually just dying -- grapher */
 static void
 gwy_grapher_model_save_grapher(GwyGrapherModel *gmodel,

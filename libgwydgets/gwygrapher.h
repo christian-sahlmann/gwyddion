@@ -95,6 +95,8 @@ void       gwy_grapher_refresh(GwyGrapher *grapher);
 
 void       gwy_grapher_change_model(GwyGrapher *grapher, 
                                     gpointer *gmodel);
+void       gwy_grapher_set_status(GwyGrapher *grapher,
+                                  GwyGrapherStatusType status);
 
 G_END_DECLS
 
