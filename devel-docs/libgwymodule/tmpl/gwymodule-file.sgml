@@ -32,6 +32,7 @@ gwymodule-file
 
 @filename: 
 @only_name: 
+@name: 
 @Returns: 
 
 
@@ -41,6 +42,7 @@ gwymodule-file
 </para>
 
 @filename: 
+@name: 
 @Returns: 
 
 
@@ -51,6 +53,7 @@ gwymodule-file
 
 @data: 
 @filename: 
+@name: 
 @Returns: 
 
 

@@ -40,9 +40,9 @@ module_register(const gchar *name)
     static GwyFileFuncInfo gwyfile_func_info = {
         "test_func",
         "Gwyddion native serialized objects (" EXTENSION ")",
-        &gwyfile_detect,
-        &gwyfile_load,
-        &gwyfile_save,
+        (GwyFileDetectFunc)&gwyfile_detect,
+        (GwyFileLoadFunc)&gwyfile_load,
+        (GwyFileSaveFunc)&gwyfile_save,
     };
 
     gwy_file_func_register(name, &gwyfile_func_info);

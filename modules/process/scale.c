@@ -81,7 +81,7 @@ module_register(const gchar *name)
     static GwyProcessFuncInfo scale_func_info = {
         "scale",
         "/_Basic Operations/Scale...",
-        &scale,
+        (GwyProcessFunc)&scale,
         SCALE_RUN_MODES,
     };
 

@@ -70,6 +70,10 @@ gwy_app_settings_load(const gchar *filename)
     }
     gwy_app_settings_free();
     settings = new_settings;
+    if (!gwy_container_contains_by_name(settings, "/app/plugindir"))
+        gwy_container_set_string_by_name(settings, "/app/plugindir",
+                                         GWY_PLUGIN_DIR);
+
     return TRUE;
 }
 

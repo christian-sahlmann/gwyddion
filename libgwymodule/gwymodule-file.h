@@ -13,10 +13,13 @@ extern "C" {
 typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
 
 typedef gint           (*GwyFileDetectFunc)     (const gchar *filename,
-                                                 gboolean only_name);
-typedef GwyContainer*  (*GwyFileLoadFunc)       (const gchar *filename);
+                                                 gboolean only_name,
+                                                 const gchar *name);
+typedef GwyContainer*  (*GwyFileLoadFunc)       (const gchar *filename,
+                                                 const gchar *name);
 typedef gboolean       (*GwyFileSaveFunc)       (GwyContainer *data,
-                                                 const gchar *filename);
+                                                 const gchar *filename,
+                                                 const gchar *name);
 
 struct _GwyFileFuncInfo {
     const gchar *name;

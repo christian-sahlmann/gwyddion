@@ -43,38 +43,38 @@ module_register(const gchar *name)
     static GwyProcessFuncInfo flip_horizontally_func_info = {
         "flip_horizontally",
         "/_Basic Operations/Flip _Horizontally",
-        &flip_horizontally,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&flip_horizontally,
+        BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo flip_vertically_func_info = {
         "flip_vertically",
         "/_Basic Operations/Flip _Vertically",
-        &flip_vertically,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&flip_vertically,
+        BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo invert_value_func_info = {
         "invert_value",
         "/_Basic Operations/_Invert Value",
-        &invert_value,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&invert_value,
+        BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_clockwise_90_func_info = {
         "rotate_clockwise_90",
         "/_Basic Operations/_Rotate Clockwise",
-        &rotate_clockwise_90,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&rotate_clockwise_90,
+        BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_counterclockwise_90_func_info = {
         "rotate_counterclockwise_90",
         "/_Basic Operations/Rotate _Counterclockwise",
-        &rotate_counterclockwise_90,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&rotate_counterclockwise_90,
+        BASICOPS_RUN_MODES,
     };
     static GwyProcessFuncInfo rotate_180_func_info = {
         "rotate_180",
         "/_Basic Operations/Rotate 1_80 degrees",
-        &rotate_180,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
+        (GwyProcessFunc)&rotate_180,
+        BASICOPS_RUN_MODES,
     };
 
     gwy_process_func_register(name, &flip_horizontally_func_info);

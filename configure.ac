@@ -116,8 +116,10 @@ AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
 AC_SUBST(TARGET_TARGETS)
 
 gwymoduledir=$libdir/gwyddion/modules
+gwyplugindir=$libexecdir/gwyddion/plugins
 gwypixmapdir=$datadir/gwyddion/pixmaps
 AC_SUBST(gwymoduledir)
+AC_SUBST(gwyplugindir)
 AC_SUBST(gwypixmapdir)
 
 AC_OUTPUT

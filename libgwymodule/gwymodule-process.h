@@ -17,7 +17,8 @@ extern "C" {
 typedef struct _GwyProcessFuncInfo GwyProcessFuncInfo;
 
 typedef gboolean       (*GwyProcessFunc)        (GwyContainer *data,
-                                                 GwyRunType run);
+                                                 GwyRunType run,
+                                                 const gchar *name);
 
 struct _GwyProcessFuncInfo {
     const gchar *name;

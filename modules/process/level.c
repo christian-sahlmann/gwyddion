@@ -36,13 +36,13 @@ module_register(const gchar *name)
     static GwyProcessFuncInfo level_func_info = {
         "level",
         "/_Level/Level",
-        &level,
+        (GwyProcessFunc)&level,
         LEVEL_RUN_MODES,
     };
     static GwyProcessFuncInfo level_rotate_func_info = {
         "level_rotate",
         "/_Level/Level Rotate",
-        &level_rotate,
+        (GwyProcessFunc)&level_rotate,
         LEVEL_RUN_MODES,
     };
 
@@ -73,6 +73,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     gdouble a, b, c;
 
     g_assert(run & LEVEL_RUN_MODES);
+    g_warning("level_rotate is borken!");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     /* FIXME: what funny scale the b and c have? */

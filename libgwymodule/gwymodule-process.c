@@ -84,7 +84,7 @@ gwy_process_func_run(const guchar *name,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
-    status = func_info->process(data, run);
+    status = func_info->process(data, run, name);
     g_object_unref(dfield);
     g_object_unref(data);
 
@@ -264,6 +264,8 @@ gwy_process_func_get_run_types(const gchar *name)
  * GwyProcessFunc:
  * @data: The data container to operate on.
  * @run: Run mode.
+ * @name: Function name from #GwyProcessFuncInfo (most modules can safely
+ *        ignore this argument)
  *
  * The type of data processing function.
  *

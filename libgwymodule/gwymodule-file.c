@@ -86,7 +86,7 @@ gwy_file_func_run_detect(const gchar *name,
     g_return_val_if_fail(func_info, 0);
     if (!func_info->detect)
         return 0;
-    return func_info->detect(filename, only_name);
+    return func_info->detect(filename, only_name, name);
 }
 
 /**
@@ -109,7 +109,7 @@ gwy_file_func_run_load(const gchar *name,
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->load, NULL);
 
-    return func_info->load(filename);
+    return func_info->load(filename, name);
 }
 
 /**
@@ -144,7 +144,7 @@ gwy_file_func_run_save(const gchar *name,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
     g_object_ref(data);
     g_object_ref(dfield);
-    status = func_info->save(data, filename);
+    status = func_info->save(data, filename, name);
     g_object_unref(dfield);
     g_object_unref(data);
 
@@ -167,7 +167,8 @@ file_detect_max_score(const gchar *key,
     if (ddata->must_have_save && !func_info->save)
         return;
 
-    score = func_info->detect(ddata->filename, ddata->only_name);
+    score = func_info->detect(ddata->filename, ddata->only_name,
+                              func_info->name);
     if (score > ddata->score) {
         ddata->winner = func_info->name;
         ddata->score = score;
@@ -268,6 +269,8 @@ gwy_file_save(GwyContainer *data,
  * GwyFileDetectFunc:
  * @filename: A file name to detect the filetype of.
  * @only_name: Whether the type should be guessed only from file name.
+ * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
+ *        this argument)
  *
  * The type of file type detection function.
  *
@@ -280,6 +283,8 @@ gwy_file_save(GwyContainer *data,
 /**
  * GwyFileLoadFunc:
  * @filename: A file name to load data from.
+ * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
+ *        this argument)
  *
  * The type of file loading function.
  *
@@ -290,6 +295,8 @@ gwy_file_save(GwyContainer *data,
  * GwyFileSaveFunc:
  * @data: A #GwyContainer to save.
  * @filename: A file name to save @data as.
+ * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
+ *        this argument)
  *
  * The type of file saving function.
  *
