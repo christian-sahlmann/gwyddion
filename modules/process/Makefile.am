@@ -28,6 +28,7 @@ process_PROGRAMS = \
 	presentationops.so \
 	rotate.so \
 	scale.so \
+	scars.so \
 	shade.so \
 	slope_dist.so \
 	unrotate.so
@@ -103,6 +104,9 @@ rotate_so_LDFLAGS = $(module_ldflags),rotate.so
 
 scale_so_SOURCES = scale.c
 scale_so_LDFLAGS = $(module_ldflags),scale.so
+
+scars_so_SOURCES = scars.c
+scars_so_LDFLAGS = $(module_ldflags),scars.so
 
 shade_so_SOURCES = shade.c
 shade_so_LDFLAGS = $(module_ldflags),shade.so
