@@ -27,9 +27,7 @@
 
 #include "gwyscitext.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_AXIS_DIALOG            (gwy_axis_dialog_get_type())
 #define GWY_AXIS_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_AXIS_DIALOG, GwyAxisDialog))
@@ -61,9 +59,7 @@ GType       gwy_axis_dialog_get_type (void) G_GNUC_CONST;
 GtkWidget*  gwy_axis_dialog_new      (void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */
 

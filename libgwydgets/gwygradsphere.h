@@ -33,9 +33,7 @@
 #  include <libdraw/gwypalette.h>
 #endif /* no GWY_TYPE_PALETTE */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAD_SPHERE            (gwy_grad_sphere_get_type())
 #define GWY_GRAD_SPHERE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAD_SPHERE, GwyGradSphere))
@@ -91,9 +89,7 @@ GtkUpdateType    gwy_grad_sphere_get_update_policy (GwyGradSphere *grad_sphere);
 void             gwy_grad_sphere_set_update_policy (GwyGradSphere *grad_sphere,
                                                     GtkUpdateType update_policy);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */
 

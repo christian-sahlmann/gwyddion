@@ -23,9 +23,7 @@
 
 #include <libgwyddion/gwycontainer.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GwyContainer* gwy_app_settings_get  (void);
 void          gwy_app_settings_free (void);
@@ -36,9 +34,7 @@ gchar**       gwy_app_settings_get_module_dirs     (void);
 gchar*        gwy_app_settings_get_config_filename (void);
 gchar*        gwy_app_settings_get_log_filename    (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_APP_SETTINGS_H__ */
 

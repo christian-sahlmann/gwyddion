@@ -24,9 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydatawindow.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
     GWY_TOOL_SWITCH_WINDOW = 1,
@@ -55,9 +53,7 @@ GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,
                                           gint max_width,
                                           const gchar **first_tool);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_TOOL_H__ */
 

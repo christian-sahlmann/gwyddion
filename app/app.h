@@ -26,9 +26,7 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwygraph.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GwyContainer*   gwy_app_get_current_data          (void);
 GwyDataWindow*  gwy_app_data_window_get_current   (void);
@@ -68,9 +66,7 @@ gboolean        gwy_app_quit                      (void);
 /* FIXME: ugly. to be moved somewhere? refactored? */
 void       gwy_app_clean_up_data            (GwyContainer *data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_APP_APP_H__ */
 

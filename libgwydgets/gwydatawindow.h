@@ -33,9 +33,7 @@
 #  include <libgwydgets/gwydataview.h>
 #endif /* no GWY_TYPE_SPHERE_COORDS */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_WINDOW            (gwy_data_window_get_type())
 #define GWY_DATA_WINDOW(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_WINDOW, GwyDataWindow))
@@ -96,9 +94,7 @@ GwyZoomMode      gwy_data_window_get_zoom_mode    (GwyDataWindow *data_window);
 void             gwy_data_window_update_title     (GwyDataWindow *data_window);
 gchar*           gwy_data_window_get_base_name    (GwyDataWindow *data_window);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_DATAWINDOW_H__ */
 

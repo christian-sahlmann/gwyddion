@@ -28,9 +28,7 @@
 #  include <libgwyddion/gwycontainer.h>
 #endif /* no GWY_TYPE_CONTAINER */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_VIEW_LAYER            (gwy_data_view_layer_get_type())
 #define GWY_DATA_VIEW_LAYER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_VIEW_LAYER, GwyDataViewLayer))
@@ -71,9 +69,7 @@ void             gwy_data_view_layer_plugged         (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_DATAVIEWLAYER_H__ */
 

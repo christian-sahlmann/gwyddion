@@ -28,9 +28,7 @@ typedef struct {
     gint value;
 } GwyEnum;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 void   gwy_hash_table_to_slist_cb (gpointer unused_key,
                                    gpointer value,
@@ -58,9 +56,7 @@ gchar* gwy_find_self_dir          (const gchar *dirname);
 void   gwy_find_self_set_argv0    (const gchar *argv0);
 #endif /* G_OS_WIN32 */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_UTILS_H__ */
 

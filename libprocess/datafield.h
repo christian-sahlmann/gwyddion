@@ -29,9 +29,7 @@
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/cwt.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_FIELD                  (gwy_data_field_get_type())
 #define GWY_DATA_FIELD(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_FIELD, GwyDataField))
@@ -599,9 +597,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field,
                               GtkOrientation orientation
                               );
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /*__GWY_DATAFIELD__*/

@@ -23,9 +23,7 @@
 
 #include <gmodule.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_MODULE_ABI_VERSION 0
 
@@ -55,9 +53,7 @@ G_CONST_RETURN
 GwyModuleInfo*          gwy_module_lookup           (const gchar *name);
 void                    gwy_module_set_register_callback(void (*callback)(const gchar *fullname));
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_LOADER_H__ */
 

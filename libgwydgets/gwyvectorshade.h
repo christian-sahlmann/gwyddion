@@ -27,9 +27,7 @@
 #  include <libgwydgets/gwygradsphere.h>
 #endif /* no GWY_TYPE_GRAD_SPHERE */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_VECTOR_SHADE            (gwy_vector_shade_get_type())
 #define GWY_VECTOR_SHADE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VECTOR_SHADE, GwyVectorShade))
@@ -72,9 +70,7 @@ GwySphereCoords* gwy_vector_shade_get_sphere_coords (GwyVectorShade *vector_shad
 void             gwy_vector_shade_set_sphere_coords (GwyVectorShade *vector_shade,
                                                      GwySphereCoords *sphere_coords);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_VECTOR_SHADE_H__ */
 

@@ -23,9 +23,7 @@
 
 #include <gtk/gtkwidget.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* this should go to some preferences... */
 extern int gwy_app_n_recent_files;
@@ -41,9 +39,7 @@ void gwy_app_file_import_cb      (const gchar *name);
 void gwy_app_file_open_initial   (gchar **args,
                                   gint n);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_APP_FILE_H__ */
 

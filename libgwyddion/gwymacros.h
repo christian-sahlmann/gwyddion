@@ -53,9 +53,7 @@
     y = __unsafe_swap; \
     } while (0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* Provide a string identifying the current function, non-concatenatable */
 /* Backported from GLib-2.4 */
@@ -116,9 +114,7 @@ void gwy_debug_gnu(const gchar *domain,
                    const gchar *format,
                    ...);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #ifdef _MSC_VER
 /* Make MSVC more pedantic, this is a recommended pragma list

@@ -31,9 +31,7 @@
 #include "gwygrapharea.h"
 #include "gwygraphcorner.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH            (gwy_graph_get_type())
 #define GWY_GRAPH(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH, GwyGraph))
@@ -137,9 +135,7 @@ void gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdo
 
 void gwy_graph_unzoom(GwyGraph *graph);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */
 

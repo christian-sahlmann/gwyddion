@@ -28,9 +28,7 @@
 #  include "libgwydgets/gwydataviewlayer.h"
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_PIXMAP_LAYER            (gwy_pixmap_layer_get_type())
 #define GWY_PIXMAP_LAYER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_PIXMAP_LAYER, GwyPixmapLayer))
@@ -64,9 +62,7 @@ struct _GwyPixmapLayerClass {
 GType            gwy_pixmap_layer_get_type        (void) G_GNUC_CONST;
 GdkPixbuf*       gwy_pixmap_layer_paint           (GwyPixmapLayer *layer);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_PIXMAPLAYER_H__ */
 

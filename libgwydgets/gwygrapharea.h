@@ -27,9 +27,7 @@
 
 #include "gwygraphlabel.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_AREA            (gwy_graph_area_get_type())
 #define GWY_GRAPH_AREA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_AREA, GwyGraphArea))
@@ -188,9 +186,7 @@ void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
 

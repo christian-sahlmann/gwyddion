@@ -24,9 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_STATUSBAR            (gwy_statusbar_get_type())
 #define GWY_STATUSBAR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_STATUSBAR, GwyStatusbar))
@@ -55,9 +53,7 @@ struct _GwyStatusbarClass {
 GtkWidget*       gwy_statusbar_new              (void);
 GType            gwy_statusbar_get_type         (void) G_GNUC_CONST;
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_STATUSBAR_H__ */
 

@@ -26,9 +26,7 @@
 #include <gtk/gtkwidget.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_SCI_TEXT            (gwy_sci_text_get_type())
 #define GWY_SCI_TEXT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SCI_TEXT, GwySciText))
@@ -75,9 +73,7 @@ gchar*     gwy_sci_text_get_text  (GwySciText *sci_text);
 void       gwy_sci_text_set_text  (GwySciText *sci_text,
                                    const gchar *new_text);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_SCI_TEXT_H__*/
 

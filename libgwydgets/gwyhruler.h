@@ -57,9 +57,7 @@
 #include <libgwydgets/gwyruler.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GWY_TYPE_HRULER            (gwy_hruler_get_type())
@@ -88,9 +86,7 @@ GType      gwy_hruler_get_type (void) G_GNUC_CONST;
 GtkWidget* gwy_hruler_new      (void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GWY_HRULER_H__ */

@@ -24,9 +24,7 @@
 #include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
     GWY_RUN_NONE           = 0,
@@ -62,9 +60,7 @@ GtkObject*   gwy_process_func_build_menu    (GtkObject *item_factory,
                                              const gchar *prefix,
                                              GCallback item_callback);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_PROCESS_H__ */
 

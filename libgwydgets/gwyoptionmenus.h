@@ -30,9 +30,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GtkWidget* gwy_menu_palette               (GCallback callback,
                                            gpointer cbdata);
@@ -87,9 +85,7 @@ gboolean   gwy_option_menu_set_history    (GtkWidget *option_menu,
 gint       gwy_option_menu_get_history    (GtkWidget *option_menu,
                                            const gchar *key);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_OPTION_MENUS_H__ */
 

@@ -23,9 +23,7 @@
 
 #include <gtk/gtk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_TOOLBOX            (gwy_toolbox_get_type())
 #define GWY_TOOLBOX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOLBOX, GwyToolbox))
@@ -67,9 +65,7 @@ GtkWidget*       gwy_toolbox_append         (GwyToolbox *toolbox,
                                              GtkSignalFunc callback,
                                              gpointer user_data);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_TOOLBOX_H__ */
 

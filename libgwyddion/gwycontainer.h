@@ -24,9 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkobject.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_CONTAINER                  (gwy_container_get_type ())
 #define GWY_CONTAINER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GWY_TYPE_CONTAINER, GwyContainer))
@@ -184,9 +182,7 @@ void       gwy_container_thaw_watch         (GwyContainer *container);
 #define gwy_container_get_object_by_name(c,n) gwy_container_get_object(c,g_quark_try_string(n))
 #define gwy_container_gis_object_by_name(c,n,v) gwy_container_gis_object(c,g_quark_from_string(n),v)
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_CONTAINER_H__ */
 

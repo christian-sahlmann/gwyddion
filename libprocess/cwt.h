@@ -24,9 +24,7 @@
 #include <glib.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
   GWY_2DCWT_GAUSS       = 0,
@@ -47,9 +45,7 @@ gwy_cwt_wfunc_2d(gdouble scale,
                  Gwy2DCWTWaveletType wtype);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /*__GWY_CWT__*/

@@ -27,9 +27,7 @@
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_LINE                  (gwy_data_line_get_type())
 #define GWY_DATA_LINE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_LINE, GwyDataLine))
@@ -234,9 +232,7 @@ void gwy_data_line_subtract_polynom(GwyDataLine *data_line,
                                     gint n,
                                     gdouble *coeffs);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_DATALINE_H__*/
 

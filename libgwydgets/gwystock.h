@@ -21,9 +21,7 @@
 #ifndef __GWY_STOCK_H__
 #define __GWY_STOCK_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_STOCK_BOLD            "gwy_bold"
 #define GWY_STOCK_CROP            "gwy_crop"
@@ -70,9 +68,7 @@ extern "C" {
 
 void gwy_stock_register_stock_items(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_STOCK_H__ */
 

@@ -32,9 +32,7 @@
 #  include <libdraw/gwypalettedef.h>
 #endif /* no GWY_TYPE_PALETTE_DEF */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_LAYER_MASK            (gwy_layer_mask_get_type())
 #define GWY_LAYER_MASK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_MASK, GwyLayerMask))
@@ -70,9 +68,7 @@ void             gwy_layer_mask_set_color       (GwyLayerMask *layer,
                                                  GwyRGBA *color);
 GwyRGBA          gwy_layer_mask_get_color       (GwyLayerMask *layer);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_LAYER_MASK_H__ */
 

@@ -24,9 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydatawindow.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GtkWidget* gwy_app_toolbox_create            (void);
 void       gwy_app_data_arith                (void);
@@ -39,9 +37,7 @@ void       gwy_app_splash_close              (void);
 void       gwy_app_splash_set_message        (const gchar *message);
 void       gwy_app_splash_set_message_prefix (const gchar *prefix);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWYDDION_GWYDDION_H__ */
 

@@ -39,9 +39,7 @@
 #define GWY_GRAPH_POINT_TRIANGLE_DOWN  6
 #define GWY_GRAPH_POINT_DIAMOND        7
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_LABEL            (gwy_graph_label_get_type())
 #define GWY_GRAPH_LABEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_LABEL, GwyGraphLabel))
@@ -114,9 +112,7 @@ void  gwy_graph_draw_point (GdkWindow *window,
                             GdkGC *gc, gint i, gint j,
                             gint type, gint size, GdkColor *color, gboolean clear);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
 

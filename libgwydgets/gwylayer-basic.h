@@ -32,9 +32,7 @@
 #  include <libdraw/gwypalette.h>
 #endif /* no GWY_TYPE_PALETTE */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_LAYER_BASIC            (gwy_layer_basic_get_type())
 #define GWY_LAYER_BASIC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_BASIC, GwyLayerBasic))
@@ -70,9 +68,7 @@ void             gwy_layer_basic_set_palette     (GwyLayerBasic *layer,
                                                   GwyPalette *palette);
 GwyPalette*      gwy_layer_basic_get_palette     (GwyLayerBasic *layer);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_LAYER_BASIC_H__ */
 

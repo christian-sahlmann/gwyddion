@@ -28,9 +28,7 @@
 #include <libgwyddion/gwysiunit.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GWY_TYPE_COLOR_AXIS            (gwy_color_axis_get_type())
@@ -91,9 +89,7 @@ void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
 
 GwyPalette * gwy_color_axis_get_palette(GwyColorAxis *axis);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
 

@@ -25,9 +25,7 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwymodule/gwymodule-tool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_UNITOOL_RESPONSE_UNSELECT 255
 
@@ -103,9 +101,7 @@ gboolean     gwy_unitool_get_selection_or_all    (GwyUnitoolState *state,
                                                   gdouble *xmax,
                                                   gdouble *ymax);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_APP_UNITOOL_H__ */
 

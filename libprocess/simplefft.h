@@ -23,9 +23,7 @@
 
 #include <glib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
   GWY_WINDOWING_NONE       = 0,
@@ -56,9 +54,7 @@ gint gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
 void gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /*__GWY_SIPLEFFT__*/

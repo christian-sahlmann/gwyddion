@@ -22,9 +22,7 @@
 #define __GWY_INTERPOLATION_H__
 #include <glib-object.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
   GWY_INTERPOLATION_NONE      = 0,
@@ -46,9 +44,7 @@ gdouble gwy_interpolation_get_dval(gdouble x,
 /*NOTE: quick interpolation of equidistant values is implemented
  in dataline and datafield classes separately.*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_INTERPOLATION_H__*/
 

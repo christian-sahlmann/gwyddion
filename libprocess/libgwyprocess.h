@@ -27,15 +27,11 @@
 #include <libprocess/simplefft.h>
 #include <libprocess/cwt.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* XXX: nothing here yet */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_GWYPROCESS_H__ */
 

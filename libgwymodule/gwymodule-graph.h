@@ -24,9 +24,7 @@
 #include <gtk/gtkobject.h>
 #include <libgwydgets/gwygraph.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef struct _GwyGraphFuncInfo GwyGraphFuncInfo;
 
@@ -49,9 +47,7 @@ GtkObject*   gwy_graph_func_build_menu    (GtkObject *item_factory,
                                            const gchar *prefix,
                                            GCallback item_callback);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_GRAPH_H__ */
 

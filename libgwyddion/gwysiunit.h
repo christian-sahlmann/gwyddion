@@ -21,9 +21,7 @@
 #ifndef __GWY_SI_UNIT_H__
 #define __GWY_SI_UNIT_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -77,9 +75,7 @@ gchar*            gwy_si_unit_get_unit_for_magnitude    (GwySIUnit *siunit,
                                                          gdouble magnitude);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_SI_UNIT_H__ */
 

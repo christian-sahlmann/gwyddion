@@ -23,9 +23,7 @@
 
 #include "gwymoduleloader.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* prefixes for canonical function names */
 #define GWY_MODULE_PREFIX_PROC     "proc::"
@@ -57,9 +55,7 @@ void  _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullnam
 void  _gwy_graph_func_set_register_callback(void (*callback)(const gchar *fullname));
 void  _gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname));
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_INTERNAL_H__ */
 

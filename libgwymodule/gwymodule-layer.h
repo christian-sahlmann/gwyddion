@@ -23,9 +23,7 @@
 
 #include <glib-object.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef struct _GwyLayerFuncInfo GwyLayerFuncInfo;
 
@@ -37,9 +35,7 @@ struct _GwyLayerFuncInfo {
 gboolean     gwy_layer_func_register      (const gchar *modname,
                                            GwyLayerFuncInfo *func_info);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_LAYER_H__ */
 

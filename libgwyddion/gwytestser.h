@@ -26,9 +26,7 @@
 #include "gwyserializable.h"
 #include "gwywatchable.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_TEST_SER                  (gwy_test_ser_get_type())
 #define GWY_TEST_SER(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TEST_SER, GwyTestSer))
@@ -65,9 +63,7 @@ gdouble    gwy_test_ser_get_radius     (GwyTestSer *test_ser);
 gdouble    gwy_test_ser_get_theta      (GwyTestSer *test_ser);
 void       gwy_test_ser_print_history  (GwyTestSer *test_ser);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_TEST_SER_H__ */
 

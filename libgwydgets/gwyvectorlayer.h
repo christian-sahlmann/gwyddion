@@ -28,9 +28,7 @@
 #  include "libgwydgets/gwydataviewlayer.h"
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_VECTOR_LAYER            (gwy_vector_layer_get_type())
 #define GWY_VECTOR_LAYER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VECTOR_LAYER, GwyVectorLayer))
@@ -109,9 +107,7 @@ void             gwy_vector_layer_cursor_new_or_ref    (GdkCursor **cursor,
                                                         GdkCursorType type);
 void             gwy_vector_layer_cursor_free_or_unref (GdkCursor **cursor);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_VECTORLAYER_H__ */
 

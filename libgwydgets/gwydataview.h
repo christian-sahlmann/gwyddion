@@ -37,9 +37,7 @@
 #  include <libgwydgets/gwypixmaplayer.h>
 #endif /* no GWY_TYPE_PIXMAP_LAYER */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_DATA_VIEW            (gwy_data_view_get_type())
 #define GWY_DATA_VIEW(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_VIEW, GwyDataView))
@@ -123,9 +121,7 @@ GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
                                                    gint size);
 void              gwy_data_view_update            (GwyDataView *data_view);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_DATAVIEW_H__ */
 

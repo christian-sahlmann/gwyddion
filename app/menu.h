@@ -24,9 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkitemfactory.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
     GWY_MENU_FLAG_DATA       = 1 << 0,
@@ -70,9 +68,7 @@ void       gwy_app_toolbox_update_state          (GwyMenuSensData *sens_data);
 void       gwy_app_run_process_func_cb           (gchar *name);
 void       gwy_app_run_graph_func_cb             (gchar *name);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_APP_MENU_H__ */
 

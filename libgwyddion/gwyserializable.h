@@ -23,9 +23,7 @@
 
 #include <glib-object.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_SERIALIZABLE                  (gwy_serializable_get_type())
 #define GWY_SERIALIZABLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SERIALIZABLE, GwySerializable))
@@ -142,9 +140,7 @@ gboolean   gwy_serialize_unpack_object_struct (const guchar *buffer,
                                                gsize nspec,
                                                const GwySerializeSpec *spec);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_SERIALIZABLE_H__ */
 

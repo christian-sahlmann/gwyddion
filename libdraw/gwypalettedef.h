@@ -27,9 +27,7 @@
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_PALETTE_DEF                  (gwy_palette_def_get_type())
 #define GWY_PALETTE_DEF(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_PALETTE_DEF, GwyPaletteDef))
@@ -121,9 +119,7 @@ void          gwy_palette_def_setup_presets    (void);
 
 #define gwy_palette_def_is_set(pd) (GWY_PALETTE_DEF(pd)->data->len)
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /*__GWY_PALETTE_H__*/

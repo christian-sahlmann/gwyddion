@@ -60,9 +60,7 @@
 #  include <libgwyddion/gwysiunit.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GWY_TYPE_RULER            (gwy_ruler_get_type())
@@ -149,9 +147,7 @@ void _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
                                                       gint position,
                                                       gint depth));
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GWY_RULER_H__ */

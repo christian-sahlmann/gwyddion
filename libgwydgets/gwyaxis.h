@@ -27,9 +27,7 @@
 #include "gwyaxisdialog.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 /* FIXME more */
 #define GWY_AXIS_NORTH   GTK_POS_TOP
@@ -146,9 +144,7 @@ GString*    gwy_axis_get_label          (GwyAxis *axis);
 void        gwy_axis_set_unit           (GwyAxis *axis,
                                          char *unit);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/
 

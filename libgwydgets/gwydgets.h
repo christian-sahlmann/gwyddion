@@ -48,9 +48,7 @@
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
                                            gint row,
@@ -67,9 +65,7 @@ gboolean   gwy_dialog_prevent_delete_cb   (void);
 
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_GWYDGETS_H__ */
 

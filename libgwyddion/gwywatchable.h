@@ -23,9 +23,7 @@
 
 #include <glib-object.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_WATCHABLE                  (gwy_watchable_get_type())
 #define GWY_WATCHABLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_WATCHABLE, GwyWatchable))
@@ -52,9 +50,7 @@ struct _GwyWatchableClass {
 GType         gwy_watchable_get_type         (void) G_GNUC_CONST;
 void          gwy_watchable_value_changed    (GObject *watchable);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_WATCHABLE_H__ */
 

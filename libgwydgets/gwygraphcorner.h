@@ -26,9 +26,7 @@
 #include <gtk/gtkwidget.h>
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 
 #define GWY_TYPE_GRAPH_CORNER            (gwy_graph_corner_get_type())
@@ -61,9 +59,7 @@ GtkWidget* gwy_graph_corner_new();
 GType gwy_graph_corner_get_type(void) G_GNUC_CONST;
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /*__GWY_GRAPH_CORNER_H__*/
 

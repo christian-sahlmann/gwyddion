@@ -21,9 +21,7 @@
 #ifndef __GWY_ENTITIES_H__
 #define __GWY_ENTITIES_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef struct {
     const gchar *entity;
@@ -36,9 +34,7 @@ gchar*         gwy_entities_text_to_utf8         (const gchar *text);
 G_CONST_RETURN
 GwyTextEntity* gwy_entities_get_entities         (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_ENTITIES_H__ */
 

@@ -23,9 +23,7 @@
 
 #include <math.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
@@ -52,9 +50,7 @@ gdouble*     gwy_math_lin_solve_rewrite  (gint n,
                                           gdouble *rhs,
                                           gdouble *result);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MATH_H__ */
 

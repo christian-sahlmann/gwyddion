@@ -25,15 +25,11 @@
 #include <libgwymodule/gwymodule.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 void gwy_module_browser (void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_MODULE_BROWSER_H__ */
 

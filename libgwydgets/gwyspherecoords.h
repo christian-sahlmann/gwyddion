@@ -24,9 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkobject.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GWY_TYPE_SPHERE_COORDS                  (gwy_sphere_coords_get_type())
 #define GWY_SPHERE_COORDS(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SPHERE_COORDS, GwySphereCoords))
@@ -62,9 +60,7 @@ void       gwy_sphere_coords_set_value      (GwySphereCoords *sphere_coords,
                                              gdouble theta,
                                              gdouble phi);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GWY_SPHERE_COORDS_H__ */
 
