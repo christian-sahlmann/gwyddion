@@ -1259,7 +1259,7 @@ gwy_deserialize_hash_items(const guchar *buffer,
     GwySerializeItem it, *pit;
     GwySerializeSpec sp;
 
-    items = g_array_new(FALSE, FALSE, sizeof(GwySerializeSpec));
+    items = g_array_new(FALSE, FALSE, sizeof(GwySerializeItem));
     position = 0;
     sp.array_size = &it.array_size;
     sp.value = &it.value;
@@ -1286,6 +1286,8 @@ gwy_deserialize_hash_items(const guchar *buffer,
         if (!gwy_deserialize_spec_value(buffer, size, &position, &sp))
             break;
         g_array_append_val(items, it);
+        gwy_debug("appended value #%u: <%s> of <%c>",
+                  items->len - 1, sp.name, sp.ctype);
     }
 
     *nitems = items->len;
@@ -1453,7 +1455,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
         break;
 
         default:
-        g_critical("Type `%c' of %s is unknown (though known to caller?!)",
+        g_critical("Type <%c> of <%s> is unknown (though known to caller?!)",
                    sp->ctype, sp->name);
         return FALSE;
         break;

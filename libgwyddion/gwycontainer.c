@@ -1933,6 +1933,7 @@ gwy_container_deserialize2(const guchar *buffer,
     container = (GwyContainer*)gwy_container_new();
     for (i = 0; i < nitems; i++) {
         it = items + i;
+        gwy_debug("value: #%u: <%s> of <%c>", i, it->name, it->ctype);
         key = g_quark_from_string(it->name);
         switch (it->ctype) {
             case 'b':
