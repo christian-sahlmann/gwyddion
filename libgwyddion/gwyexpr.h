@@ -18,28 +18,37 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GWYDDION_H__
-#define __GWY_GWYDDION_H__
-
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwynlfit.h>
-#include <libgwyddion/gwywatchable.h>
-#include <libgwyddion/gwyserializable.h>
-#include <libgwyddion/gwycontainer.h>
-#include <libgwyddion/gwyentities.h>
-#include <libgwyddion/gwysiunit.h>
-#include <libgwyddion/gwymd5.h>
-#include <libgwyddion/gwydebugobjects.h>
-#include <libgwyddion/gwyexpr.h>
+#ifndef __GWY_EXPR_H__
+#define __GWY_EXPR_H__
 
 G_BEGIN_DECLS
 
-void gwy_type_init(void);
+typedef enum {
+    GWY_EXPR_ERROR_CLOSING_PAREN,
+    GWY_EXPR_ERROR_EMPTY,
+    GWY_EXPR_ERROR_EMPTY_PARENTHESES,
+    GWY_EXPR_ERROR_GARBAGE,
+    GWY_EXPR_ERROR_INVALID_ARGUMENT,
+    GWY_EXPR_ERROR_INVALID_TOKEN,
+    GWY_EXPR_ERROR_MISSING_ARGUMENT,
+    GWY_EXPR_ERROR_NOT_EXECUTABLE,
+    GWY_EXPR_ERROR_OPENING_PAREN,
+    GWY_EXPR_ERROR_STRAY_COMMA,
+    GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS
+} GwyExprError;
+
+typedef struct _GwyExpr GwyExpr;
+
+GwyExpr*  gwy_expr_new             (void);
+void      gwy_expr_free            (GwyExpr *expr);
+gboolean  gwy_expr_evaluate        (GwyExpr *expr,
+                                    const gchar *text,
+                                    gdouble *result,
+                                    GError **err);
 
 G_END_DECLS
 
-#endif /* __GWY_GWYDDION_H__ */
+#endif /* __GWY_EXPR_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
