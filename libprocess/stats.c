@@ -544,17 +544,6 @@ gwy_data_field_get_area_stats(GwyDataField *data_field,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    /* XXX: brain damage. but this is what the original does.
-     * warning added. */
-    if (brcol == data_field->xres) {
-        brcol = data_field->xres - 1;
-        g_warning("gwy_data_field_get_area_stats: brcol off by 1");
-    }
-    if (brrow == data_field->yres) {
-        brrow = data_field->yres - 1;
-        g_warning("gwy_data_field_get_area_stats: brrow off by 1");
-    }
-
     gwy_data_field_area_get_stats(data_field, ulcol, ulrow,
                                   brcol-ulcol, brrow-ulrow,
                                   avg, ra, rms, skew, kurtosis);
