@@ -7,7 +7,8 @@ module_ldflags = -shared -Wl,-soname
 SUBDIRS = \
 	file \
 	graph \
-	process
+	process \
+	tools
 
 module_PROGRAMS = \
 	plugin-proxy.so

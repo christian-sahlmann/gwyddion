@@ -1,7 +1,5 @@
 # @(#) $Id$
 
-SUBDIRS = tools
-
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
 libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
