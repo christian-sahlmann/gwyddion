@@ -21,7 +21,7 @@ Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
 
 ============================================================================
-Worst API bugs and otherwise things that will change in 2.0:
+Worst API bugs and otherwise things that will probably change in 2.0:
 - no one knows what parameters modules functions have and can't call them with
   a particular settings
 - just about everything in graphs: not even slightly MVC, neverending copying
@@ -31,17 +31,23 @@ Worst API bugs and otherwise things that will change in 2.0:
 - libgwyprocess depends on Gtk+ (GtkOrientation)
 - File module API does not allow to open more files, differentiate between
   user cancel and failure, ...
-- everything connected to toolbar construction, but this will wait for
+- Everything related to toolbar construction, but this will wait for
   GtkActionization
-- many argument types are bad, especially serialize functions should take an
-  GwySerializable argument, not a GObject
+- Specifically, there's no tooltip entry in Process and Graph function info
+  so they are hardcoded in the application
+- Interface methods should require generally arguments of that interface,
+  now they require a plain GObject which is wrong
+- There's no system in object constructor return type for non-widgets, some
+  return GObject, some return real type for no clear reason
 - GwyDataField function naming is a mess, some are functions don't have _area
   in name at all, some have it in silly places, there are two different
   area border conventions; GwyDataLine is not much better
-- GwyWatchable is unused -- either remove it, or make object actually
+- GwyWatchable does not work -- either remove it, or make object actually
   implement the notifications
 - gwy_ruler_draw_pos() and gwy_ruler_draw_ticks() got to the public API
   somehow, but they were never meant to
+- Unitool has no free slots to extend
+- Some things may benefit from being objects after all: e.g., modules
 
 ============================================================================
 Release checklist:
