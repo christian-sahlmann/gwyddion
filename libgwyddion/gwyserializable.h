@@ -92,12 +92,6 @@ GObject*    gwy_serializable_deserialize         (const guchar *buffer,
 GObject*    gwy_serializable_duplicate           (GObject *object);
 
 #ifndef GWY_DISABLE_DEPRECATED
-GByteArray* gwy_serialize_pack                   (GByteArray *buffer,
-                                                  const gchar *templ,
-                                                  ...);
-void        gwy_serialize_store_int32            (GByteArray *buffer,
-                                                  gsize position,
-                                                  guint32 value);
 gboolean    gwy_serialize_unpack_boolean         (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
@@ -136,13 +130,6 @@ gsize       gwy_serialize_check_string           (const guchar *buffer,
                                                   gsize size,
                                                   gsize position,
                                                   const guchar *compare_to);
-GByteArray* gwy_serialize_pack_struct            (GByteArray *buffer,
-                                                  gsize nspec,
-                                                  const GwySerializeSpec *spec);
-gboolean    gwy_serialize_unpack_struct          (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize nspec,
-                                                  const GwySerializeSpec *spec);
 #endif
 GByteArray* gwy_serialize_pack_object_struct     (GByteArray *buffer,
                                                   const guchar *object_name,
@@ -153,7 +140,7 @@ gboolean    gwy_serialize_unpack_object_struct   (const guchar *buffer,
                                                   gsize *position,
                                                   const guchar *object_name,
                                                   gsize nspec,
-                                                  const GwySerializeSpec *spec);
+                                                  GwySerializeSpec *spec);
 
 GByteArray*       gwy_serialize_object_items    (GByteArray *buffer,
                                                  const guchar *object_name,

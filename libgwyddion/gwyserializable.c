@@ -662,54 +662,17 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
                                  const GwySerializeSpec *spec)
 {
     gsize before_obj;
+    guint i;
 
     gwy_debug("init size: %u, buffer = %p", buffer ? buffer->len : 0, buffer);
     buffer = gwy_serialize_pack(buffer, "si", object_name, 0);
     before_obj = buffer->len;
     gwy_debug("+head size: %u", buffer->len);
-
-    gwy_serialize_pack_struct(buffer, nspec, spec);
+    for (i = 0; i < nspec; i++)
+        gwy_serialize_spec(buffer, spec + i);
     gwy_debug("+body size: %u", buffer->len);
     gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
                               buffer->len - before_obj);
-    return buffer;
-}
-
-/* FIXME: merge into gwy_serialize_pack_object_struct() in 2.0 */
-/**
- * gwy_serialize_pack_struct:
- * @buffer: A buffer to which the serialized components should be appended,
- *          or %NULL.
- * @nspec: The number of items in @spec.
- * @spec: The components to serialize.
- *
- * Serializes a struct with named and somewhat typed fields.
- *
- * For object serialization gwy_serialize_pack_object_struct() should be more
- * convenient and less error prone.
- *
- * Returns: @buffer or a newly allocated #GByteArray with serialization of
- *          @spec components appended.
- **/
-GByteArray*
-gwy_serialize_pack_struct(GByteArray *buffer,
-                          gsize nspec,
-                          const GwySerializeSpec *spec)
-{
-    gsize i;
-
-    g_return_val_if_fail(spec, buffer);
-    gwy_debug("nspec = %" G_GSIZE_FORMAT ", buffer = %p, len = %u",
-              nspec, buffer, buffer->len);
-    if (!nspec)
-        return buffer;
-
-    if (!buffer)
-        buffer = g_byte_array_new();
-
-    for (i = 0; i < nspec; i++)
-        gwy_serialize_spec(buffer, spec + i);
-
     return buffer;
 }
 
@@ -1096,66 +1059,11 @@ gwy_serialize_skip_type(const guchar *buffer,
     *position = size;
 }
 
-/* Documented in template */
-gboolean
-gwy_serialize_unpack_object_struct(const guchar *buffer,
-                                   gsize size,
-                                   gsize *position,
-                                   const guchar *object_name,
-                                   gsize nspec,
-                                   /* FIXME: this should NOT be const */
-                                   const GwySerializeSpec *spec)
-{
-    gsize mysize;
-    gboolean ok;
-
-    mysize = gwy_serialize_check_string(buffer, size, *position, object_name);
-    g_return_val_if_fail(mysize, FALSE);
-    *position += mysize;
-
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-    g_return_val_if_fail(mysize <= size - *position, FALSE);
-    ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
-    *position += mysize;
-
-    return ok;
-}
-
-/**
- * gwy_serialize_unpack_struct:
- * @buffer: A memory location containing a serialized structure.
- * @size: The size of @buffer.
- * @nspec: The number of items in @spec.
- * @spec: The components to deserialize.
- *
- * Deserializes a structure with named components packed by
- * gwy_serialize_pack_struct().
- *
- * Extra components are ignored (but cause a warning), components of different
- * type than expected cause failure, missing components are not detected.
- *
- * It is safe to pass pointers to existing non-atomic objects (strings, arrays,
- * objects) in @spec values, they will be dereferenced and freed as necessary
- * when an unpacked value is about to replace them.
- * For the same reason it is an error to pass pointers to unintialized memory
- * there, always initialize non-atomic @spec values to %NULL pointers, at
- * least.
- *
- * Caller is responsible for use/clean-up of these values if deserialization
- * succeeds or not.
- *
- * For object deserialization gwy_serialize_unpack_object_struct() should be
- * more convenient and less error prone.
- *
- * Returns: TRUE if the unpacking succeeded, FALSE otherwise (some fields may
- * be unpacked in this case).
- **/
 gboolean
 gwy_serialize_unpack_struct(const guchar *buffer,
                             gsize size,
                             gsize nspec,
-                            /* FIXME: this should NOT be const */
-                            const GwySerializeSpec *spec)
+                            GwySerializeSpec *spec)
 {
     gsize nlen, position;
     const GwySerializeSpec *sp;
@@ -1199,11 +1107,34 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         }
 
         if (!gwy_deserialize_spec_value(buffer, size, &position,
-                                        /* FIXME: wrong const */
                                         (GwySerializeSpec*)sp))
             return FALSE;
     }
     return TRUE;
+}
+
+/* Documented in template */
+gboolean
+gwy_serialize_unpack_object_struct(const guchar *buffer,
+                                   gsize size,
+                                   gsize *position,
+                                   const guchar *object_name,
+                                   gsize nspec,
+                                   GwySerializeSpec *spec)
+{
+    gsize mysize;
+    gboolean ok;
+
+    mysize = gwy_serialize_check_string(buffer, size, *position, object_name);
+    g_return_val_if_fail(mysize, FALSE);
+    *position += mysize;
+
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    g_return_val_if_fail(mysize <= size - *position, FALSE);
+    ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
+    *position += mysize;
+
+    return ok;
 }
 
 /**
