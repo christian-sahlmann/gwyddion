@@ -8,9 +8,9 @@ gwyddion_SOURCES = \
 gwyddion_LDADD = \
 	../libgwydgets/libgwydgets.la \
 	../libgwyddion/libgwyddion.la \
-	../libprocess/libprocess.la \
+	../libprocess/libgwyprocess.la \
 	../libgwymodule/libgwymodule.la \
-	../libdraw/libdraw.la
+	../libdraw/libgwydraw.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG
