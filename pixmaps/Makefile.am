@@ -66,6 +66,7 @@ pixmapdata_DATA = \
 	gwy_scale-24.png \
 	gwy_scars-24.png \
 	gwy_shader-24.png \
+	gwy_slope_mask-24.png \
 	gwy_spot_remove-24.png \
 	gwy_stat_quantities-24.png \
 	gwy_subscript-24.png \
