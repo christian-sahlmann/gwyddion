@@ -62,13 +62,16 @@ static void logger(const gchar *log_domain,
 static void print_help(void);
 static void process_preinit_options(int *argc,
                                     char ***argv);
+static void warn_broken_settings_file(GtkWidget *parent,
+                                      const gchar *settings_file);
 
 int
 main(int argc, char *argv[])
 {
+    GtkWidget *toolbox;
     gchar **module_dirs;
     gchar *config_file, *settings_file;
-    gboolean has_config, has_settings, ok = FALSE;
+    gboolean has_config, has_settings, settings_ok = FALSE;
 
 #ifdef G_OS_WIN32
     gwy_find_self_set_argv0(argv[0]);
@@ -95,9 +98,9 @@ main(int argc, char *argv[])
     gwy_app_splash_create();
     gwy_app_splash_set_message(_("Loading settings"));
     if (has_settings)
-        ok = gwy_app_settings_load(settings_file);
-    gwy_debug("Loading settings was: %s", ok ? "OK" : "Not OK");
-    if (!ok && has_config)
+        settings_ok = gwy_app_settings_load(settings_file);
+    gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
+    if (!settings_ok && has_config)
         gwy_app_settings_load_bin(config_file);
     gwy_app_settings_get();
 
@@ -112,13 +115,16 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message_prefix(NULL);
 
     gwy_app_splash_set_message("Initializing GUI");
-    gwy_app_toolbox_create();
+    toolbox = gwy_app_toolbox_create();
     gwy_app_splash_close();
 
     gwy_app_file_open_initial(argv + 1, argc - 1);
+    if (has_settings && !settings_ok)
+        warn_broken_settings_file(toolbox, settings_file);
 
     gtk_main();
-    if (gwy_app_settings_save(settings_file)) {
+    if ((settings_ok || !has_settings)
+        && gwy_app_settings_save(settings_file)) {
         if (has_config) {
             g_warning("Converted settings to human-readable form, "
                       "deleting old one");
@@ -128,7 +134,7 @@ main(int argc, char *argv[])
     gwy_app_settings_free();
     g_free(config_file);
     g_free(settings_file);
-    gwy_debug_objects_dump_to_file(stdout, 0);
+    gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
 
     return 0;
@@ -192,6 +198,27 @@ print_help(void)
         );
     puts("Please report bugs in Gwyddion bugzilla "
          "http://trific.ath.cx/bugzilla/");
+}
+
+static void
+warn_broken_settings_file(GtkWidget *parent,
+                          const gchar *settings_file)
+{
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new
+                 (GTK_WINDOW(parent),
+                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                  GTK_MESSAGE_WARNING,
+                  GTK_BUTTONS_OK,
+                  _("Could not read settings file `%s'.\n\n"
+                    "Settings will not be saved "
+                    "until it is repaired or removed."),
+                  settings_file);
+    /* parent is usually in a screen corner, centering on it looks ugly */
+    gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_widget_show_all(dialog);
 }
 
 #ifdef WIN32
