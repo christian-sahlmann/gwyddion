@@ -24,7 +24,8 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydraw_la_LDFLAGS = -version-info 4:1:3
+#libgwydraw_la_LDFLAGS = -version-info 4:1:3
+libgwydraw_la_LDFLAGS = -release @LIBRARY_RELEASE@
 libgwydraw_la_SOURCES = \
 	gwydraw.c \
 	gwygradient.c \

@@ -1,7 +1,10 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.9, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99cvs20050316, [http://trific.ath.cx/bugzilla/])
+# Use -release for unstable version libs instead of -version-info, because
+# we *do* break compatibility each version
+LIBRARY_RELEASE=1.99.1
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -254,6 +257,7 @@ LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
 AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
 AC_SUBST(PACKAGE_URL)
+AC_SUBST(LIBRARY_RELEASE)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
                    [Define to package home page, as a string.])
 

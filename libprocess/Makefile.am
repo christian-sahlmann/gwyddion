@@ -39,7 +39,8 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyprocess_la_LDFLAGS = -version-info 8:0:5
+#libgwyprocess_la_LDFLAGS = -version-info 8:0:5
+libgwyprocess_la_LDFLAGS = -release @LIBRARY_RELEASE@
 libgwyprocess_la_SOURCES = \
 	arithmetic.c \
 	cdline.c \
