@@ -11,7 +11,7 @@
 
 /* Forward declarations */
 
-static void     gwy_vector_shade_class_init     (GwyVectorShadeClass *klass);
+static void     gwy_vector_shade_class_init     (void);
 static void     gwy_vector_shade_init           (GwyVectorShade *vector_shade);
 GtkWidget*      gwy_vector_shade_new            (GwySphereCoords *sphere_coords);
 static void     gwy_vector_shade_phi_update     (GtkAdjustment *adj,
@@ -53,7 +53,7 @@ gwy_vector_shade_get_type(void)
 }
 
 static void
-gwy_vector_shade_class_init(GwyVectorShadeClass *klass)
+gwy_vector_shade_class_init(void)
 {
     gwy_debug("%s", __FUNCTION__);
 }
