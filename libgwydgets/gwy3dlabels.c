@@ -334,21 +334,25 @@ gwy_3d_labels_get_description(Gwy3DLabels *gwy3dlabels,
  *
  * Updates the numerical values of the variables in @text field of
  * #Gwy3DLabelDescription. Also appends the SI unit to this numerical values.
- *
- * Since: 1.5
  **/
-void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
+void
+gwy_3d_labels_update(Gwy3DLabels *labels,
+                     GwySIUnit *si_unit)
 {
-    GwySIValueFormat * format;
+    GwySIValueFormat *format;
     gchar buffer[50];
     gdouble xreal, yreal, data_min, data_max, range, maximum;
-    GwyDataField * data_field;
+    GwyDataField *data_field = NULL;
     int i;
 
     gwy_debug(" ");
 
-    g_return_if_fail(gwy_container_gis_object_by_name(
-                         labels->container, "/0/data", (GObject**)&data_field));
+    if (!gwy_container_gis_object_by_name(labels->container,
+                                          "/0/data",
+                                          (GObject**)&data_field)) {
+        g_critical("No data field");
+        return;
+    }
 
     for (i = 0; i < labels->variables_count; i++)
        g_free(labels->values[i]);
@@ -411,53 +415,45 @@ void gwy_3d_labels_update(Gwy3DLabels * labels, GwySIUnit * si_unit)
  *          to their numerical values. The returned string should not be modied,
  *          freed of referenced. It is freed during next call of this function
  *          or during destroying @labels.
- *
- * Since: 1.5
  **/
-gchar * gwy_3d_labels_expand_text(Gwy3DLabels * labels, Gwy3DLabelName label_name)
+gchar*
+gwy_3d_labels_expand_text(Gwy3DLabels *labels,
+                          Gwy3DLabelName label_name)
 {
-#   define LABEL_BUFFER_SIZE 500
-    gchar buffer[LABEL_BUFFER_SIZE];
-    gchar *i, *j, *k = NULL;
-    guint p;
-    gchar * lb;
+    GString *buffer;
+    gchar *s, *lb;
+    guint i, len;
 
     lb = gwy_3d_labels_get_description(labels, label_name)->text;
     g_return_val_if_fail(lb != NULL, NULL);
 
-    gwy_debug("text:%s" , lb);
-    for (i = lb, j = buffer ; *i != '\0'; ++i, ++j)
-    {
-        if (*i != '$')
-            *j = *i;
-        else
-        {
-            for (p = 0; p < labels->variables_count; p++)
-                if (g_ascii_strncasecmp(i+1, labels->keys[p], strlen(labels->keys[p])) == 0)
-                {
-                   k = labels->values[p];
-                   i += strlen(labels->keys[p]) ;
-                   break;
-                }
-            if (k != NULL)
-            {
-                for ( ; *k != '\0' && (j-lb < LABEL_BUFFER_SIZE - 1); ++k, ++j)
-                    *j = *k;
-                k = NULL;
-                --j;
-            }
-        }
-        if (j-lb > LABEL_BUFFER_SIZE - 1)
-        {
-            j = lb + LABEL_BUFFER_SIZE - 1;
+    gwy_debug("text: <%s>", lb);
+    buffer = g_string_new("");
+    while (lb && *lb) {
+        if (!(s = strchr(lb, '$'))) {
+            g_string_append(buffer, lb);
             break;
         }
+        g_string_append_len(buffer, lb, s - lb);
+        lb = s + 1;
+
+        for (i = 0; i < labels->variables_count; i++) {
+            len = strlen(labels->keys[i]);
+            if (!g_ascii_strncasecmp(lb, labels->keys[i], len)
+                && !g_ascii_isalpha(lb[len])) {
+                g_string_append(buffer, labels->values[i]);
+                lb += len;
+                break;
+            }
+        }
+        if (i == labels->variables_count)
+            g_string_append_c(buffer, '$');
     }
-    *j = '\0';
 
     g_free(labels->text);
-    labels->text = g_strdup(buffer);
-#   undef LABEL_BUFFER_SIZE
+    labels->text = buffer->str;
+    g_string_free(buffer, FALSE);
+
     return labels->text;
 }
 

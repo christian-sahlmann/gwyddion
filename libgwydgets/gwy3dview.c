@@ -2228,7 +2228,7 @@ gl_pango_ft2_render_layout (PangoLayout *layout)
 
 static void
 gwy_3d_print_text(Gwy3DView      *gwy3dview,
-                  char           *text,
+                  gchar          *text,
                   GLfloat        raster_x,
                   GLfloat        raster_y,
                   GLfloat        raster_z,
