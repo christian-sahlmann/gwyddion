@@ -132,7 +132,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         w1 = (-0.5 + (1.0 - rest/2.0)*rest)*rest;
         w2 = 1.0 + (-2.5 + 1.5*rest)*rest*rest;
         w3 = (0.5 + (2.0 - 1.5*rest)*rest)*rest;
-        w4 = (0.5 + (1.0 + rest/2.0)*rest)*rest;
+        w4 = (-0.5 + rest/2.0)*rest*rest;
         break;
 
         case GWY_INTERPOLATION_BSPLINE:
