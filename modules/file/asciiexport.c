@@ -44,7 +44,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "asciiexport",
-    "Exports data as simple ASCII matrix",
+    N_("Exports data as simple ASCII matrix"),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -60,7 +60,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo asciiexport_func_info = {
         "asciiexport",
-        "ASCII data matrix (" EXTENSION ")",
+        N_("ASCII data matrix (.txt)"),
         (GwyFileDetectFunc)&asciiexport_detect,
         NULL,
         (GwyFileSaveFunc)&asciiexport_save,

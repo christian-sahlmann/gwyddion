@@ -215,39 +215,39 @@ static struct {
 saveable_formats[] = {
     {
         "png",
-        "Portable Network Graphics (" GWY_PNG_EXTENSIONS ")",
+        N_("Portable Network Graphics (.png)"),
         GWY_PNG_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_png,
     },
     {
         "jpeg",
-        "JPEG (" GWY_JPEG_EXTENSIONS ")",
+        N_("JPEG (.jpeg,.jpg)"),
         GWY_JPEG_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_jpeg,
     },
 #ifdef HAVE_TIFF
     {
         "tiff",
-        "TIFF (" GWY_TIFF_EXTENSIONS ")",
+        N_("TIFF (.tiff,.tif)"),
         GWY_TIFF_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_tiff,
     },
 #endif
     {
         "pnm",
-        "Portable Pixmap (" GWY_PPM_EXTENSIONS ")",
+        N_("Portable Pixmap (.ppm,.pnm)"),
         GWY_PPM_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_ppm,
     },
     {
         "bmp",
-        "Windows or OS2 Bitmap (" GWY_BMP_EXTENSIONS ")",
+        N_("Windows or OS2 Bitmap (.bmp)"),
         GWY_BMP_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_bmp
     },
     {
         "tga",
-        "TARGA (" GWY_TARGA_EXTENSIONS ")",
+        N_("TARGA (.tga,.targa)"),
         GWY_TARGA_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_targa
     },
@@ -270,17 +270,15 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "pixmap",
-    "Exports data as as pixmap images and imports data from pixmap images. "
-        "Supports following image formats for export: "
-        "PNG, "
-        "JPEG, "
-#ifdef HAVE_TIFF
-        "TIFF, "
-#endif
-        "PPM, "
-        "BMP, "
-        "TARGA. "
-        "Import support relies on GDK and thus may be installation-dependent.",
+    N_("Exports data as as pixmap images and imports data from pixmap images. "
+       "Supports following image formats for export: "
+       "PNG, "
+       "JPEG, "
+       "TIFF (if available), "
+       "PPM, "
+       "BMP, "
+       "TARGA. "
+       "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
     "4.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -693,14 +691,14 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     g_snprintf(buf, sizeof(buf), "%u", xres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gwy_table_attach_row(table, row++, _("_Horizontal size:"), "pixels",
+    gwy_table_attach_row(table, row++, _("_Horizontal size:"), _("px"),
                          label);
 
     g_snprintf(buf, sizeof(buf), "%u", yres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    gwy_table_attach_row(table, row++, _("_Vertical size:"), "pixels",
+    gwy_table_attach_row(table, row++, _("_Vertical size:"), _("px"),
                          label);
 
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
@@ -772,7 +770,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls.zexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                     -12, 3, "m/sample unit",
+                                                     -12, 3, _("m/sample unit"),
                                                      args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
@@ -1529,9 +1527,9 @@ pixmap_save_dialog(GwyContainer *data,
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum output_formats[] = {
-        { "Data alone",    PIXMAP_RAW_DATA },
-        { "Data + rulers", PIXMAP_RULERS },
-        { "Everything",    PIXMAP_EVERYTHING },
+        { N_("_Data alone"),    PIXMAP_RAW_DATA },
+        { N_("Data + _rulers"), PIXMAP_RULERS },
+        { N_("_Everything"),    PIXMAP_EVERYTHING },
     };
 
     GtkObject *zoom;
@@ -1895,7 +1893,8 @@ prepare_drawable(gint width,
     GdkColormap *cmap;
     GdkColor fg;
 
-    /* FIXME: this creates a drawable with *SCREEN* bit depth */
+    /* FIXME: this creates a drawable with *SCREEN* bit depth
+     * We should render a pixmap with Pango FT2 and use that */
     window = gwy_app_main_window_get()->window;
     drawable = GDK_DRAWABLE(gdk_pixmap_new(GDK_DRAWABLE(window),
                                            width, height, -1));

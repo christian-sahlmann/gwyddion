@@ -79,7 +79,7 @@ static gboolean       read_binary_data    (gint n,
 static GHashTable*    read_hash           (gchar **buffer);
 static gchar*         next_line           (gchar **buffer);
 
-static gchar*         get_data_name        (GHashTable *hash);
+static gchar*         get_data_name       (GHashTable *hash);
 static void           get_value_scales    (GHashTable *hash,
                                            gdouble *zscale,
                                            gdouble *curscale);
@@ -92,7 +92,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "nanoscope",
-    "Load Nanoscope data.",
+    N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -108,7 +108,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo nanoscope_func_info = {
         "nanoscope",
-        "Nanoscope files",
+        N_("Nanoscope files"),
         (GwyFileDetectFunc)&nanoscope_detect,
         (GwyFileLoadFunc)&nanoscope_load,
         NULL,

@@ -47,7 +47,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "gwyfile",
-    "Load and save Gwyddion native serialized objects.",
+    N_("Load and save Gwyddion native serialized objects."),
     "Yeti <yeti@gwyddion.net>",
     "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -63,7 +63,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo gwyfile_func_info = {
         "gwyfile",
-        "Gwyddion native serialized objects (" EXTENSION ")",
+        N_("Gwyddion native serialized objects (.gwy)"),
         (GwyFileDetectFunc)&gwyfile_detect,
         (GwyFileLoadFunc)&gwyfile_load,
         (GwyFileSaveFunc)&gwyfile_save,

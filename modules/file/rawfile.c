@@ -247,7 +247,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "rawfile",
-    "Read raw data according to user-specified format.",
+    N_("Read raw data according to user-specified format."),
     "Yeti <yeti@gwyddion.net>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -378,15 +378,15 @@ static const guint32 *const RTABLE[] = {
 };
 
 static const GwyEnum builtin_menu[] = {
-    { "User-specified",       RAW_NONE            },
-    { "Signed byte",          RAW_SIGNED_BYTE     },
-    { "Unsigned byte",        RAW_UNSIGNED_BYTE   },
-    { "Signed 16bit word",    RAW_SIGNED_WORD16   },
-    { "Unsigned 16bit word",  RAW_UNSIGNED_WORD16 },
-    { "Signed 32bit word",    RAW_SIGNED_WORD32   },
-    { "Unsigned 32bit word",  RAW_UNSIGNED_WORD32 },
-    { "IEEE single",          RAW_IEEE_FLOAT      },
-    { "IEEE double",          RAW_IEEE_DOUBLE     },
+    { N_("User-specified"),       RAW_NONE            },
+    { N_("Signed byte"),          RAW_SIGNED_BYTE     },
+    { N_("Unsigned byte"),        RAW_UNSIGNED_BYTE   },
+    { N_("Signed 16bit word"),    RAW_SIGNED_WORD16   },
+    { N_("Unsigned 16bit word"),  RAW_UNSIGNED_WORD16 },
+    { N_("Signed 32bit word"),    RAW_SIGNED_WORD32   },
+    { N_("Unsigned 32bit word"),  RAW_UNSIGNED_WORD32 },
+    { N_("IEEE single"),          RAW_IEEE_FLOAT      },
+    { N_("IEEE double"),          RAW_IEEE_DOUBLE     },
 };
 
 static const RawFileArgs rawfile_defaults = {
@@ -412,7 +412,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo rawfile_func_info = {
         "rawfile",
-        "Raw data files",
+        N_("Raw data files"),
         (GwyFileDetectFunc)&rawfile_detect,
         (GwyFileLoadFunc)&rawfile_load,
         NULL,
@@ -757,9 +757,10 @@ rawfile_dialog_info_page(RawFileArgs *args,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
-    controls->zexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                      -12, 3, "m/sample unit",
-                                                      args->zexponent);
+    controls->zexponent
+        = gwy_option_menu_metric_unit(NULL, NULL,
+                                      -12, 3, _("m/sample unit"),
+                                      args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -773,13 +774,13 @@ rawfile_dialog_format_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
     static const GwyEnum formats[] = {
-        { "_Text data",   RAW_TEXT },
-        { "_Binary data", RAW_BINARY },
+        { N_("_Text data"),   RAW_TEXT },
+        { N_("_Binary data"), RAW_BINARY },
     };
     static const GwyEnum delimiter_menu[] = {
-        { "Any whitespace",       RAW_DELIM_ANY_WHITESPACE  },
-        { "TAB character",        RAW_DELIM_TAB             },
-        { "Ohter character",      RAW_DELIM_OTHER           },
+        { N_("Any whitespace"),       RAW_DELIM_ANY_WHITESPACE  },
+        { N_("TAB character"),        RAW_DELIM_TAB             },
+        { N_("Ohter character"),      RAW_DELIM_OTHER           },
     };
     GtkWidget *vbox, *label, *table, *button, *entry, *omenu;
     GtkObject *adj;
@@ -827,6 +828,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
                                    G_CALLBACK(delimiter_changed_cb), controls,
                                    -1);
     controls->delimmenu = omenu;
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
                      GTK_FILL, 0, 2, 2);
     row++;
@@ -837,6 +839,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
                      GTK_FILL, 0, 2, 2);
 
     controls->delimiter = entry = gtk_entry_new();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -867,6 +870,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
                      GTK_FILL, 0, 2, 2);
 
     controls->byteswap = entry = gtk_entry_new();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
     gtk_entry_set_max_length(GTK_ENTRY(entry), 17);
     gtk_table_attach(GTK_TABLE(table), entry, 1, 2, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -948,7 +952,8 @@ rawfile_preset_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
         s = g_strconcat(prefix, name, "/format", NULL);
         format = gwy_container_get_int32_by_name(settings, s);
         g_free(s);
-        g_object_set(cell, "text", format == RAW_BINARY ? "Binary" : "Text",
+        g_object_set(cell, "text",
+                     format == RAW_BINARY ? _("Binary") : _("Text"),
                      NULL);
         break;
 
@@ -984,12 +989,12 @@ rawfile_preset_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
             delim = gwy_container_get_string_by_name(settings, s);
             g_free(s);
             if (!delim || !*delim)
-                g_object_set(cell, "text", "Delimiter: whitespace", NULL);
+                g_object_set(cell, "text", _("Delimiter: whitespace"), NULL);
             else {
                 if (delim[1] == '\0' && !g_ascii_isgraph(delim[0]))
-                    s = g_strdup_printf("Delimiter: 0x%02x", delim[0]);
+                    s = g_strdup_printf(_("Delimiter: 0x%02x"), delim[0]);
                 else
-                    s = g_strdup_printf("Delimiter: %s", delim);
+                    s = g_strdup_printf(_("Delimiter: %s"), delim);
                 g_object_set(cell, "text", s, NULL);
                 g_free(s);
             }
@@ -1012,10 +1017,10 @@ rawfile_dialog_preset_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
     static const GwyEnum columns[] = {
-        { "Name", RAW_PRESET_NAME },
-        { "Type", RAW_PRESET_TYPE },
-        { "Size", RAW_PRESET_SIZE },
-        { "Info", RAW_PRESET_INFO },
+        { N_("Name"), RAW_PRESET_NAME },
+        { N_("Type"), RAW_PRESET_TYPE },
+        { N_("Size"), RAW_PRESET_SIZE },
+        { N_("Info"), RAW_PRESET_INFO },
     };
     GtkListStore *store;
     GtkTreeSelection *tselect;
@@ -2005,7 +2010,7 @@ rawfile_read_ascii(RawFileArgs *args,
         buffer = strchr(buffer, '\n');
         if (!buffer) {
             g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                        "Not enough lines (%d) for offset (%d)",
+                        _("Not enough lines (%d) for offset (%d)"),
                         i, args->lineoffset);
             return FALSE;
         }
@@ -2030,8 +2035,8 @@ rawfile_read_ascii(RawFileArgs *args,
                 j = strspn(buffer, " \t\n\r");
                 if (!j) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Expected whitespace to skip more fields "
-                                "in row %u, got `%.16s'",
+                                _("Expected whitespace to skip more fields "
+                                  "in row %u, got `%.16s'"),
                                 n, buffer);
                     return FALSE;
                 }
@@ -2043,8 +2048,8 @@ rawfile_read_ascii(RawFileArgs *args,
                 end = strchr(buffer, cdelim);
                 if (!end) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Expected `%c' to skip more fields "
-                                "in row %u, got `%.16s'",
+                                _("Expected `%c' to skip more fields "
+                                  "in row %u, got `%.16s'"),
                                 cdelim, n, buffer);
                     return FALSE;
                 }
@@ -2057,8 +2062,8 @@ rawfile_read_ascii(RawFileArgs *args,
                 end = strstr(buffer, args->delimiter);
                 if (!end) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Expected `%s' to skip more fields "
-                                "in row %u, got `%.16s'",
+                                _("Expected `%s' to skip more fields "
+                                  "in row %u, got `%.16s'"),
                                 args->delimiter, n, buffer);
                     return FALSE;
                 }
@@ -2074,7 +2079,7 @@ rawfile_read_ascii(RawFileArgs *args,
                 x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Garbage `%.16s' in row %u, column %u",
+                                _("Garbage `%.16s' in row %u, column %u"),
                                 buffer, n, i);
                     return FALSE;
                 }
@@ -2088,7 +2093,7 @@ rawfile_read_ascii(RawFileArgs *args,
                 x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Garbage `%.16s' in row %u, column %u",
+                                _("Garbage `%.16s' in row %u, column %u"),
                                 buffer, n, i);
                     return FALSE;
                 }
@@ -2100,8 +2105,8 @@ rawfile_read_ascii(RawFileArgs *args,
                     buffer += j;
                 else {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Expected delimiter `%c' after data "
-                                "in row %u, column %u, got `%c'",
+                                _("Expected delimiter `%c' after data "
+                                  "in row %u, column %u, got `%c'"),
                                 cdelim, n, i, *buffer);
                     return FALSE;
                 }
@@ -2114,7 +2119,7 @@ rawfile_read_ascii(RawFileArgs *args,
                 x = strtod_func(buffer, (char**)&end);
                 if (end == buffer) {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Garbage `%.16s' in row %u, column %u",
+                                _("Garbage `%.16s' in row %u, column %u"),
                                 buffer, n, i);
                     return FALSE;
                 }
@@ -2126,8 +2131,8 @@ rawfile_read_ascii(RawFileArgs *args,
                     buffer += j;
                 else {
                     g_set_error(error, error_domain, RAW_ASCII_PARSE_ERROR,
-                                "Expected delimiter `%s' after data "
-                                "in row %u, column %u, got `%.16s'",
+                                _("Expected delimiter `%s' after data "
+                                  "in row %u, column %u, got `%.16s'"),
                                 args->delimiter, n, i, buffer);
                     return FALSE;
                 }

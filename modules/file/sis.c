@@ -352,7 +352,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "sisfile",
-    "Load SIS data.",
+    N_("Load SIS data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.9",
     "David Neačs (Yeti) & Petr Klapetek",
@@ -368,7 +368,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo sis_func_info = {
         "sisfile",
-        "SIS files (" EXTENSION ")",
+        N_("SIS files (.sis)"),
         (GwyFileDetectFunc)&sis_detect,
         (GwyFileLoadFunc)&sis_load,
         NULL,
