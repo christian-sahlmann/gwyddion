@@ -18,7 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#ifdef _MSC_VER
+/* XXX: do this better */
+#define PACKAGE_VERSION "0.0"
+#define PACKAGE_BUGREPORT "yeti@physics.muni.cz"
+#define PACKAGE_URL "http://gwyddion.net/"
+#define PACKAGE_NAME "Gwyddion"
+#else
 #include "config.h"
+#endif
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
