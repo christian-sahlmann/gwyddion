@@ -49,7 +49,6 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_graph-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
-	$(top_srcdir)/pixmaps/gwy_gwyddion-48.old.png \
 	$(top_srcdir)/pixmaps/gwy_gwyddion-60.png \
 	$(top_srcdir)/pixmaps/gwy_italic-24.png \
 	$(top_srcdir)/pixmaps/gwy_none-24.png \
