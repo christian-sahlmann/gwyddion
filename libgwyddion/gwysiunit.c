@@ -178,6 +178,15 @@ GObject* gwy_si_unit_duplicate (GObject *object)
     return duplicate;
 }
 
+/**
+ * gwy_si_unit_new:
+ * @unit_string: unit string 
+ *
+ * Unit string represents unit with no prefixes
+ * (e. g. "m", "N", "A", etc.)
+ *
+ * Returns: a new GwySiUnit with a given string
+ **/
 GObject*
 gwy_si_unit_new(char *unit_string)
 {
@@ -190,6 +199,14 @@ gwy_si_unit_new(char *unit_string)
     return (GObject*)siunit;
 }
 
+/**
+ * gwy_si_unit_set_unit_string:
+ * @siunit: GwySiUnit 
+ * @unit_string: unit string to be set 
+ *
+ * Sets string that represents unit. It is the
+ * unit with no prefixes (e. g. "m", "N", "A", etc.)
+ **/
 void
 gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
 {
@@ -199,12 +216,27 @@ gwy_si_unit_set_unit_string(GwySIUnit *siunit, char *unit_string)
     siunit->unitstr = g_strdup(unit_string);
 }
 
+/**
+ * gwy_si_unit_copy:
+ * @target: where to copy
+ * @example: what to copy 
+ *
+ * copies GwySiUnit
+ **/
 void
 gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example)
 {
     gwy_si_unit_set_unit_string(target, example->unitstr);
 }
 
+/**
+ * gwy_si_unit_get_unit_string:
+ * @siunit: GwySiUnit 
+ *
+ * 
+ *
+ * Returns: string that represents unit (with no prefixes)
+ **/
 gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
@@ -212,10 +244,20 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
     return siunit->unitstr;
 }
 
+/**
+ * gwy_si_unit_get_prefix:
+ * @siunit: GwySiUnit 
+ * @value: input value
+ * @prefix: returned prefix 
+ * @power:  returned power
+ *
+ * Finds reasonable representation for
+ * a number. This means that number @value should
+ * be written as @value / @power [@prefix gwy_si_unit_get_unit_string()]
+ **/
 void
 gwy_si_unit_get_prefix(GwySIUnit *siunit,
                        double value,
-                       gint precision,
                        char *prefix,
                        double *power)
 {
@@ -224,17 +266,28 @@ gwy_si_unit_get_prefix(GwySIUnit *siunit,
     strcpy(prefix, gwy_math_SI_prefix(*power));
 }
 
+/**
+ * gwy_si_unit_get_prefixed:
+ * @siunit: GwySiUnit 
+ * @value: input value
+ * @prefixed: returned prefixed unit
+ * @power:  returned power
+ *
+ * Finds reasonable representation for a number. In contrary
+ * to gwy_si_unit_get_prefix() also returns GwySiUnit string.
+ * This means that number @value should be written as
+ * @value / @power [@prefixed]
+ **/
 void
 gwy_si_unit_get_prefixed(GwySIUnit *siunit,
                          double value,
-                         gint precision,
-                         char *prefix,
+                         char *prefixed,
                          double *power)
 {
     gwy_debug("");
     *power = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
-    strcpy(prefix, gwy_math_SI_prefix(*power));
-    strcat(prefix, siunit->unitstr);
+    strcpy(prefixed, gwy_math_SI_prefix(*power));
+    strcat(prefixed, siunit->unitstr);
 }
 
 

@@ -56,8 +56,8 @@ GObject* gwy_si_unit_new(gchar *unit_string);
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
 
-void gwy_si_unit_get_prefix(GwySIUnit *siunit, gdouble value, gint precision, gchar *prefix, gdouble *power);
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, gint precision, gchar *prefix, gdouble *power);
+void gwy_si_unit_get_prefix(GwySIUnit *siunit, gdouble value, gchar *prefix, gdouble *power);
+void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, gchar *prefixed, gdouble *power);
 
 void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example);
 
