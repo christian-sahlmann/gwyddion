@@ -1,6 +1,8 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2000-2003 Martin Siler.
+ *  Copyright (C) 2004 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,12 +19,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/*
- *  Clean-up, rewrite from C++, and modification for Gwyddion by David
- *  Necas (Yeti), 2004.
- *  E-mail: yeti@gwyddion.net.
- */
-
 #include <string.h>
 #include <gwymacros.h>
 #include <gwymath.h>
@@ -37,21 +33,23 @@
  */
 #define EPS 1e-16
 
-#define IndexLongMat(i, j) \
-    ((j) > (i) ? (((j) + 1)*(j)/2 + (i)) : ((i) + 1)*(i)/2 + (j))
+/* Lower symmetric part indexing */
+/* i MUST be greater or equal than j */
+#define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
 
 /* XXX: brain damage:
  * all the functions whose names end with `1' use 1-based arrays since they
  * were originally written in Pascal (!)
- * never expose then to outer world, we must pretend everything is 0-based */
-static void     gwy_math_choleski_solve1(gint dimA,
-                                         gdouble *A,
-                                         gdouble *B);
-static gboolean gwy_math_choleski_decompose1(gint dimA,
-                                             gdouble *A);
+ * never expose then to outer world, we must pretend everything is 0-based
+ * eventually everything will be rewritten to base 0 */
 static gboolean gwy_math_sym_matrix_invert1(gint n,
                                             gdouble *a);
 
+static gboolean gwy_math_choleski_decompose (gint dim,
+                                             gdouble *a);
+static void     gwy_math_choleski_solve     (gint dim,
+                                             gdouble *a,
+                                             gdouble *b);
 static gdouble gwy_math_nlfit_residua(GwyNLFitter *nlfit,
                                       gint n_dat,
                                       gdouble *x,
@@ -233,7 +231,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                 xr[j] = -v[j];
             }
             /* Choleskeho rozklad J'J v A*/
-            posdef = gwy_math_choleski_decompose1(n_par, a-1);
+            posdef = gwy_math_choleski_decompose(n_par, a);
             if (!posdef) {
                 /* Provede zvetseni "lambda"*/
                 mlambda *= nlfit->minc;
@@ -241,7 +239,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                     mlambda = nlfit->mtol;
             }
         }
-        gwy_math_choleski_solve1(n_par, a-1, xr-1);
+        gwy_math_choleski_solve(n_par, a, xr);
 
         for (i = 0; i < n_par; i++) {
             param[i] = saveparam[i] + xr[i];
@@ -424,7 +422,7 @@ gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
 {
     g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
 
-    return sqrt(nlfit->dispersion * nlfit->covar[IndexLongMat(par, par)]);
+    return sqrt(nlfit->dispersion * SLi(nlfit->covar, par, par));
 }
 
 /**
@@ -469,73 +467,86 @@ gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
 
     if (par1 == par2)
         return 1.0;
+    if (par1 < par2)
+        GWY_SWAP(gint, par1, par2);
 
-    Pom = nlfit->covar[IndexLongMat(par1, par1)]
-          * nlfit->covar[IndexLongMat(par2, par2)];
+    Pom = SLi(nlfit->covar, par1, par1) * SLi(nlfit->covar, par2, par2);
     if (Pom == 0) {
         g_warning("Zero element in covar matrix");
         return G_MAXDOUBLE;
     }
 
-    return nlfit->covar[IndexLongMat(par1, par2)]/sqrt(Pom);
+    return SLi(nlfit->covar, par1, par2)/sqrt(Pom);
 }
 
 
-/* choleskeho rozklad*/
+/**
+ * gwy_math_choleski_decompose:
+ * @dim: The dimension of @a.
+ * @a: Lower triangular part of a symmetrix matric, stored by rows, i.e.,
+ *     a = [a_00 a_10 a_11 a_20 a_21 a_22 a_30 ...].
+ *
+ * Decomposes a symmetric positive definite matrix in place.
+ *
+ * Returns: Whether the matrix was really positive definite.  If %FALSE,
+ *          the decomposition failed and @a contains garbage.
+ **/
 static gboolean
-gwy_math_choleski_decompose1(gint dimA, gdouble *A)
+gwy_math_choleski_decompose(gint dim, gdouble *a)
 {
-    gint i, j, k, m, q;
-    gdouble s;
+    gint i, j, k;
+    gdouble s, r;
 
-    for (j = 1; j <= dimA; j++) {
-        q = j * (j + 1)/2;
-        if (j > 1) {
-            for (i = j; i <= dimA; i++) {
-                m = i * (i - 1)/2 + j;
-                s = A[m];
-                for (k = 1; k < j; k++)
-                    s -= A[m - k] * A[q - k];
-                A[m] = s;
-            }
-        }
-        if (A[q] <= 0)
+    /* first index is always larger */
+    for (k = 0; k < dim; k++) {
+        /* diagonal element */
+        s = SLi(a, k, k);
+        for (i = 0; i < k; i++)
+            s -= SLi(a, k, i) * SLi(a, k, i);
+        if (s <= 0.0)
             return FALSE;
+        SLi(a, k, k) = s = sqrt(s);
 
-        s = sqrt(A[q]);
-        for (i = j; i <= dimA; i++) {
-            m = i * (i - 1)/2 + j;
-            A[m] /= s;
+        /* nondiagonal elements */
+        for (j = k+1; j < dim; j++) {
+            r = SLi(a, j, k);
+            for (i = 0; i < k; i++)
+                r -= SLi(a, k, i) * SLi(a, j, i);
+            SLi(a, j, k) = r/s;
         }
     }
 
     return TRUE;
 }
 
-/*reseni soustavy choleskeho metodou */
+/**
+ * gwy_math_choleski_solve:
+ * @dim: The dimension of @a.
+ * @a: Lower triangular part of Choleski decomposition as computed
+ *     by gwy_math_choleski_decompose().
+ * @b: Right hand side vector.  Is is modified in place, on return it contains
+ *     the solution.
+ *
+ * Solves a system of linear equations with predecomposed symmetric positive
+ * definite matrix @a and right hand side @b.
+ **/
 static void
-gwy_math_choleski_solve1(gint dimA, gdouble *A, gdouble *B)
+gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
 {
-    gint i, j, pom, q;
+    gint i, j;
 
-    B[1] /= A[1];
-    if (dimA > 1) {
-        q = 1;
-        for (i = 2; i <= dimA; i++) {
-            for (j = 1; j <= i - 1; j++)
-                B[i] -= A[++q] * B[j];
-            B[i] /= A[++q];
-        }
+    /* back-substitution with the lower triangular matrix */
+    for (j = 0; j < dim; j++) {
+        for (i = 0; i < j; i++)
+            b[j] -= SLi(a, j, i)*b[i];
+        b[j] /= SLi(a, j, j);
     }
-    pom = dimA * (dimA + 1)/2;
-    B[dimA] /= A[pom];
-    if (dimA > 1) {
-        for (i = dimA; i >= 2; i--) {
-            q = i * (i - 1)/2;
-            for (j = 1; j <= i - 1; j++)
-                B[j] -= B[i] * A[q + j];
-            B[i - 1] /= A[q];
-        }
+
+    /* back-substitution with the upper triangular matrix */
+    for (j = dim-1; j >= 0; j--) {
+        for (i = j+1; i < dim; i++)
+            b[j] -= SLi(a, i, j)*b[i];
+        b[j] /= SLi(a, j, j);
     }
 }
 
@@ -561,7 +572,7 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
             q = m;
             m += i;
             t = a[q + 1];
-            x[i] = -t/s;      /* note use temporary x*/
+            x[i] = -t/s;      /* note use temporary x */
             if (i > k)
                 x[i] = -x[i];
             for (j = q + 2; j <= m; j++)
