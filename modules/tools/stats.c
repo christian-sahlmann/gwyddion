@@ -133,7 +133,7 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
 
-    dialog = gtk_dialog_new_with_buttons(_("Statistical quantities"),
+    dialog = gtk_dialog_new_with_buttons(_("Statistical Quantities"),
                                          NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);

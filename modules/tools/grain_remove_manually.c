@@ -114,7 +114,7 @@ dialog_create(GwyUnitoolState *state)
 
     gwy_debug("");
 
-    dialog = gtk_dialog_new_with_buttons(_("Grain Remove Tool"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Remove Grains"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);

@@ -156,7 +156,7 @@ dialog_create(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     load_args(settings, controls);
 
-    dialog = gtk_dialog_new_with_buttons(_("Extract profile"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Extract Profile"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
     gwy_unitool_dialog_add_button_apply(dialog);

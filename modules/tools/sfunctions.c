@@ -162,7 +162,7 @@ dialog_create(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     load_args(settings, controls);
 
-    dialog = gtk_dialog_new_with_buttons(_("Statistical functions"),
+    dialog = gtk_dialog_new_with_buttons(_("Statistical Functions"),
                                          NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
