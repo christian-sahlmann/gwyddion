@@ -25,6 +25,7 @@
 #include <libprocess/dataline.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
+#include <libprocess/cwt.h>
 
 #ifdef __cplusplus
 extern "C" {
