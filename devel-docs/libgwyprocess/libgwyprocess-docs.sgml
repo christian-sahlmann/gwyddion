@@ -21,4 +21,5 @@
   <xi:include href="xml/linestats.xml"/>
   <xi:include href="xml/simplefft.xml"/>
   <xi:include href="xml/stats.xml"/>
+  <xi:include href="xml/gwyprocess.xml"/>
 </book>

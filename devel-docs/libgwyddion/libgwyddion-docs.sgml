@@ -14,6 +14,7 @@
   <xi:include href="xml/gwyserializable.xml"/>
   <xi:include href="xml/gwycontainer.xml"/>
   <xi:include href="xml/gwymacros.xml"/>
+  <xi:include href="xml/gwyddion.xml"/>
   <xi:include href="xml/gwyentities.xml"/>
   <xi:include href="xml/gwymath.xml"/>
   <xi:include href="xml/gwynlfit.xml"/>
