@@ -404,6 +404,7 @@ GwyGraphScrPoint
 GwyGraphStatus_CursorData
 GwyGraphStatus_SelData
 GwyGraphStatus_PointsData
+GwyGraphStatus_ZoomData
 GwyGraphAreaCurve
 GwyGraphAreaParams
 <TITLE>GwyGraphArea</TITLE>
@@ -519,9 +520,12 @@ gwy_graph_add_datavalues
 gwy_graph_clear
 gwy_graph_set_autoproperties
 gwy_graph_get_autoproperties
+gwy_graph_export_ascii
 gwy_graph_set_status
 gwy_graph_get_status
 gwy_graph_get_status_data
+gwy_graph_get_boundaries
+gwy_graph_set_boundaries
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH
@@ -553,7 +557,11 @@ GWY_STOCK_GRAINS
 GWY_STOCK_GRAPH
 GWY_STOCK_GRAPH_GAUSS
 GWY_STOCK_GRAPH_HALFGAUSS
+GWY_STOCK_GRAPH_MEASURE
 GWY_STOCK_GRAPH_PALETTE
+GWY_STOCK_GRAPH_ZOOM_FIT
+GWY_STOCK_GRAPH_ZOOM_IN
+GWY_STOCK_GRAPH_ZOOM_OUT
 GWY_STOCK_GWYDDION
 GWY_STOCK_ITALIC
 GWY_STOCK_NONE

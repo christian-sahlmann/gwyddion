@@ -95,6 +95,15 @@ GwyGraph
 @autoproperties: 
 
 
+<!-- ##### FUNCTION gwy_graph_export_ascii ##### -->
+<para>
+
+</para>
+
+@graph: 
+@filename: 
+
+
 <!-- ##### FUNCTION gwy_graph_set_status ##### -->
 <para>
 
@@ -121,5 +130,29 @@ GwyGraph
 @graph: 
 @status: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_boundaries ##### -->
+<para>
+
+</para>
+
+@graph: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_boundaries ##### -->
+<para>
+
+</para>
+
+@graph: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
 
 

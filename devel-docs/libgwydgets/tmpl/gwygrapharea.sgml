@@ -30,6 +30,7 @@ GwyGraphArea
 @GWY_GRAPH_STATUS_XSEL: 
 @GWY_GRAPH_STATUS_YSEL: 
 @GWY_GRAPH_STATUS_POINTS: 
+@GWY_GRAPH_STATUS_ZOOM: 
 
 <!-- ##### TYPEDEF GwyGraphDataPoint ##### -->
 <para>
@@ -56,6 +57,12 @@ GwyGraphArea
 
 
 <!-- ##### TYPEDEF GwyGraphStatus_PointsData ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphStatus_ZoomData ##### -->
 <para>
 
 </para>

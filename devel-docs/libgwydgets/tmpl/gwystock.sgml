@@ -110,10 +110,42 @@ The "Graph-Halfgauss" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAPH_MEASURE ##### -->
+<para>
+The "Graph-Measure" stock icon.
+<inlinegraphic fileref="gwy_graph_measure-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GRAPH_PALETTE ##### -->
 <para>
 The "Graph-Palette" stock icon.
 <inlinegraphic fileref="gwy_graph_palette-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_FIT ##### -->
+<para>
+The "Graph-Zoom-Fit" stock icon.
+<inlinegraphic fileref="gwy_graph_zoom_fit-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_IN ##### -->
+<para>
+The "Graph-Zoom-In" stock icon.
+<inlinegraphic fileref="gwy_graph_zoom_in-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_OUT ##### -->
+<para>
+The "Graph-Zoom-Out" stock icon.
+<inlinegraphic fileref="gwy_graph_zoom_out-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
