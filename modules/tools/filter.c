@@ -466,6 +466,7 @@ dialog_update(GwyUnitoolState *state,
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
+    
     GwyContainer *settings;
     GwyContainer *data;
     ToolControls *controls;
@@ -479,6 +480,7 @@ dialog_abandon(GwyUnitoolState *state)
 
     save_args(settings, controls);
     gwy_container_remove_by_name(data, "/0/show");
+    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }
@@ -516,7 +518,10 @@ size_changed_cb(GtkAdjustment *adjustment, ToolControls *controls)
     gwy_debug("");
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
     if (controls->upd)
+    {
+        state_changed = 1;
         dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    }
 }
 
 
