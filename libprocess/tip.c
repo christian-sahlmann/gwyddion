@@ -420,7 +420,7 @@ gwy_tip_estimate_partial(GwyDataField *tip, GwyDataField *surface, gdouble thres
 
     itip_estimate0(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
-                   ftip, threshold, use_edges);
+                   ftip, threshold/step, use_edges);
 
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
 
@@ -447,7 +447,7 @@ gwy_tip_estimate_full(GwyDataField *tip, GwyDataField *surface, gdouble threshol
 
     itip_estimate(fsurface, surface->yres, surface->xres,
                    tip->yres, tip->xres, tip->yres/2, tip->xres/2,
-                   ftip, threshold, use_edges);
+                   ftip, threshold/step, use_edges);
 
     tip = i_field_to_datafield(ftip, tip, tipmin, step);
 

@@ -185,8 +185,8 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
     ryc = tip_ysiz - 1 - yc;
 
     /* create output array of appropriate size */
-    min = G_MAXDOUBLE;
-    max = -G_MAXDOUBLE;
+    min = G_MAXINT;
+    max = -G_MAXINT;
     cmap = iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
         for (imx = 0; imx < im_xsiz; imx++)
@@ -211,9 +211,9 @@ icmap(gint **image, gint im_xsiz, gint im_ysiz,
             count = 0;
             for (tpy = tpymin; tpy <= tpymax && count < 2; tpy++) {
                 for (tpx = tpxmin; tpx <= tpxmax && count < 2; tpx++) {
-                    if ((image[imy][imx] -
-                        tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx] ==
-                        rsurf[tpy + imy - ryc][tpx + imx - rxc])) {
+                    if (image[imy][imx]-tip[tip_ysiz-1-tpy][tip_xsiz-1-tpx] ==
+                        rsurf[tpy+imy-ryc][tpx+imx-rxc])
+                    {
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
                         y = tpy + imy - ryc;

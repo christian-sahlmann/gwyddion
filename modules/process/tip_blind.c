@@ -99,7 +99,7 @@ static void        tip_update                (TipBlindControls *controls,
 TipBlindArgs tip_blind_defaults = {
     100,
     100,
-    1e-11,
+    0.000001,
     FALSE,
     NULL,
 };
