@@ -25,9 +25,6 @@
 #include "datafield.h"
 #include <math.h>
 
-#define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
-
-
 /*
  * @data_field: A data field.
  * @xresult: X-values for log-log plot.
@@ -80,8 +77,13 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
-static gdouble
-get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row, gint width, gint height)
+G_GNUC_UNUSED static gdouble
+get_area_rms_nomask(GwyDataField *dfield,
+                    GwyDataField *mask,
+                    gint col,
+                    gint row,
+                    gint width,
+                    gint height)
 {
     gint i, j, n;
     gdouble rms = 0.0, sum2 = 0.0;
@@ -90,7 +92,7 @@ get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row
 
     if (width == 0 || height == 0)
         return rms;
-   
+
     /*printf("col: %d, row: %d, height=%d, width=%d, xres+%d, yres=%d\n", col, row, height, width, dfield->xres, dfield->yres);*/
      g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
      g_return_val_if_fail(col >= 0 && row >= 0
@@ -106,18 +108,18 @@ get_area_rms_nomask(GwyDataField *dfield, GwyDataField *mask, gint col, gint row
      for (i = 0; i < height; i++) {
           gdouble *drow = datapos + i*dfield->xres;
           for (j = 0; j < width; j++) {
-              if (mask->data[j + i*mask->xres]!=0)
+              if (mask->data[j + i*mask->xres] != 0)
               {
                   sum2 += (*drow) * (*drow);
                   sum += *drow;
                   n++;
               }
-              *drow++;             
+              *drow++;
           }
      }
      rms = sqrt(fabs(sum2 - sum*sum/n)/n);
-     
-     return rms;                              
+
+     return rms;
 }
 
 static void
@@ -136,7 +138,8 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
     buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
     maskbuffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(mask_field)));
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
-    gwy_data_field_resample(maskbuffer, xnewres, xnewres, GWY_INTERPOLATION_ROUND);
+    gwy_data_field_resample(maskbuffer, xnewres, xnewres,
+                            GWY_INTERPOLATION_ROUND);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(yresult, 0);
@@ -149,7 +152,7 @@ fractal_partitioning_nomask(GwyDataField *data_field, GwyDataField *mask_field,
                                                   (i + 1) * (rp) + 1,
                                                   (j + 1) * (rp) + 1);
                                                   */
-                rms = gwy_data_field_get_area_rms(buffer, i * (rp), j * (rp), 
+                rms = gwy_data_field_get_area_rms(buffer, i * (rp), j * (rp),
                                                   (i + 1) * (rp) + 1,
                                                   (j + 1) * (rp) + 1);
                 yresult->data[l] += rms * rms;
@@ -457,7 +460,7 @@ gwy_data_field_fractal_partitioning_dim(GwyDataLine *xresult,
 
 /**
  * gwy_data_field_fractal_cubecounting_dim:
- * @xresult: Log-log fractal data (x values) 
+ * @xresult: Log-log fractal data (x values)
  * @yresult: Log-log fractal data (y values)
  * @a: Linear fit shift
  * @b: Linear fit direction
@@ -520,20 +523,20 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
     avh = gwy_data_field_get_avg(z);
 
     xres = z->xres;
-        
+
     for (l = 0; l < k; l++) {
         pp = (gint)ceil(pow(2, l));
         p = (gint)ceil(pow(2, k - 1 - l));
         n = (z->xres + 1) / pp;
-        sg = sqrt((4 * n * n  - 6 * n + 2) / 
-                  ((2 + sqrt(2)) * n * n - (4+sqrt(2)) * n + 2) * 
+        sg = sqrt((4 * n * n  - 6 * n + 2) /
+                  ((2 + sqrt(2)) * n * n - (4+sqrt(2)) * n + 2) *
                   exp(vars->data[k - 1 - l]));
 
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
                 ii = (2 * i + 1) * p;
                 jj = (2 * j + 1) * p;
-                r = sg * gaussian_random_number(rng);                
+                r = sg * gaussian_random_number(rng);
                 if (mask->data[ii * xres + jj] != 0) {
                     if (l == 0)
                         z->data[ii * xres + jj] = avh;
@@ -545,7 +548,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                          z->data[(ii + p) * xres + (jj + p)])/4 + r;
                 }
             }
-        
+
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
                 ii = (2 * i + 1) * p;
@@ -604,7 +607,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     }
                 }
             }
-            
+
         sg=sg / sqrt(2);
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
@@ -819,7 +822,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     }
                 }
             }
-        
+
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
                 ii = (2 * i + 1) * p;
