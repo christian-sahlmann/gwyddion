@@ -278,7 +278,6 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraphArea *area;
     GtkAllocation *lab_alloc;
-    guint n;
     gwy_debug("");
 
     area = GWY_GRAPH_AREA(widget);

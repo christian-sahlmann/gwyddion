@@ -54,11 +54,11 @@ typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
 
 /*single curve properties*/
 typedef struct {
-    gint is_line;
-    gint is_point;
+    gint is_line;   /* XXX: booleans should be booleans */
+    gint is_point;   /* XXX: booleans should be booleans */
 
-    gint point_size;
-    gint point_type;
+    gint point_size;   /* XXX: enmus should be enums */
+    gint point_type;   /* XXX: enmus should be enums */
 
     GdkLineStyle line_style;
     gint line_size;
@@ -66,6 +66,8 @@ typedef struct {
     GString *description;
     GdkColor color;
 
+    /* when adding meaningful fields, please make sure GwyGraphEpitome
+     * understands them too */
     gpointer reserved1;
     gpointer reserved2;
 } GwyGraphAreaCurveParams;
