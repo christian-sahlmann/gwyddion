@@ -48,6 +48,7 @@ static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
                                                     GdkEventButton *event);
 static void       gwy_app_graph_list_toggle_cb     (GtkWidget *toggle,
                                                     GwyDataWindow *data_window);
+static gboolean   gwy_app_graph_list_delete_cb     (GtkWidget *toggle);
 
 gboolean
 gwy_app_quit(void)
@@ -318,9 +319,18 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
     }
 
     graph_view = gwy_app_graph_list(data_window);
+    g_signal_connect_swapped(graph_view, "delete_event",
+                             G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
     gtk_window_set_transient_for(GTK_WINDOW(graph_view),
                                  GTK_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(graph_view));
+}
+
+static gboolean
+gwy_app_graph_list_delete_cb(GtkWidget *toggle)
+{
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(toggle), FALSE);
+    return TRUE;
 }
 
 static GtkWidget*
