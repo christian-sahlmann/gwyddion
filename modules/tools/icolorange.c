@@ -33,7 +33,7 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef enum {
-    USE_SELECTION = 1,
+    USE_SELECTION = 0,
     USE_HISTOGRAM
 } IColorRangeSource;
 
@@ -49,6 +49,7 @@ typedef struct {
     GtkWidget *cmax;
     GtkWidget *cdatamin;
     GtkWidget *cdatamax;
+    IColorRangeSource range_source;
     gboolean in_update;
     gboolean initial_use;
     gdouble min;
@@ -60,7 +61,6 @@ typedef struct {
     GQuark key_min;
     GQuark key_max;
     gboolean do_preview;
-    IColorRangeSource range_source;
     gdouble rel_min;
     gdouble rel_max;
 } ToolControls;
@@ -152,6 +152,7 @@ use(GwyDataWindow *data_window,
     controls->key_min = g_quark_from_string("/0/base/min");
     controls->key_max = g_quark_from_string("/0/base/max");
     controls->initial_use = TRUE;
+    controls->range_source = USE_SELECTION;
 
     return gwy_unitool_use(state, data_window, reason);
 }
@@ -325,8 +326,7 @@ dialog_update(GwyUnitoolState *state,
 
     switch (reason) {
         case GWY_UNITOOL_UPDATED_SELECTION:
-        if (!controls->initial_use)
-            controls->range_source = USE_SELECTION;
+        controls->range_source = USE_SELECTION;
         break;
 
         case GWY_UNITOOL_UPDATED_CONTROLS:
@@ -339,14 +339,24 @@ dialog_update(GwyUnitoolState *state,
     }
 
     if (controls->initial_use) {
-        gboolean ok;
+        gboolean has_range;
 
-        ok = gwy_container_gis_double(data, controls->key_min, &controls->min);
-        ok |= gwy_container_gis_double(data, controls->key_max, &controls->max);
-        if (ok) {
-            controls->range_source = USE_HISTOGRAM;
-            update_percentages(controls);
-            update_graph_selection(controls);
+        has_range = gwy_container_gis_double(data, controls->key_min,
+                                             &controls->min);
+        has_range |= gwy_container_gis_double(data, controls->key_max,
+                                              &controls->max);
+        if (has_range) {
+            gwy_debug("reusing: min = %g, max = %g",
+                      controls->min, controls->max);
+            controls->min = CLAMP(controls->min,
+                                  controls->datamin, controls->datamax);
+            controls->max = CLAMP(controls->max,
+                                  controls->min, controls->datamax);
+            if (controls->max > controls->min) {
+                controls->range_source = USE_HISTOGRAM;
+                update_percentages(controls);
+                update_graph_selection(controls);
+            }
         }
     }
 
@@ -544,7 +554,6 @@ gwy_data_field_dh(GwyDataField *dfield,
     g_object_unref(dirty_trick);
 }
 
-static const gchar *range_source_key = "/tool/icolorange/range_source";
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
 static const gchar *rel_min_key = "/tool/icolorange/rel_min";
 static const gchar *rel_max_key = "/tool/icolorange/rel_max";
@@ -554,8 +563,6 @@ save_args(GwyContainer *container, ToolControls *controls)
 {
     gwy_container_set_boolean_by_name(container, do_preview_key,
                                       controls->do_preview);
-    gwy_container_set_enum_by_name(container, range_source_key,
-                                   controls->range_source);
     gwy_container_set_double_by_name(container, rel_min_key,
                                      controls->rel_min);
     gwy_container_set_double_by_name(container, rel_max_key,
@@ -566,12 +573,9 @@ static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
     controls->do_preview = TRUE;
-    controls->range_source = USE_SELECTION;
     controls->rel_min = 0.0;
     controls->rel_max = 1.0;
 
-    gwy_container_gis_enum_by_name(container, range_source_key,
-                                   &controls->range_source);
     gwy_container_gis_boolean_by_name(container, do_preview_key,
                                       &controls->do_preview);
     gwy_container_gis_double_by_name(container, rel_min_key,
@@ -581,8 +585,6 @@ load_args(GwyContainer *container, ToolControls *controls)
 
     /* sanitize */
     controls->do_preview = !!controls->do_preview;
-    controls->range_source = CLAMP(controls->range_source,
-                                   USE_SELECTION, USE_HISTOGRAM);
     controls->rel_min = CLAMP(controls->rel_min, 0.0, 1.0);
     controls->rel_max = CLAMP(controls->rel_max, controls->rel_min, 1.0);
 }
