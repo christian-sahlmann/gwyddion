@@ -32,7 +32,9 @@ static gboolean    level                      (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    level_rotate               (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    fixzero                    (GwyContainer *data,
+static gboolean    fix_zero                   (GwyContainer *data,
+                                               GwyRunType run);
+static gboolean    zero_mean                  (GwyContainer *data,
                                                GwyRunType run);
 
 /* The module info. */
@@ -42,7 +44,7 @@ static GwyModuleInfo module_info = {
     "level",
     N_("Simple automatic levelling."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -68,17 +70,25 @@ module_register(const gchar *name)
         LEVEL_RUN_MODES,
         0,
     };
-    static GwyProcessFuncInfo fixzero_func_info = {
-        "fixzero",
+    static GwyProcessFuncInfo fix_zero_func_info = {
+        "fix_zero",
         N_("/_Level/Fix _Zero"),
-        (GwyProcessFunc)&fixzero,
+        (GwyProcessFunc)&fix_zero,
+        LEVEL_RUN_MODES,
+        0,
+    };
+    static GwyProcessFuncInfo zero_mean_func_info = {
+        "zero_mean",
+        N_("/_Level/Zero _Mean Value"),
+        (GwyProcessFunc)&zero_mean,
         LEVEL_RUN_MODES,
         0,
     };
 
     gwy_process_func_register(name, &level_func_info);
     gwy_process_func_register(name, &level_rotate_func_info);
-    gwy_process_func_register(name, &fixzero_func_info);
+    gwy_process_func_register(name, &fix_zero_func_info);
+    gwy_process_func_register(name, &zero_mean_func_info);
 
     return TRUE;
 }
@@ -121,7 +131,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-fixzero(GwyContainer *data, GwyRunType run)
+fix_zero(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
@@ -129,6 +139,19 @@ fixzero(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
+
+    return TRUE;
+}
+
+static gboolean
+zero_mean(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+
+    g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+    gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
 
     return TRUE;
 }
