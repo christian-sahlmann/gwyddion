@@ -72,6 +72,21 @@ vector_shade_test(void)
 #define FILENAME "data_field.object"
 
 static void
+quit_callback(GwyDataWindow *data_window, GObject *data)
+{
+    FILE *fh;
+    guchar *buffer = NULL;
+    gsize size = 0;
+
+    fh = fopen(FILENAME, "wb");
+    buffer = gwy_serializable_serialize(data, buffer, &size);
+    fwrite(buffer, 1, size, fh);
+    fclose(fh);
+
+    gtk_main_quit();
+}
+
+static void
 data_view_test(void)
 {
     GwyContainer *data;
@@ -89,19 +104,18 @@ data_view_test(void)
 
     g_file_get_contents(FILENAME, &buffer, &size, &err);
     g_assert(!err);
-    data_field = gwy_serializable_deserialize(buffer, size, &pos);
+    data = GWY_CONTAINER(gwy_serializable_deserialize(buffer, size, &pos));
 
-    data = (GwyContainer*)gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", data_field);
+    data_field = gwy_container_get_object_by_name(data, "/0/data");
 
     view = gwy_data_view_new(data);
-    layer = (GwyDataViewLayer*)gwy_layer_basic_new(data);
+    layer = (GwyDataViewLayer*)gwy_layer_basic_new();
     palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_YELLOW);
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
 
-    layer = gwy_layer_select_new(data);
+    layer = (GwyDataViewLayer*)gwy_layer_select_new();
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);
 
     g_object_unref(data);
@@ -110,7 +124,8 @@ data_view_test(void)
     window = gwy_data_window_new(GWY_DATA_VIEW(view));
 
     gtk_widget_show_all(window);
-    g_signal_connect(G_OBJECT(window), "destroy", gtk_main_quit, NULL);
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(quit_callback), data);
 }
 /***** ]]] DATA VIEW ********************************************************/
 

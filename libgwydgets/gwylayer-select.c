@@ -7,9 +7,11 @@
 #include <glib-object.h>
 
 #include "gwylayer-select.h"
+#include "gwydataview.h"
 #include <libdraw/gwypixfield.h>
 
 #define _(x) x
+#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_LAYER_SELECT_TYPE_NAME "GwyLayerSelect"
 
@@ -22,16 +24,18 @@ static void       gwy_layer_select_init              (GwyLayerSelect *layer);
 static void       gwy_layer_select_finalize          (GObject *object);
 static void       gwy_layer_select_draw              (GwyDataViewLayer *layer,
                                                       GdkDrawable *drawable);
-static gboolean   motion_notify                      (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_select_motion_notify     (GwyDataViewLayer *layer,
                                                       GdkEventMotion *event);
-static gboolean   button_pressed                     (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_select_button_pressed    (GwyDataViewLayer *layer,
                                                       GdkEventButton *event);
-static gboolean   button_released                    (GwyDataViewLayer *layer,
+static gboolean   gwy_layer_select_button_released   (GwyDataViewLayer *layer,
                                                       GdkEventButton *event);
+static void       gwy_layer_select_plugged           (GwyDataViewLayer *layer);
+static void       gwy_layer_select_unplugged         (GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
+static GtkObjectClass *parent_class = NULL;
 
 GType
 gwy_layer_select_get_type(void)
@@ -79,9 +83,11 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     gobject_class->finalize = gwy_layer_select_finalize;
 
     layer_class->draw = gwy_layer_select_draw;
-    layer_class->motion_notify = motion_notify;
-    layer_class->button_press = button_pressed;
-    layer_class->button_release = button_released;
+    layer_class->motion_notify = gwy_layer_select_motion_notify;
+    layer_class->button_press = gwy_layer_select_button_pressed;
+    layer_class->button_release = gwy_layer_select_button_released;
+    layer_class->plugged = gwy_layer_select_plugged;
+    layer_class->unplugged = gwy_layer_select_unplugged;
 }
 
 static void
@@ -90,6 +96,8 @@ gwy_layer_select_init(GwyLayerSelect *layer)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+
+    layer->selected = FALSE;
 }
 
 static void
@@ -105,106 +113,125 @@ gwy_layer_select_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+/**
+ * gwy_layer_select_new:
+ *
+ * Creates a new rectangular selection layer.
+ *
+ * Returns: The newly created layer.
+ **/
 GtkObject*
-gwy_layer_select_new(GwyContainer *data)
+gwy_layer_select_new(void)
 {
     GtkObject *object;
     GwyDataViewLayer *layer;
     GwyLayerSelect *select_layer;
-    GwyDataField *data_field;
-    gint width, height;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-
     object = g_object_new(GWY_TYPE_LAYER_SELECT, NULL);
     layer = (GwyDataViewLayer*)object;
     select_layer = (GwyLayerSelect*)layer;
 
-    g_object_ref(data);
-    layer->data = data;
-
-    /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/data"));
-    g_return_val_if_fail(data_field, NULL);
-
-    width = gwy_data_field_get_xres(data_field);
-    height = gwy_data_field_get_yres(data_field);
-
-    select_layer->selected = FALSE;
 
     return object;
 }
 
 static void
+gwy_layer_select_setup_gc(GwyDataViewLayer *layer)
+{
+    GdkColor fg, bg;
+
+    if (!GTK_WIDGET_REALIZED(layer->parent))
+        return;
+
+    layer->gc = gdk_gc_new(layer->parent->window);
+    gdk_gc_set_function(layer->gc, GDK_INVERT);
+    fg.pixel = 0xFFFFFFFF;
+    bg.pixel = 0x00000000;
+    gdk_gc_set_foreground(layer->gc, &fg);
+    gdk_gc_set_background(layer->gc, &bg);
+}
+
+static void
 gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
 {
-    GwyDataField *data_field;
     GwyLayerSelect *select_layer;
-    GdkGC *gc;
-    gint xmin, ymin, xmax, ymax;
+    gint xmin, ymin, xmax, ymax, tmp;
 
     g_return_if_fail(layer);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
 
     select_layer = (GwyLayerSelect*)layer;
 
-    #if DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "selected == %d", select_layer->selected);
-    #endif
     if (!select_layer->selected)
         return;
 
-    /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/data"));
+    if (!layer->gc)
+        gwy_layer_select_setup_gc(layer);
 
-    gc = layer->parent->style->fg_gc[GTK_STATE_NORMAL];
-    #if DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "drawing from %d,%d size %d,%d",
-          select_layer->x, select_layer->y,
-          select_layer->width, select_layer->height);
-    #endif
-    xmin = MIN(select_layer->x, select_layer->x + select_layer->width);
-    xmax = MAX(select_layer->x, select_layer->x + select_layer->width);
-    ymin = MIN(select_layer->y, select_layer->y + select_layer->height);
-    ymax = MAX(select_layer->y, select_layer->y + select_layer->height);
-    gdk_draw_rectangle(drawable, gc, FALSE,
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%g,%g] to [%g,%g]",
+          __FUNCTION__,
+          select_layer->x0, select_layer->y0,
+          select_layer->x1, select_layer->y1);
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
+                                    select_layer->x0, select_layer->y0,
+                                    &xmin, &ymin);
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
+                                    select_layer->x1, select_layer->y1,
+                                    &xmax, &ymax);
+    if (xmax < xmin) {
+        tmp = xmax;
+        xmax = xmin;
+        xmin = tmp;
+    }
+    if (ymax < ymin) {
+        tmp = ymax;
+        ymax = ymin;
+        ymin = tmp;
+    }
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%d,%d] to [%d,%d]",
+          __FUNCTION__, xmin, ymin, xmax, ymax);
+    gdk_draw_rectangle(drawable, layer->gc, FALSE,
                        xmin, ymin, xmax - xmin, ymax - ymin);
 
 }
 
 static gboolean
-motion_notify(GwyDataViewLayer *layer, GdkEventMotion *event)
+gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
+                               GdkEventMotion *event)
 {
     GwyLayerSelect *select_layer;
+    gint x, y;
 
     select_layer = (GwyLayerSelect*)layer;
     if (!select_layer->button)
         return FALSE;
 
+    gwy_layer_select_draw(layer, layer->parent->window);
+
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
           "motion: %g %g", event->x, event->y);
-    select_layer->width = event->x - select_layer->x;
-    select_layer->height = event->y - select_layer->y;
+    x = event->x;
+    y = event->y;
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
+                                    x, y,
+                                    &select_layer->x1, &select_layer->y1);
 
-    gdk_window_invalidate_rect(layer->parent->window, NULL, TRUE);
+    gwy_layer_select_draw(layer, layer->parent->window);
 
     return FALSE;
 }
 
 static gboolean
-button_pressed(GwyDataViewLayer *layer, GdkEventButton *event)
+gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
+                                GdkEventButton *event)
 {
     GwyLayerSelect *select_layer;
+    gint x, y;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -213,11 +240,27 @@ button_pressed(GwyDataViewLayer *layer, GdkEventButton *event)
     if (select_layer->button)
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
               "unexpected mouse button press when already pressed");
+    x = event->x;
+    y = event->y;
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%d,%d]",
+          __FUNCTION__, x, y);
+    /* do nothing when we are outside */
+    if (x != event->x || y != event->y)
+        return FALSE;
+    /* undraw a previous selection */
+    if (select_layer->selected)
+        gwy_layer_select_draw(layer, layer->parent->window);
     select_layer->button = event->button;
-    select_layer->x = event->x;
-    select_layer->y = event->y;
-    select_layer->width = 0;
-    select_layer->height = 0;
+    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
+                                    x, y,
+                                    &select_layer->x0, &select_layer->y0);
+    select_layer->x1 = select_layer->x0;
+    select_layer->y1 = select_layer->y0;
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s [%g,%g] to [%g,%g]",
+          __FUNCTION__,
+          select_layer->x0, select_layer->y0,
+          select_layer->x1, select_layer->y1);
     select_layer->selected = TRUE;
     #if DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
@@ -228,22 +271,137 @@ button_pressed(GwyDataViewLayer *layer, GdkEventButton *event)
 }
 
 static gboolean
-button_released(GwyDataViewLayer *layer, GdkEventButton *event)
+gwy_layer_select_button_released(GwyDataViewLayer *layer,
+                                 GdkEventButton *event)
 {
     GwyLayerSelect *select_layer;
+    gint x, y;
+    gdouble tmp;
 
     select_layer = (GwyLayerSelect*)layer;
     if (!select_layer->button)
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
-              "unexpected mouse button release when not pressed");
+        return FALSE;
     select_layer->button = 0;
-    select_layer->width = event->x - select_layer->x;
-    select_layer->height = event->y - select_layer->y;
-    select_layer->selected = select_layer->width || select_layer->height;
+    x = event->x;
+    y = event->y;
+    gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
+    gwy_data_view_coords_xy_to_real(GWY_DATA_VIEW(layer->parent),
+                                    x, y,
+                                    &select_layer->x1, &select_layer->y1);
+    gwy_data_view_coords_real_to_xy(GWY_DATA_VIEW(layer->parent),
+                                    select_layer->x0, select_layer->y0,
+                                    &x, &y);
+    select_layer->selected = x != event->x && y != event->y;
+    if (select_layer->selected) {
+        if (select_layer->x1 < select_layer->x0) {
+            tmp = select_layer->x1;
+            select_layer->x1 = select_layer->x0;
+            select_layer->x0 = tmp;
+        }
+        if (select_layer->y1 < select_layer->y0) {
+            tmp = select_layer->y1;
+            select_layer->y1 = select_layer->y0;
+            select_layer->y0 = tmp;
+        }
 
-    gdk_window_invalidate_rect(layer->parent->window, NULL, TRUE);
+        /* TODO Container */
+        gwy_container_set_double_by_name(layer->data, "/0/select/x0",
+                                         select_layer->x0);
+        gwy_container_set_double_by_name(layer->data, "/0/select/y0",
+                                         select_layer->y0);
+        gwy_container_set_double_by_name(layer->data, "/0/select/x1",
+                                         select_layer->x1);
+        gwy_container_set_double_by_name(layer->data, "/0/select/y1",
+                                         select_layer->y1);
+    }
+    /* TODO Container */
+    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
+                                      select_layer->selected);
+
+    /* XXX: this assures no artefacts ...  */
+    gtk_widget_queue_draw(layer->parent);
 
     return FALSE;
+}
+
+/**
+ * gwy_layer_select_get_selection:
+ * @layer: A #GwyLayerSelect.
+ * @xmin: Where the upper left corner x-coordinate should be stored.
+ * @ymin: Where the upper left corner y-coordinate should be stored.
+ * @xmax: Where the lower right corner x-coordinate should be stored.
+ * @ymax: Where the lower right corner x-coordinate should be stored.
+ *
+ * Obtains the selected rectangle in real (i.e., physical) coordinates.
+ *
+ * Returns: %TRUE when there is some selection present (and some values were
+ *          stored), %FALSE
+ **/
+gboolean
+gwy_layer_select_get_selection(GwyDataViewLayer *layer,
+                               gdouble *xmin, gdouble *ymin,
+                               gdouble *xmax, gdouble *ymax)
+{
+    GwyLayerSelect *select_layer;
+
+    g_return_val_if_fail(GWY_IS_LAYER_SELECT(layer), FALSE);
+
+    select_layer = (GwyLayerSelect*)layer;
+    if (!select_layer->selected)
+        return FALSE;
+
+    if (*xmin)
+        *xmin = select_layer->x0;
+    if (*ymin)
+        *ymin = select_layer->y0;
+    if (*xmax)
+        *xmax = select_layer->x1;
+    if (*ymax)
+        *ymax = select_layer->y1;
+    return TRUE;
+}
+
+static void
+gwy_layer_select_plugged(GwyDataViewLayer *layer)
+{
+    GwyLayerSelect *select_layer;
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    select_layer = (GwyLayerSelect*)layer;
+
+    select_layer->selected = FALSE;
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+    /* TODO Container */
+    if (gwy_container_contains_by_name(layer->data, "/0/select/selected")) {
+        select_layer->selected
+            = gwy_container_get_boolean_by_name(layer->data,
+                                                "/0/select/selected");
+        if (select_layer->selected) {
+            select_layer->x0 = gwy_container_get_double_by_name(layer->data,
+                                                                "/0/select/x0");
+            select_layer->y0 = gwy_container_get_double_by_name(layer->data,
+                                                                "/0/select/y0");
+            select_layer->x1 = gwy_container_get_double_by_name(layer->data,
+                                                                "/0/select/x1");
+            select_layer->y1 = gwy_container_get_double_by_name(layer->data,
+                                                                "/0/select/y1");
+        }
+    }
+}
+
+static void
+gwy_layer_select_unplugged(GwyDataViewLayer *layer)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+
+    GWY_LAYER_SELECT(layer)->selected = FALSE;
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -38,6 +38,8 @@
 
 #define _(x) x
 
+#define ROUND(x) ((gint)floor((x) + 0.5))
+
 typedef enum {
     GWY_SCALE_0,
     GWY_SCALE_1,
@@ -612,11 +614,11 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
             && (upper < 0 || val >= 0)
             && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO) {
             g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
-                       (gint)(val + 0.5), prefix, "m");
+                       ROUND(val), prefix, "m");
             units_drawn = TRUE;
         }
         else
-            g_snprintf(unit_str, sizeof(unit_str), "%d", (gint)(val + 0.5));
+            g_snprintf(unit_str, sizeof(unit_str), "%d", ROUND(val));
         label_callback(ruler, pos, unit_str, layout,
                        digit_height, digit_offset);
     }
@@ -666,7 +668,7 @@ magnitude_to_si_prefix(gdouble magnitude)
     static const gchar *unknown = "?";
     gint i;
 
-    i = floor(log10(magnitude)/3.0 + 0.5);
+    i = ROUND(log10(magnitude)/3.0);
     if (i >= 0 && i < G_N_ELEMENTS(positive))
         return positive[i];
     if (i <= 0 && -i < G_N_ELEMENTS(negative))

@@ -39,6 +39,12 @@ struct _GwyDataView {
     GwyDataViewLayer *base_layer;
 
     gdouble zoom;    /* zoom (larger number means larger pixmaps) */
+    gdouble newzoom;    /* new zoom value (when zoom is set, but widget not
+                           yet resized) */
+    gdouble xmeasure;    /* physical units per pixel */
+    gdouble ymeasure;    /* physical units per pixel */
+    gint xoff;    /* x offset of the pixbuf from widget->allocation.x */
+    gint yoff;    /* y offset of the pixbuf from widget->allocation.y */
 
     GdkPixbuf *pixbuf;      /* everything, this is drawn on the screen */
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
@@ -66,6 +72,19 @@ void              gwy_data_view_set_zoom          (GwyDataView *data_view,
                                                    gdouble zoom);
 gdouble           gwy_data_view_get_zoom          (GwyDataView *data_view);
 GwyContainer*     gwy_data_view_get_data          (GwyDataView *data_view);
+void              gwy_data_view_coords_xy_clamp   (GwyDataView *data_view,
+                                                   gint *xscr,
+                                                   gint *yscr);
+void              gwy_data_view_coords_xy_to_real (GwyDataView *data_view,
+                                                   gint xscr,
+                                                   gint yscr,
+                                                   gdouble *xreal,
+                                                   gdouble *yreal);
+void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
+                                                   gdouble xreal,
+                                                   gdouble yreal,
+                                                   gint *xscr,
+                                                   gint *yscr);
 
 #ifdef __cplusplus
 }

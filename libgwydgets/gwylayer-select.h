@@ -33,11 +33,10 @@ struct _GwyLayerSelect {
 
     gboolean selected;
     guint button;
-    /* FIXME: should these be screen or real coordinates? */
-    gint x;
-    gint y;
-    gint width;
-    gint height;
+    gdouble x0;
+    gdouble y0;
+    gdouble x1;
+    gdouble y1;
 };
 
 struct _GwyLayerSelectClass {
@@ -46,7 +45,12 @@ struct _GwyLayerSelectClass {
 
 GType            gwy_layer_select_get_type        (void) G_GNUC_CONST;
 
-GtkObject*       gwy_layer_select_new             (GwyContainer *data);
+GtkObject*       gwy_layer_select_new             (void);
+gboolean         gwy_layer_select_get_selection   (GwyDataViewLayer *layer,
+                                                   gdouble *xmin,
+                                                   gdouble *ymin,
+                                                   gdouble *xmax,
+                                                   gdouble *ymax);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,7 @@
 #include "gwydataviewlayer.h"
 
 #define _(x) x
+#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_DATA_VIEW_LAYER_TYPE_NAME "GwyDataViewLayer"
 
@@ -26,12 +27,12 @@ enum {
 static void     gwy_data_view_layer_class_init   (GwyDataViewLayerClass *klass);
 static void     gwy_data_view_layer_init         (GwyDataViewLayer *layer);
 static void     gwy_data_view_layer_finalize     (GObject *object);
-static void     plugged                          (GwyDataViewLayer *layer);
-static void     unplugged                        (GwyDataViewLayer *layer);
+static void     gwy_data_view_layer_real_plugged (GwyDataViewLayer *layer);
+static void     gwy_data_view_layer_real_unplugged (GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
+static GtkObjectClass *parent_class = NULL;
 
 static guint data_view_layer_signals[LAST_SIGNAL] = { 0 };
 
@@ -90,8 +91,8 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     klass->key_press = NULL;
     klass->key_release = NULL;
 
-    klass->plugged = plugged;
-    klass->unplugged = unplugged;
+    klass->plugged = gwy_data_view_layer_real_plugged;
+    klass->unplugged = gwy_data_view_layer_real_unplugged;
 
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
@@ -139,21 +140,11 @@ gwy_data_view_layer_finalize(GObject *object)
 
     layer = GWY_DATA_VIEW_LAYER(object);
 
-    if (layer->gc)
-        g_object_unref(layer->gc);
-    if (layer->layout)
-        g_object_unref(layer->layout);
-    if (layer->palette)
-        g_object_unref(layer->palette);
-    if (layer->pixbuf)
-        g_object_unref(layer->pixbuf);
-    if (layer->data)
-        g_object_unref(layer->data);
-    layer->gc = NULL;
-    layer->layout = NULL;
-    layer->palette = NULL;
-    layer->pixbuf = NULL;
-    layer->data = NULL;
+    gwy_object_unref(layer->gc);
+    gwy_object_unref(layer->layout);
+    gwy_object_unref(layer->palette);
+    gwy_object_unref(layer->pixbuf);
+    gwy_object_unref(layer->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -263,6 +254,9 @@ gwy_data_view_layer_key_release(GwyDataViewLayer *layer,
 void
 gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 {
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[PLUGGED], 0);
 }
@@ -270,18 +264,39 @@ gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
 void
 gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
 {
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UNPLUGGED], 0);
 }
 
 static void
-plugged(GwyDataViewLayer *layer)
+gwy_data_view_layer_real_plugged(GwyDataViewLayer *layer)
 {
+    GwyContainer *data;
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+
+    gwy_object_unref(layer->data);
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+    g_object_ref(data);
+    layer->data = data;
 }
 
 static void
-unplugged(GwyDataViewLayer *layer)
+gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer)
 {
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+
+    gwy_object_unref(layer->gc);
+    gwy_object_unref(layer->data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

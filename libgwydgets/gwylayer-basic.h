@@ -40,7 +40,7 @@ struct _GwyLayerBasicClass {
 
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;
 
-GtkObject*       gwy_layer_basic_new             (GwyContainer *data);
+GtkObject*       gwy_layer_basic_new             (void);
 void             gwy_layer_basic_set_palette     (GwyDataViewLayer *layer,
                                                   GwyPalette *palette);
 GwyPalette*      gwy_layer_basic_get_palette     (GwyDataViewLayer *layer);

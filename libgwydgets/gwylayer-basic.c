@@ -10,6 +10,7 @@
 #include <libdraw/gwypixfield.h>
 
 #define _(x) x
+#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_LAYER_BASIC_TYPE_NAME "GwyLayerBasic"
 
@@ -22,10 +23,12 @@ static void       gwy_layer_basic_init              (GwyLayerBasic *layer);
 static void       gwy_layer_basic_finalize          (GObject *object);
 static GdkPixbuf* gwy_layer_basic_paint             (GwyDataViewLayer *layer);
 static gboolean   gwy_layer_basic_wants_repaint     (GwyDataViewLayer *layer);
+static void       gwy_layer_basic_plugged           (GwyDataViewLayer *layer);
+static void       gwy_layer_basic_unplugged         (GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
+static GtkObjectClass *parent_class = NULL;
 
 GType
 gwy_layer_basic_get_type(void)
@@ -74,6 +77,8 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 
     layer_class->paint = gwy_layer_basic_paint;
     layer_class->wants_repaint = gwy_layer_basic_wants_repaint;
+    layer_class->plugged = gwy_layer_basic_plugged;
+    layer_class->unplugged = gwy_layer_basic_unplugged;
 }
 
 static void
@@ -82,6 +87,8 @@ gwy_layer_basic_init(GwyLayerBasic *layer)
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+
+    layer->changed = TRUE;
 }
 
 static void
@@ -96,41 +103,27 @@ gwy_layer_basic_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+/**
+ * gwy_layer_basic_new:
+ *
+ * Creates a new basic data displaying layer.
+ *
+ * Returns: The newly created layer.
+ **/
 GtkObject*
-gwy_layer_basic_new(GwyContainer *data)
+gwy_layer_basic_new(void)
 {
     GtkObject *object;
     GwyDataViewLayer *layer;
-    GwyLayerBasic *basic_layer;
-    GwyDataField *data_field;
-    gint width, height;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;
-    basic_layer = (GwyLayerBasic*)layer;
-
-    g_object_ref(data);
-    layer->data = data;
 
     layer->palette = (GwyPalette*)gwy_palette_new(GWY_PALETTE_GRAY);
-
-    /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/data"));
-    g_return_val_if_fail(data_field, NULL);
-
-    width = gwy_data_field_get_xres(data_field);
-    height = gwy_data_field_get_yres(data_field);
-    layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
-                                   BITS_PER_SAMPLE, width, height);
-    basic_layer->changed = TRUE;
 
     return object;
 }
@@ -189,6 +182,38 @@ gwy_layer_basic_get_palette(GwyDataViewLayer *layer)
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
 
     return layer->palette;
+}
+
+static void
+gwy_layer_basic_plugged(GwyDataViewLayer *layer)
+{
+    GwyDataField *data_field;
+    gint width, height;
+
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+
+    GWY_LAYER_BASIC(layer)->changed = TRUE;
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+
+    /* TODO Container */
+    data_field = GWY_DATA_FIELD(
+                     gwy_container_get_object_by_name(layer->data,
+                                                      "/0/data"));
+    g_return_if_fail(data_field);
+    width = gwy_data_field_get_xres(data_field);
+    height = gwy_data_field_get_yres(data_field);
+
+    layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
+                                   BITS_PER_SAMPLE, width, height);
+}
+
+static void
+gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
+{
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+
+    gwy_object_unref(layer->pixbuf);
+    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

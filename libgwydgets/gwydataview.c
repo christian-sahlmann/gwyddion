@@ -10,6 +10,7 @@
 #include "gwydataview.h"
 
 #define _(x) x
+#define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
 #define GWY_DATA_VIEW_TYPE_NAME "GwyDataView"
 
@@ -60,6 +61,9 @@ static gboolean gwy_data_view_key_press            (GtkWidget *widget,
 static gboolean gwy_data_view_key_release          (GtkWidget *widget,
                                                     GdkEventKey *event);
 static void     gwy_data_view_update               (GwyDataView *data_view);
+static void     gwy_data_view_set_layer            (GwyDataView *data_view,
+                                                    GwyDataViewLayer **which,
+                                                    GwyDataViewLayer *layer);
 
 
 /* Local data */
@@ -145,6 +149,11 @@ gwy_data_view_init(GwyDataView *data_view)
     data_view->pixbuf = NULL;
     data_view->base_pixbuf = NULL;
     data_view->zoom = 1.0;
+    data_view->newzoom = 1.0;
+    data_view->xmeasure = -1.0;
+    data_view->ymeasure = -1.0;
+    data_view->xoff = 0;
+    data_view->yoff = 0;
 }
 
 GtkWidget*
@@ -180,6 +189,9 @@ gwy_data_view_destroy(GtkObject *object)
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
+    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->alpha_layer, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->base_layer, NULL);
 
     if (GTK_OBJECT_CLASS(parent_class)->destroy)
         (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
@@ -201,20 +213,12 @@ gwy_data_view_finalize(GObject *object)
 
     data_view = GWY_DATA_VIEW(object);
 
-    if (data_view->base_layer)
-        g_object_unref(data_view->base_layer);
-    if (data_view->alpha_layer)
-        g_object_unref(data_view->alpha_layer);
-    if (data_view->top_layer)
-        g_object_unref(data_view->top_layer);
+    gwy_object_unref(data_view->base_layer);
+    gwy_object_unref(data_view->alpha_layer);
+    gwy_object_unref(data_view->top_layer);
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
           "    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
-    if (data_view->data)
-        g_object_unref(data_view->data);
-    data_view->alpha_layer = NULL;
-    data_view->top_layer = NULL;
-    data_view->base_layer = NULL;
-    data_view->data = NULL;
+    gwy_object_unref(data_view->data);
 }
 
 static void
@@ -222,12 +226,8 @@ gwy_data_view_unrealize(GtkWidget *widget)
 {
     GwyDataView *data_view = GWY_DATA_VIEW(widget);
 
-    if (data_view->pixbuf)
-        g_object_unref(data_view->pixbuf);
-    if (data_view->base_pixbuf)
-        g_object_unref(data_view->base_pixbuf);
-    data_view->pixbuf = NULL;
-    data_view->base_pixbuf = NULL;
+    gwy_object_unref(data_view->pixbuf);
+    gwy_object_unref(data_view->base_pixbuf);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -327,8 +327,10 @@ gwy_data_view_size_request(GtkWidget *widget,
     data_field = GWY_DATA_FIELD(
                      gwy_container_get_object_by_name(data,
                                                       "/0/data"));
-    requisition->width = data_view->zoom * gwy_data_field_get_xres(data_field);
-    requisition->height = data_view->zoom * gwy_data_field_get_yres(data_field);
+    requisition->width = data_view->newzoom
+                         * gwy_data_field_get_xres(data_field);
+    requisition->height = data_view->newzoom
+                          * gwy_data_field_get_yres(data_field);
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
@@ -361,7 +363,6 @@ gwy_data_view_size_allocate(GtkWidget *widget,
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-
         gwy_data_view_make_pixmap(data_view);
     }
 }
@@ -395,11 +396,15 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     widget = GTK_WIDGET(data_view);
     data_view->zoom = MIN((gdouble)widget->allocation.width/src_width,
                           (gdouble)widget->allocation.height/src_height);
+    data_view->newzoom = data_view->zoom;
     scwidth = floor(src_width * data_view->zoom + 0.000001);
     scheight = floor(src_height * data_view->zoom + 0.000001);
+    data_view->xmeasure = gwy_data_field_get_xreal(data_field)/scwidth;
+    data_view->ymeasure = gwy_data_field_get_yreal(data_field)/scheight;
+    data_view->xoff = (widget->allocation.width - scwidth)/2;
+    data_view->yoff = (widget->allocation.height - scheight)/2;
     if (scwidth != width || scheight != height) {
-        if (data_view->pixbuf)
-            g_object_unref(data_view->pixbuf);
+        gwy_object_unref(data_view->pixbuf);
         data_view->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                            TRUE,
                                            BITS_PER_SAMPLE,
@@ -487,7 +492,6 @@ gwy_data_view_expose(GtkWidget *widget,
                      GdkEventExpose *event)
 {
     GwyDataView *data_view;
-    gint xc, yc;
     GTimer *timer = NULL;
 
     g_return_val_if_fail(widget, FALSE);
@@ -498,27 +502,23 @@ gwy_data_view_expose(GtkWidget *widget,
 
     gdk_window_set_back_pixmap(widget->window, NULL, FALSE);
 
+    timer = g_timer_new();
     data_view = GWY_DATA_VIEW(widget);
     /* FIXME: ask the layers, if they want to repaint themselves */
     if (gwy_data_view_layer_wants_repaint(data_view->base_layer)
-        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer)
-        || gwy_data_view_layer_wants_repaint(data_view->top_layer))
+        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer))
         gwy_data_view_paint(data_view);
 
-    xc = (widget->allocation.width
-          - gdk_pixbuf_get_width(data_view->pixbuf))/2;
-    yc = (widget->allocation.height
-          - gdk_pixbuf_get_height(data_view->pixbuf))/2;
-    timer = g_timer_new();
     gdk_draw_pixbuf(widget->window,
                     NULL,
                     data_view->pixbuf,
                     0, 0,
-                    xc, yc,
+                    data_view->xoff, data_view->yoff,
                     -1, -1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
     g_message("%s: buf->map %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+
     if (data_view->top_layer) {
         g_timer_reset(timer);
         gwy_data_view_layer_draw(data_view->top_layer, widget->window);
@@ -662,8 +662,9 @@ gwy_data_view_set_layer(GwyDataView *data_view,
     if (layer == *which)
         return;
     if (*which) {
-        g_object_unref(*which);
+        (*which)->parent = NULL;
         gwy_data_view_layer_unplugged(*which);
+        g_object_unref(*which);
     }
     if (layer) {
         g_assert(layer->parent == NULL);
@@ -734,11 +735,11 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
         return;
 
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG,
-          "%s: zoom = %g, new = %g", __FUNCTION__, data_view->zoom, zoom);
-    if (fabs(data_view->zoom - zoom) < 0.01)
+          "%s: zoom = %g, new = %g", __FUNCTION__, data_view->newzoom, zoom);
+    if (fabs(log(data_view->newzoom/zoom)) < 0.001)
         return;
 
-    data_view->zoom = zoom;
+    data_view->newzoom = zoom;
     gtk_widget_queue_resize(GTK_WIDGET(data_view));
 }
 
@@ -749,11 +750,71 @@ gwy_data_view_get_zoom(GwyDataView *data_view)
     return data_view->zoom;
 }
 
+gdouble
+gwy_data_view_get_xmeasure(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
+    return data_view->xmeasure;
+}
+
+gdouble
+gwy_data_view_get_ymeasure(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
+    return data_view->ymeasure;
+}
+
 GwyContainer*
 gwy_data_view_get_data(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
     return data_view->data;
+}
+
+void
+gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
+                              gint *xscr, gint *yscr)
+{
+    GtkWidget *widget;
+    gint size;
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    widget = GTK_WIDGET(data_view);
+
+    if (xscr) {
+        size = gdk_pixbuf_get_width(data_view->pixbuf);
+        *xscr = CLAMP(*xscr, data_view->xoff, data_view->xoff + size-1);
+    }
+    if (yscr) {
+        size = gdk_pixbuf_get_height(data_view->pixbuf);
+        *yscr = CLAMP(*yscr, data_view->yoff, data_view->yoff + size-1);
+    }
+}
+
+void
+gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
+                                gint xscr, gint yscr,
+                                gdouble *xreal, gdouble *yreal)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    if (xreal)
+        *xreal = (xscr - data_view->xoff) * data_view->xmeasure;
+    if (yreal)
+        *yreal = (yscr - data_view->yoff) * data_view->ymeasure;
+}
+
+void
+gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
+                                gdouble xreal, gdouble yreal,
+                                gint *xscr, gint *yscr)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    if (xscr)
+        *xscr = floor(xreal/data_view->xmeasure + 0.5) + data_view->xoff;
+    if (yscr)
+        *yscr = floor(yreal/data_view->ymeasure + 0.5) + data_view->yoff;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

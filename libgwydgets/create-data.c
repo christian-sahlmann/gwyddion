@@ -14,6 +14,7 @@ int
 main(int argc, char *argv[])
 {
     FILE *fh;
+    GwyContainer *container;
     GwyDataField *df;
     gdouble *data, *row;
     gdouble x, y;
@@ -22,7 +23,7 @@ main(int argc, char *argv[])
     gsize size = 0;
 
     g_type_init();
-    df = gwy_data_field_new(N, N, M_PI, M_PI, FALSE);
+    df = (GwyDataField*)gwy_data_field_new(N, N, M_PI, M_PI, FALSE);
     data = df->data;
     for (i = 0; i < N; i++) {
       row = data + N*i;
@@ -36,7 +37,9 @@ main(int argc, char *argv[])
     }
     gwy_data_field_set_xreal(df, 4.1e-8);
     gwy_data_field_set_yreal(df, 4.1e-8);
-    buffer = gwy_serializable_serialize(G_OBJECT(df), buffer, &size);
+    container = (GwyContainer*)gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
+    buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
 
     fh = fopen("data_field.object", "wb");
     fwrite(buffer, 1, size, fh);
