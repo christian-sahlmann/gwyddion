@@ -48,8 +48,8 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>", "<graph>"
 };
 
-static void       gwy_app_quit                (void);
-void              gwy_app_create_toolbox      (void);
+static gboolean   gwy_app_quit                (void);
+static void       gwy_app_create_toolbox      (void);
 static GtkWidget* gwy_app_toolbar_append_func (GtkWidget *toolbar,
                                                const gchar *stock_id,
                                                const gchar *tooltip,
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
     return 0;
 }
 
-static void
+static gboolean
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
@@ -110,7 +110,7 @@ gwy_app_quit(void)
     gtk_main_quit();
 }
 
-void
+static void
 gwy_app_create_toolbox(void)
 {
     GtkWidget *window, *vbox, *toolbar, *menu;
@@ -192,7 +192,7 @@ gwy_app_create_toolbox(void)
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
     /* XXX */
-    g_signal_connect(window, "destroy", gwy_app_quit, NULL);
+    g_signal_connect(window, "delete_event", gwy_app_quit, NULL);
 }
 
 GwyDataWindow*
