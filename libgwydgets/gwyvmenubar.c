@@ -120,7 +120,11 @@ gwy_vmenu_bar_class_init(GwyVMenuBarClass *klass)
     widget_class->size_allocate = gwy_vmenu_bar_size_allocate;
     widget_class->expose_event = gwy_vmenu_bar_expose;
 
-    menu_shell_class->submenu_placement = GTK_LEFT_RIGHT;
+    /* FIXME: this crashes Gtk+ as it makes assertions about relation
+     * between direction and object types
+     * menu_shell_class->submenu_placement = GTK_LEFT_RIGHT;
+     * but this is inconvenient */
+    menu_shell_class->submenu_placement = GTK_TOP_BOTTOM;
 
     binding_set = gtk_binding_set_by_class(klass);
     gtk_binding_entry_add_signal(binding_set,
