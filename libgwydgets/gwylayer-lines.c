@@ -528,7 +528,6 @@ gwy_layer_lines_get_lines(GwyDataViewLayer *layer,
     GwyLayerLines *lines_layer;
 
     g_return_val_if_fail(GWY_IS_LAYER_LINES(layer), 0);
-    g_return_val_if_fail(lines, 0);
 
     lines_layer = (GwyLayerLines*)layer;
     if (lines && lines_layer->nselected) {

@@ -432,7 +432,6 @@ gwy_layer_points_get_points(GwyDataViewLayer *layer,
     GwyLayerPoints *points_layer;
 
     g_return_val_if_fail(GWY_IS_LAYER_POINTS(layer), 0);
-    g_return_val_if_fail(points, 0);
 
     points_layer = (GwyLayerPoints*)layer;
     if (points && points_layer->nselected) {
