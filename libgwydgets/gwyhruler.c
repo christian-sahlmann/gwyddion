@@ -31,7 +31,7 @@
 
 #define _(x) x
 
-#define RULER_HEIGHT          14
+#define RULER_HEIGHT          18
 #define MINIMUM_INCR          5
 #define MAXIMUM_SUBDIVIDE     5
 #define MAXIMUM_SCALES        10
@@ -166,9 +166,6 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
     xthickness = widget->style->xthickness;
     ythickness = widget->style->ythickness;
 
-    digit_height = PANGO_PIXELS(ink_rect.height) + 2;
-    digit_offset = ink_rect.y;
-
     layout = gtk_widget_create_pango_layout(widget, "012456789");
     pango_layout_get_extents(layout, &ink_rect, &logical_rect);
 
@@ -225,7 +222,7 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
         /* Calculate the length of the tickmarks. Make sure that
          * this length increases for each set of ticks
          */
-        ideal_length = height / (i + 1) - 1;
+        ideal_length = height / (i + 1) - 2;
         if (ideal_length > ++length)
             length = ideal_length;
 
@@ -248,13 +245,13 @@ gwy_hruler_draw_ticks(GwyRuler *ruler)
 
             /* draw label */
             if (i == 0) {
-                if (units_drawn)
-                    g_snprintf(unit_str, sizeof(unit_str), "%d", (int)cur);
-                else {
+                if (!units_drawn && (end < 0 || cur >= 0)) {
                     g_snprintf(unit_str, sizeof(unit_str), "%d %s",
                                (int)cur, ruler->metric->abbrev);
                     units_drawn = TRUE;
                 }
+                else
+                    g_snprintf(unit_str, sizeof(unit_str), "%d", (int)cur);
 
                 pango_layout_set_text(layout, unit_str, -1);
                 pango_layout_get_extents(layout, &logical_rect, NULL);

@@ -526,6 +526,7 @@ gwy_data_view_expose(GtkWidget *widget,
 {
     GwyDataView *data_view;
     gint xc, yc;
+    GTimer *timer = NULL;
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
@@ -547,6 +548,7 @@ gwy_data_view_expose(GtkWidget *widget,
           - gdk_pixbuf_get_width(data_view->pixbuf))/2;
     yc = (widget->allocation.height
           - gdk_pixbuf_get_height(data_view->pixbuf))/2;
+    timer = g_timer_new();
     gdk_draw_pixbuf(widget->window,
                     NULL,
                     data_view->pixbuf,
@@ -555,6 +557,8 @@ gwy_data_view_expose(GtkWidget *widget,
                     -1, -1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
+    g_message("%s: buf->map %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
+    g_timer_destroy(timer);
 
     return FALSE;
 }

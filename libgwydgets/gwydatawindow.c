@@ -16,6 +16,11 @@ static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
 GtkWidget*      gwy_data_window_new            (GwyDataView *data_view);
 
+static void
+measure_changed(GwyDataWindow *data_window,
+                GtkAllocation *allocation,
+                gpointer data);
+
 /* Local data */
 
 GType
@@ -121,7 +126,7 @@ gwy_data_window_new(GwyDataView *data_view)
     gwy_ruler_set_range(GWY_RULER(data_window->hruler),
                         0.0, 100.0, 0.0, 100.0);
     gtk_table_attach(GTK_TABLE(table), data_window->hruler, 1, 2, 0, 1,
-                     GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL, 0, 0);
+                     GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
     g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
                              G_CALLBACK(GTK_WIDGET_GET_CLASS(data_window->hruler)->motion_notify_event),
                              data_window->hruler);
@@ -147,12 +152,37 @@ gwy_data_window_new(GwyDataView *data_view)
     /* show everything except the table */
     gtk_widget_show_all(vbox);
 
+    g_signal_connect(data_window, "size-allocate",
+                     G_CALLBACK(measure_changed), NULL);
+
     return GTK_WIDGET(data_window);
 }
 
 static void
-measure_changed(GtkWidget *widget, gpointer data)
+measure_changed(GwyDataWindow *data_window,
+                GtkAllocation *allocation,
+                gpointer data)
 {
+    gint width, height, size;
+    gdouble excess, pos, max;
+
+    width = data_window->data_view->allocation.width,
+    height = data_window->data_view->allocation.height;
+    size = MIN(width, height);
+
+    /* horizontal */
+    excess = 100*((gdouble)width/size - 1.0)/2.0;
+    gwy_ruler_get_range(GWY_RULER(data_window->hruler),
+                        NULL, NULL, &pos, &max);
+    gwy_ruler_set_range(GWY_RULER(data_window->hruler),
+                        -excess, 100 + excess, pos, max);
+
+    /* vertical */
+    excess = 100*((gdouble)height/size - 1.0)/2.0;
+    gwy_ruler_get_range(GWY_RULER(data_window->vruler),
+                        NULL, NULL, &pos, &max);
+    gwy_ruler_set_range(GWY_RULER(data_window->vruler),
+                        -excess, 100 + excess, pos, max);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

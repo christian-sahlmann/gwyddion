@@ -31,7 +31,7 @@
 #include <glib/gprintf.h>
 
 
-#define RULER_WIDTH           14
+#define RULER_WIDTH           18
 #define MINIMUM_INCR          5
 #define MAXIMUM_SUBDIVIDE     5
 #define MAXIMUM_SCALES        10
@@ -152,6 +152,8 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
     gint pos;
     PangoLayout *layout;
     PangoRectangle logical_rect, ink_rect;
+    gboolean units_drawn = FALSE;
+    gchar *utf8p, *utf8next;
 
     if (!GTK_WIDGET_DRAWABLE(ruler))
         return;
@@ -220,7 +222,7 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
         /* Calculate the length of the tickmarks. Make sure that
          * this length increases for each set of ticks
          */
-        ideal_length = height / (i + 1) - 1;
+        ideal_length = height / (i + 1) - 2;
         if (ideal_length > ++length)
             length = ideal_length;
 
@@ -242,12 +244,20 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
 
             /* draw label */
             if (i == 0) {
-                g_snprintf(unit_str, sizeof(unit_str), "%d", (int) cur);
+                if (!units_drawn && (end < 0 || cur >= 0)) {
+                    g_snprintf(unit_str, sizeof(unit_str), "%d %s",
+                               (int)cur, ruler->metric->abbrev);
+                    units_drawn = TRUE;
+                }
+                else
+                    g_snprintf(unit_str, sizeof(unit_str), "%d", (int)cur);
 
-                for (j = 0; j < (int) strlen(unit_str); j++) {
-                    pango_layout_set_text(layout, unit_str + j, 1);
+                utf8p = unit_str;
+                utf8next = g_utf8_next_char(utf8p);
+                j = 0;
+                while (*utf8p) {
+                    pango_layout_set_text(layout, utf8p, utf8next - utf8p);
                     pango_layout_get_extents(layout, NULL, &logical_rect);
-
 
                     gtk_paint_layout(widget->style,
                                      ruler->backing_store,
@@ -261,6 +271,11 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
                                      + PANGO_PIXELS(logical_rect.y
                                                     - digit_offset),
                                      layout);
+                    utf8p = utf8next;
+                    utf8next = g_utf8_next_char(utf8p);
+                    j++;
+                    if (j > 10)
+                        g_assert_not_reached();
                 }
             }
         }

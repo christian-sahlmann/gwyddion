@@ -57,7 +57,7 @@ static void gwy_ruler_get_property  (GObject        *object,
 static GtkWidgetClass *parent_class;
 
 static const GwyRulerMetric ruler_metrics[] = {
-    {"Pixels", "px", 1.0, { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 }, { 1, 5, 10, 50, 100 }},
+    {"Pixels", "µm", 1.0, { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 }, { 1, 5, 10, 50, 100 }},
     {"Inches", "in", 72.0, { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 }, { 1, 2, 4, 8, 16 }},
     {"Centimeters", "cm", 28.35, { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 }, { 1, 5, 10, 50, 100 }},
 };
