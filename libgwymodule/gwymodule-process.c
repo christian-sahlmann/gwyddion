@@ -120,6 +120,8 @@ process_menu_entry_compare(GtkItemFactoryEntry *a,
 
 /**
  * gwy_build_process_menu:
+ * @accel_group: The accelerator group the menu should use (%NULL for a new
+ *               one).
  *
  * Creates #GtkItemFactory for a data processing menu with all registered data
  * processing functions.
@@ -127,7 +129,7 @@ process_menu_entry_compare(GtkItemFactoryEntry *a,
  * Returns: The menu as a #GtkObject.
  **/
 GtkObject*
-gwy_build_process_menu(void)
+gwy_build_process_menu(GtkAccelGroup *accel_group)
 {
     GtkItemFactory *item_factory;
     GtkItemFactoryEntry *menu_item;
@@ -140,7 +142,8 @@ gwy_build_process_menu(void)
     g_hash_table_foreach(process_funcs, (GHFunc)create_process_menu_entry,
                          &entries);
     entries = g_list_sort(entries, (GCompareFunc)process_menu_entry_compare);
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<data>", NULL);
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<data>",
+                                        accel_group);
 
     /* the root item */
     menu_item = g_new(GtkItemFactoryEntry, 1);

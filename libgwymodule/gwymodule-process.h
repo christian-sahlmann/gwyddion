@@ -4,6 +4,7 @@
 #define __GWY_MODULE_PROCESS_H__
 
 #include <gtk/gtkobject.h>
+#include <gtk/gtkaccelgroup.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleloader.h>
 
@@ -25,7 +26,7 @@ struct _GwyProcessFuncInfo {
 
 gboolean        gwy_register_process_func   (const gchar *modname,
                                              GwyProcessFuncInfo *func_info);
-GtkObject*      gwy_build_process_menu      (void);
+GtkObject*      gwy_build_process_menu      (GtkAccelGroup *accel_group);
 
 #ifdef __cplusplus
 }
