@@ -146,10 +146,15 @@ gwy_app_graph_list_new(GwyDataWindow *data_window)
 {
     GtkWidget *window, *vbox, *buttonbox, *list, *scroll;
     Controls *controls;
+    gchar *t, *title;
 
+    t = gwy_data_window_get_base_name(data_window);
+    title = g_strdup_printf(_("Graph List for %s"), t);
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Graph list for FIXME");
+    gtk_window_set_title(GTK_WINDOW(window), title);
     gtk_window_set_default_size(GTK_WINDOW(window), -1, 180);
+    g_free(title);
+    g_free(t);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
