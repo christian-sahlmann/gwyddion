@@ -545,4 +545,19 @@ data_view_updated_cb(GwyDataWindow *data_window)
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
 }
 
+void
+gwy_data_window_set_units(GwyDataWindow *data_window,
+                          const gchar *units)
+{
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    gwy_ruler_set_units(GWY_RULER(data_window->hruler), units);
+}
+
+G_CONST_RETURN gchar*
+gwy_data_window_get_units(GwyDataWindow *data_window)
+{
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    return gwy_ruler_get_units(GWY_RULER(data_window->hruler));
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -68,6 +68,7 @@ struct _GwyRuler
     GdkGC *non_gr_exp_gc;
     gint xsrc, ysrc;
     gint slider_size;
+    gchar *units;
     GwyUnitsPlacement units_placement;
 
     gdouble lower;    /* The upper limit of the ruler (in physical units) */
@@ -99,7 +100,10 @@ void              gwy_ruler_get_range           (GwyRuler *ruler,
                                                  gdouble  *upper,
                                                  gdouble  *position,
                                                  gdouble  *max_size);
-
+void              gwy_ruler_set_units           (GwyRuler *ruler,
+                                                 const gchar *units);
+G_CONST_RETURN
+gchar*            gwy_ruler_get_units           (GwyRuler *ruler);
 GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
 void              gwy_ruler_set_units_placement (GwyRuler *ruler,
                                                  GwyUnitsPlacement placement);

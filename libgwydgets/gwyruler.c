@@ -203,6 +203,7 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->position = 0;
     ruler->max_size = 0;
     ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
+    ruler->units = g_strdup("m");
 }
 
 static void
@@ -587,10 +588,10 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     measure = range/mag / pixelsize;
     max /= mag;
 
-    switch (ruler->units_placement) {
+    switch (ruler->units_placement && ruler->units) {
         case GWY_UNITS_PLACEMENT_AT_ZERO:
         g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
-                   (lower > 0) ? (gint)(lower/mag) : 0, prefix, "m");
+                   (lower > 0) ? (gint)(lower/mag) : 0, prefix, ruler->units);
         break;
 
         default:
@@ -637,9 +638,10 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
             continue;
         if (!units_drawn
             && (upper < 0 || val >= 0)
-            && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO) {
+            && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
+            && ruler->units) {
             g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
-                       ROUND(val), prefix, "m");
+                       ROUND(val), prefix, ruler->units);
             units_drawn = TRUE;
         }
         else
@@ -758,6 +760,24 @@ next_scale(GwyScaleScale scale,
     }
 
     return new_scale;
+}
+
+void
+gwy_ruler_set_units(GwyRuler *ruler,
+                    const gchar *units)
+{
+    g_return_if_fail(GWY_IS_RULER(ruler));
+    if (ruler->units)
+        g_free(ruler->units);
+    ruler->units = units ? g_strdup(units) : NULL;
+    gtk_widget_queue_draw(GTK_WIDGET(ruler));
+}
+
+G_CONST_RETURN gchar*
+gwy_ruler_get_units(GwyRuler *ruler)
+{
+    g_return_val_if_fail(GWY_IS_RULER(ruler), NULL);
+    return ruler->units;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
