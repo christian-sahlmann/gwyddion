@@ -63,7 +63,7 @@ module_register(const gchar *name)
 {
     static GwyFileFuncInfo gwyfile_func_info = {
         "gwyfile",
-        N_("Gwyddion native serialized objects (.gwy)"),
+        N_("Gwyddion native format (.gwy)"),
         (GwyFileDetectFunc)&gwyfile_detect,
         (GwyFileLoadFunc)&gwyfile_load,
         (GwyFileSaveFunc)&gwyfile_save,
