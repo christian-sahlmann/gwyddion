@@ -40,6 +40,14 @@ extern "C" {
 #define GWY_IS_DATA_FIELD_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_FIELD))
 #define GWY_DATA_FIELD_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_FIELD, GwyDataFieldClass))
 
+typedef enum {
+      GWY_FILTER_MEAN          = 0, /*mean value filter (averaging)*/
+      GWY_FILTER_MEDIAN        = 1, /*median value filter*/
+      GWY_FILTER_CONSERVATIVE  = 2, /*conservative denoising filter*/
+      GWY_FILTER_LAPLACIAN     = 3, /*Laplacian 2nd derivative filter*/
+      GWY_FILTER_SOBEL         = 4, /*Sobel gradient filter*/
+      GWY_FILTER_PREWITT       = 5  /*Prewitt gradient filter*/
+} GwyFilterType;
 
 typedef struct{
     GObject parent_instance;

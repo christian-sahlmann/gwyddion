@@ -27,6 +27,7 @@
 #include <libprocess/cwt.h>
 #include <libprocess/simplefft.h>
 #include <libprocess/dataline.h>
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 
 #ifdef __cplusplus
@@ -59,6 +60,9 @@ GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
 GtkWidget* gwy_option_menu_direction       (GCallback callback,
                                            gpointer cbdata,
                                            GtkOrientation current);
+GtkWidget* gwy_option_menu_filter          (GCallback callback,
+                                            gpointer cbdata,
+                                            GwyFilterType current);
 GtkWidget* gwy_option_menu_metric_unit    (GCallback callback,
                                            gpointer cbdata,
                                            gint from,

@@ -571,6 +571,41 @@ gwy_option_menu_direction(GCallback callback,
                                   current);
 }
 
+
+/**
+ * gwy_option_menu_filter:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Filter selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available 2D filters
+ *
+ * It sets object data "filter-type" to filter type
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_filter(GCallback callback,
+                       gpointer cbdata,
+                       GwyFilterType current)
+{
+    static const GwyEnum entries[] = {
+        { "Mean value",            GWY_FILTER_MEAN,  },
+        { "Median value",          GWY_FILTER_MEDIAN, },
+        { "Conservative denoise",  GWY_FILTER_CONSERVATIVE, },
+        { "Laplacian",             GWY_FILTER_LAPLACIAN, },
+        { "Sobel gradient",        GWY_FILTER_SOBEL, },
+        { "Prewitt gradient",      GWY_FILTER_PREWITT, },
+        
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "filter-type", callback, cbdata,
+                                  current);
+}
+
 /**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for
