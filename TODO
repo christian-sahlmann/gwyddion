@@ -2,4 +2,13 @@ Too many things.  Use
 
   find . -name \*.\[ch] | xargs grep -ir '\<\(XXX\|TODO\|FIXME\|fuck\|shit\)\>'
 
-to locate them.
+to locate them ;-)
+
+Particularly:
+- Some real Undo & Redo and revert to saved state
+- User documentation, even better, integrated help
+- Internationalization and localization
+- Palette editor
+- Editable metadata
+- Multiple data in one file
+- Sessions
