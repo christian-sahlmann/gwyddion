@@ -29,14 +29,28 @@
 
 #define GWY_INVENTORY_TYPE_NAME "GwyInventory"
 
-#define ITEM(inventory, i) g_ptr_array_index((inventory)->items, (i))
-#define HASH(inventory, n) \
-    g_hash_table_lookup((inventory)->hash, \
-                        GUINT_TO_POINTER(g_str_hash(name)))
+enum {
+    ITEM_INSERTED,
+    ITEM_DELETED,
+    ITEM_UPDATED,
+    ITEMS_REORDERED,
+    LAST_SIGNAL
+};
+
+typedef struct {
+    gpointer p;
+    guint i;
+} ArrayItem;
 
 static void     gwy_inventory_class_init         (GwyInventoryClass *klass);
 static void     gwy_inventory_init               (GwyInventory *container);
 static void     gwy_inventory_finalize           (GObject *object);
+static void     gwy_inventory_reindex            (GwyInventory *inventory);
+static gint     gwy_inventory_compare_indices    (gint *a,
+                                                  gint *b,
+                                                  GwyInventory *inventory);
+
+static guint gwy_inventory_signals[LAST_SIGNAL] = { 0 };
 
 static GObjectClass *parent_class = NULL;
 
@@ -79,6 +93,82 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_inventory_finalize;
+
+/**
+ * GwyInventory::item_inserted:
+ * @gwyinventory: The #GwyInventory which received the signal.
+ * @arg1: Position an item was inserted at.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::item_inserted signal is emitted when an item is inserted into
+ * an inventory.
+ **/
+    gwy_inventory_signals[ITEM_INSERTED] =
+        g_signal_new("item_inserted",
+                     GWY_TYPE_INVENTORY,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyInventoryClass, item_inserted),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__UINT,
+                     G_TYPE_NONE, 1,
+                     G_TYPE_UINT);
+
+/**
+ * GwyInventory::item_deleted:
+ * @gwyinventory: The #GwyInventory which received the signal.
+ * @arg1: Position an item was deleted from.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::item_deleted signal is emitted when an item is deleted from
+ * an inventory.
+ **/
+    gwy_inventory_signals[ITEM_INSERTED] =
+        g_signal_new("item_deleted",
+                     GWY_TYPE_INVENTORY,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyInventoryClass, item_deleted),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__UINT,
+                     G_TYPE_NONE, 1,
+                     G_TYPE_UINT);
+
+/**
+ * GwyInventory::item_updated:
+ * @gwyinventory: The #GwyInventory which received the signal.
+ * @arg1: Position of updated item.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::item_updated signal is emitted when an item in an inventory
+ * is updated.
+ **/
+    gwy_inventory_signals[ITEM_UPDATED] =
+        g_signal_new("item_updated",
+                     GWY_TYPE_INVENTORY,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyInventoryClass, item_updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__UINT,
+                     G_TYPE_NONE, 1,
+                     G_TYPE_UINT);
+
+/**
+ * GwyInventory::items_reordered:
+ * @gwyinventory: The #GwyInventory which received the signal.
+ * @arg1: Position of updated item.
+ * @user_data: User data set when the signal handler was connected.
+ *
+ * The ::items_reordered signal is emitted when item in an inventory
+ * are reordered.
+ **/
+    gwy_inventory_signals[ITEMS_REORDERED] =
+        g_signal_new("items_reordered",
+                     GWY_TYPE_INVENTORY,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyInventoryClass, items_reordered),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__POINTER,
+                     G_TYPE_NONE, 1,
+                     G_TYPE_POINTER);
 }
 
 static void
@@ -92,13 +182,21 @@ static void
 gwy_inventory_finalize(GObject *object)
 {
     GwyInventory *inventory = (GwyInventory*)object;
+    guint i;
 
     gwy_debug("");
 
+    if (inventory->default_key)
+        g_string_free(inventory->default_key, TRUE);
     if (inventory->hash)
         g_hash_table_destroy(inventory->hash);
-    if (inventory->items)
-        g_ptr_array_free(inventory->items, TRUE);
+    if (inventory->idx)
+        g_array_free(inventory->idx, TRUE);
+    if (inventory->items) {
+        for (i = 0; i < inventory->items->len; i++)
+            g_object_unref(g_array_index(inventory->items, ArrayItem, i).p);
+        g_array_free(inventory->items, TRUE);
+    }
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -152,18 +250,25 @@ gwy_inventory_new_filled(const GwyItemType *item_type,
     }
 
     inventory->is_sorted = (item_type->compare != NULL);
-    inventory->items = g_ptr_array_sized_new(nitems);
-    if (inventory->is_simple)
-        inventory->hash = g_hash_table_new(&g_direct_hash, &g_direct_equal);
-    else
-        inventory->hash = g_hash_table_new_full(&g_direct_hash, &g_direct_equal,
-                                                NULL, &g_object_unref);
+    inventory->items = g_array_sized_new(FALSE, FALSE, sizeof(ArrayItem),
+                                         nitems);
+    inventory->idx = g_array_sized_new(FALSE, FALSE, sizeof(guint), nitems);
+    inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < nitems; i++) {
-        g_ptr_array_add(inventory->items, items[i]);
+        ArrayItem aitem;
+
+        aitem.p = items[i];
+        aitem.i = i;
+        g_array_append_val(inventory->items, aitem);
+        g_array_append_val(inventory->idx, i);
         if (inventory->is_sorted && i)
             inventory->is_sorted = (item_type->compare(items[i-1], items[i])
                                     < 0);
+
+        g_hash_table_insert(inventory->hash,
+                            (gpointer)item_type->get_name(items[i]),
+                            GUINT_TO_POINTER(i+1));
     }
     if (!inventory->is_simple) {
         for (i = 0; i < nitems; i++)
@@ -237,7 +342,7 @@ gwy_inventory_item_exists(GwyInventory *inventory,
                           const gchar *name)
 {
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
-    return HASH(inventory, name) != NULL;
+    return g_hash_table_lookup(inventory->hash, name) != NULL;
 }
 
 /**
@@ -253,8 +358,13 @@ gpointer
 gwy_inventory_get_item(GwyInventory *inventory,
                        const gchar *name)
 {
+    guint i;
+
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    return HASH(inventory, name);
+    if ((i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name))))
+        return g_array_index(inventory->items, ArrayItem, i-1).p;
+    else
+        return NULL;
 }
 
 /**
@@ -273,20 +383,19 @@ gpointer
 gwy_inventory_get_item_or_default(GwyInventory *inventory,
                                   const gchar *name)
 {
-    gpointer item;
+    guint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    if ((item = HASH(inventory, name)))
-        return item;
+    if ((i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name))))
+        return g_array_index(inventory->items, ArrayItem, i-1).p;
     if (inventory->has_default
-        && (item = g_hash_table_lookup(inventory->hash,
-                                       inventory->default_item_key)))
-        return item;
+        && (i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash,
+                                                     inventory->default_key))))
+        return g_array_index(inventory->items, ArrayItem, i-1).p;
 
     if (inventory->items->len)
-        return ITEM(inventory, 0);
-    else
-        return NULL;
+        return g_array_index(inventory->items, ArrayItem, 0).p;
+    return NULL;
 }
 
 /**
@@ -302,9 +411,13 @@ gpointer
 gwy_inventory_get_nth_item(GwyInventory *inventory,
                            guint n)
 {
+    guint i;
+
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
     g_return_val_if_fail(n < inventory->items->len, NULL);
-    return ITEM(inventory, n);
+    i = g_array_index(inventory->idx, guint, n);
+
+    return g_array_index(inventory->items, ArrayItem, i).p;
 }
 
 /**
@@ -320,20 +433,38 @@ guint
 gwy_inventory_get_item_position(GwyInventory *inventory,
                                 const gchar *name)
 {
-    gpointer item;
     guint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), -1);
-    if (!(item = HASH(inventory, name)))
-        return -1;
+    if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name))))
+        return (guint)-1;
 
-    /* TODO: this is a linear search, even if it's a very fast linear
-     * search.  For large sorted inventories we should implement bisection. */
-    for (i = 0; i < inventory->items->len; i++) {
-        if (ITEM(inventory, i) == item)
-            return i;
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+
+    return g_array_index(inventory->items, ArrayItem, i-1).i;
+}
+
+/**
+ * gwy_inventory_reindex:
+ * @inventory: An inventory.
+ *
+ * Updates @i members of @inventory->items to reflect item positions.
+ *
+ * Note positions in hash are 1-based (to allow %NULL work as no-such-item),
+ * but position in @items and @idx are 0-based.
+ **/
+static void
+gwy_inventory_reindex(GwyInventory *inventory)
+{
+    guint i, n;
+
+    for (i = 0; i < inventory->idx->len; i++) {
+        n = g_array_index(inventory->idx, guint, i);
+        g_array_index(inventory->items, ArrayItem, n).i = n;
     }
-    g_return_val_if_reached(-1);
+
+    inventory->needs_reindex = FALSE;
 }
 
 /**
@@ -342,7 +473,7 @@ gwy_inventory_get_item_position(GwyInventory *inventory,
  * @function: A function to call on each item.
  * @user_data: Data passed to @function.
  *
- * Calls a function on each item of an inventory.
+ * Calls a function on each item of an inventory, in order.
  *
  * @function's first argument is item position (transformed with
  * GUINT_TO_POINTER()), second is item pointer, and the last is @user_data.
@@ -356,8 +487,10 @@ gwy_inventory_foreach(GwyInventory *inventory,
 
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
     g_return_if_fail(function);
-    for (i = 0; i < inventory->items->len; i++)
-        function(GUINT_TO_POINTER(i), ITEM(inventory, i), user_data);
+    for (i = 0; i < inventory->idx->len; i++)
+        function(GUINT_TO_POINTER(i),
+                 g_array_index(inventory->items, ArrayItem, i).p,
+                 user_data);
 }
 
 /**
@@ -371,16 +504,23 @@ gwy_inventory_foreach(GwyInventory *inventory,
 gpointer
 gwy_inventory_get_default_item(GwyInventory *inventory)
 {
+    guint i;
+
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
     if (!inventory->has_default)
         return NULL;
-    return g_hash_table_lookup(inventory->hash, inventory->default_item_key);
+
+    if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash,
+                                                   inventory->default_key))))
+        return NULL;
+
+    return g_array_index(inventory->items, ArrayItem, i-1).p;
 }
 
 /**
  * gwy_inventory_set_default_item:
  * @inventory: An inventory.
- * @name: Item name.
+ * @name: Item name, pass %NULL to unset default item.
  *
  * Sets the default of an inventory.
  *
@@ -390,17 +530,298 @@ void
 gwy_inventory_set_default_item(GwyInventory *inventory,
                                const gchar *name)
 {
-    gpointer key;
+    g_return_if_fail(GWY_IS_INVENTORY(inventory));
+    if (!name) {
+        inventory->has_default = FALSE;
+        return;
+    }
+
+    if (!g_hash_table_lookup(inventory->hash, name)) {
+        g_warning("Default item to be set not present in inventory");
+        return;
+    }
+
+    if (!inventory->default_key)
+        inventory->default_key = g_string_new(name);
+    else
+        g_string_assign(inventory->default_key, name);
+}
+
+/**
+ * gwy_inventory_insert_item:
+ * @inventory: An inventory.
+ * @item: An item to insert.
+ *
+ * Inserts an item into an inventory.
+ *
+ * Item of the same name must not exist yet.
+ *
+ * If the inventory is sorted, item is inserted to keep order.  If the
+ * inventory is unsorted, item is simply added to the end.
+ *
+ * Returns: @item, for convenience.
+ **/
+gpointer
+gwy_inventory_insert_item(GwyInventory *inventory,
+                          gpointer item)
+{
+    ArrayItem aitem;
+    const gchar *name;
+    guint m;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
+    g_return_val_if_fail(item, NULL);
+
+    name = inventory->item_type.get_name(item);
+    if (g_hash_table_lookup(inventory->hash, name)) {
+        g_warning("Item already exists");
+        return NULL;
+    }
+
+    if (!inventory->is_simple)
+        g_object_ref((gpointer)item);
+
+    /* Insert into index array */
+    if (inventory->is_sorted) {
+        gpointer mp;
+        guint j0, j1;
+
+        j0 = 0;
+        j1 = inventory->idx->len-1;
+        while (j1 - j0 > 1) {
+            m = (j0 + j1 + 1)/2;
+            mp = g_array_index(inventory->items, ArrayItem,
+                               g_array_index(inventory->idx, guint, m)).p;
+            if (inventory->item_type.compare(item, mp) >= 0)
+                j0 = m;
+            else
+                j1 = m;
+        }
+
+        mp = g_array_index(inventory->items, ArrayItem,
+                           g_array_index(inventory->idx, guint, j0)).p;
+        if (inventory->item_type.compare(item, mp) < 0)
+            m = j0;
+        else {
+            mp = g_array_index(inventory->items, ArrayItem,
+                               g_array_index(inventory->idx, guint, j0)).p;
+            if (inventory->item_type.compare(item, mp) < 0)
+                m = j1;
+            else
+                m = j1+1;
+        }
+
+        g_array_insert_val(inventory->idx, m, inventory->items->len);
+        inventory->needs_reindex = TRUE;
+    }
+    else {
+        m = inventory->items->len;
+        g_array_append_val(inventory->idx, inventory->items->len);
+    }
+
+    aitem.p = item;
+    g_array_append_val(inventory->items, aitem);
+    g_hash_table_insert(inventory->hash, (gpointer)name,
+                        GUINT_TO_POINTER(inventory->items->len));
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, m);
+
+    return item;
+}
+
+/**
+ * gwy_inventory_insert_nth_item:
+ * @inventory: An inventory.
+ * @item: An item to insert.
+ * @n: Position to insert @item to.
+ *
+ * Inserts an item to an explicit position in an inventory.
+ *
+ * Item of the same name must not exist yet.
+ *
+ * Returns: @item, for convenience.
+ **/
+gpointer
+gwy_inventory_insert_nth_item(GwyInventory *inventory,
+                              gpointer item,
+                              guint n)
+{
+    ArrayItem aitem;
+    const gchar *name;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
+    g_return_val_if_fail(item, NULL);
+    g_return_val_if_fail(n <= inventory->items->len, NULL);
+
+    name = inventory->item_type.get_name(item);
+    if (g_hash_table_lookup(inventory->hash, name)) {
+        g_warning("Item already exists");
+        return NULL;
+    }
+
+    if (!inventory->is_simple)
+        g_object_ref((gpointer)item);
+
+    g_array_insert_val(inventory->idx, n, inventory->items->len);
+    inventory->needs_reindex = TRUE;
+
+    aitem.p = item;
+    g_array_append_val(inventory->items, aitem);
+    g_hash_table_insert(inventory->hash, (gpointer)name,
+                        GUINT_TO_POINTER(inventory->items->len));
+
+    if (inventory->is_sorted) {
+        gpointer mp;
+
+        if (n > 0) {
+            mp = g_array_index(inventory->items, ArrayItem,
+                               g_array_index(inventory->idx, guint, n-1)).p;
+            if (inventory->item_type.compare(item, mp) < 0)
+                inventory->is_sorted = FALSE;
+        }
+        if (n+1 < inventory->items->len) {
+            mp = g_array_index(inventory->items, ArrayItem,
+                               g_array_index(inventory->idx, guint, n+1)).p;
+            if (inventory->item_type.compare(item, mp) > 0)
+                inventory->is_sorted = FALSE;
+        }
+    }
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, n);
+
+    return item;
+}
+
+/**
+ * gwy_inventory_restore_order:
+ * @inventory: An inventory.
+ *
+ * Assures an inventory is sorted.
+ **/
+void
+gwy_inventory_restore_order(GwyInventory *inventory)
+{
+    guint i;
+    gint *new_order;
 
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
-    key = GUINT_TO_POINTER(g_str_hash(name));
-    if (key == inventory->default_item_key)
+    if (inventory->is_sorted)
         return;
 
-    if (!g_hash_table_lookup(inventory->hash, inventory->default_item_key))
-        g_warning("New default item not present in inventory");
+    if (!inventory->item_type.compare) {
+        g_warning("Cannot sort inventory without any compare function");
+        return;
+    }
+
+    /* Make sure old order is remembered in items.i fields */
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+    g_array_sort_with_data(inventory->idx,
+                           (GCompareDataFunc)gwy_inventory_compare_indices,
+                           inventory);
+
+    if (inventory->items->len > 1024)
+        new_order = g_new(gint, inventory->items->len);
     else
-        inventory->default_item_key = key;
+        new_order = g_newa(gint, inventory->items->len);
+
+    /* Fill new_order with indices: new_order[new_position] = old_position */
+    for (i = 0; i < inventory->idx->len; i++)
+        new_order[i] = g_array_index(inventory->items, ArrayItem,
+                                     g_array_index(inventory->idx, guint, i)).i;
+    inventory->needs_reindex = TRUE;
+    inventory->is_sorted = TRUE;
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEMS_REORDERED], 0,
+                  new_order);
+
+    if (inventory->items->len > 1024)
+        g_free(new_order);
+}
+
+static gint
+gwy_inventory_compare_indices(gint *a,
+                              gint *b,
+                              GwyInventory *inventory)
+{
+    gpointer pa, pb;
+
+    pa = g_array_index(inventory->items, ArrayItem, *a).p;
+    pb = g_array_index(inventory->items, ArrayItem, *b).p;
+    return inventory->item_type.compare(pa, pb);
+}
+
+/**
+ * gwy_inventory_delete_item:
+ * @inventory: An inventory.
+ * @name: Name of item to delete.
+ *
+ * Deletes an item from an inventory.
+ *
+ * Returns: %TRUE if item was deleted.
+ **/
+gboolean
+gwy_inventory_delete_item(GwyInventory *inventory,
+                          const gchar *name)
+{
+    gpointer mp;
+    guint i, n;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
+    if (!(i = GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name)))) {
+        g_warning("Cannot delete nonexistent item");
+        return FALSE;
+    }
+
+    /* FIXME: this makes removal of large number of items slow */
+    if (inventory->needs_reindex)
+        gwy_inventory_reindex(inventory);
+
+    mp = g_array_index(inventory->items, ArrayItem, i-1).p;
+    n = g_array_index(inventory->items, ArrayItem, i-1).i;
+    g_hash_table_remove(inventory->hash, name);
+    g_array_remove_index(inventory->idx, n);
+    g_array_remove_index(inventory->items, i-1);
+
+    inventory->needs_reindex = TRUE;
+    g_object_unref(mp);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+
+    return TRUE;
+}
+
+/**
+ * gwy_inventory_delete_nth_item:
+ * @inventory: An inventory.
+ * @n: Position of @item to delete.
+ *
+ * Deletes an item on given position from an inventory.
+ *
+ * Returns: %TRUE if item was deleted.
+ **/
+gboolean
+gwy_inventory_delete_nth_item(GwyInventory *inventory,
+                              guint n)
+{
+    gpointer mp;
+    guint i;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), FALSE);
+    g_return_val_if_fail(n <= inventory->items->len, FALSE);
+
+    i = g_array_index(inventory->idx, guint, n);
+    mp = g_array_index(inventory->items, ArrayItem, i).p;
+    g_hash_table_remove(inventory->hash, inventory->item_type.get_name(mp));
+    g_array_remove_index(inventory->idx, n);
+    g_array_remove_index(inventory->items, i);
+
+    inventory->needs_reindex = TRUE;
+    g_object_unref(mp);
+
+    g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+
+    return TRUE;
 }
 
 /************************** Documentation ****************************/

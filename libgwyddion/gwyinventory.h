@@ -50,7 +50,6 @@ struct _GwyItemType {
     const gchar* (*get_text) (gconstpointer item);
     /* OK, this is going to be a GdkPixbuf, but we can't declare it here */
     gpointer     (*get_image)(gconstpointer item);
-    gpointer     (*get_data) (gconstpointer item);
     gint         (*compare)  (gconstpointer item1,
                               gconstpointer item2);
     void         (*rename)   (gconstpointer item,
@@ -64,14 +63,16 @@ struct _GwyInventory {
     GObject parent_instance;
 
     GwyItemType item_type;
+    gboolean needs_reindex : 1;
     gboolean is_sorted : 1;
     gboolean is_simple : 1;
     gboolean can_make_copies : 1;
     gboolean has_default : 1;
 
-    gpointer default_item_key;
+    GString *default_key;
 
-    GPtrArray *items;
+    GArray *items;
+    GArray *idx;
     GHashTable *hash;
 };
 
@@ -79,14 +80,11 @@ struct _GwyInventoryClass {
     GObjectClass parent_class;
 
     void (*item_inserted)(GwyInventory *inventory,
-                          guint position,
-                          const gchar *name);
+                          guint position);
     void (*item_deleted)(GwyInventory *inventory,
-                         guint position,
-                         const gchar *name);
-    void (*item_renamed)(GwyInventory *inventory,
-                         guint position,
-                         const gchar *name);
+                         guint position);
+    void (*item_updated)(GwyInventory *inventory,
+                         guint position);
     void (*items_reordered)(GwyInventory *inventory,
                             const gint *new_order);
 };
@@ -121,26 +119,12 @@ void          gwy_inventory_set_default_item     (GwyInventory *inventory,
                                                   const gchar *name);
 gpointer      gwy_inventory_get_default_item     (GwyInventory *inventory);
 
-/* Allowed on const inventories, but noop there
- * XXX: may be unnecessary, must find out what it TreeModel needs for */
-void          gwy_inventory_ref_item             (GwyInventory *inventory,
-                                                  const gchar *name);
-void          gwy_inventory_ref_nth_item         (GwyInventory *inventory,
-                                                  guint n);
-void          gwy_inventory_unref_item           (GwyInventory *inventory,
-                                                  const gchar *name);
-void          gwy_inventory_unref_nth_item       (GwyInventory *inventory,
-                                                  guint n);
-
 /* Modifiable inventories */
-gboolean      gwy_inventory_item_is_modifable    (GwyInventory *inventory,
-                                                  const gchar *name);
-gboolean      gwy_inventory_nth_item_is_modifable(GwyInventory *inventory,
-                                                  const gchar *name);
+void          gwy_inventory_restore_order        (GwyInventory *inventory);
 gpointer      gwy_inventory_insert_item          (GwyInventory *inventory,
-                                                  gconstpointer item);
+                                                  gpointer item);
 gpointer      gwy_inventory_insert_nth_item      (GwyInventory *inventory,
-                                                  gconstpointer item,
+                                                  gpointer item,
                                                   guint n);
 gboolean      gwy_inventory_delete_item          (GwyInventory *inventory,
                                                   const gchar *name);
