@@ -373,7 +373,7 @@ apply(GwyUnitoolState *state)
     gchar *z_unit;
     gdouble z_mag, z_max;
     GwyGraphAutoProperties prop;
-    gchar buf[8];
+    gchar buf[16];
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
