@@ -74,42 +74,28 @@ module_register(const gchar *name)
 static gboolean
 fraccor(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *dialog;
     GwyDataField *dfield, *maskfield, *buffer;
-    gdouble error, cor, maxer, lastfrac, frac, starter;
-    gint i;
 
     g_assert(run & FRACCOR_RUN_MODES);
 
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
+    if (gwy_container_gis_object_by_name(data, "/0/mask",
+                                         (GObject**)&maskfield)) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/mask"));
         buffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres,
                                                    dfield->xreal, dfield->yreal,
                                                    TRUE));
 
         gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
 
-        gwy_data_field_fractal_correction(dfield, maskfield, GWY_INTERPOLATION_BILINEAR);
-
-
+        gwy_data_field_fractal_correction(dfield, maskfield,
+                                          GWY_INTERPOLATION_BILINEAR);
 
         gwy_container_remove_by_name(data, "/0/mask");
         g_object_unref(buffer);
     }
-    else
-    {
-        /* XXX: this should not happen in the first place! */
-        dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_current()),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_INFO,
-             GTK_BUTTONS_CLOSE,
-             _("There is no mask to be used for computation."));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
+    else {
+        g_warning("There is no mask to be used for computation.");
         return FALSE;
 
     }
