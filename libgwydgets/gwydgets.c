@@ -140,7 +140,59 @@ palette_def_compare(GwyPaletteDef *a,
 }
 
 
-/************************** Interpolation menu ****************************/
+/************************** Enum menus ****************************/
+
+/**
+ * gwy_option_menu_create:
+ * @entries: Option menu entries.
+ * @nentires: The number of entries.
+ * @key: Value object data key.
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            no callback).
+ * @cbdata: User data passed to the callback.
+ * @current: Value to be shown as currently selected (-1 to use what happens
+ *           to be first).
+ *
+ * Creates an option menu for an enum.
+ *
+ * It sets object data identified by @key for each menu item to its value.
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_create(const GwyOptionMenuEntry *entries,
+                       gint nentries,
+                       const gchar *key,
+                       GCallback callback,
+                       gpointer cbdata,
+                       gint current)
+{
+    GtkWidget *omenu, *menu, *item;
+    GQuark quark;
+    gint i, index;
+
+    quark = g_quark_from_static_string(key);
+    omenu = gtk_option_menu_new();
+    menu = gtk_menu_new();
+
+    index = -1;
+    for (i = 0; i < nentries; i++) {
+        item = gtk_menu_item_new_with_label(_(entries[i].name));
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_object_set_qdata(G_OBJECT(item), quark,
+                          GINT_TO_POINTER(entries[i].value));
+        if (callback)
+            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
+        if (entries[i].value == current)
+            index = i;
+    }
+
+    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
+    if (index != -1)
+        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
+
+    return omenu;
+}
 
 /**
  * gwy_interpolation_option_menu:
@@ -163,11 +215,7 @@ gwy_interpolation_option_menu(GCallback callback,
                               gpointer cbdata,
                               GwyInterpolationType current)
 {
-    static struct {
-        const gchar *name;
-        GwyInterpolationType interpolation;
-    }
-    const entries[] = {
+    static const GwyOptionMenuEntry entries[] = {
         { "None",     GWY_INTERPOLATION_NONE,     },
         { "Round",    GWY_INTERPOLATION_ROUND,    },
         { "Bilinear", GWY_INTERPOLATION_BILINEAR, },
@@ -176,32 +224,11 @@ gwy_interpolation_option_menu(GCallback callback,
         { "OMOMS",    GWY_INTERPOLATION_OMOMS,    },
         { "NNA",      GWY_INTERPOLATION_NNA,      },
     };
-    GtkWidget *omenu, *menu, *item;
-    gint i, index;
 
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
-
-    index = -1;
-    for (i = 0; i < (gint)G_N_ELEMENTS(entries); i++) {
-        item = gtk_menu_item_new_with_label(entries[i].name);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "interpolation-type",
-                          GINT_TO_POINTER(entries[i].interpolation));
-        if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
-        if (entries[i].interpolation == current)
-            index = i;
-    }
-
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (index != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
-
-    return omenu;
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "interpolation-type", callback, cbdata,
+                                  current);
 }
-
-/************************** Windowing menu ****************************/
 
 /**
  * gwy_windowing_option_menu:
@@ -224,11 +251,7 @@ gwy_windowing_option_menu(GCallback callback,
                               gpointer cbdata,
                               GwyWindowingType current)
 {
-    static struct {
-        const gchar *name;
-        GwyWindowingType windowing;
-    }
-    const entries[] = {
+    static const GwyOptionMenuEntry entries[] = {
         { "None",     GWY_WINDOWING_NONE      },
         { "Hann",     GWY_WINDOWING_HANN      },
         { "Hamming",  GWY_WINDOWING_HAMMING   },
@@ -237,32 +260,11 @@ gwy_windowing_option_menu(GCallback callback,
         { "Welch",    GWY_WINDOWING_WELCH     },
         { "Rect",     GWY_WINDOWING_RECT      },
     };
-    GtkWidget *omenu, *menu, *item;
-    gint i, index;
 
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
-
-    index = -1;
-    for (i = 0; i < (gint)G_N_ELEMENTS(entries); i++) {
-        item = gtk_menu_item_new_with_label(entries[i].name);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "windowing-type",
-                          GINT_TO_POINTER(entries[i].windowing));
-        if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
-        if (entries[i].windowing == current)
-            index = i;
-    }
-
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (index != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
-
-    return omenu;
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "windowing-type", callback, cbdata,
+                                  current);
 }
-
-/************************** Zoom mode menu ****************************/
 
 /**
  * gwy_zoom_mode_option_menu:
@@ -285,40 +287,18 @@ gwy_zoom_mode_option_menu(GCallback callback,
                           gpointer cbdata,
                           GwyZoomMode current)
 {
-    static struct {
-        const gchar *name;
-        GwyZoomMode zoom_mode;
-    }
-    const entries[] = {
+    static const GwyOptionMenuEntry entries[] = {
         { "By square root of 2",     GWY_ZOOM_MODE_SQRT2      },
         { "By cubic root of 2",      GWY_ZOOM_MODE_CBRT2      },
         { "Integer zooms",           GWY_ZOOM_MODE_PIX4PIX    },
         { "Half-integer zooms",      GWY_ZOOM_MODE_HALFPIX    },
     };
-    GtkWidget *omenu, *menu, *item;
-    gint i, index;
 
-    omenu = gtk_option_menu_new();
-    menu = gtk_menu_new();
-
-    index = -1;
-    for (i = 0; i < (gint)G_N_ELEMENTS(entries); i++) {
-        item = gtk_menu_item_new_with_label(entries[i].name);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "zoom-mode",
-                          GINT_TO_POINTER(entries[i].zoom_mode));
-        if (callback)
-            g_signal_connect(G_OBJECT(item), "activate", callback, cbdata);
-        if (entries[i].zoom_mode == current)
-            index = i;
-    }
-
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (index != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), index);
-
-    return omenu;
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "zoom-mode", callback, cbdata,
+                                  current);
 }
+
 
 /************************** Table attaching ****************************/
 
@@ -418,5 +398,13 @@ gwy_dialog_prevent_delete_cb(void)
     return TRUE;
 }
 
+/************************** Documentation ****************************/
+/**
+ * GwyOptionMenuEntry:
+ * @value: Item (enum) value.
+ * @entry: Item labels.
+ *
+ * Item specification for gwy_option_menu_create().
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

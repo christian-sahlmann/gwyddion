@@ -31,6 +31,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef struct {
+    const gchar *name;
+    gint value;
+} GwyOptionMenuEntry;
+
 GtkWidget* gwy_palette_option_menu        (GCallback callback,
                                            gpointer cbdata,
                                            const gchar *current);
@@ -43,6 +48,12 @@ GtkWidget* gwy_windowing_option_menu      (GCallback callback,
 GtkWidget* gwy_zoom_mode_option_menu      (GCallback callback,
                                            gpointer cbdata,
                                            GwyZoomMode current);
+GtkWidget* gwy_option_menu_create         (const GwyOptionMenuEntry *entries,
+                                           gint nentries,
+                                           const gchar *key,
+                                           GCallback callback,
+                                           gpointer cbdata,
+                                           gint current);
 
 GtkWidget* gwy_table_attach_spinbutton    (GtkWidget *table,
                                            gint row,
