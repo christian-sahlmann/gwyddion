@@ -59,21 +59,21 @@
 #define ROUND(x)((int)((x) + 0.5))
 
 
-static void gwy_vruler_class_init    (GwyVRulerClass *klass);
-static void gwy_vruler_init          (GwyVRuler      *vruler);
-static gint gwy_vruler_motion_notify (GtkWidget      *widget,
-                                      GdkEventMotion *event);
-static void gwy_vruler_draw_ticks    (GwyRuler       *ruler);
-static void gwy_vruler_draw_pos      (GwyRuler       *ruler);
-static void label_callback           (GwyRuler *ruler,
-                                      gint position,
-                                      const gchar *label,
-                                      PangoLayout *layout,
-                                      gint digit_height,
-                                      gint digit_offset);
-static void tick_callback            (GwyRuler *ruler,
-                                      gint position,
-                                      gint depth);
+static void     gwy_vruler_class_init    (GwyVRulerClass *klass);
+static void     gwy_vruler_init          (GwyVRuler      *vruler);
+static gboolean gwy_vruler_motion_notify (GtkWidget      *widget,
+                                          GdkEventMotion *event);
+static void     gwy_vruler_draw_ticks    (GwyRuler       *ruler);
+static void     gwy_vruler_draw_pos      (GwyRuler       *ruler);
+static void     label_callback           (GwyRuler *ruler,
+                                          gint position,
+                                          const gchar *label,
+                                          PangoLayout *layout,
+                                          gint digit_height,
+                                          gint digit_offset);
+static void     tick_callback            (GwyRuler *ruler,
+                                          gint position,
+                                          gint depth);
 
 
 GType
@@ -141,7 +141,7 @@ gwy_vruler_new(void)
 }
 
 
-static gint
+static gboolean
 gwy_vruler_motion_notify(GtkWidget      *widget,
                          GdkEventMotion *event)
 {

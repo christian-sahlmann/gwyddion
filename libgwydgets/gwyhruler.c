@@ -58,21 +58,21 @@
 
 #define ROUND(x)((int)((x) + 0.5))
 
-static void gwy_hruler_class_init    (GwyHRulerClass *klass);
-static void gwy_hruler_init          (GwyHRuler      *hruler);
-static gint gwy_hruler_motion_notify (GtkWidget      *widget,
-                                      GdkEventMotion *event);
-static void gwy_hruler_draw_ticks    (GwyRuler       *ruler);
-static void gwy_hruler_draw_pos      (GwyRuler       *ruler);
-static void label_callback           (GwyRuler *ruler,
-                                      gint position,
-                                      const gchar *label,
-                                      PangoLayout *layout,
-                                      gint digit_height,
-                                      gint digit_offset);
-static void tick_callback            (GwyRuler *ruler,
-                                      gint position,
-                                      gint depth);
+static void     gwy_hruler_class_init    (GwyHRulerClass *klass);
+static void     gwy_hruler_init          (GwyHRuler      *hruler);
+static gboolean gwy_hruler_motion_notify (GtkWidget      *widget,
+                                          GdkEventMotion *event);
+static void     gwy_hruler_draw_ticks    (GwyRuler       *ruler);
+static void     gwy_hruler_draw_pos      (GwyRuler       *ruler);
+static void     label_callback           (GwyRuler *ruler,
+                                          gint position,
+                                          const gchar *label,
+                                          PangoLayout *layout,
+                                          gint digit_height,
+                                          gint digit_offset);
+static void     tick_callback            (GwyRuler *ruler,
+                                          gint position,
+                                          gint depth);
 
 GType
 gwy_hruler_get_type(void)
@@ -140,7 +140,7 @@ gwy_hruler_new(void)
     return g_object_new(GWY_TYPE_HRULER, NULL);
 }
 
-static gint
+static gboolean
 gwy_hruler_motion_notify(GtkWidget      *widget,
                          GdkEventMotion *event)
 {
@@ -170,7 +170,7 @@ label_callback(GwyRuler *ruler,
                gint position,
                const gchar *label,
                PangoLayout *layout,
-               gint digit_height,
+               G_GNUC_UNUSED gint digit_height,
                gint digit_offset)
 {
     GtkWidget *widget = (GtkWidget*)ruler;
