@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <string.h>
 #include <stdlib.h>
 
@@ -41,8 +41,14 @@
 #include <direct.h>
 #endif
 
+typedef struct {
+    guchar md5sum[8];
+    gchar *filename_utf8;
+    gchar *thumbnail_filename;
+} RecentFile;
+
 enum {
-    FILELIST_KEY,
+    FILELIST_INDEX,
     FILELIST_FILENAME,
     FILELIST_LAST
 };
@@ -53,8 +59,7 @@ typedef struct {
     GtkWidget *list;
 } Controls;
 
-static GtkWidget* gwy_app_recent_file_list_construct     (GwyContainer *data,
-                                                          Controls *controls);
+static GtkWidget* gwy_app_recent_file_list_construct     (Controls *controls);
 static void       gwy_app_recent_file_list_cell_renderer (GtkTreeViewColumn *column,
                                                           GtkCellRenderer *cell,
                                                           GtkTreeModel *model,
@@ -71,30 +76,33 @@ static void       gwy_app_recent_file_list_selection_changed(GtkTreeSelection *s
                                                              Controls *controls);
 static void       gwy_app_recent_file_list_prune         (GtkWidget *list);
 static void       gwy_app_recent_file_list_open          (GtkWidget *list);
-static void       gwy_app_recent_file_list_add_line      (gpointer hkey,
-                                                          GValue *value,
-                                                          GtkListStore *store);
+
+static guint remember_recent_files = 256;
+static GArray *recent_files = NULL;
+static GList *recent_file_list = NULL;  /* for menu update, API wants GList */
 
 GtkWidget*
-gwy_app_recent_file_list(void)
+gwy_app_recent_file_list_new(void)
 {
-    GtkWidget *window, *vbox, *buttonbox, *list;
+    GtkWidget *window, *vbox, *buttonbox, *list, *scroll;
     Controls *controls;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Graph list for FIXME");
-    gtk_window_set_default_size(GTK_WINDOW(window), -1, 180);
+    gtk_window_set_default_size(GTK_WINDOW(window), -1, 280);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+
     controls = g_new(Controls, 1);
-    list = gwy_app_recent_file_list_construct(gwy_app_settings_get(),
-                                       controls);
-    g_signal_connect_swapped(window, "delete_event",
-                             G_CALLBACK(gtk_widget_destroy), NULL);
+    list = gwy_app_recent_file_list_construct(controls);
     g_signal_connect_swapped(list, "destroy", G_CALLBACK(g_free), controls);
-    gtk_box_pack_start(GTK_BOX(vbox), list, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(scroll), list);
 
     buttonbox = gtk_hbox_new(TRUE, 0);
     gtk_container_set_border_width(GTK_CONTAINER(buttonbox), 2);
@@ -118,8 +126,7 @@ gwy_app_recent_file_list(void)
 }
 
 static GtkWidget*
-gwy_app_recent_file_list_construct(GwyContainer *data,
-                                   Controls *controls)
+gwy_app_recent_file_list_construct(Controls *controls)
 {
     static const struct {
         const gchar *title;
@@ -134,19 +141,21 @@ gwy_app_recent_file_list_construct(GwyContainer *data,
     GtkTreeSelection *selection;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    gsize i;
+    GtkTreeIter iter;
+    guint i;
 
-    /* use an `editable' boolean column which is alwas true */
+    g_return_val_if_fail(recent_files, NULL);
     store = gtk_list_store_new(1, G_TYPE_UINT);
 
-    gwy_container_foreach(data, "/app/recent",
-                          (GHFunc)(gwy_app_recent_file_list_add_line), store);
+    for (i = 0; i < recent_files->len; i++) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, FILELIST_INDEX, i, -1);
+    }
 
     list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     controls->list = list;
     /*gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(list), TRUE);*/
     g_object_unref(store);
-    g_object_set_data(G_OBJECT(store), "container", data);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
@@ -273,35 +282,35 @@ gwy_app_recent_file_list_open(GtkWidget *list)
     GtkTreeSelection *selection;
     GtkTreeModel *store;
     GtkTreeIter iter;
-    const guchar *filename_utf8;
     gchar *filename_sys, *dirname;
-    GQuark key;
+    guint i;
     GwyContainer *data;
+    RecentFile *rf;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(list));
     if (gtk_tree_selection_get_selected(selection, &store, &iter)) {
-        gtk_tree_model_get(store, &iter, FILELIST_KEY, &key, -1);
-        if (gwy_container_gis_string(gwy_app_settings_get(), key,
-                                     &filename_utf8)) {
-            filename_sys = g_filename_from_utf8(filename_utf8,
-                                                -1, NULL, NULL, NULL);
-            if (filename_sys) {
-                data = gwy_file_load(filename_sys);
-                if (data) {
-                    /* XXX: this is copied from file_real_open().
-                     * Need an API for doing such things. */
-                    gwy_container_set_string_by_name(data, "/filename",
-                                                     filename_utf8);
-                    gwy_app_data_window_create(data);
-                    /* XXX: can't! No API.
-                     * recent_files_update(filename_utf8); */
+        gtk_tree_model_get(store, &iter, FILELIST_INDEX, &i, -1);
+        g_return_if_fail(i < recent_files->len);
+        rf = &g_array_index(recent_files, RecentFile, i);
+        filename_sys = g_filename_from_utf8(rf->filename_utf8,
+                                            -1, NULL, NULL, NULL);
+        if (filename_sys) {
+            data = gwy_file_load(filename_sys);
+            if (data) {
+                /* XXX: this is copied from file_real_open().
+                 * Need an API for doing such things. */
+                gwy_container_set_string_by_name(data, "/filename",
+                                                 g_strdup(rf->filename_utf8));
+                gwy_app_data_window_create(data);
+                /* FIXME: this is wrong, we just have to exchange the two
+                 * files */
+                gwy_app_recent_file_list_update(rf->filename_utf8);
 
-                    /* change directory to that of the loaded file */
-                    dirname = g_path_get_dirname(filename_sys);
-                    if (strcmp(dirname, "."))
-                        chdir(dirname);
-                    g_free(dirname);
-                }
+                /* change directory to that of the loaded file */
+                dirname = g_path_get_dirname(filename_sys);
+                if (strcmp(dirname, "."))
+                    chdir(dirname);
+                g_free(dirname);
             }
             g_free(filename_sys);
         }
@@ -316,21 +325,17 @@ gwy_app_recent_file_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                        GtkTreeIter *piter,
                                        gpointer userdata)
 {
-    GwyContainer *data;
-    GQuark key;
-    gulong id;
-    const gchar *filename;
+    guint id, i;
+    RecentFile *rf;
 
     id = GPOINTER_TO_UINT(userdata);
     g_assert(id == FILELIST_FILENAME);
-    gtk_tree_model_get(model, piter, FILELIST_KEY, &key, -1);
-    g_return_if_fail(key);
-    data = gwy_app_settings_get();
+    gtk_tree_model_get(model, piter, FILELIST_INDEX, &i, -1);
+    g_return_if_fail(i < recent_files->len);
+    rf = &g_array_index(recent_files, RecentFile, i);
     switch (id) {
         case FILELIST_FILENAME:
-        filename = gwy_container_get_string(data, key);
-        g_return_if_fail(filename);
-        g_object_set(cell, "text", filename, NULL);
+        g_object_set(cell, "text", rf->filename_utf8, NULL);
         break;
 
         default:
@@ -339,19 +344,142 @@ gwy_app_recent_file_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 }
 
-static void
-gwy_app_recent_file_list_add_line(gpointer hkey,
-                                  GValue *value,
-                                  GtkListStore *store)
-{
-    GObject *gmodel;
-    GtkTreeIter iter;
-    GQuark quark;
 
-    g_return_if_fail(G_VALUE_HOLDS_STRING(value));
-    quark = GPOINTER_TO_UINT(hkey);
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter, FILELIST_KEY, quark, -1);
+
+
+
+
+gboolean
+gwy_app_recent_file_list_load(const gchar *filename)
+{
+    GError *err = NULL;
+    gchar *buffer = NULL;
+    gsize size = 0;
+    gchar **files;
+    guint n;
+
+    /* TODO: do something with existing recent_files, recent_file_list */
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        g_clear_error(&err);
+        recent_files = g_array_new(FALSE, FALSE, sizeof(RecentFile));
+        return FALSE;
+    }
+
+#ifdef G_OS_WIN32
+    gwy_strkill(buffer, "\r");
+#endif
+    files = g_strsplit(buffer, "\n", 0);
+    g_free(buffer);
+    if (!files) {
+        recent_files = g_array_new(FALSE, FALSE, sizeof(RecentFile));
+        return TRUE;
+    }
+
+    for (n = 0; files[n]; n++)
+        ;
+    recent_files = g_array_sized_new(FALSE, FALSE, sizeof(RecentFile), n);
+    for (n = 0; files[n]; n++) {
+        if (*files[n]) {
+            RecentFile rf;
+
+            memset(&rf, 0, sizeof(RecentFile));
+            rf.filename_utf8 = files[n];
+            g_array_append_val(recent_files, rf);
+
+            if (n < (guint)gwy_app_n_recent_files) {
+                recent_file_list = g_list_append(recent_file_list,
+                                                 rf.filename_utf8);
+            }
+        }
+        else
+            g_free(files[n]);
+    }
+    g_free(files);
+
+    return TRUE;
+}
+
+gboolean
+gwy_app_recent_file_list_save(const gchar *filename)
+{
+    FILE *fh;
+    guint i;
+
+    fh = fopen(filename, "w");
+    if (!fh)
+        return FALSE;
+
+    for (i = 0; i < recent_files->len && i < remember_recent_files; i++) {
+        RecentFile *rf = &g_array_index(recent_files, RecentFile, i);
+        fputs(rf->filename_utf8, fh);
+        fputc('\n', fh);
+    }
+    fclose(fh);
+
+    return TRUE;
+}
+
+void
+gwy_app_recent_file_list_update(const gchar *filename_utf8)
+{
+    GList *l;
+    guint i;
+
+    gwy_debug("%s", filename_utf8);
+    g_return_if_fail(recent_files);
+
+    if (filename_utf8) {
+        RecentFile rfnew;
+
+        memset(&rfnew, 0, sizeof(RecentFile));
+        rfnew.filename_utf8 = g_strdup(filename_utf8);
+
+        /* TODO: optimize move near begining */
+
+        for (i = 0; i < recent_files->len; i++) {
+            RecentFile *rf = &g_array_index(recent_files, RecentFile, i);
+            if (!strcmp(rf->filename_utf8, filename_utf8)) {
+                g_free(rf->filename_utf8);
+                g_free(rf->thumbnail_filename);
+                g_array_remove_index(recent_files, i);
+                break;
+            }
+        }
+
+        g_array_insert_val(recent_files, 0, rfnew);
+    }
+    for (i = 0; i < recent_files->len; i++) {
+        RecentFile *rf = &g_array_index(recent_files, RecentFile, i);
+        gwy_debug("%u: <%s>", i, rf->filename_utf8);
+    }
+
+    l = recent_file_list;
+    for (i = 0;
+         i < (guint)gwy_app_n_recent_files && i < recent_files->len;
+         i++) {
+        RecentFile *rf = &g_array_index(recent_files, RecentFile, i);
+
+        if (l) {
+            l->data = rf->filename_utf8;
+            l = g_list_next(l);
+        }
+        else {
+            recent_file_list = g_list_append(recent_file_list,
+                                             rf->filename_utf8);
+        }
+    }
+    /* This should not happen here as we added a file */
+    if (l) {
+        if (!l->prev)
+            recent_file_list = NULL;
+        else {
+            l->prev->next = NULL;
+            l->prev = NULL;
+        }
+        g_list_free(l);
+    }
+    gwy_app_menu_recent_files_update(recent_file_list);
+    /* FIXME: update the list view */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

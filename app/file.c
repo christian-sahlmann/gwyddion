@@ -39,9 +39,7 @@
 #include <libgwydgets/gwylayer-mask.h>
 #include <gtk/gtkfilesel.h>
 #include <gtk/gtkmessagedialog.h>
-#include "app.h"
-#include "menu.h"
-#include "settings.h"
+#include "gwyapp.h"
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
 static void              file_save_as_ok_cb    (GtkFileSelection *selector);
@@ -53,16 +51,8 @@ static GtkFileSelection* create_open_dialog    (const gchar *title,
                                                 GCallback ok_callback);
 static gboolean          confirm_overwrite     (GtkWindow *parent,
                                                 const gchar *filename);
-static void              recent_files_update   (const gchar *filename_utf8);
-static GList*            recent_files_from_settings  (void);
-static void              recent_files_to_settings    (void);
 static void              remove_data_window_callback (GtkWidget *selector,
                                                       GwyDataWindow *data_window);
-
-int gwy_app_n_recent_files = 10;
-
-static int gwy_app_n_remember_recent_files = 200;
-static GList *recent_files = NULL;
 
 void
 gwy_app_file_open_cb(void)
@@ -269,7 +259,7 @@ file_real_open(const gchar *filename_sys,
     if (data) {
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_app_data_window_create(data);
-        recent_files_update(filename_utf8);
+        gwy_app_recent_file_list_update(filename_utf8);
 
         /* change directory to that of the loaded file */
         dirname = g_path_get_dirname(filename_sys);   /* FIXME: utf-8? */
@@ -329,7 +319,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         g_object_set_data(G_OBJECT(data), "gwy-app-modified", NULL);
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
-        recent_files_update(filename_utf8);
+        gwy_app_recent_file_list_update(filename_utf8);
     }
 
     gtk_widget_destroy(GTK_WIDGET(selector));
@@ -381,90 +371,6 @@ remove_data_window_callback(GtkWidget *selector,
 
 }
 
-static void
-recent_files_update(const gchar *filename_utf8)
-{
-    GList *item;
-
-    gwy_debug("%s", filename_utf8);
-    if (!recent_files)
-        recent_files = recent_files_from_settings();
-
-    item = g_list_find_custom(recent_files, filename_utf8,
-                              (GCompareFunc)strcmp);
-    if (item) {
-        if (item == recent_files)
-            return;
-        recent_files = g_list_remove_link(recent_files, item);
-        recent_files = g_list_concat(item, recent_files);
-    }
-    else
-        recent_files = g_list_prepend(recent_files, g_strdup(filename_utf8));
-
-    recent_files_to_settings();
-    gwy_app_menu_recent_files_update(recent_files);
-}
-
-static GList*
-recent_files_from_settings(void)
-{
-    const gchar *prefix = "/app/recent";
-    GwyContainer *settings;
-    gchar buffer[24];
-    GList *list = NULL;
-    const gchar *s;
-    gint i;
-    gsize len;
-
-    gwy_debug("");
-    settings = gwy_app_settings_get();
-    g_return_val_if_fail(GWY_IS_CONTAINER(settings), NULL);
-    len = strlen(prefix);
-    strcpy(buffer, prefix);
-    g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", 0);
-    for (i = 1; gwy_container_contains_by_name(settings, buffer); i++) {
-        s = gwy_container_get_string_by_name(settings, buffer);
-        gwy_debug("<%s> is %d", s, i);
-        list = g_list_prepend(list, g_strdup(s));
-        g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
-    }
-    list = g_list_reverse(list);
-
-    return list;
-}
-
-static void
-recent_files_to_settings(void)
-{
-    const gchar *prefix = "/app/recent";
-    GwyContainer *settings;
-    gchar buffer[24];
-    gchar *s;
-    GList *l;
-    gint i;
-    gsize len;
-
-    gwy_debug("");
-    settings = gwy_app_settings_get();
-    g_return_if_fail(GWY_IS_CONTAINER(settings));
-    gwy_container_remove_by_prefix(settings, prefix);
-    len = strlen(prefix);
-    strcpy(buffer, prefix);
-    for (l = recent_files, i = 0;
-         l && i < gwy_app_n_remember_recent_files;
-         l = g_list_next(l), i++) {
-        gwy_debug("storing %s", (gchar*)l->data);
-        g_snprintf(buffer + len, sizeof(buffer) - len, "/%d", i);
-        /* It should be safe to assume when we find a file name already in the
-         * right position, then the remaining all right too */
-        if (gwy_container_gis_string_by_name(settings, buffer, &s)
-            && !strcmp(s, (gchar*)l->data))
-            break;
-        gwy_container_set_string_by_name(settings, buffer,
-                                         g_strdup((gchar*)l->data));
-    }
-}
-
 /**
  * gwy_app_file_open_initial:
  * @args: A file list.
@@ -493,11 +399,6 @@ gwy_app_file_open_initial(gchar **args, gint n)
         g_free(filename);
     }
     g_free(cwd);
-
-    if (!recent_files)
-        recent_files = recent_files_from_settings();
-
-    gwy_app_menu_recent_files_update(recent_files);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

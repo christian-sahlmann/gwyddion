@@ -47,8 +47,7 @@ int unlink(const char *name);
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwydgets/gwystock.h>
-#include "app.h"
-#include "settings.h"
+#include "gwyapp.h"
 #include "gwyappinternal.h"
 #include "gwyddion.h"
 
@@ -70,7 +69,7 @@ main(int argc, char *argv[])
 {
     GtkWidget *toolbox;
     gchar **module_dirs;
-    gchar *config_file, *settings_file;
+    gchar *config_file, *settings_file, *recent_file_file;
     gboolean has_config, has_settings, settings_ok = FALSE;
 
 #ifdef G_OS_WIN32
@@ -102,7 +101,12 @@ main(int argc, char *argv[])
     gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
     if (!settings_ok && has_config)
         gwy_app_settings_load_bin(config_file);
-    gwy_app_settings_get();
+
+    /* TODO: remove sometime, but keep the gwy_app_settings_get(); */
+    gwy_app_splash_set_message(_("Loading document history"));
+    gwy_container_remove_by_prefix(gwy_app_settings_get(), "/app/recent/");
+    recent_file_file = gwy_app_settings_get_recent_file_list_filename();
+    gwy_app_recent_file_list_load(recent_file_file);
 
     gwy_app_splash_set_message_prefix(_("Registering "));
     gwy_app_splash_set_message(_("stock items"));
@@ -116,6 +120,7 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message("Initializing GUI");
     toolbox = gwy_app_toolbox_create();
+    gwy_app_recent_file_list_update(NULL);
     gwy_app_splash_close();
 
     gwy_app_file_open_initial(argv + 1, argc - 1);
@@ -131,7 +136,9 @@ main(int argc, char *argv[])
             unlink(config_file);
         }
     }
+    gwy_app_recent_file_list_save(recent_file_file);
     gwy_app_settings_free();
+    g_free(recent_file_file);
     g_free(config_file);
     g_free(settings_file);
     gwy_debug_objects_dump_to_file(stderr, 0);

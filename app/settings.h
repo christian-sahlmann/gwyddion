@@ -25,20 +25,21 @@
 
 G_BEGIN_DECLS
 
-GwyContainer* gwy_app_settings_get                   (void);
-void          gwy_app_settings_free                  (void);
-gboolean      gwy_app_settings_save                  (const gchar *filename);
-gboolean      gwy_app_settings_save_text             (const gchar *filename);
-gboolean      gwy_app_settings_save_bin              (const gchar *filename);
-gboolean      gwy_app_settings_load                  (const gchar *filename);
-gboolean      gwy_app_settings_load_text             (const gchar *filename);
-gboolean      gwy_app_settings_load_bin              (const gchar *filename);
+GwyContainer* gwy_app_settings_get                      (void);
+void          gwy_app_settings_free                     (void);
+gboolean      gwy_app_settings_save                     (const gchar *filename);
+gboolean      gwy_app_settings_save_text                (const gchar *filename);
+gboolean      gwy_app_settings_save_bin                 (const gchar *filename);
+gboolean      gwy_app_settings_load                     (const gchar *filename);
+gboolean      gwy_app_settings_load_text                (const gchar *filename);
+gboolean      gwy_app_settings_load_bin                 (const gchar *filename);
 
-gboolean      gwy_app_settings_create_config_dir     (void);
-gchar**       gwy_app_settings_get_module_dirs       (void);
-gchar*        gwy_app_settings_get_config_filename   (void);
-gchar*        gwy_app_settings_get_settings_filename (void);
-gchar*        gwy_app_settings_get_log_filename      (void);
+gboolean      gwy_app_settings_create_config_dir        (void);
+gchar**       gwy_app_settings_get_module_dirs          (void);
+gchar*        gwy_app_settings_get_config_filename      (void);
+gchar*        gwy_app_settings_get_settings_filename    (void);
+gchar*        gwy_app_settings_get_log_filename         (void);
+gchar*        gwy_app_settings_get_recent_file_list_filename (void);
 
 G_END_DECLS
 

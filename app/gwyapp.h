@@ -22,6 +22,7 @@
 #define __GWY_APP_GWYAPP_H__
 
 #include <app/app.h>
+#include <app/filelist.h>
 #include <app/graphlist.h>
 #include <app/menu.h>
 #include <app/menu-windowlist.h>

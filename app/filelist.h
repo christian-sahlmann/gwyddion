@@ -26,7 +26,9 @@
 G_BEGIN_DECLS
 
 GtkWidget* gwy_app_recent_file_list_new     (void);   /* get settings */
-void       gwy_app_recent_file_list_update  (GtkWidget *filelist);
+void       gwy_app_recent_file_list_update  (const gchar *filename_utf8);
+gboolean   gwy_app_recent_file_list_load    (const gchar *filename);
+gboolean   gwy_app_recent_file_list_save    (const gchar *filename);
 
 G_END_DECLS
 

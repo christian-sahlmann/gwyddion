@@ -486,4 +486,19 @@ gwy_app_settings_get_log_filename(void)
     return g_build_filename(gwy_get_user_dir(), "gwyddion.log", NULL);
 }
 
+/**
+ * gwy_app_settings_get_recent_file_list_filename:
+ *
+ * Returns a suitable recent file list file name.
+ *
+ * Returns: The file name as a newly allocated string.
+ *
+ * Since: 1.5.
+ **/
+gchar*
+gwy_app_settings_get_recent_file_list_filename(void)
+{
+    return g_build_filename(gwy_get_user_dir(), "recent-files", NULL);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

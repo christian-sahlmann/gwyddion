@@ -23,7 +23,7 @@
  * - the menu sensitivity stuff should be in libgwyapp
  * - last-run function stuff should be in ???
  */
-
+#define DEBUG 1
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -34,6 +34,7 @@
 #include <libgwymodule/gwymodulebrowser.h>
 #include "app.h"
 #include "menu.h"
+#include "filelist.h"
 #include "gwyappinternal.h"
 
 #define set_sensitive(item, flags) \
@@ -58,6 +59,7 @@ static GtkWidget* find_repeat_last_item             (GtkWidget *menu,
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
 
+int gwy_app_n_recent_files = 10;
 static GtkWidget *recent_files_menu = NULL;
 
 /* FIXME: how can MSVC can get to needing this when we are not DEBUGging? */
@@ -411,6 +413,22 @@ gwy_app_run_graph_func_cb(gchar *name)
     */
 }
 
+static void
+gwy_app_recent_file_list_cb(void)
+{
+    static GtkWidget *recent_file_list;
+
+    if (recent_file_list) {
+        gtk_window_present(GTK_WINDOW(recent_file_list));
+        return;
+    }
+
+    recent_file_list = gwy_app_recent_file_list_new();
+    g_object_add_weak_pointer(G_OBJECT(recent_file_list),
+                              (gpointer*)&recent_file_list);
+    gtk_widget_show(recent_file_list);
+}
+
 void
 gwy_app_menu_recent_files_update(GList *recent_files)
 {
@@ -420,7 +438,9 @@ gwy_app_menu_recent_files_update(GList *recent_files)
     gchar *s, *label, *filename;
     gint i;
 
-    g_return_if_fail(GTK_IS_MENU(recent_files_menu));
+    if (!recent_files_menu)
+        return;
+
     child = GTK_MENU_SHELL(recent_files_menu)->children;
     if (GTK_IS_TEAROFF_MENU_ITEM(child->data))
         child = g_list_next(child);
@@ -438,6 +458,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             gtk_label_set_text_with_mnemonic(GTK_LABEL(item), label);
             g_object_set_qdata_full(G_OBJECT(child->data), quark,
                                     g_strdup(filename), g_free);
+            gtk_widget_show(GTK_WIDGET(child->data));
             child = g_list_next(child);
         }
         else {
@@ -453,6 +474,48 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         g_free(label);
         g_free(s);
     }
+
+    /* keep konstant number of entries, otherwise it's just too hard to
+     * manage the separated stuff at the end */
+    while (i < gwy_app_n_recent_files) {
+        if (child) {
+            item = GTK_BIN(child->data)->child;
+            gwy_debug("hiding item %p [#%d]", item, i);
+            gtk_widget_hide(child->data);
+            child = g_list_next(child);
+        }
+        else {
+            item = gtk_menu_item_new_with_mnemonic("Thou Canst See This");
+            gwy_debug("adding hidden item %p [#%d]", item, i);
+            gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
+            g_signal_connect(item, "activate",
+                             G_CALLBACK(gwy_app_file_open_recent_cb), NULL);
+        }
+        i++;
+    }
+
+    /* FIXME: if the menu is in tear-off state and entries were added, it
+     * doesn't grow but an ugly scrollbar appears. How to make it grow? */
+
+    /* if there are still some entries, the separated entires already exist,
+     * so we are done */
+    if (child) {
+        g_return_if_fail(GTK_IS_SEPARATOR_MENU_ITEM(child->data));
+        return;
+    }
+    /* separator */
+    item = gtk_separator_menu_item_new();
+    gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
+    gtk_widget_show(item);
+    /* doc history */
+    item = gtk_image_menu_item_new_with_mnemonic(_("_Document history"));
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
+                                  gtk_image_new_from_stock(GTK_STOCK_OPEN,
+                                                           GTK_ICON_SIZE_MENU));
+    gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_recent_file_list_cb), NULL);
+    gtk_widget_show(item);
 }
 
 static gchar*
