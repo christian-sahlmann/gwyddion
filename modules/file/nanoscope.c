@@ -87,6 +87,7 @@ static gint            nanoscope_detect    (const gchar *filename,
 static GwyContainer*   nanoscope_load      (const gchar *filename);
 static GwyDataField*   hash_to_data_field  (GHashTable *hash,
                                             GHashTable *scannerlist,
+                                            GHashTable *scanlist,
                                             NanoscopeFileType file_type,
                                             gsize bufsize,
                                             gchar *buffer,
@@ -109,6 +110,7 @@ static void            get_scan_list_res   (GHashTable *hash,
                                             gint *yres);
 static GObject*        get_physical_scale  (GHashTable *hash,
                                             GHashTable *scannerlist,
+                                            GHashTable *scanlist,
                                             gdouble *scale);
 static void            fill_metadata       (GwyContainer *data,
                                             GHashTable *hash,
@@ -219,7 +221,7 @@ nanoscope_load(const gchar *filename)
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
-    GHashTable *hash, *scannerlist = NULL;
+    GHashTable *hash, *scannerlist = NULL, *scanlist = NULL;
     GList *l, *list = NULL;
     gint xres = 0, yres = 0;
     gboolean ok;
@@ -259,13 +261,15 @@ nanoscope_load(const gchar *filename)
             scannerlist = hash;
             continue;
         }
-        if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao scan list") == 0)
+        if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao scan list") == 0) {
             get_scan_list_res(hash, &xres, &yres);
+            scanlist = hash;
+        }
         if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
             continue;
 
-        ndata->data_field = hash_to_data_field(hash, scannerlist, file_type,
-                                               size, buffer,
+        ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
+                                               file_type, size, buffer,
                                                xres, yres,
                                                &p);
         ok = ok && ndata->data_field;
@@ -377,6 +381,7 @@ fill_metadata(GwyContainer *data,
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    GHashTable *scannerlist,
+                   GHashTable *scanlist,
                    NanoscopeFileType file_type,
                    gsize bufsize,
                    gchar *buffer,
@@ -469,7 +474,7 @@ hash_to_data_field(GHashTable *hash,
     }
 
     q = 1.0;
-    unit = get_physical_scale(hash, scannerlist, &q);
+    unit = get_physical_scale(hash, scannerlist, scanlist, &q);
     if (!unit)
         return NULL;
 
@@ -510,11 +515,16 @@ hash_to_data_field(GHashTable *hash,
 static GObject*
 get_physical_scale(GHashTable *hash,
                    GHashTable *scannerlist,
+                   GHashTable *scanlist,
                    gdouble *scale)
 {
     GObject *siunit;
     NanoscopeValue *val, *sval;
-    gchar *key, *s;
+    gchar *key, *s, *p;
+
+    /* XXX: This is a damned heuristics.  For some value types we try to guess
+     * a different quantity scale to look up.  And when we don't find them, we
+     * multiply the scale by 10 ... oh, well. */
 
     if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
         g_warning("`@2:Z scale' not found");
@@ -522,7 +532,8 @@ get_physical_scale(GHashTable *hash,
     }
     key = g_strdup_printf("@%s", val->soft_scale);
 
-    if (!(sval = g_hash_table_lookup(scannerlist, key))) {
+    if (!(sval = g_hash_table_lookup(scannerlist, key))
+        && (!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
         g_warning("`%s' not found", key);
         g_free(key);
         /* XXX */
@@ -532,20 +543,44 @@ get_physical_scale(GHashTable *hash,
 
     *scale = val->hard_value*sval->hard_value;
 
-    if (!sval->hard_value_units
-        || !(s = strchr(sval->hard_value_units, '/'))
-        || s[1] != 'V') {
-        g_warning("Cannot parse `%s' units", key);
-        g_free(key);
-        return NULL;
+    if (!sval->hard_value_units || !*sval->hard_value_units) {
+        if (strcmp(val->soft_scale, "Sens. Phase") == 0)
+            s = g_strdup("deg");
+        else
+            s = g_strdup("V");
+    }
+    else {
+        if (!(s = strchr(sval->hard_value_units, '/'))
+            || s[1] != 'V') {
+            g_warning("Cannot parse `%s' units", key);
+            g_free(key);
+            return NULL;
+        }
+        gwy_debug("Scale1 = %g V/LSB", val->hard_value);
+        gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
+        s = g_strndup(sval->hard_value_units, s - sval->hard_value_units);
+        gwy_debug("Total scale = %g %s/LSB", *scale, s);
     }
     g_free(key);
 
-    gwy_debug("Scale1 = %g V/LSB", val->hard_value);
-    gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
-    s = g_strndup(sval->hard_value_units, s - sval->hard_value_units);
-    gwy_debug("Total scale = %g %s/LSB", *scale, s);
-    siunit = gwy_si_unit_new(s);
+    p = s;
+    if (g_str_has_prefix(s, "m")) {
+        *scale *= 1e-3;
+        p = s + strlen("m");
+    }
+    else if (g_str_has_prefix(s, "μ")) {
+        *scale *= 1e-6;
+        p = s + strlen("μ");
+    }
+    else if (g_str_has_prefix(s, "n")) {
+        *scale *= 1e-9;
+        p = s + strlen("n");
+    }
+    else if (g_str_has_prefix(s, "p")) {
+        *scale *= 1e-12;
+        p = s + strlen("p");
+    }
+    siunit = gwy_si_unit_new(p);
     g_free(s);
 
     return siunit;
