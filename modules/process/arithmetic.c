@@ -127,7 +127,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo arithmetic_func_info = {
         "arithmetic",
-        N_("/M_ultidata/_Arithmetic"),
+        N_("/M_ultidata/_Arithmetic..."),
         (GwyProcessFunc)&arithmetic,
         ARITH_RUN_MODES,
         0,

@@ -109,7 +109,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo scars_mark_func_info = {
         "scars_mark",
-        N_("/_Correct Data/M_ark Scars"),
+        N_("/_Correct Data/M_ark Scars..."),
         (GwyProcessFunc)&scars_mark,
         SCARS_MARK_RUN_MODES,
         0,
