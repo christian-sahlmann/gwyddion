@@ -224,6 +224,7 @@ dialog_create(GwyUnitoolState *state)
                                      g_strdup(controls->pal));
     g_object_unref(dfield);
     controls->view = gwy_data_view_new(data);
+    g_object_unref(data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), (gdouble)SCALE);
 
     layer = GWY_PIXMAP_LAYER(gwy_layer_basic_new());
