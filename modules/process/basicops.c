@@ -115,6 +115,10 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
+        gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
@@ -128,6 +132,10 @@ flip_vertically(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
@@ -141,6 +149,8 @@ invert_value(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
+        gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
@@ -219,6 +229,10 @@ rotate_180(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
+        gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
+    if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
+        gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
