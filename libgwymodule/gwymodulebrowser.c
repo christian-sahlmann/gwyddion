@@ -29,7 +29,15 @@ static void      gwy_module_browser_cell_renderer (GtkTreeViewColumn *column,
                                                    GtkTreeModel *model,
                                                    GtkTreeIter *piter,
                                                    gpointer data);
-static GtkWidget* gwy_module_browser_construct    (void);
+static GtkWidget* gwy_module_browser_construct    (GtkWidget *parent);
+static GtkWidget* gwy_module_browser_info_table   (GtkWidget *parent);
+static void       attach_info_line                (GtkWidget *table,
+                                                   gint row,
+                                                   const gchar *name,
+                                                   GtkWidget *parent,
+                                                   const gchar *key);
+static void       update_module_info_cb           (GtkWidget *tree,
+                                                   GtkWidget *parent);
 static void       gwy_hash_table_to_slist_cb      (gpointer key,
                                                    gpointer value,
                                                    gpointer user_data);
@@ -40,14 +48,12 @@ enum {
     MODULE_MOD_INFO,
     MODULE_NAME,
     MODULE_LOADED,
-    MODULE_FILENAME,
-    MODULE_AUTHOR,
     MODULE_VERSION,
-    MODULE_COPYRIGHT,
-    MODULE_DATE,
+    MODULE_AUTHOR,
     MODULE_LAST
 };
 
+static GtkWidget* window = NULL;
 
 /**
  * gwy_module_browser:
@@ -57,25 +63,37 @@ enum {
 void
 gwy_module_browser(void)
 {
-    GtkWidget *window, *browser, *scroll;
+    GtkWidget *browser, *scroll, *vbox, *info;
+
+    if (window) {
+        gtk_window_present(GTK_WINDOW(window));
+        return;
+    }
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 360);
     gtk_window_set_title(GTK_WINDOW(window), "Gwyddion Module Browser");
     gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
                            g_get_application_name());
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_container_add(GTK_CONTAINER(window), scroll);
-    browser = gwy_module_browser_construct();
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+    browser = gwy_module_browser_construct(window);
     gtk_container_add(GTK_CONTAINER(scroll), browser);
+    info = gwy_module_browser_info_table(window);
+    gtk_box_pack_start(GTK_BOX(vbox), info, FALSE, FALSE, 0);
+
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
+    g_signal_connect_swapped(window, "destroy",
+                             G_CALLBACK(g_nullify_pointer), &window);
     gtk_widget_show_all(window);
 }
 
 static GtkWidget*
-gwy_module_browser_construct(void)
+gwy_module_browser_construct(GtkWidget *parent)
 {
     static const struct {
         const gchar *title;
@@ -84,11 +102,8 @@ gwy_module_browser_construct(void)
     columns[] = {
         { "Module", MODULE_NAME },
         { "Loaded?", MODULE_LOADED },
-        { "File", MODULE_FILENAME },
-        { "Author", MODULE_AUTHOR },
         { "Version", MODULE_VERSION },
-        { "Copyright", MODULE_COPYRIGHT },
-        { "Date", MODULE_DATE },
+        { "Author", MODULE_AUTHOR },
     };
 
     GtkWidget *tree;
@@ -104,11 +119,8 @@ gwy_module_browser_construct(void)
                                G_TYPE_POINTER, /* module info itself */
                                G_TYPE_STRING,  /* name */
                                G_TYPE_STRING,  /* loaded? */
-                               G_TYPE_STRING,  /* file */
-                               G_TYPE_STRING,  /* author */
                                G_TYPE_STRING,  /* version */
-                               G_TYPE_STRING,  /* copyright */
-                               G_TYPE_STRING   /* date */
+                               G_TYPE_STRING   /* author */
                               );
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
@@ -135,7 +147,10 @@ gwy_module_browser_construct(void)
     }
 
     select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-    gtk_tree_selection_set_mode(select, GTK_SELECTION_NONE);
+    gtk_tree_selection_set_mode(select, GTK_SELECTION_SINGLE);
+
+    g_signal_connect(G_OBJECT(tree), "cursor-changed",
+                     G_CALLBACK(update_module_info_cb), parent);
 
     return tree;
 }
@@ -149,7 +164,6 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
 {
     _GwyModuleInfoInternal *iinfo;
     GwyModuleInfo *mod_info;
-    gchar *s;
     gulong id;
 
     id = GPOINTER_TO_UINT(data);
@@ -169,28 +183,103 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
         g_object_set(cell, "text", mod_info->version, NULL);
         break;
 
-        case MODULE_COPYRIGHT:
-        g_object_set(cell, "text", mod_info->copyright, NULL);
-        break;
-
-        case MODULE_DATE:
-        g_object_set(cell, "text", mod_info->date, NULL);
-        break;
-
         case MODULE_LOADED:
         g_object_set(cell, "text", iinfo->loaded ? "Yes" : "No", NULL);
-        break;
-
-        case MODULE_FILENAME:
-        s = g_path_get_basename(iinfo->file);
-        g_object_set(cell, "text", s, NULL);
-        g_free(s);
         break;
 
         default:
         g_assert_not_reached();
         break;
     }
+}
+
+static GtkWidget*
+gwy_module_browser_info_table(GtkWidget *parent)
+{
+    GtkWidget *table, *align;
+    gint i;
+
+    table = gtk_table_new(7, 1, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 8);
+    i = 0;
+    attach_info_line(table, i++, _("Name-Version:"), parent, "name-version");
+    attach_info_line(table, i++, _("File:"), parent, "file");
+    attach_info_line(table, i++, _("Registered functions:"), parent, "funcs");
+    attach_info_line(table, i++, _("Authors:"), parent, "author");
+    attach_info_line(table, i++, _("Copyright:"), parent, "copy");
+    attach_info_line(table, i++, _("Date:"), parent, "date");
+    attach_info_line(table, i++, _("Description:"), parent, "desc");
+
+    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+    gtk_container_add(GTK_CONTAINER(align), table);
+
+    return align;
+}
+
+static void
+update_module_info_cb(GtkWidget *tree,
+                      GtkWidget *parent)
+{
+    GtkLabel *label;
+    GtkTreeModel *store;
+    GtkTreeSelection *select;
+    _GwyModuleInfoInternal *iinfo;
+    GtkTreeIter iter;
+    gchar *s;
+
+    select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+    g_return_if_fail(select);
+    if (!gtk_tree_selection_get_selected(select, &store, &iter))
+        return;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_MOD_INFO, &iinfo,
+                       -1);
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "name-version"));
+    s = g_strconcat(iinfo->mod_info->name, "-", iinfo->mod_info->version, NULL);
+    gtk_label_set_text(label, s);
+    g_free(s);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "file"));
+    gtk_label_set_text(label, iinfo->file);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "author"));
+    gtk_label_set_text(label, iinfo->mod_info->author);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "copy"));
+    gtk_label_set_text(label, iinfo->mod_info->copyright);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "date"));
+    gtk_label_set_text(label, iinfo->mod_info->date);
+
+    label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "desc"));
+    gtk_label_set_text(label, iinfo->mod_info->blurb);
+}
+
+static void
+attach_info_line(GtkWidget *table,
+                 gint row,
+                 const gchar *name,
+                 GtkWidget *parent,
+                 const gchar *key)
+{
+    GtkWidget *label;
+
+    label = gtk_label_new(name);
+    if (!strcmp(key, "desc"))
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+    else
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);
+
+    label = gtk_label_new("FIXME");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 1, 2, row, row+1);
+    if (!strcmp(key, "desc"))
+        gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+
+    g_object_set_data(G_OBJECT(parent), key, label);
 }
 
 static void

@@ -211,7 +211,7 @@ gwy_load_modules_in_dir(GDir *gdir,
         if (ok) {
             iinfo = g_new(_GwyModuleInfoInternal, 1);
             iinfo->mod_info = mod_info;
-            iinfo->file = g_strdup(filename);
+            iinfo->file = g_strdup(modulename);
             iinfo->loaded = TRUE;
             g_hash_table_insert(modules, (gpointer)mod_info->name, iinfo);
             ok = mod_info->register_func(mod_info->name);
