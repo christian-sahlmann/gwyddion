@@ -743,6 +743,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
         gwy_data_view_layer_plugged(layer);
     }
     *which = layer;
+    data_view->force_update = TRUE;
     gwy_data_view_update(data_view);
 }
 
