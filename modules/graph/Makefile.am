@@ -1,10 +1,10 @@
 # @(#) $Id$
 
-processdir = $(gwymoduledir)/graph
+graphdir = $(gwymoduledir)/graph
 
 module_ldflags = -shared -Wl,-soname
 
-process_PROGRAMS = \
+graph_PROGRAMS = \
 	read.so 
 
 EXTRA_DIST = \
