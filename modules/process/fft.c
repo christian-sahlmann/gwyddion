@@ -153,25 +153,29 @@ fft(GwyContainer *data, GwyRunType run)
         xsize = gwy_data_field_get_xres(dfield);
         ysize = gwy_data_field_get_yres(dfield);
         newsize = gwy_data_field_get_fft_res(xsize);
-        gwy_data_field_resample(dfield, newsize, newsize, args.interp);
+        gwy_data_field_resample(dfield, newsize, newsize, GWY_INTERPOLATION_BILINEAR);
         raout = gwy_data_field_new(gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
-                                   1.0/gwy_data_field_get_xreal(dfield),
-                                   1.0/gwy_data_field_get_yreal(dfield),
+                                   gwy_data_field_get_xreal(dfield),
+                                   gwy_data_field_get_yreal(dfield),
                                    1);
         ipout = gwy_data_field_new(gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
-                                   1.0/gwy_data_field_get_xreal(dfield),
-                                   1.0/gwy_data_field_get_yreal(dfield),
+                                   gwy_data_field_get_xreal(dfield),
+                                   gwy_data_field_get_yreal(dfield),
                                    1);
 
         imin = gwy_data_field_new(gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
-                                   1.0/gwy_data_field_get_xreal(dfield),
-                                   1.0/gwy_data_field_get_yreal(dfield),
+                                   gwy_data_field_get_xreal(dfield),
+                                   gwy_data_field_get_yreal(dfield),
                                    1);
  
-        gwy_data_field_multiply(dfield, 1e9);
+        gwy_data_field_multiply(dfield, 1e6);
+        gwy_data_field_fill(raout,0);
+        gwy_data_field_fill(ipout,0);
+        gwy_data_field_fill(imin,0);
+
         gwy_data_field_2dfft(dfield, imin,
                                  raout,
                                  ipout,
@@ -181,21 +185,9 @@ fft(GwyContainer *data, GwyRunType run)
                                  args.interp,
                                  0,
                                  0);
-//        gwy_data_field_2dffthumanize(raout);
-//        gwy_data_field_2dffthumanize(ipout);
-        gwy_data_field_copy(raout, dfield);
-        gwy_data_field_copy(ipout, imin);
-        gwy_data_field_2dfft(dfield, imin,
-                                 raout,
-                                 ipout,
-                                 gwy_data_line_fft_hum,
-                                 args.window,
-                                 -1,
-                                 args.interp,
-                                 0,
-                                 0);
-
-
+        gwy_data_field_2dffthumanize(raout);
+        gwy_data_field_2dffthumanize(ipout);        
+ 
 
         if (args.preserve)
         {
