@@ -18,8 +18,6 @@ EXTRA_DIST = \
 	makefile.msc \
 	libgwyprocess.def
 
-#noinst_PROGRAMS = test
-
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
@@ -36,6 +34,8 @@ libgwyprocess_la_SOURCES = \
 	fractals.c \
 	correct.c
 
+#noinst_PROGRAMS = test
+#
 #test_SOURCES = \
 #	test.c
 #test_LDADD = libgwyprocess.la \
