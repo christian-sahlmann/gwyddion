@@ -16,6 +16,8 @@
 - Creating mask by outliers detection enabled. It uses 3*sigma criterium
   for searching an outlier.
 - It is possible to import data from common bitmap image formats.
+- Fractal dimension of the rough surface can be evaluated using partitioning,
+  cube counting, traingulation and power spectrum method.
 
 1.0
 - Data can be exported to bitmaps with rules, units, scale, etc.
