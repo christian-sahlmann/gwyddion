@@ -176,12 +176,15 @@
     <sect2>
       <title>Perl</title>
       <para>
-        A Perl module Gwyddion::dump handling reading and writing dump files
-        is distributed as a part of <application>Gwyddion</application> since version 1.4.
+        A Perl module <systemitem class="library">Gwyddion::dump</systemitem>
+        handling reading and writing dump files
+        is distributed as a part of <application>Gwyddion</application>
+        since version 1.4.
         This module is in the public domain.
       </para>
       <para>
-        A sample Perl data-processing plug-in using Gwyddion::dump is included
+        A sample Perl data-processing plug-in using
+        <systemitem class="library">Gwyddion::dump</systemitem> is included
         in the source distribution:
         <filename>plugins/process/invert_perl.pl</filename>.
         This script is in the public domain.
@@ -190,15 +193,38 @@
     <sect2>
       <title>Python</title>
       <para>
-        A Python module Gwyddion.dump handling reading and writing dump files
-        is distributed as a part of <application>Gwyddion</application> since version 1.4.
+        A Python module <systemitem class="library">Gwyddion.dump</systemitem>
+        handling reading and writing dump files
+        is distributed as a part of <application>Gwyddion</application>
+        since version 1.4.
         This module is in the public domain.
       </para>
       <para>
-        A sample Python data-processing plug-in using Gwyddion.dump is included
+        A sample Python data-processing plug-in using
+        <systemitem class="library">Gwyddion.dump</systemitem> is included
         in the source distribution:
         <filename>plugins/process/invert_python.py</filename>.
         This script is in the public domain.
+      </para>
+    </sect2>
+    <sect2>
+      <title>Ruby</title>
+      <para>
+        A Ruby module <systemitem class="library">gwyddion/dump</systemitem>
+        handling reading and writing dump files
+        is distributed as a part of <application>Gwyddion</application>
+        since version 1.6.
+        This module is in the public domain.
+      </para>
+      <para>
+        Two sample Ruby data-processing plug-ins using
+        <systemitem class="library">gwyddion/dump</systemitem>, one for vanilla
+        Ruby and one making use of
+        <systemitem class="library">NArray</systemitem>, are included
+        in the source distribution:
+        <filename>plugins/process/invert_ruby.py</filename> and
+        <filename>plugins/process/invert_narray.py</filename>.
+        These scripts are in the public domain.
       </para>
     </sect2>
     <sect2>
