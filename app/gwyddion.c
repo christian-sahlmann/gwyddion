@@ -106,10 +106,9 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message("Initializing GUI");
     gwy_app_toolbox_create();
-
-    gwy_app_splash_set_message("Loading files");
-    gwy_app_file_open_initial(argv + 1, argc - 1);
     gwy_app_splash_close();
+
+    gwy_app_file_open_initial(argv + 1, argc - 1);
 
     gtk_main();
     if (gwy_app_settings_save(settings_file)) {
