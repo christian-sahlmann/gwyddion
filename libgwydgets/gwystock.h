@@ -14,6 +14,7 @@ extern "C" {
 #define GWY_STOCK_FIT_PLANE       "gwy_fit_plane"
 #define GWY_STOCK_FIT_TRIANGLE    "gwy_fit_triangle"
 #define GWY_STOCK_GRAPH           "gwy_graph"
+#define GWY_STOCK_GWYDDION        "gwy_gwyddion"
 #define GWY_STOCK_CROP            "gwy_crop"
 #define GWY_STOCK_SCALE           "gwy_scale"
 #define GWY_STOCK_ROTATE          "gwy_rotate"

@@ -56,6 +56,9 @@ register_toolbox_icons(const gchar *pixmap_path,
         { GWY_STOCK_POINTER, "Pointer", 0, GDK_VoidSymbol, "gwy" },
         { GWY_STOCK_POINTER_MEASURE, "Pointer measure", 0, GDK_VoidSymbol, "gwy" },
     };
+    static const GtkStockItem gwyddion_stock = {
+        GWY_STOCK_GWYDDION, "Gwyddion", 0, GDK_VoidSymbol, "gwy"
+    };
     guint i;
 
     gtk_stock_add_static(stock_items, G_N_ELEMENTS(stock_items));
@@ -70,12 +73,22 @@ register_toolbox_icons(const gchar *pixmap_path,
                   __FUNCTION__, filename,
                   g_file_test(filename, G_FILE_TEST_EXISTS));
         gtk_icon_source_set_filename(icon_source, filename);
-        /*
-        gtk_icon_source_set_size(icon_source, GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_icon_source_set_direction_wildcarded(icon_source, TRUE);
-        gtk_icon_source_set_size_wildcarded(icon_source, TRUE);
-        gtk_icon_source_set_state_wildcarded(icon_source, TRUE);
-        */
+        gtk_icon_set_add_source(icon_set, icon_source);
+        g_free(filename);
+        gtk_icon_factory_add(icon_factory, id, icon_set);
+    }
+
+    {
+        GtkIconSet *icon_set = gtk_icon_set_new();
+        const gchar *id = gwyddion_stock.stock_id;
+        GtkIconSource *icon_source = gtk_icon_source_new();
+        gchar *filename;
+
+        filename = g_strdup_printf("%s/%s-%u.png", pixmap_path, id, 48);
+        gwy_debug("%s: `%s': %d",
+                  __FUNCTION__, filename,
+                  g_file_test(filename, G_FILE_TEST_EXISTS));
+        gtk_icon_source_set_filename(icon_source, filename);
         gtk_icon_set_add_source(icon_set, icon_source);
         g_free(filename);
         gtk_icon_factory_add(icon_factory, id, icon_set);
