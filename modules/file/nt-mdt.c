@@ -120,6 +120,15 @@ typedef enum {
     MDT_TUNE_SLOPE = 2
 } MDTLiftMode;
 
+enum {
+    FILE_HEADER_SIZE = 32,
+    FRAME_HEADER_SIZE = 22,
+    FRAME_MODE_SIZE = 8,
+    AXIS_SCALES_SIZE = 30,
+    SCAN_VARS_MIN_SIZE = 77,
+    SPECTRO_VARS_MIN_SIZE = 38
+};
+
 typedef struct {
     gdouble offset;    /* r0 (physical units) */
     gdouble step;    /* r (physical units) */
@@ -157,12 +166,14 @@ typedef struct {
     gint xoff;    /* s_x00 (in DAC quants) */
     gint yoff;    /* s_y00 (in DAC quants) */
     gboolean nl_corr;    /* s_cor */
+#if 0
     guint orig_format;    /* s_oem */
     MDTLiftMode tune;    /* z_tune */
     gdouble feedback_gain;    /* s_fbg */
     gint dac_scale;    /* s_s */
-    /* XXX: some ABCD scan stuff here */
     gint overscan;    /* s_xov (in %) */
+#endif
+    /* XXX: much more stuff here */
 
     /* Frame mode stuff */
     guint fm_mode;    /* m_mode */
@@ -170,6 +181,7 @@ typedef struct {
     guint fm_yres;    /* m_ny */
     guint fm_ndots;    /* m_nd */
 
+    /* Data */
     const guchar *dots;
     const guchar *image;
 } MDTScannedDataFrame;
@@ -732,8 +744,11 @@ get_DOUBLE(const guchar **p)
 }
 
 static gboolean
-mdt_load_data_frame(const guchar *p,
-                    MDTScannedDataFrame *frame)
+mdt_scanned_data_vars(const guchar *p,
+                      const guchar *fstart,
+                      MDTScannedDataFrame *frame,
+                      gsize frame_size,
+                      gsize vars_size)
 {
     frame->x_scale.offset = get_FLOAT(&p);
     frame->x_scale.step = get_FLOAT(&p);
@@ -781,6 +796,33 @@ mdt_load_data_frame(const guchar *p,
     frame->yoff = get_DWORD(&p);  /* FIXME: sign? */
     frame->nl_corr = (gboolean)(*p++);
 
+    p = fstart + FRAME_HEADER_SIZE + vars_size;
+    if ((gsize)(p - fstart) + FRAME_MODE_SIZE > frame_size) {
+        gwy_debug("FAILED: Frame too short for Frame Mode");
+        return FALSE;
+    }
+    frame->fm_mode = get_WORD(&p);
+    frame->fm_xres = get_WORD(&p);
+    frame->fm_yres = get_WORD(&p);
+    frame->fm_ndots = get_WORD(&p);
+    gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
+              frame->fm_mode, frame->fm_xres, frame->fm_yres, frame->fm_ndots);
+
+    if ((gsize)(p - fstart)
+        + sizeof(gint16)*(2*frame->fm_ndots + frame->fm_xres * frame->fm_yres)
+        > frame_size) {
+        gwy_debug("FAILED: Frame too short for dots or data");
+        return FALSE;
+    }
+
+    if (frame->fm_ndots) {
+        frame->dots = p;
+        p += sizeof(gint16)*2*frame->fm_ndots;
+    }
+    if (frame->fm_xres * frame->fm_yres) {
+        frame->image = p;
+    }
+
     return TRUE;
 }
 
@@ -789,14 +831,9 @@ mdt_real_load(const guchar *buffer,
               gsize size,
               MDTFile *mdtfile)
 {
-    enum {
-        FRAME_HEADER_SIZE = 22,
-        AXIS_SCALES_SIZE = 30,
-        SCAN_VARS_MIN_SIZE = 77
-    };
     gsize start, id, i, j, len;
     const guchar *p, *fstart;
-    MDTScannedDataFrame *dataframe;
+    MDTScannedDataFrame *scannedframe;
     gpointer idp;
     gdouble d;
 
@@ -871,51 +908,39 @@ mdt_real_load(const guchar *buffer,
                           i);
                 return FALSE;
             }
-            dataframe = g_new0(MDTScannedDataFrame, 1);
-            mdt_load_data_frame(p, dataframe);
-            frame->frame_data = dataframe;
-
-            /* TODO: check size */
-            p = fstart + FRAME_HEADER_SIZE + frame->var_size;
-            dataframe->fm_mode = get_WORD(&p);
-            dataframe->fm_xres = get_WORD(&p);
-            dataframe->fm_yres = get_WORD(&p);
-            dataframe->fm_ndots = get_WORD(&p);
-            gwy_debug("mode = %u, xres = %u, yres = %u, ndots = %u",
-                      dataframe->fm_mode,
-                      dataframe->fm_xres,
-                      dataframe->fm_yres,
-                      dataframe->fm_ndots);
-
-            if ((gsize)(p - fstart)
-                + sizeof(gint16)*(2*dataframe->fm_ndots
-                                  + dataframe->fm_xres * dataframe->fm_yres)
-                > frame->size) {
-                gwy_debug("FAILED: Frame #%u too short for dots or data", i);
-                return FALSE;
-            }
-            if (dataframe->fm_ndots) {
-                dataframe->dots = p;
-                p += sizeof(gint16)*2*dataframe->fm_ndots;
-            }
-            if (dataframe->fm_xres * dataframe->fm_yres) {
-                dataframe->image = p;
-            }
+            scannedframe = g_new0(MDTScannedDataFrame, 1);
+            /* XXX: check return value */
+            mdt_scanned_data_vars(p, fstart, scannedframe,
+                                  frame->size, frame->var_size);
+            frame->frame_data = scannedframe;
             break;
 
             case MDT_FRAME_SPECTROSCOPY:
+            gwy_debug("Spectroscropy frames make little sense to read now");
             break;
 
             case MDT_FRAME_TEXT:
+            gwy_debug("Cannot read text frame");
+            /*
+            p = fstart + FRAME_HEADER_SIZE + frame->var_size;
+            p += 16;
+            for (j = 0; j < frame->size - (p - fstart); j++)
+                g_print("%c", g_ascii_isprint(p[j]) ? p[j] : '.');
+            g_printerr("%s\n", g_convert(p, frame->size - (p - fstart),
+                                         "UCS-2", "UTF-8", NULL, &j, NULL));
+                                         */
             break;
 
             case MDT_FRAME_OLD_MDA:
+            gwy_debug("Cannot read old MDA frame");
             break;
 
             case MDT_FRAME_MDA:
+            gwy_debug("Cannot read MDA frame");
             break;
 
             case MDT_FRAME_PALETTE:
+            gwy_debug("Cannot read palette frame");
             break;
 
             default:
