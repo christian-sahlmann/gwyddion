@@ -65,6 +65,8 @@ static void          slope_dialog_update_values   (SlopeControls *controls,
                                                    SlopeArgs *args);
 static void          slope_fit_plane_cb           (GtkToggleButton *check,
                                                    SlopeControls *controls);
+static void          slope_output_type_cb         (GObject *radio,
+                                                   SlopeControls *controls);
 static GwyDataField* slope_do                     (GwyDataField *dfield,
                                                    SlopeArgs *args);
 static GtkWidget*    slope_do_graph               (GwyDataField *dfield,
@@ -207,6 +209,8 @@ slope_dialog(SlopeArgs *args)
                 (NULL, _("_Two-dimensional distribution"));
     g_object_set_data(G_OBJECT(radio), "slope-output-type",
                       GUINT_TO_POINTER(SLOPE_DIST_2D_DIST));
+    g_signal_connect(radio, "toggled",
+                     G_CALLBACK(slope_output_type_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), radio,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
@@ -215,6 +219,8 @@ slope_dialog(SlopeArgs *args)
                 (GTK_RADIO_BUTTON(radio), _("Per-angle _graph"));
     g_object_set_data(G_OBJECT(radio), "slope-output-type",
                       GUINT_TO_POINTER(SLOPE_DIST_GRAPH));
+    g_signal_connect(radio, "toggled",
+                     G_CALLBACK(slope_output_type_cb), &controls);
     gtk_table_attach(GTK_TABLE(table), radio,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -297,6 +303,8 @@ slope_dialog_update_controls(SlopeControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->fit_plane),
                                  args->fit_plane);
     gtk_widget_set_sensitive(controls->kernel_size_spin, args->fit_plane);
+    gtk_widget_set_sensitive(controls->logscale,
+                             args->output_type == SLOPE_DIST_GRAPH);
 
     for (l = controls->output_type_group; l; l = g_slist_next(l)) {
         if (GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(l->data),
@@ -335,10 +343,23 @@ slope_dialog_update_values(SlopeControls *controls,
 
 static void
 slope_fit_plane_cb(GtkToggleButton *check,
-                       SlopeControls *controls)
+                   SlopeControls *controls)
 {
     gtk_widget_set_sensitive(controls->kernel_size_spin,
                              gtk_toggle_button_get_active(check));
+}
+
+static void
+slope_output_type_cb(GObject *radio,
+                     SlopeControls *controls)
+{
+    SlopeOutput otype;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
+        return;
+    otype = GPOINTER_TO_UINT(g_object_get_data(radio, "slope-output-type"));
+    gtk_widget_set_sensitive(controls->logscale,
+                             otype == SLOPE_DIST_2D_DIST);
 }
 
 static GwyDataField*
