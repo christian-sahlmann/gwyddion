@@ -287,10 +287,10 @@ apply(GwyUnitoolState *state)
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
     if (is_selected) {
-        ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
-        ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
-        brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
-        brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
+        ulcol = (gint)gwy_data_field_rtoj(dfield, MIN(xy[0], xy[2]));
+        ulrow = (gint)gwy_data_field_rtoi(dfield, MIN(xy[1], xy[3]));
+        brcol = (gint)gwy_data_field_rtoj(dfield, MAX(xy[0], xy[2]));
+        brrow = (gint)gwy_data_field_rtoi(dfield, MAX(xy[1], xy[3]));
     }
     else {
         ulcol = 0;
@@ -380,10 +380,10 @@ dialog_update(GwyUnitoolState *state,
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
     if (is_selected) {
-        ulcol = (gint)gwy_data_field_rtoi(dfield, MIN(xy[0], xy[2]));
-        ulrow = (gint)gwy_data_field_rtoj(dfield, MIN(xy[1], xy[3]));
-        brcol = (gint)gwy_data_field_rtoi(dfield, MAX(xy[0], xy[2]));
-        brrow = (gint)gwy_data_field_rtoj(dfield, MAX(xy[1], xy[3]));
+        ulcol = (gint)gwy_data_field_rtoj(dfield, MIN(xy[0], xy[2]));
+        ulrow = (gint)gwy_data_field_rtoi(dfield, MIN(xy[1], xy[3]));
+        brcol = (gint)gwy_data_field_rtoj(dfield, MAX(xy[0], xy[2]));
+        brrow = (gint)gwy_data_field_rtoi(dfield, MAX(xy[1], xy[3]));
     }
     else {
         ulcol = 0;
