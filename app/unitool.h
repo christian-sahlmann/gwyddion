@@ -29,9 +29,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-enum {
-    GWY_UNITOOL_RESPONSE_UNSELECT = 255
-};
+#define GWY_UNITOOL_RESPONSE_UNSELECT 255
 
 typedef struct _GwyUnitoolSlots GwyUnitoolSlots;
 
