@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "gwyddion.h"
 #include "gwytestser.h"
@@ -73,6 +74,35 @@ bar_callback(gpointer hkey, GValue *value, gchar *user_data)
               user_data);
 }
 
+gdouble
+gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+      G_GNUC_UNUSED gpointer user_data, gboolean *fres)
+{
+    gdouble c;
+
+    if (b[2] == 0) {
+        *fres = FALSE;
+        return 0;
+    }
+    *fres = TRUE;
+    c = (x - b[1])/b[2];
+
+    return b[0] * exp(-c*c/2);
+}
+
+gdouble
+grand(void)
+{
+    gdouble c = 0;
+    gint i;
+
+    for (i = 0; i < 20; i++)
+        c += random()/(gdouble)RAND_MAX;
+    c /= 10.0;
+    c -= 1.0;
+    return c;
+}
+
 typedef enum {
     GWY_FILE_NONE   = 0,
     GWY_FILE_LOAD   = 1 << 0,
@@ -107,6 +137,7 @@ static const GwyEnum file_op_names[] = {
 int
 main(void)
 {
+    enum { count = 50 };
     GObject *ser;
     gsize size, pos;
     guchar *buffer;
@@ -120,6 +151,15 @@ main(void)
     gdouble *x;
     gdouble y;
     gboolean ok;
+    GwyNLFitter *ms;
+    gdouble xmq[count + 1];
+    gdouble ymq[count + 1];
+    gdouble vmq[count + 1];
+    gdouble param[3];
+    gboolean bb;
+    gdouble xx, summ;
+    gint i, j;
+
 
     g_type_init();
 
@@ -330,6 +370,41 @@ main(void)
         gdouble e[] = { -1e6, 1e6 };
         linsolv(m, b, x, e);
     }
+
+    g_message("====== NLFIT ======================");
+    ms = gwy_math_nlfit_new(gauss, gwy_math_nlfit_derive);
+    param[0] = 10;                  /*amplituda*/
+    param[1] = 10;                  /*stred*/
+    param[2] = 1;                   /*sirka*/
+
+    xx = param[1] - param[2] * 5;
+
+    for (i = 0; i < count; i++, xx += param[2] * 5/count * 2) {
+        xmq[i] = xx;
+        ymq[i] = gauss(xmq[i], 3, param, NULL, &bb) + grand()/5;
+        vmq[i] = 1;
+    }
+    param[0] = 9;
+    param[1] = 9;
+    param[2] = 0.5;
+    summ = gwy_math_nlfit_fit(ms, count, xmq, ymq, vmq, 3, param, NULL);
+
+    printf("Evaluated: %d\n", ms->eval);
+    printf("Suma: %f\n", summ);
+    for (i = 0; i < 3; i++)
+        printf("Par[%d] = %f +- %f\n",
+               i, param[i], gwy_math_nlfit_get_sigma(ms, i));
+    puts("");
+    for (i = 0; i < count; i++)
+        printf("%3d: %.4f\t%.4f\t%.4f\t%.4f\n",
+               i, xmq[i], ymq[i], vmq[i], gauss(xmq[i], 3, param, NULL, &bb));
+    puts("");
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < i; j++)
+            printf("%.4f\t", gwy_math_nlfit_get_correlations(ms, i, j));
+        puts("");
+    }
+    gwy_math_nlfit_free(ms);
 
     return 0;
 }

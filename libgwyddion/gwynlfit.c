@@ -53,15 +53,15 @@ static gboolean gwy_math_choleski_decompose1(gint dimA,
 static gboolean gwy_math_sym_matrix_invert1(gint N,
                                             gdouble *A);
 
-static gdouble gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
-                                       gint n_dat,
-                                       gdouble *x,
-                                       gdouble *y,
-                                       gdouble *weight,
-                                       gint n_par,
-                                       gdouble *param,
-                                       gpointer user_data,
-                                       gdouble *resid);
+static gdouble gwy_math_nlfit_residua(GwyNLFitter *nlfit,
+                                      gint n_dat,
+                                      gdouble *x,
+                                      gdouble *y,
+                                      gdouble *weight,
+                                      gint n_par,
+                                      gdouble *param,
+                                      gpointer user_data,
+                                      gdouble *resid);
 
 
 /**
@@ -75,12 +75,12 @@ static gdouble gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
  *
  * Returns: The newly created fitter.
  **/
-GwyNLFitState*
+GwyNLFitter*
 gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
 {
-    GwyNLFitState *nlfit;
+    GwyNLFitter *nlfit;
 
-    nlfit = g_new0(GwyNLFitState, 1);
+    nlfit = g_new0(GwyNLFitter, 1);
     nlfit->fmarq = ff;
     nlfit->dmarq = df;
     nlfit->mfi = 1.0;
@@ -102,7 +102,7 @@ gwy_math_nlfit_new(GwyNLFitFunc ff, GwyNLFitDerFunc df)
  * Completely frees a Marquardt-Levenberg nonlinear fitter.
  **/
 void
-gwy_math_nlfit_free(GwyNLFitState *nlfit)
+gwy_math_nlfit_free(GwyNLFitter *nlfit)
 {
     g_free(nlfit->covar);
     nlfit->covar = NULL;
@@ -127,7 +127,7 @@ gwy_math_nlfit_free(GwyNLFitState *nlfit)
  * Returns: The final residual sum, a negative number in the case of failure.
  **/
 gdouble
-gwy_math_nlfit_fit(GwyNLFitState *nlfit,
+gwy_math_nlfit_fit(GwyNLFitter *nlfit,
                    gint n_dat,
                    gdouble *x,
                    gdouble *y,
@@ -162,14 +162,12 @@ gwy_math_nlfit_fit(GwyNLFitState *nlfit,
     /* XXX: brain damage:
      * we have to shift the arrays by one to simulate 1-based indexing,
      * param has to shifted back when passed back to user! */
-    x -= 1;
-    y -= 1;
-    weight -= 1;
     param -= 1;
 
-    resid = g_new(gdouble, n_dat+1);
-    sumr1 = gwy_math_nlfit_residua1(nlfit, n_dat, x, y, weight, n_par, param,
-                                    user_data, resid);
+    resid = g_new(gdouble, n_dat);
+    sumr1 = gwy_math_nlfit_residua(nlfit, n_dat, x, y, weight,
+                                   n_par, param+1,
+                                   user_data, resid);
     sumr = sumr1;
 
     if (nlfit->eval == FALSE) {
@@ -197,14 +195,14 @@ gwy_math_nlfit_fit(GwyNLFitState *nlfit,
                     v[i] = 0;
 
                 /* Vypocet J'J a J'r*/
-                for (i = 1; i <= n_dat; i++) {
+                for (i = 0; i < n_dat; i++) {
                     /* XXX: has to shift things back */
-                    nlfit->dmarq(i-1, x+1, n_par, param+1, nlfit->fmarq,
+                    nlfit->dmarq(i, x, n_par, param+1, nlfit->fmarq,
                               user_data, der+1, &nlfit->eval);
                     if (!nlfit->eval)
                         break;
                     for (j = 1; j <= n_par; j++) {
-                        gint q = j * (j - 1)/2;
+                        gint q = j*(j - 1)/2;
 
                         /* Do vypoctu J'r*/
                         v[j] += weight[i]* der[j] * resid[i];
@@ -258,9 +256,10 @@ gwy_math_nlfit_fit(GwyNLFitState *nlfit,
                 if (count == n_par)
                     end = TRUE;
                 else {
-                    sumr1 = gwy_math_nlfit_residua1(nlfit, n_dat, x, y, weight,
-                                                    n_par, param,
-                                                    user_data, resid);
+                    sumr1 = gwy_math_nlfit_residua(nlfit, n_dat,
+                                                   x, y, weight,
+                                                   n_par, param+1,
+                                                   user_data, resid);
                     if ((sumr1 == 0)
                         || (miter > 2 && fabs((sumr - sumr1)/sumr1) < EPS))
                         end = TRUE;
@@ -359,22 +358,22 @@ gwy_math_nlfit_derive(gint i,
 }
 
 static gdouble
-gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
-                        gint n_dat,
-                        gdouble *x,
-                        gdouble *y,
-                        gdouble *weight,
-                        gint n_par,
-                        gdouble *param,
-                        gpointer user_data,
-                        gdouble *resid)
+gwy_math_nlfit_residua(GwyNLFitter *nlfit,
+                       gint n_dat,
+                       gdouble *x,
+                       gdouble *y,
+                       gdouble *weight,
+                       gint n_par,
+                       gdouble *param,
+                       gpointer user_data,
+                       gdouble *resid)
 {
     gdouble s = 0;
     gint i;
 
     nlfit->eval = TRUE;
-    for (i = 1; (i <= n_dat) && (nlfit->eval == TRUE); i++) {
-        resid[i] = nlfit->fmarq(x[i], n_par, param+1, user_data, &nlfit->eval)
+    for (i = 0; i < n_dat && nlfit->eval; i++) {
+        resid[i] = nlfit->fmarq(x[i], n_par, param, user_data, &nlfit->eval)
                    - y[i];
         s += resid[i] * resid[i] * weight[i];
     }
@@ -390,7 +389,7 @@ gwy_math_nlfit_residua1(GwyNLFitState *nlfit,
  * Returns: The maximum number of iterations.
  **/
 gint
-gwy_math_nlfit_get_max_iterations(GwyNLFitState *nlfit)
+gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit)
 {
     return nlfit->maxiter;
 }
@@ -403,7 +402,7 @@ gwy_math_nlfit_get_max_iterations(GwyNLFitState *nlfit)
  * Sets the maximum number of iterations for nonlinear fitter @nlfit.
  **/
 void
-gwy_math_nlfit_set_max_iterations(GwyNLFitState *nlfit,
+gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
                                   gint maxiter)
 {
     g_return_if_fail(maxiter > 0);
@@ -423,7 +422,7 @@ gwy_math_nlfit_set_max_iterations(GwyNLFitState *nlfit,
  * Returns: The SD of @par-th parameter.
  **/
 gdouble
-gwy_math_nlfit_get_sigma(GwyNLFitState *nlfit, gint par)
+gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
 {
     g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
 
@@ -442,7 +441,7 @@ gwy_math_nlfit_get_sigma(GwyNLFitState *nlfit, gint par)
  * Returns: The dispersion.
  **/
 gdouble
-gwy_math_nlfit_get_dispersion(GwyNLFitState *nlfit)
+gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
 {
     g_return_val_if_fail(nlfit->covar, G_MAXDOUBLE);
     return nlfit->dispersion;
@@ -461,7 +460,7 @@ gwy_math_nlfit_get_dispersion(GwyNLFitState *nlfit)
  * Returns: The correlation coefficient.
  **/
 gdouble
-gwy_math_nlfit_get_correlations(GwyNLFitState *nlfit, gint par1, gint par2)
+gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
 {
     gdouble Pom;
 
@@ -583,11 +582,11 @@ gwy_math_sym_matrix_invert1(gint N, gdouble *A)
 
 /**
  * GwyNLFitFunc:
- * @x: hodnota, kde se pocita
- * @n_par: pocet parametru
- * @param: parametry, zacinaji od 1 do n_par vcetne
- * @user_data:
- * @fres: uspesnost vypoctu.
+ * @x: The value to compute the function in.
+ * @n_par: The number of parameters (size of @param).
+ * @param: Parameters.
+ * @user_data: User data as passed to gwy_math_nlfit_fit().
+ * @fres: Set to %TRUE if succeeds, %FALSE on failure.
  *
  * Fitting function type.
  *
@@ -596,14 +595,15 @@ gwy_math_sym_matrix_invert1(gint N, gdouble *A)
 
 /**
  * GwyNLFitDerFunc:
- * @i: index prvku ve kterem se derivace pocita
- * @x: pole s hodnotami x, pocitaji se derivace v x[i]
- * @n_par: pocet parametru
- * @param: parametry, zacinaji od 1 do n_par vcetne
- * @deriv: vystupni pole s derivacemi podle jednotlivych parametru
- * @fmarq: fitovaci funkce
- * @user_data:
- * @dres: uspesnost vypoctu
+ * @i: The index of the value in @x to compute the derivation in.
+ * @x: x-data as passed to gwy_math_nlfit_fit().
+ * @n_par: The number of parameters (size of @param).
+ * @param: Parameters.
+ * @deriv: Where the @n_par partial derivations by each parameter are to be
+ *         stored.
+ * @fmarq: The fitting function.
+ * @user_data: User data as passed to gwy_math_nlfit_fit().
+ * @dres: Set to %TRUE if succeeds, %FALSE on failure.
  *
  * Fitting function partial derivation type.
  */

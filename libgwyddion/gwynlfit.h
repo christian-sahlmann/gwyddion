@@ -45,9 +45,9 @@ typedef  void (*GwyNLFitDerFunc)(gint i,
                                  gdouble *deriv,
                                  gboolean *dres);
 
-typedef struct _GwyNLFitState GwyNLFitState;
+typedef struct _GwyNLFitter GwyNLFitter;
 
-struct _GwyNLFitState {
+struct _GwyNLFitter {
     GwyNLFitFunc fmarq;  /* fitting function */
     GwyNLFitDerFunc dmarq;  /* fitting function derivations */
     gint maxiter;  /* max number of iterations */
@@ -61,10 +61,10 @@ struct _GwyNLFitState {
     gdouble mtol;
 };
 
-GwyNLFitState* gwy_math_nlfit_new                (GwyNLFitFunc ff,
+GwyNLFitter*   gwy_math_nlfit_new                (GwyNLFitFunc ff,
                                                   GwyNLFitDerFunc df);
-void           gwy_math_nlfit_free               (GwyNLFitState *nlfit);
-gdouble        gwy_math_nlfit_fit                (GwyNLFitState *nlfit,
+void           gwy_math_nlfit_free               (GwyNLFitter *nlfit);
+gdouble        gwy_math_nlfit_fit                (GwyNLFitter *nlfit,
                                                   gint n_dat,
                                                   gdouble *x,
                                                   gdouble *y,
@@ -72,14 +72,14 @@ gdouble        gwy_math_nlfit_fit                (GwyNLFitState *nlfit,
                                                   gint n_par,
                                                   gdouble *param,
                                                   gpointer user_data);
-gint           gwy_math_nlfit_get_max_iterations (GwyNLFitState *nlfit);
-void           gwy_math_nlfit_set_max_iterations (GwyNLFitState *nlfit,
+gint           gwy_math_nlfit_get_max_iterations (GwyNLFitter *nlfit);
+void           gwy_math_nlfit_set_max_iterations (GwyNLFitter *nlfit,
                                                   gint maxiter);
-gdouble        gwy_math_nlfit_get_dispersion     (GwyNLFitState *nlfit);
-gdouble        gwy_math_nlfit_get_correlations   (GwyNLFitState *nlfit,
+gdouble        gwy_math_nlfit_get_dispersion     (GwyNLFitter *nlfit);
+gdouble        gwy_math_nlfit_get_correlations   (GwyNLFitter *nlfit,
                                                   gint par1,
                                                   gint par2);
-gdouble        gwy_math_nlfit_get_sigma          (GwyNLFitState *nlfit,
+gdouble        gwy_math_nlfit_get_sigma          (GwyNLFitter *nlfit,
                                                   gint par);
 
 void           gwy_math_nlfit_derive             (gint i,
