@@ -248,7 +248,7 @@ setup_sensitivity_keys(void)
 }
 
 /**
- * gwy_app_run_process_func_in_mode:
+ * gwy_app_run_process_func_cb:
  * @name: A data processing function name.
  *
  * Run a data processing function @name in the best possible mode.

@@ -370,7 +370,7 @@ gwy_app_data_window_create(GwyContainer *data)
 {
     static GtkWidget *popup_menu = NULL;
 
-    GtkWidget *data_window, *data_view, *corner;
+    GtkWidget *data_window, *data_view;
     GtkObject *layer;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
@@ -389,19 +389,22 @@ gwy_app_data_window_create(GwyContainer *data)
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
 #ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
-    corner = gtk_toggle_button_new();
-    g_object_set(G_OBJECT(corner),
-                 "can-default", FALSE,
-                 "can-focus", FALSE,
-                 "border-width", 1,
-                 NULL);
-    gtk_widget_set_name(corner, "cornerbutton");
-    gtk_container_add(GTK_CONTAINER(corner),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH,
-                                               GTK_ICON_SIZE_MENU));
-    gtk_widget_show_all(corner);
-    gwy_data_window_set_ul_corner_widget(GWY_DATA_WINDOW(data_window),
-                                         corner);
+    {
+        GtkWidget *corner;
+        corner = gtk_toggle_button_new();
+        g_object_set(G_OBJECT(corner),
+                     "can-default", FALSE,
+                     "can-focus", FALSE,
+                     "border-width", 1,
+                     NULL);
+        gtk_widget_set_name(corner, "cornerbutton");
+        gtk_container_add(GTK_CONTAINER(corner),
+                          gtk_image_new_from_stock(GWY_STOCK_GRAPH,
+                                                   GTK_ICON_SIZE_MENU));
+        gtk_widget_show_all(corner);
+        gwy_data_window_set_ul_corner_widget(GWY_DATA_WINDOW(data_window),
+                                            corner);
+    }
 #endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
     g_signal_connect(data_window, "focus-in-event",
