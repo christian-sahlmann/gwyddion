@@ -1,4 +1,24 @@
 <SECTION>
+<FILE>gwysiunit</FILE>
+<TITLE>GwySIUnit</TITLE>
+gwy_si_unit_new
+gwy_si_unit_free
+gwy_si_unit_set_unit_string
+gwy_si_unit_get_unit_string
+gwy_si_unit_get_prefix
+gwy_si_unit_get_prefixed
+gwy_si_unit_copy
+<SUBSECTION Standard>
+GWY_SI_UNIT
+GWY_IS_SI_UNIT
+GWY_TYPE_SI_UNIT
+gwy_si_unit_get_type
+GWY_SI_UNIT_CLASS
+GWY_IS_SI_UNIT_CLASS
+GWY_SI_UNIT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwywatchable</FILE>
 <TITLE>GwyWatchable</TITLE>
 gwy_watchable_value_changed
@@ -128,17 +148,6 @@ gwy_string_to_flags
 gwy_flags_to_string
 gwy_find_self_dir
 gwy_find_self_set_argv0
-</SECTION>
-
-<SECTION>
-<FILE>gwysiunit</FILE>
-GwySIUnit
-gwy_si_unit_new
-gwy_si_unit_free
-gwy_si_unit_set_unit_string
-gwy_si_unit_get_unit_string
-gwy_si_unit_get_prefix
-gwy_si_unit_get_prefixed
 </SECTION>
 
 <SECTION>

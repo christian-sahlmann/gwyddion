@@ -1,3 +1,9 @@
+<!-- ##### TYPEDEF GwySIUnit ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
 <para>
 Emitted when value changes.

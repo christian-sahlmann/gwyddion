@@ -1,0 +1,83 @@
+<!-- ##### SECTION Title ##### -->
+gwysiunit
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_si_unit_new ##### -->
+<para>
+
+</para>
+
+@unit_string: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_free ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_si_unit_set_unit_string ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@unit_string: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_get_unit_string ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_get_prefix ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@value: 
+@precision: 
+@prefix: 
+@power: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_get_prefixed ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@value: 
+@precision: 
+@prefix: 
+@power: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_copy ##### -->
+<para>
+
+</para>
+
+@target: 
+@example: 
+
+
