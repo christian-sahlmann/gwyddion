@@ -38,7 +38,8 @@ main(void)
     FILE *fh;
     GError *err = NULL;
     GValue val, *p;
-    GObject *container, *obj;
+    GwyContainer *container;
+    GObject *obj;
     GQuark q;
     gulong id;
 
@@ -100,50 +101,58 @@ main(void)
     g_signal_handler_disconnect(ser, id);
 
     g_message("====== CONTAINER ====================================");
-    container = gwy_container_new();
+    container = GWY_CONTAINER(gwy_container_new());
     p = g_new0(GValue, 1);
     g_value_init(p, G_TYPE_INT);
     g_value_set_int(p, 1133);
     q = g_quark_from_string("foobar");
-    gwy_container_set_value_by_name(GWY_CONTAINER(container),
-                                    "foobar", p, NULL);
+    gwy_container_set_value_by_name(container, "foobar", p, NULL);
     g_value_set_int(p, -100);
-    gwy_container_set_value_by_name(GWY_CONTAINER(container),
-                                    "foobar", p, NULL);
-    val = gwy_container_get_value(GWY_CONTAINER(container), q);
+    gwy_container_set_value_by_name(container, "foobar", p, NULL);
+    val = gwy_container_get_value(container, q);
     g_message("(value) 'foobar' -> %d", g_value_get_int(&val));
-    g_message("(int32) 'foobar' -> %d",
-                gwy_container_get_int32(GWY_CONTAINER(container), q));
-    gwy_container_set_double(GWY_CONTAINER(container), q, 1.13);
-    val = gwy_container_get_value(GWY_CONTAINER(container), q);
+    g_message("(int32) 'foobar' -> %d", gwy_container_get_int32(container, q));
+    gwy_container_set_double(container, q, 1.13);
+    val = gwy_container_get_value(container, q);
     g_message("(value) 'foobar' -> %g", g_value_get_double(&val));
     g_message("this should fail:");
-    g_message("(int32) 'foobar' -> %d",
-                gwy_container_get_int32(GWY_CONTAINER(container), q));
+    g_message("(int32) 'foobar' -> %d", gwy_container_get_int32(container, q));
+
+    gwy_container_set_double_by_name(container, "pdf", 0.5227);
+    gwy_container_set_double_by_name(container, "pdf/f", 1.4142);
+    gwy_container_set_double_by_name(container, "pdfoo", 7.76);
+
+    gwy_container_remove_by_prefix(container, "pdf");
+    g_message("'pdf': %s", gwy_container_contains_by_name(container, "pdf")
+                           ? "PRESENT" : "REMOVED");
+    g_message("'pdf/f': %s", gwy_container_contains_by_name(container, "pdf/f")
+                             ? "PRESENT" : "REMOVED");
+    g_message("'pdfoo': %s", gwy_container_contains_by_name(container, "pdfoo")
+                             ? "PRESENT" : "REMOVED");
 
     g_message("====== CONTAINER SERIALIZATION ======================");
-    gwy_container_set_double_by_name(GWY_CONTAINER(container), "pdf", 0.5227);
-    gwy_container_set_double_by_name(GWY_CONTAINER(container), "pdf/f", 1.4142);
-    gwy_container_set_int64_by_name(GWY_CONTAINER(container), "x64", 64LL);
+    gwy_container_set_double_by_name(container, "pdf", 0.5227);
+    gwy_container_set_double_by_name(container, "pdf/f", 1.4142);
+    gwy_container_set_int64_by_name(container, "x64", 64LL);
 
     g_assert(G_OBJECT(ser)->ref_count == 1);
-    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    gwy_container_set_object_by_name(container, "ser", ser);
     g_assert(G_OBJECT(ser)->ref_count == 2);
-    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    gwy_container_set_object_by_name(container, "ser", ser);
     g_assert(G_OBJECT(ser)->ref_count == 2);
-    ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
+    ser = gwy_container_get_object_by_name(container, "ser");
     g_assert(G_OBJECT(ser)->ref_count == 2);
 
     size = 0;
     buffer = NULL;
-    buffer = gwy_serializable_serialize(container, buffer, &size);
+    buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
     g_object_unref(container);
     g_assert(G_OBJECT(ser)->ref_count == 1);
     g_object_unref(ser);
 
     g_message("serializing an empty container");
-    container = gwy_container_new();
-    buffer = gwy_serializable_serialize(container, buffer, &size);
+    container = GWY_CONTAINER(gwy_container_new());
+    buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
     g_object_unref(container);
 
     fh = fopen(FILENAME, "wb");
@@ -157,30 +166,29 @@ main(void)
 
     pos = 0;
     g_message("restoring container");
-    container = gwy_serializable_deserialize(buffer, size, &pos);
+    container = GWY_CONTAINER(gwy_serializable_deserialize(buffer, size, &pos));
 
     g_message("'pdf/f' -> %g",
-              gwy_container_get_double_by_name(GWY_CONTAINER(container),
-                                               "pdf/f"));
+              gwy_container_get_double_by_name(container, "pdf/f"));
 
-    ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
+    ser = gwy_container_get_object_by_name(container, "ser");
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_assert(ser->ref_count == 1);
 
     g_object_unref(container);
     g_message("restoring the empty container");
-    container = gwy_serializable_deserialize(buffer, size, &pos);
+    container = GWY_CONTAINER(gwy_serializable_deserialize(buffer, size, &pos));
 
 
     g_message("====== DUPLICATION ======================");
 
-    gwy_container_set_double_by_name(GWY_CONTAINER(container), "dbl", 3.141592);
+    gwy_container_set_double_by_name(container, "dbl", 3.141592);
     ser = gwy_test_ser_new(0.88, 0.99);
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 13.13);
-    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    gwy_container_set_object_by_name(container, "ser", ser);
     g_object_unref(ser);
     g_message("duplicating a container");
-    obj = gwy_serializable_duplicate(container);
+    obj = gwy_serializable_duplicate(G_OBJECT(container));
     g_object_unref(container);
     g_message("'dbl' -> %g",
               gwy_container_get_double_by_name(GWY_CONTAINER(obj), "dbl"));

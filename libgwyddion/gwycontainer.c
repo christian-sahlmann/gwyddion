@@ -17,6 +17,13 @@ typedef struct {
 } SerializeData;
 
 typedef struct {
+    GwyContainer *container;
+    const gchar *prefix;
+    gsize prefix_length;
+    gsize count;
+} PrefixData;
+
+typedef struct {
     gulong wid;
     GwyContainerNotifyFunc callback;
     gpointer user_data;
@@ -60,6 +67,9 @@ static void     hash_serialize_func              (gpointer hkey,
 static GObject* gwy_container_deserialize        (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
+static gboolean hash_remove_prefix_func          (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
 static GObject* gwy_container_duplicate          (GObject *object);
 static void     hash_duplicate_func              (gpointer hkey,
                                                   gpointer hvalue,
@@ -336,6 +346,54 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 
     return g_hash_table_remove(container->values,
                                GUINT_TO_POINTER(key));
+}
+
+/**
+ * gwy_container_remove_by_prefix:
+ * @container: A #GwyContainer.
+ * @prefix: A nul-terminated id prefix.
+ *
+ * Removes a values whose key start with @prefix from container @container.
+ *
+ * Returns: The number of values removed.
+ **/
+gsize
+gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
+{
+    PrefixData pfdata;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    g_return_val_if_fail(prefix, 0);
+
+    pfdata.container = container;
+    pfdata.prefix = prefix;
+    pfdata.prefix_length = strlen(prefix);
+    pfdata.count = 0;
+    g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
+                                &pfdata);
+
+    return pfdata.count;
+}
+
+static gboolean
+hash_remove_prefix_func(gpointer hkey, gpointer hvalue, gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GValue *value = (GValue*)hvalue;
+    PrefixData *pfdata = (PrefixData*)hdata;
+    const gchar *name;
+
+    if (!(name = g_quark_to_string(key))
+        || !g_str_has_prefix(name, pfdata->prefix)
+        || (name[pfdata->prefix_length] != '\0'
+            && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP))
+        return FALSE;
+
+    if (G_VALUE_HOLDS_OBJECT(value))
+        remove_object_callback(pfdata->container, value);
+
+    pfdata->count++;
+    return TRUE;
 }
 
 /**
