@@ -1,4 +1,4 @@
-1.5cvs20041008
+1.5cvs20041015
 
 1.6
 Application:
@@ -7,12 +7,18 @@ Application:
 
 Modules:
 - Interactive color range change tool (new).
-- Polynomial background correction (new).
+- Distance and angle reading tool (new) (bug #32).
+- Polynomial background removal/extraction (new).
 - Plug-in proxy: Dump files are always written with POSIX real number format
   (bug #31).
+- Pointer and Level3: Units in table header are updated on data update
+  (bug #37).
 - Crop, Filters, Polynom, Statistics, and Spot remove tools: Also display
   dimensions in pixels.
 - Unrotate: Fixed displayed rotations being 2Pi multiplies of the real ones.
+- Layers: Fixed not redrawing when number of objects (lines, points, etc.)
+  property changes.
+- Lines layer: Identifies lines by numbers.
 
 Library:
 - libgwydgets: Gwy3DWindow swtiching from palette to material for the first
@@ -20,9 +26,12 @@ Library:
 - libgwyddion: Choleski decomposition and solution functions.
 - libgwyprocess: Two-dimensional polynom fitting.
 - libgwyapp: Helper functions to manage rectangular selections in tools.
+- gwyddion/dump Ruby module implementing plug-in proxy dump format.
 
 Other:
+- New sample plug-ins in Ruby: invert_ruby and invert_narray.
 - Various build time problems on FreeBSD were fixed.
+- Sample C++ plug-in mangling units was fixed (bug #36).
 
 
 1.5
