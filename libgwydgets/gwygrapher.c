@@ -308,16 +308,46 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
 {
     gint i;
     GwyGrapherDataArea *data_area;
+    GwyGrapherDataPoint *data_point;
     
     if (selection == NULL) return;
-    if (grapher->area->status == GWY_GRAPHER_STATUS_XSEL)
+
+    switch (grapher->area->status)
     {
+        case GWY_GRAPHER_STATUS_CURSOR:
+        selection[0] = grapher->area->cursordata->data_point.x;
+        selection[0] = grapher->area->cursordata->data_point.y;
+        break;
+        
+        case GWY_GRAPHER_STATUS_XSEL:    
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
             data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
             selection[2*i] = data_area->xmin;
             selection[2*i + 1] = data_area->xmax;
         }
+        break;
+
+        case GWY_GRAPHER_STATUS_YSEL:
+        for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
+        {
+            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
+            selection[2*i] = data_area->ymin;
+            selection[2*i + 1] = data_area->ymax;
+        }
+        break;
+
+        case GWY_GRAPHER_STATUS_POINTS:
+        for (i = 0; i < grapher->area->pointsdata->data_points->len; i++)
+        {
+            data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGrapherDataArea, i);
+            selection[2*i] = data_point->x;
+            selection[2*i + 1] = data_point->y;
+        }
+        break;
+
+        default:
+        g_assert_not_reached();   
     }
 }
 
