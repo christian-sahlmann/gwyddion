@@ -113,7 +113,7 @@ fft(GwyContainer *data, GwyRunType run)
     GwyDataField *raout, *ipout, *imin;
     FFTArgs args;
     gboolean ok; gint i;
-    gint xsize, ysize;
+    gint xsize, ysize, newsize;
 
     g_assert(run & FFT_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -133,7 +133,8 @@ fft(GwyContainer *data, GwyRunType run)
         
         xsize = gwy_data_field_get_xres(dfield);
         ysize = gwy_data_field_get_yres(dfield);
-        gwy_data_field_resample(dfield, 512, 512, args.interp);
+        newsize = gwy_data_field_get_fft_res(xsize);
+        gwy_data_field_resample(dfield, newsize, newsize, args.interp);
         raout = gwy_data_field_new(gwy_data_field_get_xres(dfield),
                                    gwy_data_field_get_yres(dfield),
                                    1.0/gwy_data_field_get_xreal(dfield),
