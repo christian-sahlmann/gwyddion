@@ -26,8 +26,15 @@
 #include <libdraw/gwydraw.h>
 #include "gwydgets.h"
 
+enum {
+    GWY_HSCALE_WIDTH = 96
+};
+
 static GdkGLConfig *glconfig = NULL;
 static guint types_initialized = 0;
+
+static void  gwy_hscale_update_log(GtkAdjustment *adj, GtkAdjustment *log_adj);
+static void  gwy_hscale_update_exp(GtkAdjustment *adj, GtkAdjustment *log_adj);
 
 /************************** Initialization ****************************/
 
@@ -174,7 +181,7 @@ gwy_table_attach_row(GtkWidget *table,
         gtk_table_attach(GTK_TABLE(table), label,
                         2, 3, row, row+1, GTK_FILL, 0, 2, 2);
         gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
-        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     }
 
     label = gtk_label_new_with_mnemonic(name);
@@ -224,7 +231,191 @@ gwy_table_get_child_widget(GtkWidget *table,
     return NULL;
 }
 
+/************************** Scale attaching ****************************/
+
+static void
+gwy_hscale_update_log(GtkAdjustment *adj, GtkAdjustment *log_adj)
+{
+    gulong id;
+
+    id = g_signal_handler_find(log_adj,
+                               G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0,
+                               gwy_hscale_update_exp,
+                               adj);
+    g_signal_handler_block(log_adj, id);
+    gtk_adjustment_set_value(log_adj, log(adj->value));
+    g_signal_handler_unblock(log_adj, id);
+}
+
+static void
+gwy_hscale_update_exp(GtkAdjustment *adj, GtkAdjustment *exp_adj)
+{
+    gulong id;
+
+    id = g_signal_handler_find(exp_adj,
+                               G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA,
+                               0, 0, 0,
+                               gwy_hscale_update_log,
+                               adj);
+    g_signal_handler_block(exp_adj, id);
+    gtk_adjustment_set_value(exp_adj, exp(adj->value));
+    g_signal_handler_unblock(exp_adj, id);
+}
+
+static void
+gwy_hscale_checkbutton_cb(GtkToggleButton *check, GObject *pivot)
+{
+    GtkWidget *widget;
+    gboolean sensitive;
+
+    sensitive = gtk_toggle_button_get_active(check);
+    if ((widget = g_object_get_data(pivot, "scale")))
+        gtk_widget_set_sensitive(widget, sensitive);
+    if ((widget = g_object_get_data(pivot, "middle_widget")))
+        gtk_widget_set_sensitive(widget, sensitive);
+    if ((widget = g_object_get_data(pivot, "label")))
+        gtk_widget_set_sensitive(widget, sensitive);
+    if ((widget = g_object_get_data(pivot, "units")))
+        gtk_widget_set_sensitive(widget, sensitive);
+}
+
+/**
+ * gwy_table_attach_hscale:
+ * @table: A #GtkTable.
+ * @row: Row in @table to attach stuff to.
+ * @name: The label before @pivot widget.
+ * @units: The label after @pivot widget.
+ * @pivot: Either a #GtkAdjustment, or a widget to use instead of the spin
+ *         button and scale widgets (if @style is %GWY_HSCALE_WIDGET).
+ * @style: A mix of options an flags determining what and how will be attached
+ *         to the table.
+ *
+ * Attaches a spinbutton with a scale and labels, or something else to a table
+ * row.
+ *
+ * Following object data are set on @pivot to various components:
+ * "scale", "check", "label", "units", "middle_widget"
+ * (some may be %NULL if not present).
+ *
+ * FIXME: What exactly happens with various @style values is quite convoluted.
+ *
+ * Returns: The middle widget.  If a spinbutton is attached, then this
+ *          spinbutton is returned.  Otherwise (in %GWY_HSCALE_WIDGET case)
+ *          @pivot itself.
+ *
+ * Since: 1.8
+ **/
+GtkWidget*
+gwy_table_attach_hscale(GtkWidget *table,
+                        gint row,
+                        const gchar *name,
+                        const gchar *units,
+                        GtkObject *pivot,
+                        GwyHScaleStyle style)
+{
+    GtkWidget *spin, *scale, *label, *check, *middle_widget;
+    GtkAdjustment *scale_adj = NULL, *adj = NULL;
+    GwyHScaleStyle base_style;
+    GtkTable *tab;
+
+    g_return_val_if_fail(GTK_IS_TABLE(table), NULL);
+    tab = GTK_TABLE(table);
+
+    base_style = style & ~GWY_HSCALE_CHECK;
+    switch (base_style) {
+        case GWY_HSCALE_DEFAULT:
+        case GWY_HSCALE_NO_SCALE:
+        case GWY_HSCALE_LOG:
+        if (pivot) {
+            g_return_val_if_fail(GTK_IS_ADJUSTMENT(pivot), NULL);
+            adj = GTK_ADJUSTMENT(pivot);
+        }
+        else {
+            if (GWY_HSCALE_LOG)
+                g_warning("Log scale doesn't work with implicit adjusments.");
+            adj = GTK_ADJUSTMENT(gtk_adjustment_new(0, 0, 0, 0, 0, 0));
+        }
+        break;
+
+        case GWY_HSCALE_WIDGET:
+        g_return_val_if_fail(GTK_IS_WIDGET(pivot), NULL);
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
+
+    if (base_style != GWY_HSCALE_WIDGET) {
+        spin = gtk_spin_button_new(adj, 1, 0);
+        gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+        gtk_table_attach(tab, spin, 2, 3, row, row+1, GTK_FILL, 0, 2, 2);
+        middle_widget = spin;
+
+        if (base_style == GWY_HSCALE_LOG) {
+            scale_adj
+                = GTK_ADJUSTMENT(gtk_adjustment_new(log(adj->value),
+                                                    log(adj->lower),
+                                                    log(adj->upper),
+                                                    log(adj->upper/adj->lower)
+                                                    /GWY_HSCALE_WIDTH,
+                                                    log(adj->upper/adj->lower)
+                                                    /GWY_HSCALE_WIDTH*10.0,
+                                                    0));
+            g_signal_connect(adj, "value_changed",
+                             G_CALLBACK(gwy_hscale_update_log), scale_adj);
+            g_signal_connect(scale_adj, "value_changed",
+                             G_CALLBACK(gwy_hscale_update_exp), adj);
+        }
+        else
+            scale_adj = adj;
+    }
+    else {
+        middle_widget = GTK_WIDGET(pivot);
+        gtk_table_attach(GTK_TABLE(table), middle_widget,
+                         1, 3, row, row+1, GTK_FILL, 0, 2, 2);
+    }
+    g_object_set_data(G_OBJECT(pivot), "middle_widget", middle_widget);
+
+    if (base_style == GWY_HSCALE_DEFAULT || base_style == GWY_HSCALE_LOG) {
+        scale = gtk_hscale_new(scale_adj);
+        gtk_scale_set_draw_value(GTK_SCALE(scale), FALSE);
+        gtk_widget_set_size_request(scale, GWY_HSCALE_WIDTH, -1);
+        gtk_table_attach(tab, scale, 1, 2, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        g_object_set_data(G_OBJECT(pivot), "scale", scale);
+    }
+
+
+    if (style & GWY_HSCALE_CHECK) {
+        check = gtk_check_button_new_with_mnemonic(name);
+        gtk_table_attach(tab, check, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+        g_signal_connect(check, "toggled",
+                         G_CALLBACK(gwy_hscale_checkbutton_cb), pivot);
+        g_object_set_data(G_OBJECT(pivot), "check", check);
+    }
+    else {
+        label = gtk_label_new_with_mnemonic(name);
+        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+        gtk_table_attach(tab, label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
+        gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
+        g_object_set_data(G_OBJECT(pivot), "label", label);
+    }
+
+    if (units) {
+        label = gtk_label_new(units);
+        gtk_label_set_use_markup(GTK_LABEL(label), TRUE);
+        gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
+        gtk_table_attach(tab, label, 3, 4, row, row+1, GTK_FILL, 0, 2, 2);
+        g_object_set_data(G_OBJECT(pivot), "units", label);
+    }
+
+    return middle_widget;
+}
+
 /************************** Mask colors ****************************/
+
 typedef struct {
     GwyDataView *data_view;
     GwyColorButton *color_button;

@@ -60,6 +60,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_HSCALE_DEFAULT  = 0,
+    GWY_HSCALE_LOG      = 1,
+    GWY_HSCALE_NO_SCALE = 2,
+    GWY_HSCALE_WIDGET   = 3,
+    GWY_HSCALE_CHECK    = 16
+} GwyHScaleStyle;
+
 void         gwy_widgets_type_init          (void);
 gboolean     gwy_widgets_gl_init            (void);
 GdkGLConfig* gwy_widgets_get_gl_config      (void);
@@ -74,6 +82,12 @@ void         gwy_table_attach_row           (GtkWidget *table,
                                              const gchar *name,
                                              const gchar *units,
                                              GtkWidget *middle_widget);
+GtkWidget*   gwy_table_attach_hscale        (GtkWidget *table,
+                                             gint row,
+                                             const gchar *name,
+                                             const gchar *units,
+                                             GtkObject *pivot,
+                                             GwyHScaleStyle style);
 GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
                                              gint row,
                                              gint col);
