@@ -1,40 +1,29 @@
 # @(#) $Id$
 
-SUBDIRS = tools
-
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion.la
 libgwymodule = $(top_builddir)/libgwymodule/libgwymodule.la
 libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
-libtools = tools/libtools.la
 
-bin_PROGRAMS = gwyddion
+noinst_LTLIBRARIES = libtools.la
 
 noinst_HEADERS = \
-	init.h \
-	file.h \
-	menu.h \
-	stock.h \
-	app.h
+	tools.h
 
-gwyddion_SOURCES = \
-	init.c \
-	file.c \
-	menu.c \
-	stock.c \
-	app.c
+libtools_la_LDFLAGS = -static
+libtools_la_SOURCES = \
+	crop.c
 
-gwyddion_LDADD = \
+libtools_la_LIBADD = \
 	$(libgwyddion) \
 	$(libgwymodule) \
 	$(libgwyprocess) \
 	$(libgwydraw) \
-	$(libgwydgets) \
-	$(libtools)
+	$(libgwydgets)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\" -DGWY_PIXMAP_DIR=\"$(gwypixmapdir)\"
+AM_CPPFLAGS = -DDEBUG -DGWY_MODULE_DIR=\"$(gwymoduledir)\"
 
 clean-local:
 	rm -f core.* *~

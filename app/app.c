@@ -6,6 +6,7 @@
 #include "init.h"
 #include "file.h"
 #include "menu.h"
+#include "stock.h"
 #include "app.h"
 
 /* TODO */
@@ -67,28 +68,51 @@ foo(void)
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<xtns>", menu);
 
+    /***************************************************************/
     toolbar = gtk_toolbar_new();
     gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
                                 GTK_ORIENTATION_HORIZONTAL);
     gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_SMALL_TOOLBAR);
+                              GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_IN,
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_IN,
                              "Zoom in", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
                              GINT_TO_POINTER(1), 0);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_100,
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_1_1,
                              "Zoom 1:1", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
                              GINT_TO_POINTER(10000), 1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GTK_STOCK_ZOOM_OUT,
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_OUT,
                              "Zoom out", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
                              GINT_TO_POINTER(-1), 2);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_FIT,
+                             "Zoom to fit", NULL,
+                             NULL, NULL, 3);
 
+    /***************************************************************/
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
+                                GTK_ORIENTATION_HORIZONTAL);
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
+                              GTK_ICON_SIZE_BUTTON);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
+                             "Fit plane", NULL,
+                             NULL, NULL, 0);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_TRIANGLE,
+                             "Fit plane using three points", NULL,
+                             NULL, NULL, 1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_GRAPH,
+                             "Graph", NULL,
+                             NULL, NULL, 2);
+
+    /***************************************************************/
     gtk_widget_show_all(window);
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 

@@ -6,6 +6,7 @@
 #include <gtk/gtkfilesel.h>
 #include "app.h"
 #include "file.h"
+#include "tools/tools.h"
 
 static void file_open_ok_cb            (GtkFileSelection *selector);
 static void file_save_as_ok_cb         (GtkFileSelection *selector);
@@ -133,7 +134,9 @@ gwy_app_create_data_window(GwyContainer *data)
                              G_CALLBACK(gwy_app_set_current_data_window), NULL);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
+
     gtk_widget_show_all(data_window);
+    gwy_tools_crop_use(data_window);
 }
 
 static void

@@ -1,25 +1,4 @@
 <SECTION>
-<FILE>gwypalette</FILE>
-<TITLE>GwyPalette</TITLE>
-gwy_palette_new
-gwy_palette_set_palette_def
-gwy_palette_get_palette_def
-gwy_palette_set_by_name
-gwy_palette_get_samples
-gwy_palette_get_data
-gwy_palette_sample
-gwy_palette_print
-<SUBSECTION Standard>
-GWY_PALETTE
-GWY_IS_PALETTE
-GWY_TYPE_PALETTE
-gwy_palette_get_type
-GWY_PALETTE_CLASS
-GWY_IS_PALETTE_CLASS
-GWY_PALETTE_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gwypalettedef</FILE>
 GWY_PALETTE_GRAY
 GWY_PALETTE_RED
@@ -56,6 +35,27 @@ gwy_palette_def_get_type
 GWY_PALETTE_DEF_CLASS
 GWY_IS_PALETTE_DEF_CLASS
 GWY_PALETTE_DEF_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwypalette</FILE>
+<TITLE>GwyPalette</TITLE>
+gwy_palette_new
+gwy_palette_set_palette_def
+gwy_palette_get_palette_def
+gwy_palette_set_by_name
+gwy_palette_get_samples
+gwy_palette_get_data
+gwy_palette_sample
+gwy_palette_print
+<SUBSECTION Standard>
+GWY_PALETTE
+GWY_IS_PALETTE
+GWY_TYPE_PALETTE
+gwy_palette_get_type
+GWY_PALETTE_CLASS
+GWY_IS_PALETTE_CLASS
+GWY_PALETTE_GET_CLASS
 </SECTION>
 
 <SECTION>

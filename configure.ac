@@ -8,6 +8,7 @@ AC_CONFIG_SRCDIR(libgwydgets/gwyspherecoords.c)
 AC_CONFIG_FILES(\
   Makefile \
   app/Makefile \
+  app/tools/Makefile \
   libdraw/Makefile \
   libgwyddion/Makefile \
   libgwydgets/Makefile \
@@ -16,6 +17,7 @@ AC_CONFIG_FILES(\
   modules/Makefile \
   modules/file/Makefile \
   modules/process/Makefile \
+  pixmaps/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyddion/Makefile \
   devel-docs/libgwydgets/Makefile \
@@ -112,8 +114,11 @@ AC_SUBST(PACKAGE_URL)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
           [Define to package home page, as a string.])
 AC_SUBST(TARGET_TARGETS)
+
 gwymoduledir=$libdir/gwyddion/modules
+gwypixmapdir=$datadir/gwyddion/pixmaps
 AC_SUBST(gwymoduledir)
+AC_SUBST(gwypixmapdir)
 
 AC_OUTPUT
 
