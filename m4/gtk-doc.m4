@@ -5,7 +5,7 @@
 ## HTML_DIR to direcotry to install HTML docs into
 ## GTKDOC to whether gtkdoc-mkdb is found
 ## ENABLE_GTK_DOC to yes when gtk-doc should be enabled
-AC_DEFUN(gtk_CHECK_GTK_DOC,
+AC_DEFUN([gtk_CHECK_GTK_DOC],
 [dnl
 
 AC_ARG_WITH(html-dir, [  --with-html-dir=PATH    path to installed docs @<:@DATADIR/gtk-doc/html@:>@])
