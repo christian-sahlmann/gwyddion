@@ -236,8 +236,8 @@ gwy_vector_shade_set_sphere_coords(GwyVectorShade *vector_shade,
     g_return_if_fail(sphere_coords != NULL);
     g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
 
-    return gwy_grad_sphere_set_sphere_coords(vector_shade->grad_sphere,
-                                             sphere_coords);
+    gwy_grad_sphere_set_sphere_coords(vector_shade->grad_sphere,
+                                      sphere_coords);
 }
 
 #define BLOCK_ALL \
