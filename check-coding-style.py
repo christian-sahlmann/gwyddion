@@ -251,7 +251,8 @@ def check_boolean_arguments(tokens, lines, warnings):
         'gtk_vbox_new': 1,
         'gtk_box_pack_start': (3, 4),
         'gwy_data_field_new': 5,
-        'gwy_data_line_new': 3
+        'gwy_data_line_new': 3,
+        'gwy_data_field_invert': (2, 3, 4)
     }
     for i, t in enumerate(tokens):
         if t.typ != Token.ident or t.string not in functions:
