@@ -71,7 +71,6 @@ module_register(const gchar *name)
 static gboolean
 outliers(GwyContainer *data, GwyRunType run)
 {
-    GString *lab;
     GwyDataField *dfield, *maskfield;
     gdouble thresh;
 

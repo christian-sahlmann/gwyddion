@@ -84,8 +84,6 @@ static void       gwy_data_croscor_menu_set_history  (GtkWidget *omenu,
 static void       gwy_data_croscor_operation_cb      (GtkWidget *item,
                                                     GwyCroscorArgs *args);
 static void       gwy_data_croscor_data_cb           (GtkWidget *item);
-static void       gwy_data_croscor_entry_cb          (GtkWidget *entry,
-                                                    gpointer data);
 static gboolean   gwy_data_croscor_do                (GwyCroscorArgs *args,
                                                     GtkWidget *croscor_window,
                                                     GwyCroscorControls *controls);
@@ -169,7 +167,6 @@ static GtkWidget*
 gwy_data_croscor_window_construct(GwyCroscorArgs *args, GwyCroscorControls *controls)
 {
     GtkWidget *dialog, *table, *omenu, *entry, *label, *spin;
-    gchar *text;
 
     dialog = gtk_dialog_new_with_buttons(_("Data Croscorrelation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
@@ -402,7 +399,7 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     args->window_x = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_x));
     args->window_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_y));
     args->thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
-    args->mask = gtk_toggle_button_get_active(GTK_CHECK_BUTTON(controls->mask));
+    args->mask = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->mask));
     
     
     data = gwy_data_window_get_data(operand1);

@@ -352,7 +352,7 @@ void
 plot_correlated(GwyDataField *retfield, gint xsize, gint ysize, gdouble threshold)
 {
     GwyDataField *field;
-    gint i, j, k;
+    gint i, j;
     
     field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
     gwy_data_field_fill(retfield, 0);
@@ -372,7 +372,7 @@ void
 plot_maxima(GwyDataField *retfield, gdouble threshold)
 {
     GwyDataField *field;
-    gint i, j, k;
+    gint i, j;
     
     field = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(retfield)));
     gwy_data_field_fill(retfield, 0);
@@ -454,7 +454,7 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
         }
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(retfield));
     }
-    gwy_app_data_view_update(GWY_DATA_VIEW(gwy_data_window_get_data_view(operand1)));
+    gwy_app_data_view_update(gwy_data_window_get_data_view(operand1));
     
     return TRUE;
 }

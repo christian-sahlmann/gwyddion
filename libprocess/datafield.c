@@ -1437,7 +1437,7 @@ gdouble
 gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolation)
 {
     gint i, j;
-    gdouble sum;
+    gdouble sum = 0;
     
     for (i=0; i<(a->xres-1); i++)
     {
@@ -1521,7 +1521,10 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint ulcol, gint ulrow, gint brcol,
         row = a->data + i*a->xres + ulcol;
 
         for (j = 0; j < brcol - ulcol; j++)
-            sum2 += (*row)*(*row++);
+        {
+            sum2 += (*row)*(*row);
+            *row++;
+        }
     }
 
     n = (brcol-ulcol)*(brrow-ulrow);
@@ -3321,7 +3324,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
 
-    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return -1;}
+    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return;}
 
     gwy_data_field_fill(score, -1);
     /*correlation request outside kernel*/
@@ -3362,7 +3365,7 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
 
-    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return -1;}
+    if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return;}
     /*correlation request outside kernel*/
     if (kxres > xres || kyres > yres) 
     {

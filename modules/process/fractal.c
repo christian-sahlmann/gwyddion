@@ -151,6 +151,8 @@ fractal(GwyContainer *data, GwyRunType run)
     else
         fractal_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_MODAL) || fractal_dialog(&args, data);
+
+    fractal_save_args(data, &args);
     return ok;
 }
 
@@ -645,7 +647,7 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
                   GwyDataLine *newxline, GwyDataLine *newyline, FractalArgs *args)
 {
     gint i, j;
-    gdouble from, to;
+    gdouble from=0, to=0;
     
     switch (args->out){
         case (GWY_FRACTAL_CUBECOUNTING):
