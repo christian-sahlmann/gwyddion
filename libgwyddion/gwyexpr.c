@@ -1311,20 +1311,26 @@ gwy_expr_compile(GwyExpr *expr,
 /**
  * gwy_expr_get_variables:
  * @expr: An expression evaluator.
- * @names: Location to store list of variable names to (may be also %NULL).
- *         The string array returned in this argument in owned by @expr and
- *         is valid only until next gwy_expr_compile(), gwy_expr_evaluate(),
- *         eventually gwy_expr_free().
+ * @names: Location to store pointer to list of variable names to (may be %NULL
+ *         to get just number of variables).  The string array returned in
+ *         this argument in owned by @expr and is valid only until next
+ *         gwy_expr_compile(), gwy_expr_evaluate(), eventually gwy_expr_free()
+ *         call.
  *
  * Get the number, names, and indices of unresolved identifiers in @expr.
  *
  * It is an error to call this function after an unsuccessful compilation.
  *
- * The position of each variable in @names corresponds to value position in
- * @values array in gwy_expr_execute() call.
+ * If you only care about variables from a prefedined set, use
+ * gwy_expr_resolve_variables().
  *
- * Returns: The number of unresolved identifiers, that is length of array
- *          stored to @names.  On failure, -1 is returned.
+ * The position of each variable in @names corresponds to value position in
+ * @values array in gwy_expr_execute() call. Namely, the first item in the
+ * array is always reserved and do not correspond to any variable.
+ *
+ * Returns: The length of array stored to @names.  This is the number of
+ *          variables plus one (for the first reserved item).
+ *          On failure, -1 is returned.
  *
  * Since: 1.9
  **/
@@ -1332,22 +1338,64 @@ gint
 gwy_expr_get_variables(GwyExpr *expr,
                        gchar ***names)
 {
-    g_return_val_if_fail(expr, -1);
-
-    if (!expr->in)
-        return -1;
+    g_return_val_if_fail(expr, 0);
+    g_return_val_if_fail(expr->in, 0);
 
     if (names)
-        *names = (gchar**)expr->identifiers->pdata + 1;
+        *names = (gchar**)expr->identifiers->pdata;
 
-    return expr->identifiers->len - 1;
+    return expr->identifiers->len;
+}
+
+/**
+ * gwy_expr_resolve_variables:
+ * @expr: An expression evaluator.
+ * @n: Length of @names and @indices arrays.
+ * @names: List of variable names to get positions of.
+ * @indices: Array to store variable positions to.  The positions are the same
+ *           as in gwy_expr_execute().  Zero is stored for variables not
+ *           present in the expression to allow to safely substitute values
+ *           without caring which variables are actually used.
+ *
+ * Finds positions of variables in an expression.
+ *
+ * Returns: The number of remaining undefined variables in @expr.
+ *
+ * Since: 1.9
+ **/
+gint
+gwy_expr_resolve_variables(GwyExpr *expr,
+                           guint n,
+                           const gchar **names,
+                           guint *indices)
+{
+    guint i, j, unresolved;
+
+    g_return_val_if_fail(expr, 0);
+    g_return_val_if_fail(expr->in, 0);
+    g_return_val_if_fail(!n || (names && indices), 0);
+
+    memset(indices, 0, n*sizeof(guint*));
+    unresolved = n;
+    for (i = 0; i < n; i++) {
+        for (j = 1; j < expr->identifiers->len; j++) {
+            if (!strcmp(names[i],
+                        (gchar*)g_ptr_array_index(expr->identifiers, j))) {
+                indices[i] = j;
+                unresolved--;
+                break;
+            }
+        }
+    }
+
+    return unresolved;
 }
 
 /**
  * gwy_expr_execute:
  * @expr: An expression evaluator.
- * @values: Array with variable values.  Variable list can be obtained
- *          by gwy_expr_get_variables().
+ * @values: Array with variable values.  Its zeroth item is always unused.
+ *          Variable list can be obtained by gwy_expr_get_variables().
  *
  * Executes a compiled expression with variables, substituting given values.
  *
@@ -1359,7 +1407,8 @@ gdouble
 gwy_expr_execute(GwyExpr *expr,
                  const gdouble *values)
 {
-    expr->variables = values - 1;
+    /* Do not check anything, this can often appear in an inner loop */
+    expr->variables = values;
     gwy_expr_stack_interpret(expr);
     return expr->stack[0];
 }

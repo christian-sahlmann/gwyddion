@@ -804,7 +804,7 @@ test_si_unit_parse(void)
 #define printexprvar(str) \
     if (gwy_expr_compile(expr, str, &err)) { \
         nvars = gwy_expr_get_variables(expr, &varnames); \
-        for (i = 0; i < nvars; i++) \
+        for (i = 1; i < nvars; i++) \
             fprintf(stderr, "%s=%g ", varnames[i], variables[i]); \
         fprintf(stderr, "<%s> = %g", str, gwy_expr_execute(expr, variables)); \
     } \
@@ -817,7 +817,7 @@ test_si_unit_parse(void)
 static void
 test_expr(void)
 {
-    gdouble variables[3];
+    gdouble variables[4];
     gchar **varnames;
     GError *err = NULL;
     GwyExpr *expr;
@@ -861,18 +861,23 @@ test_expr(void)
     printexpr("1+2 3");
     printexpr("1^2^3");
     printexpr("1/5 hypot 3,4");
+    printexpr("1(2+3)");
+    printexpr("1(2)");
 
-    variables[0] = 1;  variables[1] = 2;  variables[2] = 3;
+    variables[1] = 1;  variables[2] = 2;  variables[3] = 3;
     printexprvar("x+y+z");
     printexprvar("x^y^z");
     printexprvar("2 a + b/c");
     printexprvar("pepa z depa");
     printexprvar("1 + x");
-    variables[0] = 3;  variables[1] = 4;  variables[2] = 5;
+    variables[1] = 3;  variables[2] = 4;  variables[3] = 5;
     printexprvar("hypot hypot x, y, z");
     printexprvar("-x--y");
     printexprvar("a+a-b+a-b");
     printexprvar("1/a b");
+    printexprvar("(a+b)(a+c)");
+    printexprvar("c(a+b)");
+    printexprvar("(a+b)c");
     gwy_expr_free(expr);
 }
 
