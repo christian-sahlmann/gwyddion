@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>File Type Plug-ins</refname>
     <refpurpose>
-      XXX
+      Plug-in loading and/or saving third party data formats.
     </refpurpose>
   </refnamediv>
 
@@ -61,16 +61,33 @@ load save
   <refsect1>
     <title>Loading</title>
     <para>
-      To be written.
+      When the plug-in is called with <literal>load</literal> as its first
+      argument then the second argument is the name of
+      <link linkend="plugin-proxy-dump">dump file</link> to write the data
+      to, and the last, third argument is the name of the file to load.
+    </para>
+    <para>
+      The plug-in reads the specified file and dumps the data to the dump
+      file.  The dump file is created as an empty file before the plug-in
+      is run to avoid race conditions.  The plug-in should just overwrite
+      with actual data.  Leaving the dump file empty is a mark of failure
+      to load the given file.
     </para>
   </refsect1>
   <refsect1>
     <title>Saving</title>
     <para>
-      To be written.
+      Saving works much like loading.  When the first argument is
+      <literal>save</literal>, then the second and third arguments are again
+      names of dump file and the file to save (the order of arguments is the
+      same as in loading, dump file always comes first, then the real file).
+    </para>
+    <para>
+      The plug-in reads the dump file and writes the data to the file given
+      as the last argument.  Since the file to be written can already exist
+      the only reliable signal of failure to save the file is returning
+      nonzero exit code.
     </para>
   </refsect1>
 </refentry>
-
-
 

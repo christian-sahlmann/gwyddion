@@ -11,22 +11,50 @@
   <refnamediv>
     <refname>Dump Format</refname>
     <refpurpose>
-      XXX
+      Dumb dump file format used for data exchange between plug-in proxy and
+      plug-ins
     </refpurpose>
   </refnamediv>
 
   <refsect1>
-    <title>Overall structure</title>
+    <title>Overall Structure</title>
     <para>
       The dump format consists of text lines, except for the actual data
       samples which are for efficiency reasons stored as arrays of (binary)
       IEEE double precision numbers.
     </para>
     <para>
-      To be written.
+      Since the dump files contain binary data (along with the text ones)
+      they have to be always opened in binary mode to avoid end-of-line
+      conversions (on systems distinguishing between text and binary files).
+      Unix end-of-lines are always used, i.e., lines are always terminated
+      by a single LF (line feed) character, ASCII 0x0a.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Data Fields</title>
+    <para>
+      The data samples themselves are stored as a sequence of binary IEEE
+      floating point numbers in little-endian byte order.  The array is
+      preceded by <literal>/0/data=[</literal>, a single LF character, and
+      a single left bracket <literal>[</literal>.  The data samples are
+      closed by a sequence of two right brackets <literal>]]</literal> and
+      a single LF character.
+    </para>
+    <para>
+      The resolutions and physical dimensions are specified using special
+      keys <literal>/0/data/xres</literal>, <literal>/0/data/yres</literal>,
+      <literal>/0/data/xreal</literal>, and <literal>/0/data/yreal</literal>.
+      Since the resolutions must be obviously known before data samples can
+      be read, the lines
+      <literal>/0/data/xres=<parameter>x-resolution</parameter></literal>
+      and
+      <literal>/0/data/yres=<parameter>y-resolution</parameter></literal>
+      must appear somewhere before it in the file.  It is also strongly
+      recommended to specify physical dimensions too, though it is not
+      strictly necessary if you don't mind some bogus default value (like
+      1 meter) is substituted then.
     </para>
   </refsect1>
 </refentry>
-
-
 

@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>Data Process Plug-ins</refname>
     <refpurpose>
-      XXX
+      Data processing by external programs
     </refpurpose>
   </refnamediv>
 
@@ -74,5 +74,4 @@ noninteractive with_defaults
     </para>
   </refsect1>
 </refentry>
-
 
