@@ -121,7 +121,7 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
     setup_sensitivity_keys();
 
     obj = G_OBJECT(widget);
-    gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));
+    /*gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));*/
     i = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_key));
     if (i & data->flags) {
         j = GPOINTER_TO_UINT(g_object_get_qdata(obj, sensitive_state_key));

@@ -258,8 +258,8 @@ gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
         break;
 
         case GTK_RESPONSE_APPLY:
-        state->func_slots->apply(state);
         gwy_unitool_dialog_set_visible(state, FALSE);
+        state->func_slots->apply(state);
         break;
 
         case GWY_UNITOOL_RESPONSE_UNSELECT:
