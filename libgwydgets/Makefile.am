@@ -20,6 +20,7 @@ libgwydgetsinclude_HEADERS = \
 	gwydatawindow.h \
 	gwydgets.h \
 	gwydgetenums.h \
+	gwydgettypes.h \
 	gwyglmaterial.h \
 	gwygraph.h \
 	gwygrapharea.h \
@@ -51,7 +52,14 @@ libgwydgetsinclude_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets.la
 
+built_sources = \
+	gwydgettypes.h \
+	gwydgettypes.c
+
 EXTRA_DIST = \
+	$(built_sources) \
+	gwydgettypes.c.template \
+	gwydgettypes.h.template \
 	makefile.msc \
 	libgwydgets.def
 
@@ -75,6 +83,7 @@ libgwydgets_la_SOURCES = \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
 	gwydgets.c \
+	gwydgettypes.c \
 	gwyglmaterial.c \
 	gwygraph.c \
 	gwygrapharea.c \
@@ -105,6 +114,35 @@ libgwydgets_la_SOURCES = \
 	gwyvruler.c \
 	gwyvalunit.c
 
+INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwydgets\"
+
+clean-local:
+	rm -f core.* *~ *.xgen
+
+if MAINTAINER_MODE
+enum_headers = gwydgetenums.h
+
+MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
+
+BUILT_SOURCES = $(built_sources)
+
+gwydgettypes.h: $(enum_headers) gwydgettypes.h.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwydgettypes.h.template $(enum_headers) ) \
+	| sed -e 's/_3_D/_3D_/g' >gwydgettypes.h.xgen \
+	&& (cmp -s gwydgettypes.h.xgen gwydgettypes.h \
+		|| cp gwydgettypes.h.xgen gwydgettypes.h ) \
+	&& rm -f gwydgettypes.h.xgen
+
+gwydgettypes.c: $(enum_headers) gwydgettypes.c.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwydgettypes.c.template $(enum_headers) ) \
+	>gwydgettypes.c.xgen \
+	&& cp gwydgettypes.c.xgen gwydgettypes.c  \
+	&& rm -f gwydgettypes.c.xgen
+endif
+
 # Note these are test programs not to be included in the distro
 #noinst_PROGRAMS = main test
 #
@@ -120,19 +158,8 @@ libgwydgets_la_SOURCES = \
 #	$(libgwyprocess) \
 #	$(libgwyddion)
 #
-#wtest_SOURCES = wtest.c
-#wtest_LDADD = libgwydgets.la \
-#	$(libgwydraw) \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
-#
 #create_data_SOURCES = create-data.c
 #create_data_LDADD = \
 #	$(libgwyprocess) \
 #	$(libgwyddion)
 
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwydgets\"
-
-clean-local:
-	rm -f core.* *~

@@ -37,13 +37,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-    GWY_3D_VIEW_LABEL_X = 0,
-    GWY_3D_VIEW_LABEL_Y,
-    GWY_3D_VIEW_LABEL_MIN,
-    GWY_3D_VIEW_LABEL_MAX
-} Gwy3DViewLabel;
-
 #define GWY_TYPE_3D_VIEW              (gwy_3d_view_get_type())
 #define GWY_3D_VIEW(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_3D_VIEW, Gwy3DView))
 #define GWY_3D_VIEW_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_3D_VIEW, Gwy3DViewClass))

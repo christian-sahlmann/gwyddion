@@ -22,6 +22,7 @@
 #define __GWY_GWYPROCESS_H__
 
 #include <libprocess/gwyprocessenums.h>
+#include <libprocess/gwyprocesstypes.h>
 
 #include <libprocess/arithmetic.h>
 #include <libprocess/correct.h>

@@ -26,7 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwysiunit.h>
-#include <libgwydgets/gwydgets.h>
+#include "gwyoptionmenus.h"
 #include "gwyvalunit.h"
 
 #define GWY_VAL_UNIT_TYPE_NAME "GwyValUnit"
@@ -170,8 +170,7 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
                      G_CALLBACK(gwy_val_unit_value_changed), val_unit);
 
 
-    val_unit->base_si_unit
-        = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(si_unit)));
+    val_unit->base_si_unit = gwy_si_unit_duplicate(si_unit);
 
     return GTK_WIDGET(val_unit);
 }

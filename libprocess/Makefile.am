@@ -19,6 +19,7 @@ libgwyprocessinclude_HEADERS = \
 	grains.h \
 	gwyprocess.h \
 	gwyprocessenums.h \
+	gwyprocesstypes.h \
 	interpolation.h \
 	inttrans.h \
 	level.h \
@@ -29,9 +30,16 @@ libgwyprocessinclude_HEADERS = \
 
 noinst_HEADERS = morph_lib.h
 
+built_sources = \
+	gwyprocesstypes.h \
+	gwyprocesstypes.c
+
 lib_LTLIBRARIES = libgwyprocess.la
 
 EXTRA_DIST = \
+	$(built_sources) \
+	gwyprocesstypes.c.template \
+	gwyprocesstypes.h.template \
 	makefile.msc \
 	libgwyprocess.def
 
@@ -55,6 +63,7 @@ libgwyprocess_la_SOURCES = \
 	fractals.c \
 	grains.c \
 	gwyprocess.c \
+	gwyprocesstypes.c \
 	interpolation.c \
 	inttrans.c \
 	level.c \
@@ -64,16 +73,39 @@ libgwyprocess_la_SOURCES = \
 	stats.c \
 	tip.c
 
+INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyProcess\"
+
+clean-local:
+	rm -f core.* *~ *.xgen
+
+if MAINTAINER_MODE
+enum_headers = gwyprocessenums.h
+
+MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
+
+BUILT_SOURCES = $(built_sources)
+
+gwyprocesstypes.h: $(enum_headers) gwyprocesstypes.h.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwyprocesstypes.h.template $(enum_headers) ) \
+	| sed -e 's/_3_D/_3D_/g' >gwyprocesstypes.h.xgen \
+	&& (cmp -s gwyprocesstypes.h.xgen gwyprocesstypes.h \
+		|| cp gwyprocesstypes.h.xgen gwyprocesstypes.h ) \
+	&& rm -f gwyprocesstypes.h.xgen
+
+gwyprocesstypes.c: $(enum_headers) gwyprocesstypes.c.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwyprocesstypes.c.template $(enum_headers) ) \
+	>gwyprocesstypes.c.xgen \
+	&& cp gwyprocesstypes.c.xgen gwyprocesstypes.c  \
+	&& rm -f gwyprocesstypes.c.xgen
+endif
+
 #noinst_PROGRAMS = test
 #
 #test_SOURCES = \
 #	test.c
 #test_LDADD = libgwyprocess.la \
 #	$(libgwyddion)
-#
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyProcess\"
-
-clean-local:
-	rm -f core.* *~
 

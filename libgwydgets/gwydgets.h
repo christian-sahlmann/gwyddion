@@ -24,6 +24,7 @@
 #include <gdk/gdkgl.h>
 
 #include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwydgettypes.h>
 
 #include <libgwydgets/gwy3dlabel.h>
 #include <libgwydgets/gwy3dview.h>
