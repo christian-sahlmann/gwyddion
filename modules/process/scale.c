@@ -93,6 +93,7 @@ module_register(const gchar *name)
 static gboolean
 scale(GwyContainer *data, GwyRunType run)
 {
+    GtkWidget *data_window;
     GwyDataField *dfield;
     ScaleArgs args;
     gboolean ok;
@@ -109,13 +110,15 @@ scale(GwyContainer *data, GwyRunType run)
     if (ok) {
         data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
         g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+        /* not needed for scale? gwy_app_clean_up_data(data); */
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         gwy_data_field_resample(dfield,
                                 ROUND(args.ratio*args.xres),
                                 ROUND(args.ratio*args.yres),
                                 args.interp);
-        gwy_app_create_data_window(data);
+        data_window = gwy_app_create_data_window(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
         if (run != GWY_RUN_WITH_DEFAULTS)
             scale_save_args(gwy_app_settings_get(), &args);
     }

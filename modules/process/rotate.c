@@ -7,6 +7,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
+#include <app/file.h>
 
 #define GWY_RUN_ANY \
     (GWY_RUN_INTERACTIVE | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -75,6 +76,7 @@ module_register(const gchar *name)
 static gboolean
 rotate(GwyContainer *data, GwyRunType run)
 {
+    GtkWidget *data_window;
     GwyDataField *dfield;
     RotateArgs args;
     gboolean ok;
@@ -87,7 +89,14 @@ rotate(GwyContainer *data, GwyRunType run)
         rotate_load_args(gwy_app_settings_get(), &args);
     ok = (run != GWY_RUN_INTERACTIVE) || rotate_dialog(&args);
     if (ok) {
+        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+        gwy_app_clean_up_data(data);
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
         gwy_data_field_rotate(dfield, args.angle, args.interp);
+        data_window = gwy_app_create_data_window(data);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
         if (run != GWY_RUN_WITH_DEFAULTS)
             rotate_save_args(gwy_app_settings_get(), &args);
     }
