@@ -27,6 +27,8 @@
 #include <app/settings.h>
 #include <app/app.h>
 
+#include <stdio.h>
+
 #define CALIBRATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
@@ -37,18 +39,18 @@ typedef struct {
     gdouble zratio;
     gdouble zmin;
     gdouble zmax;
-    gint xreal;
-    gint yreal;
+    gdouble xreal;
+    gdouble yreal;
 } CalibrateArgs;
 
 typedef struct {
-    GtkWidget *xratio;
+    GtkObject *xratio;
     GtkObject *yratio;
     GtkObject *zratio;
-    GtkObject *xreal;
-    GtkObject *yreal;
-    GtkObject *zmin;
-    GtkObject *zmax;
+    GtkWidget *xreal;
+    GtkWidget *yreal;
+    GtkWidget *zmin;
+    GtkWidget *zmax;
     gboolean in_update;
 } CalibrateControls;
 
@@ -62,13 +64,13 @@ static void        ycalibrate_changed_cb          (GtkAdjustment *adj,
                                               CalibrateArgs *args);
 static void        zcalibrate_changed_cb          (GtkAdjustment *adj,
                                               CalibrateArgs *args);
-static void        width_changed_cb          (GtkAdjustment *adj,
+static void        width_changed_cb          (GwyValUnit *valunit,
                                               CalibrateArgs *args);
-static void        height_changed_cb         (GtkAdjustment *adj,
+static void        height_changed_cb         (GwyValUnit *valunit,
                                               CalibrateArgs *args);
-static void        zmin_changed_cb         (GtkAdjustment *adj,
+static void        zmin_changed_cb         (GwyValUnit *valunit,
                                               CalibrateArgs *args);
-static void        zmax_changed_cb         (GtkAdjustment *adj,
+static void        zmax_changed_cb         (GwyValUnit *valunit,
                                               CalibrateArgs *args);
 static void        calibrate_dialog_update       (CalibrateControls *controls,
                                               CalibrateArgs *args);
@@ -99,6 +101,8 @@ static GwyModuleInfo module_info = {
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
+
+CalibrateControls *pcontrols;
 
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
@@ -172,7 +176,7 @@ calibrate(GwyContainer *data, GwyRunType run)
 static gboolean
 calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table, *spin, *hbox, *label;
     GwyDataField *dfield;
     CalibrateControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -187,87 +191,118 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                                          NULL);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    
-    controls.xratio = gwy_val_unit_new("X calibration factor: ", 
-                                       gwy_data_field_get_si_unit_xy(dfield));
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xratio,
+
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(label, "<b>New real dimensions: </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-    
-    table = gtk_table_new(8, 3, FALSE);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+    controls.xreal = gwy_val_unit_new("X dimension: ", 
+                                       gwy_data_field_get_si_unit_xy(dfield));
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
+    g_signal_connect(GWY_VAL_UNIT(controls.xreal)->adjustment, "value_changed",
+                     G_CALLBACK(width_changed_cb), args);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
+                       FALSE, FALSE, 4);
+    controls.yreal = gwy_val_unit_new("Y dimension: ", 
+                                       gwy_data_field_get_si_unit_xy(dfield));
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
+    g_signal_connect(GWY_VAL_UNIT(controls.yreal)->adjustment, "value_changed",
+                     G_CALLBACK(height_changed_cb), args);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
+                       FALSE, FALSE, 4);
+    controls.zmin = gwy_val_unit_new("Z minimum: ", 
+                                       gwy_data_field_get_si_unit_z(dfield));
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zmin), args->zmin);
+    g_signal_connect(GWY_VAL_UNIT(controls.zmin)->adjustment, "value_changed",
+                     G_CALLBACK(zmin_changed_cb), args);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zmin,
+                       FALSE, FALSE, 4);
+    controls.zmax = gwy_val_unit_new("Z maximum: ", 
+                                       gwy_data_field_get_si_unit_z(dfield));
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zmax), args->zmax);
+    g_signal_connect(GWY_VAL_UNIT(controls.zmax)->adjustment, "value_changed",
+                     G_CALLBACK(zmax_changed_cb), args);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zmax,
                        FALSE, FALSE, 4);
 
- 
-   
+    pcontrols = &controls;
     
-    /*
-    controls.xratio = gtk_adjustment_new(args->xratio, 0.01, 100, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("X calibration factor:"), "",
-                                       controls.xratio);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(label, "<b>Calibration coefficients: </b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
+                       FALSE, FALSE, 4);
+     
+
+    hbox = gtk_hbox_new(FALSE, 2);
+    
+    label = gtk_label_new("X calibration factor: "); 
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), label,
+                       FALSE, FALSE, 4);
+    controls.xratio = gtk_adjustment_new(args->xratio,
+                                        0.01, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.xratio), "controls", &controls);
     g_signal_connect(controls.xratio, "value_changed",
                      G_CALLBACK(xcalibrate_changed_cb), args);
-*/
-    controls.xreal = gtk_adjustment_new(args->xratio*args->xreal,
-                                       0, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 1, _("New X range"), _("px"),
-                                       controls.xreal);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
-    g_object_set_data(G_OBJECT(controls.xreal), "controls", &controls);
-    g_signal_connect(controls.xreal, "value_changed",
-                     G_CALLBACK(width_changed_cb), args);
 
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xratio), 1, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), spin,
+                       FALSE, FALSE, 4);
     
-    controls.yratio = gtk_adjustment_new(args->yratio, 0.01, 100, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("X calibration factor:"), "",
-                                       controls.yratio);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+    
+    hbox = gtk_hbox_new(FALSE, 2);
+    
+    label = gtk_label_new("Y calibration factor: ");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), label,
+                       FALSE, FALSE, 4);
+    controls.yratio = gtk_adjustment_new(args->yratio,
+                                        0.01, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.yratio), "controls", &controls);
     g_signal_connect(controls.yratio, "value_changed",
                      G_CALLBACK(ycalibrate_changed_cb), args);
 
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yratio), 1, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), spin,
+                       FALSE, FALSE, 4);
     
-    controls.yreal = gtk_adjustment_new(args->yratio*args->yreal,
-                                       0, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 3, _("New Y range"), _("px"),
-                                       controls.yreal);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
-    g_object_set_data(G_OBJECT(controls.yreal), "controls", &controls);
-    g_signal_connect(controls.yreal, "value_changed",
-                     G_CALLBACK(height_changed_cb), args);
-
-    controls.zratio = gtk_adjustment_new(args->zratio, 0.01, 100, 0.01, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 4, _("Z calibration factor:"), "",
-                                       controls.zratio);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+    
+    hbox = gtk_hbox_new(FALSE, 2);
+    
+    label = gtk_label_new("Z calibration factor: ");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), label,
+                       FALSE, FALSE, 4);
+    controls.zratio = gtk_adjustment_new(args->zratio,
+                                        0.01, 10000, 1, 10, 0);
     g_object_set_data(G_OBJECT(controls.zratio), "controls", &controls);
     g_signal_connect(controls.zratio, "value_changed",
                      G_CALLBACK(zcalibrate_changed_cb), args);
 
-    controls.zmin = gtk_adjustment_new(args->zmin,
-                                       0, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 5, _("Z minimum"), _("px"),
-                                       controls.zmin);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
-    g_object_set_data(G_OBJECT(controls.zmin), "controls", &controls);
-    g_signal_connect(controls.zmin, "value_changed",
-                     G_CALLBACK(zmin_changed_cb), args);
-
-    controls.zmax = gtk_adjustment_new(args->zmax,
-                                       0, 10000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, 6, _("Z maximum"), _("px"),
-                                       controls.zmax);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
-    g_object_set_data(G_OBJECT(controls.zmax), "controls", &controls);
-    g_signal_connect(controls.zmax, "value_changed",
-                     G_CALLBACK(zmax_changed_cb), args);
-
-
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zratio), 1, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), spin,
+                       FALSE, FALSE, 4);
+    
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 4);
+     
+   
     
     controls.in_update = FALSE;
 
@@ -277,15 +312,11 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            args->xratio
-                = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.xratio));
-            args->yratio
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
-            args->zmin
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmin));
-            args->zmax
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmax));
-            gtk_widget_destroy(dialog);
+            args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
+            args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
+            args->zmin = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmin));
+            args->zmax = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmax));
+             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -306,10 +337,10 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->xratio = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.xratio));
+    args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
     args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
-    args->zmin = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmin));
-    args->zmax = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zmax));
+    args->zmin = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmin));
+    args->zmax = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmax));
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -326,6 +357,7 @@ xcalibrate_changed_cb(GtkAdjustment *adj,
     if (controls->in_update)
         return;
 
+    printf("xcal\n");
     controls->in_update = TRUE;
     args->xratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -341,6 +373,7 @@ ycalibrate_changed_cb(GtkAdjustment *adj,
     if (controls->in_update)
         return;
 
+    printf("ycal\n");
     controls->in_update = TRUE;
     args->yratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -355,7 +388,8 @@ zcalibrate_changed_cb(GtkAdjustment *adj,
     controls = g_object_get_data(G_OBJECT(adj), "controls");
     if (controls->in_update)
         return;
-
+    
+    printf("zcal\n");
     controls->in_update = TRUE;
     args->zratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -363,86 +397,90 @@ zcalibrate_changed_cb(GtkAdjustment *adj,
 }
 
 static void
-width_changed_cb(GtkAdjustment *adj,
+width_changed_cb(GwyValUnit *valunit,
                  CalibrateArgs *args)
 {
-    CalibrateControls *controls;
 
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    if (controls->in_update)
+    if (pcontrols->in_update)
         return;
 
-    controls->in_update = TRUE;
-    args->xratio = gtk_adjustment_get_value(adj)/args->xreal;
-    calibrate_dialog_update(controls, args);
-    controls->in_update = FALSE;
+    pcontrols->in_update = TRUE;
+  
+    printf("width\n");
+    args->xratio = gwy_val_unit_get_value(valunit)/args->xreal;
+    calibrate_dialog_update(pcontrols, args);
+    pcontrols->in_update = FALSE;
+    
 }
 
 static void
-height_changed_cb(GtkAdjustment *adj,
+height_changed_cb(GwyValUnit *valunit,
                   CalibrateArgs *args)
 {
-    CalibrateControls *controls;
-
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    if (controls->in_update)
+    if (pcontrols->in_update)
         return;
 
-    controls->in_update = TRUE;
-    args->yratio = gtk_adjustment_get_value(adj)/args->yreal;
-    calibrate_dialog_update(controls, args);
-    controls->in_update = FALSE;
+    pcontrols->in_update = TRUE;
+    
+    printf("height\n");
+    args->yratio = gwy_val_unit_get_value(valunit)/args->yreal;
+    calibrate_dialog_update(pcontrols, args);
+    pcontrols->in_update = FALSE;
 }
 
 static void
-zmin_changed_cb(GtkAdjustment *adj,
+zmin_changed_cb(GwyValUnit *valunit,
                   CalibrateArgs *args)
 {
-    CalibrateControls *controls;
-
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    if (controls->in_update)
+    if (pcontrols->in_update)
         return;
 
-    controls->in_update = TRUE;
-    args->zratio = (args->zmax - gtk_adjustment_get_value(adj))/(args->zmax - args->zmin);
-    calibrate_dialog_update(controls, args);
-    controls->in_update = FALSE;
+    pcontrols->in_update = TRUE;
+    
+    printf("zmin\n");
+    args->zratio = (args->zmax - gwy_val_unit_get_value(valunit))/(args->zmax - args->zmin);
+    calibrate_dialog_update(pcontrols, args);
+    pcontrols->in_update = FALSE;
 }
 static void
-zmax_changed_cb(GtkAdjustment *adj,
+zmax_changed_cb(GwyValUnit *valunit,
                   CalibrateArgs *args)
 {
-    CalibrateControls *controls;
-
-    controls = g_object_get_data(G_OBJECT(adj), "controls");
-    if (controls->in_update)
+    if (pcontrols->in_update)
         return;
 
-    controls->in_update = TRUE;
-    args->zratio = (gtk_adjustment_get_value(adj) - args->zmin)/(args->zmax - args->zmin);
-    calibrate_dialog_update(controls, args);
-    controls->in_update = FALSE;
+    pcontrols->in_update = TRUE;
+   
+    printf("zmax\n");
+    args->zratio = (gwy_val_unit_get_value(valunit) - args->zmin)/(args->zmax - args->zmin);
+    calibrate_dialog_update(pcontrols, args);
+    pcontrols->in_update = FALSE;
 }
 
 static void
 calibrate_dialog_update(CalibrateControls *controls,
                     CalibrateArgs *args)
 {
+
+    printf("updateing: zmin=%g, zmax=%g, xratio=%g, yratio=%g\n", args->zmin,
+           args->zmax, args->xratio, args->yratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
                              args->xratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yratio),
                              args->yratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zratio),
                              args->zratio);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xreal),
-                             ROUND(args->xratio*args->xreal));
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yreal),
-                             ROUND(args->yratio*args->yreal));
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zmin),
-                             ROUND(args->zmin));
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zmax),
-                             ROUND(args->zmax));
+
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->xreal),
+                           args->xratio*args->xreal);
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->yreal),
+                           args->yratio*args->yreal);
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zmin),
+                           args->zmin);
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zmax),
+                           args->zmax);
+                           
+
 }
 
 static const gchar *xratio_key = "/module/calibrate/xratio"; 

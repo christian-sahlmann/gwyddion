@@ -109,6 +109,8 @@ gwy_val_unit_init(GwyValUnit *val_unit)
   
 }
 
+#include <stdio.h>
+
 GtkWidget*
 gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
 {
@@ -117,29 +119,31 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
     gwy_debug("");
 
     val_unit = (GwyValUnit*)gtk_object_new(gwy_val_unit_get_type (), NULL);
+    gtk_box_set_spacing(GTK_BOX(val_unit), 2);
 
     val_unit->label = gtk_label_new(NULL);
     gtk_label_set_markup(val_unit->label, label_text);
-    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->label, FALSE, FALSE, 4);
 
     val_unit->adjustment = gtk_adjustment_new(val_unit->dival, 
-                                    0, 10000, 1, 10, 0);
+                                    -1e6, 1e6, 1, 10, 0);
     val_unit->spin = gtk_spin_button_new(GTK_ADJUSTMENT(val_unit->adjustment), 1, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(val_unit->spin), 3);
-    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->spin, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->spin, FALSE, FALSE, 2);
    
     val_unit->selection = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed), 
                                                       val_unit,
                                                       -12, 6, 
                                                       gwy_si_unit_get_unit_string(si_unit),
                                                       val_unit->unit);
-    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 2);
 
     g_signal_connect(val_unit->spin, "value-changed", 
                      G_CALLBACK(gwy_val_unit_value_changed), val_unit);
     
  
     val_unit->base_si_unit = gwy_si_unit_new(gwy_si_unit_get_unit_string(si_unit));
+    
         
     return GTK_WIDGET(val_unit);
 }
@@ -209,14 +213,23 @@ gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
                                                       "metric-unit"));
 }
 
+#include <stdio.h>
+
 void       
 gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 {
     GwySIValueFormat *format;
-    format = gwy_si_unit_get_format(val_unit->base_si_unit, value, format);
+    format = gwy_si_unit_get_format(val_unit->base_si_unit, value, NULL);
 
-    val_unit->unit = floor(log(format->magnitude)/3.0);
-    val_unit->dival = value/pow(10, 3*val_unit->unit);
+    printf("value of valunit \"%s\" is %g\n", gtk_label_get_text(GTK_LABEL(val_unit->label)), value);
+    
+    val_unit->unit = floor(log10(format->magnitude)/3.0);
+    val_unit->dival = value/pow(1000, val_unit->unit);
+
+    printf("value divided by %g  (%d, %g)=  %g\n", pow(1000, val_unit->unit), val_unit->unit, (gdouble)format->magnitude, val_unit->dival);
+    gtk_spin_button_set_value(val_unit->spin, val_unit->dival);
+    gtk_option_menu_set_history(val_unit->selection, val_unit->unit + 4);
+    
 }
 
 gdouble    
