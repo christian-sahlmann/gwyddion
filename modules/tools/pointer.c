@@ -39,7 +39,7 @@ typedef struct {
 static gboolean   module_register                (const gchar *name);
 static void       pointer_use                    (GwyDataWindow *data_window,
                                                   GwyToolSwitchEvent reason);
-static GtkWidget* pointer_dialog_create          (GwyDataView *data_view);
+static GtkWidget* pointer_dialog_create          (GwyDataWindow *data_window);
 static void       pointer_selection_updated_cb   (void);
 static void       pointer_dialog_response_cb     (gpointer unused,
                                                   gint response);
@@ -112,7 +112,7 @@ pointer_use(GwyDataWindow *data_window,
         gwy_data_view_set_top_layer(data_view, pointer_layer);
     }
     if (!pointer_dialog)
-        pointer_dialog = pointer_dialog_create(data_view);
+        pointer_dialog = pointer_dialog_create(data_window);
 
     updated_id = g_signal_connect(pointer_layer, "updated",
                                    G_CALLBACK(pointer_selection_updated_cb),
@@ -141,7 +141,7 @@ pointer_dialog_abandon(void)
 }
 
 static GtkWidget*
-pointer_dialog_create(GwyDataView *data_view)
+pointer_dialog_create(GwyDataWindow *data_window)
 {
     GwyContainer *data;
     GwyDataField *dfield;
@@ -149,7 +149,7 @@ pointer_dialog_create(GwyDataView *data_view)
     gdouble xreal, yreal, max, unit;
 
     gwy_debug("");
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_data_window_get_data(data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -168,38 +168,50 @@ pointer_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(pointer_dialog_response_cb), NULL);
-    table = gtk_table_new(5, 3, FALSE);
+    table = gtk_table_new(2, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Position</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>X</b>"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("X"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Y"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Y</b>"));
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Value</b>"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
-    label = gtk_label_new(_("Value"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
-    controls.x = gtk_label_new("");
-    controls.y = gtk_label_new("");
-    controls.val = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.x), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.y), 1.0, 0.5);
-    gtk_misc_set_alignment(GTK_MISC(controls.val), 1.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.x, 2, 3, 1, 2);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.y, 2, 3, 2, 3);
-    gtk_table_attach_defaults(GTK_TABLE(table), controls.val, 2, 3, 4, 5);
+    label = controls.x = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
+    label = controls.y = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, 0, 0, 2, 2);
+    label = controls.val = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2,
+                        GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
     gtk_widget_show_all(table);
+
+    /*
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
+
+    settings = gwy_app_settings_get();
+    if (gwy_container_contains_by_name(settings, radius_key))
+        radius = gwy_container_get_int32_by_name(settings, radius_key);
+    else
+        radius = 1;
+    controls.radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
+    gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
+                                controls.radius);
+    g_signal_connect(controls.radius, "value_changed",
+                     G_CALLBACK(level3_selection_updated_cb), NULL);
+    gtk_widget_show_all(table);*/
     controls.is_visible = FALSE;
 
     return dialog;
