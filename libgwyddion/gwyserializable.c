@@ -425,14 +425,46 @@ gwy_serialize_pack(guchar *buffer,
 
 /**
  * gwy_serialize_pack_struct:
- * @buffer: 
- * @size: 
- * @nspec: 
- * @spec: 
+ * @buffer: A buffer to which the serialized components should be appended.
+ * @size: Current size of @buffer, new size is returned here.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to serialize.
  *
- * 
  *
- * Returns:
+ *
+ * Returns: The buffer with serialization of @spec components appended.
+ **/
+guchar*
+gwy_serialize_pack_object_struct(guchar *buffer,
+                                 gsize *size,
+                                 const guchar *object_name,
+                                 gsize nspec,
+                                 const GwySerializeSpec *spec)
+{
+    gsize oldsize;
+
+    buffer = gwy_serialize_pack(buffer, size, "si", object_name, 0);
+    oldsize = *size;
+
+    buffer = gwy_serialize_pack_struct(buffer, size, nspec, spec);
+    gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
+                              *size - oldsize);
+    return buffer;
+}
+
+/**
+ * gwy_serialize_pack_struct:
+ * @buffer: A buffer to which the serialized components should be appended.
+ * @size: Current size of @buffer, new size is returned here.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to serialize.
+ *
+ * Serializes a struct with named and somewhat typed fields.
+ *
+ * For object serialization gwy_serialize_pack_object_struct() should be more
+ * convenient and less error prone.
+ *
+ * Returns: The buffer with serialization of @spec components appended.
  **/
 guchar*
 gwy_serialize_pack_struct(guchar *buffer,
@@ -705,16 +737,64 @@ gwy_serialize_skip_type(const guchar *buffer,
     g_assert_not_reached();
 }
 
+
+/**
+ * gwy_serialize_unpack_object_struct:
+ * @buffer: A memory location containing a serialized object at position
+ *          @position.
+ * @size: Current size of @buffer, new size is returned here.
+ * @position: The position of the object in @buffer, it's updated to
+ *            point after it.
+ * @object_name: The g_type_name() of the object.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to deserialize.
+ *
+ * Deserializes an object with named components packed by
+ * gwy_serialize_pack_object_struct().
+ *
+ * Returns: Whether the unpacking succeeded
+ * (see gwy_serialize_unpack_struct() for definition of success).
+ **/
+gboolean
+gwy_serialize_unpack_object_struct(const guchar *buffer,
+                                   gsize size,
+                                   gsize *position,
+                                   const guchar *object_name,
+                                   gsize nspec,
+                                   const GwySerializeSpec *spec)
+{
+    gsize mysize;
+    gboolean ok;
+
+    mysize = gwy_serialize_check_string(buffer, size, *position, object_name);
+    g_return_val_if_fail(mysize, FALSE);
+    *position += mysize;
+
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
+    *position += mysize;
+
+    return ok;
+}
+
 /**
  * gwy_serialize_unpack_struct:
- * @buffer: 
- * @size: 
- * @nspec: 
- * @spec: 
+ * @buffer: A memory location containing a serialized structure.
+ * @size: The size of @buffer.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to deserialize.
  *
- * 
+ * Deserializes a structure with named components packed by
+ * gwy_serialize_pack_struct().
  *
- * Returns:
+ * Extra components are ignored, components of different type than expected
+ * cause failure, missing components are not detected.
+ *
+ * For object deserialization gwy_serialize_unpack_object_struct() should be
+ * more convenient and less error prone.
+ *
+ * Returns: TRUE if the unpacking succeeded, FALSE otherwise (some fields may
+ * be unpacked in this case).
  **/
 gboolean
 gwy_serialize_unpack_struct(const guchar *buffer,

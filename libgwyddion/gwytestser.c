@@ -152,21 +152,15 @@ gwy_test_ser_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_TEST_SER(obj), NULL);
 
     test_ser = GWY_TEST_SER(obj);
-    buffer = gwy_serialize_pack(buffer, size, "si",
-                                GWY_TEST_SER_TYPE_NAME, 0);
     {
         GwySerializeSpec spec[] = {
             { 'd', "theta", &test_ser->theta, NULL, },
             { 'D', "r", &test_ser->radius, &test_ser->history_size, },
         };
-        gsize oldsize = *size;
-
-        buffer = gwy_serialize_pack_struct(buffer, size,
-                                           G_N_ELEMENTS(spec), spec);
-        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
-                                  *size - oldsize);
+        return gwy_serialize_pack_object_struct(buffer, size,
+                                                GWY_TEST_SER_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
     }
-    return buffer;
 }
 
 static GObject*
@@ -174,8 +168,8 @@ gwy_test_ser_deserialize(const guchar *buffer,
                          gsize size,
                          gsize *position)
 {
-    double theta, *radius;
-    gsize pos, history_size, mysize;
+    double theta, *radius = NULL;
+    gsize history_size;
     GwySerializeSpec spec[] = {
         { 'd', "theta", &theta, NULL, },
         { 'D', "r", &radius, &history_size, },
@@ -187,15 +181,12 @@ gwy_test_ser_deserialize(const guchar *buffer,
     #endif
     g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(buffer, size, *position,
-                                     GWY_TEST_SER_TYPE_NAME);
-    g_return_val_if_fail(pos, NULL);
-    *position += pos;
-    mysize = gwy_serialize_unpack_int32(buffer, size, position);
-
-    gwy_serialize_unpack_struct(buffer + *position, mysize,
-                                G_N_ELEMENTS(spec), spec);
-    *position += mysize;
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_TEST_SER_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        g_free(radius);
+        return NULL;
+    }
 
     test_ser = (GwyTestSer*)gwy_test_ser_new(theta, 0.0);
     g_free(test_ser->radius);
