@@ -326,10 +326,8 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             item = GTK_BIN(child->data)->child;
             gwy_debug("reusing item %p for <%s> [#%d]", item, s, i);
             gtk_label_set_text_with_mnemonic(GTK_LABEL(item), label);
-            /* XXX: double-free?
-             * g_free(g_object_get_qdata(G_OBJECT(child->data), quark)); */
-            g_object_set_qdata(G_OBJECT(child->data), quark,
-                               g_strdup(filename));
+            g_object_set_qdata_full(G_OBJECT(child->data), quark,
+                                    g_strdup(filename), g_free);
             child = g_list_next(child);
         }
         else {
