@@ -27,15 +27,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #define MAGIC_BIN "\\*File list\r\n"
 #define MAGIC_TXT "?*File list\r\n"
