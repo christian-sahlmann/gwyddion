@@ -119,8 +119,8 @@ pointer_use(GwyDataWindow *data_window,
                                    NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         pointer_dialog_set_visible(TRUE);
-
-    pointer_selection_updated_cb();
+    if (controls.is_visible)
+        pointer_selection_updated_cb();
 }
 
 static void
