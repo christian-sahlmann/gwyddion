@@ -263,11 +263,30 @@ logger(const gchar *log_domain,
        const gchar *message,
        gpointer user_data)
 {
+    static GString *last = NULL;
+    static guint count = 0;
     FILE *logfile = (FILE*)user_data;
 
     if (!logfile)
         return;
-    fprintf(logfile, "%s: %s\n", log_domain, message);
+
+    if (!last)
+        last = g_string_new("");
+
+    if (!strcmp(message, last->str)) {
+        count++;
+        return;
+    }
+
+    if (count)
+        fprintf(logfile, "Last message repeated %u times\n", count);
+    g_string_assign(last, message);
+    count = 0;
+
+    fprintf(logfile, "%s%s%s\n",
+            log_domain ? log_domain : "",
+            log_domain ? ": " : ""
+            message);
     fflush(logfile);
 }
 #endif  /* LOG_TO_FILE */
