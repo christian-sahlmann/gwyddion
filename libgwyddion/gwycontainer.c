@@ -113,6 +113,9 @@ static void     watchable_value_changed          (GObject *object,
                                                   ObjectWatch *owatch);
 static int      pstring_compare_callback         (const void *p,
                                                   const void *q);
+static guint    token_length                     (const gchar *text);
+static gchar*   dequote_token                    (const gchar *tok,
+                                                  guint *len);
 
 
 GType
@@ -2170,6 +2173,22 @@ token_length(const gchar *text)
     return i;
 }
 
+static gchar*
+dequote_token(const gchar *tok, guint *len)
+{
+    gchar *s, *t;
+
+    if (*len < 2 || *tok != '"')
+        return g_strndup(tok, *len);
+
+    g_assert(tok[*len-1] == '"');
+    s = g_strndup(tok+1, *len-2);
+    t = g_strcompress(s);
+    g_free(s);
+
+    return t;
+}
+
 /**
  * gwy_container_deserialize_from_text:
  * @text: Text containing serialized container contents as dumped by
@@ -2198,8 +2217,8 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* name */
         if (len == (guint)-1)
             goto fail;
-        namelen = tok[0] == '"' ? len - 2 : len;
-        name = g_strndup(tok[0] == '"' ? tok+1 : tok, namelen);
+        namelen = len;
+        name = dequote_token(tok, &namelen);
         key = g_quark_from_string(name);
         gwy_debug("got name <%s>", name);
 
@@ -2266,8 +2285,8 @@ gwy_container_deserialize_from_text(const gchar *text)
             gchar *s;
             gsize vallen;
 
-            vallen = tok[0] == '"' ? len - 2 : len;
-            s = g_strndup(tok[0] == '"' ? tok+1 : tok, vallen);
+            vallen = len;
+            s = dequote_token(tok, &vallen);
             gwy_container_set_string(container, key, s);
         }
         /* object */

@@ -256,6 +256,7 @@ test_container_serialization(void)
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_assert(ser->ref_count == 1);
 
+    gwy_container_set_string_by_name(container, "/string-n", "a\nb\rc\td");
     pa = gwy_container_serialize_to_text(container);
     g_object_unref(container);
     g_message("serialized to text");
