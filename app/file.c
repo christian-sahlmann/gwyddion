@@ -24,6 +24,8 @@
 
 #include <string.h>
 
+#define DEBUG
+
 /* chdir */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -307,22 +309,23 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         return;
     }
 
-    if (name)
-        ok = gwy_file_func_run_save(name, data, filename_sys);
-    else
-        ok = gwy_file_save(data, filename_sys);
+    if (!name) {
+        name = gwy_file_detect(filename_sys, TRUE, GWY_FILE_SAVE);
+        if (!name)
+            return;
+    }
+
+    ok = gwy_file_func_run_save(name, data, filename_sys);
     if (!ok)
         return;
 
-    if (!name
-        || (gwy_file_func_get_operations(name) & GWY_FILE_LOAD))
+    if (gwy_file_func_get_operations(name) & GWY_FILE_LOAD) {
         g_object_set_data(G_OBJECT(data), "gwy-app-modified", NULL);
-
-    if (!name) {
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
         recent_files_update(filename_utf8);
     }
+
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 
