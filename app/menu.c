@@ -52,6 +52,8 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 GtkItemFactory **factory);
 static void       gwy_app_meta_browser         (void);
 static void       destroy_app_window           (void);
+static void       gwy_app_kill_mask_cb         (void);
+static void       gwy_app_kill_show_cb         (void);
 
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
@@ -194,6 +196,9 @@ gwy_menu_create_edit_menu(GtkAccelGroup *accel_group)
         { "/Edit/_Redo", "<control>R", gwy_app_undo_redo, 0, "<StockItem>", GTK_STOCK_REDO },
         { "/Edit/_Duplicate", "<control>D", gwy_app_file_duplicate_cb, 0, NULL, NULL },
         { "/Edit/Data _Arithmetic", NULL, gwy_app_data_arith, 0, NULL, NULL },
+        { "/Edit/---", NULL, NULL, 0, "<Separator>", NULL },
+        { "/Edit/Remove _Mask", NULL, gwy_app_kill_mask_cb, 0, NULL, NULL },
+        { "/Edit/Remove _Presentation", NULL, gwy_app_kill_show_cb, 0, NULL, NULL },
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu, *item;
@@ -368,6 +373,36 @@ static void
 destroy_app_window(void)
 {
     g_signal_emit_by_name(gwy_app_main_window, "destroy");
+}
+
+static void
+gwy_app_kill_mask_cb(void)
+{
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    if (gwy_container_remove_by_name(data, "/0/mask"))
+        gwy_app_data_view_update(data_view);
+}
+
+static void
+gwy_app_kill_show_cb(void)
+{
+    GwyDataWindow *data_window;
+    GtkWidget *data_view;
+    GwyContainer *data;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    if (gwy_container_remove_by_name(data, "/0/show"))
+        gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
