@@ -13,9 +13,11 @@ file_PROGRAMS = \
 	pixmap.so \
 	rawfile.so \
 	sis.so \
+	spmlab.so \
 	stmprg.so
 
 noinst_HEADERS = \
+	get.h \
 	stmprg.h
 
 EXTRA_DIST = \
@@ -44,6 +46,9 @@ rawfile_so_LDFLAGS = $(module_ldflags),rawfile.so
 
 sis_so_SOURCES = sis.c
 sis_so_LDFLAGS = $(module_ldflags),sis.so
+
+spmlab_so_SOURCES = spmlab.c
+spmlab_so_LDFLAGS = $(module_ldflags),spmlab.so
 
 stmprg_so_SOURCES = stmprg.c
 stmprg_so_LDFLAGS = $(module_ldflags),stmprg.so
