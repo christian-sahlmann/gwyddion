@@ -36,7 +36,7 @@ void            _gwy_data_line_free              (GwyDataLine *a);
 
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GwyDataField *data_field);
-static void     gwy_data_field_finalize          (GwyDataField *data_field);
+static void     gwy_data_field_finalize          (GObject *object);
 static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_data_field_serialize      (GObject *obj,
@@ -61,6 +61,7 @@ void           _gwy_data_field_initialize        (GwyDataField *a,
                                                   gboolean nullme);
 void           _gwy_data_field_free              (GwyDataField *a);
 
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_data_field_get_type(void)
@@ -133,7 +134,9 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 
     gwy_debug("");
 
-    gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_field_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->finalize = gwy_data_field_finalize;
 }
 
 static void
@@ -149,12 +152,16 @@ gwy_data_field_init(GwyDataField *data_field)
 }
 
 static void
-gwy_data_field_finalize(GwyDataField *data_field)
+gwy_data_field_finalize(GObject *object)
 {
+    GwyDataField *data_field = (GwyDataField*)object;
+
     gwy_debug("%p is dying!", data_field);
     g_object_unref(data_field->si_unit_xy);
     g_object_unref(data_field->si_unit_z);
     _gwy_data_field_free(data_field);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 GObject*

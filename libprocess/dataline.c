@@ -29,7 +29,7 @@
 
 static void     gwy_data_line_class_init        (GwyDataLineClass *klass);
 static void     gwy_data_line_init              (GwyDataLine *data_line);
-static void     gwy_data_line_finalize          (GwyDataLine *data_line);
+static void     gwy_data_line_finalize          (GObject *object);
 static void     gwy_data_line_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_line_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_data_line_serialize      (GObject *obj,
@@ -44,6 +44,7 @@ void            _gwy_data_line_initialize       (GwyDataLine *a,
 void            _gwy_data_line_free             (GwyDataLine *a);
 /*static void     gwy_data_line_value_changed     (GObject *object);*/
 
+static GObjectClass *parent_class = NULL;
 
 GType
 gwy_data_line_get_type(void)
@@ -112,7 +113,9 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 
     gwy_debug("");
 
-     gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_line_finalize;
+    parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->finalize = gwy_data_line_finalize;
 }
 
 static void
@@ -126,10 +129,14 @@ gwy_data_line_init(GwyDataLine *data_line)
 }
 
 static void
-gwy_data_line_finalize(GwyDataLine *data_line)
+gwy_data_line_finalize(GObject *object)
 {
+    GwyDataLine *data_line = (GwyDataLine*)object;
+
     gwy_debug("");
     _gwy_data_line_free(data_line);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 GObject*
