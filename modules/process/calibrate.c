@@ -42,7 +42,7 @@ typedef struct {
 } CalibrateArgs;
 
 typedef struct {
-    GtkObject *xratio;
+    GtkWidget *xratio;
     GtkObject *yratio;
     GtkObject *zratio;
     GtkObject *xreal;
@@ -185,10 +185,18 @@ calibrate_dialog(CalibrateArgs *args)
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
+    controls.xratio = gwy_val_unit_new("X calibration factor: ");
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xratio,
+                       FALSE, FALSE, 4);
+    
     table = gtk_table_new(8, 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
+ 
+   
+    
+    /*
     controls.xratio = gtk_adjustment_new(args->xratio, 0.01, 100, 0.01, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, 0, _("X calibration factor:"), "",
                                        controls.xratio);
@@ -196,7 +204,7 @@ calibrate_dialog(CalibrateArgs *args)
     g_object_set_data(G_OBJECT(controls.xratio), "controls", &controls);
     g_signal_connect(controls.xratio, "value_changed",
                      G_CALLBACK(xcalibrate_changed_cb), args);
-
+*/
     controls.xreal = gtk_adjustment_new(args->xratio*args->xreal,
                                        0, 10000, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, 1, _("New X range"), _("px"),

@@ -48,6 +48,7 @@
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwyvectorshade.h>
 #include <libgwydgets/gwyvruler.h>
+#include <libgwydgets/gwyvalunit.h>
 
 G_BEGIN_DECLS
 
