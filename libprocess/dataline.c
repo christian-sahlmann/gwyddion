@@ -1199,6 +1199,9 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
  * @interpolation: interpolation used
  *
  * Performs 1D FFT using the alogrithm ffthum (see simplefft.h).
+ * Resamples data to closest 2^N and then resamples result back.
+ * Resample data by yourself if you want further FFT processing as
+ * resampling of the FFT spectrum can destroy some information in it.
  **/
 void
 gwy_data_line_fft_hum(gint direction,
@@ -1218,7 +1221,7 @@ gwy_data_line_fft_hum(gint direction,
 
     /*find the next power of two*/
     order = (gint) floor(log ((gdouble)ra->res)/log (2.0)+0.5);
-    newres = 1*(gint) pow(2,order);
+    newres = (gint) pow(2,order);
     oldres = ra->res;
 
     /*resample if this is not the resolution*/
@@ -1233,12 +1236,16 @@ gwy_data_line_fft_hum(gint direction,
 
     gwy_fft_hum(direction, ra->data, ia->data, rb->data, ib->data, newres);
 
+
+    /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
+     after all the processings*/
     if (newres != oldres) {
         gwy_data_line_resample(ra, oldres, interpolation);
         gwy_data_line_resample(ia, oldres, interpolation);
         gwy_data_line_resample(rb, oldres, interpolation);
         gwy_data_line_resample(ib, oldres, interpolation);
     }
+
 }
 
 
@@ -1404,28 +1411,38 @@ void
 gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint windowing, gint interpolation)
 {
     GwyDataLine *iin, *rout, *iout;
-    gint i;
+    gint i, order, newres, oldres;
 
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     
-    iin = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
-    rout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
-    iout = (GwyDataLine *)gwy_data_line_new(data_line->res, data_line->real, TRUE);
+    oldres = data_line->res;
+    order = (gint) floor(log ((gdouble)data_line->res)/log (2.0)+0.5);
+    newres = (gint) pow(2,order);
+    
+    iin = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
+    rout = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
+    iout = (GwyDataLine *)gwy_data_line_new(newres, data_line->real, TRUE);
 
-
+    /*resample to 2^N (this could be done within FFT, but with loss of precision)*/
+    gwy_data_line_resample(data_line, newres, interpolation);
+    
     gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
-                   GWY_WINDOWING_RECT, 1, interpolation,
-                   TRUE, TRUE); /*FIXME here are still some problemse*/
+                   windowing, 1, interpolation,
+                   TRUE, TRUE);
 
-    gwy_data_line_resample(target_line, rout->res/2.0, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(target_line, newres/2.0, GWY_INTERPOLATION_NONE);
 
-    for (i = 0; i < (rout->res/2); i++) {
+    /*compute module*/
+    for (i = 0; i < (newres/2); i++) {
         target_line->data[i] = (rout->data[i]*rout->data[i] + iout->data[i]*iout->data[i])
-            *data_line->real/(data_line->res*data_line->res*2*G_PI);
-
+            *data_line->real/(newres*newres*2*G_PI);
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
 
+    /*resample to given output size*/
+    gwy_data_line_resample(target_line, oldres/2.0, interpolation);
+    
+    
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
