@@ -38,21 +38,22 @@ typedef struct {
     GtkWidget *skew;
     GtkWidget *kurtosis;
     GtkWidget *avg;
+    GtkWidget *windowname;
     gdouble mag;
     gint precision;
     gchar *units;
 } StatsControls;
 
 static gboolean   module_register               (const gchar *name);
-static void       stats_use                      (GwyDataWindow *data_window,
+static void       stats_use                     (GwyDataWindow *data_window,
                                                  GwyToolSwitchEvent reason);
-static GtkWidget* stats_dialog_create            (GwyDataView *data_view);
-static void       stats_do                       (void);
+static GtkWidget* stats_dialog_create           (GwyDataWindow *data_window);
+static void       stats_do                      (void);
 static void       stats_selection_updated_cb    (void);
-static void       stats_dialog_response_cb       (gpointer unused,
+static void       stats_dialog_response_cb      (gpointer unused,
                                                  gint response);
-static void       stats_dialog_abandon           (void);
-static void       stats_dialog_set_visible       (gboolean visible);
+static void       stats_dialog_abandon          (void);
+static void       stats_dialog_set_visible      (gboolean visible);
 
 static GtkWidget *stats_dialog = NULL;
 static StatsControls controls;
@@ -121,13 +122,17 @@ stats_use(GwyDataWindow *data_window,
     }
     gwy_layer_select_set_is_crop(select_layer, FALSE);
     if (!stats_dialog)
-        stats_dialog = stats_dialog_create(data_view);
+        stats_dialog = stats_dialog_create(data_window);
 
     updated_id = g_signal_connect(select_layer, "updated",
                                    G_CALLBACK(stats_selection_updated_cb),
                                    NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         stats_dialog_set_visible(TRUE);
+    /* FIXME: window name can change also when saving under different name */
+    if (reason == GWY_TOOL_SWITCH_WINDOW)
+        gtk_label_set_text(GTK_LABEL(controls.windowname),
+                           gwy_data_window_get_base_name(data_window));
     if (controls.is_visible)
         stats_selection_updated_cb();
 }
@@ -184,15 +189,15 @@ stats_dialog_abandon(void)
 }
 
 static GtkWidget*
-stats_dialog_create(GwyDataView *data_view)
+stats_dialog_create(GwyDataWindow *data_window)
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *frame;
     gdouble xreal, yreal, max, unit;
 
     gwy_debug("");
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_data_window_get_data(data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -212,6 +217,17 @@ stats_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(stats_dialog_response_cb), NULL);
+ 
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+                       FALSE, FALSE, 0);
+    label = gtk_label_new(gwy_data_window_get_base_name(data_window));
+    controls.windowname = label;
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(label), 4, 2);
+    gtk_container_add(GTK_CONTAINER(frame), label);
+
     table = gtk_table_new(12, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
@@ -291,7 +307,7 @@ stats_dialog_create(GwyDataView *data_view)
     gtk_table_attach_defaults(GTK_TABLE(table), controls.kurtosis, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls.avg, 2, 3, 5, 6);
 
-    gtk_widget_show_all(table);
+    gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
     controls.is_visible = FALSE;
 
     return dialog;
@@ -318,21 +334,20 @@ stats_selection_updated_cb(void)
     gchar buffer[16];
 
     gwy_debug("");
-    /*XXX: seems broken
-     * is_visible = GTK_WIDGET_VISIBLE(stats_dialog);*/
     is_visible = controls.is_visible;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    if (is_selected=gwy_layer_select_get_selection(select_layer, &xmin, &ymin, &xmax, &ymax))
-    {
-        gwy_data_field_get_area_stats(dfield, gwy_data_field_rtoj(dfield, xmin),
+    is_selected = gwy_layer_select_get_selection(select_layer,
+                                                 &xmin, &ymin, &xmax, &ymax);
+    if (is_selected)
+        gwy_data_field_get_area_stats(dfield,
+                                      gwy_data_field_rtoj(dfield, xmin),
                                       gwy_data_field_rtoj(dfield, ymin),
                                       gwy_data_field_rtoj(dfield, xmax),
                                       gwy_data_field_rtoj(dfield, ymax),
                                       &avg, &ra, &rms, &skew, &kurtosis);
-    }
     else
         gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
 

@@ -33,6 +33,7 @@ typedef struct {
     GtkWidget *y;
     GtkWidget *w;
     GtkWidget *h;
+    GtkWidget *windowname;
     gdouble mag;
     gint precision;
     gchar *units;
@@ -41,7 +42,7 @@ typedef struct {
 static gboolean   module_register               (const gchar *name);
 static void       crop_use                      (GwyDataWindow *data_window,
                                                  GwyToolSwitchEvent reason);
-static GtkWidget* crop_dialog_create            (GwyDataView *data_view);
+static GtkWidget* crop_dialog_create            (GwyDataWindow *data_window);
 static void       crop_do                       (void);
 static void       crop_selection_updated_cb    (void);
 static void       crop_dialog_response_cb       (gpointer unused,
@@ -116,13 +117,17 @@ crop_use(GwyDataWindow *data_window,
     }
     gwy_layer_select_set_is_crop(select_layer, TRUE);
     if (!crop_dialog)
-        crop_dialog = crop_dialog_create(data_view);
+        crop_dialog = crop_dialog_create(data_window);
 
     updated_id = g_signal_connect(select_layer, "updated",
                                    G_CALLBACK(crop_selection_updated_cb),
                                    NULL);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         crop_dialog_set_visible(TRUE);
+    /* FIXME: window name can change also when saving under different name */
+    if (reason == GWY_TOOL_SWITCH_WINDOW)
+        gtk_label_set_text(GTK_LABEL(controls.windowname),
+                           gwy_data_window_get_base_name(data_window));
     if (controls.is_visible)
         crop_selection_updated_cb();
 }
@@ -176,15 +181,15 @@ crop_dialog_abandon(void)
 }
 
 static GtkWidget*
-crop_dialog_create(GwyDataView *data_view)
+crop_dialog_create(GwyDataWindow *data_window)
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    GtkWidget *dialog, *table, *label;
+    GtkWidget *dialog, *table, *label, *frame;
     gdouble xreal, yreal, max, unit;
 
     gwy_debug("");
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_data_window_get_data(data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -204,6 +209,17 @@ crop_dialog_create(GwyDataView *data_view)
                      G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
     response_id = g_signal_connect(dialog, "response",
                                    G_CALLBACK(crop_dialog_response_cb), NULL);
+ 
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+                       FALSE, FALSE, 0);
+    label = gtk_label_new(gwy_data_window_get_base_name(data_window));
+    controls.windowname = label;
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_padding(GTK_MISC(label), 4, 2);
+    gtk_container_add(GTK_CONTAINER(frame), label);
+
     table = gtk_table_new(6, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
@@ -241,7 +257,7 @@ crop_dialog_create(GwyDataView *data_view)
     gtk_table_attach_defaults(GTK_TABLE(table), controls.y, 2, 3, 2, 3);
     gtk_table_attach_defaults(GTK_TABLE(table), controls.w, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls.h, 2, 3, 5, 6);
-    gtk_widget_show_all(table);
+    gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
     controls.is_visible = FALSE;
 
     return dialog;

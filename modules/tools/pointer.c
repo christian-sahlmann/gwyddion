@@ -286,7 +286,7 @@ update_value_label(GtkWidget *label, gdouble value)
 {
     gchar buffer[16];
 
-    g_snprintf(buffer, sizeof(buffer), "%.3g", value);
+    g_snprintf(buffer, sizeof(buffer), "%g", value);
     gtk_label_set_text(GTK_LABEL(label), buffer);
 }
 
