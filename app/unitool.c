@@ -124,6 +124,9 @@ static void
 gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 {
     gwy_debug("");
+    if (!state->windowname)
+        return;
+
     gtk_label_set_text(GTK_LABEL(state->windowname),
                        gwy_data_window_get_base_name(state->data_window));
 }
