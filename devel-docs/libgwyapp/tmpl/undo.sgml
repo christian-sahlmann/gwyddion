@@ -2,11 +2,20 @@
 undo
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Undo and redo.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+For a module developer, the only two useful undo/redo functions are probably
+<link linkend="gwy-app-undo-checkpoint">gwy_app_undo_checkpoint()</link> and
+<link linkend="gwy-app-undo-checkpointv">gwy_app_undo_checkpointv()</link>
+creating a checkpoint in the undo history to which is possible to return to
+later. You should use these functions before commiting changes to data.
+</para>
 
+<para>
+The other functions actually perform undo or redo, and has little use outside
+main application.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

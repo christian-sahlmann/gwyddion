@@ -2,11 +2,21 @@
 settings
 
 <!-- ##### SECTION Short_Description ##### -->
-Settings.
+Module and application settings.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+All application and module settings are stored in a one big
+<link linkend="GwyContainer">GwyContainer</link>
+which can be obtained by
+<link linkend="gwy-app-setting-get">gwy_app_settings_get</link>.
+Then you can use <link linkend="GwyContainer">GwyContainer</link>
+functions to get and save settings.
+</para>
 
+<para>
+The rest of the setting manipulating functions is normally useful only in
+main application.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
