@@ -25,7 +25,6 @@
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
 
-static gdouble quick_select(gsize size, gdouble *array);
 static gint thin_data_field(GwyDataField *data_field);
 
 
@@ -493,68 +492,6 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
                                        brcol-ulcol, brrow-ulrow);
 }
 
-/* Quickly find median value in an array
- * based on public domain code by Nicolas Devillard */
-static gdouble
-quick_select(gsize size, gdouble *array)
-{
-    gsize lo, hi;
-    gsize median;
-    gsize middle, ll, hh;
-
-    lo = 0;
-    hi = size - 1;
-    median = size/2;
-    while (TRUE) {
-        if (hi <= lo)        /* One element only */
-            return array[median];
-
-        if (hi == lo + 1) {  /* Two elements only */
-            if (array[lo] > array[hi])
-                GWY_SWAP(gdouble, array[lo], array[hi]);
-            return array[median];
-        }
-
-        /* Find median of lo, middle and hi items; swap into position lo */
-        middle = (lo + hi)/2;
-        if (array[middle] > array[hi])
-            GWY_SWAP(gdouble, array[middle], array[hi]);
-        if (array[lo] > array[hi])
-            GWY_SWAP(gdouble, array[lo], array[hi]);
-        if (array[middle] > array[lo])
-            GWY_SWAP(gdouble, array[middle], array[lo]);
-
-        /* Swap low item (now in position middle) into position (lo+1) */
-        GWY_SWAP(gdouble, array[middle], array[lo + 1]);
-
-        /* Nibble from each end towards middle, swapping items when stuck */
-        ll = lo + 1;
-        hh = hi;
-        while (TRUE) {
-            do {
-                ll++;
-            } while (array[lo] > array[ll]);
-            do {
-                hh--;
-            } while (array[hh] > array[lo]);
-
-            if (hh < ll)
-                break;
-
-            GWY_SWAP(gdouble, array[ll], array[hh]);
-        }
-
-        /* Swap middle item (in position lo) back into correct position */
-        GWY_SWAP(gdouble, array[lo], array[hh]);
-
-        /* Re-set active partition */
-        if (hh <= median)
-            lo = ll;
-        if (hh >= median)
-            hi = hh - 1;
-    }
-}
-
 /**
  * gwy_data_field_area_filter_median:
  * @data_field: A data field to apply mean filter to.
@@ -604,7 +541,8 @@ gwy_data_field_area_filter_median(GwyDataField *data_field,
                 memcpy(kernel + len*(k - yfrom),
                        data + k*rowstride + xfrom,
                        len*sizeof(gdouble));
-            buffer[i*width + j] = quick_select(len*(yto - yfrom + 1), kernel);
+            buffer[i*width + j] = gwy_math_median(len*(yto - yfrom + 1),
+                                                  kernel);
         }
     }
 
