@@ -382,13 +382,13 @@ gwy_layer_select_get_selection(GwyDataViewLayer *layer,
     if (!select_layer->selected)
         return FALSE;
 
-    if (*xmin)
+    if (xmin)
         *xmin = select_layer->x0;
-    if (*ymin)
+    if (ymin)
         *ymin = select_layer->y0;
-    if (*xmax)
+    if (xmax)
         *xmax = select_layer->x1;
-    if (*ymax)
+    if (ymax)
         *ymax = select_layer->y1;
     return TRUE;
 }

@@ -677,6 +677,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
                         GwyDataViewLayer *layer)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    g_return_if_fail(which);
 
     if (layer == *which)
         return;
