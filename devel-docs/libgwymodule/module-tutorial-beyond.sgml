@@ -16,7 +16,7 @@
   </refnamediv>
 
   <refsect1>
-    <title>Multiple modules, multiple function, multifunctions</title>
+    <title>Multiple Modules, Multiple Function, Multifunctions</title>
     <para>
       Often one wants to implement a group of closely related functions that
       could share quite a bit of code.  There are several posibilities how
@@ -129,7 +129,7 @@ gwy_container_set_double_by_name(settings,
 ]]></programlisting></informalexample>
   </refsect1>
   <refsect1>
-    <title>Creating new windows</title>
+    <title>Creating New Windows</title>
     <para>
       Not always one wants to modify the original data but prefers to create
       a new data window for the result.  This primarily means one has to
@@ -171,7 +171,7 @@ gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     </para>
   </refsect1>
   <refsect1>
-    <title>Masks and presentations</title>
+    <title>Masks And Presentations</title>
     <para>
       To highlight some areas in the data (like the grain modules do) you may
       want to use a mask.  Masks are data fields too, differing only
