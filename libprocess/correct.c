@@ -192,7 +192,7 @@ gwy_data_field_mark_scars(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(scar_field));
     g_return_if_fail(max_scar_width >= 1 && max_scar_width <= 16);
     g_return_if_fail(min_scar_len >= 1);
-    g_return_if_fail(threshold_low > 0.0);
+    g_return_if_fail(threshold_low >= 0.0);
     g_return_if_fail(threshold_high >= threshold_low);
     xres = gwy_data_field_get_xres(data_field);
     yres = gwy_data_field_get_yres(data_field);
