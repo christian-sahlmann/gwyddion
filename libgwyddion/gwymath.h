@@ -55,6 +55,11 @@ gdouble*     gwy_math_fit_polynom        (gint ndata,
                                           gdouble *ydata,
                                           gint n,
                                           gdouble *coeffs);
+gboolean     gwy_math_choleski_decompose (gint n,
+                                          gdouble *matrix);
+void         gwy_math_choleski_solve     (gint n,
+                                          gdouble *decomp,
+                                          gdouble *rhs);
 
 G_END_DECLS
 

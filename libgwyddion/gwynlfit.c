@@ -44,11 +44,6 @@ struct _GwyNLFitParam {
     double default_init;
 };
 
-static gboolean gwy_math_choleski_decompose (gint dim,
-                                             gdouble *a);
-static void     gwy_math_choleski_solve     (gint dim,
-                                             gdouble *a,
-                                             gdouble *b);
 static gdouble  gwy_math_nlfit_residua      (GwyNLFitter *nlfit,
                                              gint n_dat,
                                              const gdouble *x,
@@ -594,75 +589,6 @@ gwy_math_nlfit_get_correlations(GwyNLFitter *nlfit, gint par1, gint par2)
     return SLi(nlfit->covar, par1, par2)/sqrt(Pom);
 }
 
-
-/**
- * gwy_math_choleski_decompose:
- * @dim: The dimension of @a.
- * @a: Lower triangular part of a symmetrix matric, stored by rows, i.e.,
- *     a = [a_00 a_10 a_11 a_20 a_21 a_22 a_30 ...].
- *
- * Decomposes a symmetric positive definite matrix in place.
- *
- * Returns: Whether the matrix was really positive definite.  If %FALSE,
- *          the decomposition failed and @a contains garbage.
- **/
-static gboolean
-gwy_math_choleski_decompose(gint dim, gdouble *a)
-{
-    gint i, j, k;
-    gdouble s, r;
-
-    for (k = 0; k < dim; k++) {
-        /* diagonal element */
-        s = SLi(a, k, k);
-        for (i = 0; i < k; i++)
-            s -= SLi(a, k, i) * SLi(a, k, i);
-        if (s <= 0.0)
-            return FALSE;
-        SLi(a, k, k) = s = sqrt(s);
-
-        /* nondiagonal elements */
-        for (j = k+1; j < dim; j++) {
-            r = SLi(a, j, k);
-            for (i = 0; i < k; i++)
-                r -= SLi(a, k, i) * SLi(a, j, i);
-            SLi(a, j, k) = r/s;
-        }
-    }
-
-    return TRUE;
-}
-
-/**
- * gwy_math_choleski_solve:
- * @dim: The dimension of @a.
- * @a: Lower triangular part of Choleski decomposition as computed
- *     by gwy_math_choleski_decompose().
- * @b: Right hand side vector.  Is is modified in place, on return it contains
- *     the solution.
- *
- * Solves a system of linear equations with predecomposed symmetric positive
- * definite matrix @a and right hand side @b.
- **/
-static void
-gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
-{
-    gint i, j;
-
-    /* back-substitution with the lower triangular matrix */
-    for (j = 0; j < dim; j++) {
-        for (i = 0; i < j; i++)
-            b[j] -= SLi(a, j, i)*b[i];
-        b[j] /= SLi(a, j, j);
-    }
-
-    /* back-substitution with the upper triangular matrix */
-    for (j = dim-1; j >= 0; j--) {
-        for (i = j+1; i < dim; i++)
-            b[j] -= SLi(a, i, j)*b[i];
-        b[j] /= SLi(a, j, j);
-    }
-}
 
 /* inverze symetricke matice */
 static gboolean

@@ -23,6 +23,10 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwymath.h"
 
+/* Lower symmetric part indexing */
+/* i MUST be greater or equal than j */
+#define SLi(a, i, j) a[(i)*((i) + 1)/2 + (j)]
+
 /**
  * gwy_math_SI_prefix:
  * @magnitude: A power of 1000.
@@ -372,6 +376,80 @@ gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
     g_free(sumy);
 
     return coeffs;
+}
+
+/**
+ * gwy_math_choleski_decompose:
+ * @n: The dimension of @a.
+ * @matrix: Lower triangular part of a symmetric matrix, stored by rows, i.e.,
+ *          matrix = [a_00 a_10 a_11 a_20 a_21 a_22 a_30 ...].
+ *
+ * Decomposes a symmetric positive definite matrix in place.
+ *
+ * Returns: Whether the matrix was really positive definite.  If %FALSE,
+ *          the decomposition failed and @a does not contain any meaningful
+ *          values.
+ *
+ * Since: 1.6
+ **/
+gboolean
+gwy_math_choleski_decompose(gint dim, gdouble *a)
+{
+    gint i, j, k;
+    gdouble s, r;
+
+    for (k = 0; k < dim; k++) {
+        /* diagonal element */
+        s = SLi(a, k, k);
+        for (i = 0; i < k; i++)
+            s -= SLi(a, k, i) * SLi(a, k, i);
+        if (s <= 0.0)
+            return FALSE;
+        SLi(a, k, k) = s = sqrt(s);
+
+        /* nondiagonal elements */
+        for (j = k+1; j < dim; j++) {
+            r = SLi(a, j, k);
+            for (i = 0; i < k; i++)
+                r -= SLi(a, k, i) * SLi(a, j, i);
+            SLi(a, j, k) = r/s;
+        }
+    }
+
+    return TRUE;
+}
+
+/**
+ * gwy_math_choleski_solve:
+ * @n: The dimension of @a.
+ * @decomp: Lower triangular part of Choleski decomposition as computed
+ *          by gwy_math_choleski_decompose().
+ * @rhs: Right hand side vector.  Is is modified in place, on return it
+ *       contains the solution.
+ *
+ * Solves a system of linear equations with predecomposed symmetric positive
+ * definite matrix @a and right hand side @b.
+ *
+ * Since: 1.6
+ **/
+void
+gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
+{
+    gint i, j;
+
+    /* back-substitution with the lower triangular matrix */
+    for (j = 0; j < dim; j++) {
+        for (i = 0; i < j; i++)
+            b[j] -= SLi(a, j, i)*b[i];
+        b[j] /= SLi(a, j, j);
+    }
+
+    /* back-substitution with the upper triangular matrix */
+    for (j = dim-1; j >= 0; j--) {
+        for (i = j+1; i < dim; i++)
+            b[j] -= SLi(a, i, j)*b[i];
+        b[j] /= SLi(a, j, j);
+    }
 }
 
 /************************** Documentation ****************************/
