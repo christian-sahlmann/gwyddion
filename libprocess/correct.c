@@ -95,4 +95,36 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field, GwyDataField 
 
 }
 
+/**
+ * gwy_data_field_mask_outliers:
+ * @data_field: data field 
+ * @mask_field: mask to be changed 
+ * @thresh: threshold value
+ *
+ * Creates mask of data that are above or below
+ * thresh*sigma from average height. Sigma denotes root-mean square deviation
+ * of heights. This criterium corresponds
+ * to usual Gaussian distribution outliers detection for thresh = 3.
+ **/
+void
+gwy_data_field_mask_outliers(GwyDataField *data_field, GwyDataField *mask_field, gdouble thresh)
+{
+    gdouble avg;
+    gdouble criterium;
+    gint i;
+
+    avg = gwy_data_field_get_avg(data_field);
+    criterium = gwy_data_field_get_rms(data_field)*thresh;
+
+    for (i=0; i<(data_field->xres*data_field->yres); i++)
+    {
+        if (fabs(data_field->data[i]-avg)>criterium)
+            mask_field->data[i] = 1;
+        else
+            mask_field->data[i] = 0;
+    }
+
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
