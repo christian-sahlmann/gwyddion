@@ -12,7 +12,7 @@ $(PROGRAM).exe: $(PRG_OBJECTS)
 	$(LINK32) $(PRG_OBJECTS) $(PRG_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$(PROGRAM).exe
 
 .obj.dll:
-	$(LINK32) $< $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$<.dll /dll /implib:$<.lib
+	$(LINK32) $< $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$@ /dll /implib:$*.lib
 
 $(LIBRARY)-$(LIB_VER).dll: $(LIB_OBJECTS) $(LIBRARY)-$(LIB_VER).def
 	$(LINK32) $(LIB_OBJECTS) $(LIB_LINK) $(WIN32LIBS) $(LDFLAGS) /out:$(LIBRARY)-$(LIB_VER).dll /def:$(LIBRARY)-$(LIB_VER).def /dll /implib:$(LIBRARY)-$(LIB_VER).lib
