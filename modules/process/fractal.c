@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fractal",
-    "Fractal dimension evaluation",
+    N_("Fractal dimension evaluation"),
     "Jindřich Bilek & Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek & Jindřich Bílek",
@@ -138,7 +138,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fractal_func_info = {
         "fractal",
-        "/_Statistics/_Fractal Dimension...",
+        N_("/_Statistics/_Fractal Dimension..."),
         (GwyProcessFunc)&fractal,
         FRACTAL_RUN_MODES,
         0,
@@ -230,7 +230,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 
-    controls.from = gtk_label_new(_("minimum"));
+    controls.from = gtk_label_new_with_mnemonic(_("_minimum"));
     gtk_misc_set_alignment(GTK_MISC(controls.from), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.from, 1, 2, 7, 8,
                      GTK_FILL, 0, 2, 2);
@@ -240,7 +240,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
 
-    controls.to = gtk_label_new(_("maxium"));
+    controls.to = gtk_label_new_with_mnemonic(_("ma_xium"));
     gtk_misc_set_alignment(GTK_MISC(controls.to), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.to, 1, 2, 8, 9,
                      GTK_FILL, 0, 2, 2);
@@ -439,7 +439,7 @@ fractal_dialog_update(FractalControls *controls,
             g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result_partitioning);
             gtk_label_set_text(GTK_LABEL(controls->res_partitioning), buffer);
         }
-        label = g_string_new("Partitioning");
+        label = g_string_new(_("Partitioning"));
     }
     else if (args->out == GWY_FRACTAL_CUBECOUNTING)
     {
@@ -451,7 +451,7 @@ fractal_dialog_update(FractalControls *controls,
             g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result_cubecounting);
             gtk_label_set_text(GTK_LABEL(controls->res_cubecounting), buffer);
         }
-        label = g_string_new("Cube counting");
+        label = g_string_new(_("Cube counting"));
     }
     else if (args->out == GWY_FRACTAL_TRIANGULATION)
     {
@@ -463,7 +463,7 @@ fractal_dialog_update(FractalControls *controls,
             g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result_triangulation);
             gtk_label_set_text(GTK_LABEL(controls->res_triangulation), buffer);
         }
-        label = g_string_new("Triangulation");
+        label = g_string_new(_("Triangulation"));
     }
     else if (args->out == GWY_FRACTAL_PSDF)
     {
@@ -475,7 +475,7 @@ fractal_dialog_update(FractalControls *controls,
             g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result_psdf);
             gtk_label_set_text(GTK_LABEL(controls->res_psdf), buffer);
         }
-        label = g_string_new("Power spectrum");
+        label = g_string_new(_("Power spectrum"));
     }
     else return;
 
@@ -638,9 +638,9 @@ graph_selected(GwyGraphArea *area, FractalArgs *args)
     gdouble from, to;
 
     if (area->seldata->data_start == area->seldata->data_end) {
-        g_snprintf(buffer, sizeof(buffer), "minimum");
+        g_snprintf(buffer, sizeof(buffer), _("minimum"));
         gtk_label_set_text(GTK_LABEL(global_controls->from), buffer);
-        g_snprintf(buffer, sizeof(buffer), "maximum");
+        g_snprintf(buffer, sizeof(buffer), _("maximum"));
         gtk_label_set_text(GTK_LABEL(global_controls->to), buffer);
         switch (args->out) {
             case GWY_FRACTAL_CUBECOUNTING:
@@ -748,10 +748,10 @@ gwy_option_menu_fractal(GCallback callback,
                         GwyFractalMethod current)
 {
     static const GwyEnum entries[] = {
-        { "Partitioning",       GWY_FRACTAL_PARTITIONING, },
-        { "Cube counting",      GWY_FRACTAL_CUBECOUNTING, },
-        { "Triangulation",      GWY_FRACTAL_TRIANGULATION, },
-        { "Power spectrum",     GWY_FRACTAL_PSDF, },
+        { N_("Partitioning"),       GWY_FRACTAL_PARTITIONING, },
+        { N_("Cube counting"),      GWY_FRACTAL_CUBECOUNTING, },
+        { N_("Triangulation"),      GWY_FRACTAL_TRIANGULATION, },
+        { N_("Power spectrum"),     GWY_FRACTAL_PSDF, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),

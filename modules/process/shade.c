@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "shade",
-    "Shade module",
+    N_("Shade module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -87,7 +87,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo shade_func_info = {
         "shade",
-        "/_Display/_Shading...",
+        N_("/_Display/_Shading..."),
         (GwyProcessFunc)&shade,
         SHADE_RUN_MODES,
         0,

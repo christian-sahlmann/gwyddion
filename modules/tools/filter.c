@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "filter",
-    "Basic filtering procedures.",
+    N_("Basic filtering procedures."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -108,7 +108,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "filter",
         GWY_STOCK_FILTER,
-        "Basic filters",
+        N_("Basic filters"),
         49,
         use,
     };
@@ -207,7 +207,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("Type:"));
+    label = gtk_label_new_with_mnemonic(_("_Type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
@@ -248,7 +248,7 @@ dialog_create(GwyUnitoolState *state)
                              G_CALLBACK(size_changed_cb), state);
 
     controls->update
-        = gtk_check_button_new_with_label("Update preview dynamically");
+        = gtk_check_button_new_with_label("Update Preview Dynamically");
     gtk_table_attach(GTK_TABLE(table2), controls->update, 0, 3, 4, 5,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),

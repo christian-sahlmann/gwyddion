@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "grain_dist",
-    "Evaluate grain distribution",
+    N_("Evaluate grain distribution"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -56,7 +56,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo dist_func_info = {
         "grain_dist",
-        "/_Grains/_Size Distribution",
+        N_("/_Grains/_Size Distribution"),
         (GwyProcessFunc)&dist,
         DIST_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
@@ -92,13 +92,13 @@ dist(GwyContainer *data, GwyRunType run)
     /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
     gwy_data_field_grains_get_distribution(dfield, dataline);
 
-    lab = g_string_new("Grain size histogram");
+    lab = g_string_new(_("Grain size histogram"));
     units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
     gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                         units->magnitude, 1, units->units, " ");
 
     window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(window, "Grain size distribution");
+    gtk_window_set_title(window, _("Grain size distribution"));
 
     g_string_free(lab, TRUE);
     g_object_unref(dataline);

@@ -42,7 +42,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "outliers",
-    "Create mask of outliers",
+    N_("Create mask of outliers"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -58,7 +58,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo outliers_func_info = {
         "outliers",
-        "/_Correct Data/_Mask of Outliers",
+        N_("/_Correct Data/_Mask of Outliers"),
         (GwyProcessFunc)&outliers,
         OUTLIERS_RUN_MODES,
         0,

@@ -44,7 +44,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fraccor",
-    "Remove data under mask using fraccor equation",
+    N_("Remove data under mask using fractal approach"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -60,7 +60,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fraccor_func_info = {
         "fraccor",
-        "/_Correct Data/_Fractal correction",
+        N_("/_Correct Data/_Fractal correction"),
         (GwyProcessFunc)&fraccor,
         FRACCOR_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,

@@ -61,7 +61,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_dilation",
-    "Tip Dilation.",
+    N_("Tip Dilation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -77,7 +77,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_dilation_func_info = {
         "tip_dilation",
-        "/_Tip operations/_Dilation",
+        N_("/_Tip operations/_Dilation"),
         (GwyProcessFunc)&tip_dilation,
         TIP_DILATION_RUN_MODES,
         0,
@@ -136,7 +136,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     GtkWidget *dialog, *table, *omenu, *label, *spin;
     gint row;
 
-    dialog = gtk_dialog_new_with_buttons(_("Tip dilation"),
+    dialog = gtk_dialog_new_with_buttons(_("Tip Dilation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -150,7 +150,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Tip morphology:"));
+    label = gtk_label_new_with_mnemonic(_("_Tip Morphology:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -162,7 +162,7 @@ tip_dilation_window_construct(TipDilationArgs *args,
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Surface to be dilated:"));
+    label = gtk_label_new_with_mnemonic(_("_Surface to be Dilated:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);

@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "calibrate",
-    "Recalibrate scan axis",
+    N_("Recalibrate scan axis"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -107,7 +107,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo calibrate_func_info = {
         "calibrate",
-        "/_Basic Operations/Recalibrate...",
+        N_("/_Basic Operations/Recalibrate..."),
         (GwyProcessFunc)&calibrate,
         CALIBRATE_RUN_MODES,
         0,
@@ -194,11 +194,11 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>New real dimensions: </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>New Real Dimensions: </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-    controls.xreal = gwy_val_unit_new("X range: ",
+    controls.xreal = gwy_val_unit_new(_("_X Range: "),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
     g_signal_connect(GWY_VAL_UNIT(controls.xreal), "value_changed",
@@ -206,7 +206,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
                        FALSE, FALSE, 4);
-    controls.yreal = gwy_val_unit_new("Y range: ",
+    controls.yreal = gwy_val_unit_new(_("_Y Range: "),
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
     g_signal_connect(GWY_VAL_UNIT(controls.yreal), "value_changed",
@@ -214,7 +214,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
                        FALSE, FALSE, 4);
-    controls.zreal = gwy_val_unit_new("Z range: ",
+    controls.zreal = gwy_val_unit_new(_("_Z Range: "),
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zreal), args->zreal);
     g_signal_connect(GWY_VAL_UNIT(controls.zreal), "value_changed",
@@ -226,7 +226,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Calibration coefficients: </b>");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Calibration Coefficients: </b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
@@ -234,7 +234,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new("X calibration factor: ");
+    label = gtk_label_new_with_mnemonic(_("X C_alibration Factor: "));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
@@ -255,7 +255,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new("Y calibration factor: ");
+    label = gtk_label_new_with_mnemonic(_("Y Cali_bration Factor: "));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);
@@ -276,7 +276,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    label = gtk_label_new("Z calibration factor: ");
+    label = gtk_label_new_with_mnemonic(_("Z Calibration Fa_ctor: "));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label,
                        FALSE, FALSE, 4);

@@ -57,7 +57,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "stats",
-    "Statistical quantities.",
+    N_("Statistical quantities."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -84,7 +84,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "stats",
         GWY_STOCK_STAT_QUANTITIES,
-        "Statistical quantities",
+        N_("Statistical quantities"),
         67,
         use,
     };

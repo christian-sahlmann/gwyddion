@@ -66,9 +66,9 @@ static void       maskcor_save_args        (GwyContainer *settings,
 static void       maskcor_sanitize_args    (MaskcorArgs *args);
 
 static const GwyEnum results[] = {
-    { "Objects marked",     GWY_MASKCOR_OBJECTS },
-    { "Correlation maxima", GWY_MASKCOR_MAXIMA },
-    { "Correlation score",  GWY_MASKCOR_SCORE },
+    { N_("Objects marked"),     GWY_MASKCOR_OBJECTS },
+    { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
+    { N_("Correlation score"),  GWY_MASKCOR_SCORE },
 };
 
 static const MaskcorArgs maskcor_defaults = {
@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "maskcor",
-    "Create mask by correlation with another data field.",
+    N_("Create mask by correlation with another data field."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -96,7 +96,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo maskcor_func_info = {
         "maskcor",
-        "/M_ultidata/_Mask by Correlation",
+        N_("/M_ultidata/_Mask by Correlation"),
         (GwyProcessFunc)&maskcor,
         MASKCOR_RUN_MODES,
         0,

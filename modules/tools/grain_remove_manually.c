@@ -50,7 +50,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "grain_remove_manually",
-    "Grain (mask) removal tool.",
+    N_("Grain (mask) removal tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -77,7 +77,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "grain_remove_manually",
         "gwy_grains_remove",
-        "Grain (mask) removal tool.",
+        N_("Grain (mask) removal tool."),
         98,
         &use,
     };
@@ -97,7 +97,7 @@ use(GwyDataWindow *data_window,
     if (!state) {
         func_slots.layer_type = g_type_from_name(layer_name);
         if (!func_slots.layer_type) {
-            g_warning("Layer type `%s' not available", layer_name);
+            g_warning(_("Layer type `%s' not available"), layer_name);
             return FALSE;
         }
         state = g_new0(GwyUnitoolState, 1);
@@ -114,7 +114,7 @@ dialog_create(GwyUnitoolState *state)
 
     gwy_debug("");
 
-    dialog = gtk_dialog_new_with_buttons(_("Grain remove tool"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Grain Remove Tool"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);

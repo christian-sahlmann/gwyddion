@@ -43,7 +43,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "laplace",
-    "Remove data under mask using laplace equation",
+    N_("Remove data under mask using laplace equation"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -59,7 +59,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo laplace_func_info = {
         "laplace",
-        "/_Correct Data/_Remove Data Under Mask",
+        N_("/_Correct Data/_Remove Data Under Mask"),
         (GwyProcessFunc)&laplace,
         LAPLACE_RUN_MODES,
         GWY_MENU_FLAG_DATA_MASK,
@@ -96,7 +96,7 @@ laplace(GwyContainer *data, GwyRunType run)
         error = 0;
         maxer = gwy_data_field_get_rms(dfield)/1.0e4;
         gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),
-                           "Initializing...");
+                           _("Initializing..."));
 
         gwy_data_field_correct_average(dfield, maskfield);
 
@@ -109,7 +109,7 @@ laplace(GwyContainer *data, GwyRunType run)
             if (i==0) starter = error;
 
 
-            gwy_app_wait_set_message("Iterating...");
+            gwy_app_wait_set_message(_("Iterating..."));
 
             frac = log(error/starter)/log(maxer/starter);
             if ((i/(gdouble)(5000)) > frac) frac = i/(gdouble)(5000);

@@ -36,10 +36,10 @@
 
 
 GwyEnum tip_type[] = {
-        { "Pyramide (general)",   GWY_TIP_PYRAMIDE  },
-        { "Contact etched",   GWY_TIP_CONTACT         },
-        { "Noncontact etched",   GWY_TIP_NONCONTACT   },
-        { "Delta function",   GWY_TIP_DELTA       },
+        { N_("Pyramide (general)"),   GWY_TIP_PYRAMIDE  },
+        { N_("Contact etched"),   GWY_TIP_CONTACT         },
+        { N_("Noncontact etched"),   GWY_TIP_NONCONTACT   },
+        { N_("Delta function"),   GWY_TIP_DELTA       },
 };
 
 /* Data for this function. */
@@ -120,7 +120,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_model",
-    "Model SPM tip",
+    N_("Model SPM tip"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -136,7 +136,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_model_func_info = {
         "tip_model",
-        "/_Tip operations/_Model Tip...",
+        N_("/_Tip operations/_Model Tip..."),
         (GwyProcessFunc)&tip_model,
         TIP_MODEL_RUN_MODES,
         0,
@@ -183,7 +183,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     GwyDataField *dfield;
     GtkWidget *label;
 
-    dialog = gtk_dialog_new_with_buttons(_("Model tip"),
+    dialog = gtk_dialog_new_with_buttons(_("Model Tip"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          _("Update preview"), RESPONSE_PREVIEW,
@@ -228,7 +228,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
 
-    label = gtk_label_new(_("Related data:"));
+    label = gtk_label_new(_("Related Data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -239,7 +239,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
     
-    label = gtk_label_new(_("Tip type:"));
+    label = gtk_label_new(_("Tip Type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -250,30 +250,30 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     controls.nsides = gtk_adjustment_new(args->nsides,
                                          3, 100, 1, 5, 0);
-    controls.spin_nsides = gwy_table_attach_spinbutton(table, 3, _("number of sides"), " ",
+    controls.spin_nsides = gwy_table_attach_spinbutton(table, 3, _("Number of Sides:"), " ",
                                         controls.nsides);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_nsides), 0);
     
     controls.angle = gtk_adjustment_new(args->angle,
                                          0.1, 89.9, 0.1, 1, 0);
-    controls.spin_angle = gwy_table_attach_spinbutton(table, 4, _("tip slope"), "deg",
+    controls.spin_angle = gwy_table_attach_spinbutton(table, 4, _("Tip Slope:"), "deg",
                                         controls.angle);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_angle), 2);
   
     controls.theta = gtk_adjustment_new(args->theta,
                                          0, 360, 0.1, 1, 0);
-    controls.spin_theta = gwy_table_attach_spinbutton(table, 5, _("tip rotation"), "deg",
+    controls.spin_theta = gwy_table_attach_spinbutton(table, 5, _("Tip Rotation:"), "deg",
                                         controls.theta);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls.spin_theta), 2);
 
-    controls.radius = gwy_val_unit_new("Tip apex radius: ", gwy_data_field_get_si_unit_xy(dfield));
+    controls.radius = gwy_val_unit_new(_("Tip Apex Radius: "), gwy_data_field_get_si_unit_xy(dfield));
     g_signal_connect(controls.radius, "value_changed",
                                            G_CALLBACK(radius_changed_cb), args);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.radius), args->radius);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.radius, FALSE, FALSE, 4);
 
-    controls.labsize = gtk_label_new("Resolution will be determined according tip type.");
+    controls.labsize = gtk_label_new(_("Resolution will be determined according tip type."));
     gtk_misc_set_alignment(GTK_MISC(controls.labsize), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), controls.labsize, FALSE, FALSE, 4);
 

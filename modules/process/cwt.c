@@ -79,7 +79,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "cwt",
-    "2D Continuous Wavelet Transform module",
+    N_("2D Continuous Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -95,7 +95,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo cwt_func_info = {
         "cwt",
-        "/_Integral Transforms/_2D CWT...",
+        N_("/_Integral Transforms/_2D CWT..."),
         (GwyProcessFunc)&cwt,
         CWT_RUN_MODES,
         0,

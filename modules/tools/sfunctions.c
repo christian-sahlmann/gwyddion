@@ -75,7 +75,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "sfunctions",
-    "Statistical functions.",
+    N_("Statistical functions."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -93,13 +93,13 @@ static GwyUnitoolSlots func_slots = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { "Height distribution", GWY_SF_OUTPUT_DH },
-    { "Height distribution", GWY_SF_OUTPUT_CDH },
-    { "Slope distribution",  GWY_SF_OUTPUT_DA },
-    { "Slope distribution",  GWY_SF_OUTPUT_CDA },
-    { "ACF",                 GWY_SF_OUTPUT_ACF },
-    { "HHCF",                GWY_SF_OUTPUT_HHCF },
-    { "PSDF",                GWY_SF_OUTPUT_PSDF },
+    { N_("Height distribution"), GWY_SF_OUTPUT_DH },
+    { N_("Height distribution"), GWY_SF_OUTPUT_CDH },
+    { N_("Slope distribution"),  GWY_SF_OUTPUT_DA },
+    { N_("Slope distribution"),  GWY_SF_OUTPUT_CDA },
+    { N_("ACF"),                 GWY_SF_OUTPUT_ACF },
+    { N_("HHCF"),                GWY_SF_OUTPUT_HHCF },
+    { N_("PSDF"),                GWY_SF_OUTPUT_PSDF },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -112,7 +112,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "sfunctions",
         GWY_STOCK_GRAPH_HALFGAUSS,
-        "Compute 1D statistical functions.",
+        N_("Compute 1D statistical functions."),
         77,
         use,
     };

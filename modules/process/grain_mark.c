@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "mark_threshold",
-    "Mark grains by thresholding",
+    N_("Mark grains by thresholding"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -125,7 +125,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo mark_func_info = {
         "mark_threshold",
-        "/_Grains/_Mark by Threshold...",
+        N_("/_Grains/_Mark by Threshold..."),
         (GwyProcessFunc)&mark,
         MARK_RUN_MODES,
         0,
@@ -211,7 +211,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
 
     controls.is_height
-        = gtk_check_button_new_with_label(_("Threshold by height:"));
+        = gtk_check_button_new_with_mnemonic(_("Threshold by _Height:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
                                  args->is_height);
 
@@ -220,12 +220,12 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 2, _("Height value"), "%",
+    spin = gwy_table_attach_spinbutton(table, 2, _("Height Value:"), "%",
                                        controls.threshold_height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     controls.is_slope
-        = gtk_check_button_new_with_label(_("Threshold by slope:"));
+        = gtk_check_button_new_with_mnemonic(_("Threshold by _Slope:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope),
                                  args->is_slope);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope,
@@ -233,12 +233,12 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_slope = gtk_adjustment_new(args->slope,
                                                   0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value"), "%",
+    spin = gwy_table_attach_spinbutton(table, 4, _("Slope value:"), "%",
                                        controls.threshold_slope);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     controls.is_lap
-        = gtk_check_button_new_with_label(_("Threshold by curvature:"));
+        = gtk_check_button_new_with_mnemonic(_("Threshold by _Curvature:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap),
                                  args->is_lap);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap,
@@ -246,11 +246,11 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     controls.threshold_lap = gtk_adjustment_new(args->lap,
                                                 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature value"), "%",
+    spin = gwy_table_attach_spinbutton(table, 6, _("Curvature Value:"), "%",
                                        controls.threshold_lap);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
-    label = gtk_label_new(_("Merge mode:"));
+    label = gtk_label_new_with_mnemonic(_("Mer_ge Mode:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 7, 8, GTK_FILL, 0, 2, 2);
 

@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "profile",
-    "Profile tool.",
+    N_("Profile tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -101,7 +101,7 @@ module_register(const gchar *name)
     static GwyToolFuncInfo func_info = {
         "profile",
         GWY_STOCK_PROFILE,
-        "Extract profiles from data.",
+        N_("Extract profiles from data."),
         80,
         use,
     };
@@ -223,7 +223,7 @@ dialog_create(GwyUnitoolState *state)
     g_signal_connect(controls->separation, "toggled",
                      G_CALLBACK(separate_changed_cb), controls);
 
-    label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 2);
 

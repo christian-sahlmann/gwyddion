@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "tip_blind",
-    "Blind estimation of SPM tip using Villarubia's algorithm",
+    N_("Blind estimation of SPM tip using Villarubia's algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -125,7 +125,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo tip_blind_func_info = {
         "tip_blind",
-        "/_Tip operations/_Blind estimation...",
+        N_("/_Tip operations/_Blind estimation..."),
         (GwyProcessFunc)&tip_blind,
         TIP_BLIND_RUN_MODES,
         0,
@@ -221,7 +221,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
 
-    label = gtk_label_new(_("Related data:"));
+    label = gtk_label_new(_("Related Data:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -232,7 +232,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
-    label = gtk_label_new(_("Estimated tip size:"));
+    label = gtk_label_new_with_mnemonic(_("_Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
@@ -258,7 +258,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     g_signal_connect(controls.yres, "value_changed",
                                           G_CALLBACK(height_changed_cb), args);
 
-    controls.threshold = gwy_val_unit_new("Threshold ",
+    controls.threshold = gwy_val_unit_new(_("Threshold: "),
                                        gwy_data_field_get_si_unit_z(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
              g_signal_connect(GWY_VAL_UNIT(controls.threshold), "value_changed",
@@ -268,7 +268,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
                                                       FALSE, FALSE, 4);
 
     controls.boundaries
-                = gtk_check_button_new_with_label(_("Use boundaries"));
+                = gtk_check_button_new_with_label(_("Use Boundaries:"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.boundaries),
                                                  args->use_boundaries);
     g_signal_connect(controls.boundaries, "toggled", G_CALLBACK(bound_changed_cb), args);

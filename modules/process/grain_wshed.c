@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "wshed_threshold",
-    "Mark grains by watershed algorithm",
+    N_("Mark grains by watershed algorithm"),
     "Petr Klapetek <petr@klapetek.cz>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -113,7 +113,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo wshed_func_info = {
         "wshed_threshold",
-        "/_Grains/Mark by _Watershed...",
+        N_("/_Grains/Mark by _Watershed..."),
         (GwyProcessFunc)&wshed,
         WSHED_RUN_MODES,
         0,
@@ -200,18 +200,18 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
 
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Grain location:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Grain Location</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
 
     controls.locate_steps = gtk_adjustment_new(args->locate_steps,
                                                      0.0, 100.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 2, _("Number of steps"), "",
+    gwy_table_attach_spinbutton(table, 2, _("Number of Steps:"), "",
                                 controls.locate_steps);
     controls.locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
                                                         0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 3, _("Drop size"), "%",
+    spin = gwy_table_attach_spinbutton(table, 3, _("Drop Size:"), "%",
                                 controls.locate_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     controls.locate_thresh = gtk_adjustment_new(args->locate_thresh,
@@ -220,21 +220,21 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                 controls.locate_thresh);
     controls.wshed_steps = gtk_adjustment_new(args->wshed_steps,
                                                     0.0, 1000.0, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, 6, _("Number of steps"), "",
+    gwy_table_attach_spinbutton(table, 6, _("Number of Steps"), "",
                                 controls.wshed_steps);
 
     controls.wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
                                                        0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_spinbutton(table, 7, _("Drop size"), "%",
+    spin = gwy_table_attach_spinbutton(table, 7, _("Drop Size"), "%",
                                 controls.wshed_dropsize);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Segmentation:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Segmentation</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    label = gtk_label_new_with_mnemonic(_("Preview _Mask Color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,  0, 1, 9, 10, GTK_FILL, 0, 2, 2);
     controls.color_button = gwy_color_button_new();

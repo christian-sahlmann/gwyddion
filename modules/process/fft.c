@@ -105,7 +105,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "fft",
-    "2D Fast Fourier Transform module",
+    N_("2D Fast Fourier Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -121,7 +121,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fft_func_info = {
         "fft",
-        "/_Integral Transforms/_2D FFT...",
+        N_("/_Integral Transforms/_2D FFT..."),
         (GwyProcessFunc)&fft,
         FFT_RUN_MODES,
         0,
@@ -374,8 +374,8 @@ fft_dialog(FFTArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.preserve = gtk_check_button_new_with_label("preserve size");
-    gwy_table_attach_row(table, 0, _("Data size treatment:"), "",
+    controls.preserve = gtk_check_button_new_with_mnemonic("_Preserve Size");
+    gwy_table_attach_row(table, 0, _("_Data Size Treatment:"), "",
                          controls.preserve);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
@@ -386,18 +386,18 @@ fft_dialog(FFTArgs *args)
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
                                         args, args->interp);
-    gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
+    gwy_table_attach_row(table, 1, _("_Interpolation Type:"), "",
                          controls.interp);
     controls.window
         = gwy_option_menu_windowing(G_CALLBACK(window_changed_cb),
                                     args, args->interp);
-    gwy_table_attach_row(table, 2, _("_Windowing type:"), "",
+    gwy_table_attach_row(table, 2, _("_Windowing Type:"), "",
                          controls.window);
 
     controls.out
         = gwy_option_menu_fft_output(G_CALLBACK(out_changed_cb),
                                      args, args->out);
-    gwy_table_attach_row(table, 3, _("_Output type:"), "",
+    gwy_table_attach_row(table, 3, _("_Output Type:"), "",
                          controls.out);
 
     gtk_widget_show_all(dialog);
@@ -480,12 +480,12 @@ gwy_option_menu_fft_output(GCallback callback,
                            GwyFFTOutputType current)
 {
     static const GwyEnum entries[] = {
-        { "Real + Imaginary",  GWY_FFT_OUTPUT_REAL_IMG,  },
-        { "Module + Phase",    GWY_FFT_OUTPUT_MOD_PHASE, },
-        { "Real",              GWY_FFT_OUTPUT_REAL,      },
-        { "Imaginary",         GWY_FFT_OUTPUT_IMG,       },
-        { "Module",            GWY_FFT_OUTPUT_MOD,       },
-        { "Phase",             GWY_FFT_OUTPUT_PHASE,     },
+        { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
+        { N_("Module + Phase"),    GWY_FFT_OUTPUT_MOD_PHASE, },
+        { N_("Real"),              GWY_FFT_OUTPUT_REAL,      },
+        { N_("Imaginary"),         GWY_FFT_OUTPUT_IMG,       },
+        { N_("Module"),            GWY_FFT_OUTPUT_MOD,       },
+        { N_("Phase"),             GWY_FFT_OUTPUT_PHASE,     },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),

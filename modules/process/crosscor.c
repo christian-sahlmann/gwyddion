@@ -88,10 +88,10 @@ static void       crosscor_sanitize_args      (CrosscorArgs *args);
 
 
 static const GwyEnum results[] = {
-    { "Absolute",    GWY_CROSSCOR_ABS },
-    { "X distance",  GWY_CROSSCOR_X },
-    { "Y distance",  GWY_CROSSCOR_Y },
-    { "Angle",       GWY_CROSSCOR_DIR },
+    { N_("Absolute"),    GWY_CROSSCOR_ABS },
+    { N_("X Distance"),  GWY_CROSSCOR_X },
+    { N_("Y Distance"),  GWY_CROSSCOR_Y },
+    { N_("Angle"),       GWY_CROSSCOR_DIR },
 };
 
 static const CrosscorArgs crosscor_defaults = {
@@ -103,7 +103,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "crosscor",
-    "Cross-correlation of two data fields.",
+    N_("Cross-correlation of two data fields."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -119,7 +119,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo crosscor_func_info = {
         "crosscor",
-        "/M_ultidata/_Cross-Correlation",
+        N_("/M_ultidata/_Cross-Correlation"),
         (GwyProcessFunc)&crosscor,
         CROSSCOR_RUN_MODES,
         0,
@@ -199,7 +199,7 @@ crosscor_window_construct(CrosscorArgs *args,
     row = 0;
 
     /***** First operand *****/
-    label = gtk_label_new_with_mnemonic(_("_First data field:"));
+    label = gtk_label_new_with_mnemonic(_("_First Data Field:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -211,7 +211,7 @@ crosscor_window_construct(CrosscorArgs *args,
     row++;
 
     /***** Second operand *****/
-    label = gtk_label_new_with_mnemonic(_("_Second data field:"));
+    label = gtk_label_new_with_mnemonic(_("_Second Data Field:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -224,7 +224,7 @@ crosscor_window_construct(CrosscorArgs *args,
 
     /**** Parameters ********/
     /*search size*/
-    label = gtk_label_new_with_mnemonic(_("_Search size"));
+    label = gtk_label_new_with_mnemonic(_("S_earch Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
