@@ -18,9 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include "gwydgets.h"
 
 
@@ -98,6 +100,130 @@ gwy_table_attach_row(GtkWidget *table,
     gtk_table_attach(GTK_TABLE(table), middle_widget,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
+}
+
+/************************** Mask colors ****************************/
+typedef struct {
+    GwyDataView *data_view;
+    GwyContainer *container;
+    GQuark keys[4];
+} MaskColorSelectorData;
+
+static void
+mask_color_updated_cb(GtkWidget *selector, MaskColorSelectorData *mcsdata)
+{
+    GdkColor gdkcolor;
+    guint16 gdkalpha;
+    gdouble p[4];
+    gint i;
+
+    gwy_debug("mcsdata = %p", mcsdata);
+    if (gtk_color_selection_is_adjusting(GTK_COLOR_SELECTION(selector)))
+        return;
+
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gdkalpha
+        = gtk_color_selection_get_current_alpha(GTK_COLOR_SELECTION(selector));
+
+    p[0] = gdkcolor.red/65535.0;
+    p[1] = gdkcolor.green/65535.0;
+    p[2] = gdkcolor.blue/65535.0;
+    p[3] = gdkalpha/65535.0;
+
+    for (i = 0; i < 4; i++)
+        gwy_container_set_double(mcsdata->container, mcsdata->keys[i], p[i]);
+
+    if (mcsdata->data_view)
+        gwy_data_view_update(mcsdata->data_view);
+}
+
+/**
+ * gwy_color_selector_for_mask:
+ * @dialog_title: Title of the color selection dialog (%NULL to use default).
+ * @data_view: Data view to update on color change (%NULL to not update
+ *             any data view).
+ * @container: Container to initialize the color from and save it to, may be
+ *             %NULL to use @data_view's one if that is not %NULL.
+ * @prefix: Prefix in @container (normally "/0/mask").
+ *
+ * Creates and runs a color selector dialog for a mask.
+ *
+ * Note this function does not return anything, it runs the dialog modally
+ * and returns when it finishes.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_color_selector_for_mask(const gchar *dialog_title,
+                            GwyDataView *data_view,
+                            GwyContainer *container,
+                            const gchar *prefix)
+{
+    static const gchar *mask_keys[4] = {
+        "/red", "/green", "/blue", "/alpha"
+    };
+    GtkWidget *selector, *dialog;
+    MaskColorSelectorData *mcsdata;
+    GdkColor gdkcolor;
+    guint16 gdkalpha;
+    gdouble p[4];
+    gint i, response;
+    gsize len;
+    gchar *buffer;
+
+    g_return_if_fail(prefix && *prefix == '/');
+    if (!container) {
+        g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+        container = gwy_data_view_get_data(data_view);
+    }
+
+    mcsdata = g_new(MaskColorSelectorData, 1);
+    mcsdata->data_view = data_view;
+    mcsdata->container = container;
+    /* quarkize keys */
+    len = strlen(prefix);
+    buffer = g_new(gchar, len + 6 + 1);
+    strcpy(buffer, prefix);
+    for (i = 0; i < 4; i++) {
+       strcpy(buffer + len, mask_keys[i]);
+       mcsdata->keys[i] = g_quark_from_string(buffer);
+    }
+    g_free(buffer);
+
+    for (i = 0; i < 4; i++)
+        gwy_container_gis_double(container, mcsdata->keys[i], p + i);
+
+    gdkcolor.red = (guint16)floor(p[0]*65535.999999);
+    gdkcolor.green = (guint16)floor(p[1]*65535.999999);
+    gdkcolor.blue = (guint16)floor(p[2]*65535.999999);
+    gdkalpha = (guint16)floor(p[3]*65535.999999);
+    gdkcolor.pixel = (guint32)-1; /* FIXME */
+
+    dialog = gtk_color_selection_dialog_new(dialog_title
+                                            ? dialog_title
+                                            : _("Change Mask Color"));
+    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_color_selection_set_current_alpha(GTK_COLOR_SELECTION(selector),
+                                          gdkalpha);
+    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
+    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
+                                                TRUE);
+    g_signal_connect(selector, "color-changed",
+                     G_CALLBACK(mask_color_updated_cb), mcsdata);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    if (response != GTK_RESPONSE_OK) {
+        /* restore old */
+        for (i = 0; i < 4; i++)
+            gwy_container_set_double(container, mcsdata->keys[i], p[i]);
+        if (data_view)
+            gwy_data_view_update(data_view);
+    }
+    g_free(mcsdata);
 }
 
 

@@ -55,10 +55,6 @@ static gint untitled_no = 0;
 
 static GHookList window_list_hook_list;
 
-static const gchar *mask_keys[4] = {
-    "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
-};
-
 static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
@@ -703,102 +699,46 @@ gwy_app_clean_up_data(GwyContainer *data)
     gwy_container_remove_by_prefix(data, "/0/select");
 }
 
-static void
-mask_color_updated_cb(GtkWidget *selector, GwyDataView *data_view)
-{
-    GwyContainer *data;
-    GdkColor gdkcolor;
-    guint16 gdkalpha;
-    gdouble p[4];
-    gint i;
-
-    gwy_debug("data_view = %p", data_view);
-    if (gtk_color_selection_is_adjusting(GTK_COLOR_SELECTION(selector)))
-        return;
-
-    data = data_view ? gwy_data_view_get_data(data_view)
-                     : gwy_app_settings_get();
-
-    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
-                                          &gdkcolor);
-    gdkalpha
-        = gtk_color_selection_get_current_alpha(GTK_COLOR_SELECTION(selector));
-
-    p[0] = gdkcolor.red/65535.0;
-    p[1] = gdkcolor.green/65535.0;
-    p[2] = gdkcolor.blue/65535.0;
-    p[3] = gdkalpha/65535.0;
-
-    for (i = 0; i < 4; i++)
-        gwy_container_set_double_by_name(data,
-                                         mask_keys[i] + (!data_view ? 2 : 0),
-                                         p[i]);
-    if (data_view)
-        gwy_data_view_update(GWY_DATA_VIEW(data_view));
-}
-
 void
 gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                              gboolean defaultc)
 {
+    static const gchar *mask_key_names[4] = {
+        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha",
+    };
+    static GQuark mask_keys[4] = { 0, 0, 0, 0 };
     GwyDataWindow *data_window;
-    GtkWidget *data_view = NULL;
+    GtkWidget *data_view;
     GwyContainer *data, *settings;
-    GtkWidget *selector, *dialog;
-    GdkColor gdkcolor;
-    guint16 gdkalpha;
-    gdouble p[4];
-    gint i, response;
+    gdouble p;
+    gint i;
 
-    if (!defaultc) {
-        data_window = gwy_app_data_window_get_current();
-        g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-        data_view = gwy_data_window_get_data_view(data_window);
-        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
-    }
-    else
-        data = NULL;
+    gwy_debug("defaultc = %d", defaultc);
 
     settings = gwy_app_settings_get();
-    for (i = 0; i < 4; i++) {
-        gwy_container_gis_double_by_name(settings, mask_keys[i] + 2, p + i);
-        if (data)
-            gwy_container_gis_double_by_name(data, mask_keys[i], p + i);
+    if (defaultc) {
+        gwy_color_selector_for_mask(_("Change Default Mask Color"),
+                                    NULL, settings, "/mask");
+        return;
     }
 
-    gdkcolor.red = (guint16)floor(p[0]*65535.999999);
-    gdkcolor.green = (guint16)floor(p[1]*65535.999999);
-    gdkcolor.blue = (guint16)floor(p[2]*65535.999999);
-    gdkalpha = (guint16)floor(p[3]*65535.999999);
-    gdkcolor.pixel = (guint32)-1; /* FIXME */
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
 
-    if (defaultc)
-        dialog = gtk_color_selection_dialog_new(_("Change Default Mask Color"));
-    else
-        dialog = gtk_color_selection_dialog_new(_("Change Mask Color"));
-    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
-    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
-                                          &gdkcolor);
-    gtk_color_selection_set_current_alpha(GTK_COLOR_SELECTION(selector),
-                                          gdkalpha);
-    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
-    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
-                                                TRUE);
-    g_signal_connect(selector, "color-changed",
-                     G_CALLBACK(mask_color_updated_cb),
-                     defaultc ? NULL : data_view);
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-    if (response == GTK_RESPONSE_OK)
-        return;
+    /* copy defaults to data container if necessary */
+    for (i = 0; i < 4; i++) {
+        if (!mask_keys[i])
+            mask_keys[i] = g_quark_from_static_string(mask_key_names[i]);
+        if (!gwy_container_contains(data, mask_keys[i])) {
+            p = gwy_container_get_double(settings, mask_keys[i]);
+            gwy_container_set_double(data, mask_keys[i], p);
+        }
+    }
 
-    /* restore old */
-    for (i = 0; i < 4; i++)
-        gwy_container_set_double_by_name(defaultc ? settings : data,
-                                         mask_keys[i] + (defaultc ? 2 : 0),
-                                         p[i]);
-    if (!defaultc)
-        gwy_data_view_update(GWY_DATA_VIEW(data_view));
+    gwy_color_selector_for_mask(NULL, GWY_DATA_VIEW(data_view), data,
+                                "/0/mask");
 }
 
 /**

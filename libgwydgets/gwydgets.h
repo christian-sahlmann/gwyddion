@@ -61,7 +61,10 @@ void       gwy_table_attach_row           (GtkWidget *table,
                                            const gchar *name,
                                            const gchar *units,
                                            GtkWidget *middle_widget);
-
+void       gwy_color_selector_for_mask    (const gchar *dialog_title,
+                                           GwyDataView *data_view,
+                                           GwyContainer *container,
+                                           const gchar *prefix);
 gboolean   gwy_dialog_prevent_delete_cb   (void);
 
 
