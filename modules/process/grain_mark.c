@@ -87,10 +87,6 @@ static void        load_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
 static void        save_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
-static void        mark_load_args              (GwyContainer *container,
-                                               MarkArgs *args);
-static void        mark_save_args              (GwyContainer *container,
-                                               MarkArgs *args);
 static void        mark_dialog_update          (MarkControls *controls,
                                                MarkArgs *args);
 static void        preview                     (MarkControls *controls,
@@ -102,6 +98,11 @@ static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
                                                MarkArgs *args,
                                                MarkControls *controls);
+static void        mark_load_args              (GwyContainer *container,
+                                               MarkArgs *args);
+static void        mark_save_args              (GwyContainer *container,
+                                               MarkArgs *args);
+static void        mark_sanitize_args         (MarkArgs *args);
 
 
 MarkArgs mark_defaults = {
@@ -122,7 +123,7 @@ static GwyModuleInfo module_info = {
     "mark_threshold",
     "Mark grains by thresholding",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -208,44 +209,55 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
 
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
         zoomval = 400.0/(gdouble)gwy_data_field_get_xres(dfield);
-    else zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
+    else
+        zoomval = 400.0/(gdouble)gwy_data_field_get_yres(dfield);
 
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view,
-                       FALSE, FALSE, 4);
-
-    gtk_box_pack_start(GTK_BOX(hbox), table,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
 
 
-    controls.is_height = gtk_check_button_new_with_label("Threshold by height:");
-    if (args->height) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), TRUE);
-    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), FALSE);
-    g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), args);
-    gtk_table_attach(GTK_TABLE(table), controls.is_height, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
+    controls.is_height
+        = gtk_check_button_new_with_label(_("Threshold by height:"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height),
+                                 args->is_height);
 
-    controls.threshold_height = gtk_adjustment_new(args->height, 0.0, 100.0, 0.1, 5, 0);
+    g_signal_connect(controls.is_height, "toggled",
+                     G_CALLBACK(isheight_changed_cb), args);
+    gtk_table_attach(GTK_TABLE(table), controls.is_height,
+                     0, 1, 1, 2, GTK_FILL, 0, 2, 2);
+
+    controls.threshold_height = gtk_adjustment_new(args->height,
+                                                   0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 2, _("Height value [fractile]"), _(""),
                                 controls.threshold_height);
 
-    controls.is_slope = gtk_check_button_new_with_label("Threshold by slope:");
-    if (args->slope) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), TRUE);
-    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), FALSE);
-    g_signal_connect(controls.is_slope, "toggled", G_CALLBACK(isslope_changed_cb), args);
-    gtk_table_attach(GTK_TABLE(table), controls.is_slope, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+    controls.is_slope
+        = gtk_check_button_new_with_label(_("Threshold by slope:"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope),
+                                 args->is_slope);
+    g_signal_connect(controls.is_slope, "toggled",
+                     G_CALLBACK(isslope_changed_cb), args);
+    gtk_table_attach(GTK_TABLE(table), controls.is_slope,
+                     0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
-    controls.threshold_slope = gtk_adjustment_new(args->slope, 0.0, 100.0, 0.1, 5, 0);
+    controls.threshold_slope = gtk_adjustment_new(args->slope,
+                                                  0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("Slope value [fractile]"), _(""),
                                 controls.threshold_slope);
 
-    controls.is_lap = gtk_check_button_new_with_label("Threshold by curvature:");
-    if (args->lap) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), TRUE);
-    else gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), FALSE);
-    g_signal_connect(controls.is_lap, "toggled", G_CALLBACK(islap_changed_cb), args);
-    gtk_table_attach(GTK_TABLE(table), controls.is_lap, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
+    controls.is_lap
+        = gtk_check_button_new_with_label(_("Threshold by curvature:"));
+    g_signal_connect(controls.is_lap, "toggled",
+                     G_CALLBACK(islap_changed_cb), args);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap),
+                                 args->is_lap);
+    gtk_table_attach(GTK_TABLE(table), controls.is_lap,
+                     0, 1, 5, 6, GTK_FILL, 0, 2, 2);
 
-    controls.threshold_lap = gtk_adjustment_new(args->lap, 0.0, 100.0, 0.1, 5, 0);
+    controls.threshold_lap = gtk_adjustment_new(args->lap,
+                                                0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("Curvature value [fractile]"), _(""),
                                 controls.threshold_lap);
 
@@ -258,10 +270,6 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                                             args, args->merge_type);
     gtk_table_attach(GTK_TABLE(table), controls.merge, 0, 1, 8, 9, GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), 9, 8);
-
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_height), args->is_height);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_slope), args->is_slope);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.is_lap), args->is_lap);
 
     label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -308,9 +316,12 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
         }
     } while (response != GTK_RESPONSE_OK);
 
-    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_height));
-    args->slope = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_slope));
-    args->lap = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_lap));
+    args->height
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_height));
+    args->slope
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_slope));
+    args->lap
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.threshold_lap));
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -418,49 +429,6 @@ save_mask_color(GtkWidget *color_button,
     gwy_container_set_double_by_name(data, "/0/mask/alpha", alpha/f);
 }
 
-static const gchar *isheight_key = "/module/mark_height/isheight";
-static const gchar *isslope_key = "/module/mark_height/isslope";
-static const gchar *islap_key = "/module/mark_height/islap";
-static const gchar *inverted_key = "/module/mark_height/inverted";
-static const gchar *height_key = "/module/mark_height/height";
-static const gchar *slope_key = "/module/mark_height/slope";
-static const gchar *lap_key = "/module/mark_height/lap";
-static const gchar *mergetype_key = "/module/mark_height/mergetype";
-
-
-static void
-mark_load_args(GwyContainer *container,
-               MarkArgs *args)
-{
-    *args = mark_defaults;
-
-    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
-    gwy_container_gis_boolean_by_name(container, isheight_key,
-                                      &args->is_height);
-    gwy_container_gis_boolean_by_name(container, isslope_key, &args->is_slope);
-    gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
-    gwy_container_gis_double_by_name(container, height_key, &args->height);
-    gwy_container_gis_double_by_name(container, slope_key, &args->slope);
-    gwy_container_gis_double_by_name(container, lap_key, &args->lap);
-    gwy_container_gis_enum_by_name(container, mergetype_key,
-                                    &args->merge_type);
-
-}
-
-static void
-mark_save_args(GwyContainer *container,
-               MarkArgs *args)
-{
-    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
-    gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
-    gwy_container_set_boolean_by_name(container, isslope_key, args->is_slope);
-    gwy_container_set_boolean_by_name(container, islap_key, args->is_lap);
-    gwy_container_set_double_by_name(container, height_key, args->height);
-    gwy_container_set_double_by_name(container, slope_key, args->slope);
-    gwy_container_set_double_by_name(container, lap_key, args->lap);
-    gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
-}
-
 static void
 mark_dialog_update(MarkControls *controls,
                      MarkArgs *args)
@@ -493,8 +461,9 @@ preview(MarkControls *controls,
 
     /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                  "/0/mask"));
+        maskfield
+            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                              "/0/mask"));
         gwy_data_field_resample(maskfield,
                                gwy_data_field_get_xres(dfield),
                                gwy_data_field_get_yres(dfield),
@@ -502,7 +471,8 @@ preview(MarkControls *controls,
         gwy_data_field_copy(dfield, maskfield);
         if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
             layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), GWY_PIXMAP_LAYER(layer));
+            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
+                                          GWY_PIXMAP_LAYER(layer));
         }
     }
     else {
@@ -521,7 +491,6 @@ preview(MarkControls *controls,
 
 }
 
-/* Ja se na to fakt vyseru. Promenne pojmenovane stejne jako funkce... */
 static void
 ok(MarkControls *controls,
    MarkArgs *args,
@@ -532,9 +501,7 @@ ok(MarkControls *controls,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
+    if (gwy_container_contains_by_name(data, "/0/mask")) {
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
         gwy_data_field_resample(maskfield,
@@ -543,8 +510,7 @@ ok(MarkControls *controls,
                                GWY_INTERPOLATION_NONE);
         gwy_data_field_copy(dfield, maskfield);
     }
-    else
-    {
+    else {
         maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
 
@@ -565,33 +531,39 @@ merge_changed_cb(GObject *item, MarkArgs *args)
 
 
 static void
-mask_process(GwyDataField *dfield, GwyDataField *maskfield, MarkArgs *args, MarkControls *controls)
+mask_process(GwyDataField *dfield,
+             GwyDataField *maskfield,
+             MarkArgs *args,
+             MarkControls *controls)
 {
     GwyDataField *output_field;
     gboolean is_field;
 
     is_field = FALSE;
-    output_field = (GwyDataField*)gwy_data_field_new(gwy_data_field_get_xres(dfield),
-                                                     gwy_data_field_get_yres(dfield),
-                                                     gwy_data_field_get_xreal(dfield),
-                                                     gwy_data_field_get_yreal(dfield),
-                                                     FALSE);
+    output_field = GWY_DATA_FIELD(gwy_data_field_new
+                                      (gwy_data_field_get_xres(dfield),
+                                       gwy_data_field_get_yres(dfield),
+                                       gwy_data_field_get_xreal(dfield),
+                                       gwy_data_field_get_yreal(dfield),
+                                       FALSE));
 
-    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
-    args->slope = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
-    args->lap = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
+    args->height
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
+    args->slope
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
+    args->lap
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
 
     args->inverted = 0;
-    if (args->is_height)
-    {
-        gwy_data_field_grains_mark_height(dfield, maskfield, args->height, args->inverted);
+    if (args->is_height) {
+        gwy_data_field_grains_mark_height(dfield, maskfield,
+                                          args->height, args->inverted);
         is_field = TRUE;
     }
-    if (args->is_slope)
-    {
-        gwy_data_field_grains_mark_slope(dfield, output_field, args->slope, args->inverted);
-        if (is_field)
-        {
+    if (args->is_slope) {
+        gwy_data_field_grains_mark_slope(dfield, output_field,
+                                         args->slope, args->inverted);
+        if (is_field) {
             if (args->merge_type == GWY_MERGE_UNION)
                 gwy_data_field_grains_add(maskfield, output_field);
             else if (args->merge_type == GWY_MERGE_INTERSECTION)
@@ -600,11 +572,10 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, MarkArgs *args, Mark
         else gwy_data_field_copy(output_field, maskfield);
         is_field = TRUE;
     }
-    if (args->is_lap)
-    {
-        gwy_data_field_grains_mark_curvature(dfield, output_field, args->lap, args->inverted);
-        if (is_field)
-        {
+    if (args->is_lap) {
+        gwy_data_field_grains_mark_curvature(dfield, output_field,
+                                             args->lap, args->inverted);
+        if (is_field) {
             if (args->merge_type == GWY_MERGE_UNION)
                 gwy_data_field_grains_add(maskfield, output_field);
             else if (args->merge_type == GWY_MERGE_INTERSECTION)
@@ -614,6 +585,61 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, MarkArgs *args, Mark
      }
 
     g_object_unref(output_field);
+}
+
+static const gchar *isheight_key = "/module/mark_height/isheight";
+static const gchar *isslope_key = "/module/mark_height/isslope";
+static const gchar *islap_key = "/module/mark_height/islap";
+static const gchar *inverted_key = "/module/mark_height/inverted";
+static const gchar *height_key = "/module/mark_height/height";
+static const gchar *slope_key = "/module/mark_height/slope";
+static const gchar *lap_key = "/module/mark_height/lap";
+static const gchar *mergetype_key = "/module/mark_height/merge_type";
+
+static void
+mark_sanitize_args(MarkArgs *args)
+{
+    args->inverted = !!args->inverted;
+    args->is_slope = !!args->is_slope;
+    args->is_height = !!args->is_height;
+    args->is_lap = !!args->is_lap;
+    args->height = CLAMP(args->height, 0.0, 100.0);
+    args->slope = CLAMP(args->slope, 0.0, 100.0);
+    args->lap = CLAMP(args->lap, 0.0, 100.0);
+    args->merge_type = MIN(args->merge_type, GWY_MERGE_INTERSECTION);
+}
+
+static void
+mark_load_args(GwyContainer *container,
+               MarkArgs *args)
+{
+    *args = mark_defaults;
+
+    gwy_container_gis_boolean_by_name(container, inverted_key, &args->inverted);
+    gwy_container_gis_boolean_by_name(container, isheight_key,
+                                      &args->is_height);
+    gwy_container_gis_boolean_by_name(container, isslope_key, &args->is_slope);
+    gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
+    gwy_container_gis_double_by_name(container, height_key, &args->height);
+    gwy_container_gis_double_by_name(container, slope_key, &args->slope);
+    gwy_container_gis_double_by_name(container, lap_key, &args->lap);
+    gwy_container_gis_enum_by_name(container, mergetype_key,
+                                   &args->merge_type);
+    mark_sanitize_args(args);
+}
+
+static void
+mark_save_args(GwyContainer *container,
+               MarkArgs *args)
+{
+    gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
+    gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
+    gwy_container_set_boolean_by_name(container, isslope_key, args->is_slope);
+    gwy_container_set_boolean_by_name(container, islap_key, args->is_lap);
+    gwy_container_set_double_by_name(container, height_key, args->height);
+    gwy_container_set_double_by_name(container, slope_key, args->slope);
+    gwy_container_set_double_by_name(container, lap_key, args->lap);
+    gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -66,10 +66,6 @@ static void        load_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
 static void        save_mask_color            (GtkWidget *color_button,
                                                GwyContainer *data);
-static void        wshed_load_args            (GwyContainer *container,
-                                               WshedArgs *args);
-static void        wshed_save_args            (GwyContainer *container,
-                                               WshedArgs *args);
 static void        wshed_dialog_update        (WshedControls *controls,
                                                WshedArgs *args);
 static void        preview                    (WshedControls *controls,
@@ -81,6 +77,11 @@ static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
                                                WshedArgs *args,
                                                WshedControls *controls);
+static void        wshed_load_args            (GwyContainer *container,
+                                               WshedArgs *args);
+static void        wshed_save_args            (GwyContainer *container,
+                                               WshedArgs *args);
+static void        wshed_sanitize_args        (WshedArgs *args);
 
 
 WshedArgs wshed_defaults = {
@@ -98,7 +99,7 @@ static GwyModuleInfo module_info = {
     "wshed_threshold",
     "Mark grains by watershed algorithm",
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -199,20 +200,25 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
 
-    controls.entry_locate_steps = gtk_adjustment_new(args->locate_steps, 0.0, 100.0, 0.1, 5, 0);
+    controls.entry_locate_steps = gtk_adjustment_new(args->locate_steps,
+                                                     0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 2, _("Number of steps"), _(""),
                                 controls.entry_locate_steps);
-    controls.entry_locate_dropsize = gtk_adjustment_new(args->locate_dropsize, 0.0, 100.0, 0.1, 5, 0);
+    controls.entry_locate_dropsize = gtk_adjustment_new(args->locate_dropsize,
+                                                        0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 3, _("Drop size [fractile]"), _(""),
                                 controls.entry_locate_dropsize);
-    controls.entry_locate_thresh = gtk_adjustment_new(args->locate_thresh, 0.0, 100.0, 0.1, 5, 0);
+    controls.entry_locate_thresh = gtk_adjustment_new(args->locate_thresh,
+                                                      0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("Threshold [size in pixels]"), _(""),
                                 controls.entry_locate_thresh);
 
-    controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps, 0.0, 1000.0, 0.1, 5, 0);
+    controls.entry_wshed_steps = gtk_adjustment_new(args->wshed_steps,
+                                                    0.0, 1000.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("Number of steps"), _(""),
                                 controls.entry_wshed_steps);
-    controls.entry_wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize, 0.0, 100.0, 0.1, 5, 0);
+    controls.entry_wshed_dropsize = gtk_adjustment_new(args->wshed_dropsize,
+                                                       0.0, 100.0, 0.1, 5, 0);
     gwy_table_attach_spinbutton(table, 7, _("Drop size [fractile]"), _(""),
                                 controls.entry_wshed_dropsize);
 
@@ -358,62 +364,21 @@ save_mask_color(GtkWidget *color_button,
 }
 
 
-static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
-static const gchar *locate_thresh_key = "/module/mark_wshed/locate_thresh";
-static const gchar *locate_dropsize_key = "/module/mark_wshed/locate_dropsize";
-static const gchar *wshed_steps_key = "/module/mark_wshed/wshed_steps";
-static const gchar *wshed_dropsize_key = "/module/mark_wshed/wshed_dropsize";
-
-
-static void
-wshed_load_args(GwyContainer *container,
-                 WshedArgs *args)
-{
-    *args = wshed_defaults;
-
-    if (gwy_container_contains_by_name(container, locate_dropsize_key))
-        args->locate_dropsize = gwy_container_get_double_by_name(container, locate_dropsize_key);
-    if (gwy_container_contains_by_name(container, wshed_dropsize_key))
-        args->wshed_dropsize = gwy_container_get_double_by_name(container, wshed_dropsize_key);
-
-    if (gwy_container_contains_by_name(container, locate_steps_key))
-        args->locate_steps = gwy_container_get_int32_by_name(container, locate_steps_key);
-    if (gwy_container_contains_by_name(container, wshed_steps_key))
-        args->wshed_steps = gwy_container_get_int32_by_name(container, wshed_steps_key);
-    if (gwy_container_contains_by_name(container, locate_thresh_key))
-        args->locate_thresh = gwy_container_get_int32_by_name(container, locate_thresh_key);
-
-}
-
-static void
-wshed_save_args(GwyContainer *container,
-                 WshedArgs *args)
-{
-    gwy_container_set_double_by_name(container, wshed_dropsize_key, args->wshed_dropsize);
-    gwy_container_set_double_by_name(container, locate_dropsize_key, args->locate_dropsize);
-    gwy_container_set_int32_by_name(container, locate_steps_key, args->locate_steps);
-    gwy_container_set_int32_by_name(container, wshed_steps_key, args->wshed_steps);
-    gwy_container_set_int32_by_name(container, locate_thresh_key, args->locate_thresh);
-
-}
-
 static void
 wshed_dialog_update(WshedControls *controls,
                      WshedArgs *args)
 {
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize),
-                                args->wshed_dropsize);
+                             args->wshed_dropsize);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_dropsize),
-                                args->locate_dropsize);
+                             args->locate_dropsize);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_steps),
-                                args->locate_steps);
+                             args->locate_steps);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_wshed_steps),
-                                args->wshed_steps);
+                             args->wshed_steps);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->entry_locate_thresh),
-                                args->locate_thresh);
-
-
+                             args->locate_thresh);
 }
 
 static void
@@ -565,6 +530,57 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
     gwy_app_wait_finish();
 
     controls->computed = TRUE;
+}
+
+static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
+static const gchar *locate_thresh_key = "/module/mark_wshed/locate_thresh";
+static const gchar *locate_dropsize_key = "/module/mark_wshed/locate_dropsize";
+static const gchar *wshed_steps_key = "/module/mark_wshed/wshed_steps";
+static const gchar *wshed_dropsize_key = "/module/mark_wshed/wshed_dropsize";
+
+static void
+wshed_sanitize_args(WshedArgs *args)
+{
+    args->locate_dropsize = CLAMP(args->locate_dropsize, 0.0, 100.0);
+    args->wshed_dropsize = CLAMP(args->wshed_dropsize, 0.0, 100.0);
+    args->locate_thresh = CLAMP(args->locate_thresh, 0, 100);
+    args->locate_steps = CLAMP(args->locate_steps, 0, 100);
+    args->wshed_steps = CLAMP(args->wshed_steps, 0, 1000);
+}
+
+static void
+wshed_load_args(GwyContainer *container,
+                WshedArgs *args)
+{
+    *args = wshed_defaults;
+
+    gwy_container_gis_double_by_name(container, locate_dropsize_key,
+                                     &args->locate_dropsize);
+    gwy_container_gis_double_by_name(container, wshed_dropsize_key,
+                                     &args->wshed_dropsize);
+    gwy_container_gis_int32_by_name(container, locate_steps_key,
+                                    &args->locate_steps);
+    gwy_container_gis_int32_by_name(container, wshed_steps_key,
+                                    &args->wshed_steps);
+    gwy_container_gis_int32_by_name(container, locate_thresh_key,
+                                    &args->locate_thresh);
+    wshed_sanitize_args(args);
+}
+
+static void
+wshed_save_args(GwyContainer *container,
+                WshedArgs *args)
+{
+    gwy_container_set_double_by_name(container, wshed_dropsize_key,
+                                     args->wshed_dropsize);
+    gwy_container_set_double_by_name(container, locate_dropsize_key,
+                                     args->locate_dropsize);
+    gwy_container_set_int32_by_name(container, locate_steps_key,
+                                    args->locate_steps);
+    gwy_container_set_int32_by_name(container, wshed_steps_key,
+                                    args->wshed_steps);
+    gwy_container_set_int32_by_name(container, locate_thresh_key,
+                                    args->locate_thresh);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
