@@ -32,7 +32,7 @@ test_LDADD = libgwyprocess.la \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"GwyProcess\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"GwyProcess\"
 
 clean-local:
 	rm -f core.* *~
