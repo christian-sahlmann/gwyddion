@@ -40,12 +40,7 @@ typedef enum {
 typedef struct _GwyUnitoolSlots GwyUnitoolSlots;
 
 typedef struct {
-    gdouble mag;
-    gint precision;
-    gchar *units;
-} GwyUnitoolUnits;
-
-typedef struct {
+    /*< public >*/
     gpointer user_data;
 
     GwyUnitoolSlots *func_slots;
@@ -56,7 +51,7 @@ typedef struct {
     GtkWidget *windowname;
     GtkWidget *dialog;
 
-    GwyUnitoolUnits coord_units;
+    GwySIValueFormat *coord_units;
 
     /*< private >*/
     gulong layer_updated_id;
@@ -91,7 +86,7 @@ gdouble      gwy_unitool_get_z_average           (GwyDataField *dfield,
                                                   gdouble xreal,
                                                   gdouble yreal,
                                                   gint radius);
-void         gwy_unitool_update_label            (GwyUnitoolUnits *units,
+void         gwy_unitool_update_label            (GwySIValueFormat *units,
                                                   GtkWidget *label,
                                                   gdouble value);
 

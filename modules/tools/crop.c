@@ -184,13 +184,13 @@ dialog_update(GwyUnitoolState *state,
 {
     gboolean is_visible, is_selected;
     ToolControls *controls;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     gdouble sel[4];
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, sel);

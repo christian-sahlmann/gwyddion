@@ -144,7 +144,7 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GtkWidget *dialog, *table, *table2, *label, *frame;
 
     gwy_debug("");
@@ -153,7 +153,7 @@ dialog_create(GwyUnitoolState *state)
     settings = gwy_app_settings_get();
     load_args(settings, controls);
     
-    units = &state->coord_units;
+    units = state->coord_units;
 
     dialog = gtk_dialog_new_with_buttons(_("X/Y profile leveling"),
                                          NULL,
@@ -335,7 +335,7 @@ static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *shadefield, *dfield;
@@ -348,7 +348,7 @@ dialog_update(GwyUnitoolState *state,
     is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));

@@ -284,7 +284,7 @@ dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
@@ -299,7 +299,7 @@ dialog_update(GwyUnitoolState *state,
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
     is_visible = state->is_visible;
     nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!is_visible && !nselected)
@@ -339,7 +339,7 @@ dialog_update(GwyUnitoolState *state,
             gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
                                               controls->dtl->pdata[i],
                                               0, controls->str->pdata[i], NULL,
-                                              units->mag, z_mag,
+                                              units->magnitude, z_mag,
                                               units->units, z_unit);
         }
     }
@@ -351,7 +351,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GtkWidget *window, *graph;
     GwyContainer *data;
     GwyDataField *dfield;
@@ -363,7 +363,7 @@ apply(GwyUnitoolState *state)
     GwyGraphAutoProperties prop;
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
     nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!nselected)
         return;
@@ -388,7 +388,7 @@ apply(GwyUnitoolState *state)
             gwy_graph_add_dataline_with_units(GWY_GRAPH(graph),
                                               controls->dtl->pdata[i],
                                               0, controls->str->pdata[i], NULL,
-                                              units->mag, z_mag,
+                                              units->magnitude, z_mag,
                                               units->units, z_unit);
 
             window = gwy_app_graph_window_create(graph);
@@ -405,7 +405,7 @@ apply(GwyUnitoolState *state)
             gwy_graph_add_dataline_with_units(GWY_GRAPH(graph),
                                               controls->dtl->pdata[i],
                                               0, controls->str->pdata[i], NULL,
-                                              units->mag, z_mag,
+                                              units->magnitude, z_mag,
                                               units->units, z_unit);
         }
         window = gwy_app_graph_window_create(graph);

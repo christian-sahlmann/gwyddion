@@ -261,27 +261,27 @@ update_labels(GwyUnitoolState *state)
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GwyDataViewLayer *layer;
     gdouble xmin, xmax, ymin, ymax;
     gchar buffer[64];
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
 
     g_snprintf(buffer, sizeof(buffer), "%.*f, %.*f %s",
-               units->precision, xmin/units->mag,
-               units->precision, ymin/units->mag,
+               units->precision, xmin/units->magnitude,
+               units->precision, ymin/units->magnitude,
                units->units);
     gtk_label_set_text(GTK_LABEL(controls->xy), buffer);
 
     g_snprintf(buffer, sizeof(buffer), "%.*f × %.*f %s",
-               units->precision, fabs(xmax-xmin)/units->mag,
-               units->precision, fabs(ymax-ymin)/units->mag,
+               units->precision, fabs(xmax-xmin)/units->magnitude,
+               units->precision, fabs(ymax-ymin)/units->magnitude,
                units->units);
     gtk_label_set_text(GTK_LABEL(controls->wh), buffer);
 }

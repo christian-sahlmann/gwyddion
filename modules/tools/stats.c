@@ -125,13 +125,13 @@ static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GtkWidget *dialog, *table, *label, *frame;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
 
     dialog = gtk_dialog_new_with_buttons(_("Statistical quantities"),
                                          NULL,
@@ -264,7 +264,7 @@ apply(GwyUnitoolState *state)
 static void
 dialog_update(GwyUnitoolState *state)
 {
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
@@ -278,7 +278,7 @@ dialog_update(GwyUnitoolState *state)
     is_visible = state->is_visible;
 
     controls = (ToolControls*)state->user_data;
-    units = &state->coord_units;
+    units = state->coord_units;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));

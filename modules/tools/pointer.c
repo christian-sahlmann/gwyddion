@@ -191,7 +191,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     ToolControls *controls;
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     GwyDataViewLayer *layer;
     gdouble x, y, value, xy[2];
     gboolean is_visible, is_selected;

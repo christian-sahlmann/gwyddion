@@ -209,7 +209,7 @@ static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
-    GwyUnitoolUnits *units;
+    GwySIValueFormat *units;
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;

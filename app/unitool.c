@@ -187,14 +187,13 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state)
             state->func_slots->dialog_abandon(state);
         gtk_widget_destroy(state->dialog);
     }
+    g_free(state->coord_units);
+    state->coord_units = NULL;
     state->layer = NULL;
     state->dialog = NULL;
     state->windowname = NULL;
     state->data_window = NULL;
     state->is_visible = FALSE;
-
-    g_free(state->coord_units.units);
-    state->coord_units.units = NULL;
 }
 
 static void
@@ -202,20 +201,24 @@ gwy_unitool_compute_coord_units(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
-    GwyUnitoolUnits *cunits;
+    GwySIUnit *siunits;
+    GwySIValueFormat *cunits;
     gdouble xreal, yreal, max, unit;
 
-    cunits = &state->coord_units;
+    /* TODO remove once GwySIUnit works... */
+    if (!state->coord_units)
+        state->coord_units = g_new(GwySIValueFormat, 1);
+
+    cunits = state->coord_units;
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    siunits = gwy_data_field_get_si_unit_xy(dfield);
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
     max = MAX(xreal, yreal);
     unit = MIN(xreal/gwy_data_field_get_xres(dfield),
                yreal/gwy_data_field_get_yres(dfield));
-    cunits->mag = gwy_math_humanize_numbers(unit, max, &cunits->precision);
-    g_free(state->coord_units.units);
-    cunits->units = g_strconcat(gwy_math_SI_prefix(cunits->mag), "m", NULL);
+    gwy_si_unit_get_format_with_resolution(siunits, max, unit, cunits);
 }
 
 /*
@@ -379,7 +382,7 @@ gwy_unitool_get_z_average(GwyDataField *dfield,
  * Sets the text of a label to display @value according to @units.
  **/
 void
-gwy_unitool_update_label(GwyUnitoolUnits *units,
+gwy_unitool_update_label(GwySIValueFormat *units,
                          GtkWidget *label, gdouble value)
 {
     static gchar buffer[32];
@@ -388,7 +391,7 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
     g_return_if_fail(GTK_IS_LABEL(label));
 
     g_snprintf(buffer, sizeof(buffer), "%.*f %s",
-               units->precision, value/units->mag, units->units);
+               units->precision, value/units->magnitude, units->units);
     gtk_label_set_text(GTK_LABEL(label), buffer);
 }
 
@@ -431,27 +434,12 @@ gwy_unitool_update_label(GwyUnitoolUnits *units,
  * @dialog: The tool dialog.
  * @coord_units: Units specification good for coordinate representation
  *               (to be used in gwy_unitool_update_label() for coordinates).
- *               XXX: Deprecated, should use GwySIUnit instead.
  *
  * Universal tool state.
  *
  * You should put pointer to particular tool state to the @user_data member
  * and pointer to function slots to @func_slots when creating it and otherwise
  * consider it read-only.
- **/
-
-/**
- * GwyUnitoolUnits:
- * @mag: Magnitude, should be a power of 1000.
- * @precision: Number of decimal places.
- * @units: Units (meters, seconds, etc.).
- *
- * Units specification for gwy_unitool_update_label().
- *
- * The values @mag and @precision should be probably obtained from a
- * gwy_math_humanize_numbmers() call.
- *
- * XXX: Deprecated, should use GwySIUnit instead.
  **/
 
 /**
