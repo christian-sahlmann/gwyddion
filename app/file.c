@@ -102,6 +102,8 @@ gwy_app_file_save_cb(void)
     filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
     if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
         gwy_app_file_save_as_cb();
+    else
+        g_object_set_data(G_OBJECT(data), "modified", NULL);
 }
 
 void
@@ -115,6 +117,7 @@ gwy_app_file_duplicate_cb(void)
     duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     g_return_if_fail(GWY_IS_CONTAINER(duplicate));
     data_window = gwy_app_data_window_create(duplicate);
+    g_object_set_data(G_OBJECT(data), "modified", GINT_TO_POINTER(1));
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
@@ -287,6 +290,10 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         ok = gwy_file_save(data, filename_sys);
     if (!ok)
         return;
+
+    if (!name
+        || (gwy_file_func_get_operations(name) & GWY_FILE_LOAD))
+        g_object_set_data(G_OBJECT(data), "modified", NULL);
 
     if (!name) {
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);

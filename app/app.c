@@ -101,13 +101,21 @@ static gboolean
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
+    GwyContainer *data;
 
     gwy_debug("%s", __FUNCTION__);
     /* current_tool_use_func(NULL); */
-    while ((data_window = gwy_app_data_window_get_current()))
+    while ((data_window = gwy_app_data_window_get_current())) {
+        data = gwy_data_window_get_data(data_window);
+        gwy_debug("%s: %p: %d", __FUNCTION__,
+                  data_window,
+                  GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
+                                                    "modified")));
         gtk_widget_destroy(GTK_WIDGET(data_window));
+    }
 
     gtk_main_quit();
+    return FALSE;
 }
 
 static void
@@ -192,7 +200,7 @@ gwy_app_create_toolbox(void)
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
     /* XXX */
-    g_signal_connect(window, "delete_event", gwy_app_quit, NULL);
+    g_signal_connect(window, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
 }
 
 GwyDataWindow*
@@ -656,6 +664,9 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     undo->key = g_quark_from_string(what);
     undo->data = object;
     g_object_set_data(G_OBJECT(data_window), "undo", undo);
+    g_object_set_data(G_OBJECT(data), "modified",
+        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
+                                                          "modified")) + 1));
     gwy_app_update_toolbox_state(&sens_data);
 }
 
@@ -720,6 +731,9 @@ gwy_app_undo_undo(void)
 
     undo_redo_clean(window, TRUE, TRUE);
     g_object_set_data(window, "redo", redo);
+    g_object_set_data(G_OBJECT(data), "modified",
+        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
+                                                          "modified")) - 1));
     gwy_app_data_view_update(data_view);
     gwy_app_update_toolbox_state(&sens_data);
 }
@@ -785,6 +799,9 @@ gwy_app_undo_redo(void)
 
     undo_redo_clean(window, TRUE, TRUE);
     g_object_set_data(window, "undo", undo);
+    g_object_set_data(G_OBJECT(data), "modified",
+        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(data),
+                                                          "modified")) + 1));
     gwy_app_data_view_update(data_view);
     gwy_app_update_toolbox_state(&sens_data);
 }
