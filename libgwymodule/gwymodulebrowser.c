@@ -129,13 +129,14 @@ gwy_module_browser_construct(GtkWidget *parent)
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(columns[i].title,
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
                                                           renderer,
                                                           NULL);
-        gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                gwy_module_browser_cell_renderer,
-                                                GUINT_TO_POINTER(columns[i].id),
-                                                NULL);  /* destroy notify */
+        gtk_tree_view_column_set_cell_data_func
+                                          (column, renderer,
+                                           gwy_module_browser_cell_renderer,
+                                           GUINT_TO_POINTER(columns[i].id),
+                                           NULL);  /* destroy notify */
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
