@@ -102,7 +102,7 @@ struct _GwyGrapherArea {
     GwyGrapherStatus_CursorData *cursordata;
     GwyGrapherStatus_ZoomData *zoomdata;
 
-    gpointer grapher_model;
+    gpointer graph_model;
     GPtrArray *curves;
 
     /*selection drawing*/

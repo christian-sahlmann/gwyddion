@@ -69,7 +69,7 @@ struct _GwyGrapher {
 
     GwyGrapherArea *area;
 
-    gpointer grapher_model;
+    gpointer graph_model;
 
     gint n_of_autocurves;
     GwyGrapherAutoProperties autoproperties;

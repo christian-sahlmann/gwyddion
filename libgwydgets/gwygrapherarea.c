@@ -29,8 +29,8 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyvectorlayer.h"
 #include "gwygrapher.h"
-#include "gwygraphermodel.h"
-#include "gwygraphercurvemodel.h"
+#include "gwygraphmodel.h"
+#include "gwygraphcurvemodel.h"
 
 #define GWY_GRAPHER_AREA_TYPE_NAME "GwyGrapherArea"
 
@@ -398,12 +398,12 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
 {
     gint i;
     GwyGrapherActiveAreaSpecs specs;
-    GwyGrapherCurveModel *curvemodel;
-    GwyGrapherModel *model;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
     GdkColor fg;
     GdkColormap* cmap;
 
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
     cmap = gdk_colormap_get_system();
     specs.xmin = x;
     specs.ymin = y;
@@ -424,7 +424,7 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     
     for (i=0; i<model->ncurves; i++)
     {
-        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         gwy_grapher_draw_curve (drawable, gc,
                                 &specs, G_OBJECT(curvemodel));
     }
@@ -457,7 +457,7 @@ static gboolean
 gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *gmodel;
+    GwyGraphModel *gmodel;
     GtkLayoutChild *child;
     GwyGrapherDataPoint datpnt;
     GwyGrapherDataArea areadata;
@@ -474,7 +474,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
+    gmodel = GWY_GRAPH_MODEL(area->graph_model);
     child = gwy_grapher_area_find_child(area, x, y);
     if (child) {
         if (event->type == GDK_2BUTTON_PRESS)
@@ -561,7 +561,7 @@ static gboolean
 gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *gmodel;
+    GwyGraphModel *gmodel;
     GwyGrapherDataArea *areadata;
     gint x, y, ispos = 0;
     gdouble dx, dy;
@@ -576,7 +576,7 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
+    gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
     
     if (area->selecting && (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL))
@@ -617,7 +617,7 @@ static gboolean
 gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *gmodel;
+    GwyGraphModel *gmodel;
     GwyGrapherDataArea *areadata;
     gint x, y, ispos = 0;
     gdouble dx, dy;
@@ -632,7 +632,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     dx = scr_to_data_x(widget, x);
     dy = scr_to_data_y(widget, y);
 
-    gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
+    gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
     
     if (area->selecting && (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL))
@@ -675,14 +675,14 @@ gwy_grapher_area_find_curve(GwyGrapherArea *area, gdouble x, gdouble y)
     gint i, j;
     gint closestid = -1;
     gdouble closestdistance, distance=0;
-    GwyGrapherCurveModel *curvemodel;
-    GwyGrapherModel *model;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
  
     closestdistance = G_MAXDOUBLE;
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
     for (i=0; i<model->ncurves; i++)
     {
-        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         for (j=0; j<(curvemodel->n - 1); j++)
         {
             if (curvemodel->xdata[j] <= x && curvemodel->xdata[j + 1] >= x)
@@ -727,10 +727,10 @@ gwy_grapher_area_find_point(GwyGrapherArea *area, gdouble x, gdouble y)
 {
     gint i;
     GwyGrapherDataPoint *selection;
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
     gdouble xmin, ymin, xmax, ymax, xoff, yoff;
 
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
     xoff = (model->x_max - model->x_min)/100;
     yoff = (model->y_max - model->y_min)/100;
     
@@ -812,10 +812,10 @@ static gdouble
 scr_to_data_x(GtkWidget *widget, gint scr)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
  
     area = GWY_GRAPHER_AREA(widget);
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
     return model->x_min
@@ -826,10 +826,10 @@ static gint
 data_to_scr_x(GtkWidget *widget, gdouble data)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
  
     area = GWY_GRAPHER_AREA(widget);
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
 
     return (data - model->x_min)
            /((model->x_max - model->x_min)/(widget->allocation.width-1));
@@ -839,10 +839,10 @@ static gdouble
 scr_to_data_y(GtkWidget *widget, gint scr)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
  
     area = GWY_GRAPHER_AREA(widget);
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
     return model->y_min
@@ -854,10 +854,10 @@ static gint
 data_to_scr_y(GtkWidget *widget, gdouble data)
 {
     GwyGrapherArea *area;
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
  
     area = GWY_GRAPHER_AREA(widget);
-    model = GWY_GRAPHER_MODEL(area->grapher_model);
+    model = GWY_GRAPH_MODEL(area->graph_model);
 
     return widget->allocation.height
            - (data - model->y_min)
@@ -905,7 +905,7 @@ gwy_grapher_area_refresh(GwyGrapherArea *area)
 void
 gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel)
 {
-    area->grapher_model = gmodel;
+    area->graph_model = gmodel;
     gwy_grapher_label_change_model(area->lab, gmodel);
 }
 

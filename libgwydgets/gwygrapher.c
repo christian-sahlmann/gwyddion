@@ -26,8 +26,8 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
-#include "gwygraphermodel.h"
-#include "gwygraphercurvemodel.h"
+#include "gwygraphmodel.h"
+#include "gwygraphcurvemodel.h"
 
 #define GWY_GRAPHER_TYPE_NAME "GwyGrapher"
 
@@ -218,13 +218,13 @@ gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)
 void       
 gwy_grapher_refresh(GwyGrapher *grapher)
 {
-    GwyGrapherModel *model;
-    GwyGrapherCurveModel *curvemodel;
+    GwyGraphModel *model;
+    GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j;
     
-    if (grapher->grapher_model == NULL) return;
-    model = GWY_GRAPHER_MODEL(grapher->grapher_model);
+    if (grapher->graph_model == NULL) return;
+    model = GWY_GRAPH_MODEL(grapher->graph_model);
 
     if (model->ncurves > 0)
     {
@@ -234,7 +234,7 @@ gwy_grapher_refresh(GwyGrapher *grapher)
         x_reqmax = y_reqmax = -G_MAXDOUBLE;
         for (i=0; i<model->ncurves; i++)
         {
-            curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+            curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
             for (j=0; j<curvemodel->n; j++)
             {
                 if (x_reqmin > curvemodel->xdata[j]) x_reqmin = curvemodel->xdata[j];
@@ -262,14 +262,14 @@ gwy_grapher_refresh(GwyGrapher *grapher)
 static void 
 replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
 {
-    if (grapher == NULL || grapher->grapher_model == NULL) return;
+    if (grapher == NULL || grapher->graph_model == NULL) return;
     gwy_grapher_refresh(grapher);
 }
 
 void
 gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
 {
-    grapher->grapher_model = gmodel;
+    grapher->graph_model = gmodel;
 
     g_signal_connect(gmodel, "notify", G_CALLBACK(replot_cb), grapher);
     gwy_grapher_area_change_model(grapher->area, gmodel);
@@ -278,9 +278,9 @@ gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
 static void     
 rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
 {   
-    GwyGrapherModel *model;
-    if (grapher->grapher_model == NULL) return;
-    model = GWY_GRAPHER_MODEL(grapher->grapher_model);
+    GwyGraphModel *model;
+    if (grapher->graph_model == NULL) return;
+    model = GWY_GRAPH_MODEL(grapher->graph_model);
     model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
     model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
     model->y_max = gwy_axiser_get_maximum(grapher->axis_left);

@@ -22,6 +22,7 @@
 #define __GWY_GRAPH_MODEL_H__
 
 #include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 
 G_BEGIN_DECLS
 
@@ -49,10 +50,10 @@ struct _GwyGraphModel {
 
     GString *title;    /* XXX: GwyGraph has no such thing */
 
-    gdouble x_reqmax;
-    gdouble x_reqmin;
-    gdouble y_reqmax;
-    gdouble y_reqmin;
+    gdouble x_max;
+    gdouble x_min;
+    gdouble y_max;
+    gdouble y_min;
 
     gboolean has_x_unit;
     gboolean has_y_unit;
@@ -74,8 +75,8 @@ struct _GwyGraphModel {
     gint int2;
     GwyGraphPointType enum1;
     GwyGraphPointType enum2;
-    gpointer reserved1;
-    gpointer reserved2;
+    gboolean label_reverse;
+    gboolean label_visible;
     gpointer reserved3;
     gpointer reserved4;
 };
@@ -98,9 +99,12 @@ GObject*   gwy_graph_model_new            (GwyGraph *graph);
 GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 
+void       gwy_graph_model_add_curve      (GwyGraphModel *gmodel,
+                                           GwyGraphCurveModel *curve);
+void       gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel);
 
 G_END_DECLS
 
-#endif /* __GWY_GRAPH_MODEL_H__ */
+#endif /* __GWY_GRAPHER_MODEL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

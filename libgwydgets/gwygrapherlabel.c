@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
-#include "gwygraphermodel.h"
+#include "gwygraphmodel.h"
 
 #define GWY_GRAPHER_LABEL_TYPE_NAME "GwyGrapherLabel"
 
@@ -296,13 +296,13 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
 {
     gint ypos, winheight, winwidth, winx, winy, frame_off;
     gint i;
-    GwyGrapherCurveModel *curvemodel;
-    GwyGrapherModel *model;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
     PangoRectangle rect;
     GdkColor fg;
     GdkColormap* cmap;
     
-    model = GWY_GRAPHER_MODEL(label->grapher_model);
+    model = GWY_GRAPH_MODEL(label->graph_model);
     pango_layout_set_font_description(layout, label->label_font);
 
     frame_off = model->label_frame_thickness/2;
@@ -320,7 +320,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
     winheight = y + height;
     for (i=0; i<model->ncurves; i++)
     {
-        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         
         pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
@@ -332,7 +332,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
         
         label->samplepos[i] = ypos;
 
-        if (curvemodel->type == GWY_GRAPHER_CURVE_LINE || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
+        if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
         {
             if (model->label_reverse)
                 gwy_grapher_draw_line(drawable, gc, 
@@ -345,7 +345,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
                                       curvemodel->line_style, curvemodel->line_size,
                                       &(curvemodel->color));
         }
-        if (curvemodel->type == GWY_GRAPHER_CURVE_POINTS || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
+        if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
         {
             if (model->label_reverse)
                 gwy_grapher_draw_point (drawable, gc, 
@@ -421,15 +421,15 @@ set_requised_size(GwyGrapherLabel *label)
     gint i;
     PangoLayout *layout;
     PangoRectangle rect;
-    GwyGrapherCurveModel *curvemodel;
-    GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
   
     label->reqheight = 0;
     label->reqwidth = 0;
     
     for (i=0; i<model->ncurves; i++)
     {
-        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
        
@@ -446,7 +446,7 @@ set_requised_size(GwyGrapherLabel *label)
 void 
 gwy_grapher_label_refresh(GwyGrapherLabel *label)
 {
-    GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
+    GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
     
     /*repaint label samples and descriptions*/
     if (label->samplepos) g_free(label->samplepos);
@@ -462,7 +462,7 @@ gwy_grapher_label_refresh(GwyGrapherLabel *label)
 void
 gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel)
 {
-    label->grapher_model = gmodel;
+    label->graph_model = gmodel;
 }
 
 

@@ -42,7 +42,7 @@ struct _GwyGrapherLabel {
     GtkWidget widget;
 
     PangoFontDescription *label_font;
-    gpointer grapher_model;
+    gpointer graph_model;
 
     gint *samplepos;
     gint reqheight;

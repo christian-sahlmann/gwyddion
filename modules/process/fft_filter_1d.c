@@ -27,7 +27,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
-#include <libgwydgets/gwygraphermodel.h>
+#include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygrapher.h>
 #include <app/gwyapp.h>
 
@@ -76,7 +76,7 @@ typedef struct {
     GtkWidget *menu_suppress;
     GtkWidget *menu_view_type;
     GtkWidget *graph;
-    GwyGrapherModel *gmodel;
+    GwyGraphModel *gmodel;
 } Fftf1dControls;
 
 static gboolean    module_register          (const gchar *name);
@@ -282,8 +282,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
-    controls.gmodel = GWY_GRAPHER_MODEL(gwy_grapher_model_new(NULL));
-    controls.graph = gwy_grapher_new(GWY_GRAPHER_MODEL(controls.gmodel));
+    controls.gmodel = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
+    controls.graph = gwy_grapher_new(GWY_GRAPH_MODEL(controls.gmodel));
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_top, FALSE);
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_left, FALSE);
     gwy_axiser_set_visible(GWY_GRAPHER(controls.graph)->axis_bottom, FALSE);
@@ -435,7 +435,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 {
     GwyDataField *dfield;
     GwyDataLine *dline;
-    GwyGrapherCurveModel *cmodel;
+    GwyGraphCurveModel *cmodel;
     gdouble xdata[200];
     gint i;
 
@@ -461,15 +461,15 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     }
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
     
-    cmodel = GWY_GRAPHER_CURVE_MODEL(gwy_grapher_curve_model_new());
+    cmodel = GWY_GRAPH_CURVE_MODEL(gwy_graph_curve_model_new());
     cmodel->xdata = xdata;
     cmodel->type = GWY_GRAPHER_CURVE_LINE;
     cmodel->ydata = dline->data;
     cmodel->n = MAX_PREV;
     cmodel->description = g_string_new("PSDF");
 
-    gwy_grapher_model_remove_all_curves(controls->gmodel);
-    gwy_grapher_model_add_curve(controls->gmodel, cmodel);
+    gwy_graph_model_remove_all_curves(controls->gmodel);
+    gwy_graph_model_add_curve(controls->gmodel, cmodel);
     gwy_grapher_clear_selection(GWY_GRAPHER(controls->graph));
    
     if (args->update) update_view(controls, args);

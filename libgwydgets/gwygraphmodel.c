@@ -41,9 +41,24 @@ static void   gwy_graph_model_graph_destroyed   (GwyGraph *graph,
                                                  GwyGraphModel *gmodel);
 static void   gwy_graph_model_save_graph        (GwyGraphModel *gmodel,
                                                  GwyGraph *graph);
+static void     gwy_graph_model_set_property  (GObject *object,
+                                                guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec);
+static void     gwy_graph_model_get_property  (GObject*object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec);
 
 
 static GObjectClass *parent_class = NULL;
+
+enum {
+      PROP_0,
+      PROP_N,
+      PROP_TITLE,
+      PROP_LAST
+};
 
 
 GType
@@ -117,6 +132,23 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_model_finalize;
+
+    g_object_class_install_property(gobject_class,
+                                    PROP_N,
+                                    g_param_spec_int("n",
+                                                      "Number of curves",
+                                                      "Changed number of curves in graph",
+                                                      0,
+                                                      100,
+                                                      0,
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_TITLE,
+                                    g_param_spec_string("title",
+                                                      "Graph Title",
+                                                      "Changed title of graph",
+                                                      "new graph",
+                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
@@ -131,10 +163,10 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->ncurves = 0;
     gmodel->curves = NULL;
 
-    gmodel->x_reqmin = 0.0;
-    gmodel->x_reqmax = 0.0;
-    gmodel->y_reqmin = 0.0;
-    gmodel->y_reqmax = 0.0;
+    gmodel->x_min = 0.0;
+    gmodel->x_max = 0.0;
+    gmodel->y_min = 0.0;
+    gmodel->y_max = 0.0;
 
     gmodel->has_x_unit = FALSE;
     gmodel->has_y_unit = FALSE;
@@ -151,6 +183,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
     gmodel->label_has_frame = 1;
     gmodel->label_frame_thickness = 1;
+    gmodel->label_reverse = 0; /*designed to be added*/
 }
 
 /**
@@ -184,17 +217,6 @@ gwy_graph_model_new(GwyGraph *graph)
     }
 
     return (GObject*)(gmodel);
-}
-
-gint
-gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
-{
-    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
-
-    if (gmodel->graph)
-        return gwy_graph_get_number_of_curves(gmodel->graph);
-    else
-        return gmodel->ncurves;
 }
 
 static void
@@ -265,10 +287,10 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     else
         gwy_object_unref(graph->y_unit);
 
-    gmodel->x_reqmin = graph->x_reqmin;
-    gmodel->y_reqmin = graph->y_reqmin;
-    gmodel->x_reqmax = graph->x_reqmax;
-    gmodel->y_reqmax = graph->y_reqmax;
+    gmodel->x_min = graph->x_reqmin;
+    gmodel->y_min = graph->y_reqmin;
+    gmodel->x_max = graph->x_reqmax;
+    gmodel->y_max = graph->y_reqmax;
 
     /* axes */
     g_string_assign(gmodel->top_label,
@@ -366,8 +388,8 @@ gwy_graph_new_from_model(GwyGraphModel *gmodel)
     }
 
     gwy_graph_set_boundaries(graph,
-                             gmodel->x_reqmin, gmodel->x_reqmax,
-                             gmodel->y_reqmin, gmodel->y_reqmax);
+                             gmodel->x_min, gmodel->x_max,
+                             gmodel->y_min, gmodel->y_max);
 
     return graph_widget;
 }
@@ -395,10 +417,10 @@ gwy_graph_model_serialize(GObject *obj,
             { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
             { 's', "left_label", &gmodel->left_label->str, NULL },
             { 's', "right_label", &gmodel->right_label->str, NULL },
-            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
-            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
-            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
-            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'd', "x_reqmin", &gmodel->x_min, NULL },
+            { 'd', "y_reqmin", &gmodel->y_min, NULL },
+            { 'd', "x_reqmax", &gmodel->x_max, NULL },
+            { 'd', "y_reqmax", &gmodel->y_max, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -434,10 +456,10 @@ gwy_graph_model_deserialize(const guchar *buffer,
             { 's', "bottom_label", &bottom_label, NULL },
             { 's', "left_label", &left_label, NULL },
             { 's', "right_label", &right_label, NULL },
-            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
-            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
-            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
-            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'd', "x_reqmin", &gmodel->x_min, NULL },
+            { 'd', "y_reqmin", &gmodel->y_min, NULL },
+            { 'd', "x_reqmax", &gmodel->x_max, NULL },
+            { 'd', "y_reqmax", &gmodel->y_max, NULL },
             { 'i', "label.position", &gmodel->label_position, NULL },
             { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
             { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
@@ -502,10 +524,10 @@ gwy_graph_model_duplicate(GObject *object)
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->has_x_unit = gmodel->has_x_unit;
     duplicate->has_y_unit = gmodel->has_y_unit;
-    duplicate->x_reqmin = gmodel->x_reqmin;
-    duplicate->y_reqmin = gmodel->y_reqmin;
-    duplicate->x_reqmax = gmodel->x_reqmax;
-    duplicate->y_reqmax = gmodel->y_reqmax;
+    duplicate->x_min = gmodel->x_min;
+    duplicate->y_min = gmodel->y_min;
+    duplicate->x_max = gmodel->x_max;
+    duplicate->y_max = gmodel->y_max;
     duplicate->label_position = gmodel->label_position;
     duplicate->label_has_frame = gmodel->label_has_frame;
     duplicate->label_frame_thickness = gmodel->label_frame_thickness;
@@ -522,5 +544,79 @@ gwy_graph_model_duplicate(GObject *object)
 
     return (GObject*)duplicate;
 }
+
+
+static void     
+gwy_graph_model_set_property  (GObject *object,
+                                               guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec)
+{
+    GwyGraphModel *model = GWY_GRAPH_MODEL(object);
+}
+
+static void     
+gwy_graph_model_get_property  (GObject*object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec)
+{
+    GwyGraphModel *model = GWY_GRAPH_MODEL(object);
+}
+
+
+void       
+gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
+{
+    GObject **newcurves;
+    gint i;
+    
+    newcurves = g_new(GObject*, gmodel->ncurves+1);
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+    {
+        newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
+        g_object_unref(gmodel->curves[i]);
+    }
+    newcurves[i] = gwy_serializable_duplicate(curve);
+ 
+    gmodel->curves = newcurves;
+    
+    gmodel->ncurves++;
+   
+    g_object_notify(gmodel, "n");
+}
+
+gint
+gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
+{
+    
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
+
+    if (gmodel->graph)
+        return gwy_graph_get_number_of_curves(gmodel->graph);
+    else
+        return gmodel->ncurves;
+        
+}
+
+
+void
+gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
+{
+    gint i;
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+        g_object_unref(gmodel->curves[i]);
+    g_free(gmodel->curves);    
+
+    
+    gmodel->ncurves = 0;
+    
+    g_object_notify(gmodel, "n");
+    
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
