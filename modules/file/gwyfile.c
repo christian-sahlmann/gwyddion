@@ -38,7 +38,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyFileFuncInfo gwyfile_func_info = {
-        "test_func",
+        "gwyfile",
         "Gwyddion native serialized objects (" EXTENSION ")",
         (GwyFileDetectFunc)&gwyfile_detect,
         (GwyFileLoadFunc)&gwyfile_load,
