@@ -51,10 +51,12 @@ typedef struct {
     GtkWidget *graph;
 } FractalControls;
 
+
 static gboolean    module_register            (const gchar *name);
 static gboolean    fractal                        (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    fractal_dialog                 (FractalArgs *args);
+static gboolean    fractal_dialog                 (FractalArgs *args,
+                                                   GwyContainer *data);
 static void        interp_changed_cb          (GObject *item,
                                                FractalArgs *args);
 static void        out_changed_cb             (GObject *item,
@@ -64,8 +66,11 @@ static void        fractal_load_args              (GwyContainer *container,
 static void        fractal_save_args              (GwyContainer *container,
                                                FractalArgs *args);
 static void        fractal_dialog_update          (FractalControls *controls,
-                                               FractalArgs *args);
+                                               FractalArgs *args,
+                                               GwyContainer *data);
 
+FractalControls *global_controls = NULL;
+GwyContainer *global_data = NULL;
 
 FractalArgs fractal_defaults = {
     0, 1, 2,
@@ -124,15 +129,8 @@ fractal(GwyContainer *data, GwyRunType run)
         args = fractal_defaults;
     else
         fractal_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || fractal_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || fractal_dialog(&args, data);
     if (ok) {
-        data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-        g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-        gwy_app_clean_up_data(data);
-
-        if (gwy_container_contains_by_name(data, "/0/show")) gwy_container_remove_by_name(data, "/0/show");
-        if (gwy_container_contains_by_name(data, "/0/mask")) gwy_container_remove_by_name(data, "/0/mask");
-        
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
 
@@ -161,7 +159,7 @@ fractal(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-fractal_dialog(FractalArgs *args)
+fractal_dialog(FractalArgs *args, GwyContainer *data)
 {
     GtkWidget *dialog, *table, *hbox;
     FractalControls controls;
@@ -202,6 +200,9 @@ fractal_dialog(FractalArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, 
                        FALSE, FALSE, 4);
 
+    global_controls = &controls;
+    global_data = data;
+    
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -218,7 +219,7 @@ fractal_dialog(FractalArgs *args)
 
             case RESPONSE_RESET:
             *args = fractal_defaults;
-            fractal_dialog_update(&controls, args);
+            fractal_dialog_update(&controls, args, data);
             break;
 
             default:
@@ -247,6 +248,9 @@ out_changed_cb(GObject *item,
 {
     args->out = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "fractal-type"));
+
+    if (global_controls != NULL && global_data != NULL)
+    fractal_dialog_update(global_controls, args, global_data);   
 }
 
 
@@ -275,14 +279,60 @@ fractal_save_args(GwyContainer *container,
 
 static void
 fractal_dialog_update(FractalControls *controls,
-                     FractalArgs *args)
+                     FractalArgs *args, GwyContainer *data)
 {
-    /*
+    GwyDataField *dfield;
+    GwyDataLine *xline, *yline;
+    GString *label;
+    GwyGraphAreaCurveParams *params;
+     /*
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
                              args->angle);
      */
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
+
+    
+    
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+
+    xline = gwy_data_line_new(10, 10, FALSE);
+    yline = gwy_data_line_new(10, 10, FALSE);
+
+    if (args->out == GWY_FRACTAL_PARTITIONING)
+    {
+        gwy_data_field_fractal_partitioning(dfield, xline, yline, args->interp);
+        label = g_string_new("Partitioning");
+    }
+    else if (args->out == GWY_FRACTAL_CUBECOUNTING)
+    {
+        gwy_data_field_fractal_cubecounting(dfield, xline, yline, args->interp);
+        label = g_string_new("Cube counting");
+    }
+    else if (args->out == GWY_FRACTAL_TRIANGULATION)
+    {
+        gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);
+        label = g_string_new("Triangulation");
+    }
+    else if (args->out == GWY_FRACTAL_PSDF)
+    {
+/*        gwy_data_field_fractal_triangulation(dfield, xline, yline, args->interp);*/
+        label = g_string_new("Power spectrum");
+    }
+     else return;
+
+    params = g_new(GwyGraphAreaCurveParams, 1);
+    params->is_line = 0;
+    params->is_point = 1;
+    params->point_type = 0;
+    params->point_size = 8;
+    params->color.pixel = 0x00000000;
+    
+    gwy_graph_clear(controls->graph);
+    gwy_graph_add_datavalues(controls->graph, xline->data, yline->data, xline->res,
+                             label, params);    
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
