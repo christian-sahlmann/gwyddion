@@ -9,5 +9,8 @@ data_DATA = \
 	gwy_zoom_out-24.png \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
-	gwy_graph-24.png
+	gwy_graph-24.png \
+	gwy_crop-24.png \
+	gwy_scale-24.png \
+	gwy_rotate-24.png
 

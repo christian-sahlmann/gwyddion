@@ -38,6 +38,9 @@ register_toolbox_icons(const gchar *pixmap_path,
         { GWY_STOCK_FIT_PLANE, "Fit plane", 0, GDK_VoidSymbol, "gwy" },
         { GWY_STOCK_FIT_TRIANGLE, "Fit plane", 0, GDK_VoidSymbol, "gwy" },
         { GWY_STOCK_GRAPH, "Graph", 0, GDK_VoidSymbol, "gwy" },
+        { GWY_STOCK_CROP, "Crop", 0, GDK_VoidSymbol, "gwy" },
+        { GWY_STOCK_SCALE, "Scale", 0, GDK_VoidSymbol, "gwy" },
+        { GWY_STOCK_ROTATE, "Rotate", 0, GDK_VoidSymbol, "gwy" },
     };
     guint i;
 

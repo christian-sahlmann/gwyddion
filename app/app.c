@@ -102,6 +102,25 @@ foo(void)
                               GTK_ICON_SIZE_BUTTON);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_CROP,
+                             "Crop", NULL,
+                             NULL, NULL, 0);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SCALE,
+                             "Scale", NULL,
+                             NULL, NULL, 1);
+    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ROTATE,
+                             "Rotate", NULL,
+                             NULL, NULL, 2);
+
+    /***************************************************************/
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
+                                GTK_ORIENTATION_HORIZONTAL);
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
+                              GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
                              "Fit plane", NULL,
                              NULL, NULL, 0);
