@@ -896,7 +896,7 @@ update_dialog_controls(RawFileControls *controls)
                                 args->builtin);
 
     for (group = controls->format; group; group = g_slist_next(group)) {
-        if (GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(group->data), "format"))
+        if (GPOINTER_TO_INT(g_object_get_data(G_OBJECT(group->data), "format"))
             == args->format) {
             gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(group->data), TRUE);
             break;
