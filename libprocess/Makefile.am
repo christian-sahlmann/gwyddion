@@ -29,8 +29,8 @@ EXTRA_DIST = \
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
-# Chaning ifraces     C:   R:   0
-libgwyprocess_la_LDFLAGS = -version-info 2:0:2
+# Changing ifaces     C:   R:   0
+libgwyprocess_la_LDFLAGS = -version-info 3:0:0
 libgwyprocess_la_SOURCES = \
 	correct.c \
 	correlation.c \

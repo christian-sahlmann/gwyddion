@@ -26,8 +26,8 @@ noinst_HEADERS = \
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
-# Chaning ifraces     C:   R:   0
-libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ -version-info 2:0:2
+# Changing ifaces     C:   R:   0
+libgwymodule_la_LDFLAGS = @GMODULE_LIBS@ -version-info 3:0:0
 libgwymodule_la_SOURCES = \
 	gwymodule-file.c \
 	gwymodule-graph.c \
