@@ -247,7 +247,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("type:"));
+    label = gtk_label_new(_("Type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
@@ -258,7 +258,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach(GTK_TABLE(table2), controls->filter,
                      1, 2, 1, 2, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("direction:"));
+    label = gtk_label_new(_("Direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label,
                      0, 1, 2, 3, GTK_FILL, 0, 2, 2);
@@ -274,7 +274,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach(GTK_TABLE(table2), controls->direction,
                      1, 2, 2, 3, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new(_("size:"));
+    label = gtk_label_new(_("Size:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label,
                      0, 1, 3, 4, GTK_FILL, 0, 2, 2);
@@ -287,7 +287,7 @@ dialog_create(GwyUnitoolState *state)
                              G_CALLBACK(size_changed_cb), controls);
 
     controls->update
-        = gtk_check_button_new_with_label("update preview dynamically");
+        = gtk_check_button_new_with_label("Update preview dynamically");
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
                        FALSE, FALSE, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
