@@ -143,8 +143,9 @@ gwy_layer_points_finalize(GObject *object)
  *
  * The default number of points to select is three.
  *
- * Container keys: "/0/points/0/x", "/0/points/0/y", "/0/points/1/x",
- * "/0/points/1/y", etc., and "/0/points/nselected".
+ * Container keys: "/0/select/points/0/x", "/0/select/points/0/y",
+ * "/0/select/points/1/x", "/0/select/points/1/y", etc.,
+ * and "/0/select/points/nselected".
  *
  * Returns: The newly created layer.
  **/
@@ -472,7 +473,7 @@ gwy_layer_points_save(GwyDataViewLayer *layer,
     gint from, to, n;
 
     /* TODO Container */
-    gwy_container_set_int32_by_name(layer->data, "/0/points/nselected",
+    gwy_container_set_int32_by_name(layer->data, "/0/select/points/nselected",
                                     p->nselected);
     if (i < 0) {
         from = 0;
@@ -484,7 +485,7 @@ gwy_layer_points_save(GwyDataViewLayer *layer,
     for (i = from; i <= to; i++) {
         gdouble *coords = p->points + 2*i;
 
-        n = g_snprintf(key, sizeof(key), "/0/points/%d/x", i);
+        n = g_snprintf(key, sizeof(key), "/0/select/points/%d/x", i);
         gwy_container_set_double_by_name(layer->data, key, coords[0]);
         key[n-1] = 'y';
         gwy_container_set_double_by_name(layer->data, key, coords[1]);
@@ -501,10 +502,12 @@ gwy_layer_points_restore(GwyDataViewLayer *layer)
     gint i, n, nsel;
 
     /* TODO Container */
-    if (!gwy_container_contains_by_name(layer->data, "/0/points/nselected"))
+    if (!gwy_container_contains_by_name(layer->data,
+                                        "/0/select/points/nselected"))
         return;
 
-    nsel = gwy_container_get_int32_by_name(layer->data, "/0/points/nselected");
+    nsel = gwy_container_get_int32_by_name(layer->data,
+                                           "/0/select/points/nselected");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
                                                              "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
@@ -512,7 +515,7 @@ gwy_layer_points_restore(GwyDataViewLayer *layer)
     for (i = p->nselected = 0; i < nsel && p->nselected < p->npoints; i++) {
         gdouble *coords = p->points + 2*p->nselected;
 
-        n = g_snprintf(key, sizeof(key), "/0/points/%d/x", i);
+        n = g_snprintf(key, sizeof(key), "/0/select/points/%d/x", i);
         coords[0] = gwy_container_get_double_by_name(layer->data, key);
         key[n-1] = 'y';
         coords[1] = gwy_container_get_double_by_name(layer->data, key);

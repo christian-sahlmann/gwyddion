@@ -121,7 +121,7 @@ gwy_layer_pointer_finalize(GObject *object)
  *
  * Creates a new pointer layer.
  *
- * Container keys: "/0/pointer/x", "/0/pointer/y".
+ * Container keys: "/0/select/pointer/x", "/0/select/pointer/y".
  *
  * Returns: The newly created layer.
  **/
@@ -315,8 +315,8 @@ gwy_layer_pointer_save(GwyDataViewLayer *layer)
     GwyLayerPointer *s = GWY_LAYER_POINTER(layer);
 
     /* TODO Container */
-    gwy_container_set_double_by_name(layer->data, "/0/pointer/x", s->x);
-    gwy_container_set_double_by_name(layer->data, "/0/pointer/y", s->y);
+    gwy_container_set_double_by_name(layer->data, "/0/select/pointer/x", s->x);
+    gwy_container_set_double_by_name(layer->data, "/0/select/pointer/y", s->y);
 }
 
 static void
@@ -332,12 +332,14 @@ gwy_layer_pointer_restore(GwyDataViewLayer *layer)
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
 
-    if (gwy_container_contains_by_name(layer->data, "/0/pointer/x")) {
-        s->x = gwy_container_get_double_by_name(layer->data, "/0/pointer/x");
+    if (gwy_container_contains_by_name(layer->data, "/0/select/pointer/x")) {
+        s->x = gwy_container_get_double_by_name(layer->data,
+                                                "/0/select/pointer/x");
         s->x = CLAMP(s->x, 0.0, xreal);
     }
-    if (gwy_container_contains_by_name(layer->data, "/0/pointer/y")) {
-        s->y = gwy_container_get_double_by_name(layer->data, "/0/pointer/y");
+    if (gwy_container_contains_by_name(layer->data, "/0/select/pointer/y")) {
+        s->y = gwy_container_get_double_by_name(layer->data,
+                                                "/0/select/pointer/y");
         s->y = CLAMP(s->y, 0.0, yreal);
     }
 }

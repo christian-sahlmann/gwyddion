@@ -132,8 +132,8 @@ gwy_layer_select_finalize(GObject *object)
  *
  * Creates a new rectangular selection layer.
  *
- * Container keys: "/0/select/x0", "/0/select/x1", "/0/select/y0",
- * "/0/select/y1", and "/0/select/selected".
+ * Container keys: "/0/select/rect/x0", "/0/select/x1", "/0/select/y0",
+ * "/0/select/rect/y1", and "/0/select/selected".
  *
  * Returns: The newly created layer.
  **/
@@ -440,14 +440,14 @@ gwy_layer_select_save(GwyDataViewLayer *layer)
     GwyLayerSelect *s = GWY_LAYER_SELECT(layer);
 
     /* TODO Container */
-    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected",
+    gwy_container_set_boolean_by_name(layer->data, "/0/select/rect/selected",
                                       s->selected);
     if (!s->selected)
         return;
-    gwy_container_set_double_by_name(layer->data, "/0/select/x0", s->x0);
-    gwy_container_set_double_by_name(layer->data, "/0/select/y0", s->y0);
-    gwy_container_set_double_by_name(layer->data, "/0/select/x1", s->x1);
-    gwy_container_set_double_by_name(layer->data, "/0/select/y1", s->y1);
+    gwy_container_set_double_by_name(layer->data, "/0/select/rect/x0", s->x0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/rect/y0", s->y0);
+    gwy_container_set_double_by_name(layer->data, "/0/select/rect/x1", s->x1);
+    gwy_container_set_double_by_name(layer->data, "/0/select/rect/y1", s->y1);
 }
 
 static void
@@ -458,10 +458,10 @@ gwy_layer_select_restore(GwyDataViewLayer *layer)
     gdouble xreal, yreal;
 
     /* TODO Container */
-    if (!gwy_container_contains_by_name(layer->data, "/0/select/selected"))
+    if (!gwy_container_contains_by_name(layer->data, "/0/select/rect/selected"))
         return;
     s->selected = gwy_container_get_boolean_by_name(layer->data,
-                                                    "/0/select/selected");
+                                                    "/0/select/rect/selected");
     if (!s->selected)
         return;
 
@@ -469,13 +469,13 @@ gwy_layer_select_restore(GwyDataViewLayer *layer)
                                                              "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
-    s->x0 = gwy_container_get_double_by_name(layer->data, "/0/select/x0");
+    s->x0 = gwy_container_get_double_by_name(layer->data, "/0/select/rect/x0");
     s->x0 = CLAMP(s->x0, 0.0, xreal);
-    s->y0 = gwy_container_get_double_by_name(layer->data, "/0/select/y0");
+    s->y0 = gwy_container_get_double_by_name(layer->data, "/0/select/rect/y0");
     s->y0 = CLAMP(s->y0, 0.0, yreal);
-    s->x1 = gwy_container_get_double_by_name(layer->data, "/0/select/x1");
+    s->x1 = gwy_container_get_double_by_name(layer->data, "/0/select/rect/x1");
     s->x1 = CLAMP(s->x1, 0.0, xreal);
-    s->y1 = gwy_container_get_double_by_name(layer->data, "/0/select/y1");
+    s->y1 = gwy_container_get_double_by_name(layer->data, "/0/select/rect/y1");
     s->y1 = CLAMP(s->y1, 0.0, yreal);
     if (s->x0 == s->x1 || s->y0 == s->y1)
         s->selected = FALSE;

@@ -153,9 +153,9 @@ gwy_layer_lines_finalize(GObject *object)
  *
  * The default number of lines to select is three.
  *
- * Container keys: "/0/lines/0/x0", "/0/lines/0/y0", "/0/lines/0/x1",
- * "/0/lines/0/y1", "/0/lines/1/x0", "/0/lines/1/y0", etc., and
- * "/0/lines/nselected".
+ * Container keys: "/0/select/lines/0/x0", "/0/select/lines/0/y0",
+ * "/0/select/lines/0/x1", "/0/select/lines/0/y1", "/0/select/lines/1/x0",
+ * "/0/select/lines/1/y0", etc., and "/0/select/lines/nselected".
  *
  * Returns: The newly created layer.
  **/
@@ -570,7 +570,7 @@ gwy_layer_lines_save(GwyDataViewLayer *layer,
     gint from, to, n;
 
     /* TODO Container */
-    gwy_container_set_int32_by_name(layer->data, "/0/lines/nselected",
+    gwy_container_set_int32_by_name(layer->data, "/0/select/lines/nselected",
                                     l->nselected);
     if (i < 0) {
         from = 0;
@@ -584,7 +584,7 @@ gwy_layer_lines_save(GwyDataViewLayer *layer,
 
         gwy_debug("%s: %d %g %g %g %g", __FUNCTION__,
                   i, coords[0], coords[1], coords[2], coords[3]);
-        n = g_snprintf(key, sizeof(key), "/0/lines/%d/x0", i);
+        n = g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
         gwy_container_set_double_by_name(layer->data, key, coords[0]);
         key[n-2] = 'y';
         gwy_container_set_double_by_name(layer->data, key, coords[1]);
@@ -605,10 +605,12 @@ gwy_layer_lines_restore(GwyDataViewLayer *layer)
     gint i, n, nsel;
 
     /* TODO Container */
-    if (!gwy_container_contains_by_name(layer->data, "/0/lines/nselected"))
+    if (!gwy_container_contains_by_name(layer->data,
+                                        "/0/select/lines/nselected"))
         return;
 
-    nsel = gwy_container_get_int32_by_name(layer->data, "/0/lines/nselected");
+    nsel = gwy_container_get_int32_by_name(layer->data,
+                                           "/0/select/lines/nselected");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
                                                              "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
@@ -616,7 +618,7 @@ gwy_layer_lines_restore(GwyDataViewLayer *layer)
     for (i = l->nselected = 0; i < nsel && l->nselected < l->nlines; i++) {
         gdouble *coords = l->lines + 4*l->nselected;
 
-        n = g_snprintf(key, sizeof(key), "/0/lines/%d/x0", i);
+        n = g_snprintf(key, sizeof(key), "/0/select/lines/%d/x0", i);
         coords[0] = gwy_container_get_double_by_name(layer->data, key);
         key[n-2] = 'y';
         coords[1] = gwy_container_get_double_by_name(layer->data, key);
