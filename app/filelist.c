@@ -194,7 +194,8 @@ gwy_app_recent_file_list_new(void)
 
     gcontrols.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(gcontrols.window), _("Document History"));
-    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1, 360);
+    gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1,
+                                3*gdk_screen_height()/4);
 
     /* FIXME: who will unref this beast? */
     gcontrols.tooltips = gtk_tooltips_new();
@@ -575,6 +576,7 @@ gwy_app_recent_file_list_load(const gchar *filename)
         if (*files[n]) {
             GwyRecentFile *rf;
 
+            gwy_debug("%s", files[n]);
             rf = gwy_recent_file_new(gwy_canonicalize_path(files[n]), NULL);
             gtk_list_store_append(gcontrols.store, &iter);
             gtk_list_store_set(gcontrols.store, &iter, FILELIST_RAW, rf, -1);
