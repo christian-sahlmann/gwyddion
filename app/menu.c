@@ -111,6 +111,29 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 }
 
 GtkWidget*
+gwy_menu_create_graph_menu(GtkAccelGroup *accel_group)
+{
+    GtkWidget *menu, *alignment;
+    GtkItemFactory *item_factory;
+    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_GRAPH, 0 };
+
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, "<graph>",
+                                        accel_group);
+    gwy_build_graph_menu(GTK_OBJECT(item_factory), "/_Graph",
+                         G_CALLBACK(gwy_app_run_graph_func_cb));
+    menu = gtk_item_factory_get_widget(item_factory, "<graph>");
+    alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
+    gtk_container_add(GTK_CONTAINER(alignment), menu);
+
+    /* set up sensitivity: all items need an active data window */
+    setup_sensitivity_keys();
+    gwy_menu_set_flags_recursive(menu, &sens_data);
+    gwy_menu_set_sensitive_recursive(menu, &sens_data);
+
+    return alignment;
+}
+
+GtkWidget*
 gwy_menu_create_xtns_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
@@ -358,6 +381,22 @@ gwy_app_run_process_func_cb(gchar *name)
         }
     }
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
+}
+
+void
+gwy_app_run_graph_func_cb(gchar *name)
+{
+    GtkWidget *graph;
+
+    gwy_debug("%s: `%s'", __FUNCTION__, name);
+    graph = gwy_app_graph_window_get_current();
+    if (!graph)
+        return;
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    gwy_graph_func_run(name, GWY_GRAPH(graph));
+    /* FIXME TODO: some equivalent of this:
+    gwy_app_data_view_update(data_view);
+    */
 }
 
 void

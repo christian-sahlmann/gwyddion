@@ -46,7 +46,7 @@ static GwyToolUseFunc current_tool_use_func = NULL;
 static gint untitled_no = 0;
 
 static const gchar *menu_list[] = {
-    "<file>", "<proc>", "<xtns>", "<edit>",
+    "<file>", "<proc>", "<xtns>", "<edit>", "<graph>"
 };
 
 static void       gwy_app_quit                (void);
@@ -143,6 +143,10 @@ gwy_app_create_toolbox(void)
     menu = gwy_menu_create_proc_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
     g_object_set_data(G_OBJECT(window), "<proc>", menu);
+
+    menu = gwy_menu_create_graph_menu(accel_group);
+    gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);
+    g_object_set_data(G_OBJECT(window), "<graph>", menu);
 
     menu = gwy_menu_create_xtns_menu(accel_group);
     gtk_box_pack_start(GTK_BOX(vbox), menu, FALSE, FALSE, 0);

@@ -29,9 +29,11 @@ extern "C" {
 
 
 enum {
-    GWY_MENU_FLAG_DATA = 1 << 0,
-    GWY_MENU_FLAG_UNDO = 1 << 1,
-    GWY_MENU_FLAG_REDO = 1 << 2
+    GWY_MENU_FLAG_DATA  = 1 << 0,
+    GWY_MENU_FLAG_UNDO  = 1 << 1,
+    GWY_MENU_FLAG_REDO  = 1 << 2,
+    GWY_MENU_FLAG_GRAPH = 1 << 3,
+    GWY_MENU_FLAG_MASK  = 0xf
 };
 
 typedef struct _GwyMenuSensitiveData GwyMenuSensitiveData;
@@ -43,6 +45,7 @@ struct _GwyMenuSensitiveData {
 
 GtkWidget* gwy_menu_create_xtns_menu         (GtkAccelGroup *accel_group);
 GtkWidget* gwy_menu_create_proc_menu         (GtkAccelGroup *accel_group);
+GtkWidget* gwy_menu_create_graph_menu        (GtkAccelGroup *accel_group);
 GtkWidget* gwy_menu_create_file_menu         (GtkAccelGroup *accel_group);
 GtkWidget* gwy_menu_create_edit_menu         (GtkAccelGroup *accel_group);
 
@@ -52,6 +55,7 @@ void       gwy_menu_recent_files_update      (GList *recent_files);
 
 /* FIXME: where this could really belong? */
 void       gwy_app_run_process_func_cb       (gchar *name);
+void       gwy_app_run_graph_func_cb         (gchar *name);
 
 #ifdef __cplusplus
 }
