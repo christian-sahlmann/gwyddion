@@ -46,23 +46,28 @@ typedef struct {
     gboolean in_update;
 } SphrevControls;
 
-static gboolean    module_register           (const gchar *name);
-static gboolean    sphrev                    (GwyContainer *data,
-                                              GwyRunType run);
-static gboolean    sphrev_dialog             (SphrevArgs *args);
-static void        direction_changed_cb      (GObject *item,
-                                              SphrevArgs *args);
-static void        radius_changed_cb         (GtkAdjustment *adj,
-                                              SphrevArgs *args);
-static void        size_changed_cb           (GtkAdjustment *adj,
-                                              SphrevArgs *args);
-static void        sphrev_dialog_update      (SphrevControls *controls,
-                                              SphrevArgs *args);
-static void        sphrev_sanitize_args      (SphrevArgs *args);
-static void        sphrev_load_args          (GwyContainer *container,
-                                              SphrevArgs *args);
-static void        sphrev_save_args          (GwyContainer *container,
-                                              SphrevArgs *args);
+static gboolean      module_register           (const gchar *name);
+static gboolean      sphrev                    (GwyContainer *data,
+                                                GwyRunType run);
+static GwyDataField* sphrev_do                 (SphrevArgs *args,
+                                                GwyDataField *dfield);
+static GwyDataLine*  sphrev_make_sphere        (gdouble radius,
+                                                gint maxres);
+static gboolean      sphrev_dialog             (SphrevArgs *args,
+                                                GwyDataField *dfield);
+static void          direction_changed_cb      (GObject *item,
+                                                SphrevArgs *args);
+static void          radius_changed_cb         (GtkAdjustment *adj,
+                                                SphrevArgs *args);
+static void          size_changed_cb           (GtkAdjustment *adj,
+                                                SphrevArgs *args);
+static void          sphrev_dialog_update      (SphrevControls *controls,
+                                                SphrevArgs *args);
+static void          sphrev_sanitize_args      (SphrevArgs *args);
+static void          sphrev_load_args          (GwyContainer *container,
+                                                SphrevArgs *args);
+static void          sphrev_save_args          (GwyContainer *container,
+                                                SphrevArgs *args);
 
 SphrevArgs sphrev_defaults = {
     GTK_ORIENTATION_HORIZONTAL,
@@ -128,13 +133,18 @@ sphrev(GwyContainer *data, GwyRunType run)
               args.pixelsize, args.valform.magnitude, args.valform.precision,
               args.valform.units);
 
-    ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args);
+    ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args, dfield);
     if (run == GWY_RUN_MODAL)
         sphrev_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
-    data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/base/palette",
+                                             "/0/select",
+                                             NULL);
+    dfield = sphrev_do(&args, dfield);
+    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
@@ -142,7 +152,8 @@ sphrev(GwyContainer *data, GwyRunType run)
 }
 
 static gboolean
-sphrev_dialog(SphrevArgs *args)
+sphrev_dialog(SphrevArgs *args,
+              GwyDataField *dfield)
 {
     const GwyEnum directions[] = {
         { N_("_Horizontal direction"), GTK_ORIENTATION_HORIZONTAL, },
@@ -162,7 +173,7 @@ sphrev_dialog(SphrevArgs *args)
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(4, 3, FALSE);
+    table = gtk_table_new(5, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
@@ -195,6 +206,28 @@ sphrev_dialog(SphrevArgs *args)
     g_signal_connect(controls.size, "value_changed",
                      G_CALLBACK(size_changed_cb), args);
     row++;
+
+    {
+        gchar *mustfreethis1, *mustfreethis2;
+        GwySIUnit *siunit;
+        GtkWidget *label;
+
+        siunit = gwy_data_field_get_si_unit_xy(dfield);
+        mustfreethis1 = gwy_si_unit_get_unit_string(siunit);
+        siunit = gwy_data_field_get_si_unit_z(dfield);
+        mustfreethis2 = gwy_si_unit_get_unit_string(siunit);
+        if (strcmp(mustfreethis1, mustfreethis2)) {
+            label = gtk_label_new(_("Warning: Value is a different physical "
+                                    "quantity\nthan latitude, sphere makes "
+                                    "no sense."));
+            gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+            gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                             GTK_EXPAND | GTK_FILL, 0, 2, 2);
+            row++;
+        }
+        g_free(mustfreethis2);
+        g_free(mustfreethis1);
+    }
 
     radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
                                      "direction-type",
@@ -303,6 +336,95 @@ sphrev_dialog_update(SphrevControls *controls,
                              ROUND(args->radius/args->pixelsize));
     gwy_radio_buttons_set_current(controls->direction, "interpolation-type",
                                   args->direction);
+}
+
+static GwyDataField*
+sphrev_do(SphrevArgs *args,
+          GwyDataField *dfield)
+{
+    GwyDataField *rfield;
+    GwyDataLine *sphere;
+    gdouble *data, *rdata, *sphdata;
+    gint i, j, k, size, xres, yres;
+
+    data = gwy_data_field_get_data(dfield);
+    rfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+    xres = gwy_data_field_get_xres(rfield);
+    yres = gwy_data_field_get_yres(rfield);
+    rdata = gwy_data_field_get_data(rfield);
+    /* Pathological case */
+    if (args->radius < args->pixelsize)
+        return rfield;
+
+    sphere = sphrev_make_sphere(args->radius/args->pixelsize,
+                                args->direction == GTK_ORIENTATION_HORIZONTAL
+                                ? gwy_data_field_get_xres(dfield)
+                                : gwy_data_field_get_yres(dfield));
+    gwy_data_line_multiply(sphere, args->radius);
+    sphdata = gwy_data_line_get_data(sphere);
+    size = gwy_data_line_get_res(sphere)/2;
+
+    if (args->direction == GTK_ORIENTATION_HORIZONTAL) {
+        for (i = 0; i < yres; i++) {
+            gdouble *rrow = rdata + i*xres;
+
+            for (j = 0; j < xres; j++) {
+                gdouble *row = data + i*xres + j;
+                gint from, to, km;
+                gdouble min;
+
+                from = MAX(0, j-size) - j;
+                to = MIN(j+size, xres-1) - j;
+                min = G_MAXDOUBLE;
+                km = 0;
+                for (k = from; k <= to; k++) {
+                    if (sphdata[size+k] - row[k] < min) {
+                        min = sphdata[size+k] - row[k];
+                        km = k;
+                    }
+                }
+                /* FIXME */
+                rrow[j] = -min;
+            }
+        }
+    }
+    g_object_unref(sphere);
+
+    return rfield;
+}
+
+static GwyDataLine*
+sphrev_make_sphere(gdouble radius, gint maxres)
+{
+    GwyDataLine *dline;
+    gdouble *data;
+    gint i, size;
+
+    size = ROUND(MIN(radius, maxres));
+    dline = GWY_DATA_LINE(gwy_data_line_new(2*size+1, 1.0, FALSE));
+    data = gwy_data_line_get_data(dline);
+
+    if (radius/8 > maxres) {
+        /* Pathological case: very flat sphere */
+        for (i = 0; i <= size; i++) {
+            gdouble u = i/radius;
+
+            data[size+i] = data[size-i] = u*u/2.0*(1.0 + u*u/4.0*(1 + u*u/2.0));
+        }
+    }
+    else {
+        /* Normal sphere */
+        for (i = 0; i <= size; i++) {
+            gdouble u = i/radius;
+
+            if (G_UNLIKELY(u > 1.0))
+                data[size+i] = data[size-i] = 1.0;
+            else
+                data[size+i] = data[size-i] = 1.0 - sqrt(1.0 - u*u);
+        }
+    }
+
+    return dline;
 }
 
 static const gchar *radius_key = "/module/sphere_revolve/radius";
