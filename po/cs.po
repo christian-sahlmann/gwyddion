@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-26 18:43+0200\n"
+"POT-Creation-Date: 2004-10-26 22:20+0200\n"
 "PO-Revision-Date: 2004-10-26 12:30+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -283,11 +283,11 @@ msgstr "Po třetí odmocnině ze 2"
 
 #: libgwydgets/gwyoptionmenus.c:637
 msgid "Integer zooms"
-msgstr "Celočíselná zvětšní"
+msgstr "Celočíselná zvětšení"
 
 #: libgwydgets/gwyoptionmenus.c:638
 msgid "Half-integer zooms"
-msgstr "Poločístelná zvětšní"
+msgstr "Poločíselná zvětšení"
 
 #: libgwydgets/gwyoptionmenus.c:667
 msgid "Gaussian"
@@ -480,7 +480,7 @@ msgid ""
 msgstr ""
 "Některá data nejsou uložena:\n"
 "%s\n"
-"Upravdu skončit?"
+"Opravdu skončit?"
 
 #: app/app.c:770
 msgid "Export"
@@ -740,7 +740,7 @@ msgstr "Vyznačení zrn stékáním"
 
 #: app/toolbox.c:248
 msgid "Remove grains by threshold"
-msgstr "Odstraňení zrn podle prahu"
+msgstr "Odstranění zrn podle prahu"
 
 #: app/toolbox.c:253 modules/process/grain_dist.c:100
 msgid "Grain size distribution"
@@ -1176,7 +1176,7 @@ msgstr "_Oddělovač polí:"
 
 #: modules/file/rawfile.c:846
 msgid "_Decimal separator is comma"
-msgstr "_Desetinný odělovač je čárka"
+msgstr "_Desetinný oddělovač je čárka"
 
 #: modules/file/rawfile.c:865
 msgid "Byte s_wap pattern:"
@@ -1188,7 +1188,7 @@ msgstr "_Začít na pozici:"
 
 #: modules/file/rawfile.c:886
 msgid "_Sample size:"
-msgstr "_Velikost vzrorku:"
+msgstr "_Velikost vzorku:"
 
 #: modules/file/rawfile.c:894
 msgid "After each sample s_kip:"
@@ -1480,7 +1480,7 @@ msgstr "<b>Parametry prokládání:</b>"
 
 #: modules/graph/graph_fit.c:323
 msgid "<b>Initial</b>"
-msgstr "<b>Pořáteční</b>"
+msgstr "<b>Počáteční</b>"
 
 #: modules/graph/graph_fit.c:329 modules/process/fractal.c:278
 msgid "<b>Result</b>"
@@ -1500,7 +1500,7 @@ msgstr "<b>Korelační matice:</b>"
 
 #: modules/graph/graph_fit.c:422
 msgid "<b>Chi-square result:</b>"
-msgstr "<b>Chí kvadrát výsledeku:</b>"
+msgstr "<b>Chí kvadrát výsledku:</b>"
 
 #: modules/graph/graph_fit.c:434 modules/process/fractal.c:257
 msgid "<b>Fit area</b>"
@@ -1602,7 +1602,7 @@ msgstr "Vrstva umožňující výběr vodorovných nebo svislých čar."
 
 #: modules/layer/lines.c:139
 msgid "Layer allowing selection of arbitrary straight lines."
-msgstr "Vrsta umožňující výběr libovolých přímých čar."
+msgstr "Vrstva umožňující výběr libovolných přímých čar."
 
 #: modules/layer/pointer.c:105
 msgid ""
@@ -1659,7 +1659,7 @@ msgstr "Počet _kroků:"
 
 #: modules/process/angle_dist.c:209 modules/process/slope_dist.c:234
 msgid "_Logarithmic value scale"
-msgstr "_Logaritimická škála hodnot"
+msgstr "_Logaritmická škála hodnot"
 
 #: modules/process/angle_dist.c:215 modules/process/slope_dist.c:240
 msgid "Use local plane _fitting"
@@ -1909,11 +1909,11 @@ msgstr "/_Zobrazení/Detekce _hran/_Canny "
 
 #: modules/process/facet-level.c:41
 msgid "Automatic facet-orientation based levelling."
-msgstr "Automatické vyrování založené na orientaci plošek."
+msgstr "Automatické vyrovnání založené na orientaci plošek."
 
 #: modules/process/facet-level.c:57
 msgid "/_Level/_Facet Level"
-msgstr "/_Vyrovnání/Vyrování podle p_lošek"
+msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
 
 #: modules/process/facet-level.c:86
 msgid "Facet-levelling"
@@ -2109,7 +2109,7 @@ msgstr "/_Zrna/Odstranit podle velikosti..."
 
 #: modules/process/grain_rem_threshold.c:166
 msgid "Remove Grains by Threshold"
-msgstr "Odstraňení zrn podle prahu"
+msgstr "Odstranění zrn podle prahu"
 
 #: modules/process/grain_rem_threshold.c:205
 msgid "Threshold by _maximum"
@@ -2189,7 +2189,7 @@ msgstr "/_Vyrovnání/_Vyrovnání"
 
 #: modules/process/level.c:66
 msgid "/_Level/Level _Rotate"
-msgstr "/_Vyrovnání/Vyrování _rotací"
+msgstr "/_Vyrovnání/Vyrovnání _rotací"
 
 #: modules/process/level.c:73
 msgid "/_Level/Fix _Zero"
@@ -2197,7 +2197,7 @@ msgstr "/_Vyrovnání/Oprava _nuly"
 
 #: modules/process/linecorrect.c:41
 msgid "Line defect correction, mostly experimental algorithms."
-msgstr "Odstranení chyb v rádcích."
+msgstr "Odstranění chyb v rádcích."
 
 #: modules/process/linecorrect.c:57
 msgid "/_Correct Data/_Modus Line Correction"
@@ -2205,7 +2205,7 @@ msgstr "/_Korekce dat/_Odstranění chyb v řádcích"
 
 #: modules/process/mask_grow_shrink.c:67
 msgid "Grows and shrinks masks."
-msgstr "Rošiřuje a zmenšuje masky."
+msgstr "Rozšiřuje a zmenšuje masky."
 
 #: modules/process/mask_grow_shrink.c:83
 msgid "/_Mask/_Grow Mask..."
@@ -2309,7 +2309,7 @@ msgstr "Stupeň _vodorovného polynomu:"
 
 #: modules/process/polylevel.c:219
 msgid "_Vertical polynom degree:"
-msgstr "Supeň _svislého polynomu:"
+msgstr "Stupeň _svislého polynomu:"
 
 #: modules/process/polylevel.c:225
 msgid "_Same degrees"
@@ -2333,7 +2333,7 @@ msgstr "Rotace o libovolný úhel."
 
 #: modules/process/rotate.c:93
 msgid "/_Basic Operations/Rotate by _Angle..."
-msgstr "/_Jednoduché operace/Rot_ace o ůhel..."
+msgstr "/_Jednoduché operace/Rot_ace o úhel..."
 
 #: modules/process/rotate.c:184
 msgid "Rotate"
@@ -2485,7 +2485,7 @@ msgstr "Související data:"
 
 #: modules/process/tip_blind.c:247
 msgid "Estimated Tip Size"
-msgstr "Odhadovaná belikost hrotu"
+msgstr "Odhadovaná velikost hrotu"
 
 #: modules/process/tip_blind.c:274
 msgid "_Same resolution"
@@ -2820,7 +2820,7 @@ msgstr "Nástroj Výběr profilů"
 
 #: modules/tools/profile.c:106
 msgid "Extract profiles from data."
-msgstr "Výbrat profily z dat"
+msgstr "Vybrat profily z dat"
 
 #: modules/tools/profile.c:168
 msgid "Extract Profile"
@@ -2933,7 +2933,7 @@ msgstr "Fraktální korekce"
 
 #: modules/tools/spotremove.c:145
 msgid "Manually remove spots"
-msgstr "Ruční odstranení skvrn"
+msgstr "Ruční odstranění skvrn"
 
 #: modules/tools/spotremove.c:216
 msgid "Remove Spots"
@@ -2986,3 +2986,4 @@ msgstr "Projektovaná plocha"
 #: modules/tools/stats.c:179
 msgid "Area"
 msgstr "Plocha"
+
