@@ -30,9 +30,9 @@ main(int argc, char *argv[])
       y = 2*G_PI*(double)i/(N-1);
       for (j = 0; j < N; j++) {
         x = 2*G_PI*(double)j/(N-1);
-        row[j] = sin(x*y + x-3.0*y);
+        row[j] = 1e-9*sin(x*y + x-3.0*y);
         if (row[j] < 0)
-          row[j] = (x+y)/G_PI/G_PI;
+          row[j] = 1e-9*(x+y)/G_PI/G_PI;
       }
     }
     gwy_data_field_set_xreal(df, 4.1e-8);
