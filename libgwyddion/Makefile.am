@@ -6,6 +6,7 @@ libgwyddioninclude_HEADERS = \
 	gwyddion.h \
 	gwyentities.h \
 	gwymacros.h \
+	gwymath.h \
 	gwyserializable.h \
 	gwywatchable.h
 
@@ -23,6 +24,7 @@ libgwyddion_la_LDFLAGS = -version-info 0:0:0
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
 	gwyentities.c \
+	gwymath.c \
 	gwyserializable.c \
 	gwywatchable.c
 

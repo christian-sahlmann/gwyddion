@@ -4,6 +4,7 @@
 #define __GWY_GWYDDION_H__
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
