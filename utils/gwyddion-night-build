@@ -100,6 +100,7 @@ function install_to_tmp() {
 
 
 function make_dists() {
+  rm -f .releaseme
   toremove=$pkgname-${basever}cvs*.tar.*
   for f in $toremove; do
     rm -fv $f
@@ -122,7 +123,7 @@ function release_dists() {
     $HOME/bin/Ftprm $pkgname/$f
   done
 
-  $archdir=$rpmtopdir/RPMS/$arch
+  archdir=$rpmtopdir/RPMS/$arch
   $HOME/bin/Ftpcp $pkgname $pver.tar.*
   $HOME/bin/Ftpcp $pkgname \
     $archdir/$pkgname-{,devel-,plugins-,debuginfo-}$version-1.$arch.rpm \
@@ -170,7 +171,6 @@ function help() {
 
 # =====[ main ]==============================================================
 cd $projectdir
-rm -f .releaseme
 test -d $logdir || mkdir $logdir
 # Set version from Makefile if we don't do update_version
 eval $(grep ^VERSION Makefile | tr -d ' ' | tr '[A-Z]' '[a-z]')
