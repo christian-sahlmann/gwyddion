@@ -68,7 +68,14 @@ gwy_app_init(void)
                         "GtkButton::focus_line_width = 0\n"
                         "GtkButton::focus_padding = 0\n"
                         "}\n"
-                        "widget \"*.cornerbutton\" style \"cornerbutton\"");
+                        "widget \"*.cornerbutton\" style \"cornerbutton\"\n"
+                        "\n"
+                        "style \"toolboxheader\" {\n"
+                        "GtkButton::focus_line_width = 0\n"
+                        "GtkButton::focus_padding = 0\n"
+                        "}\n"
+                        "widget \"*.toolboxheader\" style \"toolboxheader\"\n"
+                        "\n");
 }
 
 static void

@@ -559,8 +559,9 @@ gwy_app_toolbox_create_label(const gchar *text,
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     button = gtk_button_new();
+    gtk_widget_set_name(button, "toolboxheader");
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_HALF);
-    g_object_set(button, "can-focus", FALSE, NULL);
+    g_object_set(button, "can-focus", FALSE, "can-default", FALSE, NULL);
     gtk_container_add(GTK_CONTAINER(button), hbox);
 
     g_object_set_data(G_OBJECT(button), "arrow", arrow);
