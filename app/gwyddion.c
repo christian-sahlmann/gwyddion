@@ -47,7 +47,7 @@ file_open_ok_cb(GtkFileSelection *selector)
     if (!data)
         return;
 
-    filename_utf8 = g_filename_to_utf8(filename_sys, 0, NULL, NULL, NULL);
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     gwy_container_set_string_by_name(data, "/filename", filename_utf8);
     gtk_widget_destroy(GTK_WIDGET(selector));
 
@@ -58,6 +58,8 @@ file_open_ok_cb(GtkFileSelection *selector)
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_set_current_data), data);
+    g_signal_connect_swapped(data_window, "destroy",
+                             G_CALLBACK(gwy_app_set_current_data), NULL);
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(g_object_unref), data);
     gtk_widget_show_all(data_window);
@@ -90,7 +92,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     g_assert(GWY_IS_CONTAINER(data));
 
     filename_sys = gtk_file_selection_get_filename(selector);
-    filename_utf8 = g_filename_to_utf8(filename_sys, 0, NULL, NULL, NULL);
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     if (g_file_test(filename_sys,
                      G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
         g_warning("Won't overwrite `%s' (yet)", filename_utf8);
@@ -124,7 +126,7 @@ file_save_as_cb(void)
         filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
     else
         filename_utf8 = "";
-    filename_sys = g_filename_from_utf8(filename_utf8, 0, NULL, NULL, NULL);
+    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
     gtk_file_selection_set_filename(selector, filename_sys);
     g_object_set_data(G_OBJECT(selector), "data", data);
 
@@ -152,7 +154,8 @@ file_save_cb(void)
         file_save_as_cb();
         return;
     }
-    filename_sys = g_filename_from_utf8(filename_utf8, 0, NULL, NULL, NULL);
+    gwy_debug("%s: %s", __FUNCTION__, filename_utf8);
+    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
     if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
         file_save_as_cb();
 }
@@ -162,7 +165,6 @@ create_file_menu(void)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
-        { "/File/_New...", "<control>N", NULL, TRUE, "<StockItem>", GTK_STOCK_NEW },
         { "/File/_Open...", "<control>O", file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
         { "/File/_Save", "<control>S", file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
         { "/File/Save _As...", "<control><shift>S", file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
@@ -260,7 +262,13 @@ gwy_app_get_current_data(void)
 void
 gwy_app_set_current_data(GwyContainer *data)
 {
-    g_return_if_fail(GWY_IS_CONTAINER(data));
+    if (data) {
+        gwy_debug("%s: %s",
+                  __FUNCTION__, g_type_name(G_TYPE_FROM_INSTANCE(data)));
+        g_return_if_fail(GWY_IS_CONTAINER(data));
+    }
+    else
+        gwy_debug("%s: NULL", __FUNCTION__);
     current_data = data;
 }
 
