@@ -656,12 +656,14 @@ gwy_data_view_set_layer(GwyDataView *data_view,
         return;
     if (*which) {
         g_object_unref(*which);
+        gwy_data_view_layer_unplugged(*which);
     }
     if (layer) {
         g_assert(layer->parent == NULL);
         g_object_ref(layer);
         gtk_object_sink(GTK_OBJECT(layer));
         layer->parent = (GtkWidget*)data_view;
+        gwy_data_view_layer_plugged(layer);
     }
     *which = layer;
     gwy_data_view_update(data_view);

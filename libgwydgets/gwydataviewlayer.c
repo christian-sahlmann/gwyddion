@@ -15,6 +15,12 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PLUGGED,
+    UNPLUGGED,
+    LAST_SIGNAL
+};
+
 /* Forward declarations */
 
 static void     gwy_data_view_layer_class_init           (GwyDataViewLayerClass *klass);
@@ -24,6 +30,8 @@ static void     gwy_data_view_layer_finalize             (GObject *object);
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
+
+static guint data_view_layer_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_data_view_layer_get_type(void)
@@ -60,6 +68,7 @@ static void
 gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -78,6 +87,26 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     klass->motion_notify = NULL;
     klass->key_press = NULL;
     klass->key_release = NULL;
+
+    klass->plugged = NULL;
+    klass->unplugged = NULL;
+
+    data_view_layer_signals[PLUGGED] =
+        g_signal_new("plugged",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewLayerClass, plugged),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
+    data_view_layer_signals[UNPLUGGED] =
+        g_signal_new("unplugged",
+                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(GwyDataViewLayerClass, unplugged),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -227,6 +256,20 @@ gwy_data_view_layer_key_release(GwyDataViewLayer *layer,
     if (layer_class->key_release)
         return layer_class->key_release(layer, event);
     return FALSE;
+}
+
+void
+gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    g_signal_emit(layer, data_view_layer_signals[PLUGGED], 0);
+}
+
+void
+gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    g_signal_emit(layer, data_view_layer_signals[UNPLUGGED], 0);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
