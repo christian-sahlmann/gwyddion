@@ -28,6 +28,14 @@
  * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
  */
 
+/*
+ * Backported to Gtk+-2.2 and GLib-2.2 by Yeti in Feb 2004.
+ *
+ * _GtkColorButtonPrivate made a normal structure member and moved to the
+ * header file as there's no support for private in GLib-2.2.
+ * Renamed to GwyColorButton to avoid name clash with Gtk+-2.4.
+ */
+
 #ifndef __GWY_COLOR_BUTTON_H__
 #define __GWY_COLOR_BUTTON_H__
 
@@ -35,8 +43,6 @@
 #include <gtk/gtkbutton.h>
 
 G_BEGIN_DECLS
-
-#define P_(x) x
 
 /* The GtkColorSelectionButton widget is a simple color picker in a button.
  * The button displays a sample of the currently selected color.  When

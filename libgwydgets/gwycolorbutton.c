@@ -59,6 +59,8 @@
 
 #define GWY_COLOR_BUTTON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GTK_TYPE_COLOR_BUTTON, GwyColorButtonPrivate))
 
+#define P_(x) x
+
 /* Properties */
 enum
 {
@@ -434,13 +436,13 @@ gwy_color_button_state_changed (GtkWidget   *widget,
 }
 
 static void
-gwy_color_button_drag_data_received (GtkWidget        *widget,
-				     GdkDragContext   *context,
-				     gint              x,
-				     gint              y,
+gwy_color_button_drag_data_received (G_GNUC_UNUSED GtkWidget        *widget,
+				     G_GNUC_UNUSED GdkDragContext   *context,
+				     G_GNUC_UNUSED gint              x,
+				     G_GNUC_UNUSED gint              y,
 				     GtkSelectionData *selection_data,
-				     guint             info,
-				     guint32           time,
+				     G_GNUC_UNUSED guint             info,
+				     G_GNUC_UNUSED guint32           time,
 				     GwyColorButton   *color_button)
 {
   guint16 *dropped;
@@ -500,7 +502,7 @@ set_color_icon (GdkDragContext *context,
 }
 
 static void
-gwy_color_button_drag_begin (GtkWidget      *widget,
+gwy_color_button_drag_begin (G_GNUC_UNUSED GtkWidget      *widget,
 			     GdkDragContext *context,
 			     gpointer        data)
 {
@@ -510,11 +512,11 @@ gwy_color_button_drag_begin (GtkWidget      *widget,
 }
 
 static void
-gwy_color_button_drag_data_get (GtkWidget        *widget,
-				GdkDragContext   *context,
+gwy_color_button_drag_data_get (G_GNUC_UNUSED GtkWidget        *widget,
+				G_GNUC_UNUSED GdkDragContext   *context,
 				GtkSelectionData *selection_data,
-				guint             info,
-				guint             time,
+				G_GNUC_UNUSED guint             info,
+				G_GNUC_UNUSED guint             time,
 				GwyColorButton   *color_button)
 {
   guint16 dropped[4];
@@ -654,7 +656,7 @@ gwy_color_button_new_with_color (GdkColor *color)
 }
 
 static void
-dialog_ok_clicked (GtkWidget *widget,
+dialog_ok_clicked (G_GNUC_UNUSED GtkWidget *widget,
 		   gpointer   data)
 {
   GwyColorButton *color_button = GWY_COLOR_BUTTON (data);
@@ -682,7 +684,7 @@ dialog_ok_clicked (GtkWidget *widget,
 }
 
 static gboolean
-dialog_destroy (GtkWidget *widget,
+dialog_destroy (G_GNUC_UNUSED GtkWidget *widget,
 		gpointer   data)
 {
   GwyColorButton *color_button = GWY_COLOR_BUTTON (data);
@@ -693,7 +695,7 @@ dialog_destroy (GtkWidget *widget,
 }
 
 static void
-dialog_cancel_clicked (GtkWidget *widget,
+dialog_cancel_clicked (G_GNUC_UNUSED GtkWidget *widget,
 		       gpointer   data)
 {
   GwyColorButton *color_button = GWY_COLOR_BUTTON (data);
