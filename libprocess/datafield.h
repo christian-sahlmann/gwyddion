@@ -70,6 +70,13 @@ typedef enum {
     GWY_COMP_FINISHED     = 2
 } GwyComputationStateType;
 
+typedef enum {
+    GWY_FRACTAL_PARTITIONING  = 0,
+    GWY_FRACTAL_CUBECOUNTING  = 1,
+    GWY_FRACTAL_TRIANGULATION = 2,
+    GWY_FRACTAL_PSDF          = 3
+} GwyFractalType;
+
 typedef struct {
     GwyWatershedStateType state;
     gint internal_i;
@@ -79,6 +86,7 @@ typedef struct {
     gint fraction;
     GString *description;
 } GwyWatershedStatus;
+
 
 struct _GwyDataField {
     GObject parent_instance;
