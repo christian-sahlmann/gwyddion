@@ -375,7 +375,8 @@ gwy_graph_model_serialize(GObject *obj,
     before_obj = buffer->len;
 
     gmodel = GWY_GRAPH_MODEL(obj);
-    gwy_graph_model_save_graph(gmodel, gmodel->graph);
+    if (gmodel->graph)
+        gwy_graph_model_save_graph(gmodel, gmodel->graph);
     /* Global data, serialized as a fake subobject GwyGraphModel-graph */
     {
         GwySerializeSpec spec[] = {
