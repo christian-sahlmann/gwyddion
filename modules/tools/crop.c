@@ -89,7 +89,7 @@ crop_do(void)
     x1 = gwy_data_field_rtoj(dfield, x1) + 1;
     y1 = gwy_data_field_rtoi(dfield, y1) + 1;
     gwy_data_field_resize(dfield, y0, x0, y1, x1);
-    data_window = gwy_app_create_data_window(data);
+    data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
     gwy_data_view_update(GWY_DATA_VIEW(select_layer->parent));
     gwy_debug("%s: %d %d", __FUNCTION__,
