@@ -27,12 +27,12 @@
 
 #define GWY_3D_LABEL_TYPE_NAME "Gwy3DLabel"
 
-#define GWY_PSPEC(type, id, spec) \
+#define GWY_GET_PSPEC(type, id, spec) \
     G_PARAM_SPEC_##spec(g_object_class_find_property \
                             (G_OBJECT_CLASS(g_type_class_peek \
                                                     (GWY_TYPE_##type)), id))
 
-#define GEOM_PSPEC(id) GWY_PSPEC(3D_LABEL, id, DOUBLE)
+#define GEOM_PSPEC(id) GWY_GET_PSPEC(3D_LABEL, id, DOUBLE)
 
 enum {
     PROP_0,
@@ -57,6 +57,8 @@ static GObject*    gwy_3d_label_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
 static GObject*    gwy_3d_label_duplicate_real    (GObject *object);
+static void        gwy_3d_label_clone_real        (GObject *source,
+                                                   GObject *copy);
 static void        gwy_3d_label_set_property      (GObject *object,
                                                    guint prop_id,
                                                    const GValue *value,
@@ -128,6 +130,7 @@ gwy_3d_label_serializable_init(GwySerializableIface *iface)
     iface->serialize = gwy_3d_label_serialize;
     iface->deserialize = gwy_3d_label_deserialize;
     iface->duplicate = gwy_3d_label_duplicate_real;
+    iface->clone = gwy_3d_label_clone_real;
 }
 
 static void
@@ -352,15 +355,36 @@ gwy_3d_label_duplicate_real(GObject *object)
     g_return_val_if_fail(GWY_IS_3D_LABEL(object), NULL);
     label = GWY_3D_LABEL(object);
     duplicate = gwy_3d_label_new(label->default_text);
-    g_object_freeze_notify(G_OBJECT(label));
-    duplicate->fixed_size = label->fixed_size;
-    gtk_adjustment_set_value(duplicate->delta_x, label->delta_x->value);
-    gtk_adjustment_set_value(duplicate->delta_y, label->delta_y->value);
-    gtk_adjustment_set_value(duplicate->size, label->size->value);
-    gwy_3d_label_set_text(duplicate, label->text->str);
-    g_object_thaw_notify(G_OBJECT(label));
+    gwy_serializable_clone(G_OBJECT(label), G_OBJECT(duplicate));
 
     return (GObject*)duplicate;
+}
+
+static void
+gwy_3d_label_clone_real(GObject *source,
+                        GObject *copy)
+{
+    Gwy3DLabel *label, *clone;
+
+    g_return_if_fail(GWY_IS_3D_LABEL(source));
+    g_return_if_fail(GWY_IS_3D_LABEL(copy));
+
+    label = GWY_3D_LABEL(source);
+    clone = GWY_3D_LABEL(copy);
+
+    if (strcmp(label->default_text, clone->default_text)) {
+        g_warning("Trying to change construction-only property by cloning");
+        g_free(clone->default_text);
+        clone->default_text = g_strdup(label->default_text);
+    }
+
+    g_object_freeze_notify(G_OBJECT(label));
+    gwy_3d_label_set_fixed_size(clone, label->fixed_size);
+    gtk_adjustment_set_value(clone->delta_x, label->delta_x->value);
+    gtk_adjustment_set_value(clone->delta_y, label->delta_y->value);
+    gtk_adjustment_set_value(clone->size, label->size->value);
+    gwy_3d_label_set_text(clone, label->text->str);
+    g_object_thaw_notify(G_OBJECT(label));
 }
 
 static void
@@ -519,6 +543,9 @@ gwy_3d_label_set_text(Gwy3DLabel *label,
                       const gchar *text)
 {
     g_return_if_fail(GWY_IS_3D_LABEL(label));
+    if (!strcmp(text, label->text->str))
+        return;
+
     g_string_assign(label->text, text);
     g_signal_emit_by_name(label, "value_changed");
 }
@@ -658,7 +685,11 @@ gwy_3d_label_set_fixed_size(Gwy3DLabel *label,
                             gboolean fixed_size)
 {
     g_return_if_fail(GWY_IS_3D_LABEL(label));
-    label->fixed_size = !!fixed_size;
+    fixed_size = !!fixed_size;
+    if (label->fixed_size == fixed_size)
+        return;
+
+    label->fixed_size = fixed_size;
     g_object_notify(G_OBJECT(label), "fixed_size");
 }
 
