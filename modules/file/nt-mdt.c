@@ -36,6 +36,8 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 
+#include "get.h"
+
 #define MAGIC "\x01\xb0\x93\xff"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
@@ -587,40 +589,6 @@ add_metadata(MDTFile *mdtfile,
     HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
 
     g_string_free(s, TRUE);
-}
-
-static inline gsize
-get_WORD(const guchar **p)
-{
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8);
-    *p += 2;
-    return z;
-}
-
-static inline gsize
-get_DWORD(const guchar **p)
-{
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8)
-              + ((gsize)(*p)[2] << 16) + ((gsize)(*p)[3] << 24);
-    *p += 4;
-    return z;
-}
-
-static inline gfloat
-get_FLOAT(const guchar **p)
-{
-    union { guchar pp[4]; float f; } z;
-
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    memcpy(z.pp, *p, sizeof(float));
-#else
-    z.pp[0] = (*p)[3];
-    z.pp[1] = (*p)[2];
-    z.pp[2] = (*p)[1];
-    z.pp[3] = (*p)[0];
-#endif
-    *p += sizeof(float);
-    return z.f;
 }
 
 static void

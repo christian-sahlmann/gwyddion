@@ -34,6 +34,8 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 
+#include "get.h"
+
 #define MAGIC "SIS&STB  SIScan"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
@@ -738,44 +740,6 @@ add_metadata(SISFile *sisfile,
                                         sis_signal_sources,
                                         G_N_ELEMENTS(sis_signal_sources)));
     gwy_container_set_string_by_name(data, "/meta/Signal source", value);
-}
-
-static inline gsize
-get_WORD(const guchar **p)
-{
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8);
-    *p += 2;
-    return z;
-}
-
-static inline gsize
-get_DWORD(const guchar **p)
-{
-    gsize z = (gsize)(*p)[0] + ((gsize)(*p)[1] << 8)
-              + ((gsize)(*p)[2] << 16) + ((gsize)(*p)[3] << 24);
-    *p += 4;
-    return z;
-}
-
-static inline gdouble
-get_DOUBLE(const guchar **p)
-{
-    union { guchar pp[8]; double d; } z;
-
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    memcpy(z.pp, *p, sizeof(double));
-#else
-    z.pp[0] = (*p)[7];
-    z.pp[1] = (*p)[6];
-    z.pp[2] = (*p)[5];
-    z.pp[3] = (*p)[4];
-    z.pp[4] = (*p)[3];
-    z.pp[5] = (*p)[2];
-    z.pp[6] = (*p)[1];
-    z.pp[7] = (*p)[0];
-#endif
-    *p += sizeof(double);
-    return z.d;
 }
 
 /* FIXME: what a mess. And in reality, the files look different than the
