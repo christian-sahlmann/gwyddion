@@ -238,8 +238,7 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 
-	images=$(HTML_IMAGES) ;    	      \
-	for i in $$images ; do		      \
+	for i in $(HTML_IMAGES) ; do		      \
 	  cp $(srcdir)/$$i $(distdir)/html ;  \
 	done
 

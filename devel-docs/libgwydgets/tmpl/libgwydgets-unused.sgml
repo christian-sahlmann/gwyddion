@@ -62,13 +62,6 @@ gwymodulemenus
 </para>
 
 
-<!-- ##### MACRO GWY_STOCK_GRAINS ##### -->
-<para>
-The "Grains" stock icon.
-<inlinegraphic fileref="gwy_grains-24.png" format="PNG"></inlinegraphic>
-</para>
-
-
 <!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
 <para>
 

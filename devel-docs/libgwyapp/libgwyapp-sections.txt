@@ -28,6 +28,7 @@ gwy_app_clean_up_data
 
 <SECTION>
 <FILE>unitool</FILE>
+GWY_UNITOOL_RESPONSE_UNSELECT
 GwyUnitoolSlots
 GwyUnitoolUnits
 GwyUnitoolState
@@ -63,6 +64,7 @@ gwy_app_settings_get_config_filename
 
 <SECTION>
 <FILE>menu</FILE>
+GwyMenuSensFlags
 GwyMenuSensitiveData
 gwy_app_menu_create_xtns_menu
 gwy_app_menu_create_proc_menu

@@ -78,6 +78,14 @@ The "Fast-Fourier-Transform" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAINS ##### -->
+<para>
+The "Grains" stock icon.
+<inlinegraphic fileref="gwy_grains-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GRAPH ##### -->
 <para>
 The "Graph" stock icon.

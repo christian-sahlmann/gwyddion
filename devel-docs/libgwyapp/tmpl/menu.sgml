@@ -14,6 +14,19 @@ menu
 
 </para>
 
+<!-- ##### ENUM GwyMenuSensFlags ##### -->
+<para>
+
+</para>
+
+@GWY_MENU_FLAG_DATA: 
+@GWY_MENU_FLAG_UNDO: 
+@GWY_MENU_FLAG_REDO: 
+@GWY_MENU_FLAG_GRAPH: 
+@GWY_MENU_FLAG_LAST_PROC: 
+@GWY_MENU_FLAG_LAST_GRAPH: 
+@GWY_MENU_FLAG_MASK: 
+
 <!-- ##### STRUCT GwyMenuSensitiveData ##### -->
 <para>
 
@@ -110,8 +123,10 @@ menu
 </para>
 
 @item: 
-@sens: 
+@flags: 
 @state: 
+<!-- # Unused Parameters # -->
+@sens: 
 
 
 <!-- ##### FUNCTION gwy_app_menu_set_recent_files_menu ##### -->
