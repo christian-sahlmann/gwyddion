@@ -2935,7 +2935,7 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
                               GwyFitLineType fit_type, gboolean exclude, GtkOrientation orientation)
 {
 
-    gint i, xres, yres;
+    gint i, xres, yres, n;
     gdouble coefs[4];
     GwyDataLine *hlp;
     gwy_debug("");
@@ -2943,6 +2943,28 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
     xres = data_field->xres;
     yres = data_field->yres;
     hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
+
+    switch(fit_type){
+        case (GWY_FIT_POLY_0):
+        n = 0;
+        break;
+        
+        case (GWY_FIT_POLY_1):
+        n=1;
+        break;
+
+        case (GWY_FIT_POLY_2):
+        n=2;
+        break;
+
+        case (GWY_FIT_POLY_3):
+        n=3;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
  
     if (orientation == GTK_ORIENTATION_HORIZONTAL)
     {
