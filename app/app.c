@@ -480,12 +480,18 @@ gwy_app_tool_use_cb(const gchar *toolname,
 
     if (current_tool && (!toolname || strcmp(current_tool, toolname)))
         gwy_tool_func_use(current_tool, NULL, GWY_TOOL_SWITCH_TOOL);
-    current_tool = toolname;
     if (toolname) {
         data_window = gwy_app_data_window_get_current();
-        if (data_window)
-            gwy_tool_func_use(current_tool, data_window, GWY_TOOL_SWITCH_TOOL);
+        if (data_window) {
+            if (gwy_tool_func_use(toolname, data_window, GWY_TOOL_SWITCH_TOOL))
+                current_tool = toolname;
+            else
+                gwy_tool_func_use(current_tool, data_window,
+                                  GWY_TOOL_SWITCH_TOOL);
+        }
     }
+    else
+        current_tool = toolname;
 }
 
 void

@@ -50,8 +50,10 @@ static void gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
  * the hard work of changing the layer, connecting or disconnecting callbacks,
  * and showing or hiding the dialog; making all tools using it to behave
  * more-or-less consistently.
+ *
+ * Returns: Whether the tool switch succeeded. Currently always %TRUE.
  **/
-void
+gboolean
 gwy_unitool_use(GwyUnitoolState *state,
                 GwyDataWindow *data_window,
                 GwyToolSwitchEvent reason)
@@ -61,20 +63,20 @@ gwy_unitool_use(GwyUnitoolState *state,
     GwyDataView *data_view;
 
     gwy_debug("%p", data_window);
-    g_return_if_fail(state);
+    g_return_val_if_fail(state, FALSE);
 
     if (!data_window) {
         gwy_unitool_dialog_abandon(state);
-        return;
+        return TRUE;
     }
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), FALSE);
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == state->layer) {
         g_assert(state->data_window == data_window);
         if (reason == GWY_TOOL_SWITCH_TOOL)
             gwy_unitool_dialog_set_visible(state, TRUE);
-        return;
+        return TRUE;
     }
 
     /* disconnect existing handlers */
@@ -90,7 +92,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     }
     else {
         state->layer = GWY_VECTOR_LAYER(g_object_new(slot->layer_type, NULL));
-        g_assert(state->layer);
+        g_return_val_if_fail(state->layer, FALSE);
         if (slot->layer_setup)
             slot->layer_setup(state);
         gwy_data_view_set_top_layer(data_view, state->layer);
@@ -132,6 +134,8 @@ gwy_unitool_use(GwyUnitoolState *state,
 
     if (state->is_visible)
         gwy_unitool_selection_updated_cb(state);
+
+    return TRUE;
 }
 
 /***** Callbacks *************************************************************/

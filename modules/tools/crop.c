@@ -40,7 +40,7 @@ typedef struct {
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
-static void       use              (GwyDataWindow *data_window,
+static gboolean     use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static void       layer_setup      (GwyUnitoolState *state);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
@@ -77,7 +77,6 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static const gchar *layer_name = "GwyLayerSelect";
     static GwyToolFuncInfo crop_func_info = {
         "crop",
         "gwy_crop",
@@ -86,29 +85,29 @@ module_register(const gchar *name)
         &use,
     };
 
-    func_slots.layer_type = g_type_from_name(layer_name);
-    if (!func_slots.layer_type) {
-        g_warning("Layer type `%s' not available", layer_name);
-        return FALSE;
-    }
-
     gwy_tool_func_register(name, &crop_func_info);
 
     return TRUE;
 }
 
-static void
+static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
+    static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
+        func_slots.layer_type = g_type_from_name(layer_name);
+        if (!func_slots.layer_type) {
+            g_warning("Layer type `%s' not available", layer_name);
+            return FALSE;
+        }
         state = g_new0(GwyUnitoolState, 1);
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
-    gwy_unitool_use(state, data_window, reason);
+    return gwy_unitool_use(state, data_window, reason);
 }
 
 static void

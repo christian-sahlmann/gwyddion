@@ -95,8 +95,11 @@ _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname))
  * @event: The tool change event.
  *
  * Sets a tool for a data window.
+ *
+ * Returns: Whether the tool switch succeeded.  Under normal circumstances
+ *          it always return %TRUE.
  **/
-void
+gboolean
 gwy_tool_func_use(const guchar *name,
                   GwyDataWindow *data_window,
                   GwyToolSwitchEvent event)
@@ -104,10 +107,12 @@ gwy_tool_func_use(const guchar *name,
     GwyToolFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(tool_funcs, name);
-    g_return_if_fail(func_info);
-    g_return_if_fail(func_info->use);
-    g_return_if_fail(!data_window || GWY_IS_DATA_WINDOW(data_window));
-    func_info->use(data_window, event);
+    g_return_val_if_fail(func_info, FALSE);
+    g_return_val_if_fail(func_info->use, FALSE);
+    g_return_val_if_fail(!data_window || GWY_IS_DATA_WINDOW(data_window),
+                         FALSE);
+
+    return func_info->use(data_window, event);
 }
 
 /**
@@ -210,6 +215,9 @@ gwy_tool_func_remove(const gchar *name)
  * This function is called to set a tool for a data window, either when
  * the user changes the active tool or switches to another window; the
  * detailed event is given in event.
+ *
+ * Returns: Whether the tool switch succeeded.  Under normal circumstances
+ *          it should always return %TRUE.
  **/
 
 /**

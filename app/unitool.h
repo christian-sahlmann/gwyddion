@@ -69,7 +69,7 @@ struct _GwyUnitoolSlots {
     void (*response)(GwyUnitoolState *state, gint response);
 };
 
-void         gwy_unitool_use                     (GwyUnitoolState *state,
+gboolean     gwy_unitool_use                     (GwyUnitoolState *state,
                                                   GwyDataWindow *data_window,
                                                   GwyToolSwitchEvent reason);
 /* helpers */

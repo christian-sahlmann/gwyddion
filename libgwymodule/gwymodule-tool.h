@@ -35,8 +35,8 @@ typedef enum {
 
 typedef struct _GwyToolFuncInfo GwyToolFuncInfo;
 
-typedef void (*GwyToolUseFunc)(GwyDataWindow *data_window,
-                               GwyToolSwitchEvent event);
+typedef gboolean (*GwyToolUseFunc)(GwyDataWindow *data_window,
+                                   GwyToolSwitchEvent event);
 
 struct _GwyToolFuncInfo {
     const gchar *name;
@@ -48,7 +48,7 @@ struct _GwyToolFuncInfo {
 
 gboolean     gwy_tool_func_register      (const gchar *modname,
                                           GwyToolFuncInfo *func_info);
-void         gwy_tool_func_use           (const guchar *name,
+gboolean     gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
                                           GwyToolSwitchEvent event);
 GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,

@@ -37,7 +37,7 @@ typedef struct {
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
-static void       use              (GwyDataWindow *data_window,
+static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
 static void       dialog_update    (GwyUnitoolState *state);
@@ -86,7 +86,7 @@ module_register(const gchar *name)
     return TRUE;
 }
 
-static void
+static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
@@ -98,7 +98,7 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
-    gwy_unitool_use(state, data_window, reason);
+    return gwy_unitool_use(state, data_window, reason);
 }
 
 static GtkWidget*
