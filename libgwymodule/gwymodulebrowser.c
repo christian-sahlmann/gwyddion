@@ -135,7 +135,7 @@ gwy_module_browser_cell_renderer(GtkTreeViewColumn *column,
                                  GtkTreeIter *piter,
                                  gpointer data)
 {
-    GwyModuleInfoInternal *iinfo;
+    _GwyModuleInfoInternal *iinfo;
     GwyModuleInfo *mod_info;
     gchar *s;
     gulong id;

@@ -35,7 +35,6 @@ extern "C" {
     _GWY_MODULE_QUERY(void) { return &mod_info; }
 
 typedef struct _GwyModuleInfo GwyModuleInfo;
-typedef struct _GwyModuleInfoInternal GwyModuleInfoInternal;
 
 typedef gboolean       (*GwyModuleRegisterFunc) (const gchar *name);
 typedef GwyModuleInfo* (*GwyModuleQueryFunc)    (void);
@@ -51,17 +50,17 @@ struct _GwyModuleInfo {
     const gchar *date;
 };
 
-struct _GwyModuleInfoInternal {
+typedef struct {
     GwyModuleInfo *mod_info;
     gchar *file;
     gboolean loaded;
-};
+} _GwyModuleInfoInternal;
 
-void                   gwy_modules_init            (void);
-void                   gwy_module_register_modules (const gchar **paths);
-GwyModuleInfoInternal* gwy_module_get_module_info  (const gchar *name);
-void                   gwy_module_foreach          (GHFunc function,
-                                                    gpointer data);
+void                    gwy_modules_init            (void);
+void                    gwy_module_register_modules (const gchar **paths);
+_GwyModuleInfoInternal* gwy_module_get_module_info  (const gchar *name);
+void                    gwy_module_foreach          (GHFunc function,
+                                                     gpointer data);
 
 #ifdef __cplusplus
 }

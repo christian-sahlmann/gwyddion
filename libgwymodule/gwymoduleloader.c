@@ -102,7 +102,7 @@ gwy_module_register_modules(const gchar **paths)
  *
  * Returns: The internal module info.
  **/
-GwyModuleInfoInternal*
+_GwyModuleInfoInternal*
 gwy_module_get_module_info(const gchar *name)
 {
     g_assert(modules_initialized);
@@ -142,7 +142,7 @@ gwy_load_modules_in_dir(GDir *gdir,
     while ((filename = g_dir_read_name(gdir))) {
         GModule *mod;
         gboolean ok;
-        GwyModuleInfoInternal *iinfo;
+        _GwyModuleInfoInternal *iinfo;
         GwyModuleInfo *mod_info;
         GwyModuleQueryFunc query;
 
@@ -209,7 +209,7 @@ gwy_load_modules_in_dir(GDir *gdir,
         }
 
         if (ok) {
-            iinfo = g_new(GwyModuleInfoInternal, 1);
+            iinfo = g_new(_GwyModuleInfoInternal, 1);
             iinfo->mod_info = mod_info;
             iinfo->file = g_strdup(filename);
             iinfo->loaded = TRUE;

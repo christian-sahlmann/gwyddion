@@ -52,7 +52,7 @@ gboolean
 gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
-    GwyModuleInfoInternal *iinfo;
+    _GwyModuleInfoInternal *iinfo;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, menu path = %s, run = %d, func = %p",

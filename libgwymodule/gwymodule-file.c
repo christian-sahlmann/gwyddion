@@ -62,7 +62,7 @@ gboolean
 gwy_file_func_register(const gchar *modname,
                        GwyFileFuncInfo *func_info)
 {
-    GwyModuleInfoInternal *iinfo;
+    _GwyModuleInfoInternal *iinfo;
 
     gwy_debug("%s", __FUNCTION__);
     gwy_debug("name = %s, file_desc = %s, detect = %p, load = %p, save = %p",
