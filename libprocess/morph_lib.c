@@ -633,6 +633,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     gdouble fraction;
 
     gint count = 0;          /* counts places where tip estimate is improved */
+    gint sumcount = 0;
 
     open = iopen(image, im_xsiz, im_ysiz, tip0, tip_xsiz, tip_ysiz);
     if (!open)
@@ -644,7 +645,10 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                 if (itip_estimate_point(ixp, jxp, image,
                                         im_xsiz, im_ysiz, tip_xsiz, tip_ysiz,
                                         xc, yc, tip0, thresh, use_edges))
+                {
                     count++;
+                    sumcount++;
+                }
                 if (set_fraction) {
                     fraction = (gdouble)(jxp-(tip_ysiz - 1 - yc))
                                /(gdouble)((im_ysiz - 1 - yc)
@@ -659,7 +663,7 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
     }
     _gwy_morph_lib_ifreematrix(open, im_ysiz);
 
-    return count;
+    return sumcount;
 }
 
 /**
@@ -694,7 +698,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     gint arraysize;  /* size of array allocated to store list of image maxima */
     gint *x, *y;     /* point to coordinates of image maxima */
     gint iter = 0;
-    gint count;
+    gint count, sumcount;
     gint delta;      /* defines what is meant by near neighborhood for purposes
                         of point selection. */
     gint maxcount = 20;
@@ -742,6 +746,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
         set_fraction(0.0);
 
     /* Now refine tip at these coordinates recursively until no more change */
+    sumcount = 0;
     do {
         count = 0;
         iter++;
@@ -757,7 +762,10 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
             if (itip_estimate_point(x[i], y[i], image, im_xsiz, im_ysiz,
                                     tip_xsiz, tip_ysiz, xc, yc, tip0, thresh,
                                     use_edges))
+            {
                 count++;
+                sumcount++;
+            }
             if (set_fraction && !set_fraction((gdouble)i/(gdouble)n))
             {
                 g_free(x);
@@ -783,7 +791,7 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     g_string_free(str, TRUE);
     g_free(x);
     g_free(y);
-    return count;
+    return sumcount;
 }
 
 /*
