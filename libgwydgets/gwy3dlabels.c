@@ -163,7 +163,7 @@ static void
 gwy_3d_labels_finalize(GObject *object)
 {
     Gwy3DLabels *labels = (Gwy3DLabels*)object;
-    int i;
+    guint i;
 
     gwy_debug("");
 
@@ -189,16 +189,18 @@ gwy_3d_label_description_new(gchar * text, const gchar* key,
                              gint delta_x, gint delta_y,
                              gfloat rot, gint size, Gwy3DLabels * owner)
 {
-    Gwy3DLabelDescription * desc = g_new(Gwy3DLabelDescription, 1);
-    gchar * buffer = g_new(gchar, strlen(key) + 20);
+    Gwy3DLabelDescription * desc;
+    gchar * buffer;
     gchar * end;
     gchar * ttext;
 
     gwy_debug(" ");
+    desc = g_new(Gwy3DLabelDescription, 1);
     gwy_3d_label_description_init(desc);
     desc->owner = owner;
     desc->base_key = g_strdup(key);
 
+    buffer = g_new(gchar, strlen(key) + 20);
     strcpy(buffer, key);
     end = buffer + strlen(buffer);
     desc->default_text = g_strdup(text);
@@ -263,7 +265,7 @@ gwy_3d_label_description_create_adjustment(Gwy3DLabels *gwy3dlabels,
  **/
 Gwy3DLabels * gwy_3d_labels_new(GwyContainer * container)
 {
-    gint i;
+    guint i;
     Gwy3DLabels * labels = g_object_new(GWY_TYPE_3D_LABELS, NULL);
 
     gwy_debug(" ");
@@ -396,8 +398,8 @@ gchar * gwy_3d_labels_format_text(Gwy3DLabels * labels, Gwy3DLabelName label_nam
 {
 #   define LABEL_BUFFER_SIZE 500
     gchar buffer[LABEL_BUFFER_SIZE];
-    char *i, *j, *k = NULL;
-    int p;
+    gchar *i, *j, *k = NULL;
+    guint p;
     gchar * lb;
 
     lb = gwy_3d_labels_get_description(labels, label_name)->text;
