@@ -32,7 +32,9 @@
 static gboolean    module_register            (const gchar *name);
 static gboolean    line_correct_modus         (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    line_correct_remove_scars          (GwyContainer *data,
+static gboolean    line_correct_mark_scars    (GwyContainer *data,
+                                               GwyRunType run);
+static gboolean    line_correct_remove_scars  (GwyContainer *data,
                                                GwyRunType run);
 
 /* The module info. */
@@ -40,9 +42,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "line_correct",
-    "Simple automatic line correction.",
+    "Line defect correction, mostly experimental algorithms.",
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -56,20 +58,28 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo line_correct_modus_func_info = {
         "line_correct_modus",
-        "/_Correct Data/_Modus Line Correction (Exp!)",
+        "/_Correct Data/_Modus Line Correction",
         (GwyProcessFunc)&line_correct_modus,
+        LINECORR_RUN_MODES,
+        0,
+    };
+    static GwyProcessFuncInfo line_correct_mark_scars_func_info = {
+        "line_correct_mark_scars",
+        "/_Correct Data/M_ark Scars",
+        (GwyProcessFunc)&line_correct_mark_scars,
         LINECORR_RUN_MODES,
         0,
     };
     static GwyProcessFuncInfo line_correct_remove_scars_func_info = {
         "line_correct_remove_scars",
-        "/_Correct Data/Remove _Scars (Exp!)",
+        "/_Correct Data/Remove _Scars",
         (GwyProcessFunc)&line_correct_remove_scars,
         LINECORR_RUN_MODES,
         0,
     };
 
     gwy_process_func_register(name, &line_correct_modus_func_info);
+    gwy_process_func_register(name, &line_correct_mark_scars_func_info);
     gwy_process_func_register(name, &line_correct_remove_scars_func_info);
 
     return TRUE;
@@ -110,19 +120,39 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
     return TRUE;
 }
 
+/* FIXME: should be parameters */
+static const gdouble threshold_high = 0.666;
+static const gdouble threshold_low = 0.25;
+static const gint min_len = 12;
+static const gint max_width = 4;
+
+static gboolean
+line_correct_mark_scars(GwyContainer *data, GwyRunType run)
+{
+    GObject *dfield, *mask;
+
+    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    dfield = gwy_container_get_object_by_name(data, "/0/data");
+
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
+        mask = gwy_serializable_duplicate(dfield);
+        gwy_container_set_object_by_name(data, "/0/mask", mask);
+        g_object_unref(mask);
+    }
+    gwy_data_field_mark_scars(GWY_DATA_FIELD(dfield), GWY_DATA_FIELD(mask),
+                              threshold_high, threshold_low,
+                              min_len, max_width);
+
+    return TRUE;
+}
+
 static gboolean
 line_correct_remove_scars(GwyContainer *data, GwyRunType run)
 {
-    /* FIXME: should be parameters */
-    static const gdouble threshold_high = 0.666;
-    static const gdouble threshold_low = 0.25;
-    static const gint min_len = 8;
-
-    GwyDataField *dfield;
-    GObject *mask;
+    GwyDataField *dfield, *mask;
     gint xres, yres, i, j, k;
-    gdouble rms;
-    gdouble *d, *m, *row;
+    gdouble *d, *m;
 
     g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -130,75 +160,36 @@ line_correct_remove_scars(GwyContainer *data, GwyRunType run)
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
 
-    rms = 0.0;
-    for (i = 1; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            gdouble z = d[i*xres + j] - d[(i - 1)*xres + j];
-
-            rms += z*z;
-        }
-    }
-    rms = sqrt(rms/(xres*yres));
-    if (rms == 0.0)
-        return FALSE;
-
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
-    mask = gwy_data_field_new(xres, yres,
-                              gwy_data_field_get_xreal(dfield),
-                              gwy_data_field_get_yreal(dfield),
-                              TRUE);
-    m = gwy_data_field_get_data(GWY_DATA_FIELD(mask));
+    mask = GWY_DATA_FIELD(gwy_data_field_new(xres, yres,
+                                             gwy_data_field_get_xreal(dfield),
+                                             gwy_data_field_get_yreal(dfield),
+                                             FALSE));
+    gwy_data_field_mark_scars(dfield, mask,
+                              threshold_high, threshold_low,
+                              min_len, max_width);
+    m = gwy_data_field_get_data(mask);
 
-    /* preliminary mark */
+    /* interpolate */
     for (i = 1; i < yres-1; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble prev = d[(i - 1)*xres + j];
-            gdouble next = d[(i + 1)*xres + j];
-            gdouble z = d[i*xres + j];
+            if (m[i*xres + j] > 0.0) {
+                gdouble first, last;
+                gint width;
 
-            z -= MAX(prev, next);
-            m[i*xres + j] = z/rms;
-        }
-    }
-    /* expand high threshold to neighbouring low threshold */
-    for (i = 1; i < yres-1; i++) {
-        row = m + i*xres;
-        for (j = 1; j < xres; j++) {
-            if (row[j] >= threshold_low && row[j-1] >= threshold_high)
-                row[j] = threshold_high;
-        }
-        for (j = xres-1; j > 0; j--) {
-            if (row[j-1] >= threshold_low && row[j] >= threshold_high)
-                row[j-1] = threshold_high;
-        }
-    }
-    /* kill too short segments, clamping mask along the way */
-    for (i = 1; i < yres-1; i++) {
-        row = m + i*xres;
-        k = 0;
-        for (j = 0; j < xres; j++) {
-            if (row[j] >= threshold_high) {
-                row[j] = 1.0;
-                k++;
-            }
-            else if (k && k < min_len) {
+                first = d[(i - 1)*xres + j];
+                for (k = 1; m[(i + k)*xres + j] > 0.0; k++)
+                    ;
+                last = d[(i + k)*xres + j];
+                width = k + 1;
                 while (k) {
-                    row[j-k] = 0.0;
+                    gdouble x = (gdouble)k/width;
+
+                    d[(i + k - 1)*xres + j] = x*last + (1.0 - x)*first;
+                    m[(i + k - 1)*xres + j] = 0.0;
                     k--;
                 }
-                row[j] = 0.0;
             }
-            else
-                row[j] = 0.0;
-        }
-    }
-    /* interpolate
-     * FIXME: if it somehow happend two lines touch vertically, bad things
-     * happen */
-    for (i = 1; i < yres-1; i++) {
-        for (j = 0; j < xres; j++) {
-            if (m[i*xres + j] > 0.0)
-                d[i*xres + j] = (d[(i - 1)*xres + j] + d[(i + 1)*xres + j])/2;
         }
     }
 
