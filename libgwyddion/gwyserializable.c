@@ -348,7 +348,7 @@ gwy_byteswapped_append(guint8 *source,
  *
  * Compute type size based on type letter.
  *
- * Returns: Size in bytes.
+ * Returns: Size in bytes, 0 for arrays and other nonatomic types.
  **/
 static inline gsize G_GNUC_CONST
 ctype_size(guchar ctype)
@@ -423,7 +423,7 @@ gwy_serialize_pack(GByteArray *buffer,
                    ...)
 {
     va_list ap;
-    gsize nargs, i;
+    gsize nargs, i, j;
 
     g_return_val_if_fail(templ, buffer);
     gwy_debug("templ: %s", templ);
@@ -557,7 +557,7 @@ gwy_serialize_pack(GByteArray *buffer,
                 guchar *value = va_arg(ap, guchar*);
 
                 if (!value) {
-                    g_warning("representing NULL string as an empty string");
+                    g_warning("representing NULL as an empty string");
                     g_byte_array_append(buffer, "", 1);
                 }
                 else
@@ -565,14 +565,53 @@ gwy_serialize_pack(GByteArray *buffer,
             }
             break;
 
+            case 'S': {
+                gint32 alen = va_arg(ap, gsize);
+                gint32 lealen = GINT32_TO_LE(alen);
+                guchar **value = va_arg(ap, guchar**);
+
+                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
+                for (j = 0; j < alen; j++) {
+                    guchar *s = value[j];
+
+                    if (!value) {
+                        g_warning("representing NULL as an empty string");
+                        g_byte_array_append(buffer, "", 1);
+                    }
+                    else
+                        g_byte_array_append(buffer, s, strlen(s) + 1);
+                }
+            }
+
             case 'o': {
                 GObject *value = va_arg(ap, GObject*);
 
-                g_assert(value);
-                g_assert(GWY_IS_SERIALIZABLE(value));
-                gwy_serializable_serialize(value, buffer);
+                if (G_UNLIKELY(!value))
+                    g_critical("Object cannot be NULL");
+                else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
+                    g_critical("Object must be serializable");
+                else
+                    gwy_serializable_serialize(value, buffer);
             }
             break;
+
+            case 'O': {
+                gint32 alen = va_arg(ap, gsize);
+                gint32 lealen = GINT32_TO_LE(alen);
+                GObject **value = va_arg(ap, GObject**);
+
+                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
+                for (j = 0; j < alen; j++) {
+                    GObject *obj = value[j];
+
+                    if (G_UNLIKELY(!obj))
+                        g_critical("Object cannot be NULL");
+                    else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(obj)))
+                        g_critical("Object must be serializable");
+                    else
+                        gwy_serializable_serialize(obj, buffer);
+                }
+            }
 
             default:
             g_error("wrong spec `%c' in templ `%s'", templ[i], templ);
@@ -630,7 +669,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
     const GwySerializeSpec *sp;
     guint32 leasize, asize = 0;
     guint8 *arr = NULL;
-    gsize i;
+    gsize i, j;
 
     g_return_val_if_fail(spec, buffer);
     gwy_debug("nspec = %d, buffer = %p", nspec, buffer);
@@ -738,7 +777,7 @@ gwy_serialize_pack_struct(GByteArray *buffer,
                 guchar *value = *(guchar**)sp->value;
 
                 if (!value) {
-                    g_warning("representing NULL string as an empty string");
+                    g_warning("representing NULL as an empty string");
                     g_byte_array_append(buffer, "", 1);
                 }
                 else
@@ -746,12 +785,43 @@ gwy_serialize_pack_struct(GByteArray *buffer,
             }
             break;
 
+            case 'S': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
+                for (j = 0; j < asize; j++) {
+                    guchar *value = ((guchar**)arr)[j];
+
+                    if (!value) {
+                        g_warning("representing NULL as an empty string");
+                        g_byte_array_append(buffer, "", 1);
+                    }
+                    else
+                        g_byte_array_append(buffer, value, strlen(value) + 1);
+                }
+            }
+
             case 'o': {
                 GObject *value = *(GObject**)sp->value;
 
-                g_assert(value);
-                g_assert(GWY_IS_SERIALIZABLE(value));
-                gwy_serializable_serialize(value, buffer);
+                if (G_UNLIKELY(!value))
+                    g_critical("Object cannot be NULL");
+                else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
+                    g_critical("Object must be serializable");
+                else
+                    gwy_serializable_serialize(value, buffer);
+            }
+
+            case 'O': {
+                g_byte_array_append(buffer, (guint8*)&leasize, sizeof(gint32));
+                for (j = 0; j < asize; j++) {
+                    GObject *value = ((GObject**)arr)[j];
+
+                    if (G_UNLIKELY(!value))
+                        g_critical("Object cannot be NULL");
+                    else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
+                        g_critical("Object must be serializable");
+                    else
+                        gwy_serializable_serialize(value, buffer);
+                }
             }
             break;
 
@@ -777,7 +847,7 @@ gwy_serialize_skip_type(const guchar *buffer,
     static const gchar *no_string_msg =
         "Expected a string, trying to skip to end of [sub]buffer.";
 
-    gsize tsize;
+    gsize tsize, alen;
 
     if (*position >= size) {
         g_critical("Trying to skip `%c' after end of buffer?!", ctype);
@@ -790,9 +860,9 @@ gwy_serialize_skip_type(const guchar *buffer,
         if (*position + tsize > size) {
             g_warning(too_short_msg, tsize, ctype, size - *position);
             *position = size;
+            return;
         }
-        else
-            *position += tsize;
+        *position += tsize;
         return;
     }
 
@@ -810,6 +880,7 @@ gwy_serialize_skip_type(const guchar *buffer,
 
     /* objects */
     if (ctype == 'o') {
+        /* an object consists of its name... */
         tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
         if (!tsize) {
             g_warning(no_string_msg);
@@ -817,40 +888,102 @@ gwy_serialize_skip_type(const guchar *buffer,
             return;
         }
         *position += tsize;
+        /* ...and length of data... */
         if (*position + ctype_size('i') > size) {
             g_warning(too_short_msg, ctype_size('i'), 'i', size - *position);
             *position = size;
             return;
         }
         tsize = gwy_serialize_unpack_int32(buffer, size, position);
+        /* ...and the data */
         if (*position + tsize > size) {
             g_warning(too_short_msg, tsize, ctype, size - *position);
             *position = size;
+            return;
         }
-        else
-            *position += tsize;
+        *position += tsize;
         return;
     }
 
-    /* arrays */
+    /* string arrays */
+    if (ctype == 'S') {
+        if (*position + ctype_size('i') > size) {
+            g_warning(too_short_msg, ctype_size('i'), 'i', size - *position);
+            *position = size;
+            return;
+        }
+        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        while (alen) {
+            tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
+            if (!tsize) {
+                g_warning(no_string_msg);
+                *position = size;
+                return;
+            }
+            *position += tsize;
+            alen--;
+        }
+        return;
+    }
+
+    /* object arrays */
+    if (ctype == 'O') {
+        if (*position + ctype_size('i') > size) {
+            g_warning(too_short_msg, ctype_size('i'), 'i', size - *position);
+            *position = size;
+            return;
+        }
+        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        while (alen) {
+            /* an object consists of its name... */
+            tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
+            if (!tsize) {
+                g_warning(no_string_msg);
+                *position = size;
+                return;
+            }
+            *position += tsize;
+            /* ...and length of data... */
+            if (*position + ctype_size('i') > size) {
+                g_warning(too_short_msg,
+                          ctype_size('i'), 'i', size - *position);
+                *position = size;
+                return;
+            }
+            tsize = gwy_serialize_unpack_int32(buffer, size, position);
+            /* ...and the data */
+            if (*position + tsize > size) {
+                g_warning(too_short_msg, tsize, ctype, size - *position);
+                *position = size;
+                return;
+            }
+            *position += tsize;
+            alen--;
+        }
+        return;
+    }
+
+    /* arrays of simple types */
     if (g_ascii_isupper(ctype)) {
         ctype = g_ascii_tolower(ctype);
+        tsize = ctype_size(ctype);
         if (*position + ctype_size('i') > size) {
             g_warning(too_short_msg, ctype_size('i'), 'i', size - *position);
             *position = size;
             return;
         }
-        tsize = gwy_serialize_unpack_int32(buffer, size, position);
-        if (*position + tsize > size) {
-            g_warning(too_short_msg, tsize, ctype, size - *position);
+        alen = gwy_serialize_unpack_int32(buffer, size, position);
+        if (*position + alen*tsize > size) {
+            g_warning(too_short_msg, alen*tsize, ctype, size - *position);
             *position = size;
+            return;
         }
-        else
-            position += tsize*ctype_size(ctype);
+        *position += alen*tsize;
         return;
     }
 
-    g_assert_not_reached();
+    g_critical("Trying to skip uknown type `%c'", ctype);
+    *position = size;
 }
 
 
@@ -996,7 +1129,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
             case 'C':
             g_free(*(guchar**)p);
             *(guchar**)p = gwy_serialize_unpack_char_array(buffer, size,
-                                                            &position, a);
+                                                           &position, a);
             if (!*(gpointer**)p)
                 return FALSE;
             break;
@@ -1023,6 +1156,14 @@ gwy_serialize_unpack_struct(const guchar *buffer,
                                                               &position, a);
             if (!*(gpointer**)p)
                 return FALSE;
+            break;
+
+            case 'S':
+            /* TODO */
+            break;
+
+            case 'O':
+            /* TODO */
             break;
 
             default:

@@ -67,12 +67,13 @@ GObject*    gwy_serializable_deserialize       (const guchar *buffer,
                                                 gsize *position);
 GObject*    gwy_serializable_duplicate         (GObject *object);
 
-void        gwy_serialize_store_int32          (GByteArray *buffer,
-                                                gsize position,
-                                                guint32 value);
+#ifndef GWY_DISABLE_DEPRECATED
 GByteArray* gwy_serialize_pack                 (GByteArray *buffer,
                                                 const gchar *templ,
                                                 ...);
+void        gwy_serialize_store_int32          (GByteArray *buffer,
+                                                gsize position,
+                                                guint32 value);
 gboolean    gwy_serialize_unpack_boolean       (const guchar *buffer,
                                                 gsize size,
                                                 gsize *position);
@@ -111,6 +112,7 @@ gsize       gwy_serialize_check_string         (const guchar *buffer,
                                                 gsize size,
                                                 gsize position,
                                                 const guchar *compare_to);
+#endif
 GByteArray* gwy_serialize_pack_struct          (GByteArray *buffer,
                                                 gsize nspec,
                                                 const GwySerializeSpec *spec);
