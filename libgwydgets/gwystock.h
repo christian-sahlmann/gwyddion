@@ -44,6 +44,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_GRAPH_MEASURE   "gwy_graph_measure"
 #define GWY_STOCK_GRAPH_PALETTE   "gwy_graph_palette"
 #define GWY_STOCK_GRAPH_POINTER   "gwy_graph_pointer"
+#define GWY_STOCK_GRAPH_RULER     "gwy_graph_ruler"
 #define GWY_STOCK_GRAPH_ZOOM_FIT  "gwy_graph_zoom_fit"
 #define GWY_STOCK_GRAPH_ZOOM_IN   "gwy_graph_zoom_in"
 #define GWY_STOCK_GRAPH_ZOOM_OUT  "gwy_graph_zoom_out"
