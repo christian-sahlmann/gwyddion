@@ -7,7 +7,10 @@
 - It is possible to change mask color in Watershed.
 - Bug preventing new windows from appearing in Data Artithmetic in some
   window managers was fixed.
-
+- Creating mask by correlation enabled. This can be useful for searching for
+  specific patterns on the surface, for example on interferometric grids.
+- Cross-correlation enabled. Matching between two slightly different images
+  of the same feature can be found. 
 
 1.0
 - Data can be exported to bitmaps with rules, units, scale, etc.

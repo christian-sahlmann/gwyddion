@@ -28,6 +28,7 @@
 #include <app/wait.h>
 #include "file.h"
 #include "settings.h"
+#include <math.h>
 
 #define THUMBNAIL_SIZE 16
 
@@ -37,6 +38,7 @@ typedef enum {
     GWY_CROSCOR_Y,
     GWY_CROSCOR_DIR,
     GWY_CROSCOR_ANG,
+    GWY_CROSCOR_SCORE,
     GWY_CROSCOR_LAST
 } GwyCroscorResult;
 
@@ -50,6 +52,8 @@ typedef struct {
     gdouble rot_neg;
     GwyDataWindow *win1;
     GwyDataWindow *win2;
+    gboolean mask;
+    gdouble thresh;
 } GwyCroscorArgs;
 
 typedef struct {
@@ -61,6 +65,8 @@ typedef struct {
     GtkObject *window_area_y;
     GtkObject *rotation_neg;
     GtkObject *rotation_pos;
+    GtkWidget *mask;
+    GtkObject *threshold;
 } GwyCroscorControls;
 
 static void       gwy_data_croscor_load_args         (GwyContainer *settings,
@@ -89,12 +95,11 @@ static const GwyEnum results[] = {
     { "Absolute",       GWY_CROSCOR_ABS },
     { "X distance",  GWY_CROSCOR_X },
     { "Y distance",  GWY_CROSCOR_Y },
-    { "Direction",    GWY_CROSCOR_DIR },
-    { "Rotation",   GWY_CROSCOR_ANG },
+    { "Angle",    GWY_CROSCOR_DIR },
 };
 
 static const GwyCroscorArgs gwy_data_croscor_defaults = {
-    GWY_CROSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL
+    GWY_CROSCOR_ABS, 10, 10, 25, 25, 0.0, 0.0, NULL, NULL, 1, 0.95
 };
 
 void
@@ -163,7 +168,7 @@ gwy_app_data_croscor(void)
 static GtkWidget*
 gwy_data_croscor_window_construct(GwyCroscorArgs *args, GwyCroscorControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *entry, *label;
+    GtkWidget *dialog, *table, *omenu, *entry, *label, *spin;
     gchar *text;
 
     dialog = gtk_dialog_new_with_buttons(_("Data Croscorrelation"),
@@ -206,9 +211,9 @@ gwy_data_croscor_window_construct(GwyCroscorArgs *args, GwyCroscorControls *cont
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 2, 3);
 
-    controls->search_area_x = gtk_adjustment_new(args->search_x, 0.0, 100.0, 0.1, 5, 0);
+    controls->search_area_x = gtk_adjustment_new(args->search_x, 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 3, _("width"), _(""), controls->search_area_x);
-    controls->search_area_y = gtk_adjustment_new(args->search_y, 0.0, 100.0, 0.1, 5, 0);
+    controls->search_area_y = gtk_adjustment_new(args->search_y, 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 4, _("height"), _(""), controls->search_area_y);
     
     /*window size*/
@@ -216,30 +221,34 @@ gwy_data_croscor_window_construct(GwyCroscorArgs *args, GwyCroscorControls *cont
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 5, 6);
 
-    controls->window_area_x = gtk_adjustment_new(args->window_x, 0.0, 100.0, 0.1, 5, 0);
+    controls->window_area_x = gtk_adjustment_new(args->window_x, 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 6, _("width"), _(""), controls->window_area_x);
-    controls->window_area_y = gtk_adjustment_new(args->window_y, 0.0, 100.0, 0.1, 5, 0);
-    gwy_table_attach_spinbutton(table, 7, _("height"), _(""), controls->window_area_x);
-    
-    /*allowed rotation*/
-/*    label = gtk_label_new_with_mnemonic(_("R_otation (min, max) [deg]"));
+    controls->window_area_y = gtk_adjustment_new(args->window_y, 0.0, 100.0, 1, 5, 0);
+    gwy_table_attach_spinbutton(table, 7, _("height"), _(""), controls->window_area_y);
+   
+    /*do mask of thresholds*/
+/*    label = gtk_label_new_with_mnemonic(_("_Low score results mask"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 8, 9);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 8, 9);*/
+    controls->mask = gtk_check_button_new_with_label("add");
+    gwy_table_attach_row(table, 8, _("_Low score results mask:"), "", controls->mask);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mask), args->mask);
 
-    controls->rotation_neg =gtk_adjustment_new(args->rot_neg, 0.0, 100.0, 0.1, 5, 0);
-    controls->rotation_pos =gtk_adjustment_new(args->rot_pos, 0.0, 100.0, 0.1, 5, 0);
-*/  
+    controls->threshold = gtk_adjustment_new(args->thresh, -1, 1, 0.005, 0.05, 0);
+    spin = gwy_table_attach_spinbutton(table, 9, _("threshold value"), _(""), controls->threshold);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    
     /***** Result *****/
     label = gtk_label_new_with_mnemonic(_("_Result:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 8, 9);
+    gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 10, 11);
 
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
                                    "operation",
                                    G_CALLBACK(gwy_data_croscor_operation_cb),
                                    args,
                                    args->result);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 8, 9);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 10, 11);
 
     gtk_widget_show_all(dialog);
 
@@ -338,6 +347,27 @@ gwy_data_croscor_data_cb(GtkWidget *item)
     *pp = p;
 }
 
+void
+abs_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
+{
+    gint i;
+
+    for (i=0; i<(dfieldx->xres*dfieldx->yres); i++)
+    {
+        dfieldx->data[i] = sqrt(dfieldx->data[i]*dfieldx->data[i] + dfieldy->data[i]*dfieldy->data[i]);
+    }
+}
+
+void
+dir_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
+{
+    gint i;
+
+    for (i=0; i<(dfieldx->xres*dfieldx->yres); i++)
+    {
+        dfieldx->data[i] = atan2(dfieldy->data[i], dfieldx->data[i]);
+    }
+}
 
 static gboolean
 gwy_data_croscor_do(GwyCroscorArgs *args,
@@ -346,7 +376,7 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
 {
     GtkWidget *dialog, *data_window;
     GwyContainer *data;
-    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2;
+    GwyDataField *dfieldx, *dfieldy, *dfield1, *dfield2, *score;
     GwyDataWindow *operand1, *operand2;
     gint iteration = 0;
     GwyComputationStateType state;
@@ -371,12 +401,15 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     args->search_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->search_area_y));
     args->window_x = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_x));
     args->window_y = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_y));
+    args->thresh = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
+    args->mask = gtk_toggle_button_get_active(GTK_CHECK_BUTTON(controls->mask));
     
     
     data = gwy_data_window_get_data(operand1);
     dfield1 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    
 
     if (dfield1->xres != dfield2->xres || dfield1->yres != dfield2->yres)   
     {
@@ -395,6 +428,7 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                              "/0/data"));
     dfieldy = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
+    score = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfieldx)));
 
     /*compute crosscorelation*/
 
@@ -405,21 +439,41 @@ gwy_data_croscor_do(GwyCroscorArgs *args,
     do
     {
         gwy_data_field_croscorrelate_iteration(dfield1, dfield2, dfieldx, dfieldy, 
-                                 args->search_x, args->search_y,
-                                 args->window_x, args->window_y, 
-                                 &state, &iteration);
+                                               score,
+                                               args->search_x, args->search_y,
+                                               args->window_x, args->window_y, 
+                                               &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
         if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield1->xres - (args->search_x)/2))) return FALSE;
         
     } while (state != GWY_COMP_FINISHED);
     gwy_app_wait_finish();
     /*set right output*/
-    
+   
+    if (args->result == GWY_CROSCOR_ABS)
+    {
+        abs_field(dfieldx, dfieldy);
+    }
+    else if (args->result == GWY_CROSCOR_Y)
+    {
+        gwy_data_field_copy(dfieldy, dfieldx);
+    }
+    else if (args->result == GWY_CROSCOR_DIR)
+    {
+        dir_field(dfieldx, dfieldy);
+    } 
+
+    /*create score mask if requested*/
+    if (args->mask)
+    {
+        gwy_data_field_threshold(score, args->thresh, 1, 0);  
+        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(score));
+    }
     
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
-    
+    if (!args->mask) g_object_unref(score);
     g_object_unref(dfieldy);
     return TRUE;
 }

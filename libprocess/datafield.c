@@ -3363,12 +3363,12 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
  **/
 void
 gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field2, 
-                             GwyDataField *x_dist, GwyDataField *y_dist,
+                             GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
                              gint search_width, gint search_height, gint window_width, gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax; 
-    gdouble cormax, score;
+    gdouble cormax, lscore;
    
     if (data_field1 == NULL || data_field2 == NULL) 
     {
@@ -3387,6 +3387,8 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
 
     gwy_data_field_fill(x_dist, 0);
     gwy_data_field_fill(y_dist, 0);
+    gwy_data_field_fill(score, 0);
+    
     /*iterate over all the points*/
     for (i=(search_width/2); i<(xres-search_height/2); i++)
     {
@@ -3399,22 +3401,22 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
             {
                 for (n = (j-search_height); n<j; n++)
                 {
-                    score = gwy_data_field_get_correlation_score(data_field1, data_field2,
+                    lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
                                                            (i-search_width/2), (j-search_height/2),
                                                            m, n, m+search_width, n+search_height);
                     
                     /*add a little to score at exactly same point - to prevent problems on flat data*/
-                    if (m==(i-search_width/2) && n==(j-search_height/2)) score *= 1.01;
+                    if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.0001;
                         
-                    if (cormax<score) 
+                    if (cormax<lscore) 
                     {
-                        cormax = score; 
+                        cormax = lscore; 
                         imax = m+search_width/2;  
                         jmax = n+search_height/2;
                     }
-                    
                 }
             }
+            score->data[i + xres*j] = cormax;
             x_dist->data[i + xres*j] = imax - i;
             y_dist->data[i + xres*j] = jmax - j;
         }
@@ -3443,13 +3445,13 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
  **/
 void
 gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *data_field2, 
-                             GwyDataField *x_dist, GwyDataField *y_dist,
+                             GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
                              gint search_width, gint search_height, gint window_width, gint window_height,
                              GwyComputationStateType *state, gint *iteration)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax; 
-    gdouble cormax, score;
+    gdouble cormax, lscore;
    
     if (data_field1 == NULL || data_field2 == NULL) 
     {
@@ -3470,6 +3472,7 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
     {
         gwy_data_field_fill(x_dist, 0);
         gwy_data_field_fill(y_dist, 0);
+        gwy_data_field_fill(score, 0);
         *state = GWY_COMP_ITERATE;
         *iteration = 0;
     }
@@ -3487,22 +3490,23 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
             {
                 for (n = (j-search_height); n<j; n++)
                 {
-                    score = gwy_data_field_get_correlation_score(data_field1, data_field2,
+                    lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
                                                            (i-search_width/2), (j-search_height/2),
                                                            m, n, m+search_width, n+search_height);
                     
                     /*add a little to score at exactly same point - to prevent problems on flat data*/
-                    if (m==(i-search_width/2) && n==(j-search_height/2)) score *= 1.01;
+                    if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.01;
                         
-                    if (cormax<score) 
+                    if (cormax<lscore) 
                     {
-                        cormax = score; 
+                        cormax = lscore; 
                         imax = m+search_width/2;  
                         jmax = n+search_height/2;
                     }
                     
                 }
             }
+            score->data[i + xres*j] = cormax;
             x_dist->data[i + xres*j] = imax - i;
             y_dist->data[i + xres*j] = jmax - j;
             
