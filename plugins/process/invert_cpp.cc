@@ -16,19 +16,19 @@ using namespace std;
 static bool action_register(char *args[]);
 static bool action_run     (char *args[]);
 
-static PluginAction actions[] = {
+static PluginAction plugin_actions[] = {
     /* name               arguments action */
     { string("register"), 0,        &action_register },
     { string("run"),      2,        &action_run      },
 };
 
-#define NACTIONS sizeof(actions)/sizeof(actions[0])
+#define NACTIONS sizeof(plugin_actions)/sizeof(plugin_actions[0])
 
 int
 main(int argc, char *argv[])
 {
     /* Just let plug-in helper decide what to do */
-    return !run_action(NACTIONS, actions, argc, argv);
+    return !run_action(NACTIONS, plugin_actions, argc, argv);
 }
 
 /* "register" action: print registration information to standard output */

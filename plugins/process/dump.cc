@@ -153,11 +153,11 @@ Dump::read(const char *filename)
                 dfield.yreal = strtod(iter->second.c_str(), NULL);
                 meta.erase(iter);
             }
-            if ((iter = meta.find(value.first + "/xyunits")) != meta.end()) {
+            if ((iter = meta.find(value.first + "/unit-xy")) != meta.end()) {
                 dfield.xyunits = iter->second;
                 meta.erase(iter);
             }
-            if ((iter = meta.find(value.first + "/zunits")) != meta.end()) {
+            if ((iter = meta.find(value.first + "/unit-z")) != meta.end()) {
                 dfield.zunits = iter->second;
                 meta.erase(iter);
             }

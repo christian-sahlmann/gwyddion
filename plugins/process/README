@@ -1,0 +1,55 @@
+This directory contains plug-in examples in various languages.  All source
+files here are in the public domain.
+
+All plug-ins implement the same simple Value Invert function for easy
+comparison and cross reference.  They all appear in
+    Data Proces -> Plug-Ins -> Test -> Value Invert (LANGUAGE_NAME)
+menu in Gwyddion.
+
+All also implement it the same way, if possible: a class/module/unit reading
+and writing plug-in proxy dump files is defined separately from the plug-in.
+This makes the plug-ins really simple and allows to reuse the module as is.
+
+For languages where it seemed useful, a plug-in helper function/method
+encapsulating the command line argument handling is defined too.
+
+C++
+    Note it doesn't resemble Gwyddion C implementation much, it's full of STL
+    stuff, a really different implementation.
+
+    Files:
+    dump.cc, dump.hh: Dump format implementation (a really simple class).
+    plugin-helper.hh: Plug-in helper simplifying command line processing.
+    invert_cpp.cc: The plug-in itself.
+
+Pascal
+    Uses Delphi dialect (namely for dynamic arrays), should be compilable
+    with FreePascal >= 1.9 and Delphi.
+
+    Files:
+    GwyddionDump.pas: Dump format and plug-in helper.
+    invert_pascal.pas: The plug-in itself.
+
+Perl
+    Files:
+    invert_perl.pl: The plug-in itself.
+
+    The dump format in implemented in Gwyddion::dump module in
+    ../../perl/Gwyddion/dump.pm, installed with Gwyddion by default.
+
+Python
+    Files:
+    invert_python.py: The plug-in itself.
+
+    The dump format in implemented in Gwyddion.dump module in
+    ../../python/Gwyddion/dump.py, installed with Gwyddion by default.
+
+
+Beside that, a one extraodrinary plug-in is present:
+
+yellow.sh
+    A shell plug-in demostrating a property of plug-in proxy: it remembers
+    EVERYTHING and only updates it with data obtained from the plug-in.
+    So this plug-in only writes a single line of metadata and does not
+    deal with the data itself at all.
+
