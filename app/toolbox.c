@@ -117,7 +117,7 @@ gwy_app_toolbox_create(void)
             | GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         0
     };
-    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *vmenubar;
+    GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
     GtkAccelGroup *accel_group;
     GList *list;
     GSList *labels = NULL, *l;
@@ -139,26 +139,26 @@ gwy_app_toolbox_create(void)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
 
-    vmenubar = gwy_vmenu_bar_new();
-    gtk_box_pack_start(GTK_BOX(vbox), vmenubar, FALSE, FALSE, 0);
+    container = gwy_vmenu_bar_new();
+    gtk_box_pack_start(GTK_BOX(vbox), container, FALSE, FALSE, 0);
 
-    menus = toolbox_add_menubar(vmenubar,
+    menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_file_menu(accel_group),
                                 _("_File"), menus);
-    menus = toolbox_add_menubar(vmenubar,
+    menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_edit_menu(accel_group),
                                 _("_Edit"), menus);
     menu = gwy_app_menu_create_proc_menu(accel_group);
     g_object_set_data(G_OBJECT(toolbox), "<proc>", menu);     /* XXX */
-    menus = toolbox_add_menubar(vmenubar, menu, _("_Data Process"), menus);
-    menus = toolbox_add_menubar(vmenubar,
+    menus = toolbox_add_menubar(container, menu, _("_Data Process"), menus);
+    menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_graph_menu(accel_group),
                                 _("_Graph"), menus);
-    menus = toolbox_add_menubar(vmenubar,
+    menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_meta_menu(accel_group),
                                 _("_Meta"), menus);
 
-    gwy_app_menu_set_sensitive_recursive(vmenubar, &sens_data_all);
+    gwy_app_menu_set_sensitive_recursive(container, &sens_data_all);
 
     /***************************************************************/
     label = gwy_app_toolbox_create_label(_("View"), "zoom");
