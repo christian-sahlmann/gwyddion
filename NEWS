@@ -1,4 +1,4 @@
-1.1cvs20040510
+1.1cvs20040513
 
 1.2
 Application:
@@ -8,6 +8,7 @@ Application:
   the binary dump should be automatic and smooth (however, backup).
 - Last Used processing function was differentiated to Repeat Last and Re-Show
   Last, with Ctrl-F and Ctrl-Shfit-F shortcuts.
+- Right click on data window brings a context menu (very simple now).
 
 Modules:
 - Unrotate (new): Automagically correct rotation in xy plane.
@@ -20,6 +21,7 @@ Modules:
 - Angle distribution: Optionally can use local plane fitting.
 - Rawfile: Does not forget presets and settings on Cancel and allow easily
   specify Tab as delimiter.
+- Crop: Properly crops masks and presentations.
 
 Library:
 - libgwyapp: Option menu of data windows.
