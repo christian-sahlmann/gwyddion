@@ -398,7 +398,7 @@ gwy_palette_recompute_samples(GwyPaletteDef *palette_def,
  * gwy_palette_sample:
  * @palette: palette to be sampled.
  * @size: Required sample size.
- * @oldsample: pointer to field to be filled.
+ * @oldsample: Pointer to array to be filled.
  *
  * Fills the GdkPixbuf-like field of RRGGBBAA integer values representing
  * the palette.
