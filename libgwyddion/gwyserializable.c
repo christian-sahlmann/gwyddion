@@ -27,12 +27,10 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
-/* TODO: make private in 2.0 */
-void gwy_serialize_skip_type(const guchar *buffer,
-                             gsize size,
-                             gsize *position,
-                             guchar ctype);
-
+static void        gwy_serialize_skip_type         (const guchar *buffer,
+                                                    gsize size,
+                                                    gsize *position,
+                                                    guchar ctype);;
 static void        gwy_serializable_base_init          (gpointer g_class);
 static GObject*    gwy_serializable_duplicate_hard_way (GObject *object);
 
@@ -967,7 +965,7 @@ gwy_deserialize_char(const guchar *buffer,
  *
  * On failure, skips to the end of buffer.
  **/
-void
+static void
 gwy_serialize_skip_type(const guchar *buffer,
                         gsize size,
                         gsize *position,
