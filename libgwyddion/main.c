@@ -39,6 +39,25 @@
         g_free(_t); \
     }
 
+#define linprint(x,e,s) \
+    { \
+        gsize _i; \
+        printf("%s-Message: %s [", G_LOG_DOMAIN, s); \
+        for (_i = 0; _i < G_N_ELEMENTS(e); _i++) \
+            printf("%s%g", _i == 0 ? "" : " ", x[_i]); \
+        printf("] == ["); \
+        for (_i = 0; _i < G_N_ELEMENTS(e); _i++) \
+            printf("%s%g", _i == 0 ? "" : " ", e[_i]); \
+        printf("]\n"); \
+    }
+
+#define linsolv(m,b,x,e) \
+    x = gwy_math_lin_solve(G_N_ELEMENTS(b), m, b, NULL); \
+    linprint(x,e,"ro") \
+    gwy_math_lin_solve_rewrite(G_N_ELEMENTS(b), m, b, x); \
+    linprint(x,e,"rw") \
+    g_free(x)
+
 void
 foo_callback(gpointer obj, gpointer data __attribute__((unused)))
 {
@@ -98,6 +117,7 @@ main(void)
     GObject *obj;
     GQuark q;
     gulong id;
+    gdouble *x;
 
     g_type_init();
 
@@ -285,29 +305,21 @@ main(void)
     {
         gdouble m[] = { 1, 2, 3, 4 };
         gdouble b[] = { 5, 6 };
-        gdouble *x;
-
-        x = gwy_math_lin_solve(2, m, b, NULL);
-        g_message("x: [%f %f] == [-4, 9/2]", x[0], x[1]);
-        g_free(x);
+        gdouble e[] = { -4, 4.5 };
+        linsolv(m, b, x, e);
     }
     {
         gdouble m[] = { 1, 2, 3, 5, 6, 7, 1, 2, 4 };
         gdouble b[] = { 4, 8, 8 };
-        gdouble *x;
+        gdouble e[] = { 2, -5, 4 };
+        linsolv(m, b, x, e);
 
-        x = gwy_math_lin_solve(3, m, b, NULL);
-        g_message("x: [%f %f %f] == [2, -5, 4]", x[0], x[1], x[2]);
-        g_free(x);
     }
     {
         gdouble m[] = { 1, 1.000001, 0.999999, 1 };
         gdouble b[] = { 1, 1 };
-        gdouble *x;
-
-        x = gwy_math_lin_solve(2, m, b, NULL);
-        g_message("x: [%g %g] == [-1e6, 1e6]", x[0], x[1]);
-        g_free(x);
+        gdouble e[] = { -1e6, 1e6 };
+        linsolv(m, b, x, e);
     }
 
     return 0;

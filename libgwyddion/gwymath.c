@@ -194,7 +194,7 @@ gwy_math_find_nearest_point(gdouble x, gdouble y,
  * @result: Where the result should be stored.  May be %NULL to allocate
  *          a fresh array for the result.
  *
- * Solve a system of linear equations.
+ * Solve a regular system of linear equations.
  *
  * Returns: The solution (@result if it wasn't %NULL), may be %NULL if the
  *          matrix is singular.
@@ -205,6 +205,41 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
                    gdouble *result)
 {
     gdouble *m, *r;
+
+    g_return_val_if_fail(n > 0, NULL);
+    g_return_val_if_fail(matrix && rhs, NULL);
+
+    m = (gdouble*)g_memdup(matrix, n*n*sizeof(gdouble));
+    r = (gdouble*)g_memdup(rhs, n*sizeof(gdouble));
+    result = gwy_math_lin_solve_rewrite(n, m, r, result);
+    g_free(r);
+    g_free(m);
+
+    return result;
+}
+
+/**
+ * gwy_math_lin_solve_rewrite:
+ * @n: The size of the system.
+ * @matrix: The matrix of the system (@n times @n), ordered by row, then
+ *          column.
+ * @rhs: The right hand side of the sytem.
+ * @result: Where the result should be stored.  May be %NULL to allocate
+ *          a fresh array for the result.
+ *
+ * Solve a regular system of linear equations.
+ *
+ * This is a memory-conservative version of gwy_math_lin_solve() overwriting
+ * @matrix and @rhs with intermediate results.
+ *
+ * Returns: The solution (@result if it wasn't %NULL), may be %NULL if the
+ *          matrix is singular.
+ **/
+gdouble*
+gwy_math_lin_solve_rewrite(gint n, gdouble *matrix,
+                           gdouble *rhs,
+                           gdouble *result)
+{
     gint *perm;
     gint i, j, jj;
 
@@ -212,12 +247,10 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
     g_return_val_if_fail(matrix && rhs, NULL);
 
     perm = g_new(gint, n);
-    m = (gdouble*)g_memdup(matrix, n*n*sizeof(gdouble));
-    r = (gdouble*)g_memdup(rhs, n*sizeof(gdouble));
 
     /* elimination */
     for (i = 0; i < n; i++) {
-        gdouble *row = m + i*n;
+        gdouble *row = matrix + i*n;
         gdouble piv = 0;
         gint pivj = 0;
 
@@ -230,8 +263,6 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
         }
         if (piv == 0.0) {
             g_warning("Singluar matrix");
-            g_free(r);
-            g_free(m);
             g_free(perm);
             return NULL;
         }
@@ -240,14 +271,14 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
 
         /* substract */
         for (j = i+1; j < n; j++) {
-            gdouble *jrow = m + j*n;
+            gdouble *jrow = matrix + j*n;
             gdouble q = jrow[pivj]/piv;
 
             for (jj = 0; jj < n; jj++)
                 jrow[jj] -= q*row[jj];
 
             jrow[pivj] = 0.0;
-            r[j] -= q*r[i];
+            rhs[j] -= q*rhs[i];
         }
     }
 
@@ -255,16 +286,14 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
     if (!result)
         result = g_new(gdouble, n);
     for (i = n-1; i >= 0; i--) {
-        gdouble *row = m + i*n;
-        gdouble x = r[i];
+        gdouble *row = matrix + i*n;
+        gdouble x = rhs[i];
 
         for (j = n-1; j > i; j--)
             x -= result[perm[j]]*row[perm[j]];
 
         result[perm[i]] = x/row[perm[i]];
     }
-    g_free(r);
-    g_free(m);
     g_free(perm);
 
     return result;

@@ -47,6 +47,10 @@ gdouble*     gwy_math_lin_solve          (gint n,
                                           const gdouble *matrix,
                                           const gdouble *rhs,
                                           gdouble *result);
+gdouble*     gwy_math_lin_solve_rewrite  (gint n,
+                                          gdouble *matrix,
+                                          gdouble *rhs,
+                                          gdouble *result);
 
 #ifdef __cplusplus
 }
