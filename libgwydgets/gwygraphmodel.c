@@ -169,6 +169,7 @@ gwy_graph_model_new(GwyGraph *graph)
 
     gmodel->graph = graph;
     if (graph) {
+        g_assert(GWY_IS_GRAPH(graph));
         gmodel->graph_destroy_hid
             = g_signal_connect(graph, "destroy",
                                G_CALLBACK(gwy_graph_model_graph_destroyed),
@@ -407,41 +408,91 @@ gwy_graph_model_deserialize(const guchar *buffer,
                             gsize size,
                             gsize *position)
 {
-    /*
-    gdouble theta, phi;
-    GwySerializeSpec spec[] = {
-        { 'd', "theta", &theta, NULL },
-        { 'd', "phi", &phi, NULL },
-    };
-    */
+    GwyGraphModel *gmodel;
+    gsize mysize, pos;
+    gint i;
 
-    /*********************** unpack obj struct:
-    gsize mysize;
-    gboolean ok;
-
-    mysize = gwy_serialize_check_string(buffer, size, *position, object_name);
-    g_return_val_if_fail(mysize, FALSE);
+    mysize = gwy_serialize_check_string(buffer, size, *position,
+                                        GWY_GRAPH_MODEL_TYPE_NAME);
+    g_return_val_if_fail(mysize, NULL);
     *position += mysize;
-
     mysize = gwy_serialize_unpack_int32(buffer, size, position);
-    ok = gwy_serialize_unpack_struct(buffer + *position, mysize, nspec, spec);
+
+    /* Unpack the fake "GwyGraphModel-data" subobject */
+    pos = 0;
+    gmodel = (GwyGraphModel*)gwy_graph_model_new(NULL);
+    {
+        gchar *top_label, *bottom_label, *left_label, *right_label;
+        GwySerializeSpec spec[] = {
+            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
+            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
+            { 'o', "x_unit", &gmodel->x_unit, NULL },
+            { 'o', "y_unit", &gmodel->y_unit, NULL },
+            { 's', "top_label", &top_label, NULL },
+            { 's', "bottom_label", &bottom_label, NULL },
+            { 's', "left_label", &left_label, NULL },
+            { 's', "right_label", &right_label, NULL },
+            { 'd', "x_reqmin", &gmodel->x_reqmin, NULL },
+            { 'd', "y_reqmin", &gmodel->y_reqmin, NULL },
+            { 'd', "x_reqmax", &gmodel->x_reqmax, NULL },
+            { 'd', "y_reqmax", &gmodel->y_reqmax, NULL },
+            { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
+            { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
+                NULL },
+            { 'i', "ncurves", &gmodel->ncurves, NULL },
+            { 'i', "nautocurves", &gmodel->nautocurves, NULL },
+        };
+
+        top_label = bottom_label = left_label = right_label = NULL;
+        if (!gwy_serialize_unpack_object_struct(buffer + *position,
+                                                mysize, &pos,
+                                                GWY_GRAPH_MODEL_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec)) {
+            g_free(top_label);
+            g_free(bottom_label);
+            g_free(left_label);
+            g_free(right_label);
+            g_object_unref(gmodel);
+
+            *position += mysize;
+            return NULL;
+        }
+
+        if (top_label) {
+            g_string_assign(gmodel->top_label, top_label);
+            g_free(top_label);
+        }
+        if (bottom_label) {
+            g_string_assign(gmodel->bottom_label, bottom_label);
+            g_free(bottom_label);
+        }
+        if (left_label) {
+            g_string_assign(gmodel->left_label, left_label);
+            g_free(left_label);
+        }
+        if (right_label) {
+            g_string_assign(gmodel->right_label, right_label);
+            g_free(right_label);
+        }
+    }
+
+    /* Then unpack curves, they are real objects. */
+    gmodel->curves = g_new(GObject*, gmodel->ncurves);
+    for (i = 0; i < gmodel->ncurves; i++) {
+        gmodel->curves[i] = gwy_serializable_deserialize(buffer + *position,
+                                                         mysize, &pos);
+        if (!gmodel->curves[i]) {
+            gmodel->ncurves = i;    /* free only existing curves */
+            g_object_unref(gmodel);
+
+            *position += mysize;
+            return NULL;
+        }
+    }
+
     *position += mysize;
-
-    return ok;
-    ****************************/
-
-    gwy_debug("");
-    g_return_val_if_fail(buffer, NULL);
-
-    /* TODO
-    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
-                                            GWY_GRAPH_MODEL_TYPE_NAME,
-                                            G_N_ELEMENTS(spec), spec))
-        return NULL;
-
-    return (GObject*)gwy_graph_model_new(theta, phi);
-    */
-    return NULL;
+    return (GObject*)gmodel;
 }
 
 static GObject*
