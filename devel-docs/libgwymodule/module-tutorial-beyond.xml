@@ -74,7 +74,7 @@ module_register(const gchar *name)
   <refsect1>
     <title>Settings</title>
     <para>
-      The nice thing about Gwyddion module dialog boxes is that they show
+      The nice thing about <application>Gwyddion</application> module dialog boxes is that they show
       the same parameter values as when you last opened them, and they
       remember the settings even across sessions.  And you of course want
       this feature in your modules too.
@@ -86,7 +86,7 @@ module_register(const gchar *name)
     </para>
     <para>
       There is a one <link linkend="GwyContainer">GwyContainer</link> in
-      Gwyddion containing settings for all modules (and other creatures).
+      <application>Gwyddion</application> containing settings for all modules (and other creatures).
       The function
       <link linkend="gwy-app-settings-get">gwy_app_settings_get()</link>
       will bring it to you.  It is loaded on startup and saved
@@ -231,7 +231,7 @@ gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
           few restrictions on programs using it.
         </listitem>
         <listitem>
-          It is used by Gwyddion itself.  Any specialized Gwyddion widgets
+          It is used by <application>Gwyddion</application> itself.  Any specialized <application>Gwyddion</application> widgets
           you could make use of are Gtk+.  Using one graphical toolkit
           exclusively also means more unique look and feel and less
           linking problems.

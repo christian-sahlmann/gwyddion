@@ -11,14 +11,14 @@
   <refnamediv>
     <refname>A Minimal Module</refname>
     <refpurpose>
-      Dissection of a minimal Gwyddion data processing module.
+      Dissection of a minimal <application>Gwyddion</application> data processing module.
     </refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>A Minimal Module</title>
     <para>
-      A minimal Gwyddion data-processing module could look like this:
+      A minimal <application>Gwyddion</application> data-processing module could look like this:
     </para>
     <informalexample><programlisting><![CDATA[
 #include <libgwyddion/gwymacros.h>
@@ -77,9 +77,9 @@ my_invert_value(GwyContainer *data, GwyRunType run)
 ]]></programlisting></informalexample>
   <para>
     Now, we should be able to compile this code (see below),  make a dynamically linked library (*.so, *.dll, depending on
-    the operating system) and put it to your Gwyddion modules directory
+    the operating system) and put it to your <application>Gwyddion</application> modules directory
     (e. g. /lib/gwyddion/modules/process/, however depending on your actual installation and operating
-    system). After Gwyddion starts, the module is found and menu entry <emphasis>Test/Invert Value</emphasis>
+    system). After <application>Gwyddion</application> starts, the module is found and menu entry <emphasis>Test/Invert Value</emphasis>
     will appear in the main menu. Clicking on this menu item will invert the actual data.
     As this is the minimal module it even does not have graphical user interface to change parameters
     of data processing. However, for its purpose – data inversion – it is sufficient.
@@ -90,7 +90,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
   </para>
   </refsect1>
   <refsect1>
-    <title>Administrative</title>
+    <title>Boilerplate</title>
     <para>
       First of all, of course, some header files.
     </para>
@@ -137,7 +137,7 @@ my_invert_value(GwyContainer *data, GwyRunType run)
       <literal>GWY_RUN_NONINTERACTIVE</literal> is the right
       run mode for a noninteractive module like our example.
       <literal>GWY_RUN_WITH_DEFAULT</literal> is currently
-      unused in Gwyddion, but it's a good idea (and easy) to support it too.
+      unused in <application>Gwyddion</application>, but it's a good idea (and easy) to support it too.
     </para>
   </refsect1>
   <refsect1>
@@ -163,7 +163,7 @@ static gboolean    my_invert_value            (GwyContainer *data,
       Here the interesting part starts.  The
       <link linkend="GwyModuleInfo">GwyModuleInfo</link> structure contains
       overall information about the module, most of it is presented in
-      a more-or-less human-readable form Gwyddion in the module browser.
+      a more-or-less human-readable form <application>Gwyddion</application> in the module browser.
     </para>
     <informalexample><programlisting><![CDATA[
 static GwyModuleInfo module_info = {
@@ -188,7 +188,7 @@ static GwyModuleInfo module_info = {
       The third item (<literal>"value_invert"</literal>) is the module name.
       It will appear as Module in the browser.
       A module is uniquely identified by its name, so module name have to be
-      unique, Gwyddion refuses to load more modules of the same name. Otherwise
+      unique, <application>Gwyddion</application> refuses to load more modules of the same name. Otherwise
       it is a free-form string, though by convention, it is usually kept
       the same as file name of the module.
     </para>
@@ -220,10 +220,10 @@ static GwyModuleInfo module_info = {
   <refsect1>
     <title>The Module Query Function</title>
     <para>
-      A Gwyddion module is loaded in two stages.  First, it is queried,
-      the module responds with its module info, Gwyddion checks whether it
+      A <application>Gwyddion</application> module is loaded in two stages.  First, it is queried,
+      the module responds with its module info, <application>Gwyddion</application> checks whether it
       looks good (e.g., whether module ABI version matches). If it is OK,
-      Gwyddion continues with registration of particular module features.
+      <application>Gwyddion</application> continues with registration of particular module features.
     </para>
     <para>
       The query function should be always constructed using the
@@ -261,7 +261,7 @@ GWY_MODULE_QUERY(module_info)
       The registration itself is carried out by filling a function info
       structure and calling <function>gwy_*_func_register()</function> with
       the info.  Note the function info has to be persistent (static), because
-      Gwyddion doesn't make a copy of it.  It must not be freed or changed
+      <application>Gwyddion</application> doesn't make a copy of it.  It must not be freed or changed
       after the registration.
     </para>
     <informalexample><programlisting><![CDATA[
@@ -284,7 +284,7 @@ module_register(const gchar *name)
    <para>
      The registration function should always return <literal>TRUE</literal>.
      Returning <literal>FALSE</literal> means the registration failed, and
-     Gwyddion then tries to unregister all its already registered functions
+     <application>Gwyddion</application> then tries to unregister all its already registered functions
      and unload the module.  Normally there is hardly any reason why the
      registration could fail.
    </para>

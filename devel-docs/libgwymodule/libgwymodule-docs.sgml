@@ -19,18 +19,18 @@
 
   <chapter id="ModuleTutorial">
     <title>Gwyddion Module Tutorial</title>
-    <xi:include href="module-tutorial-overview.sgml"/>
-    <xi:include href="module-tutorial-minimal.sgml"/>
-    <xi:include href="module-tutorial-beyond.sgml"/>
-    <xi:include href="module-tutorial-install.sgml"/>
+    <xi:include href="module-tutorial-overview.xml"/>
+    <xi:include href="module-tutorial-minimal.xml"/>
+    <xi:include href="module-tutorial-beyond.xml"/>
+    <xi:include href="module-tutorial-install.xml"/>
   </chapter>
 
   <chapter id="PluginProxyReference">
     <title>Plug-in Proxy Reference</title>
-    <xi:include href="plugin-proxy-overview.sgml"/>
-    <xi:include href="plugin-proxy-process.sgml"/>
-    <xi:include href="plugin-proxy-file.sgml"/>
-    <xi:include href="plugin-proxy-dump.sgml"/>
-    <xi:include href="plugin-proxy-rgi.sgml"/>
+    <xi:include href="plugin-proxy-overview.xml"/>
+    <xi:include href="plugin-proxy-process.xml"/>
+    <xi:include href="plugin-proxy-file.xml"/>
+    <xi:include href="plugin-proxy-dump.xml"/>
+    <xi:include href="plugin-proxy-rgi.xml"/>
   </chapter>
 </book>

@@ -19,7 +19,7 @@
     <title>Overview</title>
     <para>
       The original and standard plug-in registration procedure consists of
-      querying (i.e., running) each plug-in by plug-in proxy on Gwyddion
+      querying (i.e., running) each plug-in by plug-in proxy on <application>Gwyddion</application>
       start-up.  The queried plug-in prints its registration information
       to standard output and plug-in proxy captures and parses it.
     </para>

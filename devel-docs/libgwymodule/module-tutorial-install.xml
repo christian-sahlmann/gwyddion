@@ -11,7 +11,7 @@
   <refnamediv>
     <refname>Gwyddion Module Installation</refname>
     <refpurpose>
-      Compilation, distribution and installation of Gwyddion modules
+      Compilation, distribution and installation of <application>Gwyddion</application> modules
     </refpurpose>
   </refnamediv>
 
@@ -23,7 +23,7 @@
       module how it copes with this issues.
     </para>
     <para>
-      Some highlights: On Unix systems, Gwyddion installs a pkg-config file
+      Some highlights: On Unix systems, <application>Gwyddion</application> installs a pkg-config file
       with meta-information about the particular installation, so you can use
       <command>pkg-config</command> to find compiler and linker options
       and module installation directories.  See pkg-config documentation
@@ -32,7 +32,7 @@
       <command>pkg-config --variable gwymoduledir gwyddion</command>.
     </para>
     <para>
-      On Win32 systems, Gwyddion installs a registry entry
+      On Win32 systems, <application>Gwyddion</application> installs a registry entry
       <literal>HKLM\Software\Gwyddion Development\1.0\Path</literal>
       containing the base directory, where development libraries and header
       files were installed.

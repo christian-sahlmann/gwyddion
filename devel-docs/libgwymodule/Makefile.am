@@ -46,15 +46,15 @@ HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files = \
-	module-tutorial-overview.sgml \
-	module-tutorial-minimal.sgml \
-	module-tutorial-beyond.sgml \
-	module-tutorial-install.sgml \
-	plugin-proxy-overview.sgml \
-	plugin-proxy-dump.sgml \
-	plugin-proxy-file.sgml \
-	plugin-proxy-process.sgml \
-	plugin-proxy-rgi.sgml
+	module-tutorial-overview.xml \
+	module-tutorial-minimal.xml \
+	module-tutorial-beyond.xml \
+	module-tutorial-install.xml \
+	plugin-proxy-overview.xml \
+	plugin-proxy-dump.xml \
+	plugin-proxy-file.xml \
+	plugin-proxy-process.xml \
+	plugin-proxy-rgi.xml
 
 # Other files to distribute.
 extra_files = makefile.msc

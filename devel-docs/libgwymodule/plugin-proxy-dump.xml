@@ -54,7 +54,7 @@
         <listitem>
           Metadata about the data.  They start with <literal>/meta/</literal>
           followed by an arbitrary key string.  Not used directly by
-          Gwyddion, but will appear in Metadata Browser.
+          <application>Gwyddion</application>, but will appear in Metadata Browser.
         </listitem>
         <listitem>
           Queer stuff (everything else).  It's best to ignore it.
@@ -144,7 +144,7 @@
   <refsect1>
     <title>Reference Implementations</title>
     <para>
-      A few sample dump format implementations are included in Gwyddion
+      A few sample dump format implementations are included in <application>Gwyddion</application>
       source distribution (see the directory
       <filename>plugins/file</filename> and the <filename>README</filename>
       there).
@@ -158,14 +158,14 @@
         <function>text_dump_import()</function> functions
         in <filename>modules/plugin-proxy.c</filename>.
         Note this file has a special licensing exception, you can
-        freely study it for the purpose of creation of Gwyddion plug-ins
+        freely study it for the purpose of creation of <application>Gwyddion</application> plug-ins
         without becoming `tainted'.
       </para>
     </sect2>
     <sect2>
       <title>C++</title>
       <para>
-        A sample C++ data-processing plug-in is included in Gwyddion
+        A sample C++ data-processing plug-in is included in <application>Gwyddion</application>
         distribution since version 1.4.
         It is divided to a simple class implementing dump file reading and
         writing (<filename>dump.cc</filename>, <filename>dump.hh</filename>)
@@ -177,7 +177,7 @@
       <title>Perl</title>
       <para>
         A Perl module Gwyddion::dump handling reading and writing dump files
-        is distributed as a part of Gwyddion since version 1.4.
+        is distributed as a part of <application>Gwyddion</application> since version 1.4.
         This module is in the public domain.
       </para>
       <para>
@@ -191,7 +191,7 @@
       <title>Python</title>
       <para>
         A Python module Gwyddion.dump handling reading and writing dump files
-        is distributed as a part of Gwyddion since version 1.4.
+        is distributed as a part of <application>Gwyddion</application> since version 1.4.
         This module is in the public domain.
       </para>
       <para>
@@ -204,7 +204,7 @@
     <sect2>
       <title>Pascal/Delphi</title>
       <para>
-        A sample Pascal/Delphi data-processing plug-in is included in Gwyddion
+        A sample Pascal/Delphi data-processing plug-in is included in <application>Gwyddion</application>
         distribution since version 1.4.
         The plug-in is implemented in the Delphi Pascal dialect, so it
         should work with FreePascal and Delphi.

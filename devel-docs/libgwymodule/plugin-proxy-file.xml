@@ -45,7 +45,7 @@
       and prefers to give chance to the plug-in whose file glob is the most
       specific if more than one match.  So while it is possible to register
       <filename>*.*</filename> the effect is quite the opposite of getting
-      all files Gwyddion tries to open or write.
+      all files <application>Gwyddion</application> tries to open or write.
     </para>
     <para>
       So the output of plugin <command>acme_v5</command> when run as

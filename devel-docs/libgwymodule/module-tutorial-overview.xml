@@ -11,19 +11,19 @@
   <refnamediv>
     <refname>Gwyddion Module Overview</refname>
     <refpurpose>
-      Overview of Gwyddion modules
+      Overview of <application>Gwyddion</application> modules
     </refpurpose>
   </refnamediv>
 
   <refsect1>
     <title>Overview</title>
     <para>
-      Gwyddion is quite a modular application.  In fact, most of its basic
+      <application>Gwyddion</application> is quite a modular application.  In fact, most of its basic
       functionallity is provided by modules.  Modules allow to easily extend
-      Gwyddion without the need to recompile. Modules need to be copied
-      in appropriate directories only followed by Gwyddion restart.
+      <application>Gwyddion</application> without the need to recompile. Modules need to be copied
+      in appropriate directories only followed by <application>Gwyddion</application> restart.
       Modules are then automatically detected, registered and the functions provided by modules
-      are added to Gwyddion menu.
+      are added to <application>Gwyddion</application> menu.
     </para>
     <para>
       There are several distinct module types:
@@ -66,7 +66,7 @@
     </para>
     <para>
       More precisely, a file (i.e., a shared/dynamically linked library)
-      always corresponds to a one Gwyddion module.  A module can register
+      always corresponds to a one <application>Gwyddion</application> module.  A module can register
       zero or more functions (features).
     </para>
   </refsect1>

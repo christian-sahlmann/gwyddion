@@ -40,7 +40,7 @@
       </simplelist>
       Note however, truly interactive plug-ins are not supported (and maybe
       they never will, because it is hard to do this without making plug-ins
-      derived works of Gwyddion), only modal ones.
+      derived works of <application>Gwyddion</application>), only modal ones.
     </para>
     <para>
       So the output of plugin <command>my_plugin</command> when run as
