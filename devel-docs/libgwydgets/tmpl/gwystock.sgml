@@ -88,7 +88,8 @@ The "Fast-Fourier-Transform" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_FRACTAL ##### -->
 <para>
-
+The "Fractal" stock icon.
+<inlinegraphic fileref="gwy_fractal-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -135,7 +136,8 @@ The "Graph" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_FIT_FUNC ##### -->
 <para>
-
+The "Graph-Fit-Func" stock icon.
+<inlinegraphic fileref="gwy_graph_fit_func-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -318,7 +320,8 @@ The "Superscript" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_UNROTATE ##### -->
 <para>
-
+The "Unrotate" stock icon.
+<inlinegraphic fileref="gwy_unrotate-24.png" format="PNG"></inlinegraphic>
 </para>
 
 

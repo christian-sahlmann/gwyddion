@@ -51,11 +51,13 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_fit_triangle-24.png \
 	$(top_srcdir)/pixmaps/gwy_fix_zero-24.png \
 	$(top_srcdir)/pixmaps/gwy_fft-24.png \
+	$(top_srcdir)/pixmaps/gwy_fractal-24.png \
 	$(top_srcdir)/pixmaps/gwy_grains-24.png \
 	$(top_srcdir)/pixmaps/gwy_grains_graph-24.png \
 	$(top_srcdir)/pixmaps/gwy_grains_remove-24.png \
 	$(top_srcdir)/pixmaps/gwy_grains_water-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph_fit_func-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_measure-24.png \
@@ -78,6 +80,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_stat_quantities-24.png \
 	$(top_srcdir)/pixmaps/gwy_subscript-24.png \
 	$(top_srcdir)/pixmaps/gwy_superscript-24.png \
+	$(top_srcdir)/pixmaps/gwy_unrotate-24.png \
 	$(top_srcdir)/pixmaps/gwy_zoom_1_1-24.png \
 	$(top_srcdir)/pixmaps/gwy_zoom_fit-24.png \
 	$(top_srcdir)/pixmaps/gwy_zoom_in-24.png \
@@ -216,6 +219,13 @@ install-data-local:
 	  echo '-- Installing $(srcdir)/html/index.sgml' ; \
 	  $(INSTALL_DATA) $(srcdir)/html/index.sgml $(DESTDIR)$(TARGET_DIR); \
 	fi)
+	(installfiles=`echo $(srcdir)/html/*.png`; \
+	if test "$$installfiles" != '$(srcdir)/html/*.png'; then \
+	  for i in $$installfiles; do \
+	    echo '-- Installing '$$i ; \
+	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
+	  done; \
+	fi)
 
 uninstall-local:
 	(installfiles=`cd $(srcdir)/html >/dev/null && echo *.html`; \
@@ -228,6 +238,13 @@ uninstall-local:
 	  done; \
 	  echo '-- Removing index.sgml' ; \
 	  rm -f $(DESTDIR)$(TARGET_DIR)/index.sgml; \
+	fi)
+	(installfiles=`cd $(srcdir)/html >/dev/null && echo *.png`; \
+	if test "$$installfiles" != '*.png'; then \
+	  for i in $$installfiles; do \
+	    echo '-- Removing '$$i ; \
+	    rm -f $(DESTDIR)$(TARGET_DIR)/$$i; \
+	  done; \
 	fi)
 
 #
@@ -249,10 +266,7 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	-cp $(srcdir)/xml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
-
-	for i in $(HTML_IMAGES) ; do		      \
-	  cp $(srcdir)/$$i $(distdir)/html ;  \
-	done
+	-cp $(srcdir)/html/*.png $(distdir)/html
 
 .PHONY : dist-hook-local
 

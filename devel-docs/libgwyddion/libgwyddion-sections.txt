@@ -206,6 +206,7 @@ GwyNLFitFunc
 GwyNLFitDerFunc
 GwyNLFitGuessFunc
 GwyNLFitParamScaleFunc
+GwyNLFitWeightFunc
 Param
 GwyNLFitPresetFunction
 GwyNLFitter

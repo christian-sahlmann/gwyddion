@@ -91,6 +91,18 @@ Marquardt-Levenbert nonlinear least square fitter.
 @dir: 
 
 
+<!-- ##### USER_FUNCTION GwyNLFitWeightFunc ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@n_dat: 
+@weight: 
+@user_data: 
+
+
 <!-- ##### TYPEDEF Param ##### -->
 <para>
 
@@ -313,11 +325,12 @@ Marquardt-Levenbert nonlinear least square fitter.
 @n_dat: 
 @x: 
 @y: 
-@weight: 
 @n_param: 
 @param: 
 @fixed_param: 
 @user_data: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@weight: 
 
 
