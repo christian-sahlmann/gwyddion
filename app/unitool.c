@@ -435,6 +435,9 @@ gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
  * The displayed name automatically changes on tool switch or when the file
  * name changes.
  *
+ * You should not make assumptions about the exact type and structure of the
+ * returned widget, its changes are not considered API changes.
+ *
  * Returns: The name-displaying frame as a #GtkWidget.
  **/
 GtkWidget*
