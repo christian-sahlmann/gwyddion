@@ -156,12 +156,14 @@ gwy_build_process_menu(GtkAccelGroup *accel_group,
         for (i = dp_len; current[i] && prev[i] && current[i] == prev[i]; i++)
             ;
         if (!current[i])
-            break;
+            g_warning("Duplicate menu entry `%s'", func_info->menu_path);
+        else {
+            /* find where the next / is  */
+            do {
+                i++;
+            } while (current[i] && current[i] != '/');
+        }
 
-        /* find where the next / is  */
-        do {
-            i++;
-        } while (current[i] && current[i] != '/');
         while (current[i]) {
             /* create a branch with a tearoff */
             current[i] = '\0';
