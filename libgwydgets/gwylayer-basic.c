@@ -129,6 +129,7 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
 {
     GwyDataField *data_field;
 
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
 
     /* TODO Container */
@@ -136,7 +137,8 @@ gwy_layer_basic_paint(GwyDataViewLayer *layer)
                      gwy_container_get_object_by_name(layer->data,
                                                       "/0/data"));
     g_return_val_if_fail(data_field, layer->pixbuf);
-    if (GWY_LAYER_BASIC(layer)->changed) {
+    /* FIXME FIXME FIXME */
+    /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
         GTimer *timer;
 
         timer = g_timer_new();

@@ -58,7 +58,6 @@ static gboolean gwy_data_view_key_press            (GtkWidget *widget,
                                                     GdkEventKey *event);
 static gboolean gwy_data_view_key_release          (GtkWidget *widget,
                                                     GdkEventKey *event);
-static void     gwy_data_view_update               (GwyDataView *data_view);
 static void     gwy_data_view_set_layer            (GwyDataView *data_view,
                                                     GwyDataViewLayer **which,
                                                     GwyDataViewLayer *layer);
@@ -146,6 +145,7 @@ gwy_data_view_init(GwyDataView *data_view)
     data_view->ymeasure = -1.0;
     data_view->xoff = 0;
     data_view->yoff = 0;
+    data_view->force_update = TRUE;
 }
 
 /**
@@ -496,9 +496,11 @@ gwy_data_view_expose(GtkWidget *widget,
     timer = g_timer_new();
     data_view = GWY_DATA_VIEW(widget);
     /* FIXME: ask the layers, if they want to repaint themselves */
-    if (gwy_data_view_layer_wants_repaint(data_view->base_layer)
+    if (data_view->force_update
+        || gwy_data_view_layer_wants_repaint(data_view->base_layer)
         || gwy_data_view_layer_wants_repaint(data_view->alpha_layer))
         gwy_data_view_paint(data_view);
+    data_view->force_update = FALSE;
 
     gdk_draw_pixbuf(widget->window,
                     NULL,
@@ -607,9 +609,11 @@ gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
 
+    gwy_debug("%s", __FUNCTION__);
     g_return_if_fail(data_view != NULL);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
+    data_view->force_update = TRUE;
     widget = GTK_WIDGET(data_view);
     if (widget->window)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);

@@ -48,6 +48,8 @@ struct _GwyDataView {
 
     GdkPixbuf *pixbuf;      /* everything, this is drawn on the screen */
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
+
+    gboolean force_update;
 };
 
 struct _GwyDataViewClass {
@@ -87,6 +89,7 @@ void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
                                                    gint *yscr);
 gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
 gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
+void              gwy_data_view_update            (GwyDataView *data_view);
 
 #ifdef __cplusplus
 }
