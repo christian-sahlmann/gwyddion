@@ -1,4 +1,4 @@
-# #(@) $Id$
+# @(#) $Id$
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
