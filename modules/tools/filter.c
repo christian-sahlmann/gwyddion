@@ -135,6 +135,7 @@ use(GwyDataWindow *data_window,
         state = g_new0(GwyUnitoolState, 1);
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
+        state->apply_doesnt_close = TRUE;
     }
     controls = (ToolControls*)state->user_data;
     controls->state_changed = TRUE;
@@ -154,8 +155,8 @@ layer_setup(GwyUnitoolState *state)
     g_object_set(state->layer, "is_crop", FALSE, NULL);
 
     controls = (ToolControls*)state->user_data;
+    gwy_debug("last preview %p\n", controls->last_preview);
     if (controls->last_preview) {
-        gwy_debug("last preview found %p\n", controls->last_preview);
         data_view = gwy_data_window_get_data_view(
                                      GWY_DATA_WINDOW(controls->last_preview));
         g_assert(data_view);
@@ -176,7 +177,7 @@ dialog_create(GwyUnitoolState *state)
     GwyContainer *settings;
     GtkWidget *dialog, *table, *table2, *label, *frame;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
@@ -203,55 +204,41 @@ dialog_create(GwyUnitoolState *state)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Filter</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new_with_mnemonic(_("_Type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
 
     controls->filter
         = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
                                  state, controls->fil);
-
-    gtk_table_attach(GTK_TABLE(table2), controls->filter,
-                     1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new(_("Direction:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label,
-                     0, 1, 2, 3, GTK_FILL, 0, 2, 2);
+    gwy_table_attach_row(table2, 1, _("_Type:"), NULL, controls->filter);
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                     state, controls->dir);
-    
+    gwy_table_attach_row(table2, 2, _("_Direction:"), NULL,
+                         controls->direction);
+    label = gwy_table_get_child_widget(table2, 2, 0);
+
     /* TODO uncomment this when some directional filter is avalilable
+     * TODO also convert to radiobutton then, as in polynom.c
     if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
         gtk_widget_set_sensitive(controls->direction, TRUE);
     else
     */
     gtk_widget_set_sensitive(controls->direction, FALSE);
-
-    gtk_table_attach(GTK_TABLE(table2), controls->direction,
-                     1, 2, 2, 3, GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new(_("Size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label,
-                     0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+    gtk_widget_set_sensitive(label, FALSE);
 
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
-    controls->size_spin = gwy_table_attach_spinbutton(table2, 3, "", "px",
+    controls->size_spin = gwy_table_attach_spinbutton(table2, 3,
+                                                      _("Size:"), "px",
                                                       controls->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
-
     g_signal_connect_swapped(controls->size, "value-changed",
                              G_CALLBACK(size_changed_cb), state);
 
     controls->update
-        = gtk_check_button_new_with_label("Update Preview Dynamically");
+        = gtk_check_button_new_with_mnemonic(_("_Update preview dynamically"));
     gtk_table_attach(GTK_TABLE(table2), controls->update, 0, 3, 4, 5,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
@@ -272,7 +259,7 @@ apply(GwyUnitoolState *state)
     ToolControls *controls;
     gint isel[4];
 
-    gwy_debug("");
+    gwy_debug(" ");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     controls = (ToolControls*)state->user_data;
 
@@ -301,20 +288,14 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *shadefield, *dfield;
     GwyDataViewLayer *layer;
     gint isel[4];
-    gboolean is_visible, is_selected;
     gint i;
 
-    gwy_debug("");
-    is_visible = state->is_visible;
+    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
-    if (!is_visible && !is_selected)
-        return;
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
@@ -377,24 +358,29 @@ static void
 do_apply(GwyDataField *dfield,
          GwyFilterType filter_type,
          gint size,
-         gint direction,
+         G_GNUC_UNUSED gint direction,
          gint *isel)
 {
-   
     switch (filter_type) {
         case GWY_FILTER_MEAN:
         gwy_data_field_area_filter_mean(dfield, size,
-                                   isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
+                                        isel[0], isel[1],
+                                        isel[2]-isel[0],
+                                        isel[3]-isel[1]);
         break;
 
         case GWY_FILTER_MEDIAN:
         gwy_data_field_area_filter_median(dfield, size,
-                                     isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
+                                          isel[0], isel[1],
+                                          isel[2]-isel[0],
+                                          isel[3]-isel[1]);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
         gwy_data_field_area_filter_conservative(dfield, size,
-                                           isel[0], isel[1], isel[2]-isel[0], isel[3]-isel[1]);
+                                                isel[0], isel[1],
+                                                isel[2]-isel[0],
+                                                isel[3]-isel[1]);
         break;
 
         default:
@@ -431,7 +417,7 @@ direction_changed_cb(GObject *item,
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
@@ -446,7 +432,7 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
     gboolean direction_sensitive = FALSE;
     gboolean size_sensitive = FALSE;
 
-    gwy_debug("");
+    gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
     controls->state_changed = TRUE;
@@ -482,7 +468,7 @@ update_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     controls->upd = gtk_toggle_button_get_active(button);
     controls->state_changed = TRUE;
@@ -494,7 +480,7 @@ size_changed_cb(GwyUnitoolState *state)
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
     if (controls->upd) {
