@@ -24,6 +24,7 @@
 #include <glib.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include "gwycontainer.h"
 #include "gwyserializable.h"
 #include "gwywatchable.h"
@@ -172,6 +173,7 @@ static void
 gwy_container_init(GwyContainer *container)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)container);
     container->values = NULL;
     container->watching = NULL;
     container->objects = NULL;

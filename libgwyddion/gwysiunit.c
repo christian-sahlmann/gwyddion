@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwysiunit.h>
 
@@ -103,6 +104,7 @@ static void
 gwy_si_unit_init(GwySIUnit *si_unit)
 {
     gwy_debug("");
+    gwy_debug_objects_creation((GObject*)si_unit);
     si_unit->unitstr = NULL;
 }
 
