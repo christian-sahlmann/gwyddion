@@ -1,11 +1,10 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Make threshold-example use -MD
-- Icolorange, Squantities: update look'n'feel for narrower rect selection info
-- Sfunctions: use rect selection info, change dialog layout after Profile
+- Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
+- Test GwyGradient, mark #ifdef GWY_ENABLE_GWYDDION2
+- Do something with sphere-revolve
+- Color mixing in GwyRGBA, maybe define some basic colors
 - Callibrate forgets coefficients and shows inconsistent values
-- Things that have preview should not wait on data window, but on their own
-  window
-- Fix cluttered left column layout in SFunctions
 - Display whether data are unchanged/modified/new somewhere
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
