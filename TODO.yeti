@@ -1,5 +1,4 @@
-- gendoc2.pl should change Warnings from h2 to something non-header
-- add invert-height to scars
+- Generate module browser-like info for gwyddion.net
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
