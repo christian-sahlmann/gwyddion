@@ -2263,7 +2263,12 @@ gwy_container_deserialize_from_text(const gchar *text)
         /* string */
         else if (typelen+1 == sizeof("string")
                  && g_str_has_prefix(type, "string")) {
-            gwy_container_set_string(container, key, g_strndup(tok, len));
+            gchar *s;
+            gsize vallen;
+
+            vallen = tok[0] == '"' ? len - 2 : len;
+            s = g_strndup(tok[0] == '"' ? tok+1 : tok, vallen);
+            gwy_container_set_string(container, key, s);
         }
         /* object */
         else if (typelen+1 == sizeof("object")
