@@ -515,7 +515,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     
     gwy_data_field_xfft(data_field, result_field,
                     hlp_dfield, hlp_idfield,
-                    gwy_data_line_fft_hum, GWY_WINDOWING_RECT,
+                    gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
                     1, interpolation,
                     FALSE, FALSE);
 
