@@ -8,14 +8,19 @@
 <!ENTITY libgwydgets-GwyDataView SYSTEM "xml/gwydataview.xml">
 <!ENTITY libgwydgets-GwyDataViewLayer SYSTEM "xml/gwydataviewlayer.xml">
 <!ENTITY libgwydgets-GwyLayerBasic SYSTEM "xml/gwylayer-basic.xml">
+<!ENTITY libgwydgets-GwyLayerLines SYSTEM "xml/gwylayer-lines.xml">
+<!ENTITY libgwydgets-GwyLayerMask SYSTEM "xml/gwylayer-mask.xml">
+<!ENTITY libgwydgets-GwyLayerPoints SYSTEM "xml/gwylayer-points.xml">
 <!ENTITY libgwydgets-GwyLayerSelect SYSTEM "xml/gwylayer-select.xml">
 <!ENTITY libgwydgets-GwyRuler SYSTEM "xml/gwyruler.xml">
 <!ENTITY libgwydgets-GwyHRuler SYSTEM "xml/gwyhruler.xml">
 <!ENTITY libgwydgets-GwyVRuler SYSTEM "xml/gwyvruler.xml">
 <!ENTITY libgwydgets-GwyAxis SYSTEM "xml/gwyaxis.xml">
+<!ENTITY libgwydgets-GwyGraphArea SYSTEM "xml/gwygrapharea.xml">
 <!ENTITY libgwydgets-GwyGraphCorner SYSTEM "xml/gwygraphcorner.xml">
 <!ENTITY libgwydgets-GwyGraphLabel SYSTEM "xml/gwygraphlabel.xml">
 <!ENTITY libgwydgets-GwyGraph SYSTEM "xml/gwygraph.xml">
+<!ENTITY libgwydgets-gwydgets SYSTEM "xml/gwydgets.xml">
 ]>
 <book id="index">
   <bookinfo>
@@ -31,13 +36,18 @@
     &libgwydgets-GwyDataView;
     &libgwydgets-GwyDataViewLayer;
     &libgwydgets-GwyLayerBasic;
+    &libgwydgets-GwyLayerLines;
+    &libgwydgets-GwyLayerMask;
+    &libgwydgets-GwyLayerPoints;
     &libgwydgets-GwyLayerSelect;
     &libgwydgets-GwyRuler;
     &libgwydgets-GwyHRuler;
     &libgwydgets-GwyVRuler;
     &libgwydgets-GwyAxis;
+    &libgwydgets-GwyGraphArea;
     &libgwydgets-GwyGraphCorner;
     &libgwydgets-GwyGraphLabel;
     &libgwydgets-GwyGraph;
+    &libgwydgets-gwydgets;
   </chapter>
 </book>

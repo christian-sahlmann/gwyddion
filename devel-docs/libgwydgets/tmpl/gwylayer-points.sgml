@@ -1,0 +1,60 @@
+<!-- ##### SECTION Title ##### -->
+GwyLayerPoints
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_layer_points_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_points_set_max_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@npoints: 
+
+
+<!-- ##### FUNCTION gwy_layer_points_get_max_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_points_get_points ##### -->
+<para>
+
+</para>
+
+@layer: 
+@points: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_points_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+

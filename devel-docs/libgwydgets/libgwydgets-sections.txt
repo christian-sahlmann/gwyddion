@@ -27,6 +27,9 @@ gwy_data_view_layer_key_release
 gwy_data_view_layer_plugged
 gwy_data_view_layer_unplugged
 gwy_data_view_layer_updated
+gwy_data_view_layer_finished
+gwy_layer_cursor_new_or_ref
+gwy_layer_cursor_free_or_unref
 <SUBSECTION Standard>
 GWY_DATA_VIEW_LAYER
 GWY_IS_DATA_VIEW_LAYER
@@ -52,6 +55,24 @@ GWY_VRULER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwylayer-lines</FILE>
+<TITLE>GwyLayerLines</TITLE>
+gwy_layer_lines_new
+gwy_layer_lines_set_max_lines
+gwy_layer_lines_get_max_lines
+gwy_layer_lines_get_lines
+gwy_layer_lines_unselect
+<SUBSECTION Standard>
+GWY_LAYER_LINES
+GWY_IS_LAYER_LINES
+GWY_TYPE_LAYER_LINES
+gwy_layer_lines_get_type
+GWY_LAYER_LINES_CLASS
+GWY_IS_LAYER_LINES_CLASS
+GWY_LAYER_LINES_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwyspherecoords</FILE>
 <TITLE>GwySphereCoords</TITLE>
 gwy_sphere_coords_new
@@ -66,6 +87,22 @@ gwy_sphere_coords_get_type
 GWY_SPHERE_COORDS_CLASS
 GWY_IS_SPHERE_COORDS_CLASS
 GWY_SPHERE_COORDS_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwylayer-mask</FILE>
+<TITLE>GwyLayerMask</TITLE>
+gwy_layer_mask_new
+gwy_layer_mask_set_color
+gwy_layer_mask_get_color
+<SUBSECTION Standard>
+GWY_LAYER_MASK
+GWY_IS_LAYER_MASK
+GWY_TYPE_LAYER_MASK
+gwy_layer_mask_get_type
+GWY_LAYER_MASK_CLASS
+GWY_IS_LAYER_MASK_CLASS
+GWY_LAYER_MASK_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -99,6 +136,24 @@ gwy_graph_label_get_type
 GWY_GRAPH_LABEL_CLASS
 GWY_IS_GRAPH_LABEL_CLASS
 GWY_GRAPH_LABEL_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwylayer-points</FILE>
+<TITLE>GwyLayerPoints</TITLE>
+gwy_layer_points_new
+gwy_layer_points_set_max_points
+gwy_layer_points_get_max_points
+gwy_layer_points_get_points
+gwy_layer_points_unselect
+<SUBSECTION Standard>
+GWY_LAYER_POINTS
+GWY_IS_LAYER_POINTS
+GWY_TYPE_LAYER_POINTS
+gwy_layer_points_get_type
+GWY_LAYER_POINTS_CLASS
+GWY_IS_LAYER_POINTS_CLASS
+GWY_LAYER_POINTS_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -260,6 +315,7 @@ GWY_GRAD_SPHERE_GET_CLASS
 <TITLE>GwyLayerSelect</TITLE>
 gwy_layer_select_new
 gwy_layer_select_get_selection
+gwy_layer_select_unselect
 <SUBSECTION Standard>
 GWY_LAYER_SELECT
 GWY_IS_LAYER_SELECT

@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-GwyLayerSelect
+GwyLayerMask
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -14,7 +14,7 @@ GwyLayerSelect
 
 </para>
 
-<!-- ##### FUNCTION gwy_layer_select_new ##### -->
+<!-- ##### FUNCTION gwy_layer_mask_new ##### -->
 <para>
 
 </para>
@@ -22,24 +22,21 @@ GwyLayerSelect
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_layer_select_get_selection ##### -->
+<!-- ##### FUNCTION gwy_layer_mask_set_color ##### -->
 <para>
 
 </para>
 
 @layer: 
-@xmin: 
-@ymin: 
-@xmax: 
-@ymax: 
+@color: 
+
+
+<!-- ##### FUNCTION gwy_layer_mask_get_color ##### -->
+<para>
+
+</para>
+
+@layer: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_layer_select_unselect ##### -->
-<para>
-
-</para>
-
-@layer: 
 
 

@@ -5,11 +5,15 @@ gwy_data_view_get_type
 gwy_data_view_layer_get_type
 gwy_data_window_get_type
 gwy_grad_sphere_get_type
+gwy_graph_area_get_type
 gwy_graph_corner_get_type
 gwy_graph_get_type
 gwy_graph_label_get_type
 gwy_hruler_get_type
 gwy_layer_basic_get_type
+gwy_layer_lines_get_type
+gwy_layer_mask_get_type
+gwy_layer_points_get_type
 gwy_layer_select_get_type
 gwy_ruler_get_type
 gwy_sphere_coords_get_type

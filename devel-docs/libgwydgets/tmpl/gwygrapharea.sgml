@@ -1,0 +1,82 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraphArea
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### TYPEDEF GwyGraphAreaCurvePoints ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphAreaCurve ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyGraphAreaParams ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_graph_area_new ##### -->
+<para>
+
+</para>
+
+@hadjustment: 
+@vadjustment: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_set_style ##### -->
+<para>
+
+</para>
+
+@area: 
+@style: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_set_boundaries ##### -->
+<para>
+
+</para>
+
+@area: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_add_curve ##### -->
+<para>
+
+</para>
+
+@area: 
+@curve: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_clear ##### -->
+<para>
+
+</para>
+
+@area: 
+
+

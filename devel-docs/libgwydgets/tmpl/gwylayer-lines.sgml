@@ -1,0 +1,60 @@
+<!-- ##### SECTION Title ##### -->
+GwyLayerLines
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_layer_lines_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_lines_set_max_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@nlines: 
+
+
+<!-- ##### FUNCTION gwy_layer_lines_get_max_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_lines_get_lines ##### -->
+<para>
+
+</para>
+
+@layer: 
+@lines: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_lines_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+

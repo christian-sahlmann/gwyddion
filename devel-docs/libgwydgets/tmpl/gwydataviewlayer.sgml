@@ -126,6 +126,38 @@ GwyDataViewLayer
 @layer: 
 
 
+<!-- ##### FUNCTION gwy_data_view_layer_finished ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### FUNCTION gwy_layer_cursor_new_or_ref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+@type: 
+
+
+<!-- ##### FUNCTION gwy_layer_cursor_free_or_unref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+
+
+<!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
+<para>
+
+</para>
+
+@gwydataviewlayer: the object which received the signal.
+
 <!-- ##### SIGNAL GwyDataViewLayer::plugged ##### -->
 <para>
 
