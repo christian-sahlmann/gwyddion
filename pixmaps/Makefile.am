@@ -25,7 +25,8 @@ pixmapdata_DATA = \
 	gwy_zoom_1_1-24.png \
 	gwy_zoom_fit-24.png \
 	gwy_zoom_in-24.png \
-	gwy_zoom_out-24.png
+	gwy_zoom_out-24.png \
+	splash.png
 
 EXTRA_DIST = \
 	makefile.msc \
