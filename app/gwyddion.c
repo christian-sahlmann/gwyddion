@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <locale.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -44,6 +45,15 @@ main(int argc, char *argv[])
     setup_logging();
     gwy_find_self_set_argv0(argv[0]);
 #endif
+    /* FIXME: remove, once gwyddion is properly i18d and l10d, but now it
+     * looks ugly */
+    gtk_disable_setlocale();
+    setlocale(LC_COLLATE, "");
+    setlocale(LC_CTYPE, "");
+    setlocale(LC_TIME, "");
+    setlocale(LC_NUMERIC, "");
+    setlocale(LC_MESSAGES, "C");
+
     gtk_init(&argc, &argv);
     config_file = gwy_app_settings_get_config_filename();
     gwy_app_init();
