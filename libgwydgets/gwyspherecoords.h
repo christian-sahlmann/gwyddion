@@ -36,7 +36,6 @@ struct _GwySphereCoordsClass {
 GType      gwy_sphere_coords_get_type       (void) G_GNUC_CONST;
 GtkObject* gwy_sphere_coords_new            (gdouble theta,
                                              gdouble phi);
-void       gwy_sphere_coords_value_changed  (GwySphereCoords *sphere_coords);
 gdouble    gwy_sphere_coords_get_theta      (GwySphereCoords *sphere_coords);
 gdouble    gwy_sphere_coords_get_phi        (GwySphereCoords *sphere_coords);
 void       gwy_sphere_coords_set_value      (GwySphereCoords *sphere_coords,

@@ -1,22 +1,24 @@
 #include <math.h>
-#include <gtk/gtkmarshal.h>
 
+#include <libgwyddion/gwywatchable.h>
+#include <libgwyddion/gwyserializable.h>
 #include "gwyspherecoords.h"
 
 #define GWY_SPHERE_COORDS_TYPE_NAME "GwySphereCoords"
 
-#undef DEBUG
 #define _(x) x
+#undef DEBUG
 
-enum {
-    VALUE_CHANGED,
-    LAST_SIGNAL
-};
-
-static guint gwy_sphere_coords_signals[LAST_SIGNAL] = { 0 };
-
-static void gwy_sphere_coords_class_init (GwySphereCoordsClass *klass);
-static void gwy_sphere_coords_init       (GwySphereCoords      *sphere_coords);
+static void     gwy_sphere_coords_class_init        (GwySphereCoordsClass *klass);
+static void     gwy_sphere_coords_init              (GwySphereCoords *sphere_coords);
+static void     gwy_sphere_coords_serializable_init (gpointer giface);
+static void     gwy_sphere_coords_watchable_init    (gpointer giface);
+static guchar*  gwy_sphere_coords_serialize         (GObject *obj,
+                                                     guchar *buffer,
+                                                     gsize *size);
+static GObject* gwy_sphere_coords_deserialize       (const guchar *buffer,
+                                                     gsize size,
+                                                     gsize *position);
 
 GType
 gwy_sphere_coords_get_type(void)
@@ -37,6 +39,13 @@ gwy_sphere_coords_get_type(void)
             NULL,
         };
 
+        GInterfaceInfo gwy_serializable_info = {
+            (GInterfaceInitFunc)gwy_sphere_coords_serializable_init, NULL, 0
+        };
+        GInterfaceInfo gwy_watchable_info = {
+            (GInterfaceInitFunc)gwy_sphere_coords_watchable_init, NULL, 0
+        };
+
         #ifdef DEBUG
         g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
         #endif
@@ -44,27 +53,50 @@ gwy_sphere_coords_get_type(void)
                                                         GWY_SPHERE_COORDS_TYPE_NAME,
                                                         &gwy_sphere_coords_info,
                                                         0);
+        g_type_add_interface_static(gwy_sphere_coords_type,
+                                    GWY_TYPE_SERIALIZABLE,
+                                    &gwy_serializable_info);
+        g_type_add_interface_static(gwy_sphere_coords_type,
+                                    GWY_TYPE_WATCHABLE,
+                                    &gwy_watchable_info);
     }
 
     return gwy_sphere_coords_type;
 }
 
 static void
-gwy_sphere_coords_class_init(GwySphereCoordsClass *klass)
+gwy_sphere_coords_serializable_init(gpointer giface)
 {
-    klass->value_changed = NULL;
+    GwySerializableClass *iface = giface;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    gwy_sphere_coords_signals[VALUE_CHANGED] =
-        g_signal_new("value_changed",
-                     G_OBJECT_CLASS_TYPE(klass),
-                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
-                     G_STRUCT_OFFSET(GwySphereCoordsClass, value_changed),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
+    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
+
+    iface->serialize = gwy_sphere_coords_serialize;
+    iface->deserialize = gwy_sphere_coords_deserialize;
+}
+
+static void
+gwy_sphere_coords_watchable_init(gpointer giface)
+{
+    GwyWatchableClass *iface = giface;
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
+
+    iface->value_changed = NULL;
+}
+
+static void
+gwy_sphere_coords_class_init(GwySphereCoordsClass *klass)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
 }
 
 static void
@@ -167,25 +199,51 @@ gwy_sphere_coords_set_value(GwySphereCoords *sphere_coords,
         sphere_coords->theta = theta;
         sphere_coords->phi = phi;
 
-        gwy_sphere_coords_value_changed(sphere_coords);
+        gwy_watchable_value_changed(G_OBJECT(sphere_coords));
     }
 }
 
-/**
- * gwy_sphere_coords_value_changed:
- * @sphere_coords: A #GwySphereCoords.
- *
- * Emits a "value_changed" signal on @sphere_coords.
- **/
-void
-gwy_sphere_coords_value_changed(GwySphereCoords *sphere_coords)
+static guchar*
+gwy_sphere_coords_serialize(GObject *obj,
+                            guchar *buffer,
+                            gsize *size)
 {
-    g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
+    GwySphereCoords *sphere_coords;
 
     #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwySphereCoords changed");
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_signal_emit(sphere_coords, gwy_sphere_coords_signals[VALUE_CHANGED], 0);
+    g_return_val_if_fail(GWY_IS_SPHERE_COORDS(obj), NULL);
+
+    sphere_coords = GWY_SPHERE_COORDS(obj);
+    return gwy_serialize_pack(buffer, size, "sdd",
+                              GWY_SPHERE_COORDS_TYPE_NAME,
+                              sphere_coords->theta,
+                              sphere_coords->phi);
+
+}
+
+static GObject*
+gwy_sphere_coords_deserialize(const guchar *stream,
+                              gsize size,
+                              gsize *position)
+{
+    gsize pos;
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    g_return_val_if_fail(stream, NULL);
+
+    pos = gwy_serialize_check_string(stream, size, *position,
+                                     GWY_SPHERE_COORDS_TYPE_NAME);
+    g_return_val_if_fail(pos, NULL);
+    *position += pos;
+
+    return (GObject*)gwy_sphere_coords_new(
+                         gwy_serialize_unpack_double(stream, size, position),
+                         gwy_serialize_unpack_double(stream, size, position)
+                     );
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
