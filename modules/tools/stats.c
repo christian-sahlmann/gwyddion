@@ -44,6 +44,7 @@ typedef struct {
     GtkWidget *projarea;
     GtkWidget *area;
     GwySIValueFormat *vform2;
+    gboolean enable_area;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -114,6 +115,41 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
+    /* Compute area units and find out whether we should display non-projected
+     * area. */
+    if (data_window) {
+        ToolControls *controls;
+        GwyContainer *data;
+        GwyDataField *dfield;
+        GwySIUnit *siunitxy, *siunitz;
+        gchar *unitxy, *unitz;
+        gdouble xreal, yreal, q;
+
+        controls = (ToolControls*)state->user_data;
+        data = gwy_data_window_get_data(data_window);
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+        siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+        siunitz = gwy_data_field_get_si_unit_z(dfield);
+        unitxy = gwy_si_unit_get_unit_string(siunitxy);
+        unitz = gwy_si_unit_get_unit_string(siunitz);
+        controls->enable_area = !strcmp(unitxy, unitz);
+        g_free(unitxy);
+        g_free(unitz);
+
+        xreal = gwy_data_field_get_xreal(dfield);
+        yreal = gwy_data_field_get_xreal(dfield);
+        q = xreal/gwy_data_field_get_xres(dfield)
+            *yreal/gwy_data_field_get_yres(dfield);
+
+        siunitxy = gwy_si_unit_duplicate(siunitxy);
+        gwy_si_unit_power(siunitxy, 2, siunitxy);
+        controls->vform2
+            = gwy_si_unit_get_format_with_resolution(siunitxy, xreal*yreal, q,
+                                                     controls->vform2);
+        g_object_unref(siunitxy);
+    }
+
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -200,15 +236,14 @@ dialog_update(GwyUnitoolState *state,
 {
     GwySIValueFormat *units;
     ToolControls *controls;
-    GwySIUnit *siunit;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gint isel[4];
     gint w, h;
-    gdouble avg, ra, rms, skew, kurtosis, min, max, median, q, xreal, yreal;
-    gdouble projarea, area;
+    gdouble avg, ra, rms, skew, kurtosis, min, max, median, q;
+    gdouble projarea, area = 0.0;
     gchar buffer[48];
 
     gwy_debug("");
@@ -227,16 +262,17 @@ dialog_update(GwyUnitoolState *state,
     min = gwy_data_field_area_get_min(dfield, isel[0], isel[1], w, h);
     max = gwy_data_field_area_get_max(dfield, isel[0], isel[1], w, h);
     median = gwy_data_field_area_get_median(dfield, isel[0], isel[1], w, h);
-    area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1], w, h,
-                                                GWY_INTERPOLATION_BILINEAR);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    q = xreal/gwy_data_field_get_xres(dfield)
-        *yreal/gwy_data_field_get_yres(dfield);
+    q = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield)
+        *gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     projarea = w*h*q;
-    /* prevent rounding errors to produce nonreal results on very flat
-     * surfaces */
-    area = MAX(area, projarea);
+    if (controls->enable_area) {
+        area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1],
+                                                    w, h,
+                                                    GWY_INTERPOLATION_BILINEAR);
+        /* prevent rounding errors to produce nonreal results on very flat
+         * surfaces */
+        area = MAX(area, projarea);
+    }
 
     state->value_format->precision = 2;
     gwy_unitool_update_label(state->value_format, controls->ra, ra);
@@ -250,17 +286,11 @@ dialog_update(GwyUnitoolState *state,
     gwy_unitool_update_label(state->value_format, controls->min, min);
     gwy_unitool_update_label(state->value_format, controls->max, max);
     gwy_unitool_update_label(state->value_format, controls->median, median);
-
-    if (!controls->vform2 || reason == GWY_UNITOOL_UPDATED_DATA) {
-        siunit = gwy_si_unit_duplicate(gwy_data_field_get_si_unit_xy(dfield));
-        gwy_si_unit_power(siunit, 2, siunit);
-        controls->vform2
-            = gwy_si_unit_get_format_with_resolution(siunit, xreal*yreal, q,
-                                                     controls->vform2);
-        g_object_unref(siunit);
-    }
     gwy_unitool_update_label(controls->vform2, controls->projarea, projarea);
-    gwy_unitool_update_label(controls->vform2, controls->area, area);
+    if (controls->enable_area)
+        gwy_unitool_update_label(controls->vform2, controls->area, area);
+    else
+        gtk_label_set_text(GTK_LABEL(controls->area), _("N.A."));
 }
 
 static void
