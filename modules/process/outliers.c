@@ -44,7 +44,7 @@ static GwyModuleInfo module_info = {
     "outliers",
     "Create mask of outliers",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -72,34 +72,26 @@ module_register(const gchar *name)
 static gboolean
 outliers(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *maskfield;
+    GObject *maskfield;
+    GwyDataField *dfield;
     gdouble thresh;
 
     g_assert(run & OUTLIERS_RUN_MODES);
 
-
-
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-    {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    }
-    else
-    {
-        maskfield = (GwyDataField*)gwy_data_field_new(dfield->xres,
-                                                      dfield->yres,
-                                                      dfield->xreal,
-                                                      dfield->yreal,
-                                                      FALSE);
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
+    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
+        maskfield = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+                                       gwy_data_field_get_yres(dfield),
+                                       gwy_data_field_get_xreal(dfield),
+                                       gwy_data_field_get_yreal(dfield),
+                                       TRUE);
+        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
     thresh = 3.0;
-    gwy_data_field_mask_outliers(dfield, maskfield, thresh);
-
+    gwy_data_field_mask_outliers(dfield, GWY_DATA_FIELD(maskfield), thresh);
 
     return TRUE;
 }
