@@ -66,13 +66,12 @@ create_pyramide(GwyDataField *tip, gdouble height, gint n)
     gint col, row;
     gdouble rcol, rrow;
     gdouble scol, srow;
-    gdouble phi, phic;
+    gdouble r, phi, phic;
     gdouble vm, radius;
 
     height = 10;
     radius = tip->xres;
 
-    printf("xres=%d\n", tip->xres);
     scol = tip->xres/2;
     srow = tip->yres/2;
 
@@ -112,7 +111,8 @@ sharpened (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 static void
 delta (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
 {
-    tip->data[tip->xres*tip->yres/2] = 1;
+    gwy_data_field_fill(tip, 0);
+    tip->data[tip->xres*tip->yres/2] = height;
 }
 
 static const GwyTipModelPreset tip_presets[] = {
