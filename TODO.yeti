@@ -1,3 +1,7 @@
+- Add default actions to dialogs
+- Use gtk_dialog_set_response_sensitive() in unitool
+- Add gwyddion-keepup to CVS
+- Scale verb/noun tralsation
 - I18n under MS Windows
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
