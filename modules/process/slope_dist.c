@@ -414,6 +414,7 @@ slope_do_graph(GwyDataField *dfield,
 
     /* FIXME: this is experimental code to test GwyGraphEpitome.
      * Remove it once it works. */
+    /*
     {
         GObject *epitome;
         GtkWidget *window;
@@ -429,6 +430,7 @@ slope_do_graph(GwyDataField *dfield,
             gtk_main_iteration_do(FALSE);
         graph = gwy_graph_new_from_epitome(GWY_GRAPH_EPITOME(epitome));
     }
+    */
     gwy_app_graph_window_create(graph);
 
     g_string_free(lab, TRUE);
