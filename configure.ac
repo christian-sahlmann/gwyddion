@@ -107,7 +107,7 @@ fi
 
 PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
-PKG_CHECK_MODULES(GTKGLEXT, [gtkglext-1.0],,)
+PKG_CHECK_MODULES(GTKGLEXT, [gtkglext-1.0],,:)
 
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([tiff],[TIFFOpen])
