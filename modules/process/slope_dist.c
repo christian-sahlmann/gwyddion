@@ -376,7 +376,7 @@ slope_do_graph(GwyDataField *dfield,
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GString *lab;
-    gdouble *xder, *yder, *data;;
+    gdouble *xder, *yder, *data;
     gint xres, yres, n, i, iphi;
 
     xres = gwy_data_field_get_xres(dfield);
