@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 
-#include "gwyscitext.h"
+#include "gwygrapher.h"
 
 G_BEGIN_DECLS
 
@@ -42,7 +42,8 @@ typedef struct _GwyGrapherAreaDialogClass GwyGrapherAreaDialogClass;
 struct _GwyGrapherAreaDialog {
     GtkDialog dialog;
 
-    GtkWidget *sci_text;
+    GtkWidget *pointtype_menu;
+    GwyGrapherPointType ptype;
 
     gpointer reserved1;
     gpointer reserved2;

@@ -73,7 +73,9 @@ static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr
 static gdouble  scr_to_data_y                       (GtkWidget *widget, gint scr);
 static gint     data_to_scr_x                       (GtkWidget *widget, gdouble data);
 static gint     data_to_scr_y                       (GtkWidget *widget, gdouble data);
-    
+static void     gwy_grapher_area_entry_cb           (GwyGrapherAreaDialog *dialog,
+                                                     gint arg1,
+                                                     gpointer user_data);
 
 
 static void     zoom                                (GtkWidget *widget);
@@ -226,6 +228,10 @@ gwy_grapher_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
                           | GDK_BUTTON_MOTION_MASK
                           | GDK_POINTER_MOTION_MASK);
 
+    area->dialog = gwy_grapher_area_dialog_new();
+    g_signal_connect(area->dialog, "response",
+                     G_CALLBACK(gwy_grapher_area_entry_cb), area);
+    
     return GTK_WIDGET(area);
 }
 
@@ -557,6 +563,9 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     x += (gint)event->x;
     y += (gint)event->y;
 
+   
+    gtk_widget_show_all(area->dialog);
+     
     
 
     child = gwy_grapher_area_find_child(area, x, y);
@@ -1152,6 +1161,12 @@ gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel)
 {
     area->grapher_model = gmodel;
     gwy_grapher_label_change_model(area->lab, gmodel);
+}
+
+static void     
+gwy_grapher_area_entry_cb(GwyGrapherAreaDialog *dialog, gint arg1, gpointer user_data)
+{
+    printf("updated\n");
 }
 
 
