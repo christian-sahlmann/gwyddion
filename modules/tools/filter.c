@@ -38,7 +38,7 @@ typedef struct {
     GtkWidget *h;
     GtkWidget *filter;
     GtkWidget *direction;
-    GtkWidget *size;
+    GtkObject *size;
     GtkWidget *update;
     gint fil;
     gint dir;
@@ -247,17 +247,15 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
-    controls->size = GTK_WIDGET(gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0));
-    gwy_table_attach_spinbutton(table2, 3, "", "px", GTK_OBJECT(controls->size));
-
+    controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
+    gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
-
+    
     controls->update = gtk_check_button_new_with_label("update preview dynamically");
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
                        FALSE, FALSE, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update), controls->upd);
     g_signal_connect(controls->update, "toggled", G_CALLBACK(update_changed_cb), controls);
-
 
     return dialog;
 }
