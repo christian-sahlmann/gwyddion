@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -54,9 +54,13 @@ static void       gwy_option_menu_data_window_destroy(GtkWidget *omenu);
  *
  * Creates an option menu of existing data windows, with thumbnails.
  *
- * It sets object data "data-window" to data window for each menu item.
- * Note the menu is static and does NOT react to creation or closing of
- * data windows.
+ * It sets object data "data-window" to data window pointer for each menu
+ * item.
+ *
+ * Note the menu is currently only safe to use in modal dialogs only because
+ * it is static and does NOT react to creation or closing of data windows.
+ * However, it probably will react to it in the future, so make no
+ * assupmtions.
  *
  * Returns: The newly created option menu as a #GtkWidget.
  *
@@ -217,25 +221,28 @@ gwy_option_menu_data_window_get_history(GtkWidget *option_menu)
 }
 
 static void
-gwy_option_menu_data_window_update(GtkWidget *omenu)
+gwy_option_menu_data_window_update(G_GNUC_UNUSED GtkWidget *omenu)
 {
+    /*
     MenuInfo *info;
     GtkWidget *menu, *item;
+    */
 
-    gwy_debug("updating option menu: %p", omenu);
+    gwy_debug("would update option menu %p, but don't know how", omenu);
+    /*
     info = g_object_get_qdata(G_OBJECT(omenu), omenu_data_window_info_key);
     g_assert(info);
 
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
-    /*gtk_widget_destroy(GTK_WIDGET(GTK_MENU_SHELL(menu)->children->data));
     item = gtk_menu_item_new_with_label("Foobar");
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);*/
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
     item = gtk_menu_item_new_with_label("Quux");
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
     gwy_debug("%d", g_list_length(GTK_MENU_SHELL(menu)->children));
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
                    NULL, NULL, 0, gtk_get_current_event_time());
+    */
 }
 
 static void
