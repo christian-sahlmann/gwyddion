@@ -45,6 +45,11 @@
       module to allow its sharing, and use separate modules for unrelated
       functions.
     </para>
+    <para>
+      More precisely, a file (i.e., a shared/dynamically linked library)
+      always corresponds to a one Gwyddion module.  A module can register
+      zero or more functions (features).
+    </para>
   </refsect1>
   <refsect1>
     <title>A Minimal Module</title>
@@ -61,7 +66,7 @@
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    invert_value               (GwyContainer *data,
+static gboolean    my_invert_value            (GwyContainer *data,
                                                GwyRunType run);
 
 static GwyModuleInfo module_info = {
@@ -80,20 +85,20 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo invert_value_func_info = {
-        "invert_value",
+    static GwyProcessFuncInfo my_invert_value_func_info = {
+        "my_invert_value",
         "/_Test/_Invert Value",
-        (GwyProcessFunc)&invert_value,
+        (GwyProcessFunc)&my_invert_value,
         INVERT_VALUE_RUN_MODES,
     };
 
-    gwy_process_func_register(name, &invert_value_func_info);
+    gwy_process_func_register(name, &my_invert_value_func_info);
 
     return TRUE;
 }
 
 static gboolean
-invert_value(GwyContainer *data, GwyRunType run)
+my_invert_value(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
 
@@ -139,8 +144,8 @@ invert_value(GwyContainer *data, GwyRunType run)
   <refsect1>
     <title>Run Modes</title>
     <para>
-      Now we declare the possible
-      <link linkend="GwyRunType">run modes</link> for the module.
+      Now we declare the
+      <link linkend="GwyRunType">run modes</link> our module supports.
     </para>
     <informalexample><programlisting><![CDATA[
 #define INVERT_VALUE_RUN_MODES \
@@ -151,14 +156,199 @@ invert_value(GwyContainer *data, GwyRunType run)
       several times manually.
     </para>
     <para>
-      There are four possible <link linkend="GwyRunType">run modes</link>,
+      There are four <link linkend="GwyRunType">run modes</link> total,
       though <literal>GWY_RUN_MODAL</literal> and
       <literal>GWY_RUN_INTERACTIVE</literal> are useful only for modules
-      with a GUI.  <literal>GWY_RUN_NONINTERACTIVE</literal> is the right
+      with a graphical user interface.
+      <literal>GWY_RUN_NONINTERACTIVE</literal> is the right
       run mode for a noninteractive module like our example.
       <literal>GWY_RUN_WITH_DEFAULT</literal> is currently
       unused in Gwyddion, but it's a good idea (and easy) to support it too.
     </para>
+  </refsect1>
+  <refsect1>
+    <title>Function Prototypes</title>
+    <para>
+      Function prototypes of our functions.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gboolean    module_register            (const gchar *name);
+static gboolean    my_invert_value            (GwyContainer *data,
+                                               GwyRunType run);
+]]></programlisting></informalexample>
+    <para>Note <emphasis>all</emphasis>
+      functions and global variables should be declared
+      <literal>static</literal>, the module should export no symbol
+      except <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link>
+      described below.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>The Module Info Structure</title>
+    <para>
+      Here the interesting part starts.  The
+      <link linkend="GwyModuleInfo">GwyModuleInfo</link> structure contains
+      overall information about the module, most of it is presented in
+      a more-or-less human-readable form Gwyddion in the module browser.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "value_invert",
+    "Inverts data value.",
+    "J. Random Hacker <hacker.jr@example.org>",
+    "1.0",
+    "J. Random Hacker",
+    "2004",
+]]></programlisting></informalexample>
+};
+    <para>
+      The first item is always
+      <link linkend="GWY-MODULE-ABI-VERSION-CAPS">GWY_MODULE_ABI_VERSION</link>.
+      The second one is a pointer to module registration function, by
+      convention called <function>module_register</function>, it is described
+      in details below.
+    </para>
+    <para>
+      The third item (<literal>"value_invert"</literal>) is the module name.
+      It will appear as Module in the browser.
+      A module is uniquely identified by its name, so module name have to be
+      unique, Gwyddion refuses to load more modules of the same name. Otherwise
+      it is a free-form string, though by convention, it is usually kept
+      the same as file name of the module.
+    </para>
+    <para>
+      The fourth item is module description.  It will appear as Description
+      in the browser.  This is a short text (up to a paragraph or two)
+      informing curious humans what the module is about.
+    </para>
+    <para>
+      The next item is the module author(s).  Under normal circumstances this
+      should be a name of a person (or more people).  Including a contact
+      e-mail address here it's a good idea because it will appear in the
+      browser as Authors, so people don't need to look to the module sources
+      to find out how to contact you.
+    </para>
+    <para>
+      The next item is the module version, a free-form string that will
+      appear as Version in the browser.  Though it is free-form, using a
+      versioning scheme with alorithmically comparable versions is
+      preferable.
+    </para>
+    <para>
+      The last but one and last items are module copyright and date.
+      The copyright field may be the same as authors field (except without
+      the eventual e-mail address), it may be an organization, or even
+      someone else than the author.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>The Module Query Function</title>
+    <para>
+      A Gwyddion module is loaded in two stages.  First, it is queried,
+      the module responds with its module info, Gwyddion checks whether it
+      looks good (e.g. whether module ABI version matches). If it is OK,
+      Gwyddion continues with registration of particular module features.
+    </para>
+    <para>
+      The query function should be always constructed using the
+      <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link> macro
+      as follows (note there is <emphasis>no</emphasis> semicolon after
+      the right parenthesis):
+    </para>
+    <informalexample><programlisting><![CDATA[
+GWY_MODULE_QUERY(module_info)
+]]></programlisting></informalexample>
+    <para>
+      The <parameter>module_info</parameter> parameter is the module info
+      described above.  If you change its name for any reason, change it here
+      too.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Module Feature Registration</title>
+    <para>
+      The module registration function is called in the second registration
+      stage and is responsible for registering particular module functions.
+      Our module registeres only a one function,
+      <literal>my_invert_value</literal>.
+    </para>
+    <para>
+      Each function type has its own registration function, our function
+      is a data processing one, so it's registered with
+      <link linkend="gwy-process-func-register">gwy_process_func_register()</link>.
+      File loading and/or saving functions are registered with
+      <link linkend="gwy-file-func-register">gwy_file_func_register()</link>,
+      etc. (at the time of writing this there exist four module function
+      types).
+    </para>
+    <para>
+      The registration itself is carried out by filling a function info
+      structure and calling <function>gwy_*_func_register()</function> with
+      the info.  Note the function info has to be persistent (static), because
+      Gwyddion doesn't make a copy of it.  It must not be freed or changed
+      after the registration.
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyProcessFuncInfo my_invert_value_func_info = {
+        "my_invert_value",
+        "/_Test/My _Invert Value",
+        (GwyProcessFunc)&my_invert_value,
+        INVERT_VALUE_RUN_MODES,
+    };
+
+    gwy_process_func_register(name, &my_invert_value_func_info);
+
+    return TRUE;
+}
+]]></programlisting></informalexample>
+   <para>
+     The registration function should always return <literal>TRUE</literal>.
+     Returning <literal>FALSE</literal> means the registration failed, and
+     Gwyddion then tries to unregister all its already registered functions
+     and unload the module.  Normally there is hardly any reason why the
+     registration could fail.
+   </para>
+   <para>
+     The <parameter>name</parameter> argument has to be passed as the first
+     argument of all function registration calls
+     (<link linkend="gwy-process-func-register">gwy_process_func_register()</link>
+     here).
+     Now it is identical to module name specified in module info, but
+     don't count on it.
+   </para>
+   <para>
+     Each function type has a different function info structure, though some
+     fields are present in all of them.  Data processing function info
+     <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link> consits
+     of function name (again, this has to be an unique identifier, among
+     the functions of the same type), path where it should be placed into
+     the Data Process menu, a pointer to the function itself
+     (<function>my_invert_value</function>), and run modes it supports (we
+     cleverly defined the <literal>INVERT_VALUE_RUN_MODES</literal> macro
+     for them).
+   </para>
+  </refsect1>
+  <refsect1>
+    <title>Executive</title>
+    <informalexample><programlisting><![CDATA[
+static gboolean
+my_invert_value(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+
+    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
+    gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
+
+    return TRUE;
+}
+]]></programlisting></informalexample>
   </refsect1>
 </refentry>
 
