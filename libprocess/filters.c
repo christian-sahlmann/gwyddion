@@ -680,75 +680,6 @@ gwy_data_field_filter_median(GwyDataField *data_field,
                                       brcol-ulcol, brrow-ulrow);
 }
 
-void
-gwy_data_field_area_filter_conservative(GwyDataField *data_field,
-                                        gint size,
-                                        gint col, gint row,
-                                        gint width, gint height)
-{
-    gint xres, yres, kxres, kyres, i, j, m, n;
-    gint nb;
-    gdouble maxval, minval;
-    GwyDataField *hlp_df;
-
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(size > 0);
-    xres = data_field->xres;
-    yres = data_field->yres;
-    kxres = size;
-    kyres = size;
-    g_return_if_fail(col >= 0 && row >= 0
-                     && width > 0 && height > 0
-                     && col + width <= xres
-                     && row + height <= yres);
-    if (kxres > width || kyres > height) {
-        g_warning("Kernel size larger than field area size.");
-        return;
-    }
-
-    hlp_df = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, data_field->xreal,
-                                               data_field->yreal, TRUE));
-
-
-    for (i = row; i < row + height; i++) {
-        for (j = col; j < col + width; j++) {
-            nb = 0;
-            maxval = -G_MAXDOUBLE;
-            minval = G_MAXDOUBLE;
-            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
-                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
-                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
-                        && ((i + m) >= 0) && !(m==0 && n==0)) {
-
-                        if (minval > data_field->data[(j + n) + xres * (i + m)])
-                            minval = data_field->data[(j + n) + xres * (i + m)];
-                        if (maxval < data_field->data[(j + n) + xres * (i + m)])
-                            maxval = data_field->data[(j + n) + xres * (i + m)];
-                    }
-                }
-            }
-
-            if (data_field->data[j + xres * i] > maxval)
-                hlp_df->data[j + xres * i] = maxval;
-            else if (data_field->data[j + xres * i] < minval)
-                hlp_df->data[j + xres * i] = minval;
-            else
-                hlp_df->data[j + xres * i] = data_field->data[j + xres * i];
-
-        }
-    }
-
-    for (i = row; i < row + height; i++) {
-        for (j = col; j < col + width; j++) {
-            data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
-        }
-    }
-
-    g_object_unref(hlp_df);
-    gwy_data_field_invalidate(data_field);
-}
-
 /**
  * gwy_data_field_area_filter_conservative:
  * @data_field: A data field to apply mean filter to.
@@ -762,6 +693,74 @@ gwy_data_field_area_filter_conservative(GwyDataField *data_field,
  *
  * Since: 1.3
  **/
+void
+gwy_data_field_area_filter_conservative(GwyDataField *data_field,
+                                        gint size,
+                                        gint col, gint row,
+                                        gint width, gint height)
+{
+    gint xres, yres, i, j, ii, jj;
+    gdouble maxval, minval;
+    gdouble *data;
+    GwyDataField *hlp_df;
+
+    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(size > 0);
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= xres
+                     && row + height <= yres);
+    if (size == 1)
+        return;
+    if (size > width || size > height) {
+        g_warning("Kernel size larger than field area size.");
+        return;
+    }
+
+    hlp_df = GWY_DATA_FIELD(gwy_data_field_new(width, height, 1.0, 1.0, FALSE));
+
+    data = data_field->data;
+    for (i = 0; i < height; i++) {
+        gint ifrom = MAX(0, i + row - (size-1)/2);
+        gint ito = MIN(yres-1, i + row + size/2);
+
+        for (j = col; j < col + width; j++) {
+            gint jfrom = MAX(0, j + col - (size-1)/2);
+            gint jto = MIN(xres-1, j + col + size/2);
+
+            maxval = -G_MAXDOUBLE;
+            minval = G_MAXDOUBLE;
+            for (ii = 0; ii <= ito - ifrom; ii++) {
+                gdouble *drow = data + (ifrom + ii)*xres + jfrom;
+
+                for (jj = 0; jj <= jto - jfrom; jj++) {
+                    if (i + row == ii + ifrom && j + col == jj + jfrom)
+                        continue;
+
+                    if (drow[jj] < minval)
+                        minval = drow[jj];
+                    if (drow[jj] > maxval)
+                        maxval = drow[jj];
+                }
+            }
+
+            hlp_df->data[i*width + j] = CLAMP(data[(i + row)*xres + j + col],
+                                              minval, maxval);
+        }
+    }
+    /* fix bottom right corner for size == 2 */
+    if (size == 2)
+        hlp_df->data[height*width - 1] = data[(row + height - 1)*xres
+                                              + col + width - 1];
+
+    gwy_data_field_area_copy(hlp_df, data_field, 0, 0, width, height, col, row);
+    g_object_unref(hlp_df);
+    gwy_data_field_invalidate(data_field);
+}
+
 void
 gwy_data_field_filter_conservative(GwyDataField *data_field,
                                    gint size,
