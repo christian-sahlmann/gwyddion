@@ -46,7 +46,7 @@ static void       pointer_dialog_response_cb     (gpointer unused,
 static void       pointer_dialog_abandon         (void);
 static void       pointer_dialog_set_visible     (gboolean visible);
 
-static GtkWidget *dialog;
+static GtkWidget *dialog = NULL;
 static PointerControls controls;
 static gulong updated_id = 0;
 static gulong response_id = 0;

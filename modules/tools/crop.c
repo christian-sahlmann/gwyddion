@@ -49,7 +49,7 @@ static void       crop_dialog_response_cb       (gpointer unused,
 static void       crop_dialog_abandon           (void);
 static void       crop_dialog_set_visible       (gboolean visible);
 
-static GtkWidget *dialog;
+static GtkWidget *dialog = NULL;
 static CropControls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;

@@ -54,7 +54,7 @@ static void       level3_dialog_set_visible     (gboolean visible);
 
 static const gchar *radius_key = "/tool/level3/radius";
 
-static GtkWidget *dialog;
+static GtkWidget *dialog = NULL;
 static Level3Controls controls;
 static gulong finished_id = 0;
 static gulong response_id = 0;
