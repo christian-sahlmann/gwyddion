@@ -89,7 +89,8 @@ main(int argc, char *argv[])
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 33.4455);
     gwy_watchable_value_changed(ser);
     g_signal_handler_disconnect(ser, id);
-    g_object_unref(ser);
+    /*g_object_unref(ser);*/
+    g_message("####### %d", G_OBJECT(ser)->ref_count);
 
     g_message("====== CONTAINER ====================================");
     container = gwy_container_new();
@@ -118,10 +119,20 @@ main(int argc, char *argv[])
     gwy_container_set_double_by_name(GWY_CONTAINER(container), "pdf/f", 1.4142);
     gwy_container_set_int64_by_name(GWY_CONTAINER(container), "x64", 64LL);
 
+    g_assert(G_OBJECT(ser)->ref_count == 1);
+    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    g_assert(G_OBJECT(ser)->ref_count == 2);
+    gwy_container_set_object_by_name(GWY_CONTAINER(container), "ser", ser);
+    g_assert(G_OBJECT(ser)->ref_count == 2);
+    ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
+    g_assert(G_OBJECT(ser)->ref_count == 2);
+
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize(container, buffer, &size);
     g_object_unref(container);
+    g_assert(G_OBJECT(ser)->ref_count == 1);
+    g_object_unref(ser);
 
     fh = fopen(FILENAME, "wb");
     fwrite(buffer, 1, size, fh);
@@ -139,6 +150,10 @@ main(int argc, char *argv[])
     g_message("'pdf/f' -> %g",
               gwy_container_get_double_by_name(GWY_CONTAINER(container),
                                                "pdf/f"));
+
+    ser = gwy_container_get_object_by_name(GWY_CONTAINER(container), "ser");
+    g_object_unref(ser);
+    g_assert(G_OBJECT(ser)->ref_count == 1);
 
     return 0;
 }

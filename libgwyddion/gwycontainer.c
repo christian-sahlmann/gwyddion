@@ -598,8 +598,9 @@ gwy_container_set_object(GwyContainer *container,
 
     memset(&gvalue, 0, sizeof(GValue));
     g_value_init(&gvalue, G_TYPE_OBJECT);
-    g_value_set_object(&gvalue, value);
+    g_value_set_object(&gvalue, value);  /* this increases refcount too */
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
+    g_object_unref(value);
 }
 
 static guchar*

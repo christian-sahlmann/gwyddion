@@ -135,7 +135,7 @@ gwy_serializable_deserialize(const guchar *buffer,
         return NULL;
     }
 
-    type = g_type_from_name((gchar*)buffer);
+    type = g_type_from_name((gchar*)(buffer + *position));
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "deserializing a %s",
           g_type_name(type));

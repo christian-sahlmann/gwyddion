@@ -178,7 +178,8 @@ gwy_test_ser_deserialize(const guchar *stream,
     #endif
     g_return_val_if_fail(stream, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, GWY_TEST_SER_TYPE_NAME);
+    pos = gwy_serialize_check_string(stream + *position, size - *position,
+                                     GWY_TEST_SER_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
 

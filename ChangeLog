@@ -1,4 +1,10 @@
 
+Sat Sep  6 19:04:41 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
+    * libgwyddion/gwycontainer.c (gwy_container_set_object):
+      fixed increasing refcount by 2 instead of 1
+    * libgwyddion/gwyserializable.c (gwy_serializable_deserialize):
+      fixed getting wrong type name by not offsetting by position
+
 Sat Sep  6 15:18:30 CEST 2003  David Necas (Yeti) <yeti@physics.muni.cz>
     * libgwyddion/gwytestser.c (gwy_test_ser_finalize):
       added
