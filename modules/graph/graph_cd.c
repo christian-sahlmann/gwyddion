@@ -40,16 +40,14 @@ typedef struct {
     GtkWidget *from;
     GtkWidget *to;
     GtkObject *data;
-    GtkWidget *chisq;
     GtkWidget *selector;
-    GtkWidget *equation;
-    GtkWidget **covar;
     GtkWidget **param_des;
     GtkWidget **param_fit;
     GtkWidget **param_init;
     GtkWidget **param_res;
     GtkWidget **param_err;
     GtkWidget *criterium;
+    GtkWidget *image;
 } FitControls;
 
 typedef struct {
@@ -253,6 +251,7 @@ fit_dialog(FitArgs *args)
     FitControls controls;
     GwyGraphAutoProperties prop;
     gint response, i, j;
+    char *p, *filename;
 
     enum {
         RESPONSE_RESET = 1,
@@ -296,9 +295,12 @@ fit_dialog(FitArgs *args)
                                            args, args->function_type);
     gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
 
-    controls.equation = gtk_label_new("f(x) =");
-    gtk_misc_set_alignment(GTK_MISC(controls.equation), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), controls.equation);
+    p = gwy_find_self_dir("pixmaps");
+    filename = g_build_filename(p, "cd_line.png");
+    g_free(p);
+    controls.image = gtk_image_new_from_file(filename);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.image);
+    g_free(filename);
 
     /*fit parameters*/
     label = gtk_label_new(NULL);
@@ -394,34 +396,6 @@ fit_dialog(FitArgs *args)
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Correlation matrix:</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(vbox), label);
-
-    controls.covar = g_new0(GtkWidget*, MAX_PARAMS*MAX_PARAMS);
-    table = gtk_table_new(MAX_PARAMS, MAX_PARAMS, TRUE);
-    for (i = 0; i < MAX_PARAMS; i++) {
-        for (j = 0; j <= i; j++) {
-            label = controls.covar[i*MAX_PARAMS + j] = gtk_label_new(NULL);
-            gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-            gtk_table_attach(GTK_TABLE(table), label,
-                             j, j+1, i, i+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-        }
-    }
-    gtk_container_add(GTK_CONTAINER(vbox), table);
-
-    hbox2 = gtk_hbox_new(FALSE, 0);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Chi-square result:</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(hbox2), label);
-
-    controls.chisq = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.chisq), 0.0, 0.5);
-    gtk_container_add(GTK_CONTAINER(hbox2), controls.chisq);
-
-    gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
     /*FIt area*/
     label = gtk_label_new("");
@@ -534,7 +508,6 @@ destroy(FitArgs *args, FitControls *controls)
     g_free(controls->param_res);
     g_free(controls->param_fit);
     g_free(controls->param_err);
-    g_free(controls->covar);
 }
 
 static void
@@ -548,8 +521,6 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_markup(GTK_LABEL(controls->param_err[i]), " ");
     }
-
-    gtk_label_set_markup(GTK_LABEL(controls->chisq), " ");
 }
 
 static void
@@ -682,12 +653,21 @@ reset(FitArgs *args, FitControls *controls)
 static void
 type_changed_cb(GObject *item, FitArgs *args)
 {
-
+    char *p, *filename;
+    
     args->function_type =
         GPOINTER_TO_INT(g_object_get_data(item, "cdline-preset"));
 
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
+    
+    p = gwy_find_self_dir("pixmaps");
+    filename = g_build_filename(p, "cd_line.png" /*gwy_cdline_get_preset_formula(args->fitfunc)*/);
+    g_free(p);
+    gtk_image_set_from_file(pcontrols->image, filename);
+    
     dialog_update(pcontrols, args);
+
+    g_free(filename);
 }
 
 static void
@@ -698,8 +678,7 @@ dialog_update(FitControls *controls, FitArgs *args)
 
     clear(args, controls);
 
-    gtk_label_set_markup(GTK_LABEL(controls->equation),
-                         gwy_cdline_get_preset_formula(args->fitfunc));
+    /*TODO change chema image*/
 
 
     for (i = 0; i < MAX_PARAMS; i++) {

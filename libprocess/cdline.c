@@ -72,7 +72,7 @@ static const GwyCDLinePreset fitting_presets[] = {
     {
         "Step height",
         "Step",
-        "ISO 42589",
+        "/home/klapetek/gwyddion/pixmaps/cd_line.png",
         &func_stepheight,
         &cd_stepheight,
         4,
