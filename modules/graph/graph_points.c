@@ -53,6 +53,7 @@ static void        selection_updated_cb         (gpointer data);
 static void        points_dialog_closed_cb      (gpointer data);
 static void        points_dialog_response_cb    (gpointer data,
                                                  gint response);
+static gdouble     get_unit_multiplicator       (gchar *unit);
 
 static PointsControls controls;
 static GtkWidget *dialog = NULL;
@@ -372,22 +373,17 @@ selection_updated_cb(gpointer data)
                 }
                 gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.disty, i)), buffer);
 
-                /*XXX FIXME follows extremely stupid block that should be changed immediately after 1.0 release*/
+                
                 if ((graph->x_unit==0 || graph->y_unit==0) || strstr(graph->x_unit, graph->y_unit)==graph->x_unit)
+                {
                     g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x))/3.141592);
-                else if ((strstr(graph->x_unit, "µ")==graph->x_unit && strstr(graph->y_unit, "n")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "m")==graph->x_unit && strstr(graph->y_unit,"µ")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "k")==graph->x_unit && strstr(graph->y_unit,"m")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "n")==graph->x_unit && strstr(graph->y_unit,"p")==graph->y_unit))
-                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x)*1000)/3.141592);
-                else if ((strstr(graph->x_unit, "µ")==graph->x_unit && strstr(graph->y_unit,"m")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "m")==graph->x_unit && strstr(graph->y_unit,"k")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "p")==graph->x_unit && strstr(graph->y_unit,"n")==graph->y_unit) ||
-                         (strstr(graph->x_unit, "n")==graph->x_unit && strstr(graph->y_unit,"µ")==graph->y_unit))
-                    g_snprintf(buffer, sizeof(buffer), "%.3f", 180.0*atan2((pnt.y - ppnt.y),(pnt.x - ppnt.x)/1000)/3.141592);
-                else g_snprintf(buffer, sizeof(buffer), " ");
-                /*XXX FIXME end of extremely stupid block*/
-
+                }
+                else
+                {
+                    g_snprintf(buffer, sizeof(buffer), "%.3f", 
+                           180.0*atan2((pnt.y - ppnt.y)*get_unit_multiplicator(graph->y_unit),
+                           (pnt.x - ppnt.x)*get_unit_multiplicator(graph->x_unit))/3.141592);
+                }
                 gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.slope, i)), buffer);
              }
         }
@@ -402,6 +398,28 @@ selection_updated_cb(gpointer data)
         }
     }
 
+}
+
+static gdouble
+get_unit_multiplicator(gchar *unit)
+{
+    if (strstr(unit, "m") == unit) return 1.0e-3;
+    if (strstr(unit, "µ") == unit) return 1.0e-6;
+    if (strstr(unit, "n") == unit) return 1.0e-9;
+    if (strstr(unit, "p") == unit) return 1.0e-12;
+    if (strstr(unit, "f") == unit) return 1.0e-15;
+    if (strstr(unit, "a") == unit) return 1.0e-18;
+    if (strstr(unit, "z") == unit) return 1.0e-21;
+    if (strstr(unit, "y") == unit) return 1.0e-24;
+    if (strstr(unit, "k") == unit) return 1.0e3;
+    if (strstr(unit, "M") == unit) return 1.0e6;
+    if (strstr(unit, "G") == unit) return 1.0e9;
+    if (strstr(unit, "T") == unit) return 1.0e12;
+    if (strstr(unit, "P") == unit) return 1.0e15;
+    if (strstr(unit, "E") == unit) return 1.0e18;
+    if (strstr(unit, "Z") == unit) return 1.0e21;
+    if (strstr(unit, "Y") == unit) return 1.0e24;
+    return 1;
 }
 
 static void
