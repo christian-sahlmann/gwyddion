@@ -34,7 +34,7 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Chaning ifraces     C:   R:   0
-libgwyapp_la_LDFLAGS = -version-info 1:0:1
+libgwyapp_la_LDFLAGS = -version-info 2:0:2
 libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
