@@ -289,7 +289,7 @@ setup_object_callback(GwyContainer *container, GQuark key, GValue *value)
 }
 
 /**
- * gwy_container_delete:
+ * gwy_container_remove:
  * @container: A #GwyContainer.
  * @key: A #GQuark key.
  *
@@ -315,6 +315,49 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 
     return g_hash_table_remove(container->values,
                                GUINT_TO_POINTER(key));
+}
+
+/**
+ * gwy_container_rename:
+ * @container: A #GwyContainer.
+ * @key: The current key.
+ * @newkey: A new key for the value.
+ * @force: Whether to delete existing value at @newkey.
+ *
+ * Makes a value in @container identified by @key to be identified by @newkey.
+ *
+ * When @force is %TRUE existing value at @newkey is removed from @container.
+ * When it's %FALSE, an existing value @newkey inhibits the rename and %FALSE
+ * is returned.
+ *
+ * Returns: Whether the rename succeeded.
+ **/
+gboolean
+gwy_container_rename(GwyContainer *container,
+                     GQuark key,
+                     GQuark newkey,
+                     gboolean force)
+{
+    GValue *value, *oldvalue;
+
+    g_return_val_if_fail(key, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
+    /* TODO: notify */
+
+    value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!value)
+        return FALSE;
+
+    oldvalue = g_hash_table_lookup(container->values, GUINT_TO_POINTER(newkey));
+    if (oldvalue) {
+        if (!force)
+            return FALSE;
+        g_assert(gwy_container_remove(container, newkey));
+    }
+    gwy_container_set_value(container, newkey, value, NULL);
+    g_assert(gwy_container_remove(container, key));
+
+    return TRUE;
 }
 
 /**
