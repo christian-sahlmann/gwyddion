@@ -171,7 +171,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
 }
 
 /**
- * gwy_color_axis_new_with_range:
+ * gwy_color_axis_new:
  * @orientation: The orientation of the axis.
  *
  * Creates a new color axis.

@@ -490,7 +490,6 @@ gwy_module_lookup(const gchar *name)
  * @register_func: Module registration function (the function run by Gwyddion
  *                 module system, actually registering particular module
  *                 features).
- * @name: An unique module name.
  * @blurb: Some module description.
  * @author: Module author(s).
  * @version: Module version.
