@@ -44,6 +44,10 @@ struct _GwyGrapherLabel {
     PangoFontDescription *label_font;
     gpointer grapher_model;
 
+    gint *samplepos;
+    gint reqheight;
+    gint reqwidth;
+
     gpointer reserved1;
     gpointer reserved2;
 };

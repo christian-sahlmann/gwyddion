@@ -103,16 +103,22 @@ main(int argc, char *argv[])
     str4 = g_string_new("cosi");
     str5 = g_string_new("jiny sinus");
 
+    graph = gwy_grapher_new();
+    gmodel = gwy_grapher_model_new(graph);
+    
     model = gwy_grapher_curve_model_new();
     model->xdata = xp;
     model->ydata = yp;
+    model->description = str1;
     model->n = 100;
-    
-    
-    graph = gwy_grapher_new();
-    gmodel = gwy_grapher_model_new(graph);
     gwy_grapher_model_add_curve(gmodel, model);
     
+    model->xdata = xp;
+    model->ydata = ys;
+    model->description = str2;
+    model->n = 100;
+    gwy_grapher_model_add_curve(gmodel, model);
+     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);
 

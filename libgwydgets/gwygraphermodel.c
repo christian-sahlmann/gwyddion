@@ -203,6 +203,7 @@ gwy_grapher_model_add_curve(GwyGrapherModel *gmodel, GwyGrapherCurveModel *curve
     newcurves[i] = gwy_serializable_duplicate(curve);
   
     gmodel->curves = newcurves;
+    gmodel->ncurves++;
     
     gwy_grapher_refresh(gmodel->grapher);
 }

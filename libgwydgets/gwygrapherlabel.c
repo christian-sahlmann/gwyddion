@@ -21,7 +21,7 @@
 #include <math.h>
 #include <gtk/gtkmain.h>
 #include <glib-object.h>
-
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
 #include "gwygraphermodel.h"
@@ -114,7 +114,7 @@ static void
 gwy_grapher_label_init(GwyGrapherLabel *label)
 {
     gwy_debug("");
-
+    label->samplepos = NULL;
 }
 
 /**
@@ -239,8 +239,8 @@ gwy_grapher_label_size_request(GtkWidget *widget,
     else
     {
         label = GWY_GRAPHER_LABEL(widget);
-        requisition->width = 5;
-        requisition->height = 5;
+        requisition->width = label->reqwidth;
+        requisition->height = label->reqheight;
     }
 }
 
@@ -296,8 +296,10 @@ gwy_grapher_label_expose(GtkWidget *widget,
 void gwy_grapher_label_draw_label(GtkWidget *widget)
 {
     gint ypos;
-    guint i;
+    gint i;
     GwyGrapherLabel *label;
+    GwyGrapherCurveModel *curvemodel;
+    GwyGrapherModel *model;
     PangoLayout *layout;
     PangoRectangle rect;
     GdkGC *mygc;
@@ -306,11 +308,48 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     mygc = gdk_gc_new(widget->window);
 
     label = GWY_GRAPHER_LABEL(widget);
+    model = GWY_GRAPHER_MODEL(label->grapher_model);
     layout = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_font_description(layout, label->label_font);
 
+   
     ypos = 5;
     fg.pixel = 0x00000000;
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        
+        pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
+        gdk_draw_layout(widget->window, mygc, 25, ypos, layout);
+        pango_layout_get_pixel_extents(layout, NULL, &rect);
+
+        label->samplepos[i] = ypos;
+
+/*        gdk_gc_set_foreground(mygc, &(cparams->color));
+        if (cparams->is_line)
+        {
+            gdk_gc_set_line_attributes (mygc, cparams->line_size,
+                   cparams->line_style, GDK_CAP_ROUND, GDK_JOIN_MITER);
+            gdk_draw_line(widget->window, mygc,
+                   5, ypos + rect.height/2, 20, ypos + rect.height/2);
+        }
+        if (cparams->is_point)
+        {
+             gwy_grapher_draw_point (widget->window, mygc, 12, ypos + rect.height/2,
+                                   cparams->point_type, cparams->point_size,
+                                   &(cparams->color), cparams->is_line);
+        }
+        gdk_gc_set_foreground(mygc, &fg);
+        */
+        ypos += rect.height + 5;
+         
+    }
+    
+
+    
+    /*ypos = 5;
+    fg.pixel = 0x00000000;
+    */
     /*plot samples of lines and text*/
 /*    for (i = 0; i < label->curve_params->len; i++)
     {
@@ -472,15 +511,48 @@ gwy_grapher_label_clear(GwyGrapherLabel *label)
 }
 */
 
-#include <stdio.h>
+static void
+set_requised_size(GwyGrapherLabel *label)
+{
+    gint i;
+    PangoLayout *layout;
+    PangoRectangle rect;
+    GwyGrapherCurveModel *curvemodel;
+    GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
+  
+    label->reqheight = 0;
+    label->reqwidth = 0;
+    
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPHER_CURVE_MODEL(model->curves[i]);
+        
+        layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
+       
+        pango_layout_set_font_description(layout, label->label_font);
+        pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
+        pango_layout_get_pixel_extents(layout, NULL, &rect);
+
+        if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30;
+        label->reqheight += rect.height + 5;
+    } 
+}
+
 void 
 gwy_grapher_label_refresh(GwyGrapherLabel *label)
 {
     GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
     
     printf("label refresh! (%d curves)\n", model->ncurves);
+    
     /*repaint label samples and descriptions*/
-
+    if (label->samplepos) g_free(label->samplepos);
+    if (model->ncurves > 0) label->samplepos = g_new(gint, model->ncurves);
+    else label->samplepos = NULL;
+    
+    set_requised_size(label);
+    gtk_widget_queue_resize(GTK_WIDGET(label));
+    gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
 void
