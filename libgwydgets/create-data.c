@@ -11,8 +11,9 @@
 #define N 240
 
 int
-main(int argc, char *argv[])
+main(void)
 {
+    static const gchar *magic_header = "GWYO";
     FILE *fh;
     GwyContainer *container;
     GwyDataField *df;
@@ -41,7 +42,8 @@ main(int argc, char *argv[])
     gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
     buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
 
-    fh = fopen("data_field.object", "wb");
+    fh = fopen("test.gwy", "wb");
+    fwrite(magic_header, 1, strlen(magic_header), fh);
     fwrite(buffer, 1, size, fh);
     fclose(fh);
 
