@@ -113,11 +113,11 @@ your own plug-ins.
 %{_libdir}/libgwydraw.so
 %{_libdir}/libgwymodule.so
 %{_libdir}/libgwyprocess.so
-%{_libdir}/libgwyddion.a
-%{_libdir}/libgwydgets.a
-%{_libdir}/libgwydraw.a
-%{_libdir}/libgwymodule.a
-%{_libdir}/libgwyprocess.a
+#%{_libdir}/libgwyddion.a
+#%{_libdir}/libgwydgets.a
+#%{_libdir}/libgwydraw.a
+#%{_libdir}/libgwymodule.a
+#%{_libdir}/libgwyprocess.a
 %{_libdir}/libgwyddion.la
 %{_libdir}/libgwydgets.la
 %{_libdir}/libgwydraw.la

@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 0.20031129, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
+AC_INIT(Gwyddion, 0.20031206, [yeti@physics.muni.cz, klapetek@physics.muni.cz])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -40,6 +40,7 @@ dnl Checks for programs.
 dnl FIXME: the tagnames= inhibits at least part of the Fortran and C++ brain
 dnl damage.
 tagnames=
+AC_DISABLE_STATIC
 AC_PROG_AWK
 AC_PROG_CC
 AC_AIX
