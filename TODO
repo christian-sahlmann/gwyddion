@@ -48,6 +48,7 @@ Release checklist:
 - update translation(s)
 - make sure global library headers (libfoo.h) include all ohters
 - update library versions, if something changed
+- make sure gwyddion.iss.in contains all translation (XXX: automatize this)
 - update version in configure.ac
 - update version in gwyddion-night-build
 - switch object leak debugging and segfault on critical messages off
