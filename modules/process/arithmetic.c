@@ -139,10 +139,9 @@ arithmetic(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & ARITH_RUN_MODES, FALSE);
     settings = gwy_app_settings_get();
-    arithmetic_load_args(settings, &args);
     args.win2 = args.win1 = gwy_app_data_window_get_current();
+    arithmetic_load_args(settings, &args);
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    /* this may set win1, win2 back to NULL is operands are to be scalars */
     arithmetic_window = arithmetic_window_construct(&args);
     gtk_window_present(GTK_WINDOW(arithmetic_window));
 
