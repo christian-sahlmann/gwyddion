@@ -43,7 +43,7 @@ typedef struct {
     gchar *prefixed;
     gdouble magnitude;
     gint precision;
-} GwySIValue;
+} GwySIValueFormat;
 
 struct _GwySIUnit {
     GObject parent_instance;
@@ -62,7 +62,7 @@ GObject* gwy_si_unit_new(gchar *unit_string);
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
 gchar* gwy_si_unit_get_unit_string(GwySIUnit *siunit);
 
-void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, GwySIValue *number);
+void gwy_si_unit_get_prefixed(GwySIUnit *siunit, gdouble value, GwySIValueFormat *number);
 
 void gwy_si_unit_copy(GwySIUnit *target, GwySIUnit *example);
 

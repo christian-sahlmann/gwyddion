@@ -262,7 +262,7 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 void 
 gwy_si_unit_get_prefixed(GwySIUnit *siunit, 
                          gdouble value, 
-                         GwySIValue *number)
+                         GwySIValueFormat *number)
 {
     gwy_debug("");
     number->magnitude = pow(10, 3*ROUND(((gint)(log10(fabs(value))))/3.0) - 3);
