@@ -33,12 +33,18 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
+#define MAX_SIZE 64
+#define SCALE 4
+
 typedef struct {
     GwyUnitoolState *state;
     GtkWidget *x;
     GtkWidget *y;
     GtkWidget *w;
     GtkWidget *h;
+    GtkWidget *view;
+    gchar *pal;
+    gint algorithm;
 } ToolControls;
 
 static gboolean   module_register      (const gchar *name);
@@ -50,6 +56,23 @@ static void       dialog_update        (GwyUnitoolState *state,
                                         GwyUnitoolUpdateType reason);
 static void       dialog_abandon       (GwyUnitoolState *state);
 static void       apply                (GwyUnitoolState *state);
+static void       load_args            (GwyContainer *container,
+                                        ToolControls *controls);
+static void       save_args            (GwyContainer *container,
+                                        ToolControls *controls);
+static void       draw_zoom            (ToolControls *controls,
+                                        GwyDataField *dfield,
+                                        gint ximin,
+                                        gint yimin,
+                                        gint ximax,
+                                        gint yimax);
+static gboolean   find_subrange        (gint min,
+                                        gint max,
+                                        gint res,
+                                        gint size,
+                                        gint *from,
+                                        gint *to,
+                                        gint *dest);
 static void       crisscross_average   (GwyDataField *dfield,
                                         gint ximin,
                                         gint yimin,
@@ -61,6 +84,10 @@ static void       selection_to_rowcol  (GwyDataField *dfield,
                                         gint *yimin,
                                         gint *ximax,
                                         gint *yimax);
+static void       algorithm_changed_cb (GObject *item,
+                                        ToolControls *controls);
+
+static const gchar *algorithm_key = "/tool/spotremove/algorithm";
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -82,6 +109,14 @@ static GwyUnitoolSlots func_slots = {
     dialog_abandon,                /* dialog abandon hook */
     apply,                         /* apply action */
     NULL,                          /* nonstandard response handler */
+};
+
+enum {
+    SPOT_REMOVE_HYPER_FLATTEN
+};
+
+static const GwyEnum algorithms[] = {
+    { "Hyperbolic flatten", SPOT_REMOVE_HYPER_FLATTEN },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -110,6 +145,7 @@ use(GwyDataWindow *data_window,
 {
     static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
+    ToolControls *controls;
 
     if (!state) {
         func_slots.layer_type = g_type_from_name(layer_name);
@@ -122,7 +158,22 @@ use(GwyDataWindow *data_window,
         state->user_data = g_new0(ToolControls, 1);
         state->apply_doesnt_close = TRUE;
     }
-    ((ToolControls*)state->user_data)->state = state;
+    controls = (ToolControls*)state->user_data;
+    controls->state = state;
+    if (controls->view && data_window) {
+        GwyContainer *data, *mydata;
+        GwyDataField *dfield;
+        gdouble min, max;
+
+        data = gwy_data_window_get_data(data_window);
+        mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                 "/0/data"));
+        min = gwy_data_field_get_min(dfield);
+        max = gwy_data_field_get_max(dfield);
+        gwy_container_set_double_by_name(mydata, "/0/base/min", min);
+        gwy_container_set_double_by_name(mydata, "/0/base/max", max);
+    }
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -137,22 +188,61 @@ static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GtkWidget *dialog, *table, *label, *frame;
+    GwyContainer *data;
+    GwyContainer *settings;
+    GwyDataField *dfield;
+    GwyPixmapLayer *layer;
+    GtkWidget *dialog, *table, *label, *frame, *vbox, *omenu;
+    gdouble min, max;
 
     gwy_debug("");
     controls = (ToolControls*)state->user_data;
+    settings = gwy_app_settings_get();
+    load_args(settings, controls);
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Spots"), NULL, 0, NULL);
+    gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
     gwy_unitool_dialog_add_button_apply(dialog);
 
-    frame = gwy_unitool_windowname_frame_create(state);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+    data = gwy_data_window_get_data(state->data_window);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    controls->pal
+        = g_strdup(gwy_container_get_string_by_name(data, "/0/base/palette"));
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
+
+    table = gtk_table_new(1, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 3, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_data_field_new(MAX_SIZE, MAX_SIZE,
+                                               1.0, 1.0, FALSE));
+    data = GWY_CONTAINER(gwy_container_new());
+    gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+    gwy_container_set_double_by_name(data, "/0/base/min", min);
+    gwy_container_set_double_by_name(data, "/0/base/max", max);
+    gwy_container_set_string_by_name(data, "/0/base/palette",
+                                     g_strdup(controls->pal));
+    g_object_unref(dfield);
+    controls->view = gwy_data_view_new(data);
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), (gdouble)SCALE);
+
+    layer = GWY_PIXMAP_LAYER(gwy_layer_basic_new());
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
+    gtk_table_attach(GTK_TABLE(table), controls->view, 0, 1, 0, 1,
+                     GTK_FILL, 0, 2, 2);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table), vbox, 1, 2, 0, 1,
+                     GTK_EXPAND | GTK_FILL, GTK_FILL | GTK_EXPAND, 2, 2);
+
+    frame = gwy_unitool_windowname_frame_create(state);
+    gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);
+
+    table = gtk_table_new(8, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Origin</b>"));
@@ -188,22 +278,67 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach_defaults(GTK_TABLE(table), controls->w, 2, 3, 4, 5);
     gtk_table_attach_defaults(GTK_TABLE(table), controls->h, 2, 3, 5, 6);
 
+    gtk_table_set_row_spacing(GTK_TABLE(table), 5, 8);
+
+    label = gtk_label_new_with_mnemonic(_("Removal _method"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, 6, 7, GTK_FILL, 0, 2, 2);
+
+    omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
+                                   "algorithm",
+                                   G_CALLBACK(algorithm_changed_cb), &controls,
+                                   controls->algorithm);
+    gtk_table_attach(GTK_TABLE(table), omenu, 0, 3, 7, 8, GTK_FILL, 0, 2, 2);
+
     return dialog;
 }
 
 static void
 dialog_update(GwyUnitoolState *state,
-              G_GNUC_UNUSED GwyUnitoolUpdateType reason)
+              GwyUnitoolUpdateType reason)
 {
     gboolean is_visible, is_selected, is_ok;
     ToolControls *controls;
     GwySIValueFormat *units;
+    GwyContainer *data;
+    GwyDataField *dfield;
+    GwyContainer *mydata;
+    GwyDataField *mydfield;
     gdouble sel[4];
+    const gchar *pal;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
     units = state->coord_format;
+
+    data = gwy_data_window_get_data(state->data_window);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+    mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
+                                                               "/0/data"));
+    pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+    if (strcmp(pal, controls->pal)) {
+        GwyPixmapLayer *layer;
+        GwyPalette *palette;
+
+        g_free(controls->pal);
+        controls->pal = g_strdup(pal);
+        palette = GWY_PALETTE(gwy_palette_new(NULL));
+        gwy_palette_set_by_name(palette, controls->pal);
+        layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+        gwy_layer_basic_set_palette(GWY_LAYER_BASIC(layer), palette);
+        g_object_unref(palette);
+    }
+    if (reason == GWY_UNITOOL_UPDATED_DATA) {
+        gdouble min, max;
+
+        gwy_debug("Recomputing min, max");
+        min = gwy_data_field_get_min(dfield);
+        max = gwy_data_field_get_max(dfield);
+        gwy_container_set_double_by_name(mydata, "/0/base/min", min);
+        gwy_container_set_double_by_name(mydata, "/0/base/max", max);
+    }
 
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, sel);
@@ -211,13 +346,8 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     if (is_selected) {
-        GwyContainer *data;
-        GwyDataField *dfield;
         gint ximin, yimin, ximax, yimax;
 
-        data = gwy_data_window_get_data(state->data_window);
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
         gwy_unitool_update_label(units, controls->x, sel[0]);
         gwy_unitool_update_label(units, controls->y, sel[1]);
         gwy_unitool_update_label(units, controls->w, sel[2] - sel[0]);
@@ -228,8 +358,9 @@ dialog_update(GwyUnitoolState *state,
                 && yimin > 0
                 && ximax + 1 < gwy_data_field_get_xres(dfield)
                 && yimax + 1 < gwy_data_field_get_yres(dfield)
-                && ximax - ximin < 40
-                && yimax - yimin < 40;
+                && ximax - ximin <= MAX_SIZE
+                && yimax - yimin <= MAX_SIZE;
+        draw_zoom(controls, dfield, ximin, yimin, ximax, yimax);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls->x), "");
@@ -237,6 +368,7 @@ dialog_update(GwyUnitoolState *state,
         gtk_label_set_text(GTK_LABEL(controls->w), "");
         gtk_label_set_text(GTK_LABEL(controls->h), "");
         is_ok = FALSE;
+        draw_zoom(controls, NULL, -1, -1, -1, -1);
     }
     gwy_unitool_apply_set_sensitive(state, is_ok);
 }
@@ -244,6 +376,14 @@ dialog_update(GwyUnitoolState *state,
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
+    ToolControls *controls;
+    GwyContainer *settings;
+
+    controls = (ToolControls*)state->user_data;
+    settings = gwy_app_settings_get();
+    save_args(settings, controls);
+    g_free(controls->pal);
+
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
@@ -266,7 +406,7 @@ apply(GwyUnitoolState *state)
     selection_to_rowcol(dfield, sel, &ximin, &yimin, &ximax, &yimax);
     gwy_app_undo_checkpoint(data, "/0/data");
     crisscross_average(dfield, ximin, yimin, ximax, yimax);
-    gwy_vector_layer_unselect(state->layer);
+    /*gwy_vector_layer_unselect(state->layer);*/
     gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
@@ -277,29 +417,26 @@ crisscross_average(GwyDataField *dfield,
 {
     gdouble *data;
     gint i, j, rowstride;
-    gdouble p, q;
 
     gwy_debug("(%d,%d) x (%d,%d)", ximin, ximax, yimin, yimax);
     data = gwy_data_field_get_data(dfield);
     rowstride = gwy_data_field_get_xres(dfield);
 
     for (i = yimin; i < yimax; i++) {
-        p = data[i*rowstride + ximin - 1];
-        q = data[i*rowstride + ximax];
+        gdouble px = data[i*rowstride + ximin - 1];
+        gdouble qx = data[i*rowstride + ximax];
+        gdouble y = (i - yimin + 1.0)/(yimax - yimin + 1.0);
+        gdouble wx = 1.0/y + 1.0/(1.0 - y);
+
         for (j = ximin; j < ximax; j++) {
+            gdouble py = data[(yimin - 1)*rowstride + j];
+            gdouble qy = data[yimax*rowstride + j];
             gdouble x = (j - ximin + 1.0)/(ximax - ximin + 1.0);
+            gdouble vy = px/x + qx/(1.0 - x);
+            gdouble vx = py/y + qy/(1.0 - y);
+            gdouble wy = 1.0/x + 1.0/(1.0 - x);
 
-            data[i*rowstride + j] = 0.5*(x*q + (1.0 - x)*p);
-        }
-    }
-
-    for (j = ximin; j < ximax; j++) {
-        p = data[(yimin - 1)*rowstride + j];
-        q = data[yimax*rowstride + j];
-        for (i = yimin; i < yimax; i++) {
-            gdouble y = (i - yimin + 1.0)/(yimax - yimin + 1.0);
-
-            data[i*rowstride + j] += 0.5*(y*q + (1.0 - y)*p);
+            data[i*rowstride + j] = (vx + vy)/(wx + wy);
         }
     }
 }
@@ -315,6 +452,95 @@ selection_to_rowcol(GwyDataField *dfield,
     *ximax = gwy_data_field_rtoj(dfield, sel[2]) + 1;
     *yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
 
+}
+
+static void
+draw_zoom(ToolControls *controls,
+          GwyDataField *dfield,
+          gint ximin, gint yimin,
+          gint ximax, gint yimax)
+{
+    GwyContainer *mydata;
+    GwyDataField *mydfield;
+    gint xfrom, xto, xdest, yfrom, yto, ydest;
+    gdouble min;
+    gboolean complete;
+
+    mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+    mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
+                                                               "/0/data"));
+    min = gwy_container_get_double_by_name(mydata, "/0/base/min");
+    if (!dfield) {
+        gwy_data_field_fill(mydfield, min);
+        gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+        return;
+    }
+
+    complete = TRUE;
+    complete &= find_subrange(ximin, ximax,
+                              gwy_data_field_get_xres(dfield), MAX_SIZE,
+                              &xfrom, &xto, &xdest);
+    complete &= find_subrange(yimin, yimax,
+                              gwy_data_field_get_yres(dfield), MAX_SIZE,
+                              &yfrom, &yto, &ydest);
+    if (!complete)
+        gwy_data_field_fill(mydfield, min);
+    gwy_data_field_area_copy(dfield, mydfield, xfrom, yfrom, xto, yto,
+                             xdest, ydest);
+    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+}
+
+static gboolean
+find_subrange(gint min, gint max, gint res, gint size,
+              gint *from, gint *to, gint *dest)
+{
+    gint length = max - min;
+
+    /* complete interval always fit in size */
+    if (res <= size) {
+        *from = 0;
+        *to = res;
+        *dest = (size - res)/2;
+        return FALSE;
+    }
+
+    /* interval larger than size */
+    if (length >= size) {
+        *from = min;
+        *to = min + size;
+        *dest = 0;
+        return TRUE;
+    }
+
+    /* interval shorter, fit intelligently */
+    *from = MAX(0, min - (size - length)/2);
+    *to = MIN(*from + size, res);
+    *from = *to - size;
+    g_assert(*from >= 0);
+    *dest = 0;
+    return TRUE;
+}
+
+static void
+algorithm_changed_cb(GObject *item, ToolControls *controls)
+{
+    controls->algorithm = GPOINTER_TO_INT(g_object_get_data(item, "algorithm"));
+}
+
+static void
+load_args(GwyContainer *container, ToolControls *controls)
+{
+    gwy_debug("");
+    gwy_container_gis_int32_by_name(container, algorithm_key,
+                                    &controls->algorithm);
+}
+
+static void
+save_args(GwyContainer *container, ToolControls *controls)
+{
+    gwy_debug("");
+    gwy_container_set_int32_by_name(container, algorithm_key,
+                                    controls->algorithm);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
