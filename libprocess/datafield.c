@@ -39,9 +39,8 @@ static void     gwy_data_field_init              (GwyDataField *data_field);
 static void     gwy_data_field_finalize          (GwyDataField *data_field);
 static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
-static guchar*  gwy_data_field_serialize         (GObject *obj,
-                                                  guchar *buffer,
-                                                  gsize *size);
+static GByteArray* gwy_data_field_serialize      (GObject *obj,
+                                                  GByteArray *buffer);
 static GObject* gwy_data_field_deserialize       (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
@@ -179,10 +178,9 @@ gwy_data_field_new(gint xres, gint yres,
     return (GObject*)(data_field);
 }
 
-static guchar*
+static GByteArray*
 gwy_data_field_serialize(GObject *obj,
-                         guchar *buffer,
-                         gsize *size)
+                         GByteArray *buffer)
 {
     GwyDataField *data_field;
     gsize datasize;
@@ -202,7 +200,7 @@ gwy_data_field_serialize(GObject *obj,
             { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
         };
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_DATA_FIELD_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }

@@ -31,9 +31,8 @@ static void     gwy_data_line_init              (GwyDataLine *data_line);
 static void     gwy_data_line_finalize          (GwyDataLine *data_line);
 static void     gwy_data_line_serializable_init (GwySerializableIface *iface);
 static void     gwy_data_line_watchable_init    (GwyWatchableIface *iface);
-static guchar*  gwy_data_line_serialize         (GObject *obj,
-                                                 guchar *buffer,
-                                                 gsize *size);
+static GByteArray* gwy_data_line_serialize      (GObject *obj,
+                                                 GByteArray *buffer);
 static GObject* gwy_data_line_deserialize       (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
@@ -145,10 +144,9 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 }
 
 
-static guchar*
+static GByteArray*
 gwy_data_line_serialize(GObject *obj,
-                       guchar *buffer,
-                       gsize *size)
+                        GByteArray *buffer)
 {
     GwyDataLine *data_line;
 
@@ -163,7 +161,7 @@ gwy_data_line_serialize(GObject *obj,
             { 'D', "data", &data_line->data, &data_line->res, },
         };
 
-        return gwy_serialize_pack_object_struct(buffer, size,
+        return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_DATA_LINE_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
     }
@@ -252,7 +250,7 @@ _gwy_data_line_initialize(GwyDataLine *a,
     gwy_debug("");
     a->res = res;
     a->real = real;
-    a->data = nullme ? g_new0(gdouble, a->res) : g_new(gdouble, a-res);
+    a->data = nullme ? g_new0(gdouble, a->res) : g_new(gdouble, a->res);
 }
 
 /**
