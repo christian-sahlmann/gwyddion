@@ -30,15 +30,15 @@ foo_callback(gpointer obj, gpointer data __attribute__((unused)))
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     GObject *ser;
     gsize size, pos;
     guchar *buffer;
     FILE *fh;
     GError *err = NULL;
-    GValue val, *p, *p1;
-    GObject *container;
+    GValue val, *p;
+    GObject *container, *obj;
     GQuark q;
     gulong id;
 
@@ -171,7 +171,15 @@ main(int argc, char *argv[])
     g_message("restoring the empty container");
     container = gwy_serializable_deserialize(buffer, size, &pos);
 
+
+    g_message("====== DUPLICATION ======================");
+
+    gwy_container_set_double_by_name(GWY_CONTAINER(container), "dbl", 3.141592);
+    g_message("duplicating a container");
+    obj = gwy_serializable_duplicate(container);
     g_object_unref(container);
+    g_message("'dbl' -> %g",
+              gwy_container_get_double_by_name(GWY_CONTAINER(obj), "dbl"));
 
     g_message("====== ENTITIES ======================");
     pent("foo");

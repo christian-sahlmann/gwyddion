@@ -20,35 +20,13 @@ extern "C" {
 typedef struct _GwySerializable GwySerializable;
 typedef struct _GwySerializableClass GwySerializableClass;
 
-/**
- * GwySerializeFunc:
- * @serializable: The object.
- * @buffer: The buffer.
- * @size: The size of @buffer.
- *
- * The type of serialization method, see gwy_serializable_serialize() for
- * argument description.
- *
- * Returns: @buffer with serialized object appended.
- */
 typedef guchar* (*GwySerializeFunc)(GObject *serializable,
                                     guchar *buffer,
                                     gsize *size);
-
-/**
- * GwyDeserializeFunc:
- * @buffer: The buffer.
- * @size: The size of @buffer.
- * @position: The current position in @buffer.
- *
- * The type of deserialization method, see gwy_serializable_deserialize() for
- * argument description.
- *
- * Returns: A newly created (restored) object.
- */
 typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
                                        gsize size,
                                        gsize *position);
+typedef GObject* (*GwyDuplicateFunc)(GObject *object);
 
 struct _GwySerializable {
     GObject parent_instance;
@@ -59,22 +37,11 @@ struct _GwySerializableClass {
 
     GwySerializeFunc serialize;
     GwyDeserializeFunc deserialize;
+    GwyDuplicateFunc duplicate;
 };
 
 typedef struct _GwySerializeSpec GwySerializeSpec;
 
-/**
- * GwySerializeSpec:
- * @ctype: Component type, as in gwy_serialize_pack().
- * @name: Component name as a null terminated string.
- * @value: Pointer to component (always add one level of indirection; for
- *         an object, a #GObject** pointer should be stored).
- * @array_size: Pointer to array size if component is an array, NULL
- *              otherwise.
- *
- * A structure containing information for one object/struct component
- * serialization or deserialization.
- **/
 struct _GwySerializeSpec {
     guchar ctype;
     const guchar *name;
@@ -90,6 +57,7 @@ guchar*    gwy_serializable_serialize         (GObject *serializable,
 GObject*   gwy_serializable_deserialize       (const guchar *buffer,
                                                gsize size,
                                                gsize *position);
+GObject*   gwy_serializable_duplicate         (GObject *object);
 
 void       gwy_serialize_store_int32          (guchar *buffer,
                                                guint32 value);

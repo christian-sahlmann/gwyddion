@@ -9,8 +9,9 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
-static void    gwy_serializable_base_init     (void);
-static void    gwy_serializable_base_finalize (void);
+static void     gwy_serializable_base_init          (GwySerializableClass *klass);
+static void     gwy_serializable_base_finalize      (void);
+static GObject* gwy_serializable_duplicate_hard_way (GObject *object);
 
 static inline gsize ctype_size     (guchar ctype);
 
@@ -43,16 +44,16 @@ gwy_serializable_get_type(void)
     return gwy_serializable_type;
 }
 
-/* XXX: WTF is this exactly good for?  I took it from the examples... ;-) */
 static guint gwy_serializable_base_init_count = 0;
 
 static void
-gwy_serializable_base_init(void)
+gwy_serializable_base_init(GwySerializableClass *klass)
 {
     gwy_serializable_base_init_count++;
     gwy_debug("%s (base init count = %d)",
               __FUNCTION__, gwy_serializable_base_init_count);
     if (gwy_serializable_base_init_count == 1) {
+        klass->duplicate = NULL;
         /* add signals... */
     }
 }
@@ -156,6 +157,62 @@ gwy_serializable_deserialize(const guchar *buffer,
         g_warning("Cannot unref class after failed %s deserialization",
                   g_type_name(type));
     return object;
+}
+
+/**
+ * gwy_serializable_duplicate:
+ * @object: A #GObject implementing #GwySerializable interface.
+ *
+ * Creates a copy of object @object.
+ *
+ * If the object doesn't support duplication natively, it's brute-force
+ * serialized and then deserialized, this may be quite inefficient,
+ * namely for large objects.
+ *
+ * You can duplicate a %NULL, too, but you are discouraged from doing it.
+ *
+ * Returns: The newly created object copy.  However if the object is a
+ *          singleton, @object itself (with incremented reference count)
+ *          can be returned, too.
+ **/
+GObject*
+gwy_serializable_duplicate(GObject *object)
+{
+    GwyDuplicateFunc duplicate_method;
+
+    if (!object) {
+        g_warning("trying to duplicate a NULL");
+        return NULL;
+    }
+    g_return_val_if_fail(GWY_IS_SERIALIZABLE(object), NULL);
+
+    duplicate_method = GWY_SERIALIZABLE_GET_CLASS(object)->duplicate;
+    if (duplicate_method)
+        return duplicate_method(object);
+
+    g_warning("%s doesn't have its own duplicate() method, "
+              "forced to duplicate it the hard way.",
+              g_type_name(G_TYPE_FROM_INSTANCE(object)));
+    return gwy_serializable_duplicate_hard_way(object);
+}
+
+static GObject*
+gwy_serializable_duplicate_hard_way(GObject *object)
+{
+    guchar *buffer = NULL;
+    gsize size = 0, position = 0;
+    GObject *duplicate;
+
+    buffer = gwy_serializable_serialize(object, buffer, &size);
+    if (!buffer) {
+        g_critical("%s serialization failed",
+                   g_type_name(G_TYPE_FROM_INSTANCE(object)));
+        return NULL;
+    }
+    duplicate = gwy_serializable_deserialize(buffer, size, &position);
+    g_free(buffer);
+
+    return duplicate;
 }
 
 /**
@@ -1217,5 +1274,67 @@ gwy_serialize_check_string(const guchar *buffer,
 
     return (p - buffer) + 1 - position;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * GwySerializeFunc:
+ * @serializable: An object to serialize.
+ * @buffer: A buffer.
+ * @size: The size of @buffer.
+ *
+ * The type of serialization method, see gwy_serializable_serialize() for
+ * description.
+ *
+ * Returns: @buffer with serialized object appended.
+ */
+
+/**
+ * GwyDeserializeFunc:
+ * @buffer: A buffer containing a serialized object.
+ * @size: The size of @buffer.
+ * @position: The current position in @buffer.
+ *
+ * The type of deserialization method, see gwy_serializable_deserialize() for
+ * description.
+ *
+ * Returns: A newly created (restored) object.
+ */
+
+/**
+ * GwyDuplicateFunc:
+ * @object: An object to duplicate.
+ *
+ * The type of duplication method, see gwy_serializable_duplicate() for
+ * description.
+ *
+ * Returns: A copy of @object.
+ */
+
+/**
+ * GwySerializeSpec:
+ * @ctype: Component type, as in gwy_serialize_pack().
+ * @name: Component name as a null terminated string.
+ * @value: Pointer to component (always add one level of indirection; for
+ *         an object, a #GObject** pointer should be stored).
+ * @array_size: Pointer to array size if component is an array, NULL
+ *              otherwise.
+ *
+ * A structure containing information for one object/struct component
+ * serialization or deserialization.
+ **/
+
+/**
+ * GWY_CONTAINER_PATHSEP:
+ *
+ * Path separator to be used for hierarchical structures in the container.
+ **/
+
+/**
+ * GWY_CONTAINER_PATHSEP_STR:
+ *
+ * Path separator to be used for hierarchical structures in the container,
+ * as a string.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
