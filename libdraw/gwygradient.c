@@ -286,7 +286,7 @@ gwy_gradient_get_samples(GwyGradient *gradient,
                          gint *nsamples)
 {
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
-    if (*nsamples)
+    if (nsamples)
         *nsamples = GWY_GRADIENT_DEFAULT_SIZE;
     return gradient->pixels;
 }
