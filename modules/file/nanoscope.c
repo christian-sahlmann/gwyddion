@@ -452,6 +452,7 @@ hash_to_data_field(GHashTable *hash,
         break;
     }
     gwy_data_field_multiply(dfield, q);
+    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
     gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
     g_object_unref(unit);
 
