@@ -27,9 +27,9 @@
 #include <gtk/gtkmessagedialog.h>
 #include "app.h"
 #include "menu.h"
-#include "file.h"
 #include "settings.h"
 #include "tools/tools.h"
+#include "file.h"
 
 static void              file_open_ok_cb       (GtkFileSelection *selector);
 static void              file_save_as_ok_cb    (GtkFileSelection *selector);
@@ -41,7 +41,7 @@ static GtkFileSelection* create_open_dialog    (const gchar *title,
                                                 GCallback ok_callback);
 static gboolean          confirm_overwrite     (GtkWindow *parent,
                                                 const gchar *filename);
-static void              recent_files_update   (const gchar *filename);
+static void              recent_files_update   (const gchar *filename_utf8);
 static GList*            recent_files_from_settings  (void);
 static void              recent_files_to_settings    (void);
 static void              remove_data_window_callback (GtkWidget *selector,
@@ -346,15 +346,16 @@ remove_data_window_callback(GtkWidget *selector,
 }
 
 static void
-recent_files_update(const gchar *filename)
+recent_files_update(const gchar *filename_utf8)
 {
     GList *item;
 
-    gwy_debug("%s: %s", __FUNCTION__, filename);
+    gwy_debug("%s: %s", __FUNCTION__, filename_utf8);
     if (!recent_files)
         recent_files = recent_files_from_settings();
 
-    item = g_list_find_custom(recent_files, filename, (GCompareFunc)strcmp);
+    item = g_list_find_custom(recent_files, filename_utf8,
+                              (GCompareFunc)strcmp);
     if (item) {
         if (item == recent_files)
             return;
@@ -362,7 +363,7 @@ recent_files_update(const gchar *filename)
         recent_files = g_list_concat(item, recent_files);
     }
     else
-        recent_files = g_list_prepend(recent_files, g_strdup(filename));
+        recent_files = g_list_prepend(recent_files, g_strdup(filename_utf8));
 
     gwy_menu_recent_files_update(recent_files);
 }
@@ -422,6 +423,37 @@ recent_files_to_settings(void)
         gwy_container_set_string_by_name(settings, buffer,
                                          g_strdup((gchar*)l->data));
     }
+}
+
+/**
+ * gwy_app_file_open_initial:
+ * @args: %NULL-terminated file list.
+ *
+ * Opens a list of files [given on command line] and created recent-files
+ * menu.
+ *
+ * Note the file names are assumed to be in system encoding, not UTF-8, but
+ * who knows, what we get on the command line...
+ **/
+void
+gwy_app_file_open_initial(gchar **args)
+{
+    gchar **p;
+    gchar *cwd, *filename;
+
+    /* FIXME: cwd is probably in UTF-8?! */
+    cwd = g_get_current_dir();
+    for (p = args; *p; p++) {
+        if (g_path_is_absolute(*p))
+            filename = g_strdup(*p);
+        else
+            filename = g_build_filename(cwd, *p, NULL);
+        file_real_open(filename, NULL);
+        g_free(filename);
+    }
+    g_free(cwd);
+
+    gwy_menu_recent_files_update(recent_files);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -30,7 +30,8 @@
 #include "settings.h"
 #include "app.h"
 
-/* TODO */
+/* TODO XXX FIXME fuck shit braindamaged silly stupid ugly broken borken
+ * (the previous line is here for grep) */
 typedef struct {
     GQuark key;
     GObject *data;
@@ -46,6 +47,8 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
 };
 
+static void       gwy_app_quit                (void);
+void              gwy_app_create_toolbox      (void);
 static GtkWidget* gwy_app_toolbar_append_tool (GtkWidget *toolbar,
                                                GtkWidget *radio,
                                                const gchar *stock_id,
@@ -60,7 +63,31 @@ static void       undo_redo_clean             (GObject *window,
                                                gboolean undo,
                                                gboolean redo);
 
-void
+int
+main(int argc, char *argv[])
+{
+    const gchar *module_dirs[] = {
+        GWY_MODULE_DIR "/file",
+        GWY_MODULE_DIR "/process",
+        NULL
+    };
+    gchar *config_file;
+
+    gtk_init(&argc, &argv);
+    config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
+    gwy_type_init();
+    gwy_app_settings_load(config_file);
+    gwy_app_settings_get();
+    gwy_module_register_modules(module_dirs);
+    gwy_app_create_toolbox();
+    gwy_app_file_open_initial(argv + 1);
+    gtk_main();
+    gwy_app_settings_save(config_file);
+
+    return 0;
+}
+
+static void
 gwy_app_quit(void)
 {
     GwyDataWindow *data_window;
@@ -198,42 +225,6 @@ gwy_app_create_toolbox(void)
 
     /* XXX */
     g_signal_connect(window, "destroy", gwy_app_quit, NULL);
-}
-
-int
-main(int argc, char *argv[])
-{
-    const gchar *module_dirs[] = {
-        GWY_MODULE_DIR "/file",
-        GWY_MODULE_DIR "/process",
-        NULL
-    };
-    GwyContainer *data;
-    gchar *filename_utf8;
-    gchar *config_file;
-    gint i;
-
-    gtk_init(&argc, &argv);
-    config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
-    gwy_type_init();
-    gwy_app_settings_load(config_file);
-    gwy_app_settings_get();
-    gwy_module_register_modules(module_dirs);
-    gwy_app_create_toolbox();
-    /* FIXME: this doesn't put files into the recent files list
-     * solution: move to file.c, and add initial recent-file menu creation
-     * there, too */
-    for (i = 1; i < argc; i++) {
-        if (!(data = gwy_file_load(argv[i])))
-            continue;
-        filename_utf8 = g_filename_to_utf8(argv[i], -1, NULL, NULL, NULL);
-        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
-        gwy_app_data_window_create(data);
-    }
-    gtk_main();
-    gwy_app_settings_save(config_file);
-
-    return 0;
 }
 
 GwyDataWindow*
