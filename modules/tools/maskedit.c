@@ -263,22 +263,27 @@ selection_finished_cb(GwyUnitoolState *state)
     GwyDataField *mask = NULL;
     GwyDataViewLayer *layer;
     ToolControls *controls;
-    gboolean has_mask;
+    GwySIUnit *siunit;
     gint isel[4];
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = gwy_container_get_object_by_name(data, "/0/data");
-    has_mask = gwy_container_gis_object_by_name(data, "/0/mask",
-                                                (GObject**)&mask);
+    gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
     switch (controls->mode) {
         case MASK_EDIT_SET:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (!has_mask)
+        if (!mask) {
             mask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+            siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
+            gwy_data_field_set_si_unit_z(mask, siunit);
+            g_object_unref(siunit);
+            gwy_container_set_object_by_name(data, "/0/mask", (GObject*)mask);
+            g_object_unref(mask);
+        }
         gwy_data_field_fill(mask, 0.0);
         gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
                                  1.0);
@@ -286,14 +291,21 @@ selection_finished_cb(GwyUnitoolState *state)
 
         case MASK_EDIT_ADD:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (!has_mask)
+        if (!mask) {
             mask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+            siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
+            gwy_data_field_set_si_unit_z(mask, siunit);
+            g_object_unref(siunit);
+            gwy_container_set_object_by_name(data, "/0/mask", (GObject*)mask);
+            g_object_unref(mask);
+            gwy_data_field_fill(mask, 0.0);
+        }
         gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
                                  1.0);
         break;
 
         case MASK_EDIT_REMOVE:
-        if (has_mask) {
+        if (mask) {
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
             gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
                                      0.0);
@@ -301,7 +313,7 @@ selection_finished_cb(GwyUnitoolState *state)
         break;
 
         case MASK_EDIT_INTERSECT:
-        if (has_mask) {
+        if (mask) {
             gwy_app_undo_checkpoint(data, "/0/mask", NULL);
             gwy_data_field_area_add(mask, isel[0], isel[1], isel[2], isel[3],
                                     1.0);
@@ -311,10 +323,6 @@ selection_finished_cb(GwyUnitoolState *state)
 
         default:
         break;
-    }
-    if (!has_mask && mask) {
-        gwy_container_set_object_by_name(data, "/0/mask", (GObject*)mask);
-        g_object_unref(mask);
     }
     gwy_vector_layer_unselect(GWY_VECTOR_LAYER(layer));
     gwy_app_data_view_update(layer->parent);
