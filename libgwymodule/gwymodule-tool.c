@@ -156,25 +156,19 @@ tool_toolbar_append(GtkWidget *toolbar,
                     GtkSignalFunc callback)
 {
     GtkWidget *icon;
-    GtkStockItem stock_item;
     const gchar *name, *stock_id, *label, *tooltip;
 
     if (!func_info) {
         name = NULL;
         stock_id = "gwy_none";
-        label = _("No tool");
+        label = stock_id;
         tooltip = _("No tool");
     }
     else {
         name = func_info->name;
         stock_id = func_info->stock_id;
+        label = stock_id;
         tooltip = func_info->tooltip;
-        if (!gtk_stock_lookup(stock_id, &stock_item)) {
-            g_warning("Couldn't find item for stock id `%s'", stock_id);
-            label = "???";
-        }
-        else
-            label = stock_item.label;
     }
     icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
     return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
