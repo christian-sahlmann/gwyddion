@@ -188,9 +188,9 @@ gwy_si_unit_new(const char *unit_string)
     GwySIUnit *siunit;
 
     gwy_debug("");
-    siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL);
+    siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL); 
     if (unit_string == NULL) siunit->unitstr = NULL; 
-    siunit->unitstr = g_strdup(unit_string);
+    else siunit->unitstr = g_strdup(unit_string);
 
 
     return (GObject*)siunit;
@@ -225,7 +225,8 @@ gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
-    return g_strdup(siunit->unitstr);
+    if (siunit->unitstr == NULL) return NULL;
+    else return g_strdup(siunit->unitstr);
 }
 
 
@@ -458,7 +459,8 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 void
 gwy_si_unit_value_format_free(GwySIValueFormat *format)
 {
-    g_free(format->units);
+    
+    if (format->units != NULL) g_free(format->units);
     g_free(format);
 }
 
