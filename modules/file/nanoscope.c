@@ -584,7 +584,7 @@ select_which_data(GList *list)
         i++;
     }
 
-    dialog = gtk_dialog_new_with_buttons(_("Select data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

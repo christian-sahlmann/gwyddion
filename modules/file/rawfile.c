@@ -486,10 +486,7 @@ rawfile_dialog(RawFileArgs *args,
     GtkAdjustment *adj2;
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Read Raw File"),
-                                         GTK_WINDOW(gwy_app_main_window_get()),
-                                         GTK_DIALOG_MODAL
-                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
+    dialog = gtk_dialog_new_with_buttons(_("Read Raw File"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,

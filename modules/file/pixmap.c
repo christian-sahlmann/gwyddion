@@ -667,9 +667,8 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Import "), s, NULL);
     g_free(s);
-    dialog = gtk_dialog_new_with_buttons(title, NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+    dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -1548,9 +1547,8 @@ pixmap_save_dialog(GwyContainer *data,
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Export "), s, NULL);
     g_free(s);
-    dialog = gtk_dialog_new_with_buttons(title, NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("Reset"), RESPONSE_RESET,
+    dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
