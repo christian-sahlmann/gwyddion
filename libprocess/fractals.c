@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include "datafield.h"
+#include <math.h>
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
@@ -369,5 +370,414 @@ gwy_data_field_fractal_psdf_dim(GwyDataLine *xresult, GwyDataLine *yresult,
 
     return 3.5 + (*a)/2;
 }
+
+
+/*TODO TODO TODO --- change this for something under GPL*/
+
+#define IA 16807
+#define IM 2147483647
+#define AM (1.0/IM)
+#define IQ 127773
+#define IR 2836
+#define NTAB 32
+#define NDIV (1+(IM-1)/NTAB)
+#define EPS 1.2e-7
+#define RNMX (1.0-EPS)
+
+float ran1(long *idum)
+/*Minimal" random number generator of Park and Miller with Bays-Durham shu.e and added
+safeguards. Returns a uniform random deviate between 0.0 and 1.0 (exclusive of the endpoint
+values). Call with idum a negative integer to initialize; thereafter, do not alter idum between
+successive deviates in a sequence. RNMX should approximate the largest oating value that is
+less than 1.*/
+{
+	int j;
+	long k;
+	static long iy=0;
+	static long iv[NTAB];
+	float temp;
+	if (*idum <= 0 || !iy) {		/*Initialize.*/
+		if (-(*idum) < 1) *idum=1;	/*Be sure to prevent idum = 0.*/
+		else *idum = -(*idum);
+		for (j=NTAB+7;j>=0;j--) {	/*Load the shu.e table (after 8 warm-ups).*/
+			k=(*idum)/IQ;
+			*idum=IA*(*idum-k*IQ)-IR*k;
+			if (*idum < 0) *idum += IM;
+			if (j < NTAB) iv[j] = *idum;
+		}
+	iy=iv[0];
+	}
+	k=(*idum)/IQ;				/*Start here when not initializing.*/
+	*idum=IA*(*idum-k*IQ)-IR*k; /*Compute idum=(IA*idum) % IM without over-*/
+								/*ows by Schrage's method.*/ 
+	if (*idum < 0) *idum += IM;
+	j=iy/NDIV;					/*Will be in the range 0..NTAB-1.*/
+	iy=iv[j];					/*Output previously stored value and rell the*/
+								/*shu.e table.*/ 
+	iv[j] = *idum;
+	if ((temp=AM*iy) > RNMX) return RNMX; 
+								/*Because users don't expect endpoint values.*/
+else return temp;
+}
+
+/*TODO TODO TODO --- change this for something under GPL*/
+
+double gasdev(glong *idum)
+/*Returns a normally distributed deviate with zero mean and unit variance, using ran1(idum)
+as the source of uniform deviates.*/
+{
+	static int iset=0;
+	static double gset;
+	double fac,rsq,v1,v2;
+	if (*idum < 0) iset=0;			/*Reinitialize.*/
+	if (iset == 0) {			/*We don't have an extra deviate handy, so*/
+		do {
+			v1=2.0*ran1(idum)-1.0; 		/*pick two uniform numbers in the square ex-
+									tending from -1 to +1 in each direction, */
+			v2=2.0*ran1(idum)-1.0;
+			rsq=v1*v1+v2*v2;	  	/*see if they are in the unit circle,*/
+			} while (rsq >= 1.0 || rsq == 0.0); /*and if they are not, try again.*/
+		fac=sqrt(-2.0*log(rsq)/rsq);
+
+	/*Now make the Box-Muller transformation to get two normal deviates. Return one and
+	save the other for next time.*/
+
+		gset=v1*fac;
+		iset=1; 			/*Set ag.*/
+		return v2*fac;
+	} else {				/*We have an extra deviate handy,*/
+		iset=0;				/*so unset the ag,*/
+	return gset;				/*and return it.*/
+	}
+}
+
+
+
+static gboolean 
+fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
+/*data repair tool using succesive random additional midpoint displacement method.
+Uses fields of size 2^k+1, *vars - y result field of gwy_data_field_fractal_partitioning(),
+*mask to specify which points to correct and *z data*/
+{
+  gint i,j,l,p,ii,jj,pp,n,xres;
+  gdouble r,sg;
+  glong *id, lid;
+
+  /*TODO initilaization should not be constant*/
+
+  lid = -5;
+  id = &lid;
+  
+  xres=z->xres;
+  n=z->xres;
+  
+  for(l=0; l<k; l++)
+  {
+    pp= (gint)ceil(pow(2, l));
+    p= (gint)ceil(pow(2, k-1-l));
+    sg=sqrt(exp(vars->data[k-1-l]));
+
+   for (i=0; i<pp; i++)
+      for(j=0; j<pp; j++)
+      {
+        ii=(2*i+1)*p;
+        jj=(2*j+1)*p;
+        r=sg*gasdev(id);
+        if(mask->data[ii*xres+jj]!=0) 
+        { 
+           z->data[ii*xres+jj]=(z->data[(ii-p)*xres+(jj-p)]+z->data[(ii-p)*xres+(jj+p)]
+                                +z->data[(ii+p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj+p)])/4+r; 
+        }
+      }
+      for(i=0; i<pp; i++)
+        for(j=0; j<pp; j++)  
+        {
+          ii=(2*i+1)*p;
+          jj=(2*j+1)*p;
+          if ((jj+p)==n-1)
+          {
+            if ((ii+p)==n-1)
+            {
+              r=sg*gasdev(id);
+              if (mask->data[(ii+p)*xres+(jj+p)]!=0) 
+                  z->data[(ii+p)*xres+(jj+p)]=z->data[(ii+p)*xres+(jj+p)]+r; 
+              r=sg*gasdev(id);
+              if (mask->data[(ii+p)*xres+(jj-p)]!=0) 
+                  z->data[(ii+p)*xres+(jj-p)]=z->data[(ii+p)*xres+(jj-p)]+r; 
+              r=sg*gasdev(id);
+              if (mask->data[(ii-p)*xres+(jj+p)]!=0) 
+                  z->data[(ii-p)*xres+(jj+p)]=z->data[(ii-p)*xres+(jj+p)]+r; 
+              r=sg*gasdev(id);
+              if (mask->data[(ii-p)*xres+(jj-p)]!=0) 
+                  z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; 
+            }
+            else
+            {
+              r=sg*gasdev(id);
+              if(mask->data[(ii-p)*xres+(jj+p)]!=0) { z->data[(ii-p)*xres+(jj+p)]=z->data[(ii-p)*xres+(jj+p)]+r; }
+              r=sg*gasdev(id);
+              if(mask->data[(ii-p)*xres+(jj-p)]!=0) { z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; }
+            }
+          }
+          else
+          {
+            if((ii+p)==n-1) 
+            {
+              r=sg*gasdev(id);
+              if(mask->data[(ii+p)*xres+(jj-p)]!=0) { z->data[(ii+p)*xres+(jj-p)]=z->data[(ii+p)*xres+(jj-p)]+r; }
+              r=sg*gasdev(id);
+              if(mask->data[(ii-p)*xres+(jj-p)]!=0) { z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; }
+            }
+            else
+            {
+              r=sg*gasdev(id);
+              if(mask->data[(ii-p)*xres+(jj-p)]!=0) { z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; }
+            }
+          }
+        }
+      //sg=sg*power(0.5,H*0.5);
+      for(i=0; i<pp; i++)
+        for(j=0; j<pp; j++)
+        {
+          ii=(2*i+1)*p;
+          jj=(2*j+1)*p;
+          if (l==0)
+          {
+            r=sg*gasdev(id);
+            if (mask->data[ii*xres+(jj-p)]!=0) 
+                z->data[ii*xres+(jj-p)]=(z->data[(ii-p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj-p)]+z->data[ii*xres+jj])/3+r;
+            r=sg*gasdev(id);
+            if (mask->data[ii*xres+(jj+p)]!=0) 
+                z->data[ii*xres+(jj+p)]=(z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)]+z->data[ii*xres+jj])/3+r; 
+            r=sg*gasdev(id);
+            if (mask->data[(ii-p)*xres+jj]!=0) 
+                z->data[(ii-p)*xres+jj]=(z->data[(ii-p)*xres+(jj-p)]+z->data[(ii-p)*xres+(jj+p)]+z->data[ii*xres+jj])/3+r;
+            r=sg*gasdev(id);
+            if (mask->data[(ii+p)*xres+jj]!=0) 
+                z->data[(ii+p)*xres+jj]=(z->data[(ii+p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj+p)]+z->data[ii*xres+jj])/3+r;
+          }
+          else
+          {
+            if ((jj+p)==n-1)
+            {
+              if ((ii+p)==n-1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+jj]!=0) 
+                    z->data[(ii+p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii+p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj-p)])/3+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[(ii+p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj+p)])/3+r; 
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj-p)])/4+r;
+              }
+              if ((ii+p)!=n && (ii-p)!=1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[(ii+p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj+p)])/3+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj-p)])/4+r; 
+              }
+              if ((ii-p)==0)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/3+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj-p)]+z->data[(ii-p)*xres+(jj+p)])/3+r;
+              }
+            }
+            if ((jj+p)!=(n-1) && (jj-p)!=0)
+            {
+              if ((ii+p)==n-1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+jj]!=0) 
+                    z->data[(ii+p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii+p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj+p)])/3+r;
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/4+r;
+              }
+              if ((ii+p)!=n-1  && (ii-p)!=0)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/4+r; 
+              }
+              if ((ii-p)==0)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/3+r; 
+              }
+            }
+            if ((jj-p)==0)
+            {
+              if ((ii+p)==n-1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+jj]!=0) 
+                    z->data[(ii+p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii+p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj+p)])/3+r;
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0)
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/4+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj-p)]!=0) 
+                    z->data[ii*xres+(jj-p)]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj-p)])/3+r;
+              }
+              if ((ii+p)!=n-1 && (ii-p)!=0)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-2*p)*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/4+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj-p)]!=0) 
+                    z->data[ii*xres+(jj-p)]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj-p)])/3+r;
+              }
+              if ((ii-p)==0)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj+p)]!=0) 
+                    z->data[ii*xres+(jj+p)]=(z->data[ii*xres+jj]+z->data[ii*xres+jj+2*p]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii+p)*xres+(jj+p)])/4+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+jj]!=0) 
+                    z->data[(ii-p)*xres+jj]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj+p)]+z->data[(ii-p)*xres+(jj-p)])/3+r;
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+(jj-p)]!=0) 
+                    z->data[ii*xres+(jj-p)]=(z->data[ii*xres+jj]+z->data[(ii-p)*xres+(jj-p)]+z->data[(ii+p)*xres+(jj-p)])/3+r;
+              }
+            }
+          }
+        }
+        for(i=0; i<pp; i++)
+          for(j=0; j<pp; j++)
+          {
+            ii=(2*i+1)*p;
+            jj=(2*j+1)*p;
+            if((jj+p)==n-1)
+            {
+              if((ii+p)==n-1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+(jj+p)]!=0) 
+                    z->data[(ii+p)*xres+(jj+p)]=z->data[(ii+p)*xres+(jj+p)]+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+(jj-p)]!=0) 
+                    z->data[(ii+p)*xres+(jj-p)]=z->data[(ii+p)*xres+(jj-p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj+p)]!=0) 
+                    z->data[(ii-p)*xres+(jj+p)]=z->data[(ii-p)*xres+(jj+p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj-p)]!=0) 
+                    z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+jj]!=0) 
+                    z->data[ii*xres+jj]=z->data[ii*xres+jj]+r;
+              }
+              else
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj+p)]!=0) 
+                    z->data[(ii-p)*xres+(jj+p)]=z->data[(ii-p)*xres+(jj+p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj-p)]!=0) 
+                    z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r;
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+jj]!=0) 
+                    z->data[ii*xres+jj]=z->data[ii*xres+jj]+r;
+              }
+            }
+            else
+            {
+              if((ii+p)==n-1)
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii+p)*xres+(jj-p)]!=0) 
+                    z->data[(ii+p)*xres+(jj-p)]=z->data[(ii+p)*xres+(jj-p)]+r;
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj-p)]!=0) 
+                    z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+jj]!=0) 
+                    z->data[ii*xres+jj]=z->data[ii*xres+jj]+r;
+              }
+              else
+              {
+                r=sg*gasdev(id);
+                if (mask->data[(ii-p)*xres+(jj-p)]!=0) 
+                    z->data[(ii-p)*xres+(jj-p)]=z->data[(ii-p)*xres+(jj-p)]+r; 
+                r=sg*gasdev(id);
+                if (mask->data[ii*xres+jj]!=0) 
+                    z->data[ii*xres+jj]=z->data[ii*xres+jj]+r; 
+              }
+            }
+          }
+  }
+  return TRUE;
+}
+
+
+gboolean
+gwy_data_field_fractal_correction(GwyDataField *data_field, GwyDataField *mask_field, GwyInterpolationType interpolation)
+{
+    GwyDataField *buffer, *maskbuffer;
+    GwyDataLine *xresult, *yresult;
+    
+    gint dimexp;
+    gint xnewres;
+    gint i;
+
+    dimexp = (gint)floor(log((gdouble)data_field->xres)/log(2.0) + 0.5);
+    xnewres = (gint)pow(2, dimexp) + 1;
+
+    buffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+    maskbuffer = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(mask_field)));
+    gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
+    gwy_data_field_resample(maskbuffer, xnewres, xnewres, interpolation);
+    
+    xresult = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+    yresult = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
+     
+    gwy_data_field_fractal_partitioning(data_field,
+                                    xresult, yresult,
+                                    interpolation);
+
+    if (fractal_correct(buffer, maskbuffer, yresult, dimexp))
+    {
+        gwy_data_field_resample(buffer, data_field->xres, data_field->yres, interpolation);
+        for (i=0; i<(data_field->xres*data_field->yres); i++)
+        {
+            if (mask_field->data[i]!=0) data_field->data[i] = buffer->data[i];
+        }
+    }
+    
+    g_object_unref(buffer);
+    g_object_unref(maskbuffer);
+    g_object_unref(xresult);
+    g_object_unref(yresult);
+
+    return TRUE;
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
