@@ -36,7 +36,7 @@ static gboolean    presentation_extract       (GwyContainer *data,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "presenationops",
+    "presentationops",
     N_("Basic operations with presentation."),
     "Yeti <yeti@gwyddion.net>",
     "1.1",
