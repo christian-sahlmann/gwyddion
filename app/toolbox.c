@@ -35,6 +35,8 @@ static GtkWidget* gwy_menu_create_aligned_menu (GtkItemFactoryEntry *menu_items,
                                                 GtkAccelGroup *accel_group,
                                                 GtkItemFactory **factory);
 static GtkWidget* gwy_app_toolbox_create_label (const gchar *text);
+static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
+                                                GtkWidget *widget);
 static void       gwy_app_rerun_process_func_cb (void);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
@@ -85,6 +87,8 @@ gwy_app_toolbox_create(void)
 
     toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+    g_signal_connect(label, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Zoom in"), NULL, GWY_STOCK_ZOOM_IN,
@@ -102,6 +106,8 @@ gwy_app_toolbox_create(void)
 
     toolbar = gwy_toolbox_new(4);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+    g_signal_connect(label, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     gwy_toolbox_append(GWY_TOOLBOX(toolbar), GTK_TYPE_BUTTON, NULL,
                        _("Automatically level data"), NULL, GWY_STOCK_FIT_PLANE,
@@ -124,6 +130,8 @@ gwy_app_toolbox_create(void)
                                           4, &first_tool);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
     gwy_app_tool_use_cb(first_tool, NULL);
+    g_signal_connect(label, "clicked",
+                     G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
     gtk_widget_show_all(toolbox);
@@ -343,17 +351,57 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 static GtkWidget*
 gwy_app_toolbox_create_label(const gchar *text)
 {
-    GtkWidget *label;
+    GtkWidget *label, *hbox, *button, *arrow;
     gchar *s;
+
+    hbox = gtk_hbox_new(FALSE, 2);
+
+    arrow = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_ETCHED_IN);
+    gtk_box_pack_start(GTK_BOX(hbox), arrow, FALSE, FALSE, 0);
 
     s = g_strconcat("<small>", text, "</small>", NULL);
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), s);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 1.0);
-    gtk_misc_set_padding(GTK_MISC(label), 2, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     g_free(s);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
-    return label;
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_HALF);
+    g_object_set(button, "can-focus", FALSE, NULL);
+    gtk_container_add(GTK_CONTAINER(button), hbox);
+
+    g_object_set_data(G_OBJECT(button), "arrow", arrow);
+
+    return button;
+}
+
+static void
+gwy_app_toolbox_showhide_cb(GtkWidget *button,
+                            GtkWidget *widget)
+{
+    GtkWidget *arrow;
+    GtkArrowType arrow_type;
+
+    arrow = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "arrow"));
+    g_assert(GTK_IS_ARROW(arrow));
+    g_object_get(arrow, "arrow-type", &arrow_type, NULL);
+    switch (arrow_type) {
+        case GTK_ARROW_RIGHT:
+        arrow_type = GTK_ARROW_DOWN;
+        gtk_widget_show(widget);
+        break;
+
+        case GTK_ARROW_DOWN:
+        arrow_type = GTK_ARROW_RIGHT;
+        gtk_widget_hide(widget);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+    g_object_set(arrow, "arrow-type", arrow_type, NULL);
 }
 
 static void
