@@ -32,6 +32,8 @@ static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 enum { bufsize = 1024 };
 
+static void gwy_layer_func_info_free(gpointer data);
+
 /**
  * gwy_layer_func_register:
  * @modname: Module identifier (name).
@@ -39,22 +41,25 @@ enum { bufsize = 1024 };
  *
  * Registeres a layer function.
  *
- * The passed @func_info must not be an automatic variable.
+ * To keep compatibility with old versions @func_info should not be an
+ * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
 gwy_layer_func_register(const gchar *modname,
-                       GwyLayerFuncInfo *func_info)
+                        GwyLayerFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    GwyLayerFuncInfo *lfinfo;
     gchar *canon_name;
 
     gwy_debug("name = %s", func_info->name);
 
     if (!layer_funcs) {
         gwy_debug("Initializing...");
-        layer_funcs = g_hash_table_new(g_str_hash, g_str_equal);
+        layer_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                            NULL, gwy_layer_func_info_free);
     }
 
     iinfo = gwy_module_get_module_info(modname);
@@ -65,8 +70,12 @@ gwy_layer_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
-    g_hash_table_insert(layer_funcs, (gpointer)func_info->name, func_info);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_LAYER, func_info->name, NULL);
+
+    lfinfo = g_memdup(func_info, sizeof(GwyLayerFuncInfo));
+    lfinfo->name = g_strdup(func_info->name);
+
+    g_hash_table_insert(layer_funcs, (gpointer)lfinfo->name, lfinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_LAYER, lfinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -78,6 +87,15 @@ void
 _gwy_layer_func_set_register_callback(void (*callback)(const gchar *fullname))
 {
     func_register_callback = callback;
+}
+
+static void
+gwy_layer_func_info_free(gpointer data)
+{
+    GwyLayerFuncInfo *lfinfo = (GwyLayerFuncInfo*)data;
+
+    g_free((gpointer)lfinfo->name);
+    g_free(lfinfo);
 }
 
 gboolean

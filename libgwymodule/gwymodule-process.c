@@ -35,6 +35,7 @@
  * here at all.
  **/
 
+static void gwy_process_func_info_free (gpointer data);
 static gint process_menu_entry_compare (GwyProcessFuncInfo *a,
                                         GwyProcessFuncInfo *b);
 
@@ -50,7 +51,8 @@ enum { bufsize = 1024 };
  *
  * Registeres a data processing function.
  *
- * The passed @func_info must not be an automatic variable.
+ * To keep compatibility with old versions @func_info should not be an
+ * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
@@ -59,6 +61,7 @@ gwy_process_func_register(const gchar *modname,
                           GwyProcessFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    GwyProcessFuncInfo *pfinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -68,7 +71,8 @@ gwy_process_func_register(const gchar *modname,
 
     if (!process_funcs) {
         gwy_debug("Initializing...");
-        process_funcs = g_hash_table_new(g_str_hash, g_str_equal);
+        process_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                              NULL, gwy_process_func_info_free);
     }
 
     iinfo = gwy_module_get_module_info(modname);
@@ -80,8 +84,15 @@ gwy_process_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
-    g_hash_table_insert(process_funcs, (gpointer)func_info->name, func_info);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, func_info->name, NULL);
+
+    pfinfo = g_memdup(func_info, sizeof(GwyProcessFuncInfo));
+    pfinfo->name = g_strdup(func_info->name);
+    /* FIXME: This is not very clean. But we need the translated string often,
+     * namely in menu building code. */
+    pfinfo->menu_path = g_strdup(_(func_info->menu_path));
+
+    g_hash_table_insert(process_funcs, (gpointer)pfinfo->name, pfinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_PROC, pfinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -93,6 +104,16 @@ void
 _gwy_process_func_set_register_callback(void (*callback)(const gchar *fullname))
 {
     func_register_callback = callback;
+}
+
+static void
+gwy_process_func_info_free(gpointer data)
+{
+    GwyProcessFuncInfo *pfinfo = (GwyProcessFuncInfo*)data;
+
+    g_free((gpointer)pfinfo->name);
+    g_free((gpointer)pfinfo->menu_path);
+    g_free(pfinfo);
 }
 
 /**

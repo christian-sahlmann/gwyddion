@@ -26,6 +26,7 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-tool.h"
 
+static void gwy_tool_func_info_free        (gpointer data);
 static gint tool_toolbox_item_compare      (GwyToolFuncInfo *a,
                                             GwyToolFuncInfo *b);
 
@@ -41,7 +42,8 @@ enum { bufsize = 1024 };
  *
  * Registeres a tool use function.
  *
- * The passed @func_info must not be an automatic variable.
+ * To keep compatibility with old versions @func_info should not be an
+ * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
@@ -50,6 +52,7 @@ gwy_tool_func_register(const gchar *modname,
                        GwyToolFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    GwyToolFuncInfo *tfinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -58,7 +61,8 @@ gwy_tool_func_register(const gchar *modname,
 
     if (!tool_funcs) {
         gwy_debug("Initializing...");
-        tool_funcs = g_hash_table_new(g_str_hash, g_str_equal);
+        tool_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                           NULL, gwy_tool_func_info_free);
     }
 
     iinfo = gwy_module_get_module_info(modname);
@@ -71,8 +75,16 @@ gwy_tool_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
-    g_hash_table_insert(tool_funcs, (gpointer)func_info->name, func_info);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_TOOL, func_info->name, NULL);
+
+    tfinfo = g_memdup(func_info, sizeof(GwyToolFuncInfo));
+    tfinfo->name = g_strdup(func_info->name);
+    tfinfo->name = g_strdup(func_info->stock_id);
+    /* FIXME: This is not very clean. But we need the translated string often,
+     * namely in menu building code. */
+    tfinfo->tooltip = g_strdup(_(func_info->tooltip));
+
+    g_hash_table_insert(tool_funcs, (gpointer)tfinfo->name, tfinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_TOOL, tfinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -84,6 +96,17 @@ void
 _gwy_tool_func_set_register_callback(void (*callback)(const gchar *fullname))
 {
     func_register_callback = callback;
+}
+
+static void
+gwy_tool_func_info_free(gpointer data)
+{
+    GwyToolFuncInfo *tfinfo = (GwyToolFuncInfo*)data;
+
+    g_free((gpointer)tfinfo->name);
+    g_free((gpointer)tfinfo->stock_id);
+    g_free((gpointer)tfinfo->tooltip);
+    g_free(tfinfo);
 }
 
 /**

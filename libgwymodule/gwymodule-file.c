@@ -36,6 +36,7 @@ typedef struct {
     GwyFileOperation mode;
 } GwyFileDetectData;
 
+static void gwy_file_func_info_free    (gpointer data);
 static void file_detect_max_score_cb   (const gchar *key,
                                         GwyFileFuncInfo *func_info,
                                         GwyFileDetectData *ddata);
@@ -52,9 +53,10 @@ enum { bufsize = 1024 };
  * @modname: Module identifier (name).
  * @func_info: File type function info.
  *
- * Registeres a data processing function.
+ * Registeres a file type function.
  *
- * The passed @func_info must not be an automatic variable.
+ * To keep compatibility with old versions @func_info should not be an
+ * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
@@ -63,6 +65,7 @@ gwy_file_func_register(const gchar *modname,
                        GwyFileFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
+    GwyFileFuncInfo *ftinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -72,7 +75,8 @@ gwy_file_func_register(const gchar *modname,
 
     if (!file_funcs) {
         gwy_debug("Initializing...");
-        file_funcs = g_hash_table_new(g_str_hash, g_str_equal);
+        file_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                           NULL, &gwy_file_func_info_free);
     }
 
     iinfo = gwy_module_get_module_info(modname);
@@ -83,8 +87,15 @@ gwy_file_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
-    g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, func_info->name, NULL);
+
+    ftinfo = g_memdup(func_info, sizeof(GwyFileFuncInfo));
+    ftinfo->name = g_strdup(func_info->name);
+    /* FIXME: This is not very clean. But we need the translated string often,
+     * namely in menu building code. */
+    ftinfo->file_desc = g_strdup(_(func_info->file_desc));
+
+    g_hash_table_insert(file_funcs, (gpointer)ftinfo->name, ftinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -96,6 +107,16 @@ void
 _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
 {
     func_register_callback = callback;
+}
+
+static void
+gwy_file_func_info_free(gpointer data)
+{
+    GwyFileFuncInfo *ftinfo = (GwyFileFuncInfo*)data;
+
+    g_free((gpointer)ftinfo->name);
+    g_free((gpointer)ftinfo->file_desc);
+    g_free(ftinfo);
 }
 
 /**
