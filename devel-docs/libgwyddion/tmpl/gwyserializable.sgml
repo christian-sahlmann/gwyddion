@@ -36,6 +36,15 @@ GwySerializable
 @Returns: 
 
 
+<!-- ##### USER_FUNCTION GwyDuplicateFunc ##### -->
+<para>
+
+</para>
+
+@object: 
+@Returns: 
+
+
 <!-- ##### STRUCT GwySerializeSpec ##### -->
 <para>
 
@@ -65,6 +74,15 @@ GwySerializable
 @buffer: 
 @size: 
 @position: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serializable_duplicate ##### -->
+<para>
+
+</para>
+
+@object: 
 @Returns: 
 
 

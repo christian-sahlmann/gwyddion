@@ -60,10 +60,12 @@ GWY_CONTAINER_GET_CLASS
 <FILE>gwyserializable</FILE>
 GwySerializeFunc
 GwyDeserializeFunc
+GwyDuplicateFunc
 <TITLE>GwySerializable</TITLE>
 GwySerializeSpec
 gwy_serializable_serialize
 gwy_serializable_deserialize
+gwy_serializable_duplicate
 gwy_serialize_store_int32
 gwy_serialize_pack
 gwy_serialize_unpack_boolean
