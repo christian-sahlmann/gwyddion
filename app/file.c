@@ -292,8 +292,10 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     if (!ok)
         return;
 
-    gwy_container_set_string_by_name(data, "/filename", filename_utf8);
-    gwy_container_remove_by_name(data, "/filename/untitled");
+    if (!name) {
+        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+        gwy_container_remove_by_name(data, "/filename/untitled");
+    }
     gtk_widget_destroy(GTK_WIDGET(selector));
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 }
