@@ -467,7 +467,12 @@ tip_model_do(TipModelArgs *args,
              TipModelControls *controls)
 {
     GtkWidget *data_window;
+    const guchar *pal;
+
     tip_process(args, controls);
+    if (gwy_container_gis_string_by_name(args->data, "/0/base/palette", &pal))
+        gwy_container_set_string_by_name(controls->tip, "/0/base/palette",
+                                         g_strdup(pal));
 
     data_window = gwy_app_data_window_create(controls->tip);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
