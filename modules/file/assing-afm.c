@@ -47,6 +47,7 @@
 typedef struct {
     guint res;
     gdouble real;
+    gdouble range;
 } AFMFile;
 
 static gboolean      module_register       (const gchar *name);
@@ -64,7 +65,7 @@ static GwyModuleInfo module_info = {
     "assing_afm",
     N_("Import Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.0.2",
+    "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -159,6 +160,10 @@ aafm_load(const gchar *filename)
                                                afmfile.real,
                                                FALSE));
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
+    p += 2*afmfile.res*afmfile.res;
+    afmfile.range = get_FLOAT(&p);
+    /* FIXME: just getting about the right order of magnitude... */
+    gwy_data_field_multiply(dfield, 3e-7/afmfile.range);
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
@@ -188,7 +193,7 @@ read_binary_data(guint res,
 
     for (i = 0; i < res*res; i++) {
         j = (res - 1 - (i % res))*res + i/res;
-        data[j] = GINT16_FROM_LE(p[i])/65536.0;
+        data[j] = GINT16_FROM_LE(p[i]);
     }
 
     return TRUE;
