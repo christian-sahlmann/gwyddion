@@ -23,6 +23,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
+#include "app.h"
 #include "unitool.h"
 
 static void       gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
@@ -37,6 +38,7 @@ static void       gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
                                                     gboolean visible);
 static GtkWidget* gwy_unitool_dialog_find_button   (GwyUnitoolState *state,
                                                     gint response_id);
+static void       gwy_unitool_setup_accel_group    (GwyUnitoolState *state);
 
 /***** Public ***************************************************************/
 
@@ -105,6 +107,7 @@ gwy_unitool_use(GwyUnitoolState *state,
         state->dialog = slot->dialog_create(state);
         g_signal_connect(state->dialog, "delete_event",
                          G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
+        gwy_unitool_setup_accel_group(state);
         gtk_widget_show_all(GTK_DIALOG(state->dialog)->vbox);
         state->is_visible = FALSE;
     }
@@ -322,6 +325,20 @@ gwy_unitool_dialog_find_button(GwyUnitoolState *state,
             return cld->widget;
     }
     return NULL;
+}
+
+static void
+gwy_unitool_setup_accel_group(GwyUnitoolState *state)
+{
+    GtkWidget *toolbox;
+    GtkAccelGroup *accel_group;
+
+    g_return_if_fail(GTK_IS_WINDOW(state->dialog));
+    toolbox = gwy_app_main_window_get();
+    accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(toolbox),
+                                                    "accel_group"));
+    g_return_if_fail(accel_group);
+    gtk_window_add_accel_group(GTK_WINDOW(state->dialog), accel_group);
 }
 
 /***** Helpers *************************************************************/
