@@ -235,10 +235,12 @@ apply(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble xmin, ymin, xmax, ymax;
     gdouble avg, ra, rms, skew, kurtosis;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
@@ -266,6 +268,7 @@ dialog_update(GwyUnitoolState *state)
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble xmin, ymin, xmax, ymax;
     gboolean is_visible, is_selected;
     gdouble avg, ra, rms, skew, kurtosis;
@@ -276,7 +279,8 @@ dialog_update(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     units = &state->coord_units;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_selected = gwy_layer_select_get_selection(GWY_LAYER_SELECT(state->layer),

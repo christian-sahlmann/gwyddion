@@ -236,6 +236,7 @@ update_labels(GwyUnitoolState *state)
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble lines[4*NPROFILE];
     GPtrArray *positions;
     gchar buffer[64];
@@ -246,7 +247,8 @@ update_labels(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     nselected = gwy_layer_lines_get_lines(GWY_LAYER_LINES(state->layer), lines);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     positions = controls->positions;
 
@@ -279,6 +281,7 @@ dialog_update(GwyUnitoolState *state)
     GwyUnitoolUnits *units;
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble lines[4*NPROFILE];
     gboolean is_visible;
     gint nselected, i, j, lineres;
@@ -301,7 +304,8 @@ dialog_update(GwyUnitoolState *state)
     prop.is_line = 1;
     gwy_graph_set_autoproperties(GWY_GRAPH(controls->graph), &prop);
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     z_max = gwy_data_field_get_max(dfield);
@@ -345,6 +349,7 @@ apply(GwyUnitoolState *state)
     GtkWidget *window, *graph;
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble lines[12];
     gint i, j, nselected;
     gchar *z_unit;
@@ -357,7 +362,8 @@ apply(GwyUnitoolState *state)
     if (!nselected)
         return;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     z_max = gwy_data_field_get_max(dfield);

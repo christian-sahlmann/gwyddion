@@ -205,6 +205,7 @@ dialog_update(GwyUnitoolState *state)
     ToolControls *controls;
     GwyContainer *data;
     GwyDataField *dfield;
+    GwyDataViewLayer *layer;
     gdouble points[6];
     gboolean is_visible;
     gdouble val;
@@ -214,7 +215,8 @@ dialog_update(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     units = &state->coord_units;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
@@ -264,6 +266,7 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     ToolControls *controls;
+    GwyDataViewLayer *layer;
     gdouble points[6], z[3];
     gdouble bx, by, c, det;
     gint i, radius;
@@ -272,7 +275,8 @@ apply(GwyUnitoolState *state)
         return;
 
     controls = (ToolControls*)state->user_data;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
@@ -316,8 +320,8 @@ apply(GwyUnitoolState *state)
               gwy_unitool_get_z_average(dfield, points[2], points[3], radius),
               gwy_unitool_get_z_average(dfield, points[4], points[5], radius));
 
-    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(state->layer));
-    gwy_data_view_update(GWY_DATA_VIEW(state->layer->parent));
+    gwy_vector_layer_unselect(state->layer);
+    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -257,12 +257,14 @@ update_labels(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyUnitoolUnits *units;
+    GwyDataViewLayer *layer;
     gdouble xmin, xmax, ymin, ymax;
     gchar buffer[64];
 
     controls = (ToolControls*)state->user_data;
     units = &state->coord_units;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
 
@@ -286,6 +288,7 @@ dialog_update(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataLine *dataline;
+    GwyDataViewLayer *layer;
     gint xm1, xm2, ym1, ym2;
     GwyGraphAutoProperties prop;
     GString *lab;
@@ -294,7 +297,8 @@ dialog_update(GwyUnitoolState *state)
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
 
@@ -342,12 +346,14 @@ apply(GwyUnitoolState *state)
     GwyDataField *dfield;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
+    GwyDataViewLayer *layer;
     gint xm1, xm2, ym1, ym2;
     GString *lab;
     gdouble xmin, ymin, xmax, ymax;
 
     controls = (ToolControls*)state->user_data;
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(state->layer->parent));
+    layer = GWY_DATA_VIEW_LAYER(state->layer);
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     get_selection_or_all(dfield, state->layer, &xmin, &ymin, &xmax, &ymax);
 
