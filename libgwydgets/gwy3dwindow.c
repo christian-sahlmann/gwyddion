@@ -346,10 +346,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox), gwy3dwindow->actions,
                        FALSE, FALSE, 0);
 
-    button = gwy_stock_like_button_new(_("_Export"), GTK_STOCK_SAVE);
-    gtk_box_pack_start(GTK_BOX(gwy3dwindow->actions), button,
-                       FALSE, FALSE, 0);
-
     gtk_widget_show_all(hbox);
 
     /* make the 3D view at least DEFAULT_SIZE x DEFAULT_SIZE */
@@ -364,7 +360,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
 /**
  * gwy_3d_window_get_3d_view:
- * @gwy3dwindow: A data view window.
+ * @gwy3dwindow: A 3D data view window.
  *
  * Returns the #Gwy3DView widget this 3D window currently shows.
  *
@@ -378,6 +374,28 @@ gwy_3d_window_get_3d_view(Gwy3DWindow *gwy3dwindow)
     g_return_val_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow), NULL);
 
     return gwy3dwindow->gwy3dview;
+}
+
+/**
+ * gwy_3d_window_add_action_widget:
+ * @gwy3dwindow: A 3D data view window.
+ * @widget: A widget to pack into the action area.
+ *
+ * Adds a widget (usually a button) to 3D window action area.
+ *
+ * The action area is located under the parameter notebook.
+ *
+ * Since: 1.5
+ **/
+void
+gwy_3d_window_add_action_widget(Gwy3DWindow *gwy3dwindow,
+                                GtkWidget *widget)
+{
+    g_return_if_fail(GWY_IS_3D_WINDOW(gwy3dwindow));
+    g_return_if_fail(GTK_IS_WIDGET(widget));
+
+    gtk_box_pack_start(GTK_BOX(gwy3dwindow->actions), widget,
+                       FALSE, FALSE, 0);
 }
 
 static void

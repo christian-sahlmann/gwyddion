@@ -57,6 +57,8 @@ struct _Gwy3DWindow {
     GtkWidget *widget1;
     GtkWidget *widget2;
     GtkWidget *widget3;
+    GtkWidget *widget4;
+    GtkWidget *widget5;
 
     guint whatever1;
     guint whatever2;
@@ -79,6 +81,8 @@ struct _Gwy3DWindowClass {
 GtkWidget*    gwy_3d_window_new                  (Gwy3DView *gwy3dview);
 GType         gwy_3d_window_get_type             (void) G_GNUC_CONST;
 GtkWidget*    gwy_3d_window_get_3d_view          (Gwy3DWindow *gwy3dwindow);
+void          gwy_3d_window_add_action_widget    (Gwy3DWindow *gwy3dwindow,
+                                                  GtkWidget *widget);
 
 G_END_DECLS
 
