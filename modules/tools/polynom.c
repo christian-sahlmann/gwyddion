@@ -277,8 +277,6 @@ apply(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
-/*
-    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
 
     if (is_selected) 
     {
@@ -297,36 +295,9 @@ apply(GwyUnitoolState *state)
   
     gwy_app_undo_checkpoint(data, "/0/data");
     
-    switch (controls->fil){
-        case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
-        break;
+    gwy_data_field_fit_lines(dfield, ulcol, ulrow, brcol, brrow, 
+                             controls->fit, controls->exc, controls->dir);
 
-        case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
-        break;
-
-        case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow); 
-        break;
-
-        case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(dfield, ulcol, ulrow, brcol, brrow); 
-        break;
-
-        case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
-        break;
-
-        case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow); 
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-*/
    gwy_vector_layer_unselect(state->layer);
    gwy_data_view_update(GWY_DATA_VIEW(layer->parent)); 
 }
@@ -338,11 +309,10 @@ dialog_update(GwyUnitoolState *state,
     GwySIValueFormat *units;
     ToolControls *controls;
     GwyContainer *data;
-    GwyDataField *shadefield, *dfield;
+    GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble xy[4];
     gboolean is_visible, is_selected;
-    gint ulcol, brcol, ulrow, brrow;
 
     gwy_debug("");
     is_visible = state->is_visible;

@@ -540,6 +540,15 @@ gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
 void gwy_data_field_grains_get_distribution(GwyDataField *grain_field, 
                                             GwyDataLine *distribution);
 
+void gwy_data_field_fit_lines(GwyDataField *data_field,
+                              gint ulcol,
+                              gint ulrow,
+                              gint brcol,
+                              gint brrow,
+                              GwyFitLineType fit_type,
+                              gboolean exclude,
+                              GtkOrientation orientation
+                              );
 
 #ifdef __cplusplus
 }

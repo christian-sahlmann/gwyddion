@@ -2931,4 +2931,41 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
 
 }
 
+void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow,
+                              GwyFitLineType fit_type, gboolean exclude, GtkOrientation orientation)
+{
+
+    gint i, xres, yres;
+    gdouble coefs[4];
+    GwyDataLine *hlp;
+    gwy_debug("");
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    hlp =(GwyDataLine*) gwy_data_line_new(xres, data_field->xreal, 0);
+ 
+    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    {
+        for (i=0; i<yres; i++)
+        {
+            gwy_data_field_get_row(data_field, hlp, i);
+            if (i>ulrow && i<=brrow)
+            {
+                gwy_data_line_part_fit_polynom(hlp, 2, coefs, ulcol, brcol);
+            }
+            else
+            {
+                gwy_data_line_fit_polynom(hlp, 2, coefs);
+            }
+            gwy_data_line_subtract_polynom(hlp, 2, coefs);
+            gwy_data_field_set_row(data_field, hlp, i);
+        }
+    }
+    else if (orientation == GTK_ORIENTATION_VERTICAL)
+    {
+    }
+    g_object_unref(hlp);
+    
+ }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
