@@ -24,7 +24,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include "gwyapp.h"
+#include <libgwymodule/gwymodule.h>
+#include <app/gwyapp.h>
+
+#define ARITH_RUN_MODES \
+    (GWY_RUN_INTERACTIVE)
 
 typedef enum {
     GWY_ARITH_ADD,
@@ -34,15 +38,15 @@ typedef enum {
     GWY_ARITH_MINIMUM,
     GWY_ARITH_MAXIMUM,
     GWY_ARITH_LAST
-} GwyArithOperation;
+} ArithmeticOperation;
 
 typedef struct {
-    GwyArithOperation operation;
+    ArithmeticOperation operation;
     gdouble scalar1;
     gdouble scalar2;
     GwyDataWindow *win1;
     GwyDataWindow *win2;
-} GwyArithArgs;
+} ArithmeticArgs;
 
 typedef struct {
     GtkWidget *dialog;
@@ -51,35 +55,37 @@ typedef struct {
     GtkWidget *scalar2;
     GtkWidget *win1;
     GtkWidget *win2;
-} GwyArithControls;
+} ArithmeticControls;
 
-static void       gwy_data_arith_load_args         (GwyContainer *settings,
-                                                    GwyArithArgs *args);
-static void       gwy_data_arith_save_args         (GwyContainer *settings,
-                                                    GwyArithArgs *args);
-static GtkWidget* gwy_data_arith_window_construct  (GwyArithArgs *args);
-static GtkWidget* gwy_data_arith_data_option_menu  (GtkWidget *entry,
-                                                    GwyDataWindow **operand);
-static void       gwy_data_arith_operation_cb      (GtkWidget *item,
-                                                    GwyArithArgs *args);
-static void       gwy_data_arith_data_cb           (GtkWidget *item);
-static void       gwy_data_arith_entry_cb          (GtkWidget *entry,
-                                                    gpointer data);
-static gboolean   gwy_data_arith_do                (GwyArithArgs *args,
-                                                    GtkWidget *arith_window);
+static gboolean   module_register             (const gchar *name);
+static gboolean   arithmetic                  (GwyContainer *data);
+static void       arithmetic_load_args        (GwyContainer *settings,
+                                               ArithmeticArgs *args);
+static void       arithmetic_save_args        (GwyContainer *settings,
+                                               ArithmeticArgs *args);
+static GtkWidget* arithmetic_window_construct (ArithmeticArgs *args);
+static GtkWidget* arithmetic_data_option_menu (GtkWidget *entry,
+                                               GwyDataWindow **operand);
+static void       arithmetic_operation_cb     (GtkWidget *item,
+                                               ArithmeticArgs *args);
+static void       arithmetic_data_cb          (GtkWidget *item);
+static void       arithmetic_entry_cb         (GtkWidget *entry,
+                                               gpointer data);
+static gboolean   arithmetic_do               (ArithmeticArgs *args,
+                                               GtkWidget *arith_window);
 
-static void       gwy_data_field_add2              (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
-static void       gwy_data_field_subtract2         (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
-static void       gwy_data_field_multiply2         (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
-static void       gwy_data_field_divide2           (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
-static void       gwy_data_field_minimum2          (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
-static void       gwy_data_field_maximum2          (GwyDataField *dfield1,
-                                                    GwyDataField *dfield2);
+static void       gwy_data_field_add2         (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
+static void       gwy_data_field_subtract2    (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
+static void       gwy_data_field_multiply2    (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
+static void       gwy_data_field_divide2      (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
+static void       gwy_data_field_minimum2     (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
+static void       gwy_data_field_maximum2     (GwyDataField *dfield1,
+                                               GwyDataField *dfield2);
 
 static const GwyEnum operations[] = {
     { "Add",       GWY_ARITH_ADD },
@@ -90,35 +96,67 @@ static const GwyEnum operations[] = {
     { "Maximum",   GWY_ARITH_MAXIMUM },
 };
 
-static const GwyArithArgs gwy_data_arith_defaults = {
+static const ArithmeticArgs arithmetic_defaults = {
     GWY_ARITH_ADD, 0.0, 0.0, NULL, NULL
 };
 
-void
-gwy_app_data_arith(void)
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "arithmetic",
+    "Simple arithmetic with two data fields (or a data field and a scalar).",
+    "Yeti <yeti@gwyddion.net>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
 {
-    static GwyArithArgs *args = NULL;
-    static GtkWidget *arith_window = NULL;
+    static GwyProcessFuncInfo arithmetic_func_info = {
+        "arithmetic",
+        "/M_ultidata/_Arithmetic",
+        (GwyProcessFunc)&arithmetic,
+        ARITH_RUN_MODES,
+    };
+
+    gwy_process_func_register(name, &arithmetic_func_info);
+
+    return TRUE;
+}
+
+/* FIXME: static variables, module not unloadable, ignores Container argument */
+gboolean
+arithmetic(G_GNUC_UNUSED GwyContainer *data)
+{
+    static ArithmeticArgs *args = NULL;
+    static GtkWidget *arithmetic_window = NULL;
     static gpointer win1 = NULL, win2 = NULL;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
     if (!args) {
-        args = g_new(GwyArithArgs, 1);
-        *args = gwy_data_arith_defaults;
+        args = g_new(ArithmeticArgs, 1);
+        *args = arithmetic_defaults;
     }
     settings = gwy_app_settings_get();
-    if (!arith_window) {
+    if (!arithmetic_window) {
         args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
         args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
 
         /* this may set win1, win2 back to NULL is operands are to be scalars */
-        gwy_data_arith_load_args(settings, args);
-        arith_window = gwy_data_arith_window_construct(args);
+        arithmetic_load_args(settings, args);
+        arithmetic_window = arithmetic_window_construct(args);
     }
-    gtk_window_present(GTK_WINDOW(arith_window));
+    gtk_window_present(GTK_WINDOW(arithmetic_window));
     do {
-        switch (gtk_dialog_run(GTK_DIALOG(arith_window))) {
+        switch (gtk_dialog_run(GTK_DIALOG(arithmetic_window))) {
             case GTK_RESPONSE_CLOSE:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_NONE:
@@ -126,9 +164,9 @@ gwy_app_data_arith(void)
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = gwy_data_arith_do(args, arith_window);
+            ok = arithmetic_do(args, arithmetic_window);
             if (ok) {
-                gwy_data_arith_save_args(settings, args);
+                arithmetic_save_args(settings, args);
                 if (win1)
                     g_object_remove_weak_pointer(G_OBJECT(win1), &win1);
                 win1 = args->win1;
@@ -148,12 +186,14 @@ gwy_app_data_arith(void)
         }
     } while (!ok);
 
-    gtk_widget_destroy(arith_window);
-    arith_window = NULL;
+    gtk_widget_destroy(arithmetic_window);
+    arithmetic_window = NULL;
+
+    return FALSE;
 }
 
 static GtkWidget*
-gwy_data_arith_window_construct(GwyArithArgs *args)
+arithmetic_window_construct(ArithmeticArgs *args)
 {
     GtkWidget *dialog, *table, *omenu, *entry, *label;
     gchar *text;
@@ -186,9 +226,9 @@ gwy_data_arith_window_construct(GwyArithArgs *args)
     gtk_widget_set_sensitive(entry, args->win1 == NULL);
     g_object_set_data(G_OBJECT(entry), "scalar", &args->scalar1);
     g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_arith_entry_cb), NULL);
+                     G_CALLBACK(arithmetic_entry_cb), NULL);
 
-    omenu = gwy_data_arith_data_option_menu(entry, &args->win1);
+    omenu = arithmetic_data_option_menu(entry, &args->win1);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
@@ -199,7 +239,7 @@ gwy_data_arith_window_construct(GwyArithArgs *args)
 
     omenu = gwy_option_menu_create(operations, G_N_ELEMENTS(operations),
                                    "operation",
-                                   G_CALLBACK(gwy_data_arith_operation_cb),
+                                   G_CALLBACK(arithmetic_operation_cb),
                                    args,
                                    args->operation);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
@@ -219,9 +259,9 @@ gwy_data_arith_window_construct(GwyArithArgs *args)
     g_free(text);
     g_object_set_data(G_OBJECT(entry), "scalar", &args->scalar2);
     g_signal_connect(entry, "changed",
-                     G_CALLBACK(gwy_data_arith_entry_cb), NULL);
+                     G_CALLBACK(arithmetic_entry_cb), NULL);
 
-    omenu = gwy_data_arith_data_option_menu(entry, &args->win2);
+    omenu = arithmetic_data_option_menu(entry, &args->win2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 2, 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
@@ -231,12 +271,12 @@ gwy_data_arith_window_construct(GwyArithArgs *args)
 }
 
 GtkWidget*
-gwy_data_arith_data_option_menu(GtkWidget *entry,
-                                GwyDataWindow **operand)
+arithmetic_data_option_menu(GtkWidget *entry,
+                            GwyDataWindow **operand)
 {
     GtkWidget *omenu, *menu;
 
-    omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_arith_data_cb),
+    omenu = gwy_option_menu_data_window(G_CALLBACK(arithmetic_data_cb),
                                         NULL,
                                         _("(scalar)"), GTK_WIDGET(*operand));
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
@@ -247,14 +287,15 @@ gwy_data_arith_data_option_menu(GtkWidget *entry,
 }
 
 static void
-gwy_data_arith_operation_cb(GtkWidget *item, GwyArithArgs *args)
+arithmetic_operation_cb(GtkWidget *item,
+                        ArithmeticArgs *args)
 {
     args->operation
         = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
 }
 
 static void
-gwy_data_arith_data_cb(GtkWidget *item)
+arithmetic_data_cb(GtkWidget *item)
 {
     GtkWidget *menu, *entry;
     gpointer p, *pp;
@@ -270,8 +311,8 @@ gwy_data_arith_data_cb(GtkWidget *item)
 }
 
 static void
-gwy_data_arith_entry_cb(GtkWidget *entry,
-                        gpointer data)
+arithmetic_entry_cb(GtkWidget *entry,
+                    gpointer data)
 {
     GtkEditable *editable;
     gint pos;
@@ -300,21 +341,21 @@ gwy_data_arith_entry_cb(GtkWidget *entry,
     }
 
     g_signal_handlers_block_by_func(editable,
-                                    G_CALLBACK(gwy_data_arith_entry_cb),
+                                    G_CALLBACK(arithmetic_entry_cb),
                                     data);
     gtk_editable_delete_text(editable, 0, -1);
     pos = 0;
     gtk_editable_insert_text(editable, s, end - s, &pos);
     g_signal_handlers_unblock_by_func(editable,
-                                      G_CALLBACK(gwy_data_arith_entry_cb),
+                                      G_CALLBACK(arithmetic_entry_cb),
                                       data);
     g_free(s);
     g_signal_stop_emission_by_name(editable, "changed");
 }
 
 static gboolean
-gwy_data_arith_do(GwyArithArgs *args,
-                  GtkWidget *arith_window)
+arithmetic_do(ArithmeticArgs *args,
+              GtkWidget *arithmetic_window)
 {
     GtkWidget *dialog, *data_window;
     GwyContainer *data;
@@ -360,7 +401,7 @@ gwy_data_arith_do(GwyArithArgs *args,
             g_assert_not_reached();
             break;
         }
-        dialog = gtk_message_dialog_new(GTK_WINDOW(arith_window),
+        dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_INFO,
                                         GTK_BUTTONS_CLOSE,
@@ -468,7 +509,7 @@ gwy_data_arith_do(GwyArithArgs *args,
              != gwy_data_field_get_xres(dfield2))
             || (gwy_data_field_get_yres(dfield1)
                 != gwy_data_field_get_yres(dfield2))) {
-            dialog = gtk_message_dialog_new(GTK_WINDOW(arith_window),
+            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_INFO,
                                             GTK_BUTTONS_CLOSE,
@@ -481,7 +522,7 @@ gwy_data_arith_do(GwyArithArgs *args,
              != gwy_data_field_get_xreal(dfield2))
             || (gwy_data_field_get_yreal(dfield1)
                 != gwy_data_field_get_yreal(dfield2))) {
-            dialog = gtk_message_dialog_new(GTK_WINDOW(arith_window),
+            dialog = gtk_message_dialog_new(GTK_WINDOW(arithmetic_window),
                                             GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_MESSAGE_INFO,
                                             GTK_BUTTONS_CLOSE,
@@ -657,6 +698,7 @@ gwy_data_field_maximum2(GwyDataField *dfield1,
             *p = *q;
 }
 
+/* TODO: change keys to /module/arithmetic, clean /app/arith */
 static const gchar *operation_key = "/app/arith/operation";
 static const gchar *scalar1_key = "/app/arith/scalar1";
 static const gchar *scalar2_key = "/app/arith/scalar2";
@@ -664,8 +706,8 @@ static const gchar *scalar_is1_key = "/app/arith/scalar_is1";
 static const gchar *scalar_is2_key = "/app/arith/scalar_is2";
 
 static void
-gwy_data_arith_load_args(GwyContainer *settings,
-                         GwyArithArgs *args)
+arithmetic_load_args(GwyContainer *settings,
+                     ArithmeticArgs *args)
 {
     gboolean b;
 
@@ -681,8 +723,8 @@ gwy_data_arith_load_args(GwyContainer *settings,
 }
 
 static void
-gwy_data_arith_save_args(GwyContainer *settings,
-                         GwyArithArgs *args)
+arithmetic_save_args(GwyContainer *settings,
+                     ArithmeticArgs *args)
 {
     gwy_container_set_enum_by_name(settings, operation_key, args->operation);
     gwy_container_set_double_by_name(settings, scalar1_key, args->scalar1);

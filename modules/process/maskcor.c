@@ -18,78 +18,114 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
-#include "gwyapp.h"
+#include <libgwymodule/gwymodule.h>
+#include <app/gwyapp.h>
+
+#define MASKCOR_RUN_MODES \
+    (GWY_RUN_INTERACTIVE)
 
 typedef enum {
     GWY_MASKCOR_OBJECTS,
     GWY_MASKCOR_MAXIMA,
     GWY_MASKCOR_SCORE,
     GWY_MASKCOR_LAST
-} GwyMaskcorResult;
+} MaskcorResult;
 
 typedef struct {
-    GwyMaskcorResult result;
+    MaskcorResult result;
     gdouble threshold;
     GwyDataWindow *win1;
     GwyDataWindow *win2;
-} GwyMaskcorArgs;
+} MaskcorArgs;
 
 typedef struct {
     GtkWidget *dialog;
     GtkWidget *result;
-} GwyMaskcorControls;
+} MaskcorControls;
 
-static void       gwy_data_maskcor_load_args        (GwyContainer *settings,
-                                                     GwyMaskcorArgs *args);
-static void       gwy_data_maskcor_save_args        (GwyContainer *settings,
-                                                     GwyMaskcorArgs *args);
-static GtkWidget* gwy_data_maskcor_window_construct (GwyMaskcorArgs *args);
-static GtkWidget* gwy_data_maskcor_data_option_menu (GwyDataWindow **operand);
-static void       gwy_data_maskcor_operation_cb     (GtkWidget *item,
-                                                     GwyMaskcorArgs *args);
-static void       gwy_data_maskcor_threshold_cb     (GtkAdjustment *adj,
-                                                     gdouble *value);
-static void       gwy_data_maskcor_data_cb          (GtkWidget *item);
-static gboolean   gwy_data_maskcor_do               (GwyMaskcorArgs *args,
-                                                     GtkWidget *maskcor_window);
+static gboolean   module_register          (const gchar *name);
+static gboolean   maskcor                  (GwyContainer *data);
+static void       maskcor_load_args        (GwyContainer *settings,
+                                            MaskcorArgs *args);
+static void       maskcor_save_args        (GwyContainer *settings,
+                                            MaskcorArgs *args);
+static GtkWidget* maskcor_window_construct (MaskcorArgs *args);
+static GtkWidget* maskcor_data_option_menu (GwyDataWindow **operand);
+static void       maskcor_operation_cb     (GtkWidget *item,
+                                            MaskcorArgs *args);
+static void       maskcor_threshold_cb     (GtkAdjustment *adj,
+                                            gdouble *value);
+static void       maskcor_data_cb          (GtkWidget *item);
+static gboolean   maskcor_do               (MaskcorArgs *args,
+                                            GtkWidget *maskcor_window);
 
 
 static const GwyEnum results[] = {
-    { "Objects marked",       GWY_MASKCOR_OBJECTS },
-    { "Correlation maxima",  GWY_MASKCOR_MAXIMA },
+    { "Objects marked",     GWY_MASKCOR_OBJECTS },
+    { "Correlation maxima", GWY_MASKCOR_MAXIMA },
     { "Correlation score",  GWY_MASKCOR_SCORE },
 };
 
-static const GwyMaskcorArgs gwy_data_maskcor_defaults = {
+static const MaskcorArgs maskcor_defaults = {
     GWY_MASKCOR_OBJECTS, 0.95, NULL, NULL
 };
 
-void
-gwy_app_data_maskcor(void)
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    "maskcor",
+    "Create mask by correlation with another data field.",
+    "Petr Klapetek <klapetek@gwyddion.net>",
+    "1.0",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2004",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
 {
-    static GwyMaskcorArgs *args = NULL;
+    static GwyProcessFuncInfo maskcor_func_info = {
+        "maskcor",
+        "/M_ultidata/_Mask by correlation",
+        (GwyProcessFunc)&maskcor,
+        MASKCOR_RUN_MODES,
+    };
+
+    gwy_process_func_register(name, &maskcor_func_info);
+
+    return TRUE;
+}
+
+/* FIXME: static variables, module not unloadable, ignores Container argument */
+static gboolean
+maskcor(G_GNUC_UNUSED GwyContainer *data)
+{
+    static MaskcorArgs *args = NULL;
     static GtkWidget *maskcor_window = NULL;
     static gpointer win1 = NULL, win2 = NULL;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
     if (!args) {
-        args = g_new(GwyMaskcorArgs, 1);
-        *args = gwy_data_maskcor_defaults;
+        args = g_new(MaskcorArgs, 1);
+        *args = maskcor_defaults;
     }
     settings = gwy_app_settings_get();
     if (!maskcor_window) {
         args->win1 = win1 ? win1 : gwy_app_data_window_get_current();
         args->win2 = win2 ? win2 : gwy_app_data_window_get_current();
 
-        gwy_data_maskcor_load_args(settings, args);
-        maskcor_window = gwy_data_maskcor_window_construct(args);
+        maskcor_load_args(settings, args);
+        maskcor_window = maskcor_window_construct(args);
     }
     gtk_window_present(GTK_WINDOW(maskcor_window));
     do {
@@ -101,9 +137,9 @@ gwy_app_data_maskcor(void)
             break;
 
             case GTK_RESPONSE_APPLY:
-            ok = gwy_data_maskcor_do(args, maskcor_window);
+            ok = maskcor_do(args, maskcor_window);
             if (ok) {
-                gwy_data_maskcor_save_args(settings, args);
+                maskcor_save_args(settings, args);
                 if (win1)
                     g_object_remove_weak_pointer(G_OBJECT(win1), &win1);
                 win1 = args->win1;
@@ -125,15 +161,17 @@ gwy_app_data_maskcor(void)
 
     gtk_widget_destroy(maskcor_window);
     maskcor_window = NULL;
+
+    return FALSE;
 }
 
 static GtkWidget*
-gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
+maskcor_window_construct(MaskcorArgs *args)
 {
     GtkWidget *dialog, *table, *omenu, *label, *spin;
     GtkObject *adj;
 
-    dialog = gtk_dialog_new_with_buttons(_("Create mask by correlation"),
+    dialog = gtk_dialog_new_with_buttons(_("Mask by correlation"),
                                          GTK_WINDOW(gwy_app_main_window_get()),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
@@ -151,7 +189,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 0, 1);
 
-    omenu = gwy_data_maskcor_data_option_menu(&args->win1);
+    omenu = maskcor_data_option_menu(&args->win1);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
@@ -162,7 +200,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, 1, 2);
 
 
-    omenu = gwy_data_maskcor_data_option_menu(&args->win2);
+    omenu = maskcor_data_option_menu(&args->win2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
 
@@ -171,7 +209,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
     spin = gwy_table_attach_spinbutton(table, 2, _("T_hreshold"), "", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect(adj, "value_changed",
-                     G_CALLBACK(gwy_data_maskcor_threshold_cb),
+                     G_CALLBACK(maskcor_threshold_cb),
                      &args->threshold);
 
     /***** Result *****/
@@ -181,7 +219,7 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
 
     omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
                                    "operation",
-                                   G_CALLBACK(gwy_data_maskcor_operation_cb),
+                                   G_CALLBACK(maskcor_operation_cb),
                                    args,
                                    args->result);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
@@ -192,11 +230,11 @@ gwy_data_maskcor_window_construct(GwyMaskcorArgs *args)
 }
 
 GtkWidget*
-gwy_data_maskcor_data_option_menu(GwyDataWindow **operand)
+maskcor_data_option_menu(GwyDataWindow **operand)
 {
     GtkWidget *omenu, *menu;
 
-    omenu = gwy_option_menu_data_window(G_CALLBACK(gwy_data_maskcor_data_cb),
+    omenu = gwy_option_menu_data_window(G_CALLBACK(maskcor_data_cb),
                                         NULL, NULL, GTK_WIDGET(*operand));
     menu = gtk_option_menu_get_menu(GTK_OPTION_MENU(omenu));
     g_object_set_data(G_OBJECT(menu), "operand", operand);
@@ -205,20 +243,20 @@ gwy_data_maskcor_data_option_menu(GwyDataWindow **operand)
 }
 
 static void
-gwy_data_maskcor_operation_cb(GtkWidget *item, GwyMaskcorArgs *args)
+maskcor_operation_cb(GtkWidget *item, MaskcorArgs *args)
 {
     args->result
         = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
 }
 
 static void
-gwy_data_maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
+maskcor_threshold_cb(GtkAdjustment *adj, gdouble *value)
 {
     *value = gtk_adjustment_get_value(adj);
 }
 
 static void
-gwy_data_maskcor_data_cb(GtkWidget *item)
+maskcor_data_cb(GtkWidget *item)
 {
     GtkWidget *menu;
     gpointer p, *pp;
@@ -268,8 +306,8 @@ plot_maxima(GwyDataField * retfield, gdouble threshold)
 }
 
 static gboolean
-gwy_data_maskcor_do(GwyMaskcorArgs *args,
-                    G_GNUC_UNUSED GtkWidget *maskcor_window)
+maskcor_do(MaskcorArgs *args,
+           G_GNUC_UNUSED GtkWidget *maskcor_window)
 {
     GtkWidget *data_window;
     GwyContainer *data, *ret, *kernel;
@@ -301,7 +339,8 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
         gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
                                            &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
-        if (!gwy_app_wait_set_fraction(iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2)))
+        if (!gwy_app_wait_set_fraction
+                (iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2)))
             return FALSE;
 
     } while (state != GWY_COMP_FINISHED);
@@ -331,20 +370,21 @@ gwy_data_maskcor_do(GwyMaskcorArgs *args,
 }
 
 
+/* TODO: change keys to /module/maskcor , clean /app/maskcor */
 static const gchar *result_key = "/app/maskcor/result";
 static const gchar *threshold_key = "/app/maskcor/threshold";
 
 static void
-gwy_data_maskcor_load_args(GwyContainer *settings,
-                         GwyMaskcorArgs *args)
+maskcor_load_args(GwyContainer *settings,
+                  MaskcorArgs *args)
 {
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
 }
 
 static void
-gwy_data_maskcor_save_args(GwyContainer *settings,
-                         GwyMaskcorArgs *args)
+maskcor_save_args(GwyContainer *settings,
+                  MaskcorArgs *args)
 {
     gwy_container_set_enum_by_name(settings, result_key, args->result);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
