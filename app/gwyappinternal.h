@@ -40,11 +40,6 @@ void         gwy_app_mask_kill_cb                (void);
 void         gwy_app_show_kill_cb                (void);
 void         gwy_app_change_mask_color_cb        (gpointer unused,
                                                   gboolean defaultc);
-GtkWidget*   gwy_app_menu_create_meta_menu       (GtkAccelGroup *accel_group);
-GtkWidget*   gwy_app_menu_create_proc_menu       (GtkAccelGroup *accel_group);
-GtkWidget*   gwy_app_menu_create_graph_menu      (GtkAccelGroup *accel_group);
-GtkWidget*   gwy_app_menu_create_file_menu       (GtkAccelGroup *accel_group);
-GtkWidget*   gwy_app_menu_create_edit_menu       (GtkAccelGroup *accel_group);
 
 void         gwy_app_menu_set_recent_files_menu  (GtkWidget *menu);
 guint        gwy_app_run_process_func_cb         (gchar *name);
