@@ -1237,7 +1237,7 @@ gwy_data_field_filter_maximum(GwyDataField *data_field,
  *
  * Return: Filtered value.
  */
-gdouble
+static gdouble
 kuwahara_block(const gdouble *a)
 {
    gint r1[] = { 0, 1, 2, 5, 6, 7, 10, 11, 12 };
