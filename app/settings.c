@@ -286,6 +286,9 @@ gwy_app_settings_load_text(const gchar *filename)
         g_free(buffer);
         return FALSE;
     }
+#if G_OS_WIN32
+    gwy_strkill(buffer, '\r');
+#endif
     if (!g_str_has_prefix(buffer, magic_header)) {
         g_warning("Bad magic header of settings file");
         g_free(buffer);
