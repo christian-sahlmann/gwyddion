@@ -23,16 +23,9 @@
 
 #include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libgwymodule/gwymoduleenums.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    GWY_FILE_NONE   = 0,
-    GWY_FILE_LOAD   = 1 << 0,
-    GWY_FILE_SAVE   = 1 << 1,
-    GWY_FILE_DETECT = 1 << 2,
-    GWY_FILE_MASK   = 0x07
-} GwyFileOperation;
 
 typedef struct _GwyFileFuncInfo GwyFileFuncInfo;
 

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,19 +18,37 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_MODULE_H__
-#define __GWY_MODULE_H__
+#ifndef __GWY_MODULE_ENUMS_H__
+#define __GWY_MODULE_ENUMS_H__
 
-#include <libgwymodule/gwymoduleenums.h>
+#include <glib/gmacros.h>
 
-#include <libgwymodule/gwymoduleloader.h>
-#include <libgwymodule/gwymodule-file.h>
-#include <libgwymodule/gwymodule-graph.h>
-#include <libgwymodule/gwymodule-layer.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <libgwymodule/gwymodule-tool.h>
-#include <libgwymodule/gwymodulebrowser.h>
+G_BEGIN_DECLS
 
-#endif /* __GWY_MODULE_H__ */
+typedef enum {
+    GWY_FILE_NONE   = 0,
+    GWY_FILE_LOAD   = 1 << 0,
+    GWY_FILE_SAVE   = 1 << 1,
+    GWY_FILE_DETECT = 1 << 2,
+    GWY_FILE_MASK   = 0x07
+} GwyFileOperation;
+
+typedef enum {
+    GWY_TOOL_SWITCH_WINDOW = 1,
+    GWY_TOOL_SWITCH_TOOL
+} GwyToolSwitchEvent;
+
+typedef enum {
+    GWY_RUN_NONE           = 0,
+    GWY_RUN_WITH_DEFAULTS  = 1 << 0,
+    GWY_RUN_NONINTERACTIVE = 1 << 1,
+    GWY_RUN_MODAL          = 1 << 2,
+    GWY_RUN_INTERACTIVE    = 1 << 3,
+    GWY_RUN_MASK           = 0x0f
+} GwyRunType;
+
+G_END_DECLS
+
+#endif /* __GWY_MODULE_ENUMS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

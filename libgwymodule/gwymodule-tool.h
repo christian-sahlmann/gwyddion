@@ -24,13 +24,9 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtktooltips.h>
 #include <libgwydgets/gwydatawindow.h>
+#include <libgwymodule/gwymoduleenums.h>
 
 G_BEGIN_DECLS
-
-typedef enum {
-    GWY_TOOL_SWITCH_WINDOW = 1,
-    GWY_TOOL_SWITCH_TOOL
-} GwyToolSwitchEvent;
 
 typedef struct _GwyToolFuncInfo GwyToolFuncInfo;
 

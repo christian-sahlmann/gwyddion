@@ -12,6 +12,7 @@ libgwymoduleinclude_HEADERS = \
 	gwymodule-process.h \
 	gwymodule-tool.h \
 	gwymodulebrowser.h \
+	gwymoduleenums.h \
 	gwymoduleloader.h
 
 lib_LTLIBRARIES = libgwymodule.la
