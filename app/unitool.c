@@ -25,16 +25,16 @@
 #include <libgwydgets/gwydgets.h>
 #include "unitool.h"
 
-static void gwy_unitool_name_changed_cb(GwyUnitoolState *state);
-static void gwy_unitool_disconnect_handlers(GwyUnitoolState *state);
-static void gwy_unitool_dialog_abandon(GwyUnitoolState *state);
-static void gwy_unitool_compute_coord_units(GwyUnitoolState *state);
-static void gwy_unitool_selection_updated_cb(GwyUnitoolState *state);
-static void gwy_unitool_data_updated_cb(GwyUnitoolState *state);
-static void gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
-                                           gint response);
-static void gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
-                                           gboolean visible);
+static void gwy_unitool_name_changed_cb      (GwyUnitoolState *state);
+static void gwy_unitool_disconnect_handlers  (GwyUnitoolState *state);
+static void gwy_unitool_dialog_abandon       (GwyUnitoolState *state);
+static void gwy_unitool_compute_coord_units  (GwyUnitoolState *state);
+static void gwy_unitool_selection_updated_cb (GwyUnitoolState *state);
+static void gwy_unitool_data_updated_cb      (GwyUnitoolState *state);
+static void gwy_unitool_dialog_response_cb   (GwyUnitoolState *state,
+                                              gint response);
+static void gwy_unitool_dialog_set_visible   (GwyUnitoolState *state,
+                                              gboolean visible);
 
 /***** Public ***************************************************************/
 
@@ -83,6 +83,8 @@ gwy_unitool_use(GwyUnitoolState *state,
         state->dialog = slot->dialog_create(state);
         g_signal_connect(state->dialog, "delete_event",
                          G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
+        gtk_widget_show_all(GTK_DIALOG(state->dialog)->vbox);
+        state->is_visible = FALSE;
     }
 
     /* connect handlers */
@@ -104,12 +106,11 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    NULL);
 
     /* setup based on switch reason */
+    gwy_unitool_compute_coord_units(state);
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
-    if (reason == GWY_TOOL_SWITCH_WINDOW) {
+    if (reason == GWY_TOOL_SWITCH_WINDOW)
         gwy_unitool_name_changed_cb(state);
-        gwy_unitool_compute_coord_units(state);
-    }
 
     if (state->is_visible)
         gwy_unitool_selection_updated_cb(state);
@@ -120,6 +121,7 @@ gwy_unitool_use(GwyUnitoolState *state,
 static void
 gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 {
+    gwy_debug("");
     gtk_label_set_text(GTK_LABEL(state->windowname),
                        gwy_data_window_get_base_name(state->data_window));
 }
@@ -135,14 +137,10 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
             g_signal_handler_disconnect(state->layer->parent,
                                         state->data_updated_id);
     }
-    if (state->dialog) {
-        if (state->response_id)
-            g_signal_handler_disconnect(state->dialog,
-                                        state->response_id);
-        if (state->windowname && state->windowname_id)
-            g_signal_handler_disconnect(state->windowname,
-                                        state->windowname_id);
-    }
+    if (state->dialog && state->response_id)
+        g_signal_handler_disconnect(state->dialog, state->response_id);
+    if (state->data_window && state->windowname_id)
+        g_signal_handler_disconnect(state->data_window, state->windowname_id);
 
     state->layer_updated_id = 0;
     state->data_updated_id = 0;
@@ -153,6 +151,7 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 static void
 gwy_unitool_dialog_abandon(GwyUnitoolState *state)
 {
+    gwy_debug("");
     gwy_unitool_disconnect_handlers(state);
     if (state->dialog) {
         if (state->func_slots->dialog_abandon)
@@ -197,8 +196,8 @@ gwy_unitool_selection_updated_cb(GwyUnitoolState *state)
 
     gwy_debug("");
     nselected = gwy_vector_layer_get_nselected(GWY_VECTOR_LAYER(state->layer));
-    if (state->func_slots->update_view)
-        state->func_slots->update_view(state);
+    if (state->func_slots->dialog_update)
+        state->func_slots->dialog_update(state);
     if (nselected && !state->is_visible)
         gwy_unitool_dialog_set_visible(state, TRUE);
 }
@@ -209,8 +208,8 @@ gwy_unitool_data_updated_cb(GwyUnitoolState *state)
     gwy_debug("");
     if (!state->is_visible)
         return;
-    if (state->func_slots->update_view)
-        state->func_slots->update_view(state);
+    if (state->func_slots->dialog_update)
+        state->func_slots->dialog_update(state);
 }
 
 static void
@@ -270,7 +269,6 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     GtkWidget *frame, *label;
 
     g_return_val_if_fail(state, NULL);
-    g_return_val_if_fail(GTK_IS_DIALOG(state->dialog), NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
 
     frame = gtk_frame_new(NULL);
@@ -281,10 +279,6 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     gtk_misc_set_padding(GTK_MISC(label), 4, 2);
     gtk_container_add(GTK_CONTAINER(frame), label);
     state->windowname = label;
-    /*
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(state->dialog)->vbox), frame,
-                       FALSE, FALSE, 0);
-                       */
 
     return frame;
 }

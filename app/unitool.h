@@ -65,8 +65,8 @@ struct _GwyUnitoolSlots {
     GtkObject* (*layer_constructor)(void);
     void (*layer_setup)(GwyUnitoolState *state);
     GtkWidget* (*dialog_create)(GwyUnitoolState *state);
+    void (*dialog_update)(GwyUnitoolState *state);
     void (*dialog_abandon)(GwyUnitoolState *state);
-    void (*update_view)(GwyUnitoolState *state);
     void (*apply)(GwyUnitoolState *state);
     void (*response)(GwyUnitoolState *state, gint response);
 };
