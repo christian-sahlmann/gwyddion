@@ -44,7 +44,7 @@ static void     gwy_data_window_init           (GwyDataWindow *data_window);
 static void     measure_changed                (GwyDataWindow *data_window);
 static void     lame_window_resize             (GwyDataWindow *data_window);
 static void     compute_statusbar_units        (GwyDataWindow *data_window);
-static void     gwy_data_view_update_statusbar (GwyDataView *data_view,
+static gboolean gwy_data_view_update_statusbar (GwyDataView *data_view,
                                                 GdkEventMotion *event,
                                                 GwyDataWindow *data_window);
 static void     zoom_changed_cb                (GwyDataWindow *data_window);
@@ -459,7 +459,7 @@ compute_statusbar_units(GwyDataWindow *data_window)
     data_window->statusbar_SI_prefix = gwy_math_SI_prefix(mag);
 }
 
-static void
+static gboolean
 gwy_data_view_update_statusbar(GwyDataView *data_view,
                                GdkEventMotion *event,
                                GwyDataWindow *data_window)
@@ -487,6 +487,8 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
                              data_window->statusbar_context_id,
                              data_window->statusbar_message_id);
     data_window->statusbar_message_id = id;
+
+    return FALSE;
 }
 
 /**
