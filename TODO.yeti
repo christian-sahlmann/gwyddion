@@ -1,6 +1,12 @@
-- Add gwyddion-keepup to CVS
+- Kill WIN32-LEAN-AND-MEAN-CAPS
+- Make threshold-example use -MD
+- Icolorange, Squantities: update look'n'feel for narrower rect selection info
+- Sfunctions: use rect selection info, change dialog layout after Profile
+- Callibrate forgets coefficients and shows inconsistent values
+- Things that have preview should not wait on data window, but on their own
+  window
 - Fix cluttered left column layout in SFunctions
-- I18n under MS Windows: find out what's wrong
+- Display whether data are unchanged/modified/new somewhere
 - Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
