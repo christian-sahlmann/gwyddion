@@ -11,6 +11,7 @@ tools_PROGRAMS = \
 	profile.so \
 	stats.so \
 	sfunctions.so \
+	spotremove.so \
 	filter.so \
 	polynom.so
 
@@ -40,6 +41,9 @@ filter_so_LDFLAGS = $(module_ldflags),filter.so
 
 polynom_so_SOURCES = polynom.c
 polynom_so_LDFLAGS = $(module_ldflags),polynom.so
+
+spotremove_so_SOURCES = spotremove.c
+spotremove_so_LDFLAGS = $(module_ldflags),spotremove.so
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Module\"
