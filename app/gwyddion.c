@@ -19,6 +19,7 @@ create_aligned_menu(GtkItemFactoryEntry *menu_items,
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
+    /* TODO must use one accel group for all menus, otherwise they don't work */
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, root_path, NULL);
     gtk_item_factory_create_items(item_factory, nitems, menu_items, NULL);
     widget = gtk_item_factory_get_widget(item_factory, root_path);
@@ -31,8 +32,8 @@ create_aligned_menu(GtkItemFactoryEntry *menu_items,
 void
 file_open_ok_cb(GtkFileSelection *selector)
 {
-    const gchar *filename_sys;  /* in system (disk) encoding */
     const gchar *filename_utf8;  /* in UTF-8 */
+    const gchar *filename_sys;  /* in system (disk) encoding */
     GwyContainer *data;
     GtkWidget *data_window, *data_view;
     GwyDataViewLayer *layer;
@@ -55,7 +56,10 @@ file_open_ok_cb(GtkFileSelection *selector)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
-    gwy_app_set_current_data(data);
+    g_signal_connect_swapped(data_window, "focus-in-event",
+                             G_CALLBACK(gwy_app_set_current_data), data);
+    g_signal_connect_swapped(data_window, "destroy",
+                             G_CALLBACK(g_object_unref), data);
     gtk_widget_show_all(data_window);
 }
 
@@ -75,6 +79,83 @@ file_open_cb(void)
     gtk_widget_show_all(GTK_WIDGET(selector));
 }
 
+void
+file_save_as_ok_cb(GtkFileSelection *selector)
+{
+    const gchar *filename_utf8;  /* in UTF-8 */
+    const gchar *filename_sys;  /* in system (disk) encoding */
+    GwyContainer *data;
+
+    data = (GwyContainer*)g_object_get_data(G_OBJECT(selector), "data");
+    g_assert(GWY_IS_CONTAINER(data));
+
+    filename_sys = gtk_file_selection_get_filename(selector);
+    filename_utf8 = g_filename_to_utf8(filename_sys, 0, NULL, NULL, NULL);
+    if (g_file_test(filename_sys,
+                     G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
+        g_warning("Won't overwrite `%s' (yet)", filename_utf8);
+        return;
+    }
+    if (g_file_test(filename_sys, G_FILE_TEST_EXISTS)) {
+        g_warning("Not a regular file `%s'", filename_utf8);
+        return;
+    }
+
+    if (!gwy_file_save(data, filename_sys))
+        return;
+
+    gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+    gtk_widget_destroy(GTK_WIDGET(selector));
+}
+
+void
+file_save_as_cb(void)
+{
+    GtkFileSelection *selector;
+    GwyContainer *data;
+    const gchar *filename_utf8;  /* in UTF-8 */
+    const gchar *filename_sys;  /* in system (disk) encoding */
+
+    data = gwy_app_get_current_data();
+    g_return_if_fail(data);
+
+    selector = GTK_FILE_SELECTION(gtk_file_selection_new("Save file as"));
+    if (gwy_container_contains_by_name(data, "/filename"))
+        filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
+    else
+        filename_utf8 = "";
+    filename_sys = g_filename_from_utf8(filename_utf8, 0, NULL, NULL, NULL);
+    gtk_file_selection_set_filename(selector, filename_sys);
+    g_object_set_data(G_OBJECT(selector), "data", data);
+
+    g_signal_connect_swapped(selector->ok_button, "clicked",
+                             G_CALLBACK(file_save_as_ok_cb), selector);
+    g_signal_connect_swapped(selector->cancel_button, "clicked",
+                             G_CALLBACK(gtk_widget_destroy), selector);
+
+    gtk_widget_show_all(GTK_WIDGET(selector));
+}
+
+void
+file_save_cb(void)
+{
+    GwyContainer *data;
+    const gchar *filename_utf8;  /* in UTF-8 */
+    const gchar *filename_sys;  /* in system (disk) encoding */
+
+    data = gwy_app_get_current_data();
+    g_return_if_fail(data);
+
+    if (gwy_container_contains_by_name(data, "/filename"))
+        filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
+    else {
+        file_save_as_cb();
+        return;
+    }
+    filename_sys = g_filename_from_utf8(filename_utf8, 0, NULL, NULL, NULL);
+    if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
+        file_save_as_cb();
+}
 
 GtkWidget*
 create_file_menu(void)
@@ -83,8 +164,8 @@ create_file_menu(void)
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
         { "/File/_New...", "<control>N", NULL, TRUE, "<StockItem>", GTK_STOCK_NEW },
         { "/File/_Open...", "<control>O", file_open_cb, 0, "<StockItem>", GTK_STOCK_OPEN },
-        { "/File/_Save", "<control>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE },
-        { "/File/Save _As...", "<control><shift>S", NULL, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
+        { "/File/_Save", "<control>S", file_save_cb, 0, "<StockItem>", GTK_STOCK_SAVE },
+        { "/File/Save _As...", "<control><shift>S", file_save_as_cb, 0, "<StockItem>", GTK_STOCK_SAVE_AS },
         { "/File/---", NULL, NULL, 0, "<Separator>", NULL },
         { "/File/_Quit...", "<control>Q", gtk_main_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
@@ -120,7 +201,7 @@ create_data_menu(void)
 void
 foo(void)
 {
-    GtkWidget *window, *vbox, *toolbar, *widget, *alignment;
+    GtkWidget *window, *vbox, *toolbar;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
