@@ -148,7 +148,10 @@ def expand_template(makefile, name):
             lst.append(mod_dll_rule % (m, m, m, m, m))
         return  '\n'.join(lst)
     elif name == 'MO_INSTALL_RULES':
-        pos = get_list(makefile, 'ALL_LINGUAS')
+        pos = [l.strip() for l in file('LINGUAS')]
+        pos = [l for l in pos if l and not l.strip().startswith('#')]
+        assert len(pos) == 1
+        pos = re.split('\s+', pos[0])
         if not pos:
             return
         lst = ['installdirs:', '\t-@mkdir "$(DEST_DIR)\\locale"']
