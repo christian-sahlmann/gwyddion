@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.3cvs20040713, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.3cvs20040727, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -124,13 +124,16 @@ else
   CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
 
-PKG_CHECK_MODULES(PACKAGE, [gtk+-2.0 >= 2.2.0])
+PKG_CHECK_MODULES(GTK, [gtk+-2.0 >= 2.2.0])
+PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 PKG_CHECK_MODULES(GTKGLEXT, [gtkglext-1.0],,:)
 
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([tiff],[TIFFOpen])
-PACKAGE_LIBS="$PACKAGE_LIBS $LIBS"
+PACKAGE_LIBS="$PACKAGE_LIBS $GOBJECT_CFLAGS $LIBS"
+# XXX: need Gtk+ headers.
+PACKAGE_CFLAGS="$PACKAGE_CFLAGS $GTK_CFLAGS"
 
 dnl Checks for header files.
 AC_HEADER_STDC

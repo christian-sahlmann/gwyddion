@@ -47,7 +47,7 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydgets_la_LDFLAGS = -version-info 4:0:1
+libgwydgets_la_LDFLAGS = @GTK_LIBS@ -version-info 4:0:1
 libgwydgets_la_SOURCES = \
 	gwyaxis.c \
 	gwyaxisdialog.c \
