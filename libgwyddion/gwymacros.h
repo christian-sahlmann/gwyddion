@@ -3,6 +3,8 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
+#define _(x) (x)
+
 /* FIXME: doesn't behive as a single statement */
 #define gwy_object_unref(x) if (x) g_object_unref(x); (x) = NULL
 
