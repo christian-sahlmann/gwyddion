@@ -31,7 +31,6 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef struct {
-    GwyUnitoolState *state;
     GtkWidget *x;
     GtkWidget *y;
     GtkWidget *w;
@@ -51,38 +50,36 @@ typedef struct {
     gboolean upd;
     gboolean data_were_updated;
     gpointer last_preview;
+    gint old_ulcol;
+    gint old_ulrow;
+    gint old_brcol;
+    gint old_brrow;
+    gint state_changed;
 } ToolControls;
 
-static gboolean   module_register  (const gchar *name);
-static gboolean   use              (GwyDataWindow *data_window,
-                                    GwyToolSwitchEvent reason);
-static void       layer_setup      (GwyUnitoolState *state);
-static GtkWidget* dialog_create    (GwyUnitoolState *state);
-static void       dialog_update    (GwyUnitoolState *state,
-                                    GwyUnitoolUpdateType reason);
-static void       dialog_abandon   (GwyUnitoolState *state);
-static void       apply            (GwyUnitoolState *state);
+static gboolean   module_register      (const gchar *name);
+static gboolean   use                  (GwyDataWindow *data_window,
+                                        GwyToolSwitchEvent reason);
+static void       layer_setup          (GwyUnitoolState *state);
+static GtkWidget* dialog_create        (GwyUnitoolState *state);
+static void       dialog_update        (GwyUnitoolState *state,
+                                        GwyUnitoolUpdateType reason);
+static void       dialog_abandon       (GwyUnitoolState *state);
+static void       apply                (GwyUnitoolState *state);
 
 static void       direction_changed_cb (GObject *item,
+                                        GwyUnitoolState *state);
+static void       filter_changed_cb    (GObject *item,
+                                        GwyUnitoolState *state);
+static void       update_changed_cb    (GtkToggleButton *button,
+                                        GwyUnitoolState *state);
+static void       size_changed_cb      (GwyUnitoolState *state);
+
+static void       load_args            (GwyContainer *container,
                                         ToolControls *controls);
-static void       filter_changed_cb (GObject *item,
-                                    ToolControls *controls);
-static void       update_changed_cb (GtkToggleButton *button,
-                                    ToolControls *controls);
-static void       size_changed_cb   (ToolControls *controls);
+static void       save_args            (GwyContainer *container,
+                                        ToolControls *controls);
 
-static void       load_args        (GwyContainer *container,
-                                    ToolControls *controls);
-static void       save_args        (GwyContainer *container,
-                                    ToolControls *controls);
-
-
-/* FIXME: This belongs to tool state */
-static gint old_ulcol = 0;
-static gint old_ulrow = 0;
-static gint old_brcol = 0;
-static gint old_brrow = 0;
-static gint state_changed = FALSE;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -132,6 +129,7 @@ use(GwyDataWindow *data_window,
 {
     static const gchar *layer_name = "GwyLayerSelect";
     static GwyUnitoolState *state = NULL;
+    ToolControls *controls;
 
     if (!state) {
         func_slots.layer_type = g_type_from_name(layer_name);
@@ -143,8 +141,9 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
-    ((ToolControls*)state->user_data)->state = state;
-    state_changed = TRUE;
+    controls = (ToolControls*)state->user_data;
+    controls->state_changed = TRUE;
+
     return gwy_unitool_use(state, data_window, reason);
 }
 
@@ -180,7 +179,6 @@ dialog_create(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *settings;
-    GwySIValueFormat *units;
     GtkWidget *dialog, *table, *table2, *label, *frame;
 
     gwy_debug("");
@@ -188,8 +186,6 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     load_args(settings, controls);
-
-    units = state->coord_format;
 
     dialog = gtk_dialog_new_with_buttons(_("Filters"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -268,7 +264,7 @@ dialog_create(GwyUnitoolState *state)
 
     controls->filter
         = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
-                                    controls, controls->fil);
+                                 state, controls->fil);
 
     gtk_table_attach(GTK_TABLE(table2), controls->filter,
                      1, 2, 1, 2, GTK_FILL, 0, 2, 2);
@@ -280,7 +276,7 @@ dialog_create(GwyUnitoolState *state)
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
-                                                 controls, controls->dir);
+                                    state, controls->dir);
     if (controls->fil == GWY_FILTER_SOBEL || controls->fil == GWY_FILTER_PREWITT)
         gtk_widget_set_sensitive(controls->direction, TRUE);
     else
@@ -300,7 +296,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), controls->siz);
 
     g_signal_connect_swapped(controls->size, "value-changed",
-                             G_CALLBACK(size_changed_cb), controls);
+                             G_CALLBACK(size_changed_cb), state);
 
     controls->update
         = gtk_check_button_new_with_label("Update preview dynamically");
@@ -309,7 +305,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  controls->upd);
     g_signal_connect(controls->update, "toggled",
-                     G_CALLBACK(update_changed_cb), controls);
+                     G_CALLBACK(update_changed_cb), state);
 
     return dialog;
 }
@@ -478,20 +474,20 @@ dialog_update(GwyUnitoolState *state,
     }
 
 
-    if ((old_ulcol != ulcol)
-        || (old_ulrow != ulrow)
-        || (old_brcol != brcol)
-        || (old_brrow != brrow)) {
-        state_changed = TRUE;
-        old_ulcol = ulcol;
-        old_ulrow = ulrow;
-        old_brcol = brcol;
-        old_brrow = brrow;
+    if ((controls->old_ulcol != ulcol)
+        || (controls->old_ulrow != ulrow)
+        || (controls->old_brcol != brcol)
+        || (controls->old_brrow != brrow)) {
+        controls->state_changed = TRUE;
+        controls->old_ulcol = ulcol;
+        controls->old_ulrow = ulrow;
+        controls->old_brcol = brcol;
+        controls->old_brrow = brrow;
     }
 
     if (reason == GWY_UNITOOL_UPDATED_DATA
         && controls->data_were_updated == FALSE) {
-        state_changed = TRUE;
+        controls->state_changed = TRUE;
         controls->data_were_updated = TRUE;
     }
     else {
@@ -499,7 +495,7 @@ dialog_update(GwyUnitoolState *state,
     }
 
 
-    if (state_changed) {
+    if (controls->state_changed) {
         if (gwy_container_contains_by_name(data, "/0/show")) {
             shadefield
                 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -563,7 +559,7 @@ dialog_update(GwyUnitoolState *state,
                 break;
             }
         }
-        state_changed = FALSE;
+        controls->state_changed = FALSE;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
     }
 }
@@ -591,23 +587,30 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-direction_changed_cb(GObject *item, ToolControls *controls)
+direction_changed_cb(GObject *item,
+                     GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+
+    controls = (ToolControls*)state->user_data;
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
-    state_changed = TRUE;
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    controls->state_changed = TRUE;
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-filter_changed_cb(GObject *item, ToolControls *controls)
+filter_changed_cb(GObject *item, GwyUnitoolState *state)
 {
+    ToolControls *controls;
     gboolean direction_sensitive = FALSE;
     gboolean size_sensitive = FALSE;
 
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
-    state_changed = TRUE;
+    controls->state_changed = TRUE;
 
     switch (controls->fil) {
         case GWY_FILTER_LAPLACIAN:
@@ -631,27 +634,32 @@ filter_changed_cb(GObject *item, ToolControls *controls)
     gtk_widget_set_sensitive(controls->direction, direction_sensitive);
     gtk_widget_set_sensitive(controls->size_spin, size_sensitive);
 
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-update_changed_cb(GtkToggleButton *button, ToolControls *controls)
+update_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->upd = gtk_toggle_button_get_active(button);
-    state_changed = TRUE;
-    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    controls->state_changed = TRUE;
+    dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-size_changed_cb(ToolControls *controls)
+size_changed_cb(GwyUnitoolState *state)
 {
+    ToolControls *controls;
+
     gwy_debug("");
+    controls = (ToolControls*)state->user_data;
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
-    if (controls->upd)
-    {
-        state_changed = TRUE;
-        dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+    if (controls->upd) {
+        controls->state_changed = TRUE;
+        dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
     }
 }
 
