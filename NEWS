@@ -1,4 +1,14 @@
 
+
+1.6
+Modules:
+- Plug-in proxy: Dump files are always written with POSIX real number format
+  (bug #31)
+
+Plug-ins:
+- dump.c: Compilation problems on FreeBSD fixed.
+
+
 1.5
 This version requires GtkGLExt in addition to Gtk+ due to the new 3D data
 display capabilities (but it is still backward compatible with 1.4 and 1.3).
