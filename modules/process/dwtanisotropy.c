@@ -167,7 +167,9 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio, 16);
     
-    
+   
+    gwy_data_field_resample(dfield, xsize, ysize,
+                            GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(mask, xsize, ysize,
                             GWY_INTERPOLATION_BILINEAR);
 

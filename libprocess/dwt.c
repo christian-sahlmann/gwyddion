@@ -325,10 +325,10 @@ gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gin
 GwyDataField* 
 gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
 {
-    if ((!dfield) || (!wt_coefs)) return NULL;
     GwyDataLine *rin;
     gint nn, k;
 
+    if ((!dfield) || (!wt_coefs)) return NULL;
     rin = GWY_DATA_LINE(gwy_data_line_new(dfield->xres, dfield->xreal, FALSE));
 
     if (isign >= 0)
@@ -613,9 +613,10 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 	double ai, ai1;
 	long i, ii, j, jf, jr, k, n1, ni, nj, nh, nmod;
 
-	if (n < 4) return NULL;
 	GwyDataLine *wksp;
-	wksp = GWY_DATA_LINE(gwy_data_line_new(n+1, n+1, TRUE));
+	
+    if (n < 4) return NULL;
+    wksp = GWY_DATA_LINE(gwy_data_line_new(n+1, n+1, TRUE));
 	
 	nmod = wt->ncof*n; 
 	n1 = n-1;			 
@@ -681,10 +682,10 @@ wtset(GwyDataLine *wt_coefs)
 	sig= -sig;
     }
 
-    /*FIXME none of the NRC shifts centers wavelet well*/
+    /*FIXME none of the shifts centers wavelet well*/
     wt->ioff = wt->joff = -(wt_coefs->res >> 1);
-/*    wt->ioff = -2;
-    wt->joff = -wt->ncof+2;*/
+    wt->ioff = 0;
+    wt->joff = -wt->ncof;
     
     return wt;
 }
@@ -818,13 +819,13 @@ static gint
 remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ulcol, gint ulrow, gint brcol, gint brrow, 
 		    gboolean hard, gdouble multiple_threshold, gdouble noise_variance)
 {
-    gdouble rms, threshold;
+    gdouble rms, threshold, max;
     gdouble *datapos;
     gint i, j, n, count, icor, jcor;
 
     n = (brrow-ulrow)*(brcol-ulcol);
     
-    gdouble max = gwy_data_field_area_get_max(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
+    max = gwy_data_field_area_get_max(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
     rms = gwy_data_field_area_get_rms(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
     if ((rms*rms - noise_variance*noise_variance) > 0)
     {
@@ -882,17 +883,17 @@ find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdou
 	   {
 	       if (fabs(*bldrow)>fabs(*trdrow))
 	       {
-		   mincol = MAX(j*cor - cor*(gdouble)setsize/2.0, 0);
-		   maxcol = MIN(j*cor + cor*(gdouble)setsize/2.0, mask->xres);
-		   minrow = MAX(5+i*cor - (gdouble)setsize/2.0, 0);
-		   maxrow = MIN(5+i*cor + (gdouble)setsize/2.0, mask->yres);		  
+		   mincol = MAX(j*cor - 1.0*(gdouble)setsize/2.0, 0);
+		   maxcol = MIN(j*cor + 1.0*(gdouble)setsize/2.0, mask->xres);
+		   minrow = MAX(i*cor - (gdouble)setsize/2.0, 0);
+		   maxrow = MIN(i*cor + (gdouble)setsize/2.0, mask->yres);		  
 	       }
 	       else
 	       {
-		   mincol = MAX(j*cor - cor*(gdouble)setsize/2.0, 0);
-		   maxcol = MIN(j*cor + cor*(gdouble)setsize/2.0, mask->xres);
-		   minrow = MAX(5+i*cor - (gdouble)setsize/2.0, 0);
-		   maxrow = MIN(5+i*cor + (gdouble)setsize/2.0, mask->yres);			   
+		   mincol = MAX(j*cor - 1.0*(gdouble)setsize/2.0, 0);
+		   maxcol = MIN(j*cor + 1.0*(gdouble)setsize/2.0, mask->xres);
+		   minrow = MAX(i*cor - (gdouble)setsize/2.0, 0);
+		   maxrow = MIN(i*cor + (gdouble)setsize/2.0, mask->yres);			   
 	       }
 	       if (minrow>maxrow) continue;
 	       gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);
