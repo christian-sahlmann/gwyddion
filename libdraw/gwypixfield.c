@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#define DEBUG 1
 #include <libgwyddion/gwymacros.h>
 #include "gwypixfield.h"
 
@@ -188,7 +189,9 @@ gwy_pixfield_do_mask(GdkPixbuf *pixbuf,
         line = pixels + i*rowstride + 3;
         row = data + i*xres;
         for (j = 0; j < xres; j++, row++) {
-            *line = (guchar)(cor*(*row));
+            gdouble val = CLAMP(*row, 0.0, 1.0);
+
+            *line = (guchar)(cor*val);
             line += 4;
         }
     }
