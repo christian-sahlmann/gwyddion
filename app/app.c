@@ -18,6 +18,14 @@ static const gchar *menu_list[] = {
     "<file>", "<proc>", "<xtns>", "<edit>",
 };
 
+static GtkWidget* gwy_app_toolbar_append_tool(GtkWidget *toolbar,
+                                              GtkWidget *radio,
+                                              const gchar *stock_id,
+                                              const gchar *tooltip,
+                                              gpointer tool);
+static void       gwy_app_use_tool_cb        (GtkWidget *unused,
+                                              gpointer tool);
+
 void
 gwy_app_quit(void)
 {
@@ -43,7 +51,7 @@ zoom_set_cb(GtkWidget *button, gpointer data)
 void
 foo(void)
 {
-    GtkWidget *window, *vbox, *toolbar, *menu;
+    GtkWidget *window, *vbox, *toolbar, *menu, *grp;
     GtkAccelGroup *accel_group;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -93,34 +101,6 @@ foo(void)
                              "Zoom out", NULL,
                              GTK_SIGNAL_FUNC(zoom_set_cb),
                              GINT_TO_POINTER(-1), -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ZOOM_FIT,
-                             "Zoom to fit", NULL,
-                             NULL, NULL, -1);
-
-    /***************************************************************/
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
-                                GTK_ORIENTATION_HORIZONTAL);
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
-                              GTK_ICON_SIZE_BUTTON);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
-
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_POINTER,
-                             "Pointer", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_CROP,
-                             "Crop", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SCALE,
-                             "Scale", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_ROTATE,
-                             "Rotate", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_SHADER,
-                             "Shade", NULL,
-                             NULL, NULL, -1);
 
     /***************************************************************/
     toolbar = gtk_toolbar_new();
@@ -134,12 +114,26 @@ foo(void)
     gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_PLANE,
                              "Fit plane", NULL,
                              NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_FIT_TRIANGLE,
-                             "Fit plane using three points", NULL,
-                             NULL, NULL, -1);
-    gtk_toolbar_insert_stock(GTK_TOOLBAR(toolbar), GWY_STOCK_GRAPH,
-                             "Graph", NULL,
-                             NULL, NULL, -1);
+
+    /***************************************************************/
+    toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
+                                GTK_ORIENTATION_HORIZONTAL);
+    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+    gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),
+                              GTK_ICON_SIZE_BUTTON);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
+    grp = gwy_app_toolbar_append_tool(toolbar, NULL, GWY_STOCK_POINTER_MEASURE,
+                                        _("Pointer tooltip"), NULL);
+    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_CROP,
+                                _("Crop tooltip"), NULL);
+    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_SHADER,
+                                _("Shader tooltip"), NULL);
+    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_FIT_TRIANGLE,
+                                _("Fit plane using three points"), NULL);
+    gwy_app_toolbar_append_tool(toolbar, grp, GWY_STOCK_GRAPH,
+                                _("Graph tooltip"), NULL);
 
     /***************************************************************/
     gtk_widget_show_all(window);
@@ -236,6 +230,39 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
                               (GtkCallback)gwy_menu_set_sensitive_recursive,
                               &sens_data);
     }
+}
+
+static GtkWidget*
+gwy_app_toolbar_append_tool(GtkWidget *toolbar,
+                            GtkWidget *radio,
+                            const gchar *stock_id,
+                            const gchar *tooltip,
+                            gpointer tool)  /* XXX: needs some real type... */
+{
+    GtkWidget *icon;
+    GtkStockItem stock_item;
+
+    g_return_val_if_fail(GTK_IS_TOOLBAR(toolbar), NULL);
+    g_return_val_if_fail(stock_id, NULL);
+    g_return_val_if_fail(tooltip, NULL);
+
+    if (!gtk_stock_lookup(stock_id, &stock_item)) {
+        g_warning("Couldn't find item for stock id `%s'", stock_id);
+        stock_item.label = "???";
+    }
+    icon = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
+    return gtk_toolbar_append_element(GTK_TOOLBAR(toolbar),
+                                      GTK_TOOLBAR_CHILD_RADIOBUTTON, radio,
+                                      stock_item.label, tooltip, NULL, icon,
+                                      GTK_SIGNAL_FUNC(gwy_app_use_tool_cb),
+                                      tool);
+}
+
+static void
+gwy_app_use_tool_cb(GtkWidget *unused,
+                    gpointer tool)  /* XXX: needs some real type... */
+{
+    gwy_debug("%s: %p", __FUNCTION__, tool);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
