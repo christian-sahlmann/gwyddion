@@ -49,24 +49,28 @@ gwyradiobuttons
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_radio_buttons_set_current_widget ##### -->
+<!-- ##### FUNCTION gwy_radio_buttons_set_current_from_widget ##### -->
 <para>
 
 </para>
 
-@radio_button: 
+@widget: 
 @key: 
 @current: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@radio_button: 
 
 
-<!-- ##### FUNCTION gwy_radio_buttons_get_current_widget ##### -->
+<!-- ##### FUNCTION gwy_radio_buttons_get_current_from_widget ##### -->
 <para>
 
 </para>
 
-@radio_button: 
+@widget: 
 @key: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@radio_button: 
 
 

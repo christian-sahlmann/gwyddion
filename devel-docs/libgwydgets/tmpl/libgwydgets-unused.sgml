@@ -619,6 +619,25 @@ gwymodulemenus
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_radio_buttons_get_current_widget ##### -->
+<para>
+
+</para>
+
+@radio_button: 
+@key: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_radio_buttons_set_current_widget ##### -->
+<para>
+
+</para>
+
+@radio_button: 
+@key: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
 <para>
 

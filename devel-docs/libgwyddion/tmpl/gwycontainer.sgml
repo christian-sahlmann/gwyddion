@@ -408,6 +408,24 @@ A general-purpose container.  Items in GwyContainer are identified by a GQuark
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_serialize_to_text ##### -->
+<para>
+
+</para>
+
+@container: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_container_deserialize_from_text ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
+
 <!-- ##### MACRO gwy_container_value_type_by_name ##### -->
 <para>
 

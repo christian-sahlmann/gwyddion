@@ -611,6 +611,121 @@ Mask processing merging (namely used in grain processing).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_area_get_max ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_min ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_avg ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_rms ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_sum ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_surface_area ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@interpolation: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
+
+
 <!-- ##### FUNCTION gwy_data_field_threshold ##### -->
 <para>
 
@@ -743,6 +858,21 @@ Mask processing merging (namely used in grain processing).
 @col: 
 @from: 
 @to: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_fit_plane ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@pa: 
+@pbx: 
+@pby: 
 
 
 <!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
@@ -978,6 +1108,29 @@ Mask processing merging (namely used in grain processing).
 @rms: 
 @skew: 
 @kurtosis: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_get_stats ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@col: 
+@row: 
+@width: 
+@height: 
+@avg: 
+@ra: 
+@rms: 
+@skew: 
+@kurtosis: 
+<!-- # Unused Parameters # -->
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_line_stat_function ##### -->
@@ -1264,6 +1417,40 @@ Mask processing merging (namely used in grain processing).
 @kernel_brcol: 
 @kernel_brrow: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_crosscorrelate ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+
+
+<!-- ##### FUNCTION gwy_data_field_crosscorrelate_iteration ##### -->
+<para>
+
+</para>
+
+@data_field1: 
+@data_field2: 
+@x_dist: 
+@y_dist: 
+@score: 
+@search_width: 
+@search_height: 
+@window_width: 
+@window_height: 
+@state: 
+@iteration: 
 
 
 <!-- ##### FUNCTION gwy_data_field_croscorrelate ##### -->

@@ -38,12 +38,56 @@ Settings.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_app_settings_save_text ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_save_bin ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_app_settings_load ##### -->
 <para>
 
 </para>
 
 @filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_load_text ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_load_bin ##### -->
+<para>
+
+</para>
+
+@filename: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_create_config_dir ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 
@@ -56,6 +100,14 @@ Settings.
 
 
 <!-- ##### FUNCTION gwy_app_settings_get_config_filename ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_settings_get_settings_filename ##### -->
 <para>
 
 </para>

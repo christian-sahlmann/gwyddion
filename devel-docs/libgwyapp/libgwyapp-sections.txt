@@ -45,6 +45,7 @@ gwy_unitool_apply_set_sensitive
 gwy_unitool_windowname_frame_create
 gwy_unitool_get_z_average
 gwy_unitool_update_label
+gwy_unitool_update_label_no_units
 gwy_unitool_get_selection_or_all
 </SECTION>
 
@@ -67,9 +68,15 @@ gwy_app_file_open_initial
 gwy_app_settings_get
 gwy_app_settings_free
 gwy_app_settings_save
+gwy_app_settings_save_text
+gwy_app_settings_save_bin
 gwy_app_settings_load
+gwy_app_settings_load_text
+gwy_app_settings_load_bin
+gwy_app_settings_create_config_dir
 gwy_app_settings_get_module_dirs
 gwy_app_settings_get_config_filename
+gwy_app_settings_get_settings_filename
 gwy_app_settings_get_log_filename
 </SECTION>
 
@@ -93,6 +100,7 @@ gwy_option_menu_data_window
 gwy_option_menu_data_window_set_history
 gwy_option_menu_data_window_get_history
 gwy_app_run_process_func_cb
+gwy_app_run_process_func_in_mode
 gwy_app_run_graph_func_cb
 </SECTION>
 
@@ -101,7 +109,9 @@ gwy_app_run_graph_func_cb
 gwy_app_undo_checkpoint
 gwy_app_undo_checkpointv
 gwy_app_undo_undo
+gwy_app_undo_undo_window
 gwy_app_undo_redo
+gwy_app_undo_redo_window
 gwy_app_data_window_has_undo
 gwy_app_data_window_has_redo
 gwy_app_undo_clear

@@ -162,6 +162,16 @@ Universal tool template.
 @value: 
 
 
+<!-- ##### FUNCTION gwy_unitool_update_label_no_units ##### -->
+<para>
+
+</para>
+
+@units: 
+@label: 
+@value: 
+
+
 <!-- ##### FUNCTION gwy_unitool_get_selection_or_all ##### -->
 <para>
 

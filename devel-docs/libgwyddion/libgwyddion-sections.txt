@@ -119,6 +119,8 @@ gwy_container_gis_string
 gwy_container_set_object
 gwy_container_get_object
 gwy_container_gis_object
+gwy_container_serialize_to_text
+gwy_container_deserialize_from_text
 gwy_container_value_type_by_name
 gwy_container_contains_by_name
 gwy_container_get_value_by_name
@@ -167,6 +169,7 @@ gwy_math_find_nearest_line
 gwy_math_find_nearest_point
 gwy_math_lin_solve
 gwy_math_lin_solve_rewrite
+gwy_math_fit_polynom
 </SECTION>
 
 <SECTION>
@@ -198,18 +201,32 @@ gwy_entities_get_entities
 
 <SECTION>
 <FILE>gwynlfit</FILE>
+GwyNLFitPresetType
 GwyNLFitFunc
 GwyNLFitDerFunc
+GwyNLFitGuessFunc
+GwyNLFitParamScaleFunc
+Param
+GwyNLFitPresetFunction
 GwyNLFitter
 gwy_math_nlfit_new
 gwy_math_nlfit_free
 gwy_math_nlfit_fit
+gwy_math_nlfit_fit_with_fixed
 gwy_math_nlfit_get_max_iterations
 gwy_math_nlfit_set_max_iterations
 gwy_math_nlfit_get_dispersion
 gwy_math_nlfit_get_correlations
 gwy_math_nlfit_get_sigma
 gwy_math_nlfit_derive
+gwy_math_nlfit_get_preset
+gwy_math_nlfit_get_function_value
+gwy_math_nlfit_get_function_name
+gwy_math_nlfit_get_function_equation
+gwy_math_nlfit_get_function_param_name
+gwy_math_nlfit_get_function_param_default
+gwy_math_nlfit_get_function_nparams
+gwy_math_nlfit_fit_preset
 </SECTION>
 
 <SECTION>

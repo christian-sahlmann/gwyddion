@@ -133,6 +133,13 @@ The "Graph" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAPH_FIT_FUNC ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GRAPH_GAUSS ##### -->
 <para>
 The "Graph-Gauss" stock icon.
@@ -305,6 +312,13 @@ The "Subscript" stock icon.
 <para>
 The "Superscript" stock icon.
 <inlinegraphic fileref="gwy_superscript-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_UNROTATE ##### -->
+<para>
+
 </para>
 
 

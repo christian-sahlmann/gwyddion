@@ -44,11 +44,27 @@ undo
 
 
 
+<!-- ##### FUNCTION gwy_app_undo_undo_window ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+
 <!-- ##### FUNCTION gwy_app_undo_redo ##### -->
 <para>
 
 </para>
 
+
+
+<!-- ##### FUNCTION gwy_app_undo_redo_window ##### -->
+<para>
+
+</para>
+
+@data_window: 
 
 
 <!-- ##### FUNCTION gwy_app_data_window_has_undo ##### -->

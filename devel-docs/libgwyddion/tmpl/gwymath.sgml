@@ -92,3 +92,16 @@ Mathematical utility functions
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_math_fit_polynom ##### -->
+<para>
+
+</para>
+
+@ndata: 
+@xdata: 
+@ydata: 
+@n: 
+@coeffs: 
+@Returns: 
+
+

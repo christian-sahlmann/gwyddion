@@ -184,6 +184,16 @@ Menu functions.
 </para>
 
 @name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_run_process_func_in_mode ##### -->
+<para>
+
+</para>
+
+@name: 
+@run: 
 
 
 <!-- ##### FUNCTION gwy_app_run_graph_func_cb ##### -->

@@ -193,3 +193,33 @@ are saved here.
 @graph: 
 
 
+<!-- ##### FUNCTION gwy_graph_get_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@xval: 
+@yval: 
+@curve: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_data_size ##### -->
+<para>
+
+</para>
+
+@graph: 
+@curve: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_number_of_curves ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+

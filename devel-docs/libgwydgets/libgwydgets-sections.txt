@@ -529,6 +529,9 @@ gwy_graph_get_status_data
 gwy_graph_get_boundaries
 gwy_graph_set_boundaries
 gwy_graph_unzoom
+gwy_graph_get_data
+gwy_graph_get_data_size
+gwy_graph_get_number_of_curves
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH
@@ -551,8 +554,8 @@ gwy_dialog_prevent_delete_cb
 gwy_radio_buttons_create
 gwy_radio_buttons_set_current
 gwy_radio_buttons_get_current
-gwy_radio_buttons_set_current_widget
-gwy_radio_buttons_get_current_widget
+gwy_radio_buttons_set_current_from_widget
+gwy_radio_buttons_get_current_from_widget
 </SECTION>
 
 <SECTION>
@@ -572,6 +575,7 @@ GWY_STOCK_GRAINS_GRAPH
 GWY_STOCK_GRAINS_REMOVE
 GWY_STOCK_GRAINS_WATER
 GWY_STOCK_GRAPH
+GWY_STOCK_GRAPH_FIT_FUNC
 GWY_STOCK_GRAPH_GAUSS
 GWY_STOCK_GRAPH_HALFGAUSS
 GWY_STOCK_GRAPH_MEASURE
@@ -594,6 +598,7 @@ GWY_STOCK_SPOT_REMOVE
 GWY_STOCK_STAT_QUANTITIES
 GWY_STOCK_SUBSCRIPT
 GWY_STOCK_SUPERSCRIPT
+GWY_STOCK_UNROTATE
 GWY_STOCK_ZOOM_1_1
 GWY_STOCK_ZOOM_FIT
 GWY_STOCK_ZOOM_IN

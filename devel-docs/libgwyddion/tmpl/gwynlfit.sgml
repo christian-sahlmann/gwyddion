@@ -14,18 +14,37 @@ Marquardt-Levenbert nonlinear least square fitter.
 
 </para>
 
+<!-- ##### ENUM GwyNLFitPresetType ##### -->
+<para>
+
+</para>
+
+@GWY_NLFIT_PRESET_GAUSSIAN: 
+@GWY_NLFIT_PRESET_GAUSSIAN_PSDF: 
+@GWY_NLFIT_PRESET_GAUSSIAN_ACF: 
+@GWY_NLFIT_PRESET_GAUSSIAN_HHCF: 
+@GWY_NLFIT_PRESET_EXPONENTIAL: 
+@GWY_NLFIT_PRESET_EXPONENTIAL_PSDF: 
+@GWY_NLFIT_PRESET_EXPONENTIAL_ACF: 
+@GWY_NLFIT_PRESET_EXPONENTIAL_HHCF: 
+@GWY_NLFIT_PRESET_POLY_0: 
+@GWY_NLFIT_PRESET_POLY_1: 
+@GWY_NLFIT_PRESET_POLY_2: 
+@GWY_NLFIT_PRESET_POLY_3: 
+
 <!-- ##### USER_FUNCTION GwyNLFitFunc ##### -->
 <para>
 
 </para>
 
 @x: 
-@n_par: 
+@n_param: 
 @param: 
 @user_data: 
 @fres: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@n_par: 
 @params: 
 
 
@@ -36,15 +55,52 @@ Marquardt-Levenbert nonlinear least square fitter.
 
 @i: 
 @x: 
-@n_par: 
+@n_param: 
 @param: 
 @fmarq: 
 @user_data: 
 @deriv: 
 @dres: 
 <!-- # Unused Parameters # -->
+@n_par: 
 @dat_x: 
 @params: 
+
+
+<!-- ##### USER_FUNCTION GwyNLFitGuessFunc ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@n_dat: 
+@param: 
+@user_data: 
+@fres: 
+
+
+<!-- ##### USER_FUNCTION GwyNLFitParamScaleFunc ##### -->
+<para>
+
+</para>
+
+@param: 
+@xscale: 
+@yscale: 
+@dir: 
+
+
+<!-- ##### TYPEDEF Param ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
+<para>
+
+</para>
 
 
 <!-- ##### STRUCT GwyNLFitter ##### -->
@@ -91,8 +147,27 @@ Marquardt-Levenbert nonlinear least square fitter.
 @x: 
 @y: 
 @weight: 
-@n_par: 
+@n_param: 
 @param: 
+@user_data: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@n_par: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_fit_with_fixed ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@n_dat: 
+@x: 
+@y: 
+@weight: 
+@n_param: 
+@param: 
+@fixed_param: 
 @user_data: 
 @Returns: 
 
@@ -152,11 +227,97 @@ Marquardt-Levenbert nonlinear least square fitter.
 
 @i: 
 @x: 
-@n_par: 
+@n_param: 
 @param: 
 @ff: 
 @user_data: 
 @deriv: 
 @dres: 
+<!-- # Unused Parameters # -->
+@n_par: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset ##### -->
+<para>
+
+</para>
+
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_value ##### -->
+<para>
+
+</para>
+
+@function: 
+@params: 
+@x: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_name ##### -->
+<para>
+
+</para>
+
+@function: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_equation ##### -->
+<para>
+
+</para>
+
+@function: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_param_name ##### -->
+<para>
+
+</para>
+
+@function: 
+@param: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_param_default ##### -->
+<para>
+
+</para>
+
+@function: 
+@param: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_function_nparams ##### -->
+<para>
+
+</para>
+
+@function: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_math_nlfit_fit_preset ##### -->
+<para>
+
+</para>
+
+@function: 
+@n_dat: 
+@x: 
+@y: 
+@weight: 
+@n_param: 
+@param: 
+@fixed_param: 
+@user_data: 
+@Returns: 
 
 
