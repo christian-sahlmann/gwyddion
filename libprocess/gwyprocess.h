@@ -24,8 +24,10 @@
 /* some are currently included by datafiled.h */
 #include <libprocess/datafield.h>
 #include <libprocess/dataline.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/cwt.h>
+#include <libprocess/dwt.h>
 #include <libprocess/correct.h>
 #include <libprocess/correlation.h>
 #include <libprocess/filters.h>

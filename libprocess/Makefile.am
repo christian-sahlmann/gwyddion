@@ -6,6 +6,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwyprocessincludedir = $(pkgincludedir)/libprocess
 
 libgwyprocessinclude_HEADERS = \
+	arithmetic.h \
 	cdline.h \
 	correct.h \
 	correlation.h \
@@ -40,6 +41,7 @@ EXTRA_DIST = \
 # Changing ifaces     C:   R:   0
 libgwyprocess_la_LDFLAGS = -version-info 5:0:2
 libgwyprocess_la_SOURCES = \
+	arithmetic.c \
 	cdline.c \
 	correct.c \
 	correlation.c \
