@@ -95,7 +95,7 @@ rotate(GwyContainer *data, GwyRunType run)
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
         gwy_data_field_rotate(dfield, args.angle, args.interp);
-        data_window = gwy_app_create_data_window(data);
+        data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window));
         if (run != GWY_RUN_WITH_DEFAULTS)
             rotate_save_args(gwy_app_settings_get(), &args);
