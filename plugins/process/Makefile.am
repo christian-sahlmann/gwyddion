@@ -2,18 +2,31 @@
 
 processdir = $(gwyplugindir)/process
 
-if HAVE_PERL
 perl_plugins = invert_perl.pl
+if HAVE_PERL
+inst_perl_plugins = $(perl_plugins)
 endif
 
-if HAVE_PYTHON
 python_plugins = invert_python.py
+if HAVE_PYTHON
+inst_python_plugins = $(python_plugins)
 endif
 
-process_SCRIPTS = \
+ruby_plugins = invert_ruby.rb invert_narray.rb
+if HAVE_RUBY
+inst_ruby_plugins = $(ruby_plugins)
+endif
+
+script_plugins = \
 	$(perl_plugins) \
 	$(python_plugins) \
-	invert_ruby.rb \
+	$(ruby_plugins) \
+	yellow.sh
+
+process_SCRIPTS = \
+	$(inst_perl_plugins) \
+	$(inst_python_plugins) \
+	$(inst_ruby_plugins) \
 	yellow.sh
 
 if HAVE_PASCAL
@@ -47,7 +60,7 @@ noinst_HEADERS = \
 	dump.hh \
 	plugin-helper.hh
 
-EXTRA_DIST = README $(process_SCRIPTS) $(pascal_plugins_sources)
+EXTRA_DIST = README $(script_plugins) $(pascal_plugins_sources)
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Plug-in\"
 PASCAL_FLAGS = -Mdelphi -l- -Sh -WC -O2 -Xc -XX
