@@ -154,7 +154,7 @@ gwy_layer_mask_paint(GwyDataViewLayer *layer)
                                                       "/0/mask"));
     g_return_val_if_fail(data_field, layer->pixbuf);
     /*if (GWY_LAYER_MASK(layer)->changed)*/ {
-        gwy_pixfield_mask(layer->pixbuf, data_field, &mask_layer->color);
+        gwy_pixfield_do_mask(layer->pixbuf, data_field, &mask_layer->color);
         GWY_LAYER_MASK(layer)->changed = FALSE;
     }
 

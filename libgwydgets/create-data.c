@@ -55,6 +55,7 @@ main(void)
     container = (GwyContainer*)gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
     df = (GwyDataField*)gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
+    data = df->data;
     for (i = 0; i < N; i++) {
       row = data + N*i;
       y = 2*G_PI*(double)i/(N-1);
@@ -67,6 +68,10 @@ main(void)
       }
     }
     gwy_container_set_object_by_name(container, "/0/mask", G_OBJECT(df));
+    gwy_container_set_double_by_name(container, "/0/mask/red", 1.0);
+    gwy_container_set_double_by_name(container, "/0/mask/blue", 0.1);
+    gwy_container_set_double_by_name(container, "/0/mask/green", 0.3);
+    gwy_container_set_double_by_name(container, "/0/mask/alpha", 1.0);
     gwy_container_set_string_by_name(container, "/meta/Created by",
                                      "$Id$");
     buffer = gwy_serializable_serialize(G_OBJECT(container), buffer, &size);
