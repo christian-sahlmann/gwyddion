@@ -48,7 +48,7 @@
 #endif
 #include <libgwyddion/gwywin32unistd.h>
 
-#if (defined(HAVE_SYS_STAT_H) || defined(G_OS_WIN32))
+#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
 #include <sys/stat.h>
 /* And now we are in a deep s... */
 #endif
