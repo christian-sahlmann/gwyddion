@@ -409,7 +409,7 @@ gwy_axiser_adjust(GwyAxiser *axiser, gint width, gint height)
     if (axiser->orientation == GTK_POS_LEFT
         || axiser->orientation == GTK_POS_RIGHT) {
         axiser->label_y_pos = height/2;
-        if (axiser->orientation == GTK_POS_LEFT)
+        if (axiser->orientation == GTK_POS_RIGHT)
             axiser->label_x_pos = 40;
         else
             axiser->label_x_pos = width - 40;
@@ -541,13 +541,13 @@ gwy_axiser_draw_axiser(GtkWidget *widget)
                       widget->allocation.width-1, widget->allocation.height-1);
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         gdk_draw_line(widget->window, mygc,
                       0, 0,
                       0, widget->allocation.height-1);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width-1, 0,
                       widget->allocation.width-1, widget->allocation.height-1);
@@ -598,7 +598,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - axiser->par.major_length);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(widget->window, mygc,
                           0,
                           widget->allocation.height-1 - pmjt->t.scrpos,
@@ -606,7 +606,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - pmjt->t.scrpos);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(widget->window, mygc,
                           widget->allocation.width-1,
                           widget->allocation.height-1 - pmjt->t.scrpos,
@@ -643,7 +643,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - axiser->par.minor_length);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(widget->window, mygc,
                           0,
                           widget->allocation.height-1 - pmit->scrpos,
@@ -651,7 +651,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - pmit->scrpos);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(widget->window, mygc,
                           widget->allocation.width-1,
                           widget->allocation.height-1 - pmit->scrpos,
@@ -703,12 +703,12 @@ gwy_axiser_draw_tlabels(GtkWidget *widget)
                    - axiser->par.major_length - sep - rect.height;
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             xpos = axiser->par.major_length + sep;
             ypos = widget->allocation.height-1 - pmjt->t.scrpos - rect.height/2;
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             xpos = widget->allocation.width-1
                    - axiser->par.major_length - sep - rect.width;
             ypos = widget->allocation.height-1
@@ -779,7 +779,7 @@ gwy_axiser_draw_label(GtkWidget *widget)
                         layout);
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         /*pango_matrix_rotate (&matrix, 90);
         pango_context_set_matrix (context, &matrix);
         pango_layout_context_changed (layout);
@@ -790,7 +790,7 @@ gwy_axiser_draw_label(GtkWidget *widget)
                         layout);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         gdk_draw_layout(widget->window, mygc,
                         axiser->label_x_pos - rect.width,
                         axiser->label_y_pos,
