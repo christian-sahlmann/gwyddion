@@ -45,6 +45,8 @@ extern "C" {
 #define GWY_STOCK_ZOOM_IN         "gwy_zoom_in"
 #define GWY_STOCK_ZOOM_OUT        "gwy_zoom_out"
 
+#define GWY_ICON_SIZE_ABOUT "gwy-about"
+
 void gwy_stock_register_stock_items(void);
 
 #ifdef __cplusplus

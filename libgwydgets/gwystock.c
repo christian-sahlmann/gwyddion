@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include <gtk/gtkstock.h>
 #include <gtk/gtkiconfactory.h>
 #include <gdk/gdkkeysyms.h>
@@ -97,6 +99,7 @@ register_toolbox_icons(const gchar *pixmap_path,
         gtk_icon_factory_add(icon_factory, id, icon_set);
     }
 
+    gtk_icon_size_register(GWY_ICON_SIZE_ABOUT, 60, 60);
     {
         GtkIconSet *icon_set = gtk_icon_set_new();
         const gchar *id = gwyddion_stock.stock_id;
@@ -178,6 +181,112 @@ guess_pixmap_path(void)
     }
 
     return NULL;
+}
+
+static GList*
+slurp_icon_directory(const gchar *path)
+{
+    GList *icons = NULL;
+    GDir *gdir = NULL;
+    GError *err = NULL;
+
+    gdir = g_dir_open(path, 0, &err);
+    if (!gdir) {
+        g_warning("Cannot open directory `%s': %s", path, err->message);
+        return NULL;
+    }
+
+    return icons;
+}
+
+/**
+ * Filename format: <gwy_foobar>-<size>[.<state>].png
+ **/
+static GtkIconSource*
+file_to_icon_source(const gchar *filename,
+                    gchar **id)
+{
+    static struct { gchar letter; GtkStateType state; }
+    const state_letters[] = {
+        { 'n', GTK_STATE_NORMAL },
+        { 'a', GTK_STATE_ACTIVE },
+        { 'p', GTK_STATE_PRELIGHT },
+        { 's', GTK_STATE_SELECTED },
+        { 'i', GTK_STATE_INSENSITIVE },
+    };
+    static struct { gint size; GtkIconSize gtksize; }
+    const gtk_sizes[] = {
+        { 16, GTK_ICON_SIZE_MENU },
+        { 18, GTK_ICON_SIZE_SMALL_TOOLBAR },
+        { 20, GTK_ICON_SIZE_BUTTON },
+        { 24, GTK_ICON_SIZE_LARGE_TOOLBAR },
+        { 32, GTK_ICON_SIZE_DND },
+        { 48, GTK_ICON_SIZE_DIALOG },
+    };
+    GtkIconSource *icon_source;
+    GtkIconSize gtksize = -1;
+    GtkStateType state = -1;
+    gchar *sz, *st, *p;
+    gint size;
+    gsize i;
+
+    *id = g_strdup(filename);
+    if (!(sz = strchr(*id, '-')))
+        return NULL;
+    *sz = '\0';
+    sz++;
+    if (!(st = strchr(sz, '.')))
+        return NULL;
+    *st = '\0';
+    st++;
+    if ((p = strchr(st, '.')))
+        *p = '\0';
+    else
+        st = NULL;
+    size = atoi(sz);
+    if (size < 0)
+        return NULL;
+
+    if (st) {
+        if (strlen(st) != 1)
+            return NULL;
+        for (i = 0; i < G_N_ELEMENTS(state_letters); i++) {
+            if (st[0] == state_letters[i].letter) {
+                state = state_letters[i].state;
+                break;
+            }
+        }
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(gtk_sizes); i++) {
+        if (gtk_sizes[i].size == size) {
+            gtksize = gtk_sizes[i].gtksize;
+            break;
+        }
+        if (gtk_sizes[i].size > size) {
+            if (!i)
+                gtksize = gtk_sizes[i].gtksize;
+            else if (size*size > gtk_sizes[i-1].size*gtk_sizes[i].size)
+                gtksize = gtk_sizes[i].gtksize;
+            else
+                gtksize = gtk_sizes[i-1].gtksize;
+            break;
+        }
+    }
+    if (gtksize == (GtkIconSize)-1)
+        gtksize = gtk_sizes[G_N_ELEMENTS(gtk_sizes)-1].gtksize;
+
+    icon_source = gtk_icon_source_new();
+    gtk_icon_source_set_filename(icon_source, filename);
+    gtk_icon_source_set_size(icon_source, gtksize);
+    gtk_icon_source_set_direction_wildcarded(icon_source, TRUE);
+    gtk_icon_source_set_size_wildcarded(icon_source, FALSE);
+    if (state != (GtkStateType)-1) {
+        gtk_icon_source_set_state_wildcarded(icon_source, FALSE);
+        gtk_icon_source_set_state(icon_source, state);
+    }
+
+    return icon_source;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
