@@ -1455,6 +1455,7 @@ gwy_expr_execute(GwyExpr *expr,
 
 /**
  * GWY_EXPR_ERROR:
+ *
  * Error domain for expression parsing. Errors in this domain will be from the
  * #GwyExprError enumeration. See #GError for information on error domains.
  *
