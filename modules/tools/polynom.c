@@ -121,6 +121,7 @@ use(GwyDataWindow *data_window,
         state = g_new0(GwyUnitoolState, 1);
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
+        state->apply_doesnt_close = TRUE;
     }
     return gwy_unitool_use(state, data_window, reason);
 }
@@ -135,12 +136,18 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    const GwyEnum directions[] = {
+        { N_("_Horizontal direction"), GTK_ORIENTATION_HORIZONTAL, },
+        { N_("_Vertical direction"),   GTK_ORIENTATION_VERTICAL,   },
+    };
     ToolControls *controls;
     GwyContainer *settings;
     GwySIValueFormat *units;
     GtkWidget *dialog, *table, *table2, *label, *frame;
+    GSList *radio;
+    gint row;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
@@ -164,50 +171,51 @@ dialog_create(GwyUnitoolState *state)
     controls->labels.unselected_is_full = TRUE;
 
     table2 = gtk_table_new(4, 2, FALSE);
+    row = 0;
 
     gtk_container_set_border_width(GTK_CONTAINER(table2), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table2);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fiting mode:</b>"));
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Fiting mode</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
-    label = gtk_label_new(_("Type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
+    controls->fitting = gwy_option_menu_fit_line(G_CALLBACK(fitting_changed_cb),
+                                                 state, controls->fit);
+    gwy_table_attach_row(table2, row, _("_Type:"), NULL, controls->fitting);
+    row++;
 
-    controls->fitting
-        = gwy_option_menu_fit_line(G_CALLBACK(fitting_changed_cb),
-                                   state, controls->fit);
-
-    gtk_table_attach(GTK_TABLE(table2), controls->fitting,
-                     1, 2, 1, 2, GTK_FILL, 0, 2, 2);
-
-    label = gtk_label_new(_("Direction:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 2, 3, GTK_FILL, 0, 2, 2);
-
-    controls->direction
-        = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
-                                    state, controls->dir);
-
-    gtk_table_attach(GTK_TABLE(table2), controls->direction,
-                     1, 2, 2, 3, GTK_FILL, 0, 2, 2);
+    radio = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
+                                     "direction-type",
+                                     G_CALLBACK(direction_changed_cb), state,
+                                     controls->dir);
+    while (radio) {
+        gtk_table_attach(GTK_TABLE(table2), GTK_WIDGET(radio->data),
+                         0, 3, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        row++;
+        radio = g_slist_next(radio);
+    }
+    gtk_table_set_row_spacing(GTK_TABLE(table2), row-1, 8);
 
     controls->exclude
-        = gtk_check_button_new_with_label(_("Exclude area if selected"));
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->exclude,
-                       FALSE, FALSE, 0);
+        = gtk_check_button_new_with_mnemonic(_("_Exclude area if selected"));
+    gtk_table_attach(GTK_TABLE(table2), controls->exclude, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->exclude),
                                  controls->exc);
     g_signal_connect(controls->exclude, "toggled",
                      G_CALLBACK(exclude_changed_cb), state);
+    row++;
 
     label = gtk_label_new(_("(otherwise will be used for fitting)"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
-                       FALSE, FALSE, 0);
+    gtk_table_attach(GTK_TABLE(table2), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
 
     return dialog;
 }
@@ -222,7 +230,7 @@ apply(GwyUnitoolState *state)
     ToolControls *controls;
     gint isel[4];
 
-    gwy_debug("");
+    gwy_debug(" ");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
@@ -288,7 +296,10 @@ direction_changed_cb(GObject *item, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
+        return;
+
     controls = (ToolControls*)state->user_data;
     controls->dir = GPOINTER_TO_INT(g_object_get_data(item, "direction-type"));
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
@@ -299,7 +310,7 @@ fitting_changed_cb(GObject *item, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     controls->fit = GPOINTER_TO_INT(g_object_get_data(item, "fit-type"));
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
@@ -310,7 +321,7 @@ exclude_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
-    gwy_debug("");
+    gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     controls->exc = gtk_toggle_button_get_active(button);
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
