@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
 "POT-Creation-Date: 2004-10-05 13:31+0200\n"
-"PO-Revision-Date: 2004-10-05 01:17+0200\n"
+"PO-Revision-Date: 2004-10-05 21:47+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -103,7 +103,7 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:295
 msgid "_Ortographic projection"
-msgstr ""
+msgstr "_Ortografická projekce"
 
 #: libgwydgets/gwy3dwindow.c:309
 msgid "Light & Material"
@@ -111,19 +111,19 @@ msgstr "Světlo a materiál"
 
 #: libgwydgets/gwy3dwindow.c:326
 msgid "Material:"
-msgstr ""
+msgstr "Materiál:"
 
 #: libgwydgets/gwy3dwindow.c:345
 msgid "Light phi"
-msgstr ""
+msgstr "Fí světla:"
 
 #: libgwydgets/gwy3dwindow.c:351
 msgid "Light theta"
-msgstr ""
+msgstr "Théta světla:"
 
 #: libgwydgets/gwy3dwindow.c:364
 msgid "Palette:"
-msgstr ""
+msgstr "Palete:"
 
 #: libgwydgets/gwy3dwindow.c:387
 msgid "Labels"
@@ -131,11 +131,11 @@ msgstr "Popisky"
 
 #: libgwydgets/gwy3dwindow.c:393
 msgid "Label"
-msgstr ""
+msgstr "Popisek"
 
 #: libgwydgets/gwy3dwindow.c:408
 msgid "Text"
-msgstr ""
+msgstr "Text"
 
 #: libgwydgets/gwy3dwindow.c:427
 msgid "Move Label"
@@ -152,11 +152,11 @@ msgstr "Vodorovně"
 #: modules/process/crosscor.c:241 modules/process/crosscor.c:255
 #: modules/process/crosscor.c:261
 msgid "pixels"
-msgstr ""
+msgstr "pixelů"
 
 #: libgwydgets/gwy3dwindow.c:439
 msgid "Vertically"
-msgstr ""
+msgstr "Svisle"
 
 #: libgwydgets/gwy3dwindow.c:445
 msgid "_Scale Size Automatically"
@@ -164,7 +164,7 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:458
 msgid "Size"
-msgstr ""
+msgstr "Velikost"
 
 #: libgwydgets/gwy3dwindow.c:466 modules/file/pixmap.c:676
 #: modules/file/pixmap.c:1557 modules/file/rawfile.c:496
@@ -182,47 +182,47 @@ msgstr ""
 
 #: libgwymodule/gwymodulebrowser.c:200
 msgid "Name-Version:"
-msgstr ""
+msgstr "Jméno-verze"
 
 #: libgwymodule/gwymodulebrowser.c:201
 msgid "File:"
-msgstr ""
+msgstr "Soubor:"
 
 #: libgwymodule/gwymodulebrowser.c:202
 msgid "Registered functions:"
-msgstr ""
+msgstr "Regostrované funkce:"
 
 #: libgwymodule/gwymodulebrowser.c:203
 msgid "Authors:"
-msgstr ""
+msgstr "Autoři:"
 
 #: libgwymodule/gwymodulebrowser.c:204
 msgid "Copyright:"
-msgstr ""
+msgstr "Copyright:"
 
 #: libgwymodule/gwymodulebrowser.c:205
 msgid "Date:"
-msgstr ""
+msgstr "Datum:"
 
 #: libgwymodule/gwymodulebrowser.c:206
 msgid "Description:"
-msgstr ""
+msgstr "Popis:"
 
 #: app/graphlist.c:174 modules/file/rawfile.c:1110
 msgid "_Delete"
-msgstr ""
+msgstr "_Smaž"
 
 #: app/graphlist.c:179
 msgid "Delete _All"
-msgstr ""
+msgstr "Smaž _všechny"
 
 #: app/graphlist.c:184
 msgid "_Show All"
-msgstr ""
+msgstr "_Ukaž všechny"
 
 #: app/graphlist.c:189
 msgid "_Hide All"
-msgstr ""
+msgstr "S_kryj všechny"
 
 #: app/app.c:209
 #, c-format
@@ -231,10 +231,13 @@ msgid ""
 "%s\n"
 "Really quit?"
 msgstr ""
+"Některá data nejsou uložena:\n"
+"%s\n"
+"Upravdu skončit?"
 
 #: app/app.c:766
 msgid "Export"
-msgstr ""
+msgstr "Export"
 
 #: app/app.c:1090 app/app.c:1102
 #, c-format
@@ -247,23 +250,23 @@ msgstr ""
 
 #: app/app.c:1330
 msgid "Change Default Mask Color"
-msgstr ""
+msgstr "Změň předvolenou barvu masky"
 
 #: app/toolbox.c:171
 msgid "_File"
-msgstr ""
+msgstr "_Soubor"
 
 #: app/toolbox.c:174
 msgid "_Edit"
-msgstr ""
+msgstr "Úpr_avy"
 
 #: app/toolbox.c:177
 msgid "_Data Process"
-msgstr ""
+msgstr "Zpracování _dat"
 
 #: app/toolbox.c:180
 msgid "_Graph"
-msgstr ""
+msgstr "_Graf"
 
 #: app/toolbox.c:183
 msgid "_Meta"
@@ -271,59 +274,59 @@ msgstr ""
 
 #: app/toolbox.c:188
 msgid "View"
-msgstr ""
+msgstr "Zobrazení"
 
 #: app/toolbox.c:197
 msgid "Zoom in"
-msgstr ""
+msgstr "Zvětšit"
 
 #: app/toolbox.c:200
 msgid "Zoom 1:1"
-msgstr ""
+msgstr "Velikost 1:1"
 
 #: app/toolbox.c:203
 msgid "Zoom out"
-msgstr ""
+msgstr "Zmenšit"
 
 #: app/toolbox.c:206
 msgid "Display a 3D view of data"
-msgstr ""
+msgstr "Zobrazit data v trojrozměrném pohledu"
 
 #: app/toolbox.c:220
 msgid "Data Process"
-msgstr ""
+msgstr "Zpracování dat"
 
 #: app/toolbox.c:228
 msgid "Fix minimum value to zero"
-msgstr ""
+msgstr "Oprav minimální hodnotu na nulu"
 
 #: app/toolbox.c:230
 msgid "Scale data"
-msgstr ""
+msgstr "Škáluj data"
 
 #: app/toolbox.c:232
 msgid "Rotate by arbitrary angle"
-msgstr ""
+msgstr "Rotuj o libovolný úhel"
 
 #: app/toolbox.c:234
 msgid "Automatically correct rotation"
-msgstr ""
+msgstr "Automaticky oprav rotaci"
 
 #: app/toolbox.c:236
 msgid "Automatically level data"
-msgstr ""
+msgstr "Automaticky vyrovnej data"
 
 #: app/toolbox.c:238
 msgid "Facet-level data"
-msgstr ""
+msgstr "Vyrovnej data podle plošek"
 
 #: app/toolbox.c:240
 msgid "Fast Fourier Transform"
-msgstr ""
+msgstr "Rychlá Fourierova transformace"
 
 #: app/toolbox.c:242
 msgid "Continuous Wavelet Transform"
-msgstr ""
+msgstr "Spojitá waveletová transformace"
 
 #: app/toolbox.c:244 modules/process/grain_mark.c:177
 msgid "Mark grains by threshold"
