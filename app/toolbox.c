@@ -651,28 +651,50 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
                           G_GNUC_UNUSED gpointer user_data)
 {
     gchar *filename;
-    GwyContainer *container;
+    gchar **file_list;
+    GwyContainer **containers;
     GtkWidget *data_window;
+    gboolean ok = FALSE;
+    gint i, n;
 
     if (data->length <= 0 || data->format != 8) {
         gtk_drag_finish(context, FALSE, FALSE, time);
         return;
     }
 
-    filename = (gchar*)data->data;
-    if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR
-                               | G_FILE_TEST_IS_SYMLINK)) {
+    file_list = g_strsplit((gchar*)data->data, "\n", 0);
+    if (!file_list) {
         gtk_drag_finish(context, FALSE, FALSE, time);
         return;
     }
 
-    container = gwy_file_load(filename);
-    gtk_drag_finish(context, container != NULL, FALSE, time);
+    /* Stop on an empty line too.
+     * This (1) kills the last empty line (2) prevents some cases of total
+     * bogus to be processed any further */
+    for (n = 0; file_list[n] && file_list[n][0]; n++)
+        ;
 
-    if (container) {
-        data_window = gwy_app_data_window_create(container);
+    containers = g_new0(GwyContainer*, n);
+    for (i = 0; i < n; i++) {
+        filename = g_strstrip(file_list[i]);
+        if (g_str_has_prefix(filename, "file://"))
+            filename += sizeof("file://") - 1;
+        gwy_debug("filename = %s", filename);
+        if (g_file_test(filename, G_FILE_TEST_IS_REGULAR
+                                  | G_FILE_TEST_IS_SYMLINK)) {
+            containers[i] = gwy_file_load(filename);
+            ok = TRUE;    /* FIXME: what if we accept only some? */
+        }
+    }
+    g_strfreev(file_list);
+    gtk_drag_finish(context, ok, FALSE, time);
+    for (i = 0; i < n; i++) {
+        if (!containers[i])
+            continue;
+        data_window = gwy_app_data_window_create(containers[i]);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
+    g_free(containers);
 
     return;
 }
