@@ -425,33 +425,36 @@ sis_load(const gchar *filename)
     memset(&sisfile, 0, sizeof(sisfile));
     sisfile.params = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                            NULL, g_free);
-    sis_real_load(buffer, size, &sisfile);
-    n = 0;
-    for (i = 0; i < sisfile.nchannels; i++) {
-        for (j = 0; j < sisfile.channels[i].nimages; j++) {
-            image = sisfile.channels[i].images + j;
-            if (image->image_data) {
-                n++;
-                gwy_debug("Available data: Channel #%u image #%u", i+1, j+1);
-                choices = g_renew(GwyEnum, choices, n);
-                choices[n-1].value = 1024*i + j;
-                choices[n-1].name = g_strdup_printf("Channel %u, image %u "
-                                                    "(%u×%u)",
-                                                    i+1, j+1,
-                                                    image->width,
-                                                    image->height);
+    if (sis_real_load(buffer, size, &sisfile)) {
+        n = 0;
+        for (i = 0; i < sisfile.nchannels; i++) {
+            for (j = 0; j < sisfile.channels[i].nimages; j++) {
+                image = sisfile.channels[i].images + j;
+                if (image->image_data) {
+                    n++;
+                    gwy_debug("Available data: Channel #%u image #%u",
+                              i+1, j+1);
+                    choices = g_renew(GwyEnum, choices, n);
+                    choices[n-1].value = 1024*i + j;
+                    choices[n-1].name = g_strdup_printf("Channel %u, image %u "
+                                                        "(%u×%u)",
+                                                        i+1, j+1,
+                                                        image->width,
+                                                        image->height);
+                }
             }
         }
-    }
-    i = select_which_data(&sisfile, choices, n);
-    gwy_debug("Selected %u:%u", i/1024, i % 1024);
-    if (i != (gsize)-1) {
-        dfield = extract_data(&sisfile, i/1024, i % 1024);
-        if (dfield) {
-            data = GWY_CONTAINER(gwy_container_new());
-            gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
-            g_object_unref(dfield);
-            add_metadata(&sisfile, i/1024, i %1024, data);
+        i = select_which_data(&sisfile, choices, n);
+        gwy_debug("Selected %u:%u", i/1024, i % 1024);
+        if (i != (gsize)-1) {
+            dfield = extract_data(&sisfile, i/1024, i % 1024);
+            if (dfield) {
+                data = GWY_CONTAINER(gwy_container_new());
+                gwy_container_set_object_by_name(data, "/0/data",
+                                                 G_OBJECT(dfield));
+                g_object_unref(dfield);
+                add_metadata(&sisfile, i/1024, i %1024, data);
+            }
         }
     }
 
@@ -771,25 +774,33 @@ sis_real_load(const guchar *buffer,
     gdouble d;
 
     p = memchr(buffer, '\x1a', size);
-    if (!p)
+    if (!p) {
+        gwy_debug("FAILED: Cannot find start of binary part");
         return FALSE;
+    }
     start = p-buffer + 1;
     gwy_debug("%.*s", start, buffer);
 
-    if (size - start < 6)
+    if (size - start < 6) {
+        gwy_debug("FAILED: Binary part shorter than its header");
         return FALSE;
+    }
 
     p = buffer + start;
     id = get_WORD(&p);
     gwy_debug("block id = %u", id);
-    if (id != SIS_BLOCK_DOCUMENT)
+    if (id != SIS_BLOCK_DOCUMENT) {
+        gwy_debug("FAILED: Block not a document block");
         return FALSE;
+    }
 
     docinfosize = get_DWORD(&p);
     gwy_debug("doc info size = %u", docinfosize);
     if (size - (p - buffer) < docinfosize - 6
-        || docinfosize < 8)
+        || docinfosize < 8) {
+        gwy_debug("FAILED: Too short document info size");
         return FALSE;
+    }
 
     sisfile->version_maj = get_WORD(&p);
     sisfile->version_min = get_WORD(&p);
@@ -798,16 +809,27 @@ sis_real_load(const guchar *buffer,
     nparams = get_WORD(&p);
     sisfile->nchannels = get_WORD(&p);
     gwy_debug("nparams = %d, nchannels = %d", nparams, sisfile->nchannels);
-    if (!sisfile->nchannels)
+    if (!sisfile->nchannels) {
+        gwy_debug("FAILED: No channels");
         return FALSE;
+    }
+    sisfile->channels = g_new0(SISChannel, sisfile->nchannels);
 
     for (i = 0; i < nparams; i++) {
-        if (size - (p - buffer) < 4)
+        if (size - (p - buffer) < 4) {
+            gwy_debug("FAILED: Too short parameter info");
             return FALSE;
+        }
         id = get_WORD(&p);
         len = get_WORD(&p);
-        if (!len || size - (p - buffer) < len)
+        if (!len) {
+            gwy_debug("ZERO length parameter %u, ignoring", id);
+            continue;
+        }
+        if (size - (p - buffer) < len) {
+            gwy_debug("FAILED: Truncated parameter data, param len = %u", len);
             return FALSE;
+        }
 
         sisparam = NULL;
         for (j = 0; j < G_N_ELEMENTS(sis_parameters); j++) {
@@ -818,7 +840,7 @@ sis_real_load(const guchar *buffer,
             }
         }
         if (!sisparam) {
-            g_warning("Unknown parameter id %u", id);
+            g_warning("UNKNOWN parameter id %u", id);
             p += len;
             continue;
         }
@@ -852,7 +874,6 @@ sis_real_load(const guchar *buffer,
         }
     }
 
-    sisfile->channels = g_new0(SISChannel, sisfile->nchannels);
     for (i = 0; i <= sisfile->nchannels; ) {
         gwy_debug("%06x", p - buffer);
         /* this looks like end-of-data */
@@ -913,7 +934,7 @@ sis_real_load(const guchar *buffer,
                 }
             }
             if (!procstep) {
-                g_warning("Unknown processing step %.4s",
+                g_warning("UNKNOWN processing step %.4s",
                           image->processing_step);
             }
             image->processing_step_index = get_WORD(&p);
@@ -972,7 +993,7 @@ sis_real_load(const guchar *buffer,
             break;
 
             default:
-            g_warning("Funny stuff");
+            gwy_debug("Funny stuff (alien block id)");
             p += len;
             break;
         }
