@@ -27,8 +27,8 @@ libgwydraw_la_SOURCES = \
 test_SOURCES = \
 	test.c
 test_LDADD = libgwydraw.la \
-	$(libgwyddion) \
-	$(libgwyprocess)
+	$(libgwyprocess) \
+	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
