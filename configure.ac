@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.3cvs20040712, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.3cvs20040713, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -50,6 +50,7 @@ AC_DISABLE_STATIC
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_F77
 AC_AIX
 AC_GNU_SOURCE
 AC_ISC_POSIX
@@ -63,8 +64,28 @@ AC_CHECK_PROGS([STRIP],[strip])
 AM_PATH_PYTHON(2.2,,:)
 AC_PATH_PROGS(PERL,perl5 perl,:)
 AC_PATH_PROGS(POD2MAN,pod2man,:)
-AC_PATH_PROGS(PASCAL,fpc,:)
 gtk_CHECK_GTK_DOC
+AC_PATH_PROGS(PASCAL,fpc,:)
+
+# Check Pascal version
+# The outer [] are necessary to quote the inner [] inside sed expressions
+if test "x$PASCAL" != "x"; then
+  AC_MSG_CHECKING([if fpc version >= 1.9])
+  fpc_version=`$PASCAL -iV`
+  [fpc_major=`echo $fpc_version | sed -e 's/\..*//'`]
+  [fpc_minor=`echo $fpc_version | sed -e 's/[^.]*\.//' -e 's/\..*//'`]
+  if test $fpc_major -gt 1; then
+    fpc_version_ok=yes
+  else
+    if test $fpc_major = 1 -a $fpc_minor -gt 8; then
+      fpc_version_ok=yes
+    else
+      fpc_version_ok=no
+      PASCAL=
+    fi
+  fi
+  AC_MSG_RESULT([$fpc_version_ok])
+fi
 
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != :])
