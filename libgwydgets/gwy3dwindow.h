@@ -71,20 +71,6 @@ GtkWidget*    gwy_3d_window_new                  (Gwy3DView *gwy3dview);
 GType         gwy_3d_window_get_type             (void) G_GNUC_CONST;
 GtkWidget*    gwy_3d_window_get_3d_view          (Gwy3DWindow *gwy3dwindow);
 
-/*
-GwyContainer* gwy_3d_window_get_data             (Gwy3DWindow *gwy3dwindow);
-void          gwy_3d_window_set_zoom             (Gwy3DWindow *gwy3dwindow,
-                                                    gint izoom);
-void          gwy_3d_window_set_zoom_mode        (Gwy3DWindow *gwy3dwindow,
-                                                    GwyZoomMode zoom_mode);
-GwyZoomMode   gwy_3d_window_get_zoom_mode        (Gwy3DWindow *gwy3dwindow);
-void          gwy_3d_window_update_title         (Gwy3DWindow *gwy3dwindow);
-gchar*        gwy_3d_window_get_base_name        (Gwy3DWindow *gwy3dwindow);
-GtkWidget*    gwy_3d_window_get_ul_corner_widget (Gwy3DWindow *gwy3dwindow);
-void          gwy_3d_window_set_ul_corner_widget (Gwy3DWindow *gwy3dwindow,
-                                                    GtkWidget *corner);
-                                                    */
-
 G_END_DECLS
 
 #endif /* __GWY_3DWINDOW_H__ */
