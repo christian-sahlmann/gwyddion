@@ -47,6 +47,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwyruler.h>
 #include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwyshader.h>
 #include <libgwydgets/gwyspherecoords.h>
 #include <libgwydgets/gwystatusbar.h>
 #include <libgwydgets/gwystock.h>
