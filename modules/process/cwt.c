@@ -10,6 +10,7 @@
 #include <libgwydgets/gwymodulemenus.h>
 #include <app/settings.h>
 #include <app/file.h>
+#include <app/app.h>
 
 #define CWT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
