@@ -80,7 +80,7 @@ gwy_app_init_set_window_icon(void)
 #else
     p = g_strdup(GWY_PIXMAP_DIR);
 #endif
-    filename = g_build_filename(p, "gwy_gwyddion-32.ico", NULL);
+    filename = g_build_filename(p, "gwyddion.ico", NULL);
     gtk_window_set_default_icon_from_file(filename, &err);
     if (err) {
         g_warning("Cannot load window icon: %s", err->message);
