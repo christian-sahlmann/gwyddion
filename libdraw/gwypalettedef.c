@@ -948,7 +948,13 @@ gwy_palette_def_print(GwyPaletteDef *a)
 /**
  * GWY_PALETTE_YELLOW:
  *
- * A yellowi palette.
+ * A yellowish palette.
+ **/
+
+/**
+ * GWY_PALETTE_GOLD:
+ *
+ * A gold palette.
  **/
 
 /**
@@ -985,6 +991,48 @@ gwy_palette_def_print(GwyPaletteDef *a)
  * GWY_PALETTE_RAINBOW2:
  *
  * A black-red-green-blue-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_PM3D:
+ *
+ * A black-blue-red-gold palette strongly resembling default pm3d palette.
+ **/
+
+/**
+ * GWY_PALETTE_RED_VIOLET:
+ *
+ * A black-red-violet-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_RED_YELLOW:
+ *
+ * A black-red-yellow-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_BLUE_CYAN:
+ *
+ * A black-blue-cyan-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_BLUE_VIOLET:
+ *
+ * A black-blue-violet-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_GREEN_YELLOW:
+ *
+ * A black-green-yellow-white palette.
+ **/
+
+/**
+ * GWY_PALETTE_GREEN_CYAN:
+ *
+ * A black-green-cyan-white palette.
  **/
 
 /**
