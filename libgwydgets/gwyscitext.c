@@ -58,11 +58,11 @@ static void     gwy_sci_text_size_allocate        (GtkWidget *widget,
 
 /* Forward declarations - sci_text related*/
 static void     gwy_sci_text_edited               (GtkEntry *entry);
-static void     gwy_sci_text_entity_selected      (GtkEntry *entry);
+static void     gwy_sci_text_entity_selected      (GwySciText *sci_text);
 static void     gwy_sci_text_button_some_pressed  (GtkButton *button,
                                                    gpointer p);
-static void     stupid_put_entities               (GList *items);
-static void     stupid_put_entity                 (GList *items, gsize i);
+static GList*   stupid_put_entities               (GList *items);
+static GList*   stupid_put_entity                 (GList *items, gsize i);
 static void     gwy_sci_text_set_text             (GwySciText *sci_text,
                                                    gchar *new_text);
 
@@ -140,7 +140,7 @@ gwy_image_button_new_from_stock(const gchar *stock_id)
 static void
 gwy_sci_text_init(GwySciText *sci_text)
 {
-    GtkWidget *lab1, *lab2, *frame, *lower, *upper, *bold, *italic, *hbox;
+    GtkWidget *lab1, *lab2, *frame, *lower, *upper, *bold, *italic, *add, *hbox;
     GList *items = NULL;
 
     gwy_debug("%s", __FUNCTION__);
@@ -155,16 +155,17 @@ gwy_sci_text_init(GwySciText *sci_text)
     upper = gwy_image_button_new_from_stock(GWY_STOCK_SUPERSCRIPT);
     bold = gwy_image_button_new_from_stock(GWY_STOCK_BOLD);
     italic = gwy_image_button_new_from_stock(GWY_STOCK_ITALIC);
-    hbox = gtk_hbox_new(0,0);
+    add = gtk_button_new_with_mnemonic("A_dd");
+    hbox = gtk_hbox_new(FALSE, 0);
 
-    items = g_list_append (items,"choose symbol");
-    stupid_put_entities(items);
+    items = stupid_put_entities(NULL);
     gtk_combo_set_popdown_strings(GTK_COMBO(sci_text->entities), items);
 
     gtk_editable_set_editable(GTK_EDITABLE(sci_text->entities->entry), FALSE);
 
     gtk_widget_show(lab1);
     gtk_widget_show(frame);
+    gtk_widget_show(add);
     gtk_widget_show(upper);
     gtk_widget_show(lower);
     gtk_widget_show(bold);
@@ -174,18 +175,21 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_widget_show(GTK_WIDGET(sci_text->label));
     gtk_widget_show(GTK_WIDGET(sci_text->entities));
 
-    gtk_box_pack_start(GTK_BOX(sci_text), lab1, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), GTK_WIDGET(sci_text->entry), 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), hbox, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), lab2, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), frame, 1, 0, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), lab1, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), GTK_WIDGET(sci_text->entry),
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), lab2, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), frame, TRUE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(frame), GTK_WIDGET(sci_text->label));
 
-    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(sci_text->entities), 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), bold, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), italic, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), lower, 0, 0, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), upper, 0, 0, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(sci_text->entities),
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), add, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), bold, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), italic, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), lower, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), upper, FALSE, FALSE, 0);
 
     gtk_widget_set_events(GTK_WIDGET(sci_text->entry), GDK_KEY_RELEASE_MASK);
     gtk_widget_set_events(sci_text->entities->list, GDK_BUTTON_PRESS_MASK);
@@ -194,8 +198,12 @@ gwy_sci_text_init(GwySciText *sci_text)
      * arrows; it even sometimes spontaneously inserts extra symbols */
     g_signal_connect(sci_text->entry, "key_release_event",
                      G_CALLBACK(gwy_sci_text_edited), NULL);
+    /*
     g_signal_connect(sci_text->entities->entry, "changed",
                      G_CALLBACK(gwy_sci_text_entity_selected), NULL);
+                     */
+    g_signal_connect_swapped(add, "clicked",
+                             G_CALLBACK(gwy_sci_text_entity_selected), sci_text);
     g_signal_connect(bold, "clicked",
                      G_CALLBACK(gwy_sci_text_button_some_pressed),
                      GINT_TO_POINTER(GWY_SCI_TEXT_BOLD));
@@ -331,30 +339,33 @@ gwy_sci_text_edited(GtkEntry *entry)
 }
 
 static void
-gwy_sci_text_entity_selected(GtkEntry *entry)
+gwy_sci_text_entity_selected(GwySciText *sci_text)
 {
-    GwySciText *sci_text;
+    GtkEditable *editable;
     GString *entity;
     gint i, pos;
+    gchar *text;
+
     gwy_debug("%s", __FUNCTION__);
 
-    sci_text = GWY_SCI_TEXT(gtk_widget_get_ancestor(GTK_WIDGET(entry),
-                                                    GWY_TYPE_SCI_TEXT));
-
     entity = g_string_new("");
+    editable = GTK_EDITABLE(sci_text->entry);
+    text = gtk_editable_get_chars(GTK_EDITABLE(sci_text->entities->entry),
+                                  0, -1);
 
     /* put entity into text entry */
     for (i = 0; ENTITIES[i].entity; i++) {
-        if (strstr(gtk_editable_get_chars(GTK_EDITABLE(entry), 0, -1),
-                   ENTITIES[i].entity)) {
-            pos = gtk_editable_get_position(GTK_EDITABLE(sci_text->entry));
+        if (strncmp(text, ENTITIES[i].utf8, strlen(ENTITIES[i].utf8)) == 0) {
+            pos = gtk_editable_get_position(editable);
             g_string_assign(entity, ENTITIES[i].entity);
             g_string_append(entity, ";");
             g_string_prepend(entity, "&");
-            gtk_editable_insert_text(GTK_EDITABLE(sci_text->entry),
-                                     entity->str, entity->len, &pos);
+            gtk_editable_insert_text(editable, entity->str, entity->len, &pos);
+            gtk_editable_set_position(editable, pos);
         }
     }
+    g_string_free(entity, TRUE);
+    g_free(text);
     gwy_sci_text_edited(sci_text->entry);
 }
 
@@ -407,7 +418,7 @@ gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
 }
 
 
-static void
+static GList*
 stupid_put_entity(GList *items, gsize i)
 {
     GString *text, *entity;
@@ -415,22 +426,25 @@ stupid_put_entity(GList *items, gsize i)
     entity = g_string_new("");
 
     g_string_assign(text, ENTITIES[i].entity);
-    g_string_assign(entity, gwy_entities_entity_to_utf8(text->str));
+    g_string_assign(entity, ENTITIES[i].utf8);
     g_string_prepend(text, "  ");
     g_string_prepend(text, entity->str);
     items = g_list_append(items, text->str);
 
     g_string_free(entity, 1);
+    return items;
 }
 
 
-static void
+static GList*
 stupid_put_entities(GList *items)
 {
     gsize i;
 
     for (i = 0; ENTITIES[i].entity; i++)
-        stupid_put_entity(items, i);
+        items = stupid_put_entity(items, i);
+
+    return items;
 }
 
 /**
