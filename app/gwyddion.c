@@ -44,6 +44,8 @@
 #undef LOG_TO_FILE
 #endif
 
+gboolean gwy_gl_ok = FALSE;
+
 #ifdef LOG_TO_FILE
 static void setup_logging(void);
 static void logger(const gchar *log_domain,
@@ -57,7 +59,7 @@ static void process_preinit_options(int *argc,
 static void warn_broken_settings_file(GtkWidget *parent,
                                       const gchar *settings_file);
 
-gboolean gwy_gl_ok = FALSE;
+static gboolean enable_object_debugging = FALSE;
 
 int
 main(int argc, char *argv[])
@@ -71,8 +73,8 @@ main(int argc, char *argv[])
     gwy_find_self_set_argv0(argv[0]);
 #endif  /* G_OS_WIN32 */
 
-    gwy_debug_objects_enable(FALSE);
     process_preinit_options(&argc, &argv);
+    gwy_debug_objects_enable(enable_object_debugging);
     gwy_app_settings_create_config_dir();
     /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
      * be run first can print things to console when debuggin is enabled. */
@@ -145,9 +147,7 @@ main(int argc, char *argv[])
     /* FIXME: This crashes in Win32.  Do not enable it.
      * I've run it in a debugger, but still don't know why -- stderr becomes
      * unusable somehow? */
-#ifndef G_OS_WIN32
     gwy_debug_objects_dump_to_file(stderr, 0);
-#endif
     gwy_debug_objects_clear();
 
     return 0;
@@ -178,11 +178,10 @@ process_preinit_options(int *argc,
 
         if (!strcmp((*argv)[i], "--no-splash"))
             gwy_app_splash_enable(FALSE);
-    }
 
-    (*argv)[i-1] = (*argv)[0];
-    *argv += i-1;
-    *argc -= i-1;
+        if (!strcmp((*argv)[i], "--debug-objects"))
+            enable_object_debugging = TRUE;
+    }
 }
 
 static void
@@ -197,6 +196,7 @@ print_help(void)
 " -h, --help                 Print this help and terminate.\n"
 " -v, --version              Print version info and terminate.\n"
 "     --no-splash            Don't show splash screen.\n"
+"     --debug-objects        Catch leaking objects (devel only).\n"
         );
     puts(
 "Gtk+ and Gdk options:\n"
