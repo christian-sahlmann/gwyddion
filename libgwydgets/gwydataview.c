@@ -456,10 +456,8 @@ static void
 gwy_data_view_paint(GwyDataView *data_view)
 {
     GdkPixbuf *src_pixbuf;
-    GTimer *timer = NULL;
 
-    g_return_if_fail(data_view->base_layer);
-    timer = g_timer_new();
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(data_view->base_layer));
 
     /* base layer is always present
      * top layer is always vector, if any
@@ -468,27 +466,20 @@ gwy_data_view_paint(GwyDataView *data_view)
         /* scale base directly to final pixbuf */
         src_pixbuf = gwy_data_view_layer_paint(data_view->base_layer);
         simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->pixbuf);
-        g_message("%s: BASE %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
     }
     else {
         /* base */
         src_pixbuf = gwy_data_view_layer_paint(data_view->base_layer);
         simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->base_pixbuf);
-        g_message("%s: base %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-        g_timer_reset(timer);
 
         /* composite with alpha */
         src_pixbuf = gwy_data_view_layer_paint(data_view->alpha_layer);
         simple_gdk_pixbuf_composite(src_pixbuf, data_view->base_pixbuf);
-        g_message("%s: alpha %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-        g_timer_reset(timer);
 
         /* scale both */
         simple_gdk_pixbuf_scale_or_copy(data_view->pixbuf,
                                         data_view->base_pixbuf);
-        g_message("%s: BOTH %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
     }
-    g_timer_destroy(timer);
 }
 
 static gboolean
@@ -496,9 +487,7 @@ gwy_data_view_expose(GtkWidget *widget,
                      GdkEventExpose *event)
 {
     GwyDataView *data_view;
-    GTimer *timer = NULL;
 
-    g_return_val_if_fail(widget, FALSE);
     g_return_val_if_fail(GWY_IS_DATA_VIEW(widget), FALSE);
 
     if (event->count > 0)
@@ -506,7 +495,6 @@ gwy_data_view_expose(GtkWidget *widget,
 
     gdk_window_set_back_pixmap(widget->window, NULL, FALSE);
 
-    timer = g_timer_new();
     data_view = GWY_DATA_VIEW(widget);
     /* FIXME: ask the layers, if they want to repaint themselves */
     if (data_view->force_update
@@ -523,14 +511,9 @@ gwy_data_view_expose(GtkWidget *widget,
                     -1, -1,
                     GDK_RGB_DITHER_NORMAL,
                     0, 0);
-    g_message("%s: buf->map %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
 
-    if (data_view->top_layer) {
-        g_timer_reset(timer);
+    if (data_view->top_layer)
         gwy_data_view_layer_draw(data_view->top_layer, widget->window);
-        g_message("%s: DRAW %gs", __FUNCTION__, g_timer_elapsed(timer, NULL));
-    }
-    g_timer_destroy(timer);
 
     return FALSE;
 }

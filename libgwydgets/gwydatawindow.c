@@ -252,8 +252,12 @@ measure_changed(GwyDataWindow *data_window)
     GwyContainer *data;
     GwyDataField *dfield;
 
+    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(data_window->data_view);
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(data_view);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
     /* TODO Container */
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     g_return_if_fail(dfield);
@@ -399,13 +403,13 @@ gwy_data_view_get_zoom_mode(GwyDataWindow *data_window)
 static void
 compute_statusbar_units(GwyDataWindow *data_window)
 {
-    GwyDataView *data_view;
     GwyDataField *dfield;
     GwyContainer *data;
     gdouble max, unit, mag, xreal, yreal;
 
-    data_view = GWY_DATA_VIEW(data_window->data_view);
-    data = gwy_data_view_get_data(data_view);
+    data = gwy_data_window_get_data(data_window);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
@@ -467,7 +471,7 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     gint prec;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
+    data_view = GWY_DATA_VIEW(data_window->data_view);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -555,7 +559,9 @@ data_view_updated_cb(GwyDataWindow *data_window)
     GwyDataField *dfield;
     gdouble min, max;
 
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+    data = gwy_data_window_get_data(data_window);
+    g_return_if_fail(GWY_IS_CONTAINER(data));
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
