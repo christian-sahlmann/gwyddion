@@ -36,20 +36,15 @@ typedef struct {
     GwyDataWindow *win2;
 } TipDilationArgs;
 
-typedef struct {
-    GtkWidget *dialog;
-} TipDilationControls;
-
-static gboolean   module_register             (const gchar *name);
-static gboolean   tip_dilation                (GwyContainer *data,
-                                               GwyRunType run);
-static GtkWidget* tip_dilation_window_construct   (TipDilationArgs *args,
-                                               TipDilationControls *controls);
-static void       tip_dilation_data_cb        (GtkWidget *item);
-static gboolean   tip_dilation_check          (TipDilationArgs *args,
-                                               GtkWidget *tip_dilation_window);
-static gboolean   tip_dilation_do             (TipDilationArgs *args);
-static GtkWidget * tip_dilation_data_option_menu(GwyDataWindow **operand);
+static gboolean   module_register               (const gchar *name);
+static gboolean   tip_dilation                  (GwyContainer *data,
+                                                 GwyRunType run);
+static GtkWidget* tip_dilation_window_construct (TipDilationArgs *args);
+static void       tip_dilation_data_cb          (GtkWidget *item);
+static gboolean   tip_dilation_check            (TipDilationArgs *args,
+                                                 GtkWidget *tip_dilation_window);
+static gboolean   tip_dilation_do               (TipDilationArgs *args);
+static GtkWidget* tip_dilation_data_option_menu (GwyDataWindow **operand);
 
 
 static const TipDilationArgs tip_dilation_defaults = {
@@ -94,13 +89,12 @@ tip_dilation(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *tip_dilation_window;
     TipDilationArgs args;
-    TipDilationControls controls;
     gboolean ok = FALSE;
 
     g_return_val_if_fail(run & TIP_DILATION_RUN_MODES, FALSE);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    tip_dilation_window = tip_dilation_window_construct(&args, &controls);
+    tip_dilation_window = tip_dilation_window_construct(&args);
     gtk_window_present(GTK_WINDOW(tip_dilation_window));
 
     do {
@@ -130,8 +124,7 @@ tip_dilation(GwyContainer *data, GwyRunType run)
 }
 
 static GtkWidget*
-tip_dilation_window_construct(TipDilationArgs *args,
-                              G_GNUC_UNUSED TipDilationControls *controls)
+tip_dilation_window_construct(TipDilationArgs *args)
 {
     GtkWidget *dialog, *table, *omenu, *label;
     gint row;

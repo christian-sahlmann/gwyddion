@@ -36,20 +36,15 @@ typedef struct {
     GwyDataWindow *win2;
 } TipReconstructionArgs;
 
-typedef struct {
-    GtkWidget *dialog;
-} TipReconstructionControls;
-
-static gboolean   module_register             (const gchar *name);
-static gboolean   tip_reconstruction                    (GwyContainer *data,
-                                               GwyRunType run);
-static GtkWidget* tip_reconstruction_window_construct   (TipReconstructionArgs *args,
-                                               TipReconstructionControls *controls);
-static void       tip_reconstruction_data_cb   (GtkWidget *item);
-static gboolean   tip_reconstruction_check     (TipReconstructionArgs *args,
-                                               GtkWidget *tip_reconstruction_window);
-static gboolean   tip_reconstruction_do        (TipReconstructionArgs *args);
-static GtkWidget *tip_reconstruction_data_option_menu(GwyDataWindow **operand);
+static gboolean   module_register                     (const gchar *name);
+static gboolean   tip_reconstruction                  (GwyContainer *data,
+                                                       GwyRunType run);
+static GtkWidget* tip_reconstruction_window_construct (TipReconstructionArgs *args);
+static void       tip_reconstruction_data_cb          (GtkWidget *item);
+static gboolean   tip_reconstruction_check            (TipReconstructionArgs *args,
+                                                       GtkWidget *tip_reconstruction_window);
+static gboolean   tip_reconstruction_do               (TipReconstructionArgs *args);
+static GtkWidget* tip_reconstruction_data_option_menu (GwyDataWindow **operand);
 
 
 static const TipReconstructionArgs tip_reconstruction_defaults = {
@@ -94,14 +89,12 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *tip_reconstruction_window;
     TipReconstructionArgs args;
-    TipReconstructionControls controls;
     gboolean ok = FALSE;
 
     g_return_val_if_fail(run & TIP_RECONSTRUCTION_RUN_MODES, FALSE);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    tip_reconstruction_window
-        = tip_reconstruction_window_construct(&args, &controls);
+    tip_reconstruction_window = tip_reconstruction_window_construct(&args);
     gtk_window_present(GTK_WINDOW(tip_reconstruction_window));
 
     do {
@@ -131,8 +124,7 @@ tip_reconstruction(GwyContainer *data, GwyRunType run)
 }
 
 static GtkWidget*
-tip_reconstruction_window_construct(TipReconstructionArgs *args,
-                          TipReconstructionControls *controls)
+tip_reconstruction_window_construct(TipReconstructionArgs *args)
 {
     GtkWidget *dialog, *table, *omenu, *label;
     gint row;

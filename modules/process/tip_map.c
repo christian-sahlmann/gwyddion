@@ -36,20 +36,15 @@ typedef struct {
     GwyDataWindow *win2;
 } TipCertaintyMapArgs;
 
-typedef struct {
-    GtkWidget *dialog;
-} TipCertaintyMapControls;
-
-static gboolean   module_register             (const gchar *name);
-static gboolean   tip_certainty_map                    (GwyContainer *data,
-                                               GwyRunType run);
-static GtkWidget* tip_certainty_map_window_construct   (TipCertaintyMapArgs *args,
-                                               TipCertaintyMapControls *controls);
-static void       tip_certainty_map_data_cb            (GtkWidget *item);
-static gboolean   tip_certainty_map_check              (TipCertaintyMapArgs *args,
-                                               GtkWidget *tip_certainty_map_window);
-static gboolean   tip_certainty_map_do                 (TipCertaintyMapArgs *args);
-static GtkWidget * tip_certainty_map_data_option_menu(GwyDataWindow **operand);
+static gboolean   module_register                    (const gchar *name);
+static gboolean   tip_certainty_map                  (GwyContainer *data,
+                                                      GwyRunType run);
+static GtkWidget* tip_certainty_map_window_construct (TipCertaintyMapArgs *args);
+static void       tip_certainty_map_data_cb          (GtkWidget *item);
+static gboolean   tip_certainty_map_check            (TipCertaintyMapArgs *args,
+                                                      GtkWidget *tip_certainty_map_window);
+static gboolean   tip_certainty_map_do               (TipCertaintyMapArgs *args);
+static GtkWidget* tip_certainty_map_data_option_menu (GwyDataWindow **operand);
 
 
 static const TipCertaintyMapArgs tip_certainty_map_defaults = {
@@ -94,7 +89,6 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *tip_certainty_map_window;
     TipCertaintyMapArgs args;
-    TipCertaintyMapControls controls;
     GwyContainer *settings;
     gboolean ok = FALSE;
 
@@ -102,8 +96,7 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
     settings = gwy_app_settings_get();
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
-    tip_certainty_map_window
-        = tip_certainty_map_window_construct(&args, &controls);
+    tip_certainty_map_window = tip_certainty_map_window_construct(&args);
     gtk_window_present(GTK_WINDOW(tip_certainty_map_window));
 
     do {
@@ -133,8 +126,7 @@ tip_certainty_map(GwyContainer *data, GwyRunType run)
 }
 
 static GtkWidget*
-tip_certainty_map_window_construct(TipCertaintyMapArgs *args,
-                                   TipCertaintyMapControls *controls)
+tip_certainty_map_window_construct(TipCertaintyMapArgs *args)
 {
     GtkWidget *dialog, *table, *omenu, *label;
     gint row;
