@@ -1,3 +1,6 @@
+%define python_version %(%__python -V 2>&1 | cut -d' ' -f2 | cut -d. -f 1,2)
+%define pythondir /usr/lib/python%python_version/site-packages
+
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
@@ -13,6 +16,7 @@ BuildPrereq: gtk2-devel >= 2.2
 BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
 BuildPrereq: gtk-doc >= 1.0
+BuildPrereq: python >= 2.2
 
 %package devel
 Summary: Headers, libraries and tools for Gwyddion module development.
@@ -119,6 +123,8 @@ your own plug-ins.
 %dir %{_datadir}/gtk-doc/html/libgwydgets
 %dir %{_datadir}/gtk-doc/html/libgwymodule
 %dir %{_datadir}/gtk-doc/html
+%{pythondir}/Gwyddion/*
+%dir %{pythondir}/Gwyddion
 %{_libdir}/pkgconfig/%{name}.pc
 %dir %{_libdir}/pkgconfig
 %{_libdir}/libgwyapp.so
