@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041010, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.5cvs20041013, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -73,8 +73,8 @@ AC_PATH_PROGS(PERL,perl5 perl,:)
 if test "$PERL" != :; then
   AC_MSG_CHECKING([for perl site module directory])
   eval `$PERL -V:installsitelib | sed -e 's/^/perl/'`
-  eval `$PERL -V:installprefix | sed -e 's/^/perl/'`
-  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlinstallprefix##"`
+  eval `$PERL -V:siteprefix | sed -e 's/^/perl/'`
+  PERL_SITE_LIB=`echo $perlinstallsitelib | sed -e "s#^$perlsiteprefix##"`
   AC_MSG_RESULT([\${prefix}$PERL_SITE_LIB])
   AC_PATH_PROGS(POD2MAN,pod2man,:)
 fi
