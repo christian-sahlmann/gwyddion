@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -45,15 +45,14 @@
  */
 
 /*
- * Modified by Yeti 2003.  In fact, rewritten, now includes a single
+ * Modified by Yeti 2003-2004.  In fact, rewritten, now includes a single
  * tick'n'label design function, and Gwy[HV]Rulers only do the actual
- * drawing at computed positions.  GtkMetric was [temporarily?] removed,
- * a scale-independent scaling is used instead.
+ * drawing at computed positions.  GtkMetric was removed, replaced with
+ * a scale-free solution and later support for GwySIUnit was added.
  */
 
 #include <string.h>
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyddion.h>
 #include "gwyruler.h"
 
 typedef enum {
@@ -567,9 +566,9 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
 {
     gdouble lower, upper, max;
     gint text_size, labels, i, scale_depth;
-    gdouble range, measure, mag, base, step, first;
-    gchar *units;
+    gdouble range, measure, base, step, first;
     GwyScaleScale scale;
+    GwySIValueFormat *format;
     PangoLayout *layout;
     PangoRectangle ink_rect;
     gchar *unit_str;
@@ -595,16 +594,17 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
         max = MAX(fabs(lower), fabs(upper));
 
     range = upper - lower;
-    mag = compute_magnitude(max);
-    units = gwy_si_unit_get_unit_for_magnitude(ruler->units, mag);
-    measure = range/mag / pixelsize;
-    max /= mag;
+    format = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                    max, max/12, NULL);
+    measure = range/format->magnitude / pixelsize;
+    max /= format->magnitude;
 
     switch (ruler->units_placement && ruler->units) {
         case GWY_UNITS_PLACEMENT_AT_ZERO:
-        unit_str = g_strdup_printf("%d %s",
-                                   (lower > 0) ? (gint)(lower/mag) : 0,
-                                   units);
+        unit_str
+            = g_strdup_printf("%d %s",
+                              (lower > 0) ? (gint)(lower/format->magnitude) : 0,
+                              format->units);
         break;
 
         default:
@@ -641,7 +641,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
     if (labels == 0)    /* at least one */
         labels = 1;
 
-    step = range/mag / labels;
+    step = range/format->magnitude / labels;
     base = compute_base(step, 10);
     step /= base;
     if (step >= 5.0 || base < 1.0) {
@@ -658,13 +658,13 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
 
     /* draw labels */
     units_drawn = FALSE;
-    first = floor(lower/mag / (base*step))*base*step;
+    first = floor(lower/format->magnitude / (base*step))*base*step;
     for (i = 0; ; i++) {
         gint pos;
         gdouble val;
 
         val = i*step*base + first;
-        pos = floor((val - lower/mag)/measure);
+        pos = floor((val - lower/format->magnitude)/measure);
         if (pos >= pixelsize)
             break;
         if (pos < 0)
@@ -673,7 +673,7 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
             && (upper < 0 || val >= 0)
             && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
             && ruler->units) {
-            unit_str = g_strdup_printf("%d %s", ROUND(val), units);
+            unit_str = g_strdup_printf("%d %s", ROUND(val), format->units);
             units_drawn = TRUE;
         }
         else
@@ -697,13 +697,13 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
         scale = tick_info[scale_depth].scale;
         base = tick_info[scale_depth].base;
         step = steps[scale];
-        first = floor(lower/mag / (base*step))*base*step;
+        first = floor(lower/format->magnitude / (base*step))*base*step;
         for (i = 0; ; i++) {
             gint pos;
             gdouble val;
 
             val = (i + 0.000001)*step*base + first;
-            pos = floor((val - lower/mag)/measure);
+            pos = floor((val - lower/format->magnitude)/measure);
             if (pos >= pixelsize)
                 break;
             if (pos < 0)
@@ -713,24 +713,8 @@ _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
         scale_depth--;
     }
 
+    gwy_si_unit_value_format_free(format);
     g_object_unref(layout);
-}
-
-static gdouble
-compute_magnitude(gdouble max)
-{
-    gint i;
-    gdouble magnitude;
-
-    i = floor(log10(max)/3.0 - 0.2);
-    magnitude = 1.0;
-    if (i > 0)
-        while (i--)
-            magnitude *= 1000.0;
-    else
-        while (i++)
-            magnitude /= 1000.0;
-    return magnitude;
 }
 
 static gdouble
