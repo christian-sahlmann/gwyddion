@@ -424,12 +424,19 @@ apply(GwyUnitoolState *state)
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
+    gint i;
     ToolControls *controls;
     GwyContainer *settings;
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     save_args(settings, controls);
+
+    for (i=0; i<NPROFILE; i++)
+    {
+        g_object_unref(controls->dtl->pdata[i]);
+    }
+            
     g_ptr_array_free(controls->dtl, TRUE);
     g_ptr_array_free(controls->str, TRUE);
     g_ptr_array_free(controls->positions, TRUE);

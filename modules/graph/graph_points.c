@@ -29,7 +29,6 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-
 /* Data for this function.*/
 
 typedef struct {
@@ -162,76 +161,76 @@ points_dialog(GwyGraph *graph)
     gtk_label_set_markup(GTK_LABEL(label), "<b>Mouse:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>Points:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
 
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>x</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>y</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>length</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>height</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>angle</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 5, 6, 1, 2,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
 
     for (i=0; i<NMAX; i++)
     {
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.labpoint, label);
 
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.pointx, label);
 
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.pointy, label);
 
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.distx, label);
 
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 4, 5, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.disty, label);
 
         label = gtk_label_new("");
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 5, 6, i+2, i+3,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
+                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 4, 2);
         g_ptr_array_add(controls.slope, label);
     }
 

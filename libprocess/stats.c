@@ -692,8 +692,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             }
             target_line->real = hlp_tarline->real;
         }
-        _gwy_data_line_free(hlp_line);
-        _gwy_data_line_free(hlp_tarline);
+        g_object_unref(hlp_line);
+        g_object_unref(hlp_tarline);
 
     }
     else if (orientation == GTK_ORIENTATION_VERTICAL) {
@@ -770,8 +770,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
             }
             target_line->real = hlp_tarline->real;
         }
-        _gwy_data_line_free(hlp_line);
-        _gwy_data_line_free(hlp_tarline);
+        g_object_unref(hlp_line);
+        g_object_unref(hlp_tarline);
 
     }
     return 1;
