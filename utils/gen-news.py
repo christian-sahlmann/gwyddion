@@ -1,5 +1,9 @@
 #!/usr/bin/python
+# @(#) $Id$
 import re, sys
+from xml.sax.saxutils import escape
+
+bugzilla_url = 'http://trific.ath.cx/bugzilla/show_bug.cgi?id='
 
 in_list = False
 in_item = False
@@ -26,6 +30,12 @@ for line in sys.stdin.readlines():
         text.append('<p><b>%s</b></p>\n<ul>' % m.group('component'))
         in_list = True
         continue
+    # Transform bug #NN references to hyperlinks
+    line = escape(line)
+    # Transform bug #NN references to hyperlinks
+    line = re.sub(r'[bB]ug #(\d+)',
+                  '<a href="' + bugzilla_url + '\\1">\\g<0></a>',
+                  line)
     # End of list
     if re.match(r'^\s*$', line):
         if in_item:
