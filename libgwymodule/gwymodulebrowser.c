@@ -123,6 +123,7 @@ gwy_module_browser_construct(GtkWidget *parent)
                               );
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
     gwy_module_foreach(gwy_hash_table_to_slist_cb, &list);
     list = g_slist_sort(list, (GCompareFunc)module_name_compare_cb);
     for (l = list; l; l = g_slist_next(l)) {
