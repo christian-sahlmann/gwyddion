@@ -495,7 +495,10 @@ get_physical_scale(GHashTable *hash,
     }
     g_free(key);
 
+    gwy_debug("Scale1 = %g V/LSB", val->hard_value);
+    gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
     s = g_strndup(sval->hard_value_units, s - sval->hard_value_units);
+    gwy_debug("Total scale = %g %s/LSB", *scale, s);
     siunit = gwy_si_unit_new(s);
     g_free(s);
 
