@@ -147,13 +147,19 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  * @fixed_param: Which parameters should be treated as fixed (set corresponding
  *               element to %TRUE for them).  May be %NULL if all parameters
  *               are variable.
- * @link_map: Map of linked parameters, values are indices of master parameters
- *            a parameter is linked to.  May be %NULL if all parameter are
- *            unique.
+ * @link_map: Map of linked parameters.  One of linked parameters is master,
+ *            Values in this array are indices of corresponding master
+ *            parameter for each parameter (for independent parameters set
+ *            @link_map[i] == i).   May be %NULL if all parameter are
+ *            independent.
  * @user_data: Any pointer that will be passed to the function and derivation
  *
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data, allowing
  * some fixed parameters.
+ *
+ * Initial values of linked (dependent) parameters are overwritten by master
+ * values, their @fixed_param property is ignored and master's property
+ * controls whether all are fixed or all variable.
  *
  * Returns: The final residual sum, a negative number in the case of failure.
  **/
@@ -169,7 +175,6 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                         const gint *link_map,
                         gpointer user_data)
 {
-
     gdouble mlambda = 1e-4;
     gdouble sumr = G_MAXDOUBLE;
     gdouble sumr1;
@@ -205,6 +210,12 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         for (i = 0; i < n_param; i++)
             l[i] = i;
         link_map = l;
+    }
+
+    /* Sync slave param values with master */
+    for (i = 0; i < n_param; i++) {
+        if (link_map[i] != i)
+            param[i] = param[link_map[i]];
     }
 
     resid = g_new(gdouble, n_dat);

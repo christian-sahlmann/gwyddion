@@ -517,8 +517,8 @@ test_nlfit(void)
     GwyNLFitter *ms;
     gdouble xmq[count + 1];
     gdouble ymq[count + 1];
-    gdouble vmq[count + 1];
     gboolean fixed[3];
+    gint linkmap[3];
     gdouble param[3];
     gboolean bb;
     gdouble xx, summ;
@@ -536,22 +536,21 @@ test_nlfit(void)
     for (i = 0; i < count; i++, xx += param[2] * 5/count * 2) {
         xmq[i] = xx;
         ymq[i] = gauss(xmq[i], 3, param, NULL, &bb) + grand()/5;
-        vmq[i] = 1;
     }
     param[0] = 9;
     param[1] = 9;
     param[2] = 0.5;
-    summ = gwy_math_nlfit_fit(ms, count, xmq, ymq, vmq, 3, param, NULL);
+    summ = gwy_math_nlfit_fit(ms, count, xmq, ymq, 3, param, NULL);
 
     fprintf(stderr, "Evaluated: %d\n", ms->eval);
-    fprintf(stderr, "Suma: %f\n", summ);
+    fprintf(stderr, "Sum: %f\n", summ);
     for (i = 0; i < 3; i++)
         fprintf(stderr, "Par[%d] = %f +- %f\n",
                 i, param[i], gwy_math_nlfit_get_sigma(ms, i));
     fputs("\n", stderr);
     for (i = 0; i < count; i++)
-        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\t%.4f\n",
-                i, xmq[i], ymq[i], vmq[i], gauss(xmq[i], 3, param, NULL, &bb));
+        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\n",
+                i, xmq[i], ymq[i], gauss(xmq[i], 3, param, NULL, &bb));
     fputs("\n", stderr);
     for (i = 0; i < 3; i++) {
         for (j = 0; j <= i; j++)
@@ -567,18 +566,45 @@ test_nlfit(void)
     fixed[0] = TRUE;
     fixed[1] = FALSE;
     fixed[2] = TRUE;
-    summ = gwy_math_nlfit_fit_with_fixed(ms, count, xmq, ymq, vmq, 3, param,
-                                         fixed, NULL);
+    summ = gwy_math_nlfit_fit_full(ms, count, xmq, ymq, NULL, 3, param,
+                                   fixed, NULL, NULL);
 
     fprintf(stderr, "Evaluated: %d\n", ms->eval);
-    fprintf(stderr, "Suma: %f\n", summ);
+    fprintf(stderr, "Sum: %f\n", summ);
     for (i = 0; i < 3; i++)
         fprintf(stderr, "Par[%d] = %f +- %f\n",
                 i, param[i], gwy_math_nlfit_get_sigma(ms, i));
     fputs("\n", stderr);
     for (i = 0; i < count; i++)
-        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\t%.4f\n",
-                i, xmq[i], ymq[i], vmq[i], gauss(xmq[i], 3, param, NULL, &bb));
+        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\n",
+                i, xmq[i], ymq[i], gauss(xmq[i], 3, param, NULL, &bb));
+    fputs("\n", stderr);
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j <= i; j++)
+            fprintf(stderr, "%.4f\t",
+                    gwy_math_nlfit_get_correlations(ms, i, j));
+        fputs("\n", stderr);
+    }
+
+    fputs("\n", stderr);
+    param[0] = 12.0;
+    param[1] = 12.0;
+    param[2] = 1.0;
+    linkmap[0] = 0;
+    linkmap[1] = 0;
+    linkmap[2] = 2;
+    summ = gwy_math_nlfit_fit_full(ms, count, xmq, ymq, NULL, 3, param,
+                                   NULL, linkmap, NULL);
+
+    fprintf(stderr, "Evaluated: %d\n", ms->eval);
+    fprintf(stderr, "Sum: %f\n", summ);
+    for (i = 0; i < 3; i++)
+        fprintf(stderr, "Par[%d] = %f +- %f\n",
+                i, param[i], gwy_math_nlfit_get_sigma(ms, i));
+    fputs("\n", stderr);
+    for (i = 0; i < count; i++)
+        fprintf(stderr, "%3d: %.4f\t%.4f\t%.4f\n",
+                i, xmq[i], ymq[i], gauss(xmq[i], 3, param, NULL, &bb));
     fputs("\n", stderr);
     for (i = 0; i < 3; i++) {
         for (j = 0; j <= i; j++)
