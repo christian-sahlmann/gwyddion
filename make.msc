@@ -12,6 +12,9 @@ MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
 DEST_DIR = $(TOP_SRCDIR)/inst
 !endif
 
+# debug by default
+DEBUG = 1
+
 # gwyddion versions
 LIBGWYDDION_VER = 0
 LIBGWYPROCESS_VER = 0
@@ -41,13 +44,13 @@ OPTIMIZE =
 LIB_CRUNTIME = -MDd
 PRG_CRUNTIME = -MLd
 MOD_CRUNTIME = -MTd
-DEBUGINFO = -Zi
+DEBUGINFO = -Zi -DDEBUG
 LINKDEBUG = /debug
 !ENDIF
 
 LDFLAGS = /machine:ix86 $(LINKDEBUG) /nologo
 
-COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include" -DDEBUG
+COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include"
 COMMON_LDFLAGS = /libpath:"$(GTK_TOP)\lib" /libpath:"$(MSC_TOP)\lib"
 
 ATK_CFLAGS = -I "$(GTK_TOP)\include\atk-$(ATK_VER)"
