@@ -972,6 +972,19 @@ gwy_inventory_delete_nth_item(GwyInventory *inventory,
     return TRUE;
 }
 
+/**
+ * gwy_inventory_rename_item:
+ * @inventory: An inventory.
+ * @name: Name of item to rename.
+ * @newname: New name of item.
+ *
+ * Renames an inventory item.
+ *
+ * If an item of name @newname is already present in @inventory, the rename
+ * will fail.
+ *
+ * Returns: The item, for convenience.
+ **/
 gpointer
 gwy_inventory_rename_item(GwyInventory *inventory,
                           const gchar *name,
@@ -1008,6 +1021,44 @@ gwy_inventory_rename_item(GwyInventory *inventory,
                   g_array_index(inventory->items, ArrayItem, i-1).i);
 
     return mp;
+}
+
+/**
+ * gwy_inventory_invent_name:
+ * @inventory: An inventory.
+ * @prefix: Name prefix.
+ *
+ * Finds a name of form "prefix number" that does not identify any item in
+ * an inventory yet.
+ *
+ * Returns: The invented name as a string that is owned by this function and
+ *          valid only until next call to it.
+ **/
+static gchar*
+gwy_inventory_invent_name(GwyInventory *inventory,
+                          const gchar *prefix)
+{
+    static GString *str = NULL;
+    gint n, i;
+
+    if (!str)
+        str = g_string_new("");
+
+    g_string_assign(str, prefix ? prefix : _("Untitled"));
+    if (!g_hash_table_lookup(inventory->hash, str->str))
+        return str->str;
+
+    g_string_append_c(str, ' ');
+    n = str->len;
+    for (i = 1; i < 100000; i++) {
+        g_string_append_printf(str, "%d", i);
+        if (!g_hash_table_lookup(inventory->hash, str->str))
+            return str->str;
+
+        g_string_truncate(str, n);
+    }
+    g_assert_not_reached();
+    return NULL;
 }
 
 /************************** Documentation ****************************/
