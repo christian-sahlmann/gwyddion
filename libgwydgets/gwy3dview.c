@@ -636,7 +636,7 @@ void
 gwy_3d_view_set_status (Gwy3DView * gwy3dview, Gwy3DMovement mv)
 {
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    g_return_if_fail(mv > GWY_3D_LIGHT_MOVEMENT);
+    g_return_if_fail(mv <= GWY_3D_LIGHT_MOVEMENT);
 
     gwy3dview->movement_status = mv;
 }
