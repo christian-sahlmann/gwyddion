@@ -59,6 +59,8 @@ struct _GwyValUnit {
 struct _GwyValUnitClass {
     GtkVBoxClass parent_class;
 
+    void (*value_changed)(GwyValUnit *val_unit);
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -70,6 +72,8 @@ GType      gwy_val_unit_get_type  (void) G_GNUC_CONST;
 void       gwy_val_unit_set_value (GwyValUnit *val_unit, gdouble value);
 
 gdouble    gwy_val_unit_get_value (GwyValUnit *val_unit);
+
+void gwy_val_unit_signal_value_changed(GwyValUnit *val_unit);
 
 
 G_END_DECLS

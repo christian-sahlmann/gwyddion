@@ -27,7 +27,6 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#include <stdio.h>
 
 #define CALIBRATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -37,8 +36,7 @@ typedef struct {
     gdouble xratio;
     gdouble yratio;
     gdouble zratio;
-    gdouble zmin;
-    gdouble zmax;
+    gdouble zreal;
     gdouble xreal;
     gdouble yreal;
 } CalibrateArgs;
@@ -49,8 +47,7 @@ typedef struct {
     GtkObject *zratio;
     GtkWidget *xreal;
     GtkWidget *yreal;
-    GtkWidget *zmin;
-    GtkWidget *zmax;
+    GtkWidget *zreal;
     gboolean in_update;
 } CalibrateControls;
 
@@ -68,9 +65,7 @@ static void        width_changed_cb          (GwyValUnit *valunit,
                                               CalibrateArgs *args);
 static void        height_changed_cb         (GwyValUnit *valunit,
                                               CalibrateArgs *args);
-static void        zmin_changed_cb         (GwyValUnit *valunit,
-                                              CalibrateArgs *args);
-static void        zmax_changed_cb         (GwyValUnit *valunit,
+static void        z_changed_cb         (GwyValUnit *valunit,
                                               CalibrateArgs *args);
 static void        calibrate_dialog_update       (CalibrateControls *controls,
                                               CalibrateArgs *args);
@@ -84,7 +79,6 @@ CalibrateArgs calibrate_defaults = {
     1.0,
     1.0,
     1.0,
-    0,
     0,
     0,
     0,
@@ -140,8 +134,8 @@ calibrate(GwyContainer *data, GwyRunType run)
         calibrate_load_args(gwy_app_settings_get(), &args);
     args.xreal = gwy_data_field_get_xreal(GWY_DATA_FIELD(dfield));
     args.yreal = gwy_data_field_get_yreal(GWY_DATA_FIELD(dfield));
-    args.zmin = gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
-    args.zmax = gwy_data_field_get_max(GWY_DATA_FIELD(dfield));
+    args.zreal = gwy_data_field_get_max(GWY_DATA_FIELD(dfield)) 
+        - gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
         calibrate_save_args(gwy_app_settings_get(), &args);
@@ -151,22 +145,27 @@ calibrate(GwyContainer *data, GwyRunType run)
     data = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     gwy_app_clean_up_data(data);
     dfield = gwy_container_get_object_by_name(data, "/0/data");
- /*   
-    gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal);
-    gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal);
-   
+ 
     
+    gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
+    gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
+    if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
+  
     if (gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&dfield))
     {
-        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal);
-        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal);
+        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
+        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
+        if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
     }
     if (gwy_container_gis_object_by_name(data, "/0/show", (GObject**)&dfield))
     {
-        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal);
-        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal);
+        gwy_data_field_set_xreal(GWY_DATA_FIELD(dfield), args.xreal*args.xratio);
+        gwy_data_field_set_yreal(GWY_DATA_FIELD(dfield), args.yreal*args.yratio);
+        if (args.zratio != 1.0) gwy_data_field_multiply(GWY_DATA_FIELD(dfield), args.zratio);
     }
- */
+ 
+    
+    
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
@@ -197,37 +196,29 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), label,
                        FALSE, FALSE, 4);
-    controls.xreal = gwy_val_unit_new("X dimension: ", 
+    controls.xreal = gwy_val_unit_new("X range: ", 
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.xreal), args->xreal);
-    g_signal_connect(GWY_VAL_UNIT(controls.xreal)->adjustment, "value_changed",
+    g_signal_connect(GWY_VAL_UNIT(controls.xreal), "value_changed",
                      G_CALLBACK(width_changed_cb), args);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.xreal,
                        FALSE, FALSE, 4);
-    controls.yreal = gwy_val_unit_new("Y dimension: ", 
+    controls.yreal = gwy_val_unit_new("Y range: ", 
                                        gwy_data_field_get_si_unit_xy(dfield));
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.yreal), args->yreal);
-    g_signal_connect(GWY_VAL_UNIT(controls.yreal)->adjustment, "value_changed",
+    g_signal_connect(GWY_VAL_UNIT(controls.yreal), "value_changed",
                      G_CALLBACK(height_changed_cb), args);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.yreal,
                        FALSE, FALSE, 4);
-    controls.zmin = gwy_val_unit_new("Z minimum: ", 
+    controls.zreal = gwy_val_unit_new("Z range: ", 
                                        gwy_data_field_get_si_unit_z(dfield));
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zmin), args->zmin);
-    g_signal_connect(GWY_VAL_UNIT(controls.zmin)->adjustment, "value_changed",
-                     G_CALLBACK(zmin_changed_cb), args);
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zreal), args->zreal);
+    g_signal_connect(GWY_VAL_UNIT(controls.zreal), "value_changed",
+                     G_CALLBACK(z_changed_cb), args);
 
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zmin,
-                       FALSE, FALSE, 4);
-    controls.zmax = gwy_val_unit_new("Z maximum: ", 
-                                       gwy_data_field_get_si_unit_z(dfield));
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.zmax), args->zmax);
-    g_signal_connect(GWY_VAL_UNIT(controls.zmax)->adjustment, "value_changed",
-                     G_CALLBACK(zmax_changed_cb), args);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zmax,
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.zreal,
                        FALSE, FALSE, 4);
 
     pcontrols = &controls;
@@ -314,9 +305,8 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
             case GTK_RESPONSE_DELETE_EVENT:
             args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
             args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
-            args->zmin = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmin));
-            args->zmax = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmax));
-             gtk_widget_destroy(dialog);
+            args->zratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zratio));
+            gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -339,8 +329,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     args->xratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.xratio));
     args->yratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.yratio));
-    args->zmin = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmin));
-    args->zmax = gwy_val_unit_get_value(GWY_VAL_UNIT(controls.zmax));
+    args->zratio = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.zratio));
     gtk_widget_destroy(dialog);
 
     return TRUE;
@@ -357,7 +346,6 @@ xcalibrate_changed_cb(GtkAdjustment *adj,
     if (controls->in_update)
         return;
 
-    printf("xcal\n");
     controls->in_update = TRUE;
     args->xratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -373,7 +361,6 @@ ycalibrate_changed_cb(GtkAdjustment *adj,
     if (controls->in_update)
         return;
 
-    printf("ycal\n");
     controls->in_update = TRUE;
     args->yratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -389,7 +376,6 @@ zcalibrate_changed_cb(GtkAdjustment *adj,
     if (controls->in_update)
         return;
     
-    printf("zcal\n");
     controls->in_update = TRUE;
     args->zratio = gtk_adjustment_get_value(adj);
     calibrate_dialog_update(controls, args);
@@ -400,13 +386,10 @@ static void
 width_changed_cb(GwyValUnit *valunit,
                  CalibrateArgs *args)
 {
-
     if (pcontrols->in_update)
         return;
 
     pcontrols->in_update = TRUE;
-  
-    printf("width\n");
     args->xratio = gwy_val_unit_get_value(valunit)/args->xreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
@@ -422,14 +405,13 @@ height_changed_cb(GwyValUnit *valunit,
 
     pcontrols->in_update = TRUE;
     
-    printf("height\n");
     args->yratio = gwy_val_unit_get_value(valunit)/args->yreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
 }
 
 static void
-zmin_changed_cb(GwyValUnit *valunit,
+z_changed_cb(GwyValUnit *valunit,
                   CalibrateArgs *args)
 {
     if (pcontrols->in_update)
@@ -437,22 +419,7 @@ zmin_changed_cb(GwyValUnit *valunit,
 
     pcontrols->in_update = TRUE;
     
-    printf("zmin\n");
-    args->zratio = (args->zmax - gwy_val_unit_get_value(valunit))/(args->zmax - args->zmin);
-    calibrate_dialog_update(pcontrols, args);
-    pcontrols->in_update = FALSE;
-}
-static void
-zmax_changed_cb(GwyValUnit *valunit,
-                  CalibrateArgs *args)
-{
-    if (pcontrols->in_update)
-        return;
-
-    pcontrols->in_update = TRUE;
-   
-    printf("zmax\n");
-    args->zratio = (gwy_val_unit_get_value(valunit) - args->zmin)/(args->zmax - args->zmin);
+    args->zratio = gwy_val_unit_get_value(valunit)/args->zreal;
     calibrate_dialog_update(pcontrols, args);
     pcontrols->in_update = FALSE;
 }
@@ -462,8 +429,6 @@ calibrate_dialog_update(CalibrateControls *controls,
                     CalibrateArgs *args)
 {
 
-    printf("updateing: zmin=%g, zmax=%g, xratio=%g, yratio=%g\n", args->zmin,
-           args->zmax, args->xratio, args->yratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
                              args->xratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yratio),
@@ -475,10 +440,8 @@ calibrate_dialog_update(CalibrateControls *controls,
                            args->xratio*args->xreal);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls->yreal),
                            args->yratio*args->yreal);
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zmin),
-                           args->zmin);
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zmax),
-                           args->zmax);
+    gwy_val_unit_set_value(GWY_VAL_UNIT(controls->zreal),
+                           args->zratio*args->zreal);
                            
 
 }

@@ -49,6 +49,12 @@ static void     gwy_val_unit_unit_changed         (GObject *item,
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
 
+enum {
+            VALUE_CHANGED_SIGNAL,
+            LAST_SIGNAL
+};
+
+static guint gwyvalunit_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_val_unit_get_type(void)
@@ -97,6 +103,15 @@ gwy_val_unit_class_init(GwyValUnitClass *klass)
     widget_class->realize = gwy_val_unit_realize;
     widget_class->unrealize = gwy_val_unit_unrealize;
     widget_class->size_allocate = gwy_val_unit_size_allocate;
+
+    gwyvalunit_signals[VALUE_CHANGED_SIGNAL] = g_signal_new ("value_changed",
+                                                               G_TYPE_FROM_CLASS (klass),
+                                                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                                               G_STRUCT_OFFSET (GwyValUnitClass, value_changed),
+                                                               NULL,
+                                                               NULL,
+                                                               g_cclosure_marshal_VOID__VOID,
+                                                               G_TYPE_NONE, 0);                                                                                                                             
 }
 
 
@@ -204,6 +219,7 @@ static void
 gwy_val_unit_value_changed(GtkSpinButton *spinbutton, GwyValUnit *val_unit)
 {
     val_unit->dival = gtk_spin_button_get_value(spinbutton);
+    gwy_val_unit_signal_value_changed(val_unit);
 }
 
 static void     
@@ -211,22 +227,19 @@ gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
 {
     val_unit->unit = GPOINTER_TO_INT(g_object_get_data(item,
                                                       "metric-unit"));
+    gwy_val_unit_signal_value_changed(val_unit);
 }
 
-#include <stdio.h>
 
 void       
 gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 {
     GwySIValueFormat *format;
     format = gwy_si_unit_get_format(val_unit->base_si_unit, value, NULL);
-
-    printf("value of valunit \"%s\" is %g\n", gtk_label_get_text(GTK_LABEL(val_unit->label)), value);
     
     val_unit->unit = floor(log10(format->magnitude)/3.0);
     val_unit->dival = value/pow(1000, val_unit->unit);
 
-    printf("value divided by %g  (%d, %g)=  %g\n", pow(1000, val_unit->unit), val_unit->unit, (gdouble)format->magnitude, val_unit->dival);
     gtk_spin_button_set_value(val_unit->spin, val_unit->dival);
     gtk_option_menu_set_history(val_unit->selection, val_unit->unit + 4);
     
@@ -235,9 +248,15 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 gdouble    
 gwy_val_unit_get_value(GwyValUnit *val_unit)
 {
-    return val_unit->dival * pow(10, 3*val_unit->unit);
+    val_unit->dival = gtk_spin_button_get_value(val_unit->spin);
+    
+    return val_unit->dival * pow(1000, val_unit->unit);
 }
 
-
+void
+gwy_val_unit_signal_value_changed(GwyValUnit *val_unit)
+{
+    g_signal_emit (G_OBJECT (val_unit), gwyvalunit_signals[VALUE_CHANGED_SIGNAL], 0);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
