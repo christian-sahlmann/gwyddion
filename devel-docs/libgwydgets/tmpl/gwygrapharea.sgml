@@ -213,3 +213,13 @@ a set of data curves with a given plot properties.
 @area: 
 
 
+<!-- ##### FUNCTION gwy_graph_area_set_selection ##### -->
+<para>
+
+</para>
+
+@area: 
+@from: 
+@to: 
+
+

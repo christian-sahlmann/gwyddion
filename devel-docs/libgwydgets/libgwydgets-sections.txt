@@ -544,6 +544,7 @@ gwy_graph_area_add_curve
 gwy_graph_area_clear
 gwy_graph_area_signal_selected
 gwy_graph_area_signal_zoomed
+gwy_graph_area_set_selection
 <SUBSECTION Standard>
 GWY_GRAPH_AREA
 GWY_IS_GRAPH_AREA
@@ -577,6 +578,8 @@ GWY_3D_WINDOW_GET_CLASS
 Gwy3DLabelDescription
 Gwy3DLabelName
 <TITLE>Gwy3DLabels</TITLE>
+Gwy3DLabels
+Gwy3DLabelsClass
 gwy_3d_labels_new
 gwy_3d_labels_update
 gwy_3d_labels_expand_text
@@ -677,6 +680,8 @@ GWY_AXIS_GET_CLASS
 <SECTION>
 <FILE>gwyvmenubar</FILE>
 <TITLE>GwyVMenuBar</TITLE>
+GwyVMenuBar
+GwyVMenuBarClass
 gwy_vmenu_bar_new
 <SUBSECTION Standard>
 GWY_VMENU_BAR
@@ -748,7 +753,9 @@ gwy_radio_buttons_get_current_from_widget
 GWY_STOCK_3D_BASE
 GWY_STOCK_BOLD
 GWY_STOCK_CROP
+GWY_STOCK_COLOR_RANGE
 GWY_STOCK_CWT
+GWY_STOCK_DISTANCE
 GWY_STOCK_FACET_LEVEL
 GWY_STOCK_FILTER
 GWY_STOCK_FIT_PLANE
