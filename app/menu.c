@@ -48,7 +48,8 @@
 
 static void       gwy_app_update_last_process_func (GtkWidget *menu,
                                                     const gchar *name);
-static void       setup_sensitivity_keys       (void);
+static void       setup_sensitivity_keys           (void);
+static gchar*     fix_recent_file_underscores      (gchar *s);
 
 static GQuark sensitive_key = 0;
 static GQuark sensitive_state_key = 0;
@@ -291,7 +292,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
          l && i < gwy_app_n_recent_files;
          l = g_list_next(l), i++) {
         filename = (gchar*)l->data;
-        s = g_path_get_basename(filename);
+        s = fix_recent_file_underscores(g_path_get_basename(filename));
         label = g_strdup_printf("%s%d. %s", i < 10 ? "_" : "", i, s);
         if (child) {
             item = GTK_BIN(child->data)->child;
@@ -316,6 +317,28 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         g_free(label);
         g_free(s);
     }
+}
+
+static gchar*
+fix_recent_file_underscores(gchar *s)
+{
+    gsize i, j;
+    gchar *s2;
+
+    for (i = j = 0; s[i]; i++, j++) {
+        if (s[i] == '_')
+            j++;
+    }
+    s2 = g_new(gchar, j + 1);
+    for (i = j = 0; s[i]; i++, j++) {
+        if (s[i] == '_')
+            s2[j++] = '_';
+        s2[j] = s[i];
+    }
+    s2[j] = '\0';
+
+    g_free(s);
+    return s2;
 }
 
 void
