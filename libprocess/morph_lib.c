@@ -208,6 +208,7 @@ icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
                         y = tpy + imy - ryc;
+                        printf(".\n");
                     }
                 }
             }
