@@ -1,6 +1,3 @@
-- Document minimum and maximum filters
-- Remove dialog separators
-- Look at Scale scale sync issues
 - Kill WIN32-LEAN-AND-MEAN-CAPS
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
@@ -20,7 +17,6 @@
 - Remember app dialog sizes
 - GwyGradSphere background is strangely shifted in pixmap themes
 - Make keyboard zoom shortcuts work in graphs, 3D
-- Register application/x-gwyddion MIME types, on Win32 and Gnome
 - Finish Spot remove
 - Add some guessing to Rawfile
 - Do something with `Remove mask' in Edit menu
