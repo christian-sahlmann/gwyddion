@@ -108,7 +108,7 @@ static GHashTable*     read_hash           (gchar **buffer);
 static void            get_scan_list_res   (GHashTable *hash,
                                             gint *xres,
                                             gint *yres);
-static GObject*        get_physical_scale  (GHashTable *hash,
+static GwySIUnit*      get_physical_scale  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
                                             gdouble *scale);
@@ -127,7 +127,7 @@ static GwyModuleInfo module_info = {
     "nanoscope",
     N_("Load Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -173,41 +173,6 @@ nanoscope_detect(const gchar *filename,
     fclose(fh);
 
     return score;
-}
-
-static inline const gchar*
-fix_silly_units(const gchar *units)
-{
-    if (!strcmp(units, "\272"))
-        return "deg";
-    if (!strcmp(units, "\272/LSB"))
-        return "deg/LSB";
-    if (!strcmp(units, "\272/V"))
-        return "deg/V";
-
-    if (!strcmp(units, "~m"))
-        return "µm";
-    if (!strcmp(units, "~m/V"))
-        return "µm/V";
-    if (!strcmp(units, "~A"))
-        return "µA";
-    if (!strcmp(units, "~A/V"))
-        return "µA/V";
-    if (!strcmp(units, "~V"))
-        return "µV";
-
-    if (!strcmp(units, "um"))
-        return "µm";
-    if (!strcmp(units, "um/V"))
-        return "µm/V";
-    if (!strcmp(units, "uA"))
-        return "µA";
-    if (!strcmp(units, "uA/V"))
-        return "µA/V";
-    if (!strcmp(units, "uV"))
-        return "µV";
-
-    return units;
 }
 
 static GwyContainer*
@@ -391,11 +356,11 @@ hash_to_data_field(GHashTable *hash,
 {
     NanoscopeValue *val;
     GwyDataField *dfield;
-    GObject *unit;
+    GwySIUnit *unitz, *unitxy;
     const gchar *s;
     gchar *end;
     gchar un[5];
-    gint xres, yres, bpp, offset, size;
+    gint xres, yres, bpp, offset, size, power10;
     gdouble xreal, yreal, q;
     gdouble *data;
 
@@ -429,19 +394,10 @@ hash_to_data_field(GHashTable *hash,
         g_warning("Cannot parse <Scan size>: <%s>", s);
         return NULL;
     }
-    if (strcmp(un, "nm") == 0) {
-        xreal /= 1e9;
-        yreal /= 1e9;
-    }
-    else if (strcmp(un, "~m") == 0 || strcmp(un, "um") == 0) {
-        xreal /= 1e6;
-        yreal /= 1e6;
-    }
-    else {
-        g_warning("Cannot understand size units: <%s>", un);
-        xreal /= 1e9;
-        yreal /= 1e9;
-    }
+    unitxy = GWY_SI_UNIT(gwy_si_unit_new_parse(un, &power10));
+    q = exp(G_LN10*power10);
+    xreal *= q;
+    yreal *= q;
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_BIN) {
@@ -474,8 +430,8 @@ hash_to_data_field(GHashTable *hash,
     }
 
     q = 1.0;
-    unit = get_physical_scale(hash, scannerlist, scanlist, &q);
-    if (!unit)
+    unitz = get_physical_scale(hash, scannerlist, scanlist, &q);
+    if (!unitz)
         return NULL;
 
     dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
@@ -502,30 +458,28 @@ hash_to_data_field(GHashTable *hash,
     }
     gwy_data_field_multiply(dfield, q);
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(unit));
-    g_object_unref(unit);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+    g_object_unref(unitz);
 
-    unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, GWY_SI_UNIT(unit));
-    g_object_unref(unit);
+    gwy_data_field_set_si_unit_xy(dfield, unitxy);
+    g_object_unref(unitxy);
 
     return dfield;
 }
 
-static GObject*
+static GwySIUnit*
 get_physical_scale(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
                    gdouble *scale)
 {
-    GObject *siunit;
+    GwySIUnit *siunit, *siunit2;
     NanoscopeValue *val, *sval;
-    gchar *key, *s, *p;
+    gchar *key;
+    gint q;
 
     /* XXX: This is a damned heuristics.  For some value types we try to guess
-     * a different quantity scale to look up.  And when we don't find them, we
-     * multiply the scale by 10 ... oh, well. */
-
+     * a different quantity scale to look up. */
     if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
         g_warning("`@2:Z scale' not found");
         return NULL;
@@ -538,50 +492,29 @@ get_physical_scale(GHashTable *hash,
         g_free(key);
         /* XXX */
         *scale = val->hard_value;
-        return gwy_si_unit_new("");
+        return GWY_SI_UNIT(gwy_si_unit_new(""));
     }
 
     *scale = val->hard_value*sval->hard_value;
 
     if (!sval->hard_value_units || !*sval->hard_value_units) {
         if (strcmp(val->soft_scale, "Sens. Phase") == 0)
-            s = g_strdup("deg");
+            siunit = GWY_SI_UNIT(gwy_si_unit_new("deg"));
         else
-            s = g_strdup("V");
+            siunit = GWY_SI_UNIT(gwy_si_unit_new("V"));
     }
     else {
-        if (!(s = strchr(sval->hard_value_units, '/'))
-            || s[1] != 'V') {
-            g_warning("Cannot parse `%s' units", key);
-            g_free(key);
-            return NULL;
-        }
+        siunit = GWY_SI_UNIT(gwy_si_unit_new_parse(sval->hard_value_units, &q));
+        siunit2 = GWY_SI_UNIT(gwy_si_unit_new("V"));
+        gwy_si_unit_multiply(siunit, siunit2, siunit);
         gwy_debug("Scale1 = %g V/LSB", val->hard_value);
         gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
-        s = g_strndup(sval->hard_value_units, s - sval->hard_value_units);
-        gwy_debug("Total scale = %g %s/LSB", *scale, s);
+        *scale *= exp(G_LN10*q);
+        gwy_debug("Total scale = %g %s/LSB",
+                  *scale, gwy_si_unit_get_unit_string(siunit));
+        g_object_unref(siunit2);
     }
     g_free(key);
-
-    p = s;
-    if (g_str_has_prefix(s, "m")) {
-        *scale *= 1e-3;
-        p = s + strlen("m");
-    }
-    else if (g_str_has_prefix(s, "μ")) {
-        *scale *= 1e-6;
-        p = s + strlen("μ");
-    }
-    else if (g_str_has_prefix(s, "n")) {
-        *scale *= 1e-9;
-        p = s + strlen("n");
-    }
-    else if (g_str_has_prefix(s, "p")) {
-        *scale *= 1e-12;
-        p = s + strlen("p");
-    }
-    siunit = gwy_si_unit_new(p);
-    g_free(s);
 
     return siunit;
 }
@@ -868,7 +801,7 @@ parse_value(const gchar *key, gchar *line)
             do {
                 p++;
             } while (g_ascii_isspace(*p));
-            val->hard_value_units = fix_silly_units(p);
+            val->hard_value_units = p;
         }
         val->hard_value_str = line;
         return val;
@@ -971,7 +904,7 @@ parse_value(const gchar *key, gchar *line)
             do {
                 p++;
             } while (g_ascii_isspace(*p));
-            val->hard_value_units = fix_silly_units(p);
+            val->hard_value_units = p;
         }
         val->hard_value_str = line;
         break;
