@@ -7,27 +7,13 @@
 
 /* TODO */
 static GwyContainer *current_data = NULL;
+static GtkAccelGroup *gwy_app_accel_group = NULL;
+static GtkWidget *data_process_menu = NULL;
 
-GwyContainer* gwy_app_get_current_data (void);
-void          gwy_app_set_current_data (GwyContainer *data);
-
-GtkWidget*
-create_aligned_menu(GtkItemFactoryEntry *menu_items,
-                    gint nitems,
-                    const gchar *root_path)
-{
-    GtkItemFactory *item_factory;
-    GtkWidget *widget, *alignment;
-
-    /* TODO must use one accel group for all menus, otherwise they don't work */
-    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, root_path, NULL);
-    gtk_item_factory_create_items(item_factory, nitems, menu_items, NULL);
-    widget = gtk_item_factory_get_widget(item_factory, root_path);
-    alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
-    gtk_container_add(GTK_CONTAINER(alignment), widget);
-
-    return alignment;
-}
+GwyContainer* gwy_app_get_current_data         (void);
+void          gwy_app_set_current_data         (GwyContainer *data);
+static void   gwy_menu_set_sensitive_recursive (GtkWidget *widget,
+                                                gpointer data);
 
 void
 file_open_ok_cb(GtkFileSelection *selector)
@@ -56,6 +42,7 @@ file_open_ok_cb(GtkFileSelection *selector)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    gtk_window_add_accel_group(GTK_WINDOW(data_window), gwy_app_accel_group);
     g_signal_connect_swapped(data_window, "focus-in-event",
                              G_CALLBACK(gwy_app_set_current_data), data);
     g_signal_connect_swapped(data_window, "destroy",
@@ -161,7 +148,27 @@ file_save_cb(void)
 }
 
 GtkWidget*
-create_file_menu(void)
+create_aligned_menu(GtkItemFactoryEntry *menu_items,
+                    gint nitems,
+                    const gchar *root_path,
+                    GtkAccelGroup *accel_group)
+{
+    GtkItemFactory *item_factory;
+    GtkWidget *widget, *alignment;
+
+    /* TODO must use one accel group for all menus, otherwise they don't work */
+    item_factory = gtk_item_factory_new(GTK_TYPE_MENU_BAR, root_path,
+                                        accel_group);
+    gtk_item_factory_create_items(item_factory, nitems, menu_items, NULL);
+    widget = gtk_item_factory_get_widget(item_factory, root_path);
+    alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
+    gtk_container_add(GTK_CONTAINER(alignment), widget);
+
+    return alignment;
+}
+
+GtkWidget*
+create_file_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File", NULL, NULL, 0, "<Branch>", NULL },
@@ -172,27 +179,29 @@ create_file_menu(void)
         { "/File/_Quit...", "<control>Q", gtk_main_quit, 0, "<StockItem>", GTK_STOCK_QUIT },
     };
 
-    return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<file>");
+    return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<file>",
+                               accel_group);
 }
 
 GtkWidget*
-create_view_menu(void)
+create_view_menu(GtkAccelGroup *accel_group)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_View", NULL, NULL, 0, "<Branch>", NULL },
         { "/_View/Show modules", NULL, gwy_module_browser, 0, "<Item>", NULL },
     };
 
-    return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<view>");
+    return create_aligned_menu(menu_items, G_N_ELEMENTS(menu_items), "<view>",
+                               accel_group);
 }
 
 GtkWidget*
-create_data_menu(void)
+create_data_menu(GtkAccelGroup *accel_group)
 {
     GtkItemFactory *item_factory;
     GtkWidget *widget, *alignment;
 
-    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu());
+    item_factory = GTK_ITEM_FACTORY(gwy_build_process_menu(accel_group));
     widget = gtk_item_factory_get_widget(item_factory, "<data>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
     gtk_container_add(GTK_CONTAINER(alignment), widget);
@@ -207,12 +216,19 @@ foo(void)
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
+    gwy_app_accel_group = gtk_accel_group_new();
+
     vbox = gtk_vbox_new(0, FALSE);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    gtk_box_pack_start(GTK_BOX(vbox), create_file_menu(), FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), create_view_menu(), FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), create_data_menu(), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), create_file_menu(gwy_app_accel_group),
+                       FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), create_view_menu(gwy_app_accel_group),
+                       FALSE, FALSE, 0);
+    data_process_menu = create_data_menu(gwy_app_accel_group);
+    gtk_box_pack_start(GTK_BOX(vbox), data_process_menu, FALSE, FALSE, 0);
+    gtk_container_foreach(GTK_CONTAINER(data_process_menu),
+                          gwy_menu_set_sensitive_recursive, FALSE);
 
     toolbar = gtk_toolbar_new();
     gtk_toolbar_set_orientation(GTK_TOOLBAR(toolbar),
@@ -234,6 +250,7 @@ foo(void)
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     gtk_widget_show_all(window);
+    gtk_window_add_accel_group(GTK_WINDOW(window), gwy_app_accel_group);
 
     /* XXX */
     g_signal_connect(window, "destroy", gtk_main_quit, NULL);
@@ -259,17 +276,45 @@ gwy_app_get_current_data(void)
     return current_data;
 }
 
+static void
+gwy_menu_set_sensitive_recursive(GtkWidget *widget,
+                                 gpointer data)
+{
+    gboolean sensitive = GPOINTER_TO_INT(data);
+
+    gtk_widget_set_sensitive(widget, sensitive);
+    if (GTK_IS_MENU_BAR(widget)) {
+        gtk_container_foreach(GTK_CONTAINER(widget),
+                              gwy_menu_set_sensitive_recursive, data);
+    }
+    else if (GTK_IS_MENU_ITEM(widget)) {
+        if ((widget = gtk_menu_item_get_submenu(GTK_MENU_ITEM(widget))))
+            gtk_container_foreach(GTK_CONTAINER(widget),
+                                  gwy_menu_set_sensitive_recursive, data);
+    }
+}
+
 void
 gwy_app_set_current_data(GwyContainer *data)
 {
+    gboolean update_state;
+
     if (data) {
         gwy_debug("%s: %s",
                   __FUNCTION__, g_type_name(G_TYPE_FROM_INSTANCE(data)));
         g_return_if_fail(GWY_IS_CONTAINER(data));
+        update_state = (current_data == NULL);
     }
-    else
+    else {
         gwy_debug("%s: NULL", __FUNCTION__);
+        update_state = (current_data != NULL);
+    }
     current_data = data;
+
+    if (update_state)
+        gtk_container_foreach(GTK_CONTAINER(data_process_menu),
+                              gwy_menu_set_sensitive_recursive,
+                              GINT_TO_POINTER(current_data != NULL));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
