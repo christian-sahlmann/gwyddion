@@ -1041,7 +1041,9 @@ scr_to_data_x(GtkWidget *widget, gint scr)
     GwyGraphArea *area;
     area = GWY_GRAPH_AREA(widget);
 
-    return area->x_min + scr*(area->x_max - area->x_min)/(widget->allocation.width-1);
+    scr = CLAMP(scr, 0, widget->allocation.width-1);
+    return area->x_min
+           + scr*(area->x_max - area->x_min)/(widget->allocation.width-1);
 }
 
 static gint
@@ -1050,7 +1052,8 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
     GwyGraphArea *area;
     area = GWY_GRAPH_AREA(widget);
 
-    return (data - area->x_min)/((area->x_max - area->x_min)/(widget->allocation.width-1));
+    return (data - area->x_min)
+           /((area->x_max - area->x_min)/(widget->allocation.width-1));
 }
 
 static gdouble
@@ -1059,7 +1062,10 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     GwyGraphArea *area;
     area = GWY_GRAPH_AREA(widget);
 
-    return area->y_min + (widget->allocation.height - scr)*(area->y_max - area->y_min)/(widget->allocation.height-1);
+    scr = CLAMP(scr, 0, widget->allocation.height-1);
+    return area->y_min
+           + (widget->allocation.height - scr)*(area->y_max - area->y_min)
+             /(widget->allocation.height-1);
 }
 
 static gint
@@ -1068,7 +1074,9 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
     GwyGraphArea *area;
     area = GWY_GRAPH_AREA(widget);
 
-    return widget->allocation.height - (data - area->y_min)/((area->y_max - area->y_min)/(widget->allocation.height-1));
+    return widget->allocation.height
+           - (data - area->y_min)
+             /((area->y_max - area->y_min)/(widget->allocation.height-1));
 }
 
 /**
