@@ -26,9 +26,9 @@
 
 G_BEGIN_DECLS
 
-gint gwy_fft_hum(gint dir,
-                 gdouble *re_in,
-                 gdouble *im_in,
+void gwy_fft_hum(GwyTransformDirection dir,
+                 const gdouble *re_in,
+                 const gdouble *im_in,
                  gdouble *re_out,
                  gdouble *im_out,
                  gint n);

@@ -70,6 +70,11 @@ typedef enum {
 } GwyOrientation;
 
 typedef enum {
+    GWY_TRANSFORM_DIRECTION_BACKWARD = -1,
+    GWY_TRANSFORM_DIRECTION_FORWARD = 1
+} GwyTransformDirection;
+
+typedef enum {
     GWY_DATA_FIELD_CACHE_MIN = 0,
     GWY_DATA_FIELD_CACHE_MAX,
     GWY_DATA_FIELD_CACHE_SUM,

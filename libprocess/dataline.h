@@ -29,12 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_DATA_LINE                  (gwy_data_line_get_type())
-#define GWY_DATA_LINE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_LINE, GwyDataLine))
-#define GWY_DATA_LINE_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATA_LINE, GwyDataLineClass))
-#define GWY_IS_DATA_LINE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATA_LINE))
-#define GWY_IS_DATA_LINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_LINE))
-#define GWY_DATA_LINE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_LINE, GwyDataLineClass))
+#define GWY_TYPE_DATA_LINE            (gwy_data_line_get_type())
+#define GWY_DATA_LINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_DATA_LINE, GwyDataLine))
+#define GWY_DATA_LINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_DATA_LINE, GwyDataLineClass))
+#define GWY_IS_DATA_LINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_DATA_LINE))
+#define GWY_IS_DATA_LINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_DATA_LINE))
+#define GWY_DATA_LINE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_DATA_LINE, GwyDataLineClass))
 
 typedef struct _GwyDataLine      GwyDataLine;
 typedef struct _GwyDataLineClass GwyDataLineClass;
@@ -51,6 +51,13 @@ struct _GwyDataLine {
 struct _GwyDataLineClass {
     GObjectClass parent_class;
 };
+
+typedef void (*GwyFFTFunc)(GwyTransformDirection dir,
+                           GwyDataLine *re_in,
+                           GwyDataLine *im_in,
+                           GwyDataLine *re_out,
+                           GwyDataLine *im_out,
+                           GwyInterpolationType interpolation);
 
 #define gwy_data_line_duplicate(data_line) ((GwyDataLine*)gwy_serializable_duplicate(G_OBJECT(data_line)))
 
@@ -81,7 +88,7 @@ gdouble        gwy_data_line_rtoi                  (GwyDataLine *data_line,
                                                     gdouble realval);
 gdouble        gwy_data_line_get_val               (GwyDataLine *data_line,
                                                     gint i);
-gint           gwy_data_line_set_val               (GwyDataLine *data_line,
+void           gwy_data_line_set_val               (GwyDataLine *data_line,
                                                     gint i,
                                                     gdouble value);
 gdouble        gwy_data_line_get_dval              (GwyDataLine *data_line,
@@ -157,22 +164,22 @@ void           gwy_data_line_line_rotate           (GwyDataLine *data_line,
                                                     gint interpolation);
 gdouble        gwy_data_line_get_der               (GwyDataLine *data_line,
                                                     gint i);
-void           gwy_data_line_fft            (GwyDataLine *ra,
-                                             GwyDataLine *ia,
-                                             GwyDataLine *rb,
-                                             GwyDataLine *ib,
-                                             void (*fft)(),
-                                             GwyWindowingType windowing,
-                                             gint direction,
-                                             GwyInterpolationType interpolation,
-                                             gboolean preserverms,
-                                             gboolean level);
-void           gwy_data_line_fft_hum               (gint direction,
-                                                    GwyDataLine *ra,
-                                                    GwyDataLine *ia,
-                                                    GwyDataLine *rb,
-                                                    GwyDataLine *ib,
-                                                    gint interpolation);
+void           gwy_data_line_fft           (GwyDataLine *ra,
+                                            GwyDataLine *ia,
+                                            GwyDataLine *rb,
+                                            GwyDataLine *ib,
+                                            GwyFFTFunc fft,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+void           gwy_data_line_fft_hum       (GwyTransformDirection direction,
+                                            GwyDataLine *ra,
+                                            GwyDataLine *ia,
+                                            GwyDataLine *rb,
+                                            GwyDataLine *ib,
+                                            GwyInterpolationType interpolation);
 gdouble*       gwy_data_line_part_fit_polynom      (GwyDataLine *data_line,
                                                     gint n,
                                                     gdouble *coeffs,

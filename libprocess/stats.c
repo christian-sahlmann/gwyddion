@@ -40,7 +40,7 @@ static gdouble  square_area                      (GwyDataField *data_field,
  * gwy_data_field_get_max:
  * @data_field: A data field.
  *
- * Finds maximum value of a data field.
+ * Finds the maximum value of a data field.
  *
  * Returns: The maximum value.
  **/
@@ -78,7 +78,7 @@ gwy_data_field_get_max(GwyDataField *data_field)
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Finds maximum value in a rectangular part of a data field.
+ * Finds the maximum value in a rectangular part of a data field.
  *
  * Returns: The maximum value.
  **/
@@ -117,7 +117,7 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
  * gwy_data_field_get_min:
  * @data_field: A data field.
  *
- * Finds minimum value of a data field.
+ * Finds the minimum value of a data field.
  *
  * Returns: The minimum value.
  **/
@@ -155,7 +155,7 @@ gwy_data_field_get_min(GwyDataField *data_field)
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Finds minimum value in a rectangular part of a data field.
+ * Finds the minimum value in a rectangular part of a data field.
  *
  * Returns: The minimum value.
  **/

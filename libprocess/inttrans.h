@@ -26,84 +26,74 @@
 
 G_BEGIN_DECLS
 
-/*2DFFT using algorithm fft*/
-gint gwy_data_field_get_fft_res(gint data_res);
-
-void gwy_data_field_2dfft(GwyDataField *ra,
-                          GwyDataField *ia,
-                          GwyDataField *rb,
-                          GwyDataField *ib,
-                          void (*fft)(),
-                          GwyWindowingType windowing,
-                          gint direction,
-                          GwyInterpolationType interpolation,
-                          gboolean preserverms,
-                          gboolean level);
-void gwy_data_field_2dfft_real(GwyDataField *ra,
-                               GwyDataField *rb,
-                               GwyDataField *ib,
-                               void (*fft)(),
-                               GwyWindowingType windowing,
-                               gint direction,
-                               GwyInterpolationType interpolation,
-                               gboolean preserverms,
-                               gboolean level);
-
-
-/*humanize 2DFFT output*/
-void gwy_data_field_2dffthumanize(GwyDataField *a);
-
-/*1DFFT along all profiles in specified direction*/
-void gwy_data_field_xfft(GwyDataField *ra,
-                         GwyDataField *ia,
-                         GwyDataField *rb,
-                         GwyDataField *ib,
-                         void (*fft)(),
-                         GwyWindowingType windowing,
-                         gint direction,
-                         GwyInterpolationType interpolation,
-                         gboolean preserverms,
-                         gboolean level);
-void gwy_data_field_yfft(GwyDataField *ra,
-                         GwyDataField *ia,
-                         GwyDataField *rb,
-                         GwyDataField *ib,
-                         void (*fft)(),
-                         GwyWindowingType windowing,
-                         gint direction,
-                         GwyInterpolationType interpolation,
-                         gboolean preserverms,
-                         gboolean level);
-void gwy_data_field_xfft_real(GwyDataField *ra,
-                              GwyDataField *rb,
-                              GwyDataField *ib,
-                              void (*fft)(),
-                              GwyWindowingType windowing,
-                              gint direction,
-                              GwyInterpolationType interpolation,
-                              gboolean preserverms,
-                              gboolean level);
-void gwy_data_field_yfft_real(GwyDataField *ra,
-                              GwyDataField *rb,
-                              GwyDataField *ib,
-                              void (*fft)(),
-                              GwyWindowingType windowing,
-                              gint direction,
-                              GwyInterpolationType interpolation,
-                              gboolean preserverms,
-                              gboolean level);
-
-
-void gwy_data_field_cwt(GwyDataField *data_field,
-                        GwyInterpolationType interpolation,
-                        gdouble scale,
-                        Gwy2DCWTWaveletType wtype);
-
-void gwy_data_field_fft_filter_1d(GwyDataField *data_field,
-                                  GwyDataField *result_field,
-                                  GwyDataLine *weights,
-                                  GwyOrientation orientation,
-                                  GwyInterpolationType interpolation);
+gint gwy_data_field_get_fft_res   (gint data_res);
+void gwy_data_field_2dfft         (GwyDataField *ra,
+                                   GwyDataField *ia,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_2dfft_real    (GwyDataField *ra,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_2dffthumanize (GwyDataField *a);
+void gwy_data_field_xfft          (GwyDataField *ra,
+                                   GwyDataField *ia,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_yfft          (GwyDataField *ra,
+                                   GwyDataField *ia,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_xfft_real     (GwyDataField *ra,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_yfft_real     (GwyDataField *ra,
+                                   GwyDataField *rb,
+                                   GwyDataField *ib,
+                                   GwyFFTFunc fft,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
+void gwy_data_field_cwt           (GwyDataField *data_field,
+                                   GwyInterpolationType interpolation,
+                                   gdouble scale,
+                                   Gwy2DCWTWaveletType wtype);
+void gwy_data_field_fft_filter_1d (GwyDataField *data_field,
+                                   GwyDataField *result_field,
+                                   GwyDataLine *weights,
+                                   GwyOrientation orientation,
+                                   GwyInterpolationType interpolation);
 
 
 G_END_DECLS

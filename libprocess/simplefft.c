@@ -21,22 +21,28 @@
 #include <math.h>
 #include "simplefft.h"
 
+typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
+
 /**
  * gwy_fft_hum:
- * @dir: direction (1/-1) 
- * @re_in: real part of input data
- * @im_in: imaginary part of input data
- * @re_out: real part of output data
- * @im_out: imaginary part of output data
- * @n: number of data points
+ * @dir: Transformation direction.
+ * @re_in: Real part of input data.
+ * @im_in: Imaginary part of input data.
+ * @re_out: Real part of output data.
+ * @im_out: Imaginary part of output data.
+ * @n: Number of data points.
  *
  * Performs FST algorithm.
  *
  * Returns: zero at success.
  **/
-gint
-gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
-            gdouble *re_out, gdouble *im_out, gint n)
+void
+gwy_fft_hum(GwyTransformDirection dir,
+            const gdouble *re_in,
+            const gdouble *im_in,
+            gdouble *re_out,
+            gdouble *im_out,
+            gint n)
 {
     gdouble rc, ic, rt, it, fact;
     gint m, l, i, j, is;
@@ -80,22 +86,21 @@ gwy_fft_hum(gint dir, gdouble *re_in, gdouble *im_in,
         }
         l = is;
     }
-    return 0;
 }
 
-gdouble
+static gdouble
 gwy_fft_window_hann(gint i, gint n)
 {
     return 0.5 - 0.5*(cos(2*G_PI*i/(n-1)));
 }
 
-gdouble
+static gdouble
 gwy_fft_window_hamming(gint i, gint n)
 {
     return 0.54 - 0.46*(cos(2*G_PI*i/n));
 }
 
-gdouble
+static gdouble
 gwy_fft_window_blackmann(gint i, gint n)
 {
     gdouble n_2 = ((gdouble)n)/2;
@@ -103,7 +108,7 @@ gwy_fft_window_blackmann(gint i, gint n)
     return 0.42 + 0.5*cos(G_PI*(i-n_2)/n_2) + 0.08*cos(2*G_PI*(i-n_2)/n_2);
 }
 
-gdouble
+static gdouble
 gwy_fft_window_lanczos(gint i, gint n)
 {
     gdouble n_2 = ((gdouble)n)/2;
@@ -111,7 +116,7 @@ gwy_fft_window_lanczos(gint i, gint n)
     return sin(G_PI*(i-n_2)/n_2)/(G_PI*(i-n_2)/n_2);
 }
 
-gdouble
+static gdouble
 gwy_fft_window_welch(gint i, gint n)
 {
     gdouble n_2 = ((gdouble)n)/2;
@@ -119,7 +124,7 @@ gwy_fft_window_welch(gint i, gint n)
     return 1 - ((i-n_2)*(i-n_2)/n_2/n_2);
 }
 
-gdouble
+static gdouble
 gwy_fft_window_rect(gint i, gint n)
 {
     gdouble par;
@@ -131,39 +136,43 @@ gwy_fft_window_rect(gint i, gint n)
     return par;
 }
 
-void
-gwy_fft_mult(gdouble *data, gint n, gdouble (*p_window)())
+static void
+gwy_fft_mult(gdouble *data, gint n, GwyFFTWindowingFunc window)
 {
     gint i;
 
-    for (i = 0; i<n; i++)
-        data[i] *= (*p_window)(i, n);
+    for (i = 0; i < n; i++)
+        data[i] *= window(i, n);
 }
 
 /**
  * gwy_fft_window:
- * @data: data values
- * @n: number of data values
- * @windowing: method used for windowing
+ * @data: Data values.
+ * @n: Number of data values.
+ * @windowing: Method used for windowing.
  *
  * Multiplies data by given window.
  **/
 void
-gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing)
+gwy_fft_window(gdouble *data,
+               gint n,
+               GwyWindowingType windowing)
 {
-    if (windowing == GWY_WINDOWING_HANN)
-        gwy_fft_mult(data, n, gwy_fft_window_hann);
-    else if (windowing == GWY_WINDOWING_RECT)
-        gwy_fft_mult(data, n, gwy_fft_window_rect);
-    else if (windowing == GWY_WINDOWING_WELCH)
-        gwy_fft_mult(data, n, gwy_fft_window_welch);
-    else if (windowing == GWY_WINDOWING_HAMMING)
-        gwy_fft_mult(data, n, gwy_fft_window_hamming);
-     else if (windowing == GWY_WINDOWING_BLACKMANN)
-        gwy_fft_mult(data, n, gwy_fft_window_blackmann);
-     else if (windowing == GWY_WINDOWING_LANCZOS)
-        gwy_fft_mult(data, n, gwy_fft_window_lanczos);
-     
+    /* The order must match GwyWindowingType enum */
+    GwyFFTWindowingFunc windowings[] = {
+        NULL,  /* none */
+        gwy_fft_window_hann,
+        gwy_fft_window_hamming,
+        gwy_fft_window_blackmann,
+        gwy_fft_window_lanczos,
+        gwy_fft_window_welch,
+        gwy_fft_window_rect,
+    };
+
+    g_return_if_fail(data);
+    g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
+    if (windowings[windowing])
+        gwy_fft_mult(data, n, windowings[windowing]);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

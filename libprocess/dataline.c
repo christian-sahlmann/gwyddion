@@ -278,8 +278,7 @@ gwy_data_line_resample(GwyDataLine *data_line,
     gdouble ratio, pos;
     gint i;
 
-    /* XXX: cannot be here because many functions don't create proper objects
-     * g_return_if_fail(GWY_IS_DATA_LINE(data_line)); */
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     if (res == data_line->res)
         return;
     g_return_if_fail(res > 1);
@@ -304,23 +303,23 @@ gwy_data_line_resample(GwyDataLine *data_line,
     data_line->res = res;
 }
 
-
 /**
  * gwy_data_line_resize:
  * @data_line: A data line.
- * @from: where to start
- * @to: where to finish
+ * @from: Where to start.
+ * @to: Where to finish + 1.
  *
- * Resamples data line to (@from - @to) and fills it
- * by appropriate original data line part.
+ * Resizes (crops) a data line.
+ *
+ * Extracts a part of data line in range @from..(@to-1), recomputing real
+ * sizes.
  **/
 void
 gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 {
-    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
     if (to < from)
         GWY_SWAP(gint, from, to);
-
     g_return_if_fail(from >= 0 && to <= a->res);
 
     a->real *= (to - from)/a->res;
@@ -352,8 +351,11 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
  * @x: position requested (0 - resolution)
  * @interpolation: interpolation used
  *
- * Using a specified interpolation returns value
- * in any point wihin data line.
+ * Gets interpolated value at arbitrary data line point indexed by pixel
+ * coordinates.
+ *
+ * See also gwy_data_line_get_dval_real() that does the same, but takes
+ * real coordinates.
  *
  * Returns: value interpolated in the data line.
  **/
@@ -364,8 +366,8 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble rest = x - (gdouble)l;
     gdouble intline[4];
 
-        gwy_debug("");
-    g_return_val_if_fail(x >= 0 && x < (a->res), 0.0);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0.0);
+    g_return_val_if_fail(x >= 0 && x < a->res, 0.0);
 
     if (rest == 0) return a->data[l];
 
@@ -433,7 +435,7 @@ gwy_data_line_get_data_const(GwyDataLine *data_line)
  * gwy_data_line_get_res:
  * @data_line: A data line.
  *
- *
+ * Gets the number of data points in a data line.
  *
  * Returns: Resolution (number of data points).
  **/
@@ -448,14 +450,14 @@ gwy_data_line_get_res(GwyDataLine *data_line)
  * gwy_data_line_get_real:
  * @data_line: A data line.
  *
- *
+ * Gets the physical size of a data line.
  *
  * Returns: Real size of data line.
  **/
 gdouble
 gwy_data_line_get_real(GwyDataLine *data_line)
 {
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
     return data_line->real;
 }
 
@@ -478,9 +480,9 @@ gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
  * @data_line: A data line.
  * @pixval: value in pixel coordinates
  *
+ * Transforms pixel coordinate to real (physical) coordinate.
  *
- *
- * Returns: value in real coordinates.
+ * Returns: @pixval in real coordinates.
  **/
 gdouble
 gwy_data_line_itor(GwyDataLine *data_line, gdouble pixval)
@@ -493,9 +495,9 @@ gwy_data_line_itor(GwyDataLine *data_line, gdouble pixval)
  * @data_line: A data line.
  * @realval: value in real coordinates
  *
+ * Transforms real (physical) coordinate to pixel coordinate.
  *
- *
- * Returns: value in pixel coordinates.
+ * Returns: @realval in pixel coordinates.
  **/
 gdouble
 gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realval)
@@ -508,12 +510,13 @@ gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realval)
  * @data_line: A data line.
  * @i: index (pixel coordinates)
  *
- *
+ * Gets value at given position in a data line.
  *
  * Returns: value at given index.
  **/
 gdouble
-gwy_data_line_get_val(GwyDataLine *data_line, gint i)
+gwy_data_line_get_val(GwyDataLine *data_line,
+                      gint i)
 {
     g_return_val_if_fail(i >= 0 && i < data_line->res, 0.0);
 
@@ -526,18 +529,16 @@ gwy_data_line_get_val(GwyDataLine *data_line, gint i)
  * @i: pixel coordinates
  * @value: value to be set
  *
- * Sets the value at given index.
- *
- * Returns: TRUE it there were no problems.
+ * Sets the value at given position in a data line.
  **/
-gboolean
-gwy_data_line_set_val(GwyDataLine *data_line, gint i, gdouble value)
+void
+gwy_data_line_set_val(GwyDataLine *data_line,
+                      gint i,
+                      gdouble value)
 {
-    g_return_val_if_fail(i >= 0 && i < data_line->res, FALSE);
+    g_return_if_fail(i >= 0 && i < data_line->res);
 
     data_line->data[i] = value;
-
-    return TRUE;
 }
 
 
@@ -547,8 +548,11 @@ gwy_data_line_set_val(GwyDataLine *data_line, gint i, gdouble value)
  * @x: real coordinates position
  * @interpolation: interpolation method used
  *
- * Same as gwy_data_line_get_dval() fucntion, but uses
- * real coordinates input.
+ * Gets interpolated value at arbitrary data line point indexed by real
+ * coordinates.
+ *
+ * See also gwy_data_line_get_dval() that does the same, but takes
+ * pixel coordinates.
  *
  * Returns: Value interpolated in the data line.
  **/
@@ -561,172 +565,188 @@ gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolation)
 /**
  * gwy_data_line_invert:
  * @data_line: A data line.
- * @x: invert x axis
- * @z: invert z axis
+ * @x: Whether to invert data point order.
+ * @z: Whether to invert in Z direction (i.e., invert values).
  *
- * Inverts values. If  @x is TRUE it inverts
- * x-axis values (x1...xn) to (xn...x1), if
- * @z is TRUE inverts z-axis values (peaks to valleys
- * and valleys to peaks).
+ * Reflects amd/or inverts a data line.
+ *
+ * In the case of value reflection, it's inverted about mean value.
  **/
 void
-gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
+gwy_data_line_invert(GwyDataLine *data_line,
+                     gboolean x,
+                     gboolean z)
 {
     gint i;
     gdouble avg;
-    GwyDataLine b;
+    gdouble *data;
 
-    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    data = data_line->data;
     if (x) {
-        b.res = a->res;
-        b.data = g_new(gdouble, a->res);
-        gwy_data_line_copy(a, &b);
+        for (i = 0; i < data_line->res/2; i++)
+            GWY_SWAP(gdouble, data[i], data[data_line->res-1 - i]);
+    }
 
-        for (i = 0; i < a->res; i++)
-            a->data[i] = b.data[i - a->res - 1];
-    }
     if (z) {
-        avg = gwy_data_line_get_avg(a);
-        for (i = 0; i < a->res; i++)
-            a->data[i] = 2*avg - a->data[i];
+        avg = gwy_data_line_get_avg(data_line);
+        for (i = 0; i < data_line->res; i++)
+            data[i] = 2*avg - data[i];
     }
-    g_free(b.data);
 }
 
 /**
  * gwy_data_line_fill:
  * @data_line: A data line.
- * @value: value to be used for filling
+ * @value: Value to fill data line with.
  *
- * Fills whole data lien with specified number.
+ * Fills data line with specified value.
  **/
 void
-gwy_data_line_fill(GwyDataLine *a, gdouble value)
+gwy_data_line_fill(GwyDataLine *data_line,
+                   gdouble value)
 {
     gint i;
 
-    for (i = 0; i < a->res; i++)
-        a->data[i] = value;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    for (i = 0; i < data_line->res; i++)
+        data_line->data[i] = value;
 }
 
 /**
  * gwy_data_line_add:
  * @data_line: A data line.
- * @value: value to be added.
+ * @value: Value to be added.
  *
- * Adds a specified number to whole data line.
+ * Adds a specified value to all values in a data line.
  **/
 void
-gwy_data_line_add(GwyDataLine *a, gdouble value)
+gwy_data_line_add(GwyDataLine *data_line,
+                  gdouble value)
 {
     gint i;
 
-    for (i = 0; i < a->res; i++)
-        a->data[i] += value;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    for (i = 0; i < data_line->res; i++)
+        data_line->data[i] += value;
 }
 
 /**
  * gwy_data_line_multiply:
  * @data_line: A data line.
- * @value: value to be used for multiplication
+ * @value: Value to multiply data line with.
  *
- * Multiplies whole data line with a specified number.
+ * Multiplies all values in a data line with a specified value.
  **/
 void
-gwy_data_line_multiply(GwyDataLine *a, gdouble value)
+gwy_data_line_multiply(GwyDataLine *data_line,
+                       gdouble value)
 {
     gint i;
 
-    for (i = 0; i < a->res; i++)
-        a->data[i] *= value;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    for (i = 0; i < data_line->res; i++)
+        data_line->data[i] *= value;
 }
 
 /**
  * gwy_data_line_part_fill:
  * @data_line: A data line.
- * @from: where to start
- * @to: where to finish
- * @value: value to be used for filling
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ * @value: Value to fill data line part with.
  *
  * Fills specified part of data line with specified number
  **/
 void
-gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
+gwy_data_line_part_fill(GwyDataLine *data_line,
+                        gint from, gint to,
+                        gdouble value)
 {
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to <= a->res);
+    g_return_if_fail(from >= 0 && to <= data_line->res);
 
     for (i = from; i < to; i++)
-        a->data[i] = value;
+        data_line->data[i] = value;
 }
 
 /**
  * gwy_data_line_part_add:
  * @data_line: A data line.
- * @from: where to start
- * @to: where to finish
- * @value: value to be added
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ * @value: Value to be added
  *
- * Adds specified number to a part of data line.
+ * Adds specified value to all values in a part of a data line.
  **/
 void
-gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
+gwy_data_line_part_add(GwyDataLine *data_line,
+                       gint from, gint to,
+                       gdouble value)
 {
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to <= a->res);
+    g_return_if_fail(from >= 0 && to <= data_line->res);
 
     for (i = from; i < to; i++)
-        a->data[i] += value;
+        data_line->data[i] += value;
 }
 
 /**
  * gwy_data_line_part_multiply:
  * @data_line: A data line.
- * @from: where to start
- * @to: where to finish
- * @value: value to be used for multiplication
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ * @value: Value multiply data line part with.
  *
- * Multiplies specified part of data line by specified number
+ * Multiplies all values in a part of data line by specified value.
  **/
 void
-gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
+gwy_data_line_part_multiply(GwyDataLine *data_line,
+                            gint from, gint to,
+                            gdouble value)
 {
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     if (to < from)
         GWY_SWAP(gint, from, to);
 
-    g_return_if_fail(from >= 0 && to <= a->res);
+    g_return_if_fail(from >= 0 && to <= data_line->res);
 
     for (i = from; i < to; i++)
-        a->data[i] *= value;
+        data_line->data[i] *= value;
 }
 
 /**
  * gwy_data_line_get_max:
  * @data_line: A data line.
  *
+ * Finds the maximum value of a data line.
  *
- *
- * Returns: Maximum value
+ * Returns: The maximum value.
  **/
 gdouble
-gwy_data_line_get_max(GwyDataLine *a)
+gwy_data_line_get_max(GwyDataLine *data_line)
 {
     gint i;
-    gdouble max = a->data[0];
+    gdouble max;
 
-    for (i = 1; i < a->res; i++) {
-        if (max < a->data[i])
-            max = a->data[i];
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), -G_MAXDOUBLE);
+
+    max = data_line->data[0];
+    for (i = 1; i < data_line->res; i++) {
+        if (G_UNLIKELY(data_line->data[i] < max))
+            max = data_line->data[i];
     }
     return max;
 }
@@ -735,19 +755,22 @@ gwy_data_line_get_max(GwyDataLine *a)
  * gwy_data_line_get_min:
  * @data_line: A data line.
  *
+ * Finds the minimum value of a data line.
  *
- *
- * Returns: Minimum value
+ * Returns: The minimum value.
  **/
 gdouble
-gwy_data_line_get_min(GwyDataLine *a)
+gwy_data_line_get_min(GwyDataLine *data_line)
 {
     gint i;
-    gdouble min = a->data[0];
+    gdouble min;
 
-    for (i = 1; i < a->res; i++) {
-        if (min > a->data[i])
-            min = a->data[i];
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), G_MAXDOUBLE);
+
+    min = data_line->data[0];
+    for (i = 1; i < data_line->res; i++) {
+        if (G_UNLIKELY(data_line->data[i] < min))
+            min = data_line->data[i];
     }
     return min;
 }
@@ -756,80 +779,88 @@ gwy_data_line_get_min(GwyDataLine *a)
  * gwy_data_line_get_avg:
  * @data_line: A data line.
  *
- *
+ * Computes average value of a data line.
  *
  * Returns: Average value
  **/
 gdouble
-gwy_data_line_get_avg(GwyDataLine *a)
+gwy_data_line_get_avg(GwyDataLine *data_line)
 {
     gint i;
     gdouble avg = 0;
 
-    for (i = 0; i < a->res; i++)
-        avg += a->data[i];
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
 
-    return avg/(gdouble)a->res;
+    for (i = 0; i < data_line->res; i++)
+        avg += data_line->data[i];
+
+    return avg/(gdouble)data_line->res;
 }
 
 /**
  * gwy_data_line_get_rms:
  * @data_line: A data line.
  *
+ * Computes root mean square value of a data line.
  *
- *
- * Returns: Root mean square deviation of heights
+ * Returns: Root mean square deviation of values.
  **/
 gdouble
-gwy_data_line_get_rms(GwyDataLine *a)
+gwy_data_line_get_rms(GwyDataLine *data_line)
 {
     gint i;
     gdouble sum2 = 0;
-    gdouble sum = gwy_data_line_get_sum(a);
+    gdouble sum;
 
-    for (i = 0; i < a->res; i++)
-        sum2 += a->data[i]*a->data[i];
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
 
-    return sqrt(fabs(sum2 - sum*sum/a->res)/a->res);
+    sum = gwy_data_line_get_sum(data_line);
+    for (i = 0; i < data_line->res; i++)
+        sum2 += data_line->data[i]*data_line->data[i];
+
+    return sqrt(fabs(sum2 - sum*sum/data_line->res)/data_line->res);
 }
 
 /**
  * gwy_data_line_get_sum:
  * @data_line: A data line.
  *
+ * Computes sum of all values in a data line.
  *
- *
- * Returns: sum of all the values
+ * Returns: sum of all the values.
  **/
 gdouble
-gwy_data_line_get_sum(GwyDataLine *a)
+gwy_data_line_get_sum(GwyDataLine *data_line)
 {
     gint i;
     gdouble sum = 0;
 
-    for (i = 0; i < a->res; i++)
-        sum += a->data[i];
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
+
+    for (i = 0; i < data_line->res; i++)
+        sum += data_line->data[i];
 
     return sum;
 }
 
-
 /**
  * gwy_data_line_part_get_max:
  * @data_line: A data line.
- * @from: where to start (in pixels)
- * @to: where to finish (in pixels)
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
+ * Finds the maximum value of a part of a data line.
  *
- *
- * Returns: Maximum within given interval
+ * Returns: Maximum within given interval.
  **/
 gdouble
-gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
+gwy_data_line_part_get_max(GwyDataLine *a,
+                           gint from, gint to)
 {
     gint i;
     gdouble max = -G_MAXDOUBLE;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), max);
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -845,19 +876,21 @@ gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
 /**
  * gwy_data_line_part_get_min:
  * @data_line: A data line.
- * @from: where to start (in pixels)
- * @to: where to finish (in pixels)
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
+ * Finds the minimum value of a part of a data line.
  *
- *
- * Returns: Minimum within given interval
+ * Returns: Minimum within given interval.
  **/
 gdouble
-gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
+gwy_data_line_part_get_min(GwyDataLine *a,
+                           gint from, gint to)
 {
     gint i;
     gdouble min = G_MAXDOUBLE;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), min);
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -874,12 +907,12 @@ gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
 /**
  * gwy_data_line_part_get_avg:
  * @data_line: A data line.
- * @from: where to start (in pixels)
- * @to: where to finish (in pixels)
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
+ * Computes mean value of all values in a part of a data line.
  *
- *
- * Returns: Average within given interval
+ * Returns: Average value within given interval.
  **/
 gdouble
 gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
@@ -890,10 +923,10 @@ gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
 /**
  * gwy_data_line_part_get_rms:
  * @data_line: A data line.
- * @from: where to start (in pixels)
- * @to: where to finish (in pixels)
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
- *
+ * Computes root mean square value of a part of a data line.
  *
  * Returns: Root mean square deviation of heights within a given interval
  **/
@@ -904,6 +937,7 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
     gdouble rms = 0;
     gdouble avg;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), rms);
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -919,12 +953,12 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
 /**
  * gwy_data_line_part_get_sum:
  * @data_line: A data line.
- * @from: where to start (in pixels)
- * @to: where to finish (in pixels)
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
+ * Computes sum of all values in a part of a data line.
  *
- *
- * Returns: Sum of all values within the interval
+ * Returns: Sum of all values within the interval.
  **/
 gdouble
 gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
@@ -932,6 +966,7 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
     gint i;
     gdouble sum = 0;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), sum);
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -946,9 +981,9 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
 /**
  * gwy_data_line_threshold:
  * @data_line: A data line.
- * @threshval: value used for thresholding
- * @bottom: lower value
- * @top: upper value
+ * @threshval: Threshold value.
+ * @bottom: Lower replacement value.
+ * @top: Upper replacement value.
  *
  * Sets all the values to @bottom or @top value
  * depending on whether the original values are
@@ -960,7 +995,9 @@ gint
 gwy_data_line_threshold(GwyDataLine *a,
                         gdouble threshval, gdouble bottom, gdouble top)
 {
-    gint i, tot=0;
+    gint i, tot = 0;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
 
     for (i = 0; i < a->res; i++) {
         if (a->data[i] < threshval)
@@ -976,13 +1013,13 @@ gwy_data_line_threshold(GwyDataLine *a,
 /**
  * gwy_data_line_part_threshold:
  * @data_line: A data line.
- * @from: where to start
- * @to: where to finish
- * @threshval: value used for thresholding
- * @bottom: lower value
- * @top: upper value
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ * @threshval: Threshold value.
+ * @bottom: Lower replacement value.
+ * @top: Upper replacement value.
  *
- *  Sets all the values within interval to @bottom or @top value
+ * Sets all the values within interval to @bottom or @top value
  * depending on whether the original values are
  * below or above @threshold value.
  *
@@ -993,8 +1030,9 @@ gwy_data_line_part_threshold(GwyDataLine *a,
                              gint from, gint to,
                              gdouble threshval, gdouble bottom, gdouble top)
 {
-    gint i, tot=0;
+    gint i, tot = 0;
 
+    g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0);
     if (to < from)
         GWY_SWAP(gint, from, to);
 
@@ -1030,6 +1068,8 @@ gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     gdouble *pdata;
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
+
     sumxi = (n-1)/2;
     sumxixi = (2*n-1)*(n-1)/6;
 
@@ -1062,9 +1102,11 @@ void
 gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 {
     gint i;
-    gdouble bpix = bv/a->res*a->real;
+    gdouble bpix;
 
-        gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
+
+    bpix = bv/a->res*a->real;
     for (i = 0; i < a->res; i++)
         a->data[i] -= av + bpix*i;
 }
@@ -1080,12 +1122,15 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
  * line segments.
  **/
 void
-gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
+gwy_data_line_line_rotate(GwyDataLine *a,
+                          gdouble angle,
+                          gint interpolation)
 {
     gint i, k, maxi, res;
     gdouble ratio, x, as, radius, xl1, xl2, yl1, yl2;
     gdouble *dx, *dy;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(a));
     if (angle == 0)
         return;
 
@@ -1144,11 +1189,11 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 /**
  * gwy_data_line_get_der:
  * @data_line: A data line.
- * @i: pixel coordinate
+ * @i: Pixel coordinate.
  *
+ * Computes central derivaltion at given index in a data line.
  *
- *
- * Returns: derivation at given pixel
+ * Returns: Derivation at given position.
  **/
 gdouble
 gwy_data_line_get_der(GwyDataLine *a, gint i)
@@ -1178,14 +1223,19 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
  * resampling of the FFT spectrum can destroy some information in it.
  **/
 void
-gwy_data_line_fft_hum(gint direction,
+gwy_data_line_fft_hum(GwyTransformDirection direction,
                       GwyDataLine *ra, GwyDataLine *ia,
                       GwyDataLine *rb, GwyDataLine *ib,
-                      gint interpolation)
+                      GwyInterpolationType interpolation)
 {
     gint order, newres, oldres;
 
-    /*this should never happen - the function should be called from gwy_data_line_fft()*/
+    /* neither should not normally happen - the function should be called from
+     * gwy_data_line_fft() */
+    g_return_if_fail(GWY_IS_DATA_LINE(ra));
+    g_return_if_fail(GWY_IS_DATA_LINE(rb));
+    g_return_if_fail(GWY_IS_DATA_LINE(ia));
+    g_return_if_fail(GWY_IS_DATA_LINE(ib));
     if (ia->res != ra->res)
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
     if (rb->res != ra->res)
@@ -1210,7 +1260,6 @@ gwy_data_line_fft_hum(gint direction,
 
     gwy_fft_hum(direction, ra->data, ia->data, rb->data, ib->data, newres);
 
-
     /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
      after all the processings*/
     if (newres != oldres) {
@@ -1219,31 +1268,33 @@ gwy_data_line_fft_hum(gint direction,
         gwy_data_line_resample(rb, oldres, interpolation);
         gwy_data_line_resample(ib, oldres, interpolation);
     }
-
 }
-
 
 /**
  * gwy_data_line_fft:
- * @ra: real input
- * @ia: imaginary input
- * @rb: real output
- * @ib: imaginary output
- * @fft: fft alorithm
- * @windowing: windowing mode
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation mode
- * @preserverms: preserve RMS value while windowing
- * @level: level line before computation
+ * @ra: Real input data line.
+ * @ia: Imaginary input data line.
+ * @rb: Real output data line.
+ * @ib: Imaginary output data line.
+ * @fft: FFT alorithm to use.
+ * @windowing: Windowing mode.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS value while windowing.
+ * @level: %TRUE to level line before computation.
  *
  * Performs Fast Fourier transform using a given algorithm.
+ *
  * A windowing or data leveling can be applied if requested.
  **/
 void
 gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
                   GwyDataLine *rb, GwyDataLine *ib,
-                  void (*fft)(), GwyWindowingType windowing, gint direction,
-                  GwyInterpolationType interpolation, gboolean preserverms,
+                  GwyFFTFunc fft,
+                  GwyWindowingType windowing,
+                  GwyTransformDirection direction,
+                  GwyInterpolationType interpolation,
+                  gboolean preserverms,
                   gboolean level)
 {
     gint i, n;
@@ -1257,8 +1308,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     g_return_if_fail(GWY_IS_DATA_LINE(ib));
 
     gwy_debug("");
-    if (ia->res != ra->res)
-    {
+    if (ia->res != ra->res) {
         gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
         gwy_data_line_fill(ia, 0);
     }
@@ -1288,7 +1338,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_fft_window(multra->data, multra->res, windowing);
         gwy_fft_window(multia->data, multia->res, windowing);
 
-        (*fft)(direction, multra, multia, rb, ib, interpolation);
+        fft(direction, multra, multia, rb, ib, interpolation);
 
         rmsb = 0;
         for (i = 0; i < multra->res/2; i++)
@@ -1305,7 +1355,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_fft_window(ra->data, ra->res, windowing);
         gwy_fft_window(ia->data, ra->res, windowing);
 
-        (*fft)(direction, ra, ia, rb, ib, interpolation);
+        fft(direction, ra, ia, rb, ib, interpolation);
     }
 }
 
@@ -1315,8 +1365,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
  * @n: Polynom degree.
  * @coeffs: An array of size @n+1 to store the coefficients to, or %NULL
  *          (a fresh array is allocated then).
- * @from: The index in @data_line to start from (inclusive).
- * @to: The index in @data_line to stop (noninclusive).
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
  *
  * Fits a polynom through a part of a data line.
  *
@@ -1409,11 +1459,27 @@ gwy_data_line_fit_polynom(GwyDataLine *data_line,
 }
 
 
-void gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
-                                         gint n, gdouble *coeffs, gint from, gint to)
+/**
+ * gwy_data_line_part_subtract_polynom:
+ * @data_line: A data line.
+ * @n: Polynom degree.
+ * @coeffs: An array of size @n+1 with polynom coefficients to.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Subtracts polynom from a part of a data line;
+ **/
+void
+gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
+                                    gint n, gdouble *coeffs,
+                                    gint from, gint to)
 {
     gint i, j;
     gdouble val;
+
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(coeffs);
+    g_return_if_fail(n >= 0);
 
     if (to < from)
         GWY_SWAP(gint, from, to);
