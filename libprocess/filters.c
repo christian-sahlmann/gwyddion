@@ -307,7 +307,7 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
     for (k = 0; k < (data_field->xres*data_field->yres); k++)
         data[k] = fabs(sobel_horizontal->data[k])
                   + fabs(sobel_vertical->data[k]);
-
+    gwy_data_field_invalidate(data_field);
 
     threshold = gwy_data_field_get_min(data_field) +
                (gwy_data_field_get_max(data_field)
@@ -754,31 +754,28 @@ pixel_thinnable(GwyDataField *data_field, gint i, gint j)
 }
 
 static gint
-thinstep(GwyDataField *data_field)
+thinstep(GwyDataField *data_field,
+         GwyDataField *buffer)
 {
-    GwyDataField *hlp;
     gint i, j, ch;
 
-    hlp = gwy_data_field_new_alike(data_field, TRUE);
-
+    gwy_data_field_clear(buffer);
     ch = 0;
     for (i = 2; i < (data_field->yres - 1); i++) {
         for (j = 2; j < (data_field->xres - 1); j++) {
             if (pixel_status(data_field, i, j) == 1
                 && pixel_thinnable(data_field, i, j) == 1) {
                 ch++;
-                hlp->data[j + data_field->xres * i] = 1;
+                buffer->data[j + data_field->xres * i] = 1;
             }
         }
     }
     for (i = 2; i < (data_field->yres - 1); i++) {
         for (j = 2; j < (data_field->xres - 1); j++) {
-            if (hlp->data[j + data_field->xres * i] == 1)
+            if (buffer->data[j + data_field->xres * i] == 1)
                 data_field->data[j + data_field->xres * i] = 0;
         }
     }
-
-    g_object_unref(hlp);
     gwy_data_field_invalidate(data_field);
 
     return ch;
@@ -787,13 +784,17 @@ thinstep(GwyDataField *data_field)
 static gint
 thin_data_field(GwyDataField *data_field)
 {
+    GwyDataField *buffer;
     gint k, n;
 
+    buffer = gwy_data_field_new_alike(data_field, FALSE);
     for (k = 0; k < 2000; k++) {
-        n = thinstep(data_field);
+        n = thinstep(data_field, buffer);
         if (n == 0)
             break;
     }
+    g_object_unref(buffer);
+
     return k;
 }
 
