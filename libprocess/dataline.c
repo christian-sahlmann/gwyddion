@@ -2,16 +2,9 @@
 
 #include <stdio.h>
 #include <math.h>
+
+#include <libgwyddion/gwymacros.h>
 #include "dataline.h"
-
-#define swap(t, x, y) \
-    do { \
-    t safe ## x ## y; \
-    safe ## x ## y = x; \
-    x = y; \
-    y = safe ## x ## y; \
-    } while (0)
-
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
@@ -45,17 +38,13 @@ gwy_data_line_get_type(void)
         };
 
         GInterfaceInfo gwy_serializable_info = {
-            gwy_data_line_serializable_init,
-            NULL,
-            GUINT_TO_POINTER(42)
+            gwy_data_line_serializable_init, NULL, 0,
         };
         GInterfaceInfo gwy_watchable_info = {
-            gwy_data_line_watchable_init,
-            NULL,
-            GUINT_TO_POINTER(37)
+            gwy_data_line_watchable_init, NULL, 0,
         };
 
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+        gwy_debug("%s", __FUNCTION__);
         gwy_data_line_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_DATA_LINE_TYPE_NAME,
                                                    &gwy_data_line_info,
@@ -77,10 +66,7 @@ gwy_data_line_serializable_init(gpointer giface,
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    g_assert(iface_data == GUINT_TO_POINTER(42));
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -94,10 +80,7 @@ gwy_data_line_watchable_init(gpointer giface,
 {
     GwyWatchableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    g_assert(iface_data == GUINT_TO_POINTER(37));
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -109,9 +92,7 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
      gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_line_finalize;
 }
@@ -119,9 +100,7 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 static void
 gwy_data_line_init(GwyDataLine *data_line)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     data_line->data = NULL;
     data_line->res = 0;
     data_line->real = 0.0;
@@ -130,9 +109,7 @@ gwy_data_line_init(GwyDataLine *data_line)
 static void
 gwy_data_line_finalize(GwyDataLine *data_line)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     gwy_data_line_free(data_line);
 }
 
@@ -141,9 +118,7 @@ gwy_data_line_new(gint res, gdouble real, gboolean nullme)
 {
     GwyDataLine *data_line;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     data_line = g_object_new(GWY_TYPE_DATA_LINE, NULL);
 
     gwy_data_line_initialize(data_line, res, real, nullme);
@@ -159,9 +134,7 @@ gwy_data_line_serialize(GObject *obj,
 {
     GwyDataLine *data_line;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
 
     data_line = GWY_DATA_LINE(obj);
@@ -193,9 +166,7 @@ gwy_data_line_deserialize(const guchar *buffer,
       { 'D', "data", &data, &fsize, },
     };
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -205,8 +176,7 @@ gwy_data_line_deserialize(const guchar *buffer,
         return NULL;
     }
     if (fsize != res) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL,
-              "Serialized %s size mismatch %u != %u",
+        g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_LINE_TYPE_NAME, fsize, res);
         g_free(data);
         return NULL;
@@ -226,9 +196,7 @@ gwy_data_line_deserialize(const guchar *buffer,
 static void
 gwy_data_line_value_changed(GObject *data_line)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyDataLine changed");
-    #endif
+    gwy_debug("signal: GwyDataLine changed");
     g_signal_emit_by_name(GWY_DATA_LINE(data_line), "value_changed", NULL);
 }
 
@@ -236,9 +204,7 @@ gwy_data_line_value_changed(GObject *data_line)
 gint
 gwy_data_line_alloc(GwyDataLine *a, gint res)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     a->res = res;
     if ((a->data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL) return -1;
@@ -249,9 +215,7 @@ gint
 gwy_data_line_initialize(GwyDataLine *a, gint res, gdouble real, gboolean nullme)
 {
     int i;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (gwy_data_line_alloc(a, res) != 0) return -1;
 
     a->real = real;
@@ -264,9 +228,7 @@ gwy_data_line_initialize(GwyDataLine *a, gint res, gdouble real, gboolean nullme
 void
 gwy_data_line_free(GwyDataLine *a)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_free(a->data);
 }
 
@@ -277,9 +239,7 @@ gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation)
     gdouble ratio = ((gdouble)a->res - 1)/((gdouble)res - 1);
     GwyDataLine b;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (res == a->res) return 0;
 
     b.res=a->res;
@@ -305,15 +265,13 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     gint i;
     GwyDataLine b;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (to < 0 || to >= a->res || from <0 || from >= a->res){
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return -1;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
     b.res = a->res;
     if ((b.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL) return -1;
@@ -332,9 +290,7 @@ gint
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
     gint i;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (a->res != b->res) {
         g_warning("Cannot copy data_lines with different sizes\n");
         return -1;}
@@ -350,9 +306,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble w1, w2, w3, w4;
     gdouble rest = x-(gdouble)l;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (x<0 || x>=a->res){
         g_warning("Trying to reach value outside datafield.\n");
         return -1;
@@ -441,7 +395,7 @@ gwy_data_line_rtoi(GwyDataLine *a, gdouble realval)
 gdouble
 gwy_data_line_get_val(GwyDataLine *a, gint i)
 {
-    if (i<0 || i >= a->res) {
+    if (i < 0 || i >= a->res) {
         g_warning("Trying to reach value outside of data_line.\n");
         return 0;
     }
@@ -451,7 +405,7 @@ gwy_data_line_get_val(GwyDataLine *a, gint i)
 gint
 gwy_data_line_set_val(GwyDataLine *a, gint i, gdouble value)
 {
-    if (i<0 || i >= a->res) {
+    if (i < 0 || i >= a->res) {
         g_warning("Trying to reach value outside of data_line.\n");
         return -1;
     }
@@ -474,21 +428,20 @@ gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z)
     gdouble avg;
     GwyDataLine b;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    if (x)
-    {
+    gwy_debug("%s", __FUNCTION__);
+    if (x) {
         b.res = a->res;
-        if ((b.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL) return -1;
+        if ((b.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL)
+            return -1;
         gwy_data_line_copy(a, &b);
 
-        for (i=0; i<a->res; i++) a->data[i] = b.data[i - a->res - 1];
+        for (i = 0; i < a->res; i++)
+            a->data[i] = b.data[i - a->res - 1];
     }
-    if (z)
-    {
+    if (z) {
         avg = gwy_data_line_get_avg(a);
-        for (i=0; i<a->res; i++) a->data[i] = 2*avg - a->data[i];
+        for (i = 0; i<a->res; i++)
+            a->data[i] = 2*avg - a->data[i];
     }
     return 0;
 }
@@ -522,14 +475,15 @@ gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value)
 {
     gint i;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++) a->data[i] = value;
+    for (i = from; i < to; i++)
+        a->data[i] = value;
     gwy_data_line_value_changed(G_OBJECT(a));
     return 0;
 }
@@ -539,14 +493,15 @@ gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value)
 {
     gint i;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++) a->data[i] += value;
+    for (i = from; i < to; i++)
+        a->data[i] += value;
     gwy_data_line_value_changed(G_OBJECT(a));
     return 0;
 }
@@ -556,14 +511,15 @@ gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value)
 {
     gint i;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++) a->data[i] *= value;
+    for (i = from; i < to; i++)
+        a->data[i] *= value;
     gwy_data_line_value_changed(G_OBJECT(a));
     return 0;
 }
@@ -572,9 +528,10 @@ gdouble gwy_data_line_get_max(GwyDataLine *a)
 {
     gint i;
     gdouble max = a->data[0];
-    for (i=1; i<a->res; i++)
-    {
-        if (max < a->data[i]) max = a->data[i];
+
+    for (i = 1; i < a->res; i++) {
+        if (max < a->data[i])
+            max = a->data[i];
     }
     return max;
 }
@@ -583,9 +540,10 @@ gdouble gwy_data_line_get_min(GwyDataLine *a)
 {
     gint i;
     gdouble min = a->data[0];
-    for (i=1; i<a->res; i++)
-    {
-        if (min > a->data[i]) min = a->data[i];
+
+    for (i = 1; i < a->res; i++) {
+        if (min > a->data[i])
+            min = a->data[i];
     }
     return min;
 }
@@ -594,10 +552,10 @@ gdouble gwy_data_line_get_avg(GwyDataLine *a)
 {
     gint i;
     gdouble avg = 0;
-    for (i=0; i<a->res; i++)
-    {
+
+    for (i = 0; i < a->res; i++)
         avg += a->data[i];
-    }
+
     return avg/(gdouble)a->res;
 }
 
@@ -606,21 +564,21 @@ gdouble gwy_data_line_get_rms(GwyDataLine *a)
     gint i;
     gdouble rms = 0;
     gdouble avg = gwy_data_line_get_avg(a);
-    for (i=0; i<a->res; i++)
-    {
+
+    for (i = 0; i < a->res; i++)
         rms += (avg - a->data[i])*(avg - a->data[i]);
-    }
+
     return sqrt(rms)/(gdouble)a->res;
 }
 
 gdouble gwy_data_line_get_sum(GwyDataLine *a)
 {
     gint i;
-    gdouble sum=0;
-    for (i=0; i<a->res; i++)
-    {
+    gdouble sum = 0;
+
+    for (i = 0; i < a->res; i++)
         sum += a->data[i];
-    }
+
     return sum;
 }
 
@@ -631,16 +589,16 @@ gwy_data_line_part_get_max(GwyDataLine *a, gint from, gint to)
     gint i;
     gdouble max = G_MINDOUBLE;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
-        if (max < a->data[i]) max = a->data[i];
+    for (i = from; i < to; i++) {
+        if (max < a->data[i])
+            max = a->data[i];
     }
     return max;
 }
@@ -651,17 +609,18 @@ gwy_data_line_part_get_min(GwyDataLine *a, gint from, gint to)
     gint i;
     gdouble min = G_MAXDOUBLE;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
-        if (min > a->data[i]) min = a->data[i];
+    for (i = from; i < to; i++) {
+        if (min > a->data[i])
+            min = a->data[i];
     }
+
     return min;
 }
 
@@ -671,17 +630,16 @@ gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
     gint i;
     gdouble avg = 0;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
+    for (i = from; i < to; i++)
         avg += a->data[i];
-    }
+
     return avg/(gdouble)(to-from);
 }
 
@@ -692,18 +650,17 @@ gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
     gdouble rms = 0;
     gdouble avg;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
     avg = gwy_data_line_part_get_avg(a, from, to);
-    for (i=from; i<to; i++)
-    {
+    for (i = from; i < to; i++)
         rms += (avg - a->data[i])*(avg - a->data[i]);
-    }
+
     return sqrt(rms)/(gdouble)(to-from);
 }
 
@@ -713,17 +670,16 @@ gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
     gint i;
     gdouble sum = 0;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
     if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to < from) GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
+    for (i = from; i < to; i++)
         sum += a->data[i];
-    }
+
     return sum;
 }
 
@@ -731,10 +687,13 @@ gint
 gwy_data_line_threshold(GwyDataLine *a, gdouble threshval, gdouble bottom, gdouble top)
 {
     gint i, tot=0;
-    for (i=0; i<a->res; i++)
-    {
-        if (a->data[i] < threshval) a->data[i] = bottom;
-        else {a->data[i] = top; tot++;}
+    for (i = 0; i < a->res; i++) {
+        if (a->data[i] < threshval)
+            a->data[i] = bottom;
+        else {
+            a->data[i] = top;
+            tot++;
+        }
     }
     gwy_data_line_value_changed(G_OBJECT(a));
     return tot;
@@ -745,17 +704,22 @@ gwy_data_line_part_threshold(GwyDataLine *a, gint from, gint to, gdouble threshv
 {
     gint i, tot=0;
 
-    if (to < 0 || to >= a->res || from <0 || from >= a->res){
+    if (to < 0 || to >= a->res || from <0 || from >= a->res) {
         g_warning("Trying to reach value outside data_line.\n");
         return -1;
     }
-    if (to == from) return 0;
-    if (to < from) swap(gint, from, to);
+    if (to == from)
+        return 0;
+    if (to < from)
+        GWY_SWAP(gint, from, to);
 
-    for (i=from; i<to; i++)
-    {
-        if (a->data[i] < threshval) a->data[i] = bottom;
-        else {a->data[i] = top; tot++;}
+    for (i = from; i < to; i++) {
+        if (a->data[i] < threshval)
+            a->data[i] = bottom;
+        else {
+            a->data[i] = top;
+            tot++;
+        }
     }
     gwy_data_line_value_changed(G_OBJECT(a));
     return tot;
@@ -771,10 +735,8 @@ gwy_data_line_line_coefs(GwyDataLine *a, gdouble *av, gdouble *bv)
     gdouble sumsi=0;
     gdouble dkap;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    for (i=0; i<a->res; i++)
+    gwy_debug("%s", __FUNCTION__);
+    for (i = 0; i < a->res; i++)
     {
         dkap = (i+1);
         sumsi += a->data[i];
@@ -790,10 +752,9 @@ void
 gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 {
     gint i;
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    for (i=0; i<a->res; i++) a->data[i] -= av + bv*(i+1);
+
+    gwy_debug("%s", __FUNCTION__);
+    for (i = 0; i < a->res; i++) a->data[i] -= av + bv*(i+1);
     gwy_data_line_value_changed(G_OBJECT(a));
 }
 
@@ -804,21 +765,20 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
     gdouble ratio, x, as, radius, x1, x2, y1, y2;
     GwyDataLine dx, dy;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     if (angle == 0 ) return 0;
 
     dx.res = dy.res = a->res;
-    if ((dx.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL) return -1;
-    if ((dy.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL) return -1;
+    if ((dx.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL)
+        return -1;
+    if ((dy.data = (gdouble *) g_try_malloc(a->res*sizeof(gdouble))) == NULL)
+        return -1;
 
     angle *= G_PI/180;
     ratio=a->real/(double)a->res;
     dx.data[0] = 0;
     dy.data[0] = a->data[0];
-    for (i=1; i<a->res; i++)
-    {
+    for (i = 1; i < a->res; i++) {
         as = atan(a->data[i]/((double)i*ratio));
         radius = sqrt(((double)i*ratio)*((double)i*ratio) + a->data[i]*a->data[i]);
         /*printf("i=%f, radius=%f\n", i*ratio, radius);*/
@@ -826,13 +786,19 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
         dy.data[i] = radius*sin((as+angle));
     }
 
-    k=0; maxi=0;
-    for (i=1; i<a->res; i++)
-    {
+    k = 0;
+    maxi = 0;
+    for (i = 1; i < a->res; i++) {
         x = i*ratio;
-        k=0;
-        do {k++;} while (dx.data[k]<x && k<a->res);
-        if (k>=(a->res-1)) {maxi=i; break;}
+        k = 0;
+        do {
+            k++;
+        } while (dx.data[k] < x && k < a->res);
+
+        if (k >= (a->res-1)) {
+            maxi=i;
+            break;
+        }
 
         x1 = dx.data[k-1];
         x2 = dx.data[k];
@@ -840,13 +806,15 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
         y2 = dy.data[k];
 
 
-        if (interpolation == GWY_INTERPOLATION_ROUND || interpolation == GWY_INTERPOLATION_BILINEAR)
-            a->data[i] = gwy_interpolation_get_dval(x, x1, y1, x2, y2, interpolation);
-        else {
+        if (interpolation == GWY_INTERPOLATION_ROUND
+            || interpolation == GWY_INTERPOLATION_BILINEAR)
+            a->data[i] = gwy_interpolation_get_dval(x, x1, y1, x2, y2,
+                                                    interpolation);
+        else
             g_warning("Interpolation not implemented yet.\n");
-        }
     }
-    if (maxi!=0) gwy_data_line_resize(a, 0, maxi);
+    if (maxi != 0)
+        gwy_data_line_resize(a, 0, maxi);
     gwy_data_line_value_changed(G_OBJECT(a));
     return 0;
 }
@@ -854,13 +822,16 @@ gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation)
 gdouble
 gwy_data_line_get_der(GwyDataLine *a, gint i)
 {
-    if (i<0 || i >= a->res) {
+    if (i < 0 || i >= a->res) {
         g_warning("Trying to reach value outside of data_line.\n");
         return 0;
     }
-    else if (i==0) return (a->data[1] - a->data[0])*a->res/a->real;
-    else if (i==(a->res-1)) return (a->data[i] - a->data[i-1])*a->res/a->real;
-    else return (a->data[i+1] - a->data[i-1])*a->res/a->real/2;
+    else if (i == 0)
+        return (a->data[1] - a->data[0])*a->res/a->real;
+    else if (i == (a->res-1))
+        return (a->data[i] - a->data[i-1])*a->res/a->real;
+    else
+        return (a->data[i+1] - a->data[i-1])*a->res/a->real/2;
 }
 
 
@@ -870,9 +841,12 @@ gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataL
     gint order, newres, oldres;
 
     /*this should never happen - the function should be called from gwy_data_line_fft()*/
-    if (ia->res != ra->res) gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
-    if (rb->res != ra->res) gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
-    if (ib->res != ra->res) gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
+    if (ia->res != ra->res)
+        gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
+    if (rb->res != ra->res)
+        gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
+    if (ib->res != ra->res)
+        gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
 
     /*find the next power of two*/
     order = (gint) floor(log ((gdouble)ra->res)/log (2.0)+0.5);
@@ -880,7 +854,7 @@ gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataL
     oldres = ra->res;
 
     /*resample if this is not the resolution*/
-    if (newres != oldres){
+    if (newres != oldres) {
         gwy_data_line_resample(ra, newres, interpolation);
         gwy_data_line_resample(ia, newres, interpolation);
         gwy_data_line_resample(rb, newres, GWY_INTERPOLATION_NONE);
@@ -889,8 +863,7 @@ gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataL
 
     gwy_fft_hum(direction, ra->data, ia->data, rb->data, ib->data, newres);
 
-    if (newres != oldres)
-    {
+    if (newres != oldres) {
         gwy_data_line_resample(ra, oldres, interpolation);
         gwy_data_line_resample(ia, oldres, interpolation);
         gwy_data_line_resample(rb, oldres, interpolation);
@@ -906,23 +879,24 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia, GwyDataLine *rb, GwyDataLine
     gdouble rmsa, rmsb, av, bv;
     GwyDataLine multra, multia;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
-    if (ia->res != ra->res) gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
-    if (rb->res != ra->res) gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
-    if (ib->res != ra->res) gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
+    gwy_debug("%s", __FUNCTION__);
+    if (ia->res != ra->res)
+        gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
+    if (rb->res != ra->res)
+        gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
+    if (ib->res != ra->res)
+        gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
 
-    if (level == TRUE)
-    {
+    if (level == TRUE) {
         gwy_data_line_line_coefs(ra, &av, &bv);
         gwy_data_line_line_level(ra, av, bv);
         gwy_data_line_line_coefs(ia, &av, &bv);
         gwy_data_line_line_level(ia, av, bv);
     }
 
-    if (preserverms == TRUE && windowing != GWY_WINDOW_NONE && windowing != GWY_WINDOW_RECT)
-    {
+    if (preserverms == TRUE
+        && windowing != GWY_WINDOW_NONE
+        && windowing != GWY_WINDOW_RECT) {
         gwy_data_line_initialize(&multra, ra->res, ra->real, 0);
         gwy_data_line_initialize(&multia, ra->res, ra->real, 0);
         gwy_data_line_copy(ra, &multra);
@@ -943,7 +917,8 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia, GwyDataLine *rb, GwyDataLine
         gwy_data_line_free(&multia);
     }
     else {
-        if (gwy_fft_window(ra->data, ra->res, windowing)==1) return 1;
+        if (gwy_fft_window(ra->data, ra->res, windowing) == 1)
+            return 1;
         gwy_fft_window(ia->data, ra->res, windowing);
 
         (*fft)(direction, ra, ia, rb, ib, ra->res, interpolation);

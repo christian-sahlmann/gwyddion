@@ -2,15 +2,9 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "datafield.h"
 
-#define swap(t, x, y) \
-    do { \
-    t safe ## x ## y; \
-    safe ## x ## y = x; \
-    x = y; \
-    y = safe ## x ## y; \
-    } while (0)
+#include <libgwyddion/gwymacros.h>
+#include "datafield.h"
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
@@ -54,7 +48,7 @@ gwy_data_field_get_type(void)
             NULL
         };
 
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+        gwy_debug("%s", __FUNCTION__);
         gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_DATA_FIELD_TYPE_NAME,
                                                    &gwy_data_field_info,
@@ -76,9 +70,7 @@ gwy_data_field_serializable_init(gpointer giface,
 {
     GwySerializableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
 
     /* initialize stuff */
@@ -92,9 +84,7 @@ gwy_data_field_watchable_init(gpointer giface,
 {
     GwyWatchableClass *iface = giface;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_WATCHABLE);
 
     /* initialize stuff */
@@ -106,9 +96,7 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
 
     gobject_class->finalize = (GObjectFinalizeFunc)gwy_data_field_finalize;
 }
@@ -116,9 +104,7 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 static void
 gwy_data_field_init(GwyDataField *data_field)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     data_field->data = NULL;
     data_field->xres = 0;
     data_field->yres = 0;
@@ -129,9 +115,7 @@ gwy_data_field_init(GwyDataField *data_field)
 static void
 gwy_data_field_finalize(GwyDataField *data_field)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     gwy_data_field_free(data_field);
 }
 
@@ -140,9 +124,7 @@ gwy_data_field_new(gint xres, gint yres, gdouble xreal, gdouble yreal, gboolean 
 {
     GwyDataField *data_field;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     data_field = g_object_new(GWY_TYPE_DATA_FIELD, NULL);
 
     gwy_data_field_initialize(data_field, xres, yres, xreal, yreal, nullme);
@@ -158,9 +140,7 @@ gwy_data_field_serialize(GObject *obj,
     GwyDataField *data_field;
     gsize datasize;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
 
     data_field = GWY_DATA_FIELD(obj);
@@ -196,9 +176,7 @@ gwy_data_field_deserialize(const guchar *buffer,
         { 'D', "data", &data, &fsize, },
     };
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
@@ -208,8 +186,7 @@ gwy_data_field_deserialize(const guchar *buffer,
         return NULL;
     }
     if (fsize != xres*yres) {
-        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL,
-              "Serialized %s size mismatch %u != %u",
+        g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_FIELD_TYPE_NAME, fsize, xres*yres);
         g_free(data);
         return NULL;
@@ -230,9 +207,7 @@ gwy_data_field_deserialize(const guchar *buffer,
 static void
 gwy_data_field_value_changed(GObject *data_field)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "signal: GwyGwyDataLine changed");
-    #endif
+    gwy_debug("signal: GwyGwyDataLine changed");
     g_signal_emit_by_name(GWY_DATA_FIELD(data_field), "value_changed", NULL);
 }
 
@@ -250,9 +225,7 @@ gwy_data_field_value_changed(GObject *data_field)
 gint
 gwy_data_field_alloc(GwyDataField *a, gint xres, gint yres)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     a->xres = xres;
     a->yres = yres;
     if ((a->data = (gdouble *) g_try_malloc(a->xres*a->yres*sizeof(gdouble))) == NULL) return -1;
@@ -277,9 +250,7 @@ gwy_data_field_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, 
 {
     int i;
 
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (%dx%d)", __FUNCTION__, xres, yres);
-    #endif
+    gwy_debug("%s (%dx%d)", __FUNCTION__, xres, yres);
     if (gwy_data_field_alloc(a, xres, yres) != 0)
         return -1;
     a->xreal = xreal;
@@ -300,9 +271,7 @@ gwy_data_field_initialize(GwyDataField *a, gint xres, gint yres, gdouble xreal, 
 void
 gwy_data_field_free(GwyDataField *a)
 {
-    #ifdef DEBUG
-    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
-    #endif
+    gwy_debug("%s", __FUNCTION__);
     g_free(a->data);
 }
 
@@ -426,9 +395,9 @@ gwy_data_field_resize(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj)
     }
 
     if (uli>bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj>brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
     yres = bri-uli;
     xres = brj-ulj;
 
@@ -920,9 +889,9 @@ gwy_data_field_area_fill(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++)
@@ -959,8 +928,8 @@ gwy_data_field_area_add(GwyDataField *a, gint uli, gint ulj, gint bri, gint brj,
         return -1;
     }
 
-    if (uli>bri) swap(gint, uli, bri);
-    if (ulj>brj) swap(gint, ulj, brj);
+    if (uli>bri) GWY_SWAP(gint, uli, bri);
+    if (ulj>brj) GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++)
@@ -998,9 +967,9 @@ gwy_data_field_area_multiply(GwyDataField *a, gint uli, gint ulj, gint bri, gint
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++)
@@ -1114,9 +1083,9 @@ gwy_data_field_get_area_max(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++) {
@@ -1143,9 +1112,9 @@ gwy_data_field_get_area_min(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
         return -1;
     }
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
 
     for (i = uli; i < bri; i++) {
@@ -1172,9 +1141,9 @@ gwy_data_field_get_area_avg(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
         return -1;
     }
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++) {
@@ -1201,9 +1170,9 @@ gwy_data_field_get_area_sum(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++) {
@@ -1230,9 +1199,9 @@ gwy_data_field_get_area_rms(GwyDataField *a, gint uli, gint ulj, gint bri, gint 
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++) {
         for (j = ulj; j < brj; j++) {
@@ -1273,9 +1242,9 @@ gwy_data_field_area_threshold(GwyDataField *a, gint uli, gint ulj, gint bri, gin
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     for (i = uli; i < bri; i++)
     {
@@ -1373,9 +1342,9 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b, gint uli, gint ulj
     }
 
     if (uli > bri)
-        swap(gint, uli, bri);
+        GWY_SWAP(gint, uli, bri);
     if (ulj > brj)
-        swap(gint, ulj, brj);
+        GWY_SWAP(gint, ulj, brj);
 
     length = sqrt((bri - uli)*(bri - uli) + (brj - ulj)*(brj - ulj));
     alpha = atan((brj - ulj)/(bri - uli));

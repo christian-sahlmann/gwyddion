@@ -2,20 +2,14 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "interpolation.h"
 
-#define swap(t, x, y) \
-    do { \
-    t safe ## x ## y; \
-    safe ## x ## y = x; \
-    x = y; \
-    y = safe ## x ## y; \
-    } while (0)
+#include <libgwyddion/gwymacros.h>
+#include "interpolation.h"
 
 gdouble 
 gwy_interpolation_get_dval(gdouble x, gdouble x1, gdouble y1, gdouble x2, gdouble y2, gint interpolation)
 {
-    if (x1 > x2){swap(gdouble, x1, x2); swap(gdouble, y1, y2);}
+    if (x1 > x2){GWY_SWAP(gdouble, x1, x2); GWY_SWAP(gdouble, y1, y2);}
 
     if (interpolation==GWY_INTERPOLATION_ROUND)
     {
