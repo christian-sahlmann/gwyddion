@@ -220,9 +220,8 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     widget_class->button_release_event = gwy_3d_view_button_release;
     widget_class->motion_notify_event = gwy_3d_view_motion_notify;
 
-    /* FIXME: change to enum types, once we register them */
     /**
-     * Gtk3DView:movement_type:
+     * Gwy3DView:movement-type:
      *
      * The :movement property represents type of action on user pointer
      * drag.
@@ -230,32 +229,30 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_MOVEMENT,
-         g_param_spec_uint("movement_type",
+         g_param_spec_enum("movement_type",
                            "Movement type",
                            "What quantity is changed when uses moves pointer",
-                           GWY_3D_MOVEMENT_NONE, GWY_3D_MOVEMENT_LIGHT,
+                           GWY_TYPE_3D_MOVEMENT,
                            GWY_3D_MOVEMENT_ROTATION,
                            G_PARAM_READWRITE));
 
-    /* FIXME: change to enum types, once we register them */
     /**
-     * Gtk3DView:projection:
+     * Gwy3DView:projection:
      *
      * The :projection property represents type of 3D to 2D projection.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_PROJECTION,
-         g_param_spec_uint("projection",
+         g_param_spec_enum("projection",
                            "Projection type",
                            "The type of 3D to 2D projection",
-                           GWY_3D_PROJECTION_ORTHOGRAPHIC,
-                           GWY_3D_PROJECTION_PERSPECTIVE,
+                           GWY_TYPE_3D_PROJECTION,
                            GWY_3D_PROJECTION_ORTHOGRAPHIC,
                            G_PARAM_READWRITE));
 
     /**
-     * Gtk3DView:show_axes:
+     * Gwy3DView:show-axes:
      *
      * The :show_axes property determines whether axes around data are shown.
      */
@@ -268,7 +265,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
                               TRUE, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DView:show_labels:
+     * Gwy3DView:show-labels:
      *
      * The :show_labels property determines whether axis labels are shown.
      * Note when axes themselves are not shown, neither are labels.
@@ -282,7 +279,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
                               TRUE, G_PARAM_READWRITE));
 
     /**
-     * Gtk3DView:projection:
+     * Gwy3DView:projection:
      *
      * The :projection property represents type of 3D to 2D projection.
      */

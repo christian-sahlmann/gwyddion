@@ -148,7 +148,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
     gobject_class->get_property = gwy_3d_label_get_property;
 
     /**
-     * Gwy3DLabel:delta_x:
+     * Gwy3DLabel:delta-x:
      *
      * The :delta_x property represents horizontal label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
@@ -162,7 +162,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              -1000, 1000, 0.0, G_PARAM_READWRITE));
 
     /**
-     * Gwy3DLabel:delta_y:
+     * Gwy3DLabel:delta-y:
      *
      * The :delta_y property represents vertical label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
@@ -204,7 +204,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              1.0, 100.0, 14.0, G_PARAM_READWRITE));
 
     /**
-     * Gwy3DLabel:fixed_size:
+     * Gwy3DLabel:fixed-size:
      *
      * The :fixed_size property controls whether the :size property is kept and
      * honoured, or conversely ignored and overwritten with automatic size.
