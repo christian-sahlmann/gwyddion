@@ -38,7 +38,7 @@ typedef struct {
 static void file_detect_max_score_cb   (const gchar *key,
                                         GwyFileFuncInfo *func_info,
                                         GwyFileDetectData *ddata);
-static void gwy_hash_table_to_slist_cb (gpointer key,
+static void gwy_hash_table_to_slist_cb (gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);
 static gint file_menu_entry_compare    (GwyFileFuncInfo *a,
@@ -339,7 +339,8 @@ gwy_build_file_menu(GtkObject *item_factory,
             continue;
 
         g_strlcpy(path + dp_len+1, func_info->file_desc, bufsize - dp_len-1);
-        gtk_item_factory_create_item(factory, &item, func_info->name, 1);
+        gtk_item_factory_create_item(factory, &item,
+                                     (gpointer)func_info->name, 1);
     }
 
     g_free(path);
@@ -349,7 +350,7 @@ gwy_build_file_menu(GtkObject *item_factory,
 }
 
 static void
-gwy_hash_table_to_slist_cb(gpointer key,
+gwy_hash_table_to_slist_cb(gpointer unused_key,
                            gpointer value,
                            gpointer user_data)
 {

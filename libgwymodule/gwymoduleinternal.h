@@ -39,6 +39,8 @@ void                    gwy_module_foreach          (GHFunc function,
                                                      gpointer data);
 gboolean                gwy_file_func_try_remove    (const gchar *name);
 gboolean                gwy_process_func_try_remove (const gchar *name);
+gboolean                gwy_tool_func_try_remove    (const gchar *name);
+gboolean                gwy_graph_func_try_remove   (const gchar *name);
 
 #ifdef __cplusplus
 }

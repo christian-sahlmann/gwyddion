@@ -28,7 +28,7 @@
 #include "gwymoduleinternal.h"
 #include "gwymodule-process.h"
 
-static void gwy_hash_table_to_slist_cb (gpointer key,
+static void gwy_hash_table_to_slist_cb (gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);
 static gint process_menu_entry_compare (GwyProcessFuncInfo *a,
@@ -213,7 +213,8 @@ gwy_build_process_menu(GtkObject *item_factory,
         /* XXX: passing directly func_info->name may be a little dangerous,
          * OTOH who would eventually free a newly allocated string? */
         item.path = current;
-        gtk_item_factory_create_item(factory, &item, func_info->name, 1);
+        gtk_item_factory_create_item(factory, &item,
+                                     (gpointer)func_info->name, 1);
 
         GWY_SWAP(gchar*, current, prev);
     }
@@ -226,7 +227,7 @@ gwy_build_process_menu(GtkObject *item_factory,
 }
 
 static void
-gwy_hash_table_to_slist_cb(gpointer key,
+gwy_hash_table_to_slist_cb(gpointer unused_key,
                            gpointer value,
                            gpointer user_data)
 {
