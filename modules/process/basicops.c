@@ -21,6 +21,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <app/app.h>
 
 #define BASICOPS_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -112,6 +113,7 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
 
     return TRUE;
@@ -124,6 +126,7 @@ flip_vertically(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return TRUE;
@@ -136,6 +139,7 @@ invert_value(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
 
     return TRUE;
@@ -148,6 +152,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_rotate(dfield, 270, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
@@ -160,6 +165,7 @@ rotate_counterclockwise_90(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_rotate(dfield, 90, GWY_INTERPOLATION_ROUND);
 
     return TRUE;
@@ -172,6 +178,7 @@ rotate_180(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_rotate(dfield, 180, GWY_INTERPOLATION_ROUND);
 
     return TRUE;

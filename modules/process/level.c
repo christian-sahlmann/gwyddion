@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <app/app.h>
 
 #define LEVEL_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -78,6 +79,7 @@ level(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     gwy_data_field_plane_level(dfield, a, b, c);
 
@@ -93,6 +95,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     g_warning("level_rotate is borken!");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data");
     gwy_data_field_plane_coeffs(dfield, &a, &b, &c);
     /* FIXME: what funny scale the b and c have? */
     gwy_data_field_plane_rotate(dfield,
