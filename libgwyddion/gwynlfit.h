@@ -84,7 +84,7 @@ typedef struct {
     const char *name;
     const char *unit;
     double default_init;
-} Param;
+} GwyNLFitParam;
 
 typedef struct {
     gchar *function_name;
@@ -95,7 +95,7 @@ typedef struct {
     GwyNLFitParamScaleFunc parameter_scale;
     GwyNLFitWeightFunc set_default_weights;
     gint nparams;
-    const Param *param;
+    const GwyNLFitParam *param;
 } GwyNLFitPresetFunction;
 
 typedef struct _GwyNLFitter GwyNLFitter;
@@ -153,7 +153,8 @@ void           gwy_math_nlfit_derive             (gint i,
                                                   gdouble *deriv,
                                                   gboolean *dres);
 
-GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type);
+const GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
+    G_GNUC_CONST;
 
 gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function,
                                           gdouble *params,
