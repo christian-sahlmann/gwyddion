@@ -48,11 +48,13 @@ typedef struct {
     RemoveAlgorithm algorithm;
     GtkWidget *algorithm_menu;
     GtkWidget *algorithm_label;
+    gulong finished_id;
 } ToolControls;
 
 static gboolean   module_register       (const gchar *name);
 static gboolean   use                   (GwyDataWindow *data_window,
                                          GwyToolSwitchEvent reason);
+static void       layer_setup           (GwyUnitoolState *state);
 static GtkWidget* dialog_create         (GwyUnitoolState *state);
 static void       dialog_abandon        (GwyUnitoolState *state);
 static void       selection_finished_cb (GwyUnitoolState *state);
@@ -79,7 +81,7 @@ static GwyModuleInfo module_info = {
 
 static GwyUnitoolSlots func_slots = {
     0,                             /* layer type, must be set runtime */
-    NULL,                          /* layer setup func */
+    layer_setup,                   /* layer setup func */
     dialog_create,                 /* dialog constructor */
     NULL,                          /* update view and controls */
     dialog_abandon,                /* dialog abandon hook */
@@ -135,7 +137,28 @@ use(GwyDataWindow *data_window,
         state->func_slots = &func_slots;
         state->user_data = g_new0(ToolControls, 1);
     }
+    else {
+        ToolControls *controls;
+
+        controls = (ToolControls*)state->user_data;
+        if (controls->finished_id) {
+            g_signal_handler_disconnect(state->layer, controls->finished_id);
+            controls->finished_id = 0;
+        }
+    }
     return gwy_unitool_use(state, data_window, reason);
+}
+
+static void
+layer_setup(GwyUnitoolState *state)
+{
+    ToolControls *controls;
+
+    controls = (ToolControls*)state->user_data;
+    g_assert(CHECK_LAYER_TYPE(state->layer));
+    controls->finished_id
+        = g_signal_connect_swapped(state->layer, "selection_finished",
+                                   G_CALLBACK(selection_finished_cb), state);
 }
 
 static GtkWidget*
@@ -204,9 +227,6 @@ dialog_create(GwyUnitoolState *state)
     gtk_widget_set_sensitive(controls->algorithm_menu, sensitive);
     gtk_widget_set_sensitive(controls->algorithm_label, sensitive);
 
-    g_signal_connect_swapped(state->layer, "selection-finished",
-                             G_CALLBACK(selection_finished_cb), state);
-
     return dialog;
 }
 
@@ -214,11 +234,11 @@ static void
 dialog_abandon(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GwyContainer *settings;
 
     controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    save_args(settings, controls);
+    if (controls->finished_id)
+        g_signal_handler_disconnect(state->layer, controls->finished_id);
+    save_args(gwy_app_settings_get(), controls);
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }
