@@ -170,7 +170,7 @@ dwt_correction_dialog(DWTCorrectionArgs *args)
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("2D DWT_CORRECTION"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("2D DWT Correction"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,

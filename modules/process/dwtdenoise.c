@@ -48,28 +48,28 @@ typedef struct {
 } DWTDenoiseControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    dwt_denoise                        (GwyContainer *data,
+static gboolean    dwt_denoise                (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    dwt_denoise_dialog                 (DWTDenoiseArgs *args);
+static gboolean    dwt_denoise_dialog         (DWTDenoiseArgs *args);
 static void        interp_changed_cb          (GObject *item,
                                                DWTDenoiseArgs *args);
-static void        wavelet_changed_cb          (GObject *item,
+static void        wavelet_changed_cb         (GObject *item,
                                                DWTDenoiseArgs *args);
 static void        method_changed_cb          (GObject *item,
                                                DWTDenoiseArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                DWTDenoiseArgs *args);
-static void        dwt_denoise_dialog_update          (DWTDenoiseControls *controls,
+static void        dwt_denoise_dialog_update  (DWTDenoiseControls *controls,
                                                DWTDenoiseArgs *args);
-static void        dwt_denoise_load_args              (GwyContainer *container,
+static void        dwt_denoise_load_args      (GwyContainer *container,
                                                DWTDenoiseArgs *args);
-static void        dwt_denoise_save_args              (GwyContainer *container,
+static void        dwt_denoise_save_args      (GwyContainer *container,
                                                DWTDenoiseArgs *args);
-static void        dwt_denoise_sanitize_args          (DWTDenoiseArgs *args);
+static void        dwt_denoise_sanitize_args  (DWTDenoiseArgs *args);
 
-static GtkWidget*  menu_method                 (GCallback callback,
-                                                gpointer cbdata,
-                                                GwyDWTDenoiseType current);
+static GtkWidget*  menu_method                (GCallback callback,
+                                               gpointer cbdata,
+                                               GwyDWTDenoiseType current);
 
 DWTDenoiseArgs dwt_denoise_defaults = {
     0,
@@ -182,7 +182,7 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("2D DWT_DENOISE"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("2D DWT Denoise"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
