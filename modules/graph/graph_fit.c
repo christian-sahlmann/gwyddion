@@ -361,7 +361,8 @@ fit_dialog(FitArgs *args)
     controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++)
     {
-        controls.param_init[i] = gtk_entry_new_with_max_length(12);
+        controls.param_init[i] = gtk_entry_new();
+        gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
         gtk_entry_set_width_chars(GTK_ENTRY(controls.param_init[i]), 12);
         g_signal_connect(controls.param_init[i], "changed",
                          G_CALLBACK(double_entry_changed_cb),
@@ -455,9 +456,10 @@ fit_dialog(FitArgs *args)
     label = gtk_label_new("From");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
-    controls.from = gtk_entry_new_with_max_length(8);
-    gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
+    controls.from = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(controls.from), 12);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 12);
+    gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
     g_signal_connect(controls.from, "changed",
                       G_CALLBACK(from_changed_cb), args);
 
@@ -465,7 +467,8 @@ fit_dialog(FitArgs *args)
     label = gtk_label_new("to");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
 
-    controls.to = gtk_entry_new_with_max_length(8);
+    controls.to = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(controls.to), 12);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.to), 12);
     gtk_container_add(GTK_CONTAINER(hbox2), controls.to);
     g_signal_connect(controls.to, "changed",
