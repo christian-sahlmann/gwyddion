@@ -438,10 +438,10 @@ file_register_plugins(GList *plugins,
             info->func.name = g_strdup(pname);
             info->func.file_desc = g_strdup(file_desc);
             info->func.detect = file_plugin_proxy_detect;
-            info->func.load = (run && GWY_FILE_LOAD) ? file_plugin_proxy_load
-                                                     : NULL;
-            info->func.save = (run && GWY_FILE_SAVE) ? file_plugin_proxy_save
-                                                     : NULL;
+            info->func.load = (run & GWY_FILE_LOAD) ? file_plugin_proxy_load
+                                                    : NULL;
+            info->func.save = (run & GWY_FILE_SAVE) ? file_plugin_proxy_save
+                                                    : NULL;
             if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 info->run = run;
@@ -867,7 +867,7 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
  * Open a temporary file in "wb" mode, return the stream handle.
  *
  * On *nix, it tries to open the file in a safe manner.  On MS systems,
- * it just opens a file.
+ * it just opens a file.  Who cares...
  *
  * Returns: The filehandle of the open file.
  **/
