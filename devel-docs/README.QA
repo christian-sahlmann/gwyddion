@@ -70,6 +70,8 @@ File import/export
 GUI
 - Dialog titles are correct (e.g., not describing another module, etc.)
 - Labels are comprehensible
+- If user may want to reset parameters to default state (this means almost
+  always), dialog provides a Reset button
 - Menu path ends with `...' if it brings a dialog, doesn't end with `...' if
   it's a direct action
 - All buttons and other active controls have mnemonics
