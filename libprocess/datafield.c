@@ -3294,44 +3294,55 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     return 1;
 }
 
-
-/* XXX: why this function does not have `area' in name? */
+/**
+ * gwy_data_field_area_convolve:
+ * @data_field: A data field to convolve.  It must be larger than @kernel_field
+ *              (or at least of the same size).
+ * @kernel_field: Kenrel field to convolve @data_field with.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Convolves a rectangular part of a data field with given kernel.
+ *
+ * Since: 1.3.
+ **/
 void
-gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
-                        gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_convolve(GwyDataField *data_field,
+                             GwyDataField *kernel_field,
+                             gint col, gint row,
+                             gint width, gint height)
 {
     gint xres, yres, kxres, kyres, i, j, m, n;
-    gint xsize, ysize;
     gdouble fieldval, avgval;
     GwyDataField *hlp_df;
 
     gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = kernel_field->xres;
     kyres = kernel_field->yres;
-    hlp_df =
-        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
-                                            data_field->yreal, TRUE);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= xres
+                     && row + height <= yres);
 
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    xsize = brcol - ulcol;
-    ysize = brrow - ulrow;
-    avgval =
-        gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
-
-    if (kxres > xsize || kyres > ysize) {
+    if (kxres > width || kyres > height) {
         g_warning("Kernel size larger than field area size.");
         return;
     }
 
-    for (i = ulrow; i < brrow; i++) {   /*0-yres */
-        for (j = ulcol; j < brcol; j++) {       /*0-xres */
+    hlp_df =
+        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
+                                            data_field->yreal, TRUE);
+
+    avgval = gwy_data_field_area_get_avg(data_field, col, row, width, height);
+
+    for (i = row; i < row + height; i++) {   /*0-yres */
+        for (j = col; j < col + width; j++) {       /*0-xres */
             /*target_field->data[j + data_field->xres*i]; */
             for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
                 for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
@@ -3349,41 +3360,66 @@ gwy_data_field_convolve(GwyDataField *data_field, GwyDataField *kernel_field,
         }
     }
 
-    for (i = ulrow; i < brrow; i++) {
-        for (j = ulcol; j < brcol; j++) {
+    for (i = row; i < row + height; i++) {
+        for (j = col; j < col + width; j++) {
             data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
         }
     }
     g_object_unref(hlp_df);
 }
 
-/* XXX: why this function does not have `area' in name? */
 void
-gwy_data_field_filter_mean(GwyDataField *data_field,
-                           gint size,
-                           gint ulcol, gint ulrow,
-                           gint brcol, gint brrow)
+gwy_data_field_convolve(GwyDataField *data_field,
+                        GwyDataField *kernel_field,
+                        gint ulcol, gint ulrow,
+                        gint brcol, gint brrow)
 {
-    gint width, height, rowstride;
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_convolve(data_field, kernel_field,
+                                 ulcol, ulrow,
+                                 brcol-ulcol, brrow-ulrow);
+}
+
+/**
+ * gwy_data_field_area_filter_mean:
+ * @data_field: A data field to apply mean filter to.
+ * @size: Averaged area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with mean filter of size @size.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_data_field_area_filter_mean(GwyDataField *data_field,
+                                gint size,
+                                gint col, gint row,
+                                gint width, gint height)
+{
+    gint rowstride;
     gint i, j, k;
     gint from, to;
     gdouble *buffer, *data, *p;
     gdouble s;
 
     gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(size > 0);
-
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-    width = brcol - ulcol;
-    height = brrow - ulrow;
-    g_return_if_fail(width > 0 && height > 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
     buffer = g_new(gdouble, width*height);
     rowstride = data_field->xres;
-    data = data_field->data + rowstride*ulrow + ulcol;
+    data = data_field->data + rowstride*row + col;
 
     /* vertical pass */
     for (j = 0; j < width; j++) {
@@ -3414,13 +3450,42 @@ gwy_data_field_filter_mean(GwyDataField *data_field,
     g_free(buffer);
 }
 
-/* XXX: why this function does not have `area' in name? */
-void gwy_data_field_filter_laplacian(GwyDataField *data_field,
-                                gint ulcol, gint ulrow, gint brcol, gint brrow)
+void
+gwy_data_field_filter_mean(GwyDataField *data_field,
+                           gint size,
+                           gint ulcol, gint ulrow,
+                           gint brcol, gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_mean(data_field, size,
+                                    ulcol, ulrow,
+                                    brcol-ulcol, brrow-ulrow);
+}
+
+/**
+ * gwy_data_field_area_filter_laplacian:
+ * @data_field: A data field to apply mean filter to.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with Laplacian filter.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_data_field_area_filter_laplacian(GwyDataField *data_field,
+                                     gint col, gint row,
+                                     gint width, gint height)
 {
     GwyDataField *kernel_df;
 
-    kernel_df = (GwyDataField*)gwy_data_field_new(3, 3, 3, 3, FALSE);
+    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
     kernel_df->data[0] = 0;               /* 0 1 2*/
     kernel_df->data[1] = 1;               /* 3 4 5*/
     kernel_df->data[2] = 0;               /* 6 7 8*/
@@ -3431,22 +3496,51 @@ void gwy_data_field_filter_laplacian(GwyDataField *data_field,
     kernel_df->data[7] = 1;
     kernel_df->data[8] = 0;
 
-    gwy_data_field_convolve(data_field, kernel_df, ulcol, ulrow, brcol, brrow);
+    gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
 
     g_object_unref(kernel_df);
 }
 
-/* XXX: why this function does not have `area' in name? */
-void gwy_data_field_filter_sobel(GwyDataField *data_field,
+void
+gwy_data_field_filter_laplacian(GwyDataField *data_field,
+                                gint ulcol, gint ulrow,
+                                gint brcol, gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_laplacian(data_field,
+                                         ulcol, ulrow,
+                                         brcol-ulcol, brrow-ulrow);
+}
+
+/**
+ * gwy_data_field_area_filter_sobel:
+ * @data_field: A data field to apply mean filter to.
+ * @orientation: Filter orientation.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with Laplacian filter.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_data_field_area_filter_sobel(GwyDataField *data_field,
                                  GtkOrientation orientation,
-                                 gint ulcol, gint ulrow, gint brcol, gint brrow)
+                                 gint col, gint row,
+                                 gint width, gint height)
 {
     GwyDataField *kernel_df;
-    gwy_debug("");
-    kernel_df = (GwyDataField*)gwy_data_field_new(3, 3, 3, 3, FALSE);
 
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
+    gwy_debug("");
+    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+
+    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
         kernel_df->data[0] = 0.25;
         kernel_df->data[1] = 0;
         kernel_df->data[2] = -0.25;
@@ -3457,8 +3551,7 @@ void gwy_data_field_filter_sobel(GwyDataField *data_field,
         kernel_df->data[7] = 0;
         kernel_df->data[8] = -0.25;
     }
-    else
-    {
+    else {
         kernel_df->data[0] = 0.25;
         kernel_df->data[1] = 0.5;
         kernel_df->data[2] = 0.25;
@@ -3469,48 +3562,95 @@ void gwy_data_field_filter_sobel(GwyDataField *data_field,
         kernel_df->data[7] = -0.5;
         kernel_df->data[8] = -0.25;
     }
-    gwy_data_field_convolve(data_field, kernel_df, ulcol, ulrow, brcol, brrow);
+    gwy_data_field_area_convolve(data_field, kernel_df,
+                                 col, row, width, height);
     g_object_unref(kernel_df);
 }
 
-/* XXX: why this function does not have `area' in name? */
-void gwy_data_field_filter_prewitt(GwyDataField *data_field,
-                                 GtkOrientation orientation,
-                                 gint ulcol, gint ulrow, gint brcol, gint brrow)
+void
+gwy_data_field_filter_sobel(GwyDataField *data_field,
+                            GtkOrientation orientation,
+                            gint ulcol, gint ulrow,
+                            gint brcol, gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_sobel(data_field, orientation,
+                                     ulcol, ulrow,
+                                     brcol-ulcol, brrow-ulrow);
+}
+
+/**
+ * gwy_data_field_area_filter_prewitt:
+ * @data_field: A data field to apply mean filter to.
+ * @orientation: Filter orientation.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with Prewitt filter.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
+                                   GtkOrientation orientation,
+                                   gint col, gint row,
+                                   gint width, gint height)
 {
     GwyDataField *kernel_df;
-    kernel_df = (GwyDataField*)gwy_data_field_new(3, 3, 3, 3, FALSE);
 
     gwy_debug("");
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
-    {
-        kernel_df->data[0] = 0.3333333333;
+    kernel_df = GWY_DATA_FIELD(gwy_data_field_new(3, 3, 3, 3, FALSE));
+
+    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+        kernel_df->data[0] = 1.0/3.0;
         kernel_df->data[1] = 0;
-        kernel_df->data[2] = -0.3333333333;
-        kernel_df->data[3] = 0.3333333333;
+        kernel_df->data[2] = -1.0/3.0;
+        kernel_df->data[3] = 1.0/3.0;
         kernel_df->data[4] = 0;
-        kernel_df->data[5] = -0.3333333333;
-        kernel_df->data[6] = 0.3333333333;
+        kernel_df->data[5] = -1.0/3.0;
+        kernel_df->data[6] = 1.0/3.0;
         kernel_df->data[7] = 0;
-        kernel_df->data[8] = -0.3333333333;
+        kernel_df->data[8] = -1.0/3.0;
     }
-    else
-    {
-        kernel_df->data[0] = 0.3333333333;
-        kernel_df->data[1] = 0.3333333333;
-        kernel_df->data[2] = 0.3333333333;
+    else {
+        kernel_df->data[0] = 1.0/3.0;
+        kernel_df->data[1] = 1.0/3.0;
+        kernel_df->data[2] = 1.0/3.0;
         kernel_df->data[3] = 0;
         kernel_df->data[4] = 0;
         kernel_df->data[5] = 0;
-        kernel_df->data[6] = -0.3333333333;
-        kernel_df->data[7] = -0.3333333333;
-        kernel_df->data[8] = -0.3333333333;
+        kernel_df->data[6] = -1.0/3.0;
+        kernel_df->data[7] = -1.0/3.0;
+        kernel_df->data[8] = -1.0/3.0;
     }
-    gwy_data_field_convolve(data_field, kernel_df, ulcol, ulrow, brcol, brrow);
+    gwy_data_field_convolve(data_field, kernel_df, col, row, width, height);
     g_object_unref(kernel_df);
 }
 
-/* based on public domain code by Nicolas Devillard */
+void
+gwy_data_field_filter_prewitt(GwyDataField *data_field,
+                              GtkOrientation orientation,
+                              gint ulcol, gint ulrow,
+                              gint brcol, gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_prewitt(data_field, orientation,
+                                       ulcol, ulrow,
+                                       brcol-ulcol, brrow-ulrow);
+}
+
+/* Quickly find median value in an array
+ * based on public domain code by Nicolas Devillard */
 static gdouble
 quick_select(gsize size, gdouble *array)
 {
@@ -3571,32 +3711,43 @@ quick_select(gsize size, gdouble *array)
     }
 }
 
-/* XXX: why this function does not have `area' in name? */
+/**
+ * gwy_data_field_area_filter_median:
+ * @data_field: A data field to apply mean filter to.
+ * @size: Averaged area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with median filter.
+ *
+ * Since: 1.3.
+ **/
 void
-gwy_data_field_filter_median(GwyDataField *data_field, gint size,
-                             gint ulcol, gint ulrow, gint brcol, gint brrow)
+gwy_data_field_area_filter_median(GwyDataField *data_field,
+                                  gint size,
+                                  gint col, gint row,
+                                  gint width, gint height)
 {
 
-    gint width, height, rowstride;
+    gint rowstride;
     gint i, j, k, len;
     gint xfrom, xto, yfrom, yto;
     gdouble *buffer, *data, *kernel;
 
     gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(size > 0);
-
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-    width = brcol - ulcol;
-    height = brrow - ulrow;
-    g_return_if_fail(width > 0 && height > 0);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
     buffer = g_new(gdouble, width*height);
     kernel = g_new(gdouble, size*size);
     rowstride = data_field->xres;
-    data = data_field->data + rowstride*ulrow + ulcol;
+    data = data_field->data + rowstride*row + col;
 
     for (i = 0; i < height; i++) {
         yfrom = MAX(0, i - (size-1)/2);
@@ -3619,46 +3770,55 @@ gwy_data_field_filter_median(GwyDataField *data_field, gint size,
     g_free(buffer);
 }
 
-/* XXX: why this function does not have `area' in name? */
 void
-gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
-                                   gint ulcol, gint ulrow, gint brcol,
-                                   gint brrow)
+gwy_data_field_filter_median(GwyDataField *data_field,
+                             gint size,
+                             gint ulcol, gint ulrow,
+                             gint brcol, gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_median(data_field, size,
+                                      ulcol, ulrow,
+                                      brcol-ulcol, brrow-ulrow);
+}
+
+void
+gwy_data_field_area_filter_conservative(GwyDataField *data_field,
+                                        gint size,
+                                        gint col, gint row,
+                                        gint width, gint height)
 {
     gint xres, yres, kxres, kyres, i, j, m, n;
-    gint xsize, ysize, nb;
+    gint nb;
     gdouble maxval, minval;
     GwyDataField *hlp_df;
 
     gwy_debug("");
-    if (size <= 0) {
-        g_warning("Filter cannot have negative or null size");
-        return;
-    }
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(size > 0);
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = size;
     kyres = size;
-    hlp_df =
-        (GwyDataField *) gwy_data_field_new(xres, yres, data_field->xreal,
-                                            data_field->yreal, TRUE);
-
-    if (ulcol > brcol)
-        GWY_SWAP(gint, ulcol, brcol);
-
-    if (ulrow > brrow)
-        GWY_SWAP(gint, ulrow, brrow);
-
-    xsize = brcol - ulcol;
-    ysize = brrow - ulrow;
-
-    if (kxres > xsize || kyres > ysize) {
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width > 0 && height > 0
+                     && col + width <= xres
+                     && row + height <= yres);
+    if (kxres > width || kyres > height) {
         g_warning("Kernel size larger than field area size.");
         return;
     }
 
-    for (i = ulrow; i < brrow; i++) {
-        for (j = ulcol; j < brcol; j++) {
+    hlp_df = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, data_field->xreal,
+                                               data_field->yreal, TRUE));
+
+
+    for (i = row; i < row + height; i++) {
+        for (j = col; j < col + width; j++) {
             nb = 0;
             maxval = -G_MAXDOUBLE;
             minval = G_MAXDOUBLE;
@@ -3674,7 +3834,7 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
                     }
                 }
             }
-            
+
             if (data_field->data[j + xres * i] > maxval)
                 hlp_df->data[j + xres * i] = maxval;
             else if (data_field->data[j + xres * i] < minval)
@@ -3685,14 +3845,43 @@ gwy_data_field_filter_conservative(GwyDataField *data_field, gint size,
         }
     }
 
-    for (i = ulrow; i < brrow; i++) {
-        for (j = ulcol; j < brcol; j++) {
+    for (i = row; i < row + height; i++) {
+        for (j = col; j < col + width; j++) {
             data_field->data[j + xres * i] = hlp_df->data[j + xres * i];
         }
     }
 
     g_object_unref(hlp_df);
 
+}
+
+/**
+ * gwy_data_field_area_filter_prewitt:
+ * @data_field: A data field to apply mean filter to.
+ * @size: Filtered area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with conservative denoise filter.
+ *
+ * Since: 1.3.
+ **/
+void
+gwy_data_field_filter_conservative(GwyDataField *data_field,
+                                   gint size,
+                                   gint ulcol, gint ulrow, gint brcol,
+                                   gint brrow)
+{
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    gwy_data_field_area_filter_conservative(data_field, size,
+                                            ulcol, ulrow,
+                                            brcol-ulcol, brrow-ulrow);
 }
 
 /* XXX: why this function does not have `area' in name? */
