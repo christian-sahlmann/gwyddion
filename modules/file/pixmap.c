@@ -281,7 +281,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.5",
+    "4.5.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

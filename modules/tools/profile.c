@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     "profile",
     N_("Profile tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
