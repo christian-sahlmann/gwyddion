@@ -66,7 +66,6 @@ static void       gwy_app_data_window_list_updated (void);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
 static gboolean   gwy_app_data_popup_menu_popup    (GtkWidget *menu,
                                                     GdkEventButton *event);
-static void       gwy_app_set_zoom_1_1_cb          (void);
 
 gboolean
 gwy_app_quit(void)
@@ -266,25 +265,37 @@ gwy_app_data_window_create(GwyContainer *data)
 static GtkWidget*
 gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
 {
-    static GtkItemFactoryEntry menu_items[] = {
-        { "/Change Mask _Color", NULL,
-            gwy_app_change_mask_color_cb, 0, NULL, NULL },
-        { "/Zoom _1:1", NULL,
-            gwy_app_set_zoom_1_1_cb, 0, NULL, NULL },
+    static struct {
+        const gchar *path;
+        gpointer callback;
+        gpointer cbdata;
+    }
+    const menu_items[] = {
+        { "/_Remove Mask", gwy_app_mask_kill_cb, NULL },
+        { "/Change Mask _Color",  gwy_app_change_mask_color_cb, NULL },
+        { "/Fix _Zero", gwy_app_run_process_func_cb, "fixzero" },
+        { "/_Level", gwy_app_run_process_func_cb, "level" },
+        { "/Zoom _1:1", gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
     static const gchar *items_need_data_mask[] = {
-        "/Change Mask Color", NULL
+        "/Remove Mask", "/Change Mask Color", NULL
     };
+    GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
     GList *menus;
+    gsize i;
 
     /* XXX: it is probably wrong to use this accel group */
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<data-popup>",
                                         accel_group);
-    gtk_item_factory_create_items(item_factory,
-                                  G_N_ELEMENTS(menu_items), menu_items, NULL);
+    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
+        entry.path = (gchar*)menu_items[i].path;
+        entry.callback = (GtkItemFactoryCallback)menu_items[i].callback;
+        gtk_item_factory_create_item(item_factory, &entry,
+                                     menu_items[i].cbdata, 1);
+    }
     menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
     gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
                                      items_need_data_mask, sens_data.flags);
@@ -891,12 +902,6 @@ gwy_app_show_kill_cb(void)
         gwy_container_remove_by_name(data, "/0/show");
         gwy_data_view_update(GWY_DATA_VIEW(data_view));
     }
-}
-
-static void
-gwy_app_set_zoom_1_1_cb(void)
-{
-    gwy_app_zoom_set_cb(GINT_TO_POINTER(10000));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
