@@ -159,9 +159,9 @@ gwy_sci_text_init(GwySciText *sci_text)
 
     items = g_list_append (items,"choose symbol");
     stupid_put_entities(items);
-    gtk_combo_set_popdown_strings (GTK_COMBO (sci_text->entities), items);
+    gtk_combo_set_popdown_strings(GTK_COMBO(sci_text->entities), items);
 
-    gtk_editable_set_editable(GTK_EDITABLE((sci_text->entities)->entry), 0);
+    gtk_editable_set_editable(GTK_EDITABLE(sci_text->entities->entry), FALSE);
 
     gtk_widget_show(lab1);
     gtk_widget_show(frame);
@@ -190,6 +190,8 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_widget_set_events(GTK_WIDGET(sci_text->entry), GDK_KEY_RELEASE_MASK);
     gtk_widget_set_events(sci_text->entities->list, GDK_BUTTON_PRESS_MASK);
 
+    /* FIXME: this is utterely broken, try to scroll the combo using cursor
+     * arrows; it even sometimes spontaneously inserts extra symbols */
     g_signal_connect(sci_text->entry, "key_release_event",
                      G_CALLBACK(gwy_sci_text_edited), NULL);
     g_signal_connect(sci_text->entities->entry, "changed",
@@ -312,15 +314,19 @@ gwy_sci_text_edited(GtkEntry *entry)
     GError *err = NULL;
     PangoAttrList *attr_list = NULL;
     gchar *text = NULL;
+    gchar *utf8;
 
     gwy_debug("%s", __FUNCTION__);
 
     sci_text = GWY_SCI_TEXT(gtk_widget_get_parent(GTK_WIDGET(entry)));
 
-    if (pango_parse_markup(gwy_entities_text_to_utf8(gtk_entry_get_text(entry)),
-                           -1, 0, &attr_list, &text, NULL, &err))
-       gtk_label_set_markup(sci_text->label,
-                            gwy_entities_text_to_utf8(gtk_entry_get_text(entry)));
+    utf8 = gwy_entities_text_to_utf8(gtk_entry_get_text(entry));
+    if (pango_parse_markup(utf8, -1, 0, &attr_list, &text, NULL, &err))
+        gtk_label_set_markup(sci_text->label, utf8);
+    g_free(utf8);
+    g_free(text);
+    pango_attr_list_unref(attr_list);
+    g_clear_error(&err);
 }
 
 static void
