@@ -22,6 +22,7 @@
  * - reduce the number of system palettes
  * - set from samples
  * - changes, signal emission
+ * - fast get_color (with hinting)
  * - test
  */
 
