@@ -28,20 +28,21 @@ SUBDIRS = \
 	devel-docs
 
 EXTRA_DIST = \
-	make.msc \
-	rules.msc \
-	makefile.msc \
 	CODING-STANDARDS \
+	INSTALL.gwyddion \
 	autogen.sh \
+	gwyddion-devel.iss \
+	gwyddion-devel.iss.in \
+	gwyddion.iss \
+	gwyddion.iss.in \
+	gwyddion.pc.in \
 	gwyddion.spec.in \
 	gwyddion.spec\
-	gwyddion.iss.in \
-	gwyddion.iss \
-	gwyddion-devel.iss.in \
-	gwyddion-devel.iss \
-	gwyddion.pc.in \
-	version.h.in \
+	make.msc \
+	makefile.msc \
+	rules.msc \
 	version.h \
+	version.h.in \
 	utils/update-msvc.py \
 	utils/update-potfiles.sh \
 	utils/vim-syn-gen.py \
