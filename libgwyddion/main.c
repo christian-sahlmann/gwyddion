@@ -132,6 +132,11 @@ main(int argc, char *argv[])
     g_assert(G_OBJECT(ser)->ref_count == 1);
     g_object_unref(ser);
 
+    g_message("serializing an empty container");
+    container = gwy_container_new();
+    buffer = gwy_serializable_serialize(container, buffer, &size);
+    g_object_unref(container);
+
     fh = fopen(FILENAME, "wb");
     fwrite(buffer, 1, size, fh);
     fclose(fh);
@@ -153,6 +158,10 @@ main(int argc, char *argv[])
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_object_unref(ser);
     g_assert(ser->ref_count == 1);
+
+    g_object_unref(container);
+    g_message("restoring the empty container");
+    container = gwy_serializable_deserialize(buffer, size, &pos);
 
     return 0;
 }

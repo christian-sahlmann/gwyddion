@@ -152,40 +152,55 @@ gwy_test_ser_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_TEST_SER(obj), NULL);
 
     test_ser = GWY_TEST_SER(obj);
-    return gwy_serialize_pack(buffer, size, "sdD",
-                              GWY_TEST_SER_TYPE_NAME,
-                              test_ser->theta,
-                              test_ser->history_size,
-                              test_ser->radius);
+    buffer = gwy_serialize_pack(buffer, size, "si",
+                                GWY_TEST_SER_TYPE_NAME, 0);
+    {
+        GwySerializeSpec spec[] = {
+            { 'd', "theta", &test_ser->theta, NULL, },
+            { 'D', "r", &test_ser->radius, &test_ser->history_size, },
+        };
+        gsize oldsize = *size;
 
+        buffer = gwy_serialize_pack_struct(buffer, size,
+                                           G_N_ELEMENTS(spec), spec);
+        gwy_serialize_store_int32(buffer + oldsize - sizeof(guint32),
+                                  *size - oldsize);
+    }
+    return buffer;
 }
 
 static GObject*
-gwy_test_ser_deserialize(const guchar *stream,
+gwy_test_ser_deserialize(const guchar *buffer,
                          gsize size,
                          gsize *position)
 {
-    gsize pos, hsize;
     double theta, *radius;
+    gsize pos, history_size, mysize;
+    GwySerializeSpec spec[] = {
+        { 'd', "theta", &theta, NULL, },
+        { 'D', "r", &radius, &history_size, },
+    };
     GwyTestSer *test_ser;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
-    g_return_val_if_fail(stream, NULL);
+    g_return_val_if_fail(buffer, NULL);
 
-    pos = gwy_serialize_check_string(stream, size, *position,
+    pos = gwy_serialize_check_string(buffer, size, *position,
                                      GWY_TEST_SER_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
 
-    theta = gwy_serialize_unpack_double(stream, size, position);
-    radius = gwy_serialize_unpack_double_array(stream, size, position, &hsize);
+    gwy_serialize_unpack_struct(buffer + *position, mysize,
+                                G_N_ELEMENTS(spec), spec);
+    *position += mysize;
 
     test_ser = (GwyTestSer*)gwy_test_ser_new(theta, 0.0);
     g_free(test_ser->radius);
     test_ser->radius = radius;
-    test_ser->history_size = hsize;
+    test_ser->history_size = history_size;
 
     return (GObject*)test_ser;
 }

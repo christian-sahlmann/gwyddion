@@ -915,15 +915,15 @@ gwy_container_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_CONTAINER(obj), NULL);
 
     container = GWY_CONTAINER(obj);
-    buffer = gwy_serialize_pack(buffer, size, "s",
-                                GWY_CONTAINER_TYPE_NAME);
+    buffer = gwy_serialize_pack(buffer, size, "si",
+                                GWY_CONTAINER_TYPE_NAME, 0);
     sdata.buffer = buffer;
     sdata.size = *size;
     g_hash_table_foreach(container->values, hash_serialize_func, &sdata);
-    sdata.buffer = gwy_serialize_pack(sdata.buffer, &sdata.size, "i",
-                                      0);  /* sentinel */
-
+    gwy_serialize_store_int32(sdata.buffer + *size - sizeof(guint32),
+                              sdata.size - *size);
     *size = sdata.size;
+
     return sdata.buffer;
 }
 
@@ -985,9 +985,9 @@ gwy_container_deserialize(const guchar *buffer,
                           gsize size,
                           gsize *position)
 {
-    gsize pos;
     GwyContainer *container;
-    GType type;
+    gsize mysize, pos;
+    const guchar *buf;
 
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
@@ -998,55 +998,62 @@ gwy_container_deserialize(const guchar *buffer,
                                      GWY_CONTAINER_TYPE_NAME);
     g_return_val_if_fail(pos, NULL);
     *position += pos;
+    mysize = gwy_serialize_unpack_int32(buffer, size, position);
+    buf = buffer + *position;
+    pos = 0;
 
     container = (GwyContainer*)gwy_container_new();
-    type = gwy_serialize_unpack_int32(buffer, size, position);
-    while (type) {
-        guchar *name = gwy_serialize_unpack_string(buffer, size, position);
-        GQuark key = g_quark_from_string(name);
+    while (pos < mysize) {
+        GType type;
+        guchar *name;
+        GQuark key;
 
+        type = gwy_serialize_unpack_int32(buf, mysize, &pos);
+        name = gwy_serialize_unpack_string(buf, mysize, &pos);
+        key = g_quark_from_string(name);
         g_free(name);
+
         switch (type) {
             case G_TYPE_OBJECT:
             gwy_container_set_object(container, key,
-                                     gwy_serializable_deserialize(buffer, size,
-                                                                  position));
+                                     gwy_serializable_deserialize(buf, mysize,
+                                                                  &pos));
             break;
 
             case G_TYPE_BOOLEAN:
             gwy_container_set_boolean(container, key,
-                                      gwy_serialize_unpack_boolean(buffer, size,
-                                                                   position));
+                                      gwy_serialize_unpack_boolean(buf, mysize,
+                                                                   &pos));
             break;
 
             case G_TYPE_UCHAR:
             gwy_container_set_uchar(container, key,
-                                    gwy_serialize_unpack_char(buffer, size,
-                                                             position));
+                                    gwy_serialize_unpack_char(buf, mysize,
+                                                              &pos));
             break;
 
             case G_TYPE_INT:
             gwy_container_set_int32(container, key,
-                                    gwy_serialize_unpack_int32(buffer, size,
-                                                               position));
+                                    gwy_serialize_unpack_int32(buf, mysize,
+                                                               &pos));
             break;
 
             case G_TYPE_INT64:
             gwy_container_set_int64(container, key,
-                                    gwy_serialize_unpack_int64(buffer, size,
-                                                               position));
+                                    gwy_serialize_unpack_int64(buf, mysize,
+                                                               &pos));
             break;
 
             case G_TYPE_DOUBLE:
             gwy_container_set_double(container, key,
-                                     gwy_serialize_unpack_double(buffer, size,
-                                                                 position));
+                                     gwy_serialize_unpack_double(buf, mysize,
+                                                                 &pos));
             break;
 
             case G_TYPE_STRING:
             gwy_container_set_string(container, key,
-                                     gwy_serialize_unpack_string(buffer, size,
-                                                                 position));
+                                     gwy_serialize_unpack_string(buf, mysize,
+                                                                 &pos));
             break;
 
             default:
@@ -1054,8 +1061,8 @@ gwy_container_deserialize(const guchar *buffer,
                 "Cannot unpack GValue holding type #%d", (gint)type);
             break;
         }
-        type = gwy_serialize_unpack_int32(buffer, size, position);
     }
+    *position += mysize;
 
     return (GObject*)container;
 }

@@ -5,8 +5,10 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
-static void gwy_serializable_base_init     (GwySerializableClass *klass);
-static void gwy_serializable_base_finalize (GwySerializableClass *klass);
+static void    gwy_serializable_base_init     (GwySerializableClass *klass);
+static void    gwy_serializable_base_finalize (GwySerializableClass *klass);
+
+static inline gsize ctype_size     (guchar ctype);
 
 GType
 gwy_serializable_get_type(void)
@@ -123,6 +125,7 @@ gwy_serializable_deserialize(const guchar *buffer,
 {
     GType type;
     GwyDeserializeFunc deserialize_method;
+    GObject *object;
 
     g_return_val_if_fail(buffer, NULL);
     if (!gwy_serialize_check_string(buffer, size, *position, NULL)) {
@@ -133,6 +136,7 @@ gwy_serializable_deserialize(const guchar *buffer,
     }
 
     type = g_type_from_name((gchar*)(buffer + *position));
+    g_type_class_ref(type);
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "deserializing a %s",
           g_type_name(type));
@@ -154,7 +158,27 @@ gwy_serializable_deserialize(const guchar *buffer,
               buffer);
         return NULL;
     }
-    return deserialize_method(buffer, size, position);
+    object = deserialize_method(buffer, size, position);
+    if (object)
+        g_type_class_unref(G_OBJECT_GET_CLASS(object));
+    else
+        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+              "Cannot unref class after failed %s deserialization",
+              g_type_name(type));
+    return object;
+}
+
+/**
+ * gwy_serialize_store_int32:
+ * @buffer: A buffer to which the value should be stored.
+ * @value: A 32bit integer.
+ *
+ * Stored a 32bit integer to a buffer.
+ **/
+void
+gwy_serialize_store_int32(guchar *buffer, guint32 value)
+{
+    memcpy(buffer, &value, sizeof(guint32));
 }
 
 /**
@@ -396,6 +420,405 @@ gwy_serialize_pack(guchar *buffer,
     g_free(objects);
 
     return buffer;
+}
+
+/**
+ * gwy_serialize_pack_struct:
+ * @buffer: 
+ * @size: 
+ * @nspec: 
+ * @spec: 
+ *
+ * 
+ *
+ * Returns:
+ **/
+guchar*
+gwy_serialize_pack_struct(guchar *buffer,
+                          gsize *size,
+                          gsize nspec,
+                          const GwySerializeSpec *spec)
+{
+    const GwySerializeSpec *sp;
+    gsize i, pos;
+    guint32 asize;
+    guchar *p = NULL;
+    gboolean do_copy = FALSE;
+    gboolean did_copy = FALSE;
+    gsize nobjs;  /* number of items which are objects */
+    struct o { gsize size; guchar *buffer; } *objects;  /* serialized objects */
+
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s (nspec = %d)",
+          __FUNCTION__, nspec);
+    #endif
+    if (!nspec)
+        return buffer;
+
+    for (nobjs = i = 0; i < nspec; i++) {
+        if (spec[i].ctype == 'o')
+            nobjs++;
+    }
+    objects = g_new(struct o, nobjs);
+
+    while (!did_copy) {
+        nobjs = 0;
+        pos = 0;
+
+        for (sp = spec; sp - spec < nspec; sp++) {
+            g_assert(sp->value);
+            if (g_ascii_isupper(sp->ctype)) {
+                g_assert(sp->array_size);
+                g_assert(*(gpointer*)sp->value);
+                asize = *sp->array_size;
+            }
+            i = strlen(sp->name) + 1;
+            if (do_copy)
+                memcpy(p + pos, sp->name, i);
+            pos += i;
+            if (do_copy)
+                *(p + pos) = sp->ctype;
+            pos++;
+            switch (sp->ctype) {
+                case 'b':
+                {
+                    /* store it as char */
+                    char value = *(gboolean*)sp->value;
+
+                    if (do_copy)
+                        memcpy(p + pos, &value, sizeof(char));
+                    pos += sizeof(char);
+                }
+                break;
+
+                case 'c':
+                {
+                    if (do_copy)
+                        *(p + pos) = *(guchar*)sp->value;
+                    pos += sizeof(char);
+                }
+                break;
+
+                case 'C':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->array_size, sizeof(guint32));
+                    pos += sizeof(guint32);
+                    if (do_copy)
+                        memcpy(p + pos, *(guchar**)sp->value,
+                               asize*sizeof(char));
+                    pos += asize*sizeof(char);
+                }
+                break;
+
+                case 'i':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->value, sizeof(gint32));
+                    pos += sizeof(gint32);
+                }
+                break;
+
+                case 'I':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->array_size, sizeof(gint32));
+                    pos += sizeof(guint32);
+                    if (do_copy)
+                        memcpy(p + pos, *(guint32**)sp->value,
+                               asize*sizeof(gint32));
+                    pos += asize*sizeof(gint32);
+                }
+                break;
+
+                case 'q':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->value, sizeof(gint64));
+                    pos += sizeof(gint64);
+                }
+                break;
+
+                case 'Q':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->array_size, sizeof(gint32));
+                    pos += sizeof(guint32);
+                    if (do_copy)
+                        memcpy(p + pos, *(guint64**)sp->value,
+                               asize*sizeof(gint64));
+                    pos += asize*sizeof(gint64);
+                }
+                break;
+
+                case 'd':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->value, sizeof(double));
+                    pos += sizeof(double);
+
+                }
+                break;
+
+                case 'D':
+                {
+                    if (do_copy)
+                        memcpy(p + pos, sp->array_size, sizeof(gint32));
+                    pos += sizeof(guint32);
+                    if (do_copy)
+                        memcpy(p + pos, *(gdouble**)sp->value,
+                               asize*sizeof(double));
+                    pos += asize*sizeof(double);
+                }
+                break;
+
+                case 's':
+                {
+                    guchar *value = *(guchar**)sp->value;
+
+                    if (!value) {
+                        g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+                              "representing NULL string as an empty string");
+                        if (do_copy)
+                            p[pos] = '\0';
+                        p++;
+                    }
+                    else {
+                        asize = strlen(value) + 1;
+                        if (do_copy)
+                            memcpy(p + pos, value, asize);
+                        pos += asize;
+                    }
+                }
+                break;
+
+                case 'o':
+                {
+                    GObject *value = *(GObject**)sp->value;
+
+                    g_assert(value);
+                    g_assert(GWY_IS_SERIALIZABLE(value));
+                    if (do_copy) {
+                        memcpy(p + pos,
+                               objects[nobjs].buffer, objects[nobjs].size);
+                        g_free(objects[nobjs].buffer);
+                    }
+                    else {
+                        objects[nobjs].buffer =
+                            gwy_serializable_serialize(value, NULL,
+                                                       &objects[nobjs].size);
+                    }
+                    pos += objects[nobjs].size;
+                    nobjs++;
+                }
+                break;
+
+                default:
+                g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
+                      "wrong spec `%c' at pos %d", sp->ctype, sp - spec);
+                g_assert(!do_copy);
+                g_free(p);
+                /* FIXME: we may leak some objects[] here */
+                return buffer;
+                break;
+            }
+        }
+
+        if (do_copy)
+            did_copy = TRUE;
+        else {
+            buffer = g_renew(guchar, buffer, *size + pos);
+            p = buffer + *size;
+            *size += pos;
+            do_copy = TRUE;
+        }
+    }
+    g_free(objects);
+
+    return buffer;
+}
+
+static inline gsize G_GNUC_CONST
+ctype_size(guchar ctype)
+{
+    switch (ctype) {
+        case 'c':
+        case 'b':
+        return sizeof(guchar);
+        break;
+
+        case 'i':
+        return sizeof(gint);
+        break;
+
+        case 'q':
+        return sizeof(gint64);
+        break;
+
+        case 'd':
+        return sizeof(gdouble);
+        break;
+
+        default:
+        return 0;
+        break;
+    }
+}
+
+void
+gwy_serialize_skip_type(const guchar *buffer,
+                        gsize size,
+                        gsize *position,
+                        guchar ctype)
+{
+    gsize tsize;
+
+    tsize = ctype_size(ctype);
+    if (tsize) {
+        *position += tsize;
+        return;
+    }
+
+    if (ctype == 's') {
+        tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
+        *position += tsize;
+        return;
+    }
+
+    if (ctype == 'o') {
+        tsize = gwy_serialize_check_string(buffer, size, *position, NULL);
+        *position += tsize;
+        tsize = gwy_serialize_unpack_int32(buffer, size, position);
+        *position += tsize;
+        return;
+    }
+
+    /* arrays */
+    if (g_ascii_isupper(ctype)) {
+        ctype = g_ascii_tolower(ctype);
+        tsize = gwy_serialize_unpack_int32(buffer, size, position);
+        position += tsize*ctype_size(ctype);
+    }
+
+    g_assert_not_reached();
+}
+
+/**
+ * gwy_serialize_unpack_struct:
+ * @buffer: 
+ * @size: 
+ * @nspec: 
+ * @spec: 
+ *
+ * 
+ *
+ * Returns:
+ **/
+gboolean
+gwy_serialize_unpack_struct(const guchar *buffer,
+                            gsize size,
+                            gsize nspec,
+                            const GwySerializeSpec *spec)
+{
+    gsize nlen, position;
+    const GwySerializeSpec *sp;
+    const guchar *name;
+    gpointer p;
+    gsize *a;
+    guchar ctype;
+
+    position = 0;
+    while (position < size) {
+        nlen = gwy_serialize_check_string(buffer, size, position, NULL);
+        if (!nlen) {
+            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
+                  "Expected a component name to deserialize, got garbage");
+            return FALSE;
+        }
+
+        for (sp = spec; sp - spec < nspec; sp++) {
+            if (strcmp(sp->name, buffer + position) == 0)
+                break;
+        }
+        name = buffer + position;
+        position += nlen;
+        ctype = gwy_serialize_unpack_char(buffer, size, &position);
+        if (sp - spec == nspec) {
+            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+                  "Extra component %s of type `%c'", name, ctype);
+            gwy_serialize_skip_type(buffer, size, &position, ctype);
+            continue;
+        }
+
+        if (ctype != sp->ctype) {
+            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+                  "Bad or unknown type `%c' of %s (expected `%c')",
+                  ctype, name, sp->ctype);
+            return FALSE;
+        }
+
+        p = sp->value;
+        a = sp->array_size;
+        switch (ctype) {
+            case 'o':
+            *(GObject**)p = gwy_serializable_deserialize(buffer, size,
+                                                         &position);
+            break;
+
+            case 'b':
+            *(gboolean*)p = gwy_serialize_unpack_boolean(buffer, size,
+                                                         &position);
+            break;
+
+            case 'c':
+            *(guchar*)p = gwy_serialize_unpack_char(buffer, size, &position);
+            break;
+
+            case 'i':
+            *(gint32*)p = gwy_serialize_unpack_int32(buffer, size, &position);
+            break;
+
+            case 'q':
+            *(gint64*)p = gwy_serialize_unpack_int64(buffer, size, &position);
+            break;
+
+            case 'd':
+            *(gdouble*)p = gwy_serialize_unpack_double(buffer, size, &position);
+            break;
+
+            case 's':
+            *(guchar**)p = gwy_serialize_unpack_string(buffer, size, &position);
+            break;
+
+            case 'C':
+            *(guchar**)p = gwy_serialize_unpack_char_array(buffer, size,
+                                                            &position, a);
+            break;
+
+            case 'I':
+            *(gint32**)p = gwy_serialize_unpack_int32_array(buffer, size,
+                                                            &position, a);
+            break;
+
+            case 'Q':
+            *(gint64**)p = gwy_serialize_unpack_int64_array(buffer, size,
+                                                            &position, a);
+            break;
+
+            case 'D':
+            *(gdouble**)p = gwy_serialize_unpack_double_array(buffer, size,
+                                                              &position, a);
+            break;
+
+            default:
+            g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_ERROR,
+                  "Type `%c' of %s is unknown (though known to application?!)",
+                  ctype, name);
+            return FALSE;
+            break;
+        }
+    }
+    return TRUE;
 }
 
 /**
@@ -679,7 +1102,7 @@ gwy_serialize_unpack_double_array(const guchar *buffer,
 
     *asize = gwy_serialize_unpack_int32(buffer, size, position);
     g_assert(*position + *asize*sizeof(gdouble) <= size);
-    value = g_memdup(buffer + *position, *asize*sizeof(double));
+    value = g_memdup(buffer + *position, *asize*sizeof(gdouble));
     *position += *asize*sizeof(gdouble);
 
     return value;
