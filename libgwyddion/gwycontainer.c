@@ -22,6 +22,8 @@
 #include <glib.h>
 #include <gtk/gtkmarshal.h>
 
+#define DEBUG 1
+
 #include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
 #include "gwyserializable.h"
@@ -1999,6 +2001,15 @@ value_changed(G_GNUC_UNUSED GwyContainer *container,
               G_GNUC_UNUSED GQuark key)
 {
     gwy_debug("[%p] %s", container, g_quark_to_string(key));
+}
+
+guchar*
+gwy_container_serialize_to_text(GwyContainer *container)
+{
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+
+    return NULL;
 }
 
 /************************** Documentation ****************************/

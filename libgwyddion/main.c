@@ -25,7 +25,7 @@
 #include "gwytestser.h"
 
 guchar*
-gwy_serializable_serialize_to_text(GObject *serializable);
+gwy_container_serialize_to_text(GwyContainer *container);
 
 #define FILENAME "testser.object"
 
@@ -91,8 +91,6 @@ test_serializable_iface(void)
     g_message("restoring the second one");
     ser = gwy_serializable_deserialize(buffer, size, &pos);
     print(ser, "restored");
-
-    gwy_serializable_serialize_to_text(ser);
 
     g_object_unref(ser);
 }
@@ -248,6 +246,8 @@ test_container_serialization(void)
     ser = gwy_container_get_object_by_name(container, "ser");
     gwy_test_ser_set_radius(GWY_TEST_SER(ser), 2.2);
     g_assert(ser->ref_count == 1);
+
+    gwy_container_serialize_to_text(container);
 
     g_object_unref(container);
     g_message("restoring the empty container");
@@ -551,7 +551,8 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_all();
+    test_serializable_iface();
+    test_container_serialization();
 
     return 0;
 }
