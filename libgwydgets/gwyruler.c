@@ -24,9 +24,30 @@
  * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
  */
 
+/*
+ * Modified by Yeti 2003.  In fact, rewritten, now includes a single
+ * tick'n'label design function, and Gwy[HV]Rulers only do the actual
+ * drawing at computed positions.  GtkMetric was [temporarily?] removed,
+ * a scale-independent scaling is used instead.
+ */
+
+#include <math.h>
 #include "gwyruler.h"
 
 #define _(x) x
+
+typedef enum {
+    GWY_SCALE_0,
+    GWY_SCALE_1,
+    GWY_SCALE_2,
+    GWY_SCALE_2_5,
+    GWY_SCALE_5,
+    GWY_SCALE_LAST
+} GwyScaleScale;
+
+static const gdouble steps[GWY_SCALE_LAST] = {
+    0.0, 1.0, 2.0, 2.5, 5.0,
+};
 
 enum {
     PROP_0,
@@ -37,31 +58,33 @@ enum {
     PROP_UNITS_PLACEMENT,
 };
 
-static void gwy_ruler_class_init    (GwyRulerClass  *klass);
-static void gwy_ruler_init          (GwyRuler       *ruler);
-static void gwy_ruler_realize       (GtkWidget      *widget);
-static void gwy_ruler_unrealize     (GtkWidget      *widget);
-static void gwy_ruler_size_allocate (GtkWidget      *widget,
-                                     GtkAllocation  *allocation);
-static gint gwy_ruler_expose        (GtkWidget      *widget,
-                                     GdkEventExpose *event);
-static void gwy_ruler_make_pixmap   (GwyRuler       *ruler);
-static void gwy_ruler_set_property  (GObject        *object,
-                                     guint           prop_id,
-                                     const GValue   *value,
-                                     GParamSpec     *pspec);
-static void gwy_ruler_get_property  (GObject        *object,
-                                     guint           prop_id,
-                                     GValue         *value,
-                                     GParamSpec     *pspec);
+static void          gwy_ruler_class_init    (GwyRulerClass  *klass);
+static void          gwy_ruler_init          (GwyRuler       *ruler);
+static void          gwy_ruler_realize       (GtkWidget      *widget);
+static void          gwy_ruler_unrealize     (GtkWidget      *widget);
+static void          gwy_ruler_size_allocate (GtkWidget      *widget,
+                                              GtkAllocation  *allocation);
+static gint          gwy_ruler_expose        (GtkWidget      *widget,
+                                              GdkEventExpose *event);
+static void          gwy_ruler_make_pixmap   (GwyRuler       *ruler);
+static void          gwy_ruler_set_property  (GObject        *object,
+                                              guint           prop_id,
+                                              const GValue   *value,
+                                              GParamSpec     *pspec);
+static void          gwy_ruler_get_property  (GObject        *object,
+                                              guint           prop_id,
+                                              GValue         *value,
+                                              GParamSpec     *pspec);
+static const gchar*  magnitude_to_si_prefix  (gdouble magnitude);
+static gdouble       compute_magnitude       (gdouble max);
+static gdouble       compute_base            (gdouble max,
+                                              gdouble basebase);
+static GwyScaleScale next_scale              (GwyScaleScale scale,
+                                              gdouble *base,
+                                              gdouble measure,
+                                              gint min_incr);
 
 static GtkWidgetClass *parent_class;
-
-static const GwyRulerMetric ruler_metrics[] = {
-    {"Pixels", "µm", 1.0, { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 }, { 1, 5, 10, 50, 100 }},
-    {"Inches", "in", 72.0, { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 }, { 1, 2, 4, 8, 16 }},
-    {"Centimeters", "cm", 28.35, { 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 }, { 1, 5, 10, 50, 100 }},
-};
 
 
 GType
@@ -177,8 +200,6 @@ gwy_ruler_init(GwyRuler *ruler)
     ruler->position = 0;
     ruler->max_size = 0;
     ruler->units_placement = GWY_UNITS_PLACEMENT_NONE;
-
-    gwy_ruler_set_metric(ruler, GTK_PIXELS);
 }
 
 static void
@@ -257,42 +278,6 @@ gwy_ruler_get_property(GObject      *object,
 }
 
 void
-gwy_ruler_set_metric(GwyRuler      *ruler,
-                     GtkMetricType  metric)
-{
-    g_return_if_fail(GWY_IS_RULER(ruler));
-
-    ruler->metric = (GwyRulerMetric*)&ruler_metrics[metric];
-
-    if (GTK_WIDGET_DRAWABLE(ruler))
-        gtk_widget_queue_draw(GTK_WIDGET(ruler));
-}
-
-/**
- * gwy_ruler_get_metric:
- * @ruler: a #GwyRuler
- *
- * Gets the units used for a #GwyRuler. See gwy_ruler_set_metric().
- *
- * Return value: the units currently used for @ruler
- **/
-GtkMetricType
-gwy_ruler_get_metric(GwyRuler *ruler)
-{
-    gint i;
-
-    g_return_val_if_fail(GWY_IS_RULER(ruler), 0);
-
-    for (i = 0; i < G_N_ELEMENTS(ruler_metrics); i++)
-        if (ruler->metric == &ruler_metrics[i])
-            return i;
-
-    g_assert_not_reached();
-
-    return 0;
-}
-
-void
 gwy_ruler_set_range(GwyRuler *ruler,
                     gdouble   lower,
                     gdouble   upper,
@@ -360,9 +345,7 @@ gwy_ruler_set_units_placement(GwyRuler *ruler,
                               GwyUnitsPlacement placement)
 {
     g_return_if_fail(GWY_IS_RULER(ruler));
-    placement = CLAMP(placement,
-                      GWY_UNITS_PLACEMENT_NONE,
-                      GWY_UNITS_PLACEMENT_AT_ZERO);
+    placement = MIN(placement, GWY_UNITS_PLACEMENT_AT_ZERO);
     if (ruler->units_placement == placement)
         return;
 
@@ -523,6 +506,253 @@ gwy_ruler_make_pixmap(GwyRuler *ruler)
         ruler->non_gr_exp_gc = gdk_gc_new(widget->window);
         gdk_gc_set_exposures(ruler->non_gr_exp_gc, FALSE);
     }
+}
+
+void
+_gwy_ruler_real_draw_ticks(GwyRuler *ruler,
+                           gint pixelsize,
+                           gint min_label_spacing,
+                           gint min_tick_spacing,
+                           void (*label_callback)(GwyRuler *ruler,
+                                                  gint position,
+                                                  const gchar *label,
+                                                  PangoLayout *layout,
+                                                  gint digit_height,
+                                                  gint digit_offset),
+                           void (*tick_callback)(GwyRuler *ruler,
+                                                 gint position,
+                                                 gint depth))
+{
+    gdouble lower, upper, max;
+    gint text_size, labels, i, scale_depth;
+    gdouble range, measure, mag, base, step, first;
+    const gchar *prefix;
+    GwyScaleScale scale;
+    PangoLayout *layout;
+    PangoRectangle ink_rect;
+    gchar unit_str[32];
+    gboolean units_drawn;
+    GtkWidget *widget;
+    gint digit_height, digit_offset;
+    struct { GwyScaleScale scale; double base; } tick_info[4];
+
+    widget = GTK_WIDGET(ruler);
+
+    layout = gtk_widget_create_pango_layout(widget, "012456789");
+    pango_layout_get_extents(layout, &ink_rect, NULL);
+
+    digit_height = PANGO_PIXELS(ink_rect.height) + 1;
+    digit_offset = ink_rect.y;
+
+    upper = ruler->upper;
+    lower = ruler->lower;
+    if (upper <= lower || pixelsize < 2 || pixelsize > 10000)
+        return;
+    max = ruler->max_size;
+    if (max == 0)
+        max = MAX(fabs(lower), fabs(upper));
+
+    range = upper - lower;
+    mag = compute_magnitude(max);
+    prefix = magnitude_to_si_prefix(mag);
+    measure = range/mag / pixelsize;
+    max /= mag;
+
+    switch (ruler->units_placement) {
+        case GWY_UNITS_PLACEMENT_AT_ZERO:
+        g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
+                   (lower > 0) ? (gint)(lower/mag) : 0, prefix, "m");
+        break;
+
+        default:
+        g_snprintf(unit_str, sizeof(unit_str), "%d",
+                   (gint)max);
+        break;
+    }
+    text_size = g_utf8_strlen(unit_str, -1)*digit_height + 1;
+
+    /* fit as many labels as you can */
+    labels = floor(pixelsize/(text_size + min_label_spacing));
+    if (labels > 5)    /* but at five slow down */
+        labels = 5 + (labels - 5)/2;
+    if (labels == 0)    /* at least one */
+        labels = 1;
+
+    step = range/mag / labels;
+    base = compute_base(step, 10);
+    step /= base;
+    if (step >= 5.0) {
+        scale = GWY_SCALE_1;
+        base *= 10;
+    }
+    else if (step >= 2.5)
+        scale = GWY_SCALE_5;
+    else if (step >= 2.0)
+        scale = GWY_SCALE_2_5;
+    else
+        scale = GWY_SCALE_2;
+    step = steps[scale];
+
+    /* draw labels */
+    units_drawn = FALSE;
+    first = floor(lower/mag / (base*step))*base*step;
+    for (i = 0; ; i++) {
+        gint pos;
+        gdouble val;
+
+        val = i*step*base + first;
+        pos = floor((val - lower/mag)/measure);
+        if (pos >= pixelsize)
+            break;
+        if (pos < 0)
+            continue;
+        if (!units_drawn
+            && (upper < 0 || val >= 0)
+            && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO) {
+            g_snprintf(unit_str, sizeof(unit_str), "%d %s%s",
+                       (gint)(val + 0.5), prefix, "m");
+            units_drawn = TRUE;
+        }
+        else
+            g_snprintf(unit_str, sizeof(unit_str), "%d", (gint)(val + 0.5));
+        label_callback(ruler, pos, unit_str, layout,
+                       digit_height, digit_offset);
+    }
+
+    /* draw tick marks, from smallest to largest */
+    scale_depth = 0;
+    while (scale && scale_depth < (gint)G_N_ELEMENTS(tick_info)) {
+        tick_info[scale_depth].scale = scale;
+        tick_info[scale_depth].base = base;
+        scale = next_scale(scale, &base, measure, min_tick_spacing);
+        scale_depth++;
+    }
+    scale_depth--;
+
+    while (scale_depth > -1) {
+        scale = tick_info[scale_depth].scale;
+        base = tick_info[scale_depth].base;
+        step = steps[scale];
+        first = floor(lower/mag / (base*step))*base*step;
+        for (i = 0; ; i++) {
+            gint pos;
+            gdouble val;
+
+            val = i*step*base + first;
+            pos = floor((val - lower/mag)/measure);
+            if (pos >= pixelsize)
+                break;
+            if (pos < 0)
+                continue;
+            tick_callback(ruler, pos, scale_depth);
+        }
+        scale_depth--;
+    }
+
+    g_object_unref(layout);
+}
+
+static const gchar*
+magnitude_to_si_prefix(gdouble magnitude)
+{
+    static const gchar *positive[] = {
+        "", "k", "M", "G", "T", "P", "E", "Z", "Y"
+    };
+    static const gchar *negative[] = {
+        "", "m", "µ", "n", "p", "f", "a", "z", "y"
+    };
+    static const gchar *unknown = "?";
+    gint i;
+
+    i = floor(log10(magnitude)/3.0 + 0.5);
+    if (i >= 0 && i < G_N_ELEMENTS(positive))
+        return positive[i];
+    if (i <= 0 && -i < G_N_ELEMENTS(negative))
+        return negative[-i];
+    /* FIXME: the vertical ruler text placing routine can't reasonably
+     * break things like 10<sup>-36</sup> to lines */
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_WARNING,
+          "magnitude %g outside of prefix range.  FIXME!", magnitude);
+    return unknown;
+}
+
+static gdouble
+compute_magnitude(gdouble max)
+{
+    gint i;
+    gdouble magnitude;
+
+    i = floor(log10(max)/3.0 - 0.2);
+    magnitude = 1.0;
+    if (i > 0)
+        while (i--)
+            magnitude *= 1000.0;
+    else
+        while (i++)
+            magnitude /= 1000.0;
+    return magnitude;
+}
+
+static gdouble
+compute_base(gdouble max, gdouble basebase)
+{
+    gint i;
+    gdouble base;
+
+    i = floor(log(max)/log(basebase));
+    base = 1.0;
+    if (i > 0)
+        while (i--)
+            base *= basebase;
+    else
+        while (i++)
+            base /= basebase;
+    return base;
+}
+
+static GwyScaleScale
+next_scale(GwyScaleScale scale,
+           gdouble *base,
+           gdouble measure,
+           gint min_incr)
+{
+    GwyScaleScale new_scale = GWY_SCALE_0;
+
+    switch (scale) {
+        case GWY_SCALE_1:
+        *base /= 10.0;
+        if ((gint)floor(*base*2.0/measure) > min_incr)
+            new_scale = GWY_SCALE_5;
+        else if ((gint)floor(*base*2.5/measure) > min_incr)
+            new_scale = GWY_SCALE_2_5;
+        else if ((gint)floor(*base*5.0/measure) > min_incr)
+            new_scale = GWY_SCALE_5;
+        break;
+
+        case GWY_SCALE_2:
+        if ((gint)floor(*base/measure) > min_incr)
+            new_scale = GWY_SCALE_1;
+        break;
+
+        case GWY_SCALE_2_5:
+        *base /= 10.0;
+        if ((gint)floor(*base*5.0/measure) > min_incr)
+            new_scale = GWY_SCALE_5;
+        break;
+
+        case GWY_SCALE_5:
+        if ((gint)floor(*base/measure) > min_incr)
+            new_scale = GWY_SCALE_1;
+        else if ((gint)floor(*base*2.5/measure) > min_incr)
+            new_scale = GWY_SCALE_2_5;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    return new_scale;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -24,17 +24,16 @@
  * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-#include <math.h>
+/*
+ * Modified by Yeti 2003.  In fact, rewritten, except the skeleton
+ * and a few drawing functions.
+ */
+
 #include <string.h>
 #include "gwyvruler.h"
 
-#include <glib/gprintf.h>
-
-
 #define RULER_WIDTH           18
 #define MINIMUM_INCR          5
-#define MAXIMUM_SUBDIVIDE     5
-#define MAXIMUM_SCALES        10
 
 #define ROUND(x)((int)((x) + 0.5))
 
@@ -45,6 +44,15 @@ static gint gwy_vruler_motion_notify (GtkWidget      *widget,
                                       GdkEventMotion *event);
 static void gwy_vruler_draw_ticks    (GwyRuler       *ruler);
 static void gwy_vruler_draw_pos      (GwyRuler       *ruler);
+static void label_callback           (GwyRuler *ruler,
+                                      gint position,
+                                      const gchar *label,
+                                      PangoLayout *layout,
+                                      gint digit_height,
+                                      gint digit_offset);
+static void tick_callback            (GwyRuler *ruler,
+                                      gint position,
+                                      gint depth);
 
 
 GType
@@ -131,51 +139,87 @@ gwy_vruler_motion_notify(GtkWidget      *widget,
 }
 
 static void
+label_callback(GwyRuler *ruler,
+               gint position,
+               const gchar *label,
+               PangoLayout *layout,
+               gint digit_height,
+               gint digit_offset)
+{
+    GtkWidget *widget = (GtkWidget*)ruler;
+    PangoRectangle logical_rect;
+    gint xthickness;
+    const gchar *utf8p, *utf8next;
+    gint j;
+
+    xthickness = widget->style->xthickness;
+    pango_layout_set_text(layout, label, -1);
+
+    utf8p = label;
+    utf8next = g_utf8_next_char(utf8p);
+    j = 0;
+    while (*utf8p) {
+        pango_layout_set_text(layout, utf8p, utf8next - utf8p);
+        pango_layout_get_extents(layout, NULL, &logical_rect);
+
+        gtk_paint_layout(widget->style,
+                         ruler->backing_store,
+                         GTK_WIDGET_STATE(widget),
+                         FALSE,
+                         NULL,
+                         widget,
+                         "vruler",
+                         xthickness + 1,
+                         position + digit_height*j + 2
+                            + PANGO_PIXELS(logical_rect.y - digit_offset),
+                         layout);
+        utf8p = utf8next;
+        utf8next = g_utf8_next_char(utf8p);
+        j++;
+    }
+}
+
+static void
+tick_callback(GwyRuler *ruler,
+              gint position,
+              gint depth)
+{
+    GtkWidget *widget = (GtkWidget*)ruler;
+    gint xthickness;
+    gint width, tick_length;
+    GdkGC *gc;
+
+    gc = widget->style->fg_gc[GTK_STATE_NORMAL];
+    xthickness = widget->style->xthickness;
+    width = widget->allocation.width - 2*xthickness;
+    tick_length = width/(depth + 1) - 2;
+
+    gdk_draw_line(ruler->backing_store, gc,
+                  width + xthickness - tick_length, position,
+                  width + xthickness, position);
+}
+
+static void
 gwy_vruler_draw_ticks(GwyRuler *ruler)
 {
     GtkWidget *widget;
-    GdkGC *gc, *bg_gc;
-    gint i, j;
+    GdkGC *gc;
     gint width, height;
     gint xthickness;
     gint ythickness;
-    gint length, ideal_length;
-    gdouble lower, upper;         /* Upper and lower limits, in ruler units */
-    gdouble increment;            /* Number of pixels per unit */
-    gint scale;                   /* Number of units per major unit */
-    gdouble subd_incr;
-    gdouble start, end, cur;
-    gchar unit_str[32];
-    gint digit_height;
-    gint digit_offset;
-    gint text_height;
-    gint pos;
-    PangoLayout *layout;
-    PangoRectangle logical_rect, ink_rect;
-    gboolean units_drawn;
-    gchar *utf8p, *utf8next;
-    GwyRulerMetric *metric;
 
     if (!GTK_WIDGET_DRAWABLE(ruler))
         return;
 
     widget = GTK_WIDGET(ruler);
-    metric = ruler->metric;
 
     gc = widget->style->fg_gc[GTK_STATE_NORMAL];
-    bg_gc = widget->style->bg_gc[GTK_STATE_NORMAL];
 
     xthickness = widget->style->xthickness;
     ythickness = widget->style->ythickness;
 
-    layout = gtk_widget_create_pango_layout(widget, "012456789");
-    pango_layout_get_extents(layout, &ink_rect, &logical_rect);
-
-    digit_height = PANGO_PIXELS(ink_rect.height) + 2;
-    digit_offset = ink_rect.y;
-
-    width = widget->allocation.height;
-    height = widget->allocation.width - ythickness * 2;
+    height = widget->allocation.height;
+    width = widget->allocation.width - 2*xthickness;
 
     gtk_paint_box(widget->style, ruler->backing_store,
                   GTK_STATE_NORMAL, GTK_SHADOW_OUT,
@@ -189,110 +233,9 @@ gwy_vruler_draw_ticks(GwyRuler *ruler)
                   height + xthickness,
                   widget->allocation.height - ythickness);
 
-    upper = ruler->upper / metric->units_per_meter;
-    lower = ruler->lower / metric->units_per_meter;
-
-    if ((upper - lower) == 0)
-        return;
-    increment = (gdouble) width / (upper - lower);
-
-    /* determine the scale
-     *   use the maximum extents of the ruler to determine the largest
-     *   possible number to be displayed.  Calculate the height in pixels
-     *   of this displayed text. Use this height to find a scale which
-     *   leaves sufficient room for drawing the ruler.
-     */
-    scale = ceil(ruler->max_size / metric->units_per_meter);
-    switch (ruler->units_placement) {
-        case GWY_UNITS_PLACEMENT_AT_ZERO:
-        g_snprintf(unit_str, sizeof(unit_str), "%d mm", scale);
-        break;
-
-        default:
-        g_snprintf(unit_str, sizeof(unit_str), "%d", scale);
-        break;
-    }
-    text_height = strlen(unit_str) * digit_height + 1;
-
-    for (scale = 0; scale < MAXIMUM_SCALES; scale++)
-        if (metric->ruler_scale[scale] * fabs(increment) > 2*text_height)
-            break;
-
-    if (scale == MAXIMUM_SCALES)
-        scale = MAXIMUM_SCALES - 1;
-
-    /* drawing starts here */
-    length = 0;
-    units_drawn = FALSE;
-    for (i = MAXIMUM_SUBDIVIDE - 1; i >= 0; i--) {
-        subd_incr = (gdouble) metric->ruler_scale[scale] /
-            (gdouble) metric->subdivide[i];
-        if (subd_incr * fabs(increment) <= MINIMUM_INCR)
-            continue;
-
-        /* Calculate the length of the tickmarks. Make sure that
-         * this length increases for each set of ticks
-         */
-        ideal_length = height / (i + 1) - 2;
-        if (ideal_length > ++length)
-            length = ideal_length;
-
-        if (lower < upper) {
-            start = floor(lower / subd_incr) * subd_incr;
-            end   = ceil  (upper / subd_incr) * subd_incr;
-        }
-        else {
-            start = floor(upper / subd_incr) * subd_incr;
-            end   = ceil  (lower / subd_incr) * subd_incr;
-        }
-
-        for (cur = start; cur <= end; cur += subd_incr) {
-            pos = ROUND((cur - lower) * increment);
-
-            gdk_draw_line(ruler->backing_store, gc,
-                          height + xthickness - length, pos,
-                          height + xthickness, pos);
-
-            /* draw label */
-            if (i == 0) {
-                if (ruler->units_placement != GWY_UNITS_PLACEMENT_NONE
-                    && !units_drawn
-                    && (end < 0 || cur >= 0)) {
-                    g_snprintf(unit_str, sizeof(unit_str), "%d %s",
-                               (int)cur, metric->abbrev);
-                    units_drawn = TRUE;
-                }
-                else
-                    g_snprintf(unit_str, sizeof(unit_str), "%d", (int)cur);
-
-                utf8p = unit_str;
-                utf8next = g_utf8_next_char(utf8p);
-                j = 0;
-                while (*utf8p) {
-                    pango_layout_set_text(layout, utf8p, utf8next - utf8p);
-                    pango_layout_get_extents(layout, NULL, &logical_rect);
-
-                    gtk_paint_layout(widget->style,
-                                     ruler->backing_store,
-                                     GTK_WIDGET_STATE(widget),
-                                     FALSE,
-                                     NULL,
-                                     widget,
-                                     "vruler",
-                                     xthickness + 1,
-                                     pos + digit_height * j + 2
-                                     + PANGO_PIXELS(logical_rect.y
-                                                    - digit_offset),
-                                     layout);
-                    utf8p = utf8next;
-                    utf8next = g_utf8_next_char(utf8p);
-                    j++;
-                }
-            }
-        }
-    }
-
-    g_object_unref(layout);
+    _gwy_ruler_real_draw_ticks(ruler, height,
+                               xthickness + MINIMUM_INCR, MINIMUM_INCR,
+                               label_callback, tick_callback);
 }
 
 

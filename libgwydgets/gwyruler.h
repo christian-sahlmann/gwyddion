@@ -52,7 +52,6 @@ extern "C" {
 
 typedef struct _GwyRuler        GwyRuler;
 typedef struct _GwyRulerClass   GwyRulerClass;
-typedef struct _GwyRulerMetric  GwyRulerMetric;
 
 typedef enum {
     GWY_UNITS_PLACEMENT_NONE,
@@ -68,7 +67,6 @@ struct _GwyRuler
 
     GdkPixmap *backing_store;
     GdkGC *non_gr_exp_gc;
-    GwyRulerMetric *metric;
     gint xsrc, ysrc;
     gint slider_size;
     GwyUnitsPlacement units_placement;
@@ -85,29 +83,10 @@ struct _GwyRulerClass
 
     void (*draw_ticks) (GwyRuler *ruler);
     void (*draw_pos)   (GwyRuler *ruler);
-
-    /* Padding for future expansion */
-    void (*_gtk_reserved1)(void);
-    void (*_gtk_reserved2)(void);
-    void (*_gtk_reserved3)(void);
-    void (*_gtk_reserved4)(void);
-};
-
-struct _GwyRulerMetric
-{
-    gchar *metric_name;
-    gchar *abbrev;
-    /* This should be points_per_unit. This is the size of the unit
-     * in 1/72nd's of an inch and has nothing to do with screen pixels */
-    gdouble units_per_meter;
-    gdouble ruler_scale[10];
-    gint subdivide[5];        /* five possible modes of subdivision */
 };
 
 
 GType             gwy_ruler_get_type            (void) G_GNUC_CONST;
-void              gwy_ruler_set_metric          (GwyRuler      *ruler,
-                                                 GtkMetricType  metric);
 void              gwy_ruler_set_range           (GwyRuler      *ruler,
                                                  gdouble        lower,
                                                  gdouble        upper,
@@ -116,7 +95,6 @@ void              gwy_ruler_set_range           (GwyRuler      *ruler,
 void              gwy_ruler_draw_ticks          (GwyRuler      *ruler);
 void              gwy_ruler_draw_pos            (GwyRuler      *ruler);
 
-GtkMetricType     gwy_ruler_get_metric          (GwyRuler *ruler);
 void              gwy_ruler_get_range           (GwyRuler *ruler,
                                                  gdouble  *lower,
                                                  gdouble  *upper,
@@ -126,6 +104,20 @@ void              gwy_ruler_get_range           (GwyRuler *ruler,
 GwyUnitsPlacement gwy_ruler_get_units_placement (GwyRuler *ruler);
 void              gwy_ruler_set_units_placement (GwyRuler *ruler,
                                                  GwyUnitsPlacement placement);
+
+void _gwy_ruler_real_draw_ticks(GwyRuler *ruler,
+                                gint pixelsize,
+                                gint min_label_spacing,
+                                gint min_tick_spacing,
+                                void (*label_callback)(GwyRuler *ruler,
+                                                       gint position,
+                                                       const gchar *label,
+                                                       PangoLayout *layout,
+                                                       gint digit_height,
+                                                       gint digit_offset),
+                                void (*tick_callback)(GwyRuler *ruler,
+                                                      gint position,
+                                                      gint depth));
 
 #ifdef __cplusplus
 }

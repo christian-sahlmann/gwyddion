@@ -203,7 +203,8 @@ measure_changed(GwyDataWindow *data_window,
     gdouble excess, pos, real;
     GwyDataView *data_view;
 
-    real = 1000;
+    /* TODO: connect to real data coords */
+    real = 71e-9;
     data_view = GWY_DATA_VIEW(data_window->data_view);
     /* horizontal */
     excess = real * gwy_data_view_get_hexcess(data_view)/2.0;
