@@ -49,9 +49,9 @@ void            gwy_app_undo_redo                 (void);
 void            gwy_app_change_mask_color_cb      (gpointer unused,
                                                    gboolean defaultc);
 
-GwyGraph*       gwy_app_graph_window_get_current  (void);   
-void            gwy_app_graph_window_set_current  (GwyGraph *graph);
-void            gwy_app_graph_window_remove       (GwyGraph *graph);
+GtkWidget*       gwy_app_graph_window_get_current  (void);   
+void            gwy_app_graph_window_set_current  (GtkWidget *window);
+void            gwy_app_graph_window_remove       (GtkWidget *window);
 GtkWidget*      gwy_app_graph_window_create       (GtkWidget *graph);
 
 /* FIXME: ugly. to be moved somewhere? refactored? */

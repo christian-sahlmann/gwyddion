@@ -332,41 +332,41 @@ gwy_app_data_window_create(GwyContainer *data)
     return data_window;
 }
 
-GwyGraph*
+GtkWidget*
 gwy_app_graph_window_get_current(void)
 {
     return current_graphs ? (GwyGraph*)current_graphs->data : NULL;
 }
 
 void
-gwy_app_graph_window_set_current(GwyGraph *graph)
+gwy_app_graph_window_set_current(GtkWidget *window)
 {
     GList *item;
 
-    gwy_debug("%s: %p", __FUNCTION__, graph);
+    gwy_debug("%s: %p", __FUNCTION__, window);
 
-    g_return_if_fail(GWY_IS_GRAPH(graph));
+    /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
   
-    item = g_list_find(current_graphs, graph);
+    item = g_list_find(current_graphs, window);
     if (item) {
         current_graphs = g_list_remove_link(current_graphs, item);
         current_graphs = g_list_concat(item, current_graphs);
     }
     else
-        current_graphs = g_list_prepend(current_graphs, graph);
+        current_graphs = g_list_prepend(current_graphs, window);
 }
 
 void
-gwy_app_graph_window_remove(GwyGraph *graph)
+gwy_app_graph_window_remove(GtkWidget *window)
 {
     GList *item;
 
-    g_return_if_fail(GWY_IS_GRAPH(graph));
+    /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
 
-    item = g_list_find(current_graphs, graph);
+    item = g_list_find(current_graphs, window);
     if (!item) {
         g_critical("Trying to remove GwyGraph %p not present in the list",
-                   graph);
+                   window);
         return;
     }
     current_graphs = g_list_delete_link(current_graphs, item);
