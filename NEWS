@@ -1,18 +1,24 @@
-1.5cvs20040927
+1.5cvs20041005
 
 1.6
 Application:
-- Crashes when a top-level menus is detached was fixed (bug #30)
+- Crash when a top-level menus is detached was fixed (bug #30).
+- Internationalization support (gettext) was added.
 
 Modules:
 - Interactive color range change tool (new).
+- Polynomial background correction (new).
 - Plug-in proxy: Dump files are always written with POSIX real number format
   (bug #31).
-- Crop tool: Also displays dimensions in pixels.
+- Crop, Filters, Polynom, Statistics, and Spot remove tools: Also display
+  dimensions in pixels.
 
 Library:
 - libgwydgets: Gwy3DWindow swtiching from palette to material for the first
   time no longer displays all-black data.
+- libgwyddion: Choleski decomposition and solution functions.
+- libgwyprocess: Two-dimensional polynom fitting.
+- libgwyapp: Helper functions to manage rectangular selections in tools.
 
 Other:
 - Various build time problems on FreeBSD were fixed.
@@ -250,3 +256,5 @@ Gwyddion:
 
 0.99.1
 Release candidate 1 for v1.0.
+
+# @(#) $Id$

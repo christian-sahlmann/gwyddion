@@ -42,3 +42,4 @@ Subdir dependencies (fully resolved):
     plugins:      (none)
     pixmaps:      (none)
     devel-docs:   libgwyddion libprocess libdraw libgwydgets libgwymodule
+    po:           libdraw libgwydgets libgwymodule app modules

@@ -1,3 +1,4 @@
+# @(#) $Id$
 # XXX: set following to your Gtk+-Development and MSVC paths
 # The uncommented paths should work for GladeWin32 All-in-one,
 # if you have separate Gtk+ and GtkGLext, defined GTKGLEXT_TOP accordingly

@@ -1,3 +1,4 @@
+# #(@) $Id$
 %define python_version %(%__python -V 2>&1 | cut -d' ' -f2 | cut -d. -f 1,2)
 %define pythondir /usr/lib/python%python_version/site-packages
 

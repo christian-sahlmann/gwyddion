@@ -1,3 +1,4 @@
+;; @(#) $Id$
 [Setup]
 AppName=@PACKAGE_NAME@
 AppVersion=@PACKAGE_VERSION@

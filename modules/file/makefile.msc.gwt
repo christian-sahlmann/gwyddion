@@ -1,3 +1,4 @@
+# @(#) $Id$
 
 TOP_SRCDIR = ..\..
 MOD_TYPE = file

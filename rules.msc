@@ -1,3 +1,4 @@
+# @(#) $Id$
 
 # building
 WIN32LIBS = user32.lib advapi32.lib wsock32.lib
