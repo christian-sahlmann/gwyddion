@@ -12,6 +12,7 @@ cat >autostuff.ignore <<':'
 ^/usr/share/aclocal/.*.m4:[0-9]*: warning: underquoted definition of 
 ^  run info '(automake)Extending aclocal'
 ^  or see http://sources\.redhat\.com/automake/automake.html#Extending%20aclocal
+^  or see http://sources\.redhat\.com/automake/automake.html#Extending-aclocal
 :
 ':'
 
