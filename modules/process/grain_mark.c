@@ -209,7 +209,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     controls.is_height = gtk_check_button_new_with_label("Threshold by height:");
     if (args->height) gtk_toggle_button_set_active(controls.is_height, TRUE);
     else gtk_toggle_button_set_active(controls.is_height, FALSE);
-    g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), &controls);
+    g_signal_connect(controls.is_height, "toggled", G_CALLBACK(isheight_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_height, 0, 1, 1, 2, GTK_FILL, 0, 2, 2);
                 
     controls.threshold_height = gtk_adjustment_new(args->height, 0.0, 100.0, 0.1, 5, 0);
@@ -219,7 +219,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     controls.is_slope = gtk_check_button_new_with_label("Threshold by slope:");
     if (args->slope) gtk_toggle_button_set_active(controls.is_slope, TRUE);
     else gtk_toggle_button_set_active(controls.is_slope, FALSE);
-    g_signal_connect(controls.is_slope, "toggled", G_CALLBACK(isslope_changed_cb), &controls);
+    g_signal_connect(controls.is_slope, "toggled", G_CALLBACK(isslope_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_slope, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
                 
     controls.threshold_slope = gtk_adjustment_new(args->slope, 0.0, 100.0, 0.1, 5, 0);
@@ -229,7 +229,7 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
     controls.is_lap = gtk_check_button_new_with_label("Threshold by curvature:");
     if (args->lap) gtk_toggle_button_set_active(controls.is_lap, TRUE);
     else gtk_toggle_button_set_active(controls.is_lap, FALSE);
-    g_signal_connect(controls.is_lap, "toggled", G_CALLBACK(islap_changed_cb), &controls);
+    g_signal_connect(controls.is_lap, "toggled", G_CALLBACK(islap_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.is_lap, 0, 1, 5, 6, GTK_FILL, 0, 2, 2);
                 
     controls.threshold_lap = gtk_adjustment_new(args->lap, 0.0, 100.0, 0.1, 5, 0);

@@ -41,6 +41,7 @@ void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
 /*void iterate(GwyDataField *mask_field, GArray *listpnt, gint col, gint row);*/
 void iterate(GwyDataField *mask_field, gint *colpnt, gint *rowpnt, gint *npnt, gint col, gint row);
 void number_grains(GwyDataField *mask_field, GwyDataField *grain_field);
+gint* gwy_data_field_fill_grain(GwyDataField *dfield, gint row, gint col, gint *nindices);
 
 /********************/
 
@@ -49,13 +50,12 @@ typedef struct{
     gint row;
 } GrainPoint;
 
-void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+void 
+gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
     GwyDataField *mask;
     gdouble min, max;
 
-    printf("************* height: val=%f, dir=%d\n", threshval, dir);
-    
     mask = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, FALSE);
 
     gwy_data_field_copy(data_field, mask);
@@ -73,7 +73,8 @@ void gwy_data_field_grains_mark_height(GwyDataField *data_field, GwyDataField *g
     g_object_unref(mask);
 }
 
-void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+void 
+gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
     GwyDataField *mask;
     gdouble min, max;
@@ -96,7 +97,8 @@ void gwy_data_field_grains_mark_slope(GwyDataField *data_field, GwyDataField *gr
     
 }
 
-void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
+void 
+gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint dir)
 {
     GwyDataField *maskx, *masky;
     gint i;
@@ -127,7 +129,8 @@ void gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField
     
 }
 
-void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
+void 
+gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
 					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
 					  gint wshed_steps, gdouble wshed_dropsize)
 {
@@ -159,7 +162,8 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField
 
 }
 
-void gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, gint row)
+void 
+gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, gint row)
 {
     GArray *listpnt;
     GrainPoint pnt;
@@ -178,7 +182,8 @@ void gwy_data_field_grains_remove_manually(GwyDataField *grain_field, gint col, 
     g_array_free(listpnt, TRUE);
 }
 
-void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
+void 
+gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
 {
     gint i, xres, yres, col, row;
     GArray *listpnt;
@@ -206,7 +211,8 @@ void gwy_data_field_grains_remove_by_size(GwyDataField *grain_field, gint size)
      
 }
 
-void gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint direction)
+void 
+gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataField *grain_field, gdouble threshval, gint direction)
 {
     gint i, xres, yres, col, row;
     
@@ -225,11 +231,13 @@ void gwy_data_field_grains_remove_by_height(GwyDataField *data_field, GwyDataFie
     
 }
 
-gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field)
+gdouble 
+gwy_data_field_grains_get_average(GwyDataField *grain_field)
 {
 }
 
-void gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *distribution)
+void 
+gwy_data_field_grains_get_distribution(GwyDataField *grain_field, GwyDataLine *distribution)
 {
 }
 
@@ -278,7 +286,8 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field, GwyDataField *interse
 /***********************************************************************************************************************/
 /*private functions*/
 
-gint step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
+gint 
+step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
 {
     gint xres, yres;
     gdouble a, b, c, d, v;
@@ -302,7 +311,8 @@ gint step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
     return 0;
 }
 
-void threshold_drops(GwyDataField *water_field, gdouble locate_thresh)
+void 
+threshold_drops(GwyDataField *water_field, gdouble locate_thresh)
 {
     gint i, xres, yres;
     
@@ -316,7 +326,8 @@ void threshold_drops(GwyDataField *water_field, gdouble locate_thresh)
 
 }
 
-void check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint row, 
+void 
+check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, gint row, 
 		     gint *global_number, gdouble *global_maximum_value, gint *global_col_value, gint *global_row_value)
 {
     gint xres, yres;
@@ -348,7 +359,8 @@ void check_neighbours(GwyDataField *data_field, GwyDataField *buffer, gint col, 
     
 }
 
-void drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
+void 
+drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
 {     
     gint xres, yres, i, retval;
     gint col, row;
@@ -371,7 +383,8 @@ void drop_step (GwyDataField *data_field, GwyDataField *water_field, gdouble dro
     }
 }
 
-void drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
+void 
+drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 {
     gint xres, yres, i, retval, global_row_value, global_col_value, global_number;
     gdouble col, row, global_maximum_value;
@@ -401,7 +414,8 @@ void drop_minima (GwyDataField *water_field, GwyDataField *min_field, gint thres
     g_object_unref(buffer); 
 }
 
-gint wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rcol, gint *rrow, gint last_grain)
+gint 
+wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rcol, gint *rrow, gint last_grain)
 {
     gint xres, yres;
     gdouble a, b, c, d, v;
@@ -439,7 +453,8 @@ gint wstep_by_one(GwyDataField *data_field, GwyDataField *grain_field, gint *rco
     
 }
 
-void process_mask(GwyDataField *grain_field, gint col, gint row)
+void 
+process_mask(GwyDataField *grain_field, gint col, gint row)
 {
     gint xres, yres, ival[4], val, stat, i;
     
@@ -487,7 +502,8 @@ void process_mask(GwyDataField *grain_field, gint col, gint row)
     
 }
 
-void wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *water_field, GwyDataField *grain_field, gdouble dropsize)
+void 
+wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataField *water_field, GwyDataField *grain_field, gdouble dropsize)
 {
     gint xres, yres, vcol, vrow, col, row, grain, retval;
     
@@ -517,7 +533,8 @@ void wdrop_step (GwyDataField *data_field,  GwyDataField *min_field,  GwyDataFie
     } 
 }
 
-void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
+void 
+mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
 {
     gint xres, yres, col, row;
     
@@ -536,7 +553,8 @@ void mark_grain_boundaries (GwyDataField *grain_field, GwyDataField *mark_field)
 }
 
 /*void iterate(GwyDataField *mask_field, GArray *listpnt, gint col, gint row)*/
-void iterate(GwyDataField *mask_field, gint *colpnt, gint *rowpnt, gint *npnt, gint col, gint row)
+void 
+iterate(GwyDataField *mask_field, gint *colpnt, gint *rowpnt, gint *npnt, gint col, gint row)
 {
     GrainPoint gr;
    
@@ -573,21 +591,18 @@ void iterate(GwyDataField *mask_field, gint *colpnt, gint *rowpnt, gint *npnt, g
 
 
 
-void number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
+void 
+number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
 {
-    /*GArray *listpnt;*/
-    gint *colpnt, *rowpnt, npnt;
+    gint *pnt, npnt;
     
     gint xres, yres, col, row, i, grain;
     xres = mask_field->xres;
     yres = mask_field->yres;
-    GrainPoint pnt;
 
     grain = 0;
     gwy_data_field_fill(grain_field, 0);
     
-    colpnt = (gint *)g_malloc(xres*yres*sizeof(gint));
-    rowpnt = (gint *)g_malloc(xres*yres*sizeof(gint));
     
     for (col=0; col<(xres); col++)
     {   
@@ -596,28 +611,158 @@ void number_grains(GwyDataField *mask_field, GwyDataField *grain_field)
             if (mask_field->data[col + xres*(row)]!=0 && 
                 (col>0 && row>0 && col<(xres-1) && row<(yres-1)))
             {
-                /*listpnt = g_array_new(TRUE, TRUE, sizeof(GrainPoint));*/
                 npnt=0;
-            
-                iterate(mask_field, colpnt, rowpnt, &npnt, col, row);
+           
+                pnt = gwy_data_field_fill_grain(mask_field, row, col, &npnt);
                 
+                printf("grain %d, (%d, %d), n=%d\n", grain, col, row, npnt);
                 grain++;
-/*                for (i=0; i<listpnt->len; i++)
+                for (i=0; i<npnt; i++)
                 {
-                    pnt = g_array_index (listpnt, GrainPoint, i);
-                    grain_field->data[pnt.col + xres*(pnt.row)] = grain;
+                    grain_field->data[pnt[i]] = grain;
+                    mask_field->data[pnt[i]] = 0;
                 }
-*/              for (i=0; i<npnt; i++)
-                {
-                    grain_field->data[colpnt[i] + xres*rowpnt[i]] = grain;
-                }
+                g_free(pnt);                
 
-                /*g_array_free(listpnt, TRUE);*/
             }
         }
     }
-    g_free(colpnt);
-    g_free(rowpnt); 
 }
+
+
+/**
+ * gwy_data_field_fill_grain:
+ * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
+ * @row: Row inside a grain.
+ * @col: Column inside a grain.
+ * @nindices: Where the number of points in the grain at (@col, @row) should
+ *            be stored.
+ *
+ * Finds all the points belonging to the grain at (@col, @row).
+ *
+ * Returns: A newly allocated array of indices of grain points in @dfield's
+ *          data, the size of the list is returned in @nindices.
+ **/
+gint*
+gwy_data_field_fill_grain(GwyDataField *dfield,
+                          gint row, gint col,
+                          gint *nindices)
+{
+    gdouble *data;
+    gint *visited;
+    gint *indices;
+    gint xres, yres, n, count;
+    gint *listh, *listv;
+    gint nh, nv;
+    gint i, p, j;
+    gint initial;
+
+    data = dfield->data;
+    xres = dfield->xres;
+    yres = dfield->yres;
+    initial = row*xres + col;
+    g_return_val_if_fail(data[initial], NULL);
+
+    n = xres*yres;
+    visited = g_new0(gint, n);
+    visited[initial] = 1;
+    count = 1;
+
+    listv = g_new(gint, n/2+2);
+    listv[0] = listv[1] = initial;
+    nv = 2;
+
+    listh = g_new(gint, n/2+2);
+    listh[0] = listh[1] = initial;
+    nh = 2;
+
+
+    while (nv) {
+        /* go through vertical lines and expand them horizontally */
+        for (i = 0; i < nv; i += 2) {
+            for (p = listv[i]; p <= listv[i+1]; p += xres) {
+                gint start, stop;
+
+                /* scan left */
+                start = p - 1;
+                stop = (p/xres)*xres;
+                for (j = start; j >= stop; j--) {
+                    if (visited[j] || !data[j])
+                        break;
+                    visited[j]++;
+                    count++;
+                }
+                if (j < start) {
+                    listh[nh++] = j + 1;
+                    listh[nh++] = start;
+                }
+
+                /* scan right */
+                start = p + 1;
+                stop = (p/xres + 1)*xres;
+                for (j = start; j < stop; j++) {
+                    if (visited[j] || !data[j])
+                        break;
+                    visited[j]++;
+                    count++;
+                }
+                if (j > start) {
+                    listh[nh++] = start;
+                    listh[nh++] = j - 1;
+                }
+            }
+        }
+        nv = 0;
+
+        /* go through horizontal lines and expand them vertically */
+        for (i = 0; i < nh; i += 2) {
+            for (p = listh[i]; p <= listh[i+1]; p++) {
+                gint start, stop;
+
+                /* scan up */
+                start = p - xres;
+                stop = p % xres;
+                for (j = start; j >= stop; j -= xres) {
+                    if (visited[j] || !data[j])
+                        break;
+                    visited[j]++;
+                    count++;
+                }
+                if (j < start) {
+                    listv[nv++] = j + xres;
+                    listv[nv++] = start;
+                }
+
+                /* scan down */
+                start = p + xres;
+                stop = p % xres + n;
+                for (j = start; j < stop; j += xres) {
+                    if (visited[j] || !data[j])
+                        break;
+                    visited[j]++;
+                    count++;
+                }
+                if (j > start) {
+                    listv[nv++] = start;
+                    listv[nv++] = j - xres;
+                }
+            }
+        }
+        nh = 0;
+    }
+
+    g_free(listv);
+    g_free(listh);
+
+    indices = g_new(gint, count);
+    j = 0;
+    for (i = 0; i < n; i++) {
+        if (visited[i])
+            indices[j++] = i;
+    }
+    *nindices = count;
+    return indices;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
