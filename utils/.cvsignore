@@ -1,10 +1,7 @@
 Makefile
 Makefile.in
 dump-modules
-*.object
-*.lo
-*.la
 .libs
 .deps
 core.*
-*.def
+*.html

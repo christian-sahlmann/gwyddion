@@ -5,3 +5,6 @@ Makefile.in
 .libs
 .deps
 core.*
+GwyddionDump.ppu
+invert_cpp
+invert_pascal

@@ -6,3 +6,4 @@ gwyddion.pot
 remove-potcdate.sed
 *.gmo
 stamp-*
+makefile.msc

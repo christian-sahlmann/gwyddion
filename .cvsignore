@@ -15,8 +15,6 @@ libtool
 ltmain.sh
 stamp-h1
 gwyddion.spec
-gwyddion.pc
 *.tar.gz
 *.tar.bz2
-*.iss
 .noBackup
