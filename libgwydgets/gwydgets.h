@@ -27,9 +27,15 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GtkWidget* gwy_palette_option_menu(GCallback callback,
-                                   gpointer cbdata,
-                                   const gchar *current);
+GtkWidget* gwy_palette_option_menu        (GCallback callback,
+                                           gpointer cbdata,
+                                           const gchar *current);
+GtkWidget* gwy_interpolation_option_menu  (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyInterpolationType current);
+GtkWidget* gwy_windowing_option_menu      (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyWindowingType current);
 
 #ifdef __cplusplus
 }

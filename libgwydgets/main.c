@@ -12,7 +12,14 @@
 #include <libdraw/gwypalette.h>
 #include <libprocess/datafield.h>
 
+#define TEST_VECTOR_SHADE 0
+#define TEST_DATA_VIEW 1
+#define TEST_OPTION_MENUS 2
+
+#define TEST_WHAT TEST_OPTION_MENUS
+
 /***** VECTOR SHADE [[[ *****************************************************/
+#if (TEST_WHAT == TEST_VECTOR_SHADE)
 #define N 5
 
 static gulong hid[N];
@@ -54,7 +61,7 @@ foo_cb(GwySphereCoords *c, gpointer p)
 }
 
 static void
-vector_shade_test(void)
+test(void)
 {
     GtkWidget *win, *widget, *box;
     GObject *pal, *pdef;
@@ -83,13 +90,15 @@ vector_shade_test(void)
     gtk_widget_show_all(win);
     g_signal_connect(G_OBJECT(win), "destroy", gtk_main_quit, NULL);
 }
+#endif
 /***** ]]] VECTOR SHADE *****************************************************/
 
 /***** DATA VIEW [[[ ********************************************************/
+#if (TEST_WHAT == TEST_DATA_VIEW)
 #define FILENAME "data_field.object"
 
 static void
-quit_callback(GwyDataWindow *data_window, GObject *data)
+quit_callback(GObject *data)
 {
     FILE *fh;
     guchar *buffer = NULL;
@@ -104,7 +113,7 @@ quit_callback(GwyDataWindow *data_window, GObject *data)
 }
 
 static void
-data_view_test(void)
+test(void)
 {
     GwyContainer *data;
     GtkWidget *window, *view;
@@ -141,10 +150,74 @@ data_view_test(void)
     window = gwy_data_window_new(GWY_DATA_VIEW(view));
 
     gtk_widget_show_all(window);
-    g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(quit_callback), data);
+    g_signal_connect_swapped(G_OBJECT(window), "destroy",
+                             G_CALLBACK(quit_callback), data);
 }
+#endif
 /***** ]]] DATA VIEW ********************************************************/
+
+/***** MENUS [[[ ************************************************************/
+#if (TEST_WHAT == TEST_OPTION_MENUS)
+static void
+menu_callback(GObject *menu_item, const gchar *which_menu)
+{
+    if (strcmp(which_menu, "palette") == 0) {
+        g_message("Palette: %s",
+                  (gchar*)g_object_get_data(menu_item, "palette-name"));
+        return;
+    }
+    if (strcmp(which_menu, "interpolation") == 0) {
+        g_message("Interpolation: %d",
+                  GPOINTER_TO_INT(g_object_get_data(menu_item,
+                                                    "interpolation-type")));
+        return;
+    }
+    if (strcmp(which_menu, "windowing") == 0) {
+        g_message("Windowing: %d",
+                  GPOINTER_TO_INT(g_object_get_data(menu_item,
+                                                    "windowing-type")));
+        return;
+    }
+    g_assert_not_reached();
+}
+
+static void
+test(void)
+{
+    GtkWidget *window, *table, *omenu, *widget;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_set_border_width(GTK_CONTAINER(window), 4);
+    table = gtk_table_new(3, 2, FALSE);
+    gtk_container_add(GTK_CONTAINER(window), table);
+
+    widget = gtk_label_new("Palettes: ");
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
+    omenu = gwy_palette_option_menu(G_CALLBACK(menu_callback),
+                                    "palette",
+                                    GWY_PALETTE_OLIVE);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
+
+    widget = gtk_label_new("Interpolation types: ");
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
+    omenu = gwy_interpolation_option_menu(G_CALLBACK(menu_callback),
+                                          "interpolation",
+                                          GWY_INTERPOLATION_BILINEAR);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
+
+    widget = gtk_label_new("Windowing types: ");
+    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 2, 3);
+    omenu = gwy_windowing_option_menu(G_CALLBACK(menu_callback),
+                                      "windowing",
+                                      GWY_WINDOWING_HAMMING);
+    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 2, 3);
+
+    gtk_widget_show_all(window);
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(gtk_main_quit), NULL);
+}
+#endif
+/***** ]]] MENUS ************************************************************/
 
 int
 main(int argc, char *argv[])
@@ -159,9 +232,7 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     gwy_palette_def_setup_presets();
-
-    //vector_shade_test();
-    data_view_test();
+    test();
     gtk_main();
 
     return 0;
