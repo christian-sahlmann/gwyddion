@@ -41,6 +41,8 @@
  * XXX: Plug-ins cannot specify sens_flags.
  */
 
+#define DEBUG 1
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -311,25 +313,35 @@ find_plugin_executables(const gchar *dir,
         g_clear_error(&err);
         return NULL;
     }
+    gwy_debug("Scanning directory %s", dir);
     while ((filename = g_dir_read_name(gdir))) {
         if (g_str_has_prefix(filename, ".")
             || g_str_has_suffix(filename, "~")
             || g_str_has_suffix(filename, ".BAK")
-            || g_str_has_suffix(filename, ".bak"))
+            || g_str_has_suffix(filename, ".bak")) {
+            gwy_debug("Ignoring %s (bad extension)", filename);
             continue;
+        }
         pluginname = g_build_filename(dir, filename, NULL);
         if (g_file_test(pluginname, G_FILE_TEST_IS_DIR)) {
+            gwy_debug("%s is a directory, descending", filename);
             list = find_plugin_executables(pluginname, list, level);
             g_free(pluginname);
             continue;
         }
         if (!g_file_test(pluginname, G_FILE_TEST_IS_EXECUTABLE)) {
+            gwy_debug("Ignoring %s, is not executable", filename);
             g_free(pluginname);
             continue;
         }
 #ifdef G_OS_WIN32
-        if (!g_str_has_suffix(filename, ".exe")
-            || g_str_has_prefix(filename, "unins")) {
+        if (!g_str_has_suffix(filename, ".exe"))
+            gwy_debug("[Win32] Ignoring %s, is not .exe", filename);
+            g_free(pluginname);
+            continue;
+        }
+        if (g_str_has_prefix(filename, "unins")) {
+            gwy_debug("[Win32] Ignoring %s, is uninstaller", filename);
             g_free(pluginname);
             continue;
         }
