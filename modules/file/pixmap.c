@@ -238,20 +238,6 @@ saveable_formats[] = {
  * FIXME: this is never freed */
 static GSList *pixmap_formats = NULL;
 
-static const GwyEnum output_formats[] = {
-    { "Data alone",    PIXMAP_RAW_DATA },
-    { "Data + rulers", PIXMAP_RULERS },
-    { "Everything",    PIXMAP_EVERYTHING },
-};
-
-static const GwyEnum value_map_types[] = {
-    { "Red",         PIXMAP_MAP_RED },
-    { "Green",       PIXMAP_MAP_GREEN },
-    { "Blue",        PIXMAP_MAP_BLUE },
-    { "Value (max)", PIXMAP_MAP_VALUE },
-    { "RGB sum",     PIXMAP_MAP_SUM },
-};
-
 static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_EVERYTHING
 };
@@ -638,6 +624,14 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                    gint yres,
                    const gboolean mapknown)
 {
+    static const GwyEnum value_map_types[] = {
+        { "Red",         PIXMAP_MAP_RED },
+        { "Green",       PIXMAP_MAP_GREEN },
+        { "Blue",        PIXMAP_MAP_BLUE },
+        { "Value (max)", PIXMAP_MAP_VALUE },
+        { "RGB sum",     PIXMAP_MAP_SUM },
+    };
+
     PixmapLoadControls controls;
     GtkObject *adj;
     GtkAdjustment *adj2;
@@ -1387,11 +1381,19 @@ static gboolean
 pixmap_save_dialog(PixmapSaveArgs *args,
                    const gchar *name)
 {
-    GtkObject *zoom;
-    GtkWidget *dialog, *table, *spin, *omenu;
+    static const GwyEnum output_formats[] = {
+        { "Data alone",    PIXMAP_RAW_DATA },
+        { "Data + rulers", PIXMAP_RULERS },
+        { "Everything",    PIXMAP_EVERYTHING },
+    };
+
     enum { RESPONSE_RESET = 1 };
+    GtkObject *zoom;
+    GtkWidget *dialog, *table, *spin, *label;
+    GSList *group, *l;
     gint response;
     gchar *s, *title;
+    gint row;
 
     s = g_ascii_strup(name, -1);
     title = g_strconcat(_("Export "), s, NULL);
@@ -1404,17 +1406,31 @@ pixmap_save_dialog(PixmapSaveArgs *args,
                                          NULL);
     g_free(title);
 
-    table = gtk_table_new(2, 3, FALSE);
+    table = gtk_table_new(2 + G_N_ELEMENTS(output_formats), 3, FALSE);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
+    row = 0;
 
     zoom = gtk_adjustment_new(args->zoom, 0.06, 16.0, 0.1, 1.0, 0);
-    spin = gwy_table_attach_spinbutton(table, 0, _("_Zoom:"), "", zoom);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Zoom:"), "", zoom);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    row++;
 
-    omenu = gwy_option_menu_create(output_formats, G_N_ELEMENTS(output_formats),
-                                   "output-format", NULL, NULL, args->otype);
-    gwy_table_attach_row(table, 1, _("Output:"), "", omenu);
+    label = gtk_label_new(_("Output:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    group = gwy_radio_buttons_create(output_formats,
+                                     G_N_ELEMENTS(output_formats),
+                                     "output-format", NULL, NULL, args->otype);
+    for (l = group; l; l = g_slist_next(l)) {
+        gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(l->data),
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        row++;
+
+    }
 
     gtk_widget_show_all(dialog);
     do {
@@ -1433,7 +1449,7 @@ pixmap_save_dialog(PixmapSaveArgs *args,
             case RESPONSE_RESET:
             *args = pixmap_save_defaults;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(zoom), args->zoom);
-            gwy_option_menu_set_history(omenu, "output-format", args->otype);
+            gwy_radio_buttons_set_current(group, "output-format", args->otype);
             break;
 
             default:
@@ -1443,7 +1459,7 @@ pixmap_save_dialog(PixmapSaveArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     args->zoom = gtk_adjustment_get_value(GTK_ADJUSTMENT(zoom));
-    args->otype = gwy_option_menu_get_history(omenu, "output-format");
+    args->otype = gwy_radio_buttons_get_current(group, "output-format");
     gtk_widget_destroy(dialog);
 
     return TRUE;
