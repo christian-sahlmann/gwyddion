@@ -1120,6 +1120,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
         gwy_container_remove_by_prefix(data, line);
         gwy_container_set_object_by_name(data, line, G_OBJECT(dfield));
+        g_object_unref(dfield);
     }
     return data;
 
