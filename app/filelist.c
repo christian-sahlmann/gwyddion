@@ -1050,12 +1050,18 @@ gwy_recent_file_thumbnail_name(const gchar *uri)
 static G_CONST_RETURN gchar*
 gwy_recent_file_thumbnail_dir(void)
 {
+    const gchar *thumbdir =
+#ifdef G_OS_WIN32
+        "thumbnails";
+#else
+        ".thumbnails";
+#endif
     static gchar *thumbnail_dir = NULL;
 
     if (thumbnail_dir)
         return thumbnail_dir;
 
-    thumbnail_dir = g_build_filename(g_get_home_dir(), ".thumbnails", NULL);
+    thumbnail_dir = g_build_filename(gwy_get_home_dir(), thumbdir, NULL);
     return thumbnail_dir;
 }
 
