@@ -168,10 +168,10 @@ gwy_gradient_finalize(GObject *object)
     gwy_debug("%s", gradient->name);
 
     klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    if (g_hash_table_lookup(klass->gradients, name) == object) {
+    g_return_if_fail(klass);
+    if (g_hash_table_lookup(klass->gradients, gradient->name) == object) {
         g_critical("Trying to finalize a gradient still present in database");
-        g_hash_table_steal(klass->gradients, name);
+        g_hash_table_steal(klass->gradients, gradient->name);
     }
 
     g_array_free(gradient->points, TRUE);
