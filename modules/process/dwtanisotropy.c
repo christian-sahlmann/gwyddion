@@ -28,61 +28,53 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define DWT_DENOISE_RUN_MODES \
+#define DWT_ANISOTROPY_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 /* Data for this function.
  * (It looks a little bit silly with just one parameter.) */
 typedef struct {
-    gboolean preserve;
     GwyInterpolationType interp;
     GwyDWTType wavelet;
-    GwyDWTDenoiseType method;
-} DWTDenoiseArgs;
+    gdouble ratio;
+} DWTAnisotropyArgs;
 
 typedef struct {
-    GtkWidget *preserve;
     GtkWidget *wavelet;
     GtkWidget *interp;
-    GtkWidget *method;
-} DWTDenoiseControls;
+    GtkObject *ratio;
+} DWTAnisotropyControls;
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    dwt_denoise                        (GwyContainer *data,
+static gboolean    dwt_anisotropy                        (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    dwt_denoise_dialog                 (DWTDenoiseArgs *args);
+static gboolean    dwt_anisotropy_dialog                 (DWTAnisotropyArgs *args);
 static void        interp_changed_cb          (GObject *item,
-                                               DWTDenoiseArgs *args);
+                                               DWTAnisotropyArgs *args);
 static void        wavelet_changed_cb          (GObject *item,
-                                               DWTDenoiseArgs *args);
-static void        method_changed_cb          (GObject *item,
-                                               DWTDenoiseArgs *args);
-static void        preserve_changed_cb        (GtkToggleButton *button,
-                                               DWTDenoiseArgs *args);
-static void        dwt_denoise_dialog_update          (DWTDenoiseControls *controls,
-                                               DWTDenoiseArgs *args);
-static void        dwt_denoise_load_args              (GwyContainer *container,
-                                               DWTDenoiseArgs *args);
-static void        dwt_denoise_save_args              (GwyContainer *container,
-                                               DWTDenoiseArgs *args);
-static void        dwt_denoise_sanitize_args          (DWTDenoiseArgs *args);
+                                               DWTAnisotropyArgs *args);
+static void        ratio_changed_cb            (GtkAdjustment *adj,
+						DWTAnisotropyArgs *args);
+static void        dwt_anisotropy_dialog_update          (DWTAnisotropyControls *controls,
+                                               DWTAnisotropyArgs *args);
+static void        dwt_anisotropy_load_args              (GwyContainer *container,
+                                               DWTAnisotropyArgs *args);
+static void        dwt_anisotropy_save_args              (GwyContainer *container,
+                                               DWTAnisotropyArgs *args);
+static void        dwt_anisotropy_sanitize_args          (DWTAnisotropyArgs *args);
 
-static GtkWidget*  menu_method                 (GCallback callback,
-						gpointer cbdata,
-						GwyDWTDenoiseType current);
 
-DWTDenoiseArgs dwt_denoise_defaults = {
-    0,
+DWTAnisotropyArgs dwt_anisotropy_defaults = {
     GWY_INTERPOLATION_BILINEAR,
     GWY_DWT_DAUB12,
-    GWY_DWT_DENOISE_SCALE_ADAPTIVE,
+    4
 };
 
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    "dwt_denoise",
+    "dwt_anisotropy",
     N_("2D Discrete Wavelet Transform module"),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.3",
@@ -97,46 +89,42 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyProcessFuncInfo dwt_denoise_func_info = {
-        "dwt_denoise",
-        N_("/_Integral Transforms/_DWT denoise..."),
-        (GwyProcessFunc)&dwt_denoise,
-        DWT_DENOISE_RUN_MODES,
+    static GwyProcessFuncInfo dwt_anisotropy_func_info = {
+        "dwt_anisotropy",
+        N_("/_Integral Transforms/_DWT anisotropy..."),
+        (GwyProcessFunc)&dwt_anisotropy,
+        DWT_ANISOTROPY_RUN_MODES,
         0,
     };
 
-    gwy_process_func_register(name, &dwt_denoise_func_info);
+    gwy_process_func_register(name, &dwt_anisotropy_func_info);
 
     return TRUE;
 }
 
 static gboolean
-dwt_denoise(GwyContainer *data, GwyRunType run)
+dwt_anisotropy(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window, *dialog;
-    GwyDataField *dfield;
+    GtkWidget *dialog;
+    GwyDataField *dfield, *mask, *maskfield;
     GwyDataLine *wtcoefs;
-    DWTDenoiseArgs args;
+    DWTAnisotropyArgs args;
     gboolean ok;
     gint xsize, ysize, newsize;
 
-    g_assert(run & DWT_DENOISE_RUN_MODES);
+    g_assert(run & DWT_ANISOTROPY_RUN_MODES);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     if (run == GWY_RUN_WITH_DEFAULTS)
-        args = dwt_denoise_defaults;
+        args = dwt_anisotropy_defaults;
     else
-        dwt_denoise_load_args(gwy_app_settings_get(), &args);
-    ok = (run != GWY_RUN_MODAL) || dwt_denoise_dialog(&args);
+        dwt_anisotropy_load_args(gwy_app_settings_get(), &args);
+    ok = (run != GWY_RUN_MODAL) || dwt_anisotropy_dialog(&args);
     if (run == GWY_RUN_MODAL)
-        dwt_denoise_save_args(gwy_app_settings_get(), &args);
+        dwt_anisotropy_save_args(gwy_app_settings_get(), &args);
     if (!ok)
         return FALSE;
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));    
 
     xsize = gwy_data_field_get_xres(dfield);
     ysize = gwy_data_field_get_yres(dfield);
@@ -146,45 +134,57 @@ dwt_denoise(GwyContainer *data, GwyRunType run)
              GTK_DIALOG_DESTROY_WITH_PARENT,
              GTK_MESSAGE_ERROR,
              GTK_BUTTONS_OK,
-             _("DWT_DENOISE: Data must be square."));
+             _("DWT_ANISOTROPY: Data must be square."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
         return ok;
+    }
+
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+    {
+	mask =  GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
+    }
+    else
+    {
+	mask = gwy_data_field_new(gwy_data_field_get_xres(dfield),
+				       gwy_data_field_get_yres(dfield),
+				       gwy_data_field_get_xreal(dfield),
+				       gwy_data_field_get_yreal(dfield),
+				       TRUE);
+	gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(mask));
+	g_object_unref(mask);
     }
 
     newsize = gwy_data_field_get_fft_res(xsize);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(mask, newsize, newsize,
+                            GWY_INTERPOLATION_BILINEAR);
+
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_dwt_denoise(dfield, wtcoefs, TRUE, 1, args.method);
+    mask = gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio, 16);
     
     
-    if (args.preserve)
-    {
-        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-    }
+    gwy_data_field_resample(mask, xsize, ysize,
+                            GWY_INTERPOLATION_BILINEAR);
 
-    data_window = gwy_app_data_window_create(data);
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-				     "DWT_DENOISE");
-    
     g_object_unref(wtcoefs);
-    return FALSE;
+    return TRUE;
 }
 
 
 static gboolean
-dwt_denoise_dialog(DWTDenoiseArgs *args)
+dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 {
-    GtkWidget *dialog, *table;
-    DWTDenoiseControls controls;
+    GtkWidget *dialog, *table, *spin;
+    DWTAnisotropyControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
 
-    dialog = gtk_dialog_new_with_buttons(_("2D DWT_DENOISE"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("2D DWT_ANISOTROPY"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -197,15 +197,6 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    controls.preserve
-        = gtk_check_button_new_with_mnemonic(_("_Preserve size (don't "
-                                               "resize to power of 2)"));
-    gtk_table_attach(GTK_TABLE(table), controls.preserve, 0, 3, 0, 1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
-                                 args->preserve);
-    g_signal_connect(controls.preserve, "toggled",
-                     G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
         = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
@@ -219,11 +210,16 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
-    controls.method
-	= menu_method(G_CALLBACK(method_changed_cb),
-		      args, args->method);
-    gwy_table_attach_row(table, 3, _("_Threshold:"), "",
-			 controls.method);
+    controls.ratio = gtk_adjustment_new(args->ratio,
+					0.0001, 10000, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 3,
+				       _("X/Y ratio threshold:"), NULL,
+				       controls.ratio);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect(controls.ratio, "value_changed",
+		     G_CALLBACK(ratio_changed_cb), args);
+    
+    
 
     gtk_widget_show_all(dialog);
     do {
@@ -240,8 +236,8 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
             break;
 
             case RESPONSE_RESET:
-            *args = dwt_denoise_defaults;
-            dwt_denoise_dialog_update(&controls, args);
+            *args = dwt_anisotropy_defaults;
+            dwt_anisotropy_dialog_update(&controls, args);
             break;
 
             default:
@@ -255,26 +251,10 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     return TRUE;
 }
 
-static GtkWidget*
-menu_method(GCallback callback,
-	    gpointer cbdata,
-	    GwyDWTDenoiseType current)
-{
-    static const GwyEnum entries[] = {
-	{ N_("Universal"),  GWY_DWT_DENOISE_UNIVERSAL,  },
-	{ N_("Scale adaptive"),  GWY_DWT_DENOISE_SCALE_ADAPTIVE,  },
-	{ N_("Scale and space adaptive"),  GWY_DWT_DENOISE_SPACE_ADAPTIVE,  },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-				  "denoise-type", callback, cbdata,
-				  current);    
-	
-}
 
 static void
 interp_changed_cb(GObject *item,
-                  DWTDenoiseArgs *args)
+                  DWTAnisotropyArgs *args)
 {
     args->interp = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "interpolation-type"));
@@ -282,29 +262,20 @@ interp_changed_cb(GObject *item,
 
 static void
 wavelet_changed_cb(GObject *item,
-                  DWTDenoiseArgs *args)
+                  DWTAnisotropyArgs *args)
 {
     args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
-    printf("wavelet: %d\n", args->wavelet);
 }
 
 static void
-method_changed_cb(GObject *item,
-                  DWTDenoiseArgs *args)
+ratio_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 {
-    args->method = GPOINTER_TO_INT(g_object_get_data(item, "denoise-type"));
-}
-
-
-static void
-preserve_changed_cb(GtkToggleButton *button, DWTDenoiseArgs *args)
-{
-    args->preserve = gtk_toggle_button_get_active(button);
-}
+    args->ratio = gtk_adjustment_get_value(adj);
+}    
 
 static void
-dwt_denoise_dialog_update(DWTDenoiseControls *controls,
-                     DWTDenoiseArgs *args)
+dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
+                     DWTAnisotropyArgs *args)
 {
     /*
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
@@ -317,42 +288,37 @@ dwt_denoise_dialog_update(DWTDenoiseControls *controls,
 }
 
 
-static const gchar *preserve_key = "/module/dwt_denoise/preserve";
-static const gchar *interp_key = "/module/dwt_denoise/interp";
-static const gchar *wavelet_key = "/module/dwt_denoise/wavelet";
-static const gchar *method_key = "/module/dwt_denoise/method";
+static const gchar *interp_key = "/module/dwt_anisotropy/interp";
+static const gchar *wavelet_key = "/module/dwt_anisotropy/wavelet";
+static const gchar *ratio_key = "/module/dwt_anisotropy/ratio";
 
 static void
-dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
+dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)
 {
-    args->preserve = !!args->preserve;
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
-    args->method = CLAMP(args->wavelet, GWY_DWT_DENOISE_UNIVERSAL, GWY_DWT_DENOISE_SPACE_ADAPTIVE);
 }
 
 static void
-dwt_denoise_load_args(GwyContainer *container,
-              DWTDenoiseArgs *args)
+dwt_anisotropy_load_args(GwyContainer *container,
+              DWTAnisotropyArgs *args)
 {
-    *args = dwt_denoise_defaults;
+    *args = dwt_anisotropy_defaults;
 
-    gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
-    gwy_container_gis_enum_by_name(container, method_key, &args->method);
-    dwt_denoise_sanitize_args(args);
+    gwy_container_gis_double_by_name(container, ratio_key, &args->ratio);
+    dwt_anisotropy_sanitize_args(args);
 }
 
 static void
-dwt_denoise_save_args(GwyContainer *container,
-              DWTDenoiseArgs *args)
+dwt_anisotropy_save_args(GwyContainer *container,
+              DWTAnisotropyArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
-    gwy_container_set_enum_by_name(container, method_key, args->method);
+    gwy_container_set_double_by_name(container, ratio_key, args->ratio);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

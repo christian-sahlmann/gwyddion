@@ -17,6 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+#include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,9 +44,18 @@ static gint remove_by_adaptive_threshold(GwyDataField *dfield, gint ulcol, gint 
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
 static gint remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow,
 		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
+static gint remove_by_threshold_under_mask(GwyDataField *dfield, 
+					   GwyDataField *mask,
+					   gint ulcol, gint ulrow, gint brcol, gint brrow,
+		                        gboolean hard, gdouble multiple_threshold, gdouble noise_variance);
 
+
+static gint find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gint setsize);
 
 static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gint brrow);
+static void mask_grow_do(GwyDataField *dfield,
+	                  gint by);
+
 /*public functions*/
 
 
@@ -356,6 +367,21 @@ gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint
     return dfield;
 }
 
+/**
+* gwy_data_field_dwt_denoise:
+* @dfield: datafield to be transformed (square)
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @hart: whether to apply hard thresholding
+* @multiple_threshold: multiply it by value different from zero to change threshold
+* @type: type of thresholding
+*
+* Performs wavelet denoising base on threshold obtained from noise variance
+* (obtained from high scale wvelet coefficients). This threshold can
+* be multiplied by user defined value.
+* 
+* Returns: denoised GwyDataField.
+ **/
+
 GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
 					                           gdouble multiple_threshold,
 								   GwyDWTDenoiseType type)
@@ -450,8 +476,119 @@ GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_c
 }
 
 
+/**
+* gwy_data_field_mark_anisotropy:
+* @dfield: datafield to be transformed (square)
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @isign: direction of the transform (1)...direct, (-1)...inverse
+* @minsize: size of minimal transform result block
+*
+* Performs steps of the 2D image wavelet decomposition while the smallest
+* low pass coefficients block is equal to @minsize. Run with
+* @minsize = @dfield->xres/2 to perform one step of decomposition
+* or @minsize = 4 to perform full decomposition (or anything between).
+* 
+* Returns: transformed GwyDataField.
+ **/
+GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataField *mask,
+                           GwyDataLine *wt_coefs, gdouble ratio, gint lowlimit)
+{
+    GwyDataField *buffer;
+    gint br, ul, ulcol, ulrow, brcol, brrow, count;
+
+    buffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres,
+					       dfield->xreal, dfield->yreal,
+					       FALSE));
+    gwy_data_field_copy(dfield, buffer);			        
+    gwy_data_field_fill(mask, 0);
+
+    gwy_data_field_dwt(buffer, wt_coefs, 1, lowlimit);
+
+    for (br = dfield->xres; br>lowlimit; br>>=1)
+    {
+	ul = br/2;
+
+	count = find_anisotropy(buffer, mask, ul, br, ratio, 4);	
+	printf("Level %d: found %d anisotropy suspections.\n", br, count);
+    }
+        
+    g_object_unref(buffer);
+    return mask;   
+}
+
+static void
+average_under_mask(GwyDataField *dfield, GwyDataField *mask)
+{
+    gint n;   
+    gdouble avg = gwy_data_field_get_avg(dfield);
+
+    for (n=0; n<(dfield->xres*dfield->yres); n++)
+    {
+	if (mask->data[n]>0) dfield->data[n] = avg;
+    }
+}
+
+
+GwyDataField *gwy_data_field_dwt_correction(GwyDataField *dfield, GwyDataField *mask,
+					    GwyDataLine *wt_coefs)
+{
+    gint i, nsteps=300, border=20, br, ul, count;
+    gdouble threshold, median, noise_variance;
+    GwyDataField *maskbuffer;
+    gint ulcol, ulrow, brcol, brrow;
+    gdouble mult=1;
+    maskbuffer = GWY_DATA_FIELD(gwy_data_field_new(dfield->xres, dfield->yres,
+					       dfield->xreal, dfield->yreal,
+					       FALSE));
+     
+    average_under_mask(dfield, mask);
+
+    for (i=0; i<nsteps; i++)
+    {
+
+	    dfield = gwy_data_field_dwt(dfield, wt_coefs, 1, 32);
+
+	    ulcol = dfield->xres/2; ulrow = dfield->xres/2;
+	    brcol = dfield->xres; brrow = dfield->xres;
+	 
+	    median = smedian(dfield, ulcol, ulrow, brcol, brrow);
+	    noise_variance = median/0.6745;
+	    mult*=0.7;
+
+	    count = 0;
+	    for (br = dfield->xres; br>32; br>>=1)
+	    {	
+		gwy_data_field_copy(mask, maskbuffer);
+		mask_grow_do(maskbuffer, (nsteps-i)/20);
+		gwy_data_field_resample(maskbuffer, br/2, br/2, GWY_INTERPOLATION_ROUND);
+		ul = br/2;
+	
+		ulcol = ul; ulrow = ul;
+		brcol = br; brrow = br;
+		    count += remove_by_threshold_under_mask(dfield, maskbuffer,
+							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
+		ulcol = 0; ulrow = ul;
+		brcol = ul; brrow = br;
+		    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
+							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
+		ulcol = ul; ulrow = 0;
+		brcol = br; brrow = ul;
+		    count += remove_by_threshold_under_mask(dfield, maskbuffer, 
+							   ulcol, ulrow, brcol, brrow, TRUE, mult, noise_variance);
+		    
+	        gwy_data_field_resample(maskbuffer, dfield->xres, dfield->xres, GWY_INTERPOLATION_NONE);
+	    }
+	    printf("iteration %d: %d removed\n", i, count);
+	    dfield = gwy_data_field_dwt(dfield, wt_coefs, -1, 32);
+    }
+    
+    g_object_unref(maskbuffer);
+    return dfield;
+ 
+}
 
 /*private functions*/
+
 
 static GwyDataLine*
 pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
@@ -660,6 +797,100 @@ remove_by_threshold(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol, gi
     return count;
 }
 
+static gint
+remove_by_threshold_under_mask(GwyDataField *dfield, GwyDataField *mask, gint ulcol, gint ulrow, gint brcol, gint brrow, 
+		    gboolean hard, gdouble multiple_threshold, gdouble noise_variance)
+{
+    gdouble rms, threshold;
+    gdouble *datapos;
+    gint i, j, n, count, icor, jcor;
+
+    n = (brrow-ulrow)*(brcol-ulcol);
+    
+    rms = gwy_data_field_area_get_rms(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow);
+    if ((rms*rms - noise_variance*noise_variance) > 0)
+    {
+	rms = sqrt(rms*rms - noise_variance*noise_variance);
+	threshold = noise_variance*noise_variance/rms*multiple_threshold;
+    }
+    else
+    {	
+        threshold = 
+	    MAX(gwy_data_field_area_get_max(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow), 
+		-gwy_data_field_area_get_min(dfield, ulcol, ulrow, brcol-ulcol, brrow-ulrow));
+    }
+
+    count = 0;
+    datapos = dfield->data + ulrow*dfield->xres + ulcol;
+    for (i = 0; i < (brrow - ulrow); i++) {
+       gdouble *drow = datapos + i*dfield->xres;
+
+       for (j = 0; j < (brcol - ulcol); j++) {
+	   if (mask->data[j + i*mask->xres] > 0 && fabs(*drow) < threshold*100)
+	   {
+	       if (hard) *drow = 0;
+	       else {
+		   if (*drow<0) (*drow)+=threshold;
+		   else (*drow)-=threshold;
+	       }
+	       count++;
+	   }
+	   drow++;
+       }
+    }
+    return count;
+}
+
+
+static gint
+find_anisotropy(GwyDataField *dfield, GwyDataField *mask, gint ul, gint br, gdouble threshold, gint setsize)
+{
+    gdouble *brpos, *trpos, *blpos, *brdrow, *trdrow, *bldrow;
+    gdouble cor, rms;
+    gint i, j, n, count, mincol, minrow, maxcol, maxrow;
+
+    count = 0;
+    brpos = dfield->data + ul*dfield->xres + ul;
+    trpos = dfield->data + ul;
+    blpos = dfield->data + ul*dfield->xres;
+
+    /*ratio between all field and its fraction*/
+    cor = dfield->xres/(br-ul);
+    rms = gwy_data_field_area_get_rms(dfield, ul, ul, br-ul, br-ul);
+    
+    for (i = 0; i < (br - ul); i++) {
+	brdrow = brpos + i*dfield->xres;
+	bldrow = blpos + i*dfield->xres;
+	trdrow = trpos + i*dfield->xres;
+	
+	for (j = 0; j < (br - ul); j++) {
+	   if (fabs(*trdrow)>(rms/2) && fabs(*bldrow)>(rms/2) && fabs(1-(*bldrow)/(*trdrow))>threshold)
+	   {
+	       if (fabs(*bldrow)>fabs(*trdrow))
+	       {
+		   mincol = MAX(j*cor - setsize/2, 0);
+		   maxcol = MIN(j*cor + setsize/2, mask->xres);
+		   minrow = MAX(i*cor - cor*setsize/2, 0);
+		   maxrow = MIN(i*cor + cor*setsize/2, mask->yres);
+	       }
+	       else
+	       {
+		   mincol = MAX(j*cor - cor*setsize/2, 0);
+		   maxcol = MIN(j*cor + cor*setsize/2, mask->xres);
+		   minrow = MAX(i*cor - setsize/2, 0);
+		   maxrow = MIN(i*cor + setsize/2, mask->yres);			   
+	       }
+	       gwy_data_field_area_fill(mask, mincol, minrow, maxcol, maxrow, 1);
+	       count++;
+	   }
+	   *brdrow++;
+	   *bldrow++;
+	   *trdrow++;
+	}
+    }  
+    return count;
+}
+
 
 gint dsort(const void *p_a, const void *p_b)
 {
@@ -695,6 +926,64 @@ static gdouble smedian(GwyDataField *dfield, gint ulcol, gint ulrow, gint brcol,
    val = (buf[(gint)(n/2)-1]+buf[(gint)(n/2)])/2;
    g_free(buf);
    return val;
+}
+
+
+
+static void
+mask_grow_do(GwyDataField *dfield,
+             gint by)
+{
+    gdouble *data, *buffer, *prow;
+    gdouble min, q1, q2;
+    gint xres, yres, rowstride;
+    gint i, j, iter;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+    rowstride = xres;
+
+    buffer = g_new(gdouble, xres);
+    prow = g_new(gdouble, xres);
+    for (iter = 0; iter < by; iter++) {
+        min = G_MAXDOUBLE;
+        for (j = 0; j < xres; j++)
+            prow[j] = -G_MAXDOUBLE;
+        memcpy(buffer, data, xres*sizeof(gdouble));
+        for (i = 0; i < yres; i++) {
+            gdouble *row = data + i*xres;
+
+            if (i == yres-1)
+                rowstride = 0;
+
+            j = 0;
+            q2 = MAX(buffer[j], buffer[j+1]);
+            q1 = MAX(prow[j], row[j+rowstride]);
+            row[j] = MAX(q1, q2);
+            min = MIN(min, row[j]);
+            for (j = 1; j < xres-1; j++) {
+                q1 = MAX(prow[j], buffer[j-1]);
+                q2 = MAX(buffer[j], buffer[j+1]);
+                q2 = MAX(q2, row[j+rowstride]);
+                row[j] = MAX(q1, q2);
+                min = MIN(min, row[j]);
+            }
+            j = xres-1;
+            q2 = MAX(buffer[j-1], buffer[j]);
+            q1 = MAX(prow[j], row[j+rowstride]);
+            row[j] = MAX(q1, q2);
+            min = MIN(min, row[j]);
+
+            GWY_SWAP(gdouble*, prow, buffer);
+            if (i < yres-1)
+                memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
+        }
+        if (min >= 1.0)
+            break;
+    }
+    g_free(buffer);
+    g_free(prow);
 }
 
 

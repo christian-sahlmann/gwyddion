@@ -63,6 +63,13 @@ GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, g
 GwyDataField *gwy_data_field_dwt_denoise(GwyDataField *dfield, GwyDataLine *wt_coefs, gboolean hard,
 					 gdouble multiple_threshold, GwyDWTDenoiseType type);
 
+/*wavelet anisotropy marking (scars, etc.)*/
+GwyDataField *gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield, GwyDataField *mask,
+				GwyDataLine *wt_coefs, gdouble ratio, gint lowlimit);
+
+/*wavelet interpolation (correction of lost data in mask)*/
+GwyDataField *gwy_data_field_dwt_correction(GwyDataField *dfield, GwyDataField *mask,
+				GwyDataLine *wt_coefs);
 
 G_END_DECLS
 
