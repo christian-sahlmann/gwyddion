@@ -57,7 +57,8 @@ gwyddion_LDADD = libgwyapp.la \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG
+#AM_CPPFLAGS = -DDEBUG
+AM_CPPFLAGS =
 
 clean-local:
 	rm -f core.* *~
