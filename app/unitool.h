@@ -22,6 +22,7 @@
 #define __GWY_APP_UNITOOL_H__
 
 #include <gtk/gtkwidget.h>
+#include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwymodule/gwymodule-tool.h>
 

@@ -26,11 +26,8 @@
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
-#include "file.h"
-#include "menu.h"
-#include "settings.h"
-#include "undo.h"
-#include "app.h"
+#include "gwyapp.h"
+#include "gwyappinternal.h"
 
 /* this is not used (yet), the GUI doesn't allow more levels */
 enum {
@@ -644,7 +641,7 @@ gwy_app_data_window_foreach(GFunc func,
 
 void
 gwy_app_tool_use_cb(const gchar *toolname,
-                    GtkWidget *button)
+                     GtkWidget *button)
 {
     static GtkWidget *old_button = NULL;
     GwyDataWindow *data_window;
@@ -704,7 +701,7 @@ gwy_app_clean_up_data(GwyContainer *data)
 
 void
 gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
-                             gboolean defaultc)
+                              gboolean defaultc)
 {
     static const gchar *keys[] = {
         "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"

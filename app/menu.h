@@ -67,12 +67,6 @@ void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
 void       gwy_app_menu_set_recent_files_menu     (GtkWidget *menu);
 void       gwy_app_toolbox_update_state           (GwyMenuSensData *sens_data);
 
-/* FIXME: where this could really belong? */
-guint      gwy_app_run_process_func_cb           (gchar *name);
-void       gwy_app_run_process_func_in_mode      (gchar *name,
-                                                  GwyRunType run);
-void       gwy_app_run_graph_func_cb             (gchar *name);
-
 G_END_DECLS
 
 #endif /* __GWY_APP_MENU_H__ */

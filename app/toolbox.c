@@ -24,12 +24,9 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwytoolbox.h>
 #include <libgwymodule/gwymodule.h>
-#include "file.h"
-#include "menu.h"
-#include "app.h"
-#include "undo.h"
-#include "settings.h"
+#include "gwyapp.h"
 
+#include "gwyappinternal.h"
 #include "gwyddion.h"
 
 

@@ -391,6 +391,7 @@ gwy_app_settings_get_module_dirs(void)
     };
     gchar **module_dirs;
     gchar *p;
+    const gchar *q;
     gsize n, i;
 
     n = G_N_ELEMENTS(module_types);
@@ -401,11 +402,11 @@ gwy_app_settings_get_module_dirs(void)
         module_dirs[i] = g_build_filename(p, module_types[i], NULL);
     module_dirs[i++] = p;
 
-    p = gwy_get_user_dir();
+    q = gwy_get_user_dir();
     for (i = 0; i < n; i++)
-        module_dirs[n+1 + i] = g_build_filename(p, "modules", module_types[i],
+        module_dirs[n+1 + i] = g_build_filename(q, "modules", module_types[i],
                                                 NULL);
-    module_dirs[2*n + 1] = g_build_filename(p, "modules", NULL);;
+    module_dirs[2*n + 1] = g_build_filename(q, "modules", NULL);;
 
     module_dirs[2*n + 2] = NULL;
 

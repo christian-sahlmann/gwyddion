@@ -35,6 +35,7 @@
 #include "app.h"
 #include "file.h"
 #include "menu.h"
+#include "gwyappinternal.h"
 
 #define set_sensitive(item, flags) \
     g_object_set_qdata(G_OBJECT(item), sensitive_key, \
@@ -241,8 +242,6 @@ setup_sensitivity_keys(void)
  * Interactive modes are considered `better' than noninteractive for this
  * purpose.  Since 1.2 it returns the actually used mode (nonzero), or 0 on
  * failure.
- *
- * Should NOT be used outside main application.
  **/
 guint
 gwy_app_run_process_func_cb(gchar *name)
@@ -274,13 +273,11 @@ gwy_app_run_process_func_cb(gchar *name)
  *
  * Run a data processing function @name in mode @run.
  *
- * Should NOT be used outside main application.
- *
  * Since: 1.2.
  **/
 void
 gwy_app_run_process_func_in_mode(gchar *name,
-                                 GwyRunType run)
+                                  GwyRunType run)
 {
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC

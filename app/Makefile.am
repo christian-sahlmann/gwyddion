@@ -19,6 +19,7 @@ libgwyappinclude_HEADERS = \
 	wait.h
 
 noinst_HEADERS = \
+	gwyappinternal.h \
 	gwyddion.h
 
 bin_PROGRAMS = gwyddion
