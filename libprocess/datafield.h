@@ -57,6 +57,25 @@ typedef enum {
     GWY_MERGE_INTERSECTION = 1  /*intersection of grains found by different methods*/
 } GwyMergeType;
 
+typedef enum {
+    GWY_WSHED_INIT         = 0, /*start initializations*/
+    GWY_WSHED_LOCATE       = 1, /*locate steps*/ 
+    GWY_WSHED_MIN          = 2, /*find minima*/
+    GWY_WSHED_WSHED        = 3, /*watershed steps*/
+    GWY_WSHED_MARK         = 4, /*mark grain boundaries*/
+    GWY_WSHED_FINISHED     = 5
+} GwyWatershedStateType;
+
+typedef struct {
+    GwyWatershedStateType state;
+    gint internal_i;
+    GwyDataField *min; 
+    GwyDataField *water; 
+    GwyDataField *mark_dfield;
+    gint fraction;
+    GString *description;
+} GwyWatershedStatus;
+
 struct _GwyDataField {
     GObject parent_instance;
 
@@ -530,7 +549,9 @@ void gwy_data_field_grains_mark_watershed(GwyDataField *data_field,
                                           gint locate_thresh,
                                           gdouble locate_dropsize,
                                           gint wshed_steps,
-                                          gdouble wshed_dropsize);
+                                          gdouble wshed_dropsize,
+                                          gboolean prefilter,
+                                          gint dir);
 
 void gwy_data_field_grains_remove_manually( 
                                            GwyDataField *grain_field, 
@@ -544,6 +565,18 @@ void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                             GwyDataField *grain_field, 
                                             gdouble threshval, 
                                             gint direction);
+
+void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
+                                               GwyDataField *grain_field,
+                                               GwyWatershedStatus *status,
+                                               gint locate_steps,
+                                               gint locate_thresh,
+                                               gdouble locate_dropsize,
+                                               gint wshed_steps,
+                                               gdouble wshed_dropsize,
+                                               gboolean prefilter,
+                                               gint dir);
+                                              
 
 gdouble gwy_data_field_grains_get_average(GwyDataField *grain_field);
 

@@ -130,7 +130,7 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field, GwyDataField *gra
 void 
 gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *grain_field,
 					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
-					  gint wshed_steps, gdouble wshed_dropsize)
+					  gint wshed_steps, gdouble wshed_dropsize, gboolean prefilter, gint dir)
 {
     GwyDataField *min, *water, *mark_dfield;
     gint i;
@@ -142,7 +142,8 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     gwy_data_field_resample(grain_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(grain_field, 0);
 
-    /*gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);*/
+    if (prefilter) gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
+
     /*odrop*/
     for (i=0; i<locate_steps; i++)
     {
@@ -155,7 +156,6 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     /*gwy_data_field_filter_median(mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);*/
     for (i=0; i<wshed_steps; i++)
     {
-        printf("%d\n",i);
         wdrop_step(mark_dfield, min, water, grain_field, wshed_dropsize); 
     }
   
@@ -167,6 +167,78 @@ gwy_data_field_grains_mark_watershed(GwyDataField *data_field, GwyDataField *gra
     g_object_unref(min);
     g_object_unref(water);
     g_object_unref(mark_dfield);
+
+}
+
+void 
+gwy_data_field_grains_watershed_iteration(GwyDataField *data_field, GwyDataField *grain_field,
+                                          GwyWatershedStatus *status,
+                    					  gint locate_steps, gint locate_thresh, gdouble locate_dropsize,
+                    					  gint wshed_steps, gdouble wshed_dropsize, gboolean prefilter, gint dir)
+{
+    if (status->state == GWY_WSHED_INIT)
+    {
+        status->min = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
+        status->water = (GwyDataField*)gwy_data_field_new(data_field->xres, data_field->yres, data_field->xreal, data_field->yreal, TRUE);
+        status->mark_dfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(data_field)));
+
+        gwy_data_field_resample(grain_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
+        gwy_data_field_fill(grain_field, 0);
+
+        if (prefilter) gwy_data_field_filter_median(status->mark_dfield, 6, 0, 0, data_field->xres, data_field->yres);
+        
+        status->state = GWY_WSHED_LOCATE;
+        status->internal_i = 0;
+    }
+
+    /*odrop*/
+    if (status->state == GWY_WSHED_LOCATE)
+    {
+        if (status->internal_i < locate_steps)
+        {
+            drop_step(status->mark_dfield, status->water, locate_dropsize);
+            status->internal_i += 1;
+        }
+        else
+        {
+            status->state = GWY_WSHED_MIN;
+            status->internal_i = 0;
+        }
+    }
+    
+    if (status->state == GWY_WSHED_MIN)
+    {
+        drop_minima(status->water, status->min, locate_thresh);
+        status->state = GWY_WSHED_WSHED;
+        status->internal_i = 0;
+    }
+   
+
+    if (status->state == GWY_WSHED_WSHED)
+    {
+        if (status->internal_i==0) gwy_data_field_copy(data_field, status->mark_dfield);
+        if (status->internal_i < wshed_steps)
+        {
+            wdrop_step(status->mark_dfield, status->min, status->water, grain_field, wshed_dropsize);
+            status->internal_i += 1;
+        }
+        else
+        {
+            status->state = GWY_WSHED_MARK;
+            status->internal_i = 0;
+        }
+    }
+
+    if (status->state == GWY_WSHED_MARK)
+    {
+        mark_grain_boundaries(grain_field);
+
+        g_object_unref(status->min);
+        g_object_unref(status->water);
+        g_object_unref(status->mark_dfield);
+
+        status->state = GWY_WSHED_FINISHED;
+    }
 
 }
 

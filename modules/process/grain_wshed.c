@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+#include <app/wait.h>
 
 #define WSHED_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
@@ -400,6 +401,7 @@ static void
 mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, WshedControls *controls)
 {
     gdouble max, min;
+    GwyWatershedStatus status;
 
     max = gwy_data_field_get_max(dfield);
     min = gwy_data_field_get_min(dfield);
@@ -410,13 +412,53 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args, Wsh
     args->wshed_steps = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_steps));
     args->wshed_dropsize = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->entry_wshed_dropsize));
 
+    /*
     gwy_data_field_grains_mark_watershed(dfield, maskfield, 
                                          args->locate_steps,
                                          args->locate_thresh,
                                          args->locate_dropsize*(max-min)/5000.0,
                                          args->wshed_steps,
-                                         args->wshed_dropsize*(max-min)/5000.0);
-
+                                         args->wshed_dropsize*(max-min)/5000.0,
+                                         FALSE, 0);
+    */
+    status.state = GWY_WSHED_INIT;
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_current()),"Initializing...");
+    do
+    {
+        gwy_data_field_grains_watershed_iteration(dfield, maskfield,
+                                         &status,
+                                         args->locate_steps,
+                                         args->locate_thresh,
+                                         args->locate_dropsize*(max-min)/5000.0,
+                                         args->wshed_steps,
+                                         args->wshed_dropsize*(max-min)/5000.0,
+                                         FALSE, 0);
+        
+        if (status.state == GWY_WSHED_MIN) {
+            gwy_app_wait_set_message("Finding minima...");
+            gwy_app_wait_set_fraction(0.0);
+        }
+        else if (status.state == GWY_WSHED_LOCATE) {
+            gwy_app_wait_set_message("Location...");
+            gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->locate_steps);
+        }
+        else if (status.state == GWY_WSHED_WSHED) {
+            gwy_app_wait_set_message("Watershed...");
+            gwy_app_wait_set_fraction((gdouble)status.internal_i/(gdouble)args->wshed_steps);
+        }
+        else if (status.state == GWY_WSHED_MARK) {
+            gwy_app_wait_set_message("Marking boundaries...");
+            gwy_app_wait_set_fraction(0.0);
+        }
+        else {
+            gwy_app_wait_set_message("Finished.");
+            gwy_app_wait_set_fraction(0.0);
+        }
+        
+            
+    } while (status.state != GWY_WSHED_FINISHED);
+    gwy_app_wait_finish();
+                                                  
     controls->computed = TRUE;
 }
 
