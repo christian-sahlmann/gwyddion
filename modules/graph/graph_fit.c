@@ -125,12 +125,12 @@ static void        ch3_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
 static void        ch4_changed_cb            (GtkToggleButton *button,
                                               FitArgs *args);
-static void        dialog_update             (FitArgs *args,
-                                              FitControls *controls);
-static void        guess                     (FitArgs *args,
-                                              FitControls *controls);
-static void        graph_update              (FitArgs *args,
-                                              FitControls *controls);
+static void        dialog_update             (FitControls *controls, 
+                                              FitArgs *args);
+static void        guess                     (FitControls *controls, 
+                                              FitArgs *args);
+static void        graph_update              (FitControls *controls,
+                                              FitArgs *args);
 static void        get_data                  (FitArgs *args);
 static void        graph_selected            (GwyGraphArea *area, 
                                               FitArgs *args);
@@ -138,9 +138,6 @@ static gint        normalize_data            (FitArgs *args,
                                               GwyDataLine *xdata, 
                                               GwyDataLine *ydata, 
                                               gint curve);
-static void        clear                     (FitArgs *args, 
-                                              FitControls *controls);
-    
 
 FitControls *pcontrols;
 
@@ -230,6 +227,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     gwy_data_line_resample(xdata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, args->parent_ns[curve], GWY_INTERPOLATION_NONE);
 
+   
     j = 0;
     for (i=0; i<xdata->res; i++)
     {
@@ -244,6 +242,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
     }
     if (j==0) return 0;
    
+    
     if (j < xdata->res)
     {
         gwy_data_line_resize(xdata, 0, j);
@@ -258,10 +257,6 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
 static gboolean
 fit_dialog(FitArgs *args)
 {
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2
-    };
     GtkWidget *label;
     GtkWidget *table;
     GtkWidget *dialog;
@@ -274,13 +269,16 @@ fit_dialog(FitArgs *args)
     gint response;
 
     pcontrols = &controls;
-
+    enum { RESPONSE_RESET = 1,
+        RESPONSE_FIT = 2
+    };
+    
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         _("Fit"), RESPONSE_FIT,
-                                         _("Reset inits"), RESPONSE_RESET,
+                                         _("Recompute"), RESPONSE_FIT,
+                                         _("Reset"), RESPONSE_RESET,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
 
@@ -448,7 +446,11 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), controls.param4_fit, 4, 5, 4, 5,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
+    
+    
     gtk_container_add(GTK_CONTAINER(vbox), table);
+
+    
     
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Correlation matrix:</b>");
@@ -497,6 +499,7 @@ fit_dialog(FitArgs *args)
                                 controls.data);
     gtk_container_add(GTK_CONTAINER(vbox), table2);
     
+    
     hbox2 = gtk_hbox_new(FALSE, 0);
    
     label = gtk_label_new("from");
@@ -507,6 +510,7 @@ fit_dialog(FitArgs *args)
     gtk_entry_set_width_chars(GTK_ENTRY(controls.from), 12);
     g_signal_connect(controls.from, "changed",
                       G_CALLBACK(from_changed_cb), args);
+    
     
     label = gtk_label_new("to");
     gtk_container_add(GTK_CONTAINER(hbox2), label);
@@ -519,6 +523,7 @@ fit_dialog(FitArgs *args)
   
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
+ 
      /*graph*/
     controls.graph = gwy_graph_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
@@ -536,8 +541,8 @@ fit_dialog(FitArgs *args)
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
 
     reset(args, &controls);
-    dialog_update(args, &controls);
-    graph_update(args, &controls);
+    dialog_update(&controls, args);
+    graph_update(&controls, args);
     graph_selected(GWY_GRAPH(controls.graph)->area, args);
         
     gtk_widget_show_all(dialog);
@@ -568,6 +573,7 @@ fit_dialog(FitArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
+    
     
     return TRUE;
 }
@@ -754,7 +760,7 @@ recompute(FitArgs *args, FitControls *controls)
         ydata->data[i] = function->function(xdata->data[i], function->nparams, param, NULL, &ok);
     }
    
-    graph_update(args, controls);
+    graph_update(controls, args);
     
     label = g_string_new("fit");
     
@@ -778,7 +784,7 @@ recompute(FitArgs *args, FitControls *controls)
 static void        
 reset(FitArgs *args, FitControls *controls)
 {
-    dialog_update(args, controls);
+    dialog_update(controls, args);
 }
 
 
@@ -791,16 +797,16 @@ type_changed_cb(GObject *item, FitArgs *args)
                                             "fit-type"));
 
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
-    dialog_update(args, pcontrols);
+    dialog_update(pcontrols, args);
 }
 
 static void
-dialog_update(FitArgs *args, FitControls *controls)
+dialog_update(FitControls *controls, FitArgs *args)
 {
     char buffer[20];
 
     clear(args, controls);
-    guess(args, controls);
+    guess(controls, args);
     
     gtk_label_set_markup(GTK_LABEL(controls->equation), 
                          gwy_math_nlfit_get_function_equation(args->fitfunc));
@@ -880,7 +886,7 @@ dialog_update(FitArgs *args, FitControls *controls)
  }
 
 static void
-guess(FitArgs *args, FitControls *controls)
+guess(FitControls *controls, FitArgs *args)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
@@ -913,19 +919,24 @@ guess(FitArgs *args, FitControls *controls)
 }
 
 static void
-graph_update(FitArgs *args, FitControls *controls)
+graph_update(FitControls *controls, FitArgs *args)
 {
     gint i;
+    GString *label;
     
+    /*clear graph*/
     gwy_graph_clear(GWY_GRAPH(controls->graph));
 
+    label = g_string_new("");
+    /*add curves from parent graph*/
     for (i=0; i<args->parent_nofcurves; i++)
     {
+        g_string_printf(label, "data %d", i+1);
         gwy_graph_add_datavalues(GWY_GRAPH(controls->graph), 
                                  args->parent_xs[i], 
                                  args->parent_ys[i],
                                  args->parent_ns[i], 
-                                 gwy_graph_get_label(args->parent_graph, i), NULL);    
+                                 label, NULL);    
     }
 
 }
@@ -957,7 +968,7 @@ graph_selected(GwyGraphArea *area, FitArgs *args)
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->to);
         gtk_entry_set_text(GTK_ENTRY(pcontrols->to), buffer);
     }
-    dialog_update(args, pcontrols);    
+    dialog_update(pcontrols, args);    
 }
 
 static void
