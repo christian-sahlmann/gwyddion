@@ -66,7 +66,7 @@ gwy_app_quit(void)
     }
 
     gtk_main_quit();
-    return FALSE;
+    return TRUE;
 }
 
 /**
