@@ -29,9 +29,8 @@
 
 #define GWY_GRAD_SPHERE_TYPE_NAME "GwyGradSphere"
 
+#define GWY_SCROLL_DELAY_LENGTH  300
 #define BITS_PER_SAMPLE 8
-
-#define SCROLL_DELAY_LENGTH  300
 #define GRAD_SPHERE_DEFAULT_SIZE 80
 
 enum {
@@ -256,6 +255,11 @@ gwy_grad_sphere_unrealize(GtkWidget *widget)
     grad_sphere->sphere_pixbuf = NULL;
     grad_sphere->radius = -1;
 
+    if (grad_sphere->timer) {
+        gtk_timeout_remove(grad_sphere->timer);
+        grad_sphere->timer = 0;
+    }
+
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
 }
@@ -315,15 +319,14 @@ gwy_grad_sphere_get_property(GObject*object,
  * gwy_grad_sphere_get_update_policy:
  * @grad_sphere: a #GwyGradSphere.
  *
- * Returns the update policy of this gradient spehere.
+ * Returns the update policy of a gradient spehere @grad_sphere.
  *
  * Returns: The update policy.
  **/
 GtkUpdateType
 gwy_grad_sphere_get_update_policy(GwyGradSphere *grad_sphere)
 {
-    g_return_val_if_fail(grad_sphere != NULL, GTK_UPDATE_CONTINUOUS);
-    g_return_val_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere), GTK_UPDATE_CONTINUOUS);
+    g_return_val_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere), 0);
 
     return grad_sphere->update_policy;
 }
@@ -332,14 +335,13 @@ gwy_grad_sphere_get_update_policy(GwyGradSphere *grad_sphere)
  * gwy_grad_sphere_get_sphere_coords:
  * @grad_sphere: a #GwyGradSphere.
  *
- * Returns the spherical coordinates this gradient spehere uses.
+ * Returns the spherical coordinates a gradient spehere @grad_sphere uses.
  *
  * Returns: The coordinates.
  **/
 GwySphereCoords*
 gwy_grad_sphere_get_sphere_coords(GwyGradSphere *grad_sphere)
 {
-    g_return_val_if_fail(grad_sphere != NULL, NULL);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere), NULL);
 
     return grad_sphere->sphere_coords;
@@ -348,7 +350,7 @@ gwy_grad_sphere_get_sphere_coords(GwyGradSphere *grad_sphere)
 /**
  * gwy_grad_sphere_set_update_policy:
  * @grad_sphere: a #GwyGradSphere.
- * @update_policy: the update policy the gradient sphere should use.
+ * @update_policy: the update policy a gradient sphere @grad_sphere should use.
  *
  * Sets update policy for a gradient sphere.
  **/
@@ -356,7 +358,6 @@ void
 gwy_grad_sphere_set_update_policy(GwyGradSphere *grad_sphere,
                                   GtkUpdateType update_policy)
 {
-    g_return_if_fail(grad_sphere != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
 
     grad_sphere->update_policy = update_policy;
@@ -375,7 +376,6 @@ gwy_grad_sphere_set_sphere_coords(GwyGradSphere *grad_sphere,
 {
     GwySphereCoords *old;
 
-    g_return_if_fail(grad_sphere != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
     g_return_if_fail(GWY_IS_SPHERE_COORDS(sphere_coords));
 
@@ -409,7 +409,6 @@ gwy_grad_sphere_realize(GtkWidget *widget)
     gwy_debug("realizing a GwyGradSphere (%ux%u)",
           widget->allocation.x, widget->allocation.height);
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
@@ -459,7 +458,6 @@ gwy_grad_sphere_size_allocate(GtkWidget *widget,
 
     gwy_debug("");
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(widget));
     g_return_if_fail(allocation != NULL);
 
@@ -549,7 +547,6 @@ gwy_grad_sphere_expose(GtkWidget *widget,
     GwyGradSphere *grad_sphere;
     gint xc, yc;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
@@ -594,7 +591,6 @@ gwy_grad_sphere_button_press(GtkWidget *widget,
     GwyGradSphere *grad_sphere;
     double x, y;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
@@ -620,7 +616,6 @@ gwy_grad_sphere_button_release(GtkWidget *widget,
 {
     GwyGradSphere *grad_sphere;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
@@ -630,8 +625,10 @@ gwy_grad_sphere_button_release(GtkWidget *widget,
         gtk_grab_remove(widget);
         grad_sphere->button = 0;
 
-        if (grad_sphere->update_policy == GTK_UPDATE_DELAYED)
+        if (grad_sphere->update_policy == GTK_UPDATE_DELAYED) {
             gtk_timeout_remove(grad_sphere->timer);
+            grad_sphere->timer = 0;
+        }
 
         if (grad_sphere->update_policy != GTK_UPDATE_CONTINUOUS) {
             if (grad_sphere->old_theta != grad_sphere->sphere_coords->theta
@@ -652,7 +649,6 @@ gwy_grad_sphere_motion_notify(GtkWidget *widget,
     GdkModifierType mods;
     gint x, y, mask;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
@@ -694,13 +690,13 @@ gwy_grad_sphere_motion_notify(GtkWidget *widget,
 static gboolean
 gwy_grad_sphere_timer(GwyGradSphere *grad_sphere)
 {
-    g_return_val_if_fail(grad_sphere != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere), FALSE);
 
     if (grad_sphere->update_policy == GTK_UPDATE_DELAYED)
         g_signal_emit_by_name(grad_sphere->sphere_coords,
                               "value_changed");
 
+    grad_sphere->timer = 0;
     return FALSE;
 }
 
@@ -710,7 +706,6 @@ gwy_grad_sphere_update_mouse(GwyGradSphere *grad_sphere, gint x, gint y)
     gint xc, yc;
     gdouble old_phi, old_theta, r;
 
-    g_return_if_fail(grad_sphere != NULL);
     g_return_if_fail(GWY_IS_GRAD_SPHERE(grad_sphere));
 
     xc = GTK_WIDGET(grad_sphere)->allocation.width / 2;
@@ -739,19 +734,27 @@ gwy_grad_sphere_update_mouse(GwyGradSphere *grad_sphere, gint x, gint y)
                                    GTK_WIDGET(grad_sphere)->allocation.width,
                                    GTK_WIDGET(grad_sphere)->allocation.height);
 
-        if (grad_sphere->update_policy == GTK_UPDATE_CONTINUOUS)
-            gtk_signal_emit_by_name((gpointer)grad_sphere->sphere_coords,
-                                    "value_changed");
-        else {
-            if (grad_sphere->update_policy == GTK_UPDATE_DELAYED) {
-                if (grad_sphere->timer)
-                    gtk_timeout_remove(grad_sphere->timer);
 
-                grad_sphere->timer
-                    = gtk_timeout_add(SCROLL_DELAY_LENGTH,
-                                      (GtkFunction)gwy_grad_sphere_timer,
-                                      grad_sphere);
-            }
+        switch (grad_sphere->update_policy) {
+            case GTK_UPDATE_CONTINUOUS:
+            g_signal_emit_by_name(grad_sphere->sphere_coords, "value_changed");
+            break;
+
+            case GTK_UPDATE_DELAYED:
+            if (grad_sphere->timer)
+                gtk_timeout_remove(grad_sphere->timer);
+            grad_sphere->timer
+                = gtk_timeout_add(GWY_SCROLL_DELAY_LENGTH,
+                                  (GtkFunction)gwy_grad_sphere_timer,
+                                  grad_sphere);
+            break;
+
+            case GTK_UPDATE_DISCONTINUOUS:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
         }
     }
 }
