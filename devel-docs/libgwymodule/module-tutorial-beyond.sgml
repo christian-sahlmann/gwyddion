@@ -193,10 +193,123 @@ gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
       for some final presentations, because it is not obviously updated when
       the data changes.
     </para>
+  </refsect1>
+  <refsect1>
+    <title>File Type Modules</title>
     <para>
-      TODO: file-type and other modules, GUI.
+      File type modules implement loading and saving of files.  They are
+      quite similar to data processing modules.   The function info
+      (<link linkend="libgwymodule-gwymodule-file-GwyFileFuncInfo">GwyFileFuncInfo</link>)
+      contains pointers to three functions instead of one: loading, saving
+      and file type detection.  You don't have to implement all, just
+      set the unimplemented members to <literal>NULL</literal>.  If
+      detection is not implemented, files of this type are loaded or
+      saved only when user explicitely requests it from the Import or Export
+      menu.
+    </para>
+    <para>
+      The loading function gets a file name and returns a container with
+      data from the file; conversely, the saving function gets a container
+      and a file name and writes the data from the container to the file.
+      The exact signatures of the functions are described in the
+      <link linkend="libgwymodule-gwymodule-file">reference</link> part.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Graphical User Interface (GUI)</title>
+    <para>
+      You are encouraged to use the <ulink url="http://gtk.org/">Gtk+</ulink>
+      graphical toolkit for your module GUI.  It has following advantages:
+      <itemizedlist>
+        <listitem>
+          It is available for a variety of platforms, allowing to easily
+          create portable modules.
+        </listitem>
+        <listitem>
+          It is licensed under GNU LGPL (for all the platforms), this meaning
+          namely it is free, with complete source code available and imposing
+          few restrictions on programs using it.
+        </listitem>
+        <listitem>
+          It is used by Gwyddion itself.  Any specialized Gwyddion widgets
+          you could make use of are Gtk+.  Using one graphical toolkit
+          exclusively also means more unique look and feel and less
+          linking problems.
+        </listitem>
+      </itemizedlist>
+      There is an extensive
+      <ulink url="http://gtk.org/tutorial/">Gtk+ Tutorial</ulink>
+      and <ulink url="http://gtk.org/api/">API Reference</ulink> available
+      on the Gtk+ Web site.  You can use existing modules as templates
+      for your module.
+    </para>
+    <para>
+      A very simple GUI dialog asking for a one value (unimaginatively called
+      Amount) could be implemented in Gtk+ as follows:
+    </para>
+    <informalexample><programlisting><![CDATA[
+static gboolean
+slope_dialog(gdouble *amount)
+{
+    GtkWidget *dialog, *table, *spin;
+    GtkObject *adjust;
+    gint response;
+
+    dialog = gtk_dialog_new_with_buttons(_("Frobnicate"), NULL,
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 4);
+
+    adjust = gtk_adjustment_new(*amount, 0, 100, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, 0, _("Amount:"), "percents",
+                                       adjust);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    switch (response) {
+        case GTK_RESPONSE_CANCEL:
+        case GTK_RESPONSE_DELETE_EVENT:
+        gtk_widget_destroy(dialog);
+        case GTK_RESPONSE_NONE:
+        break;
+
+        case GTK_RESPONSE_OK:
+        *amount = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjust));
+        gtk_widget_destroy(dialog);
+        break;
+    }
+
+    return response == GTK_RESPONSE_OK;
+}
+]]></programlisting></informalexample>
+    <para>
+      There is no rocket science in here: the dialog is created with some
+      standard buttons, a value entry with a description
+      is placed there, range of allowed values is specified; then the dialog
+      is run, depending on user's action the value of
+      <varname>amount</varname> is eventually updated, and
+      <literal>TRUE</literal> or <literal>FALSE</literal> is returned to
+      the called to indicate user's action (we take everything as
+      cancellation, except pressing <guibutton>OK</guibutton>).
+    </para>
+    <para>
+      Note such a module would report <literal>GWY_RUN_MODAL</literal>
+      as its <link linkend="libgwymodule-gwymodule-process-GwyRunMode">run
+      mode</link>, not <literal>GWY_RUN_INTERACTIVE</literal> since the
+      <function>gtk_dialog_run()</function> runs the dialog in a modal
+      (exclusive) mode, blocking the rest of application until the dialog
+      is closed.  This is the simpliest possibility, suficient for most
+      modules (as no race conditions can arise).
+    </para>
+    <para>
+      TODO: other modules types.
     </para>
   </refsect1>
 </refentry>
-
 

@@ -45,11 +45,11 @@
       So the output of plugin <command>my_plugin</command> when run as
       <command>my_plugin register</command> could look:
     </para>
-    <screen><![CDATA[
+    <informalexample><programlisting><![CDATA[
 my_plugin
 /_Plug-ins/My Plug-in
 noninteractive with_defaults
-]]></screen>
+]]></programlisting></informalexample>
   </refsect1>
   <refsect1>
     <title>Data Processing</title>

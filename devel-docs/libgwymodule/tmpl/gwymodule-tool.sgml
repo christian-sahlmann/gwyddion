@@ -2,24 +2,16 @@
 gwymodule-tool
 
 <!-- ##### SECTION Short_Description ##### -->
-Tool modules
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Tool modules implement interactive tools allowing users to select parts from
-or otherwise `draw' directly on the data windows. The tool interface consists
-of a single function <link linkend="GwyToolUseFunc">GwyToolUseFunc</link>
-called when a tool is selected for a data window (or un-selected, like when
-another tool is selected or the data window is removed), they can be however
-quite tricky. You are encouraged to use the
-<link linkend="libgwyapp-unitool">GwyUnitool</link> helper to implement your
-tool modules.
+
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="libgwyapp-unitool">GwyUnitool</link>, a tool template
-implementing the common functionality of tools.
+
 </para>
 
 <!-- ##### ENUM GwyToolSwitchEvent ##### -->

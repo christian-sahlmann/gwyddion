@@ -29,7 +29,7 @@
       conversions (on systems distinguishing between text and binary files).
       Unix end-of-lines are always used, i.e., lines are always terminated
       by a single LF (line feed) character, ASCII 0x0a.  Plugin-proxy
-      always writes data with Unix end-of-lines and though it may read
+      always writes data with Unix end-of-lines and although it may read
       dumps with CRLF end-of-lines without problems too, don't count on it.
     </para>
   </refsect1>
@@ -94,6 +94,21 @@
       <literal>/0/data/unit-z</literal> (value, height) keys.
       If not specified, meters are assumed.
     </para>
+    <para>
+      So a dump file could look (excluding the binary data):
+    </para>
+    <informalexample><programlisting><![CDATA[
+/0/data/xres=240
+/0/data/yres=240
+/0/data/xreal=4.1e-08
+/0/data/yreal=4.1e-08
+/0/data/unit-xy=m
+/0/data/unit-z=m
+/0/data=[
+[...
+...
+..]]
+]]></programlisting></informalexample>
     <para>
       If you want to pass mask (or presentation) instead of the main data,
       just replace the <literal>/0/data</literal> with

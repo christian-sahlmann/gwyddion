@@ -51,12 +51,12 @@
       So the output of plugin <command>acme_v5</command> when run as
       <command>acme_v5 register</command> could look:
     </para>
-    <screen><![CDATA[
+    <informalexample><programlisting><![CDATA[
 acme_v5
 ACME AFM Data Format v5 (*.ac5)
 *.ac5 *.acme5
 load save
-]]></screen>
+]]></programlisting></informalexample>
   </refsect1>
   <refsect1>
     <title>Loading</title>
