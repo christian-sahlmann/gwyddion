@@ -54,6 +54,7 @@ EXTRA_DIST = \
 	version.h.in \
 	version.h \
 	utils/update-msvc.py \
+	utils/update-potfiles.sh \
 	utils/vim-syn-gen.py \
 	utils/gwyddion-cfg.py \
 	utils/gwyddion.vim \
