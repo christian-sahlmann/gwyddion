@@ -336,12 +336,6 @@ gwy_app_data_window_create(GwyContainer *data)
     layer = gwy_layer_basic_new();
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
                                  GWY_DATA_VIEW_LAYER(layer));
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        layer = gwy_layer_mask_new();
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view),
-                                      GWY_DATA_VIEW_LAYER(layer));
-    }
-
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     gtk_window_add_accel_group(GTK_WINDOW(data_window),
                                g_object_get_data(G_OBJECT(gwy_app_main_window),
