@@ -66,7 +66,7 @@ EXTRA_DIST = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 7:0:4
+libgwydgets_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 8:0:5
 libgwydgets_la_SOURCES = \
 	gwy3dlabels.c \
 	gwy3dview.c \
