@@ -1,6 +1,13 @@
 # @(#) $Id$
 
-SUBDIRS = libgwyddion libprocess libdraw libgwydgets libgwymodule devel-docs
+SUBDIRS = \
+	libgwyddion \
+	libprocess \
+	libdraw \
+	libgwydgets \
+	libgwymodule \
+	app \
+	devel-docs
 M4TESTS = \
 	m4/gtk-doc.m4 \
 	m4/pkg.m4

@@ -7,6 +7,7 @@ AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(libgwydgets/gwyspherecoords.c)
 AC_CONFIG_FILES(\
   Makefile \
+  app/Makefile \
   libdraw/Makefile \
   libgwyddion/Makefile \
   libgwydgets/Makefile \
