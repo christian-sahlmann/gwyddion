@@ -385,6 +385,7 @@ gwy_serialize_pack(guchar *buffer,
                         g_free(objects[nobjs].buffer);
                     }
                     else {
+                        objects[nobjs].size = 0;
                         objects[nobjs].buffer =
                             gwy_serializable_serialize(value, NULL,
                                                        &objects[nobjs].size);
@@ -604,6 +605,7 @@ gwy_serialize_pack_struct(guchar *buffer,
                         g_free(objects[nobjs].buffer);
                     }
                     else {
+                        objects[nobjs].size = 0;
                         objects[nobjs].buffer =
                             gwy_serializable_serialize(value, NULL,
                                                        &objects[nobjs].size);
