@@ -79,7 +79,9 @@ GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
 GtkWidget* gwy_option_menu_direction         (GCallback callback,
                                               gpointer cbdata,
                                               GtkOrientation current);
-/* The GwyFilterType itself is broken and should not exist. */
+/* The GwyFilterType itself is broken and should not exist. Moreover, the menu
+ * no longer contains all filters, because some were moved to separate modules.
+ * Oh, well... */
 GtkWidget* gwy_option_menu_filter            (GCallback callback,
                                               gpointer cbdata,
                                               GwyFilterType current);

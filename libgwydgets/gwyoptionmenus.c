@@ -981,6 +981,8 @@ gwy_option_menu_filter(GCallback callback,
         { N_("Mean value"),            GWY_FILTER_MEAN,  },
         { N_("Median value"),          GWY_FILTER_MEDIAN, },
         { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
+        { N_("Minimum"),               GWY_FILTER_MINIMUM, },
+        { N_("Maximum"),               GWY_FILTER_MAXIMUM, },
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
