@@ -137,6 +137,7 @@ function release_dists() {
   fi
   sed -ri -e "2s/\\<1\\.[0-9][0-9.cvs]*/$version/" $pkgpage
 
+  cd Ftp/$pkgname && rm -f $pcvs.tar.* && tar -jxf $pver.tar.bz2 && mv $pver $pcvs && tar -jcf $pcvs.tar.bz2 $pcvs && tar -zcf $pcvs.tar.gz $pcvs; rm -rf $pcvs $pver
   ssh $host "cd Ftp/$pkgname && rm -f $pcvs.tar.* && tar -jxf $pver.tar.bz2 && mv $pver $pcvs && tar -jcf $pcvs.tar.bz2 $pcvs && tar -zcf $pcvs.tar.gz $pcvs; rm -rf $pcvs $pver"
   rm -f .releaseme
 }
