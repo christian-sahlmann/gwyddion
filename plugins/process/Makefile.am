@@ -13,6 +13,7 @@ endif
 process_SCRIPTS = \
 	$(perl_plugins) \
 	$(python_plugins) \
+	invert_ruby.rb \
 	yellow.sh
 
 if HAVE_PASCAL
