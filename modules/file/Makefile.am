@@ -5,6 +5,7 @@ filedir = $(gwymoduledir)/file
 module_ldflags = -shared -Wl,-soname
 
 file_PROGRAMS = \
+	asciiexport.so \
 	gwyfile.so \
 	nanoscope.so \
 	pixmap.so \
@@ -12,6 +13,9 @@ file_PROGRAMS = \
 
 EXTRA_DIST = \
 	makefile.msc
+
+asciiexport_so_SOURCES = asciiexport.c
+asciiexport_so_LDFLAGS = $(module_ldflags),asciiexport.so
 
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
