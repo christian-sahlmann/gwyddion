@@ -412,12 +412,14 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
     rng = g_rand_new();
 
     xres = z->xres;
-    n = z->xres;
-
+    
     for (l = 0; l < k; l++) {
         pp = (gint)ceil(pow(2, l));
         p = (gint)ceil(pow(2, k - 1 - l));
-        sg = sqrt(exp(vars->data[k - 1 - l]));
+        n = (z->xres + 1) / pp;
+        sg = sqrt((4 * n * n  - 6 * n + 2) / 
+                  ((2 + sqrt(2)) * n * n - (4+sqrt(2)) * n + 2) * 
+                  exp(vars->data[k - 1 - l]));
 
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
@@ -490,7 +492,7 @@ fractal_correct(GwyDataField *z, GwyDataField *mask, GwyDataLine *vars, gint k)
                     }
                 }
             }
-        //sg=sg*power(0.5,H*0.5);
+        sg=sg / sqrt(2);
         for (i = 0; i < pp; i++)
             for (j = 0; j < pp; j++) {
                 ii = (2 * i + 1) * p;
