@@ -6,10 +6,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_CONTAINER
-#  include <libgwyddion/gwycontainer.h>
-#endif /* no GWY_TYPE_CONTAINER */
-
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
 #  include <libgwydgets/gwydataviewlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
@@ -55,6 +51,7 @@ gboolean         gwy_layer_select_get_selection   (GwyDataViewLayer *layer,
                                                    gdouble *ymin,
                                                    gdouble *xmax,
                                                    gdouble *ymax);
+void             gwy_layer_select_unselect        (GwyDataViewLayer *layer);
 
 #ifdef __cplusplus
 }

@@ -3,6 +3,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwycontainer.h>
 #include <libdraw/gwypixfield.h>
 #include "gwylayer-basic.h"
 
@@ -97,7 +98,8 @@ gwy_layer_basic_finalize(GObject *object)
  *
  * Creates a new basic data displaying layer.
  *
- * By default, is uses a gray palette.
+ * By default, is uses a gray palette or the palette stored with the data
+ * as "/0/base/palette".
  *
  * Returns: The newly created layer.
  **/

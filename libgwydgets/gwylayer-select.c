@@ -127,16 +127,16 @@ gwy_layer_select_finalize(GObject *object)
 
     gwy_debug("%s", __FUNCTION__);
 
-    g_return_if_fail(object != NULL);
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
 
     klass = GWY_LAYER_SELECT_GET_CLASS(object);
-    refcount = klass->resize_cursor->ref_count - 1;
     for (i = 0; i < 4; i++) {
+        refcount = klass->corner_cursor[i]->ref_count - 1;
         gdk_cursor_unref(klass->corner_cursor[i]);
         if (!refcount)
             klass->corner_cursor[i] = NULL;
     }
+    refcount = klass->resize_cursor->ref_count - 1;
     gdk_cursor_unref(klass->resize_cursor);
     if (!refcount)
         klass->resize_cursor = NULL;
@@ -187,13 +187,14 @@ gwy_layer_select_setup_gc(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_select_draw(GwyDataViewLayer *layer, GdkDrawable *drawable)
+gwy_layer_select_draw(GwyDataViewLayer *layer,
+                      GdkDrawable *drawable)
 {
     GwyLayerSelect *select_layer;
     gint xmin, ymin, xmax, ymax;
 
-    g_return_if_fail(layer);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
     select_layer = (GwyLayerSelect*)layer;
 
@@ -229,6 +230,7 @@ static gboolean
 gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
                                GdkEventMotion *event)
 {
+    GwyLayerSelectClass *klass;
     GwyLayerSelect *select_layer;
     gint x, y;
     gdouble oldx, oldy, xreal, yreal;
@@ -244,15 +246,13 @@ gwy_layer_select_motion_notify(GwyDataViewLayer *layer,
     if (xreal == oldx && yreal == oldy)
         return FALSE;
 
+    klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     if (!select_layer->button) {
         gint i = gwy_layer_select_near_point(select_layer, xreal, yreal);
 
         if (select_layer->near != i) {
-            GwyLayerSelectClass *klass;
-
             select_layer->near = i;
-            klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
-            gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
+            gdk_window_set_cursor(layer->parent->window,
                                   i == -1 ? NULL : klass->corner_cursor[i]);
         }
         return FALSE;
@@ -282,6 +282,7 @@ static gboolean
 gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
                                 GdkEventButton *event)
 {
+    GwyLayerSelectClass *klass;
     GwyLayerSelect *select_layer;
     gint x, y;
     gdouble xreal, yreal;
@@ -291,6 +292,7 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
     select_layer = (GwyLayerSelect*)layer;
     if (select_layer->button)
         g_warning("unexpected mouse button press when already pressed");
+
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(GWY_DATA_VIEW(layer->parent), &x, &y);
@@ -304,6 +306,7 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
     /* handle a previous selection:
      * when we are near a corner, resize the existing one
      * otherwise forget it and start from scratch */
+    klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     if (select_layer->selected) {
         gint i;
 
@@ -319,6 +322,9 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
                 select_layer->y0 = MIN(select_layer->y0, select_layer->y1);
             else
                 select_layer->y0 = MAX(select_layer->y0, select_layer->y1);
+
+            gdk_window_set_cursor(layer->parent->window,
+                                  klass->resize_cursor);
         }
     }
     select_layer->button = event->button;
@@ -336,9 +342,6 @@ gwy_layer_select_button_pressed(GwyDataViewLayer *layer,
               select_layer->x1, select_layer->y1);
     select_layer->selected = TRUE;
     gwy_debug("selected == %d", select_layer->selected);
-
-    gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
-                          GWY_LAYER_SELECT_GET_CLASS(layer)->resize_cursor);
 
     return FALSE;
 }
@@ -391,7 +394,7 @@ gwy_layer_select_button_released(GwyDataViewLayer *layer,
 
     klass = GWY_LAYER_SELECT_GET_CLASS(select_layer);
     i = gwy_layer_select_near_point(select_layer, xreal, yreal);
-    gdk_window_set_cursor(GTK_WIDGET(layer->parent)->window,
+    gdk_window_set_cursor(layer->parent->window,
                           i == -1 ? NULL : klass->corner_cursor[i]);
 
     /* XXX: this assures no artifacts ...  */
@@ -437,6 +440,26 @@ gwy_layer_select_get_selection(GwyDataViewLayer *layer,
     if (*ymax)
         *ymax = select_layer->y1;
     return TRUE;
+}
+
+/**
+ * gwy_layer_select_unselect:
+ * @layer: A #GwyLayerSelect.
+ *
+ * Clears the selection.
+ *
+ * Note: may have unpredictable effects when called while user is drawing
+ * a selection.
+ **/
+void
+gwy_layer_select_unselect(GwyDataViewLayer *layer)
+{
+    GwyLayerSelect *select_layer;
+
+    g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
+    select_layer = (GwyLayerSelect*)layer;
+    select_layer->selected = FALSE;
+    gwy_container_set_boolean_by_name(layer->data, "/0/select/selected", FALSE);
 }
 
 static void

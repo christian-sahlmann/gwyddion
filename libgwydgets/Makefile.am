@@ -18,6 +18,8 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphlabel.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
+	gwylayer-mask.h \
+	gwylayer-points.h \
 	gwylayer-select.h \
 	gwyruler.h \
 	gwyspherecoords.h \
@@ -45,13 +47,17 @@ libgwydgets_la_SOURCES = \
 	gwygraphlabel.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
+	gwylayer-mask.c \
+	gwylayer-points.c \
 	gwylayer-select.c \
 	gwyruler.c \
 	gwyspherecoords.c \
 	gwyvectorshade.c \
 	gwyvruler.c
+#	mylayout.c
 
 # Note these are test programs not to be included in the distro
+#noinst_PROGRAMS = main test create-data layout
 noinst_PROGRAMS = main test create-data
 
 main_SOURCES = main.c
@@ -71,8 +77,14 @@ create_data_LDADD = \
 	$(libgwyddion) \
 	$(libgwyprocess)
 
+#layout_SOURCES = layout.c
+#layout_LDADD = libgwydgets.la \
+#	$(libgwyddion) \
+#	$(libgwyprocess) \
+#	$(libgwydraw)
+
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DDEBUG -DGWY_LOG_DOMAIN=\"Gwydgets\" -DG_LOG_DOMAIN=\"Gwydgets\"
+AM_CPPFLAGS = -DDEBUG -DG_LOG_DOMAIN=\"Gwydgets\" -DGWY_LOG_DOMAIN=G_LOG_DOMAIN
 
 clean-local:
 	rm -f core.* *~

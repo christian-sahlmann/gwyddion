@@ -133,7 +133,8 @@ data_view_test(void)
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
 
-    layer = (GwyDataViewLayer*)gwy_layer_select_new();
+    //layer = (GwyDataViewLayer*)gwy_layer_select_new();
+    layer = (GwyDataViewLayer*)gwy_layer_points_new();
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), layer);
 
     g_object_unref(data);

@@ -6,13 +6,13 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_CONTAINER
-#  include <libgwyddion/gwycontainer.h>
-#endif /* no GWY_TYPE_CONTAINER */
-
 #ifndef GWY_TYPE_DATA_VIEW_LAYER
 #  include <libgwydgets/gwydataviewlayer.h>
 #endif /* no GWY_TYPE_DATA_VIEW_LAYER */
+
+#ifndef GWY_TYPE_PALETTE
+#  include <libdraw/gwypalette.h>
+#endif /* no GWY_TYPE_PALETTE */
 
 #ifdef __cplusplus
 extern "C" {
