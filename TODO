@@ -22,6 +22,10 @@ Particularly (overall app issues, module issues not listed):
 Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
 
+============================================================================
+Worst API bugs:
+- libgwymodule does GUI stuff
+- libgwyprocess depends on Gtk+ (GtkOrientation)
 
 ============================================================================
 Release checklist:
