@@ -5,6 +5,9 @@ use strict;
 use HTML::Entities;
 use POSIX qw(getcwd);
 
+# This script transforms gtk-doc documentation to a form directly usable on
+# gwyddion.net with left bar, etc.  I should rather learn DSSSL...
+
 my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
 my $base = $ENV{'HOME'} . "/Projects/Gwyddion/Web/documentation";
@@ -62,7 +65,7 @@ foreach my $dir (glob "*") {
         }
         m#<title>(.*?)</title>#;
         my $title = $1;
-        s#<head>.*?</head>\n#<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>\n<title>$title</title>\n<link rel="stylesheet" type="text/css" href="/main.css"/>\n<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>\n$links</head>#sg;
+        s#<head>.*?</head>\n#<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>\n<title>$title</title>\n<link rel="stylesheet" type="text/css" href="/main.css"/>\n<!--[if IE]>\n<style> \#LeftMenu { position: absolute; } </style>\n<![endif]-->\n<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>\n$links</head>#sg;
         s#(<body>\n)#$1<div id="Main">\n#sg;
         s#(</body>)#$footer$1#;
         if ( $add_topnote ) { s#(<div id="Main">\n)#$1<?php include('../../_topnote.php'); ?>\n#s; }
