@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id$
+ *  @(%) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@physics.muni.cz, klapetek@physics.muni.cz.
  *
@@ -21,6 +21,9 @@
 /* XXX: ,safe` for Unix, but probably broken for Win32
  * It always creates the temporary file, keeps it open all the time during
  * plug-in runs, then unlinks it and closes at last.
+ *
+ * XXX: it also has to open dump files in binary mode, BUT still assumes
+ * normal Unix \n EOLs.
  */
 
 #include <stdlib.h>
@@ -165,6 +168,18 @@ module_register(const gchar *name)
     return TRUE;
 }
 
+/**
+ * register_plugins:
+ * @plugins: Existing plug-in list.
+ * @dir: Plug-in directory to search them in.
+ * @name: Plug-in proxy module name (to be used passed to @register_func).
+ * @register_func: Particular registration function.
+ *
+ * Register all plug-ins in a directory @dir with @register_func and add
+ * them to @plugins.
+ *
+ * Returns: The new plug-in list, with all registered plug-in prepended.
+ **/
 static GList*
 register_plugins(GList *plugins,
                  const gchar *dir,
@@ -220,6 +235,18 @@ register_plugins(GList *plugins,
 
 /***** Proc ****************************************************************/
 
+/**
+ * proc_register_plugins:
+ * @plugins: Plug-in list to eventually add the plug-in to.
+ * @name: Module name for gwy_process_func_register().
+ * @file: Plug-in file (full path).
+ * @buffer: The output from "plugin register".
+ *
+ * Parse output from "plugin register" and eventually add it to the
+ * plugin-list.
+ *
+ * Returns: The new plug-in list, with the plug-in eventually prepended.
+ **/
 static GList*
 proc_register_plugins(GList *plugins,
                       const gchar *name,
@@ -260,6 +287,16 @@ proc_register_plugins(GList *plugins,
     return plugins;
 }
 
+/**
+ * proc_plugin_proxy_run:
+ * @data: A data container.
+ * @run: Run mode.
+ * @name: Plug-in name (i.e. data processing function) to run.
+ *
+ * The plug-in proxy itself, runs plug-in @name on @data.
+ *
+ * Returns: Whether it succeeded running the plug-in.
+ **/
 static gboolean
 proc_plugin_proxy_run(GwyContainer *data,
                       GwyRunType run,
@@ -311,6 +348,16 @@ proc_plugin_proxy_run(GwyContainer *data,
     return ok;
 }
 
+/**
+ * proc_find_plugin:
+ * @name: Plug-in name.
+ * @run: Run modes it is supposed to support.
+ *
+ * Finds a data processing plugin of name @name supporting at least one of the
+ * modes in @run.
+ *
+ * Returns: The plug-in info.
+ **/
 static ProcPluginInfo*
 proc_find_plugin(const gchar *name,
                  GwyRunType run)
@@ -337,6 +384,18 @@ proc_find_plugin(const gchar *name,
 
 /***** File ****************************************************************/
 
+/**
+ * file_register_plugins:
+ * @plugins: Plug-in list to eventually add the plug-in to.
+ * @name: Module name for gwy_file_func_register().
+ * @file: Plug-in file (full path).
+ * @buffer: The output from "plugin register".
+ *
+ * Parse output from "plugin register" and eventually add it to the
+ * plugin-list.
+ *
+ * Returns: The new plug-in list, with the plug-in eventually prepended.
+ **/
 static GList*
 file_register_plugins(GList *plugins,
                       const gchar *name,
@@ -386,6 +445,16 @@ file_register_plugins(GList *plugins,
     return plugins;
 }
 
+/**
+ * file_plugin_proxy_load:
+ * @filename. A file name to load.
+ * @name: Plug-in name (i.e. file-loading function) to run.
+ *
+ * The plug-in proxy itself, runs file-loading plug-in @name to load @filename.
+ *
+ * Returns: A newly created data container with the contents of @filename,
+ *          or %NULL if it fails.
+ **/
 static GwyContainer*
 file_plugin_proxy_load(const gchar *filename,
                        const gchar *name)
@@ -440,6 +509,16 @@ file_plugin_proxy_load(const gchar *filename,
     return data;
 }
 
+/**
+ * file_plugin_proxy_save:
+ * @data: A data container to save.
+ * @filename: A file name to save @data to.
+ * @name: Plug-in name (i.e. file-saving function) to run.
+ *
+ * The plug-in proxy itself, runs file-saving plug-in @name to save @filename.
+ *
+ * Returns: Whether it succeeded saving the data.
+ **/
 static gboolean
 file_plugin_proxy_save(GwyContainer *data,
                        const gchar *filename,
@@ -484,6 +563,19 @@ file_plugin_proxy_save(GwyContainer *data,
     return ok;
 }
 
+/**
+ * file_plugin_proxy_detect:
+ * @filename: A file name to detect type of..
+ * @only_name: Whether only name should be used for detection (otherwise
+ *             trying to open the file is allowed).  Note this parameter is
+ *             formal, as the proxy always decides only on filename basis.
+ * @name: Plug-in name (i.e. file-detection function) to run.
+ *
+ * The plug-in proxy itself.  Emulates filetype detection based on file
+ * name glob given by the plug-in during registration.
+ *
+ * Returns: The score (as defined in gwyddion filetype module interface).
+ **/
 static gint
 file_plugin_proxy_detect(const gchar *filename,
                          G_GNUC_UNUSED gboolean only_name,
@@ -500,6 +592,16 @@ file_plugin_proxy_detect(const gchar *filename,
     return CLAMP(info->specificity, 1, 20);
 }
 
+/**
+ * file_find_plugin:
+ * @name: Plug-in name.
+ * @run: File operations it is supposed to support.
+ *
+ * Finds a filetype plugin of name @name supporting at least one of the
+ * file operations in @run.
+ *
+ * Returns: The plug-in info.
+ **/
 static FilePluginInfo*
 file_find_plugin(const gchar *name,
                  GwyFileOperation run)
@@ -524,6 +626,18 @@ file_find_plugin(const gchar *name,
     return info;
 }
 
+/**
+ * file_pattern_specificity:
+ * @pattern: A fileglob-like pattern, as supported by #GPatternSpec.
+ *
+ * Computes a number approximately representing pattern specificity.
+ *
+ * The pattern specificity increases with the number of non-wildcards in
+ * the pattern and decreases with the number of wildcards (*) in the pattern.
+ *
+ * Returns: The pattern specificity. Normally a small integer, may be even
+ *          negative (e.g. for "*").
+ **/
 static glong
 file_pattern_specificity(const gchar *pattern)
 {
@@ -589,12 +703,12 @@ file_pattern_specificity(const gchar *pattern)
 
 /**
  * text_dump_export:
- * @data: A #GwyContainer to dump.
+ * @data: A %GwyContainer to dump.
  * @filename: File name to dump the container to.
  *
  * Dumps data container to a file @filename.
  *
- * In fact, it only dumps data and mask #DataField's and everything under
+ * In fact, it only dumps data and mask %DataField's and everything under
  * "/meta" as strings.
  *
  * Returns: A filehandle of the dump file open in "wb" mode.
@@ -626,6 +740,14 @@ text_dump_export(GwyContainer *data, gchar **filename)
     return fh;
 }
 
+/**
+ * dump_export_meta_cb:
+ * @hkey: A disguised #GQuark key.
+ * @value: A string value.
+ * @fh: A filehandle open for writing.
+ *
+ * Dumps a one string value to @fh.
+ **/
 static void
 dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
 {
@@ -638,6 +760,14 @@ dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
     fprintf(fh, "%s=%s\n", key, g_value_get_string(value));
 }
 
+/**
+ * dump_export_data_field:
+ * @dfield: A #GwyDataField.
+ * @name: The name of @dfield.
+ * @fh: A filehandle open for writing.
+ *
+ * Dumps a one #GwyDataField to @fh.
+ **/
 static void
 dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 {
@@ -779,6 +909,19 @@ fail:
     return NULL;
 }
 
+/**
+ * next_line:
+ * @buffer: A character buffer containing some text.
+ *
+ * Extracts a next line from @buffer.
+ *
+ * @buffer is updated to point after the end of the line and the "\n" is
+ * replaced with "\0", if present.
+ *
+ * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
+ *          The line is not duplicated, the returned pointer points somewhere
+ *          to @buffer.
+ **/
 static gchar*
 next_line(gchar **buffer)
 {
