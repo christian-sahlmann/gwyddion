@@ -1,0 +1,45 @@
+--blank-lines-after-declarations
+--blank-lines-after-procedures
+--break-before-boolean-operator
+--braces-on-if-line
+--braces-on-struct-decl-line
+--case-brace-indentation0
+--cuddle-do-while
+--continuation-indentation4
+--case-indentation4
+--honour-newlines
+--indent-level4
+--line-length80
+--continue-at-parentheses
+--leave-preprocessor-space
+--no-space-after-casts
+--dont-format-comments
+--no-space-after-function-call-names
+--no-space-after-parentheses
+--leave-optional-blank-lines
+--no-tabs
+--procnames-start-lines
+--space-after-for
+--space-after-if
+--space-after-while
+--struct-brace-indentation4
+--space-special-semicolon
+-T gdouble
+-T gint
+-T gint32
+-T guint32
+-T gint64
+-T guint64
+-T gsize
+-T glong
+-T gulong
+-T gchar
+-T guchar
+-T gboolean
+-T gpointer
+-T GtkWidget
+-T GtkObject
+-T GObject
+-T GwyDataLine
+-T GwyDataField
+-T GwyContainer
