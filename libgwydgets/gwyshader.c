@@ -191,16 +191,16 @@ gwy_shader_init(GwyShader *shader)
 
 /**
  * gwy_shader_new:
- * @sphere_coords: The spherical coordinates this gradient sphere should use.
+ * @gradient: Name of gradient to color the spehere with.  Can be %NULL to
+ *            use the default gray gradient.
  *
- * Creates a new #GwyShader.
- *
- * @sphere_coords can be %NULL, new spherical coordinates are allocated
- * then.
+ * Creates a new spherical shader.
  *
  * The widget takes up all the space allocated for it.
  *
- * Returns: The new gradient sphere as a #GtkWidget.
+ * Returns: The new shader as a #GtkWidget.
+ *
+ * Since: 1.8
  **/
 GtkWidget*
 gwy_shader_new(const gchar *gradient)
@@ -210,7 +210,8 @@ gwy_shader_new(const gchar *gradient)
     gwy_debug("");
     shader = (GwyShader*)g_object_new(GWY_TYPE_SHADER, NULL);
 
-    shader->gradient = gwy_gradients_get_gradient(gradient);
+    if (gradient)
+        shader->gradient = gwy_gradients_get_gradient(gradient);
     if (!shader->gradient)
         shader->gradient = gwy_gradients_get_gradient("Gray");
     if (!shader->gradient)
@@ -308,11 +309,13 @@ gwy_shader_get_property(GObject*object,
 
 /**
  * gwy_shader_get_update_policy:
- * @shader: a #GwyShader.
+ * @shader: A shader.
  *
- * Returns the update policy of a gradient spehere @shader.
+ * Returns the update policy of a shader.
  *
  * Returns: The update policy.
+ *
+ * Since: 1.8
  **/
 GtkUpdateType
 gwy_shader_get_update_policy(GwyShader *shader)
@@ -322,6 +325,17 @@ gwy_shader_get_update_policy(GwyShader *shader)
     return shader->update_policy;
 }
 
+/**
+ * gwy_shader_get_theta:
+ * @shader: A shader.
+ *
+ * Returns the theta coordinate of a shader.
+ *
+ * Returns: The theta coordinate, in radians.  Theta coordinate is angle from
+ *          sphere's north pole.
+ *
+ * Since: 1.8
+ **/
 gdouble
 gwy_shader_get_theta(GwyShader *shader)
 {
@@ -330,6 +344,17 @@ gwy_shader_get_theta(GwyShader *shader)
     return shader->theta;
 }
 
+/**
+ * gwy_shader_get_phi:
+ * @shader: A shader.
+ *
+ * Returns the phi coordinate of a shader.
+ *
+ * Returns: The phi coordinate, in radians.  Phi coordinate is orientation
+ *          in horizontal plane, measured from x axis, counterclockwise.
+ *
+ * Since: 1.8
+ **/
 gdouble
 gwy_shader_get_phi(GwyShader *shader)
 {
@@ -338,6 +363,19 @@ gwy_shader_get_phi(GwyShader *shader)
     return shader->phi;
 }
 
+/**
+ * gwy_shader_get_gradient:
+ * @shader: A shader.
+ *
+ * Returns the name of color gradient a shader uses.
+ *
+ * Returns: The gradient name.  It must not be modified or freed.  It may
+ *          differ the name that was used on initialization or set with
+ *          gwy_shader_set_gradient(), if the gradient didn't exist or
+ *          was renamed meanwhile.
+ *
+ * Since: 1.8
+ **/
 const gchar*
 gwy_shader_get_gradient(GwyShader *shader)
 {
@@ -348,17 +386,19 @@ gwy_shader_get_gradient(GwyShader *shader)
 
 /**
  * gwy_shader_set_update_policy:
- * @shader: a #GwyShader.
- * @update_policy: the update policy a gradient sphere @shader should use.
+ * @shader: A shader.
+ * @update_policy: The update policy @shader should use.
  *
- * Sets update policy for a gradient sphere.
+ * Sets the update policy of a shader.
+ *
+ * Since: 1.8
  **/
 void
 gwy_shader_set_update_policy(GwyShader *shader,
                              GtkUpdateType update_policy)
 {
     g_return_if_fail(GWY_IS_SHADER(shader));
-    g_return_if_fail(update_policy >= GTK_UPDATE_CONTINUOUS
+    g_return_if_fail((gint)update_policy >= GTK_UPDATE_CONTINUOUS
                      && update_policy <= GTK_UPDATE_DELAYED);
 
     shader->update_policy = update_policy;
@@ -366,6 +406,16 @@ gwy_shader_set_update_policy(GwyShader *shader,
     g_object_notify(G_OBJECT(shader), "update_policy");
 }
 
+/**
+ * gwy_shader_set_theta:
+ * @shader: A shader.
+ * @theta: The theta coordinate to set.  See gwy_shader_get_theta() for
+ *         description.
+ *
+ * Sets the theta coordinate of a shader.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_shader_set_theta(GwyShader *shader,
                      gdouble theta)
@@ -381,6 +431,15 @@ gwy_shader_set_theta(GwyShader *shader,
     gwy_shader_update(shader);
 }
 
+/**
+ * gwy_shader_set_phi:
+ * @shader: A shader.
+ * @phi: The phi coordinate to set.  See gwy_shader_get_phi() for description.
+ *
+ * Sets the phi coordinate of a shader.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_shader_set_phi(GwyShader *shader,
                    gdouble phi)
@@ -399,6 +458,17 @@ gwy_shader_set_phi(GwyShader *shader,
     gwy_shader_update(shader);
 }
 
+/**
+ * gwy_shader_set_angle:
+ * @shader: A shader.
+ * @theta: The theta coordinate to set.  See gwy_shader_get_theta() for
+ *         description.
+ * @phi: The phi coordinate to set.  See gwy_shader_get_phi() for description.
+ *
+ * Sets the spherical angle of a shader.
+ *
+ * Since: 1.8
+ **/
 void
 gwy_shader_set_angle(GwyShader *shader,
                      gdouble theta,
@@ -423,10 +493,12 @@ gwy_shader_set_angle(GwyShader *shader,
 
 /**
  * gwy_shader_set_gradient:
- * @shader: a #GwyShader.
- * @gradient: A gradient @shader should use.
+ * @shader: A shader.
+ * @gradient: Name of gradient @shader should use.  It should exist.
  *
- * Sets the gradient a gradient sphere uses.
+ * Sets the gradient a shader uses.
+ *
+ * Since: 1.8
  **/
 void
 gwy_shader_set_gradient(GwyShader *shader,
