@@ -46,8 +46,10 @@ gwy_widgets_type_init(void)
     gwy_draw_type_init();
 
     types_initialized += gwy_sphere_coords_get_type();
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
     types_initialized += gwy_graph_curve_model_get_type();
     types_initialized += gwy_graph_model_get_type();
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
     types_initialized |= 1;
 }
 

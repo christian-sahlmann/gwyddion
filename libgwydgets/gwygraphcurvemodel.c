@@ -17,13 +17,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <string.h>
 
 #include <libgwyddion/gwyddion.h>
 #include "gwygraphcurvemodel.h"
 
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
+
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
 
 static void   gwy_graph_curve_model_class_init        (GwyGraphCurveModelClass *klass);
 static void   gwy_graph_curve_model_init              (GwyGraphCurveModel *gcmodel);
@@ -360,5 +362,7 @@ gwy_graph_curve_model_duplicate(GObject *object)
 
     return (GObject*)duplicate;
 }
+
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

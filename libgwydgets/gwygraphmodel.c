@@ -27,6 +27,8 @@
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 #define GRAPH_GLOBALS_FAKE_TYPE_NAME "GwyGraphModel-graph"
 
+#ifdef I_WANT_A_BROKEN_GWY_GRAPH_MODEL
+
 static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
 static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
 static void   gwy_graph_model_finalize          (GObject *object);
@@ -559,5 +561,7 @@ gwy_graph_model_duplicate(GObject *object)
 
     return (GObject*)duplicate;
 }
+
+#endif  /* I_WANT_A_BROKEN_GWY_GRAPH_MODEL */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
