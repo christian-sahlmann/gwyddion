@@ -1061,4 +1061,161 @@ gwy_data_field_get_median(GwyDataField *dfield)
                                           0, 0, dfield->xres, dfield->yres);
 }
 
+/**
+ * gwy_data_field_area_get_normal_coeffs:
+ * @a: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nx: Where x-component of average normal vector should be stored, or %NULL.
+ * @ny: Where y-component of average normal vector should be stored, or %NULL.
+ * @nz: Where z-component of average normal vector should be stored, or %NULL.
+ * @normalize1: true to normalize the normal vector to 1, false to normalize
+ *              the vector so that z-component is 1.
+ *
+ * Computes average normal vector of an area of a data field.
+ **/
+gboolean
+gwy_data_field_area_get_normal_coeffs(GwyDataField *a,
+                                      gint col, gint row, gint width, gint height,
+                                      gdouble *nx, gdouble *ny, gdouble *nz,
+                                      gboolean normalize1)
+{
+  gint i, j;
+  int ctr = 0;
+  gdouble d1x, d1y, d1z, d2x, d2y, d2z, dcx, dcy, dcz, dd;
+  gdouble sumdx = 0.0, sumdy = 0.0, sumdz = 0.0, sumw = 0.0;
+  gdouble avgdx, avgdy, avgdz;
+
+  g_return_val_if_fail(GWY_IS_DATA_FIELD(a), FALSE);
+  g_return_val_if_fail(col >= 0 && row >= 0
+                        && width > 0 && height > 0
+                        && col + width <= a->xres
+                       && row + height <= a->yres,
+                       FALSE);
+  g_return_val_if_fail(gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(a),
+                                         gwy_data_field_get_si_unit_z(a)),
+                       FALSE);
+
+  for (i = col; i < col + width; i++)
+    for (j = row; j < row + height; j++)
+      {
+        d1x = 1.0;
+        d1y = 0.0;
+        d1z = gwy_data_field_get_xder(a, i, j);
+        d2x = 0.0;
+        d2y = 1.0;
+        d2z = gwy_data_field_get_yder(a, i, j);
+        /* Cross product = normal vector */
+        dcx = d1y*d2z - d1z*d2y;
+        dcy = d1z*d2x - d1x*d2z;
+        dcz = d1x*d2y - d1y*d2x; /* Always 1 */
+        /* Normalize and add */
+        dd = sqrt(dcx*dcx+dcy*dcy+dcz*dcz);
+        dcx /= dd; sumdx += dcx;
+        dcy /= dd; sumdy += dcy;
+        dcz /= dd; sumdz += dcz;
+        sumw += 1.0/dd;
+        ctr++;
+      }
+  /* average dimensionless normal vector */
+  if (normalize1)
+    { /* normalize to 1 */
+      avgdx = sumdx/ctr;
+      avgdy = sumdy/ctr;
+      avgdz = sumdz/ctr;
+    }
+  else
+    { /* normalize for gwy_data_field_plane_level */
+      avgdx = sumdx/sumw;
+      avgdy = sumdy/sumw;
+      avgdz = sumdz/sumw;
+    }
+
+  if (nx) *nx = avgdx;
+  if (ny) *ny = avgdy;
+  if (nz) *nz = avgdz;
+
+  return TRUE;
+}
+
+
+/**
+ * gwy_data_field_get_normal_coeffs:
+ * @a: A data field.
+ * @nx: Where x-component of average normal vector should be stored, or %NULL.
+ * @ny: Where y-component of average normal vector should be stored, or %NULL.
+ * @nz: Where z-component of average normal vector should be stored, or %NULL.
+ * @normalize1: true to normalize the normal vector to 1, false to normalize
+ *              the vector so that z-component is 1.
+ *
+ * Computes average normal vector of a data field.
+ **/
+gboolean
+gwy_data_field_get_normal_coeffs(GwyDataField *a,
+                                 gdouble *nx, gdouble *ny, gdouble *nz,
+                                 gboolean normalize1)
+{
+  return gwy_data_field_area_get_normal_coeffs(a, 0, 0, a->xres, a->yres,
+                                               nx, ny, nz, normalize1);
+}
+
+
+/**
+ * gwy_data_field_area_get_inclination:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @thetadeg: Where theta angle (in degrees) should be stored, or %NULL.
+ * @phideg: Where phi angle (in degrees) should be stored, or %NULL.
+ *
+ * Calculates the inclination of the image (polar and azimuth angle).
+ **/
+gboolean
+gwy_data_field_area_get_inclination(GwyDataField *data_field,
+                                    gint col, gint row,
+                                    gint width, gint height,
+                                    gdouble *thetadeg,
+                                    gdouble *phideg)
+{
+  gdouble nx, ny, nz, nr, theta, phi;
+
+  if (!gwy_data_field_area_get_normal_coeffs(data_field,
+                                             col, row, width, height,
+                                             &nx, &ny, &nz, TRUE))
+    return FALSE;
+
+  nr = sqrt(nx*nx + ny*ny);
+  theta = atan2(nr, nz);
+  phi = atan2(ny, nx);
+  if (thetadeg) *thetadeg = theta * 180.0/G_PI;
+  if (phideg) *phideg = phi * 180.0/G_PI;
+  return TRUE;
+}
+
+
+/**
+ * gwy_data_field_area_get_inclination:
+ * @data_field: A data field.
+ * @thetadeg: Where theta angle (in degrees) should be stored, or %NULL.
+ * @phideg: Where phi angle (in degrees) should be stored, or %NULL.
+ *
+ * Calculates the inclination of the image (polar and azimuth angle).
+ **/
+gboolean
+gwy_data_field_get_inclination(GwyDataField *data_field,
+                               gdouble *thetadeg,
+                               gdouble *phideg)
+{
+  return gwy_data_field_area_get_inclination(data_field,
+                                             0, 0,
+                                             data_field->xres, data_field->yres,
+                                             thetadeg,
+                                             phideg);
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -93,6 +93,8 @@ GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
                                                          gint sdigits,
                                                          GwySIValueFormat *format);
 void              gwy_si_unit_value_format_free         (GwySIValueFormat *format);
+gboolean          gwy_si_unit_equal                     (GwySIUnit *siunit1,
+                                                         GwySIUnit *siunit2);
 
 
 G_END_DECLS

@@ -696,6 +696,29 @@ gwy_si_unit_value_format_free(GwySIValueFormat *format)
 }
 
 
+/**
+ * gwy_si_unit_equal:
+ * @siunit1: First unit.
+ * @siunit2: Second unit.
+ *
+ * Returns TRUE if both units are equal.
+ **/
+gboolean
+gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
+{
+  gchar *unit_string1, *unit_string2;
+  gboolean compare;
+
+  unit_string1 = gwy_si_unit_get_unit_string(siunit1);
+  unit_string2 = gwy_si_unit_get_unit_string(siunit2);
+  compare = strstr(unit_string1, unit_string2) != NULL;
+  g_free(unit_string1);
+  g_free(unit_string2);
+
+  return compare;
+}
+
+
 /************************** GwySIUnit2 ***********************************/
 
 static void
