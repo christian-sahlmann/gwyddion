@@ -38,6 +38,8 @@ static gboolean    canny                        (GwyContainer *data,
                                                  GwyRunType run);
 static gboolean    rms                          (GwyContainer *data,
                                                  GwyRunType run);
+static gboolean    rms_edge                     (GwyContainer *data,
+                                                 GwyRunType run);
 
 
 
@@ -81,10 +83,18 @@ module_register(const gchar *name)
         EDGE_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo rms_edge_func_info = {
+        "rms_edge",
+        N_("/_Display/_Edge detection/RMS _Edge"),
+        (GwyProcessFunc)&rms_edge,
+        EDGE_RUN_MODES,
+        0,
+    };
 
     gwy_process_func_register(name, &laplacian_func_info);
     gwy_process_func_register(name, &canny_func_info);
     gwy_process_func_register(name, &rms_func_info);
+    gwy_process_func_register(name, &rms_edge_func_info);
 
     return TRUE;
 }
@@ -201,6 +211,56 @@ rms(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_filter_rms(shadefield, 5);
+
+    return TRUE;
+}
+
+static gboolean
+rms_edge(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield, *shadefield, *tmp;
+    gint xres, yres, i, j;
+    gdouble *d;
+    const gdouble *t;
+    gdouble s;
+
+    g_assert(run & EDGE_RUN_MODES);
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    if (gwy_container_gis_object_by_name(data, "/0/show",
+                                         (GObject**)&shadefield)) {
+        gwy_data_field_resample(shadefield, xres, yres, GWY_INTERPOLATION_NONE);
+    }
+    else {
+        shadefield =  GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, FALSE));
+        gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
+        g_object_unref(shadefield);
+    }
+
+    tmp = gwy_data_field_duplicate(dfield);
+    gwy_data_field_filter_rms(tmp, 5);
+    t = gwy_data_field_get_data_const(tmp);
+    d = gwy_data_field_get_data(shadefield);
+    for (i = 0; i < yres; i++) {
+        gint iim = MAX(i-2, 0)*xres;
+        gint iip = MIN(i+2, yres-1)*xres;
+        gint ii = i*xres;
+
+        for (j = 0; j < xres; j++) {
+            gint jm = MAX(j-2, 0);
+            gint jp = MIN(j+2, xres-1);
+
+            s = t[ii + jm] + t[ii + jp] + t[iim + j] + t[iip + j]
+                + (t[iim + jm] + t[iim + jp] + t[iip + jm] + t[iip + jp])/2.0;
+            s /= 6.0;
+
+            d[ii + j] = MAX(t[ii + j] - s, 0);
+        }
+    }
+    g_object_unref(tmp);
 
     return TRUE;
 }
