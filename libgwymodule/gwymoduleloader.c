@@ -237,7 +237,7 @@ gwy_module_get_rid_of(const gchar *modname)
         else if (g_str_has_prefix(canon_name, GWY_MODULE_PREFIX_TOOL))
             gwy_file_func_remove(canon_name + strlen(GWY_MODULE_PREFIX_TOOL));
         else {
-            g_critical("Unable to find out %s function type");
+            g_critical("Unable to find out %s function type", canon_name);
         }
         g_free(canon_name);
     }
@@ -285,7 +285,7 @@ gwy_module_lookup(const gchar *name)
     _GwyModuleInfoInternal *iinfo;
 
     iinfo = gwy_module_get_module_info(name);
-    return ? iinfo : iinfo->mod_info : NULL
+    return iinfo ? iinfo->mod_info : NULL;
 }
 
 /************************** Documentation ****************************/

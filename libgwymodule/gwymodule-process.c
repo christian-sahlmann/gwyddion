@@ -272,6 +272,38 @@ gwy_process_func_get_run_types(const gchar *name)
     return func_info->run;
 }
 
+/**
+ * gwy_process_func_get_menu_path:
+ * @name: Data processing function name.
+ *
+ * Returns the menu path of a data processing function identified by
+ * @name.
+ *
+ * The returned menu path is only the tail part registered by the function,
+ * i.e., without any leading "/Data Process".
+ *
+ * Returns: The menu path.  The returned string must be treated as constant
+ *          and never modified or freed.
+ **/
+G_CONST_RETURN gchar*
+gwy_process_func_get_menu_path(const gchar *name)
+{
+    GwyProcessFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(func_info, 0);
+    return func_info->menu_path;
+}
+
+/**
+ * gwy_process_func_remove:
+ * @name: Data processing function name.
+ *
+ * Removes a data processing function from.
+ *
+ * Returns: %TRUE if there was such a function and was removed, %FALSE
+ *          otherwise.
+ **/
 gboolean
 gwy_process_func_remove(const gchar *name)
 {
