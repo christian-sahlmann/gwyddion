@@ -47,6 +47,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_color_range-24.png \
 	$(top_srcdir)/pixmaps/gwy_crop-24.png \
 	$(top_srcdir)/pixmaps/gwy_cwt-24.png \
+	$(top_srcdir)/pixmaps/gwy_distance-24.png \
 	$(top_srcdir)/pixmaps/gwy_data_arithmetic-24.png \
 	$(top_srcdir)/pixmaps/gwy_facet_level-24.png \
 	$(top_srcdir)/pixmaps/gwy_filter-24.png \

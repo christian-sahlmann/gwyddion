@@ -25,6 +25,7 @@ Since: 1.5
 </para>
 
 
+
 <!-- ##### MACRO GWY_STOCK_BOLD ##### -->
 <para>
 The "Bold" stock icon.
@@ -52,10 +53,19 @@ Since: 1.6
 </para>
 
 
+
 <!-- ##### MACRO GWY_STOCK_CWT ##### -->
 <para>
 The "Continuous-Wavelet-Transform" stock icon.
 <inlinegraphic fileref="gwy_cwt-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_DISTANCE ##### -->
+<para>
+The "Distance" stock icon.
+<inlinegraphic fileref="gwy_distance-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -119,6 +129,7 @@ Since: 1.1
 </para>
 
 
+
 <!-- ##### MACRO GWY_STOCK_GRAINS ##### -->
 <para>
 The "Grains" stock icon.
@@ -168,6 +179,7 @@ The "Graph-Fit-Func" stock icon.
 <para>
 Since: 1.2
 </para>
+
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_GAUSS ##### -->
@@ -221,6 +233,7 @@ Since: 1.4
 </para>
 
 
+
 <!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_FIT ##### -->
 <para>
 The "Graph-Zoom-Fit" stock icon.
@@ -270,6 +283,7 @@ The "Light-Rotate" stock icon.
 <para>
 Since: 1.5
 </para>
+
 
 
 <!-- ##### MACRO GWY_STOCK_NONE ##### -->
@@ -379,6 +393,7 @@ Since: 1.2
 </para>
 
 
+
 <!-- ##### MACRO GWY_STOCK_Z_SCALE ##### -->
 <para>
 The "Z-Scale" stock icon.
@@ -388,6 +403,7 @@ The "Z-Scale" stock icon.
 <para>
 Since: 1.5
 </para>
+
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
