@@ -311,7 +311,7 @@ gwy_app_settings_load_text(const gchar *filename)
  *
  * Probably useful only in the application.
  *
- * Since 1.2 no longer tries creates to create the parent directory
+ * Since 1.2 no longer tries to create the parent directory
  * when it doesn't exist, and loads the human-readable (text) format.
  *
  * Returns: Whether it succeeded.  In either case you can call
