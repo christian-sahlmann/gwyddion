@@ -1,7 +1,20 @@
-1.8cvs20050205
+1.8cvs20050209
 
 1.9
-- Mark, remove scars: can remove negative scars too.
+Application:
+- Startup time improved.
+
+Modules:
+- Mark, remove scars: Can remove negative scars too.
+- Edge detection: Experimental RMS, RMS Edge, and Local Nonlinearity filters
+  were added.
+- Rotate: Preview showing wrong angle was fixed.
+- Presentation operations: Extract presentation was added.
+
+Library:
+- libgwymodule: Public functions for obtaining module list and detailed module
+  information.
+- libgwyprocess: Local rms filter.
 
 
 1.8
@@ -41,7 +54,7 @@ Modules:
 - Crop tool: Slightly skewed new physical dimensions were corrected.
 - All modules: GUI improvements, namely addition of scale controls.
 
-Libraries:
+Library:
 - libgwyddion: Better SI unit parsing, multiplication, division and powers.
 - libgwydgets: 3D View not honouring data aspect ratio was fixed
 - libgwyddion: Value formatting bug causing data ranges consisting entirely
