@@ -48,7 +48,7 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   gdouble scale,
                                                   Gwy2DCWTWaveletType wtype);
 
-gdouble         edist                             (gint x1, gint y1, gint x2, gint y2);
+static gdouble  edist                            (gint x1, gint y1, gint x2, gint y2);
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
@@ -2035,7 +2035,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     gwy_data_line_free(&iout);
 }
 
-gdouble
+static gdouble
 edist(gint x1, gint y1, gint x2, gint y2)
 {
     return sqrt(((gdouble)x1-x2)*((gdouble)x1-x2)+((gdouble)y1-y2)*((gdouble)y1-y2));
