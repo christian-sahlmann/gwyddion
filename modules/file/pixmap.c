@@ -99,17 +99,17 @@ static GdkPixbuf*    hruler                    (gint size,
                                                 gint extra,
                                                 gdouble real,
                                                 gdouble zoom,
-                                                const gchar *units);
+                                                GwySIUnit *siunit);
 static GdkPixbuf*    vruler                    (gint size,
                                                 gint extra,
                                                 gdouble real,
                                                 gdouble zoom,
-                                                const gchar *units);
+                                                GwySIUnit *siunit);
 static GdkPixbuf*    fmscale                   (gint size,
                                                 gdouble bot,
                                                 gdouble top,
                                                 gdouble zoom,
-                                                const gchar *units);
+                                                GwySIUnit *siunit);
 static GdkDrawable*  prepare_drawable          (gint width,
                                                 gint height,
                                                 gint lw,
@@ -295,6 +295,7 @@ pixmap_save(GwyContainer *data,
     GdkPixbuf *pixbuf, *hrpixbuf, *vrpixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *scalepixbuf = NULL;
     GwyContainer *settings;
+    GwySIUnit *siunit_xy, *siunit_z;
     PixmapArgs args;
     const guchar *samples;
     guchar *pixels;
@@ -319,6 +320,8 @@ pixmap_save(GwyContainer *data,
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), FALSE);
     g_return_val_if_fail(gwy_data_view_get_data(data_view) == data, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    siunit_xy = gwy_data_field_get_si_unit_xy(dfield);
+    siunit_z = gwy_data_field_get_si_unit_z(dfield);
 
     settings = gwy_app_settings_get();
     pixmap_load_args(settings, &args);
@@ -358,16 +361,16 @@ pixmap_save(GwyContainer *data,
     lw = ZOOM2LW(args.zoom);
 
     hrpixbuf = hruler(zwidth + 2*lw, border, gwy_data_field_get_xreal(dfield),
-                      args.zoom, "m");
+                      args.zoom, siunit_xy);
     hrh = gdk_pixbuf_get_height(hrpixbuf);
     vrpixbuf = vruler(zheight + 2*lw, border, gwy_data_field_get_yreal(dfield),
-                      args.zoom, "m");
+                      args.zoom, siunit_xy);
     vrw = gdk_pixbuf_get_width(vrpixbuf);
     if (args.otype == PIXMAP_EVERYTHING) {
         scalepixbuf = fmscale(zheight + 2*lw,
                             gwy_data_field_get_min(dfield),
                             gwy_data_field_get_max(dfield),
-                            args.zoom, "m");
+                            args.zoom, siunit_z);
         scw = gdk_pixbuf_get_width(scalepixbuf);
     }
     else {
@@ -807,7 +810,7 @@ hruler(gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
-       const gchar *units)
+       GwySIUnit *siunit)
 {
     const gsize bufsize = 64;
     PangoRectangle logical1, logical2;
@@ -815,28 +818,29 @@ hruler(gint size,
     GdkDrawable *drawable;
     GdkPixbuf *pixbuf;
     GdkGC *gc;
-    gdouble magnitude, base, step, x;
+    GwySIValueFormat *format;
+    gdouble base, step, x;
     gchar *s;
-    gint precision, l, n, ix;
+    gint l, n, ix;
     gint tick, height, lw;
 
     s = g_new(gchar, bufsize);
     layout = prepare_layout(zoom);
 
-    magnitude = gwy_math_humanize_numbers(real/12, real, &precision);
+    format = gwy_si_unit_get_format_with_resolution(siunit, real, real/12,
+                                                    NULL);
 
-    g_snprintf(s, bufsize, "%.*f", precision, real/magnitude);
+    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, 0.0, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s", format->precision, 0.0, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical2);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
-    step = real/magnitude/n;
+    step = real/format->magnitude/n;
     base = exp(G_LN10*floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
@@ -854,14 +858,14 @@ hruler(gint size,
     height = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(size + extra, height, lw, &gc);
 
-    for (x = 0.0; x <= real/magnitude; x += base*step) {
+    for (x = 0.0; x <= real/format->magnitude; x += base*step) {
         if (!x)
-            g_snprintf(s, bufsize, "%.*f %s%s",
-                       precision, x, gwy_math_SI_prefix(magnitude), units);
+            g_snprintf(s, bufsize, "%.*f %s",
+                       format->precision, x, format->units);
         else
-            g_snprintf(s, bufsize, "%.*f", precision, x);
+            g_snprintf(s, bufsize, "%.*f", format->precision, x);
         pango_layout_set_markup(layout, s, -1);
-        ix = x/(real/magnitude)*size + lw/2;
+        ix = x/(real/format->magnitude)*size + lw/2;
         pango_layout_get_extents(layout, NULL, &logical1);
         if (ix + PANGO_PIXELS(logical1.width) <= size + extra/4)
             gdk_draw_layout(drawable, gc, ix+1, 1, layout);
@@ -871,6 +875,7 @@ hruler(gint size,
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, size + extra, height);
 
+    gwy_si_unit_value_format_free(format);
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
@@ -884,7 +889,7 @@ vruler(gint size,
        gint extra,
        gdouble real,
        gdouble zoom,
-       const gchar *units)
+       GwySIUnit *siunit)
 {
     const gsize bufsize = 64;
     PangoRectangle logical1, logical2;
@@ -892,30 +897,31 @@ vruler(gint size,
     GdkDrawable *drawable;
     GdkPixbuf *pixbuf;
     GdkGC *gc;
-    gdouble magnitude, base, step, x;
+    GwySIValueFormat *format;
+    gdouble base, step, x;
     gchar *s;
-    gint precision, l, n, ix;
+    gint l, n, ix;
     gint tick, width, lw;
 
     s = g_new(gchar, bufsize);
     layout = prepare_layout(zoom);
 
-    magnitude = gwy_math_humanize_numbers(real/12, real, &precision);
+    format = gwy_si_unit_get_format_with_resolution(siunit, real, real/12,
+                                                    NULL);
 
     /* note the algorithm is the same to force consistency between axes,
      * even though the vertical one could be filled with tick more densely */
-    g_snprintf(s, bufsize, "%.*f", precision, real/magnitude);
+    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, 0.0, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s", format->precision, 0.0, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical2);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
-    step = real/magnitude/n;
+    step = real/format->magnitude/n;
     base = exp(G_LN10*floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
@@ -927,7 +933,7 @@ vruler(gint size,
         step = 1.0;
     }
 
-    g_snprintf(s, bufsize, "%.*f", precision, real/magnitude);
+    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
     l = PANGO_PIXELS(logical1.width);
@@ -937,10 +943,10 @@ vruler(gint size,
     width = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(width, size + extra, lw, &gc);
 
-    for (x = 0.0; x <= real/magnitude; x += base*step) {
-        g_snprintf(s, bufsize, "%.*f", precision, x);
+    for (x = 0.0; x <= real/format->magnitude; x += base*step) {
+        g_snprintf(s, bufsize, "%.*f", format->precision, x);
         pango_layout_set_markup(layout, s, -1);
-        ix = x/(real/magnitude)*size + lw/2;
+        ix = x/(real/format->magnitude)*size + lw/2;
         pango_layout_get_extents(layout, NULL, &logical1);
         if (ix + PANGO_PIXELS(logical1.height) <= size + extra/4)
             gdk_draw_layout(drawable, gc, 1, ix+1, layout);
@@ -950,6 +956,7 @@ vruler(gint size,
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, width, size + extra);
 
+    gwy_si_unit_value_format_free(format);
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
@@ -964,7 +971,7 @@ fmscale(gint size,
         gdouble bot,
         gdouble top,
         gdouble zoom,
-        const gchar *units)
+        GwySIUnit *siunit)
 {
     const gsize bufsize = 64;
     PangoRectangle logical1, logical2;
@@ -972,24 +979,24 @@ fmscale(gint size,
     GdkDrawable *drawable;
     GdkPixbuf *pixbuf;
     GdkGC *gc;
-    gdouble magnitude, x;
+    gdouble x;
+    GwySIValueFormat *format;
     gchar *s;
-    gint precision, l;
-    gint tick, width, lw;
+    gint l, tick, width, lw;
 
     s = g_new(gchar, bufsize);
     layout = prepare_layout(zoom);
 
     x = MAX(fabs(bot), fabs(top));
-    magnitude = gwy_math_humanize_numbers(x/120, x, &precision);
+    format = gwy_si_unit_get_format_with_resolution(siunit, x, x/120, NULL);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, top/magnitude, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s",
+               format->precision, top/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, bot/magnitude, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s",
+               format->precision, bot/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical2);
 
@@ -999,8 +1006,8 @@ fmscale(gint size,
     width = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(width, size, lw, &gc);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, bot/magnitude, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s",
+               format->precision, top/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
     gdk_draw_layout(drawable, gc,
@@ -1009,8 +1016,8 @@ fmscale(gint size,
                     layout);
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
 
-    g_snprintf(s, bufsize, "%.*f %s%s",
-               precision, top/magnitude, gwy_math_SI_prefix(magnitude), units);
+    g_snprintf(s, bufsize, "%.*f %s",
+               format->precision, bot/format->magnitude, format->units);
     pango_layout_set_markup(layout, s, -1);
     pango_layout_get_extents(layout, NULL, &logical1);
     gdk_draw_layout(drawable, gc,
@@ -1023,6 +1030,7 @@ fmscale(gint size,
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, width, size);
 
+    gwy_si_unit_value_format_free(format);
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
