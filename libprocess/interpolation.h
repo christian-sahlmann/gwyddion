@@ -16,7 +16,7 @@ typedef enum {
   GWY_INTERPOLATION_KEY       = 3,
   GWY_INTERPOLATION_BSPLINE   = 4,
   GWY_INTERPOLATION_OMOMS     = 5,
-  GWY_INTERPOLATION_NNA       = 6,
+  GWY_INTERPOLATION_NNA       = 6
 } GwyInterpolationType;
 
 /*simple interpolation of non-equidistant values using two neighbour values*/

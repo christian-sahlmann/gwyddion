@@ -18,7 +18,7 @@ typedef enum {
   GWY_WINDOWING_BLACKMANN  = 3,
   GWY_WINDOWING_LANCZOS    = 4,
   GWY_WINDOWING_WELCH      = 5,
-  GWY_WINDOWING_RECT       = 6,
+  GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
 /*2^N fft algorithm*/
