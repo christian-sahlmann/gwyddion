@@ -50,9 +50,11 @@ static void         gwy_gradient_serializable_init(GwySerializableIface *iface);
 static void         gwy_gradient_watchable_init   (GwyWatchableIface *iface);
 static void         gwy_gradient_sanitize         (GwyGradient *gradient);
 static void         gwy_gradient_changed          (GwyGradient *gradient);
+/*
 static gchar*       gwy_gradient_invent_name      (GHashTable *gradients,
                                                    const gchar *prefix,
                                                    gboolean warn);
+                                                   */
 static GwyGradient* gwy_gradient_new_internal   (gchar *name,
                                                  gint npoints,
                                                  const GwyGradientPoint *points,
@@ -833,6 +835,11 @@ gwy_gradients_get_gradient(const gchar *name)
     return g_hash_table_lookup(klass->gradients, name);
 }
 
+/* FIXME:
+ * 1. the API will be probably different in 2.0
+ * 2. it would be very unwise to use these function in 1.x
+ */
+#if 0
 /**
  * gwy_gradients_new_gradient:
  * @newname: Name of the new gradient to create.  May be %NULL, something like
@@ -1006,6 +1013,7 @@ gwy_gradients_rename_gradient(const gchar *name,
 
     return gradient;
 }
+#endif
 
 /**
  * gwy_gradients_foreach:

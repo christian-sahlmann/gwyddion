@@ -114,15 +114,19 @@ GwyGradient*      gwy_gradient_parse                 (const gchar *text);
 
 gboolean          gwy_gradients_gradient_exists      (const gchar *name);
 GwyGradient*      gwy_gradients_get_gradient         (const gchar *name);
+/*
 GwyGradient*      gwy_gradients_new_gradient         (const gchar *newname);
 GwyGradient*      gwy_gradients_rename_gradient      (const gchar *name,
                                                       const gchar *newname);
 GwyGradient*      gwy_gradients_new_gradient_as_copy (const gchar *name,
                                                       const gchar *newname);
 gboolean          gwy_gradients_delete_gradient      (const gchar *name);
+*/
 void              gwy_gradients_foreach              (GwyGradientFunc function,
                                                       gpointer user_data);
-/*void              gwy_gradients_setup_presets        (void);*/
+/*
+void              gwy_gradients_setup_presets        (void);
+*/
 
 G_END_DECLS
 
