@@ -8,6 +8,7 @@ pixmapdata_DATA = \
 	gwy_color_range-24.png \
 	gwy_crop-24.png \
 	gwy_cwt-24.png \
+	gwy_dwt-24.png \
 	gwy_data_arithmetic-24.png \
 	gwy_distance-24.png \
 	gwy_facet_level-24.png \
