@@ -84,6 +84,44 @@ menu
 @recent_files: 
 
 
+<!-- ##### FUNCTION gwy_app_menu_set_flags_recursive ##### -->
+<para>
+
+</para>
+
+@widget: 
+@data: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_set_sensitive_array ##### -->
+<para>
+
+</para>
+
+@item_factory: 
+@root: 
+@items: 
+@flags: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_set_sensitive_both ##### -->
+<para>
+
+</para>
+
+@item: 
+@sens: 
+@state: 
+
+
+<!-- ##### FUNCTION gwy_app_menu_set_recent_files_menu ##### -->
+<para>
+
+</para>
+
+@menu: 
+
+
 <!-- ##### FUNCTION gwy_app_run_process_func_cb ##### -->
 <para>
 

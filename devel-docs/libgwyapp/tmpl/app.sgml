@@ -14,11 +14,10 @@ app
 
 </para>
 
-<!-- ##### FUNCTION gwy_app_toolbox_create ##### -->
+<!-- ##### VARIABLE gwy_app_main_window ##### -->
 <para>
 
 </para>
-
 
 
 <!-- ##### FUNCTION gwy_app_get_current_data ##### -->
@@ -151,6 +150,45 @@ app
 </para>
 
 @graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_tool_use_cb ##### -->
+<para>
+
+</para>
+
+@unused: 
+@toolname: 
+
+
+<!-- ##### FUNCTION gwy_app_zoom_set_cb ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### FUNCTION gwy_app_mask_kill_cb ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_show_kill_cb ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_quit ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 

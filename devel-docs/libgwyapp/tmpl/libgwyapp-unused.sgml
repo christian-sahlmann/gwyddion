@@ -1,0 +1,132 @@
+<!-- ##### SECTION ./tmpl/about.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/about.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/about.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/about.sgml:Title ##### -->
+about
+
+
+<!-- ##### SECTION ./tmpl/arith.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/arith.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/arith.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/arith.sgml:Title ##### -->
+arith
+
+
+<!-- ##### SECTION ./tmpl/init.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/init.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/init.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/init.sgml:Title ##### -->
+init
+
+
+<!-- ##### SECTION ./tmpl/meta.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/meta.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/meta.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/meta.sgml:Title ##### -->
+meta
+
+
+<!-- ##### SECTION ./tmpl/toolbox.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/toolbox.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/toolbox.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/toolbox.sgml:Title ##### -->
+toolbox
+
+
+<!-- ##### FUNCTION gwy_app_about ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_app_data_arith ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_app_metadata_browser ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+<!-- ##### FUNCTION gwy_app_toolbox_create ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_type_init ##### -->
+<para>
+
+</para>
+
+
