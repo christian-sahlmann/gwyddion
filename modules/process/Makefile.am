@@ -29,7 +29,7 @@ process_PROGRAMS = \
 	laplace.so \
 	level.so \
 	linecorrect.so \
-	nanoindent_mark.so \ 
+	nanoindent_mark.so \
 	mask_grow_shrink.so \
 	maskcor.so \
 	maskops.so \
