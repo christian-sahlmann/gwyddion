@@ -59,6 +59,8 @@ gchar*   gwy_strreplace             (const gchar *haystack,
                                      gsize maxrepl);
 gint     gwy_strdiffpos             (const gchar *s1,
                                      const gchar *s2);
+gboolean gwy_str_has_suffix_nocase  (const gchar *s,
+                                     const gchar *suffix);
 gboolean gwy_file_get_contents      (const gchar *filename,
                                      guchar **buffer,
                                      gsize *size,
