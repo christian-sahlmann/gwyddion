@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -152,7 +151,7 @@ gwy_data_field_init(GwyDataField *data_field)
 static void
 gwy_data_field_finalize(GwyDataField *data_field)
 {
-    gwy_debug("");
+    gwy_debug("%p is dying!", data_field);
     g_object_unref(data_field->si_unit_xy);
     g_object_unref(data_field->si_unit_z);
     gwy_data_field_free(data_field);
@@ -365,7 +364,7 @@ gwy_data_field_copy(GwyDataField *a, GwyDataField *b)
     gwy_object_unref(b->si_unit_z);
     b->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_xy));
     b->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(a->si_unit_z));
-    
+
     memcpy(b->data, a->data, a->xres*a->yres*sizeof(gdouble));
 
     return TRUE;
@@ -418,10 +417,10 @@ gwy_data_field_area_copy(GwyDataField *src,
         || destcol + brcol - ulcol > dest->xres
         || destrow + brrow - ulrow > dest->yres)
         return FALSE;
-    
+
     dest->si_unit_xy = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_xy));
     dest->si_unit_z = (GwySIUnit *)gwy_serializable_duplicate(G_OBJECT(src->si_unit_z));
- 
+
     for (i = 0; i < brrow - ulrow; i++)
         memcpy(dest->data + dest->xres*(destrow + i) + destcol,
                src->data + src->xres*(ulrow + i) + ulcol,
@@ -578,7 +577,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
         iy = (gint)(y + 0.5);
         return a->data[ix + a->xres*iy];
 
-        case GWY_INTERPOLATION_BILINEAR: 
+        case GWY_INTERPOLATION_BILINEAR:
         floorx = (gint)floor(x);
         floory = (gint)floor(y);
         restx = x - (gdouble)floorx;
@@ -601,9 +600,9 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
 
         return valpx + valxp + valpp
                + (1 - restx)*(1 - resty)*a->data[floorx + a->xres*floory];
-        
 
-        default: 
+
+        default:
         floorx = (gint)floor(x);
         floory = (gint)floor(y);
         restx = x - (gdouble)floorx;
@@ -616,7 +615,7 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
             iy = (gint)(y + 0.5);
             return a->data[ix + a->xres*iy];
         }
-        
+
         /*interpolation in x direction*/
         for (i=0; i<4; i++) intline[i] = a->data[floorx - 1 + i + a->xres*(floory - 1)];
         va = gwy_interpolation_get_dval_of_equidists(restx, intline, interpolation);
@@ -1461,7 +1460,7 @@ gwy_data_field_get_area_avg(GwyDataField *a,
 
 /**
  * gwy_data_field_get_surface_area:
- * @a: data field 
+ * @a: data field
  * @interpolation: interpolation method
  *
  * Computes surface area.
@@ -1473,7 +1472,7 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
 {
     gint i, j;
     gdouble sum = 0;
-    
+
     for (i=0; i<(a->xres-1); i++)
     {
         for (j=0; j<(a->yres-1); j++)
@@ -1486,7 +1485,7 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
 
 /**
  * gwy_data_field_get_area_surface_area:
- * @a: data field 
+ * @a: data field
  * @ulcol: upper-left column coordinate
  * @ulrow: upper-left row coordinate
  * @brcol: bottom-right column coordinate
@@ -1498,13 +1497,13 @@ gwy_data_field_get_surface_area(GwyDataField *a, GwyInterpolationType interpolat
  * Returns:
  **/
 gdouble
-gwy_data_field_get_area_surface_area(GwyDataField *a, 
+gwy_data_field_get_area_surface_area(GwyDataField *a,
                                      gint ulcol, gint ulrow, gint brcol, gint brrow,
                                      GwyInterpolationType interpolation)
 {
     gint i, j;
     gdouble sum;
-    
+
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
@@ -2451,7 +2450,7 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
             imag_field->data[i + j*xres] *= val;
         }
     }
-    
+
 }
 
 
@@ -2491,7 +2490,7 @@ gwy_data_field_cwt(GwyDataField *data_field,
                         1,
                         interpolation,
                         FALSE,
-                        FALSE); 
+                        FALSE);
    gwy_data_field_mult_wav(&hlp_r, &hlp_i, scale, wtype);
 
    gwy_data_field_2dfft(&hlp_r,
@@ -3269,8 +3268,8 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
 
 /**
  * gwy_data_field_get_correlation_score:
- * @data_field: data field 
- * @kernel_field: kernel to be correlated with data field 
+ * @data_field: data field
+ * @kernel_field: kernel to be correlated with data field
  * @ulcol: upper-left column position in the data field
  * @ulrow: upper-left row position in the data field
  * @kernel_ulcol: upper-left column position in kernel field
@@ -3289,19 +3288,19 @@ void gwy_data_field_fit_lines(GwyDataField *data_field, gint ulcol, gint ulrow, 
  **/
 gdouble
 gwy_data_field_get_correlation_score(GwyDataField *data_field, GwyDataField *kernel_field,
-                                     gint ulcol, gint ulrow, 
+                                     gint ulcol, gint ulrow,
                                      gint kernel_ulcol, gint kernel_ulrow, gint kernel_brcol, gint kernel_brrow)
 {
     gint xres, yres, kxres, kyres, i, j;
     gint kwidth, kheight;
     gdouble rms1, rms2, avg1, avg2, sumpoints, score;
-    
-    if (data_field == NULL || kernel_field == NULL) 
+
+    if (data_field == NULL || kernel_field == NULL)
     {
         g_error("Field for correlation is NULL.");
         return -1;
     }
-    
+
     if (kernel_ulcol > kernel_brcol)
         GWY_SWAP(gint, kernel_ulcol, kernel_brcol);
     if (kernel_ulrow > kernel_brrow)
@@ -3322,9 +3321,9 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field, GwyDataField *ker
     /*correlation request outside data field*/
     if (ulcol<0 || ulrow<0 || (ulcol+kwidth)>xres || (ulrow+kheight)>yres) return -1;
     if (kernel_ulcol<0|| kernel_ulrow<0 || (kernel_ulcol+kwidth)>kxres || (kernel_ulrow+kheight)>kyres) return -1;
-   
+
 /*    printf("kul: %d, %d,  kbr: %d, %d, ul: %d, %d\n", kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow,  ulcol, ulrow);*/
-    
+
     avg1 = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, ulcol+kwidth, ulrow+kheight);
     avg2 = gwy_data_field_get_area_avg(kernel_field, kernel_ulcol, kernel_ulrow, kernel_brcol, kernel_brrow);
     rms1 = gwy_data_field_get_area_rms(data_field, ulcol, ulrow, ulcol+kwidth, ulrow+kheight);
@@ -3360,13 +3359,13 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 {
 
     gint xres, yres, kxres, kyres, i, j;
-   
-    if (data_field == NULL || kernel_field == NULL) 
+
+    if (data_field == NULL || kernel_field == NULL)
     {
         g_error("Field for correlation is NULL.");
         return;
     }
-    
+
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = kernel_field->xres;
@@ -3376,11 +3375,11 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
     gwy_data_field_fill(score, -1);
     /*correlation request outside kernel*/
-    if (kxres > xres || kyres > yres) 
+    if (kxres > xres || kyres > yres)
     {
         return;
     }
- 
+
     for (i=(kxres/2); i<(xres-kxres/2); i++)/*col*/
     {
         for (j=(kyres/2); j<(yres-kyres/2); j++)/*row*/
@@ -3394,7 +3393,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
 /**
  * gwy_data_field_correlate_iteration:
- * @data_field: data field 
+ * @data_field: data field
  * @kernel_field: kernel to be correlated with data
  * @score: correlation scores
  * @state: state of iteration
@@ -3403,17 +3402,17 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
  * Performs one iteration of correlation.
  **/
 void
-gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kernel_field, GwyDataField *score, 
+gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kernel_field, GwyDataField *score,
                                    GwyComputationStateType *state, gint *iteration)
 {
     gint xres, yres, kxres, kyres, i, j;
-   
-    if (data_field == NULL || kernel_field == NULL) 
+
+    if (data_field == NULL || kernel_field == NULL)
     {
         g_error("Field for correlation is NULL.");
         return;
     }
-    
+
     xres = data_field->xres;
     yres = data_field->yres;
     kxres = kernel_field->xres;
@@ -3421,11 +3420,11 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
 
     if (kxres<=0 || kyres<=0) {g_warning("Correlation kernel has nonpositive size."); return;}
     /*correlation request outside kernel*/
-    if (kxres > xres || kyres > yres) 
+    if (kxres > xres || kyres > yres)
     {
         return;
     }
-  
+
     if (*state == GWY_COMP_INIT)
     {
         gwy_data_field_fill(score, -1);
@@ -3442,14 +3441,14 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
                                         i - kxres/2, j - kyres/2,
                                         0, 0, kxres, kyres);
         }
-        *iteration = i+1; 
+        *iteration = i+1;
         if (*iteration == (xres-kxres/2 -1)) *state = GWY_COMP_FINISHED;
     }
 }
 
 /**
  * gwy_data_field_croscorrelate:
- * @data_field1: data field 
+ * @data_field1: data field
  * @data_field2: data field
  * @x_dist: field of resulting x-distances
  * @y_dist: field of resulting y-distances
@@ -3467,23 +3466,23 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field, GwyDataField *kerne
  * in the @data_field2 at former position of points at @data_field1.
  **/
 void
-gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field2, 
+gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field2,
                              GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
                              gint search_width, gint search_height, gint window_width, gint window_height)
 {
     gint xres, yres, i, j, m, n;
-    gint imax, jmax; 
+    gint imax, jmax;
     gdouble cormax, lscore;
-   
-    if (data_field1 == NULL || data_field2 == NULL) 
+
+    if (data_field1 == NULL || data_field2 == NULL)
     {
         g_error("Field for correlation is NULL.");
         return;
     }
-    
+
     xres = data_field1->xres;
     yres = data_field1->yres;
-     
+
     if (xres != data_field2->xres || yres != data_field2->yres)
     {
         g_warning("Fields must be of same dimensions");
@@ -3493,7 +3492,7 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
     gwy_data_field_fill(x_dist, 0);
     gwy_data_field_fill(y_dist, 0);
     gwy_data_field_fill(score, 0);
-    
+
     /*iterate over all the points*/
     for (i=(search_width/2); i<(xres-search_height/2); i++)
     {
@@ -3509,14 +3508,14 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
                     lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
                                                            (i-search_width/2), (j-search_height/2),
                                                            m, n, m+search_width, n+search_height);
-                    
+
                     /*add a little to score at exactly same point - to prevent problems on flat data*/
                     if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.0001;
-                        
-                    if (cormax<lscore) 
+
+                    if (cormax<lscore)
                     {
-                        cormax = lscore; 
-                        imax = m+search_width/2;  
+                        cormax = lscore;
+                        imax = m+search_width/2;
                         jmax = n+search_height/2;
                     }
                 }
@@ -3530,7 +3529,7 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
 
 /**
  * gwy_data_field_croscorrelate_iteration:
- * @data_field1: data field 
+ * @data_field1: data field
  * @data_field2: data field
  * @x_dist: field of resulting x-distances
  * @y_dist: field of resulting y-distances
@@ -3550,24 +3549,24 @@ gwy_data_field_croscorrelate(GwyDataField *data_field1, GwyDataField *data_field
  * in the @data_field2 at former position of points at @data_field1.
  **/
 void
-gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *data_field2, 
+gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *data_field2,
                              GwyDataField *x_dist, GwyDataField *y_dist, GwyDataField *score,
                              gint search_width, gint search_height, gint window_width, gint window_height,
                              GwyComputationStateType *state, gint *iteration)
 {
     gint xres, yres, i, j, m, n;
-    gint imax, jmax; 
+    gint imax, jmax;
     gdouble cormax, lscore;
-   
-    if (data_field1 == NULL || data_field2 == NULL) 
+
+    if (data_field1 == NULL || data_field2 == NULL)
     {
         g_error("Field for correlation is NULL.");
         return;
     }
-    
+
     xres = data_field1->xres;
     yres = data_field1->yres;
-     
+
     if (xres != data_field2->xres || yres != data_field2->yres)
     {
         g_warning("Fields must be of same dimensions");
@@ -3586,7 +3585,7 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
     {
         if (iteration==0) i=(search_width/2);
         else i = *iteration;
- 
+
         for (j=(search_height/2); j<(yres-search_height/2); j++)
         {
             /*iterate over search area in the second datafield*/
@@ -3599,48 +3598,48 @@ gwy_data_field_croscorrelate_iteration(GwyDataField *data_field1, GwyDataField *
                     lscore = gwy_data_field_get_correlation_score(data_field1, data_field2,
                                                            (i-search_width/2), (j-search_height/2),
                                                            m, n, m+search_width, n+search_height);
-                    
+
                     /*add a little to score at exactly same point - to prevent problems on flat data*/
                     if (m==(i-search_width/2) && n==(j-search_height/2)) lscore *= 1.01;
-                        
-                    if (cormax<lscore) 
+
+                    if (cormax<lscore)
                     {
-                        cormax = lscore; 
-                        imax = m+search_width/2;  
+                        cormax = lscore;
+                        imax = m+search_width/2;
                         jmax = n+search_height/2;
                     }
-                    
+
                 }
             }
             score->data[i + xres*j] = cormax;
             x_dist->data[i + xres*j] = imax - i;
             y_dist->data[i + xres*j] = jmax - j;
-            
+
         }
-        *iteration = i+1; 
+        *iteration = i+1;
         if (*iteration == (xres-search_height/2)) *state = GWY_COMP_FINISHED;
      }
 }
 
-static gdouble  
+static gdouble
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow, gint division, GwyInterpolationType interpolation)
 {
     gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb;
-    
+
     x = data_field->xreal/data_field->xres;
 
     z1 = data_field->data[(ulcol) + data_field->xres*(ulrow)];
     z2 = data_field->data[(brcol) + data_field->xres*(ulrow)];
     z3 = data_field->data[(ulcol) + data_field->xres*(brrow)];
     z4 = data_field->data[(brcol) + data_field->xres*(brrow)];
-    
+
     a = sqrt(x*x+(z1-z2)*(z1-z2));
     b = sqrt(x*x+(z1-z3)*(z1-z3));
     c = sqrt(x*x+(z3-z4)*(z3-z4));
     d = sqrt(x*x+(z2-z4)*(z2-z4));
     e = sqrt(2*x*x+(z3-z2)*(z3-z2));
     f = sqrt(2*x*x+(z4-z1)*(z4-z1));
-    
+
     s1 = (a+b+e) / 2;
     s2 = (c+d+e) / 2;
     sa = sqrt(s1*(s1-a)*(s1-b)*(s1-e))+sqrt(s2*(s2-c)*(s2-d)*(s2-e));
