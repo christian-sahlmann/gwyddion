@@ -406,7 +406,7 @@ gwy_2dcwt_option_menu(GCallback callback,
     };
 
     return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "2dcwt_wavelet_type", callback, cbdata,
+                                  "2dcwt-wavelet-type", callback, cbdata,
                                   current);
 }
 

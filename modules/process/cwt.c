@@ -241,9 +241,10 @@ interp_changed_cb(GObject *item,
 static void
 wavelet_changed_cb(GObject *item,
                   CWTArgs *args)
-{
+{ 
     args->wavelet = GPOINTER_TO_INT(g_object_get_data(item,
                                                      "2dcwt-wavelet-type"));
+    printf("Wavelet changed to %d\n", (gint)args->wavelet);
 }
 
 static void
@@ -268,7 +269,7 @@ cwt_load_args(GwyContainer *container,
     if (gwy_container_contains_by_name(container, interp_key))
         args->interp = gwy_container_get_int32_by_name(container, interp_key);
     if (gwy_container_contains_by_name(container, wavelet_key))
-        args->interp = gwy_container_get_int32_by_name(container, wavelet_key);
+        args->wavelet = gwy_container_get_int32_by_name(container, wavelet_key);
     if (gwy_container_contains_by_name(container, scale_key))
         args->scale = gwy_container_get_double_by_name(container, scale_key);
 }
