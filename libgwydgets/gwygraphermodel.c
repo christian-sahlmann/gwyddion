@@ -149,8 +149,9 @@ gwy_grapher_model_init(GwyGrapherModel *gmodel)
     gmodel->right_label = g_string_new("");
 
     gmodel->label_position = GWY_GRAPHER_LABEL_NORTHEAST;
-    gmodel->label_has_frame = 1;
+    gmodel->label_has_frame = 1; /*designed to be removed*/
     gmodel->label_frame_thickness = 1;
+    gmodel->label_reverse = 0; /*designed to be added*/
 }
 
 /**

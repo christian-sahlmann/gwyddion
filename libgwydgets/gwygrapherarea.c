@@ -78,7 +78,9 @@ static gint     data_to_scr_y                       (GtkWidget *widget, gdouble 
 static void     gwy_grapher_area_entry_cb           (GwyGrapherAreaDialog *dialog,
                                                      gint arg1,
                                                      gpointer user_data);
-
+static void     gwy_grapher_label_entry_cb          (GwyGrapherLabelDialog *dialog,
+                                                     gint arg1,
+                                                     gpointer user_data);
 
 static void     zoom                                (GtkWidget *widget);
 /* Local data */
@@ -230,10 +232,13 @@ gwy_grapher_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
                           | GDK_BUTTON_MOTION_MASK
                           | GDK_POINTER_MOTION_MASK);
 
-    area->dialog = gwy_grapher_area_dialog_new();
-    g_signal_connect(area->dialog, "response",
+    area->area_dialog = gwy_grapher_area_dialog_new();
+    g_signal_connect(area->area_dialog, "response",
                      G_CALLBACK(gwy_grapher_area_entry_cb), area);
-    
+    area->label_dialog = gwy_grapher_label_dialog_new();
+    g_signal_connect(area->label_dialog, "response",
+                     G_CALLBACK(gwy_grapher_label_entry_cb), area);
+     
     return GTK_WIDGET(area);
 }
 
@@ -255,7 +260,8 @@ gwy_grapher_area_finalize(GObject *object)
     gwy_vector_layer_cursor_free_or_unref(&klass->cross_cursor);
     gwy_vector_layer_cursor_free_or_unref(&klass->arrow_cursor);
 
-    gtk_widget_destroy(area->dialog);
+    gtk_widget_destroy(area->area_dialog);
+    gtk_widget_destroy(area->label_dialog);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -568,23 +574,34 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     y += (gint)event->y;
 
     gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
-    if (gmodel->ncurves > 0)
-    {
-       gwy_grapher_area_dialog_set_curve_data(area->dialog, gmodel->curves[0]);
-       gtk_widget_show_all(area->dialog);
-    }
-    
 
     child = gwy_grapher_area_find_child(area, x, y);
     if (child) {
-        area->active = child->widget;
-        area->x0 = x;
-        area->y0 = y;
-        area->xoff = 0;
-        area->yoff = 0;
-        gwy_grapher_area_draw_child_rectangle(area);
+        if (event->type == GDK_2BUTTON_PRESS)
+        {
+            gwy_grapher_label_dialog_set_graph_data(area->label_dialog, G_OBJECT(gmodel));
+            gtk_widget_show_all(area->label_dialog);
+        }
+        else
+        {
+            area->active = child->widget;
+            area->x0 = x;
+            area->y0 = y;
+            area->xoff = 0;
+            area->yoff = 0;
+            gwy_grapher_area_draw_child_rectangle(area);
+        }
         return FALSE;
     }
+
+    if (gmodel->ncurves > 0)
+    {
+       gwy_grapher_area_dialog_set_curve_data(area->area_dialog, gmodel->curves[0]);
+       gtk_widget_show_all(area->area_dialog);
+    }
+ 
+
+    
 /*
     if (area->status == GWY_GRAPHER_STATUS_XSEL
         || area->status == GWY_GRAPHER_STATUS_YSEL) {
@@ -1180,6 +1197,19 @@ gwy_grapher_area_entry_cb(GwyGrapherAreaDialog *dialog, gint arg1, gpointer user
         gtk_widget_hide(GTK_WIDGET(dialog));
     }
 }
+
+static void     
+gwy_grapher_label_entry_cb(GwyGrapherLabelDialog *dialog, gint arg1, gpointer user_data)
+{
+    if (arg1 == GTK_RESPONSE_APPLY) {
+        gwy_grapher_area_refresh(GWY_GRAPHER_AREA(user_data));
+    }
+    else if (arg1 == GTK_RESPONSE_CLOSE) {
+        gtk_widget_hide(GTK_WIDGET(dialog));
+    }
+}
+
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -28,7 +28,6 @@
 #include "gwygrapher.h"
 #include "gwygrapherlabeldialog.h"
 #include "gwygraphermodel.h"
-#include "gwygraphercurvemodel.h"
 #include <libgwyddion/gwymacros.h>
 
 #define GWY_GRAPHER_LABEL_DIALOG_TYPE_NAME "GwyGrapherLabelDialog"
@@ -43,6 +42,9 @@ static gboolean gwy_grapher_label_dialog_delete           (GtkWidget *widget,
 static void     linesize_changed_cb                      (GtkObject *adj,
                                                           GwyGrapherLabelDialog *dialog);
 static void     refresh                                  (GwyGrapherLabelDialog *dialog);
+static void     reverse_changed_cb                       (GtkToggleButton *button,
+                                                          GwyGrapherLabelDialog *dialog);
+
 
 
 static GtkDialogClass *parent_class = NULL;
@@ -109,13 +111,25 @@ gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
 
     table = gtk_table_new(2, 8, FALSE);
    
-    dialog->linesize = gtk_adjustment_new(1, 1, 50, 1, 5, 0);
+    dialog->linesize = gtk_adjustment_new(1, 1, 20, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Frame thickness:"),
                                 _(""),
                                 dialog->linesize);
     g_signal_connect(dialog->linesize, "value_changed",
                      G_CALLBACK(linesize_changed_cb), dialog);
-     
+    row++;
+
+    label = gtk_label_new("Layout:");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row + 1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    dialog->reversed = gtk_check_button_new_with_mnemonic(_("_reversed"));
+    g_signal_connect(dialog->reversed, "toggled",
+                     G_CALLBACK(reverse_changed_cb), dialog);
+    gtk_table_attach(GTK_TABLE(table), dialog->reversed, 1, 2, row, row + 1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -123,6 +137,7 @@ gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                       table);
+    gtk_widget_show_all(GTK_DIALOG(dialog)->vbox);
 
     dialog->graph_model = NULL;
 }
@@ -151,10 +166,10 @@ refresh(GwyGrapherLabelDialog *dialog)
 {
     GwyGrapherModel *model;
     if (dialog->graph_model == NULL) return;
-    model = GWY_GRAPHER_CURVE_MODEL(dialog->graph_model);
+    model = GWY_GRAPHER_MODEL(dialog->graph_model);
     
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), model->label_frame_thickness);
-     
+    gtk_toggle_button_set_active(dialog->reversed, model->label_reverse);     
 }
 
 
@@ -176,6 +191,17 @@ linesize_changed_cb(GtkObject *adj, GwyGrapherLabelDialog *dialog)
     model = GWY_GRAPHER_MODEL(dialog->graph_model);
     model->label_frame_thickness = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
 }
+
+static void     
+reverse_changed_cb(GtkToggleButton *button, GwyGrapherLabelDialog *dialog)
+{
+    GwyGrapherModel *model;
+    if (dialog->graph_model == NULL) return;
+
+    model = GWY_GRAPHER_MODEL(dialog->graph_model);
+    model->label_reverse = gtk_toggle_button_get_active(button);
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

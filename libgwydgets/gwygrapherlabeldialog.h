@@ -44,6 +44,7 @@ struct _GwyGrapherLabelDialog {
     GtkDialog dialog;
 
     GtkObject *linesize;
+    GtkWidget *reversed;
 
     GObject *graph_model;
 

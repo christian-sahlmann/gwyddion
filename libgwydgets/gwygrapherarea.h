@@ -26,6 +26,7 @@
 #include <gtk/gtklayout.h>
 #include "gwygrapher.h"
 #include "gwygrapherareadialog.h"
+#include "gwygrapherlabeldialog.h"
 
 G_BEGIN_DECLS
 
@@ -118,7 +119,8 @@ struct _GwyGrapherArea {
     gboolean newline;
    
     /*linestyle dialog*/
-    GwyGrapherAreaDialog *dialog;
+    GwyGrapherAreaDialog *area_dialog;
+    GwyGrapherLabelDialog *label_dialog;
     
     /*label movement*/
     GtkWidget *active;

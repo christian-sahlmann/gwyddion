@@ -115,7 +115,6 @@ gwy_grapher_label_init(GwyGrapherLabel *label)
 {
     gwy_debug("");
     label->samplepos = NULL;
-    label->rightsidesamples = FALSE;
 }
 
 /**
@@ -332,7 +331,7 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
         
-        if (label->rightsidesamples)
+        if (model->label_reverse)
             gdk_draw_layout(widget->window, mygc, winwidth - rect.width - 25, ypos, layout);
         else
             gdk_draw_layout(widget->window, mygc, 25, ypos, layout);
@@ -341,7 +340,7 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
 
         if (curvemodel->type == GWY_GRAPHER_CURVE_LINE || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
         {
-            if (label->rightsidesamples)
+            if (model->label_reverse)
                 gwy_grapher_draw_line(widget->window, mygc, 
                                       winwidth - 20, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2,
                                       curvemodel->line_style, curvemodel->line_size,
@@ -354,7 +353,13 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
         }
         if (curvemodel->type == GWY_GRAPHER_CURVE_POINTS || curvemodel->type == GWY_GRAPHER_CURVE_LINE_POINTS)
         {
-             gwy_grapher_draw_point (widget->window, mygc, 
+            if (model->label_reverse)
+                gwy_grapher_draw_point (widget->window, mygc, 
+                                     winwidth - 13, ypos + rect.height/2,
+                                   curvemodel->point_type, curvemodel->point_size,
+                                   &(curvemodel->color), FALSE); 
+            else
+                gwy_grapher_draw_point (widget->window, mygc, 
                                      12, ypos + rect.height/2,
                                    curvemodel->point_type, curvemodel->point_size,
                                    &(curvemodel->color), FALSE);

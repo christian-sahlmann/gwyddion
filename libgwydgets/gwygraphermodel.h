@@ -67,7 +67,8 @@ struct _GwyGrapherModel {
 
     /* like GwyGrapherLabelParams */
     GwyGrapherLabelPosition label_position;
-    gboolean label_has_frame;
+    gboolean label_has_frame; /*change this for frame thickness = 0*/
+    gboolean label_reverse;   /*new member instead of the upper one*/
     gint label_frame_thickness;
     gboolean label_visible;
 
