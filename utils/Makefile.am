@@ -6,6 +6,7 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libgwyapp = $(top_builddir)/app/libgwyapp.la
+moduledir = $(top_srcdir)/modules
 
 EXTRA_DIST = \
 	modules-web.xsl \
@@ -14,6 +15,8 @@ EXTRA_DIST = \
 	vim-syn-gen.py
 
 if MAINTAINER_MODE
+all-local: modules.xml module-list.html
+
 noinst_PROGRAMS = \
 	dump-modules
 
@@ -29,8 +32,14 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyddion)
 
 INCLUDES = -I$(top_srcdir)
+
+modules.xml: dump-modules $(moduledir)/*.c $(moduledir)/*/*.c
+	./dump-modules >modules.xml
+
+module-list.html: modules.xml modules-web.xsl
+	$(XSLTPROC) modules-web.xsl modules.xml >module-list.html
 endif
 
 clean-local:
 	rm -f core.* *~
-
+	rm -f modules.xml

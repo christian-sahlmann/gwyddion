@@ -30,8 +30,7 @@ static GSList *tag_stack = NULL;
 
 /* For module list sorting */
 static gint
-compare_modules(gconstpointer a,
-                gconstpointer b)
+compare_modules(gconstpointer a, gconstpointer b)
 {
     return strcmp(((const GwyModuleInfo*)a)->name,
                   ((const GwyModuleInfo*)b)->name);
@@ -39,11 +38,9 @@ compare_modules(gconstpointer a,
 
 /* For finding module of given name */
 static gint
-find_module(gconstpointer a,
-            gconstpointer b)
+find_module(gconstpointer a, gconstpointer b)
 {
-    return strcmp(((const GwyModuleInfo*)a)->name,
-                  (const gchar*)b);
+    return strcmp(((const GwyModuleInfo*)a)->name, (const gchar*)b);
 }
 
 /* Print a single tag with content, handling sensitive characters */
@@ -100,6 +97,37 @@ menu_path_print(const gchar *path, const gchar *tag)
     g_free(s);
 }
 
+static gchar*
+kill_mail(const gchar *authors)
+{
+    const gchar *a;
+    gchar *s, *p;
+
+    p = s = g_new0(gchar, strlen(authors) + 1);
+    while (authors) {
+        a = strchr(authors, '<');
+        if (!a) {
+            strcpy(p, authors);
+            break;
+        }
+        else {
+            strncpy(p, authors, a - authors);
+            p += a - authors;
+            authors = strchr(a+1, '>');
+            if (authors)
+                authors++;
+        }
+    }
+
+    p = s + strlen(s);
+    while (p >= s && (!*p || g_ascii_isspace(*p))) {
+        *p = '\0';
+        p--;
+    }
+
+    return s;
+}
+
 /* Main */
 int
 main(G_GNUC_UNUSED int argc,
@@ -137,11 +165,14 @@ main(G_GNUC_UNUSED int argc,
     for (m = modules; m; m = g_slist_next(m)) {
         const GwyModuleInfo *mod_info = (const GwyModuleInfo*)m->data;
         GSList *f = gwy_module_get_functions(mod_info->name);
+        gchar *s;
 
         tag_open("module");
         tag_print("name", mod_info->name);
         tag_print("version", mod_info->version);
-        tag_print("author", mod_info->author);
+        s = kill_mail(mod_info->author);
+        tag_print("author", s);
+        g_free(s);
         tag_print("copyright", mod_info->copyright);
         tag_print("date", mod_info->date);
         tag_print("description", mod_info->blurb);
