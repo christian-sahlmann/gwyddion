@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#define DEBUG 1
-
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
@@ -563,7 +561,7 @@ static void
 gwy_app_rerun_process_func_cb(gpointer user_data)
 {
     GtkWidget *menu;
-    GwyRunType run;
+    GwyRunType run, available_run_modes;
     gchar *name;
 
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
@@ -572,8 +570,25 @@ gwy_app_rerun_process_func_cb(gpointer user_data)
     name = (gchar*)g_object_get_data(G_OBJECT(menu), "last-func");
     g_return_if_fail(name);
     run = GPOINTER_TO_UINT(user_data);
-    gwy_debug("run mode = %u", run);
-    gwy_app_run_process_func_cb(name);
+    available_run_modes = gwy_process_func_get_run_types(name);
+    g_return_if_fail(available_run_modes);
+    gwy_debug("run mode = %u, available = %u", run, available_run_modes);
+
+    /* try to find some mode `near' to requested one, otherwise just use any */
+    if (!(run & available_run_modes)) {
+        if (run == GWY_RUN_MODAL
+            && (available_run_modes & GWY_RUN_INTERACTIVE))
+            run = GWY_RUN_INTERACTIVE;
+        else if (run == GWY_RUN_NONINTERACTIVE
+                 && (available_run_modes & GWY_RUN_WITH_DEFAULTS))
+            run = GWY_RUN_WITH_DEFAULTS;
+        else
+            run = 0;
+    }
+    if (run)
+        gwy_app_run_process_func_in_mode(name, run);
+    else
+        gwy_app_run_process_func_cb(name);
 }
 
 static void

@@ -219,59 +219,95 @@ setup_sensitivity_keys(void)
         sensitive_state_key = g_quark_from_static_string("sensitive-state");
 }
 
-void
+/**
+ * gwy_app_run_process_func_in_mode:
+ * @name: A data processing function name.
+ *
+ * Run a data processing function @name in the best possible mode.
+ *
+ * Interactive modes are considered `better' than noninteractive for this
+ * purpose.  Since 1.2 it returns the actually used mode (nonzero), or 0 on
+ * failure.
+ *
+ * Should NOT be used outside main application.
+ **/
+guint
 gwy_app_run_process_func_cb(gchar *name)
 {
     GwyRunType run_types[] = {
         GWY_RUN_INTERACTIVE, GWY_RUN_MODAL,
         GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
     };
+    GwyRunType available_run_modes;
+    gsize i;
+
+    gwy_debug("`%s'", name);
+    available_run_modes = gwy_process_func_get_run_types(name);
+    g_return_val_if_fail(available_run_modes, 0);
+    for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
+        if (run_types[i] & available_run_modes) {
+            gwy_app_run_process_func_in_mode(name, run_types[i]);
+            return run_types[i];
+        }
+    }
+    g_critical("Trying to run `%s', but no run mode found", name);
+    return 0;
+}
+
+/**
+ * gwy_app_run_process_func_in_mode:
+ * @name: A data processing function name.
+ * @run: A run mode.
+ *
+ * Run a data processing function @name in mode @run.
+ *
+ * Should NOT be used outside main application.
+ *
+ * Since: 1.2.
+ **/
+void
+gwy_app_run_process_func_in_mode(gchar *name,
+                                 GwyRunType run)
+{
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
     };
-    GwyRunType run;
     GwyDataWindow *data_window;
     GtkWidget *data_view, *menu;
     GwyContainer *data;
-    gsize i;
     gboolean ok;
 
     gwy_debug("`%s'", name);
+    if (!(run & gwy_process_func_get_run_types(name)))
+        return;
+
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(data_window);
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
     g_return_if_fail(data);
-    run = gwy_process_func_get_run_types(name);
-    for (i = 0; i < G_N_ELEMENTS(run_types); i++) {
-        if (!(run & run_types[i]))
-            continue;
-        ok = gwy_process_func_run(name, data, run_types[i]);
+    ok = gwy_process_func_run(name, data, run);
 
-        /* update the menus regardless the function returns TRUE or not.
-         * functions changing nothing would never appear in the last-used
-         * menu and/or it would never become sensitive */
-        menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
-                                            "<proc>"));
-        gwy_app_update_last_process_func(menu, name);
-        /* FIXME: the ugliest hack! */
-        if (ok)
-            gwy_app_data_view_update(data_view);
+    /* update the menus regardless the function returns TRUE or not.
+     * functions changing nothing would never appear in the last-used
+     * menu and/or it would never become sensitive */
+    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
+                                        "<proc>"));
+    gwy_app_update_last_process_func(menu, name);
+    /* FIXME: the ugliest hack! */
+    if (ok)
+        gwy_app_data_view_update(data_view);
 
-        /* re-get current data window, it may have changed */
-        data_window = gwy_app_data_window_get_current();
-        data = gwy_data_window_get_data(GWY_DATA_WINDOW(data_window));
-        if (gwy_container_contains_by_name(data, "/0/mask"))
-            sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-        if (gwy_container_contains_by_name(data, "/0/show"))
-            sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
-        gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
-
-        return;
-    }
-    g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
+    /* re-get current data window, it may have changed */
+    data_window = gwy_app_data_window_get_current();
+    data = gwy_data_window_get_data(GWY_DATA_WINDOW(data_window));
+    if (gwy_container_contains_by_name(data, "/0/mask"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
+    if (gwy_container_contains_by_name(data, "/0/show"))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+    gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
 }
 
 static void

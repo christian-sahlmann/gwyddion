@@ -23,6 +23,7 @@
 
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkitemfactory.h>
+#include <libgwymodule/gwymodule-process.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +51,7 @@ GtkWidget* gwy_app_menu_create_proc_menu          (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_graph_menu         (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_file_menu          (GtkAccelGroup *accel_group);
 GtkWidget* gwy_app_menu_create_edit_menu          (GtkAccelGroup *accel_group);
-                                                  
+
 void       gwy_app_menu_set_sensitive_recursive   (GtkWidget *widget,
                                                    GwyMenuSensData *data);
 void       gwy_app_menu_recent_files_update       (GList *recent_files);
@@ -74,7 +75,9 @@ gboolean   gwy_option_menu_data_window_set_history(GtkWidget *option_menu,
 GtkWidget* gwy_option_menu_data_window_get_history(GtkWidget *option_menu);
 
 /* FIXME: where this could really belong? */
-void       gwy_app_run_process_func_cb           (gchar *name);
+guint      gwy_app_run_process_func_cb           (gchar *name);
+void       gwy_app_run_process_func_in_mode      (gchar *name,
+                                                  GwyRunType run);
 void       gwy_app_run_graph_func_cb             (gchar *name);
 
 G_END_DECLS
