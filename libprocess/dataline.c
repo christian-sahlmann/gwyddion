@@ -1416,8 +1416,8 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 
 
     gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
-                   windowing, 1, interpolation,
-                   TRUE, TRUE); /*lvel was false*/
+                   GWY_WINDOWING_RECT, 1, interpolation,
+                   FALSE, TRUE); /*FIXME here are still some problemse*/
 
     gwy_data_line_resample(target_line, rout->res/2.0, GWY_INTERPOLATION_NONE);
 
