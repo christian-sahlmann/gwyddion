@@ -5,6 +5,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 
 libgwyprocessincludedir = $(includedir)/gwyddion/libprocess
 libgwyprocessinclude_HEADERS = \
+	cdline.h \
 	correct.h \
 	correlation.h \
 	cwt.h \
@@ -16,9 +17,10 @@ libgwyprocessinclude_HEADERS = \
 	gwyprocess.h \
 	interpolation.h \
 	inttrans.h \
+	level.h \
 	linestats.h \
 	simplefft.h \
-	cdline.h
+	stats.h
 
 lib_LTLIBRARIES = libgwyprocess.la
 
@@ -33,6 +35,7 @@ EXTRA_DIST = \
 # Changing ifaces     C:   R:   0
 libgwyprocess_la_LDFLAGS = -version-info 3:0:0
 libgwyprocess_la_SOURCES = \
+	cdline.c \
 	correct.c \
 	correlation.c \
 	cwt.c \
@@ -43,9 +46,10 @@ libgwyprocess_la_SOURCES = \
 	grains.c \
 	interpolation.c \
 	inttrans.c \
+	level.c \
 	linestats.c \
 	simplefft.c \
-	cdline.c
+	stats.c
 
 #noinst_PROGRAMS = test
 #
