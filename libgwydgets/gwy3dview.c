@@ -355,7 +355,7 @@ gwy_3d_view_new(GwyContainer *data)
                                  GDK_GL_RGBA_TYPE);
 
     gwy3dview->si_unit = (GwySIUnit*) gwy_si_unit_new("m");
-    gwy3dview->labels = gwy_3d_labels_new();
+    gwy3dview->labels = gwy_3d_labels_new(gwy3dview->container);
     g_signal_connect(gwy3dview->labels, "label_changed",
                      G_CALLBACK(gwy_3d_labels_value_changed), gwy3dview);
     gwy_3d_labels_update(gwy3dview->labels, gwy3dview->container, gwy3dview->si_unit);
@@ -1982,9 +1982,10 @@ static void gwy_3d_draw_axes(Gwy3DView * widget)
                    : GTK_WIDGET(widget)->allocation.height;
             size = (gint) (sqrt(view_size)*0.8);
             if (yfirst)
-               label = GWY_3D_VIEW_LABEL_Y;
+                label = GWY_3D_VIEW_LABEL_Y;
             else
-               label = GWY_3D_VIEW_LABEL_X;
+                label = GWY_3D_VIEW_LABEL_X;
+            glColor3f(0.0, 0.0, 0.0);
             gwy_3d_print_text(widget,
                               gwy_3d_labels_format_text(widget->labels,label),
                               (Ax+2*Bx)/3 - (Cx-Bx)*0.1,

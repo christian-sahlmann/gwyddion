@@ -19,6 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+#define DEBUG
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
@@ -38,11 +39,20 @@ static void    gwy_3d_labels_finalize   (GObject *object);
 
 static Gwy3DLabelDescription * gwy_3d_label_description_new(
                                     gchar * text,
+                                    const gchar * key,
                                     gint delta_x,
                                     gint delta_y,
                                     gfloat rot,
                                     gint size,
                                     Gwy3DLabels * owner);
+static GtkAdjustment* gwy_3d_label_description_create_adjustment(
+                                    Gwy3DLabels *gwy3labels,
+                                    const gchar *key,
+                                    gdouble value,
+                                    gdouble lower,
+                                    gdouble upper,
+                                    gdouble step,
+                                    gdouble page);
 static void    gwy_3d_label_description_init(
                                     Gwy3DLabelDescription *label_description);
 static void    gwy_3d_label_description_free(
@@ -50,8 +60,11 @@ static void    gwy_3d_label_description_free(
 static void    gwy_3d_labels_adjustment_value_changed(
                                     GtkAdjustment* adjustment, gpointer user_data);
 
+
+
 static GObjectClass *parent_class = NULL;
 static guint labels_signals[LAST_SIGNAL] = { 0 };
+static GQuark container_key_quark = 0;
 
 
 GType
@@ -109,6 +122,7 @@ gwy_3d_labels_class_init(Gwy3DLabelsClass *klass)
 static void
 gwy_3d_label_description_init(Gwy3DLabelDescription *label_description)
 {
+    label_description->base_key      = NULL;
     label_description->default_text  = NULL;
     label_description->text          = NULL;
     label_description->delta_x       = NULL;
@@ -116,6 +130,7 @@ gwy_3d_label_description_init(Gwy3DLabelDescription *label_description)
     label_description->rotation      = NULL;
     label_description->auto_scale    = TRUE;
     label_description->size          = NULL;
+    label_description->owner         = NULL;
 }
 
 static void
@@ -132,6 +147,7 @@ gwy_3d_labels_init(Gwy3DLabels *labels)
 static void
 gwy_3d_label_description_free(Gwy3DLabelDescription *label_description)
 {
+    g_free(label_description->base_key);
     g_free(label_description->default_text);
     g_free(label_description->text);
 
@@ -162,49 +178,80 @@ gwy_3d_labels_finalize(GObject *object)
     g_free(labels->keys);
     g_free(labels->values);
     g_free(labels->text);
+    gwy_object_unref(labels->container);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 
 static Gwy3DLabelDescription *
-gwy_3d_label_description_new(gchar * text, gint delta_x, gint delta_y,
+gwy_3d_label_description_new(gchar * text, const gchar* key,
+                             gint delta_x, gint delta_y,
                              gfloat rot, gint size, Gwy3DLabels * owner)
 {
     gwy_debug(" ");
     Gwy3DLabelDescription * desc = g_new(Gwy3DLabelDescription, 1);
+    gchar * buffer = g_new(gchar, strlen(key) + 20);
+    gchar * end;
+    gchar * ttext;
+
     gwy_3d_label_description_init(desc);
+    desc->owner = owner;
+    desc->base_key = g_strdup(key);
 
+    strcpy(buffer, key);
+    end = buffer + strlen(buffer);
     desc->default_text = g_strdup(text);
-    desc->text = g_strdup(text);
-    desc->delta_x  = (GtkAdjustment*)gtk_adjustment_new(delta_x, -1000, 1000, 1, 10, 0.0);
-    desc->delta_y  = (GtkAdjustment*)gtk_adjustment_new(delta_y, -1000, 1000, 1, 10, 0.0);;
-    desc->rotation = (GtkAdjustment*)gtk_adjustment_new(rot, -180, 180, 1, 10, 0.0);;
-    desc->size     = (GtkAdjustment*)gtk_adjustment_new(size, 1, 100, 1, 5, 0.0);;
+    strcpy(end, "text");
+    ttext = text;
+    gwy_container_gis_string_by_name(owner->container, buffer, &ttext);
+gwy_debug("%s -> %s", buffer, ttext);
+    desc->text = g_strdup(ttext);
+    strcpy(end, "auto_scale");
+    gwy_container_gis_boolean_by_name(owner->container, buffer, &desc->auto_scale);
+    strcpy(end, "delta_x");
+    desc->delta_x  = gwy_3d_label_description_create_adjustment(
+                         owner, buffer, delta_x, -1000, 1000, 1, 10);
+    strcpy(end, "delta_y");
+    desc->delta_y  = gwy_3d_label_description_create_adjustment(
+                         owner, buffer, delta_y, -1000, 1000, 1, 10);
+    strcpy(end, "rotation");
+    desc->rotation = gwy_3d_label_description_create_adjustment(
+                         owner, buffer, rot, -180, 180, 1, 10);
+    strcpy(end, "size");
+    desc->size     = gwy_3d_label_description_create_adjustment(
+                         owner, buffer, size, 1, 100, 1, 5);
 
-    g_object_ref(G_OBJECT(desc->delta_x));
-    g_object_ref(G_OBJECT(desc->delta_y));
-    g_object_ref(G_OBJECT(desc->rotation));
-    g_object_ref(G_OBJECT(desc->size));
-    gtk_object_sink(GTK_OBJECT(desc->delta_x));
-    gtk_object_sink(GTK_OBJECT(desc->delta_y));
-    gtk_object_sink(GTK_OBJECT(desc->rotation));
-    gtk_object_sink(GTK_OBJECT(desc->size));
-
-    g_signal_connect(desc->delta_x, "value_changed",
-                     G_CALLBACK(gwy_3d_labels_adjustment_value_changed),
-                     owner);
-    g_signal_connect(desc->delta_y, "value_changed",
-                     G_CALLBACK(gwy_3d_labels_adjustment_value_changed),
-                     owner);
-    g_signal_connect(desc->rotation, "value_changed",
-                     G_CALLBACK(gwy_3d_labels_adjustment_value_changed),
-                     owner);
-    g_signal_connect(desc->size, "value_changed",
-                     G_CALLBACK(gwy_3d_labels_adjustment_value_changed),
-                     owner);
 
     return desc;
+}
+
+static GtkAdjustment*
+gwy_3d_label_description_create_adjustment(Gwy3DLabels *gwy3dlabels,
+                              const gchar *key,
+                              gdouble value,
+                              gdouble lower,
+                              gdouble upper,
+                              gdouble step,
+                              gdouble page)
+{
+    GtkObject *adj;
+    GQuark quark;
+
+    gwy_debug(" ");
+    if (!container_key_quark)
+        container_key_quark = g_quark_from_string("gwy3dview-container-key");
+    quark = g_quark_from_string(key);
+    gwy_container_gis_double(gwy3dlabels->container, quark, &value);
+    adj = gtk_adjustment_new(value, lower, upper, step, page, 0.0);
+    g_object_ref(adj);
+    gtk_object_sink(adj);
+    g_object_set_qdata(G_OBJECT(adj), container_key_quark,
+                       GUINT_TO_POINTER(quark));
+    g_signal_connect(adj, "value-changed",
+                     G_CALLBACK(gwy_3d_labels_adjustment_value_changed), gwy3dlabels);
+
+    return (GtkAdjustment*)adj;
 }
 
 /**
@@ -214,20 +261,26 @@ gwy_3d_label_description_new(gchar * text, gint delta_x, gint delta_y,
  *
  * Since: 1.5
  **/
-Gwy3DLabels * gwy_3d_labels_new(void)
+Gwy3DLabels * gwy_3d_labels_new(GwyContainer * container)
 {
     gint i;
     Gwy3DLabels * labels = g_object_new(GWY_TYPE_3D_LABELS, NULL);
 
     gwy_debug(" ");
 
+    labels->container = container;
+    g_object_ref(labels->container);
     labels->labels_count = 4;
     labels->labels = g_new(Gwy3DLabelDescription*, labels->labels_count);
 
-    labels->labels[0] = gwy_3d_label_description_new("x: $X", 0, 0, 0.0f, -1, labels);
-    labels->labels[1] = gwy_3d_label_description_new("y: $Y", 0, 0, 0.0f, -1, labels);
-    labels->labels[2] = gwy_3d_label_description_new("$MIN",  0, 0, 0.0f, -1, labels);
-    labels->labels[3] = gwy_3d_label_description_new("$MAX",  0, 0, 0.0f, -1, labels);
+    labels->labels[0] = gwy_3d_label_description_new(
+                            "x: $X", "/0/3d/labels/x/", 0, 0, 0.0f, 1, labels);
+    labels->labels[1] = gwy_3d_label_description_new(
+                            "y: $Y", "/0/3d/labels/y/", 0, 0, 0.0f, 1, labels);
+    labels->labels[2] = gwy_3d_label_description_new(
+                            "$MIN", "/0/3d/labels/min/", 0, 0, 0.0f, 1, labels);
+    labels->labels[3] = gwy_3d_label_description_new(
+                            "$MAX", "/0/3d/labels/max/", 0, 0, 0.0f, 1, labels);
 
     labels->variables_count = 4;
     labels->keys   = g_new(gchar*, labels->variables_count);
@@ -395,12 +448,22 @@ gchar * gwy_3d_labels_format_text(Gwy3DLabels * labels, Gwy3DLabelName label_nam
  * Since: 1.5
  **/
 void
-gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
+gwy_3d_label_description_set_text(Gwy3DLabelDescription * ld,
                                   const gchar* text)
 {
-    g_free(label_description->text);
-    label_description->text = g_strdup(text);
-    g_signal_emit_by_name(label_description->delta_x, "value_changed", 0);
+    gchar * buffer = g_new(gchar, strlen(ld->base_key) + 20);
+    gchar * end;
+
+    strcpy(buffer, ld->base_key);
+    end = buffer + strlen(buffer);
+    strcpy(end, "text");
+    g_free(ld->text);
+    ld->text = g_strdup(text);
+    gwy_container_set_string_by_name(ld->owner->container,
+                                     buffer, g_strdup(ld->text));
+
+    g_free(buffer);
+    g_signal_emit(ld->owner, labels_signals[LABEL_CHANGED], 0);
 }
 
 /**
@@ -410,25 +473,31 @@ gwy_3d_label_description_set_text(Gwy3DLabelDescription * label_description,
  *
  * Since: 1.5
  **/
-
 void
 gwy_3d_label_description_reset(Gwy3DLabelDescription * label_description)
 {
-    g_free(label_description->text);
-    label_description->text = g_strdup(label_description->default_text);
+    gwy_debug(" ");
+    gwy_3d_label_description_set_text(label_description,
+                                      label_description->default_text);
     gtk_adjustment_set_value(label_description->delta_x, 0);
     gtk_adjustment_set_value(label_description->delta_y, 0);
     gtk_adjustment_set_value(label_description->size, -1);
     gtk_adjustment_set_value(label_description->rotation, 0);
 }
+
 static void
 gwy_3d_labels_adjustment_value_changed(GtkAdjustment* adjustment, gpointer user_data)
 {
     Gwy3DLabels * labels;
+    GQuark quark;
 
     gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_LABELS(user_data));
     labels =  (Gwy3DLabels*) user_data;
+    if ((quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(adjustment),
+                                                     container_key_quark))))
+        gwy_container_set_double(labels->container, quark,
+                                 gtk_adjustment_get_value(adjustment));
 
     g_signal_emit(labels, labels_signals[LABEL_CHANGED], 0);
 }
@@ -444,4 +513,42 @@ gdouble gwy_3d_labels_user_size(Gwy3DLabels *labels,
         return user_size;
     } else
         return ld->size->value;
+}
+
+/**
+ * gwy_3d_label_description_get_autoscale:
+ *
+ *
+ *
+ * Since: 1.5
+ **/
+gboolean
+gwy_3d_label_description_get_autoscele(Gwy3DLabelDescription * label_description)
+{
+    return label_description->auto_scale;
+}
+
+/**
+ * gwy_3d_label_description_set_autoscale:
+ *
+ *
+ *
+ * Since: 1.5
+ **/
+void
+gwy_3d_label_description_set_autoscale(Gwy3DLabelDescription * ld,
+                                       const gboolean autoscale)
+{
+    gchar * buffer = g_new(gchar, strlen(ld->base_key) + 20);
+    gchar * end;
+
+    strcpy(buffer, ld->base_key);
+    end = buffer + strlen(buffer);
+    strcpy(end, "auto_scale");
+
+    ld->auto_scale = autoscale;
+    gwy_container_set_boolean_by_name(ld->owner->container,
+                                      buffer, ld->auto_scale);
+    g_free(buffer);
+    g_signal_emit(ld->owner, labels_signals[LABEL_CHANGED], 0);
 }
