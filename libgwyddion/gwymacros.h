@@ -33,6 +33,7 @@
 #endif  /* _MSC_VER */
 #endif  /* GWYDDION_COMPILATION */
 
+#include <stdarg.h>
 #include <glibconfig.h>
 #include <glib/gmacros.h>
 #include <glib/gstrfuncs.h>
@@ -104,11 +105,9 @@ G_BEGIN_DECLS
 #    define gwy_debug(...) /* */
 #  endif
 #else
-/* no varargs macros
- * FIXME: this is broken, though it's like gutils.h
- * gimme a compiler with no vararg macros and maybe I'll try to fix it */
+/* no varargs macros */
 #  ifdef DEBUG
-G_INLINE_FUNC void
+static inline void
 gwy_debug(const gchar *format, ...)
 {
     va_list args;
@@ -117,7 +116,7 @@ gwy_debug(const gchar *format, ...)
     va_end(args);
 }
 #  else
-G_INLINE_FUNC void
+static inline void
 gwy_debug(const gchar *format, ...)
 {
 }
