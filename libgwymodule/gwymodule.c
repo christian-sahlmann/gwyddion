@@ -1,7 +1,6 @@
 /* @(#) $Id$ */
 
 #include <string.h>
-#include <gmodule.h>
 #include <libgwyddion/gwymacros.h>
 
 #include "gwymodule.h"

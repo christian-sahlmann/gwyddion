@@ -3,6 +3,8 @@
 #ifndef __GWY_MODULE_H__
 #define __GWY_MODULE_H__
 
+#include <gmodule.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
