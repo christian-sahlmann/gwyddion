@@ -12,13 +12,8 @@ gwy_graph_corner_get_type
 gwy_graph_get_type
 gwy_graph_label_get_type
 gwy_hruler_get_type
-gwy_layer_axes_get_type
 gwy_layer_basic_get_type
-gwy_layer_lines_get_type
 gwy_layer_mask_get_type
-gwy_layer_pointer_get_type
-gwy_layer_points_get_type
-gwy_layer_select_get_type
 gwy_pixmap_layer_get_type
 gwy_ruler_get_type
 gwy_sci_text_get_type
