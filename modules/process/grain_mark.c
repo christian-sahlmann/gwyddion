@@ -366,19 +366,10 @@ static void
 load_mask_color(GtkWidget *color_button,
                 GwyContainer *data)
 {
-    GwyContainer *settings;
     GwyRGBA rgba;
 
-    settings = gwy_app_settings_get();
-    gwy_container_gis_double_by_name(settings, "/mask/red", &rgba.r);
-    gwy_container_gis_double_by_name(settings, "/mask/green", &rgba.g);
-    gwy_container_gis_double_by_name(settings, "/mask/blue", &rgba.b);
-    gwy_container_gis_double_by_name(settings, "/mask/alpha", &rgba.a);
-    gwy_container_gis_double_by_name(data, "/0/mask/red", &rgba.r);
-    gwy_container_gis_double_by_name(data, "/0/mask/green", &rgba.g);
-    gwy_container_gis_double_by_name(data, "/0/mask/blue", &rgba.b);
-    gwy_container_gis_double_by_name(data, "/0/mask/alpha", &rgba.a);
-
+    gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+    gwy_rgba_get_from_container(&rgba, data, "/0/mask");
     gwy_debug("(%g, %g, %g, %g)", rgba.r, rgba.g, rgba.b, rgba.a);
     gwy_color_button_set_color(GWY_COLOR_BUTTON(color_button), &rgba);
 }
@@ -391,11 +382,7 @@ save_mask_color(GtkWidget *color_button,
 
     gwy_color_button_get_color(GWY_COLOR_BUTTON(color_button), &rgba);
     gwy_debug("(%u, %u, %u, %u)", rgba.r, rgba.g, rgba.b, rgba.a);
-
-    gwy_container_set_double_by_name(data, "/0/mask/red", rgba.r);
-    gwy_container_set_double_by_name(data, "/0/mask/green", rgba.g);
-    gwy_container_set_double_by_name(data, "/0/mask/blue", rgba.b);
-    gwy_container_set_double_by_name(data, "/0/mask/alpha", rgba.a);
+    gwy_rgba_store_to_container(&rgba, data, "/0/mask");
 }
 
 static void

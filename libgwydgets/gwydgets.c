@@ -107,36 +107,28 @@ typedef struct {
     GwyDataView *data_view;
     GwyColorButton *color_button;
     GwyContainer *container;
-    GQuark keys[4];
+    gchar *prefix;
 } MaskColorSelectorData;
 
 static void
-mask_color_updated_cb(GtkWidget *selector, MaskColorSelectorData *mcsdata)
+mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
 {
     GdkColor gdkcolor;
     guint16 gdkalpha;
-    gdouble p[4];
-    gint i;
+    GwyRGBA rgba;
 
     gwy_debug("mcsdata = %p", mcsdata);
-    if (gtk_color_selection_is_adjusting(GTK_COLOR_SELECTION(selector)))
+    if (gtk_color_selection_is_adjusting(GTK_COLOR_SELECTION(sel)))
         return;
 
-    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
-                                          &gdkcolor);
-    gdkalpha
-        = gtk_color_selection_get_current_alpha(GTK_COLOR_SELECTION(selector));
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(sel), &gdkcolor);
+    gdkalpha = gtk_color_selection_get_current_alpha(GTK_COLOR_SELECTION(sel));
 
-    p[0] = gdkcolor.red/65535.0;
-    p[1] = gdkcolor.green/65535.0;
-    p[2] = gdkcolor.blue/65535.0;
-    p[3] = gdkalpha/65535.0;
-
-    for (i = 0; i < 4; i++)
-        gwy_container_set_double(mcsdata->container, mcsdata->keys[i], p[i]);
+    gwy_rgba_from_gdk_color_and_alpha(&rgba, &gdkcolor, gdkalpha);
+    gwy_rgba_store_to_container(&rgba, mcsdata->container, mcsdata->prefix);
 
     if (mcsdata->color_button)
-        gwy_color_button_set_color(mcsdata->color_button, (GwyRGBA*)p); /*XXX*/
+        gwy_color_button_set_color(mcsdata->color_button, &rgba);
     if (mcsdata->data_view)
         gwy_data_view_update(mcsdata->data_view);
 }
@@ -165,17 +157,12 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
                             GwyContainer *container,
                             const gchar *prefix)
 {
-    static const gchar *mask_keys[4] = {
-        "/red", "/green", "/blue", "/alpha"
-    };
     GtkWidget *selector, *dialog;
     MaskColorSelectorData *mcsdata;
     GdkColor gdkcolor;
     guint16 gdkalpha;
-    gdouble p[4];
-    gint i, response;
-    gsize len;
-    gchar *buffer;
+    GwyRGBA rgba;
+    gint response;
 
     g_return_if_fail(prefix && *prefix == '/');
     if (!container) {
@@ -187,24 +174,11 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     mcsdata->data_view = data_view;
     mcsdata->color_button = color_button;
     mcsdata->container = container;
-    /* quarkize keys */
-    len = strlen(prefix);
-    buffer = g_new(gchar, len + 6 + 1);
-    strcpy(buffer, prefix);
-    for (i = 0; i < 4; i++) {
-       strcpy(buffer + len, mask_keys[i]);
-       mcsdata->keys[i] = g_quark_from_string(buffer);
-    }
-    g_free(buffer);
+    mcsdata->prefix = g_strdup(prefix);
 
-    for (i = 0; i < 4; i++)
-        gwy_container_gis_double(container, mcsdata->keys[i], p + i);
-
-    gdkcolor.red = (guint16)floor(p[0]*65535.999999);
-    gdkcolor.green = (guint16)floor(p[1]*65535.999999);
-    gdkcolor.blue = (guint16)floor(p[2]*65535.999999);
-    gdkalpha = (guint16)floor(p[3]*65535.999999);
-    gdkcolor.pixel = (guint32)-1; /* FIXME */
+    gwy_rgba_get_from_container(&rgba, container, mcsdata->prefix);
+    gwy_rgba_to_gdk_color(&rgba, &gdkcolor);
+    gdkalpha = gwy_rgba_to_gdk_alpha(&rgba);
 
     dialog = gtk_color_selection_dialog_new(dialog_title
                                             ? dialog_title
@@ -223,15 +197,13 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
     if (response != GTK_RESPONSE_OK) {
-        /* restore old */
-        for (i = 0; i < 4; i++)
-            gwy_container_set_double(container, mcsdata->keys[i], p[i]);
+        gwy_rgba_store_to_container(&rgba, container, mcsdata->prefix);
         if (mcsdata->color_button)
-            gwy_color_button_set_color(mcsdata->color_button,
-                                       (GwyRGBA*)p); /*XXX*/
+            gwy_color_button_set_color(mcsdata->color_button, &rgba);
         if (data_view)
             gwy_data_view_update(data_view);
     }
+    g_free(mcsdata->prefix);
     g_free(mcsdata);
 }
 

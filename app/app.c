@@ -703,15 +703,10 @@ void
 gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
                              gboolean defaultc)
 {
-    static const gchar *mask_key_names[4] = {
-        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha",
-    };
-    static GQuark mask_keys[4] = { 0, 0, 0, 0 };
     GwyDataWindow *data_window;
     GtkWidget *data_view;
     GwyContainer *data, *settings;
-    gdouble p;
-    gint i;
+    GwyRGBA rgba;
 
     gwy_debug("defaultc = %d", defaultc);
 
@@ -726,17 +721,13 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    g_assert(data);
 
     /* copy defaults to data container if necessary */
-    for (i = 0; i < 4; i++) {
-        if (!mask_keys[i])
-            mask_keys[i] = g_quark_from_static_string(mask_key_names[i]);
-        if (!gwy_container_contains(data, mask_keys[i])) {
-            p = gwy_container_get_double(settings, mask_keys[i]);
-            gwy_container_set_double(data, mask_keys[i], p);
-        }
+    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, settings, "/mask");
+        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
     }
-
     gwy_color_selector_for_mask(NULL, GWY_DATA_VIEW(data_view), NULL, data,
                                 "/0/mask");
 }

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #define __GWY_RGBA_H__
 
 #include <gdk/gdkcolor.h>
+#include <libgwyddion/gwycontainer.h>
 
 G_BEGIN_DECLS
 
@@ -47,6 +48,12 @@ void          gwy_rgba_from_gdk_color           (GwyRGBA *rgba,
 void          gwy_rgba_from_gdk_color_and_alpha (GwyRGBA *rgba,
                                                  GdkColor *gdkcolor,
                                                  guint16 gdkalpha);
+gboolean      gwy_rgba_get_from_container       (GwyRGBA *rgba,
+                                                 GwyContainer *container,
+                                                 const gchar *prefix);
+void          gwy_rgba_store_to_container       (GwyRGBA *rgba,
+                                                 GwyContainer *container,
+                                                 const gchar *prefix);
 
 G_END_DECLS
 
