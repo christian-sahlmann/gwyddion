@@ -629,83 +629,63 @@ fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
     return b[0] + b[1]*x;
 }
 
-static const gchar *gauss_pars[]=
-{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
 
-static const gchar *gauss_units[]=
-{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+static const Param gauss_pars[]= {
+   {"x<sub>0</sub>", " ", 1 },
+   {"y<sub>0</sub>", " ", 2 },
+   {"a", " ", 3 },
+   {"b", " ", 4 },
+};
 
-static const gdouble gauss_defaults[]=
-{1, 2, 3, 4};
+static const Param exp_pars[]= {
+   {"x<sub>0</sub>", " ", 1 },
+   {"y<sub>0</sub>", " ", 2 },
+   {"a", " ", 3 },
+   {"b", " ", 4 },
+};
 
-static const gchar *exp_pars[]=
-{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+static const Param poly0_pars[]= {
+   {"a", " ", 1 },
+};
 
-static const gchar *exp_units[]=
-{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
-
-static const gdouble exp_defaults[]=
-{1, 2, 3, 4};
-
-static const gchar *poly0_pars[]=
-{"a"};
-
-static const gchar *poly0_units[]=
-{"a"};
-
-static const gdouble poly0_defaults[]=
-{1};
-
-static const gchar *poly1_pars[]=
-{"a", "b"};
-
-static const gchar *poly1_units[]=
-{"a", "b"};
-
-static const gdouble poly1_defaults[]=
-{1, 2};
+static const Param poly1_pars[]= {
+   {"a", " ", 1 },
+   {"b", " ", 2 },
+};
 
 
 static const GwyNLFitPresetFunction fitting_presets[] = {
     { "Gaussian", 
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
-       gauss_pars,
-       gauss_units,
-       4, 
-       gauss_defaults,
        &fit_gauss,
        NULL,
-       NULL
+       NULL,
+       4,
+       gauss_pars
     },
     { "Exponential", 
        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
-       exp_pars,
-       exp_units,
-       4, 
-       exp_defaults,
        &fit_exp,
        NULL,
-       NULL
+       NULL,
+       4,
+       exp_pars
     },
     { "Polynom (order 0)", 
        "f(x) = a",
-       poly0_pars,
-       poly0_units,
-       1, 
-       poly0_defaults,
        &fit_poly_0,
        NULL,
-       NULL
+       NULL,
+       1,
+       poly0_pars    
     },
     { "Polynom (order 1)", 
        "f(x) = a + b*x",
-       poly1_pars,
-       poly1_units,
-       2, 
-       poly1_defaults,
        &fit_poly_1,
        NULL,
-       NULL
+       NULL,
+       2,
+       poly1_pars
     }
 };
 
@@ -733,12 +713,16 @@ gchar *gwy_math_nlfit_get_function_equation(GwyNLFitPresetFunction* function)
 
 gchar *gwy_math_nlfit_get_function_param_name(GwyNLFitPresetFunction* function, gint param)
 {
-    return g_strdup(function->param_name[param]);
+    Param *par;
+    par = function->param + param;
+    return g_strdup(par->name);
 }
 
 gdouble gwy_math_nlfit_get_function_param_default(GwyNLFitPresetFunction* function, gint param)
 {
-    return function->defaults[param];
+    Param *par; 
+    par = function->param + param;        
+    return par->default_init;
 }
 
 gint gwy_math_nlfit_get_function_nparams(GwyNLFitPresetFunction* function)
