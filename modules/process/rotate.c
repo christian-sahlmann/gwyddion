@@ -49,7 +49,8 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    rotate                     (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_dialog              (RotateArgs *args);
-static void        interp_changed_cb          (RotateControls *controls);
+static void        interp_changed_cb          (GObject *item,
+                                               RotateControls *controls);
 static void        expand_changed_cb          (GtkWidget *toggle,
                                                RotateArgs *args);
 static void        angle_changed_cb           (GtkObject *angle,
@@ -185,6 +186,7 @@ rotate_dialog(RotateArgs *args)
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(3, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -246,10 +248,11 @@ rotate_dialog(RotateArgs *args)
 }
 
 static void
-interp_changed_cb(RotateControls *controls)
+interp_changed_cb(GObject *item,
+                  RotateControls *controls)
 {
-    controls->args->interp = gwy_option_menu_get_history(controls->interp,
-                                                         "interpolation-type");
+    controls->args->interp
+        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
 }
 
 static void
