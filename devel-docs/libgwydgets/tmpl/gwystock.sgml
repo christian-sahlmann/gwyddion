@@ -30,11 +30,26 @@ The "Crop" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_CWT ##### -->
+<para>
+The "Continuous-Wavelet-Transform" stock icon.
+<inlinegraphic fileref="gwy_cwt-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_FACET_LEVEL ##### -->
+<para>
+The "Facet-Level" stock icon.
+<inlinegraphic fileref="gwy_facet_level-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_FIT_PLANE ##### -->
 <para>
 The "Fit-Plane" stock icon.
 <inlinegraphic fileref="gwy_fit_plane-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -43,7 +58,22 @@ The "Fit-Plane" stock icon.
 <para>
 The "Fit-Triangle" stock icon.
 <inlinegraphic fileref="gwy_fit_triangle-24.png" format="PNG"></inlinegraphic>
+</para>
 
+
+
+<!-- ##### MACRO GWY_STOCK_FIX_ZERO ##### -->
+<para>
+The "Fix-Zero" stock icon.
+<inlinegraphic fileref="gwy_fix_zero-24.png" format="PNG"></inlinegraphic>
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_FFT ##### -->
+<para>
+The "Fast-Fourier-Transform" stock icon.
+<inlinegraphic fileref="gwy_fft-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -52,7 +82,6 @@ The "Fit-Triangle" stock icon.
 <para>
 The "Graph" stock icon.
 <inlinegraphic fileref="gwy_graph-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -61,7 +90,6 @@ The "Graph" stock icon.
 <para>
 The "Graph-Gauss" stock icon.
 <inlinegraphic fileref="gwy_graph_gauss-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -70,7 +98,14 @@ The "Graph-Gauss" stock icon.
 <para>
 The "Graph-Halfgauss" stock icon.
 <inlinegraphic fileref="gwy_graph_halfgauss-24.png" format="PNG"></inlinegraphic>
+</para>
 
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_PALETTE ##### -->
+<para>
+The "Graph-Palette" stock icon.
+<inlinegraphic fileref="gwy_graph_palette-24.png" format="PNG"></inlinegraphic>
 </para>
 
 
@@ -79,7 +114,6 @@ The "Graph-Halfgauss" stock icon.
 <para>
 The "Gwyddion" stock icon.
 <inlinegraphic fileref="gwy_gwyddion-60.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -88,7 +122,6 @@ The "Gwyddion" stock icon.
 <para>
 The "Italic" stock icon.
 <inlinegraphic fileref="gwy_italic-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -97,7 +130,6 @@ The "Italic" stock icon.
 <para>
 The "None" stock icon.
 <inlinegraphic fileref="gwy_none-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -106,7 +138,6 @@ The "None" stock icon.
 <para>
 The "Pointer" stock icon.
 <inlinegraphic fileref="gwy_pointer-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -115,7 +146,6 @@ The "Pointer" stock icon.
 <para>
 The "Pointer-Measure" stock icon.
 <inlinegraphic fileref="gwy_pointer_measure-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -124,7 +154,6 @@ The "Pointer-Measure" stock icon.
 <para>
 The "Profile" stock icon.
 <inlinegraphic fileref="gwy_profile-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -133,7 +162,6 @@ The "Profile" stock icon.
 <para>
 The "Rotate" stock icon.
 <inlinegraphic fileref="gwy_rotate-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -142,7 +170,6 @@ The "Rotate" stock icon.
 <para>
 The "Scale" stock icon.
 <inlinegraphic fileref="gwy_scale-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -151,7 +178,6 @@ The "Scale" stock icon.
 <para>
 The "Shader" stock icon.
 <inlinegraphic fileref="gwy_shader-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -160,7 +186,6 @@ The "Shader" stock icon.
 <para>
 The "Stat-Quantities" stock icon.
 <inlinegraphic fileref="gwy_stat_quantities-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -169,7 +194,6 @@ The "Stat-Quantities" stock icon.
 <para>
 The "Subscript" stock icon.
 <inlinegraphic fileref="gwy_subscript-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -178,7 +202,6 @@ The "Subscript" stock icon.
 <para>
 The "Superscript" stock icon.
 <inlinegraphic fileref="gwy_superscript-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -187,7 +210,6 @@ The "Superscript" stock icon.
 <para>
 The "Zoom-1:1" stock icon.
 <inlinegraphic fileref="gwy_zoom_1_1-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -196,7 +218,6 @@ The "Zoom-1:1" stock icon.
 <para>
 The "Zoom-Fit" stock icon.
 <inlinegraphic fileref="gwy_zoom_fit-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -205,7 +226,6 @@ The "Zoom-Fit" stock icon.
 <para>
 The "Zoom-In" stock icon.
 <inlinegraphic fileref="gwy_zoom_in-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 
@@ -214,7 +234,6 @@ The "Zoom-In" stock icon.
 <para>
 The "Zoom-Out" stock icon.
 <inlinegraphic fileref="gwy_zoom_out-24.png" format="PNG"></inlinegraphic>
-
 </para>
 
 

@@ -13,5 +13,6 @@
     <xi:include href="xml/settings.xml"/>
     <xi:include href="xml/menu.xml"/>
     <xi:include href="xml/unitool.xml"/>
+    <xi:include href="xml/wait.xml"/>
   </chapter>
 </book>

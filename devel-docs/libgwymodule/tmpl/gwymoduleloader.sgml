@@ -77,3 +77,11 @@ Basic module loader interface
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_module_set_register_callback ##### -->
+<para>
+
+</para>
+
+@callback: 
+
+

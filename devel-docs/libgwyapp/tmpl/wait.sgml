@@ -1,0 +1,69 @@
+<!-- ##### SECTION Title ##### -->
+wait
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_app_wait_start ##### -->
+<para>
+
+</para>
+
+@window: 
+@message: 
+
+
+<!-- ##### FUNCTION gwy_app_wait_finish ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### FUNCTION gwy_app_wait_switch_widget ##### -->
+<para>
+
+</para>
+
+@window: 
+@message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_wait_set_fraction ##### -->
+<para>
+
+</para>
+
+@fraction: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_wait_set_message ##### -->
+<para>
+
+</para>
+
+@message: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_wait_set_message_prefix ##### -->
+<para>
+
+</para>
+
+@prefix: 
+@Returns: 
+
+

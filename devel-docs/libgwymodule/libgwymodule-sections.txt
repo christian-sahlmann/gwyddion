@@ -26,6 +26,7 @@ GwyModuleRegisterFunc
 GwyModuleQueryFunc
 gwy_module_register_modules
 gwy_module_lookup
+gwy_module_set_register_callback
 </SECTION>
 
 <SECTION>

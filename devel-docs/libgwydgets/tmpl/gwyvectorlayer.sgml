@@ -4,7 +4,6 @@ GwyVectorLayer
 <!-- ##### SECTION Short_Description ##### -->
 Base class for #GwyDataView vector (interactive) layers
 
-
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 
@@ -92,6 +91,32 @@ Base class for #GwyDataView vector (interactive) layers
 
 
 <!-- ##### FUNCTION gwy_vector_layer_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### FUNCTION gwy_vector_layer_get_update_policy ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_vector_layer_set_update_policy ##### -->
+<para>
+
+</para>
+
+@layer: 
+@policy: 
+
+
+<!-- ##### FUNCTION gwy_vector_layer_updated ##### -->
 <para>
 
 </para>

@@ -27,6 +27,17 @@ gwy_app_clean_up_data
 </SECTION>
 
 <SECTION>
+<FILE>unitool</FILE>
+GwyUnitoolSlots
+GwyUnitoolUnits
+GwyUnitoolState
+gwy_unitool_use
+gwy_unitool_windowname_frame_create
+gwy_unitool_get_z_average
+gwy_unitool_update_label
+</SECTION>
+
+<SECTION>
 <FILE>file</FILE>
 gwy_app_n_recent_files
 gwy_app_file_open_cb
@@ -66,5 +77,15 @@ gwy_app_menu_set_sensitive_both
 gwy_app_menu_set_recent_files_menu
 gwy_app_run_process_func_cb
 gwy_app_run_graph_func_cb
+</SECTION>
+
+<SECTION>
+<FILE>wait</FILE>
+gwy_app_wait_start
+gwy_app_wait_finish
+gwy_app_wait_switch_widget
+gwy_app_wait_set_fraction
+gwy_app_wait_set_message
+gwy_app_wait_set_message_prefix
 </SECTION>
 

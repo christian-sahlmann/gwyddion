@@ -655,9 +655,11 @@ GwyDataField
 
 @a: 
 @b: 
-@column: 
+@col: 
 @from: 
 @to: 
+<!-- # Unused Parameters # -->
+@column: 
 
 
 <!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
@@ -920,5 +922,6 @@ GwyDataField
 @interpolation: 
 @windowing: 
 @nstats: 
+@Returns: 
 
 
