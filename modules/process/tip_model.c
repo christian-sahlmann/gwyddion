@@ -20,6 +20,8 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
