@@ -119,7 +119,7 @@ stats_use(GwyDataWindow *data_window,
         select_layer = (GwyDataViewLayer*)gwy_layer_select_new();
         gwy_data_view_set_top_layer(data_view, select_layer);
     }
-    /*gwy_layer_select_set_is_crop(select_layer, TRUE);*/
+    gwy_layer_select_set_is_crop(select_layer, FALSE);
     if (!stats_dialog)
         stats_dialog = stats_dialog_create(data_view);
 
