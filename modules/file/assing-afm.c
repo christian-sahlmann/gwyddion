@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -102,20 +102,10 @@ aafm_detect(const gchar *filename,
     struct stat st;
     guchar buffer[2];
 
-    if (only_name) {
-        gchar *filename_lc;
+    if (only_name)
+        return gwy_str_has_suffix_nocase(filename_lc, EXTENSION) ? 17 : 0;
 
-        filename_lc = g_ascii_strdown(filename, -1);
-        score = g_str_has_suffix(filename_lc, EXTENSION) ? 17 : 0;
-        g_free(filename_lc);
-
-        return score;
-    }
-
-    if (stat(filename, &st))
-        return 0;
-
-    if (!(fh = fopen(filename, "rb")))
+    if (stat(filename, &st) || !(fh = fopen(filename, "rb")))
         return 0;
 
     if (fread(buffer, sizeof(buffer), 1, fh) == 1

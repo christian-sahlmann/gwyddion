@@ -355,7 +355,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11.1",
+    "0.11.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -389,18 +389,12 @@ sis_detect(const gchar *filename,
     gint score;
 
     gwy_debug("");
-    if (only_name) {
-        gchar *filename_lc;
-
-        filename_lc = g_ascii_strdown(filename, -1);
-        score = g_str_has_suffix(filename_lc, EXTENSION) ? 20 : 0;
-        g_free(filename_lc);
-
-        return score;
-    }
+    if (only_name)
+        return gwy_str_has_suffix_nocase(filename_lc, EXTENSION) ? 20 : 0;
 
     if (!(fh = fopen(filename, "rb")))
         return 0;
+
     score = 0;
     if (fread(magic, 1, MAGIC_SIZE, fh) == MAGIC_SIZE
         && memcmp(magic, MAGIC, MAGIC_SIZE) == 0)

@@ -60,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.3",
+    "0.3.1",
     "Rok Zitko",
     "2004",
 };
@@ -93,11 +93,8 @@ createc_detect(const gchar *filename,
     FILE *fh;
     gchar magic[MAGIC_SIZE];
 
-    if (g_str_has_suffix(filename, ".dat"))
-        score += 10;
-
     if (only_name)
-        return score;
+        return gwy_str_has_suffix_nocase(filename, ".dat") ? 10 : 0;
 
     if (!(fh = fopen(filename, "rb")))
         return 0;

@@ -280,7 +280,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.6",
+    "4.6.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -406,7 +406,7 @@ pixmap_detect(const gchar *filename,
     extensions = g_strsplit(format_info->extensions, ",", 0);
     g_assert(extensions);
     for (ext = 0; extensions[ext]; ext++) {
-        if (g_str_has_suffix(filename, extensions[ext]))
+        if (gwy_str_has_suffix_nocase(filename, extensions[ext]))
             break;
     }
     score = extensions[ext] ? 20 : 0;
