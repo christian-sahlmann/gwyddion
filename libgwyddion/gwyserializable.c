@@ -98,7 +98,7 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
  * @buffer: A buffer to which the serialized object should be appended,
  *          or %NULL.
  *
- * Serializes an object implementing #GwySerializable interface.
+ * Serializes an object to byte buffer.
  *
  * Returns: @buffer or a newly allocated #GByteArray with serialized
  *          object appended.
@@ -130,7 +130,7 @@ gwy_serializable_serialize(GObject *serializable,
  * @position: The position of the object in @buffer, it's updated to
  *            point after it.
  *
- * Restores a serialized object.
+ * Restores a serialized object from byte buffer.
  *
  * The newly created object has reference count according to its nature, thus
  * a #GtkObject will have a floating reference, a #GObject will have a
@@ -222,9 +222,9 @@ gwy_serializable_deserialize(const guchar *buffer,
 
 /**
  * gwy_serializable_duplicate:
- * @object: A #GObject implementing #GwySerializable interface.
+ * @object: An object implementing #GwySerializable interface.
  *
- * Creates a copy of object @object.
+ * Creates a copy of an object.
  *
  * If the object doesn't support duplication natively, it's brute-force
  * serialized and then deserialized, this may be quite inefficient,
@@ -239,12 +239,10 @@ gwy_serializable_deserialize(const guchar *buffer,
 GObject*
 gwy_serializable_duplicate(GObject *object)
 {
-    GwyDuplicateFunc duplicate_method;
+    GObject* (*duplicate_method)(GObject*);
 
-    if (!object) {
-        g_warning("trying to duplicate a NULL");
+    if (!object)
         return NULL;
-    }
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(object), NULL);
 
     duplicate_method = GWY_SERIALIZABLE_GET_IFACE(object)->duplicate;
@@ -276,6 +274,38 @@ gwy_serializable_duplicate_hard_way(GObject *object)
     g_byte_array_free(buffer, TRUE);
 
     return duplicate;
+}
+
+/**
+ * gwy_serializable_clone:
+ * @source: An object implementing #GwySerializable interface.
+ * @copy: An object of the same type as @source to modify after it.
+ *
+ * Makes an object identical to another object of the same type.
+ *
+ * More precisely, @source may be subclass of @copy (the extra information
+ * is lost then).
+ **/
+void
+gwy_serializable_clone(GObject *source,
+                       GObject *copy)
+{
+    GType source_type, copy_type;
+    void (*clone_method)(GObject*, GObject*);
+
+    g_return_if_fail(GWY_IS_SERIALIZABLE(source));
+    g_return_if_fail(GWY_IS_SERIALIZABLE(copy));
+    source_type = G_TYPE_FROM_INSTANCE(source);
+    copy_type = G_TYPE_FROM_INSTANCE(copy);
+    g_return_if_fail(g_type_is_a(copy_type, source_type));
+
+    clone_method = GWY_SERIALIZABLE_GET_IFACE(copy)->clone;
+    if (!clone_method) {
+        g_error("%s doesn't implement clone()",
+                g_type_name(G_TYPE_FROM_INSTANCE(copy)));
+        return;
+    }
+    clone_method(source, copy);
 }
 
 /**
@@ -1911,16 +1941,6 @@ gwy_serialize_check_string(const guchar *buffer,
  */
 
 /**
- * GwyDuplicateFunc:
- * @object: An object to duplicate.
- *
- * The type of duplication method, see gwy_serializable_duplicate() for
- * description.
- *
- * Returns: A copy of @object.
- */
-
-/**
  * GwySerializeSpec:
  * @ctype: Component type, as in gwy_serialize_pack_object_struct().
  * @name: Component name as a null terminated string.
@@ -1950,6 +1970,21 @@ gwy_serialize_check_string(const guchar *buffer,
  * This component information is used in gwy_serialize_object_items() and
  * gwy_deserialize_object_hash() suitable for (de)serialization of hash-like
  * objects.
+ **/
+
+/**
+ * GwySerializableIface:
+ * @serialize: Serialization method (obligatory), see #GwySerializeFunc for
+ *             description.
+ * @deserialize: Restore method (obligatory), see #GwyDeserializeFunc for
+ *               description.
+ * @clone: Clone method (obligatory).  Copies complete object `value' to an
+ *         existing object of the same type.  This method is called from
+ *         copy's class if source and copy classes differ.
+ * @duplicate: Duplication method (optional).  Creates a duplicate of an
+ *             object.
+ *
+ * The methods a serializable objects has to implement.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

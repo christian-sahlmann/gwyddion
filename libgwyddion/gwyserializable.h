@@ -39,14 +39,14 @@ typedef GByteArray* (*GwySerializeFunc)(GObject *serializable,
 typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
                                        gsize size,
                                        gsize *position);
-typedef GObject* (*GwyDuplicateFunc)(GObject *object);
 
 struct _GwySerializableIface {
     GTypeInterface parent_class;
 
     GwySerializeFunc serialize;
     GwyDeserializeFunc deserialize;
-    GwyDuplicateFunc duplicate;
+    void (*clone)(GObject *source, GObject *copy);
+    GObject* (*duplicate)(GObject *object);
 };
 
 typedef struct {
@@ -87,6 +87,8 @@ GObject*    gwy_serializable_deserialize         (const guchar *buffer,
                                                   gsize size,
                                                   gsize *position);
 GObject*    gwy_serializable_duplicate           (GObject *object);
+void        gwy_serializable_clone               (GObject *source,
+                                                  GObject *copy);
 
 GByteArray* gwy_serialize_pack_object_struct     (GByteArray *buffer,
                                                   const guchar *object_name,
