@@ -584,6 +584,147 @@ test_nlfit(void)
     gwy_math_nlfit_free(ms);
 }
 
+#define dcpath(p) \
+    do { \
+        gchar *s; \
+        fprintf(stderr, "<%s> -> <%s>\n", p, s = gwy_canonicalize_path(p)); \
+        g_free(s); \
+    } while (FALSE)
+
+/* FIXME: must defgine G_OS_WIN32 in gwyutils.c for that! */
+static void
+test_path_normalization()
+{
+    g_message("====== PATH ======================");
+    dcpath("/foo/bar/adgasg");
+    dcpath("/foo/bar////adgasg");
+    dcpath("/foo/bar////adgasg///");
+    dcpath("//foo//bar////adgasg///");  /* On Win32 initial // must be kept */
+    dcpath("/////");
+    dcpath("main.c");
+    dcpath("c:\\dgd\\fgfdsg\\fgsdfg");
+    dcpath("d:\\dgd\\\\\\fgfdsg\\fgsdfg");
+    dcpath("e:\\dgd\\\\\\fgfdsg/fgsdfg/baz");
+    dcpath("../Makefile.am");
+    dcpath("/foo/../Makefile.am");
+    dcpath("/foo/bar/../baz/../../Makefile.am");
+    dcpath("/foo/./bar/../baz/.././.././Makefile.am");
+    dcpath("/..");
+    dcpath("/../.");
+    dcpath("/./");
+    dcpath("///./");
+    dcpath("/..///./");
+    dcpath("/././../../.");
+    dcpath("/././../.././");
+}
+
+#define dsiunitd(si, dig, val, vf) \
+    vf = gwy_si_unit_get_format_with_digits(si, val, dig, vf); \
+    fprintf(stderr, "(%s,\t%g,\td=%d) -> %.*f %s\n", \
+            gwy_si_unit_get_unit_string(si), val, dig, \
+            vf->precision, val/vf->magnitude, vf->units)
+
+#define dsiunitr(si, res, val, vf) \
+    vf = gwy_si_unit_get_format_with_resolution(si, val, res, vf); \
+    fprintf(stderr, "(%s,\t%g,\tr=%g)\t-> %.*f %s\n", \
+            gwy_si_unit_get_unit_string(si), val, res, \
+            vf->precision, val/vf->magnitude, vf->units)
+
+static void
+test_si_unit(void)
+{
+    GwySIUnit *si;
+    GwySIValueFormat *vformat = NULL;
+
+    g_message("====== SI UNIT ======================");
+
+    si = (GwySIUnit*)gwy_si_unit_new("m");
+    dsiunitd(si, 0, 1e1, vformat);
+    dsiunitd(si, 0, 1e0, vformat);
+    dsiunitd(si, 0, 1e-1, vformat);
+    dsiunitd(si, 0, 1e-9, vformat);
+    dsiunitd(si, 0, 1e-10, vformat);
+    dsiunitd(si, 0, 1e-11, vformat);
+    dsiunitd(si, 1, 1e1, vformat);
+    dsiunitd(si, 1, 1e0, vformat);
+    dsiunitd(si, 1, 1e-1, vformat);
+    dsiunitd(si, 1, 1e-9, vformat);
+    dsiunitd(si, 1, 1e-10, vformat);
+    dsiunitd(si, 1, 1e-11, vformat);
+    dsiunitd(si, 2, 1e1, vformat);
+    dsiunitd(si, 2, 1e0, vformat);
+    dsiunitd(si, 2, 1e-1, vformat);
+    dsiunitd(si, 2, 1e-9, vformat);
+    dsiunitd(si, 2, 1e-10, vformat);
+    dsiunitd(si, 2, 1e-11, vformat);
+    g_object_unref(si);
+
+    si = (GwySIUnit*)gwy_si_unit_new("Hz");
+    dsiunitd(si, 0, 1e1, vformat);
+    dsiunitd(si, 0, 1e0, vformat);
+    dsiunitd(si, 0, 1e-1, vformat);
+    dsiunitd(si, 0, 1e-9, vformat);
+    dsiunitd(si, 0, 1e-10, vformat);
+    dsiunitd(si, 0, 1e-11, vformat);
+    dsiunitd(si, 1, 1e1, vformat);
+    dsiunitd(si, 1, 1e0, vformat);
+    dsiunitd(si, 1, 1e-1, vformat);
+    dsiunitd(si, 1, 1e-9, vformat);
+    dsiunitd(si, 1, 1e-10, vformat);
+    dsiunitd(si, 1, 1e-11, vformat);
+    dsiunitd(si, 2, 1e1, vformat);
+    dsiunitd(si, 2, 1e0, vformat);
+    dsiunitd(si, 2, 1e-1, vformat);
+    dsiunitd(si, 2, 1e-9, vformat);
+    dsiunitd(si, 2, 1e-10, vformat);
+    dsiunitd(si, 2, 1e-11, vformat);
+    g_object_unref(si);
+
+    si = (GwySIUnit*)gwy_si_unit_new("m");
+    dsiunitr(si, 1e1, 1e1, vformat);
+    dsiunitr(si, 1e0, 1e0, vformat);
+    dsiunitr(si, 1e-1, 1e-1, vformat);
+    dsiunitr(si, 1e-9, 1e-9, vformat);
+    dsiunitr(si, 1e-10, 1e-10, vformat);
+    dsiunitr(si, 1e-11, 1e-11, vformat);
+    dsiunitr(si, 1e0, 1e1, vformat);
+    dsiunitr(si, 1e-1, 1e0, vformat);
+    dsiunitr(si, 1e-2, 1e-1, vformat);
+    dsiunitr(si, 1e-10, 1e-9, vformat);
+    dsiunitr(si, 1e-11, 1e-10, vformat);
+    dsiunitr(si, 1e-12, 1e-11, vformat);
+    dsiunitr(si, 1e-1, 1e1, vformat);
+    dsiunitr(si, 1e-2, 1e0, vformat);
+    dsiunitr(si, 1e-3, 1e-1, vformat);
+    dsiunitr(si, 1e-11, 1e-9, vformat);
+    dsiunitr(si, 1e-12, 1e-10, vformat);
+    dsiunitr(si, 1e-13, 1e-11, vformat);
+    g_object_unref(si);
+
+    si = (GwySIUnit*)gwy_si_unit_new("Hz");
+    dsiunitr(si, 1e1, 1e1, vformat);
+    dsiunitr(si, 1e0, 1e0, vformat);
+    dsiunitr(si, 1e-1, 1e-1, vformat);
+    dsiunitr(si, 1e-9, 1e-9, vformat);
+    dsiunitr(si, 1e-10, 1e-10, vformat);
+    dsiunitr(si, 1e-11, 1e-11, vformat);
+    dsiunitr(si, 1e0, 1e1, vformat);
+    dsiunitr(si, 1e-1, 1e0, vformat);
+    dsiunitr(si, 1e-2, 1e-1, vformat);
+    dsiunitr(si, 1e-10, 1e-9, vformat);
+    dsiunitr(si, 1e-11, 1e-10, vformat);
+    dsiunitr(si, 1e-12, 1e-11, vformat);
+    dsiunitr(si, 1e-1, 1e1, vformat);
+    dsiunitr(si, 1e-2, 1e0, vformat);
+    dsiunitr(si, 1e-3, 1e-1, vformat);
+    dsiunitr(si, 1e-11, 1e-9, vformat);
+    dsiunitr(si, 1e-12, 1e-10, vformat);
+    dsiunitr(si, 1e-13, 1e-11, vformat);
+    g_object_unref(si);
+
+    gwy_si_unit_value_format_free(vformat);
+}
+
 static void
 test_all(void)
 {
@@ -597,6 +738,8 @@ test_all(void)
     test_math();
     test_string_utils();
     test_nlfit();
+    test_path_normalization();
+    test_si_unit();
 }
 
 static void
