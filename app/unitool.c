@@ -39,8 +39,6 @@ static void       gwy_unitool_dialog_response_cb     (GwyUnitoolState *state,
                                                       gint response);
 static void       gwy_unitool_dialog_set_visible     (GwyUnitoolState *state,
                                                       gboolean visible);
-static GtkWidget* gwy_unitool_dialog_find_button     (GwyUnitoolState *state,
-                                                      gint response_id);
 static void       gwy_unitool_setup_accel_group      (GwyUnitoolState *state);
 static void       gwy_unitool_update_thumbnail       (GwyUnitoolState *state);
 
@@ -265,17 +263,15 @@ gwy_unitool_selection_updated_real(GwyUnitoolState *state,
                                    gboolean make_visible)
 {
     gint nselected;
-    GtkWidget *clear;
 
     nselected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (state->func_slots->dialog_update)
         state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_SELECTION);
     if (make_visible && nselected && !state->is_visible)
         gwy_unitool_dialog_set_visible(state, TRUE);
-    clear = gwy_unitool_dialog_find_button(state,
-                                           GWY_UNITOOL_RESPONSE_UNSELECT);
-    if (clear)
-        gtk_widget_set_sensitive(clear, nselected);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(state->dialog),
+                                      GWY_UNITOOL_RESPONSE_UNSELECT,
+                                      nselected);
 }
 
 /*
@@ -343,31 +339,6 @@ gwy_unitool_dialog_set_visible(GwyUnitoolState *state,
         gtk_widget_hide(state->dialog);
 }
 
-/* FIXME: Why we don't use gtk_dialog_set_response_sensitive() ??? */
-static GtkWidget*
-gwy_unitool_dialog_find_button(GwyUnitoolState *state,
-                               gint response_id)
-{
-    GtkWidget *dialog, *hbbox;
-    GList *children, *c;
-
-    g_return_val_if_fail(state, NULL);
-    dialog = state->dialog;
-    g_return_val_if_fail(GTK_IS_DIALOG(dialog), NULL);
-    hbbox = GTK_DIALOG(dialog)->action_area;
-    children = GTK_BOX(hbbox)->children;
-    for (c = children; c; c = g_list_next(c)) {
-        GtkBoxChild *cld = (GtkBoxChild*)c->data;
-        gint id;
-
-        id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(cld->widget),
-                                               "gwy-unitool-response-id"));
-        if (id == response_id)
-            return cld->widget;
-    }
-    return NULL;
-}
-
 static void
 gwy_unitool_setup_accel_group(GwyUnitoolState *state)
 {
@@ -430,8 +401,7 @@ gwy_unitool_dialog_add_button_apply(GtkWidget *dialog)
                                    GTK_STOCK_APPLY,
                                    GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_APPLY);
-    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
-                      GINT_TO_POINTER(GTK_RESPONSE_APPLY));
+
     return button;
 }
 
@@ -451,8 +421,7 @@ gwy_unitool_dialog_add_button_clear(GtkWidget *dialog)
     button = gtk_dialog_add_button(GTK_DIALOG(dialog),
                                    GTK_STOCK_CLEAR,
                                    GWY_UNITOOL_RESPONSE_UNSELECT);
-    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
-                      GINT_TO_POINTER(GWY_UNITOOL_RESPONSE_UNSELECT));
+
     return button;
 }
 
@@ -472,8 +441,7 @@ gwy_unitool_dialog_add_button_hide(GtkWidget *dialog)
     button = gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Hide"),
                                    GTK_RESPONSE_CLOSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
-    g_object_set_data(G_OBJECT(button), "gwy-unitool-response-id",
-                      GINT_TO_POINTER(GTK_RESPONSE_CLOSE));
+
     return button;
 }
 
@@ -488,11 +456,9 @@ void
 gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
                                 gboolean sensitive)
 {
-    GtkWidget *apply;
-
-    apply = gwy_unitool_dialog_find_button(state, GTK_RESPONSE_APPLY);
-    g_return_if_fail(apply);
-    gtk_widget_set_sensitive(apply, sensitive);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(state->dialog),
+                                      GTK_RESPONSE_APPLY,
+                                      sensitive);
 }
 
 /**
