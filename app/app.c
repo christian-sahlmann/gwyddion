@@ -1178,16 +1178,21 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         { N_("/Mask _Color"),  gwy_app_change_mask_color_cb, NULL },
         { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fix_zero" },
         { N_("/Reset Color _Range"), gwy_app_reset_color_range, NULL },
+        { N_("/Remove _Presentation"), gwy_app_show_kill_cb, NULL },
         { N_("/_Level"), gwy_app_run_process_func_cb, "level" },
         { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },
     };
     static const gchar *items_need_data_mask[] = {
         "/Remove Mask", "/Mask Color", NULL
     };
+    static const gchar *items_need_data_show[] = {
+        "/Remove Presentation", NULL
+    };
     GtkItemFactoryEntry entry = { NULL, NULL, NULL, 0, NULL, NULL };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
-    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
+    GwyMenuSensData sens_data_mask = { GWY_MENU_FLAG_DATA_MASK, 0 };
+    GwyMenuSensData sens_data_show = { GWY_MENU_FLAG_DATA_SHOW, 0 };
     GList *menus;
     gsize i;
 
@@ -1213,7 +1218,11 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
     }
     menu = gtk_item_factory_get_widget(item_factory, "<data-popup>");
     gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
-                                     items_need_data_mask, sens_data.flags);
+                                     items_need_data_mask,
+                                     sens_data_mask.flags);
+    gwy_app_menu_set_sensitive_array(item_factory, "data-popup",
+                                     items_need_data_show,
+                                     sens_data_show.flags);
 
     /* XXX: assuming g_list_append() doesn't change nonempty list head */
     menus = (GList*)g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
