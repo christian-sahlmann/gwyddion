@@ -187,7 +187,9 @@ fft(GwyContainer *data, GwyRunType run)
     ipout = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
     imin = GWY_DATA_FIELD(gwy_data_field_new_alike(dfield, TRUE));
 
-    gwy_data_field_multiply(dfield, 1e6);
+    gwy_data_field_multiply(dfield, 1.0
+                            /(gwy_data_field_get_max(dfield)
+                              - gwy_data_field_get_min(dfield)));
 
     gwy_data_field_2dfft(dfield, imin,
                          raout,

@@ -94,7 +94,8 @@ static void        fit_2d_run               (Fit2dControls *controls,
                         	                 Fit2dArgs *args);
 static void        fit_2d_do                (Fit2dControls *controls,
                         	                 Fit2dArgs *args);
-static void        fit_2d_dialog_abandon    (Fit2dControls *controls);
+static void        fit_2d_dialog_abandon    (Fit2dControls *controls,
+                                             Fit2dArgs *args);
 static GtkWidget*  menu_display             (GCallback callback,
                                              gpointer cbdata,
                                              GwyFit2dDisplayType current);
@@ -163,7 +164,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo fit_2d_func_info = {
         "fit_2d",
-        N_("/_Background/_2D fit..."),
+        N_("/_Level/_Fit sphere..."),
         (GwyProcessFunc)&fit_2d,
         FIT_2D_RUN_MODES,
         0,
@@ -263,7 +264,6 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
     
-
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Fitting parameters:</b>"));
@@ -432,7 +432,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
 
             case GTK_RESPONSE_OK:
             fit_2d_do(&controls, args);
-            if (args->fitter && args->fitter->covar)
+            if (args->is_fitted && args->fitter && args->fitter->covar)
                 create_results_window(args);
             break;
 
@@ -455,17 +455,19 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
-    fit_2d_dialog_abandon(&controls);
-    if (args->fitter) gwy_math_nlfit_free(args->fitter);
+    fit_2d_dialog_abandon(&controls, args);
 
     return TRUE;
 }
 
 static void
-fit_2d_dialog_abandon(Fit2dControls *controls)
-{		
+fit_2d_dialog_abandon(Fit2dControls *controls, Fit2dArgs *args)
+{	
+    if (args->fitter) gwy_math_nlfit_free(args->fitter);
+    g_object_unref(args->vdata);
 }
 
+/*update preview depending on user's wishes*/
 static void        
 update_view(Fit2dControls *controls, Fit2dArgs *args)
 {
@@ -509,12 +511,12 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
     gwy_data_view_update(GWY_DATA_VIEW(controls->view));
 }
 
-
+/*call appropriate guess function and reset all result fields*/
 static void        
 guess             
 (Fit2dControls *controls, Fit2dArgs *args)
 {
-    gint i;
+    gint i, j;
     GwyDataField *dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original_data, 
                                                                            "/0/data"));
     gchar buffer[20];
@@ -529,6 +531,7 @@ guess
     gtk_label_set_text(GTK_LABEL(controls->param_des[2]), "y center");
     gtk_label_set_text(GTK_LABEL(controls->param_des[3]), "z center");
 
+    gtk_label_set_text(GTK_LABEL(controls->chisq), " ");
     for (i=0; i<4; i++)
     {
         gtk_widget_set_sensitive(GTK_WIDGET(controls->param_init[i]), TRUE);
@@ -537,10 +540,16 @@ guess
         gtk_entry_set_text(GTK_ENTRY(controls->param_init[i]), buffer);
         gtk_label_set_text(GTK_LABEL(controls->param_res[i]), " ");
         gtk_label_set_text(GTK_LABEL(controls->param_err[i]), " ");
-    }
+        
+        for (j = 0; j <= i; j++) {
+            gtk_label_set_text
+                   (GTK_LABEL(controls->covar[i*MAX_PARAMS + j]), " ");
+        }
+     }
+     args->is_fitted = 0;
 }
 
-
+/*plot guessed (or user) initial parameters*/
 static void        
 plot_inits(Fit2dControls *controls, Fit2dArgs *args)
 {
@@ -569,14 +578,14 @@ plot_inits(Fit2dControls *controls, Fit2dArgs *args)
 }
 
 
-
+/*fit data*/
 static void
 fit_2d_run(Fit2dControls *controls,
               Fit2dArgs *args)
 {
     GwyDataField *dfield, *original_field, *weight;
     gdouble param[4], err[4];
-    gboolean fix[4], fres;
+    gboolean fres;
     gdouble dimdata[4];
     gchar buffer[20];
     gint i, j, nparams;
@@ -601,11 +610,6 @@ fit_2d_run(Fit2dControls *controls,
     dimdata[2] = original_field->xreal;
     dimdata[3] = original_field->yreal;
 
-    fix[0] = args->par_fix[0];
-    fix[1] = args->par_fix[1];
-    fix[2] = args->par_fix[2];
-    fix[3] = args->par_fix[3];
-
     param[0] = args->par_init[0];
     param[1] = args->par_init[1];
     param[2] = args->par_init[2];
@@ -621,7 +625,7 @@ fit_2d_run(Fit2dControls *controls,
 		      weight,
 		      4,
 		      param, err,
-		      fix,
+		      args->par_fix,
 		      dimdata);
     else
         args->fitter = gwy_math_nlfit_fit_2d(fit_sphere_down,
@@ -630,7 +634,7 @@ fit_2d_run(Fit2dControls *controls,
 		      weight,
 		      4,
 		      param, err,
-		      fix,
+		      args->par_fix,
 		      dimdata);
         
     gwy_app_wait_finish();
@@ -673,6 +677,7 @@ fit_2d_run(Fit2dControls *controls,
     g_object_unref(weight);
 }
 
+/*dialog finished, export result data*/
 static void
 fit_2d_do(Fit2dControls *controls,
              Fit2dArgs *args)
@@ -683,6 +688,7 @@ fit_2d_do(Fit2dControls *controls,
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 }
 
+/*display mode menu*/
 static GtkWidget*  
 menu_display(GCallback callback, gpointer cbdata, GwyFit2dDisplayType current)
 {
@@ -696,6 +702,7 @@ menu_display(GCallback callback, gpointer cbdata, GwyFit2dDisplayType current)
                                   current);
 }
 
+/*function type menu*/
 static GtkWidget*  
 menu_function(GCallback callback, gpointer cbdata, GwyFit2dFunctionType current)
 {
@@ -736,6 +743,7 @@ function_changed(GObject *item, Fit2dArgs *args)
     update_view(pcontrols, args);
 }
 
+/*extract radius and center from upper section of sphere*/
 static void
 guess_sphere_up(GwyDataField *dfield,
 	   G_GNUC_UNUSED gint n_param,
@@ -759,6 +767,8 @@ guess_sphere_up(GwyDataField *dfield,
     param[2] = dfield->yreal/2;
     param[3] = avgtop-param[0];
 }
+
+/*extract radius and center from lower section of sphere*/
 static void
 guess_sphere_down(GwyDataField *dfield,
 	   G_GNUC_UNUSED gint n_param,
@@ -783,6 +793,7 @@ guess_sphere_down(GwyDataField *dfield,
     param[3] = avgtop+param[0];
 }
 
+/*fit upper section of sphere*/
 static gdouble
 fit_sphere_up(gdouble x,
 	   G_GNUC_UNUSED gint n_param,
@@ -816,6 +827,7 @@ fit_sphere_up(gdouble x,
     
 }
 
+/*fit lower section of sphere*/
 static gdouble
 fit_sphere_down(gdouble x,
 	   G_GNUC_UNUSED gint n_param,
@@ -849,6 +861,7 @@ fit_sphere_down(gdouble x,
     
 }
 
+/*fitter construction*/
 static GwyNLFitter*
 gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 		      GwyNLFitDerFunc df,		      
