@@ -74,7 +74,7 @@ struct _GwyGradientClass {
 
 GType             gwy_gradient_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_gradient_get_name              (GwyGradient *gradient);
-gboolean          gwy_gradient_is_modifiable         (GwyGradient *gradient);
+gboolean          gwy_gradient_get_modifiable        (GwyGradient *gradient);
 void              gwy_gradient_get_color             (GwyGradient *gradient,
                                                       gdouble x,
                                                       GwyRGBA *color);

@@ -201,7 +201,7 @@ gwy_gradient_get_name(GwyGradient *gradient)
 }
 
 /**
- * gwy_gradient_is_modifiable:
+ * gwy_gradient_get_modifiable:
  * @gradient: A color gradient.
  *
  * Returns whether a color gradient is modifiable.
@@ -214,7 +214,7 @@ gwy_gradient_get_name(GwyGradient *gradient)
  * Since: 1.8
  **/
 gboolean
-gwy_gradient_is_modifiable(GwyGradient *gradient)
+gwy_gradient_get_modifiable(GwyGradient *gradient)
 {
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), FALSE);
     return gradient->modifiable;
