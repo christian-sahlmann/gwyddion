@@ -16,6 +16,7 @@
 
 static void  gwy_dataline_class_init        (GwyDataLineClass *klass);
 static void  gwy_dataline_init              (GwyDataLine *dataline);
+static void  gwy_dataline_finalize          (GwyDataLine *dataline);
 static void  gwy_dataline_serializable_init (gpointer giface, gpointer iface_data);
 static void  gwy_dataline_watchable_init    (gpointer giface, gpointer iface_data);
 static guchar* gwy_dataline_serialize       (GObject *obj, guchar *buffer, gsize *size);
@@ -105,9 +106,13 @@ gwy_dataline_watchable_init(gpointer giface,
 static void
 gwy_dataline_class_init(GwyDataLineClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
     #ifdef DEBUG
     g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
     #endif
+
+     gobject_class->finalize = (GObjectFinalizeFunc)gwy_dataline_finalize;
 }
 
 static void
@@ -119,6 +124,15 @@ gwy_dataline_init(GwyDataLine *dataline)
     dataline->data = NULL;
     dataline->res = 0;
     dataline->real = 0.0;
+}
+
+static void
+gwy_dataline_finalize(GwyDataLine *dataline)
+{
+    #ifdef DEBUG
+    g_log(GWY_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, "%s", __FUNCTION__);
+    #endif
+    gwy_dataline_free(dataline); 
 }
 
 GObject*
@@ -135,6 +149,7 @@ gwy_dataline_new(gint res, gdouble real, gboolean nullme)
 
     return (GObject*)(dataline);
 }
+
 
 static guchar*
 gwy_dataline_serialize(GObject *obj,
@@ -153,6 +168,7 @@ gwy_dataline_serialize(GObject *obj,
                               GWY_DATALINE_TYPE_NAME,
                               dataline->res,
                               dataline->real,
+			      dataline->res,
                               dataline->data);
 
 }
