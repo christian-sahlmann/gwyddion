@@ -15,6 +15,7 @@
     (x) = NULL; \
     } while (0)
 
+/* FIXME: this breaks on GWY_SWAP(int, a->foo, b->bar);
 #define GWY_SWAP(t, x, y) \
     do { \
     t safe ## x ## y; \
@@ -22,7 +23,14 @@
     x = y; \
     y = safe ## x ## y; \
     } while (0)
-
+*/
+#define GWY_SWAP(t, x, y) \
+    do { \
+    t __unsafe_swap; \
+    __unsafe_swap = x; \
+    x = y; \
+    y = __unsafe_swap; \
+    } while (0)
 
 #ifdef __cplusplus
 extern "C" {
