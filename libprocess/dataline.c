@@ -1218,7 +1218,7 @@ gwy_data_line_fft_hum(gint direction,
 
     /*find the next power of two*/
     order = (gint) floor(log ((gdouble)ra->res)/log (2.0)+0.5);
-    newres = (gint) pow(2,order);
+    newres = 1*(gint) pow(2,order);
     oldres = ra->res;
 
     /*resample if this is not the resolution*/
@@ -1298,9 +1298,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     gwy_data_line_fill(ib, 0);
 
 
-    if (preserverms == TRUE
-        && windowing != GWY_WINDOWING_NONE
-        && windowing != GWY_WINDOWING_RECT) {
+    if (preserverms == TRUE) {
         gwy_data_line_initialize(&multra, ra->res, ra->real, 0);
         gwy_data_line_initialize(&multia, ra->res, ra->real, 0);
         gwy_data_line_copy(ra, &multra);
@@ -1417,7 +1415,7 @@ gwy_data_line_psdf(GwyDataLine *data_line, GwyDataLine *target_line, gint window
 
     gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
                    GWY_WINDOWING_RECT, 1, interpolation,
-                   FALSE, TRUE); /*FIXME here are still some problemse*/
+                   TRUE, TRUE); /*FIXME here are still some problemse*/
 
     gwy_data_line_resample(target_line, rout->res/2.0, GWY_INTERPOLATION_NONE);
 

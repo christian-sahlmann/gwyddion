@@ -111,7 +111,7 @@ gwy_fft_window_rect(gint i, gint n)
 {
     gdouble par;
 
-    if (i == 0 || i == n-1)
+    if (i == 0 || i == (n-1))
         par = 0.5;
     else
         par = 1.0;
@@ -132,6 +132,17 @@ gwy_fft_window(gdouble *data, gint n, GwyWindowingType windowing)
 {
     if (windowing == GWY_WINDOWING_HANN)
         gwy_fft_mult(data, n, gwy_fft_window_hann);
+    else if (windowing == GWY_WINDOWING_RECT)
+        gwy_fft_mult(data, n, gwy_fft_window_rect);
+    else if (windowing == GWY_WINDOWING_WELCH)
+        gwy_fft_mult(data, n, gwy_fft_window_welch);
+    else if (windowing == GWY_WINDOWING_HAMMING)
+        gwy_fft_mult(data, n, gwy_fft_window_hamming);
+     else if (windowing == GWY_WINDOWING_BLACKMANN)
+        gwy_fft_mult(data, n, gwy_fft_window_blackmann);
+     else if (windowing == GWY_WINDOWING_LANCZOS)
+        gwy_fft_mult(data, n, gwy_fft_window_lanczos);
+     
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
