@@ -280,6 +280,17 @@ void gwy_data_field_get_column_part(GwyDataField *a,
                                  gint from,
                                  gint to);
 
+void gwy_data_field_set_row_part(GwyDataField *a,
+                                 GwyDataLine* b,
+                                 gint row,
+                                 gint from,
+                                 gint to);
+void gwy_data_field_set_column_part(GwyDataField *a,
+                                 GwyDataLine* b,
+                                 gint col,
+                                 gint from,
+                                 gint to);
+
 gdouble gwy_data_field_get_xder(GwyDataField *a,
                                 gint col,
                                 gint row);

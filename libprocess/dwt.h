@@ -46,22 +46,14 @@ GwyDataLine *gwy_dwt_plot_wavelet(GwyDataLine *dline, GwyDataLine *wt_coefs);
 /*plot scaling function*/
 GwyDataLine *gwy_dwt_plot_scaling_function(GwyDataLine *dline, GwyDataLine *wt_coefs);
 
-/*compute full dwt pyramidal algorithm*/
-GwyDataLine * gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign);
+/*compute dwt pyramidal algorithm for dataline*/
+GwyDataLine * gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign, gint minsize);
 
-/*compute one step of pyramidal algorithm within specified data*/
-/*GwyDataLine * gwy_data_line_area_dwt_step(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign,
-						gint from, gint to);
-*/		
-/*compute full dwt pyramidal algorithm*/
-GwyDataField * gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
-GwyDataField * gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
-GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign);
+/*compute dwt pyramidal algorithms for datafields*/
+GwyDataField * gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize);
+GwyDataField * gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize);
+GwyDataField * gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize);
 
-/*compute one step of pyramidal algorithm within specified data*/
-/*GwyDataField * gwy_data_field_area_dwt_step(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign,
-						gint ulcol, gint ulrow, gint brcol, gint brrow);
-*/
 
 
 G_END_DECLS

@@ -146,12 +146,14 @@ dwt(GwyContainer *data, GwyRunType run)
     }
 
     newsize = gwy_data_field_get_fft_res(xsize);
+    gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
 
     wtcoefs = gwy_data_line_new(10, 10, TRUE);
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
-    gwy_data_field_dwt(dfield, wtcoefs, 1);
+    gwy_data_field_ydwt(dfield, wtcoefs, 1, 64);
+    gwy_data_field_ydwt(dfield, wtcoefs, -1, 64);
     
     if (args.preserve)
     {

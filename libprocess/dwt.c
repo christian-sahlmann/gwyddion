@@ -38,6 +38,16 @@ static GwyDWTFilter *wtset(GwyDataLine *wt_coefs);
 
 /*public functions*/
 
+
+/**
+* gwy_dwt_set_coefficients:
+* @dline: dataline where coefficients should be stored (allocated or NULL)
+* @type: wavelet type
+*
+* Fills resampled or nely allocated GwyDataLine with wavelet coefficients. 
+* 
+* Returns: resampled or newly allocated GwyDataLine with wavelet coefficients.
+ **/
 GwyDataLine*
 gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
 {
@@ -131,6 +141,15 @@ gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
     return ret;	
 }
 
+/**
+* gwy_dwt_set_coefficients:
+* @dline: dataline where coefficients should be stored (allocated or NULL)
+* @type: wavelet type
+*
+* Fills resampled or nely allocated GwyDataLine with wavelet coefficients. 
+* 
+* Returns: resampled or newly allocated GwyDataLine with wavelet coefficients.
+ **/
 
 GwyDataLine*
 gwy_dwt_plot_wavelet(GwyDataLine *dline, GwyDataLine *wt_coefs)
@@ -143,6 +162,15 @@ gwy_dwt_plot_wavelet(GwyDataLine *dline, GwyDataLine *wt_coefs)
     return dline;
 }
 
+/**
+* gwy_dwt_set_coefficients:
+* @dline: dataline where coefficients should be stored (allocated or NULL)
+* @type: wavelet type
+*
+* Fills resampled or nely allocated GwyDataLine with wavelet coefficients. 
+* 
+* Returns: resampled or newly allocated GwyDataLine with wavelet coefficients.
+ **/
 
 GwyDataLine*
 gwy_dwt_plot_scaling_function(GwyDataLine *dline, GwyDataLine *wt_coefs)
@@ -155,8 +183,22 @@ gwy_dwt_plot_scaling_function(GwyDataLine *dline, GwyDataLine *wt_coefs)
     return dline;
 }
 
+/**
+* gwy_data_line_dwt:
+* @dline: dataline to be transformed
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @isign: direction of the transform (1)...direct, (-1)...inverse
+* @minsize: size of minimal transform result block
+*
+* Performs steps of the wavelet decomposition while the smallest
+* low pass coefficients block is equal to @minsize. Run with
+* @minsize = @dline->res/2 to perform one step of decomposition
+* or @minsize = 4 to perform full decomposition (or anything between).
+* 
+* Returns: transformed GwyDataLine.
+ **/
 GwyDataLine* 
-gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign)
+gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign, gint minsize)
 {
     gint nn;
     gint n = dline->res; 
@@ -164,8 +206,6 @@ gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign)
     GwyDataLine *shiftedline;
     GwyDWTFilter *wt;
     if (n < 4) return NULL;
-    if (wt_coefs==NULL) printf("Uaaaaaaaa\n");
-    printf("wt_coefs->res=%d\n", wt_coefs->res);
 
     shiftedline = GWY_DATA_LINE(gwy_data_line_new(dline->res + 1, dline->real, FALSE));
     
@@ -174,9 +214,9 @@ gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign)
     for (k=0; k<dline->res; k++) shiftedline->data[k+1] = dline->data[k];
     
     if (isign >= 0)
-	for (nn=n; nn>=4; nn>>=1) pwt(wt, dline, nn, isign);
+	for (nn=n; nn>=(2*minsize); nn>>=1) pwt(wt, shiftedline, nn, isign);
     else
-	for (nn=4; nn<=n; nn<<=1) pwt(wt, dline, nn, isign);
+	for (nn=2*minsize; nn<=n; nn<<=1) pwt(wt, shiftedline, nn, isign);
 
     for (k=0; k<dline->res; k++) dline->data[k] = shiftedline->data[k+1];
   
@@ -186,8 +226,22 @@ gwy_data_line_dwt(GwyDataLine *dline, GwyDataLine *wt_coefs, gint isign)
 }
 
 
+/**
+* gwy_data_field_xdwt:
+* @dfield: datafield to be transformed
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @isign: direction of the transform (1)...direct, (-1)...inverse
+* @minsize: size of minimal transform result block
+*
+* Performs steps of the X-direction image wavelet decomposition while the smallest
+* low pass coefficients block is equal to @minsize. Run with
+* @minsize = @dfield->xres/2 to perform one step of decomposition
+* or @minsize = 4 to perform full decomposition (or anything between).
+* 
+* Returns: transformed GwyDataField.
+ **/
 GwyDataField* 
-gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
+gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
 {
     gint k;
     GwyDataLine *rin;
@@ -196,15 +250,29 @@ gwy_data_field_xdwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
 
     for (k = 0; k < dfield->yres; k++) {
 	gwy_data_field_get_row(dfield, rin, k);
-	rin = gwy_data_line_dwt(rin, wt_coefs, isign);
+	rin = gwy_data_line_dwt(rin, wt_coefs, isign, minsize);
 	gwy_data_field_set_row(dfield, rin, k);
     }
     g_object_unref(rin);	 
     return dfield;
 }
 
+/**
+* gwy_data_field_ydwt:
+* @dfield: datafield to be transformed
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @isign: direction of the transform (1)...direct, (-1)...inverse
+* @minsize: size of minimal transform result block
+*
+* Performs steps of the Y-direction image wavelet decomposition while the smallest
+* low pass coefficients block is equal to @minsize. Run with
+* @minsize = @dfield->yres/2 to perform one step of decomposition
+* or @minsize = 4 to perform full decomposition (or anything between).
+* 
+* Returns: transformed GwyDataField.
+ **/
 GwyDataField* 
-gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
+gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
 {
     gint k;
     GwyDataLine *rin;
@@ -213,19 +281,69 @@ gwy_data_field_ydwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
 
     for (k = 0; k < dfield->xres; k++) {
 	gwy_data_field_get_column(dfield, rin, k);
-	rin = gwy_data_line_dwt(rin, wt_coefs, isign);
+	rin = gwy_data_line_dwt(rin, wt_coefs, isign, minsize);
 	gwy_data_field_set_column(dfield, rin, k);
     }
     g_object_unref(rin);	     
     return dfield;
 }
 
+/**
+* gwy_data_field_dwt:
+* @dfield: datafield to be transformed (square)
+* @wt_coefs: dataline where wavelet transfor coefficients are stored.
+* @isign: direction of the transform (1)...direct, (-1)...inverse
+* @minsize: size of minimal transform result block
+*
+* Performs steps of the 2D image wavelet decomposition while the smallest
+* low pass coefficients block is equal to @minsize. Run with
+* @minsize = @dfield->xres/2 to perform one step of decomposition
+* or @minsize = 4 to perform full decomposition (or anything between).
+* 
+* Returns: transformed GwyDataField.
+ **/
 GwyDataField* 
-gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign)
+gwy_data_field_dwt(GwyDataField *dfield, GwyDataLine *wt_coefs, gint isign, gint minsize)
 {
     if ((!dfield) || (!wt_coefs)) return NULL;
-    dfield = gwy_data_field_xdwt(dfield, wt_coefs, isign);
-    dfield = gwy_data_field_ydwt(dfield, wt_coefs, isign);    
+    GwyDataLine *rin;
+    gint nn, k;
+
+    rin = GWY_DATA_LINE(gwy_data_line_new(dfield->xres, dfield->xreal, FALSE));
+
+    if (isign >= 0)
+    {
+	for (nn = dfield->xres; nn>=(2*minsize); nn>>=1)
+        {
+	    for (k = 0; k < nn; k++) {
+		gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
+		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	    }
+	    for (k = 0; k < nn; k++) {
+		gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
+		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
+	    }
+	}
+    }
+    else {
+	for (nn = 2*minsize; nn<=dfield->xres; nn<<=1)
+	{
+	    for (k = 0; k < nn; k++) {
+		gwy_data_field_get_row_part(dfield, rin, k, 0, nn);
+		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		gwy_data_field_set_row_part(dfield, rin, k, 0, nn);
+	    }
+	    for (k = 0; k < nn; k++) {
+		gwy_data_field_get_column_part(dfield, rin, k, 0, nn);
+		rin = gwy_data_line_dwt(rin, wt_coefs, isign, nn/2);
+		gwy_data_field_set_column_part(dfield, rin, k, 0, nn);
+	    }
+	}
+    }
+
+    g_object_unref(rin);	 
     return dfield;
 }
 
@@ -241,8 +359,7 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 	if (n < 4) return NULL;
 	GwyDataLine *wksp;
 	wksp = GWY_DATA_LINE(gwy_data_line_new(n+1, n+1, TRUE));
-
-	/*
+	
 	nmod = wt->ncof*n; 
 	n1 = n-1;			 
 	nh = n >> 1;
@@ -279,9 +396,8 @@ pwt(GwyDWTFilter *wt, GwyDataLine *dline, gint n, gint isign)
 			}
 		}
 	}
-	*/
+	
 	for (j=1; j<=n; j++) dline->data[j]=wksp->data[j];
-	gwy_data_line_multiply(dline, 0);	
 	g_object_unref(wksp);
 
 	return dline;
@@ -309,6 +425,8 @@ wtset(GwyDataLine *wt_coefs)
     }
 
     wt->ioff = wt->joff = -(wt_coefs->res >> 1);
+/*    wt->ioff = -2;
+    wt->joff = -wt->ncof+2;*/
     
     return wt;
 }

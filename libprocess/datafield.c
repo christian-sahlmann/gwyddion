@@ -1603,6 +1603,64 @@ gwy_data_field_get_column_part(GwyDataField *a,
 }
 
 /**
+ * gwy_data_field_set_row_part:
+ * @a: A data field
+ * @b: A data line
+ * @row: index of row
+ * @from: beginning index
+ * @to: end index
+ *
+ * Puts data line into datafield. 
+ **/
+void
+gwy_data_field_set_row_part(GwyDataField *a,
+                            GwyDataLine* b,
+                            gint row,
+                            gint from,
+                            gint to)
+{
+    g_return_if_fail(row >= 0 && row < a->yres);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    if (b->res != (to-from))
+        gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_BILINEAR);
+
+    memcpy(a->data + row*a->xres + from, b->data, (to-from)*sizeof(gdouble));
+}
+
+
+/**
+ * gwy_data_field_set_column_part:
+ * @a: A data field
+ * @b: A data line
+ * @col: index of column
+ * @from: beginning index
+ * @to: end index
+ *
+ *  Puts data line into datafield.
+ **/
+void
+gwy_data_field_set_column_part(GwyDataField *a,
+                               GwyDataLine* b,
+                               gint col,
+                               gint from,
+                               gint to)
+{
+    gint k;
+
+    g_return_if_fail(col >= 0 && col < a->xres);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    if (b->res != (to-from))
+        gwy_data_line_resample(b, to-from, GWY_INTERPOLATION_BILINEAR);
+
+    for (k = 0; k < to-from; k++)
+        a->data[(k+from)*a->xres + col] = b->data[k];
+}
+
+/**
  * gwy_data_field_set_row:
  * @a: A data field
  * @b: A data line
