@@ -91,7 +91,7 @@ module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
         "filter",
-        "gwy_filter",
+        GWY_STOCK_FILTER,
         "Basic filters",
         49,
         use,

@@ -29,6 +29,7 @@ extern "C" {
 #define GWY_STOCK_CROP            "gwy_crop"
 #define GWY_STOCK_CWT             "gwy_cwt"
 #define GWY_STOCK_FACET_LEVEL     "gwy_facet_level"
+#define GWY_STOCK_FILTER          "gwy_filter"
 #define GWY_STOCK_FIT_PLANE       "gwy_fit_plane"
 #define GWY_STOCK_FIT_TRIANGLE    "gwy_fit_triangle"
 #define GWY_STOCK_FIX_ZERO        "gwy_fix_zero"
