@@ -332,7 +332,6 @@ static const gchar *exc_key = "/tool/polynom/exclude";
 static const gchar *fit_key = "/tool/polynom/fitting";
 static const gchar *dir_key = "/tool/polynom/direction";
 
-
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
@@ -358,5 +357,6 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->fit = MIN(controls->fit, GWY_FIT_POLY_3);
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
 }
-    /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
