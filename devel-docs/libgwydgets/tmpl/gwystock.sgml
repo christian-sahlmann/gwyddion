@@ -184,7 +184,8 @@ The "Graph-Pointer" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_RULER ##### -->
 <para>
-
+The "Graph-Ruler" stock icon.
+<inlinegraphic fileref="gwy_graph_ruler-24.png" format="PNG"></inlinegraphic>
 </para>
 
 

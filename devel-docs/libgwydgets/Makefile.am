@@ -63,6 +63,7 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/gwy_graph_measure-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_palette-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_pointer-24.png \
+	$(top_srcdir)/pixmaps/gwy_graph_ruler-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_fit-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_in-24.png \
 	$(top_srcdir)/pixmaps/gwy_graph_zoom_out-24.png \
