@@ -49,8 +49,8 @@ typedef struct {
     gdouble rot_neg;
     GwyDataWindow *win1;
     GwyDataWindow *win2;
-    gboolean mask;
-    gdouble thresh;
+    gboolean add_ls_mask;
+    gdouble threshold;
 } CrosscorArgs;
 
 typedef struct {
@@ -62,7 +62,7 @@ typedef struct {
     GtkObject *window_area_y;
     GtkObject *rotation_neg;
     GtkObject *rotation_pos;
-    GtkWidget *mask;
+    GtkWidget *add_ls_mask;
     GtkObject *threshold;
 } CrosscorControls;
 
@@ -261,14 +261,15 @@ crosscor_window_construct(CrosscorArgs *args,
     row++;
 
     /*do mask of thresholds*/
-    controls->mask = gtk_check_button_new_with_mnemonic(_("Add _low score "
-                                                          "results mask"));
-    gtk_table_attach(GTK_TABLE(table), controls->mask, 0, 3, row, row+1,
+    controls->add_ls_mask = gtk_check_button_new_with_mnemonic
+                                (_("Add _low score results mask"));
+    gtk_table_attach(GTK_TABLE(table), controls->add_ls_mask, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->mask), args->mask);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask),
+                                 args->add_ls_mask);
     row++;
 
-    controls->threshold = gtk_adjustment_new(args->thresh,
+    controls->threshold = gtk_adjustment_new(args->threshold,
                                              -1, 1, 0.005, 0.05, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Threshold value"), _(""),
                                        controls->threshold);
@@ -356,10 +357,10 @@ crosscor_update_values(CrosscorControls *controls,
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_x));
     args->window_y =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->window_area_y));
-    args->thresh =
+    args->threshold =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
-    args->mask =
-        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->mask));
+    args->add_ls_mask =
+        gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_ls_mask));
 }
 
 static gboolean
@@ -452,15 +453,15 @@ crosscor_do(CrosscorArgs *args)
     }
 
     /*create score mask if requested */
-    if (args->mask) {
-        gwy_data_field_threshold(score, args->thresh, 1, 0);
+    if (args->add_ls_mask) {
+        gwy_data_field_threshold(score, args->threshold, 1, 0);
         gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(score));
     }
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
-    if (!args->mask)
+    if (!args->add_ls_mask)
         g_object_unref(score);
     g_object_unref(dfieldy);
     return TRUE;
@@ -472,7 +473,8 @@ static const gchar *search_x_key = "/module/crosscor/search_x";
 static const gchar *search_y_key = "/module/crosscor/search_y";
 static const gchar *window_x_key = "/module/crosscor/window_x";
 static const gchar *window_y_key = "/module/crosscor/window_y";
-#warning WFT is rot_pos, rot_neg?
+static const gchar *add_ls_mask_key = "/module/crosscor/add_ls_mask";
+static const gchar *threshold_key = "/module/crosscor/threshold";
 static const gchar *rot_pos_key = "/module/crosscor/rot_pos";
 static const gchar *rot_neg_key = "/module/crosscor/rot_neg";
 
@@ -484,6 +486,8 @@ crosscor_sanitize_args(CrosscorArgs *args)
     args->search_y = CLAMP(args->search_y, 0, 100);
     args->window_x = CLAMP(args->window_x, 0, 100);
     args->window_y = CLAMP(args->window_y, 0, 100);
+    args->threshold = CLAMP(args->threshold, -1.0, 1.0);
+    args->add_ls_mask = !!args->add_ls_mask;
 }
 
 static void
@@ -499,6 +503,9 @@ crosscor_load_args(GwyContainer *settings,
     gwy_container_gis_int32_by_name(settings, search_y_key, &args->search_y);
     gwy_container_gis_int32_by_name(settings, window_x_key, &args->window_x);
     gwy_container_gis_int32_by_name(settings, window_y_key, &args->window_y);
+    gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
+    gwy_container_gis_boolean_by_name(settings, add_ls_mask_key,
+                                      &args->add_ls_mask);
     gwy_container_gis_double_by_name(settings, rot_pos_key, &args->rot_pos);
     gwy_container_gis_double_by_name(settings, rot_neg_key, &args->rot_neg);
     crosscor_sanitize_args(args);
@@ -513,6 +520,9 @@ crosscor_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, search_y_key, args->search_y);
     gwy_container_set_int32_by_name(settings, window_x_key, args->window_x);
     gwy_container_set_int32_by_name(settings, window_y_key, args->window_y);
+    gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
+    gwy_container_set_boolean_by_name(settings, add_ls_mask_key,
+                                      args->add_ls_mask);
     gwy_container_set_double_by_name(settings, rot_pos_key, args->rot_pos);
     gwy_container_set_double_by_name(settings, rot_neg_key, args->rot_neg);
 }
