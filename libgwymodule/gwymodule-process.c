@@ -287,7 +287,10 @@ process_menu_entry_compare(GwyProcessFuncInfo *a,
  * Returns possible run modes for a data processing function identified by
  * @name.
  *
- * Returns: The run mode bit mask.
+ * This function is suitable for testing whether a data processing function
+ * exists, as function with no run modes cannot be registered.
+ *
+ * Returns: The run mode bit mask, zero if the function does not exist.
  **/
 GwyRunType
 gwy_process_func_get_run_types(const gchar *name)
@@ -295,7 +298,8 @@ gwy_process_func_get_run_types(const gchar *name)
     GwyProcessFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(process_funcs, name);
-    g_return_val_if_fail(func_info, 0);
+    if (!func_info)
+        return 0;
 
     return func_info->run;
 }
