@@ -19,7 +19,6 @@ int main(int argc, char *argv[])
     FILE *fh;
 
     GwyPalette *p, *r;
-    GwyPaletteDef *pdef;
     GwyRGBA pec;
 
     GwyDataField *a;
@@ -33,9 +32,8 @@ int main(int argc, char *argv[])
 
     g_message("preparing palette...");
     gwy_palette_def_setup_presets();
-    pdef = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_RAINBOW2);
-    p = (GwyPalette*)gwy_palette_new(pdef);
-    g_object_unref(pdef);
+    p = (GwyPalette*)gwy_palette_new(NULL);
+    gwy_palette_set_by_name(p, GWY_PALETTE_RAINBOW2);
 
     /*gwy_palette_def_print(p->def);*/
 
@@ -73,8 +71,6 @@ int main(int argc, char *argv[])
     fwrite(buffer, 1, size, fh);
     fclose(fh);
     g_object_unref((GObject *)p);
-    /* XXX: get rid of the always present internal reference */
-    g_object_unref(pdef);
 
     g_message("deserializing palette...");
 
@@ -83,6 +79,8 @@ int main(int argc, char *argv[])
 
     r = (GwyPalette*) gwy_serializable_deserialize(buffer, size, &pos);
     /*gwy_palette_print(r);*/
+    gwy_pixfield_do(pxb, a, r);
+    gdk_pixbuf_save(pxb, "xout2.jpg", "jpeg", &error, "quality", "100", NULL);
 
     g_object_unref((GObject *)r);
     return 0;

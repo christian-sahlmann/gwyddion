@@ -114,7 +114,6 @@ data_view_test(void)
     gsize size = 0;
     gsize pos = 0;
     GError *err = NULL;
-    GwyPaletteDef *palette_def;
     GwyPalette *palette;
 
     /* FIXME: this is necessary to initialize the object system */
@@ -128,9 +127,8 @@ data_view_test(void)
 
     view = gwy_data_view_new(data);
     layer = (GwyDataViewLayer*)gwy_layer_basic_new();
-    palette_def = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_YELLOW);
-    palette = (GwyPalette*)gwy_palette_new(palette_def);
-    g_object_unref(palette_def);
+    palette = (GwyPalette*)(gwy_palette_new(NULL));
+    gwy_palette_set_by_name(palette, GWY_PALETTE_RAINBOW2);
     gwy_layer_basic_set_palette(layer, palette);
     g_object_unref(palette);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
@@ -163,8 +161,8 @@ main(int argc, char *argv[])
     gtk_init(&argc, &argv);
     gwy_palette_def_setup_presets();
 
-    vector_shade_test();
-    //data_view_test();
+    //vector_shade_test();
+    data_view_test();
     gtk_main();
 
     return 0;

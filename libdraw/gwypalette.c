@@ -3,13 +3,19 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwypalette.h"
 
-/* TODO: allow NULL argument of gwy_palette_new() (use gray then) */
-
 #define GWY_PALETTE_TYPE_NAME "GwyPalette"
 
 #define GWY_PALETTE_DEFAULT_SIZE 512
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.999999*(1 << (BITS_PER_SAMPLE)))
+
+/* the singleton samples */
+typedef struct {
+    gint nofvals;           /* maximum N (size of tables) */
+    GwyRGBA *color;         /* generated table of doubles */
+    guchar *pixels;         /* generated table of int32s */
+    gint ref_count;         /* reference count */
+} GwyPaletteSamples;
 
 static void     gwy_palette_class_init            (GwyPaletteClass *klass);
 static void     gwy_palette_init                  (GwyPalette *palette);
@@ -22,9 +28,16 @@ static guchar*  gwy_palette_serialize             (GObject *obj,
 static GObject* gwy_palette_deserialize           (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
+static void     gwy_palette_real_set_palette_def  (GwyPalette *palette,
+                                                   GwyPaletteDef* palette_def);
 static void     gwy_palette_value_changed         (GObject *GwyPalette);
-static gint     gwy_palette_recompute_colors      (GwyPalette *palette);
+static void     gwy_palette_recompute_samples     (GwyPaletteDef *palette_def,
+                                                   GwyPaletteSamples *samples);
 static void     gwy_palette_update                (GwyPalette *palette);
+static GwyPaletteSamples* gwy_palette_samples_new (GwyPaletteDef *palette_def,
+                                                   gint size);
+static void     gwy_palette_samples_free          (GwyPaletteSamples *samples);
+static void     gwy_palette_samples_maybe_free    (GwyPaletteDef *palette_def);
 
 
 GType
@@ -115,29 +128,19 @@ gwy_palette_init(GwyPalette *palette)
 {
     gwy_debug("%s", __FUNCTION__);
 
-    palette->nofvals = 0;
-    palette->color = NULL;
     palette->def = NULL;
-    palette->samples = NULL;
 }
 
 static void
 gwy_palette_finalize(GwyPalette *palette)
 {
-    GwyPaletteClass *klass;
-
     gwy_debug("%s (%s)", __FUNCTION__, palette->def->name);
 
     g_signal_handlers_disconnect_matched(palette->def, G_SIGNAL_MATCH_FUNC,
                                          0, 0, NULL,
-                                         gwy_palette_update, NULL);
-    klass = GWY_PALETTE_GET_CLASS(palette);
-    g_hash_table_remove(klass->palettes, palette->def);
-    gwy_debug("%s child GwyPaletteDef ref_count = %d",
-              __FUNCTION__, G_OBJECT(palette->def)->ref_count);
+                                         gwy_palette_value_changed, NULL);
+    gwy_palette_samples_maybe_free(palette->def);
     g_object_unref(palette->def);
-    g_free(palette->color);
-    g_free(palette->samples);
 }
 
 /**
@@ -146,40 +149,30 @@ gwy_palette_finalize(GwyPalette *palette)
  *
  * Creates a new palette based on palette definition @palette_def.
  *
- * Palettes of the same definition are singletons, thus if a palette
- * with the same definition already exists, it is returned instead (with
- * reference count incremented).
+ * You can pass %NULL as @palette_def, a default gray palette will be returned
+ * then.
  *
- * Returns:
+ * Returns: The palette, as a #GObject.
  **/
 GObject*
 gwy_palette_new(GwyPaletteDef *palette_def)
 {
     GwyPalette *palette;
-    GwyPaletteClass *klass;
+    gboolean dont_ref = FALSE;
 
     gwy_debug("%s", __FUNCTION__);
 
+    if (!palette_def) {
+        palette_def = (GwyPaletteDef*)gwy_palette_def_new(GWY_PALETTE_GRAY);
+        dont_ref = TRUE;
+    }
     g_return_val_if_fail(GWY_IS_PALETTE_DEF(palette_def), NULL);
     g_return_val_if_fail(gwy_palette_def_is_set(palette_def), NULL);
 
-    /* when g_type_class_peek() returns NULL we are constructing the very
-     * first palette and thus no other can exist yet */
-    if ((klass = g_type_class_peek(GWY_TYPE_PALETTE))
-        && (palette = g_hash_table_lookup(klass->palettes, palette_def))) {
-        g_object_ref(palette);
-        return (GObject*)palette;
-    }
-
-    g_object_ref(palette_def);
+    if (!dont_ref)
+        g_object_ref(palette_def);
     palette = g_object_new(GWY_TYPE_PALETTE, NULL);
-    palette->nofvals = GWY_PALETTE_DEFAULT_SIZE;
-    palette->def = palette_def;
-    palette->color = g_new(GwyRGBA, palette->nofvals);
-    palette->samples = g_new(guchar, 4*palette->nofvals);
-    g_signal_connect_swapped(palette_def, "value_changed",
-                             G_CALLBACK(gwy_palette_update), palette);
-    gwy_palette_update(palette);
+    gwy_palette_real_set_palette_def(palette, palette_def);
 
     return (GObject*)(palette);
 }
@@ -206,11 +199,81 @@ gwy_palette_set_by_name(GwyPalette *palette,
         return FALSE;
 
     palette_def = (GwyPaletteDef*)gwy_palette_def_new(name);
-    if (palette_def != palette->def)
-        gwy_palette_set_palette_def(palette, palette_def);
+    gwy_palette_set_palette_def(palette, palette_def);
     g_object_unref(palette_def);
 
     return TRUE;
+}
+
+/**
+ * gwy_palette_set_palette_def:
+ * @palette: palette we want to be set.
+ * @palette_def: palette definition to be used.
+ *
+ * Sets the palette definition to @palette_def.
+ **/
+void
+gwy_palette_set_palette_def(GwyPalette *palette,
+                            GwyPaletteDef* palette_def)
+{
+    GwyPaletteDef *olddef;
+
+    gwy_debug("%s", __FUNCTION__);
+    g_return_if_fail(GWY_IS_PALETTE(palette));
+    g_return_if_fail(GWY_IS_PALETTE_DEF(palette_def));
+    g_return_if_fail(gwy_palette_def_is_set(palette_def));
+
+    if (palette->def == palette_def)
+        return;
+
+    olddef = palette->def;
+    g_signal_handlers_disconnect_matched(olddef, G_SIGNAL_MATCH_FUNC,
+                                         0, 0, NULL,
+                                         gwy_palette_value_changed, NULL);
+    g_object_ref(palette_def);
+    gwy_palette_real_set_palette_def(palette, palette_def);
+    gwy_palette_samples_maybe_free(olddef);
+    g_object_unref(olddef);
+}
+
+static void
+gwy_palette_real_set_palette_def(GwyPalette *palette,
+                                 GwyPaletteDef* palette_def)
+{
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
+
+    palette->def = palette_def;
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    if ((samples = g_hash_table_lookup(klass->palettes, palette_def)))
+        samples->ref_count++;
+    else {
+        samples = gwy_palette_samples_new(palette_def,
+                                          GWY_PALETTE_DEFAULT_SIZE);
+        g_hash_table_insert(klass->palettes, palette_def, samples);
+        g_signal_connect_swapped(palette_def, "value_changed",
+                                G_CALLBACK(gwy_palette_update), palette);
+    }
+    g_signal_connect_swapped(palette_def, "value_changed",
+                             G_CALLBACK(gwy_palette_value_changed), palette);
+}
+
+static void
+gwy_palette_samples_maybe_free(GwyPaletteDef *palette_def)
+{
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    samples = g_hash_table_lookup(klass->palettes, palette_def);
+    samples->ref_count--;
+    if (!samples->ref_count) {
+        g_signal_handlers_disconnect_matched(palette_def, G_SIGNAL_MATCH_FUNC,
+                                             0, 0, NULL,
+                                             gwy_palette_update, NULL);
+        g_hash_table_remove(klass->palettes, palette_def);
+        gwy_palette_samples_free(samples);
+    }
 }
 
 static guchar*
@@ -251,8 +314,7 @@ gwy_palette_deserialize(const guchar *buffer,
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_PALETTE_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
-        if (pdef)
-            g_object_unref(pdef);
+        gwy_object_unref(pdef);
         return NULL;
     }
 
@@ -279,41 +341,6 @@ gwy_palette_value_changed(GObject *palette)
 
 
 /**
- * gwy_palette_set_palette_def:
- * @palette: palette we want to be set.
- * @palette_def: palette definition to be used.
- *
- * Sets the palette definition to @palette_def.
- **/
-void
-gwy_palette_set_palette_def(GwyPalette *palette,
-                            GwyPaletteDef* palette_def)
-{
-    GwyPaletteDef *olddef;
-    gint dis;
-
-    gwy_debug("%s", __FUNCTION__);
-    g_return_if_fail(GWY_IS_PALETTE(palette));
-    g_return_if_fail(GWY_IS_PALETTE_DEF(palette_def));
-    g_return_if_fail(gwy_palette_def_is_set(palette_def));
-
-    if (palette->def == palette_def)
-        return;
-
-    olddef = palette->def;
-    dis = g_signal_handlers_disconnect_matched(olddef, G_SIGNAL_MATCH_FUNC,
-                                               0, 0, NULL,
-                                               gwy_palette_update, NULL);
-    g_assert(dis);
-    g_object_ref(palette_def);
-    palette->def = palette_def;
-    g_signal_connect_swapped(palette_def, "value_changed",
-                             G_CALLBACK(gwy_palette_update), palette);
-    g_object_unref(olddef);
-    gwy_palette_update(palette);
-}
-
-/**
  * gwy_palette_get_palette_def:
  * @palette: A #GwyPalette.
  *
@@ -329,8 +356,9 @@ gwy_palette_get_palette_def(GwyPalette *palette)
 }
 
 /**
- * gwy_palette_recompute_colors:
- * @palette: palette to be recomputed
+ * gwy_palette_recompute_samples:
+ * @palette_def: palette definition to be used.
+ * @samples: samples to be recomputed
  *
  * Recomputes all the color tables inside palette.
  *
@@ -339,27 +367,26 @@ gwy_palette_get_palette_def(GwyPalette *palette)
  *
  * Returns: 0 at success
  **/
-static gint
-gwy_palette_recompute_colors(GwyPalette *palette)
+static void
+gwy_palette_recompute_samples(GwyPaletteDef *palette_def,
+                              GwyPaletteSamples *samples)
 {
     gint i;
     GwyRGBA pe;
-    guchar *samples = palette->samples;
+    guchar *pixels = samples->pixels;
 
     gwy_debug("%s", __FUNCTION__);
 
-    for (i = 0; i < palette->nofvals; i++) {
-        pe = (gwy_palette_def_get_color(palette->def,
-                                        i/(palette->nofvals - 1.0),
+    for (i = 0; i < samples->nofvals; i++) {
+        pe = (gwy_palette_def_get_color(palette_def,
+                                        i/(samples->nofvals - 1.0),
                                         GWY_INTERPOLATION_BILINEAR));
-        palette->color[i] = pe;
-        *(samples++) = (guchar)(gint32)(MAX_CVAL*pe.r);
-        *(samples++) = (guchar)(gint32)(MAX_CVAL*pe.g);
-        *(samples++) = (guchar)(gint32)(MAX_CVAL*pe.b);
-        *(samples++) = (guchar)(gint32)(MAX_CVAL*pe.a);
+        samples->color[i] = pe;
+        *(pixels++) = (guchar)(gint32)(MAX_CVAL*pe.r);
+        *(pixels++) = (guchar)(gint32)(MAX_CVAL*pe.g);
+        *(pixels++) = (guchar)(gint32)(MAX_CVAL*pe.b);
+        *(pixels++) = (guchar)(gint32)(MAX_CVAL*pe.a);
     }
-
-    return 0;
 }
 
 /**
@@ -420,8 +447,18 @@ gwy_palette_sample(GwyPalette *palette, gint size, guchar *oldsample)
 G_CONST_RETURN guchar*
 gwy_palette_get_samples(GwyPalette *palette, gint *n_of_samples)
 {
-    *n_of_samples = palette->nofvals;
-    return palette->samples;
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
+
+    g_return_val_if_fail(GWY_IS_PALETTE(palette), NULL);
+    g_return_val_if_fail(n_of_samples, NULL);
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    samples = g_hash_table_lookup(klass->palettes, palette->def);
+    g_assert(samples);
+    *n_of_samples = samples->nofvals;
+
+    return samples->pixels;
 }
 
 /**
@@ -439,15 +476,53 @@ gwy_palette_get_samples(GwyPalette *palette, gint *n_of_samples)
 G_CONST_RETURN GwyRGBA*
 gwy_palette_get_data(GwyPalette *palette, gint *n_of_data)
 {
-    *n_of_data = palette->nofvals;
-    return palette->color;
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
+
+    g_return_val_if_fail(GWY_IS_PALETTE(palette), NULL);
+    g_return_val_if_fail(n_of_data, NULL);
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    samples = g_hash_table_lookup(klass->palettes, palette->def);
+    g_assert(samples);
+    *n_of_data = samples->nofvals;
+
+    return samples->color;
 }
 
 static void
 gwy_palette_update(GwyPalette *palette)
 {
-    gwy_palette_recompute_colors(palette);
-    gwy_palette_value_changed(G_OBJECT(palette));
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    samples = g_hash_table_lookup(klass->palettes, palette->def);
+    gwy_palette_recompute_samples(palette->def, samples);
+}
+
+static GwyPaletteSamples*
+gwy_palette_samples_new(GwyPaletteDef *palette_def,
+                        gint size)
+{
+    GwyPaletteSamples *samples;
+
+    samples = g_new(GwyPaletteSamples, 1);
+    samples->ref_count = 1;
+    samples->nofvals = size;
+    samples->color = g_new(GwyRGBA, size);
+    samples->pixels = g_new(guchar, 4*size);
+    gwy_palette_recompute_samples(palette_def, samples);
+
+    return samples;
+}
+
+static void
+gwy_palette_samples_free(GwyPaletteSamples *samples)
+{
+    g_free(samples->pixels);
+    g_free(samples->color);
+    g_free(samples);
 }
 
 /**
@@ -460,14 +535,20 @@ gwy_palette_update(GwyPalette *palette)
 void
 gwy_palette_print(GwyPalette *palette)
 {
+    GwyPaletteClass *klass;
+    GwyPaletteSamples *samples;
     gint i;
+    GwyRGBA *colors;
+
+    klass = g_type_class_peek(GWY_TYPE_PALETTE);
+    samples = g_hash_table_lookup(klass->palettes, palette->def);
+    colors = samples->color;
 
     g_print("### palette #################################################\n");
-    for (i = 0; i < palette->nofvals; i++) {
+    for (i = 0; i < samples->nofvals; i++) {
         g_print("%d : (%.3g %.3g %.3g %.3g)\n",
                i,
-               palette->color[i].r, palette->color[i].g, palette->color[i].b,
-               palette->color[i].a);
+               colors[i].r, colors[i].g, colors[i].b, colors[i].a);
     }
     g_print("##############################################################\n");
 }

@@ -107,16 +107,14 @@ gwy_layer_basic_new(void)
 {
     GtkObject *object;
     GwyDataViewLayer *layer;
-    GwyPaletteDef *palette_def;
 
     gwy_debug("%s", __FUNCTION__);
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyDataViewLayer*)object;
 
-    palette_def = gwy_palette_def_new(GWY_PALETTE_GRAY);
-    layer->palette = (GwyPalette*)gwy_palette_new(palette_def);
-    g_object_unref(palette_def);
+    layer->palette = (GwyPalette*)(gwy_palette_new(NULL));
+    gwy_palette_set_by_name(layer->palette, GWY_PALETTE_GRAY);
 
     return object;
 }

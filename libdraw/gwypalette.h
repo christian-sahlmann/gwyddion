@@ -18,21 +18,15 @@ extern "C" {
 #define GWY_PALETTE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_PALETTE, GwyPaletteClass))
 
 
-/*Palette - generated table of (0-N) colors for quick use.
- Generating definition is included for easy reference/change*/
 typedef struct {
     GObject parent_instance;
 
-    GwyRGBA *color;         /* generated table of doubles */
     GwyPaletteDef *def;     /* palette definition */
-    guchar *samples;        /* generated table of int32s */
-    gint nofvals;           /* maximum N (size of tables) */
 } GwyPalette;
 
 typedef struct{
     GObjectClass parent_class;
 
-    /* Class data, for making the palettes singletons */
     GHashTable *palettes;
 } GwyPaletteClass;
 
@@ -43,8 +37,6 @@ void             gwy_palette_set_palette_def      (GwyPalette *palette,
 GwyPaletteDef*   gwy_palette_get_palette_def      (GwyPalette *palette);
 gboolean         gwy_palette_set_by_name          (GwyPalette *palette,
                                                    const gchar *name);
-GwyRGBA*         gwy_palette_get_color            (GwyPalette *palette,
-                                                   gint i);
 G_CONST_RETURN
 guchar*          gwy_palette_get_samples          (GwyPalette *palette,
                                                    gint *n_of_samples);

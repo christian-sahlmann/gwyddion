@@ -11,17 +11,18 @@ gwy_pixfield_do(GdkPixbuf *g, GwyDataField *f, GwyPalette *pal)
     int xres = f->xres;
     int yres = f->yres;
     int i, j, palsize;
-    guchar *pixels, *line, *samples, *s;
+    guchar *pixels, *line;
+    const guchar *samples, *s;
     gint rowstride, dval;
     gdouble maximum, minimum, cor;
 
     maximum = gwy_data_field_get_max(f);
     minimum = gwy_data_field_get_min(f);
-    cor = (pal->nofvals-1)/(maximum-minimum);
 
     pixels = gdk_pixbuf_get_pixels(g);
     rowstride = gdk_pixbuf_get_rowstride(g);
     samples = gwy_palette_get_samples(pal, &palsize);
+    cor = (palsize-1.0)/(maximum-minimum);
 
     for (i = 0; i < yres; i++) {
         line=pixels + i*rowstride;

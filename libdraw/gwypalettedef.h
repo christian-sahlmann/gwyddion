@@ -32,7 +32,6 @@ extern "C" {
 #define GWY_PALETTE_RAINBOW1  "Rainbow1"
 #define GWY_PALETTE_RAINBOW2  "Rainbow2"
 
-/* Palette entry (red/green/blue/opacity) in range of 0.0-1.0 */
 typedef struct {
     gdouble r;
     gdouble g;
@@ -45,19 +44,17 @@ typedef struct {
     GwyRGBA color;
 } GwyPaletteDefEntry;
 
-/*Palette definition - x data (0-N) and corresponding colors*/
 typedef struct{
     GObject parent_instance;
 
     gchar *name;
     GArray *data;                  /*color data*/
-    gboolean has_alpha;		   /*has alpha chanel?*/
+    gboolean has_alpha;      /*has alpha chanel?*/
 } GwyPaletteDef;
 
 typedef struct{
     GObjectClass parent_class;
 
-    /* Class data, for making the palettes singletons */
     GHashTable *palettes;
 } GwyPaletteDefClass;
 

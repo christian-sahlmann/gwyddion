@@ -301,6 +301,7 @@ gwy_palette_def_deserialize(const guchar *buffer,
       { 'D', "alpha", &adat, &nadat, },
       { 'D', "x", &xdat, &nxdat, },
     };
+    gboolean exists;
 
     gwy_debug("%s", __FUNCTION__);
     g_return_val_if_fail(buffer, NULL);
@@ -327,10 +328,14 @@ gwy_palette_def_deserialize(const guchar *buffer,
         return NULL;
     }
 
-    if (gwy_palette_def_exists(name))
-        g_critical("Deserializing existing palette %s, bad things will happen",
-                   name);
+    exists = gwy_palette_def_exists(name);
     palette_def = (GwyPaletteDef*)gwy_palette_def_new(name);
+    if (exists) {
+        g_warning("Deserializing existing palette %s, "
+                  "who knows what will happen...",
+                   name);
+        g_array_set_size(palette_def->data, 0);
+    }
     g_free(name);
     for (i = 0; i < nxdat; i++) {
         pe.x = xdat[i];
@@ -445,8 +450,7 @@ gwy_palette_def_get_color(GwyPaletteDef *palette_def,
     }
 
     /*find the closest color index*/
-    for (i = 0; i < palette_def->data->len-1; i++)
-    {
+    for (i = 0; i < palette_def->data->len-1; i++) {
         pe = g_array_index(palette_def->data, GwyPaletteDefEntry, i);
         pf = g_array_index(palette_def->data, GwyPaletteDefEntry, i+1);
         if (pe.x == x) {
@@ -512,10 +516,9 @@ gwy_palette_def_entry_compare(GwyPaletteDefEntry *a,
 {
     if (a->x < b->x)
         return -1;
-    else if (a->x == b->x)
+    if (a->x == b->x)
         return 0;
-    else
-        return 1;
+    return 1;
 }
 
 static gchar*
