@@ -9,25 +9,14 @@ extern "C" {
 
 #define GWY_MODULE_ABI_VERSION 0
 
+/**
+ * GWY_MODULE_REGISTER_FUNC:
+ * The name of a module registration function (the only exported function).
+ **/
 #define GWY_MODULE_REGISTER_FUNC gwy_module_register
 #define GWY_MODULE_REGISTER_FUNC_NAME G_STRINGIFY(GWY_MODULE_REGISTER_FUNC)
 
 typedef struct _GwyModuleInfo GwyModuleInfo;
-typedef struct _GwyModuleFuncInfo GwyModuleFuncInfo;
-
-typedef enum {
-    GWY_FUNC_ROLE_NONE,
-    GWY_FUNC_ROLE_CLASS,
-    GWY_FUNC_ROLE_PROCESS,
-    GWY_FUNC_ROLE_LOAD,
-    GWY_FUNC_ROLE_SAVE
-} GwyModuleFuncRole;
-
-struct _GwyModuleFuncInfo {
-    const gchar *name;
-    const gchar *blurb;
-    GwyModuleFuncRole role;
-};
 
 struct _GwyModuleInfo {
     guint32 abi_version;
@@ -37,8 +26,6 @@ struct _GwyModuleInfo {
     const gchar *version;
     const gchar *copyright;
     const gchar *date;
-    gsize nfuncs;
-    GwyModuleFuncInfo *func_info;
 };
 
 typedef GwyModuleInfo* (*GwyModuleRegisterFunc)(GModule *mod);

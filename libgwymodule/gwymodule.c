@@ -8,27 +8,40 @@
 
 static void gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules);
 
-static GHashTable *modules = NULL;
+static GHashTable *modules;
+static gboolean modules_initialized = FALSE;
 
 void
 gwy_modules_init(void)
 {
+    g_assert(!modules_initialized);
+
     /* Check whether modules are supported. */
     if (!g_module_supported()) {
         g_error("Cannot initialize modules: not supported on this platform.\n");
     }
+
+    modules = g_hash_table_new(g_str_hash, g_str_equal);
+    modules_initialized = TRUE;
 }
 
+/**
+ * gwy_register_modules:
+ * @paths: A %NULL delimited list of directory names.
+ *
+ * Register all modules in given directories.
+ *
+ * Can be called several times (on different directories).
+ **/
 void
 gwy_register_modules(const gchar **paths)
 {
     const gchar *dir;
 
+    if (!modules_initialized)
+        gwy_modules_init();
     if (!paths)
         return;
-
-    if (!modules)
-        modules = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (dir = *paths; dir; dir = *(++paths)) {
         GDir *gdir;
@@ -67,6 +80,8 @@ gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
         }
         gwy_debug("Module loaded successfully as %s.\n", g_module_name(mod));
 
+        /* Do a few sanity checks on the module before registration
+         * is performed. */
         ok = TRUE;
         if (!g_module_symbol(mod, GWY_MODULE_REGISTER_FUNC_NAME,
                              (gpointer)&register_func)) {
@@ -87,6 +102,18 @@ gwy_load_modules_in_dir(GDir *gdir, GHashTable *modules)
                 g_warning("Module %s ABI version %d is different from %d",
                           modulename, mod_info->abi_version,
                           GWY_MODULE_ABI_VERSION);
+        }
+
+        if (ok) {
+            ok = mod_info->name && &mod_info->name
+                 && mod_info->blurb && &mod_info->blurb
+                 && mod_info->author && &mod_info->author
+                 && mod_info->version && &mod_info->version
+                 && mod_info->copyright && &mod_info->copyright
+                 && mod_info->date && &mod_info->date;
+            if (!ok)
+                g_warning("Module %s description field are invalid.",
+                          modulename);
         }
 
         if (ok) {
