@@ -420,6 +420,7 @@ rawfile_load(const gchar *filename)
     if ((dfield = rawfile_dialog(args, buffer))) {
         data = GWY_CONTAINER(gwy_container_new());
         gwy_container_set_object_by_name(data, "/0/data", G_OBJECT(dfield));
+        g_object_unref(dfield);
         rawfile_save_args(settings, args);
     }
     g_free(buffer);
