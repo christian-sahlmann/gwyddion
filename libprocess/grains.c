@@ -724,6 +724,7 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
 
     g_free(listv);
     g_free(listh);
+    g_free(visited);
 
     indices = g_new(gint, count);
     j = 0;
