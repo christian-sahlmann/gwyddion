@@ -6,6 +6,13 @@ General:
 - The length of identifier name is roughly proportional to its scope
   and its role in the program.
 
+  [Rationale:
+  The more global is an identified, the higher is the chance it's needed
+  in different context and the chance of name clash.  So the name has
+  to be more descriptive.  On the other hand, core readability is not
+  improved by calling a temporary loop counter intTemporaryLoopCounter2
+  instead of i, quite the contrary.]
+
 - Global identifiers are compound of words tied with underscores, they
   are descriptive and unambiguous.  Local identifiers are short.  When
   there's no reason for doing otherwise, short (one-letter) identifiers
@@ -15,7 +22,7 @@ General:
   s - string
   p - pointer
   r, t, w, x, y - floating point
-  Of course, when 
+  But this is in no sense strict.
 
 - Hungarian notation is not used.
 
@@ -40,7 +47,7 @@ General:
 
 Scope:
 - Variables are declared in the scope where really used, to emphasize
-  their scope:
+  their scope (where it's unclear):
 
   int
   foo(int n, FooBar *ff)
@@ -58,7 +65,9 @@ Scope:
 
 Prefixes:
 - No identifiers start with prefixes colliding with some standard or
-  possibly used library.
+  possibly used library.  Identifiers colliding with libc functions are
+  avoided; common problematic identifiers include: y0, y1, yn, j0, j1,
+  jn (math.h), index (string.h), exp2, log2 (math.h), fmax, fmin (math.h).
 
 - All non-static identifiers use some unique prefix:
   Macros and constants: GWY_
@@ -228,5 +237,5 @@ Empty lines:
 - There's always at least one empty line between functions, structs and
   and other compound definitions (declarations).
 - There's always an empty line after while line in do-while cycles, except
-  a closing brace follows.
+  when a closing brace follows.
 
