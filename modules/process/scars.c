@@ -33,6 +33,10 @@
 #define SCARS_RUN_MODES \
     (GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
+enum {
+    PREVIEW_SIZE = 320
+};
+
 typedef struct {
     gboolean inverted;   /* unused */
     gdouble threshold_high;
@@ -95,7 +99,7 @@ static GwyModuleInfo module_info = {
     "scars",
     N_("Scar detection and removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.1",
+    "1.1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -395,8 +399,8 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
 
-    zoomval = 400.0/MAX(gwy_data_field_get_xres(dfield),
-                        gwy_data_field_get_yres(dfield));
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
@@ -420,7 +424,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, row++, _("_Hard threshold:"),
-                                       "% RMS", controls.threshold_high);
+                                       "RMS", controls.threshold_high);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_high, "value_changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
@@ -429,7 +433,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     controls.threshold_low = gtk_adjustment_new(args->threshold_low,
                                                 0.0, 2.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Soft threshold:"),
-                                       "% RMS", controls.threshold_low);
+                                       "RMS", controls.threshold_low);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     g_signal_connect(controls.threshold_low, "value_changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
@@ -437,7 +441,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Preview _mask color:"));
+    label = gtk_label_new_with_mnemonic(_("_Mask color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,  0, 1, row, row+1,
                      GTK_FILL, 0, 2, 2);
