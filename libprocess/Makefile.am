@@ -4,6 +4,7 @@ include_HEADERS = \
 	datafield.h \
 	dataline.h \
 	interpolation.h \
+	libgwyprocess.h \
 	simplefft.h
 lib_LTLIBRARIES = libgwyprocess.la
 

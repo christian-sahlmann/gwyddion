@@ -6,9 +6,8 @@
 #include <time.h>
 #include <math.h>
 #include <gtk/gtk.h>
-#include "dataline.h"
-#include "datafield.h"
-#include "simplefft.h"
+
+#include "libgwyprocess.h"
 
 void make_test_image(GwyDataField *a)
 {
