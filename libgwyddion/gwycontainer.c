@@ -24,8 +24,6 @@
 #include <glib.h>
 #include <gtk/gtkmarshal.h>
 
-#define DEBUG 1
-
 #include <libgwyddion/gwymacros.h>
 #include "gwycontainer.h"
 #include "gwyserializable.h"
@@ -2174,11 +2172,12 @@ token_length(const gchar *text)
 
 /**
  * gwy_container_deserialize_from_text:
- * @text: 
+ * @text: Text containing serialized container contents as dumped by
+ *        gwy_container_serialize_to_text().
  *
- * 
+ * Restores a container from is text representation.
  *
- * Returns:
+ * Returns: The restored container, or %NULL on failure.
  *
  * Since: 1.2.
  **/
@@ -2278,12 +2277,12 @@ gwy_container_deserialize_from_text(const gchar *text)
 
             buf = g_new(guchar, len/2);
             for (i = 0; i < len/2; i++) {
-                guchar hi = g_ascii_xdigit_value(tok[2*i]);
-                guchar low = g_ascii_xdigit_value(tok[2*i + 1]);
+                gint hi = g_ascii_xdigit_value(tok[2*i]);
+                gint low = g_ascii_xdigit_value(tok[2*i + 1]);
 
                 if (hi == -1 || low == -1) {
                     g_free(buf);
-                    tok += 2*i;
+                    tok += 2*i;   /* for warning */
                     goto fail;
                 }
                 buf[i] = (hi << 4) | low;
