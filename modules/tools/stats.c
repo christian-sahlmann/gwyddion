@@ -83,6 +83,7 @@ module_register(const gchar *name)
         "stats",
         "gwy_crop",
         "Stat. quantities",
+        47,
         stats_use,
     };
 
@@ -142,15 +143,22 @@ stats_do(void)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     
 
-    if (!gwy_layer_select_get_selection(select_layer,
+    if (gwy_layer_select_get_selection(select_layer,
                                         &xmin, &ymin, &xmax, &ymax))
     {
+        gwy_data_field_get_area_stats(dfield, gwy_data_field_rtoj(dfield, xmin), 
+                                      gwy_data_field_rtoj(dfield, ymin), 
+                                      gwy_data_field_rtoj(dfield, xmax), 
+                                      gwy_data_field_rtoj(dfield, ymax), 
+                                      &avg, &ra, &rms, &skew, &kurtosis);
+    }
+    else
+    {
+        gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
         xmin = ymin = 0; 
         xmax = gwy_data_field_get_xreal(dfield);
         ymax = gwy_data_field_get_yreal(dfield);
     }
-        
-    gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
     
     
 }
@@ -311,13 +319,20 @@ stats_selection_finished_cb(void)
     /*XXX: seems broken
      * is_visible = GTK_WIDGET_VISIBLE(stats_dialog);*/
     is_visible = controls.is_visible;
-    is_selected = gwy_layer_select_get_selection(select_layer,
-                                                 &xmin, &ymin, &xmax, &ymax);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(select_layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
+    if (is_selected=gwy_layer_select_get_selection(select_layer, &xmin, &ymin, &xmax, &ymax))
+    {
+        gwy_data_field_get_area_stats(dfield, gwy_data_field_rtoj(dfield, xmin), 
+                                      gwy_data_field_rtoj(dfield, ymin), 
+                                      gwy_data_field_rtoj(dfield, xmax), 
+                                      gwy_data_field_rtoj(dfield, ymax), 
+                                      &avg, &ra, &rms, &skew, &kurtosis);
+    }
+    else
+        gwy_data_field_get_stats(dfield, &avg, &ra, &rms, &skew, &kurtosis);
     
     g_snprintf(buffer, sizeof(buffer), "%2.3e", ra);
     gtk_label_set_text(GTK_LABEL(controls.ra), buffer); 
@@ -340,10 +355,10 @@ stats_selection_finished_cb(void)
         update_label(controls.h, fabs(ymax - ymin));
     }
     else {
-        gtk_label_set_text(GTK_LABEL(controls.x), "");
-        gtk_label_set_text(GTK_LABEL(controls.y), "");
-        gtk_label_set_text(GTK_LABEL(controls.w), "");
-        gtk_label_set_text(GTK_LABEL(controls.h), "");
+        update_label(controls.x, 0);
+        update_label(controls.y, 0);
+        update_label(controls.w, gwy_data_field_get_xreal(dfield));
+        update_label(controls.h, gwy_data_field_get_yreal(dfield));
     }
     if (!is_visible)
         stats_dialog_set_visible(TRUE);

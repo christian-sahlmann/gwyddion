@@ -193,9 +193,6 @@ gdouble gwy_data_field_get_min(GwyDataField *a);
 gdouble gwy_data_field_get_avg(GwyDataField *a);
 gdouble gwy_data_field_get_rms(GwyDataField *a);
 gdouble gwy_data_field_get_sum(GwyDataField *a);
-gdouble gwy_data_field_get_ra(GwyDataField *a);
-gdouble gwy_data_field_get_skew(GwyDataField *a);
-gdouble gwy_data_field_get_kurtosis(GwyDataField *a);
 
 gdouble gwy_data_field_get_area_max(GwyDataField *a,
                                     gint ulcol,
@@ -218,21 +215,6 @@ gdouble gwy_data_field_get_area_rms(GwyDataField *a,
                                     gint brcol,
                                     gint brrow);
 gdouble gwy_data_field_get_area_sum(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_ra(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_skew(GwyDataField *a,
-                                    gint ulcol,
-                                    gint ulrow,
-                                    gint brcol,
-                                    gint brrow);
-gdouble gwy_data_field_get_area_kurtosis(GwyDataField *a,
                                     gint ulcol,
                                     gint ulrow,
                                     gint brcol,

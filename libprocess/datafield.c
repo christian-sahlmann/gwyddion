@@ -2198,15 +2198,13 @@ gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
  * @kurtosis: kurtosis (peakedness of height ditribution)
  *
  * Computes basic statistical quantities
- * in one interation over the datafield. This function is
- * used only to speed up the computation of more (similar) parameters.
- * For computation of any single parameter use appropriate function. 
+ * in one interation over the datafield.  
  **/
 void
 gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gdouble *rms, gdouble *skew, gdouble *kurtosis)
 {
     gint i;
-    gdouble c_s1z, c_sz1, c_s2z, c_sz2, c_s3z, c_sz3, c_s4z, c_sz4;    
+    gdouble c_s1z, c_sz1, c_s2z, c_sz2, c_s3z, c_sz3, c_s4z, c_sz4, c_abs1;    
     gdouble *p = data_field->data;
     gdouble nn = data_field->xres * data_field->yres;
     gdouble nn2 = nn*nn;
@@ -2214,13 +2212,14 @@ gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gd
     gdouble nn4 = nn3*nn;
     gdouble dif;
     
-    c_sz1 = c_sz2 = c_sz3 = c_sz4 = 0;
+    c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
     *avg = gwy_data_field_get_avg(data_field);
     
     for (i = nn; i; i--, p++)
     {
         dif = (*p - *avg);
+        c_abs1 += fabs(dif);
         c_sz1 += dif;
         c_sz2 += dif*dif;
         c_sz3 += dif*dif*dif;
@@ -2232,13 +2231,62 @@ gwy_data_field_get_stats(GwyDataField *data_field, gdouble *avg, gdouble *ra, gd
     c_s3z = c_s2z*c_s1z;
     c_s4z = c_s3z*c_s1z;
 
-    *ra = c_sz1/nn;
+    *ra = c_abs1/nn;
     *rms = c_sz2/nn2;
     *skew = (c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);
     *kurtosis = (c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);
 
 }
 
+void
+gwy_data_field_get_area_stats(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol, gint brrow,
+                              gdouble *avg, gdouble *ra, gdouble *rms, gdouble *skew, gdouble *kurtosis)
+{
+    gint i, j;
+    gdouble c_s1z, c_sz1, c_s2z, c_sz2, c_s3z, c_sz3, c_s4z, c_sz4, c_abs1;
+    gdouble nn, nn2, nn3, nn4, dif;
+    
+    gdouble *row;
+
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    g_return_val_if_fail(ulcol >= 0 && ulrow >= 0 && brcol < data_field->xres && brrow < data_field->yres, 0);
+
+    nn = (brcol-ulcol)*(brrow-ulrow);
+    nn2 = nn*nn;
+    nn3 = nn2*nn;
+    nn4 = nn3*nn;
+    c_sz1 = c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
+    
+    *avg = gwy_data_field_get_area_avg(data_field, ulcol, ulrow, brcol, brrow);
+    
+    for (i = ulrow; i < brrow; i++) {
+        row = data_field->data + i*data_field->xres + ulcol;
+
+        for (j = 0; j < brcol - ulcol; j++)
+        {
+            dif = (*(row++) - *avg);
+            c_abs1 += fabs(dif);
+            c_sz1 += dif;
+            c_sz2 += dif*dif;
+            c_sz3 += dif*dif*dif;
+            c_sz4 += dif*dif*dif*dif;
+        }
+    }
+    c_s1z = c_sz1;
+    c_s2z = c_s1z*c_s1z;
+    c_s3z = c_s2z*c_s1z;
+    c_s4z = c_s3z*c_s1z;
+
+    *ra = c_abs1/nn;
+    *rms = c_sz2/nn2;
+    *skew = (c_sz3/nn - 3*c_sz1*c_sz3/nn2 + 2*c_s3z/nn3)/pow((c_sz2/nn - c_s2z/nn2),1.5);
+    *kurtosis = (c_sz4/nn - 4*c_sz1*c_sz3/nn4 + 6*c_s2z*c_sz2/nn3 - 3*c_s4z/nn4 - 3)/pow((c_sz2/nn - c_s2z/nn2),2);
+    
+}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
