@@ -55,6 +55,15 @@ Graph modules implement operations on graphs (like profiles).
 @data: 
 
 
+<!-- ##### FUNCTION gwy_graph_func_exists ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_graph_func_get_menu_path ##### -->
 <para>
 

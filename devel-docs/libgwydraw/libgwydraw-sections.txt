@@ -101,5 +101,6 @@ gwy_pixfield_do_mask
 
 <SECTION>
 <FILE>gwydraw</FILE>
+gwy_draw_type_init
 </SECTION>
 

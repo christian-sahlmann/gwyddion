@@ -195,6 +195,7 @@ gwy_get_user_dir
 
 <SECTION>
 <FILE>gwyddion</FILE>
+gwy_type_init
 </SECTION>
 
 <SECTION>

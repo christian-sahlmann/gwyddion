@@ -77,6 +77,15 @@ Basic module loader interface
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_module_register_module ##### -->
+<para>
+
+</para>
+
+@modulename: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_module_set_register_callback ##### -->
 <para>
 

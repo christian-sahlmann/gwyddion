@@ -10,6 +10,7 @@ GwyToolUseFunc
 gwy_tool_func_register
 gwy_tool_func_use
 gwy_tool_func_build_toolbox
+gwy_tool_func_exists
 </SECTION>
 
 <SECTION>
@@ -32,6 +33,7 @@ GwyModuleRegisterFunc
 GwyModuleQueryFunc
 gwy_module_register_modules
 gwy_module_lookup
+gwy_module_register_module
 gwy_module_set_register_callback
 </SECTION>
 
@@ -41,6 +43,7 @@ GwyGraphFuncInfo
 GwyGraphFunc
 gwy_graph_func_register
 gwy_graph_func_run
+gwy_graph_func_exists
 gwy_graph_func_get_menu_path
 gwy_graph_func_build_menu
 </SECTION>

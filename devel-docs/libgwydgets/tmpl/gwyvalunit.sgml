@@ -20,8 +20,10 @@ GwyValUnit
 </para>
 
 @label_text: 
-@unit: 
+@si_unit: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@unit: 
 
 
 <!-- ##### FUNCTION gwy_val_unit_set_value ##### -->

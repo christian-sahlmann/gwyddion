@@ -241,6 +241,7 @@ gwy_data_field_get_area_stats
 
 <SECTION>
 <FILE>gwyprocess</FILE>
+gwy_process_type_init
 </SECTION>
 
 <SECTION>
@@ -298,7 +299,6 @@ GwyPlaneSymmetry
 gwy_data_field_correct_laplace_iteration
 gwy_data_field_correct_average
 gwy_data_field_mask_outliers
-gwy_data_field_mark_scars
 gwy_data_field_unrotate_find_corrections
 </SECTION>
 
