@@ -213,11 +213,12 @@ gwy_flags_to_string(gint enumval,
 /* A debugging message helper */
 void
 gwy_debug_gnu(const gchar *domain,
+              const gchar *fileline,
               const gchar *funcname,
               const gchar *format,
               ...)
 {
-    gchar *fmt2 = g_strconcat(funcname, ": ", format, NULL);
+    gchar *fmt2 = g_strconcat(fileline, ": ", funcname, ": ", format, NULL);
     va_list args;
     va_start(args, format);
     g_logv(domain, G_LOG_LEVEL_DEBUG, fmt2, args);

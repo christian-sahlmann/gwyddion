@@ -57,21 +57,42 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* Provide a string identifying the current function, non-concatenatable */
+/* Backported from GLib-2.4 */
+#ifndef G_STRFUNC
+#  if defined (__GNUC__)
+#    define G_STRFUNC     ((const char*) (__PRETTY_FUNCTION__))
+#  elif defined (G_HAVE_ISO_VARARGS)
+#    define G_STRFUNC     ((const char*) (__func__))
+#  else
+#    define G_STRFUNC     ((const char*) ("???"))
+#  endif
+#endif
+
 #ifdef G_HAVE_GNUC_VARARGS
 #  ifdef DEBUG
 #    define gwy_debug(format...) \
-            gwy_debug_gnu(G_LOG_DOMAIN, __FUNCTION__, format)
+            gwy_debug_gnu(G_LOG_DOMAIN,\
+                          __FILE__ ":" G_STRINGIFY (__LINE__), \
+                          G_STRFUNC, \
+                          format)
 #  else
 #    define gwy_debug(format...) /* */
 #  endif
 #elif defined(G_HAVE_ISO_VARARGS)
 #  ifdef DEBUG
 #    define gwy_debug(...) \
-            gwy_debug_gnu(G_LOG_DOMAIN, __FILE__, __VA_ARGS__)
+            gwy_debug_gnu(G_LOG_DOMAIN, \
+                          __FILE__ ":" G_STRINGIFY(__LINE__), \
+                          G_STRFUNC, \
+                          __VA_ARGS__)
 #  else
 #    define gwy_debug(...) /* */
 #  endif
-#else /* no varargs macros FIXME: this is broken, though it's like gutils.h */
+#else
+/* no varargs macros
+ * FIXME: this is broken, though it's like gutils.h
+ * gimme a compiler with no vararg macros and maybe I'll try to fix it */
 #  ifdef DEBUG
 G_INLINE_FUNC void
 gwy_debug(const gchar *format, ...)
@@ -90,6 +111,7 @@ gwy_debug(const gchar *format, ...)
 #endif /* varargs macros */
 
 void gwy_debug_gnu(const gchar *domain,
+                   const gchar *fileline,
                    const gchar *funcname,
                    const gchar *format,
                    ...);
