@@ -580,7 +580,7 @@ gwy_tip_dilation(GwyDataField *tip,
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    _gwy_morph_lib_dfreematrix(fresult, result->xres);
+    _gwy_morph_lib_dfreematrix(fresult, surface->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
@@ -646,7 +646,7 @@ gwy_tip_erosion(GwyDataField *tip,
     /*free auxiliary data arrays*/
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
-    _gwy_morph_lib_dfreematrix(fresult, result->xres);
+    _gwy_morph_lib_dfreematrix(fresult, surface->xres);
     if (freetip)
         g_object_unref(buffertip);
     else
