@@ -584,19 +584,22 @@ file_plugin_proxy_detect(const gchar *filename,
                          const gchar *name)
 {
     FilePluginInfo *info;
-    gint i;
+    gint i, max;
 
     gwy_debug("called as %s with file `%s'", name, filename);
     if (!(info = file_find_plugin(name, GWY_FILE_MASK)))
         return 0;
+
+    max = G_MININT;
     for (i = 0; info->pattern[i]; i++) {
-        if (g_pattern_match_string(info->pattern[i], filename))
-            break;
+        if (info->specificity[i] > max
+            && g_pattern_match_string(info->pattern[i], filename))
+            max = info->specificity[i];
     }
-    if (!info->pattern[i])
+    if (max == G_MININT)
         return 0;
 
-    return CLAMP(info->specificity[i], 1, 20);
+    return CLAMP(max, 1, 20);
 }
 
 /**
