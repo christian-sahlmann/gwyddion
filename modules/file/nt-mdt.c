@@ -17,7 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+/* TODO: fix value scales, some metadata, at least */
+#define DEBUG 1
 #include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
@@ -41,6 +42,7 @@
 #define EXTENSION ".mdt"
 
 #define Angstrom (1e-10)
+#define Nano (1e-9)
 
 typedef enum {
     MDT_FRAME_SCANNED      = 0,
@@ -383,7 +385,7 @@ mdt_load(const gchar *filename)
                 n++;
                 choices = g_renew(GwyEnum, choices, n);
                 choices[n-1].value = i;
-                choices[n-1].name = g_strdup_printf("Frame %u"
+                choices[n-1].name = g_strdup_printf("Frame %u "
                                                     "(%u×%u)",
                                                     i+1,
                                                     sdframe->fm_xres,
@@ -537,11 +539,53 @@ select_which_data(MDTFile *mdtfile,
     return i;
 }
 
+#define HASH_SET_META(fmt, val, key) \
+    g_string_printf(s, fmt, val); \
+    gwy_container_set_string_by_name(data, "/meta/" key, g_strdup(s->str))
+
 static void
 add_metadata(MDTFile *mdtfile,
              gsize i,
              GwyContainer *data)
 {
+    MDTFrame *frame;
+    MDTScannedDataFrame *sdframe;
+    GString *s;
+
+    g_return_if_fail(i <= mdtfile->last_frame);
+    frame = mdtfile->frames + i;
+    g_return_if_fail(frame->type == MDT_FRAME_SCANNED);
+    sdframe = (MDTScannedDataFrame*)frame->frame_data;
+
+    s = g_string_new("");
+    g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
+                    frame->year, frame->month, frame->day,
+                    frame->hour, frame->min, frame->sec);
+    gwy_container_set_string_by_name(data, "/meta/Date & time",
+                                     g_strdup(s->str));
+
+    g_string_printf(s, "%d.%d",
+                    frame->version/0x100, frame->version % 0x100);
+    gwy_container_set_string_by_name(data, "/meta/Version",
+                                     g_strdup(s->str));
+
+    g_string_printf(s, "%c%c%c%s",
+                    (sdframe->scan_dir & 0x02) ? '-' : '+',
+                    (sdframe->scan_dir & 0x01) ? 'X' : 'Y',
+                    (sdframe->scan_dir & 0x04) ? '-' : '+',
+                    (sdframe->scan_dir & 0x80) ? " (double pass)" : "");
+    gwy_container_set_string_by_name(data, "/meta/Scan direction",
+                                     g_strdup(s->str));
+
+    HASH_SET_META("%d", sdframe->channel_index, "Channel index");
+    HASH_SET_META("%d", sdframe->mode, "Mode");
+    HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
+    HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
+    HASH_SET_META("%.0f nm/s", sdframe->velocity/Nano, "Scan velocity");
+    HASH_SET_META("%.2f nA", sdframe->setpoint/Nano, "Setpoint value");
+    HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
+
+    g_string_free(s, TRUE);
 }
 
 static inline gsize
@@ -647,7 +691,7 @@ mdt_scanned_data_vars(const guchar *p,
     frame->scan_dir = (guint)(*p++);
     frame->power_of_2 = (gboolean)(*p++);
     frame->velocity = Angstrom*get_FLOAT(&p);
-    frame->setpoint = get_FLOAT(&p);
+    frame->setpoint = Nano*get_FLOAT(&p);
     frame->bias_voltage = get_FLOAT(&p);
     frame->draw = (gboolean)(*p++);
     p++;
@@ -848,6 +892,8 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     p = dataframe->image;
     for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
         data[i] = zscale*(p[2*i] + 256.0*p[2*i + 1])/65535.0;
+
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return dfield;
 }
