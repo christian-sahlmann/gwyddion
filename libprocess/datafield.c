@@ -1293,39 +1293,43 @@ void
 gwy_data_field_plane_coeffs(GwyDataField *a,
                            gdouble *ap, gdouble *bp, gdouble *cp)
 {
-    gint k;
-    GwyDataLine l;
     gdouble val;
+    gdouble sumxi, sumxixi, sumyi, sumyiyi;
+    gdouble sumsi = 0.0;
+    gdouble sumsixi = 0.0;
+    gdouble sumsiyi = 0.0;
+    gdouble nx = a->xres;
+    gdouble ny = a->yres;
+    gdouble bx, by;
+    gdouble *pdata;
+    gint i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(a));
-    gwy_data_line_alloc(&l, a->xres);
 
-    if (bp) {
-        gdouble b = 0.0;
+    sumxi = (nx-1)/2;
+    sumxixi = (2*nx-1)*(nx-1)/6;
+    sumyi = (ny-1)/2;
+    sumyiyi = (2*ny-1)*(ny-1)/6;
 
-        for (k = 0; k < a->yres; k++) {
-            gwy_data_field_get_row(a, &l, k);
-            gwy_data_line_line_coeffs(&l, NULL, &val);
-            b += val;
-        }
-        *bp = b/a->yres;
+    pdata = a->data;
+    for (i = 0; i < a->xres*a->yres; i++) {
+        sumsi += *pdata;
+        sumsixi += *pdata * (i%a->xres);
+        sumsiyi += *pdata * (i/a->xres);
+        *pdata++;
     }
+    sumsi /= nx*ny;
+    sumsixi /= nx*ny;
+    sumsiyi /= nx*ny;
 
-    if (cp) {
-        gdouble c = 0.0;
-
-        for (k = 0; k < a->xres; k++) {
-            gwy_data_field_get_column(a, &l, k);
-            gwy_data_line_line_coeffs(&l, NULL, &val);
-            c += val;
-        }
-        *cp = c/a->xres;
-    }
-
+    bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+    by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
+    if (bp)
+        *bp = bx*nx/a->xreal;
+    if (cp)
+        *cp = by*ny/a->yreal;
     if (ap)
-        *ap = gwy_data_field_get_avg(a);
-
-    gwy_data_line_free(&l);
+        *ap = sumsi - bx*sumxi - by*sumyi;
 }
 
 
@@ -1333,10 +1337,13 @@ void
 gwy_data_field_plane_level(GwyDataField *a, gdouble ap, gdouble bp, gdouble cp)
 {
     gint i, j;
+    gdouble bpix = bp/a->xres*a->xreal;
+    gdouble cpix = cp/a->yres*a->yreal;
 
     for (i = 0; i < a->yres; i++) {
+        gdouble *row = a->data + i*a->xres;
         for (j = 0; j < a->xres; j++) {
-            a->data[i + j*a->yres] -= ap + bp*i + cp*j;
+            row[j] -= ap + cpix*i + bpix*j;
         }
     }
 }

@@ -739,35 +739,42 @@ gwy_data_line_part_threshold(GwyDataLine *a,
 void
 gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 {
-    gint i;
-    gdouble sumxixi = 0.0;
-    gdouble sumxi = 0.0;
+    gdouble sumxi, sumxixi;
     gdouble sumsixi = 0.0;
     gdouble sumsi = 0.0;
-    gdouble dkap;
+    gdouble n = a->res;
+    gdouble *pdata;
+    gint i;
 
-    for (i = 0; i < a->res; i++) {
-        dkap = (i+1);
-        sumsi += a->data[i];
-        sumxi += dkap;
-        sumxixi += dkap*dkap;
-        sumsixi += dkap*a->data[i];
+    sumxi = (n-1)/2;
+    sumxixi = (2*n-1)*(n-1)/6;
+
+    pdata = a->data;
+    for (i = a->res; i; i--) {
+        sumsi += *pdata;
+        sumsixi += *pdata * i;
+        pdata++;
     }
+    sumsi /= n;
+    sumsixi /= n;
 
-    if (bv)
-        *bv = (sumsixi*a->res - sumsi*sumxi) / (sumxixi*a->res - sumxi*sumxi);
+    if (bv) {
+        *bv = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+        *bv *= n/a->real;
+    }
     if (av)
-        *av = (sumsi - (*bv)*sumxi)/a->res;
+        *av = (sumsi*sumxixi - sumxi*sumsixi) / (sumxixi - sumxi*sumxi);
 }
 
 void
 gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 {
     gint i;
+    gdouble bpix = bv/a->res*a->real;
 
     gwy_debug("%s", __FUNCTION__);
     for (i = 0; i < a->res; i++)
-        a->data[i] -= av + bv*(i+1);
+        a->data[i] -= av + bpix*i;
     /* XXX: gwy_data_line_value_changed(G_OBJECT(a));*/
 }
 
