@@ -313,11 +313,12 @@ gwy_3d_label_deserialize(const guchar *buffer,
         { 'b', "fixed_size", &fixed_size, NULL, },
     };
 
+    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
     delta_x = GEOM_PSPEC("delta_x")->default_value;
     delta_y = GEOM_PSPEC("delta_y")->default_value;
     rotation = GEOM_PSPEC("rotation")->default_value;
-    size = GEOM_PSPEC("size")->default_value;
+    scale = GEOM_PSPEC("size")->default_value;
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_3D_LABEL_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)
