@@ -29,6 +29,8 @@
 static gboolean    module_register            (const gchar *name);
 static gboolean    presentation_remove        (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    presentation_extract       (GwyContainer *data,
+                                               GwyRunType run);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -37,7 +39,7 @@ static GwyModuleInfo module_info = {
     "presenationops",
     N_("Basic operations with presentation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -56,8 +58,16 @@ module_register(const gchar *name)
         PRESENTATIONOPS_RUN_MODES,
         GWY_MENU_FLAG_DATA_SHOW,
     };
+    static GwyProcessFuncInfo presentation_extract_func_info = {
+        "presentation_extract",
+        N_("/_Display/E_xtract Presentation"),
+        (GwyProcessFunc)&presentation_extract,
+        PRESENTATIONOPS_RUN_MODES,
+        GWY_MENU_FLAG_DATA_SHOW,
+    };
 
     gwy_process_func_register(name, &presentation_remove_func_info);
+    gwy_process_func_register(name, &presentation_extract_func_info);
 
     return TRUE;
 }
@@ -75,6 +85,40 @@ presentation_remove(GwyContainer *data, GwyRunType run)
     gwy_container_remove_by_name(data, "/0/show");
 
     return TRUE;
+}
+
+static gboolean
+presentation_extract(GwyContainer *data, GwyRunType run)
+{
+    GtkWidget *data_window;
+    GObject *dfield, *siunit;
+    gdouble min, max;
+    const gchar *pal;
+
+    g_return_val_if_fail(run & PRESENTATIONOPS_RUN_MODES, FALSE);
+    dfield = gwy_container_get_object_by_name(data, "/0/show");
+    g_return_val_if_fail(dfield, FALSE);
+
+    pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+    dfield = gwy_serializable_duplicate(dfield);
+    min = gwy_data_field_get_min(GWY_DATA_FIELD(dfield));
+    max = gwy_data_field_get_max(GWY_DATA_FIELD(dfield));
+    gwy_data_field_add(GWY_DATA_FIELD(dfield), -min);
+    if (max > min)
+        gwy_data_field_multiply(GWY_DATA_FIELD(dfield), 1.0/(max - min));
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(GWY_DATA_FIELD(dfield), GWY_SI_UNIT(siunit));
+    g_object_unref(siunit);
+
+    data = GWY_CONTAINER(gwy_container_new());
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    g_object_unref(dfield);
+    gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));
+
+    data_window = gwy_app_data_window_create(data);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+
+    return FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
