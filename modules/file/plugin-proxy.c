@@ -277,7 +277,7 @@ plugin_proxy_save(GwyContainer *data,
               args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
-    unlink(filename);
+    unlink(tmpname);
     fclose(fh);
     gwy_debug("%s: ok = %d, exit_status = %d, err = %p", __FUNCTION__,
               ok, exit_status, err);
