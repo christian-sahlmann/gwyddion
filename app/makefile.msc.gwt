@@ -64,6 +64,7 @@ prg: $(PROGRAM).exe
 
 # Install install every .h file
 install: install-lib install-prg
+	del "$(DEST_DIR)\include\$(XLIBRARY)\authors.h"
 	del "$(DEST_DIR)\include\$(XLIBRARY)\gwyddion.h"
 	del "$(DEST_DIR)\include\$(XLIBRARY)\gwyappinternal.h"
 
