@@ -242,6 +242,7 @@ gwy_grapher_label_size_request(GtkWidget *widget,
     }
 }
 
+
 static void
 gwy_grapher_label_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)

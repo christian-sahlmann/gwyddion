@@ -132,8 +132,8 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_model_finalize;
-   gobject_class->set_property = gwy_graph_model_set_property;
-       gobject_class->get_property = gwy_graph_model_get_property;
+    gobject_class->set_property = gwy_graph_model_set_property;
+    gobject_class->get_property = gwy_graph_model_get_property;
                                                                                                                                                                     
 
     g_object_class_install_property(gobject_class,
@@ -555,7 +555,6 @@ gwy_graph_model_set_property  (GObject *object,
                                                const GValue *value,
                                                GParamSpec *pspec)
 {
-    GwyGraphModel *model = GWY_GRAPH_MODEL(object);
 }
 
 static void     
@@ -564,7 +563,6 @@ gwy_graph_model_get_property  (GObject*object,
                                                GValue *value,
                                                GParamSpec *pspec)
 {
-    GwyGraphModel *model = GWY_GRAPH_MODEL(object);
 }
 
 
@@ -587,7 +585,7 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
     
     gmodel->ncurves++;
    
-    g_object_notify(gmodel, "n");
+    g_object_notify(G_OBJECT(gmodel), "n");
 }
 
 gint
@@ -616,7 +614,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
     
     gmodel->ncurves = 0;
     
-    g_object_notify(gmodel, "n");
+    g_object_notify(G_OBJECT(gmodel), "n");
     
 }
 

@@ -27,10 +27,11 @@
 #include "gwyoptionmenus.h"
 #include "gwygrapher.h"
 #include "gwygrapherlabeldialog.h"
-#include "gwygraphermodel.h"
+#include "gwygraphmodel.h"
 #include <libgwyddion/gwymacros.h>
 
 #define GWY_GRAPHER_LABEL_DIALOG_TYPE_NAME "GwyGrapherLabelDialog"
+
 
 
 static void     gwy_grapher_label_dialog_class_init       (GwyGrapherLabelDialogClass *klass);
@@ -105,7 +106,7 @@ gwy_grapher_label_dialog_delete(GtkWidget *widget,
 static void
 gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
 {
-    GtkWidget *label, *hbox, *table, *button;
+    GtkWidget *label, *table;
     gint row = 0;
     gwy_debug("");
 
@@ -163,9 +164,9 @@ gwy_grapher_label_dialog_finalize(GObject *object)
 static void
 refresh(GwyGrapherLabelDialog *dialog)
 {
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
-    model = GWY_GRAPHER_MODEL(dialog->graph_model);
+    model = GWY_GRAPH_MODEL(dialog->graph_model);
     
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), model->label_frame_thickness);
     gtk_toggle_button_set_active(dialog->reversed, model->label_reverse);     
@@ -184,20 +185,20 @@ gwy_grapher_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
 static void     
 linesize_changed_cb(GtkObject *adj, GwyGrapherLabelDialog *dialog)
 {
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
 
-    model = GWY_GRAPHER_MODEL(dialog->graph_model);
+    model = GWY_GRAPH_MODEL(dialog->graph_model);
     model->label_frame_thickness = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
 }
 
 static void     
 reverse_changed_cb(GtkToggleButton *button, GwyGrapherLabelDialog *dialog)
 {
-    GwyGrapherModel *model;
+    GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
 
-    model = GWY_GRAPHER_MODEL(dialog->graph_model);
+    model = GWY_GRAPH_MODEL(dialog->graph_model);
     model->label_reverse = gtk_toggle_button_get_active(button);
 }
 

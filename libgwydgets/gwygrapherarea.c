@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtkmain.h>
@@ -81,7 +82,7 @@ static void     gwy_grapher_label_entry_cb          (GwyGrapherLabelDialog *dial
                                                      gint arg1,
                                                      gpointer user_data);
 
-static void     zoom                                (GtkWidget *widget);
+/*static void     zoom                                (GtkWidget *widget);*/
 /* Local data */
 
 

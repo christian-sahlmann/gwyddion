@@ -289,6 +289,7 @@ rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
     gwy_grapher_area_refresh(grapher->area);
 }
 
+
 void
 gwy_grapher_set_status(GwyGrapher *grapher, GwyGrapherStatusType status)
 {
@@ -340,7 +341,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         case GWY_GRAPHER_STATUS_POINTS:
         for (i = 0; i < grapher->area->pointsdata->data_points->len; i++)
         {
-            data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGrapherDataArea, i);
+            data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGrapherDataPoint, i);
             selection[2*i] = data_point->x;
             selection[2*i + 1] = data_point->y;
         }

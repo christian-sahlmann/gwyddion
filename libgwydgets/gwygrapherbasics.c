@@ -48,7 +48,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
                         GwyGrapherActiveAreaSpecs *specs,
                         GObject *curvemodel)
 {
-    gint i, x, y, xn, yn;
+    gint i, x, y, xn=0, yn=0;
     GwyGraphCurveModel *cmodel;
     cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
     
@@ -101,8 +101,6 @@ gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
     GdkColor bcl, fcl;
     GdkColormap *colormap;
     GwyRGBA rgba;
-    gint i, j;
-    gint size_half = size/2;
     
     if (gc==NULL) gc = gdk_gc_new(drawable);
 
