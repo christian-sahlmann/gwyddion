@@ -513,7 +513,7 @@ gwy_app_toolbox_update_state(GwyMenuSensData *sens_data)
 /***** Documentation *******************************************************/
 
 /**
- * GwyMenuSensitivityFlags:
+ * GwyMenuSensFlags:
  * @GWY_MENU_FLAG_DATA: There's at least a one data window present.
  * @GWY_MENU_FLAG_UNDO: There's something to undo (for current data window).
  * @GWY_MENU_FLAG_REDO: There's something to redo (for current data window).
