@@ -101,6 +101,7 @@ function WriteDump(filename : string;
 
 function PluginHelper(actions : array of tPluginAction) : boolean;
 
+(********************** IMPLEMENTATION ***********************)
 implementation
 
 (*****************************************************************************
@@ -301,13 +302,6 @@ begin
     end;
     RemoveMetadata(dump, i);
 
-    (* The next character must be '[' *)
-    BlockRead(f, b, 1);
-    if b <> '[' then begin
-        WriteLn('Expected ''['' at start of DataField ', key);
-        Exit;
-    end;
-
     (* Read data itself *)
     size := dfield.xres * dfield.yres;
     SetLength(dfield.data, size);
@@ -384,6 +378,7 @@ var
     meta    : tMetadata;    (* temporary metadata, before storing it to
                                dump.meta *)
     ok      : boolean;      (* return status *)
+    b       : char;
 
 begin
     ok := True;
@@ -420,6 +415,19 @@ begin
            We store also data field information here, ReadDataField() pulls
            them from meta later. *)
         if meta.value <> '[' then begin
+            AddMetadata(dump, meta);
+            Continue;
+        end;
+
+        (* The next character must be '[' *)
+        {$I-}
+        BlockRead(f, b, 1);
+        {$I+}
+        if b <> '[' then begin
+            (* Pascal has no ungetc(), so try to seek one character back,
+               but not when we hit EOF *)
+            if (IOResult = 0) and not EOF(f) then
+                Seek(f, FilePos(f)-1);
             AddMetadata(dump, meta);
             Continue;
         end;
@@ -551,3 +559,4 @@ begin
 end;
 
 end.
+(* vim: set ts=4 sw=4 et nocin si errorformat=%f(%l\\\,%c)\ %m : *)

@@ -31,7 +31,7 @@ invert_pascal_SOURCES =
 
 # Don't care about GwyddionDump, fpc seems to be clever enough to compile it
 # automagically.
-invert_pascal: invert_pascal.pas
+invert_pascal: invert_pascal.pas GwyddionDump.pas
 	$(PASCAL) $(PASCAL_FLAGS) -oinvert_pascal invert_pascal.pas
 
 noinst_HEADERS = \
