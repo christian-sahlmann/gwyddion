@@ -25,7 +25,8 @@ lib_LTLIBRARIES = libgwyapp.la
 
 EXTRA_DIST = \
 	makefile.msc \
-	libgwyapp.def
+	libgwyapp.def \
+	README.objdata
 
 # In following order do:
 # Any code change     C:   R++: A
