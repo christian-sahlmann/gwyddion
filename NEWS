@@ -1,27 +1,50 @@
-1.0cvs20040411
+1.0cvs20040412
 
 1.1
-- App: Creating mask by correlation. This can be useful for searching for
-  specific patterns on the surface, for example on interferometric grids.
-- App: Cross-correlation. Matching between two slightly different images
+Application:
+- Creating mask by correlation (new).  This can be useful for searching
+  for specific patterns on the surface, for example on interferometric
+  grids.
+- Cross-correlation (new).  Matching between two slightly different images
   of the same feature can be found.
-- App: A bug preventing new windows from appearing in Data Artithmetic and
+- A bug preventing new windows from appearing in Data Artithmetic and
   correlations in some window managers was fixed.
-- App: Creating mask by outliers detection. It uses 3*sigma criterium
+- Creating mask by outliers detection. It uses 3*sigma criterium
   for searching an outlier.
-- App: Fixed: modules not changing data (and creating new windows instead)
+- Fixed: modules not changing data (and creating new windows instead)
   never became `Last used'.
-- Fractal module (new): Fractal dimension of the rough surface can be
+- Undo/redo memory leak was fixed.
+
+Modules:
+- Fractal (new): Fractal dimension of the rough surface can be
   evaluated using partitioning, cube counting, traingulation and power
   spectrum method.
-- Laplace module (new): Removal of data under mask (of any shape). It uses
+- Laplace (new): Removal of data under mask (of any shape). It uses
   iterative method similar to solving Laplace equation.
-- Pixmap module: Can also import data from common bitmap image formats.
-- Rawfile module: Supports named presets of import parameters.
-- Rawfile module: No longer resets text/binary parameters when switching to
+- Pixmap: Can also import data from common bitmap image formats.
+- Rawfile: Supports named presets of import parameters.
+- Rawfile: No longer resets text/binary parameters when switching to
   the other type.
-- Watershed module: It is possible to change mask color.
-- Facet-level module: shows progress bas and is cancelable.
+- Watershed: It is possible to change mask color.
+- Facet-level: shows progress bas and is cancelable.
+- Filters tool: Bug #7 (preview confused by tool switch) was mostly fixed.
+- Graph points: Bug #15 (bad value formatting) was mostly fixed.
+- Shade: Bug #11 (not undoable) was fixed.
+- Many modules: Memory leaks fixed.
+
+Library:
+- libgwyddion: Marquardt-Levenverg non-linear least square fitter was
+  added (GwyNLFitter).
+- libprocess: XXX XXX XXX XXX urèitì tam toho dost pøibylo, ale ten bastard
+  k nièemu nenapsal Since: 1.1., tak¾e kdo ví XXX XXX XXX XXX
+- libgwymodule: Data process modules can specify sensitivity of their
+  menu entries.
+- libgwyddion: Specific functions for storing enums in GwyContainer were
+  added.
+- libgwyddion: gwy_strkill() and gwy_strreplace() string utility functions
+  were added.
+
+Other:
 - The license of plug-in proxy as a reference dump format implementation
   was clarified.
 
