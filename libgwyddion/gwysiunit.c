@@ -228,7 +228,7 @@ gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
     gwy_debug("");
-    return siunit->unitstr;
+    return g_strdup(siunit->unitstr);
 }
 
 
