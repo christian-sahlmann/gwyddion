@@ -53,7 +53,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyGraphFuncInfo read_func_info = {
-        "graph ascii export",
+        "graph_ascii_export",
         N_("/_Export ASCII..."),
         (GwyGraphFunc)&ascii,
     };
