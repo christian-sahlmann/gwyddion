@@ -29,7 +29,7 @@
 
 /* this is not used (yet), the GUI doesn't allow more levels */
 enum {
-    UNDO_LEVELS = 2
+    UNDO_LEVELS = 3
 };
 
 typedef struct {
@@ -189,7 +189,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) + 1));
-    /* TODO */
     gwy_app_toolbox_update_state(&sens_data);
 
     return level->id;
@@ -239,7 +238,8 @@ gwy_app_undo_undo(void)
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) - 1));
     gwy_app_data_view_update(data_view);
-    /* TODO */
+    if (undo)
+        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
     gwy_app_toolbox_update_state(&sens_data);
 }
 
@@ -287,7 +287,8 @@ gwy_app_undo_redo(void)
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) + 1));
     gwy_app_data_view_update(data_view);
-    /* TODO */
+    if (redo)
+        sens_data.set_to |= GWY_MENU_FLAG_REDO;
     gwy_app_toolbox_update_state(&sens_data);
 }
 
