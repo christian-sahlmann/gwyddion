@@ -416,7 +416,7 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble rest = x - (gdouble)l;
 
     /*gwy_debug("");*/
-    g_return_val_if_fail(x >= 0 && x <= (a->res-1), 0.0);
+    g_return_val_if_fail(x >= 0 && x < (a->res), 0.0);
 
     /*simple (and fast) methods*/
     switch (interpolation) {
