@@ -1855,7 +1855,8 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
 }
 
 
-void gwy_data_field_cwt(GwyDataField *data_field,
+void 
+gwy_data_field_cwt(GwyDataField *data_field,
                         GwyInterpolationType interpolation,
                         gdouble scale,
                         Gwy2DCWTWaveletType wtype)
@@ -1898,6 +1899,22 @@ void gwy_data_field_cwt(GwyDataField *data_field,
    gwy_data_field_free(&hlp_r);
    gwy_data_field_free(&hlp_i);
    gwy_data_field_free(&imag_field); 
+}
+
+void 
+gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
+                                                    gdouble theta, gdouble phi)
+{
+    gint i, j; 
+    gwy_data_field_resample(target_field, data_field->xres, data_field->yres, GWY_INTERPOLATION_NONE);
+    for (i = 0; i < data_field->yres; i++) 
+    {
+        
+        for (j = 0; j < data_field->xres; j++) 
+        {
+            target_field->data[j + data_field->xres*i] = gwy_data_field_get_angder(data_field, i, j, theta);
+        }
+    }     
 }
 
 

@@ -369,6 +369,9 @@ void gwy_data_field_cwt(GwyDataField *data_field,
                         Gwy2DCWTWaveletType wtype);
 
 
+void gwy_data_field_shade(GwyDataField *data_field, GwyDataField *target_field,
+			  gdouble theta, gdouble phi);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
