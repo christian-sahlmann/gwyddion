@@ -88,7 +88,7 @@ guess_pixmap_path(void)
     gchar *b, *p, *q;
 
     /* try argv[0] */
-    p = g_get_prgname();
+    p = g_strdup(g_get_prgname());
     if (!g_path_is_absolute(p)) {
         b = g_get_current_dir();
         q = g_build_filename(b, p, NULL);
