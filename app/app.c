@@ -3,6 +3,7 @@
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
+#include "tools/tools.h"
 #include "init.h"
 #include "file.h"
 #include "menu.h"
@@ -23,6 +24,7 @@ gwy_app_quit(void)
     GwyDataWindow *data_window;
 
     gwy_debug("%s", __FUNCTION__);
+    gwy_tools_crop_use(NULL);
     while ((data_window = gwy_app_get_current_data_window()))
         gtk_widget_destroy(GTK_WIDGET(data_window));
 
@@ -225,14 +227,19 @@ gwy_app_set_current_data_window(GwyDataWindow *window)
 
     if (window) {
         g_return_if_fail(GWY_IS_DATA_WINDOW(window));
+        if (current_data && current_data->data == (gpointer)window)
+            return;
         update_state = (current_data == NULL);
         current_data = g_slist_remove(current_data, window);
         current_data = g_slist_prepend(current_data, window);
     }
     else {
-        update_state = (current_data != NULL);
+        if (!current_data)
+            return;
+        update_state = TRUE;
         current_data = g_slist_remove(current_data, current_data->data);
     }
+    gwy_tools_crop_use(window);
 
     if (!update_state)
         return;

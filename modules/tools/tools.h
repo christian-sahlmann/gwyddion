@@ -9,7 +9,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void gwy_tools_crop_use(GwyDataWindow *data_window);
+void gwy_tools_crop_use   (GwyDataWindow *data_window);
 
 #ifdef __cplusplus
 }
