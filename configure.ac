@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.1, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.1cvs20050323, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.1
@@ -189,7 +189,7 @@ AC_PATH_X
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || CPPFLAGS="$CPPFLAGS -L$x_libraries"
 
-PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.2.0])
+PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.4.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
