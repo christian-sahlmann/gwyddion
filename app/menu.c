@@ -395,7 +395,8 @@ gwy_menu_recent_files_update(GList *recent_files)
             item = gtk_menu_item_new_with_mnemonic(label);
             gwy_debug("%s: creating item %p for <%s> [#%d]", __FUNCTION__,
                       item, s, i);
-            g_object_set_qdata(G_OBJECT(item), quark, g_strdup(filename));
+            g_object_set_qdata_full(G_OBJECT(item), quark, g_strdup(filename),
+                                    g_free);
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
                              G_CALLBACK(gwy_app_file_open_recent_cb), NULL);

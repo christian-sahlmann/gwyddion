@@ -94,6 +94,8 @@ main(int argc, char *argv[])
     gwy_app_file_open_initial(argv + 1);
     gtk_main();
     gwy_app_settings_save(config_file);
+    gwy_app_settings_free();
+    g_free(config_file);
 
     return 0;
 }
@@ -335,7 +337,7 @@ gwy_app_data_window_create(GwyContainer *data)
 GtkWidget*
 gwy_app_graph_window_get_current(void)
 {
-    return current_graphs ? (GwyGraph*)current_graphs->data : NULL;
+    return current_graphs ? current_graphs->data : NULL;
 }
 
 void
@@ -371,7 +373,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
     }
     current_graphs = g_list_delete_link(current_graphs, item);
     if (current_graphs) {
-        gwy_app_graph_window_set_current(GWY_GRAPH(current_graphs->data));
+        gwy_app_graph_window_set_current(current_graphs->data);
         return;
     }
 }
@@ -620,6 +622,9 @@ gwy_app_use_tool_cb(GtkWidget *unused,
     GwyDataWindow *data_window;
 
     gwy_debug("%s: %p", __FUNCTION__, tool_use_func);
+    /* don't catch deactivations */
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(unused)))
+        return;
     if (current_tool_use_func)
         current_tool_use_func(NULL, GWY_TOOL_SWITCH_TOOL);
     current_tool_use_func = tool_use_func;

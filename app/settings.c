@@ -23,7 +23,7 @@
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
 
-static void gwy_app_set_defaults(GwyContainer *settings);
+static void gwy_app_set_defaults (GwyContainer *settings);
 
 static GwyContainer *settings = NULL;
 
@@ -104,7 +104,7 @@ gwy_app_set_defaults(GwyContainer *settings)
 
     if (!gwy_container_contains_by_name(settings, "/app/plugindir"))
         gwy_container_set_string_by_name(settings, "/app/plugindir",
-                                         GWY_PLUGIN_DIR);
+                                         g_strdup(GWY_PLUGIN_DIR));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
