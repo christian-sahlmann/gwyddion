@@ -581,7 +581,7 @@ gwy_math_sym_matrix_invert1(gint n, gdouble *a)
 
 /*FIXME only for test*/
 gdouble
-gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+fit_gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
         gdouble c;
@@ -598,7 +598,7 @@ gauss(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
 
 /*FIXME only for test*/
 gdouble
-exponential(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+fit_exp(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
         gdouble c;
@@ -615,7 +615,7 @@ exponential(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
 
 /*FIXME only for test*/
 gdouble
-poly0(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+fit_poly_0(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     return b[0];
@@ -623,83 +623,96 @@ poly0(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
 
 /*FIXME only for test*/
 gdouble
-poly1(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
+fit_poly_1(gdouble x, G_GNUC_UNUSED gint n_par, gdouble *b,
             G_GNUC_UNUSED gpointer user_data, gboolean *fres)
 {
     return b[0] + b[1]*x;
 }
 
+static const gchar *gauss_pars[]=
+{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+
+static const gchar *gauss_units[]=
+{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+
+static const gdouble gauss_defaults[]=
+{1, 2, 3, 4};
+
+static const gchar *exp_pars[]=
+{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+
+static const gchar *exp_units[]=
+{"x<sub>0</sub>", "y<sub>0</sub>", "a", "b"};
+
+static const gdouble exp_defaults[]=
+{1, 2, 3, 4};
+
+static const gchar *poly0_pars[]=
+{"a"};
+
+static const gchar *poly0_units[]=
+{"a"};
+
+static const gdouble poly0_defaults[]=
+{1};
+
+static const gchar *poly1_pars[]=
+{"a", "b"};
+
+static const gchar *poly1_units[]=
+{"a", "b"};
+
+static const gdouble poly1_defaults[]=
+{1, 2};
+
+
+static const GwyNLFitPresetFunction fitting_presets[] = {
+    { "Gaussian", 
+       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+       gauss_pars,
+       gauss_units,
+       4, 
+       gauss_defaults,
+       &fit_gauss,
+       NULL,
+       NULL
+    },
+    { "Exponential", 
+       "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
+       exp_pars,
+       exp_units,
+       4, 
+       exp_defaults,
+       &fit_exp,
+       NULL,
+       NULL
+    },
+    { "Polynom (order 0)", 
+       "f(x) = a",
+       poly0_pars,
+       poly0_units,
+       1, 
+       poly0_defaults,
+       &fit_poly_0,
+       NULL,
+       NULL
+    },
+    { "Polynom (order 1)", 
+       "f(x) = a + b*x",
+       poly1_pars,
+       poly1_units,
+       2, 
+       poly1_defaults,
+       &fit_poly_1,
+       NULL,
+       NULL
+    }
+};
 
 GwyNLFitPresetFunction* gwy_math_nlfit_get_preset(GwyNLFitPresetType type)
 {
-    GwyNLFitPresetFunction* ret;
-    ret = g_new(GwyNLFitPresetFunction, 1);
 
-    switch (type) {
-       case GWY_NLFIT_PRESET_GAUSSIAN:
-       ret->function_name = g_strdup("Gaussian");
-       ret->function_equation = g_strdup("f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)");
-       ret->nparams = 4;
-       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
-       ret->param_name[0] = g_strdup("x<sub>0</sub>");
-       ret->param_name[1] = g_strdup("y<sub>0</sub>");
-       ret->param_name[2] = g_strdup("a");
-       ret->param_name[3] = g_strdup("b");
-       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
-       ret->defaults[0] = 3.14;
-       ret->defaults[1] = 6.28;
-       ret->defaults[2] = 1212;
-       ret->defaults[3] = 0.1234;        
-       ret->function = gauss;
-       ret->function_derivation = gwy_math_nlfit_derive;
-       break;
-       
-       case GWY_NLFIT_PRESET_POLY_0:
-       ret->function_name = g_strdup("Polynom (order 0)");
-       ret->function_equation = g_strdup("f(x) = a");
-       ret->nparams = 1;
-       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
-       ret->param_name[0] = g_strdup("a");
-       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
-       ret->defaults[0] = 5;
-       ret->function = poly0;
-       ret->function_derivation = gwy_math_nlfit_derive;
-       break;
-       
-       case GWY_NLFIT_PRESET_POLY_1:
-       ret->function_name = g_strdup("Polynom (order 1)");
-       ret->function_equation = g_strdup("f(x) = a + b*x");
-       ret->nparams = 2;
-       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
-       ret->param_name[0] = g_strdup("a");
-       ret->param_name[1] = g_strdup("b");
-       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
-       ret->defaults[0] = 1;
-       ret->defaults[1] = 2;
-       ret->function = poly1;
-       ret->function_derivation = gwy_math_nlfit_derive;
-       break;
-       
-       default:
-       ret->function_name = g_strdup("Exponential");
-       ret->function_equation = g_strdup("f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))");
-       ret->nparams = 4;
-       ret->param_name = (gchar **)g_malloc(ret->nparams*sizeof(gchar*));
-       ret->param_name[0] = g_strdup("x<sub>0</sub>");
-       ret->param_name[1] = g_strdup("y<sub>0</sub>");
-       ret->param_name[2] = g_strdup("a");
-       ret->param_name[3] = g_strdup("b");
-       ret->defaults = (gdouble *)g_malloc(ret->nparams*sizeof(gdouble));
-       ret->defaults[0] = 0.125;
-       ret->defaults[1] = 1258;
-       ret->defaults[2] = 0.25;
-       ret->defaults[3] = 0.05;
-       ret->function = exponential;
-       ret->function_derivation = gwy_math_nlfit_derive;
-       break;
-    }
-    
-    return ret;
+    return (fitting_presets + type);
 }
 
 gdouble gwy_math_nlfit_get_function_value(GwyNLFitPresetFunction* function, gdouble *params, gdouble x)

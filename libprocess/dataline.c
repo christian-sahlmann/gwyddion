@@ -1309,7 +1309,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_fft_window(multra.data, multra.res, windowing);
         gwy_fft_window(multia.data, multia.res, windowing);
 
-        (*fft)(direction, &multra, &multia, rb, ib, multra.res, interpolation);
+        (*fft)(direction, &multra, &multia, rb, ib, interpolation); /*multra.res, interpolation*/
 
         rmsb=0;
         for (i=0; i<(multra.res/2); i++) rmsb+=(rb->data[i]*rb->data[i]+ib->data[i]*ib->data[i])*2
@@ -1325,7 +1325,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_fft_window(ra->data, ra->res, windowing);
         gwy_fft_window(ia->data, ra->res, windowing);
 
-        (*fft)(direction, ra, ia, rb, ib, ra->res, interpolation);
+        (*fft)(direction, ra, ia, rb, ib, interpolation); /*ra->res, interpolation*/
     }
 
     /* XXX: gwy_data_line_value_changed(G_OBJECT(ra));*/

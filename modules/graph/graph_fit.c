@@ -488,7 +488,6 @@ type_changed_cb(GObject *item, FitArgs *args)
         GPOINTER_TO_INT(g_object_get_data(item,
                                             "fit-type"));
 
-    if (args->fitfunc != NULL) g_free(args->fitfunc);
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
 
     dialog_update(pcontrols, args);

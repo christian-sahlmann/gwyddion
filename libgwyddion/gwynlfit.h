@@ -61,6 +61,13 @@ typedef  void (*GwyNLFitDerFunc)(gint i,
                                  gdouble *deriv,
                                  gboolean *dres);
 
+typedef void (*GwyNLFitGuessFunc)(gdouble *x,
+                                  gdouble *y,
+                                  gdouble *param,
+                                  gpointer user_data,
+                                  gboolean *fres
+                                  );
+
 typedef struct {
     gchar *function_name;
     gchar *function_equation;
@@ -69,7 +76,8 @@ typedef struct {
     gint nparams;
     gdouble *defaults;  
     GwyNLFitFunc function;
-    GwyNLFitFunc function_derivation;
+    GwyNLFitDerFunc function_derivation;
+    GwyNLFitGuessFunc function_guess;
 } GwyNLFitPresetFunction;
 
 typedef struct _GwyNLFitter GwyNLFitter;
