@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # @(#) $Id$
 # A very simple Gwyddion plug-in example in Python.
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.

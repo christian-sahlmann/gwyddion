@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # @(#) $Id$
 # A very simple Gwyddion plug-in example in Perl.
 # Written by Yeti <yeti@gwyddion.net>.  Public domain.
