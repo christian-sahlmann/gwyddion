@@ -21,6 +21,7 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
+#include <glibconfig.h>
 #include <glib/gmacros.h>
 #include <glib/gstrfuncs.h>
 #include <glib/gmem.h>
