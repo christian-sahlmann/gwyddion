@@ -1,17 +1,14 @@
 - Kill WIN32-LEAN-AND-MEAN-CAPS
-- Update Mark scars GUI after grain modules
-- Define abstract serializer interface
-- Add missing GObject property change notifications
-- Add remove data under grain functionality to remove grains
+- Don't forget to remove "selection-finished" callback in remove grains
+- Invent some initialization for Laplace solver so that it can only converge
+  for near final state
+- Convert Logarithmic scale value to logarithmic presentation
+- Fix gwyddion-x.desktop according to whatever current desktop standards happen
+  to say
 - Speed up Document History -- seems hard; I don't quite understand how Gimp
   does it, but it may involve a custom cell renderer that can use exposition
   info efficiently
 - Incorporate Zitko's stmprg module
-- Convert Logarithmic scale value to logarithmic presentation
-- GwyRuler: compute value format also on size-allocate? (seem to work quite
-  well w/o that, but...)
-- Fix gwyddion-x.desktop according to whatever current desktop standards happen
-  to say
 - Rework Scars
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Test GwyGradient
