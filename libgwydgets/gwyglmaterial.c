@@ -340,7 +340,7 @@ gwy_gl_material_create_preset(GwyGLMaterialPreset *entry,
  * Set up built-in Open GL material definitions.  To be used in Gwyddion initialization
  * and eventually replaced by loading Open GL material definitions from external files.
  *
- * Sice 1.5
+ * Since: 1.5
  **/
 void
 gwy_gl_material_setup_presets(void)
