@@ -59,7 +59,7 @@ gwyfile_detect(const gchar *filename,
     gint score;
 
     if (only_name)
-        return g_str_has_suffix(filename, EXTENSION) ? 100 : 0;
+        return g_str_has_suffix(filename, EXTENSION) ? 20 : 0;
 
     if (!(fh = fopen(filename, "rb")))
         return 0;
