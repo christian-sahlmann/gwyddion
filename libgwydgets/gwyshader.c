@@ -212,11 +212,9 @@ gwy_shader_new(const gchar *gradient)
     if (gradient)
         shader->gradient = gwy_gradients_get_gradient(gradient);
     if (!shader->gradient)
-        shader->gradient = gwy_gradients_get_gradient("Gray");
-    if (!shader->gradient)
-        shader->gradient = gwy_gradients_new_gradient("Gray");
-    else
-        g_object_ref(shader->gradient);
+        shader->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    g_assert(shader->gradient);
+    g_object_ref(shader->gradient);
 
     shader->gradient_change_id
         = g_signal_connect_swapped(shader->gradient, "value_changed",

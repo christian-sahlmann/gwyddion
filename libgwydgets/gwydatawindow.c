@@ -138,18 +138,7 @@ gwy_data_window_init(GwyDataWindow *data_window)
 {
     gwy_debug(" ");
 
-    data_window->data_view = NULL;
-    data_window->hruler = NULL;
-    data_window->vruler = NULL;
-    data_window->statusbar = NULL;
-    data_window->table = NULL;
-    data_window->coloraxis = NULL;
     data_window->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
-    data_window->statusbar_context_id = 0;
-    data_window->statusbar_message_id = 0;
-    data_window->coord_format = NULL;
-    data_window->value_format = NULL;
-    data_window->ul_corner = NULL;
 }
 
 static void
@@ -780,18 +769,15 @@ gwy_data_window_palette_selected(GtkWidget *item,
                                  GwyDataWindow *data_window)
 {
     GwyPixmapLayer *layer;
-    GwyPalette *palette;
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "palette-name");
     gwy_debug("%s", name);
-    g_return_if_fail(gwy_palette_def_exists(name));
 
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
-    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-    palette = gwy_layer_basic_get_palette(GWY_LAYER_BASIC(layer));
-    g_return_if_fail(GWY_IS_PALETTE(palette));
-    gwy_palette_set_by_name(palette, name);
+    gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
+    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), name);
+    /* FIXME: this should happen automatically */
     gwy_data_view_update(GWY_DATA_VIEW(data_window->data_view));
 }
 

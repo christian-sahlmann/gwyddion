@@ -36,6 +36,7 @@
 /* Forward declarations - widget related*/
 static void     gwy_color_axis_class_init         (GwyColorAxisClass *klass);
 static void     gwy_color_axis_init               (GwyColorAxis *axis);
+static void     gwy_color_axis_destroy            (GtkObject *object);
 static void     gwy_color_axis_finalize           (GObject *object);
 
 static void     gwy_color_axis_realize            (GtkWidget *widget);
@@ -97,12 +98,14 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
     GtkWidgetClass *widget_class;
 
     gwy_debug("");
-    object_class = (GtkObjectClass*)klass;
-    widget_class = (GtkWidgetClass*)klass;
+    object_class = GTK_OBJECT_CLASS(klass);
+    widget_class = GTK_WIDGET_CLASS(klass);
 
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_color_axis_finalize;
+
+    object_class->destroy = gwy_color_axis_destroy;
 
     widget_class->realize = gwy_color_axis_realize;
     widget_class->expose_event = gwy_color_axis_expose;
@@ -164,11 +167,11 @@ gwy_color_axis_new(GtkOrientation orientation,
     pango_font_description_set_weight(axis->par.font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(axis->par.font, 10*PANGO_SCALE);
 
-    axis->palette = pal;
-    g_object_ref(axis->palette);
-    g_signal_connect_swapped(axis->palette, "value_changed",
-                             G_CALLBACK(gwy_color_axis_update), axis);
-
+    axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    g_object_ref(axis->gradient);
+    /* XXX: remove */
+    axis->palette = (GwyPalette*)gwy_palette_new(NULL);
+    gwy_color_axis_set_palette(axis, pal);
     axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
 
     return GTK_WIDGET(axis);
@@ -181,29 +184,33 @@ gwy_color_axis_finalize(GObject *object)
 
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_COLOR_AXIS(object));
-
-    axis = GWY_COLOR_AXIS(object);
-    g_signal_handlers_disconnect_matched(axis->palette,
-                                         G_SIGNAL_MATCH_DATA
-                                         | G_SIGNAL_MATCH_FUNC,
-                                         0, 0, NULL,
-                                         gwy_color_axis_update, axis);
-    g_object_unref(axis->palette);
+    axis = (GwyColorAxis*)object;
+    gwy_object_unref(axis->palette);
     gwy_object_unref(axis->pixbuf);
     g_object_unref(axis->siunit);
+    g_object_unref(axis->gradient);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void
-gwy_color_axis_unrealize(GtkWidget *widget)
+gwy_color_axis_destroy(GtkObject *object)
 {
     GwyColorAxis *axis;
 
     gwy_debug("");
 
-    axis = GWY_COLOR_AXIS(widget);
+    axis = (GwyColorAxis*)object;
+    g_signal_handlers_disconnect_matched(axis->gradient, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, axis);
+
+    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+}
+
+static void
+gwy_color_axis_unrealize(GtkWidget *widget)
+{
+    gwy_debug("");
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -329,11 +336,10 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
                                   width, height);
     gwy_debug_objects_creation(G_OBJECT(axis->pixbuf));
 
-    g_return_if_fail(GWY_IS_PALETTE(axis->palette));
     /*render pixbuf according to orientation*/
     pixels = gdk_pixbuf_get_pixels(axis->pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(axis->pixbuf);
-    samples = gwy_palette_get_samples(axis->palette, &palsize);
+    samples = gwy_gradient_get_samples(axis->gradient, &palsize);
 
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         cor = (palsize-1.0)/height;
@@ -655,26 +661,11 @@ void
 gwy_color_axis_set_palette(GwyColorAxis *axis,
                            GwyPalette *pal)
 {
-    GwyPalette *old;
-
-    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
     g_return_if_fail(GWY_IS_PALETTE(pal));
 
-    if (pal == axis->palette)
-        return;
-    g_signal_handlers_disconnect_matched(axis->palette,
-                                         G_SIGNAL_MATCH_DATA
-                                         | G_SIGNAL_MATCH_FUNC,
-                                         0, 0, NULL,
-                                         gwy_color_axis_update, axis);
-    old = axis->palette;
-    axis->palette = pal;
-    g_object_ref(axis->palette);
-    g_object_unref(old);
-    g_signal_connect_swapped(axis->palette, "value_changed",
-                             G_CALLBACK(gwy_color_axis_update), axis);
-
-    gwy_color_axis_update(axis);
+    gwy_color_axis_set_gradient(axis,
+                                gwy_palette_def_get_name
+                                           (gwy_palette_get_palette_def(pal)));
 }
 
 /**
@@ -688,7 +679,60 @@ gwy_color_axis_set_palette(GwyColorAxis *axis,
 GwyPalette*
 gwy_color_axis_get_palette(GwyColorAxis *axis)
 {
-   return axis->palette;
+    return axis->palette;
+}
+
+/**
+ * gwy_color_axis_set_gradient:
+ * @axis: A color axis.
+ * @gradient: Name of gradient @axis should use.  It should exist.
+ *
+ * Sets the color gradient a color axis should use.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_color_axis_set_gradient(GwyColorAxis *axis,
+                            const gchar *gradient)
+{
+    GwyGradient *grad, *old;
+
+    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
+
+    grad = gwy_gradients_get_gradient(gradient);
+    if (!grad || grad == axis->gradient)
+        return;
+
+    old = axis->gradient;
+    g_signal_handlers_disconnect_matched(axis->gradient, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, axis);
+    g_object_ref(grad);
+    axis->gradient = grad;
+    g_signal_connect_swapped(axis->gradient, "value_changed",
+                             G_CALLBACK(gwy_color_axis_update), axis);
+    g_object_unref(old);
+    /* XXX: remove */
+    gwy_palette_set_by_name(axis->palette, gradient);
+
+    gwy_color_axis_update(axis);
+}
+
+/**
+ * gwy_color_axis_get_gradient:
+ * @axis: A color axis.
+ *
+ * Returns the color gradient a color axis uses.
+ *
+ * Returns: The color gradient.
+ *
+ * Since: 1.8
+ **/
+const gchar*
+gwy_color_axis_get_gradient(GwyColorAxis *axis)
+{
+    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), NULL);
+
+    return gwy_gradient_get_name(axis->gradient);
 }
 
 static void
@@ -700,12 +744,56 @@ gwy_color_axis_update(GwyColorAxis *axis)
                           GTK_WIDGET(axis)->allocation.height);
 }
 
-void
-gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit)
+/**
+ * gwy_color_axis_get_si_unit:
+ * @axis: A color axis.
+ *
+ * Returns the SI unit a color axis displays.
+ *
+ * Returns: The SI unit.
+ *
+ * Since: 1.8
+ **/
+GwySIUnit*
+gwy_color_axis_get_si_unit(GwyColorAxis *axis)
 {
-    if (axis->siunit != NULL)
-        g_object_unref(axis->siunit);
-    axis->siunit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
+    g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), NULL);
+
+    return axis->siunit;
+}
+
+/**
+ * gwy_color_axis_set_unit:
+ * @axis: A color axis.
+ * @unit: An SI unit.
+ *
+ * Sets the SI unit a color axis should display next to values.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_color_axis_set_unit(GwyColorAxis *axis,
+                        GwySIUnit *unit)
+{
+    gwy_color_axis_set_si_unit(axis, unit);
+}
+
+void
+gwy_color_axis_set_si_unit(GwyColorAxis *axis,
+                           GwySIUnit *unit)
+{
+    GwySIUnit *old;
+
+    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
+    g_return_if_fail(GWY_IS_SI_UNIT(unit));
+
+    if (axis->siunit == unit)
+        return;
+
+    old = axis->siunit;
+    g_object_ref(unit);
+    axis->siunit = unit;
+    gwy_object_unref(old);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

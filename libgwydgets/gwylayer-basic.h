@@ -24,13 +24,9 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 
-#ifndef GWY_TYPE_PIXMAP_LAYER
-#  include <libgwydgets/gwypixmaplayer.h>
-#endif /* no GWY_TYPE_PIXMAP_LAYER */
-
-#ifndef GWY_TYPE_PALETTE
-#  include <libdraw/gwypalette.h>
-#endif /* no GWY_TYPE_PALETTE */
+#include <libgwydgets/gwypixmaplayer.h>
+#include <libdraw/gwygradient.h>
+#include <libdraw/gwypalette.h>
 
 G_BEGIN_DECLS
 
@@ -47,11 +43,12 @@ typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 struct _GwyLayerBasic {
     GwyPixmapLayer parent_instance;
 
-    GwyPalette *palette;
+    GwyPalette *palette;    /* XXX: unused, remove in 2.0 */
     gboolean changed;
 
-    gpointer reserved1;
+    GwyGradient *gradient;
     gpointer reserved2;
+    /* XXX: add a signal id here for direct disconnection */
 };
 
 struct _GwyLayerBasicClass {
@@ -64,9 +61,14 @@ struct _GwyLayerBasicClass {
 GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;
 
 GtkObject*       gwy_layer_basic_new             (void);
+#ifndef GWY_DISABLE_DEPRECATED
 void             gwy_layer_basic_set_palette     (GwyLayerBasic *layer,
                                                   GwyPalette *palette);
 GwyPalette*      gwy_layer_basic_get_palette     (GwyLayerBasic *layer);
+#endif
+void             gwy_layer_basic_set_gradient    (GwyLayerBasic *layer,
+                                                  const gchar *gradient);
+const gchar*     gwy_layer_basic_get_gradient    (GwyLayerBasic *layer);
 
 G_END_DECLS
 

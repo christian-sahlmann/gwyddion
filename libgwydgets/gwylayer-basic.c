@@ -17,9 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
-#include <glib-object.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwycontainer.h>
@@ -34,6 +31,7 @@
 
 static void       gwy_layer_basic_class_init        (GwyLayerBasicClass *klass);
 static void       gwy_layer_basic_init              (GwyLayerBasic *layer);
+static void       gwy_layer_basic_destroy           (GtkObject *object);
 static void       gwy_layer_basic_finalize          (GObject *object);
 static GdkPixbuf* gwy_layer_basic_paint             (GwyPixmapLayer *layer);
 static gboolean   gwy_layer_basic_wants_repaint     (GwyDataViewLayer *layer);
@@ -63,7 +61,7 @@ gwy_layer_basic_get_type(void)
             (GInstanceInitFunc)gwy_layer_basic_init,
             NULL,
         };
-        gwy_debug("");
+        gwy_debug(" ");
         gwy_layer_basic_type
             = g_type_register_static(GWY_TYPE_PIXMAP_LAYER,
                                      GWY_LAYER_BASIC_TYPE_NAME,
@@ -78,14 +76,17 @@ static void
 gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_layer_basic_finalize;
+
+    object_class->destroy = gwy_layer_basic_destroy;
 
     layer_class->wants_repaint = gwy_layer_basic_wants_repaint;
     layer_class->plugged = gwy_layer_basic_plugged;
@@ -97,24 +98,31 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 static void
 gwy_layer_basic_init(GwyLayerBasic *layer)
 {
-    gwy_debug("");
+    gwy_debug(" ");
 
     layer->changed = TRUE;
-    layer->palette = NULL;
 }
 
 static void
 gwy_layer_basic_finalize(GObject *object)
 {
-    GwyLayerBasic *layer;
-    gwy_debug("");
+    gwy_debug(" ");
 
-    g_return_if_fail(GWY_IS_LAYER_BASIC(object));
-    layer = GWY_LAYER_BASIC(object);
-
-    gwy_object_unref(layer->palette);
+    gwy_object_unref(GWY_LAYER_BASIC(object)->gradient);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gwy_layer_basic_destroy(GtkObject *object)
+{
+    GwyLayerBasic *layer;
+
+    layer = (GwyLayerBasic*)object;
+    g_signal_handlers_disconnect_matched(layer->gradient, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, layer);
+
+    GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
 
 /**
@@ -122,8 +130,8 @@ gwy_layer_basic_finalize(GObject *object)
  *
  * Creates a new basic data displaying layer.
  *
- * By default, is uses a gray palette or the palette stored with the data
- * as "/0/base/palette".
+ * By default, is uses a gray gradient or gradient whose name is stored with
+ * the data as "/0/base/palette".
  *
  * Other used container values: "/0/show" is shown instead of "/0/data" if
  * present.  If "/0/base/min" and "/0/base/max" is set, it is used as the
@@ -137,17 +145,16 @@ gwy_layer_basic_new(void)
     GtkObject *object;
     GwyLayerBasic *layer;
 
-    gwy_debug("");
+    gwy_debug(" ");
 
     object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer = (GwyLayerBasic*)object;
 
-    layer->palette = (GwyPalette*)(gwy_palette_new(NULL));
-    /*
-    gwy_palette_set_by_name(layer->palette, GWY_PALETTE_GRAY);
-    g_signal_connect_swapped(layer->palette, "value_changed",
-                             G_CALLBACK(gwy_layer_basic_update), layer);
-                             */
+    layer->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    g_object_ref(layer->gradient);
+    /* XXX: remove */
+    layer->palette = (GwyPalette*)gwy_palette_new(NULL);
+    gwy_palette_set_by_name(layer->palette, GWY_GRADIENT_DEFAULT);
 
     return object;
 }
@@ -162,7 +169,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     gboolean fixedmin, fixedmax;
     gboolean fixedrange = FALSE;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
     basic_layer = GWY_LAYER_BASIC(layer);
     data = GWY_DATA_VIEW_LAYER(layer)->data;
@@ -190,10 +197,12 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     /* XXX */
     /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
         if (fixedrange)
-            gwy_pixfield_do_with_range(layer->pixbuf, data_field,
-                                       basic_layer->palette, min, max);
+            gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
+                                                  basic_layer->gradient,
+                                                  min, max);
         else
-            gwy_pixfield_do(layer->pixbuf, data_field, basic_layer->palette);
+            gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
+                                       basic_layer->gradient);
         basic_layer->changed = FALSE;
     }
 
@@ -219,25 +228,11 @@ void
 gwy_layer_basic_set_palette(GwyLayerBasic *layer,
                             GwyPalette *palette)
 {
-    GwyPalette *oldpalette;
-    const gchar *palette_name;
-
-    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     g_return_if_fail(GWY_IS_PALETTE(palette));
 
-    oldpalette = layer->palette;
-    g_signal_handlers_disconnect_matched(layer->palette, G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, layer);
-    g_object_ref(palette);
-    layer->palette = palette;
-    g_signal_connect_swapped(layer->palette, "value_changed",
-                             G_CALLBACK(gwy_layer_basic_update), layer);
-    palette_name
-        = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
-    gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
-                                     "/0/base/palette",
-                                     g_strdup(palette_name));
-    g_object_unref(oldpalette);
+    gwy_layer_basic_set_gradient(layer,
+                                 gwy_palette_def_get_name
+                                        (gwy_palette_get_palette_def(palette)));
 }
 
 /**
@@ -256,16 +251,81 @@ gwy_layer_basic_get_palette(GwyLayerBasic *layer)
     return layer->palette;
 }
 
+/**
+ * gwy_layer_basic_set_gradient:
+ * @layer: A basic data view layer.
+ * @gradient: Name of gradient @layer should use.  It should exist.
+ *
+ * Sets the color gradient a basic layer should use.
+ *
+ * Since: 1.8
+ **/
+void
+gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
+                             const gchar *gradient)
+{
+    GwyGradient *grad, *old;
+    gchar *gradstr;
+
+    g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
+    gwy_debug("%s", gradient);
+
+    grad = gwy_gradients_get_gradient(gradient);
+    if (!grad || grad == layer->gradient)
+        return;
+
+    /* the string we've got as argument can be owned by somethin we are
+     * going to destroy */
+    gradstr = g_strdup(gradient);
+    old = layer->gradient;
+    g_signal_handlers_disconnect_matched(layer->gradient, G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL, NULL, layer);
+    g_object_ref(grad);
+    layer->gradient = grad;
+    g_signal_connect_swapped(layer->gradient, "value_changed",
+                             G_CALLBACK(gwy_layer_basic_update), layer);
+    gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
+                                     "/0/base/palette", gradstr);
+    g_object_unref(old);
+    /* XXX: remove */
+    if (!gwy_palette_set_by_name(layer->palette, gradstr))
+        g_warning("Palette <%s> doesn't exist, we've got out of sync",
+                  gradstr);
+
+    gwy_layer_basic_update(GWY_DATA_VIEW_LAYER(layer));
+}
+
+/**
+ * gwy_layer_basic_get_gradient:
+ * @layer: A basic data view layer.
+ *
+ * Returns the color gradient a basic layer uses.
+ *
+ * Returns: The gradient name.  It must not be modified or freed.  It may
+ *          differ the name that was used on initialization or set with
+ *          gwy_shader_set_gradient(), if the gradient didn't exist or
+ *          was renamed meanwhile.
+ *
+ * Since: 1.8
+ **/
+const gchar*
+gwy_layer_basic_get_gradient(GwyLayerBasic *layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
+
+    return gwy_gradient_get_name(layer->gradient);
+}
+
 static void
 gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
     GwyLayerBasic *basic_layer;
-    GwyDataField *data_field;
+    GwyDataField *data_field = NULL;
     gint width, height;
-    const gchar *palette_name;
+    const guchar *gradient_name;
 
-    gwy_debug("");
+    gwy_debug(" ");
     g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
@@ -275,31 +335,17 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 
     /* TODO Container */
     /* XXX */
-    if (gwy_container_contains_by_name(layer->data, "/0/show"))
-        data_field = GWY_DATA_FIELD(
-                         gwy_container_get_object_by_name(layer->data,
-                                                          "/0/show"));
-    else
-        data_field = GWY_DATA_FIELD(
-                         gwy_container_get_object_by_name(layer->data,
-                                                          "/0/data"));
+    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
+                                                                 "/0/data"));
+    gwy_container_gis_object_by_name(layer->data, "/0/show",
+                                     (GObject**)&data_field);
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
 
-    if (gwy_container_contains_by_name(layer->data, "/0/base/palette")) {
-        palette_name = gwy_container_get_string_by_name(layer->data,
-                                                        "/0/base/palette");
-        gwy_palette_set_by_name(basic_layer->palette, palette_name);
-    }
-    else {
-        palette_name = g_strdup(GWY_PALETTE_GRAY);
-        gwy_palette_set_by_name(basic_layer->palette, palette_name);
-        gwy_container_set_string_by_name(layer->data, "/0/base/palette",
-                                         palette_name);
-    }
-    g_signal_connect_swapped(basic_layer->palette, "value_changed",
-                             G_CALLBACK(gwy_layer_basic_update), layer);
+    if (gwy_container_gis_string_by_name(layer->data, "/0/base/palette",
+                                         &gradient_name))
+        gwy_layer_basic_set_gradient((GwyLayerBasic*)layer, gradient_name);
 
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
                                           BITS_PER_SAMPLE, width, height);
@@ -316,9 +362,6 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
 
-    g_signal_handlers_disconnect_matched(basic_layer->palette,
-                                         G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, layer);
     gwy_object_unref(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
@@ -326,17 +369,9 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_basic_update(GwyDataViewLayer *layer)
 {
-    GwyLayerBasic *basic_layer;
-    GwyPalette *palette;
-    const gchar *pal;
+    gwy_debug(" ");
 
     GWY_LAYER_BASIC(layer)->changed = TRUE;
-    basic_layer = GWY_LAYER_BASIC(layer);
-    palette = basic_layer->palette;
-    pal = gwy_palette_def_get_name(gwy_palette_get_palette_def(palette));
-    gwy_debug("storing palette %s", pal);
-    gwy_container_set_string_by_name(layer->data, "/0/base/palette",
-                                     g_strdup(pal));
     gwy_data_view_layer_updated(layer);
 }
 

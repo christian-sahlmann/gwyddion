@@ -24,12 +24,11 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include <libdraw/gwypalette.h>
 #include <libgwyddion/gwysiunit.h>
-
+#include <libdraw/gwypalette.h>
+#include <libdraw/gwygradient.h>
 
 G_BEGIN_DECLS
-
 
 #define GWY_TYPE_COLOR_AXIS            (gwy_color_axis_get_type())
 #define GWY_COLOR_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_COLOR_AXIS, GwyColorAxis))
@@ -41,6 +40,7 @@ G_BEGIN_DECLS
 typedef struct _GwyColorAxis      GwyColorAxis;
 typedef struct _GwyColorAxisClass GwyColorAxisClass;
 
+/* XXX: merge or something */
 typedef struct {
     gint tick_length;
     gint textarea;    /*text area width*/
@@ -52,18 +52,18 @@ struct _GwyColorAxis {
     GtkWidget widget;
 
     GwyColorAxisParams par;
-    GwyPalette *palette;
+    GwyPalette *palette;   /* XXX: Remove */
 
     GdkPixbuf *pixbuf;
 
-    GtkOrientation orientation;   /*north, south, east, west*/
+    GtkOrientation orientation;
     gdouble min;
     gdouble max;
 
     GString *label_text;
     GwySIUnit *siunit;
 
-    gpointer reserved1;
+    GwyGradient *gradient;
     gpointer reserved2;
 };
 
@@ -75,22 +75,35 @@ struct _GwyColorAxisClass {
 };
 
 
-GtkWidget* gwy_color_axis_new(GtkOrientation orientation, gdouble min, gdouble max, GwyPalette *pal);
+GType        gwy_color_axis_get_type  (void) G_GNUC_CONST;
+/* XXX: change arguments, ideally to orientation only */
+GtkWidget*   gwy_color_axis_new       (GtkOrientation orientation,
+                                       gdouble min,
+                                       gdouble max,
+                                       GwyPalette *pal);
+void         gwy_color_axis_get_range (GwyColorAxis *axis,
+                                       gdouble *min,
+                                       gdouble *max);
+void         gwy_color_axis_set_range (GwyColorAxis *axis,
+                                       gdouble min,
+                                       gdouble max);
+GwySIUnit*   gwy_color_axis_get_si_unit(GwyColorAxis *axis);
+void         gwy_color_axis_set_si_unit(GwyColorAxis *axis,
+                                        GwySIUnit *unit);
 
-GType gwy_color_axis_get_type(void) G_GNUC_CONST;
+void         gwy_color_axis_set_gradient(GwyColorAxis *axis,
+                                         const gchar *gradient);
+const gchar* gwy_color_axis_get_gradient(GwyColorAxis *axis);
 
-void gwy_color_axis_get_range(GwyColorAxis *axis, gdouble *min, gdouble *max);
-
-void gwy_color_axis_set_range(GwyColorAxis *axis, gdouble min, gdouble max);
-
-void gwy_color_axis_set_unit(GwyColorAxis *axis, GwySIUnit *unit);
-
+#ifndef GWY_DISABLE_DEPRECATED
+void         gwy_color_axis_set_unit(GwyColorAxis *axis,
+                                     GwySIUnit *unit);
 void gwy_color_axis_set_palette(GwyColorAxis *axis, GwyPalette *pal);
-
-GwyPalette * gwy_color_axis_get_palette(GwyColorAxis *axis);
+GwyPalette* gwy_color_axis_get_palette(GwyColorAxis *axis);
+#endif
 
 G_END_DECLS
 
-#endif /*__GWY_AXIS_H__*/
+#endif /*__GWY_COLOR_AXIS_H__*/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
