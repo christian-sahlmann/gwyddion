@@ -25,12 +25,14 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>
+#include <app/settings.h>
 
 typedef struct {
     gboolean is_visible;  /* XXX: GTK_WIDGET_VISIBLE() returns BS? */
     GtkWidget *x;
     GtkWidget *y;
     GtkWidget *val;
+    GtkObject *radius;
     gdouble mag;
     gint precision;
     gchar *units;
@@ -43,8 +45,14 @@ static GtkWidget* pointer_dialog_create          (GwyDataWindow *data_window);
 static void       pointer_selection_updated_cb   (void);
 static void       pointer_dialog_response_cb     (gpointer unused,
                                                   gint response);
+static gdouble    pointer_get_z_average          (GwyDataField *dfield,
+                                                  gdouble xreal,
+                                                  gdouble yreal,
+                                                  gint radius);
 static void       pointer_dialog_abandon         (void);
 static void       pointer_dialog_set_visible     (gboolean visible);
+
+static const gchar *radius_key = "/tool/pointer/radius";
 
 static GtkWidget *pointer_dialog = NULL;
 static PointerControls controls;
@@ -123,14 +131,45 @@ pointer_use(GwyDataWindow *data_window,
         pointer_selection_updated_cb();
 }
 
+static gdouble
+pointer_get_z_average(GwyDataField *dfield,
+                      gdouble xreal,
+                      gdouble yreal,
+                      gint radius)
+{
+    gint x, y, xres, yres, uli, ulj, bri, brj;
+
+    if (radius < 1)
+        g_warning("Bad averaging radius %d, fixing to 1", radius);
+    x = gwy_data_field_rtoj(dfield, xreal);
+    y = gwy_data_field_rtoi(dfield, yreal);
+    if (radius < 2)
+        return gwy_data_field_get_val(dfield, x, y);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    ulj = CLAMP(x - radius, 0, xres - 1);
+    uli = CLAMP(y - radius, 0, yres - 1);
+    brj = CLAMP(x + radius, 0, xres - 1);
+    bri = CLAMP(y + radius, 0, yres - 1);
+
+    return gwy_data_field_get_area_avg(dfield, ulj, uli, brj, bri);
+}
+
 static void
 pointer_dialog_abandon(void)
 {
+    GwyContainer *settings;
+    gint radius;
+
     if (pointer_layer && updated_id)
         g_signal_handler_disconnect(pointer_layer, updated_id);
     updated_id = 0;
     pointer_layer = NULL;
     if (pointer_dialog) {
+        radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
+        radius = CLAMP(radius, 1, 16);
+        settings = gwy_app_settings_get();
+        gwy_container_set_int32_by_name(settings, radius_key, radius);
         g_signal_handler_disconnect(pointer_dialog, response_id);
         gtk_widget_destroy(pointer_dialog);
         pointer_dialog = NULL;
@@ -143,10 +182,11 @@ pointer_dialog_abandon(void)
 static GtkWidget*
 pointer_dialog_create(GwyDataWindow *data_window)
 {
-    GwyContainer *data;
+    GwyContainer *data, *settings;
     GwyDataField *dfield;
     GtkWidget *dialog, *table, *label;
     gdouble xreal, yreal, max, unit;
+    gint radius;
 
     gwy_debug("");
     data = gwy_data_window_get_data(data_window);
@@ -196,7 +236,6 @@ pointer_dialog_create(GwyDataWindow *data_window)
 
     gtk_widget_show_all(table);
 
-    /*
     table = gtk_table_new(1, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, 0, TRUE, TRUE);
@@ -210,15 +249,15 @@ pointer_dialog_create(GwyDataWindow *data_window)
     gwy_table_attach_spinbutton(table, 9, "Averaging radius", "px",
                                 controls.radius);
     g_signal_connect(controls.radius, "value_changed",
-                     G_CALLBACK(level3_selection_updated_cb), NULL);
-    gtk_widget_show_all(table);*/
+                     G_CALLBACK(pointer_selection_updated_cb), NULL);
+    gtk_widget_show_all(table);
     controls.is_visible = FALSE;
 
     return dialog;
 }
 
 static void
-update_label(GtkWidget *label, gdouble value)
+update_coord_label(GtkWidget *label, gdouble value)
 {
     gchar buffer[16];
 
@@ -228,35 +267,38 @@ update_label(GtkWidget *label, gdouble value)
 }
 
 static void
+update_value_label(GtkWidget *label, gdouble value)
+{
+    gchar buffer[16];
+
+    g_snprintf(buffer, sizeof(buffer), "%.3g", value);
+    gtk_label_set_text(GTK_LABEL(label), buffer);
+}
+
+static void
 pointer_selection_updated_cb(void)
 {
-    gdouble x, y;
+    GwyContainer *data;
+    GwyDataField *dfield;
+    gdouble x, y, value;
     gboolean is_visible, is_selected;
+    gint radius;
 
     gwy_debug("");
-    /*XXX: seems broken
-     * is_visible = GTK_WIDGET_VISIBLE(dialog);*/
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(pointer_layer->parent));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls.radius));
+
     is_visible = controls.is_visible;
     is_selected = gwy_layer_pointer_get_point(pointer_layer, &x, &y);
     if (!is_visible && !is_selected)
         return;
     if (is_selected) {
-        update_label(controls.x, x);
-        update_label(controls.y, y);
-        {
-            gchar buffer[16];
-            gdouble value;
-            GwyContainer *data;
-            GwyDataField *dfield;
-
-            data = gwy_data_view_get_data(GWY_DATA_VIEW(pointer_layer->parent));
-            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                     "/0/data"));
-            value = gwy_data_field_get_dval_real(dfield, x, y,
-                                                 GWY_INTERPOLATION_ROUND);
-            g_snprintf(buffer, sizeof(buffer), "%g", value);
-            gtk_label_set_text(GTK_LABEL(controls.val), buffer);
-        }
+        update_coord_label(controls.x, x);
+        update_coord_label(controls.y, y);
+        value = pointer_get_z_average(dfield, x, y, radius);
+        update_value_label(controls.val, value);
     }
     else {
         gtk_label_set_text(GTK_LABEL(controls.x), "");
