@@ -17,6 +17,7 @@ libgwyprocessinclude_HEADERS = \
 	gwyprocess.h \
 	interpolation.h \
 	inttrans.h \
+	morph_lib.h \
 	level.h \
 	linestats.h \
 	simplefft.h \
@@ -50,6 +51,7 @@ libgwyprocess_la_SOURCES = \
 	inttrans.c \
 	level.c \
 	linestats.c \
+	morph_lib.c \
 	simplefft.c \
 	stats.c \
 	tip.c
