@@ -483,24 +483,14 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     gchar *window_title, *filename, zoomstr[8];
     const gchar *fnm;
     GwyDataView *data_view;
-    GwyContainer *data;
     gdouble zoom;
     gint prec;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(data_window->data_view);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = gwy_data_view_get_data(data_view);
-    g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    if (gwy_container_contains_by_name(data, "/filename")) {
-        fnm = gwy_container_get_string_by_name(data, "/filename");
-        filename = g_path_get_basename(fnm);
-    }
-    else {
-        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
-        filename = g_strdup(fnm);
-    }
+    filename = gwy_data_window_get_base_name(data_window);
 
     zoom = gwy_data_view_get_zoom(data_view);
     gwy_debug("%g", zoom);
@@ -516,6 +506,37 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     gtk_window_set_title(GTK_WINDOW(data_window), window_title);
     g_free(window_title);
     g_free(filename);
+}
+
+/**
+ * gwy_data_window_get_base_name:
+ * @data_window: A data window.
+ *
+ * Creates a string usable as a @data_window window name/title.
+ *
+ * This is the prefered data window representation in option menus,
+ * infoboxes, etc.
+ *
+ * Returns: The window name as a newly allocated string.  It should be
+ *          freed when no longer needed.
+ **/
+gchar*
+gwy_data_window_get_base_name(GwyDataWindow *data_window)
+{
+    GwyContainer *data;
+    const gchar *fnm;
+
+    data = gwy_data_window_get_data(data_window);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+
+    if (gwy_container_contains_by_name(data, "/filename")) {
+        fnm = gwy_container_get_string_by_name(data, "/filename");
+        return g_path_get_basename(fnm);
+    }
+    else {
+        fnm = gwy_container_get_string_by_name(data, "/filename/untitled");
+        return g_strdup(fnm);
+    }
 }
 
 static void
