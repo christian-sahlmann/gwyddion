@@ -40,16 +40,16 @@ GType gwy_data_line_get_type  (void) G_GNUC_CONST;
 GObject* gwy_data_line_new(gint res, gdouble real, gboolean nullme);
 
 /*allocate data line*/
-gint gwy_data_line_alloc(GwyDataLine *a, gint res);
+void gwy_data_line_alloc(GwyDataLine *a, gint res);
 
 /*allocate data line, set its size and null all values (or not)*/
-gint gwy_data_line_initialize(GwyDataLine *a, gint res, gdouble real, gboolean nullme);
+void gwy_data_line_initialize(GwyDataLine *a, gint res, gdouble real, gboolean nullme);
 
 /*free data line*/
 void gwy_data_line_free(GwyDataLine *a);
 
 /*resample data line (change resolution)*/
-gint gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation);
+void gwy_data_line_resample(GwyDataLine *a, gint res, gint interpolation);
 
 /*resize data line according to from-to*/
 gint gwy_data_line_resize(GwyDataLine *a, gint from, gint to);
@@ -84,15 +84,15 @@ gdouble gwy_data_line_get_dval_real(GwyDataLine *a, gdouble x, gint interpolatio
 /*Processing*/
 
 /*invert line along x/y/z axis*/
-gint gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z);
+void gwy_data_line_invert(GwyDataLine *a, gboolean x, gboolean z);
 
 /*fill, multiply or add something*/
 void gwy_data_line_fill(GwyDataLine *a, gdouble value);
 void gwy_data_line_multiply(GwyDataLine *a, gdouble value);
 void gwy_data_line_add(GwyDataLine *a, gdouble value);
-gint gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value);
-gint gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value);
-gint gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value);
+void gwy_data_line_part_fill(GwyDataLine *a, gint from, gint to, gdouble value);
+void gwy_data_line_part_multiply(GwyDataLine *a, gint from, gint to, gdouble value);
+void gwy_data_line_part_add(GwyDataLine *a, gint from, gint to, gdouble value);
 
 /*get some basic properties:*/
 gdouble gwy_data_line_get_max(GwyDataLine *a);
@@ -118,17 +118,22 @@ void gwy_data_line_part_line_coefs(GwyDataLine *a, gint from, gint to, gdouble *
 void gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv);
 
 /*do "rotation" along the y-axis by specified angle to do better line leveling*/
-gint gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation);
+void gwy_data_line_line_rotate(GwyDataLine *a, gdouble angle, gint interpolation);
 
 /*get derivations (according to "real" sizes of field)*/
 gdouble gwy_data_line_get_der(GwyDataLine *a, gint i);
 
 /*1DFFT interface*/
-gint gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia, GwyDataLine *rb, GwyDataLine *ib, gint (*fft)(), gint windowing, gint direction,
-		   gint interpolation, gboolean preserverms, gboolean level);
+void gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
+                       GwyDataLine *rb, GwyDataLine *ib,
+                       gint (*fft)(), GwyWindowingType windowing,
+                       gint direction, GwyInterpolationType interpolation,
+                       gboolean preserverms, gboolean level);
 
 /*simple version of (*fft) function using fft_hum() from "simplefft.h"*/
-gint gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia, GwyDataLine *rb, GwyDataLine *ib, gint interpolation);
+void gwy_data_line_fft_hum(gint direction, GwyDataLine *ra, GwyDataLine *ia,
+                           GwyDataLine *rb, GwyDataLine *ib,
+                           gint interpolation);
 
 
 #ifdef __cplusplus

@@ -20,7 +20,12 @@ typedef enum {
 } GwyInterpolationType;
 
 /*simple interpolation of non-equidistant values using two neighbour values*/
-gdouble gwy_interpolation_get_dval(gdouble x, gdouble x1, gdouble y1, gdouble x2, gdouble y2, gint interpolation);
+gdouble gwy_interpolation_get_dval(gdouble x,
+                                   gdouble x1,
+                                   gdouble y1,
+                                   gdouble x2,
+                                   gdouble y2,
+                                   gint interpolation);
 
 /*NOTE: quick interpolation of equidistant values is implemented
  in dataline and datafield classes separately.*/
