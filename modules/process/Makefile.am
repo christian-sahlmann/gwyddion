@@ -28,6 +28,7 @@ process_PROGRAMS = \
 	laplace.so \
 	level.so \
 	linecorrect.so \
+	local_contrast.so \
 	mask_grow_shrink.so \
 	maskcor.so \
 	maskops.so \
@@ -128,6 +129,9 @@ level_so_LDFLAGS = $(module_ldflags),level.so
 
 linecorrect_so_SOURCES = linecorrect.c
 linecorrect_so_LDFLAGS = $(module_ldflags),linecorrect.so
+
+local_contrast_so_SOURCES = local_contrast.c
+local_contrast_so_LDFLAGS = $(module_ldflags),local_contrast.so
 
 #nanoindent_mark_so_SOURCES = nanoindent_mark.c
 #nanoindent_mark_so_LDFLAGS = $(module_ldflags),nanoindent_mark.so
