@@ -18,6 +18,7 @@ AC_CONFIG_FILES(\
   modules/file/Makefile \
   modules/process/Makefile \
   plugins/Makefile \
+  plugins/file/Makefile \
   plugins/process/Makefile \
   pixmaps/Makefile \
   devel-docs/Makefile \
