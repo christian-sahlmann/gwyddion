@@ -5,7 +5,9 @@ GwyDataField
 GwyDataFieldClass
 GwyComputationStateType
 gwy_data_field_invalidate
+gwy_data_field_duplicate
 gwy_data_field_new
+gwy_data_field_new_alike
 gwy_data_field_resample
 gwy_data_field_resize
 gwy_data_field_copy
@@ -36,9 +38,11 @@ gwy_data_field_get_dval_real
 gwy_data_field_rotate
 gwy_data_field_invert
 gwy_data_field_fill
+gwy_data_field_clear
 gwy_data_field_multiply
 gwy_data_field_add
 gwy_data_field_area_fill
+gwy_data_field_area_clear
 gwy_data_field_area_multiply
 gwy_data_field_area_add
 gwy_data_field_threshold
@@ -77,7 +81,9 @@ GwyFitLineType
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
 GwyDataLineClass
+gwy_data_line_duplicate
 gwy_data_line_new
+gwy_data_line_new_alike
 gwy_data_line_resample
 gwy_data_line_resize
 gwy_data_line_copy
@@ -183,6 +189,7 @@ gwy_data_field_grains_mark_curvature
 gwy_data_field_grains_mark_watershed
 gwy_data_field_grains_remove_manually
 gwy_data_field_grains_remove_grain
+gwy_data_field_grains_extract_grain
 gwy_data_field_grains_remove_by_size
 gwy_data_field_grains_remove_by_height
 gwy_data_field_grains_watershed_iteration
@@ -260,6 +267,10 @@ gwy_data_field_area_filter_laplacian
 gwy_data_field_area_filter_sobel
 gwy_data_field_area_filter_prewitt
 gwy_data_field_area_filter_canny
+gwy_data_field_filter_minimum
+gwy_data_field_area_filter_minimum
+gwy_data_field_filter_maximum
+gwy_data_field_area_filter_maximum
 gwy_data_field_convolve
 gwy_data_field_filter_median
 gwy_data_field_filter_mean

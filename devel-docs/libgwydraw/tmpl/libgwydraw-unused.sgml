@@ -1,3 +1,52 @@
+<!-- ##### FUNCTION gwy_gradient_is_modifiable ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradients_delete_gradient ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradients_new_gradient ##### -->
+<para>
+
+</para>
+
+@newname: 
+@Returns: 
+@name: 
+
+<!-- ##### FUNCTION gwy_gradients_new_gradient_as_copy ##### -->
+<para>
+
+</para>
+
+@name: 
+@newname: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradients_rename_gradient ##### -->
+<para>
+
+</para>
+
+@name: 
+@newname: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradients_setup_presets ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_palette_def_print ##### -->
 <para>
 

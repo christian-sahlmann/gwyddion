@@ -50,6 +50,15 @@ Simple axis with a false color scale
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_color_axis_new_default ##### -->
+<para>
+
+</para>
+
+@orientation: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_color_axis_get_range ##### -->
 <para>
 
@@ -68,6 +77,42 @@ Simple axis with a false color scale
 @axis: 
 @min: 
 @max: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_get_si_unit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_set_si_unit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@unit: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_set_gradient ##### -->
+<para>
+
+</para>
+
+@axis: 
+@gradient: 
+
+
+<!-- ##### FUNCTION gwy_color_axis_get_gradient ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_color_axis_set_unit ##### -->

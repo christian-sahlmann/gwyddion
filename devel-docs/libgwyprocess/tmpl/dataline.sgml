@@ -52,6 +52,14 @@ Fit polynomial degree selection.
 
 @parent_class: 
 
+<!-- ##### MACRO gwy_data_line_duplicate ##### -->
+<para>
+
+</para>
+
+@data_line: 
+
+
 <!-- ##### FUNCTION gwy_data_line_new ##### -->
 <para>
 
@@ -59,6 +67,16 @@ Fit polynomial degree selection.
 
 @res: 
 @real: 
+@nullme: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_new_alike ##### -->
+<para>
+
+</para>
+
+@model: 
 @nullme: 
 @Returns: 
 

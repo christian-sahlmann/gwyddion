@@ -61,6 +61,7 @@
     <xi:include href="xml/gwyvmenubar.xml"/>
     <xi:include href="xml/gwyscitext.xml"/>
     <xi:include href="xml/gwystatusbar.xml"/>
+    <xi:include href="xml/gwyshader.xml"/>
     <xi:include href="xml/gwytoolbox.xml"/>
     <xi:include href="xml/gwyvalunit.xml"/>
   </chapter>

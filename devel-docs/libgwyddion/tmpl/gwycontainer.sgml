@@ -101,6 +101,14 @@ thus has a string-key counterpart
 
 @parent_class: 
 
+<!-- ##### MACRO gwy_container_duplicate ##### -->
+<para>
+
+</para>
+
+@container: 
+
+
 <!-- ##### FUNCTION gwy_container_new ##### -->
 <para>
 

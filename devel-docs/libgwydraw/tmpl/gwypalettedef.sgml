@@ -6,13 +6,18 @@ Palette definitions
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+This type is broken, deprecated, and will be removed in 2.0.
+Use #GwyGradient for new stuff.
+</para>
+
+<para>
 A palette definition consists of defining points, between them the colors are
-interpolated to get a <link linkend="GwyPalette">palette</link>.
+interpolated to get a #GwyPalette.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="GwyPalette">GwyPalette</link>
+#GwyPalette, #GwyGradient.
 </para>
 
 <!-- ##### MACRO GWY_PALETTE_BLUE ##### -->

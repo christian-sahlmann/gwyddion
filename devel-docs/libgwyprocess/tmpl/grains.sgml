@@ -102,6 +102,17 @@ Mask processing merging (namely used in grain processing).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_data_field_grains_extract_grain ##### -->
+<para>
+
+</para>
+
+@grain_field: 
+@col: 
+@row: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_field_grains_remove_by_size ##### -->
 <para>
 

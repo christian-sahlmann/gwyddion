@@ -1,0 +1,283 @@
+<!-- ##### SECTION Title ##### -->
+GwyGradient
+
+<!-- ##### SECTION Short_Description ##### -->
+A map from numbers to RGBA colors.
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+Gradient is a map from interval [0,1] to RGB(A) color space.
+Each gradient is defined by an ordered set of color points, the first of them
+is always at 0.0, the last at 1.0 (thus each gradient must consist of at
+least two points).  Between them, the color is interpolated.  Color points
+of modifiable gradients (see below) can be edited with functions like
+gwy_gradient_insert_point(), gwy_gradient_set_point_color(), or
+gwy_gradient_set_points().
+</para>
+
+<para>
+Gradient objects can be obtained from gwy_gradients_get_gradient().
+New gradients can be created with gwy_gradients_new_gradient() and
+gwy_gradients_new_gradient_as_copy().  However, #GwyGradient objects are
+more or less singletons, all gradients of the same name are normally the same
+objects (the only exception are gradients that survived
+gwy_gradients_delete_gradient(), see its desciption for more). Normally you
+don't need to care about this, except that you have to excplicitely add your
+reference to a gradient returned by some of above functions.
+</para>
+
+<para>
+Some gradients are predefined and cannot be modified and deleted (most notably
+"Gray" gradient), gradients created by gwy_gradients_new_gradient() and
+gwy_gradients_new_gradient_as_copy() are modifiable; the state can be
+queried with gwy_gradient_is_modifiable().
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_GRADIENT_DEFAULT ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GwyGradientPoint ##### -->
+<para>
+
+</para>
+
+@x: 
+@color: 
+
+<!-- ##### USER_FUNCTION GwyGradientFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@gradient: 
+@user_data: 
+
+
+<!-- ##### STRUCT GwyGradient ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGradientClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@gradients: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_gradient_get_name ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_modifiable ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_color ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@x: 
+@color: 
+<!-- # Unused Parameters # -->
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_samples ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@nsamples: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_sample ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@nsamples: 
+@samples: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_npoints ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_point ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@index_: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_set_point ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@index_: 
+@point: 
+
+
+<!-- ##### FUNCTION gwy_gradient_set_point_color ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@index_: 
+@color: 
+
+
+<!-- ##### FUNCTION gwy_gradient_insert_point ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@index_: 
+@point: 
+
+
+<!-- ##### FUNCTION gwy_gradient_insert_point_sorted ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@point: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_delete_point ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@index_: 
+
+
+<!-- ##### FUNCTION gwy_gradient_reset ##### -->
+<para>
+
+</para>
+
+@gradient: 
+
+
+<!-- ##### FUNCTION gwy_gradient_get_points ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@npoints: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_set_points ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@npoints: 
+@points: 
+
+
+<!-- ##### FUNCTION gwy_gradient_set_from_samples ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@nsamples: 
+@samples: 
+
+
+<!-- ##### FUNCTION gwy_gradient_dump ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradients_gradient_exists ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradients_get_gradient ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradients_foreach ##### -->
+<para>
+
+</para>
+
+@function: 
+@user_data: 
+
+

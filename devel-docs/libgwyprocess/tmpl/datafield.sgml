@@ -47,6 +47,14 @@ as they are connected with GwyDataField.
 @data_field: 
 
 
+<!-- ##### MACRO gwy_data_field_duplicate ##### -->
+<para>
+
+</para>
+
+@data_field: 
+
+
 <!-- ##### FUNCTION gwy_data_field_new ##### -->
 <para>
 
@@ -56,6 +64,16 @@ as they are connected with GwyDataField.
 @yres: 
 @xreal: 
 @yreal: 
+@nullme: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_new_alike ##### -->
+<para>
+
+</para>
+
+@model: 
 @nullme: 
 @Returns: 
 
@@ -419,6 +437,14 @@ as they are connected with GwyDataField.
 @a: 
 
 
+<!-- ##### FUNCTION gwy_data_field_clear ##### -->
+<para>
+
+</para>
+
+@data_field: 
+
+
 <!-- ##### FUNCTION gwy_data_field_multiply ##### -->
 <para>
 
@@ -454,6 +480,18 @@ as they are connected with GwyDataField.
 @value: 
 <!-- # Unused Parameters # -->
 @a: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_clear ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@ulcol: 
+@ulrow: 
+@brcol: 
+@brrow: 
 
 
 <!-- ##### FUNCTION gwy_data_field_area_multiply ##### -->

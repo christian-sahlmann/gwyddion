@@ -1,10 +1,13 @@
 <SECTION>
 <FILE>gwygradient</FILE>
+GWY_GRADIENT_DEFAULT
 GwyGradientPoint
 GwyGradientFunc
 <TITLE>GwyGradient</TITLE>
+GwyGradient
+GwyGradientClass
 gwy_gradient_get_name
-gwy_gradient_is_modifiable
+gwy_gradient_get_modifiable
 gwy_gradient_get_color
 gwy_gradient_get_samples
 gwy_gradient_sample
@@ -23,12 +26,7 @@ gwy_gradient_dump
 gwy_gradient_parse
 gwy_gradients_gradient_exists
 gwy_gradients_get_gradient
-gwy_gradients_new_gradient
-gwy_gradients_rename_gradient
-gwy_gradients_new_gradient_as_copy
-gwy_gradients_delete_gradient
 gwy_gradients_foreach
-gwy_gradients_setup_presets
 <SUBSECTION Standard>
 GWY_GRADIENT
 GWY_IS_GRADIENT
@@ -38,6 +36,7 @@ GWY_GRADIENT_CLASS
 GWY_IS_GRADIENT_CLASS
 GWY_GRADIENT_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwypalettedef</FILE>
 GWY_PALETTE_BLUE

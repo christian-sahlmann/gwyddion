@@ -66,6 +66,22 @@ GWY_GL_MATERIAL_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygrapherlabel</FILE>
+<TITLE>GwyGrapherLabel</TITLE>
+gwy_grapher_label_new
+gwy_grapher_label_refresh
+gwy_grapher_label_change_model
+gwy_grapher_label_draw_label_on_drawable
+<SUBSECTION Standard>
+GWY_GRAPHER_LABEL
+GWY_IS_GRAPHER_LABEL
+GWY_TYPE_GRAPHER_LABEL
+gwy_grapher_label_get_type
+GWY_GRAPHER_LABEL_CLASS
+GWY_IS_GRAPHER_LABEL_CLASS
+GWY_GRAPHER_LABEL_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 GwyDataViewLayer
@@ -91,8 +107,13 @@ GwyColorAxisParams
 GwyColorAxis
 GwyColorAxisClass
 gwy_color_axis_new
+gwy_color_axis_new_default
 gwy_color_axis_get_range
 gwy_color_axis_set_range
+gwy_color_axis_get_si_unit
+gwy_color_axis_set_si_unit
+gwy_color_axis_set_gradient
+gwy_color_axis_get_gradient
 gwy_color_axis_set_unit
 gwy_color_axis_set_palette
 gwy_color_axis_get_palette
@@ -179,6 +200,69 @@ GWY_SPHERE_COORDS_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyaxiser</FILE>
+GWY_AXISER_NORTH
+GWY_AXISER_SOUTH
+GWY_AXISER_EAST
+GWY_AXISER_WEST
+GwyAxiserScaleFormat
+GwyAxiserTick
+GwyAxiserLabeledTick
+GwyAxiserParams
+<TITLE>GwyAxiser</TITLE>
+gwy_axiser_new
+gwy_axiser_set_logarithmic
+gwy_axiser_set_visible
+gwy_axiser_set_auto
+gwy_axiser_set_req
+gwy_axiser_set_style
+gwy_axiser_get_maximum
+gwy_axiser_get_minimum
+gwy_axiser_get_reqmaximum
+gwy_axiser_get_reqminimum
+gwy_axiser_set_label
+gwy_axiser_get_label
+gwy_axiser_set_unit
+gwy_axiser_enable_label_edit
+gwy_axiser_signal_rescaled
+<SUBSECTION Standard>
+GWY_AXISER
+GWY_IS_AXISER
+GWY_TYPE_AXISER
+gwy_axiser_get_type
+GWY_AXISER_CLASS
+GWY_IS_AXISER_CLASS
+GWY_AXISER_GET_CLASS
+</SECTION>
+<SECTION>
+<FILE>gwygraphermodel</FILE>
+<TITLE>GwyGrapherModel</TITLE>
+gwy_grapher_model_new
+gwy_grapher_model_get_n_curves
+gwy_grapher_model_add_curve
+<SUBSECTION Standard>
+GWY_GRAPHER_MODEL
+GWY_IS_GRAPHER_MODEL
+GWY_TYPE_GRAPHER_MODEL
+gwy_grapher_model_get_type
+GWY_GRAPHER_MODEL_CLASS
+GWY_IS_GRAPHER_MODEL_CLASS
+GWY_GRAPHER_MODEL_GET_CLASS
+</SECTION>
+<SECTION>
+<FILE>gwygraphercorner</FILE>
+<TITLE>GwyGrapherCorner</TITLE>
+gwy_grapher_corner_new
+<SUBSECTION Standard>
+GWY_GRAPHER_CORNER
+GWY_IS_GRAPHER_CORNER
+GWY_TYPE_GRAPHER_CORNER
+gwy_grapher_corner_get_type
+GWY_GRAPHER_CORNER_CLASS
+GWY_IS_GRAPHER_CORNER_CLASS
+GWY_GRAPHER_CORNER_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwylayer-mask</FILE>
 <TITLE>GwyLayerMask</TITLE>
 GwyLayerMask
@@ -196,6 +280,63 @@ GWY_IS_LAYER_MASK_CLASS
 GWY_LAYER_MASK_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwygrapherarea</FILE>
+GwyGrapherStatusType
+GwyGrapherStatus_PointData
+GwyGrapherStatus_CursorData
+GwyGrapherStatus_PointsData
+GwyGrapherStatus_AreaData
+GwyGrapherStatus_AreasData
+GwyGrapherStatus_ZoomData
+GwyGrapherAreaCurve
+<TITLE>GwyGrapherArea</TITLE>
+gwy_grapher_area_new
+gwy_grapher_area_signal_selected
+gwy_grapher_area_signal_zoomed
+gwy_grapher_area_refresh
+gwy_grapher_area_set_selection
+gwy_grapher_area_change_model
+gwy_grapher_area_draw_area_on_drawable
+<SUBSECTION Standard>
+GWY_GRAPHER_AREA
+GWY_IS_GRAPHER_AREA
+GWY_TYPE_GRAPHER_AREA
+gwy_grapher_area_get_type
+GWY_GRAPHER_AREA_CLASS
+GWY_IS_GRAPHER_AREA_CLASS
+GWY_GRAPHER_AREA_GET_CLASS
+</SECTION>
+<SECTION>
+<FILE>gwygrapher</FILE>
+GwyGrapherAutoProperties
+<TITLE>GwyGrapher</TITLE>
+gwy_grapher_new
+gwy_grapher_refresh
+gwy_grapher_change_model
+<SUBSECTION Standard>
+GWY_GRAPHER
+GWY_IS_GRAPHER
+GWY_TYPE_GRAPHER
+gwy_grapher_get_type
+GWY_GRAPHER_CLASS
+GWY_IS_GRAPHER_CLASS
+GWY_GRAPHER_GET_CLASS
+</SECTION>
+<SECTION>
+<FILE>gwygrapherareadialog</FILE>
+<TITLE>GwyGrapherAreaDialog</TITLE>
+gwy_grapher_area_dialog_new
+gwy_grapher_area_dialog_set_curve_data
+<SUBSECTION Standard>
+GWY_GRAPHER_AREA_DIALOG
+GWY_IS_GRAPHER_AREA_DIALOG
+GWY_TYPE_GRAPHER_AREA_DIALOG
+gwy_grapher_area_dialog_get_type
+GWY_GRAPHER_AREA_DIALOG_CLASS
+GWY_IS_GRAPHER_AREA_DIALOG_CLASS
+GWY_GRAPHER_AREA_DIALOG_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwygraphlabel</FILE>
 GwyGraphLabelPosition
@@ -276,6 +417,20 @@ GWY_STATUSBAR_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygrapherlabeldialog</FILE>
+<TITLE>GwyGrapherLabelDialog</TITLE>
+gwy_grapher_label_dialog_new
+gwy_grapher_label_dialog_set_graph_data
+<SUBSECTION Standard>
+GWY_GRAPHER_LABEL_DIALOG
+GWY_IS_GRAPHER_LABEL_DIALOG
+GWY_TYPE_GRAPHER_LABEL_DIALOG
+gwy_grapher_label_dialog_get_type
+GWY_GRAPHER_LABEL_DIALOG_CLASS
+GWY_IS_GRAPHER_LABEL_DIALOG_CLASS
+GWY_GRAPHER_LABEL_DIALOG_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwyvectorlayer</FILE>
 <TITLE>GwyVectorLayer</TITLE>
 GwyVectorLayer
@@ -307,6 +462,20 @@ GWY_VECTOR_LAYER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygraphercurvemodel</FILE>
+<TITLE>GwyGrapherCurveModel</TITLE>
+gwy_grapher_curve_model_new
+gwy_grapher_curve_model_save_curve
+<SUBSECTION Standard>
+GWY_GRAPHER_CURVE_MODEL
+GWY_IS_GRAPHER_CURVE_MODEL
+GWY_TYPE_GRAPHER_CURVE_MODEL
+gwy_grapher_curve_model_get_type
+GWY_GRAPHER_CURVE_MODEL_CLASS
+GWY_IS_GRAPHER_CURVE_MODEL_CLASS
+GWY_GRAPHER_CURVE_MODEL_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwyruler</FILE>
 GwyUnitsPlacement
 <TITLE>GwyRuler</TITLE>
@@ -331,6 +500,31 @@ GWY_RULER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyshader</FILE>
+<TITLE>GwyShader</TITLE>
+GwyShader
+GwyShaderClass
+gwy_shader_new
+gwy_shader_get_theta
+gwy_shader_get_phi
+gwy_shader_set_theta
+gwy_shader_set_phi
+gwy_shader_set_angle
+gwy_shader_get_gradient
+gwy_shader_set_gradient
+gwy_shader_get_update_policy
+gwy_shader_set_update_policy
+<SUBSECTION Standard>
+GWY_SHADER
+GWY_IS_SHADER
+GWY_TYPE_SHADER
+gwy_shader_get_type
+GWY_SHADER_CLASS
+GWY_IS_SHADER_CLASS
+GWY_SHADER_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwylayer-basic</FILE>
 <TITLE>GwyLayerBasic</TITLE>
 GwyLayerBasic
@@ -338,6 +532,8 @@ GwyLayerBasicClass
 gwy_layer_basic_new
 gwy_layer_basic_set_palette
 gwy_layer_basic_get_palette
+gwy_layer_basic_set_gradient
+gwy_layer_basic_get_gradient
 <SUBSECTION Standard>
 GWY_LAYER_BASIC
 GWY_IS_LAYER_BASIC
@@ -438,6 +634,8 @@ gwy_3d_view_new
 gwy_3d_view_update
 gwy_3d_view_get_palette
 gwy_3d_view_set_palette
+gwy_3d_view_get_gradient
+gwy_3d_view_set_gradient
 gwy_3d_view_get_status
 gwy_3d_view_set_status
 gwy_3d_view_get_orthographic
@@ -739,11 +937,15 @@ GWY_GRAPH_GET_CLASS
 
 <SECTION>
 <FILE>gwydgets</FILE>
+gwy_adjustment_get_int
+GwyHScaleStyle
 gwy_widgets_type_init
 gwy_widgets_gl_init
 gwy_widgets_get_gl_config
 gwy_table_attach_spinbutton
 gwy_table_attach_row
+gwy_table_attach_hscale
+gwy_table_hscale_set_sensitive
 gwy_table_get_child_widget
 gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
@@ -757,6 +959,21 @@ gwy_radio_buttons_set_current
 gwy_radio_buttons_get_current
 gwy_radio_buttons_set_current_from_widget
 gwy_radio_buttons_get_current_from_widget
+</SECTION>
+
+<SECTION>
+<FILE>gwygrapherbasics</FILE>
+GwyGrapherPointType
+GwyGrapherCurveType
+GwyGrapherLabelPosition
+GwyGrapherDataPoint
+GwyGrapherDataArea
+GwyGrapherActiveAreaSpecs
+gwy_grapher_draw_point
+gwy_grapher_draw_line
+gwy_grapher_draw_curve
+gwy_grapher_draw_selection_points
+gwy_grapher_draw_selection_areas
 </SECTION>
 
 <SECTION>
@@ -829,8 +1046,10 @@ gwy_stock_register_stock_items
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
 gwy_menu_palette
+gwy_menu_gradient
 gwy_menu_gl_material
 gwy_option_menu_palette
+gwy_option_menu_gradient
 gwy_option_menu_gl_material
 gwy_option_menu_interpolation
 gwy_option_menu_windowing

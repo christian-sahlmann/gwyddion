@@ -70,6 +70,16 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_menu_gradient ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_menu_gl_material ##### -->
 <para>
 
@@ -81,6 +91,17 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 
 
 <!-- ##### FUNCTION gwy_option_menu_palette ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_gradient ##### -->
 <para>
 
 </para>

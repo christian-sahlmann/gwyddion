@@ -151,6 +151,19 @@ types
 </para>
 
 
+<!-- ##### USER_FUNCTION GwyDeserializeStructFunc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@object_name: 
+@nspec: 
+@spec: 
+@Returns: 
+
 <!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
 <para>
 
@@ -200,6 +213,28 @@ types
 @serialize: 
 @deserialize: 
 @duplicate: 
+
+<!-- ##### USER_FUNCTION GwySerializeHashFunc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@object_name: 
+@nitems: 
+@items: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION GwySerializeStructFunc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@object_name: 
+@nspec: 
+@spec: 
+@Returns: 
 
 <!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
 <para>

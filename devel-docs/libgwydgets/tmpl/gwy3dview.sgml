@@ -111,6 +111,24 @@ the 3D view to update self, when data changes.
 @gwy3dwiew: 
 
 
+<!-- ##### FUNCTION gwy_3d_view_get_gradient ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_3d_view_set_gradient ##### -->
+<para>
+
+</para>
+
+@gwy3dview: 
+@gradient: 
+
+
 <!-- ##### FUNCTION gwy_3d_view_get_status ##### -->
 <para>
 

@@ -51,12 +51,30 @@ or number of significant digits --
 @reserved1: 
 @reserved2: 
 
+<!-- ##### MACRO gwy_si_unit_duplicate ##### -->
+<para>
+
+</para>
+
+@siunit: 
+
+
 <!-- ##### FUNCTION gwy_si_unit_new ##### -->
 <para>
 
 </para>
 
 @unit_string: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_new_parse ##### -->
+<para>
+
+</para>
+
+@unit_string: 
+@power10: 
 @Returns: 
 
 
@@ -69,12 +87,55 @@ or number of significant digits --
 @unit_string: 
 
 
+<!-- ##### FUNCTION gwy_si_unit_set_unit_string_parse ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@unit_string: 
+@power10: 
+
+
 <!-- ##### FUNCTION gwy_si_unit_get_unit_string ##### -->
 <para>
 
 </para>
 
 @siunit: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_multiply ##### -->
+<para>
+
+</para>
+
+@siunit1: 
+@siunit2: 
+@result: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_divide ##### -->
+<para>
+
+</para>
+
+@siunit1: 
+@siunit2: 
+@result: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_power ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@power: 
+@result: 
 @Returns: 
 
 

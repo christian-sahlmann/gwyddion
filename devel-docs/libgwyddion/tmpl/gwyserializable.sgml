@@ -17,17 +17,18 @@ It is also posible it duplicate any such object with
 </para>
 
 <para>
-There are quite a few helper functions available for implementation of
-serialization and deserialization in your classes, most high-level
-(and thus probably most useful) are
-<link linkend="gwy-serialize-pack-object-struct">gwy_serialize_pack_object_struct()</link>
-and
-<link linkend="gwy-serialize-unpack-object-struct">gwy_serialize_unpack_object_struct()</link>
-that do all the hard work themselves and are sufficient for serialization of
-simple objects.
-Even if you don not use these functions, you should keep object name and
-serialized data length in the same format as they do in new objects, to allow
-old Gwyddion versions to safely ignore (skip) these new objects.
+The only functions that should be used for implementation of serialization
+and deserialization in your classes, are the most high-level ones:
+gwy_serialize_pack_object_struct(), gwy_serialize_unpack_object_struct(),
+gwy_serialize_object_items(), and gwy_deserialize_object_hash().
+The former two are useful for struct-like objects (most objects are of this
+kind), the latter two for hash-like objects, i.e., objects that can contain
+components of arbitrary name and type.
+</para>
+
+<para>
+All the low-level functions are deprecated and will be removed in Gwyddion
+2.0.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -311,12 +312,8 @@ old Gwyddion versions to safely ignore (skip) these new objects.
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->
 <para>
-Packs a struct as an object.
-</para>
-
-<para>
-This is a wrapper around gwy_serialize_pack_struct(), taking care of
-adding type name and packed object size.
+Appends serialization of object with g_type_name() @object_name and components
+described by @spec to @buffer in gwy-file format.
 </para>
 
 <para>
@@ -346,14 +343,31 @@ my_object_serialize(GObject *obj,
 @nspec: The number of items in @spec.
 @spec: The components to serialize.
 @Returns: The buffer with serialization of @spec components appended.
-<!-- # Unused Parameters # -->
-@size: Current size of @buffer, new size is returned here.
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_object_struct ##### -->
 <para>
-Deserializes an object with named components packed by
+Deserializes an object with named components packed into gwy-file format by
 gwy_serialize_pack_object_struct().
+</para>
+
+<para>
+Extra components are ignored (but cause a warning), components of different
+type than expected cause failure, missing components are not detected.
+</para>
+
+<para>
+It is safe to pass pointers to existing non-atomic objects (strings, arrays,
+objects) in @spec values, they will be dereferenced and freed as necessary
+when an unpacked value is about to replace them.
+For the same reason it is an error to pass pointers to unintialized memory
+there, always initialize non-atomic @spec values to %NULL pointers, at
+least.
+</para>
+
+<para>
+Caller is responsible for use/clean-up of these values if deserialization
+succeeds or not.
 </para>
 
 <para>
@@ -389,7 +403,7 @@ my_object_deserialize(const guchar *buffer,
 @nspec: The number of items in @spec.
 @spec: The components to deserialize.
 @Returns: Whether the unpacking succeeded
-          (see gwy_serialize_unpack_struct() for definition of success).
+          (see description body for definition of success and failure).
 
 
 <!-- ##### FUNCTION gwy_serialize_object_items ##### -->

@@ -860,6 +860,54 @@ gwymodulemenus
 </para>
 
 
+<!-- ##### FUNCTION gwy_graph_draw_curve ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@curvemodel: 
+
+<!-- ##### FUNCTION gwy_graph_draw_line ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@x_from: 
+@y_from: 
+@x_to: 
+@y_to: 
+@type: 
+@line_style: 
+@size: 
+@color: 
+
+<!-- ##### FUNCTION gwy_graph_draw_selection_areas ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@data_areas: 
+@n_of_areas: 
+
+<!-- ##### FUNCTION gwy_graph_draw_selection_points ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@data_points: 
+@n_of_points: 
+
 <!-- ##### FUNCTION gwy_graph_enable_axis_label_update ##### -->
 <para>
 
@@ -890,6 +938,14 @@ gwymodulemenus
 </para>
 
 @graph: 
+
+<!-- ##### FUNCTION gwy_grapher_new_from_model ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_interpolation_option_menu ##### -->
 <para>
@@ -1196,6 +1252,15 @@ gwymodulemenus
 @key: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_shader_set_spherical_angle ##### -->
+<para>
+
+</para>
+
+@shader: 
+@theta: 
+@phi: 
 
 <!-- ##### FUNCTION gwy_sphere_coords_value_changed ##### -->
 <para>

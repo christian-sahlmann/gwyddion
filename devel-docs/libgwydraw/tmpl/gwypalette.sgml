@@ -6,6 +6,11 @@ Palettes mapping number ranges to colors
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+This type is broken, deprecated, and will be removed in 2.0.
+Use #GwyGradient for new stuff.
+</para>
+
+<para>
 A palette is a map from interval [0,1] to RGB or RGBA space. Palettes as
 created from
 <link linkend="GwyPaletteDef">palette definitions</link> that contain some
@@ -14,7 +19,7 @@ defining points between them the colors are interpolated.
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="GwyPaletteDef">GwyPaletteDef</link>
+#GwyPaletteDef, #GwyGradient.
 </para>
 
 <!-- ##### STRUCT GwyPalette ##### -->

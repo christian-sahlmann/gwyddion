@@ -57,3 +57,21 @@ Display data colored with a gradient
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_layer_basic_set_gradient ##### -->
+<para>
+
+</para>
+
+@layer: 
+@gradient: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_get_gradient ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+

@@ -4,9 +4,15 @@ GwySIValueFormat
 <TITLE>GwySIUnit</TITLE>
 GwySIUnit
 GwySIUnitClass
+gwy_si_unit_duplicate
 gwy_si_unit_new
+gwy_si_unit_new_parse
 gwy_si_unit_set_unit_string
+gwy_si_unit_set_unit_string_parse
 gwy_si_unit_get_unit_string
+gwy_si_unit_multiply
+gwy_si_unit_divide
+gwy_si_unit_power
 gwy_si_unit_get_format
 gwy_si_unit_get_format_with_resolution
 gwy_si_unit_get_format_with_digits
@@ -82,6 +88,7 @@ GwyKeyVal
 <TITLE>GwyContainer</TITLE>
 GwyContainer
 GwyContainerClass
+gwy_container_duplicate
 gwy_container_new
 gwy_container_value_type
 gwy_container_contains

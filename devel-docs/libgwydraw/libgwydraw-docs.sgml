@@ -11,8 +11,9 @@
     functions.
   </para>
   <xi:include href="xml/gwyrgba.xml"/>
+  <xi:include href="xml/gwygradient.xml"/>
+  <xi:include href="xml/gwypixfield.xml"/>
   <xi:include href="xml/gwypalette.xml"/>
   <xi:include href="xml/gwypalettedef.xml"/>
-  <xi:include href="xml/gwypixfield.xml"/>
   <xi:include href="xml/gwydraw.xml"/>
 </book>

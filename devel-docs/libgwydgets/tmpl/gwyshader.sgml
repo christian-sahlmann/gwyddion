@@ -1,0 +1,139 @@
+<!-- ##### SECTION Title ##### -->
+GwyShader
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyShader ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyShader::angle-changed ##### -->
+<para>
+
+</para>
+
+@gwyshader: the object which received the signal.
+
+<!-- ##### ARG GwyShader:gradient ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyShader:update-policy ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyShaderClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@angle_changed: 
+@reserved1: 
+
+<!-- ##### FUNCTION gwy_shader_new ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_shader_get_theta ##### -->
+<para>
+
+</para>
+
+@shader: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_shader_get_phi ##### -->
+<para>
+
+</para>
+
+@shader: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_shader_set_theta ##### -->
+<para>
+
+</para>
+
+@shader: 
+@theta: 
+
+
+<!-- ##### FUNCTION gwy_shader_set_phi ##### -->
+<para>
+
+</para>
+
+@shader: 
+@phi: 
+
+
+<!-- ##### FUNCTION gwy_shader_set_angle ##### -->
+<para>
+
+</para>
+
+@shader: 
+@theta: 
+@phi: 
+
+
+<!-- ##### FUNCTION gwy_shader_get_gradient ##### -->
+<para>
+
+</para>
+
+@shader: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_shader_set_gradient ##### -->
+<para>
+
+</para>
+
+@shader: 
+@gradient: 
+
+
+<!-- ##### FUNCTION gwy_shader_get_update_policy ##### -->
+<para>
+
+</para>
+
+@shader: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_shader_set_update_policy ##### -->
+<para>
+
+</para>
+
+@shader: 
+@update_policy: 
+
+

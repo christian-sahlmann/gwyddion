@@ -20,6 +20,27 @@ gwy_widgets_gl_init().
 
 </para>
 
+<!-- ##### MACRO gwy_adjustment_get_int ##### -->
+<para>
+
+</para>
+
+@adj: 
+
+
+<!-- ##### ENUM GwyHScaleStyle ##### -->
+<para>
+
+</para>
+
+@GWY_HSCALE_DEFAULT: 
+@GWY_HSCALE_LOG: 
+@GWY_HSCALE_SQRT: 
+@GWY_HSCALE_NO_SCALE: 
+@GWY_HSCALE_WIDGET: 
+@GWY_HSCALE_WIDGET_NO_EXPAND: 
+@GWY_HSCALE_CHECK: 
+
 <!-- ##### FUNCTION gwy_widgets_type_init ##### -->
 <para>
 
@@ -66,6 +87,29 @@ gwy_widgets_gl_init().
 @name: 
 @units: 
 @middle_widget: 
+
+
+<!-- ##### FUNCTION gwy_table_attach_hscale ##### -->
+<para>
+
+</para>
+
+@table: 
+@row: 
+@name: 
+@units: 
+@pivot: 
+@style: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_table_hscale_set_sensitive ##### -->
+<para>
+
+</para>
+
+@pivot: 
+@sensitive: 
 
 
 <!-- ##### FUNCTION gwy_table_get_child_widget ##### -->
