@@ -83,9 +83,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     "unrotate",
-    "Rotates data to make main directions parallel with x or y axis.",
+    N_("Rotates data to make main directions parallel with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -99,7 +99,7 @@ module_register(const gchar *name)
 {
     static GwyProcessFuncInfo unrotate_func_info = {
         "unrotate",
-        "/_Correct Data/_Unrotate...",  /* FIXME: a less silly name? */
+        N_("/_Correct Data/_Unrotate..."),
         (GwyProcessFunc)&unrotate,
         UNROTATE_RUN_MODES,
         0,
@@ -276,7 +276,7 @@ unrotate_dialog_update(UnrotateControls *controls,
                                 args->symmetry);
 
     symm = args->symmetry ? args->symmetry : controls->guess;
-    lab = g_strdup_printf("%.2f", 360*controls->correction[symm]);
+    lab = g_strdup_printf("%.2f", 180/G_PI*controls->correction[symm]);
     gtk_label_set_text(GTK_LABEL(controls->corrlabel), lab);
     g_free(lab);
 }
