@@ -946,13 +946,15 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
  *
  * Returns current zoom of @data_view.
  *
+ * When a resize is queued, the new zoom value is returned.
+ *
  * Returns: The zoom.
  **/
 gdouble
 gwy_data_view_get_zoom(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
-    return data_view->zoom;
+    return data_view->newzoom;
 }
 
 /**

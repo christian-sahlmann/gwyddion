@@ -43,8 +43,10 @@ static void     gwy_data_window_init              (GwyDataWindow *data_window);
 static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_measure_changed   (GwyDataWindow *data_window);
 static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
+static void     gwy_data_window_fit_to_screen     (GwyDataWindow *data_window,
+                                                   GwyDataView *data_view);
 static void     gwy_data_window_update_units      (GwyDataWindow *data_window);
-static gboolean gwy_data_view_update_statusbar    (GwyDataView *data_view,
+static gboolean gwy_data_window_update_statusbar  (GwyDataView *data_view,
                                                    GdkEventMotion *event,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
@@ -180,11 +182,11 @@ gwy_data_window_finalize(GObject *object)
 GtkWidget*
 gwy_data_window_new(GwyDataView *data_view)
 {
+    GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
     GwyDataWindow *data_window;
     GwyPixmapLayer *layer;
     GwyPalette *palette;
     GtkWidget *vbox, *hbox;
-    GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
 
     gwy_debug("");
 
@@ -203,6 +205,7 @@ gwy_data_window_new(GwyDataView *data_view)
                                   GTK_WIDGET(data_view),
                                   &geom,
                                   GDK_HINT_MIN_SIZE);
+    gwy_data_window_fit_to_screen(data_window, data_view);
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
@@ -227,7 +230,7 @@ gwy_data_window_new(GwyDataView *data_view)
         = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
                                        "coordinates");
     g_signal_connect(GTK_WIDGET(data_view), "motion_notify_event",
-                     G_CALLBACK(gwy_data_view_update_statusbar), data_window);
+                     G_CALLBACK(gwy_data_window_update_statusbar), data_window);
 
     /***** main table *****/
     data_window->table = gtk_table_new(2, 2, FALSE);
@@ -274,7 +277,8 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /* show everything except the table */
     gwy_data_window_update_units(data_window);
-    gwy_data_view_update_statusbar(NULL, NULL, data_window);
+    gwy_data_window_update_title(data_window);
+    gwy_data_window_update_statusbar(NULL, NULL, data_window);
 
     gtk_widget_show_all(vbox);
 
@@ -371,6 +375,29 @@ gwy_data_window_lame_resize(GwyDataWindow *data_window)
     width = vruler_req.width + view_req.width + coloraxis_req.width;
     height = hruler_req.height + view_req.height + statusbar_req.height;
     gtk_window_resize(GTK_WINDOW(data_window), width, height);
+}
+
+static void
+gwy_data_window_fit_to_screen(GwyDataWindow *data_window,
+                              GwyDataView *data_view)
+{
+    GtkRequisition request;
+    GdkScreen *screen;
+    gint scrwidth, scrheight;
+    gdouble zoom, z;
+
+    screen = gtk_widget_get_screen(GTK_WIDGET(data_window));
+    scrwidth = gdk_screen_get_width(screen);
+    scrheight = gdk_screen_get_height(screen);
+
+    zoom = gwy_data_view_get_zoom(data_view);
+    gtk_widget_size_request(GTK_WIDGET(data_view), &request);
+    z = MAX(request.width/(gdouble)scrwidth, request.height/(gdouble)scrheight);
+    if (z > 0.85) {
+        zoom *= 0.85/z;
+        /* TODO: honour zoom mode */
+        gwy_data_view_set_zoom(data_view, zoom);
+    }
 }
 
 /**
@@ -510,9 +537,9 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
 }
 
 static gboolean
-gwy_data_view_update_statusbar(GwyDataView *data_view,
-                               GdkEventMotion *event,
-                               GwyDataWindow *data_window)
+gwy_data_window_update_statusbar(GwyDataView *data_view,
+                                 GdkEventMotion *event,
+                                 GwyDataWindow *data_window)
 {
     static gchar label[128];
     GwyContainer *data;
