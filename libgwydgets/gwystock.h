@@ -36,6 +36,7 @@ extern "C" {
 #define GWY_STOCK_FFT             "gwy_fft"
 #define GWY_STOCK_GRAINS          "gwy_grains"
 #define GWY_STOCK_GRAINS_GRAPH    "gwy_grains_graph"
+#define GWY_STOCK_GRAINS_REMOVE   "gwy_grains_remove"
 #define GWY_STOCK_GRAINS_WATER    "gwy_grains_water"
 #define GWY_STOCK_GRAPH           "gwy_graph"
 #define GWY_STOCK_GRAPH_GAUSS     "gwy_graph_gauss"

@@ -14,6 +14,7 @@ pixmapdata_DATA = \
 	gwy_fft-24.png \
 	gwy_grains-24.png \
 	gwy_grains_graph-24.png \
+	gwy_grains_remove-24.png \
 	gwy_grains_water-24.png \
 	gwy_graph-24.png \
 	gwy_graph_gauss-24.png \
