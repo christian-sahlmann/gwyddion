@@ -1,19 +1,26 @@
 
 TOP_SRCDIR = ..
-PACKAGE = libgwyapp
-XPACKAGE = $(PACKAGE)
-PKG_VER = $(LIBGWYAPP_VER)
+LIBRARY = libgwyapp
+XLIBRARY = $(LIBRARY)
+LIB_VER = $(LIBGWYAPP_VER)
+PROGRAM = gwyddion
+SUBDIRS = tools
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
-PKG_CFLAGS = \
-	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) \
+LIB_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(LIB_CRUNTIME) \
 	$(GTK_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	-DG_LOG_DOMAIN=\"GwyApp\"
 
+PRG_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(PRG_CRUNTIME) \
+	$(GTK_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
+	-UG_LOG_DOMAIN
 
-PKG_LINK = \
+LIB_LINK = \
 	$(COMMON_LDFLAGS) \
 	$(GTK_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
@@ -28,19 +35,36 @@ PKG_LINK = \
 	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
 	libgwyddion-$(LIBGWYDDION_VER).lib
 
-OBJECTS = \
+PRG_LINK = \
+	$(COMMON_LDFLAGS) \
+	$(GTK_LIBS) \
+	$(GDK_PIXBUF_LIBS) \
+	/libpath:$(TOP_SRCDIR)\libgwyddion \
+	/libpath:$(TOP_SRCDIR)\libprocess \
+	/libpath:$(TOP_SRCDIR)\libdraw \
+	/libpath:$(TOP_SRCDIR)\libgwydgets \
+	/libpath:$(TOP_SRCDIR)\libgwymodule \
+	/libpath:. \
+	libgwyapp-$(LIBGWYAPP_VER).lib \
+	libgwymodule-$(LIBGWYMODULE_VER).lib \
+	libgwydgets-$(LIBGWYDGETS_VER).lib \
+	libgwydraw-$(LIBGWYDRAW_VER).lib \
+	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
+	libgwyddion-$(LIBGWYDDION_VER).lib
+
+LIB_OBJECTS = \
 	app.obj \
 	file.obj \
 	menu.obj \
 	settings.obj
 
-HEADERS = \
+LIB_HEADERS = \
 	app.h \
 	file.h \
 	menu.h \
 	settings.h
 
-GWYDDION_OBJECTS = \
+PRG_OBJECTS = \
 	about.obj \
 	arith.obj \
 	gwyddion.obj \
@@ -49,23 +73,37 @@ GWYDDION_OBJECTS = \
 	toolbox.obj
 
 ## targets
-all: \
-	$(PACKAGE)-$(PKG_VER).dll \
+all: lib prg sub-all
 
-$(PACKAGE)-$(PKG_VER).def: $(PACKAGE).def
-	copy $(PACKAGE).def $(PACKAGE)-$(PKG_VER).def
+lib: $(LIBRARY)-$(LIB_VER).dll
 
-$(PACKAGE)-$(PKG_VER).dll: $(OBJECTS) $(PACKAGE)-$(PKG_VER).def
-	$(LINK32) $(OBJECTS) $(PKG_LINK) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /out:$(PACKAGE)-$(PKG_VER).dll /def:$(PACKAGE)-$(PKG_VER).def /dll /implib:$(PACKAGE)-$(PKG_VER).lib
+prg: $(PROGRAM).exe
 
-.c.obj:
-	$(CC) $(CFLAGS) -GD -c $(PKG_CFLAGS) $<
+install: install-lib install-prg sub-install
 
-install: all "$(TOP_SRCDIR)\inst.stamp"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).dll "$(DEST_DIR)"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).lib "$(DEST_DIR)\lib"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).def "$(DEST_DIR)\lib"
-	for %h in ($(HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XPACKAGE)"
+clean:: sub-clean
 
+!INCLUDE $(TOP_SRCDIR)\rules.msc
 
+# the easiest way how to tell appart the program and library sources seems to
+# be list one explicitely; also: msdn says later specified rules take
+# precedence
+about.obj: about.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) about.c
 
+arith.obj: arith.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) arith.c
+
+gwyddion.obj: gwyddion.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) gwyddion.c
+
+init.obj: init.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) init.c
+
+meta.obj: meta.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) meta.c
+
+toolbox.obj: toolbox.c
+	$(CC) $(CFLAGS) -GD -c $(PRG_CFLAGS) toolbox.c
+
+# vim: ft=make

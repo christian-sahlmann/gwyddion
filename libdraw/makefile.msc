@@ -1,20 +1,19 @@
 
 TOP_SRCDIR = ..
-PACKAGE = libgwydraw
+LIBRARY = libgwydraw
 # @#$%! the directory has different name than the library
-XPACKAGE = libdraw
-PKG_VER = $(LIBGWYDRAW_VER)
+XLIBRARY = libdraw
+LIB_VER = $(LIBGWYDRAW_VER)
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
-PKG_CFLAGS = \
-	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) \
+LIB_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(LIB_CRUNTIME) \
 	$(GTK_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	-DG_LOG_DOMAIN=\"GwyDraw\"
 
-
-PKG_LINK = \
+LIB_LINK = \
 	$(COMMON_LDFLAGS) \
 	$(GTK_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
@@ -23,31 +22,23 @@ PKG_LINK = \
 	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
 	libgwyddion-$(LIBGWYDDION_VER).lib
 
-OBJECTS = \
+LIB_OBJECTS = \
 	gwypalette.obj \
 	gwypalettedef.obj \
 	gwypixfield.obj
 
-HEADERS = \
+LIB_HEADERS = \
 	gwypalette.h \
 	gwypalettedef.h \
 	gwypixfield.h
 
 ## targets
-all: \
-	$(PACKAGE)-$(PKG_VER).dll \
+all: lib
 
-$(PACKAGE)-$(PKG_VER).def: $(PACKAGE).def
-	copy $(PACKAGE).def $(PACKAGE)-$(PKG_VER).def
+lib: $(LIBRARY)-$(LIB_VER).dll
 
-$(PACKAGE)-$(PKG_VER).dll: $(OBJECTS) $(PACKAGE)-$(PKG_VER).def
-	$(LINK32) $(OBJECTS) $(PKG_LINK) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /out:$(PACKAGE)-$(PKG_VER).dll /def:$(PACKAGE)-$(PKG_VER).def /dll /implib:$(PACKAGE)-$(PKG_VER).lib
+install: install-lib
 
-.c.obj:
-	$(CC) $(CFLAGS) -GD -c $(PKG_CFLAGS) $<
+!INCLUDE $(TOP_SRCDIR)\rules.msc
 
-install: all "$(TOP_SRCDIR)\inst.stamp"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).dll "$(DEST_DIR)"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).lib "$(DEST_DIR)\lib"
-	$(INSTALL) $(PACKAGE)-$(PKG_VER).def "$(DEST_DIR)\lib"
-	for %h in ($(HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XPACKAGE)"
+# vim: ft=make
