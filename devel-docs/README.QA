@@ -99,8 +99,8 @@ Object leaking
 Valgrinding
 - Does not work on Win32
 - Run gwyddion as
-  valgrind --tool=memcheck --num-callers=12 --suppressions=FIXME.supp gwyddion
-- It should print no errors[5]
+  valgrind --tool=memcheck --num-callers=12 --suppressions=...[5] gwyddion
+- It should print no errors[6]
 - Ideally, all testing should be done with addrcheck at least (instead of
   memcheck which makes the program too slow and memory-hungry)
 
@@ -111,4 +111,57 @@ Footnotes
     correctly.
 [3] May need to prepare some specific testing data
 [4] Except perhaps in too new modules that have not been translated yet
-[5] 3D view is known to cause ***lots*** of errors
+[5] Suppressions for Gdk and libpng problems are listed below
+[6] 3D view is known to cause ***lots*** of errors
+
+Addendum: Valgrind suppressions (for FC3)
+<<<<< gdk_display.supp <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+{
+   gdk_display_open_XReply
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   fun:_X11TransWrite
+   obj:/usr/X11R6/lib/libX11.so.6.2
+   fun:_XReply
+}
+
+{
+   gdk_display_open_XEventsQueued
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   fun:_X11TransWrite
+   obj:/usr/X11R6/lib/libX11.so.6.2
+   fun:_XEventsQueued
+
+}
+{
+   gdk_display_open_XReply
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   fun:_X11TransWrite
+   obj:/usr/X11R6/lib/libX11.so.6.2
+   fun:XFlush
+}
+
+{
+   gdk_display_open_XDrawLine
+   Memcheck:Param
+   write(buf)
+   fun:__write_nocancel
+   fun:_X11TransWrite
+   obj:/usr/X11R6/lib/libX11.so.6.2
+   fun:XDrawLine
+}
+
+{
+   png_write
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.1.2
+   obj:/usr/lib/libz.so.1.2.1.2
+   fun:deflate
+   fun:png_write_finish_row
+}
+>>>>> gdk_display.supp >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
