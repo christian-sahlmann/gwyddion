@@ -342,6 +342,9 @@ gwy_app_recent_file_list_row_deleted(GtkTreeModel *store,
     GtkTreeIter iter;
     gboolean has_rows;
 
+    if (!controls->window)
+        return;
+
     has_rows = gtk_tree_model_get_iter_first(store, &iter);
     gtk_widget_set_sensitive(controls->prune, has_rows);
     if (has_rows) {
@@ -366,6 +369,7 @@ gwy_app_recent_file_list_selection_changed(GtkTreeSelection *selection,
 static void
 gwy_app_recent_file_list_destroyed(Controls *controls)
 {
+    gwy_object_unref(controls->failed_pixbuf);
     controls->window = NULL;
     controls->open = NULL;
     controls->prune = NULL;
@@ -518,8 +522,6 @@ cell_renderer_thumb(G_GNUC_UNUSED GtkTreeViewColumn *column,
         case FILE_STATE_OK:
         case FILE_STATE_OLD:
         g_object_set(cell, "pixbuf", rf->pixbuf, NULL);
-        /* FIXME: who knows... */
-        /*g_object_unref(rf->pixbuf);*/
         break;
 
         default:
@@ -734,6 +736,12 @@ gwy_app_recent_file_list_update_menu(Controls *controls)
     GList *l;
     guint i;
 
+    if (!controls->store) {
+        g_return_if_fail(controls->recent_file_list == NULL);
+        gwy_app_menu_recent_files_update(controls->recent_file_list);
+        return;
+    }
+
     l = controls->recent_file_list;
     if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(controls->store), &iter)) {
         i = 0;
@@ -823,6 +831,7 @@ gwy_recent_file_new(gchar *filename_utf8,
 static void
 gwy_recent_file_free(GwyRecentFile *rf)
 {
+    gwy_debug("pbuf->ref_count = %d", G_OBJECT(rf->pixbuf)->ref_count);
     gwy_object_unref(rf->pixbuf);
     g_free(rf->file_utf8);
     g_free(rf->file_sys);

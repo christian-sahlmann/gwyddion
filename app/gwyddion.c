@@ -147,6 +147,7 @@ main(int argc, char *argv[])
     g_free(config_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
+    gwy_app_recent_file_list_free();
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
 
