@@ -85,6 +85,7 @@ GUI
 - Progress dialogs are shown over appropriate windows: dialogs windows during
   manipulation inside dialogs; data windows during final processing when the
   dialog is no longer shown
+- Resizable dialogs behave reasonably on resize
 - Capitalization rules: FIXME
 
 Translateability
