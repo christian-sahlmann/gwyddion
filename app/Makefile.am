@@ -31,6 +31,7 @@ lib_LTLIBRARIES = libgwyapp.la
 EXTRA_DIST = \
 	makefile.msc \
 	libgwyapp.def \
+	authors.h \
 	README.objdata
 
 # In following order do:
@@ -69,7 +70,27 @@ gwyddion_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyprocess) \
 	$(libgwyddion)
 
+# This is ugly a bit, but uses only very basic sed constructs
+authors.h: ${top_srcdir}/AUTHORS
+	{ \
+		echo 'static const gchar *core_developers[] = {'; \
+		sed -n -e '/=== Core developers ===/,/^$$/{' \
+			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
+			-e 's/ *<.*//' -e 's/..*/    "&",/' -e p -e '}' \
+			${top_srcdir}/AUTHORS; \
+		echo '};'; \
+		echo 'static const gchar *developers[] = {'; \
+		sed -n -e '/=== Developers ===/,/^$$/{' \
+			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
+			-e 's/ *<.*//' -e 's/.*/    "&",/' -e p -e '}' \
+			${top_srcdir}/AUTHORS; \
+		echo '};'; \
+	} >authors.h
+
 INCLUDES = -I$(top_srcdir)
 
 clean-local:
 	rm -f core.* *~
+
+maintainer-clean-local:
+	rm -f authors.h

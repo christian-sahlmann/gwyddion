@@ -22,16 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include "app.h"
-
-static const gchar *core_developers[] = {
-    "David Nečas (Yeti)",
-    "Petr Klapetek",
-};
-
-static const gchar *developers[] = {
-    "Martin Šiler",
-    "Jindřich Bílek",
-};
+#include "authors.h"
 
 static void about_close    (void);
 
