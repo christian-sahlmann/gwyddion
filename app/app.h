@@ -30,7 +30,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-GtkWidget *gwy_app_main_window;
+extern GtkWidget *gwy_app_main_window;
 
 void            gwy_app_toolbox_create            (void);
 GwyContainer*   gwy_app_get_current_data          (void);

@@ -405,7 +405,7 @@ gwy_app_data_view_update(GtkWidget *data_view)
         settings = gwy_app_settings_get();
         for (i = 0; i < G_N_ELEMENTS(keys); i++) {
             if (gwy_container_contains_by_name(data, keys[i])
-                && !gwy_container_contains_by_name(settings, keys[i] + 2))
+                || !gwy_container_contains_by_name(settings, keys[i] + 2))
                 continue;
             x = gwy_container_get_double_by_name(settings, keys[i] + 2);
             gwy_container_set_double_by_name(data, keys[i], x);
