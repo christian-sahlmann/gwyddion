@@ -2,11 +2,11 @@
 gwymodule-graph
 
 <!-- ##### SECTION Short_Description ##### -->
-Graph data processing modules
+Graph modules
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Graph modules implement operations on graphs (like profiles).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

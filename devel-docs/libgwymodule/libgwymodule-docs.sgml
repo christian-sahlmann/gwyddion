@@ -13,6 +13,7 @@
     <xi:include href="xml/gwymodule-process.xml"/>
     <xi:include href="xml/gwymodule-tool.xml"/>
     <xi:include href="xml/gwymodule-graph.xml"/>
+    <xi:include href="xml/gwymodule-layer.xml"/>
     <xi:include href="xml/gwymodulebrowser.xml"/>
   </chapter>
 

@@ -6,7 +6,19 @@ File loading and saving modules
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
+File modules implement file loading, saving and file type detection
+functions.  Not all fuctions has to be implemented, a file module can be
+import-only or export-only.  If it does not implement file type detection,
+files of this type can be read/written only on user's explicite request.
+</para>
 
+<para>
+For file module writers, the only useful function here is the registration
+function <link linkend="gwy-file-func-register">gwy_file_func_register()</link>
+and the signatures of particular file operations:
+<link linkend="GwyFileDetectFunc">GwyFileDetectFunc</link>,
+<link linkend="GwyFileLoadFunc">GwyFileLoadFunc</link>, and
+<link linkend="GwyFileSaveFunc">GwyFileSaveFunc</link>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

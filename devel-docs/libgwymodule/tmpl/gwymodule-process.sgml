@@ -6,7 +6,10 @@ Data field processing modules
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Data processing modules implement the actual ability to do something useful
+with the data. They reigster functions that get a
+<link linkend="GwyContainer">GwyContainer</link> with data and either modify
+it or create a new data field from it.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

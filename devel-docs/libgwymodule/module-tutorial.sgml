@@ -1,4 +1,4 @@
-<refentry id="gwymodule-tutorial" revision="20 Mar 2002">
+<refentry id="gwymodule-tutorial" revision="@(#) $Id$">
   <refmeta>
     <refentrytitle>Gwyddion Module Tutorial</refentrytitle>
     <manvolnum>3</manvolnum>
@@ -17,7 +17,7 @@
       Gwyddion is quite a modular application.  In fact, most of its basic
       functionallity is provided by modules.  Modules allow to easily extend
       Gwyddion without the need to recompile. Modules need to be copied
-      in appropriate directories only followed by Gwyddion restart. 
+      in appropriate directories only followed by Gwyddion restart.
       Modules are then automatically detected, registered and the functions provided by modules
       are added to Gwyddion menu.
     </para>
@@ -25,7 +25,7 @@
       There are several distinct module types:
       <itemizedlist>
         <listitem><para>
-          <link linkend="gwymodule-process">data processing modules</link> - these modules
+          <link linkend="gwymodule-process">data processing modules</link> – these modules
           provide functions for processing of two-dimensional data arrays (e. g. <emphasis>fast fourier transform</emphasis> module),
           or changing the graphical presentation of data (e. g. <emphasis>shading</emphasis> module). Data processing
           modules usually get data (e. g. two-dimensional field of SPM data), ask for processing options
@@ -35,15 +35,18 @@
           <link linkend="gwymodule-file">file loading and saving modules</link>
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-graph">graph modules</link> - these modules are used
-          to process special class of data in the apllication - graphs of one-dimensional functions
+          <link linkend="gwymodule-graph">graph modules</link> – these modules are used
+          to process special class of data in the apllication – graphs of one-dimensional functions
           (e. g. profiles obtained by <emphasis>Profile selection</emphasis> tool).
         </para></listitem>
         <listitem><para>
-          <link linkend="gwymodule-tool">tool modules</link> - tools are modules extended
-          to provide more interactive interface (namely connected with selections by mouse). 
+          <link linkend="gwymodule-tool">tool modules</link> – tools are modules extended
+          to provide more interactive interface (namely connected with selections by mouse).
           This means ability of active recomputation of the requested parameters while creating and changing selections
-          on the original data (e. g. <emphasis>read value</emphasis> tool, <emphasis>three-point leveling</emphasis> tool). 
+          on the original data (e. g. <emphasis>read value</emphasis> tool, <emphasis>three-point leveling</emphasis> tool).
+        </para></listitem>
+        <listitem><para>
+          <link linkend="gwymodule-layer">layer modules</link> – FIXME
         </para></listitem>
       </itemizedlist>
     </para>
@@ -127,9 +130,9 @@ my_invert_value(GwyContainer *data, GwyRunType run)
     the operating system) and put it to your Gwyddion modules directory
     (e. g. /lib/gwyddion/modules/process/, however depending on your actual installation and operating
     system). After Gwyddion starts, the module is found and menu entry <emphasis>Test/Invert Value</emphasis>
-    will appear in the main menu. Clicking on this menu item will invert the actual data. 
+    will appear in the main menu. Clicking on this menu item will invert the actual data.
     As this is the minimal module it even does not have graphical user interface to change parameters
-    of data processing. However, for its purpose - data inversion - it is sufficient.
+    of data processing. However, for its purpose – data inversion – it is sufficient.
   </para>
   <para>
     Though the above example is minimal it still constis of quite a bit of code.
@@ -412,9 +415,67 @@ my_invert_value(GwyContainer *data, GwyRunType run)
   </refsect1>
   <refsect1>
    <title>Beyond The Minimal Module</title>
+   <refsect2>
+     <title>Multiple modules, multiple function, multifunctions</title>
+     <para>
+       Often one wants to implement a group of closely related functions that
+       could share quite a bit of code.  There are several posibilities how
+       to do it.
+     </para>
+     <para>
+       The naive approach would be to put the code of all the modules to
+       a one file and share what is shareable.  But alas! there can be only
+       one <link linkend="GWY-MODULE-QUERY-CAPS">GWY_MODULE_QUERY</link>,
+       thus a one file can register only a one module and this approach would
+       not work.
+     </para>
+     <para>
+       So the prefered solution is to register more than function for the
+       module.  This is as simple as it sounds.  One just has to define more
+       <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link>s
+       (or other func infos) and register the functions one by one in
+       <symbol>module_register()</symbol>.  It is even
+       possible to register functions of different kind in a one module, but
+       this is not recommended.
+     </para>
+     <para>
+       The other posibility, generally not recommended but sometimes
+       useful, is to define more
+       <link linkend="GwyProcessFuncInfo">GwyProcessFuncInfo</link>s
+       like before, but make them all points to the same C function.
+       It can then determine from its last argument (<symbol>name</symbol>)
+       what function the caller thinks it is calling.
+       Incidentally, this is exactly how the plugin-proxy module works.
+     </para>
+     <title>Settings</title>
+     <para>
+       The nice thing about Gwyddion module dialog boxes is that they show
+       the same parameter values as when you last open them, and they remember
+       the settings even acros sessions.  And you of course want this feature
+       in your modules too.
+     </para>
+     <para>
+       Saving and restoring settings usually has sense only for modules with
+       a GUI, simple noninteractive modules like value invert don't have any
+       settings to remember.  We will get to GUI later.
+     </para>
+     <para>
+       There is a one <link linkend="GwyContainer">GwyContainer</link> in
+       Gwyddion containing settings for all modules (and other creatures).
+       The function
+       <link linkend="gwy-app-settings-get">gwy_app_settings_get()</link>
+       will bring it to you.  It is loaded on startup and saved
+       on exit so you don't need to take care about this.
+       So the only thing you have to care about is to read the settings from
+       it when your module starts and store them there on exit.  OK, there
+       are in fact two things you have to care about.  There are no
+       limitations on who can access what in the container, so to avoid
+       surprises you should use only keys startings with
+       <literal>"/mod/my-module-name/"</literal>.
+     </para>
+   </refsect2>
    <para>
-     TODO: multiple modules, multiple functions, multifunctions;
-     settings, masks, presentations, GUI.
+     TODO: masks, presentations, GUI.
    </para>
   </refsect1>
 </refentry>
