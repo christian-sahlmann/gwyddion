@@ -43,6 +43,7 @@
         set_sensitive_state(item, state); \
     } while (0)
 
+static void       gwy_app_rerun_process_func_cb(void);
 static void       setup_sensitivity_keys       (void);
 static void       gwy_menu_set_flags_recursive (GtkWidget *widget,
                                                 GwyMenuSensitiveData *data);
@@ -90,7 +91,7 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
 GtkWidget*
 gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
 {
-    GtkWidget *menu, *alignment;
+    GtkWidget *menu, *alignment, *last;
     GtkItemFactory *item_factory;
     GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
@@ -98,14 +99,22 @@ gwy_menu_create_proc_menu(GtkAccelGroup *accel_group)
                                         accel_group);
     gwy_build_process_menu(GTK_OBJECT(item_factory), "/_Data Process",
                            G_CALLBACK(gwy_app_run_process_func_cb));
-    menu = gtk_item_factory_get_widget(item_factory, "<proc>");
     alignment = gtk_alignment_new(1.0, 1.5, 1.0, 1.0);
+    menu = gtk_item_factory_get_widget(item_factory, "<proc>");
     gtk_container_add(GTK_CONTAINER(alignment), menu);
 
     /* set up sensitivity: all items need an active data window */
     setup_sensitivity_keys();
     gwy_menu_set_flags_recursive(menu, &sens_data);
     gwy_menu_set_sensitive_recursive(menu, &sens_data);
+
+    /* re-run last item */
+    last = gtk_menu_item_new_with_mnemonic(_("_Last Used"));
+    menu = gtk_item_factory_get_widget(item_factory, "<proc>/Data Process");
+    gtk_menu_shell_insert(GTK_MENU_SHELL(menu), last, 1);
+    set_sensitive_both(last, GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC, 0);
+    g_signal_connect(last, "activate",
+                     G_CALLBACK(gwy_app_rerun_process_func_cb), NULL);
 
     return alignment;
 }
@@ -357,9 +366,13 @@ gwy_app_run_process_func_cb(gchar *name)
         GWY_RUN_INTERACTIVE, GWY_RUN_MODAL,
         GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
     };
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC,
+        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
+    };
     GwyRunType run;
     GwyDataWindow *data_window;
-    GtkWidget *data_view;
+    GtkWidget *data_view, *menu;
     GwyContainer *data;
     gsize i;
 
@@ -376,11 +389,30 @@ gwy_app_run_process_func_cb(gchar *name)
             gwy_process_func_run(name, data, run_types[i]);
             /* FIXME: the ugliest hack! */
             gwy_app_data_view_update(data_view);
+            menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                                "<proc>"));
+            gwy_menu_set_sensitive_recursive(menu, &sens_data);
+            /* TODO: Change menu item label to show what would be run */
+            g_object_set_data(G_OBJECT(menu), "last-func", name);
 
             return;
         }
     }
     g_critical("Trying to run `%s', but no run mode found (%d)", name, run);
+}
+
+static void
+gwy_app_rerun_process_func_cb(void)
+{
+    GtkWidget *menu;
+    gchar *name;
+
+    menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window),
+                                        "<proc>"));
+    g_return_if_fail(menu);
+    name = (gchar*)g_object_get_data(G_OBJECT(menu), "last-func");
+    g_return_if_fail(name);
+    gwy_app_run_process_func_cb(name);
 }
 
 void

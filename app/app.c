@@ -219,7 +219,9 @@ gwy_app_get_current_data(void)
 void
 gwy_app_data_window_set_current(GwyDataWindow *window)
 {
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA };
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA
+    };
     gboolean update_state;
     GList *item;
 
@@ -245,7 +247,9 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
 void
 gwy_app_data_window_remove(GwyDataWindow *window)
 {
-    GwyMenuSensitiveData sens_data = { GWY_MENU_FLAG_DATA, 0 };
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_DATA, 0
+    };
     GList *item;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(window));
@@ -323,6 +327,9 @@ gwy_app_graph_window_get_current(void)
 void
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_GRAPH, GWY_MENU_FLAG_GRAPH
+    };
     GList *item;
 
     gwy_debug("%s: %p", __FUNCTION__, window);
@@ -336,11 +343,16 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     }
     else
         current_graphs = g_list_prepend(current_graphs, window);
+
+    gwy_app_update_toolbox_state(&sens_data);
 }
 
 void
 gwy_app_graph_window_remove(GtkWidget *window)
 {
+    GwyMenuSensitiveData sens_data = {
+        GWY_MENU_FLAG_GRAPH, 0
+    };
     GList *item;
 
     /*g_return_if_fail(GWY_IS_GRAPH(graph));*/
@@ -352,10 +364,10 @@ gwy_app_graph_window_remove(GtkWidget *window)
         return;
     }
     current_graphs = g_list_delete_link(current_graphs, item);
-    if (current_graphs) {
+    if (current_graphs)
         gwy_app_graph_window_set_current(current_graphs->data);
-        return;
-    }
+    else
+        gwy_app_update_toolbox_state(&sens_data);
 }
 
 GtkWidget*

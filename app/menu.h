@@ -29,11 +29,13 @@ extern "C" {
 
 
 enum {
-    GWY_MENU_FLAG_DATA  = 1 << 0,
-    GWY_MENU_FLAG_UNDO  = 1 << 1,
-    GWY_MENU_FLAG_REDO  = 1 << 2,
-    GWY_MENU_FLAG_GRAPH = 1 << 3,
-    GWY_MENU_FLAG_MASK  = 0xf
+    GWY_MENU_FLAG_DATA       = 1 << 0,
+    GWY_MENU_FLAG_UNDO       = 1 << 1,
+    GWY_MENU_FLAG_REDO       = 1 << 2,
+    GWY_MENU_FLAG_GRAPH      = 1 << 3,
+    GWY_MENU_FLAG_LAST_PROC  = 1 << 4,
+    GWY_MENU_FLAG_LAST_GRAPH = 1 << 5,
+    GWY_MENU_FLAG_MASK       = 0x3f
 };
 
 typedef struct _GwyMenuSensitiveData GwyMenuSensitiveData;
