@@ -515,7 +515,7 @@ gwy_data_view_update_statusbar(GwyDataView *data_view,
                yreal/data_window->coord_format->magnitude,
                data_window->coord_format->units,
                data_window->value_format->precision,
-               xreal/data_window->value_format->magnitude,
+               value/data_window->value_format->magnitude,
                data_window->value_format->units);
     id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);
     if (data_window->statusbar_message_id)
