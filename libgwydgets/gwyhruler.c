@@ -110,6 +110,13 @@ gwy_hruler_init(GwyHRuler *hruler)
 }
 
 
+/**
+ * gwy_hruler_new:
+ *
+ * Creates a new #GwyHRuler.
+ *
+ * Returns: The new ruler as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_hruler_new(void)
 {

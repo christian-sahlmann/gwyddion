@@ -615,6 +615,16 @@ gwy_data_view_update(GwyDataView *data_view)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
 }
 
+/**
+ * gwy_data_view_get_base_layer:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the base layer this data view currently uses.
+ *
+ * A base layer should be always present.
+ *
+ * Returns: The currently used base layer.
+ **/
 GwyDataViewLayer*
 gwy_data_view_get_base_layer(GwyDataView *data_view)
 {
@@ -623,6 +633,15 @@ gwy_data_view_get_base_layer(GwyDataView *data_view)
     return data_view->base_layer;
 }
 
+/**
+ * gwy_data_view_get_alpha_layer:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the alpha layer this data view currently uses, or %NULL if none
+ * is present.
+ *
+ * Returns: The currently used alpha layer.
+ **/
 GwyDataViewLayer*
 gwy_data_view_get_alpha_layer(GwyDataView *data_view)
 {
@@ -631,6 +650,15 @@ gwy_data_view_get_alpha_layer(GwyDataView *data_view)
     return data_view->alpha_layer;
 }
 
+/**
+ * gwy_data_view_get_top_layer:
+ * @data_view: A #GwyDataView.
+ *
+ * Returns the top layer this data view currently uses, or %NULL if none
+ * is present.
+ *
+ * Returns: The currently used top layer.
+ **/
 GwyDataViewLayer*
 gwy_data_view_get_top_layer(GwyDataView *data_view)
 {

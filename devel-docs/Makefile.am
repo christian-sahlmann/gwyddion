@@ -1,11 +1,11 @@
 # @(#) $Id$
 
 SUBDIRS = \
-	libgwydgets \
 	libgwyddion \
+	libgwyprocess \
 	libgwydraw \
-	libgwymodule \
-	libgwyprocess
+	libgwydgets \
+	libgwymodule
 EXTRA_DIST = \
 	README \
 	gtk-doc.mk

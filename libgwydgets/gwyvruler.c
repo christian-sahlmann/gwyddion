@@ -108,6 +108,13 @@ gwy_vruler_init(GwyVRuler *vruler)
     widget->requisition.height = widget->style->ythickness * 2 + 1;
 }
 
+/**
+ * gwy_vruler_new:
+ *
+ * Creates a new #GwyVRuler.
+ *
+ * Returns: The new ruler as a #GtkWidget.
+ **/
 GtkWidget*
 gwy_vruler_new(void)
 {

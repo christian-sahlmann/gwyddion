@@ -281,6 +281,16 @@ gwy_ruler_get_property(GObject      *object,
     }
 }
 
+/**
+ * gwy_ruler_set_range:
+ * @ruler: A #GwyRuler
+ * @lower: Lower limit of the ruler.
+ * @upper: Upper limit of the ruler.
+ * @position: Current position of the mark on the ruler.
+ * @max_size: Maximum value used for calculating size of text labels.
+ *
+ * Sets range and current value of a ruler.
+ **/
 void
 gwy_ruler_set_range(GwyRuler *ruler,
                     gdouble   lower,
@@ -315,12 +325,13 @@ gwy_ruler_set_range(GwyRuler *ruler,
 
 /**
  * gwy_ruler_get_range:
- * @ruler: a #GwyRuler
- * @lower: location to store lower limit of the ruler, or %NULL
- * @upper: location to store upper limit of the ruler, or %NULL
- * @position: location to store the current position of the mark on the ruler, or %NULL
- * @max_size: location to store the maximum size of the ruler used when calculating
- *            the space to leave for the text, or %NULL.
+ * @ruler: A #GwyRuler
+ * @lower: Location to store lower limit of the ruler, or %NULL
+ * @upper: Location to store upper limit of the ruler, or %NULL
+ * @position: Location to store the current position of the mark on the ruler,
+ *            or %NULL
+ * @max_size: Location to store the maximum size of the ruler used when
+ *            calculating the space to leave for the text, or %NULL.
  *
  * Retrieves values indicating the range and current position of a #GwyRuler.
  * See gwy_ruler_set_range().
@@ -344,6 +355,13 @@ gwy_ruler_get_range(GwyRuler *ruler,
         *max_size = ruler->max_size;
 }
 
+/**
+ * gwy_ruler_set_units_placement:
+ * @ruler: A #GwyRuler
+ * @placement: Units placement specification.
+ *
+ * Sets whether and where units should be placed on the ruler.
+ **/
 void
 gwy_ruler_set_units_placement(GwyRuler *ruler,
                               GwyUnitsPlacement placement)
@@ -362,6 +380,14 @@ gwy_ruler_set_units_placement(GwyRuler *ruler,
         gtk_widget_queue_draw(GTK_WIDGET(ruler));
 }
 
+/**
+ * gwy_ruler_get_units_placement:
+ * @ruler: A #GwyRuler
+ *
+ * Gets current units placement of ruler @ruler.
+ *
+ * Returns: The units placement.
+ **/
 GwyUnitsPlacement
 gwy_ruler_get_units_placement(GwyRuler *ruler)
 {

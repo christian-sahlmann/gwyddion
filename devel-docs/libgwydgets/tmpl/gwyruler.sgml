@@ -80,3 +80,28 @@ GwyRuler
 @placement: 
 
 
+<!-- ##### ARG GwyRuler:lower ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:max-size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:position ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:units-placement ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyRuler:upper ##### -->
+<para>
+
+</para>
+
