@@ -155,7 +155,7 @@ gwy_data_field_get_min(GwyDataField *a)
  * Returns: The minimum value, and undefined value (currently %G_MAXDOUBLE)
  *          for zero @width or @height.
  *
- * Since 1.2.
+ * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_min(GwyDataField *dfield,
@@ -237,7 +237,7 @@ gwy_data_field_get_sum(GwyDataField *a)
  *
  * Returns: The value sum.
  *
- * Since 1.2.
+ * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_sum(GwyDataField *dfield,
@@ -307,7 +307,7 @@ gwy_data_field_get_avg(GwyDataField *a)
  *
  * Returns: The average value.
  *
- * Since 1.2.
+ * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_avg(GwyDataField *dfield,
@@ -813,7 +813,7 @@ gwy_data_field_get_surface_area(GwyDataField *a,
  *
  * Returns: The surface area.
  *
- * Since 1.2.
+ * Since: 1.2.
  **/
 gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
@@ -870,7 +870,7 @@ gwy_data_field_get_area_surface_area(GwyDataField *a,
  * Computes surface area within given rectangle
  *
  * Returns: surface area (in real units)
- * Since 1.1
+ * Since: 1.1
  **/
 static gdouble
 square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
@@ -922,7 +922,7 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
  *
  * Computes angular slope distribution.
  *
- * Since 1.4.
+ * Since: 1.4.
  **/
 void
 gwy_data_field_slope_distribution(GwyDataField *dfield,

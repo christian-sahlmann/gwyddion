@@ -29,7 +29,7 @@ static guint types_initialized = 0;
  *
  * Eventually calls g_type_init().
  *
- * Since 1.4.
+ * Since: 1.4.
  **/
 void
 gwy_type_init(void)

@@ -30,7 +30,7 @@ static guint types_initialized = 0;
  *
  * Eventually calls gwy_process_type_init().
  *
- * Since 1.4.
+ * Since: 1.4.
  **/
 void
 gwy_draw_type_init(void)

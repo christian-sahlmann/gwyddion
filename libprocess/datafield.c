@@ -1667,8 +1667,9 @@ gwy_data_field_get_data_line(GwyDataField *a, GwyDataLine* b,
  * puts it into data line. It is expected that the data
  * line is allready allocated.
  *
- * Returns: true at success
- * Since 1.2 
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.2 
  **/
 gboolean
 gwy_data_field_get_data_line_averaged(GwyDataField *a, GwyDataLine* b,
