@@ -61,6 +61,7 @@ GtkObject*     gwy_process_func_build_menu    (GtkObject *item_factory,
                                                GCallback item_callback);
 void           gwy_process_func_set_sensitivity_flags (const gchar *name,
                                                        guint flags);
+guint          gwy_process_func_get_sensitivity_flags (const gchar *name);
 
 G_END_DECLS
 

@@ -370,6 +370,29 @@ gwy_process_func_set_sensitivity_flags(const gchar *name,
 }
 
 /**
+ * gwy_process_func_get_sensitivity_flags:
+ * @name: Data processing function name.
+ *
+ * Returns menu sensititivy flags for function @name.
+ *
+ * Returns: The menu item sensitivity flags, as it was set with
+ *          gwy_process_func_set_sensitivity_flags(), i.e., without any
+ *          implied flags.
+ *
+ * Since: 1.2.
+ **/
+guint
+gwy_process_func_get_sensitivity_flags(const gchar *name)
+{
+    GwyProcessFuncInfoInternal *ipfinfo;
+
+    ipfinfo = g_hash_table_lookup(process_funcs, name);
+    g_return_val_if_fail(ipfinfo, 0);
+
+    return ipfinfo->sens_flags;
+}
+
+/**
  * gwy_process_func_remove:
  * @name: Data processing function name.
  *
