@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2004-10-26 12:29+0200\n"
+"POT-Creation-Date: 2004-10-26 18:43+0200\n"
 "PO-Revision-Date: 2004-10-26 12:30+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -23,35 +23,35 @@ msgstr "Eroze"
 msgid "Certainty map"
 msgstr "Mapa spolehlivosti"
 
-#: libprocess/morph_lib.c:610 libprocess/morph_lib.c:741
+#: libprocess/morph_lib.c:611 libprocess/morph_lib.c:756
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Iteruji odhad (iterace %d)"
 
-#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:753
+#: libprocess/morph_lib.c:619 libprocess/morph_lib.c:779
 #, c-format
 msgid "%d image locations produced refinement"
 msgstr "%d míst v obrázku dalo zpřesnění"
 
-#: libprocess/morph_lib.c:712
+#: libprocess/morph_lib.c:718
 msgid "Searching for local maxima"
 msgstr "Hledám lokální maxima"
 
-#: libprocess/morph_lib.c:731
+#: libprocess/morph_lib.c:741
 #, c-format
 msgid "Found %d internal local maxima"
 msgstr "Bylo nalezeno %d lokálních maxim"
 
-#: libprocess/tip.c:780 libprocess/tip.c:802 libprocess/tip.c:852
-#: libprocess/tip.c:874
+#: libprocess/tip.c:790 libprocess/tip.c:818 libprocess/tip.c:869
+#: libprocess/tip.c:896
 msgid "Converting fields"
 msgstr "Konvertuji pole"
 
-#: libprocess/tip.c:790
+#: libprocess/tip.c:800
 msgid "Starting partial estimation"
 msgstr "Začínám částečný odhad"
 
-#: libprocess/tip.c:862
+#: libprocess/tip.c:879
 msgid "Starting full estimation"
 msgstr "Začínám plný odhad"
 
@@ -888,8 +888,8 @@ msgstr "Výška"
 #: modules/process/mask_grow_shrink.c:184 modules/process/scale.c:186
 #: modules/process/scale.c:196 modules/process/scars.c:411
 #: modules/process/scars.c:417 modules/process/slope_dist.c:228
-#: modules/process/slope_dist.c:249 modules/process/tip_blind.c:248
-#: modules/process/tip_blind.c:258 modules/tools/level3.c:199
+#: modules/process/slope_dist.c:249 modules/process/tip_blind.c:254
+#: modules/process/tip_blind.c:264 modules/tools/level3.c:199
 #: modules/tools/pointer.c:180 modules/tools/profile.c:255
 msgid "px"
 msgstr "px"
@@ -1126,7 +1126,7 @@ msgid "S_quare sample"
 msgstr "Č_tvercový vzorek"
 
 #: modules/file/rawfile.c:711 modules/process/crosscor.c:222
-#: modules/process/crosscor.c:242 modules/process/tip_blind.c:248
+#: modules/process/crosscor.c:242 modules/process/tip_blind.c:254
 msgid "_Width:"
 msgstr "Šířk_a:"
 
@@ -1837,7 +1837,7 @@ msgstr "Velikost hledání"
 
 #: modules/process/crosscor.c:228 modules/process/crosscor.c:248
 #: modules/process/grain_mark.c:221 modules/process/grain_rem_threshold.c:213
-#: modules/process/tip_blind.c:258
+#: modules/process/tip_blind.c:264
 msgid "_Height:"
 msgstr "_Výška:"
 
@@ -1850,7 +1850,7 @@ msgid "Add _low score results mask"
 msgstr "Přidat _masku s nízkým skóre"
 
 #: modules/process/crosscor.c:264 modules/process/grain_wshed.c:218
-#: modules/process/maskcor.c:183 modules/process/tip_blind.c:278
+#: modules/process/maskcor.c:183 modules/process/tip_blind.c:284
 msgid "_Threshold:"
 msgstr "Prá_h: "
 
@@ -2455,47 +2455,47 @@ msgstr "Typ výstupu"
 msgid "Angular slope distribution"
 msgstr "Úhlové rozdělení sklonu"
 
-#: modules/process/tip_blind.c:118
+#: modules/process/tip_blind.c:120
 msgid "Blind estimation of SPM tip using Villarubia's algorithm"
 msgstr "Slepý odhad tvaru SPM hrotu pomocí Villarubiova algoritmu"
 
-#: modules/process/tip_blind.c:134
+#: modules/process/tip_blind.c:136
 msgid "/_Tip/_Blind estimation..."
 msgstr "/_Hrot SPM/_Slepý odhad tvaru hrotu..."
 
-#: modules/process/tip_blind.c:181
+#: modules/process/tip_blind.c:183
 msgid "Blind Tip Estimation"
 msgstr "Slepý odhad tvaru hrotu"
 
-#: modules/process/tip_blind.c:182
+#: modules/process/tip_blind.c:184
 msgid "Run _Partial"
 msgstr "Čás_t. odhad"
 
-#: modules/process/tip_blind.c:183
+#: modules/process/tip_blind.c:185
 msgid "Run _Full"
 msgstr "Pl_ný odhad"
 
-#: modules/process/tip_blind.c:184
+#: modules/process/tip_blind.c:186
 msgid "_Reset Tip"
 msgstr "_Obnovit hrot"
 
-#: modules/process/tip_blind.c:237 modules/process/tip_model.c:231
+#: modules/process/tip_blind.c:243 modules/process/tip_model.c:231
 msgid "Related _data:"
 msgstr "Související data:"
 
-#: modules/process/tip_blind.c:241
+#: modules/process/tip_blind.c:247
 msgid "Estimated Tip Size"
 msgstr "Odhadovaná belikost hrotu"
 
-#: modules/process/tip_blind.c:268
+#: modules/process/tip_blind.c:274
 msgid "_Same resolution"
 msgstr "S_tejná rozlišení"
 
-#: modules/process/tip_blind.c:288
+#: modules/process/tip_blind.c:294
 msgid "Use _boundaries"
 msgstr "Použít _okraje"
 
-#: modules/process/tip_blind.c:494 modules/process/tip_map.c:267
+#: modules/process/tip_blind.c:504 modules/process/tip_map.c:269
 #: modules/process/tip_reconstruction.c:263
 msgid "Initializing"
 msgstr "Inicializace"
