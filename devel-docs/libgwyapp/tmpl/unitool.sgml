@@ -1,0 +1,83 @@
+<!-- ##### SECTION Title ##### -->
+unitool
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyUnitoolSlots ##### -->
+<para>
+
+</para>
+
+@layer_type: 
+@layer_constructor: 
+@layer_setup: 
+@dialog_create: 
+@dialog_update: 
+@dialog_abandon: 
+@apply: 
+@response: 
+
+<!-- ##### TYPEDEF GwyUnitoolUnits ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF GwyUnitoolState ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_unitool_use ##### -->
+<para>
+
+</para>
+
+@state: 
+@data_window: 
+@reason: 
+
+
+<!-- ##### FUNCTION gwy_unitool_windowname_frame_create ##### -->
+<para>
+
+</para>
+
+@state: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_get_z_average ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@xreal: 
+@yreal: 
+@radius: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_unitool_update_label ##### -->
+<para>
+
+</para>
+
+@units: 
+@label: 
+@value: 
+
+
