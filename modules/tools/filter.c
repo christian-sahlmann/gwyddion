@@ -44,6 +44,7 @@ typedef struct {
     gint dir;
     gint siz;
     gboolean upd;
+    gpointer last_preview;
 } ToolControls;
 
 static gboolean   module_register  (const gchar *name);
@@ -71,12 +72,12 @@ static void       save_args        (GwyContainer *container,
                                     ToolControls *controls);
 
 
-gint old_ulcol = 0;
-gint old_ulrow = 0;
-gint old_brcol = 0;
-gint old_brrow = 0;
-gint state_changed = 0;
-gpointer last_preview = NULL;
+/* FIXME: This belongs to tool state */
+static gint old_ulcol = 0;
+static gint old_ulrow = 0;
+static gint old_brcol = 0;
+static gint old_brrow = 0;
+static gint state_changed = 0;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -85,7 +86,7 @@ static GwyModuleInfo module_info = {
     "filter",
     "Basic filtering procedures.",
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -145,35 +146,29 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    ToolControls *controls;
     GwyContainer *data, *last_data;
     GwyDataViewLayer *layer;
-    
+    GtkWidget *data_view;
+    GObject *shadefield;
+
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
 
-    printf("last preview = %d\n", (gint) last_preview);
-    
-    if (last_preview != NULL)
-    {
-        printf("last preview found\n");
-        last_data = GWY_CONTAINER(last_preview);
-        g_object_remove_weak_pointer(G_OBJECT(last_data), &last_preview);
-        
-        gwy_container_remove_by_name(last_data, "/0/show");
+    controls = (ToolControls*)state->user_data;
+    if (controls->last_preview) {
+        gwy_debug("last preview found %p\n", controls->last_preview);
+        data_view = gwy_data_window_get_data_view(
+                                     GWY_DATA_WINDOW(controls->last_preview));
+        g_assert(data_view);
+        data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
+        g_assert(data);
+        shadefield = gwy_container_get_object_by_name(data, "/0/show");
+        g_object_remove_weak_pointer(shadefield, &controls->last_preview);
+        controls->last_preview = NULL;
+        gwy_container_remove_by_name(data, "/0/show");
+        gwy_app_data_view_update(data_view);
     }
-   
-    if (state->layer != NULL)
-    {
-        layer = GWY_DATA_VIEW_LAYER(state->layer);
-        if (GWY_IS_DATA_VIEW(layer->parent))
-        {
-            data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-            printf("data = %d\n", (gint)data);
-            g_object_add_weak_pointer(G_OBJECT(data), &last_preview);
-            printf("preview set (%d)\n", (gint) last_preview);
-        }
-    }
-    
 }
 
 static GtkWidget*
@@ -261,21 +256,25 @@ dialog_create(GwyUnitoolState *state)
         = gwy_option_menu_filter(G_CALLBACK(filter_changed_cb),
                                     controls, controls->fil);
 
-    gtk_table_attach(GTK_TABLE(table2), controls->filter, 1, 2, 1, 2, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), controls->filter,
+                     1, 2, 1, 2, GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("direction:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 2, 3, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), label,
+                     0, 1, 2, 3, GTK_FILL, 0, 2, 2);
 
     controls->direction
         = gwy_option_menu_direction(G_CALLBACK(direction_changed_cb),
                                                  controls, controls->dir);
 
-    gtk_table_attach(GTK_TABLE(table2), controls->direction, 1, 2, 2, 3, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), controls->direction,
+                     1, 2, 2, 3, GTK_FILL, 0, 2, 2);
 
     label = gtk_label_new(_("size:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 3, 4, GTK_FILL, 0, 2, 2);
+    gtk_table_attach(GTK_TABLE(table2), label,
+                     0, 1, 3, 4, GTK_FILL, 0, 2, 2);
 
     controls->size = gtk_adjustment_new(controls->siz, 1, 20, 1, 5, 0);
     gwy_table_attach_spinbutton(table2, 3, "", "px", controls->size);
@@ -283,12 +282,15 @@ dialog_create(GwyUnitoolState *state)
 
     g_signal_connect(controls->size, "value-changed",
                      G_CALLBACK(size_changed_cb), controls);
-    
-    controls->update = gtk_check_button_new_with_label("update preview dynamically");
+
+    controls->update
+        = gtk_check_button_new_with_label("update preview dynamically");
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->update,
                        FALSE, FALSE, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update), controls->upd);
-    g_signal_connect(controls->update, "toggled", G_CALLBACK(update_changed_cb), controls);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
+                                 controls->upd);
+    g_signal_connect(controls->update, "toggled",
+                     G_CALLBACK(update_changed_cb), controls);
 
     return dialog;
 }
@@ -307,6 +309,7 @@ apply(GwyUnitoolState *state)
 
     gwy_debug("");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    controls = (ToolControls*)state->user_data;
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_container_remove_by_name(data, "/0/show");
@@ -314,7 +317,6 @@ apply(GwyUnitoolState *state)
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    controls = (ToolControls*)state->user_data;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
 
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
@@ -334,17 +336,20 @@ apply(GwyUnitoolState *state)
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
 
-    switch (controls->fil){
+    switch (controls->fil) {
         case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_filter_mean(dfield, controls->siz,
+                                   ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_filter_median(dfield, controls->siz,
+                                     ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(dfield, controls->siz, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_filter_conservative(dfield, controls->siz,
+                                           ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_LAPLACIAN:
@@ -352,11 +357,13 @@ apply(GwyUnitoolState *state)
         break;
 
         case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(dfield, controls->dir, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_filter_sobel(dfield, controls->dir,
+                                    ulcol, ulrow, brcol, brrow);
         break;
 
         case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(dfield, controls->dir, ulcol, ulrow, brcol, brrow);
+        gwy_data_field_filter_prewitt(dfield, controls->dir,
+                                      ulcol, ulrow, brcol, brrow);
         break;
 
         default:
@@ -426,8 +433,10 @@ dialog_update(GwyUnitoolState *state,
     }
 
 
-    if ((old_ulcol != ulcol) || (old_ulrow != ulrow) || (old_brcol != brcol) || (old_brrow != brrow))
-    {
+    if ((old_ulcol != ulcol)
+        || (old_ulrow != ulrow)
+        || (old_brcol != brcol)
+        || (old_brrow != brrow)) {
         state_changed = 1;
         old_ulcol = ulcol;
         old_ulrow = ulrow;
@@ -435,66 +444,77 @@ dialog_update(GwyUnitoolState *state,
         old_brrow = brrow;
     }
 
-    if (state_changed)
-    {
-       if (gwy_container_contains_by_name(data, "/0/show"))
-       {
-          shadefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                               "/0/show"));
-          gwy_data_field_resample(shadefield,
-                                  gwy_data_field_get_xres(dfield),
-                                  gwy_data_field_get_yres(dfield),
-                                  GWY_INTERPOLATION_NONE);
-          gwy_data_field_copy(dfield, shadefield);
-       }
-       else
-       {
-          shadefield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-          gwy_container_set_object_by_name(data, "/0/show", G_OBJECT(shadefield));
-       }
-       
-       if (controls->upd)
-       {
-     switch (controls->fil){
-        case GWY_FILTER_MEAN:
-        gwy_data_field_filter_mean(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
-        break;
+    if (state_changed) {
+        if (gwy_container_contains_by_name(data, "/0/show")) {
+            shadefield
+                = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                  "/0/show"));
+            gwy_data_field_resample(shadefield,
+                                    gwy_data_field_get_xres(dfield),
+                                    gwy_data_field_get_yres(dfield),
+                                    GWY_INTERPOLATION_NONE);
+            gwy_data_field_copy(dfield, shadefield);
+        }
+        else {
+            shadefield
+                = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
+            gwy_container_set_object_by_name(data, "/0/show",
+                                             G_OBJECT(shadefield));
+            g_object_unref(shadefield);
 
-        case GWY_FILTER_MEDIAN:
-        gwy_data_field_filter_median(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
-        break;
+            g_assert(!controls->last_preview);
+            controls->last_preview = state->data_window;
+            gwy_debug("setting last preview %p", controls->last_preview);
+            g_object_add_weak_pointer(G_OBJECT(shadefield),
+                                      &controls->last_preview);
+        }
 
-        case GWY_FILTER_CONSERVATIVE:
-        gwy_data_field_filter_conservative(shadefield, controls->siz, ulcol, ulrow, brcol, brrow);
-        break;
+        if (controls->upd) {
+            switch (controls->fil) {
+                case GWY_FILTER_MEAN:
+                gwy_data_field_filter_mean(shadefield, controls->siz,
+                                           ulcol, ulrow, brcol, brrow);
+                break;
 
-        case GWY_FILTER_LAPLACIAN:
-        gwy_data_field_filter_laplacian(shadefield, ulcol, ulrow, brcol, brrow);
-        break;
+                case GWY_FILTER_MEDIAN:
+                gwy_data_field_filter_median(shadefield, controls->siz,
+                                             ulcol, ulrow, brcol, brrow);
+                break;
 
-        case GWY_FILTER_SOBEL:
-        gwy_data_field_filter_sobel(shadefield, controls->dir, ulcol, ulrow, brcol, brrow);
-        break;
+                case GWY_FILTER_CONSERVATIVE:
+                gwy_data_field_filter_conservative(shadefield, controls->siz,
+                                                   ulcol, ulrow, brcol, brrow);
+                break;
 
-        case GWY_FILTER_PREWITT:
-        gwy_data_field_filter_prewitt(shadefield, controls->dir, ulcol, ulrow, brcol, brrow);
-        break;
+                case GWY_FILTER_LAPLACIAN:
+                gwy_data_field_filter_laplacian(shadefield,
+                                                ulcol, ulrow, brcol, brrow);
+                break;
 
-        default:
-        g_assert_not_reached();
-        break;
-    }
-       }
+                case GWY_FILTER_SOBEL:
+                gwy_data_field_filter_sobel(shadefield, controls->dir,
+                                            ulcol, ulrow, brcol, brrow);
+                break;
+
+                case GWY_FILTER_PREWITT:
+                gwy_data_field_filter_prewitt(shadefield, controls->dir,
+                                              ulcol, ulrow, brcol, brrow);
+                break;
+
+                default:
+                g_assert_not_reached();
+                break;
+            }
+        }
         state_changed = 0;
         gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
-   }
-
+    }
 }
 
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
-    
+
     GwyContainer *settings;
     GwyContainer *data;
     ToolControls *controls;
@@ -540,7 +560,7 @@ update_changed_cb (GtkToggleButton *button, ToolControls *controls)
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
-static void       
+static void
 size_changed_cb(GtkAdjustment *adjustment, ToolControls *controls)
 {
     gwy_debug("");
