@@ -12,14 +12,9 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
 lib_LTLIBRARIES = \
-	libtestmodule.la \
 	libbasicops.la \
 	liblevel.la \
 	librotate.la
-
-libtestmodule_la_SOURCES = testmodule.c
-libtestmodule_la_LDFLAGS = -avoid-version -module
-libtestmodule_la_LIBADD = $(libgwymodule) @GMODULE_LIBS@
 
 libbasicops_la_SOURCES = basicops.c
 libbasicops_la_LDFLAGS = -avoid-version -module
