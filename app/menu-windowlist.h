@@ -18,19 +18,23 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_APP_GWYAPP_H__
-#define __GWY_APP_GWYAPP_H__
+#ifndef __GWY_APP_MENU_WINDOWLIST_H__
+#define __GWY_APP_MENU_WINDOWLIST_H__
 
-#include <app/app.h>
-#include <app/file.h>
-#include <app/menu.h>
-#include <app/menu-windowlist.h>
-#include <app/settings.h>
-#include <app/unitool.h>
-#include <app/undo.h>
-#include <app/wait.h>
+#include <gtk/gtkwidget.h>
 
-#endif /* __GWY_APP_GWYAPP_H__ */
+G_BEGIN_DECLS
+
+GtkWidget* gwy_option_menu_data_window             (GCallback callback,
+                                                    gpointer cbdata,
+                                                    const gchar *none_label,
+                                                    GtkWidget *current);
+gboolean   gwy_option_menu_data_window_set_history (GtkWidget *option_menu,
+                                                    GtkWidget *current);
+GtkWidget* gwy_option_menu_data_window_get_history (GtkWidget *option_menu);
+
+G_END_DECLS
+
+#endif /* __GWY_APP_MENU_WINDOWLIST_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

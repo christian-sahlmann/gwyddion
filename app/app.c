@@ -253,10 +253,63 @@ gwy_app_data_window_list_updated(void)
 {
     gwy_debug("");
 
+    if (!window_list_hook_list.is_setup)
+        return;
+
+    g_hook_list_invoke(&window_list_hook_list, FALSE);
+}
+
+/**
+ * gwy_app_data_window_list_add_hook:
+ * @func: Function to be called (with @data as its only argument).
+ * @data: Data passed to @func.
+ *
+ * Adds a hook function called just after a data window is created or
+ * destroyed.
+ *
+ * Returns: Hook id to be used in gwy_app_data_window_list_remove_hook().
+ *
+ * Since: 1.2.
+ **/
+gulong
+gwy_app_data_window_list_add_hook(gpointer func,
+                                  gpointer data)
+{
+    GHook *hook;
+
+    gwy_debug("");
     if (!window_list_hook_list.is_setup) {
         gwy_debug("initializing window_list_hook_list");
         g_hook_list_init(&window_list_hook_list, sizeof(GHook));
     }
+
+    hook = g_hook_alloc(&window_list_hook_list);
+    hook->func = func;
+    hook->data = data;
+    g_hook_append(&window_list_hook_list, hook);
+    gwy_debug("id = %lu", hook->hook_id);
+
+    return hook->hook_id ;
+}
+
+/**
+ * gwy_app_data_window_list_remove_hook:
+ * @hook_id: Hook id, as returned by gwy_app_data_window_list_add_hook().
+ *
+ * Removes a data window list hook function added by
+ * gwy_app_data_window_list_add_hook().
+ *
+ * Returns: Whether such a hook was found and removed.
+ *
+ * Since: 1.2.
+ **/
+gboolean
+gwy_app_data_window_list_remove_hook(gulong hook_id)
+{
+    gwy_debug("");
+    g_return_val_if_fail(window_list_hook_list.is_setup, FALSE);
+
+    return g_hook_destroy(&window_list_hook_list, hook_id);
 }
 
 /**
