@@ -39,7 +39,7 @@ enum {
 
 static void     gwy_data_window_class_init     (GwyDataWindowClass *klass);
 static void     gwy_data_window_init           (GwyDataWindow *data_window);
-static void     gwy_data_window_destroy        (GtkObject *object);
+static void     gwy_data_window_finalize       (GObject *object);
 static void     measure_changed                (GwyDataWindow *data_window);
 static void     lame_window_resize             (GwyDataWindow *data_window);
 static void     compute_statusbar_units        (GwyDataWindow *data_window);
@@ -97,6 +97,7 @@ gwy_data_window_get_type(void)
 static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
 
     gwy_debug("");
@@ -104,7 +105,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    object_class->destroy  = gwy_data_window_destroy;
+    gobject_class->finalize = gwy_data_window_finalize;
 
     klass->title_changed = NULL;
 
@@ -137,21 +138,18 @@ gwy_data_window_init(GwyDataWindow *data_window)
 }
 
 static void
-gwy_data_window_destroy(GtkObject *object)
+gwy_data_window_finalize(GObject *object)
 {
     GwyDataWindow *data_window;
 
-    gwy_debug("destroying a GwyDataWindow (refcount = %u)",
-              G_OBJECT(object)->ref_count);
+    gwy_debug("finalizing a GwyDataWindow %p (refcount = %u)",
+              object, object->ref_count);
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(object));
 
     data_window = GWY_DATA_WINDOW(object);
     g_free(data_window->coord_format);
     g_free(data_window->value_format);
-
-    if (GTK_OBJECT_CLASS(parent_class)->destroy)
-        (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 }
 
 /**

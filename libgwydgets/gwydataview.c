@@ -220,8 +220,8 @@ gwy_data_view_destroy(GtkObject *object)
 {
     GwyDataView *data_view;
 
-    gwy_debug("destroying a GwyDataView (refcount = %u)",
-              G_OBJECT(object)->ref_count);
+    gwy_debug("destroying a GwyDataView %p (refcount = %u)",
+              object, G_OBJECT(object)->ref_count);
 
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
