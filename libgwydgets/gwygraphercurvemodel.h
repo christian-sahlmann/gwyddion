@@ -90,8 +90,6 @@ GObject*   gwy_grapher_curve_model_new            (void);
 gboolean   gwy_grapher_curve_model_save_curve     (GwyGrapherCurveModel *gcmodel,
                                                  GwyGrapher *grapher,
                                                  gint index_);
-void       gwy_grapher_add_curve_from_model       (GwyGrapher *grapher,
-                                                 GwyGrapherCurveModel *gcmodel);
 
 G_END_DECLS
 

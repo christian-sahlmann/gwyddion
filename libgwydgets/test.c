@@ -111,7 +111,7 @@ main(int argc, char *argv[])
     
     graph = gwy_grapher_new();
     gmodel = gwy_grapher_model_new(graph);
-    gwy_grapher_add_curve_from_model(graph, model);
+    gwy_grapher_model_add_curve(gmodel, model);
     
     gtk_container_add (GTK_CONTAINER (window), graph);
     gtk_widget_show (graph);

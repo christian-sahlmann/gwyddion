@@ -612,4 +612,13 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     gwy_grapher_area_refresh(grapher->area);
     
 }
+
+
+void
+gwy_grapher_change_model(GwyGrapher *grapher, gpointer *gmodel)
+{
+    grapher->grapher_model = gmodel;
+    gwy_grapher_area_change_model(grapher->area, gmodel);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -158,6 +158,8 @@ void gwy_grapher_area_refresh(GwyGrapherArea *area);
 
 void gwy_grapher_area_set_selection(GwyGrapherArea *area, GwyGrapherStatusType *status, gpointer statusdata);
 
+void gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel);
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/

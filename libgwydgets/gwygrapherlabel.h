@@ -64,6 +64,8 @@ GType gwy_grapher_label_get_type(void) G_GNUC_CONST;
 
 void gwy_grapher_label_refresh(GwyGrapherLabel *label);
 
+void gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel);
+
 G_END_DECLS
 
 #endif /*__GWY_AXIS_H__*/

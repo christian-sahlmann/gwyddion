@@ -93,6 +93,9 @@ GType      gwy_grapher_get_type(void) G_GNUC_CONST;
 
 void       gwy_grapher_refresh(GwyGrapher *grapher);
 
+void       gwy_grapher_change_model(GwyGrapher *grapher, 
+                                    gpointer *gmodel);
+
 G_END_DECLS
 
 #endif /* __GWY_GRADSPHERE_H__ */

@@ -24,6 +24,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
+#include "gwygraphermodel.h"
 
 #define GWY_GRAPHER_LABEL_TYPE_NAME "GwyGrapherLabel"
 
@@ -475,9 +476,18 @@ gwy_grapher_label_clear(GwyGrapherLabel *label)
 void 
 gwy_grapher_label_refresh(GwyGrapherLabel *label)
 {
-    printf("label refresh!\n");
+    GwyGrapherModel *model = GWY_GRAPHER_MODEL(label->grapher_model);
+    
+    printf("label refresh! (%d curves)\n", model->ncurves);
     /*repaint label samples and descriptions*/
 
 }
+
+void
+gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel)
+{
+    label->grapher_model = gmodel;
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

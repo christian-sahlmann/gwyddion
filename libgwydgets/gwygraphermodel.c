@@ -183,8 +183,30 @@ gwy_grapher_model_new(GwyGrapher *grapher)
                                gmodel);
     }
 
+    if (grapher) gwy_grapher_change_model(gmodel->grapher, gmodel);
     return (GObject*)(gmodel);
 }
+
+
+void       
+gwy_grapher_model_add_curve(GwyGrapherModel *gmodel, GwyGrapherCurveModel *curve)
+{
+    GObject **newcurves;
+    gint i;
+    
+    newcurves = g_new(GObject*, gmodel->ncurves+1);
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+    {
+        newcurves[i] = gmodel->curves[i];
+    }
+    newcurves[i] = gwy_serializable_duplicate(curve);
+  
+    gmodel->curves = newcurves;
+    
+    gwy_grapher_refresh(gmodel->grapher);
+}
+
 
 gint
 gwy_grapher_model_get_n_curves(GwyGrapherModel *gmodel)

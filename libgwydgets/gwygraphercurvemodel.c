@@ -230,32 +230,6 @@ gwy_grapher_curve_model_save_curve(GwyGrapherCurveModel *gcmodel,
     */
 }
 
-void
-gwy_grapher_add_curve_from_model(GwyGrapher *grapher,
-                               GwyGrapherCurveModel *gcmodel)
-{
-    gwy_grapher_refresh(grapher);
-    /*
-    GwyGrapherAreaCurveParams params;
-
-    g_return_if_fail(GWY_IS_GRAPHER(grapher));
-    g_return_if_fail(GWY_IS_GRAPHER_CURVE_MODEL(gcmodel));
-
-    gwy_rgba_to_gdk_color(&gcmodel->color, &params.color);
-
-    params.is_point = (gcmodel->type & GWY_GRAPHER_CURVE_POINTS) != 0;
-    params.point_type = gcmodel->point_type;
-    params.point_size = gcmodel->point_size;
-
-    params.is_line = (gcmodel->type & GWY_GRAPHER_CURVE_LINE) != 0;
-    params.line_style = gcmodel->line_style;
-    params.line_size = gcmodel->line_size;
-
-    gwy_grapher_add_datavalues(grapher, gcmodel->xdata, gcmodel->ydata,
-                             gcmodel->n, gcmodel->description,
-                             &params);
-                             */
-}
 
 static GByteArray*
 gwy_grapher_curve_model_serialize(GObject *object,

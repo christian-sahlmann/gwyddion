@@ -22,6 +22,7 @@
 #define __GWY_GRAPHER_MODEL_H__
 
 #include "gwygrapher.h"
+#include "gwygraphercurvemodel.h"
 
 G_BEGIN_DECLS
 
@@ -98,6 +99,9 @@ GType      gwy_grapher_model_get_type       (void) G_GNUC_CONST;
 GObject*   gwy_grapher_model_new            (GwyGrapher *grapher);
 GtkWidget* gwy_grapher_new_from_model       (GwyGrapherModel *gmodel);
 gint       gwy_grapher_model_get_n_curves   (GwyGrapherModel *gmodel);
+
+void       gwy_grapher_model_add_curve      (GwyGrapherModel *gmodel,
+                                             GwyGrapherCurveModel *curve);
 
 G_END_DECLS
 
