@@ -151,7 +151,7 @@ selection_finished_cb(GwyUnitoolState *state)
     is_visible = state->is_visible;
     is_selected = gwy_vector_layer_get_selection(state->layer, xy);
 
-    row = ROUND(gwy_data_field_rtoj(dfield, xy[1]));
+    row = ROUND(gwy_data_field_rtoi(dfield, xy[1]));
     col = ROUND(gwy_data_field_rtoj(dfield, xy[0]));
 
     if (!is_visible && !is_selected)

@@ -320,9 +320,9 @@ apply(GwyUnitoolState *state)
     gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
 
     xm1 = ROUND(gwy_data_field_rtoj(dfield, xmin));
-    ym1 = ROUND(gwy_data_field_rtoj(dfield, ymin));
+    ym1 = ROUND(gwy_data_field_rtoi(dfield, ymin));
     xm2 = ROUND(gwy_data_field_rtoj(dfield, xmax));
-    ym2 = ROUND(gwy_data_field_rtoj(dfield, ymax));
+    ym2 = ROUND(gwy_data_field_rtoi(dfield, ymax));
 
     dataline = (GwyDataLine *)gwy_data_line_new(10, 10, 0);
     lab = g_string_new(gwy_enum_to_string(controls->out,
