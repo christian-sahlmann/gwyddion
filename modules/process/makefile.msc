@@ -4,6 +4,7 @@ MOD_TYPE = process
 MODULES = \
 	basicops.dll \
 	cwt.dll \
+	facet-level.dll \
 	fft.dll \
 	level.dll \
 	rotate.dll \
@@ -33,6 +34,9 @@ basicops.dll: basicops.obj
 
 cwt.dll: cwt.obj
 	$(LINK32) cwt.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:cwt.dll /dll /implib:cwt.lib
+
+facet-level.dll: facet-level.obj
+	$(LINK32) facet-level.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:facet-level.dll /dll /implib:facet-level.lib
 
 fft.dll: fft.obj
 	$(LINK32) fft.obj $(MOD_LINK) $(WIN32LIBS) $(LDFLAGS) /out:fft.dll /dll /implib:fft.lib

@@ -7,6 +7,7 @@ module_ldflags = -shared -Wl,-soname
 process_PROGRAMS = \
 	basicops.so \
 	cwt.so \
+	facet-level.so \
 	fft.so \
 	level.so \
 	rotate.so \
@@ -37,6 +38,8 @@ cwt_so_LDFLAGS = $(module_ldflags),cwt.so
 shade_so_SOURCES = shade.c
 shade_so_LDFLAGS = $(module_ldflags),shade.so
 
+facet_level_so_SOURCES = facet-level.c
+facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
 
 
 INCLUDES = -I$(top_srcdir)
