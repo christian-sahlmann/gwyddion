@@ -70,6 +70,7 @@ G_END_DECLS
 #include <libprocess/correct.h>
 #include <libprocess/correlation.h>
 #include <libprocess/cwt.h>
+#include <libprocess/dwt.h>
 #include <libprocess/fractals.h>
 #include <libprocess/filters.h>
 #include <libprocess/grains.h>

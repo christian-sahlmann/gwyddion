@@ -32,13 +32,13 @@ typedef enum {
 	GWY_DWT_DAUB8,
 	GWY_DWT_DAUB12,
 	GWY_DWT_DAUB20
-} GwyDWTCoefficientsType;
+} GwyDWTType;
 
 
 G_BEGIN_DECLS
 
 /*load wavelet coeficients*/
-GwyDataLine *gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTCoefficientsType type);
+GwyDataLine *gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type);
 
 /*plot wavelet*/
 GwyDataLine *gwy_dwt_plot_wavelet(GwyDataLine *dline, GwyDataLine *wt_coefs);

@@ -674,6 +674,40 @@ gwy_option_menu_2dcwt(GCallback callback,
 }
 
 /**
+ * gwy_option_menu_dwt:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ * @current: DWT wavelet type to be shown as currently selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available wavelet types.
+ *
+ * It sets object data "dwt-wavelet-type" to DWT wavelet type for each
+ * menu item (use GPOINTER_TO_INT() when retrieving it)..
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_dwt(GCallback callback,
+                      gpointer cbdata,
+                      GwyDWTType current)
+{
+    static const GwyEnum entries[] = {
+        { N_("Haar"),          GWY_DWT_HAAR      },
+        { N_("Daubechies 4"),           GWY_DWT_DAUB4        },
+        { N_("Daubechies 6"),           GWY_DWT_DAUB6        },
+        { N_("Daubechies 8"),           GWY_DWT_DAUB8        },
+        { N_("Daubechies 12"),           GWY_DWT_DAUB12      },
+        { N_("Daubechies 20"),           GWY_DWT_DAUB20      },
+     };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "dwt-wavelet-type", callback, cbdata,
+                                  current);
+}
+
+/**
  * gwy_option_menu_sfunctions_output:
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            none).

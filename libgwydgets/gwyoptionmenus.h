@@ -53,6 +53,9 @@ GtkWidget* gwy_option_menu_zoom_mode         (GCallback callback,
 GtkWidget* gwy_option_menu_2dcwt             (GCallback callback,
                                               gpointer cbdata,
                                               Gwy2DCWTWaveletType current);
+GtkWidget* gwy_option_menu_dwt                (GCallback callback,
+                                              gpointer cbdata,
+                                              GwyDWTType current);
 GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
                                               gpointer cbdata,
                                               GwySFOutputType current);

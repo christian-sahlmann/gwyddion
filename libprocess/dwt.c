@@ -38,7 +38,7 @@ static GwyDWTFilter *wtset(GwyDataLine *wt_coefs);
 /*public functions*/
 
 GwyDataLine*
-gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTCoefficientsType type)
+gwy_dwt_set_coefficients(GwyDataLine *dline, GwyDWTType type)
 {
     GwyDataLine *ret;
     
