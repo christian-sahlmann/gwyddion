@@ -97,6 +97,9 @@ static void     hash_foreach_func                (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
 static GObject* gwy_container_duplicate_real     (GObject *object);
+static void     gwy_container_clone_real         (GObject *source,
+                                                  GObject *copy);
+static gboolean hash_remove_all_func             (void);
 static void     hash_duplicate_func              (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
@@ -160,6 +163,7 @@ gwy_container_serializable_init(GwySerializableIface *iface)
     iface->serialize = gwy_container_serialize;
     iface->deserialize = gwy_container_deserialize;
     iface->duplicate = gwy_container_duplicate_real;
+    iface->clone = gwy_container_clone_real;
 }
 
 static void
@@ -1830,6 +1834,28 @@ gwy_container_duplicate_real(GObject *object)
                          hash_duplicate_func, duplicate);
 
     return (GObject*)duplicate;
+}
+
+static void
+gwy_container_clone_real(GObject *source,
+                         GObject *copy)
+{
+    GwyContainer *container, *clone;
+
+    g_return_if_fail(GWY_IS_CONTAINER(source));
+    g_return_if_fail(GWY_IS_CONTAINER(copy));
+    container = GWY_CONTAINER(source);
+    clone = GWY_CONTAINER(copy);
+
+    g_hash_table_foreach_remove(container->values,
+                                (GHRFunc)hash_remove_all_func, NULL);
+    g_hash_table_foreach(container->values, hash_duplicate_func, clone);
+}
+
+static gboolean
+hash_remove_all_func(void)
+{
+    return TRUE;
 }
 
 static void
