@@ -27,7 +27,159 @@
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
-GwySIUnit* gwy_si_unit_new(char *unit_string)
+#define GWY_SI_UNIT_TYPE_NAME "GwySiUnit"
+
+static void     gwy_si_unit_class_init        (GwySIUnitClass *klass);
+static void     gwy_si_unit_init              (GwySIUnit *si_unit);
+static void     gwy_si_unit_finalize          (GwySIUnit *si_unit);
+static void     gwy_si_unit_serializable_init (gpointer giface);
+static guchar*  gwy_si_unit_serialize         (GObject *obj,
+                                              guchar *buffer,
+                                              gsize *size);
+static GObject* gwy_si_unit_deserialize       (const guchar *buffer,
+                                              gsize size,
+                                              gsize *position);
+static GObject* gwy_si_unit_duplicate         (GObject *object);
+
+GType
+gwy_si_unit_get_type(void)
+{
+    static GType gwy_si_unit_type = 0;
+
+    if (!gwy_si_unit_type) {
+        static const GTypeInfo gwy_si_unit_info = {
+            sizeof(GwySIUnitClass),
+            NULL,
+            NULL,
+            (GClassInitFunc)gwy_si_unit_class_init,
+            NULL,
+            NULL,
+            sizeof(GwySIUnit),
+            0,
+            (GInstanceInitFunc)gwy_si_unit_init,
+            NULL,
+        };
+
+        GInterfaceInfo gwy_serializable_info = {
+            (GInterfaceInitFunc)gwy_si_unit_serializable_init,
+            NULL,
+            NULL
+        };
+
+        gwy_debug("");
+        gwy_si_unit_type = g_type_register_static(G_TYPE_OBJECT,
+                                                   GWY_SI_UNIT_TYPE_NAME,
+                                                   &gwy_si_unit_info,
+                                                   0);
+        g_type_add_interface_static(gwy_si_unit_type,
+                                    GWY_TYPE_SERIALIZABLE,
+                                    &gwy_serializable_info);
+    }
+
+    return gwy_si_unit_type;
+}
+
+static void
+gwy_si_unit_serializable_init(gpointer giface)
+{
+    GwySerializableClass *iface = giface;
+
+    gwy_debug("");
+    g_assert(G_TYPE_FROM_INTERFACE(iface) == GWY_TYPE_SERIALIZABLE);
+
+    /* initialize stuff */
+    iface->serialize = gwy_si_unit_serialize;
+    iface->deserialize = gwy_si_unit_deserialize;
+    iface->duplicate = gwy_si_unit_duplicate;
+}
+
+
+static void
+gwy_si_unit_class_init(GwySIUnitClass *klass)
+{
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gwy_debug("");
+
+    gobject_class->finalize = (GObjectFinalizeFunc)gwy_si_unit_finalize;
+}
+
+static void
+gwy_si_unit_init(GwySIUnit *si_unit)
+{
+    gwy_debug("");
+}
+
+static void
+gwy_si_unit_finalize(GwySIUnit *si_unit)
+{
+    gwy_debug("");
+    gwy_si_unit_free(si_unit);
+}
+
+static guchar*
+gwy_si_unit_serialize(GObject *obj,
+                         guchar *buffer,
+                         gsize *size)
+{
+    GwySIUnit *si_unit;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_SI_UNIT(obj), NULL);
+
+    si_unit = GWY_SI_UNIT(obj);
+    {
+        GwySerializeSpec spec[] = {
+            { 's', "unitstr", &si_unit->unitstr, NULL, },
+        };
+        return gwy_serialize_pack_object_struct(buffer, size,
+                                                GWY_SI_UNIT_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static GObject*
+gwy_si_unit_deserialize(const guchar *buffer,
+                           gsize size,
+                           gsize *position)
+{
+    gchar *unitstr=NULL;
+    
+    GwySIUnit *si_unit;
+    GwySerializeSpec spec[] = {
+        { 's', "unitstr", &unitstr, NULL, },
+    };
+
+    gwy_debug("");
+    g_return_val_if_fail(buffer, NULL);
+
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_SI_UNIT_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        return NULL;
+    }
+
+    /* don't allocate large amount of memory just to immediately free it */
+    si_unit = (GwySIUnit*)gwy_si_unit_new(unitstr);
+
+    return (GObject*)si_unit;
+}
+
+
+static 
+GObject* gwy_si_unit_duplicate (GObject *object)
+{
+    GwySIUnit *si_unit;
+    GObject *duplicate;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(object), NULL);
+    si_unit = GWY_SI_UNIT(object);
+    duplicate = gwy_si_unit_new(si_unit->unitstr);
+    
+    return duplicate;
+}
+
+GObject* gwy_si_unit_new(char *unit_string)
 {
     GwySIUnit *siunit;
     
@@ -39,7 +191,7 @@ GwySIUnit* gwy_si_unit_new(char *unit_string)
         strcpy(siunit->unitstr, unit_string);
     }
     else siunit->unitstr = NULL;
-    return siunit;
+    return (GObject*) siunit;
 }
 
 void gwy_si_unit_free(GwySIUnit *siunit)

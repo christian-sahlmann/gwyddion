@@ -25,11 +25,29 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <libgwyddion/gwyserializable.h>
+    
+#define GWY_TYPE_SI_UNIT                  (gwy_si_unit_get_type())
+#define GWY_SI_UNIT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SI_UNIT, GwySIUnit))
+#define GWY_SI_UNIT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SI_UNIT, GwySIUnit))
+#define GWY_IS_SI_UNIT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SI_UNIT))
+#define GWY_IS_SI_UNIT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SI_UNIT))
+#define GWY_SI_UNIT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SI_UNIT, GwySIUnitClass))
+
+    
 typedef struct{
    gchar *unitstr;
 } GwySIUnit;
 
-GwySIUnit* gwy_si_unit_new(gchar *unit_string);
+typedef struct{
+    GObjectClass parent_class;
+} GwySIUnitClass;
+
+GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
+
+GObject* gwy_si_unit_new(gchar *unit_string);
 void gwy_si_unit_free();
 
 void gwy_si_unit_set_unit_string(GwySIUnit *siunit, gchar *unit_string);
