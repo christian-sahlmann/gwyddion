@@ -1,9 +1,9 @@
-1.5cvs20041024
 
 1.6
 Application:
 - Crash when a top-level menus is detached was fixed (bug #30).
-- Internationalization support (gettext) was added.
+- Internationalization support (gettext) was added, currently works only on
+  Unix.
 
 Modules:
 - Interactive color range change tool (new).
@@ -285,4 +285,3 @@ Gwyddion:
 0.99.1
 Release candidate 1 for v1.0.
 
-# @(#) $Id$

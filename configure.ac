@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.5cvs20041014, [yeti@gwyddion.net, klapetek@gwyddion.net])
+AC_INIT(Gwyddion, 1.6, [yeti@gwyddion.net, klapetek@gwyddion.net])
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -94,6 +94,17 @@ exit 1"]; then
   AC_MSG_RESULT([$ruby_version_ok])
 fi
 
+ruby_has_narray=no
+if test "$RUBY" != :; then
+  AC_MSG_CHECKING([for ruby narray module])
+  if $RUBY -rnarray -e 'exit 0' >/dev/null 2>&1; then
+    ruby_has_narray=yes
+  else
+    ruby_has_narray=no
+  fi
+  AC_MSG_RESULT([$ruby_has_narray])
+fi
+
 # Check for Pascal compiler
 # The outer [] are necessary to quote the inner [] inside sed expressions
 AC_PATH_PROGS(PASCAL,fpc,:)
@@ -119,6 +130,7 @@ AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != :])
 AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != :])
 AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != :])
+AM_CONDITIONAL([HAVE_RUBY_NARRAY], [test "$ruby_has_narray" = yes])
 
 dnl With GCC, be paranoiac.  It should compile really cleanly.
 if test "$GCC" = yes; then
