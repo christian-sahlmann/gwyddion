@@ -284,13 +284,13 @@ fit_dialog(FitArgs *args)
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    hbox = gtk_hbox_new(FALSE, 0);
+    hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+                       FALSE, FALSE, 0);
 
     vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
 
     /*fit equation*/
     label = gtk_label_new(NULL);
@@ -344,8 +344,7 @@ fit_dialog(FitArgs *args)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
-    for (i=0; i<MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_des[i] = gtk_label_new(NULL);
         gtk_misc_set_alignment(GTK_MISC(controls.param_des[i]), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), controls.param_des[i],
@@ -354,8 +353,7 @@ fit_dialog(FitArgs *args)
     }
 
     controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_init[i] = gtk_entry_new();
         gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
         gtk_entry_set_width_chars(GTK_ENTRY(controls.param_init[i]), 12);
@@ -368,8 +366,7 @@ fit_dialog(FitArgs *args)
     }
 
     controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_res[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
                          2, 3, i+1, i+2,
@@ -378,8 +375,7 @@ fit_dialog(FitArgs *args)
     }
 
     controls.param_err = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_err[i] = gtk_label_new(NULL);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
                          3, 4, i+1, i+2,
@@ -388,8 +384,7 @@ fit_dialog(FitArgs *args)
     }
 
     controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_fit[i] = gtk_check_button_new();
         g_signal_connect(controls.param_fit[i], "toggled",
                          G_CALLBACK(toggle_changed_cb), &args->par_fix[i]);
@@ -472,11 +467,10 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
 
-     /*graph*/
+    /*graph*/
     controls.graph = gwy_graph_new();
     gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls.graph), FALSE);
-    gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
-                       FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
     gwy_graph_get_autoproperties(GWY_GRAPH(controls.graph), &prop);
     prop.is_line = 0;
