@@ -57,18 +57,19 @@ gwy_menu_create_aligned_menu(GtkItemFactoryEntry *menu_items,
 
 static void
 run_process_func_cb(gchar *name,
-                    guint cb_action,
-                    GtkWidget *who_knows)
+                    guint cb_action)
 {
+    GwyDataWindow *data_window;
+    GwyDataView *data_view;
     GwyContainer *data;
 
-    gwy_debug("first argument = %s", name);
-    gwy_debug("second argument = %u", cb_action);
-    gwy_debug("third argument = %p (%s)",
-              who_knows, g_type_name(G_TYPE_FROM_INSTANCE(who_knows)));
-    data = gwy_app_get_current_data();
+    data_window = gwy_app_get_current_data_window();
+    data_view = gwy_data_window_get_data_view(data_window);
+    data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
     gwy_run_process_func(name, data, GWY_RUN_NONINTERACTIVE);
+    /* FIXME: the ugliest hack! */
+    gwy_data_view_update(data_view);
 }
 
 GtkWidget*
