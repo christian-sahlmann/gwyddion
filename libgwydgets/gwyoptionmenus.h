@@ -24,6 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwynlfit.h>
 #include <libprocess/cwt.h>
 #include <libprocess/simplefft.h>
 #include <libprocess/dataline.h>
@@ -70,6 +71,9 @@ GtkWidget* gwy_option_menu_fit_line      (GCallback callback,
 GtkWidget* gwy_option_menu_fractal        (GCallback callback,
                                           gpointer cbdata,
                                           GwyFractalType current);
+GtkWidget* gwy_option_menu_nlfitpreset    (GCallback callback,
+                                          gpointer cbdata,
+                                          GwyNLFitPresetType current);
 GtkWidget* gwy_option_menu_metric_unit    (GCallback callback,
                                            gpointer cbdata,
                                            gint from,

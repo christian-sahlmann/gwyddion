@@ -38,6 +38,7 @@ typedef struct {
     GtkWidget *from;
     GtkWidget *to;
     GtkWidget *chisq;
+    GtkWidget *selector;
     GtkWidget *equation;
     GtkWidget *covar_row1;
     GtkWidget *covar_row2;
@@ -88,7 +89,7 @@ static gboolean    fit                       (GwyGraph *graph);
 static gboolean    fit_dialog                (FitArgs *args);
 static void        recompute                 (FitArgs *args, FitControls *controls);
 static void        reset                     (FitArgs *args, FitControls *controls);
-
+static void        type_changed_cb           (GObject *item, FitArgs *args);
 
 
 
@@ -142,6 +143,7 @@ fit_dialog(FitArgs *args)
     GtkWidget *table;
     GtkWidget *dialog;
     GtkWidget *hbox;
+    GtkWidget *hbox2;
     GtkWidget *vbox;
     FitControls controls;
     gint response;
@@ -172,8 +174,15 @@ fit_dialog(FitArgs *args)
     gtk_label_set_markup(GTK_LABEL(label), "<b>Function definition:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
-       
 
+    controls.selector = gwy_option_menu_nlfitpreset(G_CALLBACK(type_changed_cb),
+                                                    args, args->function_type);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.selector);
+       
+    controls.equation = gtk_label_new("f(x) = a + bx");
+    gtk_misc_set_alignment(GTK_MISC(controls.equation), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.equation);
+ 
     /*fit parameters*/
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>Fitting parameters:</b>");
@@ -287,13 +296,59 @@ fit_dialog(FitArgs *args)
     gtk_label_set_markup(GTK_LABEL(label), "<b>Correlation matrix:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
+
+    controls.covar_row1 = gtk_label_new("a: ");
+    gtk_misc_set_alignment(GTK_MISC(controls.covar_row1), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row1);
+    
+    controls.covar_row2 = gtk_label_new("b: ");
+    gtk_misc_set_alignment(GTK_MISC(controls.covar_row2), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row2);
      
+    controls.covar_row3 = gtk_label_new("c: ");
+    gtk_misc_set_alignment(GTK_MISC(controls.covar_row3), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row3);
+     
+    controls.covar_row4 = gtk_label_new("d: ");
+    gtk_misc_set_alignment(GTK_MISC(controls.covar_row4), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), controls.covar_row4);
+      
     label = gtk_label_new("");
     gtk_label_set_markup(GTK_LABEL(label), "<b>Chi-square result:</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_container_add(GTK_CONTAINER(vbox), label);
  
-    /*graph*/
+    /*FIt area*/
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "<b>Fit area</b>");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_container_add(GTK_CONTAINER(vbox), label);
+   
+    hbox2 = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2,
+                       FALSE, FALSE, 4);
+
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "from");
+    /*gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);*/
+    gtk_container_add(GTK_CONTAINER(hbox2), label);
+     
+    controls.from = gtk_entry_new_with_max_length(8);
+    gtk_entry_set_width_chars(controls.from, 8);
+    gtk_container_add(GTK_CONTAINER(hbox2), controls.from);
+
+    label = gtk_label_new("");
+    gtk_label_set_markup(GTK_LABEL(label), "to");
+    /*gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);*/
+    gtk_container_add(GTK_CONTAINER(hbox2), label);
+     
+    controls.to = gtk_entry_new_with_max_length(8);
+    gtk_entry_set_width_chars(controls.to, 8);
+    gtk_container_add(GTK_CONTAINER(hbox2), controls.to);
+
+
+ 
+     /*graph*/
     controls.graph = gwy_graph_new();
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        FALSE, FALSE, 4);
@@ -358,5 +413,10 @@ reset(FitArgs *args, FitControls *controls)
 {
 }
 
+
+static void
+type_changed_cb(GObject *item, FitArgs *args)
+{
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

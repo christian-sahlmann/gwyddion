@@ -698,6 +698,46 @@ gwy_option_menu_fractal(GCallback callback,
                                   "fractal-type", callback, cbdata,
                                   current);
 }
+
+/**
+ * gwy_option_menu_nlfitpreset:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Fit preset mode selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available fit presets
+ *
+ * It sets object data "fit-type" to line fit
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_nlfitpreset(GCallback callback,
+                       gpointer cbdata,
+                       GwyNLFitPresetType current)
+{
+    static const GwyEnum entries[] = {
+        { "Gaussian",             GWY_NLFIT_PRESET_GAUSSIAN, },
+        { "Gaussian (PSDF)",      GWY_NLFIT_PRESET_GAUSSIAN_PSDF, },
+        { "Gaussian (ACF)",       GWY_NLFIT_PRESET_GAUSSIAN_ACF, },
+        { "Gaussian (HHCF)",      GWY_NLFIT_PRESET_GAUSSIAN_HHCF, },
+        { "Exponential",             GWY_NLFIT_PRESET_EXPONENTIAL, },
+        { "Exponential (PSDF)",      GWY_NLFIT_PRESET_EXPONENTIAL_PSDF, },
+        { "Exponential (ACF)",       GWY_NLFIT_PRESET_EXPONENTIAL_ACF, },
+        { "Exponential (HHCF)",      GWY_NLFIT_PRESET_EXPONENTIAL_HHCF, },
+        { "Polynom (order 0)",       GWY_NLFIT_PRESET_POLY_0, },    
+        { "Polynom (order 1)",       GWY_NLFIT_PRESET_POLY_1, },
+        { "Polynom (order 2)",       GWY_NLFIT_PRESET_POLY_2, },
+        { "Polynom (order 3)",       GWY_NLFIT_PRESET_POLY_3, },    
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                  "fit-type", callback, cbdata,
+                                  current);
+}
+
 /**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for

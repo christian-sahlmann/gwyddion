@@ -30,6 +30,23 @@ G_BEGIN_DECLS
 
 #include <glib.h>
 
+typedef enum {
+    GWY_NLFIT_PRESET_GAUSSIAN          = 0,
+    GWY_NLFIT_PRESET_GAUSSIAN_PSDF     = 1,
+    GWY_NLFIT_PRESET_GAUSSIAN_ACF      = 2,
+    GWY_NLFIT_PRESET_GAUSSIAN_HHCF     = 3,
+    GWY_NLFIT_PRESET_EXPONENTIAL       = 4,
+    GWY_NLFIT_PRESET_EXPONENTIAL_PSDF  = 5,
+    GWY_NLFIT_PRESET_EXPONENTIAL_ACF   = 6,
+    GWY_NLFIT_PRESET_EXPONENTIAL_HHCF  = 7,
+    GWY_NLFIT_PRESET_POLY_0            = 8,
+    GWY_NLFIT_PRESET_POLY_1            = 9,
+    GWY_NLFIT_PRESET_POLY_2            = 10,
+    GWY_NLFIT_PRESET_POLY_3            = 11
+} GwyNLFitPresetType;
+    
+    
+
 typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gint n_par,
                                  gdouble *param,
