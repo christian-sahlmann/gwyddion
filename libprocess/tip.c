@@ -26,6 +26,144 @@
 #include "datafield.h"
 #include "tip.h"
 
+static void
+contact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+               gdouble *xres, gdouble *yres)
+{
+    *xres = 200;
+    *yres = 200;
 
+}
+static void
+noncontact_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+               gdouble *xres, gdouble *yres)
+{
+    *xres = 200;
+    *yres = 200;
+}
+static void
+sharpened_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+               gdouble *xres, gdouble *yres)
+{
+    *xres = 200;
+    *yres = 200;
+
+}
+static void
+delta_guess (GwyDataField *data, gdouble height, gdouble radius, gdouble *params,
+               gdouble *xres, gdouble *yres)
+{
+    *xres = 200;
+    *yres = 200;
+
+}
+
+static void
+contact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+{
+    
+}
+
+static void
+noncontact (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+{
+    
+}
+
+static void
+sharpened (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+{
+    
+}
+
+static void
+delta (GwyDataField *tip, gdouble height, gdouble radius, gdouble *params)
+{
+    
+}
+
+static const GwyTipModelPreset tip_presets[] = {
+    {
+        "Contact",
+        "Pyramidal",
+        &contact,
+        &contact_guess,
+        0
+    },
+    {
+        "Noncontact",
+        "Pyramidal",
+        &noncontact,
+        &noncontact_guess,
+        0
+    },
+    {
+        "Sharpened",
+        "Pyramidal",
+        &sharpened,
+        &sharpened_guess,
+        0
+    },
+     {
+        "Delta function",
+        "Analytical",
+        &delta,
+        &delta_guess,
+        0
+    },
+};
+
+
+gint
+gwy_tip_model_get_npresets(void)
+{
+    return (gint)G_N_ELEMENTS(tip_presets);
+}
+
+G_CONST_RETURN GwyTipModelPreset*
+gwy_tip_model_get_preset(gint preset_id)
+{
+    g_return_val_if_fail(preset_id >= 0
+                         && preset_id < (gint)G_N_ELEMENTS(tip_presets),
+                         NULL);
+
+    return tip_presets + preset_id;
+}
+        
+G_CONST_RETURN GwyTipModelPreset*
+gwy_tip_model_get_preset_by_name(const gchar *name)
+{
+    gsize i;
+
+    for (i = 0; i < G_N_ELEMENTS(tip_presets); i++) {
+        if (strcmp(name, tip_presets[i].tip_name) == 0)
+            return tip_presets + i;
+    }
+    return NULL;
+}
+
+gint
+gwy_tip_model_get_preset_id(const GwyTipModelPreset* preset)
+{
+    return preset - tip_presets;
+}
+
+G_CONST_RETURN gchar*
+gwy_tip_model_get_preset_tip_name(const GwyTipModelPreset* preset)
+{
+    return preset->tip_name;
+}
+
+G_CONST_RETURN gchar*
+gwy_tip_model_get_preset_group_name(const GwyTipModelPreset* preset)
+{
+    return preset->group_name;
+}
+
+gint
+gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset)
+{
+    return preset->nparams;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -37,11 +37,13 @@ GwyEnum tip_type[] = {
         { "Contact",   GWY_TIP_CONTACT        },
         { "Noncontact",   GWY_TIP_NONCONTACT       },
         { "Sharpened",   GWY_TIP_SHARPENED       },
+        { "Delta function",   GWY_TIP_DELTA       },
 };
 
 /* Data for this function. */
 typedef struct {
     gdouble height;
+    gdouble radius;
     GwyTipType type;
     GwyDataWindow *win;
 } TipModelArgs;
@@ -49,10 +51,11 @@ typedef struct {
 typedef struct {
     GtkWidget *view;
     GtkWidget *data;
-    GtkObject *type;
+    GtkWidget *type;
     GtkWidget *radius;
     GtkObject *slope;
     GwyContainer *tip;
+    GwyContainer *surface;
 } TipModelControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -65,11 +68,8 @@ static void        tip_model_dialog_update_values  (TipModelControls *controls,
                                                TipModelArgs *args);
 static void        preview                    (TipModelControls *controls,
                                                TipModelArgs *args);
-static void        tip_model_do                    (TipModelArgs *args,
-                                               GwyContainer *data);
-static void        mask_process               (GwyDataField *dfield,
-                                               GwyDataField *maskfield,
-                                               TipModelArgs *args);
+static void        tip_model_do                (TipModelControls *controls, TipModelArgs *args);
+static void        tip_process                 (TipModelControls *controls, TipModelArgs *args); 
 static void        tip_model_load_args              (GwyContainer *container,
                                                TipModelArgs *args);
 static void        tip_model_save_args              (GwyContainer *container,
@@ -80,9 +80,13 @@ static void        tip_model_data_cb(GtkWidget *item);
 
 static void        tip_type_cb     (GtkWidget *item,
                                              TipModelArgs *args);
-
+static GtkWidget*  create_preset_menu        (GCallback callback,
+                                              gpointer cbdata,
+                                              gint current);
+                                              
 
 TipModelArgs tip_model_defaults = {
+    0,
     0,
     0,
     NULL,
@@ -127,6 +131,7 @@ tip_model(GwyContainer *data, GwyRunType run)
     gboolean ok = FALSE;
 
     g_assert(run & TIP_MODEL_RUN_MODES);
+    
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = tip_model_defaults;
     else
@@ -147,12 +152,11 @@ tip_model(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *spin, *omenu, *vbox;
+    GtkWidget *dialog, *table, *omenu, *vbox;
     TipModelControls controls;
     enum { RESPONSE_RESET = 1,
            RESPONSE_PREVIEW = 2 };
     gint response, col, row;
-    gdouble zoomval;
     GtkObject *layer;
     GtkWidget *hbox;
     GwyDataField *dfield;
@@ -175,6 +179,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
+    controls.surface = data;    
     controls.tip = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.tip, "/0/data"));
     gwy_data_field_fill(dfield, 0);
@@ -208,10 +213,8 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
     
-    controls.type
-       = gwy_option_menu_create(tip_type, G_N_ELEMENTS(tip_type), "type", 
-                                G_CALLBACK(tip_type_cb), args,
-                                args->type);
+    controls.type = create_preset_menu(G_CALLBACK(tip_type_cb), args, args->type);
+    
     gtk_table_attach(GTK_TABLE(table), controls.type, 1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
 
@@ -284,179 +287,84 @@ tip_model_data_cb(GtkWidget *item)
 }
 
 static void        
-tip_type_cb     (GtkWidget *item,
-                                             TipModelArgs *args)
-
+tip_type_cb     (GtkWidget *item, TipModelArgs *args)
 {
+    args->type =
+                GPOINTER_TO_INT(g_object_get_data(item, "tip-preset"));    
 }
 
 
-static void
-tip_model_dialog_update_controls(TipModelControls *controls,
-                            TipModelArgs *args)
+static GtkWidget*
+create_preset_menu(GCallback callback,
+                   gpointer cbdata,
+                   gint current)
 {
-/*    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_height),
-                             args->height);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_slope),
-                             args->slope);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->threshold_lap),
-                             args->lap);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_height),
-                                 args->is_height);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_slope),
-                                 args->is_slope);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
-                                 args->is_lap);
-    gwy_option_menu_set_history(controls->merge, "mergegrain-type",
-                                args->merge_type);
-                                */
-}
+    static GwyEnum *entries = NULL;
+    static gint nentries = 0;
 
-static void
-tip_model_dialog_update_values(TipModelControls *controls,
-                          TipModelArgs *args)
-{
-    /*
-    args->height
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
-    args->slope
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_slope));
-    args->lap
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_lap));
-    args->is_height
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_height));
-    args->is_slope
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_slope));
-    args->is_lap
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_lap));
-    args->merge_type
-        = gwy_option_menu_get_history(controls->merge, "mergegrain-type");
-        */
-}
+    if (!entries) {
+        const GwyTipModelPreset *func;
+        gint i;
 
-
-static void
-preview(TipModelControls *controls,
-        TipModelArgs *args)
-{
-    GwyDataField *maskfield, *dfield;
-    GwyPixmapLayer *layer;
-/*
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                             "/0/data"));
-
-  */  /*set up the mask*/
-/*    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                              "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
-        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
-            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                          GWY_PIXMAP_LAYER(layer));
+        nentries = gwy_tip_model_get_npresets();
+        entries = g_new(GwyEnum, nentries);
+        for (i = 0; i < nentries; i++) {
+            entries[i].value = i;
+            func = gwy_tip_model_get_preset(i);
+            entries[i].name = gwy_tip_model_get_preset_tip_name(func);
         }
     }
-    else {
-        maskfield = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(maskfield));
-        g_object_unref(maskfield);
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 GWY_PIXMAP_LAYER(layer));
 
-    }
-
-    mask_process(dfield, maskfield, args);
-
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
-*/
+    return gwy_option_menu_create(entries, nentries,
+                                  "tip-preset", callback, cbdata,
+                                  current);
 }
 
 static void
-tip_model_do(TipModelArgs *args,
-        GwyContainer *data)
+tip_model_dialog_update_controls(TipModelControls *controls, TipModelArgs *args)
 {
-
-    GwyDataField *dfield, *maskfield;
-/*
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                               gwy_data_field_get_xres(dfield),
-                               gwy_data_field_get_yres(dfield),
-                               GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield);
-    }
-    else {
-        maskfield
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(data, "/0/mask", G_OBJECT(maskfield));
-        g_object_unref(maskfield);
-    }
-
-    mask_process(dfield, maskfield, args);
-    */
 }
 
 static void
-mask_process(GwyDataField *dfield,
-             GwyDataField *maskfield,
-             TipModelArgs *args)
+tip_model_dialog_update_values(TipModelControls *controls, TipModelArgs *args)
 {
-    GwyDataField *output_field;
-    gboolean is_field;
+}
 
-    /*
-    is_field = FALSE;
-    output_field = GWY_DATA_FIELD(gwy_data_field_new
-                                      (gwy_data_field_get_xres(dfield),
-                                       gwy_data_field_get_yres(dfield),
-                                       gwy_data_field_get_xreal(dfield),
-                                       gwy_data_field_get_yreal(dfield),
-                                       FALSE));
 
-    args->inverted = 0;
-    if (args->is_height) {
-        gwy_data_field_grains_tip_model_height(dfield, maskfield,
-                                          args->height, args->inverted);
-        is_field = TRUE;
-    }
-    if (args->is_slope) {
-        gwy_data_field_grains_tip_model_slope(dfield, output_field,
-                                         args->slope, args->inverted);
-        if (is_field) {
-            if (args->merge_type == GWY_MERGE_UNION)
-                gwy_data_field_grains_add(maskfield, output_field);
-            else if (args->merge_type == GWY_MERGE_INTERSECTION)
-                gwy_data_field_grains_intersect(maskfield, output_field);
-        }
-        else gwy_data_field_copy(output_field, maskfield);
-        is_field = TRUE;
-    }
-    if (args->is_lap) {
-        gwy_data_field_grains_tip_model_curvature(dfield, output_field,
-                                             args->lap, args->inverted);
-        if (is_field) {
-            if (args->merge_type == GWY_MERGE_UNION)
-                gwy_data_field_grains_add(maskfield, output_field);
-            else if (args->merge_type == GWY_MERGE_INTERSECTION)
-                gwy_data_field_grains_intersect(maskfield, output_field);
-        }
-        else gwy_data_field_copy(output_field, maskfield);
-     }
+static void
+preview(TipModelControls *controls, TipModelArgs *args)
+{
+    tip_process(controls, args);
 
-    g_object_unref(output_field);
-    */
+    /*gwy_data_view_update(GWY_DATA_VIEW(controls->view));*/
+}
+
+static void
+tip_model_do(TipModelControls *controls, TipModelArgs *args)
+{
+    
+    tip_process(controls, args);
+}
+
+static void
+tip_process(TipModelControls *controls, TipModelArgs *args)
+{
+    GwyTipModelPreset *preset;
+    GwyDataField *dfield;
+    gint xres, yres;
+
+    preset = gwy_tip_model_get_preset(args->type);
+    if (preset == NULL) return;
+    
+    /*guess x and y size*/
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->tip, "/0/data"));
+
+    printf("preset: %d\n", args->type);
+    
+    preset->guess(dfield, gwy_data_field_get_max(dfield), args->radius, NULL, &xres, &yres);
+    printf("guess: %d x %d\n", xres, yres);
+    
+    /*process tip*/
 }
 
 static const gchar *mergetype_key = "/module/tip_model_height/merge_type";
@@ -464,9 +372,6 @@ static const gchar *mergetype_key = "/module/tip_model_height/merge_type";
 static void
 tip_model_sanitize_args(TipModelArgs *args)
 {
-    /*
-    args->merge_type = MIN(args->merge_type, GWY_MERGE_INTERSECTION);
-    */
 }
 
 static void
@@ -474,14 +379,9 @@ tip_model_load_args(GwyContainer *container,
                TipModelArgs *args)
 {
     *args = tip_model_defaults;
-
+    args->type = 0;
     /*
-    gwy_container_gis_boolean_by_name(container, islap_key, &args->is_lap);
-    gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, slope_key, &args->slope);
-    gwy_container_gis_double_by_name(container, lap_key, &args->lap);
-    gwy_container_gis_enum_by_name(container, mergetype_key,
-                                   &args->merge_type);
                                    
     tip_model_sanitize_args(args);
     */
@@ -493,13 +393,6 @@ tip_model_save_args(GwyContainer *container,
 {
     /*
     gwy_container_set_boolean_by_name(container, inverted_key, args->inverted);
-    gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
-    gwy_container_set_boolean_by_name(container, isslope_key, args->is_slope);
-    gwy_container_set_boolean_by_name(container, islap_key, args->is_lap);
-    gwy_container_set_double_by_name(container, height_key, args->height);
-    gwy_container_set_double_by_name(container, slope_key, args->slope);
-    gwy_container_set_double_by_name(container, lap_key, args->lap);
-    gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
     */
 }
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -28,11 +28,56 @@ G_BEGIN_DECLS
 typedef enum {
     GWY_TIP_CONTACT        = 0, 
     GWY_TIP_NONCONTACT     = 1,
-    GWY_TIP_SHARPENED      = 2
+    GWY_TIP_SHARPENED      = 2,
+    GWY_TIP_DELTA          = 3
 } GwyTipType;
 
 
 G_END_DECLS
+
+typedef void (*GwyTipModelFunc)(GwyDataField *tip,			
+				gdouble height,
+				gdouble radius,
+				gdouble *params);
+
+typedef void (*GwyTipGuessFunc)(GwyDataField *data,
+				gdouble height,
+				gdouble radius,
+				gdouble *params,
+				gdouble *xres,
+				gdouble *yres);
+
+typedef struct _GwyTipModelPreset GwyTipModelPreset;
+
+struct _GwyTipModelPreset {
+    const gchar *tip_name;
+    const gchar *group_name;
+    GwyTipModelFunc func;
+    GwyTipGuessFunc guess;
+    gint nparams;    
+};
+
+
+gint             gwy_tip_model_get_npresets(void);
+
+G_CONST_RETURN
+GwyTipModelPreset* gwy_tip_model_get_preset(gint preset_id);
+
+G_CONST_RETURN
+GwyTipModelPreset* gwy_tip_model_get_preset_by_name(const gchar *name);
+
+gint            gwy_tip_model_get_preset_id     (const GwyTipModelPreset* preset);
+
+G_CONST_RETURN
+gchar*          gwy_tip_model_get_preset_tip_name   (const GwyTipModelPreset* preset);
+
+G_CONST_RETURN
+gchar*          gwy_tip_model_get_preset_group_name   (const GwyTipModelPreset* preset);
+
+gint            gwy_tip_model_get_preset_nparams(const GwyTipModelPreset* preset);
+
+	      
+	  
 
 #endif /*__GWY_PROCESS_GRAINS__*/
 
