@@ -25,7 +25,6 @@
 #if (HAVE_MMAP \
      && HAVE_UNISTD_H && HAVE_SYS_STAT_H && HAVE_SYS_TYPES_H && HAVE_FCNTL_H)
 #define USE_MMAP 1
-#include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -36,6 +35,7 @@
 #undef USE_MMAP
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include "gwyutils.h"
 
