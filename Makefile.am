@@ -32,6 +32,8 @@ EXTRA_DIST = \
 	gwyddion.iss.in \
 	gwyddion.iss \
 	gwyddion.pc.in \
+	version.h.in \
+	version.h \
 	$(M4TESTS)
 
 docs:

@@ -19,11 +19,7 @@
  */
 
 #ifdef _MSC_VER
-/* XXX: do this better */
-#define PACKAGE_VERSION "0.0"
-#define PACKAGE_BUGREPORT "yeti@physics.muni.cz"
-#define PACKAGE_URL "http://gwyddion.net/"
-#define PACKAGE_NAME "Gwyddion"
+#include "version.h"
 #else
 #include "config.h"
 #endif
