@@ -191,7 +191,7 @@ gwy_grapher_init(GwyGrapher *grapher)
 
     grapher->area = GWY_GRAPHER_AREA(gwy_grapher_area_new(NULL,NULL));
 
-    grapher->area->status = GWY_GRAPHER_STATUS_XSEL;
+    grapher->area->status = GWY_GRAPHER_STATUS_YSEL;
 
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);

@@ -500,14 +500,24 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
     }
 
-    if (area->status == GWY_GRAPHER_STATUS_XSEL)
+    if (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL)
     {
         if (event->button == 1) /*add selection*/
         {
-            areadata.xmin = dx;
-            areadata.xmax = dx;
-            areadata.ymin = gmodel->y_min;
-            areadata.ymax = gmodel->y_max;
+            if (area->status == GWY_GRAPHER_STATUS_XSEL)
+            {
+                areadata.xmin = dx;
+                areadata.xmax = dx;
+                areadata.ymin = gmodel->y_min;
+                areadata.ymax = gmodel->y_max;
+            }
+            else
+            {
+                areadata.xmin = gmodel->x_min;
+                areadata.xmax = gmodel->x_max;
+                areadata.ymin = dy;
+                areadata.ymax = dy;
+            }
             g_array_append_val(area->areasdata->data_areas, areadata);
             area->selecting = TRUE;
         }
@@ -548,10 +558,13 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
 
     
-    if (area->selecting && area->status == GWY_GRAPHER_STATUS_XSEL)
+    if (area->selecting && (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL))
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGrapherDataArea, area->areasdata->data_areas->len - 1);
-         areadata->xmax = dx;
+         if (area->status == GWY_GRAPHER_STATUS_XSEL)
+            areadata->xmax = dx;
+         else
+            areadata->ymax = dy;
          area->selecting = FALSE;
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
@@ -602,10 +615,13 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     gmodel = GWY_GRAPHER_MODEL(area->grapher_model);
 
     
-    if (area->selecting && area->status == GWY_GRAPHER_STATUS_XSEL)
+    if (area->selecting && (area->status == GWY_GRAPHER_STATUS_XSEL || area->status == GWY_GRAPHER_STATUS_YSEL))
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGrapherDataArea, area->areasdata->data_areas->len - 1);
-         areadata->xmax = dx;
+         if (area->status == GWY_GRAPHER_STATUS_XSEL)
+            areadata->xmax = dx;
+         else
+            areadata->ymax = dy;
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
