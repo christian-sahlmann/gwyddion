@@ -818,8 +818,8 @@ gwy_option_menu_filter(GCallback callback,
  **/
 GtkWidget*
 gwy_option_menu_mergegrain(GCallback callback,
-                       gpointer cbdata,
-                       GwyFilterType current)
+                           gpointer cbdata,
+                           GwyMergeType current)
 {
     static const GwyEnum entries[] = {
         { N_("Union"),            GWY_MERGE_UNION,  },

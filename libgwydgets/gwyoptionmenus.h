@@ -59,13 +59,13 @@ GtkWidget* gwy_option_menu_dwt                (GCallback callback,
 GtkWidget* gwy_option_menu_sfunctions_output (GCallback callback,
                                               gpointer cbdata,
                                               GwySFOutputType current);
+#ifndef GWY_DISABLE_DEPRECATED
 GtkWidget* gwy_option_menu_direction         (GCallback callback,
                                               gpointer cbdata,
                                               GtkOrientation current);
 GtkWidget* gwy_option_menu_filter            (GCallback callback,
                                               gpointer cbdata,
                                               GwyFilterType current);
-#ifndef GWY_DISABLE_DEPRECATED
 /* option menus for enums that should not be public at the first place */
 GtkWidget* gwy_option_menu_mergegrain        (GCallback callback,
                                               gpointer cbdata,
