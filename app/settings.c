@@ -19,6 +19,8 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
+#include <sys/stat.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyserializable.h>
 #include "settings.h"
@@ -57,8 +59,11 @@ gwy_app_settings_save(const gchar *filename)
     settings = gwy_app_settings_get();
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = fopen(filename, "wb");
-    if (!fh)
+    if (!fh) {
+        g_warning("Cannot save settings to `%s': %s",
+                  filename, g_strerror(errno));
         return FALSE;
+    }
     buffer = gwy_serializable_serialize(G_OBJECT(settings), buffer, &size);
     if (!buffer)
         return FALSE;
@@ -76,10 +81,27 @@ gwy_app_settings_load(const gchar *filename)
     GError *err = NULL;
     gchar *buffer = NULL;
     gsize size = 0, position = 0;
+    gchar *cfgdir;
+    gint ok;
+
+    cfgdir = g_path_get_dirname(filename);
+    if (!g_file_test(cfgdir, G_FILE_TEST_IS_DIR)) {
+        gwy_debug("Trying to create config directory %s", cfgdir);
+        ok = !mkdir(cfgdir, 0700);
+        if (!ok) {
+            g_warning("Cannot create config directory %s: %s",
+                      cfgdir, g_strerror(errno));
+        }
+        g_free(cfgdir);
+        return FALSE;
+    }
+    g_free(cfgdir);
 
     gwy_debug("Loading settings from `%s'", filename);
     if (!g_file_get_contents(filename, &buffer, &size, &err)
         || !size || !buffer) {
+        g_warning("Cannot load settings from `%s': %s",
+                  filename, err ? err->message : "unknown error");
         g_clear_error(&err);
         return FALSE;
     }

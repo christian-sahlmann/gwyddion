@@ -38,7 +38,8 @@ main(int argc, char *argv[])
     gchar *config_file;
 
     gtk_init(&argc, &argv);
-    config_file = g_build_filename(g_get_home_dir(), ".gwydrc", NULL);
+    config_file = g_build_filename(g_get_home_dir(), ".gwyddion", "gwydrc",
+                                   NULL);
     gwy_app_type_init();
     gwy_app_settings_load(config_file);
     gwy_app_settings_get();
