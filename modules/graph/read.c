@@ -148,17 +148,38 @@ selection_updated_cb(gpointer data)
 
     cd = (GwyGraphStatus_CursorData*)gwy_graph_get_status_data(graph);
 
+   
     if (cd->data_point.x_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->data_point.x, cd->data_point.x_unit);
+    {
+        if ((fabs(cd->data_point.x)<=1e5 && fabs(cd->data_point.x)>1e-2) || fabs(cd->data_point.x)==0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f %s", cd->data_point.x, cd->data_point.x_unit);
+        else
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e %s", cd->data_point.x, cd->data_point.x_unit);
+    }
     else
-        g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->data_point.x);
+    {
+        if ((fabs(cd->data_point.x)<=1e5 && fabs(cd->data_point.x)>1e-2) || fabs(cd->data_point.x)==0)
+            g_snprintf(buffer, sizeof(buffer), "x = %.3f", cd->data_point.x);
+        else
+            g_snprintf(buffer, sizeof(buffer), "x = %.3e", cd->data_point.x);
+    }
 
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
     if (cd->data_point.y_unit != NULL)
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->data_point.y, cd->data_point.y_unit);
+    {
+        if ((fabs(cd->data_point.y)<=1e5 && fabs(cd->data_point.y)>1e-2) || fabs(cd->data_point.y)==0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f %s", cd->data_point.y, cd->data_point.y_unit);
+        else
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e %s", cd->data_point.y, cd->data_point.y_unit);
+    }
     else
-        g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->data_point.y);
+    {
+        if ((fabs(cd->data_point.y)<=1e5 && fabs(cd->data_point.y)>1e-2) || fabs(cd->data_point.y)==0)
+            g_snprintf(buffer, sizeof(buffer), "y = %.3f", cd->data_point.y);
+        else
+            g_snprintf(buffer, sizeof(buffer), "y = %.3e", cd->data_point.y);
+    }
 
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
 
