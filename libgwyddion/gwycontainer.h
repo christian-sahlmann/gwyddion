@@ -22,6 +22,7 @@
 #define __GWY_CONTAINER_H__
 
 #include <glib-object.h>
+#include <libgwyddion/gwyserializable.h>
 
 G_BEGIN_DECLS
 
