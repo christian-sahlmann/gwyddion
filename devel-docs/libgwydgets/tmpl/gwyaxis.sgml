@@ -224,7 +224,7 @@ with ranges in the requested interval.
 @unit: 
 
 
-<!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
+<!-- ##### FUNCTION gwy_axis_enable_label_edit ##### -->
 <para>
 
 </para>

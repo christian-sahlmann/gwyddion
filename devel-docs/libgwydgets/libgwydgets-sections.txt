@@ -494,7 +494,7 @@ gwy_axis_get_reqminimum
 gwy_axis_set_label
 gwy_axis_get_label
 gwy_axis_set_unit
-gwy_axis_enable_set_label
+gwy_axis_enable_label_edit
 <SUBSECTION Standard>
 GWY_AXIS
 GWY_IS_AXIS
@@ -529,7 +529,7 @@ gwy_graph_get_data
 gwy_graph_get_data_size
 gwy_graph_get_number_of_curves
 gwy_graph_get_label
-gwy_graph_enable_axis_label_update
+gwy_graph_enable_axis_label_edit
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH

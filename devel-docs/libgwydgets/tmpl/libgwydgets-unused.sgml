@@ -269,6 +269,14 @@ gwymodulemenus
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@enable: 
+
 <!-- ##### FUNCTION gwy_color_button_get_alpha ##### -->
 <para>
 
@@ -419,6 +427,14 @@ gwymodulemenus
 @cbdata: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_graph_enable_axis_label_update ##### -->
+<para>
+
+</para>
+
+@graph: 
+@enable: 
 
 <!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
 <para>
