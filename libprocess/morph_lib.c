@@ -177,16 +177,27 @@ icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
     gint count;
     gint rxc, ryc;              /* center coordinates of reflected tip */
     gint x=0, y=0;
+    gdouble threshold=0;
+    gdouble min, max;
 
     rxc = tip_xsiz - 1 - xc;
     ryc = tip_ysiz - 1 - yc;
 
     /* create output array of appropriate size */
+    min = G_MAXDOUBLE;
+    max = -G_MAXDOUBLE;
     cmap = allocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
         for (imx = 0; imx < im_xsiz; imx++)
+        {
             cmap[imy][imx] = 0;
+            if (min > image[imy][imx]) min = image[imy][imx];
+            if (max < image[imy][imx]) max = image[imy][imx];
+        }
 
+    threshold = (max-min)/100;
+    
+    
     /*
        Loop over all pixels in the interior of the image. We skip
        pixels near the edge. Since it is possible there are unseen
@@ -202,14 +213,19 @@ icmap(gdouble **image, gint im_xsiz, gint im_ysiz,
             count = 0;
             for (tpy = tpymin; tpy <= tpymax && count < 2; tpy++) {
                 for (tpx = tpxmin; tpx <= tpxmax && count < 2; tpx++) {
-                    if (image[imy][imx] -
-                        tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx] ==
-                        rsurf[tpy + imy - ryc][tpx + imx - rxc]) {
+                    if (fabs(image[imy][imx] +  /*-*/
+                        tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx] -
+                        rsurf[tpy + imy - ryc][tpx + imx - rxc])<threshold) {
                         count++;        /* increment count */
                         x = tpx + imx - rxc;    /* remember coordinates */
                         y = tpy + imy - ryc;
-                        printf(".\n");
                     }
+                    
+/*                    printf("tpy=%d, tpx=%d  img: %g, tip: %g,  rsurf: %g,  diff: %g\n", tpy, tpx, 
+                           image[imy][imx], tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx], 
+                           rsurf[tpy + imy - ryc][tpx + imx - rxc], fabs(image[imy][imx] + tip[tip_ysiz - 1 - tpy][tip_xsiz - 1 - tpx] 
+                                                                         - rsurf[tpy + imy - ryc][tpx + imx - rxc]));
+                                                                         */
                 }
             }
             if (count == 1)

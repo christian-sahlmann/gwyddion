@@ -221,6 +221,55 @@ datafield_to_field(GwyDataField *datafield, gboolean maxzero)
     return ret;
 }
 
+gdouble **
+datafield_to_largefield(GwyDataField *datafield, GwyDataField *tipfield)
+{
+    gdouble **ret;
+    gint col, row;
+    gint xnew, ynew;
+    gdouble min;
+    
+    min = gwy_data_field_get_min(datafield);
+    xnew = datafield->xres + tipfield->xres;
+    ynew = datafield->yres + tipfield->yres;
+    
+    ret = allocmatrix(xnew, ynew);
+    for (col=0; col<xnew; col++)
+    {
+        for (row=0; row<ynew; row++)
+        {
+            if (col>=tipfield->xres/2 && col<(datafield->xres - tipfield->xres/2)
+                && row>=tipfield->yres/2 && row<(datafield->yres - tipfield->yres/2))
+            ret[col][row] = datafield->data[col - tipfield->xres/2 
+                + datafield->xres*(row - tipfield->yres/2)];
+            else
+                ret[col][row] = min;
+        }
+    }
+    return ret;
+}
+
+GwyDataField*
+largefield_to_datafield(gdouble **field, GwyDataField *ret, GwyDataField *tipfield)
+{
+    gint col, row;
+    gint xnew, ynew;
+
+    xnew = ret->xres + tipfield->xres;
+    ynew = ret->yres + tipfield->yres;
+    
+    for (col=0; col<xnew; col++)
+    {
+        for (row=0; row<ynew; row++)
+        {
+            if (col>=tipfield->xres/2 && col<(ret->xres - tipfield->xres/2)
+                && row>=tipfield->yres/2 && row<(ret->yres - tipfield->yres/2))
+            ret->data[col - tipfield->xres/2 + ret->xres*(row - tipfield->yres/2)] = field[col][row];
+        }
+    }    
+    return ret;
+}
+
 GwyDataField*
 field_to_datafield(gdouble **field, GwyDataField *ret)
 {
@@ -229,7 +278,7 @@ field_to_datafield(gdouble **field, GwyDataField *ret)
     {
         for (row=0; row<ret->yres; row++)
         {
-            ret->data[col + ret->xres*row] = field[col][row];
+            ret->data[col  + ret->xres*row] = field[col][row];
         }
     }    
     return ret;
@@ -287,22 +336,25 @@ gwy_tip_cmap(GwyDataField *tip, GwyDataField *surface, GwyDataField *result)
     gdouble **fsurface;
     gdouble **rsurface;
     gdouble **fresult;
+    gint newx, newy;
 
+    newx = surface->xres + tip->xres;
+    newy = surface->yres + tip->yres;
    
     ftip = datafield_to_field(tip, TRUE);
-    fsurface = datafield_to_field(surface, FALSE);
+    fsurface = datafield_to_largefield(surface, tip);
     
-    rsurface = ierosion(fsurface, surface->yres, surface->xres,
+    rsurface = ierosion(fsurface, newy, newx,
                         ftip, tip->yres, tip->xres, tip->yres/2, tip->xres/2);
 
-    fresult = icmap(fsurface, surface->yres, surface->xres,
+    fresult = icmap(fsurface, newy, newx,
                         ftip, tip->yres, tip->xres, rsurface, tip->yres/2, tip->xres/2);
     
-    result = field_to_datafield(fresult, result);
+    result = largefield_to_datafield(fresult, result, tip);
 
     freematrix(ftip, tip->xres);
-    freematrix(fsurface, surface->xres);
-    freematrix(rsurface, surface->xres);
+    freematrix(fsurface, newx);
+    freematrix(rsurface, newx);
     freematrix(fresult, result->xres);
     return result;
     
