@@ -204,7 +204,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
  *                           interpolation).
  * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
  * @GWY_INTERPOLATION_KEY: Key interpolation.
- * @GWY_INTERPOLATION_BSPLINE B-spline interpolation.
+ * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation.
  * @GWY_INTERPOLATION_OMOMS: Omoms interpolation
  * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
  *
