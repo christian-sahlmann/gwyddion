@@ -132,6 +132,9 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_model_finalize;
+   gobject_class->set_property = gwy_graph_model_set_property;
+       gobject_class->get_property = gwy_graph_model_get_property;
+                                                                                                                                                                    
 
     g_object_class_install_property(gobject_class,
                                     PROP_N,

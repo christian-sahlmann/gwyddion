@@ -24,8 +24,8 @@
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
-#include "gwygraphermodel.h"
-#include "gwygraphercurvemodel.h"
+#include "gwygraphmodel.h"
+#include "gwygraphcurvemodel.h"
 #include <stdio.h>
 
 static gint 
@@ -49,8 +49,8 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
                         GObject *curvemodel)
 {
     gint i, x, y, xn, yn;
-    GwyGrapherCurveModel *cmodel;
-    cmodel = GWY_GRAPHER_CURVE_MODEL(curvemodel);
+    GwyGraphCurveModel *cmodel;
+    cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
     
     for (i=0; i<(cmodel->n); i++)
     {
