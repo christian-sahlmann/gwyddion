@@ -8,6 +8,7 @@ SUBDIRS = \
 	libgwymodule \
 	app \
 	modules \
+	plugins \
 	pixmaps \
 	devel-docs
 M4TESTS = \

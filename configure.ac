@@ -17,6 +17,8 @@ AC_CONFIG_FILES(\
   modules/Makefile \
   modules/file/Makefile \
   modules/process/Makefile \
+  plugins/Makefile \
+  plugins/process/Makefile \
   pixmaps/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyddion/Makefile \
