@@ -1,0 +1,21 @@
+
+SUBDIRS = \
+	libgwyddion \
+	libprocess \
+	libdraw \
+	libgwydgets \
+	libgwymodule \
+	app \
+
+#	modules \
+#	pixmaps
+
+all: sub-all
+
+sub-all:
+	for %d in ($(SUBDIRS)) do nmake -nologo -f makefile.msc sub-one THIS=%d
+
+sub-one:
+	cd $(THIS)
+	nmake -nologo -f makefile.msc
+	cd ..

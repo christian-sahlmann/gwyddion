@@ -1,0 +1,101 @@
+
+TOP_SRCDIR = ..
+PACKAGE = libgwydgets
+XPACKAGE = $(PACKAGE)
+PKG_VER = $(LIBGWYDGETS_VER)
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+PKG_CFLAGS = \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) \
+	$(GTK_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
+	-DG_LOG_DOMAIN=\"Gwydgets\"
+
+
+PKG_LINK = \
+	$(COMMON_LDFLAGS) \
+	$(GTK_LIBS) \
+	$(GDK_PIXBUF_LIBS) \
+	/libpath:$(TOP_SRCDIR)\libgwyddion \
+	/libpath:$(TOP_SRCDIR)\libprocess \
+	/libpath:$(TOP_SRCDIR)\libdraw \
+	libgwydraw-$(LIBGWYDRAW_VER).lib \
+	libgwyprocess-$(LIBGWYPROCESS_VER).lib \
+	libgwyddion-$(LIBGWYDDION_VER).lib
+
+OBJECTS = \
+	gwyaxis.obj \
+	gwyaxisdialog.obj \
+	gwycoloraxis.obj \
+	gwydataview.obj \
+	gwydataviewlayer.obj \
+	gwydatawindow.obj \
+	gwydgets.obj \
+	gwygradsphere.obj \
+	gwygraph.obj \
+	gwygrapharea.obj \
+	gwygraphcorner.obj \
+	gwygraphlabel.obj \
+	gwyhruler.obj \
+	gwylayer-basic.obj \
+	gwylayer-mask.obj \
+	gwylayer-lines.obj \
+	gwylayer-pointer.obj \
+	gwylayer-points.obj \
+	gwylayer-select.obj \
+	gwyoptionmenus.obj \
+	gwyruler.obj \
+	gwyscitext.obj \
+	gwyspherecoords.obj \
+	gwystock.obj \
+	gwyvectorshade.obj \
+	gwyvruler.obj 
+
+HEADERS = \
+	gwyaxis.h \
+	gwyaxisdialog.h \
+	gwycoloraxis.h \
+	gwydataview.h \
+	gwydataviewlayer.h \
+	gwydatawindow.h \
+	gwydgets.h \
+	gwygradsphere.h \
+	gwygraph.h \
+	gwygrapharea.h \
+	gwygraphcorner.h \
+	gwygraphlabel.h \
+	gwyhruler.h \
+	gwylayer-basic.h \
+	gwylayer-mask.h \
+	gwylayer-lines.h \
+	gwylayer-pointer.h \
+	gwylayer-points.h \
+	gwylayer-select.h \
+	gwyoptionmenus.h \
+	gwyruler.h \
+	gwyscitext.h \
+	gwyspherecoords.h \
+	gwystock.h \
+	gwyvectorshade.h \
+	gwyvruler.h 
+
+## targets
+all: \
+	$(PACKAGE)-$(PKG_VER).dll \
+
+$(PACKAGE)-$(PKG_VER).def: $(PACKAGE).def
+	copy $(PACKAGE).def $(PACKAGE)-$(PKG_VER).def
+
+$(PACKAGE)-$(PKG_VER).dll: $(OBJECTS) $(PACKAGE)-$(PKG_VER).def
+	$(LINK32) $(OBJECTS) $(PKG_LINK) user32.lib advapi32.lib wsock32.lib $(LDFLAGS) /out:$(PACKAGE)-$(PKG_VER).dll /def:$(PACKAGE)-$(PKG_VER).def /dll /implib:$(PACKAGE)-$(PKG_VER).lib
+
+.c.obj:
+	$(CC) $(CFLAGS) -GD -c $(PKG_CFLAGS) $<
+
+install: all "$(TOP_SRCDIR)\inst.stamp"
+	$(INSTALL) $(PACKAGE)-$(PKG_VER).dll "$(DEST_DIR)"
+	$(INSTALL) $(PACKAGE)-$(PKG_VER).lib "$(DEST_DIR)\lib"
+	$(INSTALL) $(PACKAGE)-$(PKG_VER).def "$(DEST_DIR)\lib"
+	for %h in ($(HEADERS)) do $(INSTALL) %h "$(DEST_DIR)\include\$(XPACKAGE)"
+

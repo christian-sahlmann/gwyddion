@@ -1,0 +1,149 @@
+!IFNDEF GTK_TOP
+!MESSAGE GTK_TOP not set, using default...
+GTK_TOP = C:\Dev-C++
+!ENDIF
+
+!IFNDEF MSC_TOP
+!MESSAGE MSC_TOP not set, using default...
+MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
+!ENDIF
+
+!IFNDEF DEST_DIR
+DEST_DIR = $(TOP_SRCDIR)/inst
+!endif
+
+# gwyddion versions
+LIBGWYDDION_VER = 0
+LIBGWYPROCESS_VER = 0
+LIBGWYDRAW_VER = 0
+LIBGWYDGETS_VER = 0
+LIBGWYMODULE_VER = 0
+LIBGWYAPP_VER = 0
+
+ATK_VER = 1.0
+GDK_PIXBUF_VER = 2.0
+GLIB_VER = 2.0
+GTK_VER = 2.0
+PANGO_VER = 1.0
+
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE
+NULL=nul
+!ENDIF
+
+!IFNDEF DEBUG
+# Full optimization:
+OPTIMIZE = -Ox
+CRUNTIME = -MD
+# Line number debug info only
+DEBUGINFO = -Zd
+LINKDEBUG =
+!ELSE
+# Debugging:
+OPTIMIZE =
+CRUNTIME = -MDd
+DEBUGINFO = -Zi
+LINKDEBUG = /debug
+!ENDIF
+
+LDFLAGS = /machine:ix86 $(LINKDEBUG) /nologo
+
+COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include"
+COMMON_LDFLAGS = /libpath:"$(GTK_TOP)\lib" /libpath:"$(MSC_TOP)\lib"
+
+ATK_CFLAGS = -I "$(GTK_TOP)\include\atk-$(ATK_VER)"
+ATK_LIBS = atk-$(ATK_VER).lib
+
+GDK_PIXBUF_CFLAGS =
+GDK_PIXBUF_LIBS = gdk_pixbuf-$(GDK_PIXBUF_VER).lib
+
+GLIB_CFLAGS = -I "$(GTK_TOP)\include\glib-$(GLIB_VER)" -I "$(GTK_TOP)\lib\glib-$(GLIB_VER)\include" $(INTL_CFLAGS)
+GLIB_LIBS = glib-$(GLIB_VER).lib gmodule-$(GLIB_VER).lib gobject-$(GLIB_VER).lib
+
+GTK_CFLAGS = $(GLIB_CFLAGS) $(ATK_CFLAGS) $(PANGO_CFLAGS) -I "$(GTK_TOP)\include\gtk-$(GTK_VER)" -I "$(GTK_TOP)\lib\gtk-$(GTK_VER)\include"
+GTK_LIBS = $(GLIB_LIBS) $(ATK_LIBS) $(PANGO_LIBS) gtk-win32-$(GTK_VER).lib gdk-win32-$(GTK_VER).lib $(PANGO_LIBS)
+
+INTL_CFLAGS =
+INTL_LIBS = intl.lib
+
+LIBICONV_CFLAGS =
+LIBICONV_LIBS = iconv.lib
+
+# XXX:
+JPEG_CFLAGS =
+JPEG_LIBS = libjpeg.lib
+
+PANGO_CFLAGS = -I "$(GTK_TOP)\include\pango-$(PANGO_VER)"
+PANGO_LIBS = pango-$(PANGO_VER).lib
+PANGOWIN32_LIBS = $(PANGO_LIBS) pangowin32-$(PANGO_VER).lib
+
+# XXX:
+PNG_CFLAGS = -I "$(GTK_TOP)\include\libpng12" $(ZLIB_CFLAGS)
+PNG_LIBS = libpng.lib $(ZLIB_LIBS)
+
+TIFF_CFLAGS =
+TIFF_LIBS = libtiff.lib $(JPEG_LIBS) $(ZLIB_LIBS) user32.lib
+
+ZLIB_CFLAGS =
+ZLIB_LIBS = libz.lib
+
+INSTALL = copy
+LINK32 = link.exe
+
+CCOMPILER = cl
+CC = $(CCOMPILER) -G6 -GF $(CRUNTIME) -W3 -nologo
+
+################
+# The including makefile should define INCLUDES, DEFINES and
+# DEPCFLAGS.  INCLUDES are the includes related to the module being
+# built.  DEFINES similarly. DEPCFLAGS should be set to a set of
+# GLIB_CFLAGS, GTK_CFLAGS etc corresponding to what other modules we
+# depend on.
+
+CFLAGS = $(OPTIMIZE) $(DEBUGINFO) $(INCLUDES) $(DEFINES) $(DEPCFLAGS)
+
+.c.i :
+	$(CC) $(CFLAGS) -E $< >$@
+
+# The default target should be "all"
+
+default: all
+
+clean::
+	-del *.obj
+	-del *.res
+	-del *.i
+	-del *.exe
+	-del *.dll
+	-del *.lib
+	-del *.err
+	-del *.map
+	-del *.sym
+	-del *.exp
+	-del *.lk1
+	-del *.mk1
+	-del *.pdb
+	-del *.ilk
+
+"$(TOP_SRCDIR)/inst.stamp":
+	-@mkdir "$(DEST_DIR)"
+	-@mkdir "$(DEST_DIR)/include"
+	-@mkdir "$(DEST_DIR)/include/libdraw"
+	-@mkdir "$(DEST_DIR)/include/libgwyapp"
+	-@mkdir "$(DEST_DIR)/include/libgwyddion"
+	-@mkdir "$(DEST_DIR)/include/libgwydgets"
+	-@mkdir "$(DEST_DIR)/include/libgwymodule"
+	-@mkdir "$(DEST_DIR)/include/libprocess"
+	-@mkdir "$(DEST_DIR)/lib"
+	-@mkdir "$(DEST_DIR)/pixmaps"
+	-@mkdir "$(DEST_DIR)/modules"
+	-@mkdir "$(DEST_DIR)/modules/file"
+	-@mkdir "$(DEST_DIR)/modules/graph"
+	-@mkdir "$(DEST_DIR)/modules/process"
+	-@mkdir "$(DEST_DIR)/modules/tool"
+	-@mkdir "$(DEST_DIR)/plugins"
+	-@mkdir "$(DEST_DIR)/plugins/file"
+	-@mkdir "$(DEST_DIR)/plugins/process"
+	@echo foo >"$(TOP_SRCDIR)/inst.stamp"
+
