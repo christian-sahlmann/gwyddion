@@ -127,9 +127,11 @@ EXPORTS
 	gwy_layer_points_new
 	gwy_layer_points_set_max_points
 	gwy_layer_points_unselect
+	gwy_layer_select_get_is_crop
 	gwy_layer_select_get_selection
 	gwy_layer_select_get_type
 	gwy_layer_select_new
+	gwy_layer_select_set_is_crop
 	gwy_layer_select_unselect
 	gwy_menu_palette
 	gwy_option_menu_2dcwt
@@ -160,6 +162,9 @@ EXPORTS
 	gwy_stock_register_stock_items
 	gwy_table_attach_row
 	gwy_table_attach_spinbutton
+	gwy_toolbox_append
+	gwy_toolbox_get_type
+	gwy_toolbox_new
 	gwy_vector_shade_get_grad_sphere
 	gwy_vector_shade_get_sphere_coords
 	gwy_vector_shade_get_type

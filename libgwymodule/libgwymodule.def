@@ -25,7 +25,7 @@ EXPORTS
 	gwy_process_func_register
 	gwy_process_func_remove
 	gwy_process_func_run
-	gwy_tool_func_build_toolbar
+	gwy_tool_func_build_toolbox
 	gwy_tool_func_register
 	gwy_tool_func_remove
 	gwy_tool_func_use
