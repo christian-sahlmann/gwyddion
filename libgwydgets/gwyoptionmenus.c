@@ -696,45 +696,6 @@ gwy_option_menu_fractal(GCallback callback,
 }
 
 /**
- * gwy_option_menu_nlfitpreset:
- * @callback: A callback called when a menu item is activated (or %NULL for
- * @cbdata: User data passed to the callback.
- * @current: Fit preset mode selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of available fit presets
- *
- * It sets object data "fit-type" to line fit
- * for each menu item (use GPOINTER_TO_INT() when retrieving it).
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_nlfitpreset(GCallback callback,
-                       gpointer cbdata,
-                       GwyNLFitPresetType current)
-{
-    static const GwyEnum entries[] = {
-        { "Gaussian",             GWY_NLFIT_PRESET_GAUSSIAN, },
-        { "Gaussian (PSDF)",      GWY_NLFIT_PRESET_GAUSSIAN_PSDF, },
-        { "Gaussian (ACF)",       GWY_NLFIT_PRESET_GAUSSIAN_ACF, },
-        { "Gaussian (HHCF)",      GWY_NLFIT_PRESET_GAUSSIAN_HHCF, },
-        { "Exponential",             GWY_NLFIT_PRESET_EXPONENTIAL, },
-        { "Exponential (PSDF)",      GWY_NLFIT_PRESET_EXPONENTIAL_PSDF, },
-        { "Exponential (ACF)",       GWY_NLFIT_PRESET_EXPONENTIAL_ACF, },
-        { "Exponential (HHCF)",      GWY_NLFIT_PRESET_EXPONENTIAL_HHCF, },
-        { "Polynom (order 0)",       GWY_NLFIT_PRESET_POLY_0, },
-        { "Polynom (order 1)",       GWY_NLFIT_PRESET_POLY_1, },
-        { "Polynom (order 2)",       GWY_NLFIT_PRESET_POLY_2, },
-        { "Polynom (order 3)",       GWY_NLFIT_PRESET_POLY_3, },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "fit-type", callback, cbdata,
-                                  current);
-}
-
-/**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
@@ -801,6 +762,46 @@ gwy_option_menu_metric_unit_destroyed(GwyEnum *entries)
         i++;
     }
     g_free(entries);
+}
+
+/**
+ * gwy_option_menu_nlfitpreset:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Fit preset mode selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available fit presets.
+ *
+ * It sets object data "fit-preset" to fit preset id
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_nlfitpreset(GCallback callback,
+                            gpointer cbdata,
+                            gint current)
+{
+    static GwyEnum *entries = NULL;
+    static gint nentries = 0;
+
+    if (!entries) {
+        const GwyNLFitPresetFunction *func;
+        gint i;
+
+        nentries = gwy_math_nlfit_get_npresets();
+        entries = g_new(GwyEnum, nentries);
+        for (i = 0; i < nentries; i++) {
+            entries[i].value = i;
+            func = gwy_math_nlfit_get_preset(i);
+            entries[i].name = gwy_math_nlfit_get_function_name(func);
+        }
+    }
+
+    return gwy_option_menu_create(entries, nentries,
+                                  "fit-preset", callback, cbdata,
+                                  current);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
