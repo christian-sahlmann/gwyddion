@@ -27,21 +27,14 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-   static GwyProcessFuncInfo test_func_info = {
+    static GwyProcessFuncInfo test_func_info = {
         "test_func",
-        "/_Trific/_Test",
-        &test_process_func,
-        GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
-    };
-   static GwyProcessFuncInfo test2_func_info = {
-        "test2_func",
-        "/_Foo/_Bar/_Baz/_Quux",
+        "/_Test/_Test",
         &test_process_func,
         GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS,
     };
 
     gwy_register_process_func(name, &test_func_info);
-    gwy_register_process_func(name, &test2_func_info);
 
     return TRUE;
 }
