@@ -355,7 +355,7 @@ static GwyModuleInfo module_info = {
     N_("Load SIS data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.11",
-    "David Neačs (Yeti) & Petr Klapetek",
+    "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
