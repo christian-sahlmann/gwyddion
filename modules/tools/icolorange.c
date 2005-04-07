@@ -551,19 +551,15 @@ gwy_data_field_dh(GwyDataField *dfield,
                   GwyDataLine *dh,
                   gint nsteps)
 {
-    /* XXX */
-    GwyDataLine *dirty_trick;
-    gdouble *orig_data;
-
-    dirty_trick = gwy_data_line_new(1, 1.0, FALSE);
-    dirty_trick->res = gwy_data_field_get_xres(dfield)
-                       * gwy_data_field_get_yres(dfield);
-    orig_data = dirty_trick->data;
-    dirty_trick->data = dfield->data;
-    gwy_data_line_dh(dirty_trick, dh, 0, 0, nsteps);
-    dirty_trick->data = orig_data;
-    dirty_trick->res = 1;
-    g_object_unref(dirty_trick);
+    gwy_data_field_get_line_stat_function(dfield, dh,
+                                          0, 0,
+                                          gwy_data_field_get_xres(dfield),
+                                          gwy_data_field_get_yres(dfield),
+                                          GWY_SF_OUTPUT_DH,
+                                          GWY_ORIENTATION_HORIZONTAL,
+                                          GWY_INTERPOLATION_ROUND,
+                                          GWY_WINDOWING_NONE,
+                                          nsteps);
 }
 
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
