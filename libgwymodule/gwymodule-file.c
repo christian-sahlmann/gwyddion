@@ -346,7 +346,7 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     }
 
     fileinfo->buffer = g_new0(guchar, GWY_FILE_DETECT_BUFFER_SIZE);
-    fileinfo->buffer_len = fread(fileinfo->buffer,
+    fileinfo->buffer_len = fread((gchar*)fileinfo->buffer,
                                  1, GWY_FILE_DETECT_BUFFER_SIZE, fh);
     fclose(fh);
 
