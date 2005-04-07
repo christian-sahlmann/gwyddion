@@ -1,4 +1,4 @@
-MAIN
+- Forward-port relflected 3D fix from stable
 - Fix enum documentation after rename, write missing
 - Check for cases where datafield is replaced in container, one is undo
 - Make GWY_PSPEC() public, if it works
