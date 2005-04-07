@@ -526,7 +526,7 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
  * Returns: Normally %FALSE; %TRUE when @data_field is too small.  The return
  *          value should be ignored.
  **/
-gint
+gboolean
 gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                       GwyDataLine *target_line,
                                       gint ulcol, gint ulrow,
@@ -541,20 +541,37 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     GwyDataLine *hlp_tarline;
     gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE, val, realsize;
 
-    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
+    /* FIXME: shouldn't size be difference + 1 ? */
+    if (orientation == GWY_ORIENTATION_HORIZONTAL)
+        size = brcol - ulcol;
+    else
+        size = brrow - ulrow;
+
+    if (size < 10
+        || (type == GWY_SF_OUTPUT_PSDF && size < 64))
+        return FALSE;
+
     /* precompute settings if necessary */
     if (type == GWY_SF_OUTPUT_DH || type == GWY_SF_OUTPUT_CDH) {
-        min = gwy_data_field_area_get_min(data_field,
-                                          ulcol, ulrow,
-                                          brcol-ulcol, brrow-ulrow);
-        max = gwy_data_field_area_get_max(data_field,
-                                          ulcol, ulrow,
-                                          brcol-ulcol, brrow-ulrow);
+        if (ulrow == 0 && ulcol == 0
+            && brrow == data_field->xres-1 && brcol == data_field->yres - 1) {
+            min = gwy_data_field_get_min(data_field);
+            max = gwy_data_field_get_max(data_field);
+        }
+        else {
+            min = gwy_data_field_area_get_min(data_field,
+                                              ulcol, ulrow,
+                                              brcol-ulcol, brrow-ulrow);
+            max = gwy_data_field_area_get_max(data_field,
+                                              ulcol, ulrow,
+                                              brcol-ulcol, brrow-ulrow);
+        }
     }
     else if (type == GWY_SF_OUTPUT_DA || type == GWY_SF_OUTPUT_CDA) {
         if (orientation == GWY_ORIENTATION_HORIZONTAL) {
@@ -582,16 +599,6 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
     /*average over profiles*/
     if (orientation == GWY_ORIENTATION_HORIZONTAL) {
-        size = brcol-ulcol;
-        if (size < 10) {
-            g_warning("Field too small");
-            return 0;
-        }
-        if (type == GWY_SF_OUTPUT_PSDF && size < 64) {
-            g_warning("Field too small");
-            return 0;
-        }
-
         realsize = gwy_data_field_jtor(data_field, size);
         hlp_line = gwy_data_line_new(size, realsize, FALSE);
         hlp_tarline = gwy_data_line_new(size, realsize, FALSE);
@@ -658,12 +665,6 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
 
     }
     else if (orientation == GWY_ORIENTATION_VERTICAL) {
-        size = brrow-ulrow;
-        if (size < 10) {
-            g_warning("Field too small");
-            return 0;
-        }
-
         realsize = gwy_data_field_itor(data_field, size);
         hlp_line = gwy_data_line_new(size, realsize, FALSE);
         hlp_tarline = gwy_data_line_new(size, realsize, FALSE);
@@ -730,7 +731,8 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         g_object_unref(hlp_tarline);
 
     }
-    return 1;
+
+    return TRUE;
 }
 
 /**
