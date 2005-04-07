@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwysiunit.h>
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
@@ -72,6 +73,7 @@ static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
 static void        gwy_si_unit_init              (GwySIUnit *si_unit);
 static void        gwy_si_unit_finalize          (GObject *object);
 static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
+static void        gwy_si_unit_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_si_unit_serialize         (GObject *obj,
                                                   GByteArray *buffer);
 static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
@@ -170,8 +172,12 @@ gwy_si_unit_get_type(void)
             NULL,
             NULL
         };
+        GInterfaceInfo gwy_watchable_info = {
+            (GInterfaceInitFunc)gwy_si_unit_watchable_init,
+            NULL,
+            NULL
+        };
 
-        gwy_debug("");
         gwy_si_unit_type = g_type_register_static(G_TYPE_OBJECT,
                                                   GWY_SI_UNIT_TYPE_NAME,
                                                   &gwy_si_unit_info,
@@ -179,6 +185,9 @@ gwy_si_unit_get_type(void)
         g_type_add_interface_static(gwy_si_unit_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
+        g_type_add_interface_static(gwy_si_unit_type,
+                                    GWY_TYPE_WATCHABLE,
+                                    &gwy_watchable_info);
     }
 
     return gwy_si_unit_type;
@@ -195,13 +204,16 @@ gwy_si_unit_serializable_init(GwySerializableIface *iface)
     iface->clone = gwy_si_unit_clone_real;
 }
 
+static void
+gwy_si_unit_watchable_init(GwyWatchableIface *iface)
+{
+    iface->value_changed = NULL;
+}
 
 static void
 gwy_si_unit_class_init(GwySIUnitClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-
-    gwy_debug("");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -211,7 +223,6 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
 static void
 gwy_si_unit_init(GwySIUnit *si_unit)
 {
-    gwy_debug("");
     gwy_debug_objects_creation((GObject*)si_unit);
 }
 
@@ -220,7 +231,6 @@ gwy_si_unit_finalize(GObject *object)
 {
     GwySIUnit *si_unit = (GwySIUnit*)object;
 
-    gwy_debug("");
     if (si_unit->units)
         g_array_free(si_unit->units, TRUE);
 
@@ -233,7 +243,6 @@ gwy_si_unit_serialize(GObject *obj,
 {
     GwySIUnit *si_unit;
 
-    gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(obj), NULL);
 
     si_unit = GWY_SI_UNIT(obj);
@@ -261,7 +270,6 @@ gwy_si_unit_deserialize(const guchar *buffer,
     };
     GwySIUnit *si_unit;
 
-    gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
