@@ -111,10 +111,10 @@ static gboolean      gwy_3d_view_button_release (GtkWidget *widget,
                                                  GdkEventButton *event);
 static gboolean      gwy_3d_view_motion_notify  (GtkWidget *widget,
                                                  GdkEventMotion *event);
-static Gwy3DVector*  gwy_3d_make_normals        (GwyDataField * data,
+static Gwy3DVector*  gwy_3d_make_normals        (GwyDataField *dfield,
                                                  Gwy3DVector *normals);
-static void          gwy_3d_make_list           (Gwy3DView * gwy3D,
-                                                 GwyDataField *data,
+static void          gwy_3d_make_list           (Gwy3DView *gwy3D,
+                                                 GwyDataField *dfield,
                                                  gint shape);
 static void          gwy_3d_draw_axes           (Gwy3DView *gwy3dview);
 static void          gwy_3d_draw_light_position (Gwy3DView *gwy3dview);
@@ -1813,47 +1813,48 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
 
 static Gwy3DVector*
-gwy_3d_make_normals(GwyDataField *data,
+gwy_3d_make_normals(GwyDataField *dfield,
                     Gwy3DVector *normals)
 {
    typedef struct { Gwy3DVector A, B; } RectangleNorm;
+   const gdouble *data;
    gint i, j, xres, yres;
    RectangleNorm * norms;
 
-   gwy_debug(" ");
-
-   g_return_val_if_fail(GWY_IS_DATA_FIELD(data), NULL);
    g_return_val_if_fail(normals, NULL);
 
-   xres = gwy_data_field_get_xres(data);
-   yres = gwy_data_field_get_yres(data);
+   xres = gwy_data_field_get_xres(dfield);
+   yres = gwy_data_field_get_yres(dfield);
+   data = gwy_data_field_get_data_const(dfield);
 
    /* memory for normals of triangles
     * total count of rectangels is (xres-1)*(yres-1), each one has 2n triangles
     * 3 componernts per vector
     */
-   norms = g_new(RectangleNorm, (xres - 1 ) * (yres - 1));
+   norms = g_new(RectangleNorm, (xres - 1) * (yres - 1));
    if (norms == NULL)
        return NULL;
+
    /* Calculation of nornals of triangles */
    for (j = 0; j < yres-1; j++) {
       for (i = 0; i < xres-1; i++) {
          GLfloat a, b, c, n;
-         a = gwy_data_field_get_val(data, i, j);
-         b = gwy_data_field_get_val(data, i, j+1);
-         c = gwy_data_field_get_val(data, i+1, j);
+
+         a = data[(yres-1 - j)*xres + i];
+         b = data[(yres-2 - j)*xres + i];
+         c = data[(yres-1 - j)*xres + i+1];
          n = 1.0 / sqrt((a-c)*(a-c) + (b-a)*(b-a) + 1.0);
-         norms[j*(data->xres-1) + i].A.x = (a-c)*n;
-         norms[j*(data->xres-1) + i].A.y = (b-a)*n;
-         norms[j*(data->xres-1)+ i].A.z = n;
+         norms[j*(xres-1) + i].A.x = (a-c)*n;
+         norms[j*(xres-1) + i].A.y = (b-a)*n;
+         norms[j*(xres-1)+ i].A.z = n;
 
          a = b;
          b = c;
-         c = gwy_data_field_get_val(data, i+1, j+1);
+         c = data[(yres-2 - j)*xres + i+1];
          n = 1.0 / sqrt((a-c)*(a-c) + (c-b)*(c-b) + 1.0);
-         norms[j*(data->xres-1) + i].B.x = (a-c)*n;
-         norms[j*(data->xres-1) + i].B.y = (c-b)*n;
-         norms[j*(data->xres-1) + i].B.z = n;
+         norms[j*(xres-1) + i].B.x = (a-c)*n;
+         norms[j*(xres-1) + i].B.y = (c-b)*n;
+         norms[j*(xres-1) + i].B.z = n;
       }
    }
 
@@ -1883,13 +1884,13 @@ gwy_3d_make_normals(GwyDataField *data,
    }
 
    for (i = 1; i < xres - 1; i ++) {
-       const Gwy3DVector *a = &(norms[(xres - 1)*(yres -2) + i-1].B);
-       const Gwy3DVector *b = &(norms[(xres - 1)*(yres -2) + i-1].A);
-       const Gwy3DVector *c = &(norms[(xres - 1)*(yres -2) + i].B);
+       const Gwy3DVector *a = &(norms[(xres - 1)*(yres - 2) + i-1].B);
+       const Gwy3DVector *b = &(norms[(xres - 1)*(yres - 2) + i-1].A);
+       const Gwy3DVector *c = &(norms[(xres - 1)*(yres - 2) + i].B);
 
-       normals[xres * (yres -1) + i].x = (a->x + b->x + c->x)/3.0;
-       normals[xres * (yres -1) + i].y = (a->y + b->y + c->y)/3.0;
-       normals[xres * (yres -1) + i].z = (a->z + b->z + c->z)/3.0;
+       normals[xres * (yres - 1) + i].x = (a->x + b->x + c->x)/3.0;
+       normals[xres * (yres - 1) + i].y = (a->y + b->y + c->y)/3.0;
+       normals[xres * (yres - 1) + i].z = (a->z + b->z + c->z)/3.0;
    }
 
    for (i = 1; i < yres - 1; i ++) {
@@ -1945,60 +1946,59 @@ gwy_3d_make_normals(GwyDataField *data,
 
 static void
 gwy_3d_make_list(Gwy3DView *gwy3D,
-                 GwyDataField *data,
+                 GwyDataField *dfield,
                  gint shape)
 {
    gint i, j, xres, yres, res;
    GLdouble zdifr;
    Gwy3DVector *normals;
+   const gdouble *data;
    GwyGradient *grad;
    GwyRGBA color;
 
-   gwy_debug(" ");
-
-   g_return_if_fail(GWY_IS_DATA_FIELD(data));
-
-   xres = gwy_data_field_get_xres(data);
-   yres = gwy_data_field_get_yres(data);
+   xres = gwy_data_field_get_xres(dfield);
+   yres = gwy_data_field_get_yres(dfield);
+   data = gwy_data_field_get_data_const(dfield);
    res  = xres > yres ? xres : yres;
    grad = gwy3D->gradient;
 
    glNewList(gwy3D->shape_list_base + shape, GL_COMPILE);
-      glPushMatrix();
-      glTranslatef(-(xres / (double)res), -(yres / (double)res),
-                   GWY_3D_Z_DISPLACEMENT);
-      glScalef(2.0/res, 2.0/res,
-               GWY_3D_Z_TRANSFORMATION / (gwy3D->data_max - gwy3D->data_min) );
-      glTranslatef(0.0, 0.0, -gwy3D->data_min);
-      zdifr = 1.0/(gwy3D->data_max - gwy3D->data_min);
-      normals = g_new(Gwy3DVector, xres * yres);
-      if (gwy_3d_make_normals(data, normals) == NULL) {
-           /*TODO solve not enough momory problem*/
-      }
+   glPushMatrix();
+   glTranslatef(-(xres/(double)res), -(yres/(double)res),
+                GWY_3D_Z_DISPLACEMENT);
+   glScalef(2.0/res, 2.0/res,
+            GWY_3D_Z_TRANSFORMATION / (gwy3D->data_max - gwy3D->data_min));
+   glTranslatef(0.0, 0.0, -gwy3D->data_min);
+   zdifr = 1.0/(gwy3D->data_max - gwy3D->data_min);
+   normals = g_new(Gwy3DVector, xres * yres);
+   if (!gwy_3d_make_normals(dfield, normals)) {
+       /*TODO solve not enough momory problem*/
+   }
 
-      for (j = 0; j < yres-1; j++) {
-         glBegin(GL_TRIANGLE_STRIP);
-         for (i = 0; i < xres-1; i++) {
-            double a, b;
-            a = gwy_data_field_get_val(data, i, j);
-            b = gwy_data_field_get_val(data, i, j+1);
-            glNormal3d(normals[j*xres+i].x,
-                       normals[j*xres+i].y,
-                       normals[j*xres+i].z);
-            gwy_gradient_get_color(grad, (a - gwy3D->data_min) * zdifr, &color);
-            glColor3d(color.r , color.g, color.b);
-            glVertex3d((double)i, (double)j, a);
-            glNormal3d(normals[(j+1)*xres+i].x,
-                       normals[(j+1)*xres+i].y,
-                       normals[(j+1)*xres+i].z);
-            gwy_gradient_get_color(grad, (b - gwy3D->data_min) * zdifr, &color);
-            glColor3d(color.r , color.g, color.b);
-            glVertex3d((double)i, (double)(j+1), b);
-         }
-         glEnd();
-      }
-      g_free(normals);
-      glPopMatrix();
+   for (j = 0; j < yres-1; j++) {
+       glBegin(GL_TRIANGLE_STRIP);
+       for (i = 0; i < xres-1; i++) {
+           gdouble a, b;
+
+           a = data[(yres-1 - j)*xres + i];
+           b = data[(yres-2 - j)*xres + i];
+           glNormal3d(normals[j*xres+i].x,
+                      normals[j*xres+i].y,
+                      normals[j*xres+i].z);
+           gwy_gradient_get_color(grad, (a - gwy3D->data_min) * zdifr, &color);
+           glColor3d(color.r , color.g, color.b);
+           glVertex3d((double)i, (double)j, a);
+           glNormal3d(normals[(j+1)*xres+i].x,
+                      normals[(j+1)*xres+i].y,
+                      normals[(j+1)*xres+i].z);
+           gwy_gradient_get_color(grad, (b - gwy3D->data_min) * zdifr, &color);
+           glColor3d(color.r , color.g, color.b);
+           glVertex3d((double)i, (double)(j+1), b);
+       }
+       glEnd();
+   }
+   g_free(normals);
+   glPopMatrix();
    glEndList();
 
 }
