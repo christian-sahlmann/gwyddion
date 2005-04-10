@@ -504,7 +504,6 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
         *rms = sqrt(myrms);
 }
 
-/* FIXME: fix return value to boolean */
 /**
  * gwy_data_field_get_line_stat_function:
  * @data_field: A data field.
@@ -541,7 +540,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     GwyDataLine *hlp_tarline;
     gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE, val, realsize;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), FALSE);
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
