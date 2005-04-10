@@ -72,40 +72,6 @@
 
 G_BEGIN_DECLS
 
-/* Provide a string identifying the current function, non-concatenatable */
-/* Backported from GLib-2.4
- * FIXME: remove in 2.0 */
-#ifndef G_STRFUNC
-#  if defined(__GNUC__)
-#    define G_STRFUNC     ((const char*) (__PRETTY_FUNCTION__))
-#  elif defined(G_HAVE_ISO_VARARGS)
-#    define G_STRFUNC     ((const char*) (__func__))
-#  else
-#    define G_STRFUNC     ((const char*) ("???"))
-#  endif
-#endif
-
-/* This is a workaround for the fact that G_GINT64_MODIFIER and G_GSIZE_FORMAT
- * are only defined in Glib >= 2.4 (and not very correct, as this should
- * be checked by configure for each architecture) */
-/* FIXME: remove in 2.0 */
-#ifndef G_GINT64_MODIFIER
-# if (GLIB_SIZEOF_LONG == 8)
-#   define G_GINT64_MODIFIER "l"
-# else
-#   define G_GINT64_MODIFIER "ll"
-# endif
-#endif
-
-/* FIXME: remove in 2.0 */
-#ifndef G_GSIZE_FORMAT
-# if (GLIB_SIZEOF_LONG == 8)
-#   define G_GSIZE_FORMAT "lu"
-# else
-#   define G_GSIZE_FORMAT "u"
-# endif
-#endif
-
 #ifdef G_HAVE_GNUC_VARARGS
 #  ifdef DEBUG
 #    define gwy_debug(format...) \
