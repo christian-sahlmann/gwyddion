@@ -1,5 +1,12 @@
-- Forward-port relflected 3D fix from stable
+- Add libdir/gwyddion/include/gwyconfig.h for platform information stuff
 - Fix enum documentation after rename, write missing
+  libprocess: GwyMergeType, GwyWatershedStateType, GwyPlaneSymmetry,
+              Gwy2DCWTWaveletType, GwyOrientation, GwyTransformDirection,
+              GwyDataFieldCached, GwyComputationStateType, GwyDWTType,
+              GwyDWTDenoiseType, GwyWindowingType, GwyTipType
+  libgwydgets: GwyAxisScaleFormat, Gwy3DProjection, Gwy3DVisualization,
+               Gwy3DViewLabel, GwyUnitsPlacement, GwyGraphStatusType,
+               GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
 - Check for cases where datafield is replaced in container, one is undo
 - Make GWY_PSPEC() public, if it works
 - Find out why there's no cursor in 3D window entries and fix it
