@@ -1,3 +1,5 @@
+- Update po in MAIN after GWYDDION-1
+- Got rid of multple PangoFT2FontMaps (in 3D view)
 - Add libdir/gwyddion/include/gwyconfig.h for platform information stuff
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, GwyPlaneSymmetry,
@@ -15,6 +17,7 @@
 - Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
 - Add preview to: artithmetic
 - Find out why rectangular selections sometimes leaves a dot, and fix it
+- It should be possible to export images with selections drawn
 - Make things actually compile with --disable-gl, also improve GL/gl.h,
   GL/glu.h checking
 - Check or rework filename handling to work with Gtk+ 2.6
