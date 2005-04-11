@@ -39,7 +39,8 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
+
 #include "get.h"
 
 #define EXTENSION ".afm"
@@ -60,6 +61,8 @@ static GwyContainer* aafm_load             (const gchar *filename);
 static gboolean      read_binary_data      (guint res,
                                             gdouble *data,
                                             const guchar *buffer);
+static gboolean      aafm_save             (GwyContainer *data,
+                                            const gchar *filename);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -84,7 +87,7 @@ module_register(const gchar *name)
         N_("Assing AFM files (.afm)"),
         (GwyFileDetectFunc)&aafm_detect,
         (GwyFileLoadFunc)&aafm_load,
-        NULL
+        (GwyFileSaveFunc)&aafm_save,
     };
 
     gwy_file_func_register(name, &aafm_func_info);
@@ -162,6 +165,7 @@ aafm_load(const gchar *filename)
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
 
     gwy_file_abandon_contents(buffer, size, &err);
     g_clear_error(&err);
@@ -174,8 +178,8 @@ read_binary_data(guint res,
                  gdouble *data,
                  const guchar *buffer)
 {
+    const guint16 *p = (const guint16*)buffer;
     guint i, j;
-    guint16 *p = (gint16*)buffer;
 
     for (i = 0; i < res*res; i++) {
         j = (res - 1 - (i % res))*res + i/res;
@@ -183,6 +187,76 @@ read_binary_data(guint res,
     }
 
     return TRUE;
+}
+
+static gboolean
+aafm_save(GwyContainer *data,
+          const gchar *filename)
+{
+    union { guchar pp[4]; float f; } z;
+    guint16 res, r;
+    gint16 *x;
+    gint16 v, min, max;
+    gint i, j, xres, yres, n;
+    GwyDataField *dfield;
+    const gdouble *d;
+    gdouble avg;
+    FILE *fh;
+    gboolean ok = TRUE;
+
+    if (!(fh = fopen(filename, "wb")))
+        return FALSE;
+
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    d = gwy_data_field_get_data_const(dfield);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    res = MIN(MIN(xres, yres), 32767);
+    n = (gint)res*(gint)res;
+    r = GUINT16_TO_LE(res);
+    fwrite(&res, 1, sizeof(r), fh);
+
+    avg = gwy_data_field_get_avg(dfield);
+    z.f = MIN(gwy_data_field_get_xreal(dfield),
+              gwy_data_field_get_yreal(dfield))/Angstrom;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    z.pp[0] = (*p)[3];
+    z.pp[1] = (*p)[2];
+    z.pp[2] = (*p)[1];
+    z.pp[3] = (*p)[0];
+#endif
+    fwrite(&z, 1, sizeof(z), fh);
+
+    x = g_new(gint16, n);
+    min = max = 0;
+    for (i = 0; i < res; i++) {
+        for (j = 0; j < res; j++) {
+            v = ROUND((d[(res-1 - j)*res + i] - avg)/Z_SCALE);
+            v = MAX(v, -32766);
+            min = MIN(v, min);
+            max = MAX(v, min);
+            x[i*res + j] = GINT16_TO_LE(v);
+        }
+    }
+    /* FIXME */
+    if (!(ok = (fwrite(x, 1, 2*n, fh) == 2*n)))
+        unlink(filename);
+    else {
+        z.f = ((gint)max - (gint)min)/2.0;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+        z.pp[0] = (*p)[3];
+        z.pp[1] = (*p)[2];
+        z.pp[2] = (*p)[1];
+        z.pp[3] = (*p)[0];
+#endif
+        fwrite(&z, 1, sizeof(z), fh);
+    }
+
+    fclose(fh);
+    g_free(x);
+
+    return ok;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
