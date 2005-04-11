@@ -18,6 +18,8 @@ Nenad Ocelic <ocelic@biochem.mpg.de>
     Ruby dump module and plug-ins, Distance tool.
 Rok Zitko <rok.zitko@ijs.si>
     Createc and stmprg import modules, Kuwahara filter.
+Lukáš Chvátal <chvatal@physics.muni.cz>
+    Nanoindentation modules.
 
 
 === Translators ===
@@ -42,4 +44,17 @@ AUTHORS file in The GIMP for complete list.
 
 John Villarrubia, National Institute of Standards and Technology
     Tip algorithms in libprocess/morhp_lib.c, see this file for more.
+
+The Wine project
+    VT_DATE to normal unix date conversion in APE file module was copied
+    from Wine (with minor formal modifications).
+
+Percy Zahl, Andreas Klust, and other GXSM authors, see file AUTHORS in GXSM
+source tarball.
+    RHK SPM32 plug-in helped us in writing our rhk-spm32 import module,
+    although we wrote it from scratch.
+
+Mindaugas Rackaitis, Penn State University
+    ReadSTP Matlab method helped us in writing our stpfile import module,
+    although we wrote it from scratch.
 

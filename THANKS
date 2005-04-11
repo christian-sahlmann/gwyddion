@@ -18,3 +18,23 @@ MV <kasigra@seznam.cz>
 
 Livia Della Seta <livia.dellaseta@casaccia.enea.it>
     for help with Assing AFM file import implementation.
+
+Paolo Messina <paolo.messina@unifi.it>
+    for APE Research file format specifications.
+
+Marc Tobias Wenzel <mtwenzel@iapp.de>
+    for BCR and RHK SPM32 file format specifications and samples.
+
+Sungjun Lee <lsjun@phya.snu.ac.kr>
+Ignacio Horcas <ignacio.horcas@nanotec.es>
+    for Nanotec WSxM file format specifications and samples.
+
+Marcelo Nakamura <marnak@usp.br>
+    for Molecular Imaging data file samples.
+
+Simone Pisana <sp406@eng.cam.ac.uk>
+    for SPMLab R6 data file samples.
+
+Ranjan Grover <rgrover@optics.arizona.edu>
+    for Nanosurf EZD file information and samples.
+

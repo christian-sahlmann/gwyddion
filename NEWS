@@ -1,4 +1,27 @@
 
+1.99.2
+Library:
+- libgwymodule: File detection functions now get a struct with various file
+  information instead of filename as first argument.
+- libprocess: Data field stats caching was implemented.
+- libprocess, libgwydgets, libgwymodule: All enum types are registered in
+  GObject type system, enum class properties were changed from guints to real
+  enums.
+- libgwyddion: SI Unit GwyWatchable interface actually works.
+- libgwyddion: Marquardt-Levenberg NL fitter supports linked parameters (API
+  changed).
+- libprocess: Proper types and enmus were defined for FFT functions.
+- libprocess: GwyDataLine clean-up, including removal of some bogus interfaces.
+- libgwyddion: GwySerializable has a new method clone to transform an
+  object to duplicate of an existing one.
+
+Modules:
+- New file modules and improvements were forward-ported from 1.10 (apefile,
+  assing-afm, bcrfile, ezdfile, pixmap, rhk-spm32, spmlab, stpfile,
+  wsxmfile).
+- Pixmap: False color scale export is disabled when presentation is shown.
+
+
 1.99.1
 Application:
 - Support for long deprecated binary settings file was removed
@@ -33,6 +56,36 @@ Library:
 
 Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
+1.10
+Application:
+- Translations updated: Czech, Italian.
+
+Modules:
+- APEfile (new): Applied Physics and Engineering data file import.
+- BCRfile (new): Image Metrology BCR data file import.
+- RHK SPM32 (new): RHK SPM32 data file import.
+- WSxMfile (new): Nanotec WSxM data file import.
+- EZDFile (new): Nanosurf EZD data file import.
+- Nanoident analyse (new): Analyses nanoindent structures (volume, surfaces,
+  etc.).
+- Nanoindent adjust (new) Adjusts images of two indentor prints.
+- Pixmap: False color scale is correct when explicite color range is set
+  (bug #43).
+- Assing AFM: Supports also save.
+- SPMLab: Supports R6 file format import.
+- Calibrate: Applying calibrating ratios squared was fixed.
+
+Library:
+- libgwyddion: Marquardt-Levenberg NL fitter fixed parameters actually work
+  now.
+- libgwyddion: gwy_si_unit_get_unit_strings() recomposes the string from
+  internal representation so that works for nontrivial units too.
+- libprocess: Rotation correction mysteriously broken on Win32 was no less
+  mysteriously fixed.
+- libprocess: Nanoindentation functions.
+- libgwydgets: 3D view reflected with respect to 2D was fixed.
 
 
 1.9
@@ -423,7 +476,7 @@ Modules:
 - Many modules: Memory leaks fixed.
 
 Library:
-- libgwyddion: Marquardt-Levenverg non-linear least square fitter was
+- libgwyddion: Marquardt-Levenberg non-linear least square fitter was
   added (GwyNLFitter).
 - libgwyprocess: Functions for computing fractal dimension and surface area
   added. Functions for correlation, crosscorrelation, outlier detection
