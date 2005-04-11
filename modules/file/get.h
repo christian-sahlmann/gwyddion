@@ -55,6 +55,23 @@ get_FLOAT(const guchar **p)
 }
 
 static inline gdouble
+get_FLOAT_BE(const guchar **p)
+{
+    union { guchar pp[4]; float f; } z;
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    memcpy(z.pp, *p, sizeof(float));
+#else
+    z.pp[0] = (*p)[3];
+    z.pp[1] = (*p)[2];
+    z.pp[2] = (*p)[1];
+    z.pp[3] = (*p)[0];
+#endif
+    *p += sizeof(float);
+    return z.f;
+}
+
+static inline gdouble
 get_DOUBLE(const guchar **p)
 {
     union { guchar pp[8]; double d; } z;
