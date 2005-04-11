@@ -635,15 +635,17 @@ _gwy_file_func_remove(const gchar *name)
  * @name: File name.
  * @name_lowercase: File name in lowercase (for eventual case-insensitive
  *                  name check).
- * @file_size: File size in bytes.  Unset if @only_name.
+ * @file_size: File size in bytes.  Undefined if @only_name.
  * @buffer_len: The size of @buffer in bytes.  Normally it's
  *              @GWY_FILE_DETECT_BUFFER_SIZE except when file is shorter than
- *              that.  Unset if @only_name.
- * @buffer: Initial part of file.
+ *              that.  Undefined if @only_name.
+ * @buffer: Initial part of file.  Undefined if @only_name.
  *
  * File detection data.
  *
  * It contains common information file type detection routines need to obtain.
+ * It is shared between file detection functions and they must not modify its
+ * contents.
  **/
 
 /**
