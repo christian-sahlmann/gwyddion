@@ -285,10 +285,12 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     GList *item;
     GwyContainer *data;
 
+    g_printerr("GwyDataWindow %p (%s) set current\n",
+               window, gtk_window_get_title(GTK_WINDOW(window)));
     gwy_debug("win = %p, tool = %p", window, current_tool);
     gwy_app_set_current_window(GTK_WIDGET(window));
     if (already_current == window) {
-        gwy_debug("window already current");
+        g_printerr("(window seems already current)\n");
         g_assert(current_data && current_data->data == (gpointer)window);
         return FALSE;
     }
@@ -363,6 +365,15 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     gwy_app_data_window_list_updated();
 }
 
+/* XXX: print all focus-in events on data windows to smash bug #40 */
+static gboolean
+gwy_app_data_window_debug_focus_in(GtkWindow *window)
+{
+    g_printerr("GwyDataWindow %p (%s) got focus-in\n",
+               window, gtk_window_get_title(window));
+    return FALSE;
+}
+
 /**
  * gwy_app_data_window_create:
  * @data: A data container.
@@ -412,6 +423,8 @@ gwy_app_data_window_create(GwyContainer *data)
                                             corner);
     }
 
+    g_signal_connect(data_window, "focus-in-event",
+                     G_CALLBACK(gwy_app_data_window_debug_focus_in), NULL);
     g_signal_connect(data_window, "focus-in-event",
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
