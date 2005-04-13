@@ -42,4 +42,7 @@ endif
 docs:
 	(cd devel-docs && $(MAKE) $(AM_MAKEFLAGS) docs)
 
+configexecincludedir = $(pkglibdir)/include
+configexecinclude_DATA = gwyconfig.h
+
 .PHONY: docs

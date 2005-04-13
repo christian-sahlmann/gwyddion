@@ -234,11 +234,11 @@ AC_TYPE_SIGNAL
 
 dnl Checks for library functions.
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([getline])
-AC_CHECK_FUNCS([setenv])
-AC_CHECK_FUNCS([cbrt])
-AC_CHECK_FUNCS([hypot])
-AC_CHECK_FUNCS([pow10])
+AC_CHECK_FUNC([getline])
+AC_CHECK_FUNC([setenv])
+AC_CHECK_FUNC([cbrt], [gwy_have_cbrt=yes], [gwy_have_cbrt=no])
+AC_CHECK_FUNC([hypot], [gwy_have_hypot=yes], [gwy_have_hypot=no])
+AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
 
 dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
@@ -260,5 +260,52 @@ AC_SUBST(PACKAGE_URL)
 AC_SUBST(LIBRARY_RELEASE)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
                    [Define to package home page, as a string.])
+
+AC_CONFIG_COMMANDS([gwyconfig.h],
+[
+  outfile=gwyconfig.h-tmp
+  cat > $outfile <<\_______EOF
+/*
+ * gwyconfig.h
+ *
+ * This is a generated file.  Please modify 'configure.ac'
+ */
+
+#ifndef __GWY_CONFIG_H__
+#define __GWY_CONFIG_H__
+
+_______EOF
+
+  if test x$gwy_have_pow10 = xno; then
+    echo '#define pow10(x) exp(G_LN2*exp(x))' >>$outfile
+  else
+    echo '/* pow10() is defined */' >>$outfile
+  fi
+
+  if test x$gwy_have_hypot = xno; then
+    echo '#define hypot(x, y) sqrt(pow(x, 2.0) + pow(y, 2.0))' >>$outfile
+  else
+    echo '/* hypot() is defined */' >>$outfile
+  fi
+
+  if test x$gwy_have_cbrt = xno; then
+    echo '#define cbrt(x) pow(x, 1.0/3.0)' >>$outfile
+  else
+    echo '/* cbrt() is defined */' >>$outfile
+  fi
+
+  cat >>$outfile <<_______EOF
+
+#endif /* __GWY_CONFIG_H__ */
+_______EOF
+
+
+  if cmp -s $outfile gwyconfig.h; then
+    AC_MSG_NOTICE([gwyconfig.h is unchanged])
+    rm -f $outfile
+  else
+    mv $outfile gwyconfig.h
+  fi
+])
 
 AC_OUTPUT
