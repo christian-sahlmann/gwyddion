@@ -444,8 +444,7 @@ gwy_layer_select_button_pressed(GwyVectorLayer *layer,
     if (!keep_old) {
         select_layer->x0 = xreal;
         select_layer->y0 = yreal;
-        if (select_layer->is_crop)
-            gwy_layer_select_draw(layer, window);
+        gwy_layer_select_draw(layer, window);
     }
     else
         gwy_layer_select_draw(layer, window);
