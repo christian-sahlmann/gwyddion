@@ -30,6 +30,11 @@ dump_modules_LDADD = @GTKGLEXT_LIBS@ \
 	$(libgwyprocess) \
 	$(libgwyddion)
 
+CLEANFILES = \
+	modules.xml \
+	module-list.html \
+	module-list-nocss.html
+
 INCLUDES = -I$(top_srcdir)
 
 modules.xml: dump-modules $(moduledir)/*.c $(moduledir)/*/*.c
@@ -43,4 +48,3 @@ module-list-nocss.html: modules.xml modules-web-nocss.xsl
 
 clean-local:
 	rm -f core.* *~
-	rm -f modules.xml module-list.html module-list-nocss.html

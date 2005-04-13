@@ -38,6 +38,8 @@ EXTRA_DIST = \
 BUILT_SOURCES = \
 	authors.h
 
+MAINTAINERCLEANFILES = authors.h
+
 # In following order do:
 # Any code change     C:   R++: A
 # Any iface change    C++: 0:   A
@@ -102,6 +104,3 @@ INCLUDES = -I$(top_srcdir)
 
 clean-local:
 	rm -f core.* *~
-
-maintainer-clean-local:
-	rm -f authors.h

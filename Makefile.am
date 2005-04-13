@@ -29,6 +29,8 @@ EXTRA_DIST = \
 	rules.msc \
 	version.h
 
+DISTCLEANFILES = gwyconfig.h
+
 ACLOCAL_AMFLAGS = -I m4
 
 if MAINTAINER_MODE

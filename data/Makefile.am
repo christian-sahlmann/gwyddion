@@ -36,6 +36,9 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwymodule/libgwymodule-decl.txt \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
+MAINTAINERCLEANFILES = \
+	gwyddion.vim
+
 # FIXME: this breaks VPATH build
 if MAINTAINER_MODE
 gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg) $(vim_syn_gen)
