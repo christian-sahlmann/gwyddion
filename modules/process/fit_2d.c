@@ -763,7 +763,7 @@ guess_sphere_up(GwyDataField *dfield,
                                          10, 10);
 
     v = avgtop - avgcorner;
-    t = sqrt(dfield->xreal*dfield->xreal + dfield->yreal*dfield->yreal);
+    t = hypot(dfield->xreal, dfield->yreal);
     param[0] = fabs((t*t - 4*v*v)/8/v);
     param[1] = dfield->xreal/2;
     param[2] = dfield->yreal/2;

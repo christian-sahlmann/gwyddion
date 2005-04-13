@@ -127,7 +127,7 @@ median(GwyContainer *data, GwyRunType run)
     /* FIXME: this is bogus for non-square pixels anyway */
     xr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
     yr = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
-    args.pixelsize = sqrt(xr*xr + yr*yr);
+    args.pixelsize = hypot(xr, yr);
     gwy_data_field_get_value_format_xy(dfield, &args.valform);
     gwy_debug("pixelsize = %g, vf = (%g, %d, %s)",
               args.pixelsize, args.valform.magnitude, args.valform.precision,

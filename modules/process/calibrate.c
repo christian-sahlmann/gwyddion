@@ -27,10 +27,6 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#ifndef HAVE_POW10
-#define pow10(x) pow(G_LN10, (x))
-#endif
-
 #define CALIBRATE_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
@@ -166,13 +162,13 @@ calibrate(GwyContainer *data, GwyRunType run)
                  - gwy_data_field_get_min(dfield);
     args.xres = gwy_data_field_get_xres(dfield);
     args.yres = gwy_data_field_get_yres(dfield);
-    args.xyorigexp = 3*floor(log(args.xorig*args.yorig)/(6*G_LN10));
-    args.zorigexp = 3*floor(log(args.zorig)/(3*G_LN10));
+    args.xyorigexp = 3*floor(log10(args.xorig*args.yorig)/6);
+    args.zorigexp = 3*floor(log10(args.zorig)/3);
     args.xreal = args.xratio * args.xorig;
     args.yreal = args.yratio * args.yorig;
     args.zreal = args.zratio * args.zorig;
-    args.xyexponent = 3*floor(log(args.xreal*args.yreal)/(6*G_LN10));
-    args.zexponent = 3*floor(log(args.zreal)/(3*G_LN10));
+    args.xyexponent = 3*floor(log10(args.xreal*args.yreal)/6);
+    args.zexponent = 3*floor(log10(args.zreal)/3);
 
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)

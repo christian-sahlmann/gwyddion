@@ -30,10 +30,6 @@
 
 #include "get.h"
 
-#ifndef HAVE_POW10
-#define pow10(x) (exp(G_LN10*(x)))
-#endif
-
 #define MAGIC "WSxM file copyright Nanotec Electronica\r\n" \
               "SxM Image file\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)

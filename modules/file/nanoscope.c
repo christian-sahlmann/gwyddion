@@ -387,7 +387,7 @@ hash_to_data_field(GHashTable *hash,
         return NULL;
     }
     unitxy = gwy_si_unit_new_parse(un, &power10);
-    q = exp(G_LN10*power10);
+    q = pow10(power10);
     xreal *= q;
     yreal *= q;
 
@@ -500,7 +500,7 @@ get_physical_scale(GHashTable *hash,
         gwy_si_unit_multiply(siunit, siunit2, siunit);
         gwy_debug("Scale1 = %g V/LSB", val->hard_value);
         gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
-        *scale *= exp(G_LN10*q);
+        *scale *= pow10(q);
         gwy_debug("Total scale = %g %s/LSB",
                   *scale, gwy_si_unit_get_unit_string(siunit));
         g_object_unref(siunit2);

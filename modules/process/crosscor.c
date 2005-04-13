@@ -336,11 +336,8 @@ abs_field(GwyDataField *dfieldx, GwyDataField *dfieldy)
 {
     gint i;
 
-    for (i = 0; i < (dfieldx->xres * dfieldx->yres); i++) {
-        dfieldx->data[i] =
-            sqrt(dfieldx->data[i] * dfieldx->data[i] +
-                 dfieldy->data[i] * dfieldy->data[i]);
-    }
+    for (i = 0; i < (dfieldx->xres * dfieldx->yres); i++)
+        dfieldx->data[i] = hypot(dfieldx->data[i], dfieldy->data[i]);
 }
 
 static void

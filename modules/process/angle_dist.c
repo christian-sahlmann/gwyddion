@@ -406,7 +406,7 @@ count_angles(gint n, gdouble *xder, gdouble *yder,
         gdouble xd = *(xder++);
         gdouble yd = *(yder++);
 
-        d = atan(sqrt(xd*xd + yd*yd));    /* no hypot()... */
+        d = atan(hypot(xd, yd));
         phi = atan2(yd, xd);
         for (j = 0; j < steps; j++) {
             gdouble v = d*cos(2.0*G_PI*j/steps - phi);

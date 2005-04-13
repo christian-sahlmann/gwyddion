@@ -619,12 +619,9 @@ pixmap_load(const gchar *filename,
     }
     g_object_unref(pixbuf);
 
-    gwy_data_field_set_xreal(dfield,
-                             args.xreal*exp(G_LN10*args.xyexponent));
-    gwy_data_field_set_yreal(dfield,
-                             args.yreal*exp(G_LN10*args.xyexponent));
-    gwy_data_field_multiply(dfield,
-                            args.zreal*exp(G_LN10*args.zexponent));
+    gwy_data_field_set_xreal(dfield, args.xreal*pow10(args.xyexponent));
+    gwy_data_field_set_yreal(dfield, args.yreal*pow10(args.xyexponent));
+    gwy_data_field_multiply(dfield, args.zreal*pow10(args.zexponent));
     data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
@@ -1690,7 +1687,7 @@ hruler(gint size,
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
     step = real/format->magnitude/n;
-    base = exp(G_LN10*floor(log10(step)));
+    base = pow10(floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
         step = 2.0;
@@ -1772,7 +1769,7 @@ vruler(gint size,
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
     step = real/format->magnitude/n;
-    base = exp(G_LN10*floor(log10(step)));
+    base = pow10(floor(log10(step)));
     step = step/base;
     if (step <= 2.0)
         step = 2.0;

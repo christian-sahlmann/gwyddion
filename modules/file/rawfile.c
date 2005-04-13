@@ -43,10 +43,6 @@
 #include <app/app.h>
 #include <app/settings.h>
 
-#ifndef HAVE_POW10
-#define pow10(x) exp(G_LN10*(x))
-#endif
-
 /* Predefined common binary formats */
 typedef enum {
     RAW_NONE = 0,
