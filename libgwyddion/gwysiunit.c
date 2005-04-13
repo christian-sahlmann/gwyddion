@@ -18,15 +18,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
+#include "gwymacros.h"
+
 #include <string.h>
 #include <stdlib.h>
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
-#include <libgwyddion/gwydebugobjects.h>
-#include <libgwyddion/gwyserializable.h>
-#include <libgwyddion/gwywatchable.h>
-#include <libgwyddion/gwysiunit.h>
+
+#include "gwymath.h"
+#include "gwydebugobjects.h"
+#include "gwyserializable.h"
+#include "gwywatchable.h"
+#include "gwysiunit.h"
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
 
@@ -467,7 +468,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     else
         format->magnitude = gwy_math_humanize_numbers(value/12, value,
                                                       &format->precision);
-    siunit->power10 = ROUND(log(format->magnitude)/G_LN10);
+    siunit->power10 = ROUND(log10(format->magnitude));
     format->units = gwy_si_unit_format_as_plain_string(siunit,
                                                        &format_style_vfmarkup);
 
@@ -515,7 +516,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     else
         format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
                                                       &format->precision);
-    siunit->power10 = ROUND(log(format->magnitude)/G_LN10);
+    siunit->power10 = ROUND(log10(format->magnitude));
     format->units = gwy_si_unit_format_as_plain_string(siunit,
                                                        &format_style_vfmarkup);
 
@@ -560,9 +561,9 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
     }
     else
         format->magnitude
-            = gwy_math_humanize_numbers(maximum/exp(G_LN10*sdigits),
+            = gwy_math_humanize_numbers(maximum/pow10(sdigits),
                                         maximum, &format->precision);
-    siunit->power10 = ROUND(log(format->magnitude)/G_LN10);
+    siunit->power10 = ROUND(log10(format->magnitude));
     format->units = gwy_si_unit_format_as_plain_string(siunit,
                                                        &format_style_vfmarkup);
 
@@ -654,8 +655,8 @@ gwy_si_unit_parse(GwySIUnit *siunit,
     q = g_ascii_strtod(string, (gchar**)&end);
     if (end != string) {
         string = end;
-        siunit->power10 = ROUND(log(q)/G_LN10);
-        if (q <= 0 || fabs(log(q/exp(G_LN10*siunit->power10))) > 1e-14) {
+        siunit->power10 = ROUND(log10(q));
+        if (q <= 0 || fabs(log(q/pow10(siunit->power10))) > 1e-14) {
             g_warning("Bad multiplier %g", q);
             siunit->power10 = 0;
         }

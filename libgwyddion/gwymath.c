@@ -18,8 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
 #include "gwymacros.h"
+
+#include <string.h>
 #include "gwymath.h"
 
 /* Lower symmetric part indexing */
@@ -103,7 +104,7 @@ gwy_math_humanize_numbers(gdouble unit,
         mag = 0;
     }
 
-    return exp(G_LN10*mag);
+    return pow10(mag);
 }
 
 /**

@@ -41,6 +41,9 @@
 #include <glib/gutils.h>
 #include <glib/gmessages.h>
 
+#include <gwyconfig.h>
+
+/* XXX: move to gwyconfig.h? */
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #else

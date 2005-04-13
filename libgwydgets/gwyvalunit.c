@@ -18,13 +18,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <libgwyddion/gwymacros.h>
+
 #include <math.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <glib-object.h>
 
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwysiunit.h>
 #include "gwyoptionmenus.h"
 #include "gwyvalunit.h"
@@ -253,7 +254,7 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
     format = gwy_si_unit_get_format(val_unit->base_si_unit, value, NULL);
 
     val_unit->unit = floor(log10(format->magnitude)); /* /3 */
-    val_unit->dival = value/pow(10, val_unit->unit);  /*1000*/
+    val_unit->dival = value/pow10(val_unit->unit);  /*1000*/
 
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(val_unit->spin), val_unit->dival);
 
@@ -275,7 +276,7 @@ gwy_val_unit_get_value(GwyValUnit *val_unit)
     val_unit->dival
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(val_unit->spin));
 
-    return val_unit->dival * pow(10, val_unit->unit);
+    return val_unit->dival * pow10(val_unit->unit);
 }
 
 void

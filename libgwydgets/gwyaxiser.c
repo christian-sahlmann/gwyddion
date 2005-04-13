@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <libgwyddion/gwymacros.h>
 #include <math.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -26,7 +27,6 @@
 #include <gdk/gdk.h>
 #include <pango/pango.h>
 #include <gdk/gdkpango.h>
-#include <libgwyddion/gwymacros.h>
 #include "gwyaxiser.h"
 
 #define GWY_AXISER_TYPE_NAME "GwyAxiser"
@@ -1025,7 +1025,7 @@ gwy_axiser_logscale(GwyAxiser *a)
 
     /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
     tickstep = gwy_axiser_dbl_raise(10.0, (gint)floor(min));
-    base = ceil(pow(10, min)/tickstep)*tickstep;
+    base = ceil(pow10(min)/tickstep)*tickstep;
     max = a->max;
     i = 0;
     do {
@@ -1129,7 +1129,7 @@ gwy_axiser_formatticks(GwyAxiser *a)
     if (!a->is_logarithmic)
         range = fabs(mjx.t.value - mji.t.value);
     else
-        range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));
+        range = fabs(pow10(mjx.t.value) - pow10(mji.t.value));
 
     for (i = 0; i< a->mjticks->len; i++)
     {
@@ -1138,7 +1138,7 @@ gwy_axiser_formatticks(GwyAxiser *a)
         if (!a->is_logarithmic)
             value = pmjt->t.value;
         else
-            value = pow(10, pmjt->t.value);
+            value = pow10(pmjt->t.value);
 
         /*fill dependent to mode*/
         if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT

@@ -163,7 +163,7 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
 
     gdata = grain_field->data;
     for (i = 0; i < xres*yres; i++)
-        gdata[i] = sqrt(gdata[i]*gdata[i] + masky->data[i]*masky->data[i]);
+        gdata[i] = hypot(gdata[i], masky->data[i]);
 
     min = gwy_data_field_get_min(grain_field);
     max = gwy_data_field_get_max(grain_field);

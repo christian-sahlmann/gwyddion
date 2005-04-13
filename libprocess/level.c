@@ -24,10 +24,6 @@
 #include "datafield.h"
 #include "level.h"
 
-#ifndef HAVE_HYPOT
-#define hypot(x,y) sqrt((x)*(x) + (y)*(y))
-#endif
-
 /**
  * gwy_data_field_plane_coeffs:
  * @data_field: A data field.

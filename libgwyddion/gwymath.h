@@ -22,6 +22,7 @@
 #define __GWY_MATH_H__
 
 #include <glib.h>
+#include <libgwyddion/gwymacros.h>
 #include <math.h>
 
 G_BEGIN_DECLS

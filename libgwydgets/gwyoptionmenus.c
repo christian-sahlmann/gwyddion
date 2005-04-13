@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <libgwyddion/gwymacros.h>
+
 #include <string.h>
 #include <gtk/gtkimage.h>
 #include <gtk/gtkmenu.h>
@@ -812,7 +814,7 @@ gwy_option_menu_metric_unit(GCallback callback,
     n = (to - from) + 1;
     entries = g_new(GwyEnum, n + 1);
     for (i = from; i <= to; i++) {
-        s = g_strconcat(gwy_math_SI_prefix(exp(G_LN10*3.0*i)), unit, NULL);
+        s = g_strconcat(gwy_math_SI_prefix(pow10(3.0*i)), unit, NULL);
         entries[i - from].name = s;
         entries[i - from].value = 3*i;
     }

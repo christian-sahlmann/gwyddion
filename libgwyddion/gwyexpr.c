@@ -26,18 +26,6 @@
 #include "gwymath.h"
 #include "gwyexpr.h"
 
-#ifndef HAVE_HYPOT
-#define hypot(x, y) sqrt((x)*(x) + (y)*(y))
-#endif
-
-#ifndef HAVE_POW10
-#define pow10(x) exp(G_LN10*(x))
-#endif
-
-#ifndef HAVE_CBRT
-#define cbrt(x) pow((x), 1.0/3.0)
-#endif
-
 #define GWY_EXPR_SCOPE_GLOBAL 0
 
 /* things that can appear on code stack */

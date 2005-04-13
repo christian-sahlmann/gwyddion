@@ -824,10 +824,10 @@ square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
     z3 = data_field->data[(ulcol) + data_field->xres * (brrow)];
     z4 = data_field->data[(brcol) + data_field->xres * (brrow)];
 
-    a = sqrt(x * x + (z1 - z2) * (z1 - z2));
-    b = sqrt(x * x + (z1 - z3) * (z1 - z3));
-    c = sqrt(x * x + (z3 - z4) * (z3 - z4));
-    d = sqrt(x * x + (z2 - z4) * (z2 - z4));
+    a = hypot(x, z1 - z2);
+    b = hypot(x, z1 - z3);
+    c = hypot(x, z3 - z4);
+    d = hypot(x, z2 - z4);
     e = sqrt(2 * x * x + (z3 - z2) * (z3 - z2));
     f = sqrt(2 * x * x + (z4 - z1) * (z4 - z1));
 
@@ -885,7 +885,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
                 phi = atan2(by, bx);
                 iphi = (gint)floor(nder*(phi + G_PI)/(2.0*G_PI));
                 iphi = CLAMP(iphi, 0, nder-1);
-                der[iphi] += sqrt(bx*bx + by*by);
+                der[iphi] += hypot(bx, by);
             }
         }
     }
@@ -900,7 +900,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
                 phi = atan2(by*qy, bx*qx);
                 iphi = (gint)floor(nder*(phi + G_PI)/(2.0*G_PI));
                 iphi = CLAMP(iphi, 0, nder-1);
-                der[iphi] += sqrt(bx*bx + by*by);
+                der[iphi] += hypot(bx, by);
             }
         }
     }
@@ -1117,7 +1117,7 @@ gwy_data_field_area_get_inclination(GwyDataField *data_field,
                                           col, row, width, height,
                                           &nx, &ny, &nz, TRUE);
 
-    nr = sqrt(nx*nx + ny*ny);
+    nr = hypot(nx, ny);
     if (theta)
         *theta = atan2(nr, nz);
     if (phi)
