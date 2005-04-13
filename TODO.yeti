@@ -1,6 +1,5 @@
 - Update po in MAIN after GWYDDION-1
-- Got rid of multple PangoFT2FontMaps (in 3D view)
-- Add libdir/gwyddion/include/gwyconfig.h for platform information stuff
+- Use FT2 in pixmap export instead the ugly hack
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, GwyPlaneSymmetry,
               Gwy2DCWTWaveletType, GwyOrientation, GwyTransformDirection,
@@ -22,6 +21,7 @@
 - Check or rework filename handling to work with Gtk+ 2.6
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
+- Write a Postscript export module based on JP's work
 - Convert Logarithmic scale value to logarithmic presentation
 - Do something reasonable with results of pow10, hypot, etc. detection
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
