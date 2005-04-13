@@ -23,7 +23,9 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwydraw.h>
+#include <pango/pangoft2.h>
 #include "gwydgetutils.h"
 
 enum {
@@ -530,6 +532,7 @@ gwy_dialog_prevent_delete_cb(void)
     return TRUE;
 }
 
+/* TODO: may use "icon" property in Gtk+ 2.6 */
 /**
  * gwy_stock_like_button_new:
  * @label_text: Button label text.
@@ -561,6 +564,35 @@ gwy_stock_like_button_new(const gchar *label_text,
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
 
     return button;
+}
+
+/**
+ * gwy_get_pango_ft2_font_map:
+ * @unref: If %TRUE, function removes the font map reference and return %NULL
+ *         %NULL.
+ *
+ * Returns global Pango FT2 font map, eventually creating it.
+ *
+ * Returns: Pango FT2 font map.  Add your own reference if you want it to
+ *          never go away.
+ **/
+PangoFontMap*
+gwy_get_pango_ft2_font_map(gboolean unref)
+{
+    static PangoFontMap *ft2_font_map = NULL;
+
+    if (unref) {
+        gwy_object_unref(ft2_font_map);
+        return NULL;
+    }
+
+    if (ft2_font_map)
+        return ft2_font_map;
+
+    ft2_font_map = pango_ft2_font_map_new();
+    gwy_debug_objects_creation(ft2_font_map);
+
+    return ft2_font_map;
 }
 
 /************************** Documentation ****************************/

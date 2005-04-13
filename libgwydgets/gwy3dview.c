@@ -43,6 +43,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/stats.h>
+#include <pango/pangoft2.h>
 #include "gwydgets.h"
 
 #define DEG_2_RAD (G_PI / 180.0)
@@ -1527,10 +1528,12 @@ gwy_3d_view_realize(GtkWidget *widget)
     gwy_3d_view_realize_gl(gwy3dview);
 
     /* Get PangoFT2 context. */
-    gwy3dview->ft2_font_map = (PangoFT2FontMap*) pango_ft2_font_map_new();
-    pango_ft2_font_map_set_resolution(gwy3dview->ft2_font_map, 72, 72);
-    gwy3dview->ft2_context
-        = pango_ft2_font_map_create_context(gwy3dview->ft2_font_map);
+    gwy3dview->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
+    g_object_ref(gwy3dview->ft2_font_map);
+    pango_ft2_font_map_set_resolution
+                         (PANGO_FT2_FONT_MAP(gwy3dview->ft2_font_map), 72, 72);
+    gwy3dview->ft2_context = pango_ft2_font_map_create_context
+                                 (PANGO_FT2_FONT_MAP(gwy3dview->ft2_font_map));
 }
 
 static gboolean

@@ -26,7 +26,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include <pango/pangoft2.h>
 
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
@@ -90,7 +89,7 @@ struct _Gwy3DView {
     guint timeout_id;               /* Timeout id */
 
     PangoContext *ft2_context;      /* For text rendering */
-    PangoFT2FontMap *ft2_font_map;  /* Font map for text rendering */
+    PangoFontMap *ft2_font_map;     /* Font map for text rendering */
     Gwy3DLabel **labels;            /* labels text, displacement etc */
     gulong      *label_signal_ids;
     GHashTable *variables;          /* Label substitution variables */
