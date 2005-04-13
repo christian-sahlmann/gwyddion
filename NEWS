@@ -20,6 +20,7 @@ Modules:
   assing-afm, bcrfile, ezdfile, pixmap, rhk-spm32, spmlab, stpfile,
   wsxmfile).
 - Pixmap: False color scale export is disabled when presentation is shown.
+- Rectangular select layer: Dot left on image after unselection was fixed.
 
 
 1.99.1
