@@ -537,5 +537,26 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_object_unref(dline);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * GwyTransformDirection:
+ * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward transform.
+ * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward transform.
+ *
+ * Transform (namely integral transform) direction.
+ **/
+
+/**
+ * GwyFFTFunc:
+ * @dir: Transform direction (forward or backward).
+ * @re_in: Data line with real part of input data.
+ * @im_in: Data line with imaginary part of input data.
+ * @re_out: Data line to store real part of output data to.
+ * @im_out: Data line to store imaginary part of output data to.
+ * @interpolation: Interpolation type to use.
+ *
+ * Fast Fourier Transform (FFT) function type.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

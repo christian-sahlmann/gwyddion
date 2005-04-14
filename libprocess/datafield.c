@@ -2327,4 +2327,26 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  * resolutions and units.
  **/
 
+/**
+ * GwyOrientation:
+ * @GWY_ORIENTATION_HORIZONTAL: Horizontal orientation.
+ * @GWY_ORIENTATION_VERTICAL: Vertical orientation.
+ *
+ * Orientation type.
+ **/
+
+/**
+ * GwyDataFieldCached:
+ * @GWY_DATA_FIELD_CACHE_MIN: Overall minimum.
+ * @GWY_DATA_FIELD_CACHE_MAX: Overall maximum.
+ * @GWY_DATA_FIELD_CACHE_SUM: Sum of all values.
+ * @GWY_DATA_FIELD_CACHE_RMS: Root mean square.
+ * @GWY_DATA_FIELD_CACHE_MED: Median.
+ * @GWY_DATA_FIELD_CACHE_SIZE: The size of statistics cache.
+ *
+ * Cached data field quantity types.
+ *
+ * There should be no need to this enum directly.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

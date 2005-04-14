@@ -377,4 +377,22 @@ unrotate_refine_correction(GwyDataLine *derdist,
     return phi;
 }
 
+/**
+ * GwyPlaneSymmetry:
+ * @GWY_SYMMETRY_AUTO: Automatic symmetry selection.
+ * @GWY_SYMMETRY_PARALLEL: Parallel symmetry, there is one prevalent direction
+ *                         (bilateral).
+ * @GWY_SYMMETRY_TRIANGULAR: Triangular symmetry, there are three prevalent
+ *                           directions (unilateral) by 120 degrees.
+ * @GWY_SYMMETRY_SQUARE: Square symmetry, two prevalent directions (bilateral)
+ *                       oriented approximately along image sides.
+ * @GWY_SYMMETRY_RHOMBIC: Rhombic symmetry, two prevalent directions
+ *                        (bilateral) oriented approximately along diagonals.
+ * @GWY_SYMMETRY_HEXAGONAL: Hexagonal symmetry, three prevalent directions
+ *                          (bilateral) by 120 degrees.
+ * @GWY_SYMMETRY_LAST: The number of symmetries.
+ *
+ * Plane symmetry types for rotation correction.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
