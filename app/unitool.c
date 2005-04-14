@@ -23,6 +23,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
+#include <string.h>
 #include "app.h"
 #include "unitool.h"
 #include "menu-windowlist.h"

@@ -18,9 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
-#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <math.h>
+#include <string.h>
+#include <gtk/gtk.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
 #include <libgwydgets/gwydgets.h>

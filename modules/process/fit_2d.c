@@ -18,10 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <libgwyddion/gwymacros.h>
+#include <stdlib.h>
 #include <math.h>
 #include <errno.h>
 #include <gtk/gtk.h>
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
