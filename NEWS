@@ -14,6 +14,10 @@ Library:
 - libprocess: GwyDataLine clean-up, including removal of some bogus interfaces.
 - libgwyddion: GwySerializable has a new method clone to transform an
   object to duplicate of an existing one.
+- libgwydgets: A function to maintain one global PangoFT2Map was introduced,
+  3DView uses it now.
+- libgwydgets: Vector layer cursor ref/unref helpers were renamed and moved to
+  utils, as they are used elsewhere.
 
 Modules:
 - New file modules and improvements were forward-ported from 1.10 (apefile,
@@ -21,6 +25,9 @@ Modules:
   wsxmfile).
 - Pixmap: False color scale export is disabled when presentation is shown.
 - Rectangular select layer: Dot left on image after unselection was fixed.
+
+Other:
+- A platform info header gwyconfig.h was introduced, similar to glibconfig.h.
 
 
 1.99.1
