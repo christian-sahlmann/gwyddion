@@ -26,6 +26,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 
 #define GWY_TYPE_LAYER_SELECT            (gwy_layer_select_get_type())
@@ -222,11 +223,11 @@ gwy_layer_select_init(GwyLayerSelect *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_SELECT_GET_CLASS(layer);
-    gwy_vector_layer_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
-    gwy_vector_layer_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
-    gwy_vector_layer_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
-    gwy_vector_layer_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
-    gwy_vector_layer_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
     layer->selected = FALSE;
     layer->is_crop = FALSE;
 }
@@ -242,9 +243,9 @@ gwy_layer_select_finalize(GObject *object)
     g_return_if_fail(GWY_IS_LAYER_SELECT(object));
 
     klass = GWY_LAYER_SELECT_GET_CLASS(object);
-    gwy_vector_layer_cursor_free_or_unref(&klass->resize_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->resize_cursor);
     for (i = 0; i < 4; i++)
-        gwy_vector_layer_cursor_free_or_unref(&klass->corner_cursor[i]);
+        gwy_gdk_cursor_free_or_unref(&klass->corner_cursor[i]);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

@@ -604,48 +604,4 @@ gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
     gdk_gc_set_background(layer->gc, &bg);
 }
 
-/**
- * gwy_vector_layer_cursor_new_or_ref:
- * @cursor: A Gdk cursor, or %NULL.
- * @type: Cursor type to eventually create.
- *
- * Increments reference count of a given Gdk cursor or creates a new one
- * (if @cursor is NULL) of type @cursor_type.
- *
- * This function is intended only for layer implementation.
- **/
-void
-gwy_vector_layer_cursor_new_or_ref(GdkCursor **cursor,
-                                   GdkCursorType type)
-{
-    g_return_if_fail(cursor);
-
-    if (*cursor)
-        gdk_cursor_ref(*cursor);
-    else
-        *cursor = gdk_cursor_new(type);
-}
-
-/**
- * gwy_vector_layer_cursor_free_or_unref:
- * @cursor: A Gdk cursor.
- *
- * Decrements reference count of a Gdk cursor, possibly freeing it.
- *
- * This function is intended only for layer implementation.
- **/
-void
-gwy_vector_layer_cursor_free_or_unref(GdkCursor **cursor)
-{
-    int refcount;
-
-    g_return_if_fail(cursor);
-    g_return_if_fail(*cursor);
-
-    refcount = (*cursor)->ref_count - 1;
-    gdk_cursor_unref(*cursor);
-    if (!refcount)
-        *cursor = NULL;
-}
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

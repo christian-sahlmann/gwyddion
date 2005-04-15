@@ -590,9 +590,53 @@ gwy_get_pango_ft2_font_map(gboolean unref)
         return ft2_font_map;
 
     ft2_font_map = pango_ft2_font_map_new();
-    gwy_debug_objects_creation(ft2_font_map);
+    gwy_debug_objects_creation(G_OBJECT(ft2_font_map));
 
     return ft2_font_map;
+}
+
+/**
+ * gwy_gdk_cursor_new_or_ref:
+ * @cursor: A Gdk cursor, or %NULL.
+ * @type: Cursor type to eventually create.
+ *
+ * Increments reference count of a given Gdk cursor or creates a new one
+ * (if @cursor is NULL) of type @cursor_type.
+ *
+ * This function is intended for layer implementation.
+ **/
+void
+gwy_gdk_cursor_new_or_ref(GdkCursor **cursor,
+                          GdkCursorType type)
+{
+    g_return_if_fail(cursor);
+
+    if (*cursor)
+        gdk_cursor_ref(*cursor);
+    else
+        *cursor = gdk_cursor_new(type);
+}
+
+/**
+ * gwy_gdk_cursor_free_or_unref:
+ * @cursor: A Gdk cursor.
+ *
+ * Decrements reference count of a Gdk cursor, possibly freeing it.
+ *
+ * This function is intended for layer implementation.
+ **/
+void
+gwy_gdk_cursor_free_or_unref(GdkCursor **cursor)
+{
+    int refcount;
+
+    g_return_if_fail(cursor);
+    g_return_if_fail(*cursor);
+
+    refcount = (*cursor)->ref_count - 1;
+    gdk_cursor_unref(*cursor);
+    if (!refcount)
+        *cursor = NULL;
 }
 
 /************************** Documentation ****************************/

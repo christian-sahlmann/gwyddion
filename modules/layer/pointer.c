@@ -39,6 +39,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 
 #define GWY_TYPE_LAYER_POINTER            (gwy_layer_pointer_get_type())
@@ -192,7 +193,7 @@ gwy_layer_pointer_init(GwyLayerPointer *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_POINTER_GET_CLASS(layer);
-    gwy_vector_layer_cursor_new_or_ref(&klass->point_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->point_cursor, GDK_CROSS);
     layer->x = 0.0;
     layer->y = 0.0;
     layer->selected = FALSE;
@@ -208,7 +209,7 @@ gwy_layer_pointer_finalize(GObject *object)
     g_return_if_fail(GWY_IS_LAYER_POINTER(object));
 
     klass = GWY_LAYER_POINTER_GET_CLASS(object);
-    gwy_vector_layer_cursor_free_or_unref(&klass->point_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->point_cursor);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

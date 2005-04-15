@@ -30,6 +30,7 @@
 #include "gwyvectorlayer.h"
 #include "gwygrapharea.h"
 #include "gwygraphlabel.h"
+#include "gwydgetutils.h"
 
 #define GWY_GRAPH_AREA_TYPE_NAME "GwyGraphArea"
 
@@ -225,8 +226,8 @@ gwy_graph_area_init(GwyGraphArea *area)
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
     klass = GWY_GRAPH_AREA_GET_CLASS(area);
-    gwy_vector_layer_cursor_new_or_ref(&klass->cross_cursor, GDK_CROSS);
-    gwy_vector_layer_cursor_new_or_ref(&klass->arrow_cursor, GDK_LEFT_PTR);
+    gwy_gdk_cursor_new_or_ref(&klass->cross_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->arrow_cursor, GDK_LEFT_PTR);
 }
 
 GtkWidget*
@@ -266,8 +267,8 @@ gwy_graph_area_finalize(GObject *object)
     area = GWY_GRAPH_AREA(object);
 
     klass = GWY_GRAPH_AREA_GET_CLASS(area);
-    gwy_vector_layer_cursor_free_or_unref(&klass->cross_cursor);
-    gwy_vector_layer_cursor_free_or_unref(&klass->arrow_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->cross_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->arrow_cursor);
 
     for (i = 0; i < area->curves->len; i++)
     {

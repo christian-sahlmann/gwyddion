@@ -24,6 +24,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 
 #define GWY_TYPE_LAYER_LINES            (gwy_layer_lines_get_type())
@@ -246,9 +247,9 @@ gwy_layer_lines_init(GwyLayerLines *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_LINES_GET_CLASS(layer);
-    gwy_vector_layer_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
-    gwy_vector_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
-    gwy_vector_layer_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
+    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
+    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
 
     layer->nlines = 3;
     layer->nselected = 0;
@@ -270,9 +271,9 @@ gwy_layer_lines_finalize(GObject *object)
 
     layer = (GwyLayerLines*)object;
     klass = GWY_LAYER_LINES_GET_CLASS(object);
-    gwy_vector_layer_cursor_free_or_unref(&klass->near_cursor);
-    gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
-    gwy_vector_layer_cursor_free_or_unref(&klass->nearline_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->nearline_cursor);
 
     g_free(layer->line_labels);
     g_free(layer->lines);

@@ -101,9 +101,6 @@ void             gwy_vector_layer_updated              (GwyVectorLayer *layer);
 
 /* helpers */
 void             gwy_vector_layer_setup_gc             (GwyVectorLayer *layer);
-void             gwy_vector_layer_cursor_new_or_ref    (GdkCursor **cursor,
-                                                        GdkCursorType type);
-void             gwy_vector_layer_cursor_free_or_unref (GdkCursor **cursor);
 
 G_END_DECLS
 

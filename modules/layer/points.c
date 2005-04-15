@@ -25,6 +25,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 
 #define GWY_TYPE_LAYER_POINTS            (gwy_layer_points_get_type())
@@ -219,8 +220,8 @@ gwy_layer_points_init(GwyLayerPoints *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_POINTS_GET_CLASS(layer);
-    gwy_vector_layer_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
-    gwy_vector_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
+    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
 
     layer->npoints = 3;
     layer->nselected = 0;
@@ -240,8 +241,8 @@ gwy_layer_points_finalize(GObject *object)
 
     layer = (GwyLayerPoints*)object;
     klass = GWY_LAYER_POINTS_GET_CLASS(object);
-    gwy_vector_layer_cursor_free_or_unref(&klass->near_cursor);
-    gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
 
     g_free(layer->points);
 

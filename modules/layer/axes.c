@@ -25,6 +25,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
 
 #define GWY_TYPE_LAYER_AXES            (gwy_layer_axes_get_type())
@@ -232,8 +233,8 @@ gwy_layer_axes_init(GwyLayerAxes *layer)
     gwy_debug("");
 
     klass = GWY_LAYER_AXES_GET_CLASS(layer);
-    gwy_vector_layer_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
-    gwy_vector_layer_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
+    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
+    gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
 
     layer->orientation = GTK_ORIENTATION_HORIZONTAL;
     layer->naxes = 3;
@@ -254,8 +255,8 @@ gwy_layer_axes_finalize(GObject *object)
 
     layer = (GwyLayerAxes*)object;
     klass = GWY_LAYER_AXES_GET_CLASS(object);
-    gwy_vector_layer_cursor_free_or_unref(&klass->near_cursor);
-    gwy_vector_layer_cursor_free_or_unref(&klass->move_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
+    gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
 
     g_free(layer->axes);
 
