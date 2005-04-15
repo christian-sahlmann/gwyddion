@@ -129,6 +129,7 @@ update-mime-database %{_datadir}/mime
 %{_includedir}/%{name}/libgwyddion/*.h
 %{_includedir}/%{name}/libgwydgets/*.h
 %{_includedir}/%{name}/libgwymodule/*.h
+%{_libdir}/%{name}/include/gwyconfig.h
 %dir %{_includedir}/%{name}/app
 %dir %{_includedir}/%{name}/libdraw
 %dir %{_includedir}/%{name}/libprocess
