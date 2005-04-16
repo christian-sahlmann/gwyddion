@@ -1,12 +1,10 @@
 - Update po in MAIN after GWYDDION-1
-- Use FT2 in pixmap export instead the ugly hack
+- Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix enum documentation after rename, write missing
-  libprocess: GwyMergeType, GwyWatershedStateType, GwyPlaneSymmetry,
-              Gwy2DCWTWaveletType, GwyOrientation, GwyTransformDirection,
-              GwyDataFieldCached, GwyComputationStateType, GwyDWTType,
+  libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
+              GwyComputationStateType, GwyDWTType,
               GwyDWTDenoiseType, GwyWindowingType, GwyTipType
-  libgwydgets: GwyAxisScaleFormat, Gwy3DProjection, Gwy3DVisualization,
-               Gwy3DViewLabel, GwyUnitsPlacement, GwyGraphStatusType,
+  libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
 - Check for cases where datafield is replaced in container, one is undo
 - Make GWY_PSPEC() public, if it works
