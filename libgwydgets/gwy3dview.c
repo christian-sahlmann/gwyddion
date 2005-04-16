@@ -2470,4 +2470,32 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
  * The type of 3D view change that happens when user drags it with mouse.
  */
 
+/**
+ * Gwy3DProjection:
+ * @GWY_3D_PROJECTION_ORTHOGRAPHIC: Otrhographic projection.
+ * @GWY_3D_PROJECTION_PERSPECTIVE: Perspective projection.
+ *
+ * 3D View projection type.
+ **/
+
+/**
+ * Gwy3DVisualization:
+ * @GWY_3D_VISUALIZATION_GRADIENT: Data is displayed with color corresponding
+ *                                 to 2D view.
+ * @GWY_3D_VISUALIZATION_LIGHTING: Data is displayed as an uniform material
+ *                                 with some lighting.
+ *
+ * 3D View data visualization type.
+ **/
+
+/**
+ * Gwy3DViewLabel:
+ * @GWY_3D_VIEW_LABEL_X: X-axis label.
+ * @GWY_3D_VIEW_LABEL_Y: Y-axis label.
+ * @GWY_3D_VIEW_LABEL_MIN: Z-axis bottom label.
+ * @GWY_3D_VIEW_LABEL_MAX: Z-axis top label.
+ *
+ * 3D View label type.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
