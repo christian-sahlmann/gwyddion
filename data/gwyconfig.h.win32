@@ -1,0 +1,15 @@
+/*
+ * gwyconfig.h
+ *
+ * This is a static Win32 version.
+ */
+
+#ifndef __GWY_CONFIG_H__
+#define __GWY_CONFIG_H__
+
+/* pow10() is defined */
+/* hypot() is defined */
+#define cbrt(x) pow((x), 1.0/3.0)
+
+#endif /* __GWY_CONFIG_H__ */
+
