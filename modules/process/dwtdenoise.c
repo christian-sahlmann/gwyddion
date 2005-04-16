@@ -283,7 +283,6 @@ wavelet_changed_cb(GObject *item,
                   DWTDenoiseArgs *args)
 {
     args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
-    printf("wavelet: %d\n", args->wavelet);
 }
 
 static void

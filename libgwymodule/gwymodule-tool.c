@@ -18,9 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
+#include <gtk/gtk.h>
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtktable.h>
 
