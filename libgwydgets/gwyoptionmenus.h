@@ -60,6 +60,9 @@ GtkWidget* gwy_option_menu_orientation       (GCallback callback,
 GtkWidget* gwy_option_menu_merge_type        (GCallback callback,
                                               gpointer cbdata,
                                               GwyMergeType current);
+GtkWidget* gwy_option_menu_indentor          (GCallback callback,
+                                              gpointer cbdata,
+                                              GwyIndentorType current);
 GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
                                               gint from,

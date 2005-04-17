@@ -771,6 +771,42 @@ gwy_option_menu_merge_type(GCallback callback,
                                   current);
 }
 
+
+/**
+ * gwy_option_menu_indentor:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @current: Indentor type selected
+ *           (or -1 to use what happens to appear first).
+ *
+ * Creates a #GtkOptionMenu of available indentor types
+ *
+ * It sets object data "indentor-type" to line fit
+ * for each menu item (use GPOINTER_TO_INT() when retrieving it).
+ *
+ * Returns: The newly created option menu as #GtkWidget.
+**/
+GtkWidget*
+gwy_option_menu_indentor(GCallback callback,
+                         gpointer cbdata,
+                         GwyIndentorType current)
+{
+    static const GwyEnum entries[] = {
+        { N_("Vickers"),    GWY_INDENTOR_VICKERS, },
+        { N_("Berkovich"),  GWY_INDENTOR_BERKOVICH, },
+        { N_("Berkovich (modified)"),  GWY_INDENTOR_BERKOVICH_M, },
+        { N_("Knoop"),      GWY_INDENTOR_KNOOP, },
+        { N_("Brinell"),   GWY_INDENTOR_BRINELL, },
+        { N_("Cube corner"), GWY_INDENTOR_CUBECORNER, },
+        { N_("Rockwell"),   GWY_INDENTOR_ROCKWELL, },
+    };
+
+    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
+                                 "indentor-type", callback, cbdata,
+                                 current);
+    
+}
+
 /**
  * gwy_option_menu_metric_unit:
  * @callback: A callback called when a menu item is activated (or %NULL for

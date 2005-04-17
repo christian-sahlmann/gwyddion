@@ -141,6 +141,17 @@ typedef enum {
     GWY_TIP_DELTA          = 3
 } GwyTipType;
 
+typedef enum {
+  GWY_INDENTOR_VICKERS     = 0,
+  GWY_INDENTOR_BERKOVICH   = 1,
+  GWY_INDENTOR_BERKOVICH_M = 2,
+  GWY_INDENTOR_KNOOP       = 3,
+  GWY_INDENTOR_BRINELL     = 4,
+  GWY_INDENTOR_ROCKWELL    = 5,
+  GWY_INDENTOR_CUBECORNER  = 6
+} GwyIndentorType;
+
+
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_ENUMS_H__ */
