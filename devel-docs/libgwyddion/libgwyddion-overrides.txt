@@ -1,0 +1,12 @@
+# FIXME: This is generic, how to generate it automatically?
+
+<STRUCT>
+<NAME>GwySerializableIface</NAME>
+struct GwySerializableIface {
+    GwySerializeFunc serialize;
+    GwyDeserializeFunc deserialize;
+    void (*clone)(GObject *source, GObject *copy);
+    GObject* (*duplicate)(GObject *object);
+};
+</STRUCT>
+
