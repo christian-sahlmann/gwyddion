@@ -1747,6 +1747,21 @@ GwyVMenuBar
 
 @sphere_coords: 
 
+<!-- ##### FUNCTION gwy_vector_layer_cursor_free_or_unref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+
+<!-- ##### FUNCTION gwy_vector_layer_cursor_new_or_ref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+@type: 
+
 <!-- ##### FUNCTION gwy_vector_layer_get_nselected ##### -->
 <para>
 

@@ -76,6 +76,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_ORIENTATION_HORIZONTAL: 
 @GWY_ORIENTATION_VERTICAL: 
 
+<!-- ##### ENUM GwyTransformDirection ##### -->
+<para>
+
+</para>
+
+@GWY_TRANSFORM_DIRECTION_BACKWARD: 
+@GWY_TRANSFORM_DIRECTION_FORWARD: 
+
 <!-- ##### ENUM GwyDataFieldCached ##### -->
 <para>
 
@@ -83,8 +91,9 @@ Mask processing merging (namely used in grain processing).
 
 @GWY_DATA_FIELD_CACHE_MIN: 
 @GWY_DATA_FIELD_CACHE_MAX: 
-@GWY_DATA_FIELD_CACHE_AVG: 
+@GWY_DATA_FIELD_CACHE_SUM: 
 @GWY_DATA_FIELD_CACHE_RMS: 
+@GWY_DATA_FIELD_CACHE_MED: 
 @GWY_DATA_FIELD_CACHE_SIZE: 
 
 <!-- ##### ENUM GwyComputationStateType ##### -->
@@ -165,4 +174,17 @@ Selection of windowing applied before FFT (if requested).
 @GWY_TIP_CONTACT: 
 @GWY_TIP_NONCONTACT: 
 @GWY_TIP_DELTA: 
+
+<!-- ##### ENUM GwyIndentorType ##### -->
+<para>
+
+</para>
+
+@GWY_INDENTOR_VICKERS: 
+@GWY_INDENTOR_BERKOVICH: 
+@GWY_INDENTOR_BERKOVICH_M: 
+@GWY_INDENTOR_KNOOP: 
+@GWY_INDENTOR_BRINELL: 
+@GWY_INDENTOR_ROCKWELL: 
+@GWY_INDENTOR_CUBECORNER: 
 

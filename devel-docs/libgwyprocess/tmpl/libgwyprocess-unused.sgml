@@ -53,6 +53,30 @@ morph_lib
 @GWY_CWT_HAT: 
 @GWY_CWT_MORLET: 
 
+<!-- ##### ARG GwyDataField:unit-xy ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyDataField:unit-z ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyDataField:xreal ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GwyDataField:yreal ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### ENUM GwyFFTOutputType ##### -->
 <para>
 FFT output.

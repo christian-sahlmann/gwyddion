@@ -111,3 +111,29 @@ gwydgetutils
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_get_pango_ft2_font_map ##### -->
+<para>
+
+</para>
+
+@unref: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gdk_cursor_new_or_ref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+@type: 
+
+
+<!-- ##### FUNCTION gwy_gdk_cursor_free_or_unref ##### -->
+<para>
+
+</para>
+
+@cursor: 
+
+

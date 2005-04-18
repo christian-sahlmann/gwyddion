@@ -84,12 +84,12 @@ GwySerializableIface
 GwySerializable
 GwySerializeFunc
 GwyDeserializeFunc
-GwyDuplicateFunc
 GwySerializeSpec
 GwySerializeItem
 gwy_serializable_serialize
 gwy_serializable_deserialize
 gwy_serializable_duplicate
+gwy_serializable_clone
 gwy_serialize_pack_object_struct
 gwy_serialize_unpack_object_struct
 gwy_serialize_object_items
@@ -223,7 +223,6 @@ gwy_flags_to_string
 gwy_strkill
 gwy_strreplace
 gwy_strdiffpos
-gwy_str_has_suffix_nocase
 gwy_file_get_contents
 gwy_file_abandon_contents
 gwy_find_self_dir
@@ -281,7 +280,7 @@ GwyNLFitParam
 gwy_math_nlfit_new
 gwy_math_nlfit_free
 gwy_math_nlfit_fit
-gwy_math_nlfit_fit_with_fixed
+gwy_math_nlfit_fit_full
 gwy_math_nlfit_get_max_iterations
 gwy_math_nlfit_set_max_iterations
 gwy_math_nlfit_get_dispersion
@@ -324,9 +323,6 @@ _
 N_
 gwy_object_unref
 GWY_SWAP
-G_STRFUNC
-G_GINT64_MODIFIER
-G_GSIZE_FORMAT
 gwy_debug
 gwy_debug_gnu
 </SECTION>

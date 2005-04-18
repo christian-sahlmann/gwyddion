@@ -419,8 +419,6 @@ gwy_vector_layer_get_update_policy
 gwy_vector_layer_set_update_policy
 gwy_vector_layer_updated
 gwy_vector_layer_setup_gc
-gwy_vector_layer_cursor_new_or_ref
-gwy_vector_layer_cursor_free_or_unref
 <SUBSECTION Standard>
 GWY_VECTOR_LAYER
 GWY_IS_VECTOR_LAYER
@@ -867,6 +865,9 @@ gwy_table_get_child_widget
 gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
 gwy_stock_like_button_new
+gwy_get_pango_ft2_font_map
+gwy_gdk_cursor_new_or_ref
+gwy_gdk_cursor_free_or_unref
 </SECTION>
 
 <SECTION>
@@ -961,6 +962,7 @@ gwy_option_menu_dwt
 gwy_option_menu_sfunctions_output
 gwy_option_menu_orientation
 gwy_option_menu_merge_type
+gwy_option_menu_indentor
 gwy_option_menu_metric_unit
 gwy_option_menu_create
 gwy_option_menu_set_history

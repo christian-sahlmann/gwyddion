@@ -29,6 +29,19 @@ connected with 1D data, graphs, etc.
 
 @parent_class: 
 
+<!-- ##### USER_FUNCTION GwyFFTFunc ##### -->
+<para>
+
+</para>
+
+@dir: 
+@re_in: 
+@im_in: 
+@re_out: 
+@im_out: 
+@interpolation: 
+
+
 <!-- ##### MACRO gwy_data_line_duplicate ##### -->
 <para>
 
@@ -192,8 +205,8 @@ connected with 1D data, graphs, etc.
 @data_line: 
 @i: 
 @value: 
-@Returns: 
 <!-- # Unused Parameters # -->
+@Returns: 
 @a: 
 
 

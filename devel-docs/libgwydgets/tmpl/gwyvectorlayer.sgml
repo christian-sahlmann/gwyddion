@@ -180,20 +180,3 @@ Base class for #GwyDataView vector (interactive) layers
 @layer: 
 
 
-<!-- ##### FUNCTION gwy_vector_layer_cursor_new_or_ref ##### -->
-<para>
-
-</para>
-
-@cursor: 
-@type: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_cursor_free_or_unref ##### -->
-<para>
-
-</para>
-
-@cursor: 
-
-

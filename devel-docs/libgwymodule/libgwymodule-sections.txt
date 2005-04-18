@@ -72,6 +72,8 @@ gwy_process_func_get_sensitivity_flags
 
 <SECTION>
 <FILE>gwymodule-file</FILE>
+GWY_FILE_DETECT_BUFFER_SIZE
+GwyFileDetectInfo
 GwyFileFuncInfo
 GwyFileDetectFunc
 GwyFileLoadFunc

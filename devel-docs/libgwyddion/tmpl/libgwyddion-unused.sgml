@@ -151,6 +151,24 @@ types
 </para>
 
 
+<!-- ##### MACRO G_GINT64_MODIFIER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_GSIZE_FORMAT ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO G_STRFUNC ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### USER_FUNCTION GwyDeserializeStructFunc ##### -->
 <para>
 
@@ -162,6 +180,14 @@ types
 @object_name: 
 @nspec: 
 @spec: 
+@Returns: 
+
+<!-- ##### USER_FUNCTION GwyDuplicateFunc ##### -->
+<para>
+
+</para>
+
+@object: 
 @Returns: 
 
 <!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
@@ -235,12 +261,6 @@ types
 @nspec: 
 @spec: 
 @Returns: 
-
-<!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
-<para>
-Emitted when value changes.
-</para>
-
 
 <!-- ##### STRUCT GwyWatchableClass ##### -->
 <para>
@@ -566,6 +586,22 @@ Emitted when value changes.
 @inventory: 
 @n: 
 
+<!-- ##### FUNCTION gwy_math_nlfit_fit_with_fixed ##### -->
+<para>
+
+</para>
+
+@nlfit: 
+@n_dat: 
+@x: 
+@y: 
+@weight: 
+@n_param: 
+@param: 
+@fixed_param: 
+@user_data: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_math_nlfit_get_function_equation ##### -->
 <para>
 
@@ -831,6 +867,15 @@ Emitted when value changes.
 
 @siunit: 
 @magnitude: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_str_has_suffix_nocase ##### -->
+<para>
+
+</para>
+
+@s: 
+@suffix: 
 @Returns: 
 
 <!-- ##### FUNCTION machine_zero ##### -->

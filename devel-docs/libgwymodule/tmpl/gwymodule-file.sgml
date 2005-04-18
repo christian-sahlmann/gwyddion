@@ -26,6 +26,24 @@ and the signatures of particular file operations:
 
 </para>
 
+<!-- ##### MACRO GWY_FILE_DETECT_BUFFER_SIZE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### STRUCT GwyFileDetectInfo ##### -->
+<para>
+
+</para>
+
+@name: 
+@name_lowercase: 
+@file_size: 
+@buffer_len: 
+@buffer: 
+
 <!-- ##### STRUCT GwyFileFuncInfo ##### -->
 <para>
 
@@ -42,10 +60,12 @@ and the signatures of particular file operations:
 
 </para>
 
-@filename: 
+@fileinfo: 
 @only_name: 
 @name: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@filename: 
 
 
 <!-- ##### USER_FUNCTION GwyFileLoadFunc ##### -->

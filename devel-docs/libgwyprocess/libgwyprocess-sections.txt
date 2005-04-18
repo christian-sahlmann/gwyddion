@@ -77,6 +77,7 @@ GWY_DATA_FIELD_GET_CLASS
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
 GwyDataLineClass
+GwyFFTFunc
 gwy_data_line_duplicate
 gwy_data_line_new
 gwy_data_line_new_alike
@@ -166,6 +167,8 @@ gwy_2dcwt_wavelet_type_get_type
 GWY_TYPE_2DCWT_WAVELET_TYPE
 gwy_orientation_get_type
 GWY_TYPE_ORIENTATION
+gwy_transform_direction_get_type
+GWY_TYPE_TRANSFORM_DIRECTION
 gwy_data_field_cached_get_type
 GWY_TYPE_DATA_FIELD_CACHED
 gwy_computation_state_type_get_type
@@ -182,6 +185,8 @@ gwy_windowing_type_get_type
 GWY_TYPE_WINDOWING_TYPE
 gwy_tip_type_get_type
 GWY_TYPE_TIP_TYPE
+gwy_indentor_type_get_type
+GWY_TYPE_INDENTOR_TYPE
 </SECTION>
 
 <SECTION>
@@ -356,6 +361,7 @@ GwyWatershedStateType
 GwyPlaneSymmetry
 Gwy2DCWTWaveletType
 GwyOrientation
+GwyTransformDirection
 GwyDataFieldCached
 GwyComputationStateType
 GwyDWTType
@@ -364,6 +370,7 @@ GwyInterpolationType
 GwyPlaneFitQuantity
 GwyWindowingType
 GwyTipType
+GwyIndentorType
 </SECTION>
 
 <SECTION>

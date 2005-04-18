@@ -41,9 +41,9 @@ All the low-level functions are deprecated and will be removed in Gwyddion
 
 </para>
 
-@parent_class: 
 @serialize: 
 @deserialize: 
+@clone: 
 @duplicate: 
 
 <!-- ##### STRUCT GwySerializable ##### -->
@@ -72,15 +72,6 @@ All the low-level functions are deprecated and will be removed in Gwyddion
 @buffer: 
 @size: 
 @position: 
-@Returns: 
-
-
-<!-- ##### USER_FUNCTION GwyDuplicateFunc ##### -->
-<para>
-
-</para>
-
-@object: 
 @Returns: 
 
 
@@ -134,6 +125,15 @@ All the low-level functions are deprecated and will be removed in Gwyddion
 
 @object: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_serializable_clone ##### -->
+<para>
+
+</para>
+
+@source: 
+@copy: 
 
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->

@@ -179,6 +179,17 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_option_menu_indentor ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_metric_unit ##### -->
 <para>
 

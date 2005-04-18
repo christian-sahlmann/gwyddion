@@ -188,16 +188,16 @@ or <link linkend="gwy-math-nlfit-get-preset-formula">gwy_math_nlfit_get_preset_f
 @n_dat: 
 @x: 
 @y: 
-@weight: 
 @n_param: 
 @param: 
 @user_data: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@weight: 
 @n_par: 
 
 
-<!-- ##### FUNCTION gwy_math_nlfit_fit_with_fixed ##### -->
+<!-- ##### FUNCTION gwy_math_nlfit_fit_full ##### -->
 <para>
 
 </para>
@@ -210,6 +210,7 @@ or <link linkend="gwy-math-nlfit-get-preset-formula">gwy_math_nlfit_get_preset_f
 @n_param: 
 @param: 
 @fixed_param: 
+@link_map: 
 @user_data: 
 @Returns: 
 
