@@ -64,6 +64,8 @@ void         gwy_math_choleski_solve     (gint n,
                                           gdouble *rhs);
 gdouble      gwy_math_median             (gsize n,
                                           gdouble *array);
+void         gwy_math_sort               (gsize n,
+                                          gdouble *array);
 
 G_END_DECLS
 

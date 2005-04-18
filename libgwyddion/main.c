@@ -61,7 +61,7 @@ test_serializable_iface(void)
     print(ser, "created");
 
     array = gwy_serializable_serialize(ser, array);
-    g_message("size of both objects: %u", size);
+    g_message("size of both objects: %" G_GSIZE_FORMAT, size);
     g_object_unref(ser);
     g_message("writing objects to %s", FILENAME);
     fh = fopen(FILENAME, "wb");
@@ -78,7 +78,7 @@ test_serializable_iface(void)
     if (!gwy_file_get_contents(FILENAME, &buffer, &size, &err)) {
         g_error("%s", err->message);
     }
-    g_message("size = %u", size);
+    g_message("size = %" G_GSIZE_FORMAT, size);
 
     pos = 0;
     g_message("restoring the first one");
@@ -248,7 +248,7 @@ test_container_serialization(void)
     if (!gwy_file_get_contents(FILENAME, &buffer, &size, &err)) {
         g_error("%s", err->message);
     }
-    g_message("size = %u", size);
+    g_message("size = %" G_GSIZE_FORMAT, size);
 
     pos = 0;
     g_message("restoring container");
@@ -908,6 +908,33 @@ test_expr(void)
 }
 
 static void
+test_sort(void)
+{
+    GRand *rng;
+    gdouble *array;
+    guint n, i, k, N = 4096;
+
+    rng = g_rand_new();
+    array = g_new(gdouble, N);
+
+    for (k = 0; k < 1000; k++) {
+        n = g_rand_int_range(rng, 2, N);
+        for (i = 0; i < n; i++)
+            array[i] = g_rand_double(rng);
+
+        gwy_math_sort(n, array);
+
+        for (i = 1; i < n; i++) {
+            if (array[i] < array[i-1])
+                g_warning("Badly sorted item at pos %u", i);
+        }
+    }
+
+    g_free(array);
+    g_rand_free(rng);
+}
+
+static void
 test_all(void)
 {
     test_serializable_iface();
@@ -925,6 +952,7 @@ test_all(void)
     test_si_unit_format();
     test_si_unit_parse();
     test_expr();
+    test_sort();
 }
 
 static void
@@ -942,7 +970,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_nlfit();
+    test_sort();
 
     return 0;
 }

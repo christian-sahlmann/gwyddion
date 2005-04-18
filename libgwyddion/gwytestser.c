@@ -184,7 +184,7 @@ gwy_test_ser_deserialize(const guchar *buffer,
     double theta, *radius = NULL;
     gchar *string = NULL;
     GObject *unit = NULL;
-    gsize rsize, ssize, usize;
+    guint32 rsize, ssize, usize;
     GwySerializeSpec spec[] = {
         { 'd', "theta", &theta, NULL, },
         { 'D', "radius", &radius, &rsize, },
