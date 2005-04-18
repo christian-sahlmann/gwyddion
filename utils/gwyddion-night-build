@@ -1,8 +1,8 @@
 #!/bin/bash
 disabled=
 pkgname=gwyddion
-basever=1.99.1
-dont_update_version=
+basever=1.99.2
+dont_update_version=no_dont_update_it
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
