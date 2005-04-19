@@ -47,12 +47,12 @@ libgwyddion_la_SOURCES = \
 	gwysiunit.c \
 	gwywatchable.c
 
-noinst_PROGRAMS = main
-main_SOURCES = \
-	main.c \
-	gwytestser.c
-
-main_LDADD = libgwyddion.la
+#noinst_PROGRAMS = main
+#main_SOURCES = \
+#	main.c \
+#	gwytestser.c
+#
+#main_LDADD = libgwyddion.la
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_PIXMAP_DIR=\"$(pkgdatadir)/pixmaps\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"

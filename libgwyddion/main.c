@@ -907,31 +907,60 @@ test_expr(void)
     gwy_expr_free(expr);
 }
 
+static int
+compare_double(gconstpointer a, gconstpointer b)
+{
+    gdouble p = *(gdouble*)a;
+    gdouble q = *(gdouble*)b;
+
+    if (p < q)
+        return -1;
+    if (p > q)
+        return 1;
+    return 0;
+}
+
 static void
 test_sort(void)
 {
     GRand *rng;
+    GTimer *timer;
     gdouble *array;
     guint n, i, k, N = 4096;
+    gdouble libcsort = 0.0, gwysort = 0.0;
 
     rng = g_rand_new();
-    array = g_new(gdouble, N);
+    timer = g_timer_new();
+    array = g_new(gdouble, 2*N);
 
     for (k = 0; k < 10000; k++) {
         n = g_rand_int_range(rng, 2, N);
         for (i = 0; i < n; i++)
             array[i] = g_rand_double(rng);
+        memcpy(array + N, array, N*sizeof(gdouble));
 
+        g_timer_start(timer);
         gwy_math_sort(n, array);
+        g_timer_stop(timer);
+        gwysort += g_timer_elapsed(timer, NULL);
 
         for (i = 1; i < n; i++) {
             if (array[i] < array[i-1])
                 g_warning("Badly sorted item at pos %u", i);
         }
+
+        g_timer_start(timer);
+        qsort(array + N, n, sizeof(gdouble), compare_double);
+        g_timer_stop(timer);
+        libcsort += g_timer_elapsed(timer, NULL);
     }
+
+    fprintf(stderr, "libc sort: %f\n", libcsort);
+    fprintf(stderr, "gwy sort: %f\n", gwysort);
 
     g_free(array);
     g_rand_free(rng);
+    g_timer_destroy(timer);
 }
 
 static void

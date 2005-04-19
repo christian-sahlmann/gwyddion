@@ -3,6 +3,10 @@
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
+ *  The quicksort algorithm was copied from GNU C library,
+ *  Copyright (C) 1991, 1992, 1996, 1997, 1999 Free Software Foundation, Inc.
+ *  See below.
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
@@ -525,27 +529,39 @@ gwy_math_median(gsize n, gdouble *array)
     }
 }
 
-/* Byte-wise swap two items of size SIZE. */
-#define SWAP(a, b, size) \
-    do \
-    { \
-        register size_t __size = (size); \
-            register char *__a = (a), *__b = (b); \
-            do \
-            { \
-                char __tmp = *__a; \
-                    *__a++ = *__b; \
-                    *__b++ = __tmp; \
-            } while (--__size > 0); \
-    } while (0)
+/* Note: The implementation was specialized for doubles and a few things were
+ * renamed, otherwise it has not changed.  It is about twice faster than the
+ * generic version. */
+
+/* Copyright (C) 1991, 1992, 1996, 1997, 1999 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+   Written by Douglas C. Schmidt (schmidt@ics.uci.edu).
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, write to the Free
+   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+   02111-1307 USA.  */
+
+/* If you consider tuning this algorithm, you should consult first:
+   Engineering a sort function; Jon Bentley and M. Douglas McIlroy;
+   Software - Practice and Experience; Vol. 23 (11), 1249-1265, 1993.  */
 
 /* Discontinue quicksort algorithm when partition gets below this size.
    This particular magic number was chosen to work best on a Sun 4/260. */
 #define MAX_THRESH 4
 
 /* Stack node declarations used to store unfulfilled partition obligations. */
-typedef struct
-{
+typedef struct {
     gdouble *lo;
     gdouble *hi;
 } stack_node;
@@ -555,7 +571,7 @@ typedef struct
    log(MAX_THRESH)).  Since total_elements has type size_t, we get as
    upper bound for log (total_elements):
    bits per byte (CHAR_BIT) * sizeof(size_t).  */
-#define STACK_SIZE      (CHAR_BIT * sizeof(size_t))
+#define STACK_SIZE      (CHAR_BIT * sizeof(gsize))
 #define PUSH(low, high) ((void) ((top->lo = (low)), (top->hi = (high)), ++top))
 #define POP(low, high)  ((void) (--top, (low = top->lo), (high = top->hi)))
 #define STACK_NOT_EMPTY (stack < top)
@@ -588,7 +604,6 @@ void
 gwy_math_sort(gsize n,
               gdouble *array)
 {
-    size_t size = sizeof(gdouble);
 
     if (n == 0)
         /* Avoid lossage with unsigned arithmetic below.  */
@@ -657,15 +672,15 @@ jump_over:;
              ignore one or both.  Otherwise, push the larger partition's
              bounds on the stack and continue sorting the smaller one. */
 
-          if ((size_t)(right_ptr - lo) <= MAX_THRESH) {
-              if ((size_t)(hi - left_ptr) <= MAX_THRESH)
+          if ((gsize)(right_ptr - lo) <= MAX_THRESH) {
+              if ((gsize)(hi - left_ptr) <= MAX_THRESH)
                   /* Ignore both small partitions. */
                   POP(lo, hi);
               else
                   /* Ignore small left partition. */
                   lo = left_ptr;
           }
-          else if ((size_t)(hi - left_ptr) <= MAX_THRESH)
+          else if ((gsize)(hi - left_ptr) <= MAX_THRESH)
               /* Ignore small right partition. */
               hi = right_ptr;
           else if ((right_ptr - lo) > (hi - left_ptr)) {
@@ -691,7 +706,7 @@ jump_over:;
         double *const end_ptr = array + (n - 1);
         double *tmp_ptr = array;
         double *thresh = MIN(end_ptr, array + MAX_THRESH);
-        register double *run_ptr;
+        register gdouble *run_ptr;
 
         /* Find smallest element in first threshold and place it at the
            array's beginning.  This is the smallest array element,
@@ -716,18 +731,13 @@ jump_over:;
 
             tmp_ptr++;
             if (tmp_ptr != run_ptr) {
-                char *trav;
+                gdouble *hi, *lo;
+                gdouble d;
 
-                trav = (gchar*)run_ptr + size;
-                while (--trav >= (gchar*)run_ptr)
-                {
-                    char c = *trav;
-                    char *hi, *lo;
-
-                    for (hi = lo = trav; (lo -= size) >= (gchar*)tmp_ptr; hi = lo)
-                        *hi = *lo;
-                    *hi = c;
-                }
+                d = *run_ptr;
+                for (hi = lo = run_ptr; --lo >= tmp_ptr; hi = lo)
+                    *hi = *lo;
+                *hi = d;
             }
         }
     }
