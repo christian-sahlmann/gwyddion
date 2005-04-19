@@ -917,7 +917,7 @@ test_sort(void)
     rng = g_rand_new();
     array = g_new(gdouble, N);
 
-    for (k = 0; k < 1000; k++) {
+    for (k = 0; k < 10000; k++) {
         n = g_rand_int_range(rng, 2, N);
         for (i = 0; i < n; i++)
             array[i] = g_rand_double(rng);
