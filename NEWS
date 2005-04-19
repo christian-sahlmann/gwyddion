@@ -1,3 +1,11 @@
+1.99.2cvs20050419
+
+1.99.3
+Library:
+- libgwyddion: A quicksort function specialized for doubles.
+- libgwyddion: Marquardt-Levenberg NL fitter derivation function can avoid
+  derivations by fixed parameters, and the default numeric one avoids it.
+
 
 1.99.2
 Library:
