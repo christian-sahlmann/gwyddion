@@ -28,8 +28,8 @@
  */
 #define FitSqrtMachEps  1e-5
 
-/* Konstanta pro rozhodnuti o ukonceni fitovaciho cyklu podle perlativniho rozdilu
- * rezidualnilnich souctu mezi jednotlivymi kroky
+/* Constant for decision to stop fitting cycle due to relative difference
+ * in residual sum of squares between subsequent steps.
  */
 #define EPS 1e-16
 
@@ -181,6 +181,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     gdouble *der, *v, *xr, *saveparam, *resid, *a, *save_a;
     gdouble *w = NULL;
     gint *var_param_id;
+    gboolean *fixed;
     gint covar_size;
     gint i, j, k;
     gint n_var_param;
@@ -257,6 +258,18 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
         g_free(resid);
         return sumr;
     }
+
+    /* Resolve which params are fixed, taking links into account.  We
+     * cannot modify fixed_param, so create a new array. */
+    if (!fixed_param)
+        fixed = NULL;
+    else {
+        fixed = g_new0(gboolean, n_param);
+        for (i = 0; i < n_param; i++) {
+            fixed[i] = fixed_param[link_map[i]];
+        }
+    }
+
     covar_size = n_var_param*(n_var_param + 1)/2;
 
     der = g_new(gdouble, n_param);  /* because ->dmarq() computes all */
@@ -281,8 +294,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
 
             /* J'J and J'r computation */
             for (i = 0; i < n_dat; i++) {
-                /* FIXME: this unnecessarilly computes all derivations */
-                nlfit->dmarq(i, x, n_param, param, nlfit->fmarq,
+                nlfit->dmarq(i, x, n_param, param, fixed, nlfit->fmarq,
                              user_data, der, &nlfit->eval);
                 if (!nlfit->eval)
                     break;
@@ -417,6 +429,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     g_free(xr);
     g_free(v);
     g_free(der);
+    g_free(fixed);
     g_free(var_param_id);
     g_free(resid);
     g_free(w);
@@ -443,6 +456,7 @@ gwy_math_nlfit_derive(gint i,
                       const gdouble *x,
                       gint n_param,
                       gdouble *param,
+                      const gboolean *fixed_param,
                       GwyNLFitFunc ff,
                       gpointer user_data,
                       gdouble *deriv,
@@ -453,6 +467,9 @@ gwy_math_nlfit_derive(gint i,
     gint j;
 
     for (j = 0; j < n_param; j++) {
+        if (fixed_param && fixed_param[j])
+            continue;
+
         hj = (fabs(param[j]) + FitSqrtMachEps) * FitSqrtMachEps;
         save_par_j = param[j];
         param[j] -= hj;
