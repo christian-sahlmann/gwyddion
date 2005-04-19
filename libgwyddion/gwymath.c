@@ -584,21 +584,6 @@ typedef struct
    smaller partition.  This *guarantees* no more than log (total_elems)
    stack size is needed (actually O(1) in this case)!  */
 
-static gint
-compare_double(gconstpointer a, gconstpointer b)
-{
-    gdouble p, q;
-
-    p = *(gdouble*)a;
-    q = *(gdouble*)b;
-
-    if (p < q)
-        return -1;
-    if (p > q)
-        return 1;
-    return 0;
-}
-
 void
 gwy_math_sort(gsize n,
               gdouble *const pbase)
@@ -606,7 +591,6 @@ gwy_math_sort(gsize n,
     register char *base_ptr = (char *) pbase;
     size_t total_elems = n;
     size_t size = sizeof(gdouble);
-    gint (*cmp)(gconstpointer, gconstpointer) = &compare_double;
     const size_t max_thresh = MAX_THRESH * size;
 
     if (total_elems == 0)
@@ -631,13 +615,13 @@ gwy_math_sort(gsize n,
 
             char *mid = lo + size * ((hi - lo) / size >> 1);
 
-            if ((*cmp) ((void *) mid, (void *) lo) < 0)
+            if (*(gdouble*)mid < *(gdouble*)lo)
                 SWAP (mid, lo, size);
-            if ((*cmp) ((void *) hi, (void *) mid) < 0)
+            if (*(gdouble*)hi < *(gdouble*)mid)
                 SWAP (mid, hi, size);
             else
                 goto jump_over;
-            if ((*cmp) ((void *) mid, (void *) lo) < 0)
+            if (*(gdouble*)mid < *(gdouble*)lo)
                 SWAP (mid, lo, size);
 jump_over:;
 
@@ -648,10 +632,10 @@ jump_over:;
              Gotta like those tight inner loops!  They are the main reason
              that this algorithm runs much faster than others. */
           do {
-              while ((*cmp) ((void *) left_ptr, (void *) mid) < 0)
+              while (*(gdouble*)left_ptr < *(gdouble*)mid)
                   left_ptr += size;
 
-              while ((*cmp) ((void *) mid, (void *) right_ptr) < 0)
+              while (*(gdouble*)mid < *(gdouble*)right_ptr)
                   right_ptr -= size;
 
               if (left_ptr < right_ptr) {
@@ -717,7 +701,7 @@ jump_over:;
            and the operation speeds up insertion sort's inner loop. */
 
         for (run_ptr = tmp_ptr + size; run_ptr <= thresh; run_ptr += size) {
-            if ((*cmp) ((void *) run_ptr, (void *) tmp_ptr) < 0)
+            if (*(gdouble*)run_ptr < *(gdouble*)tmp_ptr)
                 tmp_ptr = run_ptr;
         }
 
@@ -729,7 +713,7 @@ jump_over:;
         run_ptr = base_ptr + size;
         while ((run_ptr += size) <= end_ptr) {
             tmp_ptr = run_ptr - size;
-            while ((*cmp) ((void *) run_ptr, (void *) tmp_ptr) < 0)
+            while (*(gdouble*)run_ptr < *(gdouble*)tmp_ptr)
                 tmp_ptr -= size;
 
             tmp_ptr += size;
