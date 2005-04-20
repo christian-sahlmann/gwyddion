@@ -558,7 +558,11 @@ gwy_math_median(gsize n, gdouble *array)
 
 /* Discontinue quicksort algorithm when partition gets below this size.
    This particular magic number was chosen to work best on a Sun 4/260. */
-#define MAX_THRESH 4
+/* #define MAX_THRESH 4 */
+/* Note: Specialization makes the insertion sort part relatively more
+ * efficient, after some benchmarking this seems be about the best value
+ * on Athlon 64. */
+#define MAX_THRESH 12
 
 /* Stack node declarations used to store unfulfilled partition obligations. */
 typedef struct {
@@ -724,7 +728,7 @@ jump_over:;
          */
 
         run_ptr = array + 1;
-        while ((++run_ptr) <= end_ptr) {
+        while (++run_ptr <= end_ptr) {
             tmp_ptr = run_ptr - 1;
             while (*run_ptr < *tmp_ptr)
                 tmp_ptr--;

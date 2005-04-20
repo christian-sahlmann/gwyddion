@@ -929,11 +929,11 @@ test_sort(void)
     guint n, i, k, N = 4096;
     gdouble libcsort = 0.0, gwysort = 0.0;
 
-    rng = g_rand_new();
+    rng = g_rand_new_with_seed(42);
     timer = g_timer_new();
     array = g_new(gdouble, 2*N);
 
-    for (k = 0; k < 10000; k++) {
+    for (k = 0; k < 20000; k++) {
         n = g_rand_int_range(rng, 2, N);
         for (i = 0; i < n; i++)
             array[i] = g_rand_double(rng);
