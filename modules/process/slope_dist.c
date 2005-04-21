@@ -434,13 +434,13 @@ compute_slopes(GwyDataField *dfield,
                gdouble *xder,
                gdouble *yder)
 {
-    gdouble *data;
+    const gdouble *data;
     gdouble qx, qy;
     gdouble d, max;
     gint xres, yres;
     gint col, row;
 
-    data = gwy_data_field_get_data(dfield);
+    data = gwy_data_field_get_data_const(dfield);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     qx = xres/gwy_data_field_get_xreal(dfield);

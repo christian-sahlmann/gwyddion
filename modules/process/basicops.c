@@ -246,12 +246,13 @@ static void
 flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
 {
     gint xres, yres, i, j;
-    gdouble *dd, *sd;
+    gdouble *dd;
+    const gdouble *sd;
 
     xres = gwy_data_field_get_xres(source);
     yres = gwy_data_field_get_yres(source);
     gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
-    sd = gwy_data_field_get_data(source);
+    sd = gwy_data_field_get_data_const(source);
     dd = gwy_data_field_get_data(dest);
     if (minor) {
         for (i = 0; i < xres; i++) {
