@@ -444,6 +444,8 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
  * @x: x-data as passed to gwy_math_nlfit_fit().
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).
+ * @fixed_param: Which parameters should be treated as fixed (corresponding
+ *               entries are set to %TRUE).
  * @ff: The fitted function.
  * @user_data: User data as passed to gwy_math_nlfit_fit().
  * @deriv: Array where the put the result to.
@@ -1887,6 +1889,8 @@ gwy_math_nlfit_fit_preset(const GwyNLFitPreset* preset,
  * @x: x-data as passed to gwy_math_nlfit_fit().
  * @n_param: The number of parameters (size of @param).
  * @param: Parameters.
+ * @fixed_param: Which parameters should be treated as fixed (corresponding
+ *               entries are set to %TRUE).
  * @deriv: Array where the @n_param partial derivations by each parameter are
  *         to be stored.
  * @fmarq: The fitting function.
