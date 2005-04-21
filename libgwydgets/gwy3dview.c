@@ -2415,7 +2415,7 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
     layout = pango_layout_new(gwy3dview->ft2_context);
     pango_layout_set_width(layout, -1);
     pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
-    pango_layout_set_text(layout, text, -1);
+    pango_layout_set_markup(layout, text, -1);
     /* TODO: use Pango to rotate text, after Pango is capable doing it */
 
     /* Text position */
