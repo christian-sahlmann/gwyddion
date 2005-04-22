@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
 #include <math.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -27,6 +26,8 @@
 #include <gdk/gdk.h>
 #include <pango/pango.h>
 #include <gdk/gdkpango.h>
+#include <libgwydgets/gwydgetenums.h>
+#include <libgwyddion/gwymacros.h>
 #include "gwyaxiser.h"
 
 #define GWY_AXISER_TYPE_NAME "GwyAxiser"
@@ -352,7 +353,7 @@ gwy_axiser_size_request(GtkWidget *widget,
     axiser = GWY_AXISER(widget);
 
     if (axiser->is_visible) {
-        if (axiser->orientation == GTK_POS_LEFT
+        if (axiser->orientation == GTK_POS_LEFT 
             || axiser->orientation == GTK_POS_RIGHT) {
             requisition->width = 80;
             requisition->height = 100;
@@ -409,7 +410,7 @@ gwy_axiser_adjust(GwyAxiser *axiser, gint width, gint height)
     if (axiser->orientation == GTK_POS_LEFT
         || axiser->orientation == GTK_POS_RIGHT) {
         axiser->label_y_pos = height/2;
-        if (axiser->orientation == GTK_POS_RIGHT)
+        if (axiser->orientation == GTK_POS_LEFT)
             axiser->label_x_pos = 40;
         else
             axiser->label_x_pos = width - 40;
@@ -476,7 +477,7 @@ gwy_axiser_autoset(GwyAxiser *axiser, gint width, gint height)
 
 /**
  * gwy_axiser_set_logarithmic:
- * @axiser: axiser
+ * @axiser: axiser 
  * @is_logarithmic: logarithimc mode
  *
  * Sets logarithmic mode. Untested.
@@ -508,7 +509,7 @@ gwy_axiser_expose(GtkWidget *widget,
                           widget->allocation.width,
                           widget->allocation.height);
 
-    if (axiser->is_standalone && axiser->is_visible)
+    if (axiser->is_standalone && axiser->is_visible) 
         gwy_axiser_draw_axiser(widget);
     if (axiser->is_visible) gwy_axiser_draw_ticks(widget);
     if (axiser->is_visible) gwy_axiser_draw_tlabels(widget);
@@ -529,25 +530,25 @@ gwy_axiser_draw_axiser(GtkWidget *widget)
                                 GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
     switch (axiser->orientation) {
-        case GTK_POS_TOP:
+        case GTK_POS_BOTTOM:
         gdk_draw_line(widget->window, mygc,
                       0, 0,
                       widget->allocation.width-1, 0);
         break;
 
-        case GTK_POS_BOTTOM:
+        case GTK_POS_TOP:
         gdk_draw_line(widget->window, mygc,
                       0, widget->allocation.height-1,
                       widget->allocation.width-1, widget->allocation.height-1);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         gdk_draw_line(widget->window, mygc,
                       0, 0,
                       0, widget->allocation.height-1);
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         gdk_draw_line(widget->window, mygc,
                       widget->allocation.width-1, 0,
                       widget->allocation.width-1, widget->allocation.height-1);
@@ -582,7 +583,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
         pmjt = &g_array_index (axiser->mjticks, GwyAxiserLabeledTick, i);
 
         switch (axiser->orientation) {
-            case GTK_POS_TOP:
+            case GTK_POS_BOTTOM:
             gdk_draw_line(widget->window, mygc,
                           pmjt->t.scrpos,
                           0,
@@ -590,7 +591,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           axiser->par.major_length);
             break;
 
-            case GTK_POS_BOTTOM:
+            case GTK_POS_TOP:
             gdk_draw_line(widget->window, mygc,
                           pmjt->t.scrpos,
                           widget->allocation.height-1,
@@ -598,7 +599,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - axiser->par.major_length);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(widget->window, mygc,
                           0,
                           widget->allocation.height-1 - pmjt->t.scrpos,
@@ -606,7 +607,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - pmjt->t.scrpos);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(widget->window, mygc,
                           widget->allocation.width-1,
                           widget->allocation.height-1 - pmjt->t.scrpos,
@@ -627,7 +628,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
         pmit = &g_array_index (axiser->miticks, GwyAxiserTick, i);
 
         switch (axiser->orientation) {
-            case GTK_POS_TOP:
+            case GTK_POS_BOTTOM:
             gdk_draw_line(widget->window, mygc,
                           pmit->scrpos,
                           0,
@@ -635,7 +636,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           axiser->par.minor_length);
             break;
 
-            case GTK_POS_BOTTOM:
+            case GTK_POS_TOP:
             gdk_draw_line(widget->window, mygc,
                           pmit->scrpos,
                           widget->allocation.height-1,
@@ -643,7 +644,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - axiser->par.minor_length);
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             gdk_draw_line(widget->window, mygc,
                           0,
                           widget->allocation.height-1 - pmit->scrpos,
@@ -651,7 +652,7 @@ gwy_axiser_draw_ticks(GtkWidget *widget)
                           widget->allocation.height-1 - pmit->scrpos);
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             gdk_draw_line(widget->window, mygc,
                           widget->allocation.width-1,
                           widget->allocation.height-1 - pmit->scrpos,
@@ -692,23 +693,23 @@ gwy_axiser_draw_tlabels(GtkWidget *widget)
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
         switch (axiser->orientation) {
-            case GTK_POS_TOP:
+            case GTK_POS_BOTTOM:
             xpos = pmjt->t.scrpos - rect.width/2;
             ypos = axiser->par.major_length + sep;
             break;
 
-            case GTK_POS_BOTTOM:
+            case GTK_POS_TOP:
             xpos = pmjt->t.scrpos - rect.width/2;
             ypos = widget->allocation.height-1
                    - axiser->par.major_length - sep - rect.height;
             break;
 
-            case GTK_POS_RIGHT:
+            case GTK_POS_LEFT:
             xpos = axiser->par.major_length + sep;
             ypos = widget->allocation.height-1 - pmjt->t.scrpos - rect.height/2;
             break;
 
-            case GTK_POS_LEFT:
+            case GTK_POS_RIGHT:
             xpos = widget->allocation.width-1
                    - axiser->par.major_length - sep - rect.width;
             ypos = widget->allocation.height-1
@@ -766,20 +767,20 @@ gwy_axiser_draw_label(GtkWidget *widget)
     /*context = gtk_widget_create_pango_context (widget);
     */
     switch (axiser->orientation) {
-        case GTK_POS_TOP:
+        case GTK_POS_BOTTOM:
         gdk_draw_layout(widget->window, mygc,
                         axiser->label_x_pos - rect.width/2, axiser->label_y_pos,
                         layout);
         break;
 
-        case GTK_POS_BOTTOM:
+        case GTK_POS_TOP:
         gdk_draw_layout(widget->window, mygc,
                         axiser->label_x_pos - rect.width/2,
                         axiser->label_y_pos,
                         layout);
         break;
 
-        case GTK_POS_RIGHT:
+        case GTK_POS_LEFT:
         /*pango_matrix_rotate (&matrix, 90);
         pango_context_set_matrix (context, &matrix);
         pango_layout_context_changed (layout);
@@ -790,7 +791,7 @@ gwy_axiser_draw_label(GtkWidget *widget)
                         layout);
         break;
 
-        case GTK_POS_LEFT:
+        case GTK_POS_RIGHT:
         gdk_draw_layout(widget->window, mygc,
                         axiser->label_x_pos - rect.width,
                         axiser->label_y_pos,
@@ -874,7 +875,7 @@ gwy_axiser_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 }
 
 
-void
+void        
 gwy_axiser_signal_rescaled(GwyAxiser *axiser)
 {
     g_signal_emit(axiser, axiser_signals[RESCALED], 0);
@@ -930,7 +931,7 @@ gwy_axiser_normalscale(GwyAxiser *a)
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
     if (a->reqmax == a->reqmin) {g_warning("Axiser with zero range!"); a->reqmax = a->reqmin+1;}
-
+        
     /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
@@ -939,7 +940,7 @@ gwy_axiser_normalscale(GwyAxiser *a)
         g_warning("Axiser with extreme range (>1e40)!");
         a->reqmax = 100; a->reqmin = 0;
     }
-
+    
     tickstep = gwy_axiser_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
     majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;
@@ -951,7 +952,7 @@ gwy_axiser_normalscale(GwyAxiser *a)
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
-        a->min = majorbase;
+        a->min = majorbase; 
     }
     else
         a->min = a->reqmin;
@@ -968,8 +969,8 @@ gwy_axiser_normalscale(GwyAxiser *a)
         i++;
     } while ((majorbase - tickstep) < a->reqmax /*&& i< a->par.major_maxticks*/);
     a->max = majorbase - tickstep;
-
-
+    
+    
     i = 0;
     /*minor tics*/
     do {
@@ -1025,7 +1026,7 @@ gwy_axiser_logscale(GwyAxiser *a)
 
     /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
     tickstep = gwy_axiser_dbl_raise(10.0, (gint)floor(min));
-    base = ceil(pow10(min)/tickstep)*tickstep;
+    base = ceil(pow(10, min)/tickstep)*tickstep;
     max = a->max;
     i = 0;
     do {
@@ -1048,7 +1049,7 @@ gwy_axiser_scale(GwyAxiser *a)
     gsize i;
     GwyAxiserLabeledTick *mjt;
 
-
+    
     /*never use logarithmic mode for negative numbers*/
     if (a->min < 0 && a->is_logarithmic == TRUE)
         return 1; /*this is an error*/
@@ -1129,7 +1130,7 @@ gwy_axiser_formatticks(GwyAxiser *a)
     if (!a->is_logarithmic)
         range = fabs(mjx.t.value - mji.t.value);
     else
-        range = fabs(pow10(mjx.t.value) - pow10(mji.t.value));
+        range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));
 
     for (i = 0; i< a->mjticks->len; i++)
     {
@@ -1138,7 +1139,7 @@ gwy_axiser_formatticks(GwyAxiser *a)
         if (!a->is_logarithmic)
             value = pmjt->t.value;
         else
-            value = pow10(pmjt->t.value);
+            value = pow(10, pmjt->t.value);
 
         /*fill dependent to mode*/
         if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT
@@ -1182,7 +1183,7 @@ gwy_axiser_formatticks(GwyAxiser *a)
 
 /**
  * gwy_axiser_set_visible:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @is_visible: visibility
  *
  * Sets visibility of axiser.
@@ -1195,7 +1196,7 @@ gwy_axiser_set_visible(GwyAxiser *axiser, gboolean is_visible)
 
 /**
  * gwy_axiser_set_auto:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @is_auto: auto preperty
  *
  * Sets the auto property. If TRUE, axiser changes fonts
@@ -1210,7 +1211,7 @@ gwy_axiser_set_auto(GwyAxiser *axiser, gboolean is_auto)
 
 /**
  * gwy_axiser_set_req:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @min: minimum requisistion
  * @max: maximum requisition
  *
@@ -1222,10 +1223,10 @@ gwy_axiser_set_req(GwyAxiser *axiser, gdouble min, gdouble max)
 {
     axiser->reqmin = min;
     axiser->reqmax = max;
-
+    
     /*prevent axiser to allow null range. It has no sense*/
     if (min==max) axiser->reqmax += 10.0;
-
+   
     gwy_axiser_adjust(axiser,
                     (GTK_WIDGET(axiser))->allocation.width,
                     (GTK_WIDGET(axiser))->allocation.height);
@@ -1233,7 +1234,7 @@ gwy_axiser_set_req(GwyAxiser *axiser, gdouble min, gdouble max)
 
 /**
  * gwy_axiser_set_style:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @style: axiser style
  *
  * Set axiser style. The style affects used tick sizes, fonts etc.
@@ -1249,9 +1250,9 @@ gwy_axiser_set_style(GwyAxiser *axiser, GwyAxiserParams style)
 
 /**
  * gwy_axiser_get_maximum:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  *
- *
+ * 
  *
  * Returns: real maximum of axiser
  **/
@@ -1263,9 +1264,9 @@ gwy_axiser_get_maximum(GwyAxiser *axiser)
 
 /**
  * gwy_axiser_get_minimum:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  *
- *
+ * 
  *
  * Returns: real minimum of axiser
  **/
@@ -1277,9 +1278,9 @@ gwy_axiser_get_minimum(GwyAxiser *axiser)
 
 /**
  * gwy_axiser_get_reqmaximum:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  *
- *
+ * 
  *
  * Returns: axiser requisition maximum
  **/
@@ -1291,9 +1292,9 @@ gwy_axiser_get_reqmaximum(GwyAxiser *axiser)
 
 /**
  * gwy_axiser_get_reqminimum:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  *
- *
+ * 
  *
  * Returns: axiser requisition minimum
  **/
@@ -1305,7 +1306,7 @@ gwy_axiser_get_reqminimum(GwyAxiser *axiser)
 
 /**
  * gwy_axiser_set_label:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @label_text: label to be set
  *
  * sets the label text
@@ -1323,9 +1324,9 @@ gwy_axiser_set_label(GwyAxiser *axiser, GString *label_text)
 
 /**
  * gwy_axiser_get_label:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  *
- *
+ * 
  *
  * Returns: axiser label string
  **/
@@ -1339,7 +1340,7 @@ gwy_axiser_get_label(GwyAxiser *axiser)
 /* XXX: DoubleFuck! The thing GOBBLES the passed string! */
 /**
  * gwy_axiser_set_unit:
- * @axiser: axiser widget
+ * @axiser: axiser widget 
  * @unit: label unit
  *
  * Sets the label unit. This will be added automatically
@@ -1355,10 +1356,12 @@ gwy_axiser_set_unit(GwyAxiser *axiser, char *unit)
 
 /**
  * gwy_axiser_enable_label_edit:
- * @axiser: Axiser widget
- * @enable: enable/disable user to change axiser label
+ * @axiser: Axiser widget 
+ * @enable: enable/disable user to change axiser label 
  *
  * Enables/disables user to change axiser label by clicking on axiser widget.
+ *
+ * Since: 1.3.
  **/
 void
 gwy_axiser_enable_label_edit(GwyAxiser *axiser, gboolean enable)
@@ -1369,13 +1372,13 @@ gwy_axiser_enable_label_edit(GwyAxiser *axiser, gboolean enable)
 /************************** Documentation ****************************/
 
 /**
- * GwyAxisScaleFormat:
- * @GWY_AXIS_SCALE_FORMAT_FLOAT: Floating point format.
- * @GWY_AXIS_SCALE_FORMAT_EXP: Exponential (`scienfitic') format.
- * @GWY_AXIS_SCALE_FORMAT_INT: Integer format.
- * @GWY_AXIS_SCALE_FORMAT_AUTO: Automatical format.
+ * GwyAxiserScaleFormat:
+ * @GWY_AXISER_FLOAT: Floating point format.
+ * @GWY_AXISER_EXP: Exponential (`scienfitic') format.
+ * @GWY_AXISER_INT: Integer format.
+ * @GWY_AXISER_AUTO: Automatical format.
  *
- * Labeled axis tick mark format.
+ * Labeled axiser tick mark format.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

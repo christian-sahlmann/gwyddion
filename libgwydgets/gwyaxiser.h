@@ -24,9 +24,8 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyaxisdialog.h>
-
+#include <libgwydgets/gwydgetenums.h>
 
 G_BEGIN_DECLS
 
@@ -39,6 +38,7 @@ G_BEGIN_DECLS
 
 typedef struct _GwyAxiser      GwyAxiser;
 typedef struct _GwyAxiserClass GwyAxiserClass;
+
 
 typedef struct {
     gdouble value;      /*tick value*/
@@ -104,7 +104,7 @@ struct _GwyAxiserClass {
 
     void (*label_updated)(GwyAxiser *axiser);
     void (*rescaled)(GwyAxiser *axiser);
-
+        
     gpointer reserved1;
     gpointer reserved2;
 };

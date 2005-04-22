@@ -21,9 +21,9 @@
 #ifndef __GWY_GRAPH_MODEL_H__
 #define __GWY_GRAPH_MODEL_H__
 
-#include <libgwyddion/gwysiunit.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
 
@@ -58,7 +58,7 @@ struct _GwyGraphModel {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GwySIUnit *x_unit;
+    GwySIUnit *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
     GwySIUnit *y_unit;
 
     GString *top_label;
@@ -85,9 +85,9 @@ struct _GwyGraphModel {
 struct _GwyGraphModelClass {
     GObjectClass parent_class;
 
-    void (*value_changed)(GwyGraphModel *gmodel);  /* XXX: only formal */
-
-    gpointer reserved1;
+    //void (*value_changed)(GwyGraphModel *gmodel);  /* XXX: only formal */
+    void (*layout_updated)(GwyGraphModel *gmodel);
+    
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
@@ -102,7 +102,39 @@ gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 
 void       gwy_graph_model_add_curve      (GwyGraphModel *gmodel,
                                            GwyGraphCurveModel *curve);
+void       gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
+                                                gchar *description);
+void       gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel,
+                                                gint index);
+GwyGraphCurveModel*  gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
+                                                gchar *description);
+GwyGraphCurveModel*  gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel,
+                                                gint index);
+
+
+
 void       gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel);
+
+void       gwy_graph_model_set_title(GwyGraphModel *model, gchar *title);
+
+void       gwy_graph_model_set_label_position(GwyGraphModel *model, GwyGraphLabelPosition position);
+void       gwy_graph_model_set_label_has_frame(GwyGraphModel *model, gboolean label_has_frame);
+void       gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness);
+void       gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse);
+void       gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible);
+
+gchar*     gwy_graph_model_get_title(GwyGraphModel *model);
+
+GwyGraphLabelPosition  gwy_graph_model_get_label_position(GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_has_frame(GwyGraphModel *model);
+gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_reverse(GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_visible(GwyGraphModel *model);
+
+
+
+
+void      gwy_graph_model_signal_layout_changed(GwyGraphModel *model);
 
 G_END_DECLS
 

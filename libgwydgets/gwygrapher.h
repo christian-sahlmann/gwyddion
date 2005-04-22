@@ -93,8 +93,9 @@ GtkWidget *gwy_grapher_new(GwyGraphModel *gmodel);
 GType      gwy_grapher_get_type(void) G_GNUC_CONST;
 
 void       gwy_grapher_refresh(GwyGrapher *grapher);
+void       gwy_grapher_refresh_and_reset(GwyGrapher *grapher);
 
-void       gwy_grapher_change_model(GwyGrapher *grapher,
+void       gwy_grapher_change_model(GwyGrapher *grapher, 
                                     GwyGraphModel *gmodel);
 void       gwy_grapher_set_status(GwyGrapher *grapher,
                                   GwyGraphStatusType status);
@@ -104,6 +105,14 @@ void       gwy_grapher_get_selection(GwyGrapher *grapher,
                                      gdouble *selection);
 
 void       gwy_grapher_clear_selection(GwyGrapher *grapher);
+
+void       gwy_grapher_request_x_range(GwyGrapher *grapher, gdouble x_min_req, gdouble x_max_req);
+void       gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, gdouble y_max_req);
+void       gwy_grapher_get_x_range(GwyGrapher *grapher, gdouble *x_min, gdouble *x_max);
+void       gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max);
+
+
+
 
 G_END_DECLS
 

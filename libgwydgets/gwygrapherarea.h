@@ -41,6 +41,16 @@ typedef struct _GwyGrapherArea      GwyGrapherArea;
 typedef struct _GwyGrapherAreaClass GwyGrapherAreaClass;
 
 
+typedef enum {
+    GWY_GRAPHER_STATUS_PLAIN  = 0,
+    GWY_GRAPHER_STATUS_CURSOR = 1,
+    GWY_GRAPHER_STATUS_XSEL   = 2,
+    GWY_GRAPHER_STATUS_YSEL   = 3,
+    GWY_GRAPHER_STATUS_POINTS = 4,
+    GWY_GRAPHER_STATUS_ZOOM   = 5
+} GwyGrapherStatusType;
+
+
 typedef struct {
   GwyGrapherDataPoint data_point;
 } GwyGrapherStatus_PointData;
@@ -48,15 +58,14 @@ typedef struct {
 typedef struct {
   GwyGrapherDataPoint data_point;
 } GwyGrapherStatus_CursorData;
-
-typedef struct {
+                                                                                                                                                               typedef struct {
   GArray *data_points;
 } GwyGrapherStatus_PointsData;
-
+                                                                                                                                                             
 typedef struct {
   GwyGrapherDataArea data_area;
 } GwyGrapherStatus_AreaData;
-
+                                                                                                                                                             
 typedef struct {
   GArray *data_areas;
 } GwyGrapherStatus_AreasData;
@@ -72,7 +81,7 @@ typedef struct {
 /*single curve*/
 typedef struct {
     GdkPoint *points;           /*points to be directly plotted*/
-
+    
     gpointer reserved;
 } GwyGrapherAreaCurve;
 
@@ -108,11 +117,11 @@ struct _GwyGrapherArea {
     gint old_width;
     gint old_height;
     gboolean newline;
-
+   
     /*linestyle dialog*/
     GwyGrapherAreaDialog *area_dialog;
     GwyGrapherLabelDialog *label_dialog;
-
+    
     /*label movement*/
     GtkWidget *active;
     gint x0;

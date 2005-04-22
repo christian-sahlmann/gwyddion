@@ -53,12 +53,20 @@ static void     gwy_graph_model_get_property  (GObject*object,
 
 static GObjectClass *parent_class = NULL;
 
+
 enum {
       PROP_0,
       PROP_N,
       PROP_TITLE,
       PROP_LAST
 };
+
+enum {
+      LAYOUT_UPDATED,
+      LAST_SIGNAL
+};
+
+static guint graph_model_signals[LAST_SIGNAL] = { 0 };
 
 
 GType
@@ -134,7 +142,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
     gobject_class->finalize = gwy_graph_model_finalize;
     gobject_class->set_property = gwy_graph_model_set_property;
     gobject_class->get_property = gwy_graph_model_get_property;
-
+                                                                                                                                                                    
 
     g_object_class_install_property(gobject_class,
                                     PROP_N,
@@ -144,7 +152,7 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                                                       0,
                                                       100,
                                                       0,
-                                                      G_PARAM_READABLE | G_PARAM_WRITABLE));
+                                                      G_PARAM_READABLE));
     g_object_class_install_property(gobject_class,
                                     PROP_TITLE,
                                     g_param_spec_string("title",
@@ -152,6 +160,16 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
                                                       "Changed title of graph",
                                                       "new graph",
                                                       G_PARAM_READABLE | G_PARAM_WRITABLE));
+
+    graph_model_signals[LAYOUT_UPDATED]
+                = g_signal_new("layout-updated",
+                               G_OBJECT_CLASS_TYPE(gobject_class),
+                               G_SIGNAL_RUN_FIRST,
+                               G_STRUCT_OFFSET(GwyGraphModelClass, layout_updated),
+                                NULL, NULL,
+                               g_cclosure_marshal_VOID__VOID,
+                               G_TYPE_NONE, 0);
+   
 }
 
 static void
@@ -549,7 +567,7 @@ gwy_graph_model_duplicate(GObject *object)
 }
 
 
-static void
+static void     
 gwy_graph_model_set_property  (GObject *object,
                                                guint prop_id,
                                                const GValue *value,
@@ -557,7 +575,7 @@ gwy_graph_model_set_property  (GObject *object,
 {
 }
 
-static void
+static void     
 gwy_graph_model_get_property  (GObject*object,
                                                guint prop_id,
                                                GValue *value,
@@ -565,59 +583,373 @@ gwy_graph_model_get_property  (GObject*object,
 {
 }
 
+#include <stdio.h>
+void test_value_changed(GwyGraphModel *gmodel)
+{
 
-void
+    printf("graphmodel: value changed refresh call got from curve\n");
+}
+/**
+* gwy_graph_model_add_curve:
+* @gmodel: A #GwyGraphModel.
+* @curve: A #GwyGraphCurveModel representing curve.
+*
+* Adds a new curve to the model. All the curve parameters should be specified
+* within the @curve structure. The curve is duplicated to put data inside
+* model, therefore it should be freed by user when not necessary.
+**/
+
+void       
 gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
 {
     GObject **newcurves;
     gint i;
-
+    
     newcurves = g_new(GObject*, gmodel->ncurves+1);
-
+    
     for (i = 0; i < gmodel->ncurves; i++)
     {
         newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_object_unref(gmodel->curves[i]);
     }
     newcurves[i] = gwy_serializable_duplicate(curve);
-
+ 
     gmodel->curves = newcurves;
-
+    
     gmodel->ncurves++;
 
+    g_signal_connect_swapped(curve, "value_changed",
+                      G_CALLBACK(gwy_watchable_value_changed), gmodel);
+    
+    g_signal_connect_swapped(curve, "value_changed",
+                      G_CALLBACK(test_value_changed), gmodel);
+    
     g_object_notify(G_OBJECT(gmodel), "n");
 }
 
+
+/**
+* gwy_graph_model_get_n_curves:
+* @model: A #GwyGraphModel.
+*
+* Returns: number of curves in graph model.
+**/
 gint
 gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
 {
-
+    
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
 
     if (gmodel->graph)
         return gwy_graph_get_number_of_curves(gmodel->graph);
     else
         return gmodel->ncurves;
-
+        
 }
 
-
+/**
+* gwy_graph_model_remove_all_curves:
+* @model: A #GwyGraphModel.
+*
+* Removes all the curves from graph model
+**/
 void
 gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 {
     gint i;
-
+    
     for (i = 0; i < gmodel->ncurves; i++)
         g_object_unref(gmodel->curves[i]);
-    g_free(gmodel->curves);
+    g_free(gmodel->curves);    
 
-
+    
     gmodel->ncurves = 0;
-
+    
     g_object_notify(G_OBJECT(gmodel), "n");
-
+    
 }
 
+/**
+* gwy_graph_model_remove_curve_by_desciption:
+* @model: A #GwyGraphModel.
+* @description: curve description (label)
+*
+* Removes all the curves having same description string as @description.
+**/
+void
+gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
+                                             gchar *description)
+{
+    GObject **newcurves;
+    GwyGraphCurveModel *cmodel;
+    gint i, count = 0;
+    
+    newcurves = g_new(GObject*, gmodel->ncurves+1);
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+    {
+        cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
+        if (strcmp(description, cmodel->description->str)==0) continue;
+       
+        newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
+        g_object_unref(gmodel->curves[i]);
+        count++;
+    }
+    
+    gmodel->curves = newcurves;
+    gmodel->ncurves = count;
+   
+    g_object_notify(G_OBJECT(gmodel), "n");
+}
+
+/**
+* gwy_graph_model_remove_curve_by_index:
+* @model: A #GwyGraphModel.
+* @index: curve index (within GwyGraphModel structure)
+*
+* Removes the curve having given index. 
+**/
+void       
+gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint index)
+{
+    GObject **newcurves;
+    GwyGraphCurveModel *cmodel;
+    gint i, count = 0;
+    
+    newcurves = g_new(GObject*, gmodel->ncurves+1);
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+    {
+        if (i == index) continue;
+        cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]); 
+        newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
+        g_object_unref(gmodel->curves[i]);
+        count++;
+    }
+    
+    gmodel->curves = newcurves;
+    gmodel->ncurves = count;
+   
+    g_object_notify(G_OBJECT(gmodel), "n");    
+}
+
+/**
+* gwy_graph_model_get_curve_by_desciption:
+* @model: A #GwyGraphModel.
+* @description: curve description (label)
+*
+* Returns: first curve that has sescription (label) given by @description. Note that this
+* is pointer to data in GraphModel, therefore make a copy if you want to use
+* it for some other purposes and do not free it unless you know what you are doing.
+**/
+GwyGraphCurveModel*  
+gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *description)
+{
+    GwyGraphCurveModel *cmodel;
+    gint i;
+    
+    for (i = 0; i < gmodel->ncurves; i++)
+    {
+        cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
+        if (strcmp(description, cmodel->description->str)==0) return cmodel;
+    }
+
+    return NULL;
+}
+
+/**
+* gwy_graph_model_get_curve_by_desciption:
+* @model: A #GwyGraphModel.
+* @index: curve index (within GwyGraphModel structure)
+*
+* Returns: curve with given index. Note that this
+* is pointer to data in GraphModel, therefore make a copy if you want to use
+* it for some other purposes and do not free it unless you know what you are doing.
+**/
+GwyGraphCurveModel*  
+gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint index)
+{
+    if (index>=gwy_graph_model_get_n_curves(gmodel) || index<0) return NULL;
+    else return GWY_GRAPH_CURVE_MODEL(gmodel->curves[index]);
+}
+
+
+/**
+* gwy_graph_model_signal_layout_changed:
+* @model: A #GwyGraphModel.
+*
+* Emits signal that somehing general in graph layout (label settings) was changed.
+* Graph widget or other widgets connected to graph model object should react somehow.
+**/
+void      
+gwy_graph_model_signal_layout_changed(GwyGraphModel *model)
+{
+    g_signal_emit(model, graph_model_signals[LAYOUT_UPDATED], 0);
+}
+
+
+/**
+* gwy_graph_model_set_title:
+* @model: A #GwyGraphModel.
+* @title: A new graphmodel title.
+*
+* Sets new title for the graph model.
+**/
+
+void       
+gwy_graph_model_set_title(GwyGraphModel *model, gchar *title)
+{
+    g_string_assign(model->title, title);
+    g_object_notify(G_OBJECT(model), "title");
+}
+                                                                                                                                                             
+/**
+* gwy_graph_model_set_label_position:
+* @model: A #GwyGraphModel.
+* @position: A new graphmodel label position.
+*
+* Sets label (curve desriptions) postion on graph widget.
+**/
+void       
+gwy_graph_model_set_label_position(GwyGraphModel *model, GwyGraphLabelPosition position)
+{
+    model->label_position = position;
+    gwy_graph_model_signal_layout_changed(model);
+}
+
+/**
+* gwy_graph_model_set_label_has_frame:
+* @model: A #GwyGraphModel.
+* @label_has_frame: label frame mode.
+*
+* Sets whether graph widget label should have frame around. Note that the
+* label must be visible (see #gwy_graph_model_set_label_visible) to see label.
+**/
+void       
+gwy_graph_model_set_label_has_frame(GwyGraphModel *model, gboolean label_has_frame)
+{
+    model->label_has_frame = label_has_frame;
+    gwy_graph_model_signal_layout_changed(model);
+}
+
+/**
+* gwy_graph_model_set_label_frame_thickness:
+* @model: A #GwyGraphModel.
+* @thickness: Label frame thickness (in pixels).
+*
+* Sets the label frame thickness. Note that the
+* both the frame and label must be visible (see #gwy_graph_model_set_label_visible) 
+* to see label and label frame.
+*
+**/
+void       
+gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
+{
+    model->label_frame_thickness = thickness;
+    gwy_graph_model_signal_layout_changed(model);
+}
+
+/**
+* gwy_graph_model_set_label_reverse:
+* @model: A #GwyGraphModel.
+* @reverse: Label alingment mode.
+*
+* Sets the label alingment (curve samples and their description postion).
+* By setting the @reverse = TRUE you get alingment ("text", "sample"),
+* otherwise you get alingment ("sample", "text").
+**/
+void       
+gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
+{
+    model->label_reverse = reverse;
+    gwy_graph_model_signal_layout_changed(model);
+}
+
+/**
+* gwy_graph_model_set_label_visible:
+* @model: A #GwyGraphModel.
+* @visible: Label visibility.
+*
+* Sets the graph widget label visibility.
+**/
+void       
+gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible)
+{
+    model->label_visible = visible;
+    gwy_graph_model_signal_layout_changed(model);
+}
+                                                                                                                                                             
+/**
+* gwy_graph_model_get_title:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph title (newly allocated string).
+**/
+gchar*     
+gwy_graph_model_get_title(GwyGraphModel *model)
+{
+    return g_strdup(model->title->str);
+}
+                                                                                                                                                             
+/**
+* gwy_graph_model_get_label_position:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph widget label posititon.
+**/
+GwyGraphLabelPosition  
+gwy_graph_model_get_label_position(GwyGraphModel *model)
+{
+    return model->label_position;
+}
+
+/**
+* gwy_graph_model_get_label_has_frame:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph widget label frame visibility.
+**/
+gboolean       
+gwy_graph_model_get_label_has_frame(GwyGraphModel *model)
+{
+    return model->label_has_frame;
+}
+
+/**
+* gwy_graph_model_get_label_frame_thickness:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph widget label frame thickness.
+**/
+gint           
+gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model)
+{
+    return model->label_frame_thickness;
+}
+
+/**
+* gwy_graph_model_get_label_reverse:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph widget label alingment mode.
+**/
+gboolean       
+gwy_graph_model_get_label_reverse(GwyGraphModel *model)
+{
+    return model->label_reverse;
+}
+
+/**
+* gwy_graph_model_get_label_visible:
+* @model: A #GwyGraphModel.
+*
+* Returns: graph widget label visibility.
+**/
+gboolean       
+gwy_graph_model_get_label_visible(GwyGraphModel *model)
+{
+    return model->label_visible;
+}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

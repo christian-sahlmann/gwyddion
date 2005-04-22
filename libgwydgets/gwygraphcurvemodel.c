@@ -362,4 +362,243 @@ gwy_graph_curve_model_duplicate(GObject *object)
     return (GObject*)duplicate;
 }
 
+/**
+* gwy_graph_curve_model_set_data:
+* @gcmodel: A #GwyGraphCurveModel.
+* @xdata: x data points (array of size @n)
+* @ydata: y data points (array of size @n)
+* @n: data array size (number of data points)
+*
+* Sets curve model data. Curve model does not make a copy of the data,
+* therefore you should not free the data unless you know what
+* are you doing.
+**/
+void       
+gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
+                               gdouble *xdata,
+                               gdouble *ydata,
+                               gint n)
+{
+    gcmodel->xdata = xdata;
+    gcmodel->ydata = ydata;
+    gcmodel->n = n;
+//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+
+/**
+* gwy_graph_curve_model_set_description:
+* @gcmodel: A #GwyGraphCurveModel.
+* @description: curve description text
+*
+* Sets curve model description. The description should appear on graph label, for example.
+**/
+void       
+gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
+                                      gchar *description)
+{
+    g_string_assign(gcmodel->description, description);
+    printf("curve: emitting value changed (curve description). Who connects?\n");
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+                        
+#include <stdio.h>
+/**
+* gwy_graph_curve_model_set_curve_type:
+* @gcmodel: A #GwyGraphCurveModel.
+* @type: curve type
+*
+* Sets curve type for plotting the curve. This includes setting points, linespoints, line, etc.
+**/
+void       
+gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
+                                     GwyGraphCurveType type)
+{
+    gcmodel->type = type;
+    printf("curve: emitting value changed (curve type). Who connects?\n");
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+
+/**
+* gwy_graph_curve_model_set_curve_point_type:
+* @gcmodel: A #GwyGraphCurveModel.
+* @point_type: point type to be used for plot
+*
+* Sets curve point type for plotting the curve. Curve type that is chosen must include
+* some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+**/
+void       
+gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
+                                           GwyGraphPointType point_type)
+{
+    gcmodel->point_type = point_type;
+//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_set_curve_point_size:
+* @gcmodel: A #GwyGraphCurveModel.
+* @point_size: point size to be used for plot (in pixels)
+*
+* Sets curve point size for plotting the curve. Curve type that is chosen must include
+* some kind of point plot to see any change (e. g. GWY_GRAPH_CURVE_POINTS).
+**/
+void       
+gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
+                                           gint point_size)
+{
+    gcmodel->point_size = point_size;
+//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_set_line_style:
+* @gcmodel: A #GwyGraphCurveModel.
+* @description: line style to be used for plot
+*
+* Sets curve line style for plotting the curve. Curve type that is chosen must include
+* some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+**/
+void       
+gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
+                                           GdkLineStyle line_style)
+{
+    gcmodel->line_style = line_style;
+//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_set_line_size:
+* @gcmodel: A #GwyGraphCurveModel.
+* @description: line size to be used for plot (in pixels)
+*
+* Sets curve line size description. Curve type that is chosen must include
+* some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
+**/
+void       
+gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
+                                          gint line_size)
+{
+    gcmodel->line_size = line_size;
+//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_xdata:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Gets pointer to x data points. The data might be used somewhere within the
+* curve or graph model or graph widget, so do no free them until you don't know what
+* are you doing.
+*
+* Returns: x data points
+**/
+gdouble*   
+gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->xdata;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_ydata:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Gets pointer to y data points. The data might be used somewhere within the
+* curve or graph model or graph widget, so do no free them until you don't know what
+* are you doing.
+*
+* Returns: y data points
+**/
+gdouble*   
+gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->ydata;
+}
+                   
+/**
+* gwy_graph_curve_model_get_ndata:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: number of data points within the curve data
+**/
+gint       
+gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->n;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_description:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve data description (what appears as curve label on graph) as newly
+* allocated string.
+**/
+gchar*     
+gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
+{
+    return g_strdup(gcmodel->description->str);
+}
+                                                                                                                                                             
+
+/**
+* gwy_graph_curve_model_get_curve_type:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve plot type (as points, lines, linespoints, etc.)
+**/
+GwyGraphCurveType  
+gwy_graph_curve_model_get_curve_type(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->type;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_curve_point_type:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve plot point type (square, circle, etc.)
+**/
+GwyGraphPointType  
+gwy_graph_curve_model_get_curve_point_type(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->point_type;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_curve_point_size:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve plot point size (in pixels)
+**/
+gint       
+gwy_graph_curve_model_get_curve_point_size(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->point_size;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_curve_line_style:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve plot line style
+**/
+GdkLineStyle  
+gwy_graph_curve_model_get_curve_line_style(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->line_style;
+}
+                                                                                                                                                             
+/**
+* gwy_graph_curve_model_get_curve_line_size:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve plot line size (in pixels)
+**/
+gint       
+gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->line_size;
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
