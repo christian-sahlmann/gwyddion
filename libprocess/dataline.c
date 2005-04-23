@@ -1371,7 +1371,7 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
         gwy_data_line_multiply(rb, rmsa/rmsb);
         gwy_data_line_multiply(ib, rmsa/rmsb);
         g_object_unref(multra);
-        g_object_unref(&multia);
+        g_object_unref(multia);
     }
     else {
         gwy_fft_window(ra->data, ra->res, windowing);
