@@ -25,8 +25,8 @@
 #include <gdk/gdk.h>
 
 #include <libgwydgets/gwygrapher.h>
-#include <libgwydgets/gwygraphermodel.h>
-#include <libgwydgets/gwygraphercurvemodel.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 
 
 static void destroy( GtkWidget *widget, gpointer data )
@@ -40,7 +40,7 @@ main(int argc, char *argv[])
     GtkWidget *window;
     GtkWidget *axis, *label, *area, *graph, *foo;
     GObject *gmodel;
-    GwyGrapherCurveModel *model;
+    GwyGraphCurveModel *model;
     gint i;
     GString *str1, *str2, *str3, *str4, *str5;
     GwyDataLine *dln;
@@ -96,34 +96,42 @@ main(int argc, char *argv[])
 
   
     dln = (GwyDataLine *) gwy_data_line_new(200, 200, 1);
-    
-    str1 = g_string_new("parabola");
-    str2 = g_string_new("kousek");
-    str3 = g_string_new("sinus");
-    str4 = g_string_new("cosi");
-    str5 = g_string_new("jiny sinus");
 
-    gmodel = gwy_grapher_model_new(NULL);
+    gmodel = gwy_graph_model_new(NULL);
     graph = gwy_grapher_new(gmodel);
     
-    model = gwy_grapher_curve_model_new();
-    model->xdata = xp;
-    model->ydata = yp;
-    model->description = str1;
-    model->n = 100;
-    gwy_grapher_model_add_curve(gmodel, model);
+    model = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(model, xp, yp, 100);
+    gwy_graph_curve_model_set_description(model, "parabola");
+   
+    gwy_graph_model_add_curve(gmodel, model);
     
-    model->xdata = xp;
-    model->ydata = ys;
-    model->description = str2;
-    model->n = 100;
-     
+    gwy_graph_curve_model_set_data(model, xp, ys, 100);
+    gwy_graph_curve_model_set_description(model, "kousek");
+
+
+    
     gtk_container_add (GTK_CONTAINER (window), graph);
+
+    printf("show!\n");
     gtk_widget_show (graph);
 
+    printf("show all!\n");
     gtk_widget_show_all(window);
 
-    gwy_grapher_model_add_curve(gmodel, model);
+    printf("add!\n");
+    //gwy_graph_model_add_curve(gmodel, model);
+
+    //printf("n of curves: %d\n", gwy_graph_model_get_n_curves(gmodel));
+    model = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    gwy_graph_curve_model_set_description(model, "kousek2");
+    gwy_graph_curve_model_set_curve_type(model, 1);
+    gwy_graph_curve_model_set_curve_type(model, 1);
+
+    gwy_graph_curve_model_set_curve_type(model, 1);
+
+    gwy_graph_curve_model_set_curve_type(model, 1);
+
     gtk_main();
 
     return 0;
