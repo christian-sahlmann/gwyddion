@@ -273,7 +273,7 @@ gwy_grapher_area_dialog_finalize(GObject *object)
 
 
 static GtkWidget*
-gwy_point_menu_create(const GwyGrapherPointType current,
+gwy_point_menu_create(const GwyGraphPointType current,
                       gint *current_idx)
 {
     GtkWidget *menu, *image, *item, *hbox;

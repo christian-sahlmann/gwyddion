@@ -88,7 +88,7 @@ void  gwy_grapher_draw_point (GdkDrawable *drawable,
                             GdkGC *gc, 
                             gint x,
                             gint y,
-                            GwyGrapherPointType type, 
+                            GwyGraphPointType type, 
                             gint size, 
                             GwyRGBA *color, 
                             gboolean clear);
