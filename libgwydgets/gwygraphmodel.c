@@ -705,7 +705,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
 /**
 * gwy_graph_model_remove_curve_by_index:
 * @model: A #GwyGraphModel.
-* @index: curve index (within GwyGraphModel structure)
+* @index_: curve index (within GwyGraphModel structure)
 *
 * Removes the curve having given index. 
 **/
@@ -760,7 +760,7 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *descripti
 /**
 * gwy_graph_model_get_curve_by_desciption:
 * @model: A #GwyGraphModel.
-* @index: curve index (within GwyGraphModel structure)
+* @index_: curve index (within GwyGraphModel structure)
 *
 * Returns: curve with given index. Note that this
 * is pointer to data in GraphModel, therefore make a copy if you want to use
