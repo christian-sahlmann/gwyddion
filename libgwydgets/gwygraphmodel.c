@@ -607,17 +607,12 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
     
     newcurves = g_new(GObject*, gmodel->ncurves+1);
     
-    for (i = 0; i < gmodel->ncurves; i++)
-    {
-        newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
-        g_object_unref(gmodel->curves[i]);
-    }
-    newcurves[i] = gwy_serializable_duplicate(curve);
- 
-    gmodel->curves = newcurves;
-    
+    gmodel->curves = g_renew(GwyGraphCurveModel*,
+                             gmodel->curves, gmodel->ncurves+1);
+    gmodel->curves[gmodel->ncurves] = curve;
+    g_object_ref(curve);
     gmodel->ncurves++;
-
+            
     g_signal_connect_swapped(curve, "value_changed",
                       G_CALLBACK(gwy_watchable_value_changed), gmodel);
     
