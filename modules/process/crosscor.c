@@ -417,7 +417,13 @@ crosscor_do(CrosscorArgs *args)
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     /*result fields - after computation result should be at dfieldx */
-    data = gwy_container_duplicate(data);
+    data = gwy_container_duplicate_by_prefix(data,
+                                             "/0/data",
+                                             "/0/base/palette",
+                                             "/0/mask/red",
+                                             "/0/mask/green",
+                                             "/0/mask/blue",
+                                             NULL);
     dfieldx = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dfieldy = gwy_data_field_duplicate(dfieldx);
     score = gwy_data_field_duplicate(dfieldx);
@@ -426,8 +432,7 @@ crosscor_do(CrosscorArgs *args)
 
     iteration = 0;
     state = GWY_COMPUTATION_STATE_INIT;
-    gwy_app_wait_start(GTK_WIDGET(args->win1),
-                       "Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
     do {
         gwy_data_field_crosscorrelate_iteration(dfield1, dfield2, dfieldx,
                                                 dfieldy, score, args->search_x,
@@ -446,16 +451,23 @@ crosscor_do(CrosscorArgs *args)
 
     } while (state != GWY_COMPUTATION_STATE_FINISHED);
     gwy_app_wait_finish();
-    /*set right output */
 
-    if (args->result == GWY_CROSSCOR_ABS) {
+    switch (args->result) {
+        case GWY_CROSSCOR_ABS:
         abs_field(dfieldx, dfieldy);
-    }
-    else if (args->result == GWY_CROSSCOR_Y) {
+        break;
+
+        case GWY_CROSSCOR_Y:
         gwy_data_field_copy(dfieldy, dfieldx, FALSE);
-    }
-    else if (args->result == GWY_CROSSCOR_DIR) {
+        break;
+
+        case GWY_CROSSCOR_DIR:
         dir_field(dfieldx, dfieldy);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
 
     /*create score mask if requested */
@@ -467,8 +479,7 @@ crosscor_do(CrosscorArgs *args)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 
-    if (!args->add_ls_mask)
-        g_object_unref(score);
+    g_object_unref(score);
     g_object_unref(dfieldy);
 
     return TRUE;

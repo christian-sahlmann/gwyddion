@@ -296,12 +296,8 @@ maskcor_do(MaskcorArgs *args)
     g_return_val_if_fail(operand1 != NULL && operand2 != NULL, FALSE);
 
     data = gwy_data_window_get_data(operand1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                             "/0/data"));
-
-    ret = gwy_container_duplicate(data);
-    retfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
-                                                             "/0/data"));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    retfield = gwy_data_field_duplicate(dfield);
 
     kernel = gwy_data_window_get_data(operand2);
     kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel,
@@ -314,7 +310,8 @@ maskcor_do(MaskcorArgs *args)
                                            &state, &iteration);
         gwy_app_wait_set_message("Correlating...");
         if (!gwy_app_wait_set_fraction
-                (iteration/(gdouble)(dfield->xres - (kernelfield->xres)/2)))
+                (iteration/(gdouble)(gwy_data_field_get_xres(dfield)
+                                     - gwy_data_field_get_xres(kernelfield)/2)))
             return FALSE;
 
     } while (state != GWY_COMPUTATION_STATE_FINISHED);
@@ -322,29 +319,30 @@ maskcor_do(MaskcorArgs *args)
 
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE) {
-        if (gwy_container_contains_by_name(ret, "/0/mask"))
-            gwy_container_remove_by_name(ret, "/0/mask");
-
+        ret = gwy_container_duplicate_by_prefix(data,
+                                                "/0/base/palette",
+                                                NULL);
+        /* TODO: resize, there's an empty border! */
         /* TODO: set some units! */
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
     else { /*add mask*/
-        if (args->result == GWY_MASKCOR_OBJECTS) {
-            gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        if (args->result == GWY_MASKCOR_OBJECTS)
             plot_correlated(retfield, kernelfield->xres, kernelfield->yres,
                             args->threshold);
-        }
-        else if (args->result == GWY_MASKCOR_MAXIMA) {
-            gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        else if (args->result == GWY_MASKCOR_MAXIMA)
             plot_maxima(retfield, args->threshold);
-        }
-        gwy_container_set_object_by_name(data, "/0/mask",
-                                         gwy_data_field_duplicate(retfield));
-        g_object_unref(ret);
+
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+            gwy_data_field_copy(retfield, dfield, FALSE);
+        else
+            gwy_container_set_object_by_name(data, "/0/mask", retfield);
         gwy_app_data_window_set_current(args->win1);
         gwy_app_data_view_update(gwy_data_window_get_data_view(operand1));
     }
+    g_object_unref(retfield);
 
     return TRUE;
 }

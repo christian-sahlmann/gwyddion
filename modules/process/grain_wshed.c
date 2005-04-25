@@ -466,7 +466,10 @@ wshed_ok(WshedControls *controls,
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+            gwy_data_field_copy(maskfield, dfield, FALSE);
+        else
+            gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         return TRUE;
     }
 
@@ -475,7 +478,10 @@ wshed_ok(WshedControls *controls,
     if (mask_process(dfield, maskfield, args,
                      GTK_WIDGET(gwy_app_data_window_get_for_data(data)))) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+            gwy_data_field_copy(maskfield, dfield, FALSE);
+        else
+            gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         controls->computed = TRUE;
     }
     g_object_unref(maskfield);

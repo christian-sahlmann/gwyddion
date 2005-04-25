@@ -257,11 +257,7 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
 
     /*result fields - after computation result should be at dfield */
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/mask"));
-    }
-    else {
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         dfield = gwy_data_field_duplicate(dfield2);
         gwy_container_set_object_by_name(data, "/0/mask", dfield);
         g_object_unref(dfield);

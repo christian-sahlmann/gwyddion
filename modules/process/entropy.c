@@ -197,7 +197,6 @@ entropy_do(GwyDataField *dfield)
 
         /* Zoom actual data */
         memset(grid.known, 0, grid.res*grid.res*sizeof(gboolean));
-        /*
         memcpy(grid.data, adata, grid.res*grid.res*sizeof(gdouble));
         for (i = 0; i < GRID_M; i++) {
             for (j = 0; j < GRID_M; j++) {
@@ -206,7 +205,6 @@ entropy_do(GwyDataField *dfield)
                 grid.known[i*(grid.res - 1)/(GRID_M - 1)] = TRUE;
             }
         }
-        */
     }
 
     /* Final level */

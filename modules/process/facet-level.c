@@ -68,7 +68,7 @@ module_register(const gchar *name)
 static gboolean
 facet_level(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *old;
     gdouble c, bx, by, b2;
     gdouble p, progress, maxb2 = 666, eps = 1e-8;
     gint i;
@@ -76,6 +76,7 @@ facet_level(GwyContainer *data, GwyRunType run)
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
 
     /* converge
@@ -108,7 +109,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     gwy_app_wait_finish();
     if (!canceled) {
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
-        gwy_container_set_object_by_name(data, "/0/data", dfield);
+        gwy_data_field_copy(dfield, old, FALSE);
     }
     g_object_unref(dfield);
 

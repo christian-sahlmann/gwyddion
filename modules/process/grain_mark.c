@@ -476,7 +476,10 @@ mark_ok(MarkControls *controls,
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+            gwy_data_field_copy(maskfield, dfield, FALSE);
+        else
+            gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         return;
     }
 

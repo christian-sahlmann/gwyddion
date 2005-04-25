@@ -78,7 +78,7 @@ outliers(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
-        maskfield = gwy_data_field_new_alike(dfield, TRUE);
+        maskfield = gwy_data_field_new_alike(dfield, FALSE);
         gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         g_object_unref(maskfield);
     }
