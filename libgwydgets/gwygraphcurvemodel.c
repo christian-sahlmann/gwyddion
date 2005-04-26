@@ -397,11 +397,9 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       gchar *description)
 {
     g_string_assign(gcmodel->description, description);
-    printf("curve: emitting value changed (curve description). Who connects?\n");
     gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                         
-#include <stdio.h>
 /**
 * gwy_graph_curve_model_set_curve_type:
 * @gcmodel: A #GwyGraphCurveModel.
@@ -414,7 +412,6 @@ gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphCurveType type)
 {
     gcmodel->type = type;
-    printf("curve: emitting value changed (curve type). Who connects?\n");
     gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
 
@@ -431,7 +428,7 @@ gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
                                            GwyGraphPointType point_type)
 {
     gcmodel->point_type = point_type;
-//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -447,7 +444,7 @@ gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
                                            gint point_size)
 {
     gcmodel->point_size = point_size;
-//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -463,7 +460,7 @@ gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
                                            GdkLineStyle line_style)
 {
     gcmodel->line_style = line_style;
-//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -479,7 +476,7 @@ gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
                                           gint line_size)
 {
     gcmodel->line_size = line_size;
-//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
+    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**

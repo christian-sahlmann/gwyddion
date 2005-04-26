@@ -551,7 +551,6 @@ curvetype_changed_cb(GObject *item, GwyGrapherAreaDialog *dialog)
     if (dialog->curve_model == NULL) return;
     
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-/*    cmodel->type = GPOINTER_TO_INT(g_object_get_data(item, "curve-type"));*/
     gwy_graph_curve_model_set_curve_type(cmodel,GPOINTER_TO_INT(g_object_get_data(item, "curve-type")));
 }
  
@@ -562,7 +561,7 @@ linesize_changed_cb(GtkObject *adj, GwyGrapherAreaDialog *dialog)
     if (dialog->curve_model == NULL) return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    cmodel->line_size = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    gwy_graph_curve_model_set_curve_line_size(cmodel, gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)));
 }
 
 static void     
@@ -572,7 +571,7 @@ pointsize_changed_cb(GtkObject *adj, GwyGrapherAreaDialog *dialog)
     if (dialog->curve_model == NULL) return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    cmodel->point_size = gtk_adjustment_get_value(GTK_ADJUSTMENT(adj));
+    gwy_graph_curve_model_set_curve_point_size(cmodel, gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)));
 }
 
 

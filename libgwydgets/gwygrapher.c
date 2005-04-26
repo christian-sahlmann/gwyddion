@@ -179,11 +179,6 @@ gwy_grapher_init(GwyGrapher *grapher)
 
 }
 
-#include <stdio.h>
-void test_cb(GwyGrapher *grapher)
-{
-    printf("grapher: got update value (refresh call) from graph model\n");
-}
 
 /**
  * gwy_grapher_new:
@@ -207,8 +202,6 @@ gwy_grapher_new(GwyGraphModel *gmodel)
        g_signal_connect_swapped(gmodel, "value_changed",
                      G_CALLBACK(gwy_grapher_refresh), grapher);
 
-       g_signal_connect_swapped(gmodel, "value_changed",
-                     G_CALLBACK(test_cb), grapher);
     }
     
     return grapher;
@@ -249,7 +242,8 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j;
-    
+   
+    printf("grapher refresh!\n");
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
