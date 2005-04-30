@@ -946,5 +946,24 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
     return model->label_visible;
 }
 
+/**
+* gwy_graph_model_export_ascii:
+* @model: A #GwyGraphModel.
+* @filename: name of file to be created 
+* @export_units: export units in the column header
+* @export_metadata: export all graph metadata within file header
+* @export_style: style of values export to be readable by cetain program directly.
+*
+* Exports graph model into a file. The export options are specified by
+* parameter @export_style.
+**/
+void
+gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
+                             gboolean export_units, gboolean export_metadata,
+                             GwyGraphModelExportStyle export_style)
+{
+    
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -116,6 +116,14 @@ typedef enum {
     GWY_GRAPH_LABEL_USER      = 4
 } GwyGraphLabelPosition;
 
+typedef enum {
+    GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN = 0,
+    GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT = 1,
+    GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN = 2
+}
+GwyGraphModelExportStyle;
+
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_ENUMS_H__ */
