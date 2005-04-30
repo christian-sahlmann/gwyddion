@@ -39,6 +39,16 @@ G_BEGIN_DECLS
 typedef struct _GwyAxiser      GwyAxiser;
 typedef struct _GwyAxiserClass GwyAxiserClass;
 
+typedef struct {
+    gint xmin;         /*x offset of the active area with respect to drawable left border*/
+    gint ymin;         /*y offset of the active area with respect to drawable top border*/
+    gint height;       /*active area height*/
+    gint width;        /*active area width*/
+    gdouble real_xmin; /*real units values*/
+    gdouble real_ymin; /*real units values*/
+    gdouble real_height; /*real units values*/
+    gdouble real_width; /*real units values*/                             
+} GwyAxiserActiveAreaSpecs;
 
 typedef struct {
     gdouble value;      /*tick value*/
@@ -138,6 +148,12 @@ void        gwy_axiser_set_unit           (GwyAxiser *axiser,
 void        gwy_axiser_enable_label_edit  (GwyAxiser *axiser,
                                          gboolean enable);
 void        gwy_axiser_signal_rescaled   (GwyAxiser *axiser);
+
+void        gwy_axiser_draw_on_drawable  (GdkDrawable *drawable, 
+                                          GdkGC *gc, 
+                                          GwyAxiserActiveAreaSpecs *specs,
+                                          GwyAxiser *axiser);
+
 
 G_END_DECLS
 

@@ -31,6 +31,15 @@ void       gwy_grapher_export_pixmap(GwyGrapher *grapher, const gchar *filename,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels)
 {
+    /*create pixmap*/
+    
+    /*plot area*/
+    
+    /*plot axis*/
+
+    /*plot label*/
+
+    /*save pixmap*/
     
 }
 
@@ -38,6 +47,17 @@ void       gwy_grapher_export_postscript(GwyGrapher *grapher, const gchar *filen
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels)
 {
+    /*create stream*/
+
+    /*write header*/
+
+    /*write label*/
+    
+    /*write axis*/
+
+    /*write area*/
+
+    /*save stream*/
 
 }
 
