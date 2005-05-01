@@ -305,6 +305,9 @@ gwy_process_func_get_run_types(const gchar *name)
 {
     ProcessFuncInfo *func_info;
 
+    if (!process_funcs)
+        return 0;
+
     func_info = g_hash_table_lookup(process_funcs, name);
     if (!func_info)
         return 0;

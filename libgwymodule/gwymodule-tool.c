@@ -240,7 +240,7 @@ _gwy_tool_func_remove(const gchar *name)
 gboolean
 gwy_tool_func_exists(const gchar *name)
 {
-    return g_hash_table_lookup(tool_funcs, name) != NULL;
+    return tool_funcs && g_hash_table_lookup(tool_funcs, name);
 }
 
 /**

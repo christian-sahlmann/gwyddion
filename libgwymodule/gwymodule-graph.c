@@ -268,7 +268,7 @@ graph_menu_entry_compare(GraphFuncInfo *a,
 gboolean
 gwy_graph_func_exists(const gchar *name)
 {
-    return g_hash_table_lookup(graph_funcs, name) != 0;
+    return graph_funcs && g_hash_table_lookup(graph_funcs, name);
 }
 
 /**

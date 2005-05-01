@@ -522,6 +522,9 @@ gwy_file_func_get_operations(const gchar *name)
     FileFuncInfo *func_info;
     GwyFileOperation capable = 0;
 
+    if (!file_funcs)
+        return 0;
+
     func_info = g_hash_table_lookup(file_funcs, name);
     if (!func_info)
         return 0;
