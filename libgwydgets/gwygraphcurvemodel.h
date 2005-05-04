@@ -94,6 +94,10 @@ void       gwy_graph_curve_model_set_data       (GwyGraphCurveModel *gcmodel,
                                                  gdouble *xdata,
                                                  gdouble *ydata,
                                                  gint n);
+void       gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
+                                                        GwyDataLine *dline,
+                                                        gint from_index,
+                                                        gint to_index);
 
 void       gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                                  gchar *description);

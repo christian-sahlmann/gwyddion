@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <libgwyddion/gwyddion.h>
+#include <libprocess/dataline.h>
 #include "gwygraphcurvemodel.h"
 
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
@@ -595,6 +596,41 @@ gint
 gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
 {
     return gcmodel->line_size;
+}
+
+void
+gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
+                                            GwyDataLine *dline,
+                                            gint from_index,
+                                            gint to_index)
+{
+    gdouble *xdata;
+    gint res, i;
+    gdouble realmin, realmax;
+             
+    if (from_index == to_index || from_index > to_index)
+    {
+        res = gwy_data_line_get_res(dline);
+        realmin = gwy_data_line_get_real(dline);
+        from_index = 0;
+    }
+    else
+    {
+        res = to_index - from_index;
+        realmin = gwy_data_line_itor(dline, from_index);
+        realmax = gwy_data_line_itor(dline, to_index);                
+    }
+
+    xdata = (gdouble *)g_malloc(sizeof(gdouble)*res);
+                                                                                                                                                                 
+    for (i=0; i<res; i++)
+        gwy_data_line_set_val(xdata, i, realmin + (gdouble)i*(realmax - realmin)/(gdouble)res);
+
+                                                                                                                                                            
+    gcmodel->xdata = xdata;
+    gcmodel->ydata = dline->data + from_index;
+    gcmodel->n = res;
+                    
 }
 
 
