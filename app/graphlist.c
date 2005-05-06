@@ -88,7 +88,7 @@ static void       gwy_app_graph_list_orphaned        (GtkWidget *graph_view);
 
 void
 gwy_app_graph_list_add(GwyDataWindow *data_window,
-                       GwyGraph *graph)
+                       GwyGrapher *graph)
 {
     GwyContainer *data;
     GtkListStore *store;
@@ -582,7 +582,7 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
                                   gpointer list)
 {
     GObject *gmodel;
-    GwyGraph *graph;
+    GwyGrapher *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
     graph = GWY_GRAPH_MODEL(gmodel)->graph;
