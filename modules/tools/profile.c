@@ -39,6 +39,7 @@ enum {
 typedef struct {
     GwyUnitoolState *state;
     GtkWidget *graph;
+    GwyGraphModel *graphmodel;
     GtkWidget *interpolation;
     GtkWidget *separation;
     GPtrArray *positions;
@@ -280,8 +281,9 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach(GTK_TABLE(table), controls->interpolation,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    controls->graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);
+    controls->graphmodel = gwy_graph_model_new(NULL);
+    controls->graph = gwy_grapher_new(controls->graphmodel);
+    /*gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);*/
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
 
     return dialog;
@@ -339,7 +341,8 @@ dialog_update(GwyUnitoolState *state,
     gboolean is_visible;
     gint nselected, i, j, lineres;
     gint xl1, xl2, yl1, yl2;
-    GwyGraphAutoProperties prop;
+    GwyGraphCurveModel *gcmodel;
+    
     gchar *z_unit;
     gdouble z_mag, z_max;
 
@@ -352,10 +355,6 @@ dialog_update(GwyUnitoolState *state,
     if (!is_visible && !nselected)
         return;
 
-    gwy_graph_get_autoproperties(GWY_GRAPH(controls->graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(controls->graph), &prop);
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
@@ -366,7 +365,7 @@ dialog_update(GwyUnitoolState *state,
     z_mag = pow(10, 3*ROUND(((gint)(log10(fabs(z_max))))/3.0) - 3);
     z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
-    gwy_graph_clear(GWY_GRAPH(controls->graph));
+    gwy_graph_model_remove_all_curves(controls->graphmodel);
     if (nselected) {
         j = 0;
         for (i = 0; i < nselected; i++) {
@@ -382,11 +381,16 @@ dialog_update(GwyUnitoolState *state,
             gwy_data_field_get_data_line_averaged(dfield, controls->dtl->pdata[i],
                                                   xl1, yl1, xl2, yl2, lineres, controls->size,
                                                   controls->interp);
-            gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
+            gcmodel = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                         controls->dtl->pdata[i],
+                                                         0, 0);
+            gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
+            /*gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
                                               controls->dtl->pdata[i],
                                               0, controls->str->pdata[i], NULL,
                                               units->magnitude, z_mag,
-                                              units->units, z_unit);
+                                              units->units, z_unit);*/
         }
     }
     update_labels(state);
