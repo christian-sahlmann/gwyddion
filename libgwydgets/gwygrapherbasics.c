@@ -70,8 +70,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
             yn = y_data_to_pixel(specs, cmodel->ydata[i+1]);
         }
       
-        if (i>0 
-            && i<(cmodel->n-1) 
+        if (i<(cmodel->n-1) 
             && (cmodel->type == GWY_GRAPH_CURVE_LINE 
                 || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
                  gwy_grapher_draw_line(drawable, gc,
@@ -83,8 +82,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
                                   &(cmodel->color));
              
          
-        if (i>0 &&
-            (cmodel->type == GWY_GRAPH_CURVE_POINTS 
+        if ((cmodel->type == GWY_GRAPH_CURVE_POINTS 
              || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
                  gwy_grapher_draw_point(drawable, gc,
                                   x,
