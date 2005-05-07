@@ -99,6 +99,7 @@ void       gwy_grapher_change_model(GwyGrapher *grapher,
                                     GwyGraphModel *gmodel);
 void       gwy_grapher_set_status(GwyGrapher *grapher,
                                   GwyGraphStatusType status);
+GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher);
 
 gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
 void       gwy_grapher_get_selection(GwyGrapher *grapher,

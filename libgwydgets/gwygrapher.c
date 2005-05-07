@@ -264,6 +264,7 @@ gwy_grapher_refresh(GwyGrapher *grapher)
                 if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
             }
         }
+        printf("curve[%d] yreq: %g  %g,   xreq: %g  %g\n", i, y_reqmin, y_reqmax, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
@@ -333,6 +334,16 @@ rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
     gwy_grapher_area_refresh(grapher->area);
 }
 
+/**
+ * gwy_grapher_get_model:
+ * @grapher: A grapher widget.
+ *
+ * Returns: GraphModel associated with this grapher widget.
+ **/
+GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher)
+{
+    return  grapher->graph_model;
+}
 
 /**
  * gwy_grapher_set_status:

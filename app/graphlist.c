@@ -100,10 +100,11 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 
     gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    g_return_if_fail(GWY_IS_GRAPH(graph));
+    g_return_if_fail(GWY_IS_GRAPHER(graph));
 
     data = gwy_data_window_get_data(data_window);
-    gmodel = gwy_graph_model_new(graph);
+    gmodel = gwy_grapher_get_model(graph);
+    /*gmodel = gwy_graph_model_new(graph);*/
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
 
     /* compute new id and new id list */

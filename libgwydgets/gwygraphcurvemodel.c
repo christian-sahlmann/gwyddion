@@ -605,13 +605,15 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                             gint to_index)
 {
     gdouble *xdata;
+    gdouble *ydata;
     gint res, i;
     gdouble realmin, realmax;
              
     if (from_index == to_index || from_index > to_index)
     {
         res = gwy_data_line_get_res(dline);
-        realmin = gwy_data_line_get_real(dline);
+        realmin = 0;
+        realmax = gwy_data_line_get_real(dline);
         from_index = 0;
     }
     else
@@ -622,14 +624,19 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     }
 
     xdata = (gdouble *)g_malloc(sizeof(gdouble)*res);
-                                                                                                                                                                 
+    ydata = (gdouble *)g_malloc(sizeof(gdouble)*res);                                                                                                                                                             
     for (i=0; i<res; i++)
-        gwy_data_line_set_val(xdata, i, realmin + (gdouble)i*(realmax - realmin)/(gdouble)res);
+    {
+        xdata[i] = realmin + (gdouble)i*(realmax - realmin)/(gdouble)res;
+        ydata[i] = dline->data[i + from_index];
+        printf("%g  %g\n", xdata[i], ydata[i]);
+    }
 
-                                                                                                                                                            
-    gcmodel->xdata = xdata;
-    gcmodel->ydata = dline->data + from_index;
-    gcmodel->n = res;
+    gwy_graph_curve_model_set_data(gcmodel,
+                                   xdata,
+                                   ydata,
+                                   res);
+    
                     
 }
 

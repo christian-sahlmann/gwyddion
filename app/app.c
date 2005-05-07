@@ -681,17 +681,17 @@ gwy_app_graph_window_create(GtkWidget *graph)
  * Returns: The newly created graph window.
  **/
 GtkWidget*
-gwy_app_graph_window_create_for_window(GwyGraph *graph,
+gwy_app_graph_window_create_for_window(GwyGrapher *grapher,
                                        GwyDataWindow *data_window,
                                        const gchar *title)
 {
     GtkWidget *window;
 
-    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPHER(grapher), NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(graph));
+    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(grapher));
     gtk_window_set_title(GTK_WINDOW(window),
                          title ? title : _("Untitled Graph"));
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
@@ -701,11 +701,11 @@ gwy_app_graph_window_create_for_window(GwyGraph *graph,
 
     /* TODO: this is broken because we do not actually know which data window
      * is the right one, but for GraphModel testing it doesn't matter much. */
-    if (!g_object_get_data(G_OBJECT(graph), "graph-model"))
+    if (!g_object_get_data(G_OBJECT(grapher), "graph-model"))
         /* FIXME: this is convoluted. We try to fix adding a graph just
          * created from a model for a second time. Also, a GwyGraph should
          * obviously know its model... */
-        gwy_app_graph_list_add(data_window, graph);
+        gwy_app_graph_list_add(data_window, grapher);
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -714,7 +714,7 @@ gwy_app_graph_window_create_for_window(GwyGraph *graph,
 
     current_graph = g_list_append(current_graph, window);
 
-    gtk_widget_show(GTK_WIDGET(graph));
+    gtk_widget_show(GTK_WIDGET(grapher));
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 

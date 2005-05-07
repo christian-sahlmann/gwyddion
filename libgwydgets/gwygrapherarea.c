@@ -371,7 +371,6 @@ gwy_grapher_area_expose(GtkWidget *widget,
 
     gwy_debug("");
 
-
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPHER_AREA(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);

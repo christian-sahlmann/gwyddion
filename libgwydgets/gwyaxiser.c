@@ -165,6 +165,7 @@ gwy_axiser_init(GwyAxiser *axiser)
 {
     gwy_debug("");
 
+    axiser->gc = NULL;
     axiser->is_visible = 1;
     axiser->is_logarithmic = 0;
     axiser->is_auto = 1;
@@ -340,6 +341,8 @@ gwy_axiser_realize(GtkWidget *widget)
 
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
 
+    axiser->gc = gdk_gc_new(widget->window);
+    
     /*compute ticks*/
     gwy_axiser_adjust(axiser, widget->allocation.width, widget->allocation.height);
 }
@@ -518,7 +521,7 @@ gwy_axiser_expose(GtkWidget *widget,
 
     
     gwy_axiser_draw_on_drawable(widget->window,
-                                NULL,
+                                axiser->gc,
                                 &specs,
                                 GWY_AXISER(widget));
     return FALSE;

@@ -25,6 +25,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapher.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +51,7 @@ GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 #ifndef GWY_DISALBE_DEPRECATED
 GtkWidget*     gwy_app_graph_window_create         (GtkWidget *graph);
 #endif
-GtkWidget*  gwy_app_graph_window_create_for_window (GwyGraph *graph,
+GtkWidget*  gwy_app_graph_window_create_for_window (GwyGrapher *grapher,
                                                     GwyDataWindow *data_window,
                                                     const gchar *title);
 void           gwy_app_graph_window_remove         (GtkWidget *window);

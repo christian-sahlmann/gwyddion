@@ -79,6 +79,7 @@ typedef struct {
 struct _GwyAxiser {
     GtkWidget widget;
 
+    GdkGC *gc;
     GwyAxiserParams par;
 
     gboolean is_visible;

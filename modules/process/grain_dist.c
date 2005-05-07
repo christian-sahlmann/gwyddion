@@ -70,6 +70,8 @@ dist(GwyContainer *data, GwyRunType run)
 {
     GString *lab;
     GtkWidget *graph;
+    GwyGraphCurveModel *model;
+    GwyGraphModel *gmodel;
     GwyDataWindow *data_window;
     GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
@@ -80,29 +82,31 @@ dist(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(gwy_container_contains_by_name(data, "/0/mask"),
                          FALSE);
 
-    graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
+    gmodel = gwy_graph_model_new(NULL);
+    graph = gwy_grapher_new(gmodel);
+    
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dataline = gwy_data_line_new(10, 10, TRUE);
-    /*for (i=0; i<10; i++) dataline->data[i] = i*i;*/
     gwy_data_field_grains_get_distribution(dfield, dataline);
 
-/*    lab = g_string_new(_("Grain size histogram"));
-    units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);
-    gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
+    gwy_graph_model_set_title(gmodel, _("Grain size histogram"));
+   /* units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);*/
+    
+    
+    model = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_description(model, "histrogram");
+    gwy_graph_curve_model_set_data_from_dataline(model, dataline, 0, 0);
+    gwy_graph_model_add_curve(gmodel, model);
+    
+    /*    gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
                                         units->magnitude, 1, units->units, " ");
-
-    data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
-                                           _("Grain size distribution"));
 */
-    g_string_free(lab, TRUE);
+    data_window = gwy_app_data_window_get_for_data(data);
+    gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph), data_window,
+                                           _("Grain size distribution"));
+
     g_object_unref(dataline);
-    g_free(units);
+    /*g_free(units);*/
 
     return FALSE;
 }
