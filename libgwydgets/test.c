@@ -41,7 +41,7 @@ main(int argc, char *argv[])
     GtkWidget *axis, *label, *area, *graph, *foo;
     GObject *gmodel;
     GwyGraphCurveModel *model;
-    gint i;
+    gint i, k;
     GString *str1, *str2, *str3, *str4, *str5;
     GwyDataLine *dln;
 
@@ -94,6 +94,7 @@ main(int argc, char *argv[])
     gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
     */
 
+   
   
     dln = (GwyDataLine *) gwy_data_line_new(200, 200, 1);
 
@@ -106,9 +107,6 @@ main(int argc, char *argv[])
    
     gwy_graph_model_add_curve(gmodel, model);
     
-    gwy_graph_curve_model_set_data(model, xp, ys, 100);
-    gwy_graph_curve_model_set_description(model, "kousek");
-
 
     
     gtk_container_add (GTK_CONTAINER (window), graph);
@@ -117,20 +115,20 @@ main(int argc, char *argv[])
     gtk_widget_show (graph);
 
     printf("show all!\n");
-    gtk_widget_show_all(window);
+   gtk_widget_show_all(window);
 
     printf("add!\n");
-    //gwy_graph_model_add_curve(gmodel, model);
 
+    for (k=0; k<1000; k++)
+    {
+       gwy_graph_model_remove_all_curves(gmodel);
+       g_object_unref(model);
+       model = gwy_graph_curve_model_new();
+       gwy_graph_curve_model_set_data(model, xp, yp, 100);
+       gwy_graph_model_add_curve(gmodel, model);
+       printf("%d ", k);
+    }
     //printf("n of curves: %d\n", gwy_graph_model_get_n_curves(gmodel));
-    model = gwy_graph_model_get_curve_by_index(gmodel, 0);
-    gwy_graph_curve_model_set_description(model, "kousek2");
-    gwy_graph_curve_model_set_curve_type(model, 1);
-    gwy_graph_curve_model_set_curve_type(model, 1);
-
-    gwy_graph_curve_model_set_curve_type(model, 1);
-
-    gwy_graph_curve_model_set_curve_type(model, 1);
 
     gtk_main();
 

@@ -19,7 +19,7 @@
  */
 
 #include <string.h>
-
+#include <stdio.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/dataline.h>
 #include "gwygraphcurvemodel.h"
@@ -166,14 +166,14 @@ static void
 gwy_graph_curve_model_finalize(GObject *object)
 {
     GwyGraphCurveModel *gcmodel;
-
+printf("curve finalize..."); fflush(stdout);
     gwy_debug("");
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
 
     g_string_free(gcmodel->description, TRUE);
     g_free(gcmodel->xdata);
     g_free(gcmodel->ydata);
-
+printf("done\n");
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -380,9 +380,11 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                gdouble *ydata,
                                gint n)
 {
-    gcmodel->xdata = xdata;
-    gcmodel->ydata = ydata;
+    printf("curve allocate..."); fflush(stdout);
+    gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
+    gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
     gcmodel->n = n;
+    printf("Done.\n");
 //    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
 
@@ -629,7 +631,6 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     {
         xdata[i] = realmin + (gdouble)i*(realmax - realmin)/(gdouble)res;
         ydata[i] = dline->data[i + from_index];
-        printf("%g  %g\n", xdata[i], ydata[i]);
     }
 
     gwy_graph_curve_model_set_data(gcmodel,
