@@ -382,9 +382,11 @@ dialog_update(GwyUnitoolState *state,
                                                   xl1, yl1, xl2, yl2, lineres, controls->size,
                                                   controls->interp);
             gcmodel = gwy_graph_curve_model_new();
+            gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPHER_CURVE_LINE);
             gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                          controls->dtl->pdata[i],
                                                          0, 0);
+            gwy_graph_model_set_label_visible(controls->graphmodel, FALSE);
             /*gwy_graph_curve_model_set_description(gcmodel, controls->str->pdata[i]->str);*/
             gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
             /*gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
