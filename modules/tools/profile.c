@@ -284,7 +284,7 @@ dialog_create(GwyUnitoolState *state)
     controls->graphmodel = gwy_graph_model_new(NULL);
     controls->graph = gwy_grapher_new(controls->graphmodel);
     /*gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);*/
-    gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), controls->graph, TRUE, TRUE, 0);
 
     return dialog;
 }

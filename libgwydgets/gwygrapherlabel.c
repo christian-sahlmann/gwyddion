@@ -112,6 +112,8 @@ static void
 gwy_grapher_label_init(GwyGrapherLabel *label)
 {
     gwy_debug("");
+    label->reqwidth = 0;
+    label->reqheight = 0;
     label->samplepos = NULL;
 }
 
@@ -407,7 +409,8 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     layout = gtk_widget_create_pango_layout(widget, "");
 
     gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);    
-
+   printf("wh %d %d\n", winheight, winwidth); 
+    if (winwidth>1 && winheight>1)
     gwy_grapher_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
                                              0, 0, winwidth, winheight,
                                              label);
@@ -440,6 +443,7 @@ set_requised_size(GwyGrapherLabel *label)
 
         if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30 + model->label_frame_thickness;
         label->reqheight += rect.height + 5 + model->label_frame_thickness;
+        printf("reqwidth = %d\n", label->reqwidth);
     } 
 }
 

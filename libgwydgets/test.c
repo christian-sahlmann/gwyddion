@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 
     printf("add!\n");
 
-    for (k=0; k<1000; k++)
+    for (k=0; k<1; k++)
     {
        gwy_graph_model_remove_all_curves(gmodel);
        g_object_unref(model);

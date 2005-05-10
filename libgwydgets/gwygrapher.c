@@ -264,6 +264,7 @@ gwy_grapher_refresh(GwyGrapher *grapher)
                 if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
             }
         }
+        printf("reset axis %g - %g\n", x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);

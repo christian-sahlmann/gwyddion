@@ -432,6 +432,7 @@ gwy_axiser_adjust(GwyAxiser *axiser, gint width, gint height)
         gwy_axiser_precompute(axiser, 0, height);
 
 
+    gtk_widget_queue_draw(axiser);
 }
 
 static void
@@ -519,7 +520,6 @@ gwy_axiser_expose(GtkWidget *widget,
     specs.height = widget->allocation.height;
     specs.width = widget->allocation.width;
 
-    
     gwy_axiser_draw_on_drawable(widget->window,
                                 axiser->gc,
                                 &specs,
@@ -1227,7 +1227,7 @@ gwy_axiser_set_req(GwyAxiser *axiser, gdouble min, gdouble max)
     
     /*prevent axiser to allow null range. It has no sense*/
     if (min==max) axiser->reqmax += 10.0;
-   
+  
     gwy_axiser_adjust(axiser,
                     (GTK_WIDGET(axiser))->allocation.width,
                     (GTK_WIDGET(axiser))->allocation.height);
