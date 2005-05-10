@@ -201,7 +201,7 @@ gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_assert(id < META_LAST);
     gtk_tree_model_get(model, piter, id, &text, -1);
     g_return_if_fail(text);
-    g_object_set(cell, "text", text, NULL);
+    g_object_set(cell, "markup", text, NULL);
     g_free(text);
 }
 
