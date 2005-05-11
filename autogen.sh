@@ -29,7 +29,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 }
 
 (grep "^AM_PROG_LIBTOOL" ./configure.ac >/dev/null) && {
-  ($LIBTOOL --version) < /dev/null > /dev/null 2>&1 || {
+  ($LIBTOOLIZE --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`libtool' installed."
     echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.4.tar.gz"
@@ -89,7 +89,7 @@ test -n "$NO_AUTOMAKE" || ($ACLOCAL --version) < /dev/null > /dev/null 2>&1 || {
 }
 
 if test -z "$NO_LIBTOOL"; then
-  LT_VERSION=`$LIBTOOL --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
+  LT_VERSION=`$LIBTOOLIZE --version | grep libtool | sed 's/.* \([0-9.]*\)[-a-z0-9]*$/\1/'`
   if test "$LT_VERSION" '<' "1.4"; then
     echo
     echo "**ERROR**: You need at least libtool-1.4 installed to re-generate"
