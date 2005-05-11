@@ -48,6 +48,8 @@ struct _GwyGrapherLabel {
     gint reqheight;
     gint reqwidth;
 
+    gboolean enable_user_input;
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -74,6 +76,7 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
                                               gint x, gint y, gint width, gint height,
                                               GwyGrapherLabel *label);
 
+void gwy_grapher_label_enable_user_input(GwyGrapherLabel *label, gboolean enable);
 
 G_END_DECLS
 

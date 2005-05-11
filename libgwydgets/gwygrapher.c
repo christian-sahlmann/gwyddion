@@ -114,12 +114,6 @@ gwy_grapher_init(GwyGrapher *grapher)
 {
     gwy_debug("");
 
-    grapher->n_of_autocurves = 0;
-
-    grapher->autoproperties.is_line = 1;
-    grapher->autoproperties.is_point = 1;
-    grapher->autoproperties.point_size = 8;
-    grapher->autoproperties.line_size = 1;
 
     gtk_table_resize (GTK_TABLE (grapher), 3, 3);
     gtk_table_set_homogeneous (GTK_TABLE (grapher), FALSE);
@@ -171,7 +165,8 @@ gwy_grapher_init(GwyGrapher *grapher)
     grapher->area = GWY_GRAPHER_AREA(gwy_grapher_area_new(NULL,NULL));
 
     grapher->area->status = GWY_GRAPH_STATUS_PLAIN;
-
+    grapher->enable_user_input = TRUE;
+    
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
@@ -202,6 +197,7 @@ gwy_grapher_new(GwyGraphModel *gmodel)
        g_signal_connect_swapped(gmodel, "value_changed",
                      G_CALLBACK(gwy_grapher_refresh), grapher);
 
+       gwy_grapher_refresh(grapher);
     }
     
     return grapher;
@@ -243,7 +239,6 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j;
    
-    printf("grapher refresh!\n");
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
@@ -264,7 +259,6 @@ gwy_grapher_refresh(GwyGrapher *grapher)
                 if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
             }
         }
-        printf("reset axis %g - %g\n", x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
         gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
@@ -479,6 +473,27 @@ gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max)
 {
     *y_min = gwy_axiser_get_minimum(grapher->axis_left);
     *y_max = gwy_axiser_get_maximum(grapher->axis_left);
+}
+
+
+/**
+ * gwy_grapher_enable_user_input:
+ * @grapher: A grapher widget.
+ * @enable: whether to enable user input
+ *
+ * Enables/disables all the graph/curve settings dialogs to be invoked by mouse clicks.
+ **/
+void
+gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable)
+{
+    grapher->enable_user_input = enable;
+    gwy_grapher_area_enable_user_input(grapher->area, enable);
+    gwy_axiser_enable_label_edit(grapher->axis_top, enable);
+    gwy_axiser_enable_label_edit(grapher->axis_bottom, enable);
+    gwy_axiser_enable_label_edit(grapher->axis_left, enable);
+    gwy_axiser_enable_label_edit(grapher->axis_right, enable);
+    
+    
 }
 
 

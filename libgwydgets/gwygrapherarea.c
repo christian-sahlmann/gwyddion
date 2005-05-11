@@ -210,7 +210,8 @@ gwy_grapher_area_init(GwyGrapherArea *area)
     area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataPoint)); 
     
     area->colors = NULL;
-
+    area->enable_user_input = TRUE;
+    
     area->lab = GWY_GRAPHER_LABEL(gwy_grapher_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
@@ -478,7 +479,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
     child = gwy_grapher_area_find_child(area, x, y);
     if (child) {
-        if (event->type == GDK_2BUTTON_PRESS)
+        if (event->type == GDK_2BUTTON_PRESS && area->enable_user_input == TRUE)
         {
             gwy_grapher_label_dialog_set_graph_data(GTK_WIDGET(area->label_dialog), G_OBJECT(gmodel));
             gtk_widget_show_all(GTK_WIDGET(area->label_dialog));
@@ -495,7 +496,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         return FALSE;
     }
 
-    if (area->status == GWY_GRAPH_STATUS_PLAIN && gmodel->ncurves > 0)
+    if (area->status == GWY_GRAPH_STATUS_PLAIN && gmodel->ncurves > 0 && area->enable_user_input == TRUE)
     {
         curve = gwy_grapher_area_find_curve(area, dx, dy);
         if (curve >= 0)
@@ -890,24 +891,42 @@ gwy_grapher_area_signal_zoomed(GwyGrapherArea *area)
     g_signal_emit (G_OBJECT (area), gwygrapherarea_signals[ZOOMED_SIGNAL], 0);
 }
 
-
+/**
+ * gwy_grapher_area_signal_refresh:
+ * @area: grapher area 
+ *
+ * Refreshes the area with respect to graph model.
+ **/
 void 
 gwy_grapher_area_refresh(GwyGrapherArea *area)
 {
     /*refresh label*/
-    gwy_grapher_label_refresh(area->lab);
-    /*re-adjust label position*/
-    gwy_grapher_area_adjust_label(area);
+    if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
+    {
+        gtk_widget_show(area->lab);
+        gwy_grapher_label_refresh(area->lab);
+        /*re-adjust label position*/
+        gwy_grapher_area_adjust_label(area);
+    }
+    else
+        gtk_widget_hide(area->lab);
 
     /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
+/**
+ * gwy_grapher_area_change_model:
+ * @area: grapher area 
+ *
+ * Changes the graph model. Calls refresh afterwards.
+ **/
 void
 gwy_grapher_area_change_model(GwyGrapherArea *area, gpointer gmodel)
 {
     area->graph_model = gmodel;
     gwy_grapher_label_change_model(area->lab, gmodel);
+    gwy_grapher_area_refresh(area);
 }
 
 static void     
@@ -944,6 +963,21 @@ gwy_grapher_area_clear_selection(GwyGrapherArea *area)
     }
 
     gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
+
+/**
+ * gwy_grapher_area_enable_user_input:
+ * @area: grapher area
+ * @enable: enable/disable user input
+ *
+ * Enables/disables all the user input dialogs to be invoked by clicking by mouse.
+ **/
+void
+gwy_grapher_area_enable_user_input(GwyGrapherArea *area, gboolean enable)
+{
+    area->enable_user_input = enable;
+    gwy_grapher_label_enable_user_input(area->lab, enable);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

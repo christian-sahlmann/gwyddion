@@ -131,6 +131,8 @@ struct _GwyGrapherArea {
 
     GdkColor *colors;
 
+    gboolean enable_user_input;
+    
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
@@ -172,6 +174,7 @@ void gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
 
 void gwy_grapher_area_clear_selection(GwyGrapherArea *area);
 
+void gwy_grapher_area_enable_user_input(GwyGrapherArea *area, gboolean enable);
 
 G_END_DECLS
 

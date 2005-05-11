@@ -441,40 +441,21 @@ gwy_axiser_autoset(GwyAxiser *axiser, gint width, gint height)
     if (axiser->orientation == GTK_POS_TOP
         || axiser->orientation == GTK_POS_BOTTOM) {
 
-        if (width < 150) {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 5;
+        axiser->par.major_maxticks = width/70; /*empirical equation*/
+        if (width < 300) 
             axiser->par.minor_division = 5;
-        }
-        else if (width < 600) {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 7;
+        else 
             axiser->par.minor_division = 10;
-        }
-        else {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 18;
-            axiser->par.minor_division = 10;
-        }
     }
     if (axiser->orientation == GTK_POS_LEFT
         || axiser->orientation == GTK_POS_RIGHT) {
 
-        if (height < 150) {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 10;
+        axiser->par.major_maxticks = height/50; /*empirical equation*/
+        if (height < 150)
             axiser->par.minor_division = 5;
-        }
-        else if (height < 600) {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 20;
+        else 
             axiser->par.minor_division = 10;
-        }
-        else {
-            axiser->par.major_thickness = 1;
-            axiser->par.major_maxticks = 25;
-            axiser->par.minor_division = 10;
-        }
+       
     }
 
 

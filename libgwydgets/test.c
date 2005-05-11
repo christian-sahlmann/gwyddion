@@ -107,10 +107,11 @@ main(int argc, char *argv[])
    
     gwy_graph_model_add_curve(gmodel, model);
     
-
+    gwy_graph_model_set_label_visible(gmodel, TRUE);
     
     gtk_container_add (GTK_CONTAINER (window), graph);
 
+    gwy_grapher_enable_user_input(graph, TRUE);
     printf("show!\n");
     gtk_widget_show (graph);
 

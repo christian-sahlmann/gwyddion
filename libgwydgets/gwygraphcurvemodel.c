@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <libdraw/gwyrgba.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/dataline.h>
 #include "gwygraphcurvemodel.h"
@@ -166,14 +167,12 @@ static void
 gwy_graph_curve_model_finalize(GObject *object)
 {
     GwyGraphCurveModel *gcmodel;
-printf("curve finalize..."); fflush(stdout);
     gwy_debug("");
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
 
     g_string_free(gcmodel->description, TRUE);
     g_free(gcmodel->xdata);
     g_free(gcmodel->ydata);
-printf("done\n");
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -380,11 +379,9 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                gdouble *ydata,
                                gint n)
 {
-    printf("curve allocate..."); fflush(stdout);
     gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
     gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
     gcmodel->n = n;
-    printf("Done.\n");
 //    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
 
@@ -641,5 +638,35 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                     
 }
 
+
+/**
+* gwy_graph_curve_model_set_curve_color:
+* @gcmodel: A #GwyGraphCurveModel.
+* @color: GwyRGBA color structure (will not be directly used)
+*
+* Sets the curve color.
+**/
+void
+gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
+                                                   GwyRGBA color)
+{
+    gcmodel->color.r = color.r;
+    gcmodel->color.g = color.g;
+    gcmodel->color.b = color.b;
+    gcmodel->color.a = color.a;
+    
+}
+
+/**
+* gwy_graph_curve_model_get_curve_color:
+* @gcmodel: A #GwyGraphCurveModel.
+*
+* Returns: curve color structure (directly used by curve model, not free it after use).
+**/
+GwyRGBA *
+gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
+{
+    return &gcmodel->color;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -112,8 +112,8 @@ static void
 gwy_grapher_label_init(GwyGrapherLabel *label)
 {
     gwy_debug("");
-    label->reqwidth = 0;
-    label->reqheight = 0;
+    label->reqwidth = 10;
+    label->reqheight = 10;
     label->samplepos = NULL;
 }
 
@@ -409,8 +409,6 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
     layout = gtk_widget_create_pango_layout(widget, "");
 
     gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);    
-   printf("wh %d %d\n", winheight, winwidth); 
-    if (winwidth>1 && winheight>1)
     gwy_grapher_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
                                              0, 0, winwidth, winheight,
                                              label);
@@ -443,8 +441,9 @@ set_requised_size(GwyGrapherLabel *label)
 
         if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30 + model->label_frame_thickness;
         label->reqheight += rect.height + 5 + model->label_frame_thickness;
-        printf("reqwidth = %d\n", label->reqwidth);
-    } 
+    }
+    if (label->reqwidth == 0) label->reqwidth = 30;
+    if (label->reqheight == 0) label->reqheight = 30;
 }
 
 /*synchronize label with information in graphmodel*/
@@ -470,5 +469,11 @@ gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel)
     label->graph_model = gmodel;
 }
 
+
+void
+gwy_grapher_label_enable_user_input(GwyGrapherLabel *label, gboolean enable)
+{
+    label->enable_user_input = enable;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

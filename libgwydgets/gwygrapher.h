@@ -46,14 +46,6 @@ G_BEGIN_DECLS
 typedef struct _GwyGrapher      GwyGrapher;
 typedef struct _GwyGrapherClass GwyGrapherClass;
 
-typedef struct {
-    gboolean is_line;
-    gboolean is_point;
-    gint line_size;
-    gint point_size;
-    GdkColor color;
-} GwyGrapherAutoProperties;
-
 
 struct _GwyGrapher {
     GtkTable table;
@@ -72,9 +64,7 @@ struct _GwyGrapher {
 
     GwyGraphModel *graph_model;
 
-    gint n_of_autocurves;
-    GwyGrapherAutoProperties autoproperties;
-
+    gboolean enable_user_input;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -112,12 +102,16 @@ void       gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, g
 void       gwy_grapher_get_x_range(GwyGrapher *grapher, gdouble *x_min, gdouble *x_max);
 void       gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max);
 
+void       gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable);
+
+
 void       gwy_grapher_export_pixmap(GwyGrapher *grapher, const gchar *filename, 
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels);
 void       gwy_grapher_export_postscript(GwyGrapher *grapher, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels);
+
 
 
 G_END_DECLS

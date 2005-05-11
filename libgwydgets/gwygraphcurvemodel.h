@@ -117,6 +117,8 @@ void       gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmode
 void       gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
                                                       gint line_size);
 
+void       gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
+                                                 GwyRGBA color);
 
 gdouble*   gwy_graph_curve_model_get_xdata       (GwyGraphCurveModel *gcmodel);
 
@@ -137,7 +139,7 @@ GdkLineStyle  gwy_graph_curve_model_get_curve_line_style(GwyGraphCurveModel *gcm
 
 gint       gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel);
 
-
+GwyRGBA*   gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel);
 
 
 

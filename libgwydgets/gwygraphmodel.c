@@ -205,6 +205,8 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->label_has_frame = 1;
     gmodel->label_frame_thickness = 1;
     gmodel->label_reverse = 0; /*designed to be added*/
+    gmodel->label_visible = TRUE;
+    
 }
 
 /**
@@ -540,24 +542,8 @@ gwy_graph_model_duplicate(GObject *object)
     if (gmodel->graph)
         return gwy_graph_model_new(gmodel->graph);
 
-    duplicate = (GwyGraphModel*)gwy_graph_model_new(NULL);
-    /* widget stuff is already initialized to NULL */
-    duplicate->title = g_string_new(gmodel->title->str);;
-    duplicate->has_x_unit = gmodel->has_x_unit;
-    duplicate->has_y_unit = gmodel->has_y_unit;
-    duplicate->x_min = gmodel->x_min;
-    duplicate->y_min = gmodel->y_min;
-    duplicate->x_max = gmodel->x_max;
-    duplicate->y_max = gmodel->y_max;
-    duplicate->label_position = gmodel->label_position;
-    duplicate->label_has_frame = gmodel->label_has_frame;
-    duplicate->label_frame_thickness = gmodel->label_frame_thickness;
-    duplicate->x_unit = gwy_si_unit_duplicate(gmodel->x_unit);
-    duplicate->y_unit = gwy_si_unit_duplicate(gmodel->y_unit);
-    duplicate->top_label = g_string_new(gmodel->top_label->str);
-    duplicate->bottom_label = g_string_new(gmodel->bottom_label->str);
-    duplicate->left_label = g_string_new(gmodel->left_label->str);
-    duplicate->right_label = g_string_new(gmodel->right_label->str);
+    duplicate = (GwyGraphModel*)gwy_graph_model_new_alike(gmodel);
+    
     duplicate->ncurves = gmodel->ncurves;
     duplicate->curves = g_new(GObject*, gmodel->ncurves);
     for (i = 0; i < gmodel->ncurves; i++)
@@ -581,6 +567,37 @@ gwy_graph_model_get_property  (GObject*object,
                                                GValue *value,
                                                GParamSpec *pspec)
 {
+}
+
+
+GObject*   
+gwy_graph_model_new_alike(GwyGraphModel *gmodel)
+{
+    GwyGraphModel *duplicate;
+
+    gwy_debug("");
+
+    duplicate = (GwyGraphModel*)gwy_graph_model_new(NULL);
+    /* widget stuff is already initialized to NULL */
+    duplicate->title = g_string_new(gmodel->title->str);;
+    duplicate->has_x_unit = gmodel->has_x_unit;
+    duplicate->has_y_unit = gmodel->has_y_unit;
+    duplicate->x_min = gmodel->x_min;
+    duplicate->y_min = gmodel->y_min;
+    duplicate->x_max = gmodel->x_max;
+    duplicate->y_max = gmodel->y_max;
+    duplicate->label_position = gmodel->label_position;
+    duplicate->label_has_frame = gmodel->label_has_frame;
+    duplicate->label_frame_thickness = gmodel->label_frame_thickness;
+    duplicate->label_visible = gmodel->label_visible;
+    duplicate->x_unit = gwy_si_unit_duplicate(gmodel->x_unit);
+    duplicate->y_unit = gwy_si_unit_duplicate(gmodel->y_unit);
+    duplicate->top_label = g_string_new(gmodel->top_label->str);
+    duplicate->bottom_label = g_string_new(gmodel->bottom_label->str);
+    duplicate->left_label = g_string_new(gmodel->left_label->str);
+    duplicate->right_label = g_string_new(gmodel->right_label->str);
+
+    return (GObject*)duplicate;
 }
 
 #include <stdio.h>

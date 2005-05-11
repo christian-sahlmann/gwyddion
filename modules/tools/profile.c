@@ -283,7 +283,8 @@ dialog_create(GwyUnitoolState *state)
 
     controls->graphmodel = gwy_graph_model_new(NULL);
     controls->graph = gwy_grapher_new(controls->graphmodel);
-    /*gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);*/
+    gtk_widget_set_size_request(controls->graph, 400, 150);
+    gwy_grapher_enable_user_input(controls->graph, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, TRUE, TRUE, 0);
 
     return dialog;
@@ -342,6 +343,7 @@ dialog_update(GwyUnitoolState *state,
     gint nselected, i, j, lineres;
     gint xl1, xl2, yl1, yl2;
     GwyGraphCurveModel *gcmodel;
+    GwyRGBA color;
     
     gchar *z_unit;
     gdouble z_mag, z_max;
@@ -386,14 +388,19 @@ dialog_update(GwyUnitoolState *state,
             gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                          controls->dtl->pdata[i],
                                                          0, 0);
-            gwy_graph_model_set_label_visible(controls->graphmodel, FALSE);
-            /*gwy_graph_curve_model_set_description(gcmodel, controls->str->pdata[i]->str);*/
+            gwy_graph_curve_model_set_description(gcmodel, ((GString*)(controls->str->pdata[i]))->str);
+
+            color.r = 0;
+            color.g = 0;
+            color.b = 0;
+            color.a = 1;
+            
+            if (i==1) color.r = 1;
+            else if (i==2) color.g = 1;
+            else if (i==3) color.b = 1;
+               
+            gwy_graph_curve_model_set_curve_color(gcmodel, color);
             gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
-            /*gwy_graph_add_dataline_with_units(GWY_GRAPH(controls->graph),
-                                              controls->dtl->pdata[i],
-                                              0, controls->str->pdata[i], NULL,
-                                              units->magnitude, z_mag,
-                                              units->units, z_unit);*/
         }
     }
     update_labels(state);
@@ -411,6 +418,7 @@ apply(GwyUnitoolState *state)
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     gdouble lines[4*NPROFILE];
+    GwyGraphModel *model;
     gint i, j, nselected;
     gchar *z_unit;
     gdouble z_mag, z_max;
@@ -433,38 +441,21 @@ apply(GwyUnitoolState *state)
     j = 0;
     if (controls->separate) {
         for (i = 0; i < nselected; i++) {
-            graph = gwy_graph_new();
-            gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-            prop.is_point = 0;
-            prop.is_line = 1;
-            gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
-            gwy_graph_add_dataline_with_units(GWY_GRAPH(graph),
-                                              controls->dtl->pdata[i],
-                                              0, controls->str->pdata[i], NULL,
-                                              units->magnitude, z_mag,
-                                              units->units, z_unit);
+            model = gwy_graph_model_new_alike(controls->graphmodel);
+            
+            model->ncurves = 1;
+            model->curves = g_new(GObject*, model->ncurves);
+            model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
+            graph = gwy_grapher_new(model);
 
             gwy_app_graph_window_create_for_window
-                                    (GWY_GRAPH(graph), state->data_window,
+                                    (GWY_GRAPHER(graph), state->data_window,
                                      ((GString*)controls->str->pdata[i])->str);
         }
     }
     else {
-        graph = gwy_graph_new();
-        gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-        prop.is_point = 0;
-        prop.is_line = 1;
-        gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
-        for (i = 0; i < nselected; i++) {
-            gwy_graph_add_dataline_with_units(GWY_GRAPH(graph),
-                                              controls->dtl->pdata[i],
-                                              0, controls->str->pdata[i], NULL,
-                                              units->magnitude, z_mag,
-                                              units->units, z_unit);
-        }
-        gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
+        graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+        gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
                                                state->data_window,
                                                _("Profiles"));
     }

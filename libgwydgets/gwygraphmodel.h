@@ -111,7 +111,7 @@ GwyGraphCurveModel*  gwy_graph_model_get_curve_by_description(GwyGraphModel *gmo
 GwyGraphCurveModel*  gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel,
                                                 gint index_);
 
-
+GObject*   gwy_graph_model_new_alike(GwyGraphModel *gmodel);
 
 void       gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel);
 
