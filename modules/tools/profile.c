@@ -412,31 +412,14 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
-    GwySIValueFormat *units;
     GtkWidget *graph;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    gdouble lines[4*NPROFILE];
     GwyGraphModel *model;
     gint i, j, nselected;
-    gchar *z_unit;
-    gdouble z_mag, z_max;
-    GwyGraphAutoProperties prop;
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
-    nselected = gwy_vector_layer_get_selection(state->layer, lines);
+    nselected = gwy_vector_layer_get_selection(state->layer, NULL);
     if (!nselected)
         return;
-
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    z_max = gwy_data_field_get_max(dfield);
-    z_mag = pow(10, (3*ROUND(((gdouble)((gint)(log10(fabs(z_max))))/3.0)))-3);
-    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
     j = 0;
     if (controls->separate) {
