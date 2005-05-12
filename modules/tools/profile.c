@@ -334,7 +334,6 @@ dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
-    GwySIValueFormat *units;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
@@ -345,27 +344,17 @@ dialog_update(GwyUnitoolState *state,
     GwyGraphCurveModel *gcmodel;
     GwyRGBA color;
     
-    gchar *z_unit;
-    gdouble z_mag, z_max;
-
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
     is_visible = state->is_visible;
     nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!is_visible && !nselected)
         return;
 
-
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-
-    /* TODO: use Unitool's value format */
-    z_max = gwy_data_field_get_max(dfield);
-    z_mag = pow(10, 3*ROUND(((gint)(log10(fabs(z_max))))/3.0) - 3);
-    z_unit = g_strconcat(gwy_math_SI_prefix(z_mag), "m", NULL);
 
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     if (nselected) {
@@ -376,7 +365,6 @@ dialog_update(GwyUnitoolState *state,
             xl1 = gwy_data_field_rtoj(dfield, lines[j++]);
             yl1 = gwy_data_field_rtoi(dfield, lines[j++]);
 
-            /* XXX jaktoze to s timhle pada?*/
             lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
                                  + (yl1 - yl2)*(yl1 - yl2)));
             lineres = MAX(lineres, 10);
@@ -404,7 +392,6 @@ dialog_update(GwyUnitoolState *state,
         }
     }
     update_labels(state);
-    g_free(z_unit);
     gwy_unitool_apply_set_sensitive(state, nselected);
 }
 
@@ -430,7 +417,7 @@ apply(GwyUnitoolState *state)
             model->curves = g_new(GObject*, model->ncurves);
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
             graph = gwy_grapher_new(model);
-
+            gtk_widget_set_size_request(graph, 400, 300);
             gwy_app_graph_window_create_for_window
                                     (GWY_GRAPHER(graph), state->data_window,
                                      ((GString*)controls->str->pdata[i])->str);
@@ -438,6 +425,7 @@ apply(GwyUnitoolState *state)
     }
     else {
         graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+        gtk_widget_set_size_request(graph, 400, 300);
         gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
                                                state->data_window,
                                                _("Profiles"));

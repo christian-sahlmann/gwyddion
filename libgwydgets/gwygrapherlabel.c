@@ -444,6 +444,7 @@ set_requised_size(GwyGrapherLabel *label)
     }
     if (label->reqwidth == 0) label->reqwidth = 30;
     if (label->reqheight == 0) label->reqheight = 30;
+    printf("rw: %d\n", label->reqwidth);
 }
 
 /*synchronize label with information in graphmodel*/

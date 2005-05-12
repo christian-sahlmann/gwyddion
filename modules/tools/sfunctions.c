@@ -44,6 +44,7 @@ typedef struct {
     GwyInterpolationType interp;
     GwySFOutputType out;
     GwyOrientation dir;
+    GwyGraphModel *graphmodel;
 } ToolControls;
 
 static gboolean   module_register      (const gchar *name);
@@ -238,8 +239,10 @@ dialog_create(GwyUnitoolState *state)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls->graph), FALSE);
+    controls->graphmodel = gwy_graph_model_new(NULL);
+    controls->graph = gwy_grapher_new(controls->graphmodel);
+    gtk_widget_set_size_request(controls->graph, 400, 150);
+    gwy_grapher_enable_user_input(controls->graph, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
 
     return dialog;
@@ -251,11 +254,11 @@ dialog_update(GwyUnitoolState *state,
 {
     ToolControls *controls;
     GwyContainer *data;
+    GwyGraphCurveModel *gcmodel;
     GwyDataField *dfield;
     GwyDataLine *dataline;
     GwyDataViewLayer *layer;
     gint isel[4];
-    GwyGraphAutoProperties prop;
     GString *lab;
 
     gwy_debug("");
@@ -270,12 +273,12 @@ dialog_update(GwyUnitoolState *state,
 
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
 
-    gwy_graph_get_autoproperties(GWY_GRAPH(controls->graph), &prop);
-    prop.is_point = FALSE;
-    prop.is_line = TRUE;
-    gwy_graph_set_autoproperties(GWY_GRAPH(controls->graph), &prop);
-    gwy_graph_clear(GWY_GRAPH(controls->graph));
 
+    gwy_graph_model_remove_all_curves(controls->graphmodel);
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPHER_CURVE_LINE);
+    
+    
     dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new(gwy_enum_to_string(controls->out,
                                           sf_types, G_N_ELEMENTS(sf_types)));
@@ -288,8 +291,13 @@ dialog_update(GwyUnitoolState *state,
                                               controls->interp,
                                               GWY_WINDOWING_HANN,
                                               100))
-        gwy_graph_add_dataline(GWY_GRAPH(controls->graph), dataline,
-                               0, lab, NULL);
+    {
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                     dataline,
+                                                     0, 0);
+        gwy_graph_curve_model_set_description(gcmodel, lab->str);
+        gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
+    }
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
 }
@@ -297,55 +305,19 @@ dialog_update(GwyUnitoolState *state,
 static void
 apply(GwyUnitoolState *state)
 {
+    
     ToolControls *controls;
     GtkWidget *graph;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyGraphAutoProperties prop;
-    GwyDataLine *dataline;
-    GwyDataViewLayer *layer;
-    gint xm1, xm2, ym1, ym2;
-    GString *lab;
-    gdouble xmin, ymin, xmax, ymax;
 
     controls = (ToolControls*)state->user_data;
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    gwy_unitool_get_selection_or_all(state, &xmin, &ymin, &xmax, &ymax);
 
-    graph = gwy_graph_new();
+    graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+    gtk_widget_set_size_request(graph, 400, 300);
 
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
-    xm1 = ROUND(gwy_data_field_rtoj(dfield, xmin));
-    ym1 = ROUND(gwy_data_field_rtoi(dfield, ymin));
-    xm2 = ROUND(gwy_data_field_rtoj(dfield, xmax));
-    ym2 = ROUND(gwy_data_field_rtoi(dfield, ymax));
-
-    dataline = gwy_data_line_new(10, 10, FALSE);
-    lab = g_string_new(gwy_enum_to_string(controls->out,
-                                          sf_types, G_N_ELEMENTS(sf_types)));
-
-    if (gwy_data_field_get_line_stat_function(dfield, dataline,
-                                              xm1, ym1,
-                                              xm2, ym2,
-                                              controls->out,
-                                              controls->dir,
-                                              controls->interp,
-                                              GWY_WINDOWING_HANN,
-                                              100))
-        gwy_graph_add_dataline(GWY_GRAPH(graph), dataline, 0, lab, NULL);
-
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
+    gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
                                            state->data_window,
                                            _(sf_types[controls->out].name));
 
-    g_string_free(lab, TRUE);
-    g_object_unref(dataline);
 }
 
 static void
