@@ -23,5 +23,11 @@ plugin_proxy_so_LDFLAGS = $(module_ldflags),plugin-proxy.so
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
 
+# To run uninstalled
+all-local: tool
+
+tool:
+	$(LN_S) tools tool
+
 clean-local:
-	rm -f core.* *~
+	rm -f core.* *~ tool

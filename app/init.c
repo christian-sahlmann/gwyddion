@@ -22,6 +22,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwydgets.h>
+#include <string.h>
 #include "gwyddion.h"
 
 static GSList *palettes = NULL;
@@ -100,5 +101,31 @@ gwy_app_init_set_window_icon(void)
     g_free(filename);
     g_free(p);
 }
+
+#ifdef G_OS_WIN32
+void
+gwy_app_set_find_self_style(const gchar *argv0)
+{
+    gwy_find_self_set_argv0(argv0);
+}
+#endif  /* G_OS_WIN32 */
+
+#ifdef G_OS_UNIX
+void
+gwy_app_set_find_self_style(const gchar *argv0)
+{
+    const gchar *ext ="/app/.libs/lt-gwyddion";
+    gchar *p;
+
+    if (g_str_has_suffix(argv0, ext)) {
+        g_printerr("Warning: Running uninstalled, "
+                   "but may be still using *installed* libraries.\n");
+        p = g_strdup(argv0);
+        strcpy(p + strlen(p) - strlen(ext) + 1, "gwyddion");
+        gwy_find_self_set_argv0(p);
+        g_free(p);
+    }
+}
+#endif  /* G_OS_UNIX */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

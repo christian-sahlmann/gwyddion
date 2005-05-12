@@ -69,10 +69,7 @@ main(int argc, char *argv[])
     gchar *settings_file, *recent_file_file;
     gboolean has_settings, settings_ok = FALSE;
 
-#ifdef G_OS_WIN32
-    gwy_find_self_set_argv0(argv[0]);
-#endif  /* G_OS_WIN32 */
-
+    gwy_app_set_find_self_style(argv[0]);
     process_preinit_options(&argc, &argv);
     gwy_debug_objects_enable(enable_object_debugging);
     gwy_app_settings_create_config_dir();

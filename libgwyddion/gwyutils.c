@@ -508,30 +508,6 @@ gwy_sgettext(const gchar *msgid)
 gchar*
 gwy_find_self_dir(const gchar *dirname)
 {
-#ifdef G_OS_WIN32
-    gchar *p, *q, *b;
-
-    /* TODO: to be sure, we should put the path to the registry, too */
-    /* argv[0] */
-    p = g_strdup(gwy_argv0);
-    if (!g_path_is_absolute(p)) {
-        b = g_get_current_dir();
-        q = g_build_filename(b, p, NULL);
-        g_free(p);
-        g_free(b);
-        p = q;
-    }
-    /* now p contains an absolute path, the dir should be there */
-    gwy_debug("gwyddion full path seems to be `%s'", p);
-    q = g_path_get_dirname(p);
-    g_free(p);
-    p = q;
-    q = g_build_filename(p, dirname, NULL);
-    g_free(p);
-
-    return q;
-#endif /* G_OS_WIN32 */
-
 #ifdef G_OS_UNIX
     static const struct { gchar *id; gchar *path; } paths[] = {
         { "modules",   GWY_MODULE_DIR },
@@ -539,6 +515,33 @@ gwy_find_self_dir(const gchar *dirname)
         { "plugins",   GWY_PLUGIN_DIR },
     };
     gsize i;
+#endif /* G_OS_UNIX */
+    gchar *p, *q, *b;
+
+#ifdef G_OS_UNIX
+    if (gwy_argv0) {
+#endif
+        /* TODO: to be sure, we should put the path to the registry, too */
+        /* argv[0] */
+        p = g_strdup(gwy_argv0);
+        if (!g_path_is_absolute(p)) {
+            b = g_get_current_dir();
+            q = g_build_filename(b, p, NULL);
+            g_free(p);
+            g_free(b);
+            p = q;
+        }
+        /* now p contains an absolute path, the dir should be there */
+        gwy_debug("gwyddion full path seems to be `%s'", p);
+        q = g_path_get_dirname(p);
+        g_free(p);
+        p = q;
+        q = g_build_filename(p, dirname, NULL);
+        g_free(p);
+
+        return q;
+#ifdef G_OS_UNIX
+    }
 
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
         if (strcmp(dirname, paths[i].id) == 0)
@@ -546,7 +549,7 @@ gwy_find_self_dir(const gchar *dirname)
     }
     g_critical("Cannot find directory for `%s'", dirname);
     return NULL;
-#endif /* G_OS_UNIX */
+#endif
 }
 
 /**
@@ -554,6 +557,9 @@ gwy_find_self_dir(const gchar *dirname)
  * @argv0: Program's argv[0].
  *
  * Sets argv0 so that gwy_find_self_dir() can find self.
+ *
+ * Calling this function enforces Win32 (or uninstalled) directory layout,
+ * even on Unix.
  **/
 void
 gwy_find_self_set_argv0(const gchar *argv0)
