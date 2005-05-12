@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -372,7 +372,7 @@ mdt_load(const gchar *filename)
                 n++;
                 choices = g_renew(GwyEnum, choices, n);
                 choices[n-1].value = i;
-                choices[n-1].name = g_strdup_printf("%s %" G_GSIZE_FORMAT " "
+                choices[n-1].name = g_strdup_printf("%s %u "
                                                     "(%u×%u)",
                                                     _("Frame"),
                                                     i+1,
@@ -584,36 +584,38 @@ mdt_read_axis_scales(const guchar *p,
 {
     x_scale->offset = get_FLOAT(&p);
     x_scale->step = get_FLOAT(&p);
-    x_scale->unit = get_WORD(&p);
+    x_scale->unit = (gint16)get_WORD(&p);
     gwy_debug("x: *%g +%g [%d:%s]",
               x_scale->step, x_scale->offset, x_scale->unit,
               gwy_enum_to_string(x_scale->unit,
                                  mdt_units, G_N_ELEMENTS(mdt_units)));
-    if (!(x_scale->step > 0)) {
+    x_scale->step = fabs(x_scale->step);
+    if (!x_scale->step) {
         g_warning("x_scale.step == 0, changing to 1");
         x_scale->step = 1.0;
     }
 
     y_scale->offset = get_FLOAT(&p);
     y_scale->step = get_FLOAT(&p);
-    y_scale->unit = get_WORD(&p);
+    y_scale->unit = (gint16)get_WORD(&p);
     gwy_debug("y: *%g +%g [%d:%s]",
               y_scale->step, y_scale->offset, y_scale->unit,
               gwy_enum_to_string(y_scale->unit,
                                  mdt_units, G_N_ELEMENTS(mdt_units)));
-    if (!(y_scale->step > 0)) {
+    y_scale->step = fabs(y_scale->step);
+    if (!y_scale->step) {
         g_warning("y_scale.step == 0, changing to 1");
         y_scale->step = 1.0;
     }
 
     z_scale->offset = get_FLOAT(&p);
     z_scale->step = get_FLOAT(&p);
-    z_scale->unit = get_WORD(&p);
+    z_scale->unit = (gint16)get_WORD(&p);
     gwy_debug("z: *%g +%g [%d:%s]",
               z_scale->step, z_scale->offset, z_scale->unit,
               gwy_enum_to_string(z_scale->unit,
                                  mdt_units, G_N_ELEMENTS(mdt_units)));
-    if (!(z_scale->step > 0)) {
+    if (!z_scale->step) {
         g_warning("z_scale.step == 0, changing to 1");
         z_scale->step = 1.0;
     }
@@ -818,7 +820,7 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     gdouble *data;
     gdouble xreal, yreal, zscale;
     gint power10xy, power10z;
-    const guchar *p;
+    const gint16 *p;
     const gchar *unit;
 
     if (dataframe->x_scale.unit != dataframe->y_scale.unit)
@@ -843,9 +845,9 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     g_object_unref(siunitz);
 
     data = gwy_data_field_get_data(dfield);
-    p = dataframe->image;
+    p = (gint16*)dataframe->image;
     for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
-        data[i] = zscale*(p[2*i] + 256.0*p[2*i + 1]);
+        data[i] = zscale*GINT16_FROM_LE(p[i]);
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
