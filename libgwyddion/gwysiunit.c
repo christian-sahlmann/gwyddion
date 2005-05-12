@@ -26,10 +26,14 @@
 #include "gwymath.h"
 #include "gwydebugobjects.h"
 #include "gwyserializable.h"
-#include "gwywatchable.h"
 #include "gwysiunit.h"
 
 #define GWY_SI_UNIT_TYPE_NAME "GwySIUnit"
+
+enum {
+    VALUE_CHANGED,
+    LAST_SIGNAL
+};
 
 /* FIXME: unused */
 typedef struct {
@@ -74,7 +78,6 @@ static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
 static void        gwy_si_unit_init              (GwySIUnit *si_unit);
 static void        gwy_si_unit_finalize          (GObject *object);
 static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
-static void        gwy_si_unit_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_si_unit_serialize         (GObject *obj,
                                                   GByteArray *buffer);
 static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
@@ -149,6 +152,8 @@ static const GwySIFormatStyle format_style_TeX = {
 
 static GObjectClass *parent_class = NULL;
 
+static guint si_unit_signals[LAST_SIGNAL] = { 0 };
+
 GType
 gwy_si_unit_get_type(void)
 {
@@ -173,11 +178,6 @@ gwy_si_unit_get_type(void)
             NULL,
             NULL
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_si_unit_watchable_init,
-            NULL,
-            NULL
-        };
 
         gwy_si_unit_type = g_type_register_static(G_TYPE_OBJECT,
                                                   GWY_SI_UNIT_TYPE_NAME,
@@ -186,9 +186,6 @@ gwy_si_unit_get_type(void)
         g_type_add_interface_static(gwy_si_unit_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_si_unit_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_si_unit_type;
@@ -206,12 +203,6 @@ gwy_si_unit_serializable_init(GwySerializableIface *iface)
 }
 
 static void
-gwy_si_unit_watchable_init(GwyWatchableIface *iface)
-{
-    iface->value_changed = NULL;
-}
-
-static void
 gwy_si_unit_class_init(GwySIUnitClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
@@ -219,6 +210,15 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_si_unit_finalize;
+
+    si_unit_signals[VALUE_CHANGED]
+        = g_signal_new("value_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwySIUnitClass, value_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -322,7 +322,7 @@ gwy_si_unit_clone_real(GObject *source, GObject *copy)
     g_array_append_vals(clone->units,
                         si_unit->units->data, si_unit->units->len);
     clone->power10 = si_unit->power10;
-    g_signal_emit_by_name(copy, "value_changed");
+    g_signal_emit(copy, si_unit_signals[VALUE_CHANGED], 0);
 }
 
 /**
@@ -414,7 +414,7 @@ gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
     if (power10)
         *power10 = siunit->power10;
 
-    g_signal_emit_by_name(siunit, "value_changed");
+    g_signal_emit(siunit, si_unit_signals[VALUE_CHANGED], 0);
 }
 
 /**
@@ -897,7 +897,7 @@ gwy_si_unit_power(GwySIUnit *siunit,
     g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
 
     gwy_si_unit_power_real(siunit, power, result);
-    g_signal_emit_by_name(result, "value_changed");
+    g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
 
     return result;
 }
@@ -970,7 +970,7 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         }
     }
     gwy_si_unit_canonicalize(result);
-    g_signal_emit_by_name(result, "value_changed");
+    g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
 
     return result;
 }

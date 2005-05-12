@@ -47,7 +47,6 @@ static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
 static void     gwy_data_field_init              (GObject *object);
 static void     gwy_data_field_finalize          (GObject *object);
 static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
-static void     gwy_data_field_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_data_field_serialize      (GObject *obj,
                                                   GByteArray *buffer);
 static GObject* gwy_data_field_deserialize       (const guchar *buffer,
@@ -84,13 +83,7 @@ gwy_data_field_get_type(void)
             NULL,
             NULL
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_data_field_watchable_init,
-            NULL,
-            NULL
-        };
 
-        gwy_debug("");
         gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
                                                      GWY_DATA_FIELD_TYPE_NAME,
                                                      &gwy_data_field_info,
@@ -98,9 +91,6 @@ gwy_data_field_get_type(void)
         g_type_add_interface_static(gwy_data_field_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_data_field_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_data_field_type;
@@ -115,14 +105,6 @@ gwy_data_field_serializable_init(GwySerializableIface *iface)
     iface->deserialize = gwy_data_field_deserialize;
     iface->duplicate = gwy_data_field_duplicate_real;
     iface->clone = gwy_data_field_clone_real;
-}
-
-static void
-gwy_data_field_watchable_init(GwyWatchableIface *iface)
-{
-    gwy_debug("");
-    /* initialize stuff */
-    iface->value_changed = NULL;
 }
 
 static void

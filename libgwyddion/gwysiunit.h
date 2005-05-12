@@ -54,6 +54,8 @@ struct _GwySIUnit {
 struct _GwySIUnitClass {
     GObjectClass parent_class;
 
+    void (*value_changed)(GwySIUnit *siunit);
+
     gpointer *reserved1;
     gpointer *reserved2;
 };

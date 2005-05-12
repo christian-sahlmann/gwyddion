@@ -1265,9 +1265,7 @@ gwy_container_try_set_one(GwyContainer *container,
     if (G_VALUE_HOLDS_OBJECT(value)) {
         GObject *obj = g_value_peek_pointer(value);
 
-        g_return_val_if_fail(GWY_IS_SERIALIZABLE(obj)
-                             && GWY_IS_WATCHABLE(obj),
-                             FALSE);
+        g_return_val_if_fail(GWY_IS_SERIALIZABLE(obj), FALSE);
     }
     else {
         GType type = G_VALUE_TYPE(value);
@@ -1654,8 +1652,7 @@ gwy_container_set_string(GwyContainer *container,
  * incremented.
  *
  * The object must implement #GwySerializable interface to allow serialization
- * of the container.  It also has to implement #GwyWatchable interface to
- * allow watching of value changes.
+ * of the container.
  **/
 void
 gwy_container_set_object(GwyContainer *container,

@@ -38,6 +38,8 @@ typedef struct _Gwy3DLabelClass           Gwy3DLabelClass;
 
 struct _Gwy3DLabelClass {
     GObjectClass parent_class;
+
+    void (*value_changed)(Gwy3DLabel *label);
 };
 
 struct _Gwy3DLabel {

@@ -21,7 +21,6 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyserializable.h>
-#include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwy3dlabel.h"
 
@@ -33,6 +32,11 @@
                                                     (GWY_TYPE_##type)), id))
 
 #define GEOM_PSPEC(id) GWY_GET_PSPEC(3D_LABEL, id, DOUBLE)
+
+enum {
+    VALUE_CHANGED,
+    LAST_SIGNAL
+};
 
 enum {
     PROP_0,
@@ -50,7 +54,6 @@ static void        gwy_3d_label_class_init        (Gwy3DLabelClass *klass);
 static void        gwy_3d_label_init              (Gwy3DLabel *label);
 static void        gwy_3d_label_finalize          (GObject *object);
 static void        gwy_3d_label_serializable_init (GwySerializableIface *iface);
-static void        gwy_3d_label_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_3d_label_serialize         (GObject *obj,
                                                    GByteArray *buffer);
 static GObject*    gwy_3d_label_deserialize       (const guchar *buffer,
@@ -78,6 +81,8 @@ static void        gwy_3d_label_adj_changed       (Gwy3DLabel *label,
 
 static GObjectClass *parent_class = NULL;
 
+static guint gwy_3d_label_signals[LAST_SIGNAL] = { 0 };
+
 GType
 gwy_3d_label_get_type(void)
 {
@@ -102,13 +107,7 @@ gwy_3d_label_get_type(void)
             NULL,
             NULL
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_3d_label_watchable_init,
-            NULL,
-            NULL
-        };
 
-        gwy_debug("");
         gwy_3d_label_type = g_type_register_static(G_TYPE_OBJECT,
                                                    GWY_3D_LABEL_TYPE_NAME,
                                                    &gwy_3d_label_info,
@@ -116,9 +115,6 @@ gwy_3d_label_get_type(void)
         g_type_add_interface_static(gwy_3d_label_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_3d_label_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_3d_label_type;
@@ -131,12 +127,6 @@ gwy_3d_label_serializable_init(GwySerializableIface *iface)
     iface->deserialize = gwy_3d_label_deserialize;
     iface->duplicate = gwy_3d_label_duplicate_real;
     iface->clone = gwy_3d_label_clone_real;
-}
-
-static void
-gwy_3d_label_watchable_init(GwyWatchableIface *iface)
-{
-    iface->value_changed = NULL;
 }
 
 static void
@@ -227,6 +217,15 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
                              "Default text",
                              "Default label text",
                              "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+    gwy_3d_label_signals[VALUE_CHANGED]
+        = g_signal_new("value_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(Gwy3DLabelClass, value_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -547,7 +546,7 @@ gwy_3d_label_set_text(Gwy3DLabel *label,
         return;
 
     g_string_assign(label->text, text);
-    g_signal_emit_by_name(label, "value_changed");
+    g_signal_emit(label, gwy_3d_label_signals[VALUE_CHANGED], 0);
 }
 
 /**
