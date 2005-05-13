@@ -354,7 +354,7 @@ gwy_si_unit_new(const char *unit_string)
  * of @unit_string.
  *
  * For example, for "pA/s" it will store -12 to @power10 because 1 pA/s is
- * 1e-9 A/s, for "km^2" it will store 6 to @power10 because 1 km^2 is 1e6
+ * 1e-12 A/s, for "km^2" it will store 6 to @power10 because 1 km^2 is 1e6
  * m^2.
  *
  * Returns: A new SI unit.
