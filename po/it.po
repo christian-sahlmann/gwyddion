@@ -1,6 +1,7 @@
 # translation of it.po to 
 # translation of it.po to
 # translation of it.po to
+# translation of it.po to
 # translation of gwyddion.po to
 # This file is distributed under the same license as the PACKAGE package.
 # Copyright (C) YEAR "David Necas (Yeti) & Petr Klapetek".
@@ -11,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-04-18 04:17+0200\n"
-"PO-Revision-Date: 2005-03-28 08:49+0200\n"
+"POT-Creation-Date: 2005-05-13 04:24+0200\n"
+"PO-Revision-Date: 2005-05-07 15:49+0200\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -273,11 +274,11 @@ msgstr "Tipo Linea:"
 msgid "Line thickness:"
 msgstr "Spessore Linea:"
 
-#: libgwydgets/gwygrapherlabeldialog.c:115
+#: libgwydgets/gwygrapherlabeldialog.c:116
 msgid "Frame thickness:"
 msgstr "Spessore cornice:"
 
-#: libgwydgets/gwygrapherlabeldialog.c:125
+#: libgwydgets/gwygrapherlabeldialog.c:126
 msgid "_reversed"
 msgstr "invertito"
 
@@ -411,31 +412,32 @@ msgstr "Intersezione"
 
 #: libgwydgets/gwyoptionmenus.c:795
 msgid "Vickers"
-msgstr ""
+msgstr "Vickers"
 
 #: libgwydgets/gwyoptionmenus.c:796
 msgid "Berkovich"
-msgstr ""
+msgstr "Berkovich"
 
 #: libgwydgets/gwyoptionmenus.c:797
 msgid "Berkovich (modified)"
-msgstr ""
+msgstr "Berkovich (modificato)"
 
 #: libgwydgets/gwyoptionmenus.c:798
 msgid "Knoop"
-msgstr ""
+msgstr "Knoop"
 
 #: libgwydgets/gwyoptionmenus.c:799
 msgid "Brinell"
-msgstr ""
+msgstr "Brinell"
 
 #: libgwydgets/gwyoptionmenus.c:800
+#, fuzzy
 msgid "Cube corner"
-msgstr ""
+msgstr "Spigolo cubo"
 
 #: libgwydgets/gwyoptionmenus.c:801
 msgid "Rockwell"
-msgstr ""
+msgstr "Rockwell"
 
 #: libgwymodule/gwymodulebrowser.c:64
 msgid "Module Browser"
@@ -541,56 +543,56 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:696
+#: app/app.c:696 app/app.c:750
 msgid "Untitled Graph"
 msgstr "Grafico senza titolo"
 
-#: app/app.c:824
+#: app/app.c:878
 msgid "Export"
 msgstr "Esporta"
 
-#: app/app.c:828
+#: app/app.c:882
 msgid "Export 3D view to PNG image"
 msgstr "Esporta veduta 3D come immagine PNG"
 
-#: app/app.c:1146 app/app.c:1158
+#: app/app.c:1200 app/app.c:1212
 #, c-format
 msgid "Untitled %d"
 msgstr "Senza titolo %d"
 
-#: app/app.c:1176 app/toolbox.c:754
+#: app/app.c:1230 app/toolbox.c:754
 msgid "/Remove _Mask"
 msgstr "/Rimuovi _Maschera"
 
-#: app/app.c:1177 app/toolbox.c:770
+#: app/app.c:1231 app/toolbox.c:770
 msgid "/Mask _Color"
 msgstr "/_Colore Maschera"
 
-#: app/app.c:1178
+#: app/app.c:1232
 msgid "/Fix _Zero"
 msgstr "/Fissa _Zero"
 
-#: app/app.c:1179
+#: app/app.c:1233
 msgid "/Reset Color _Range"
 msgstr "/Azzera Intervallo Colore"
 
-#: app/app.c:1180 app/toolbox.c:762
+#: app/app.c:1234 app/toolbox.c:762
 msgid "/Remove _Presentation"
 msgstr "/Rimuovi _Presentazione"
 
-#: app/app.c:1181
+#: app/app.c:1235
 msgid "/_Level"
 msgstr "/_Livella"
 
-#: app/app.c:1182
+#: app/app.c:1236
 msgid "/Zoom _1:1"
 msgstr "/Zoom _1:1"
 
-#: app/app.c:1405
+#: app/app.c:1459
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
-#: app/app.c:1432
+#: app/app.c:1486
 msgid "Change Default Mask Color"
 msgstr "Cambia Colore Predefinito Maschera"
 
@@ -639,65 +641,65 @@ msgstr "Chiudi elenco file"
 msgid "Open selected file"
 msgstr "Apri file selezionato"
 
-#: app/graphlist.c:147
+#: app/graphlist.c:148
 #, c-format
 msgid "Graph List for %s"
 msgstr "Lista grafici per %s"
 
-#: app/graphlist.c:172 modules/file/rawfile.c:1109
+#: app/graphlist.c:173 modules/file/rawfile.c:1109
 msgid "_Delete"
 msgstr "_Elimina"
 
-#: app/graphlist.c:177
+#: app/graphlist.c:178
 msgid "Delete _All"
 msgstr "Elimina Tutti"
 
-#: app/graphlist.c:182
+#: app/graphlist.c:183
 msgid "_Show All"
 msgstr "Mostra Tutti"
 
-#: app/graphlist.c:187
+#: app/graphlist.c:188
 msgid "_Hide All"
 msgstr "Nascondi Tutti"
 
-#: app/graphlist.c:212
+#: app/graphlist.c:213
 msgid "Vis."
 msgstr "Vis."
 
-#: app/graphlist.c:213
+#: app/graphlist.c:214
 msgid "Title"
 msgstr "Titolo"
 
-#: app/graphlist.c:214
+#: app/graphlist.c:215
 msgid "graphlist|Curves"
 msgstr "Lista grafici|Curve"
 
-#: app/gwyddion.c:95
+#: app/gwyddion.c:92
 msgid "Loading settings"
 msgstr "Carica preferenze"
 
-#: app/gwyddion.c:101
+#: app/gwyddion.c:98
 msgid "Loading document history"
 msgstr "Carica cronologia"
 
-#: app/gwyddion.c:106
+#: app/gwyddion.c:103
 msgid "Registering "
 msgstr "Registrazione "
 
-#: app/gwyddion.c:107
+#: app/gwyddion.c:104
 #, fuzzy
 msgid "stock items"
 msgstr "stock items"
 
-#: app/gwyddion.c:110
+#: app/gwyddion.c:107
 msgid "modules"
 msgstr "moduli"
 
-#: app/gwyddion.c:115
+#: app/gwyddion.c:112
 msgid "Initializing GUI"
 msgstr "Inizializzazione GUI"
 
-#: app/gwyddion.c:223
+#: app/gwyddion.c:220
 #, c-format
 msgid ""
 "Could not read settings file `%s'.\n"
@@ -811,7 +813,7 @@ msgstr "Segna grana per watershed"
 msgid "Remove grains by threshold"
 msgstr "Rimuovi grana per soglia"
 
-#: app/toolbox.c:217 modules/process/grain_dist.c:101
+#: app/toolbox.c:217 modules/process/grain_dist.c:106
 msgid "Grain size distribution"
 msgstr "Distribuzione dimensione grana"
 
@@ -985,7 +987,7 @@ msgstr "Altezza"
 
 #: app/unitool.c:799 app/unitool.c:803 app/unitool.c:810 app/unitool.c:817
 #: modules/file/pixmap.c:689 modules/file/pixmap.c:696
-#: modules/tools/level3.c:198 modules/tools/profile.c:254
+#: modules/tools/level3.c:198 modules/tools/profile.c:255
 #: modules/tools/readvalue.c:179
 msgid "px"
 msgstr "px"
@@ -996,16 +998,16 @@ msgstr "Attendere"
 
 #: modules/file/apefile.c:127
 msgid "Imports APE (Applied Physics and Engineering) data files."
-msgstr ""
+msgstr "Importa file dati APE (Applied Physics and Engineering)"
 
 #: modules/file/apefile.c:143
 msgid "APE files (.dat)"
-msgstr ""
+msgstr "File APE (.dat)"
 
 #: modules/file/apefile.c:389
 #, c-format
 msgid "Channel %u"
-msgstr ""
+msgstr "Canale %u"
 
 #: modules/file/apefile.c:392 modules/file/ezdfile.c:560
 #: modules/file/nanoscope.c:578 modules/file/nt-mdt.c:453
@@ -1037,11 +1039,11 @@ msgstr "file AFM Assing (.afm)"
 
 #: modules/file/bcrfile.c:67
 msgid "Imports Image Metrology BCR data files."
-msgstr ""
+msgstr "Importa file dati BCR Image Metrology"
 
 #: modules/file/bcrfile.c:83
 msgid "BCR files (.bcr, .bcrf)"
-msgstr ""
+msgstr "File BCR (.bcr, .bcrf)"
 
 #: modules/file/createc.c:61
 msgid "Imports Createc data files."
@@ -1053,16 +1055,16 @@ msgstr "file Createc (.dat)"
 
 #: modules/file/ezdfile.c:106
 msgid "Imports Nanosurf EZD data files."
-msgstr ""
+msgstr "Importafile dati EZD Nanosurf"
 
 #: modules/file/ezdfile.c:122
 msgid "Nanosurf files (.ezd)"
-msgstr ""
+msgstr "File Nanosurf (.ezd)"
 
 #: modules/file/ezdfile.c:553
 #, c-format
 msgid "Group %d, Channel %d"
-msgstr ""
+msgstr "Gruppo %d, Canale %d"
 
 #: modules/file/gwyfile.c:53
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -1499,11 +1501,11 @@ msgstr ""
 
 #: modules/file/rhk-spm32.c:94
 msgid "Imports RHK Technology SPM32 data files."
-msgstr ""
+msgstr "Importa file dati SPM32 RHK Technology"
 
 #: modules/file/rhk-spm32.c:110
 msgid "RHK SPM32 files (.sm2)"
-msgstr ""
+msgstr "File RHK SPM32 (.sm2)"
 
 #: modules/file/sis.c:356
 msgid "Imports SIS (Surface Imaging Systems) data files."
@@ -1515,11 +1517,11 @@ msgstr "file SIS (.sis)"
 
 #: modules/file/spmlab.c:49
 msgid "Imports Thermicroscopes SpmLab R4, R5, and R6 data files."
-msgstr ""
+msgstr "Importa file dati R4, R5, and R6 Thermicroscopes SpmLab"
 
 #: modules/file/spmlab.c:65
 msgid "Thermicroscopes SpmLab R4, R5, R6 files"
-msgstr ""
+msgstr "File Thermicroscopes SpmLab R4, R5, R6"
 
 #: modules/file/stmprg.c:68
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -1531,24 +1533,24 @@ msgstr "file Omicron STMPRG (.tp, .ta)"
 
 #: modules/file/stpfile.c:87
 msgid "Imports Molecular Imaging STP data files."
-msgstr ""
+msgstr "Importa file dati STP Molecular Imaging"
 
 #: modules/file/stpfile.c:103
 msgid "STP files (.stp)"
-msgstr ""
+msgstr "File STP (.stp)"
 
 #: modules/file/stpfile.c:427
-#, c-format
+#, fuzzy, c-format
 msgid "Buffer %u"
-msgstr ""
+msgstr "Buffer %u"
 
 #: modules/file/wsxmfile.c:64
 msgid "Imports Nanotec WSxM data files."
-msgstr ""
+msgstr "Importa file dati WSxM Nanotec "
 
 #: modules/file/wsxmfile.c:80
 msgid "WSXM files (.tom)"
-msgstr ""
+msgstr "File WSXM (.tom)"
 
 #: modules/graph/graph_cd.c:120
 msgid "Critical dimension measurements"
@@ -2052,7 +2054,7 @@ msgstr "Dimensioni finestra"
 
 #: modules/process/crosscor.c:264 modules/process/fft.c:350
 #: modules/process/fractal.c:245 modules/process/maskcor.c:188
-#: modules/tools/sfunctions.c:200
+#: modules/tools/sfunctions.c:201
 msgid "_Output type:"
 msgstr "Tipo output:"
 
@@ -2100,7 +2102,7 @@ msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 #: modules/process/fft_filter_1d.c:338 modules/process/fractal.c:230
 #: modules/process/nanoindent_adjust.c:245 modules/process/rotate.c:248
 #: modules/process/scale.c:206 modules/process/unrotate.c:274
-#: modules/tools/profile.c:271
+#: modules/tools/profile.c:272
 msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
@@ -2219,6 +2221,16 @@ msgstr "/Mostra/Determinazione bordi/Bordo RMS"
 msgid "/_Display/_Edge detection/Local _Nonlinearity"
 msgstr "/Mostra/Determinazione bordi/ Locale non lineare"
 
+#: modules/process/entropy.c:70
+msgid ""
+"Calculates two-dimensional distribution of entropys or graph of their "
+"angular distribution."
+msgstr ""
+
+#: modules/process/entropy.c:87
+msgid "/_Level/_Entropy Level"
+msgstr ""
+
 #: modules/process/facet-level.c:40
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
@@ -2231,7 +2243,7 @@ msgstr ""
 msgid "/_Level/_Facet Level"
 msgstr "/_Livella/_Facet Level"
 
-#: modules/process/facet-level.c:86
+#: modules/process/facet-level.c:87
 msgid "Facet-levelling"
 msgstr "Facet-levelling"
 
@@ -2371,8 +2383,8 @@ msgstr "Indovina"
 msgid "Function type:"
 msgstr "Tipo funzione:"
 
-#: modules/process/fit_2d.c:604 modules/process/grain_wshed.c:526
-#: modules/process/tip_blind.c:497 modules/process/tip_map.c:269
+#: modules/process/fit_2d.c:604 modules/process/grain_wshed.c:532
+#: modules/process/tip_blind.c:497 modules/process/tip_map.c:265
 #: modules/process/tip_reconstruction.c:263
 msgid "Initializing"
 msgstr "Inizializzazione"
@@ -2499,7 +2511,7 @@ msgstr "Stima la distribuzione  grana (parte continua della maschera)"
 msgid "/_Grains/_Size Distribution"
 msgstr "/_Grana/Distribuzione Dimensioni"
 
-#: modules/process/grain_dist.c:94
+#: modules/process/grain_dist.c:92
 msgid "Grain size histogram"
 msgstr "Istogramma dimensione grana"
 
@@ -2533,8 +2545,8 @@ msgid "_Curvature:"
 msgstr "_Curvatura:"
 
 #: modules/process/grain_mark.c:256 modules/process/grain_rem_threshold.c:236
-#: modules/process/grain_wshed.c:269 modules/tools/profile.c:247
-#: modules/tools/sfunctions.c:194
+#: modules/process/grain_wshed.c:269 modules/tools/profile.c:248
+#: modules/tools/sfunctions.c:195
 msgid "<b>Options</b>"
 msgstr "<b>Opzioni</b>"
 
@@ -2604,19 +2616,19 @@ msgstr "Numero di step:"
 msgid "Dr_op size:"
 msgstr "Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:538
+#: modules/process/grain_wshed.c:544
 msgid "Finding minima"
 msgstr "Ricerca minimi"
 
-#: modules/process/grain_wshed.c:544
+#: modules/process/grain_wshed.c:550
 msgid "Locating"
 msgstr "Localizzando"
 
-#: modules/process/grain_wshed.c:551
+#: modules/process/grain_wshed.c:557
 msgid "Watershed"
 msgstr "Watershed"
 
-#: modules/process/grain_wshed.c:557
+#: modules/process/grain_wshed.c:563
 msgid "Marking boundaries"
 msgstr "Marcatura confini"
 
@@ -2811,7 +2823,7 @@ msgstr "Aggiusta le immagini di due stampe "
 
 #: modules/process/nanoindent_adjust.c:111
 msgid "/Indento_r/Ad_just..."
-msgstr ""
+msgstr "/Indentazione/Aggiusta..."
 
 #: modules/process/nanoindent_adjust.c:177
 #, fuzzy
@@ -2849,171 +2861,172 @@ msgstr ""
 
 #: modules/process/nanoindent_analyze.c:232
 msgid "Do nothing"
-msgstr ""
+msgstr "Non fare nulla"
 
 #: modules/process/nanoindent_analyze.c:233
 msgid "Plane level"
-msgstr ""
+msgstr "Livella piano"
 
 #: modules/process/nanoindent_analyze.c:234
 msgid "Plane rotate"
-msgstr ""
+msgstr "Ruota piano"
 
 #: modules/process/nanoindent_analyze.c:247
 msgid "New"
-msgstr ""
+msgstr "Nuovo"
 
 #: modules/process/nanoindent_analyze.c:248
 msgid "AND"
-msgstr ""
+msgstr "E"
 
 #: modules/process/nanoindent_analyze.c:249
 msgid "OR"
-msgstr ""
+msgstr "O"
 
 #: modules/process/nanoindent_analyze.c:250
 msgid "NOT"
-msgstr ""
+msgstr "NON"
 
 #: modules/process/nanoindent_analyze.c:251
 msgid "XOR"
-msgstr ""
+msgstr "XOR"
 
 #: modules/process/nanoindent_analyze.c:268
 msgid "Nothing"
-msgstr ""
+msgstr "Nulla"
 
 #: modules/process/nanoindent_analyze.c:269
 msgid "Above"
-msgstr ""
+msgstr "Sopra"
 
 #: modules/process/nanoindent_analyze.c:270
 msgid "Bellow"
-msgstr ""
+msgstr "Sotto"
 
 #: modules/process/nanoindent_analyze.c:271
 msgid "Plane"
-msgstr ""
+msgstr "Piano"
 
 #: modules/process/nanoindent_analyze.c:272
 msgid "Impression"
-msgstr ""
+msgstr "Impressione"
 
 #: modules/process/nanoindent_analyze.c:273
 msgid "Inner Pile-up"
-msgstr ""
+msgstr "Inner Pile-up"
 
 #: modules/process/nanoindent_analyze.c:274
+#, fuzzy
 msgid "Outer Pile-up"
-msgstr ""
+msgstr "Outer Pile-up"
 
 #: modules/process/nanoindent_analyze.c:275
 msgid "Special points"
-msgstr ""
+msgstr "Ounti speciali"
 
 #: modules/process/nanoindent_analyze.c:276
 msgid "Faces border"
-msgstr ""
+msgstr "Contorno facce"
 
 #: modules/process/nanoindent_analyze.c:286
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)"
-msgstr ""
+msgstr "Analizza struttura nanoindentazione (volumi, superfici, ....)"
 
 #: modules/process/nanoindent_analyze.c:302
 msgid "/Indento_r/_Analyze..."
-msgstr ""
+msgstr "/Indentazione/_Analizza..."
 
 #: modules/process/nanoindent_analyze.c:355
 msgid "Indentaion statistics"
-msgstr ""
+msgstr "Statistiche indentazione"
 
 #: modules/process/nanoindent_analyze.c:356
 msgid "_Compute & mark"
-msgstr ""
+msgstr "_Calcola & segna"
 
 #: modules/process/nanoindent_analyze.c:357
 msgid "_Save statistics"
-msgstr ""
+msgstr "_Salva statistiche"
 
 #: modules/process/nanoindent_analyze.c:395
 msgid "Data field leveling:"
-msgstr ""
+msgstr "Livellamento campo dati:"
 
 #: modules/process/nanoindent_analyze.c:404
 msgid "Marked areas:"
-msgstr ""
+msgstr "Aree segnate:"
 
 #: modules/process/nanoindent_analyze.c:411
 msgid "Indentor type:"
-msgstr ""
+msgstr "Typo indentazione:"
 
 #: modules/process/nanoindent_analyze.c:419
 msgid "Mask creation type:"
-msgstr ""
+msgstr "Creazione maschera:"
 
 #: modules/process/nanoindent_analyze.c:424
 msgid "Ref. plane tolerance:"
-msgstr ""
+msgstr "Ref. tolleranza piano:"
 
 #: modules/process/nanoindent_analyze.c:429
 msgid "Angle 1 tolerance:"
-msgstr ""
+msgstr "Tolleranza angolo 1:"
 
 #: modules/process/nanoindent_analyze.c:434
 msgid "Theta range:"
-msgstr ""
+msgstr "Intervallo theta"
 
 #: modules/process/nanoindent_analyze.c:449
 msgid "Indent centre at"
-msgstr ""
+msgstr "Centra indentazione a:"
 
 #: modules/process/nanoindent_analyze.c:452
 msgid "Maximum at"
-msgstr ""
+msgstr "Massimo a"
 
 #: modules/process/nanoindent_analyze.c:455
 msgid "Max-min diference"
-msgstr ""
+msgstr "Differenza massimo-minimo"
 
 #: modules/process/nanoindent_analyze.c:462
 msgid "Expected A_d:"
-msgstr ""
+msgstr "A_d aspettata:"
 
 #: modules/process/nanoindent_analyze.c:465
 msgid "Expected A_p:"
-msgstr ""
+msgstr "A_p aspettata:"
 
 #: modules/process/nanoindent_analyze.c:506
 msgid "Volume above-below"
-msgstr ""
+msgstr "Volume sopra-sotto"
 
 #: modules/process/nanoindent_analyze.c:516
 msgid "Indent. volume"
-msgstr ""
+msgstr "Volume indent."
 
 #: modules/process/nanoindent_analyze.c:522
 msgid "Indent. A_d"
-msgstr ""
+msgstr "A_d indent."
 
 #: modules/process/nanoindent_analyze.c:525
 msgid "Indent. A_p"
-msgstr ""
+msgstr "A_p indent"
 
 #: modules/process/nanoindent_analyze.c:534
 msgid "Inner Pile-Up A_d"
-msgstr ""
+msgstr "Inner Pile-Up A_d"
 
 #: modules/process/nanoindent_analyze.c:537
 msgid "Inner Pile-Up A_p"
-msgstr ""
+msgstr "Inner Pile-Up A_p"
 
 #: modules/process/nanoindent_analyze.c:540
 msgid "Outer Pile-Up A_d"
-msgstr ""
+msgstr "Outer Pile-Up A_d"
 
 #: modules/process/nanoindent_analyze.c:543
 msgid "Outer Pile-Up A_p"
-msgstr ""
+msgstr "Outer Pile-Up A_p"
 
 #: modules/process/nanoindent_mark.c:45
 msgid "Creates mask of nanoindentation hole."
@@ -3683,36 +3696,36 @@ msgstr "_Escludi area selezionata"
 msgid "(otherwise will be used for fitting)"
 msgstr "(altrimenti utilizzata per il fitting)"
 
-#: modules/tools/profile.c:78
+#: modules/tools/profile.c:79
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Strumento profilo, crea grafico del profilo da linee selezionate."
 
-#: modules/tools/profile.c:105
+#: modules/tools/profile.c:106
 msgid "Extract profiles from data."
 msgstr "Estrai profilo dai dati"
 
-#: modules/tools/profile.c:167
+#: modules/tools/profile.c:168
 msgid "Extract Profile"
 msgstr "Estrai Profilo"
 
-#: modules/tools/profile.c:191
+#: modules/tools/profile.c:192
 msgid "<b>Profile Positions</b> [pixels]"
 msgstr "<b>Posizioni Profilo</b> pixels"
 
-#: modules/tools/profile.c:231
+#: modules/tools/profile.c:232
 #, c-format
 msgid "Profile %d"
 msgstr "Profilo %d"
 
-#: modules/tools/profile.c:254
+#: modules/tools/profile.c:255
 msgid "Thickness:"
 msgstr "Spessore:"
 
-#: modules/tools/profile.c:261
+#: modules/tools/profile.c:262
 msgid "_Separate profiles"
 msgstr "_Separa Profili"
 
-#: modules/tools/profile.c:462
+#: modules/tools/profile.c:431
 msgid "Profiles"
 msgstr "Profili"
 
@@ -3728,7 +3741,7 @@ msgstr "Legge valore sotto il cursore del mouse"
 msgid "Read Value"
 msgstr "Leggi Valore"
 
-#: modules/tools/sfunctions.c:77
+#: modules/tools/sfunctions.c:78
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF) of selected part of data."
@@ -3736,47 +3749,47 @@ msgstr ""
 "Strumento funzioni statistiche, calcola funzioni statistiche unidimensionali "
 "(altezza, distribuzione, correlazione, PSDF) di dati selezionati."
 
-#: modules/tools/sfunctions.c:97
+#: modules/tools/sfunctions.c:98
 msgid "Height distribution"
 msgstr "Distribuzione Altezze"
 
-#: modules/tools/sfunctions.c:98
+#: modules/tools/sfunctions.c:99
 msgid "Cum. height distribution"
 msgstr "Distribuzione altezze cum."
 
-#: modules/tools/sfunctions.c:99
+#: modules/tools/sfunctions.c:100
 msgid "Distribution of angles"
 msgstr "Distribuzione angoli"
 
-#: modules/tools/sfunctions.c:100
+#: modules/tools/sfunctions.c:101
 msgid "Cum. distribution of angles"
 msgstr "Distribuzione angoli cum"
 
-#: modules/tools/sfunctions.c:101
+#: modules/tools/sfunctions.c:102
 msgid "ACF"
 msgstr "ACF"
 
-#: modules/tools/sfunctions.c:102
+#: modules/tools/sfunctions.c:103
 msgid "HHCF"
 msgstr "HHCF"
 
-#: modules/tools/sfunctions.c:103
+#: modules/tools/sfunctions.c:104
 msgid "PSDF"
 msgstr "PSDF"
 
-#: modules/tools/sfunctions.c:116
+#: modules/tools/sfunctions.c:117
 msgid "Compute 1D statistical functions."
 msgstr "Calcola funzioni statistiche 1D"
 
-#: modules/tools/sfunctions.c:167
+#: modules/tools/sfunctions.c:168
 msgid "Statistical Functions"
 msgstr "Funzioni Statistiche"
 
-#: modules/tools/sfunctions.c:214
+#: modules/tools/sfunctions.c:215
 msgid "Computation _direction:"
 msgstr "Direzione calcolo:"
 
-#: modules/tools/sfunctions.c:228
+#: modules/tools/sfunctions.c:229
 msgid "Interpolation type:"
 msgstr "Tipo interpolazione:"
 
@@ -3869,30 +3882,3 @@ msgstr "Quantità statistiche"
 #: modules/tools/stats.c:214
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametri</b>"
-
-#~ msgid "By square root of 2"
-#~ msgstr "per radice quadrata di 2"
-
-#~ msgid "By cubic root of 2"
-#~ msgstr "per radice cubica di 2"
-
-#~ msgid "Integer zooms"
-#~ msgstr "Ingrandimenti interi"
-
-#~ msgid "Half-integer zooms"
-#~ msgstr "Ingrandimenti semi-interi"
-
-#~ msgid "_Theta: "
-#~ msgstr "_Theta: "
-
-#~ msgid "_Phi: "
-#~ msgstr "_Phi: "
-
-#~ msgid "/_Nanoindentation/_Adjust..."
-#~ msgstr "/_Nanoindentazione/_Aggiusta..."
-
-#~ msgid "Imports Thermicroscopes SpmLab R4 and R5 data files."
-#~ msgstr "Importa file dati Thermicroscopes SpmLab R4 e R5"
-
-#~ msgid "Thermicroscopes SpmLab R4, R5 files"
-#~ msgstr "file Thermicroscopes SpmLab R4, R5"
