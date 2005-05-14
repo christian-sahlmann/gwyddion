@@ -277,10 +277,10 @@ gwy_grapher_area_finalize(GObject *object)
 static void
 gwy_grapher_area_adjust_label(GwyGrapherArea *area)
 {
-    GtkAllocation *lab_alloc;
-    lab_alloc = &GTK_WIDGET(area->lab)->allocation;
+    /*GtkAllocation *lab_alloc;
+    lab_alloc = &GTK_WIDGET(area->lab)->allocation;*/
     gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
-                        GTK_WIDGET(area)->allocation.width - area->lab->reqwidth/*lab_alloc->width*/ - 5, 5);
+                        GTK_WIDGET(area)->allocation.width - area->lab->reqwidth - 5, 5);
     area->newline = 0;
 }
 
