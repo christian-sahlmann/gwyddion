@@ -672,7 +672,7 @@ gwy_axiser_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxiserActiveAreaSpe
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, axiser->par.major_font);
 
-    sep = 5;
+    sep = 3;
 
     for (i = 0; i < axiser->mjticks->len; i++) {
         pmjt = &g_array_index(axiser->mjticks, GwyAxiserLabeledTick, i);
@@ -688,7 +688,7 @@ gwy_axiser_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxiserActiveAreaSpe
             case GTK_POS_TOP:
             xpos = pmjt->t.scrpos - rect.width/2;
             ypos = specs->height-1
-                   - axiser->par.major_length - sep - rect.height;
+                   - axiser->par.major_length - rect.height;
             break;
 
             case GTK_POS_LEFT:
