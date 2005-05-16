@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 gulong          gwy_app_undo_checkpoint           (GwyContainer *data,
                                                    ...);
 gulong          gwy_app_undo_checkpointv          (GwyContainer *data,
-                                                   gsize n,
+                                                   guint n,
                                                    const gchar **keys);
 void            gwy_app_undo_undo                 (void);
 void            gwy_app_undo_undo_window          (GwyDataWindow *data_window);

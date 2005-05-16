@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
+#include <libprocess/datafield.h>
 #include "app.h"
 #include "menu.h"
 #include "undo.h"
@@ -31,22 +32,24 @@ enum {
 
 typedef struct {
     GQuark key;
-    GObject *data;  /* TODO: keep references to the objects */
+    GObject *object;  /* TODO: keep references to the objects */
 } GwyAppUndoItem;
 
 typedef struct {
     gulong id;
-    gint modif;
-    gsize nitems;
+    guint nitems;
     GwyAppUndoItem *items;
 } GwyAppUndoLevel;
 
+static void       gwy_app_undo_reuse_levels   (GwyAppUndoLevel *level,
+                                               GList *available);
 static void       gwy_app_undo_or_redo        (GwyContainer *data,
                                                GwyAppUndoLevel *level);
-static GList*     gwy_app_undo_list_trim      (GList *list,
-                                               gsize n);
+static GList*     gwy_list_split              (GList *list,
+                                               guint n,
+                                               GList **tail);
 static void       gwy_app_undo_list_free      (GList *list);
-static void       setup_keys                  (void);
+static void       gwy_app_undo_setup_keys     (void);
 
 static GQuark undo_key = 0;
 static GQuark redo_key = 0;
@@ -69,7 +72,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
 {
     va_list ap;
     const gchar **keys;
-    gsize i, n;
+    guint i, n;
     gulong id;
 
     n = 0;
@@ -108,7 +111,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
  **/
 gulong
 gwy_app_undo_checkpointv(GwyContainer *data,
-                         gsize n,
+                         guint n,
                          const gchar **keys)
 {
     const char *good_keys[] = {
@@ -122,9 +125,12 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     static gulong undo_level_id = 0;
     GwyAppUndoLevel *level;
     GObject *object;
-    GList *undo, *redo;
+    GList *undo, *redo, *available;
     const gchar **p, *key;
-    gsize i;
+    guint i;
+
+    if (!UNDO_LEVELS)
+        return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
     if (!n) {
@@ -133,7 +139,7 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     }
 
     if (!undo_key)
-        setup_keys();
+        gwy_app_undo_setup_keys();
 
     for (i = 0; i < n; i++) {
         key = keys[i];
@@ -145,7 +151,8 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         }
         if (gwy_container_contains_by_name(data, key)) {
             object = gwy_container_get_object_by_name(data, key);
-            /*g_return_if_fail(GWY_IS_DATA_FIELD(object));*/
+            /* XXX: datafield special-casing */
+            g_return_val_if_fail(GWY_IS_DATA_FIELD(object), 0UL);
         }
     };
 
@@ -153,22 +160,19 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     undo_level_id++;
     gwy_debug("Creating a new undo level #%lu", undo_level_id);
     level = g_new(GwyAppUndoLevel, 1);
-    level->modif = 0;  /* TODO */
     level->nitems = n;
     level->items = g_new0(GwyAppUndoItem, n);
     level->id = undo_level_id;
 
-    /* fill the things to save */
+    /* fill the things to save, but don't create copies yet */
     for (i = 0; i < n; i++) {
         GQuark quark;
 
         key = keys[i];
         quark = g_quark_from_string(key);
         level->items[i].key = quark;
-        object = NULL;
         if (gwy_container_gis_object(data, quark, &object))
-            object = gwy_serializable_duplicate(object);
-        level->items[i].data = object;
+            level->items[i].object = object;
     }
 
     /* add to the undo queue */
@@ -177,11 +181,16 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     redo = (GList*)g_object_get_qdata(G_OBJECT(data), redo_key);
     g_assert(!redo || !redo->prev);
 
-    gwy_app_undo_list_free(redo);
+    /* gather undo/redo levels we are going to free for potential reuse */
+    undo = gwy_list_split(undo, UNDO_LEVELS-1, &available);
+    available = g_list_concat(available, redo);
+    redo = NULL;
+
+    gwy_app_undo_reuse_levels(level, available);
+
     undo = g_list_prepend(undo, level);
-    undo = gwy_app_undo_list_trim(undo, UNDO_LEVELS);
     g_object_set_qdata(G_OBJECT(data), undo_key, undo);
-    g_object_set_qdata(G_OBJECT(data), redo_key, NULL);
+    g_object_set_qdata(G_OBJECT(data), redo_key, redo);
 
     /* TODO */
     g_object_set_qdata(G_OBJECT(data), modif_key,
@@ -196,6 +205,67 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 
     return level->id;
 }
+
+/**
+ * gwy_app_undo_reuse_levels:
+ * @level: An undo level with objects that have to be either duplicated or
+ *         reused from to-be-discarded levels.
+ * @available: A list of to-be-discarded levels to eventually reuse.
+ *
+ * Actually duplicates data in @level, eventually reusing @available.
+ **/
+static void
+gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
+                          GList *available)
+{
+    GType type;
+    GList *l;
+    guint i, j;
+    GwyAppUndoItem *item, *jtem;
+    GwyAppUndoLevel *lvl;
+    gboolean found;
+
+    for (i = 0; i < level->nitems; i++) {
+        item = level->items + i;
+        if (!item->object)
+            continue;
+
+        found = FALSE;
+        type = G_TYPE_FROM_INSTANCE(item->object);
+        /* scan through all available levels and all objects inside */
+        for (l = available; l; l = g_list_next(l)) {
+            lvl = (GwyAppUndoLevel*)l->data;
+            for (j = 0; j < lvl->nitems; j++) {
+                jtem = lvl->items + i;
+                if (!jtem->object)
+                    continue;
+                if (G_TYPE_FROM_INSTANCE(jtem->object) == type) {
+                    /* we've found a reusable item
+                     * FIXME: for datafields, we normally know they are all
+                     * all the same size, but otherwise there should be some
+                     * real compatibility check */
+                    gwy_serializable_clone(item->object, jtem->object);
+                    item->object = jtem->object;
+                    jtem->object = NULL;
+                    found = TRUE;
+                    gwy_debug("Item (%lu,%x) reused from (%lu,%x)",
+                              level->id, item->key, lvl->id, jtem->key);
+
+                    l = NULL;    /* break from outer cycle */
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            item->object = gwy_serializable_duplicate(item->object);
+            gwy_debug("Item (%lu,%x) created as new",
+                      level->id, item->key);
+        }
+    }
+
+    gwy_app_undo_list_free(available);
+}
+
 
 /**
  * gwy_app_undo_undo:
@@ -331,27 +401,27 @@ gwy_app_undo_or_redo(GwyContainer *data,
 {
     GObject *dfapp, *df;
     GQuark quark;
-    gsize i;
+    guint i;
 
     for (i = 0; i < level->nitems; i++) {
         quark = level->items[i].key;
-        df = level->items[i].data;
+        df = level->items[i].object;
         dfapp = NULL;
         gwy_container_gis_object(data, quark, &dfapp);
         if (df && dfapp) {
             g_object_ref(dfapp);
             gwy_container_set_object(data, quark, df);
-            level->items[i].data = dfapp;
+            level->items[i].object = dfapp;
             g_object_unref(df);
         }
         else if (df && !dfapp) {
             gwy_container_set_object(data, quark, df);
-            level->items[i].data = NULL;
+            level->items[i].object = NULL;
             g_object_unref(df);
         }
         else if (!df && dfapp) {
-            level->items[i].data = dfapp;
-            g_object_ref(level->items[i].data);
+            level->items[i].object = dfapp;
+            g_object_ref(level->items[i].object);
             gwy_container_remove(data, quark);
         }
         else
@@ -364,33 +434,44 @@ gwy_app_undo_list_free(GList *list)
 {
     GwyAppUndoLevel *level;
     GList *l;
-    gsize i;
+    guint i;
 
     if (!list)
         return;
 
     for (l = g_list_first(list); l; l = g_list_next(l)) {
         level = (GwyAppUndoLevel*)l->data;
-        for (i = 0; i < level->nitems; i++)
-            gwy_object_unref(level->items[i].data);
+        for (i = 0; i < level->nitems; i++) {
+            if (level->items[i].object)
+                gwy_debug("Item (%lu,%x) destroyed",
+                          level->id, level->items[i].key);
+            gwy_object_unref(level->items[i].object);
+        }
     }
     g_list_free(list);
 }
 
-/*
- * Trim undo list to @n levels.
- * Return the new list head.
+/**
+ * gwy_list_split:
+ * @list: A list.
+ * @n: Length to split list at.
+ * @tail: Pointer to store list tail to.
+ *
+ * Splits a list at given position.
+ *
+ * Returns: New list head.
  **/
 static GList*
-gwy_app_undo_list_trim(GList *list,
-                       gsize n)
+gwy_list_split(GList *list,
+               guint n,
+               GList **tail)
 {
     GList *l;
 
-    if (!list || !n) {
-        gwy_app_undo_list_free(list);
+    g_return_val_if_fail(tail, list);
+    *tail = NULL;
+    if (!list)
         return NULL;
-    }
 
     list = g_list_first(list);
     l = g_list_nth(list, n);
@@ -399,7 +480,7 @@ gwy_app_undo_list_trim(GList *list,
 
     l->prev->next = NULL;
     l->prev = NULL;
-    gwy_app_undo_list_free(l);
+    *tail = l;
 
     return list;
 }
@@ -455,7 +536,7 @@ gwy_app_undo_clear(GwyDataWindow *data_window)
 }
 
 static void
-setup_keys(void)
+gwy_app_undo_setup_keys(void)
 {
     undo_key = g_quark_from_static_string("gwy-app-undo");
     redo_key = g_quark_from_static_string("gwy-app-redo");
