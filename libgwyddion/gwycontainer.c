@@ -29,12 +29,23 @@
 
 #define GWY_CONTAINER_TYPE_NAME "GwyContainer"
 
-/* FIXME: remove all references to GwyWatchable in 2.0 */
+enum {
+    ITEM_CHANGED,
+    LAST_SIGNAL
+};
+
+typedef struct {
+    GQuark key;
+    GValue *value;
+    gboolean changed;
+} GwyKeyVal;
+
 typedef struct {
     GwyContainer *container;
     const gchar *prefix;
     gsize prefix_length;
-    gsize count;
+    guint count;
+    GSList *keylist;
     gboolean closed_prefix;
     GHFunc func;
     gpointer user_data;
@@ -118,6 +129,8 @@ static gchar*   dequote_token                    (const gchar *tok,
 
 static GObjectClass *parent_class = NULL;
 
+static guint container_signals[LAST_SIGNAL] = { 0 };
+
 GType
 gwy_container_get_type(void)
 {
@@ -176,6 +189,16 @@ gwy_container_class_init(GwyContainerClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_container_finalize;
+
+    /* XXX: differentiate insert, change, delete? */
+    container_signals[ITEM_CHANGED]
+        = g_signal_new("item_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED,
+                       G_STRUCT_OFFSET(GwyContainerClass, item_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -183,7 +206,8 @@ gwy_container_init(GwyContainer *container)
 {
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)container);
-    container->last_wid = 1;
+    container->values = g_hash_table_new_full(NULL, NULL,
+                                              NULL, value_destroy_func);
 }
 
 static void
@@ -212,10 +236,6 @@ gwy_container_new(void)
 
     gwy_debug("");
     container = g_object_new(GWY_TYPE_CONTAINER, NULL);
-
-    /* assume GQuarks are good enough hash keys */
-    container->values = g_hash_table_new_full(NULL, NULL,
-                                              NULL, value_destroy_func);
 
     return container;
 }
@@ -344,8 +364,11 @@ gwy_container_remove(GwyContainer *container, GQuark key)
                   G_OBJECT(g_value_peek_pointer(value))->ref_count);
     }
 #endif
-    return g_hash_table_remove(container->values,
-                               GUINT_TO_POINTER(key));
+
+    g_hash_table_remove(container->values, GUINT_TO_POINTER(key));
+    g_signal_emit(container, container_signals[ITEM_CHANGED], key);
+
+    return TRUE;
 }
 
 /**
@@ -359,7 +382,7 @@ gwy_container_remove(GwyContainer *container, GQuark key)
  *
  * Returns: The number of values removed.
  **/
-gsize
+guint
 gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
 {
     PrefixData pfdata;
@@ -370,11 +393,15 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     pfdata.prefix = prefix;
     pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
     pfdata.count = 0;
+    pfdata.keylist = NULL;
     pfdata.closed_prefix = !pfdata.prefix_length
                            || prefix[pfdata.prefix_length - 1]
                               == GWY_CONTAINER_PATHSEP;
     g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
                                 &pfdata);
+    pfdata.keylist = g_slist_reverse(pfdata.keylist);
+    /* TODO: emit signals */
+    g_slist_free(pfdata.keylist);
 
     return pfdata.count;
 }
@@ -397,6 +424,8 @@ hash_remove_prefix_func(gpointer hkey,
         return FALSE;
 
     pfdata->count++;
+    pfdata->keylist = g_slist_prepend(pfdata->keylist,
+                                      GUINT_TO_POINTER(hkey));
     return TRUE;
 }
 
@@ -412,13 +441,9 @@ hash_remove_prefix_func(gpointer hkey,
  *
  * The function is called @function(#GQuark key, #GValue *value, user_data).
  *
- * An empty @prefix means @function will be called on all @container items
- * with a name.  A %NULL @prefix means @function will be called on all
- * @container, even those identified only by a stray nameless %GQuark.
- *
  * Returns: The number of items @function was called on.
  **/
-gsize
+guint
 gwy_container_foreach(GwyContainer *container,
                       const gchar *prefix,
                       GHFunc function,
@@ -436,6 +461,7 @@ gwy_container_foreach(GwyContainer *container,
                            || prefix[pfdata.prefix_length - 1]
                               == GWY_CONTAINER_PATHSEP;
     pfdata.count = 0;
+    pfdata.keylist = NULL;
     pfdata.func = function;
     pfdata.user_data = user_data;
     g_hash_table_foreach(container->values, hash_foreach_func, &pfdata);
@@ -1296,6 +1322,9 @@ gwy_container_try_set_one(GwyContainer *container,
     else
         g_value_copy(value, old);
 
+    if (!container->no_changes)
+        g_signal_emit(container, container_signals[ITEM_CHANGED], key);
+
     return TRUE;
 }
 
@@ -1827,8 +1856,11 @@ gwy_container_duplicate_real(GObject *object)
               "gwy_container_duplicate_by_prefix() for selective duplication.");
               */
     duplicate = gwy_container_new();
+    /* don't emit signals when no one can be connected */
+    duplicate->no_changes = TRUE;
     g_hash_table_foreach(GWY_CONTAINER(object)->values,
                          hash_duplicate_func, duplicate);
+    duplicate->no_changes = FALSE;
 
     return (GObject*)duplicate;
 }
@@ -1950,10 +1982,13 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
                                   == GWY_CONTAINER_PATHSEP;
     }
 
+    /* don't emit signals when no one can be connected */
     duplicate = (GwyContainer*)gwy_container_new();
+    duplicate->no_changes = TRUE;
     pfxlist.container = duplicate;
     g_hash_table_foreach(container->values,
                          hash_prefix_duplicate_func, &pfxlist);
+    duplicate->no_changes = FALSE;
 
     g_free(pfxlist.prefixes);
     g_free(pfxlist.pfxclosed);
@@ -2017,52 +2052,6 @@ hash_prefix_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
         gwy_container_set_value(duplicate, key, value, NULL);
         break;
     }
-}
-
-/* FIXME: remove in 2.0 */
-/**
- * gwy_container_freeze_watch:
- * @container: A #GwyContainer.
- *
- * Freezes value update notifications for @container.
- *
- * They are collected until gwy_container_thaw_watch() is called (it has to be
- * called the same number of times as gwy_container_freeze_watch()).
- **/
-void
-gwy_container_freeze_watch(G_GNUC_UNUSED GwyContainer *container)
-{
-    g_warning("No one should call this method!");
-}
-
-/* FIXME: remove in 2.0 */
-/**
- * gwy_container_thaw_watch:
- * @container: A #GwyContainer.
- *
- * Reverts the effect of gwy_container_freeze_watch() causing collected
- * value change notifications to be performed.
- *
- * Due to grouping the number of notifications can be lower than the number of
- * actual value changes.  E.g., when you are watching "foo", and both
- * "foo/bar" and "foo/baz" changes in the freezed state, only one notification
- * is performed after thawing @container.
- **/
-void
-gwy_container_thaw_watch(G_GNUC_UNUSED GwyContainer *container)
-{
-    g_warning("No one should call this method!");
-}
-
-/* FIXME: remove in 2.0 */
-gulong
-gwy_container_watch(G_GNUC_UNUSED GwyContainer *container,
-                    G_GNUC_UNUSED const guchar *path,
-                    G_GNUC_UNUSED GwyContainerNotifyFunc callback,
-                    G_GNUC_UNUSED gpointer user_data)
-{
-    g_warning("No one should call this method!");
-    return 0;
 }
 
 static void
@@ -2237,6 +2226,7 @@ gwy_container_deserialize_from_text(const gchar *text)
     GQuark key;
 
     container = GWY_CONTAINER(gwy_container_new());
+    container->no_changes = TRUE;
 
     for (tok = text; g_ascii_isspace(*tok); tok++)
         ;
@@ -2357,6 +2347,7 @@ gwy_container_deserialize_from_text(const gchar *text)
         for (tok = tok + len; g_ascii_isspace(*tok); tok++)
             ;
     }
+    container->no_changes = FALSE;
 
     return container;
 

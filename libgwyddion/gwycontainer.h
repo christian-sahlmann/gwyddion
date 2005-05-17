@@ -39,30 +39,17 @@ G_BEGIN_DECLS
 typedef struct _GwyContainer GwyContainer;
 typedef struct _GwyContainerClass GwyContainerClass;
 
-#ifndef GWY_DISABLE_DEPRECATED
-typedef void (*GwyContainerNotifyFunc)(GwyContainer *container,
-                                       const guchar *path,
-                                       gpointer user_data);
-
-typedef struct {
-    GQuark key;
-    GValue *value;
-    gboolean changed;
-} GwyKeyVal;
-#endif
-
 struct _GwyContainer {
     GObject parent_instance;
 
     GHashTable *values;
-    GHashTable *watching;  /* FIXME: remove in 2.0 */
-    GHashTable *objects;  /* FIXME: remove in 2.0 */
-    gint watch_freeze;  /* FIXME: remove in 2.0 */
-    gulong last_wid;  /* FIXME: remove in 2.0 */
+    gboolean no_changes : 1;
 };
 
 struct _GwyContainerClass {
     GObjectClass parent_class;
+
+    void (*item_changed)(GwyContainer *container);
 };
 
 #define gwy_container_duplicate(container) ((GwyContainer*)gwy_serializable_duplicate(G_OBJECT(container)))
@@ -81,7 +68,7 @@ void          gwy_container_set_value_by_name     (GwyContainer *container,
                                                    ...);
 gboolean      gwy_container_remove                (GwyContainer *container,
                                                    GQuark key);
-gsize         gwy_container_remove_by_prefix      (GwyContainer *container,
+guint         gwy_container_remove_by_prefix      (GwyContainer *container,
                                                    const gchar *prefix);
 GwyContainer* gwy_container_duplicate_by_prefix   (GwyContainer *container,
                                                    ...);
@@ -89,7 +76,7 @@ gboolean      gwy_container_rename                (GwyContainer *container,
                                                    GQuark key,
                                                    GQuark newkey,
                                                    gboolean force);
-gsize         gwy_container_foreach               (GwyContainer *container,
+guint         gwy_container_foreach               (GwyContainer *container,
                                                    const gchar *prefix,
                                                    GHFunc function,
                                                    gpointer user_data);
@@ -161,15 +148,6 @@ gboolean      gwy_container_gis_object            (GwyContainer *container,
 
 GPtrArray*    gwy_container_serialize_to_text     (GwyContainer *container);
 GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
-
-/* FIXME: remove in 2.0
-gulong     gwy_container_watch              (GwyContainer *container,
-                                             const guchar *path,
-                                             GwyContainerNotifyFunc callback,
-                                             gpointer user_data);
-void       gwy_container_freeze_watch       (GwyContainer *container);
-void       gwy_container_thaw_watch         (GwyContainer *container);
-*/
 
 #define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
 #define gwy_container_contains_by_name(c,n) gwy_container_contains(c,g_quark_try_string(n))
