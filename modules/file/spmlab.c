@@ -48,7 +48,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -162,16 +162,13 @@ read_data_field(const guchar *buffer, guint size, guchar version)
     enum { MIN_REMAINDER = 2620 };
     /* information offsets in different versions, in r5+ relative to data
      * start, in order: data offset, pixel dimensions, physical dimensions,
-     * value multiplier, multipliers (units) */
-    const guint offsets34[] = { 0x0104, 0x0196, 0x01a2, 0x01b2, 0x01be };
-    const guint offsets56[] = { 0x0104, 0x025c, 0x0268, 0x0288, 0x029c };
-    /* there probably more constants, the left and right 1e-6 also serve as
-     * defaults after CLAMP() */
-    const gdouble zfactors[] = { 1e-6, 1e-9, 1e-10, 1e-6 };
-    const gdouble lfactors[] = { 1e-6, 1e-10, 1e-9, 1e-6 };
-    gint xres, yres, doffset, lf, zf, i;
+     * value multiplier, unit string */
+    const guint offsets34[] = { 0x0104, 0x0196, 0x01a2, 0x01b2, 0x01c2 };
+    const guint offsets56[] = { 0x0104, 0x025c, 0x0268, 0x0288, 0x02a0 };
+    gint xres, yres, doffset, i, power10;
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
+    GwySIUnit *unitxy, *unitz;
     gdouble *data;
     const guint *offset;
     const guchar *p, *r, *last;
@@ -219,17 +216,15 @@ read_data_field(const guchar *buffer, guint size, guchar version)
     gwy_debug("xreal.raw = %g, yreal.raw = %g, q.raw = %g, z0.raw = %g",
               xreal, yreal, q, z0);
     p = buffer + *(offset++);
-    zf = get_WORD(&p);
-    lf = get_WORD(&p);
-    gwy_debug("lf = %d, zf = %d", lf, zf);
-    lf = CLAMP(lf, 0, G_N_ELEMENTS(lfactors)-1);
-    xreal *= lfactors[lf];
-    yreal *= lfactors[lf];
-    zf = CLAMP(zf, 0, G_N_ELEMENTS(zfactors)-1);
-    q *= zfactors[zf];
-    z0 *= zfactors[zf];
+    unitz = gwy_si_unit_new_parse(p, &power10);
+    q *= pow10(power10);
+    z0 *= pow10(power10);
+    unitxy = gwy_si_unit_new_parse(p + 10, &power10);
+    xreal *= pow10(power10);
+    yreal *= pow10(power10);
     gwy_debug("xres = %d, yres = %d, xreal = %g, yreal = %g, q = %g, z0 = %g",
               xres, yres, xreal, yreal, q, z0);
+    gwy_debug("unitxy = %s, unitz = %s", p, p + 10);
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
@@ -238,6 +233,10 @@ read_data_field(const guchar *buffer, guint size, guchar version)
     }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    gwy_data_field_set_si_unit_xy(dfield, unitxy);
+    g_object_unref(unitxy);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+    g_object_unref(unitz);
     data = gwy_data_field_get_data(dfield);
     for (i = 0; i < xres*yres; i++)
         data[i] = (p[2*i] + 256.0*p[2*i + 1])*q + z0;
