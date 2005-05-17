@@ -23,7 +23,6 @@
  * - replace get_samples with samples_ref, add samples_unref
  * - set from samples
  * - changes, signal emission
- * - fast get_color (with hinting)
  * - test
  */
 
@@ -43,11 +42,15 @@ enum {
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
+enum {
+    DATA_CHANGED,
+    LAST_SIGNAL
+};
+
 static void         gwy_gradient_class_init       (GwyGradientClass *klass);
 static void         gwy_gradient_init             (GwyGradient *gradient);
 static void         gwy_gradient_finalize         (GObject *object);
 static void         gwy_gradient_serializable_init(GwySerializableIface *iface);
-static void         gwy_gradient_watchable_init   (GwyWatchableIface *iface);
 static void         gwy_gradient_sanitize         (GwyGradient *gradient);
 static void         gwy_gradient_changed          (GwyGradient *gradient);
 /*
@@ -84,6 +87,8 @@ static const GwyGradientPoint null_point = { 0, { 0, 0, 0, 0 } };
 
 static GObjectClass *parent_class = NULL;
 
+static guint gradient_signals[LAST_SIGNAL] = { 0 };
+
 GType
 gwy_gradient_get_type(void)
 {
@@ -108,11 +113,6 @@ gwy_gradient_get_type(void)
             NULL,
             NULL
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_gradient_watchable_init,
-            NULL,
-            NULL
-        };
 
         gwy_debug("");
         gwy_gradient_type = g_type_register_static(G_TYPE_OBJECT,
@@ -122,9 +122,6 @@ gwy_gradient_get_type(void)
         g_type_add_interface_static(gwy_gradient_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_gradient_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_gradient_type;
@@ -139,12 +136,6 @@ gwy_gradient_serializable_init(GwySerializableIface *iface)
 }
 
 static void
-gwy_gradient_watchable_init(GwyWatchableIface *iface)
-{
-    iface->value_changed = NULL;
-}
-
-static void
 gwy_gradient_class_init(GwyGradientClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
@@ -153,6 +144,15 @@ gwy_gradient_class_init(GwyGradientClass *klass)
     gobject_class->finalize = gwy_gradient_finalize;
     klass->gradients = g_hash_table_new_full(g_str_hash, g_str_equal,
                                              NULL, g_object_unref);
+
+    gradient_signals[DATA_CHANGED]
+        = g_signal_new("data_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyGradientClass, data_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -779,7 +779,7 @@ gwy_gradient_changed(GwyGradient *gradient)
     gradient->pixels = gwy_gradient_sample(gradient,
                                            GWY_GRADIENT_DEFAULT_SIZE,
                                            gradient->pixels);
-    g_signal_emit_by_name(gradient, "value_changed");
+    g_signal_emit(gradient, gradient_signals[DATA_CHANGED], 0);
 }
 
 /**

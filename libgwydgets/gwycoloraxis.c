@@ -700,7 +700,7 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
                                          0, 0, NULL, NULL, axis);
     g_object_ref(grad);
     axis->gradient = grad;
-    g_signal_connect_swapped(axis->gradient, "value_changed",
+    g_signal_connect_swapped(axis->gradient, "data_changed",
                              G_CALLBACK(gwy_color_axis_update), axis);
     g_object_unref(old);
 

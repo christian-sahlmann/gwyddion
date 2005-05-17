@@ -245,7 +245,7 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
     g_object_ref(grad);
     layer->gradient = grad;
     layer->gradient_id
-        = g_signal_connect_swapped(layer->gradient, "value_changed",
+        = g_signal_connect_swapped(layer->gradient, "data_changed",
                                    G_CALLBACK(gwy_layer_basic_update), layer);
     gwy_container_set_string_by_name(GWY_DATA_VIEW_LAYER(layer)->data,
                                      "/0/base/palette", gradstr);

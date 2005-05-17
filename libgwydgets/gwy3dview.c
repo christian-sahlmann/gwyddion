@@ -536,7 +536,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy_container_set_string_by_name(data, "/0/3d/palette",
                                      g_strdup(name));
     g_object_ref(gwy3dview->gradient);
-    g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
+    g_signal_connect_swapped(gwy3dview->gradient, "data_changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
 
@@ -798,7 +798,7 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
                                          0, 0, NULL, NULL, gwy3dview);
     g_object_ref(grad);
     gwy3dview->gradient = grad;
-    g_signal_connect_swapped(gwy3dview->gradient, "value_changed",
+    g_signal_connect_swapped(gwy3dview->gradient, "data_changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
     gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",

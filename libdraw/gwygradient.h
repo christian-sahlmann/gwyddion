@@ -68,6 +68,8 @@ struct _GwyGradientClass {
 
     GHashTable *gradients;
 
+    void (*data_changed)(GwyGradient *gradient);
+
     gpointer reserved1;
     gpointer reserved2;
 };

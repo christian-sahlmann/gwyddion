@@ -222,7 +222,7 @@ gwy_shader_new(const gchar *gradient)
     g_object_ref(shader->gradient);
 
     shader->gradient_change_id
-        = g_signal_connect_swapped(shader->gradient, "value_changed",
+        = g_signal_connect_swapped(shader->gradient, "data_changed",
                                    G_CALLBACK(gwy_shader_update), shader);
 
     return (GtkWidget*)shader;
@@ -504,7 +504,7 @@ gwy_shader_set_gradient(GwyShader *shader,
     g_object_ref(grad);
     shader->gradient = grad;
     shader->gradient_change_id
-        = g_signal_connect_swapped(shader->gradient, "value_changed",
+        = g_signal_connect_swapped(shader->gradient, "data_changed",
                                    G_CALLBACK(gwy_shader_update), shader);
     g_object_unref(old);
 
