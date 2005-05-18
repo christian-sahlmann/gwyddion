@@ -29,6 +29,11 @@
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
+enum {
+    DATA_CHANGED,
+    LAST_SIGNAL
+};
+
 static void     gwy_data_line_class_init        (GwyDataLineClass *klass);
 static void     gwy_data_line_init              (GObject *object);
 static void     gwy_data_line_finalize          (GObject *object);
@@ -41,9 +46,10 @@ static GObject* gwy_data_line_deserialize       (const guchar *buffer,
 static GObject* gwy_data_line_duplicate_real    (GObject *object);
 static void     gwy_data_line_clone_real        (GObject *source,
                                                  GObject *copy);
-/*static void     gwy_data_line_value_changed     (GObject *object);*/
 
 static GObjectClass *parent_class = NULL;
+
+static guint data_line_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_data_line_get_type(void)
@@ -101,6 +107,23 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_line_finalize;
+
+/**
+ * GwyDataLine::data_changed:
+ * @gwydataline: The #GwyDataLine which received the signal.
+ *
+ * The ::data_changed signal is never emitted by data line itself.  It
+ * is intended as a means to notify others data line users they should
+ * update themselves.
+ */
+    data_line_signals[DATA_CHANGED]
+        = g_signal_new("data_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataLineClass, data_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -254,14 +277,17 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
     memcpy(clone->data, data_line->data, data_line->res*sizeof(gdouble));
 }
 
-/*
-static void
-gwy_data_line_value_changed(GObject *object)
+/**
+ * gwy_data_line_data_changed:
+ * @data_line: A data line.
+ *
+ * Emits signal "data_changed" on a data line.
+ **/
+void
+gwy_data_line_value_changed(GwyDataLine *data_line)
 {
-    gwy_debug("signal: GwyDataLine changed");
-    g_signal_emit_by_name(object, "value_changed", NULL);
+    g_signal_emit(data_line, data_line_signals[DATA_CHANGED], 0);
 }
-*/
 
 /**
  * gwy_data_line_resample:
@@ -345,7 +371,6 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 void
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 {
-    gwy_debug("");
     g_return_if_fail(a->res == b->res);
 
     memcpy(b->data, a->data, a->res*sizeof(gdouble));
@@ -406,7 +431,11 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
  * gwy_data_line_get_data:
  * @data_line: A data line.
  *
- * Gets the data of the line.
+ * Gets the raw data buffer of a data line.
+ *
+ * The returned buffer is not quaranteed to be valid through whole data
+ * line life time.  Some function may change it, most notably
+ * gwy_data_line_resize() and gwy_data_line_resample().
  *
  * This function invalidates any cached information, use
  * gwy_data_line_get_data_const() if you are not going to change the data.
@@ -424,7 +453,11 @@ gwy_data_line_get_data(GwyDataLine *data_line)
  * gwy_data_line_get_data_const:
  * @data_line: A data line.
  *
- * Gets the data of the line, read-only.
+ * Gets the raw data buffer of a data line, read-only.
+ *
+ * The returned buffer is not quaranteed to be valid through whole data
+ * line life time.  Some function may change it, most notably
+ * gwy_data_line_resize() and gwy_data_line_resample().
  *
  * Use gwy_data_line_get_data() if you want to change the data.
  *

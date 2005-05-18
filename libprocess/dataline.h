@@ -50,6 +50,8 @@ struct _GwyDataLine {
 
 struct _GwyDataLineClass {
     GObjectClass parent_class;
+
+    void (*data_changed)(GwyDataLine *data_line);
 };
 
 typedef void (*GwyFFTFunc)(GwyTransformDirection dir,
@@ -68,6 +70,7 @@ GwyDataLine*   gwy_data_line_new                   (gint res,
                                                     gboolean nullme);
 GwyDataLine*   gwy_data_line_new_alike             (GwyDataLine *model,
                                                     gboolean nullme);
+void           gwy_data_line_data_changed          (GwyDataLine *data_line);
 void           gwy_data_line_resample      (GwyDataLine *data_line,
                                             gint res,
                                             GwyInterpolationType interpolation);

@@ -56,6 +56,8 @@ struct _GwyDataField {
 
 struct _GwyDataFieldClass {
     GObjectClass parent_class;
+
+    void (*data_changed)(GwyDataField *data_field);
 };
 
 #define gwy_data_field_invalidate(data_field) data_field->cached = 0
@@ -71,6 +73,7 @@ GwyDataField*     gwy_data_field_new                 (gint xres,
                                                       gboolean nullme);
 GwyDataField*     gwy_data_field_new_alike           (GwyDataField *model,
                                                       gboolean nullme);
+void              gwy_data_field_data_changed        (GwyDataField *data_field);
 void              gwy_data_field_resample  (GwyDataField *data_field,
                                             gint xres,
                                             gint yres,

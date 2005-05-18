@@ -36,11 +36,8 @@
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
 enum {
-    PROP_0,
-    PROP_XREAL,
-    PROP_YREAL,
-    PROP_UNIT_XY,
-    PROP_UNIT_Z
+    DATA_CHANGED,
+    LAST_SIGNAL
 };
 
 static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
@@ -55,9 +52,10 @@ static GObject* gwy_data_field_deserialize       (const guchar *buffer,
 static GObject* gwy_data_field_duplicate_real    (GObject *object);
 static void     gwy_data_field_clone_real        (GObject *source,
                                                   GObject *copy);
-/*static void     gwy_data_field_value_changed     (GObject *object);*/
 
 static GObjectClass *parent_class = NULL;
+
+static guint data_field_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_data_field_get_type(void)
@@ -117,6 +115,23 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_field_finalize;
+
+/**
+ * GwyDataField::data_changed:
+ * @gwydatafield: The #GwyDataField which received the signal.
+ *
+ * The ::data_changed signal is never emitted by data field itself.  It
+ * is intended as a means to notify others data field users they should
+ * update themselves.
+ */
+    data_field_signals[DATA_CHANGED]
+        = g_signal_new("data_changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataFieldClass, data_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -353,14 +368,17 @@ gwy_data_field_clone_real(GObject *source, GObject *copy)
     gwy_data_field_copy(data_field, clone, TRUE);
 }
 
-/*
-static void
-gwy_data_field_value_changed(GObject *object)
+/**
+ * gwy_data_field_data_changed:
+ * @data_field: A data field.
+ *
+ * Emits signal "data_changed" on a data field.
+ **/
+void
+gwy_data_field_data_changed(GwyDataField *data_field)
 {
-    gwy_debug("signal: GwyGwyDataLine changed");
-    g_signal_emit_by_name(object, "value_changed", NULL);
+    g_signal_emit(data_field, data_field_signals[DATA_CHANGED], 0);
 }
-*/
 
 /**
  * gwy_data_field_copy:
@@ -484,6 +502,9 @@ gwy_data_field_area_copy(GwyDataField *src,
  * @interpolation: Interpolation method to use.
  *
  * Resamples a data field using given interpolation method
+ *
+ * This method may invalidate raw data buffer returned by
+ * gwy_data_field_get_data().
  **/
 void
 gwy_data_field_resample(GwyDataField *data_field,
@@ -547,6 +568,9 @@ gwy_data_field_resample(GwyDataField *data_field,
  *
  * Extracts rectangular part of the a data field.between upper-left and
  * bottom-right points, recomputing real size.
+ *
+ * This method may invalidate raw data buffer returned by
+ * gwy_data_field_get_data().
  **/
 void
 gwy_data_field_resize(GwyDataField *data_field,
@@ -699,7 +723,11 @@ gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
  * gwy_data_field_get_data:
  * @data_field: A data field
  *
- * Gets the data of a data field.
+ * Gets the raw data buffer of a data field.
+ *
+ * The returned buffer is not quaranteed to be valid through whole data
+ * field life time.  Some function may change it, most notably
+ * gwy_data_field_resize() and gwy_data_field_resample().
  *
  * This function invalidates any cached information, use
  * gwy_data_field_get_data_const() if you are not going to change the data.
@@ -723,7 +751,11 @@ gwy_data_field_get_data(GwyDataField *data_field)
  * gwy_data_field_get_data_const:
  * @data_field: A data field.
  *
- * Gets the data of a data field, read-only.
+ * Gets the raw data buffer of a data field, read-only.
+ *
+ * The returned buffer is not quaranteed to be valid through whole data
+ * field life time.  Some function may change it, most notably
+ * gwy_data_field_resize() and gwy_data_field_resample().
  *
  * Use gwy_data_field_get_data() if you want to change the data.
  *
@@ -2293,9 +2325,6 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  * direct changes to it with calls to methods like gwy_data_field_get_max(),
  * you may need to explicitely invalidate cached values to let
  * gwy_data_field_get_max() know it has to recompute the maximum.
- *
- * Note, no stats are actually cached in Gwyddion 1.x, but they will be cached
- * in 2.x.
  **/
 
 /**
@@ -2328,7 +2357,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  *
  * Cached data field quantity types.
  *
- * There should be no need to this enum directly.
+ * There should be little need to this enum directly.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
