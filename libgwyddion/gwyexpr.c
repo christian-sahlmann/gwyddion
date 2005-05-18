@@ -186,6 +186,9 @@ static const GwyExprFunction call_table[] = {
     { gwy_expr_tanh,       "tanh",   1,  1,  GWY_EXPR_CODE_TANH,     },
 };
 
+/* Maximum number of function arguments */
+#define GWY_EXPR_FUNC_MAX_ARGS 2
+
 static const GwyExprConstant constant_table[] = {
     { "Pi",      G_PI            },
     { "E",       G_E             },
@@ -330,7 +333,7 @@ gwy_expr_stack_check_executability(GwyExpr *expr)
 }
 
 G_GNUC_UNUSED static void
-gwy_expr_print_stack(GwyExpr *expr)
+gwy_expr_stack_print(GwyExpr *expr)
 {
     guint i;
     GwyExprCode *code;
@@ -348,6 +351,66 @@ gwy_expr_print_stack(GwyExpr *expr)
         else
             g_print("Constant %g\n", code->value);
     }
+}
+
+/**
+ * gwy_expr_stack_fold_constants:
+ * @expr: An expression.
+ *
+ * Folds foldable constants in compiled op code representation.
+ *
+ * This is done by selective execution, that is we go through the stack like
+ * in gwy_expr_stack_interpret(), but only execute function calls on constant
+ * while copying operands and operations we cannot carry out right away.
+ *
+ * Only directly foldable constants can folded this way:
+ *   1+2+3+4+x is folded to 10+x, but
+ *   x+1+2+3+4 is kept intact.
+ * Better than nothing.
+ **/
+static void
+gwy_expr_stack_fold_constants(GwyExpr *expr)
+{
+    guint from, to, last_constants;
+
+    last_constants = 0;
+    for (from = to = 0; from < expr->in; from++, to++) {
+        GwyExprCode *code = expr->input + from;
+
+        expr->input[to] = expr->input[from];
+        if (code->type == GWY_EXPR_CODE_CONSTANT)
+            last_constants++;
+        else if ((gint)code->type <= 0)
+            last_constants = 0;
+        else {
+            const GwyExprFunction *func = call_table + code->type;
+
+            if (last_constants >= func->in_values) {
+                gdouble tmp[GWY_EXPR_FUNC_MAX_ARGS];
+                gdouble *sp;
+                guint i;
+
+                for (i = 0; i < func->in_values; i++)
+                    tmp[i] = expr->input[to + i - func->in_values].value;
+
+                sp = tmp + func->in_values - 1;
+                func->function(&sp);
+
+                last_constants += func->out_values;
+                last_constants -= func->in_values;
+                to += func->out_values;
+                to -= func->in_values;
+
+                for (i = 0; i < func->out_values; i++) {
+                    code = expr->input + to - func->out_values + i;
+                    code->value = tmp[0];
+                    code->type = GWY_EXPR_CODE_CONSTANT;
+                }
+                to--;
+            }
+        }
+    }
+    expr->in = to;
 }
 
 /****************************************************************************
@@ -1302,6 +1365,7 @@ gwy_expr_compile(GwyExpr *expr,
         expr->in = 0;
         return FALSE;
     }
+    gwy_expr_stack_fold_constants(expr);
 
     return TRUE;
 }

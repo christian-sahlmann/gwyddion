@@ -904,6 +904,8 @@ test_expr(void)
     printexprvar("(a+b)(a+c)");
     printexprvar("c(a+b)");
     printexprvar("(a+b)c");
+    printexprvar("x+1+2+3+4");
+    printexprvar("1+2+3+4+x");
     gwy_expr_free(expr);
 }
 
@@ -999,7 +1001,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_sort();
+    test_all();
 
     return 0;
 }
