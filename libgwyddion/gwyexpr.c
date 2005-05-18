@@ -1245,7 +1245,7 @@ gwy_expr_free(GwyExpr *expr)
 /**
  * gwy_expr_evaluate:
  * @expr: An expression evaluator.
- * @text: String containing expression to evaluate.
+ * @text: String containing the expression to evaluate.
  * @result: Location to store result to.
  * @err: Location to store compilation error to.
  *
@@ -1277,7 +1277,7 @@ gwy_expr_evaluate(GwyExpr *expr,
 /**
  * gwy_expr_compile:
  * @expr: An expression evaluator.
- * @text: String containing expression to compile.
+ * @text: String containing the expression to compile.
  * @err: Location to store compilation error to.
  *
  * Compiles an expression for later execution.
@@ -1309,9 +1309,9 @@ gwy_expr_compile(GwyExpr *expr,
 /**
  * gwy_expr_get_variables:
  * @expr: An expression evaluator.
- * @names: Location to store pointer to list of variable names to (may be %NULL
- *         to get just number of variables).  The string array returned in
- *         this argument in owned by @expr and is valid only until next
+ * @names: Location to store pointer to array of variable names to (may be
+ *         %NULL to get just number of variables).  The string array returned
+ *         in this argument in owned by @expr and is valid only until next
  *         gwy_expr_compile(), gwy_expr_evaluate(), eventually gwy_expr_free()
  *         call.
  *
@@ -1319,12 +1319,13 @@ gwy_expr_compile(GwyExpr *expr,
  *
  * It is an error to call this function after an unsuccessful compilation.
  *
- * If you only care about variables from a prefedined set, use
+ * If you only care about variables from a prefedined set, that is if any
+ * unknown variable is an error, it's easier to use
  * gwy_expr_resolve_variables().
  *
- * The position of each variable in @names corresponds to value position in
- * @values array in gwy_expr_execute() call. Namely, the first item in the
- * array is always reserved and do not correspond to any variable.
+ * The position of each variable in @names corresponds to the position of its
+ * value in @values array in gwy_expr_execute() call.  Namely, the first item
+ * in the array is always reserved and do not correspond to any variable.
  *
  * Returns: The length of array stored to @names.  This is the number of
  *          variables plus one (for the first reserved item).
@@ -1346,16 +1347,17 @@ gwy_expr_get_variables(GwyExpr *expr,
 /**
  * gwy_expr_resolve_variables:
  * @expr: An expression evaluator.
- * @n: Length of @names and @indices arrays.
+ * @n: The length of @names and @indices arrays.
  * @names: List of variable names to get positions of.
  * @indices: Array to store variable positions to.  The positions are the same
- *           as in gwy_expr_execute().  Zero is stored for variables not
- *           present in the expression to allow to safely substitute values
- *           without caring which variables are actually used.
+ *           as in gwy_expr_execute().  Variables not present in the expression
+ *           are assigned (reserved) position 0.  This allows to safely
+ *           substitute values of all variables before execution wthout caring
+ *           which variables are actually present.
  *
  * Finds positions of variables in an expression.
  *
- * Returns: The number of remaining (not asked for) variables in @expr.
+ * Returns: The number of remaining, unresolved variables in @expr.
  **/
 gint
 gwy_expr_resolve_variables(GwyExpr *expr,
