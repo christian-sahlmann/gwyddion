@@ -382,17 +382,18 @@ process_metadata(STPFile *stpfile,
     if ((p = g_hash_table_lookup(data->meta, "tip_bias")))
         gwy_container_set_string_by_name(container, "/meta/Bias",
                                          g_strdup_printf("%s V", p));
+    if ((p = g_hash_table_lookup(data->meta, "line_freq")))
+        gwy_container_set_string_by_name(container, "/meta/Line frequency",
+                                         g_strdup_printf("%s Hz", p));
     if ((p = g_hash_table_lookup(data->meta, "scan_dir"))) {
         if (!strcmp(p, "0"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
-                                             g_strdup("Top to bottom, "
-                                                      "left to right"));
+                                             g_strdup("Top to bottom"));
         else if (strcmp(p, "1"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
-                                             g_strdup("Bottom to top, "
-                                                      "right to left"));
+                                             g_strdup("Bottom to top"));
     }
 }
 
