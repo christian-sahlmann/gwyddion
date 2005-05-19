@@ -37,8 +37,8 @@ typedef struct {
 
 
 static gboolean    module_register            (const gchar *name);
-static gboolean    read                       (GwyGraph *graph);
-static gboolean    read_dialog                (GwyGraph *graph);
+static gboolean    read                       (GwyGrapher *graph);
+static gboolean    read_dialog                (GwyGrapher *graph);
 static void        selection_updated_cb       (gpointer data);
 static void        read_dialog_closed_cb      (gpointer data);
 static void        read_dialog_response_cb    (gpointer data);
@@ -78,7 +78,7 @@ module_register(const gchar *name)
 }
 
 static gboolean
-read(GwyGraph *graph)
+read(GwyGrapher *graph)
 {
 
     if (!graph) {
@@ -88,7 +88,7 @@ read(GwyGraph *graph)
         return TRUE;
     }
 
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
+    gwy_grapher_set_status(graph, GWY_GRAPH_STATUS_CURSOR);
     if (!dialog)
         read_dialog(graph);
 
@@ -97,7 +97,7 @@ read(GwyGraph *graph)
 
 
 static gboolean
-read_dialog(GwyGraph *graph)
+read_dialog(GwyGrapher *graph)
 {
     GtkWidget *table, *label;
 
@@ -148,7 +148,7 @@ read_dialog(GwyGraph *graph)
     gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    selection_id = g_signal_connect_swapped(graph->area, "selected",
+    selection_id = g_signal_connect(graph->area, "selected",
                                             G_CALLBACK(selection_updated_cb),
                                             graph);
 
@@ -160,56 +160,23 @@ read_dialog(GwyGraph *graph)
 static void
 selection_updated_cb(gpointer data)
 {
-    GwyGraph *graph;
-    GwyGraphStatus_CursorData *cd;
+    GwyGrapher *graph;
+    gdouble selection[2];
     gchar buffer[40];
 
-    graph = (GwyGraph *)data;
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_CURSOR);
-    /* FIXME TODO XXX this must be changed XXX TODO FIXME */
-
-    cd = (GwyGraphStatus_CursorData *) gwy_graph_get_status_data(graph);
-
-
-    if (cd->data_point.x_unit != NULL) {
-        if ((fabs(cd->data_point.x) <= 1e5 && fabs(cd->data_point.x) > 1e-2)
-            || fabs(cd->data_point.x) == 0)
-            g_snprintf(buffer, sizeof(buffer), "%.3f %s", cd->data_point.x,
-                       cd->data_point.x_unit);
-        else
-            g_snprintf(buffer, sizeof(buffer), "%.3e %s", cd->data_point.x,
-                       cd->data_point.x_unit);
-    }
-    else {
-        if ((fabs(cd->data_point.x) <= 1e5 && fabs(cd->data_point.x) > 1e-2)
-            || fabs(cd->data_point.x) == 0)
-            g_snprintf(buffer, sizeof(buffer), "%.3f", cd->data_point.x);
-        else
-            g_snprintf(buffer, sizeof(buffer), "%.3e", cd->data_point.x);
-    }
+    graph = (GwyGrapher *)data;
+    g_return_if_fail(GWY_IS_GRAPHER(graph));
+/*
+    gwy_grapher_get_selection(graph, selection);
+    
+    g_snprintf(buffer, sizeof(buffer), "%.3e", selection[0]);
 
     gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
 
-    if (cd->data_point.y_unit != NULL) {
-        if ((fabs(cd->data_point.y) <= 1e5 && fabs(cd->data_point.y) > 1e-2)
-            || fabs(cd->data_point.y) == 0)
-            g_snprintf(buffer, sizeof(buffer), "%.3f %s", cd->data_point.y,
-                       cd->data_point.y_unit);
-        else
-            g_snprintf(buffer, sizeof(buffer), "%.3e %s", cd->data_point.y,
-                       cd->data_point.y_unit);
-    }
-    else {
-        if ((fabs(cd->data_point.y) <= 1e5 && fabs(cd->data_point.y) > 1e-2)
-            || fabs(cd->data_point.y) == 0)
-            g_snprintf(buffer, sizeof(buffer), "%.3f", cd->data_point.y);
-        else
-            g_snprintf(buffer, sizeof(buffer), "%.3e", cd->data_point.y);
-    }
+    g_snprintf(buffer, sizeof(buffer), "%.3e", selection[1]);
 
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
-
+*/
 }
 
 static void
