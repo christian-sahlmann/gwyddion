@@ -38,7 +38,8 @@ typedef enum {
     GWY_EXPR_ERROR_NOT_EXECUTABLE,
     GWY_EXPR_ERROR_OPENING_PARENTHESIS,
     GWY_EXPR_ERROR_STRAY_COMMA,
-    GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS
+    GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
+    GWY_EXPR_ERROR_CONSTANT_NAME
 } GwyExprError;
 
 typedef struct _GwyExpr GwyExpr;
@@ -62,6 +63,12 @@ gint      gwy_expr_get_variables     (GwyExpr *expr,
                                       gchar ***names);
 gdouble   gwy_expr_execute           (GwyExpr *expr,
                                       const gdouble *values);
+gboolean  gwy_expr_define_constant   (GwyExpr *expr,
+                                      const gchar *name,
+                                      gdouble value,
+                                      GError **err);
+gboolean  gwy_expr_undefine_constant (GwyExpr *expr,
+                                      const gchar *name);
 
 G_END_DECLS
 

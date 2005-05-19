@@ -227,7 +227,7 @@ gwy_test_ser_set_radius(GwyTestSer *test_ser,
                         gdouble radius)
 {
     gchar *s;
-    GObject *u;
+    GwySIUnit *u;
 
     gwy_debug("");
 

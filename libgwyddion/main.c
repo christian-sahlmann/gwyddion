@@ -665,6 +665,8 @@ test_si_unit()
     GwySIUnit *siunit1, *siunit2;
     guint i;
 
+    g_message("===== SI UNIT ========================");
+
     siunit1 = (GwySIUnit*)gwy_si_unit_new("");
     siunit2 = (GwySIUnit*)gwy_si_unit_new("");
     for (i = 0; i < G_N_ELEMENTS(pairs)/2; i++) {
@@ -697,7 +699,7 @@ test_si_unit_format(void)
     GwySIUnit *si;
     GwySIValueFormat *vformat = NULL;
 
-    g_message("====== SI UNIT ======================");
+    g_message("====== SI UNIT FORMAT ======================");
 
     si = (GwySIUnit*)gwy_si_unit_new("m");
     dsiunitd(si, 0, 1e1, vformat);
@@ -849,7 +851,10 @@ test_expr(void)
     GwyExpr *expr;
     gint nvars, i;
 
+    g_message("====== EXPR ======================");
+
     expr = gwy_expr_new();
+    gwy_expr_define_constant(expr, "Pi", G_PI, NULL);
     printexpr("");
     printexpr("-100");
     printexpr("(-100)");
@@ -909,6 +914,90 @@ test_expr(void)
     gwy_expr_free(expr);
 }
 
+static void
+test_expr_err(void)
+{
+    static const GwyEnum errtable[] = {
+       { "CLOSING_PARENTHESIS", GWY_EXPR_ERROR_CLOSING_PARENTHESIS, },
+       { "EMPTY", GWY_EXPR_ERROR_EMPTY, },
+       { "EMPTY_PARENTHESES", GWY_EXPR_ERROR_EMPTY_PARENTHESES, },
+       { "GARBAGE", GWY_EXPR_ERROR_GARBAGE, },
+       { "INVALID_ARGUMENT", GWY_EXPR_ERROR_INVALID_ARGUMENT, },
+       { "INVALID_TOKEN", GWY_EXPR_ERROR_INVALID_TOKEN, },
+       { "MISSING_ARGUMENT", GWY_EXPR_ERROR_MISSING_ARGUMENT, },
+       { "NOT_EXECUTABLE", GWY_EXPR_ERROR_NOT_EXECUTABLE, },
+       { "OPENING_PARENTHESIS", GWY_EXPR_ERROR_OPENING_PARENTHESIS, },
+       { "STRAY_COMMA", GWY_EXPR_ERROR_STRAY_COMMA, },
+       { "UNRESOLVED_IDENTIFIERS", GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS, },
+       { "CONSTANT_NAME", GWY_EXPR_ERROR_CONSTANT_NAME, },
+    };
+    const gchar *chars = "0000111122223333444455556666777788889999...."
+                         "0000111122223333444455556666777788889999...."
+                         "0000111122223333444455556666777788889999...."
+                         "0000111122223333444455556666777788889999...."
+                         "EEEEEPPII                                   "
+                         "powminmaxmodhypotatanabssqrtcbrt"
+                         "sincostanasinacosatanexplnlogpowlogcoshsinhtanh"
+                         "++++----~~~****////%&&%^^^^,,,,((((()))))"
+                         "++++----~~~****////%&&%^^^^,,,,((((()))))";
+    GwyExpr *expr;
+    GTimer *timer;
+    GError *err = NULL;
+    GRand *rng;
+    GString *str;
+    guint *errors;
+    guint i, n, len;
+    gchar c;
+
+    g_message("====== EXPR GARBAGE ======================");
+
+    errors = g_new0(guint, G_N_ELEMENTS(errtable) + 2);
+    str = g_string_new("");
+    rng = g_rand_new();
+    g_rand_set_seed(rng, 42);
+    timer = g_timer_new();
+    g_timer_stop(timer);
+
+    expr = gwy_expr_new();
+    gwy_expr_define_constant(expr, "PI", G_PI, NULL);
+    gwy_expr_define_constant(expr, "E", G_E, NULL);
+
+    len = strlen(chars);
+    n = 6666666;
+    fprintf(stderr, "Compiling");
+    for (i = 0; i < n; i++) {
+        g_string_truncate(str, 0);
+        do {
+            c = chars[g_rand_int_range(rng, 0, len)];
+            g_string_append_c(str, c);
+        } while (g_rand_int_range(rng, 0, 12));
+        g_timer_continue(timer);
+        if (!gwy_expr_compile(expr, str->str, &err)) {
+            errors[MIN(err->code + 1, G_N_ELEMENTS(errtable))]++;
+            g_clear_error(&err);
+        }
+        else
+            errors[0]++;
+        g_timer_stop(timer);
+        if (i % 100000 == 0)
+            putc('.', stderr);
+    }
+    putc('\n', stderr);
+
+    fprintf(stderr, "OK: %u\n", errors[0]);
+    for (i = 0; i < G_N_ELEMENTS(errtable); i++)
+        fprintf(stderr, "%s: %u\n", errtable[i].name, errors[i+1]);
+    fprintf(stderr, "UNKNOWN ERROR: %u\n", errors[G_N_ELEMENTS(errtable)+1]);
+    fprintf(stderr, "Total expressions: %u in %fs\n",
+            n, g_timer_elapsed(timer, NULL));
+
+    g_timer_destroy(timer);
+    g_rand_free(rng);
+    gwy_expr_free(expr);
+    g_string_free(str, TRUE);
+    g_free(errors);
+}
+
 static int
 compare_double(gconstpointer a, gconstpointer b)
 {
@@ -931,11 +1020,14 @@ test_sort(void)
     guint n, i, k, N = 4096;
     gdouble libcsort = 0.0, gwysort = 0.0;
 
+    g_message("====== SORT ======================");
+
     rng = g_rand_new_with_seed(42);
     timer = g_timer_new();
     array = g_new(gdouble, 2*N);
 
-    for (k = 0; k < 20000; k++) {
+    fprintf(stderr, "Sorting");
+    for (k = 0; k < 50000; k++) {
         n = g_rand_int_range(rng, 2, N);
         for (i = 0; i < n; i++)
             array[i] = g_rand_double(rng);
@@ -955,7 +1047,10 @@ test_sort(void)
         qsort(array + N, n, sizeof(gdouble), compare_double);
         g_timer_stop(timer);
         libcsort += g_timer_elapsed(timer, NULL);
+        if (i % 1000 == 0)
+            putc('.', stderr);
     }
+    putc('\n', stderr);
 
     fprintf(stderr, "libc sort: %f\n", libcsort);
     fprintf(stderr, "gwy sort: %f\n", gwysort);
@@ -983,6 +1078,7 @@ test_all(void)
     test_si_unit_format();
     test_si_unit_parse();
     test_expr();
+    test_expr_err();
     test_sort();
 }
 

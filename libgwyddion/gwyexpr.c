@@ -64,6 +64,11 @@ typedef enum {
     GWY_EXPR_CODE_TANH,
 } GwyExprOpCode;
 
+typedef enum {
+    GWY_EXPR_CONST_ADD,
+    GWY_EXPR_CONST_REMOVE,
+} GwyExprConstAction;
+
 typedef struct {
     const gchar *name;
     gdouble value;
@@ -800,6 +805,32 @@ gwy_expr_rectify_token_list(GwyExpr *expr)
 }
 
 /**
+ * gwy_expr_initialize_scanner:
+ * @expr: An expression evaluator.
+ *
+ * Initializes scanner, configuring it and setting up function symbol table.
+ **/
+static void
+gwy_expr_initialize_scanner(GwyExpr *expr)
+{
+    guint i;
+
+    if (expr->scanner)
+        return;
+
+    expr->scanner = g_scanner_new(&scanner_config);
+
+    for (i = 1; i < G_N_ELEMENTS(call_table); i++) {
+        if (!call_table[i].name || !g_ascii_isalpha(call_table[i].name[0]))
+            continue;
+        g_scanner_scope_add_symbol(expr->scanner, GWY_EXPR_SCOPE_GLOBAL,
+                                   call_table[i].name, GUINT_TO_POINTER(i));
+    }
+    g_scanner_set_scope(expr->scanner, GWY_EXPR_SCOPE_GLOBAL);
+    expr->scanner->input_name = "expression";
+}
+
+/**
  * gwy_expr_parse:
  * @expr: An expression.
  * @text: String containing expression to parse.
@@ -814,21 +845,7 @@ gwy_expr_parse(GwyExpr *expr,
                const gchar *text,
                GError **err)
 {
-    guint i;
-
-    if (!expr->scanner) {
-        expr->scanner = g_scanner_new(&scanner_config);
-
-        for (i = 1; i < G_N_ELEMENTS(call_table); i++) {
-            if (!call_table[i].name || !g_ascii_isalpha(call_table[i].name[0]))
-                continue;
-            g_scanner_scope_add_symbol(expr->scanner, GWY_EXPR_SCOPE_GLOBAL,
-                                       call_table[i].name, GUINT_TO_POINTER(i));
-        }
-        g_scanner_set_scope(expr->scanner, GWY_EXPR_SCOPE_GLOBAL);
-        expr->scanner->input_name = "expression";
-    }
-
+    gwy_expr_initialize_scanner(expr);
     g_scanner_input_text(expr->scanner, text, strlen(text));
 
     if (!gwy_expr_scan_tokens(expr, err)) {
@@ -857,6 +874,7 @@ static gboolean
 gwy_expr_transform_values(GwyExpr *expr)
 {
     GwyExprToken *code, *t;
+    GQuark quark;
     gdouble *cval;
     guint i;
 
@@ -880,8 +898,9 @@ gwy_expr_transform_values(GwyExpr *expr)
             continue;
 
         if (expr->constants) {
-            if ((cval = g_hash_table_lookup(expr->constants,
-                                            t->value.v_identifier))) {
+            if ((quark = g_quark_try_string(t->value.v_identifier))
+                && (cval = g_hash_table_lookup(expr->constants,
+                                               GUINT_TO_POINTER(quark)))) {
                 code = gwy_expr_token_new0(expr);
                 code->token = GWY_EXPR_CODE_CONSTANT;
                 code->value.v_float = *cval;
@@ -1259,7 +1278,6 @@ GwyExpr*
 gwy_expr_new(void)
 {
     GwyExpr *expr;
-    guint i;
 
     if (!table_sanity_checked) {
         if (!gwy_expr_check_call_table_sanity())
@@ -1273,12 +1291,10 @@ gwy_expr_new(void)
                                         32*sizeof(GwyExprToken),
                                         G_ALLOC_ONLY);
 
-    /* FIXME: manipulate constants through API */
-    expr->constants = g_hash_table_new(g_str_hash, g_str_equal);
-    for (i = 0; i < G_N_ELEMENTS(constant_table); i++)
-        g_hash_table_insert(expr->constants,
-                            (gpointer)constant_table[i].name,
-                            (gpointer)&constant_table[i].value);
+    /* We could also put constants into scanner's symbol table, but then
+     * we have to tell them apart when we get some symbol from scanner. */
+    expr->constants = g_hash_table_new_full(g_direct_hash, g_direct_equal,
+                                            NULL, g_free);
 
     return expr;
 }
@@ -1477,6 +1493,107 @@ gwy_expr_execute(GwyExpr *expr,
     return expr->stack[0];
 }
 
+/**
+ * gwy_expr_constant_name_is_valid:
+ * @name: Constant identifier.
+ *
+ * Checks whether constant name is a valid identifier.
+ *
+ * Valid identifier must start with a letter, continue with alphanumeric
+ * characters (or underscores).
+ *
+ * Returns: %TRUE if @name is a possible constant name, %FALSE otherwise.
+ **/
+static gboolean
+gwy_expr_constant_name_is_valid(const gchar *name)
+{
+    guint i;
+
+    if (!name || !g_ascii_isalpha(*name))
+        return FALSE;
+
+    for (i = 1; name[i]; i++) {
+        if (!g_ascii_isalnum(name[i]) && name[i] != '_')
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * gwy_expr_define_constant:
+ * @expr: An expression evaluator.
+ * @name: Name of constant to define.
+ * @value: Constant numeric value.
+ * @err: Location to store errors to (or %NULL).
+ *
+ * Defines a symbolic constant.
+ *
+ * Note the definition does not affect already compiled expression, you have
+ * to recompile it (and eventually re-resolve variables).
+ *
+ * Returns: %TRUE on success, %FALSE if definition failed.
+ **/
+gboolean
+gwy_expr_define_constant(GwyExpr *expr,
+                         const gchar *name,
+                         gdouble value,
+                         GError **err)
+{
+    GQuark quark;
+
+    g_return_val_if_fail(expr, FALSE);
+    g_return_val_if_fail(name, FALSE);
+
+    if (!gwy_expr_constant_name_is_valid(name)) {
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_CONSTANT_NAME,
+                    "Invalid constant name");
+        return FALSE;
+    }
+
+    gwy_expr_initialize_scanner(expr);
+    if (g_scanner_lookup_symbol(expr->scanner, name)) {
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_CONSTANT_NAME,
+                    "Constant name clashes with function");
+        return FALSE;
+    }
+
+    quark = g_quark_from_string(name);
+    g_hash_table_insert(expr->constants, GUINT_TO_POINTER(quark),
+                        g_memdup(&value, sizeof(gdouble)));
+
+    return TRUE;
+}
+
+/**
+ * gwy_expr_undefine_constant:
+ * @expr: An expression evaluator.
+ * @name: Name of constant to undefine.
+ *
+ * Undefines a symbolic constant.
+ *
+ * Note the definition removal does not affect already compiled expression,
+ * you have to recompile it (and eventually re-resolve variables).
+ *
+ * Returns: %TRUE if there was such a constant and was removed, %FALSE
+ *          otherwise.
+ **/
+gboolean
+gwy_expr_undefine_constant(GwyExpr *expr,
+                           const gchar *name)
+{
+    GQuark quark;
+
+    g_return_val_if_fail(expr, FALSE);
+    g_return_val_if_fail(name, FALSE);
+
+    quark = g_quark_from_string(name);
+    if (!quark)
+        return FALSE;
+
+    return g_hash_table_remove(expr->constants, GUINT_TO_POINTER(quark));
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -1485,8 +1602,7 @@ gwy_expr_execute(GwyExpr *expr,
  * @GWY_EXPR_ERROR_EMPTY: Expression is empty.
  * @GWY_EXPR_ERROR_EMPTY_PARENTHESES: A parentheses pair contain nothing
  *                                    inside.
- * @GWY_EXPR_ERROR_GARBAGE: An symbol unexpectedly managed to survive
- *                          (FIXME: can this really happen?)
+ * @GWY_EXPR_ERROR_GARBAGE: An symbol unexpectedly managed to survive.
  * @GWY_EXPR_ERROR_INVALID_ARGUMENT: Function or operator argument is not a
  *                                   value.
  * @GWY_EXPR_ERROR_INVALID_TOKEN: Expression contains an invalid token.
