@@ -194,18 +194,6 @@ static const GwyExprFunction call_table[] = {
 /* Maximum number of function arguments */
 #define GWY_EXPR_FUNC_MAX_ARGS 2
 
-static const GwyExprConstant constant_table[] = {
-    { "Pi",      G_PI            },
-    { "E",       G_E             },
-    /*
-    { "c",       2.99792458e8    },
-    { "h",       1.0545887e-34   },
-    { "k",       1.380662e-23    },
-    { "G",       6.672e-11       },
-    { "e",       1.6021982e-19   },
-    */
-};
-
 static const GScannerConfig scanner_config = {
     /* character sets */
     " \t\n\r",
