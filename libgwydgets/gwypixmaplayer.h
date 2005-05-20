@@ -46,6 +46,7 @@ struct _GwyPixmapLayer {
     GObject *data_field;
     gulong item_changed_id;
     gulong data_changed_id;
+    gboolean wants_repaint;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -61,11 +62,11 @@ struct _GwyPixmapLayerClass {
     gpointer reserved2;
 };
 
-GType            gwy_pixmap_layer_get_type        (void) G_GNUC_CONST;
-GdkPixbuf*       gwy_pixmap_layer_paint           (GwyPixmapLayer *layer);
-void             gwy_pixmap_layer_set_data_key    (GwyPixmapLayer *layer,
-                                                   const gchar *key);
-const gchar*     gwy_pixmap_layer_get_data_key    (GwyPixmapLayer *layer);
+GType            gwy_pixmap_layer_get_type      (void) G_GNUC_CONST;
+GdkPixbuf*       gwy_pixmap_layer_paint         (GwyPixmapLayer *pixmap_layer);
+void             gwy_pixmap_layer_set_data_key  (GwyPixmapLayer *pixmap_layer,
+                                                 const gchar *key);
+const gchar*     gwy_pixmap_layer_get_data_key  (GwyPixmapLayer *pixmap_layer);
 
 G_END_DECLS
 

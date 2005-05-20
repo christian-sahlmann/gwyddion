@@ -118,7 +118,7 @@ gwy_pixmap_layer_destroy(GtkObject *object)
 
 /**
  * gwy_pixmap_layer_paint:
- * @layer: A pixmap data view layer.
+ * @pixmap_layer: A pixmap data view layer.
  *
  * Returns a pixbuf with painted pixmap layer @layer.
  *
@@ -129,28 +129,43 @@ GdkPixbuf*
 gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 {
     GwyPixmapLayerClass *layer_class = GWY_PIXMAP_LAYER_GET_CLASS(pixmap_layer);
+    GdkPixbuf *pixbuf;
 
     g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), NULL);
     g_return_val_if_fail(layer_class->paint, NULL);
     if (!pixmap_layer->data_field) {
         g_warning("Data field to paint is missing.  "
                   "That's probably because I didn't implement it yet.");
+        pixmap_layer->wants_repaint = FALSE;
         /*return pixmap_layer->pixbuf;*/
     }
-    return layer_class->paint(pixmap_layer);
+    pixbuf = layer_class->paint(pixmap_layer);
+    pixmap_layer->wants_repaint = FALSE;
+
+    return pixbuf;
 }
 
+/**
+ * gwy_pixmap_layer_data_field_connect:
+ * @pixmap_layer: A pixmap layer.
+ *
+ * Eventually connects to new data field's "data_changed" signal.
+ **/
 static inline void
 gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
 {
     GwyDataViewLayer *layer;
 
     g_assert(!pixmap_layer->data_field);
+    if (!pixmap_layer->data_key)
+        return;
+
     layer = GWY_DATA_VIEW_LAYER(pixmap_layer);
     if (!gwy_container_gis_object(layer->data, pixmap_layer->data_key,
                                   &pixmap_layer->data_field))
         return;
 
+    /*g_return_if_fail(GWY_IS_DATA_FIELD(pixmap_layer->data_field));*/
     g_object_ref(pixmap_layer->data_field);
     pixmap_layer->data_changed_id
         = g_signal_connect_swapped(pixmap_layer->data_field,
@@ -159,6 +174,12 @@ gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
                                    layer);
 }
 
+/**
+ * gwy_pixmap_layer_data_field_disconnect:
+ * @pixmap_layer: A pixmap layer.
+ *
+ * Disconnects from all data field's signals and drops reference to it.
+ **/
 static inline void
 gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer)
 {
@@ -185,6 +206,7 @@ gwy_pixmap_layer_plugged(GwyDataViewLayer *layer)
 
     /* Watch for changes in container */
     data_key_string = g_quark_to_string(pixmap_layer->data_key);
+    g_assert(data_key_string);
     detailed_signal = g_newa(gchar, sizeof("item_changed::")
                                     + strlen(data_key_string));
     g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), data_key_string);
@@ -196,6 +218,7 @@ gwy_pixmap_layer_plugged(GwyDataViewLayer *layer)
 
     /* Watch for changes in the data field itself */
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
+    pixmap_layer->wants_repaint = TRUE;
 }
 
 static void
@@ -205,6 +228,7 @@ gwy_pixmap_layer_unplugged(GwyDataViewLayer *layer)
 
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
 
+    pixmap_layer->wants_repaint = FALSE;
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     if (pixmap_layer->item_changed_id)
         g_signal_handler_disconnect(layer->data, pixmap_layer->item_changed_id);
@@ -225,15 +249,25 @@ gwy_pixmap_layer_item_changed(GwyPixmapLayer *pixmap_layer)
 {
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
-    /* TODO: emit something */
+
+    pixmap_layer->wants_repaint = TRUE;
+    g_signal_emit_by_name(pixmap_layer, "updated");
 }
 
 static void
 gwy_pixmap_layer_data_changed(GwyPixmapLayer *pixmap_layer)
 {
-    /* TODO: emit something */
+    pixmap_layer->wants_repaint = TRUE;
+    g_signal_emit_by_name(pixmap_layer, "updated");
 }
 
+/**
+ * gwy_pixmap_layer_set_data_key:
+ * @pixmap_layer: A pixmap layer.
+ * @key: Container string key identifying the data field to display.
+ *
+ * Sets the data field to display by a pixmap layer.
+ **/
 void
 gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
                               const gchar *key)
@@ -256,9 +290,19 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     pixmap_layer->data_key = quark;
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
-    /* TODO: emit something */
+
+    pixmap_layer->wants_repaint = TRUE;
+    g_signal_emit_by_name(pixmap_layer, "updated");
 }
 
+/**
+ * gwy_pixmap_layer_set_data_key:
+ * @pixmap_layer: A pixmap layer.
+ *
+ * Gets the key identifying data field this pixmap layer displays.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_pixmap_layer_get_data_key(GwyPixmapLayer *pixmap_layer)
 {
