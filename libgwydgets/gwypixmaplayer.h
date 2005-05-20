@@ -42,6 +42,10 @@ struct _GwyPixmapLayer {
     GwyDataViewLayer parent_instance;
 
     GdkPixbuf *pixbuf;
+    GQuark data_key;
+    GObject *data_field;
+    gulong item_changed_id;
+    gulong data_changed_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -59,6 +63,9 @@ struct _GwyPixmapLayerClass {
 
 GType            gwy_pixmap_layer_get_type        (void) G_GNUC_CONST;
 GdkPixbuf*       gwy_pixmap_layer_paint           (GwyPixmapLayer *layer);
+void             gwy_pixmap_layer_set_data_key    (GwyPixmapLayer *layer,
+                                                   const gchar *key);
+const gchar*     gwy_pixmap_layer_get_data_key    (GwyPixmapLayer *layer);
 
 G_END_DECLS
 

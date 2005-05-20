@@ -442,9 +442,10 @@ gwy_app_undo_list_free(GList *list)
     for (l = g_list_first(list); l; l = g_list_next(l)) {
         level = (GwyAppUndoLevel*)l->data;
         for (i = 0; i < level->nitems; i++) {
-            if (level->items[i].object)
+            if (level->items[i].object) {
                 gwy_debug("Item (%lu,%x) destroyed",
                           level->id, level->items[i].key);
+            }
             gwy_object_unref(level->items[i].object);
         }
     }

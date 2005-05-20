@@ -400,6 +400,7 @@ gwy_app_data_window_create(GwyContainer *data)
 
     data_view = gwy_data_view_new(data);
     layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
                                  GWY_PIXMAP_LAYER(layer));
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
@@ -1152,6 +1153,7 @@ gwy_app_data_view_update(GtkWidget *data_view)
         }
 
         layer = GWY_DATA_VIEW_LAYER(gwy_layer_mask_new());
+        gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view),
                                       GWY_PIXMAP_LAYER(layer));
     }
