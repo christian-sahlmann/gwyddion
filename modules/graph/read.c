@@ -148,7 +148,7 @@ read_dialog(GwyGrapher *graph)
     gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    selection_id = g_signal_connect(graph->area, "selected",
+    selection_id = g_signal_connect_swapped(graph, "selected",
                                             G_CALLBACK(selection_updated_cb),
                                             graph);
 
@@ -166,7 +166,8 @@ selection_updated_cb(gpointer data)
 
     graph = (GwyGrapher *)data;
     g_return_if_fail(GWY_IS_GRAPHER(graph));
-/*
+
+
     gwy_grapher_get_selection(graph, selection);
     
     g_snprintf(buffer, sizeof(buffer), "%.3e", selection[0]);
@@ -176,7 +177,7 @@ selection_updated_cb(gpointer data)
     g_snprintf(buffer, sizeof(buffer), "%.3e", selection[1]);
 
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
-*/
+
 }
 
 static void
