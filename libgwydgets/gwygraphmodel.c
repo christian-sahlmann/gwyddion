@@ -971,6 +971,7 @@ gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
 {
     if (model->x_unit) g_object_unref(model->x_unit);
     model->x_unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit)));
+    gwy_graph_model_signal_layout_changed(model);
 }
 
 void       
@@ -978,6 +979,7 @@ gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
 {
     if (model->y_unit) g_object_unref(model->y_unit);
     model->y_unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit)));
+    gwy_graph_model_signal_layout_changed(model);
 }
 
 GwySIUnit*

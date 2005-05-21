@@ -262,6 +262,10 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
+    gwy_axiser_set_unit(grapher->axis_top, model->x_unit);
+    gwy_axiser_set_unit(grapher->axis_bottom, model->x_unit);
+    gwy_axiser_set_unit(grapher->axis_left, model->y_unit);
+    gwy_axiser_set_unit(grapher->axis_right, model->y_unit);
     if (model->ncurves > 0)
     {
     

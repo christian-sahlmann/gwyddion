@@ -196,7 +196,7 @@ gwy_axiser_init(GwyAxiser *axiser)
     axiser->enable_label_edit = TRUE;
 
     axiser->has_unit = 0;
-    /*axiser->unit = NULL;*/
+    axiser->unit = NULL;
 }
 
 /**
@@ -741,7 +741,7 @@ gwy_axiser_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxiserActiveAreaSpecs
 
     if (axiser->has_unit) {
         g_string_append(plotlabel, " [");
-        g_string_append(plotlabel, axiser->unit);
+        g_string_append(plotlabel, gwy_si_unit_get_unit_string(axiser->unit));
         g_string_append(plotlabel, "]");
     }
 
@@ -1318,20 +1318,18 @@ gwy_axiser_get_label(GwyAxiser *axiser)
     return axiser->label_text;
 }
 
-/* XXX: Fuck! There's NO way how the units could be unset! */
-/* XXX: DoubleFuck! The thing GOBBLES the passed string! */
 /**
  * gwy_axiser_set_unit:
  * @axiser: axiser widget 
- * @unit: label unit
+ * @unit: axiser unit
  *
- * Sets the label unit. This will be added automatically
+ * Sets the axiser unit. This will be added automatically
  * to the label.
  **/
 void
-gwy_axiser_set_unit(GwyAxiser *axiser, char *unit)
+gwy_axiser_set_unit(GwyAxiser *axiser, GwySIUnit *unit)
 {
-    axiser->unit = unit;
+    axiser->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
     axiser->has_unit = 1;
 }
 

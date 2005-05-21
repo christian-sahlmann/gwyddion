@@ -26,6 +26,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwydgetenums.h>
+#include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
 
@@ -101,7 +102,7 @@ struct _GwyAxiser {
     gint label_y_pos;
     GString *label_text;
 
-    gchar *unit;                /*axiser unit (if any)*/
+    GwySIUnit *unit;                /*axiser unit (if any)*/
 
     GtkWidget *dialog;      /*axiser label and other properties dialog*/
 
@@ -145,7 +146,7 @@ void        gwy_axiser_set_label          (GwyAxiser *axiser,
                                          GString *label_text);
 GString*    gwy_axiser_get_label          (GwyAxiser *axiser);
 void        gwy_axiser_set_unit           (GwyAxiser *axiser,
-                                         char *unit);
+                                           GwySIUnit *unit);
 void        gwy_axiser_enable_label_edit  (GwyAxiser *axiser,
                                          gboolean enable);
 void        gwy_axiser_signal_rescaled   (GwyAxiser *axiser);
