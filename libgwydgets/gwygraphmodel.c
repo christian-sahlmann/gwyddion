@@ -965,6 +965,33 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
     return model->label_visible;
 }
 
+
+void       
+gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
+{
+    if (model->x_unit) g_object_unref(model->x_unit);
+    model->x_unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit)));
+}
+
+void       
+gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
+{
+    if (model->y_unit) g_object_unref(model->y_unit);
+    model->y_unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit)));
+}
+
+GwySIUnit*
+gwy_graph_model_get_x_siunit(GwyGraphModel *model)
+{
+    return GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(model->x_unit)));
+}
+
+GwySIUnit*
+gwy_graph_model_get_y_siunit(GwyGraphModel *model)
+{
+    return GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(model->y_unit)));
+}
+
 /**
 * gwy_graph_model_export_ascii:
 * @model: A #GwyGraphModel.
@@ -983,6 +1010,8 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
 {
     
 }
+
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

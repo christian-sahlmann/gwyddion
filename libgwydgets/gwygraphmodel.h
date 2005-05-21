@@ -122,6 +122,8 @@ void       gwy_graph_model_set_label_has_frame(GwyGraphModel *model, gboolean la
 void       gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness);
 void       gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse);
 void       gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible);
+void       gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit);
+void       gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit);
 
 gchar*     gwy_graph_model_get_title(GwyGraphModel *model);
 
@@ -130,7 +132,8 @@ gboolean       gwy_graph_model_get_label_has_frame(GwyGraphModel *model);
 gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);
 gboolean       gwy_graph_model_get_label_reverse(GwyGraphModel *model);
 gboolean       gwy_graph_model_get_label_visible(GwyGraphModel *model);
-
+GwySIUnit*     gwy_graph_model_get_x_siunit(GwyGraphModel *model);
+GwySIUnit*     gwy_graph_model_get_y_siunit(GwyGraphModel *model);
 
 void      gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename, 
                                        gboolean export_units, gboolean export_metadata,

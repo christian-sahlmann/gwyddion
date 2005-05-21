@@ -31,6 +31,11 @@
 
 #define GWY_GRAPHER_TYPE_NAME "GwyGrapher"
 
+enum {
+    SELECTED_SIGNAL,
+    LAST_SIGNAL
+};
+
 
 static void     gwy_grapher_class_init           (GwyGrapherClass *klass);
 static void     gwy_grapher_init                 (GwyGrapher *grapher);
@@ -44,6 +49,8 @@ static void     replot_cb                        (GObject *gobject,
                                                   GParamSpec *arg1, 
                                                   GwyGrapher *grapher);
 static GtkWidgetClass *parent_class = NULL;
+static guint gwygrapher_signals[LAST_SIGNAL] = { 0 };
+
 
 
 GType
@@ -87,6 +94,16 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
     widget_class->size_request = gwy_grapher_size_request;
     widget_class->size_allocate = gwy_grapher_size_allocate;
 
+    klass->selected = NULL;
+    gwygrapher_signals[SELECTED_SIGNAL]
+                = g_signal_new ("selected",
+                                G_TYPE_FROM_CLASS (klass),
+                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                G_STRUCT_OFFSET (GwyGrapherClass, selected),
+                                NULL,
+                                NULL,
+                                g_cclosure_marshal_VOID__VOID,
+                                G_TYPE_NONE, 0);
 }
 
 
@@ -166,6 +183,9 @@ gwy_grapher_init(GwyGrapher *grapher)
 
     grapher->area->status = GWY_GRAPH_STATUS_PLAIN;
     grapher->enable_user_input = TRUE;
+
+    g_signal_connect_swapped(grapher->area, "selected",
+                     G_CALLBACK(gwy_grapher_signal_selected), grapher);
     
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
@@ -384,7 +404,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
     {
         case GWY_GRAPH_STATUS_CURSOR:
         selection[0] = grapher->area->cursordata->data_point.x;
-        selection[0] = grapher->area->cursordata->data_point.y;
+        selection[1] = grapher->area->cursordata->data_point.y;
         break;
         
         case GWY_GRAPH_STATUS_XSEL:    
@@ -494,6 +514,13 @@ gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable)
     gwy_axiser_enable_label_edit(grapher->axis_right, enable);
     
     
+}
+
+
+void       
+gwy_grapher_signal_selected(GwyGrapher *grapher)
+{
+    g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[SELECTED_SIGNAL], 0);
 }
 
 

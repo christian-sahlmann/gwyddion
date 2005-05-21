@@ -494,7 +494,7 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         return FALSE;
     }
-
+printf("status: %d\n", area->status);
     if (area->status == GWY_GRAPH_STATUS_PLAIN && gmodel->ncurves > 0 && area->enable_user_input == TRUE)
     {
         curve = gwy_grapher_area_find_curve(area, dx, dy);
@@ -635,6 +635,12 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
+    if (area->status == GWY_GRAPH_STATUS_CURSOR)
+    {
+        area->cursordata->data_point.x = dx;
+        area->cursordata->data_point.y = dy;
+        gwy_grapher_area_signal_selected(area);
+    }
     
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
