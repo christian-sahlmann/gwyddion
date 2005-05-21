@@ -162,21 +162,27 @@ selection_updated_cb(gpointer data)
 {
     GwyGrapher *graph;
     gdouble selection[2];
-    gchar buffer[40];
+    gchar buffer[100];
+    GwySIValueFormat format;
 
     graph = (GwyGrapher *)data;
     g_return_if_fail(GWY_IS_GRAPHER(graph));
 
 
     gwy_grapher_get_selection(graph, selection);
+   
+    gwy_si_unit_get_format((gwy_grapher_get_model(graph))->x_unit, selection[0], &format);
+        
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", selection[0]/format.magnitude, format.units);
+
+    gtk_label_set_markup(GTK_LABEL(controls.xlabel), buffer);
+
+    gwy_si_unit_get_format((gwy_grapher_get_model(graph))->y_unit, selection[1], &format);
     
-    g_snprintf(buffer, sizeof(buffer), "%.3e", selection[0]);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", selection[1]/format.magnitude, format.units);
 
-    gtk_label_set_text(GTK_LABEL(controls.xlabel), buffer);
+    gtk_label_set_markup(GTK_LABEL(controls.ylabel), buffer);
 
-    g_snprintf(buffer, sizeof(buffer), "%.3e", selection[1]);
-
-    gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
 
 }
 

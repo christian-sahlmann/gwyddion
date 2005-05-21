@@ -357,6 +357,9 @@ dialog_update(GwyUnitoolState *state,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     gwy_graph_model_remove_all_curves(controls->graphmodel);
+    gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
+    gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
+    
     if (nselected) {
         j = 0;
         for (i = 0; i < nselected; i++) {
