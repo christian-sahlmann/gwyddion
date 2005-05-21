@@ -24,6 +24,24 @@
 #include "gwyddion.h"
 #include "gwytestser.h"
 
+static void
+log_handler(G_GNUC_UNUSED const gchar *log_domain,
+            G_GNUC_UNUSED GLogLevelFlags log_level,
+            const gchar *message,
+            G_GNUC_UNUSED gpointer user_data)
+{
+    fputs(message, stderr);
+    fputc('\n', stderr);
+}
+
+static void
+ignore_handler(G_GNUC_UNUSED const gchar *log_domain,
+               G_GNUC_UNUSED GLogLevelFlags log_level,
+               G_GNUC_UNUSED const gchar *message,
+               G_GNUC_UNUSED gpointer user_data)
+{
+}
+
 #define FILENAME "testser.object"
 
 #define print(obj,txt) \
@@ -820,6 +838,59 @@ test_si_unit_parse(void)
     siparsecompose("10 cm^2 km/m^3");
 }
 
+static void
+test_si_unit_err(void)
+{
+    const gchar *chars = "0000111122223333444455556666777788889999...."
+                         "eee                              "
+                         G_CSET_a_2_z G_CSET_A_2_Z
+                         "^^^^^^++++---/////<<<<>>>>";
+    GwySIUnit *siunit;
+    GTimer *timer;
+    GRand *rng;
+    GString *str;
+    guint i, n, len, id;
+    gchar c;
+
+    g_message("====== SI UNIT GARBAGE ======================");
+    id = g_log_set_handler("Gwyddion", G_LOG_LEVEL_WARNING, ignore_handler,
+                           NULL);
+
+    str = g_string_new("");
+    rng = g_rand_new();
+    g_rand_set_seed(rng, 42);
+    timer = g_timer_new();
+    g_timer_stop(timer);
+    siunit = gwy_si_unit_new("1");
+
+    n = 666666;
+    len = strlen(chars);
+    fprintf(stderr, "Parsing units");
+    for (i = 0; i < n; i++) {
+        g_string_truncate(str, 0);
+        do {
+            c = chars[g_rand_int_range(rng, 0, len)];
+            g_string_append_c(str, c);
+        } while (g_rand_int_range(rng, 0, 12));
+        g_timer_continue(timer);
+        gwy_si_unit_set_unit_string(siunit, str->str);
+        g_timer_stop(timer);
+        if (i % 12000 == 0)
+            putc('.', stderr);
+    }
+    putc('\n', stderr);
+
+    fprintf(stderr, "Total units parsed: %u in %fs\n",
+            n, g_timer_elapsed(timer, NULL));
+
+    g_object_unref(siunit);
+    g_timer_destroy(timer);
+    g_rand_free(rng);
+    g_string_free(str, TRUE);
+
+    g_log_remove_handler("Gwyddion", id);
+}
+
 #define printexpr(str) \
     if (gwy_expr_evaluate(expr, str, variables, &err)) \
         fprintf(stderr, "<%s> = %g", str, variables[0]); \
@@ -964,7 +1035,7 @@ test_expr_err(void)
 
     len = strlen(chars);
     n = 6666666;
-    fprintf(stderr, "Compiling");
+    fprintf(stderr, "Compiling exprs");
     for (i = 0; i < n; i++) {
         g_string_truncate(str, 0);
         do {
@@ -996,6 +1067,234 @@ test_expr_err(void)
     gwy_expr_free(expr);
     g_string_free(str, TRUE);
     g_free(errors);
+}
+
+static void
+test_expr_speed(void)
+{
+    GwyExpr *expr;
+    GTimer *timer;
+    gdouble *buf1, *buf2, *buf3;
+    gdouble *buffers[3];
+    gdouble vars[3];
+    guint i, j, n, len = 65536;
+
+    g_message("====== EXPR EXECUTION ======================");
+
+    buf1 = g_new(gdouble, len);
+    buf2 = g_new(gdouble, len);
+    buf3 = g_new(gdouble, len);
+    buffers[0] = NULL;
+    buffers[1] = buf1;
+    buffers[2] = buf2;
+    timer = g_timer_new();
+    g_timer_stop(timer);
+
+    expr = gwy_expr_new();
+    for (j = 0; j < len; j++) {
+        buf1[j] = (j + 1.0)/(100.0 + j*j);
+        buf2[j] = sin(j);
+    }
+    /* constant */
+    fprintf(stderr, "Constant");
+    n = 2000;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++)
+            buf3[j] = 1.0;
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " direct=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "1.0", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " expr=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "1.0", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++)
+        gwy_expr_vector_execute(expr, len, buffers, buf3);
+    g_timer_stop(timer);
+    fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    fprintf(stderr, "\n");
+
+    /* a+b */
+    fprintf(stderr, "a+b     ");
+    n = 1000;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++)
+            buf3[j] = buf1[j] + buf2[j];
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " direct=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "a+b", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            vars[1] = buf1[j];
+            vars[2] = buf2[j];
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " expr=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "a+b", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++)
+        gwy_expr_vector_execute(expr, len, buffers, buf3);
+    g_timer_stop(timer);
+    fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    fprintf(stderr, "\n");
+
+    /* (a+b)(a+b)/(1+2*a*b) */
+    fprintf(stderr, "(a+b)(..");
+    n = 200;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            gdouble a = buf1[j];
+            gdouble b = buf2[j];
+
+            buf3[j] = (a+b)*(a+b)/(1+2*a*b);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " direct=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 50;
+    gwy_expr_compile(expr, "(a+b)(a+b)/(1+2*a*b)", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            vars[1] = buf1[j];
+            vars[2] = buf2[j];
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " expr=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 50;
+    gwy_expr_compile(expr, "(a+b)(a+b)/(1+2*a*b)", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++)
+        gwy_expr_vector_execute(expr, len, buffers, buf3);
+    g_timer_stop(timer);
+    fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            buf3[j] = buf1[j] + buf2[j];
+        }
+    }
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            buf3[j] *= buf3[j];
+        }
+    }
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            buf3[j] /= 1.0 + 2*buf1[j]*buf2[j];
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " serial=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    fprintf(stderr, "\n");
+
+    /* log x */
+    fprintf(stderr, "log x   ");
+    n = 100;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++)
+            buf3[j] = log(buf1[j]);
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " direct=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 50;
+    gwy_expr_compile(expr, "log x", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            vars[1] = buf1[j];
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " expr=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 50;
+    gwy_expr_compile(expr, "log x", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            vars[1] = buf1[j];
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    fprintf(stderr, "\n");
+
+    /* max(a,b) */
+    fprintf(stderr, "max a,b ");
+    n = 1000;
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++)
+            buf3[j] = MAX(buf1[j], buf2[j]);
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " direct=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "max a,b", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < len; j++) {
+            vars[1] = buf1[j];
+            vars[2] = buf2[j];
+            buf3[j] = gwy_expr_execute(expr, vars);
+        }
+    }
+    g_timer_stop(timer);
+    fprintf(stderr, " expr=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    n = 200;
+    gwy_expr_compile(expr, "max a,b", NULL);
+    g_timer_start(timer);
+    for (i = 0; i < n; i++)
+        gwy_expr_vector_execute(expr, len, buffers, buf3);
+    g_timer_stop(timer);
+    fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
+
+    fprintf(stderr, "\n");
+
+    g_timer_destroy(timer);
+    gwy_expr_free(expr);
+    g_free(buf1);
+    g_free(buf2);
+    g_free(buf3);
 }
 
 static int
@@ -1060,7 +1359,7 @@ test_sort(void)
     g_timer_destroy(timer);
 }
 
-static void
+G_GNUC_UNUSED static void
 test_all(void)
 {
     test_serializable_iface();
@@ -1077,19 +1376,10 @@ test_all(void)
     test_si_unit();
     test_si_unit_format();
     test_si_unit_parse();
+    test_si_unit_err();
     test_expr();
     test_expr_err();
     test_sort();
-}
-
-static void
-log_handler(G_GNUC_UNUSED const gchar *log_domain,
-            G_GNUC_UNUSED GLogLevelFlags log_level,
-            const gchar *message,
-            G_GNUC_UNUSED gpointer user_data)
-{
-    fputs(message, stderr);
-    fputc('\n', stderr);
 }
 
 int
@@ -1097,7 +1387,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_all();
+    test_expr_speed();
 
     return 0;
 }

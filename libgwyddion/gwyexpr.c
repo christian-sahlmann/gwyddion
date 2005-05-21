@@ -149,13 +149,13 @@ make_function_2_1(hypot)
 make_function_2_1(atan2)
 make_function_2_1(fmod)
 
-void gwy_expr_negate(gdouble **s) { **s = -(**s); }
-void gwy_expr_add(gdouble **s) { --*s; **s = *(*s+1) + **s; }
-void gwy_expr_subtract(gdouble **s) { --*s; **s = *(*s+1) - **s; }
-void gwy_expr_multiply(gdouble **s) { --*s; **s = *(*s+1) * **s; }
-void gwy_expr_divide(gdouble **s) { --*s; **s = *(*s+1) / **s; }
-void gwy_expr_max(gdouble **s) { --*s; **s = MAX(*(*s+1), **s); }
-void gwy_expr_min(gdouble **s) { --*s; **s = MIN(*(*s+1), **s); }
+static void gwy_expr_negate(gdouble **s) { **s = -(**s); }
+static void gwy_expr_add(gdouble **s) { --*s; **s = *(*s+1) + **s; }
+static void gwy_expr_subtract(gdouble **s) { --*s; **s = *(*s+1) - **s; }
+static void gwy_expr_multiply(gdouble **s) { --*s; **s = *(*s+1) * **s; }
+static void gwy_expr_divide(gdouble **s) { --*s; **s = *(*s+1) / **s; }
+static void gwy_expr_max(gdouble **s) { --*s; **s = MAX(*(*s+1), **s); }
+static void gwy_expr_min(gdouble **s) { --*s; **s = MIN(*(*s+1), **s); }
 
 static const GwyExprFunction call_table[] = {
     { NULL,                NULL,     0,  0,  0                       },
@@ -287,6 +287,43 @@ gwy_expr_stack_interpret(GwyExpr *expr)
 }
 
 /**
+ * gwy_expr_stack_interpret_vectors:
+ * @expr: An expression.
+ * @n: The lenght of @result and of @data member arrays, that is vector length.
+ * @data: An array of arrays of length @n.  The arrays correspond to expression
+ *        variables in gwy_expr_execute().  Zeroth array can be %NULL.
+ * @result: An array of length @n to store computation results to.  It may be
+ *          one of those in @data.
+ *
+ * Performs actual vectorized stack interpretation.
+ *
+ * No checking is done, use gwy_expr_stack_check_executability() beforehand.
+ **/
+static inline void
+gwy_expr_stack_interpret_vectors(GwyExpr *expr,
+                                 guint n,
+                                 gdouble **data,
+                                 gdouble *result)
+{
+    guint i, j;
+
+    for (j = 0; j < n; j++) {
+        expr->sp = expr->stack - 1;
+        for (i = 0; i < expr->in; i++) {
+            GwyExprCode *code = expr->input + i;
+
+            if (code->type == GWY_EXPR_CODE_CONSTANT)
+                *(++expr->sp) = code->value;
+            else if ((gint)code->type > 0)
+                call_table[code->type].function(&expr->sp);
+            else
+                *(++expr->sp) = data[-(gint)code->type][j];
+        }
+        result[j] = expr->stack[0];
+    }
+}
+
+/**
  * gwy_expr_stack_check_executability:
  * @expr: An expression.
  *
@@ -303,12 +340,13 @@ gwy_expr_stack_check_executability(GwyExpr *expr)
     nval = max = 0;
     for (i = 0; i < expr->in; i++) {
         if (expr->input[i].type == GWY_EXPR_CODE_CONSTANT
-            || (gint)expr->input[i].type < 0)
+            || (gint)expr->input[i].type < 0) {
             nval++;
+        }
         else if (expr->input[i].type > 0) {
             nval -= call_table[expr->input[i].type].in_values;
             nval += call_table[expr->input[i].type].out_values;
-            if (!nval)
+            if (nval <= 0)
                 return FALSE;
         }
         if (nval > max)
@@ -331,18 +369,21 @@ gwy_expr_stack_print(GwyExpr *expr)
     guint i;
     GwyExprCode *code;
 
+    g_printerr("expr->in = %d\n", expr->in);
     for (i = 0; i < expr->in; i++) {
         code = expr->input + i;
         if ((gint)code->type > 0) {
-            g_print("Function %s\n",
-                    call_table[code->type].name);
+            g_print("#%u Function %s\n",
+                    i, call_table[code->type].name);
         }
         else if ((gint)code->type < 0) {
-            g_print("Argument %s\n",
-                    (gchar*)g_ptr_array_index(expr->identifiers, -code->type));
+            g_print("#%u Argument %s\n",
+                    i, (gchar*)g_ptr_array_index(expr->identifiers,
+                                                 -(gint)code->type));
         }
         else
-            g_print("Constant %g\n", code->value);
+            g_print("#%u Constant %g\n",
+                    i, code->value);
     }
 }
 
@@ -373,7 +414,7 @@ gwy_expr_stack_fold_constants(GwyExpr *expr)
         expr->input[to] = expr->input[from];
         if (code->type == GWY_EXPR_CODE_CONSTANT)
             last_constants++;
-        else if ((gint)code->type <= 0)
+        else if ((gint)code->type < 0)
             last_constants = 0;
         else {
             const GwyExprFunction *func = call_table + code->type;
@@ -401,6 +442,8 @@ gwy_expr_stack_fold_constants(GwyExpr *expr)
                 }
                 to--;
             }
+            else
+                last_constants = 0;
         }
     }
     expr->in = to;
@@ -1427,7 +1470,7 @@ gwy_expr_get_variables(GwyExpr *expr,
  *
  * Returns: The number of remaining, unresolved variables in @expr.
  **/
-gint
+guint
 gwy_expr_resolve_variables(GwyExpr *expr,
                            guint n,
                            gchar * const *names,
@@ -1475,10 +1518,38 @@ gdouble
 gwy_expr_execute(GwyExpr *expr,
                  const gdouble *values)
 {
-    /* Do not check anything, this can often appear in an inner loop */
+    g_return_val_if_fail(expr, 0.0);
+    g_return_val_if_fail(expr->in, 0.0);
+    g_return_val_if_fail(values || expr->identifiers->len <= 1, 0.0);
+
     expr->variables = values;
     gwy_expr_stack_interpret(expr);
     return expr->stack[0];
+}
+
+/**
+ * gwy_expr_vector_execute:
+ * @expr: An expression evaluator.
+ * @n: The lenght of @result and of @data member arrays, that is vector length.
+ * @data: An array of arrays of length @n.  The arrays correspond to expression
+ *        variables in gwy_expr_execute().  Zeroth array can be %NULL.
+ * @result: An array of length @n to store computation results to.  It may be
+ *          one of those in @data.
+ *
+ * Executes a compiled expression on each item of data arrays.
+ **/
+void
+gwy_expr_vector_execute(GwyExpr *expr,
+                        guint n,
+                        gdouble **data,
+                        gdouble *result)
+{
+    g_return_if_fail(expr);
+    g_return_if_fail(expr->in);
+    g_return_if_fail(result);
+    g_return_if_fail(data || expr->identifiers->len <= 1);
+
+    gwy_expr_stack_interpret_vectors(expr, n, data, result);
 }
 
 /**

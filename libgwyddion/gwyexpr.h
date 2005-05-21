@@ -55,7 +55,7 @@ gboolean  gwy_expr_evaluate          (GwyExpr *expr,
 gboolean  gwy_expr_compile           (GwyExpr *expr,
                                       const gchar *text,
                                       GError **err);
-gint      gwy_expr_resolve_variables (GwyExpr *expr,
+guint     gwy_expr_resolve_variables (GwyExpr *expr,
                                       guint n,
                                       gchar * const *names,
                                       guint *indices);
@@ -63,6 +63,10 @@ gint      gwy_expr_get_variables     (GwyExpr *expr,
                                       gchar ***names);
 gdouble   gwy_expr_execute           (GwyExpr *expr,
                                       const gdouble *values);
+void      gwy_expr_vector_execute    (GwyExpr *expr,
+                                      guint n,
+                                      gdouble **data,
+                                      gdouble *result);
 gboolean  gwy_expr_define_constant   (GwyExpr *expr,
                                       const gchar *name,
                                       gdouble value,
