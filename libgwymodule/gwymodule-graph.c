@@ -23,7 +23,7 @@
 #include <gtk/gtkmenubar.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapher.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-graph.h"
@@ -132,7 +132,7 @@ gwy_graph_func_run(const guchar *name,
 
     func_info = g_hash_table_lookup(graph_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPH(graph), FALSE);
+    g_return_val_if_fail(GWY_IS_GRAPHER(graph), FALSE);
     g_object_ref(graph);
     status = func_info->info.graph(graph, name);
     g_object_unref(graph);
