@@ -448,7 +448,7 @@ points_dialog_response_cb(gpointer data, gint response)
     graph = (GwyGraph *) data;
 
     if (response == GTK_RESPONSE_REJECT) {
-        gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
+        gwy_grapher_clear_selection(graph);
         gtk_widget_queue_draw(GTK_WIDGET(graph));
         selection_updated_cb(data);
     }

@@ -967,6 +967,11 @@ gwy_grapher_area_clear_selection(GwyGrapherArea *area)
         if (area->areasdata) g_array_free(area->areasdata->data_areas, TRUE);
         area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataArea));        
     }
+    else if (area->status == GWY_GRAPH_STATUS_POINTS)
+    {
+        if (area->pointsdata) g_array_free(area->pointsdata->data_points, TRUE);
+        area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataPoint));
+    }
 
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
