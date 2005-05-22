@@ -9,7 +9,7 @@ module_ldflags = -shared -Wl,-soname
 #	graph_export_ascii.so \
 #	graph_zoom.so \
 #	graph_unzoom.so \
-#	graph_points.so \
+#	graph_points.so 
 #	graph_fit.so \
 #	graph_cd.so
  

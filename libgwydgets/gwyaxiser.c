@@ -1189,6 +1189,9 @@ gwy_axiser_formatticks(GwyAxiser *a)
             g_string_printf(pmjt->ttext,"%d", (int)(value+0.5));
         }
     }
+    
+    if (format) g_free(format->units);
+    
     return 0;
 }
 
