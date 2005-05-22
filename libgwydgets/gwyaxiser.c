@@ -197,6 +197,7 @@ gwy_axiser_init(GwyAxiser *axiser)
 
     axiser->has_unit = 0;
     axiser->unit = NULL;
+    axiser->magnification_string = NULL;
 }
 
 /**
@@ -741,7 +742,8 @@ gwy_axiser_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxiserActiveAreaSpecs
 
     if (axiser->has_unit) {
         g_string_append(plotlabel, " [");
-        g_string_append(plotlabel, gwy_si_unit_get_unit_string(axiser->unit));
+        if (axiser->magnification_string) g_string_append(plotlabel, axiser->magnification_string->str);
+        else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axiser->unit));
         g_string_append(plotlabel, "]");
     }
 
@@ -1100,7 +1102,9 @@ gwy_axiser_formatticks(GwyAxiser *a)
 {
     guint i;
     gdouble value;
-    gdouble range; /*only for automode and precision*/
+    gdouble range, crange; /*only for automode and precision*/
+    gdouble average;
+    GwySIValueFormat *format = NULL;
     GwyAxiserLabeledTick mji, mjx, *pmjt;
     /*determine range*/
     if (a->mjticks->len == 0) {
@@ -1110,9 +1114,32 @@ gwy_axiser_formatticks(GwyAxiser *a)
     mji = g_array_index(a->mjticks, GwyAxiserLabeledTick, 0);
     mjx = g_array_index(a->mjticks, GwyAxiserLabeledTick, a->mjticks->len - 1);
     if (!a->is_logarithmic)
+    {
+        average = fabs(mjx.t.value + mji.t.value)/2;
         range = fabs(mjx.t.value - mji.t.value);
+    }
     else
+    {
+        average = 0;
         range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));
+    }
+
+    
+    /*move exponents to axis label*/
+    if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
+        && (range > 1000 || average > 1000 || range < 0.001 || average < 0.001))
+    {
+        format = gwy_si_unit_get_format(a->unit, MAX(average, range), format);
+        if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
+        a->magnification_string = g_string_new(format->units);
+        range /= format->magnitude;
+    } 
+    else
+    {
+        if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
+        a->magnification_string = NULL;
+    }
+
 
     for (i = 0; i< a->mjticks->len; i++)
     {
@@ -1122,6 +1149,10 @@ gwy_axiser_formatticks(GwyAxiser *a)
             value = pmjt->t.value;
         else
             value = pow(10, pmjt->t.value);
+
+        if (format) 
+            value /= format->magnitude;
+
 
         /*fill dependent to mode*/
         if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT

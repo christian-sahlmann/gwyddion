@@ -103,6 +103,7 @@ struct _GwyAxiser {
     GString *label_text;
 
     GwySIUnit *unit;                /*axiser unit (if any)*/
+    GString *magnification_string;
 
     GtkWidget *dialog;      /*axiser label and other properties dialog*/
 
