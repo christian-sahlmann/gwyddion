@@ -46,9 +46,12 @@ struct _GwyDataView {
 
     GwyContainer *data;
 
-    GwyDataViewLayer *top_layer;
-    GwyDataViewLayer *alpha_layer;
-    GwyDataViewLayer *base_layer;
+    GwyPixmapLayer *base_layer;
+    GwyPixmapLayer *alpha_layer;
+    GwyVectorLayer *top_layer;
+
+    gulong base_hid;
+    gulong alpha_hid;
 
     gdouble zoom;    /* zoom (larger number means larger pixmaps) */
     gdouble newzoom;    /* new zoom value (when zoom is set, but widget not
@@ -61,8 +64,6 @@ struct _GwyDataView {
     GdkPixbuf *pixbuf;      /* everything, this is drawn on the screen */
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
 
-    gboolean force_update;
-
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -70,7 +71,6 @@ struct _GwyDataView {
 struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
 
-    void (*updated)(GwyDataView *data_view);
     void (*redrawn)(GwyDataView *data_view);
 
     gpointer reserved2;
@@ -114,7 +114,6 @@ GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
 GdkPixbuf*        gwy_data_view_get_pixbuf        (GwyDataView *data_view,
                                                    gint max_width,
                                                    gint max_height);
-void              gwy_data_view_update            (GwyDataView *data_view);
 
 G_END_DECLS
 

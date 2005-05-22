@@ -396,7 +396,7 @@ preview(RemoveControls *controls,
                                          &maskfield))
         mask_process(dfield, maskfield, args);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(maskfield, "data_changed");
 
 }
 

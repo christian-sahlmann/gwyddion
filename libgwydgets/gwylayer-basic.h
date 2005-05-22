@@ -43,7 +43,6 @@ struct _GwyLayerBasic {
     GwyPixmapLayer parent_instance;
 
     GwyGradient *gradient;
-    gboolean changed;
     gulong gradient_id;
 
     gpointer reserved2;

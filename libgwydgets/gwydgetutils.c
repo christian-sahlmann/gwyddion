@@ -433,8 +433,6 @@ mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
 
     if (mcsdata->color_button)
         gwy_color_button_set_color(mcsdata->color_button, &rgba);
-    if (mcsdata->data_view)
-        gwy_data_view_update(mcsdata->data_view);
 }
 
 /**
@@ -442,6 +440,9 @@ mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
  * @dialog_title: Title of the color selection dialog (%NULL to use default).
  * @data_view: Data view to update on color change (%NULL to not update
  *             any data view).
+ *             FIXME: The data view layer should watch
+ *             changes, and even if not, the argument should be a layer.
+ *             will be changed.
  * @color_button: Color button to update on color change (or %NULL).
  * @container: Container to initialize the color from and save it to, may be
  *             %NULL to use @data_view's one if that is not %NULL.
@@ -502,8 +503,6 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
         gwy_rgba_store_to_container(&rgba, container, mcsdata->prefix);
         if (mcsdata->color_button)
             gwy_color_button_set_color(mcsdata->color_button, &rgba);
-        if (data_view)
-            gwy_data_view_update(data_view);
     }
     g_free(mcsdata->prefix);
     g_free(mcsdata);

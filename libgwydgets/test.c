@@ -29,9 +29,10 @@
 #include <libgwydgets/gwygraphcurvemodel.h>
 
 
-static void destroy( GtkWidget *widget, gpointer data )
+static void
+destroy(GtkWidget *widget, gpointer data)
 {
-        gtk_main_quit ();
+    gtk_main_quit();
 }
 
 int
@@ -55,79 +56,83 @@ main(int argc, char *argv[])
     double yu[10];
     double xv[20];
     double yv[20];
-         
-    for (i=0; i<100; i++){xs[i]=i-7; xp[i]=i; ys[i]= 100 + (double)i*i/40; 
-        yp[i]=50 + 20*sin((double)i*15/100);
-        
-        if (i<20) {
-            xv[i]=5.0*i + 12;
-            yv[i]=20*sin((double)i*5.0*15/100)-15*cos((double)(i*5.0-3)*15/100) - 30;
-           }
-        if (i<10) {
-            xr[i]=20+i*3;
-            yr[i]=150+4*i;
-            xu[i]=20+i*7;
-            yu[i]=50 - (double)i*4;
-           }
+
+    for (i = 0; i < 100; i++) {
+        xs[i] = i - 7;
+        xp[i] = i;
+        ys[i] = 100 + (double)i * i/40;
+
+        yp[i] = 50 + 20 * sin((double)i * 15100);
+
+        if (i < 20) {
+            xv[i] = 5.0 * i + 12;
+            yv[i] = 20 * sin((double)i * 5.0 * 15100)
+                    - 15 * cos((double)(i * 5.0 - 3) * 15100) - 30;
         }
-    
+        if (i < 10) {
+            xr[i] = 20 + i * 3;
+            yr[i] = 150 + 4 * i;
+            xu[i] = 20 + i * 7;
+            yu[i] = 50 - (double)i *4;
+        }
+    }
+
     gtk_init(&argc, &argv);
-    
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
-    g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (destroy), NULL);
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    gtk_container_set_border_width (GTK_CONTAINER (window), 0);
- 
-    /*
-    label = gwy_graph_label_new();
-    gtk_container_add (GTK_CONTAINER (window), label);
-    gtk_widget_show (label);
-    */
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), NULL);
+
+    gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
     /*
-    area = gwy_graph_area_new(NULL,NULL);
-    gtk_layout_set_size(GTK_LAYOUT(area), 320, 240);
-    gtk_container_add (GTK_CONTAINER (window), area);
+       label = gwy_graph_label_new();
+       gtk_container_add (GTK_CONTAINER (window), label);
+       gtk_widget_show (label);
+     */
 
-    foo = gtk_label_new("Foo!");
-    gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
-    */
+    /*
+       area = gwy_graph_area_new(NULL,NULL);
+       gtk_layout_set_size(GTK_LAYOUT(area), 320, 240);
+       gtk_container_add (GTK_CONTAINER (window), area);
 
-   
-  
-    dln = (GwyDataLine *) gwy_data_line_new(200, 200, 1);
+       foo = gtk_label_new("Foo!");
+       gtk_layout_put(GTK_LAYOUT(area), foo, 10, 20);
+     */
+
+
+
+    dln = (GwyDataLine *)gwy_data_line_new(200, 200, 1);
 
     gmodel = gwy_graph_model_new(NULL);
     graph = gwy_grapher_new(gmodel);
-    
+
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 100);
     gwy_graph_curve_model_set_description(model, "parabola");
-   
+
     gwy_graph_model_add_curve(gmodel, model);
-    
+
     gwy_graph_model_set_label_visible(gmodel, TRUE);
-    
-    gtk_container_add (GTK_CONTAINER (window), graph);
+
+    gtk_container_add(GTK_CONTAINER(window), graph);
 
     gwy_grapher_enable_user_input(graph, TRUE);
     printf("show!\n");
-    gtk_widget_show (graph);
+    gtk_widget_show(graph);
 
     printf("show all!\n");
-   gtk_widget_show_all(window);
+    gtk_widget_show_all(window);
 
     printf("add!\n");
 
-    for (k=0; k<1; k++)
-    {
-       gwy_graph_model_remove_all_curves(gmodel);
-       g_object_unref(model);
-       model = gwy_graph_curve_model_new();
-       gwy_graph_curve_model_set_data(model, xp, yp, 100);
-       gwy_graph_model_add_curve(gmodel, model);
-       printf("%d ", k);
+    for (k = 0; k < 1; k++) {
+        gwy_graph_model_remove_all_curves(gmodel);
+        g_object_unref(model);
+        model = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(model, xp, yp, 100);
+        gwy_graph_model_add_curve(gmodel, model);
+        printf("%d ", k);
     }
     //printf("n of curves: %d\n", gwy_graph_model_get_n_curves(gmodel));
 
@@ -135,4 +140,5 @@ main(int argc, char *argv[])
 
     return 0;
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

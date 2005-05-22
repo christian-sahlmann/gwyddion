@@ -335,7 +335,7 @@ shade_dialog_update(ShadeControls *controls,
     shader = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
                                                              "/0/show"));
     gwy_data_field_shade(dfield, shader, args->theta, args->phi);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
+    g_signal_emit_by_name(shader, "data_changed");
 }
 
 static const gchar *theta_key = "/module/shade/theta";

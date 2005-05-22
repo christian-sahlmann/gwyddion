@@ -55,14 +55,16 @@ struct _GwyPixmapLayer {
 struct _GwyPixmapLayerClass {
     GwyDataViewLayerClass parent_class;
 
-    /* renderers */
     GdkPixbuf* (*paint)(GwyPixmapLayer *layer);
+    /* May anyone want to override this? */
+    /*gboolean (*wants_repaint)(GwyDataViewLayer *layer);*/
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
 GType            gwy_pixmap_layer_get_type      (void) G_GNUC_CONST;
+gboolean         gwy_pixmap_layer_wants_repaint (GwyPixmapLayer *pixmap_layer);
 GdkPixbuf*       gwy_pixmap_layer_paint         (GwyPixmapLayer *pixmap_layer);
 void             gwy_pixmap_layer_set_data_key  (GwyPixmapLayer *pixmap_layer,
                                                  const gchar *key);

@@ -64,7 +64,6 @@ static void     simple_gdk_pixbuf_scale_or_copy    (GdkPixbuf *source,
                                                     GdkPixbuf *dest);
 static void     gwy_data_view_make_pixmap          (GwyDataView *data_view);
 static void     gwy_data_view_paint                (GwyDataView *data_view);
-static void     gwy_data_view_maybe_resize         (GwyDataView *data_view);
 static gboolean gwy_data_view_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
 static gboolean gwy_data_view_button_press         (GtkWidget *widget,
@@ -78,7 +77,8 @@ static gboolean gwy_data_view_key_press            (GtkWidget *widget,
 static gboolean gwy_data_view_key_release          (GtkWidget *widget,
                                                     GdkEventKey *event);
 static void     gwy_data_view_set_layer            (GwyDataView *data_view,
-                                                    GwyDataViewLayer **which,
+                                                    gpointer which,
+                                                    gulong *hid,
                                                     GwyDataViewLayer *layer);
 
 
@@ -148,33 +148,15 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     widget_class->key_press_event = gwy_data_view_key_press;
     widget_class->key_release_event = gwy_data_view_key_release;
 
-    klass->updated = NULL;
     klass->redrawn = NULL;
-
-/**
- * GwyDataView::updated:
- * @gwydataview: The #GwyDataView which received the signal.
- *
- * The ::updated signal is emitted when the displayed data, or the way they
- * are displayed, changes.  However, actual redraw takes place later in the
- * main Gtk+ loop, so if you want to e.g. actualize a thumbnail, connect
- * to ::redrawn instead.
- */
-    data_view_signals[UPDATED]
-        = g_signal_new("updated",
-                       G_OBJECT_CLASS_TYPE(object_class),
-                       G_SIGNAL_RUN_FIRST,
-                       G_STRUCT_OFFSET(GwyDataViewClass, updated),
-                       NULL, NULL,
-                       g_cclosure_marshal_VOID__VOID,
-                       G_TYPE_NONE, 0);
 
 /**
  * GwyDataView::redrawn:
  * @gwydataview: The #GwyDataView which received the signal.
  *
- * The ::redrawn signal is emitted when #GwyDataView actually redraws itself
- * after an update.
+ * The ::redrawn signal is emitted when #GwyDataView redraws pixbufs after an
+ * update.  That is, when it's the right time to get a new pixbuf from
+ * gwy_data_view_get_thumbnail() or gwy_data_view_get_pixbuf().
  */
     data_view_signals[REDRAWN]
         = g_signal_new("redrawn",
@@ -193,9 +175,6 @@ gwy_data_view_init(GwyDataView *data_view)
 
     data_view->zoom = 1.0;
     data_view->newzoom = 1.0;
-    data_view->xmeasure = -1.0;
-    data_view->ymeasure = -1.0;
-    data_view->force_update = TRUE;
 }
 
 /**
@@ -244,9 +223,11 @@ gwy_data_view_destroy(GtkObject *object)
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
-    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL);
-    gwy_data_view_set_layer(data_view, &data_view->alpha_layer, NULL);
-    gwy_data_view_set_layer(data_view, &data_view->base_layer, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->alpha_layer,
+                            &data_view->alpha_hid, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->base_layer,
+                            &data_view->base_hid, NULL);
 
     if (GTK_OBJECT_CLASS(parent_class)->destroy)
         (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
@@ -549,14 +530,13 @@ gwy_data_view_expose(GtkWidget *widget,
     if (xs >= xe || ys >= ye)
         return FALSE;
 
-    /* FIXME: ask the layers, if they want to repaint themselves */
-    if (data_view->force_update
-        || gwy_data_view_layer_wants_repaint(data_view->base_layer)
-        || gwy_data_view_layer_wants_repaint(data_view->alpha_layer)) {
+    if ((data_view->base_layer
+         && gwy_pixmap_layer_wants_repaint(data_view->base_layer))
+        || (data_view->alpha_layer
+            && gwy_pixmap_layer_wants_repaint(data_view->alpha_layer))) {
         gwy_data_view_paint(data_view);
         emit_redrawn = TRUE;
     }
-    data_view->force_update = FALSE;
 
     gdk_draw_pixbuf(widget->window,
                     NULL,
@@ -660,53 +640,20 @@ gwy_data_view_key_release(GtkWidget *widget,
  *
  * Instructs a data view to update self and repaint.
  *
- * It causes "updated" signal emission, among other things.
- *
- * FIXME: This function exists because it's impossible [now?] to watch changes
- * of datafields (and other things) properly.  Call it when you changed data
- * and want the view to reflect the change.
+ * XXX: Deprecated.  It merely causes an expose event on the data view now.
  **/
 void
 gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
 
-    gwy_debug(" ");
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
-    data_view->force_update = TRUE;
-    gwy_data_view_maybe_resize(data_view);
     widget = GTK_WIDGET(data_view);
     if (widget->window)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
-    g_signal_emit(data_view, data_view_signals[UPDATED], 0);
 }
 
-/* XXX FIXME: this is broken, must have support in layers first, then write
- * this again */
-static void
-gwy_data_view_maybe_resize(GwyDataView *data_view)
-{
-    GwyDataField *data_field;
-    GwyContainer *data;
-    gint xres, yres, width, height;
-
-    /* XXX: when can happen? */
-    if (!data_view->base_pixbuf)
-        return;
-
-    data = data_view->data;
-    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-    xres = gwy_data_field_get_xres(data_field);
-    yres = gwy_data_field_get_yres(data_field);
-    width = gdk_pixbuf_get_width(data_view->base_pixbuf);
-    height = gdk_pixbuf_get_height(data_view->base_pixbuf);
-    if (width != xres || height != yres) {
-        g_warning("Resizing, have to notify layers!");
-        /*(gwy_object_unref(data_view->base_pixbuf);*/
-    }
-}
 /**
  * gwy_data_view_get_base_layer:
  * @data_view: A #GwyDataView.
@@ -761,28 +708,40 @@ gwy_data_view_get_top_layer(GwyDataView *data_view)
 
 static void
 gwy_data_view_set_layer(GwyDataView *data_view,
-                        GwyDataViewLayer **which,
+                        gpointer which,
+                        gulong *hid,
                         GwyDataViewLayer *layer)
 {
+    GwyDataViewLayer **which_layer;
+
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     g_return_if_fail(which);
 
-    if (layer == *which)
+    which_layer = (GwyDataViewLayer**)which;
+    if (layer == *which_layer)
         return;
-    if (*which) {
-        gwy_data_view_layer_unplugged(*which);
-        (*which)->parent = NULL;
-        g_object_unref(*which);
+    if (*which_layer) {
+        if (hid) {
+            g_signal_handler_disconnect(*which_layer, *hid);
+            *hid = 0;
+        }
+        gwy_data_view_layer_unplugged(*which_layer);
+        (*which_layer)->parent = NULL;
+        g_object_unref(*which_layer);
     }
     if (layer) {
         g_assert(layer->parent == NULL);
         g_object_ref(layer);
         gtk_object_sink(GTK_OBJECT(layer));
         layer->parent = (GtkWidget*)data_view;
+        if (hid)
+            *hid = g_signal_connect_swapped(layer, "updated",
+                                            G_CALLBACK(gwy_data_view_update),
+                                            data_view);
         gwy_data_view_layer_plugged(layer);
     }
-    *which = layer;
-    data_view->force_update = TRUE;
+    *which_layer = layer;
+    gwy_data_view_update(data_view);
 }
 
 /**
@@ -802,7 +761,9 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
                              GwyPixmapLayer *layer)
 {
     g_return_if_fail(!layer || GWY_IS_PIXMAP_LAYER(layer));
-    gwy_data_view_set_layer(data_view, &data_view->base_layer,
+    gwy_data_view_set_layer(data_view,
+                            &data_view->base_layer,
+                            &data_view->base_hid,
                             GWY_DATA_VIEW_LAYER(layer));
     gwy_data_view_update(data_view);
 }
@@ -824,7 +785,9 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                               GwyPixmapLayer *layer)
 {
     g_return_if_fail(!layer || GWY_IS_PIXMAP_LAYER(layer));
-    gwy_data_view_set_layer(data_view, &data_view->alpha_layer,
+    gwy_data_view_set_layer(data_view,
+                            &data_view->alpha_layer,
+                            &data_view->alpha_hid,
                             GWY_DATA_VIEW_LAYER(layer));
     gwy_data_view_update(data_view);
 }
@@ -846,7 +809,7 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyVectorLayer *layer)
 {
     g_return_if_fail(!layer || GWY_IS_VECTOR_LAYER(layer));
-    gwy_data_view_set_layer(data_view, &data_view->top_layer,
+    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL,
                             GWY_DATA_VIEW_LAYER(layer));
     gwy_data_view_update(data_view);
 }

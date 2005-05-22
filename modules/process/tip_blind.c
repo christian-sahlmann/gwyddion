@@ -441,7 +441,7 @@ reset(TipBlindControls *controls, TipBlindArgs *args)
                                       GTK_RESPONSE_OK, controls->good_tip);
 
     tip_update(controls, args);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(tipfield, "data_changed");
 }
 
 static void
@@ -528,7 +528,7 @@ tip_blind_run(TipBlindControls *controls,
         g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
         gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
     }
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(tipfield, "data_changed");
 }
 
 static void

@@ -468,9 +468,11 @@ apply(GwyUnitoolState *state)
     gwy_container_set_double(data, controls->key_min, controls->min);
     gwy_container_set_double(data, controls->key_max, controls->max);
 
+    /*FIXME:
     gwy_data_view_update
         (GWY_DATA_VIEW(gwy_data_window_get_data_view
                            (GWY_DATA_WINDOW(state->data_window))));
+                           */
     controls->in_update = FALSE;
 }
 

@@ -340,7 +340,7 @@ unrotate_dialog_update(UnrotateControls *controls,
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
     gwy_data_field_copy(dfield, rfield, FALSE);
     gwy_data_field_rotate(rfield, phi, args->interp);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
+    g_signal_emit_by_name(rfield, "data_changed");
 }
 
 static void

@@ -112,7 +112,6 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
-    layer_class->wants_repaint = NULL;  /* always wants */
     layer_class->updated = gwy_vector_layer_real_updated;
 
     klass->draw = NULL;

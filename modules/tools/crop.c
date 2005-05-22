@@ -194,7 +194,7 @@ apply(GwyUnitoolState *state)
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     gwy_vector_layer_unselect(state->layer);
-    gwy_data_view_update(data_view);
+    /*FIXME: gwy_data_view_update(data_view);*/
     gwy_debug("%d %d",
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }

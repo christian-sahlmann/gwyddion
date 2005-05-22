@@ -125,8 +125,9 @@ gwy_unitool_use(GwyUnitoolState *state,
         = g_signal_connect_swapped(state->layer, "updated",
                                    G_CALLBACK(gwy_unitool_selection_updated_cb),
                                    state);
+    /* FIXME: */
     state->data_updated_id
-        = g_signal_connect_swapped(data_view, "updated",
+        = g_signal_connect_swapped(data_view, "redrawn",
                                    G_CALLBACK(gwy_unitool_data_updated_cb),
                                    state);
     state->windowname_id

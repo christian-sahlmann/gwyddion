@@ -600,6 +600,7 @@ select_which_data(GPtrArray *ezdfile,
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
                            120.0/MAX(section->xres, section->yres));
     layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
                                  GWY_PIXMAP_LAYER(layer));
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
@@ -648,8 +649,7 @@ selection_changed(GtkWidget *button,
                                                              "/0/data"));
     ezdfile = controls->file;
     read_data_field(dfield, (EZDSection*)g_ptr_array_index(ezdfile, i));
-
-    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
+    g_signal_emit_by_name(dfield, "data_changed");
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

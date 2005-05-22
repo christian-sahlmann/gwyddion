@@ -23,6 +23,7 @@
 #include <string.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
+#include <libprocess/datafield.h>
 
 #include "gwypixmaplayer.h"
 
@@ -34,7 +35,6 @@
 
 static void     gwy_pixmap_layer_class_init   (GwyPixmapLayerClass *klass);
 static void     gwy_pixmap_layer_init         (GwyPixmapLayer *layer);
-static void     gwy_pixmap_layer_finalize     (GObject *object);
 static void     gwy_pixmap_layer_destroy      (GtkObject *object);
 static void     gwy_pixmap_layer_plugged      (GwyDataViewLayer *layer);
 static void     gwy_pixmap_layer_unplugged    (GwyDataViewLayer *layer);
@@ -63,7 +63,6 @@ gwy_pixmap_layer_get_type(void)
             (GInstanceInitFunc)gwy_pixmap_layer_init,
             NULL,
         };
-        gwy_debug("");
         gwy_pixmap_layer_type
             = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
                                      GWY_PIXMAP_LAYER_TYPE_NAME,
@@ -77,15 +76,10 @@ gwy_pixmap_layer_get_type(void)
 static void
 gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gwy_debug("");
-
     parent_class = g_type_class_peek_parent(klass);
-
-    gobject_class->finalize = gwy_pixmap_layer_finalize;
 
     object_class->destroy = gwy_pixmap_layer_destroy;
 
@@ -98,12 +92,6 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
 static void
 gwy_pixmap_layer_init(G_GNUC_UNUSED GwyPixmapLayer *layer)
 {
-}
-
-static void
-gwy_pixmap_layer_finalize(GObject *object)
-{
-    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void
@@ -120,10 +108,13 @@ gwy_pixmap_layer_destroy(GtkObject *object)
  * gwy_pixmap_layer_paint:
  * @pixmap_layer: A pixmap data view layer.
  *
- * Returns a pixbuf with painted pixmap layer @layer.
+ * Returns a pixbuf with painted pixmap layer.
  *
- * Returns: The pixbuf.  It should not be modified or freed.  The layer must
- * be a pixmap layer.  Use gwy_pixmap_layer_draw() for vector layers.
+ * This method does not enforce repaint.  If the layer doesn't think it needs
+ * to repaint the pixbuf, it simply returns the current one.  To enforce
+ * update, emit "data_changed" signal on corresponding data field.
+ *
+ * Returns: The pixbuf.  It should not be modified or freed.
  **/
 GdkPixbuf*
 gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
@@ -133,16 +124,35 @@ gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 
     g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), NULL);
     g_return_val_if_fail(layer_class->paint, NULL);
-    if (!pixmap_layer->data_field) {
+
+    if (!pixmap_layer->data_field
+        || !GWY_IS_DATA_FIELD(pixmap_layer->data_field)) {
         g_warning("Data field to paint is missing.  "
                   "That's probably because I didn't implement it yet.");
         pixmap_layer->wants_repaint = FALSE;
-        /*return pixmap_layer->pixbuf;*/
+        return pixmap_layer->pixbuf;
     }
-    pixbuf = layer_class->paint(pixmap_layer);
+    if (pixmap_layer->wants_repaint)
+        layer_class->paint(pixmap_layer);
     pixmap_layer->wants_repaint = FALSE;
 
-    return pixbuf;
+    return pixmap_layer->pixbuf;
+}
+
+/**
+ * gwy_data_view_layer_wants_repaint:
+ * @pixmap_layer: A pixmap data view layer.
+ *
+ * Checks whether a pixmap layer wants repaint.
+ *
+ * Returns: %TRUE if the the layer wants repaint itself, %FALSE otherwise.
+ **/
+gboolean
+gwy_pixmap_layer_wants_repaint(GwyPixmapLayer *pixmap_layer)
+{
+    g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), FALSE);
+
+    return pixmap_layer->wants_repaint;
 }
 
 /**
@@ -251,14 +261,14 @@ gwy_pixmap_layer_item_changed(GwyPixmapLayer *pixmap_layer)
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
 
     pixmap_layer->wants_repaint = TRUE;
-    g_signal_emit_by_name(pixmap_layer, "updated");
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
 static void
 gwy_pixmap_layer_data_changed(GwyPixmapLayer *pixmap_layer)
 {
     pixmap_layer->wants_repaint = TRUE;
-    g_signal_emit_by_name(pixmap_layer, "updated");
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
 /**
@@ -292,7 +302,7 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
 
     pixmap_layer->wants_repaint = TRUE;
-    g_signal_emit_by_name(pixmap_layer, "updated");
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
 /**

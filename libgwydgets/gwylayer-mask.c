@@ -34,9 +34,7 @@
 
 static void       gwy_layer_mask_class_init        (GwyLayerMaskClass *klass);
 static void       gwy_layer_mask_init              (GwyLayerMask *layer);
-static void       gwy_layer_mask_finalize          (GObject *object);
 static GdkPixbuf* gwy_layer_mask_paint             (GwyPixmapLayer *layer);
-static gboolean   gwy_layer_mask_wants_repaint     (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_unplugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_update            (GwyLayerMask *layer);
@@ -65,7 +63,6 @@ gwy_layer_mask_get_type(void)
             (GInstanceInitFunc)gwy_layer_mask_init,
             NULL,
         };
-        gwy_debug("");
         gwy_layer_mask_type
             = g_type_register_static(GWY_TYPE_PIXMAP_LAYER,
                                      GWY_LAYER_MASK_TYPE_NAME,
@@ -79,17 +76,11 @@ gwy_layer_mask_get_type(void)
 static void
 gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
 
-    gwy_debug("");
-
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_layer_mask_finalize;
-
-    layer_class->wants_repaint = gwy_layer_mask_wants_repaint;
     layer_class->plugged = gwy_layer_mask_plugged;
     layer_class->unplugged = gwy_layer_mask_unplugged;
 
@@ -97,25 +88,8 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
 }
 
 static void
-gwy_layer_mask_init(GwyLayerMask *layer)
+gwy_layer_mask_init(G_GNUC_UNUSED GwyLayerMask *layer)
 {
-    gwy_debug("");
-
-    layer->changed = TRUE;
-    layer->color.r = layer->color.g = layer->color.b = layer->color.a = 0.0;
-
-}
-
-static void
-gwy_layer_mask_finalize(GObject *object)
-{
-    GwyDataViewLayer *layer;
-    gwy_debug("");
-
-    g_return_if_fail(GWY_IS_LAYER_MASK(object));
-    layer = GWY_DATA_VIEW_LAYER(object);
-
-    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 /**
@@ -151,30 +125,16 @@ gwy_layer_mask_paint(GwyPixmapLayer *layer)
     GwyLayerMask *mask_layer;
     GwyContainer *data;
 
-    g_return_val_if_fail(GWY_IS_LAYER_MASK(layer), NULL);
     mask_layer = (GwyLayerMask*)layer;
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
-    data_field
-        = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
-    g_return_val_if_fail(data_field, layer->pixbuf);
+    data_field = GWY_DATA_FIELD(layer->data_field);
+    g_return_val_if_fail(data_field, NULL);
     gwy_layer_mask_restore(mask_layer);
-    /* XXX */
-    /*if (GWY_LAYER_MASK(layer)->changed)*/ {
-        gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field,
-                                           &mask_layer->color);
-        mask_layer->changed = FALSE;
-    }
+    gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field,
+                                       &mask_layer->color);
 
     return layer->pixbuf;
-}
-
-static gboolean
-gwy_layer_mask_wants_repaint(GwyDataViewLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_MASK(layer), FALSE);
-
-    return GWY_LAYER_MASK(layer)->changed;
 }
 
 /**
@@ -225,18 +185,13 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
     GwyLayerMask *mask_layer;
     gint width, height;
 
-    gwy_debug("");
     g_return_if_fail(GWY_IS_LAYER_MASK(layer));
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
 
     mask_layer = (GwyLayerMask*)layer;
-    mask_layer->changed = TRUE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 
-    /* TODO Container */
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(layer->data,
-                                                      "/0/mask"));
+    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
@@ -262,7 +217,7 @@ gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
 static void
 gwy_layer_mask_update(GwyLayerMask *layer)
 {
-    layer->changed = TRUE;
+    GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 

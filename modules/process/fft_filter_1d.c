@@ -426,7 +426,7 @@ update_view(Fftf1dControls *controls, Fftf1dArgs *args)
                             args->interpolation);
 
     gwy_data_field_copy(rfield, rvfield, FALSE);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
+    g_signal_emit_by_name(rvfield, "data_changed");
 }
 
 static void
@@ -472,9 +472,10 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
     gwy_grapher_clear_selection(GWY_GRAPHER(controls->graph));
 
-    if (args->update) update_view(controls, args);
+    if (args->update)
+        update_view(controls, args);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));
+    /*FIXME: gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));*/
 }
 
 static void

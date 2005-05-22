@@ -177,7 +177,7 @@ layer_setup(GwyUnitoolState *state)
         g_object_remove_weak_pointer(shadefield, &controls->last_preview);
         controls->last_preview = NULL;
         gwy_container_remove_by_name(data, "/0/show");
-        gwy_app_data_view_update(data_view);
+        /*FIXME:gwy_app_data_view_update(data_view);*/
     }
 }
 
@@ -295,7 +295,7 @@ apply(GwyUnitoolState *state)
     do_apply(dfield, controls->fil, controls->siz, controls->dir, isel);
 
     gwy_vector_layer_unselect(state->layer);
-    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    /*FIXME:gwy_data_view_update(GWY_DATA_VIEW(layer->parent));*/
 }
 
 static void
@@ -367,7 +367,7 @@ dialog_update(GwyUnitoolState *state,
                      controls->fil, controls->siz, controls->dir, isel);
 
         controls->state_changed = FALSE;
-        gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+        /*FIXME:gwy_data_view_update(GWY_DATA_VIEW(layer->parent));*/
     }
 
     controls->old_upd = controls->upd;
@@ -448,7 +448,7 @@ dialog_abandon(GwyUnitoolState *state)
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
     gwy_container_remove_by_name(data, "/0/show");
-    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    /*FIXME:gwy_data_view_update(GWY_DATA_VIEW(layer->parent));*/
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }

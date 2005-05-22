@@ -35,10 +35,9 @@ static void       gwy_layer_basic_init              (GwyLayerBasic *layer);
 static void       gwy_layer_basic_destroy           (GtkObject *object);
 static void       gwy_layer_basic_finalize          (GObject *object);
 static GdkPixbuf* gwy_layer_basic_paint             (GwyPixmapLayer *layer);
-static gboolean   gwy_layer_basic_wants_repaint     (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_unplugged         (GwyDataViewLayer *layer);
-static void       gwy_layer_basic_update            (GwyDataViewLayer *layer);
+static void       gwy_layer_basic_update            (GwyLayerBasic *layer);
 
 /* Local data */
 
@@ -62,7 +61,6 @@ gwy_layer_basic_get_type(void)
             (GInstanceInitFunc)gwy_layer_basic_init,
             NULL,
         };
-        gwy_debug(" ");
         gwy_layer_basic_type
             = g_type_register_static(GWY_TYPE_PIXMAP_LAYER,
                                      GWY_LAYER_BASIC_TYPE_NAME,
@@ -89,7 +87,6 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 
     object_class->destroy = gwy_layer_basic_destroy;
 
-    layer_class->wants_repaint = gwy_layer_basic_wants_repaint;
     layer_class->plugged = gwy_layer_basic_plugged;
     layer_class->unplugged = gwy_layer_basic_unplugged;
 
@@ -97,18 +94,13 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 }
 
 static void
-gwy_layer_basic_init(GwyLayerBasic *layer)
+gwy_layer_basic_init(G_GNUC_UNUSED GwyLayerBasic *layer)
 {
-    gwy_debug(" ");
-
-    layer->changed = TRUE;
 }
 
 static void
 gwy_layer_basic_finalize(GObject *object)
 {
-    gwy_debug(" ");
-
     gwy_object_unref(GWY_LAYER_BASIC(object)->gradient);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -160,59 +152,35 @@ gwy_layer_basic_new(void)
 static GdkPixbuf*
 gwy_layer_basic_paint(GwyPixmapLayer *layer)
 {
-    GwyDataField *data_field;
     GwyLayerBasic *basic_layer;
+    GwyDataField *data_field;
     GwyContainer *data;
     gdouble min = 0.0, max = 0.0;
     gboolean fixedmin, fixedmax;
-    gboolean fixedrange = FALSE;
 
-    gwy_debug(" ");
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
     basic_layer = GWY_LAYER_BASIC(layer);
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
-    /* TODO Container */
-    if (!gwy_container_gis_object_by_name(data, "/0/show",
-                                          (GObject**)&data_field)) {
-        data_field
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-        fixedrange = TRUE;
+    /* TODO: We were special-casing "/0/show" here to ignore fixed range.
+     * Move the logic where it belongs... */
+    data_field = GWY_DATA_FIELD(layer->data_field);
+    g_return_val_if_fail(data_field, NULL);
+    fixedmin = gwy_container_gis_double_by_name(data, "/0/base/min", &min);
+    fixedmax = gwy_container_gis_double_by_name(data, "/0/base/max", &max);
+    if (fixedmin || fixedmax) {
+        if (!fixedmin)
+            min = gwy_data_field_get_min(data_field);
+        if (!fixedmax)
+            max = gwy_data_field_get_max(data_field);
+        gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
+                                              basic_layer->gradient,
+                                              min, max);
     }
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), layer->pixbuf);
-    if (fixedrange) {
-        fixedmin = gwy_container_gis_double_by_name(data, "/0/base/min", &min);
-        fixedmax = gwy_container_gis_double_by_name(data, "/0/base/max", &max);
-        if (fixedmin || fixedmax) {
-            if (!fixedmin)
-                min = gwy_data_field_get_min(data_field);
-            if (!fixedmax)
-                max = gwy_data_field_get_max(data_field);
-        }
-        else
-            fixedrange = FALSE;
-    }
-    /* XXX */
-    /*if (GWY_LAYER_BASIC(layer)->changed)*/ {
-        if (fixedrange)
-            gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
-                                                  basic_layer->gradient,
-                                                  min, max);
-        else
-            gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
-                                       basic_layer->gradient);
-        basic_layer->changed = FALSE;
-    }
+    else
+        gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
+                                   basic_layer->gradient);
 
     return layer->pixbuf;
-}
-
-static gboolean
-gwy_layer_basic_wants_repaint(GwyDataViewLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), FALSE);
-
-    return GWY_LAYER_BASIC(layer)->changed;
 }
 
 /**
@@ -236,8 +204,9 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
     if (!grad || grad == layer->gradient)
         return;
 
-    /* the string we've got as argument can be owned by somethin we are
-     * going to destroy */
+    /* the string we've got as argument can be owned by something we are
+     * going to destroy
+     * FIXME: is this still true? */
     gradstr = g_strdup(gradient);
     old = layer->gradient;
     if (layer->gradient_id)
@@ -251,7 +220,7 @@ gwy_layer_basic_set_gradient(GwyLayerBasic *layer,
                                      "/0/base/palette", gradstr);
     g_object_unref(old);
 
-    gwy_layer_basic_update(GWY_DATA_VIEW_LAYER(layer));
+    gwy_layer_basic_update(layer);
 }
 
 /**
@@ -287,15 +256,9 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
 
-    basic_layer->changed = TRUE;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 
-    /* TODO Container */
-    /* XXX */
-    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(layer->data,
-                                                                 "/0/data"));
-    gwy_container_gis_object_by_name(layer->data, "/0/show",
-                                     (GObject**)&data_field);
+    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data_field);
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
@@ -334,12 +297,12 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_basic_update(GwyDataViewLayer *layer)
+gwy_layer_basic_update(GwyLayerBasic *layer)
 {
     gwy_debug(" ");
 
-    GWY_LAYER_BASIC(layer)->changed = TRUE;
-    gwy_data_view_layer_updated(layer);
+    GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

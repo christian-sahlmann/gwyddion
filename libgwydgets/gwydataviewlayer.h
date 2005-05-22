@@ -53,8 +53,6 @@ struct _GwyDataViewLayer {
 struct _GwyDataViewLayerClass {
     GtkObjectClass parent_class;
 
-    /* XXX: Move to pixmap layer class, vector layers don't implement it */
-    gboolean (*wants_repaint)(GwyDataViewLayer *layer);
     /* signal functions */
     void (*plugged)(GwyDataViewLayer *layer);
     void (*unplugged)(GwyDataViewLayer *layer);
@@ -65,7 +63,6 @@ struct _GwyDataViewLayerClass {
 };
 
 GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
-gboolean         gwy_data_view_layer_wants_repaint   (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_plugged         (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
 void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);

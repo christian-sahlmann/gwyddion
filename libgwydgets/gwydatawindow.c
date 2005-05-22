@@ -209,7 +209,8 @@ gwy_data_window_new(GwyDataView *data_view)
                            G_CALLBACK(gwy_data_window_zoom_changed),
                            data_window,
                            NULL, G_CONNECT_AFTER | G_CONNECT_SWAPPED);
-    g_signal_connect_swapped(data_view, "updated",
+    /* FIXME: */
+    g_signal_connect_swapped(data_view, "redrawn",
                              G_CALLBACK(gwy_data_window_data_view_updated),
                              data_window);
 
@@ -778,8 +779,6 @@ gwy_data_window_gradient_selected(GtkWidget *item,
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
     gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), name);
-    /* FIXME: this should happen automatically */
-    gwy_data_view_update(GWY_DATA_VIEW(data_window->data_view));
 }
 
 static void

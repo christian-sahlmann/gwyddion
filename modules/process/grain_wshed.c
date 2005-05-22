@@ -451,7 +451,7 @@ preview(WshedControls *controls,
                                       controls->dialog);
 
     if (controls->computed)
-        gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+        g_signal_emit_by_name(maskfield, "data_changed");
 
 }
 

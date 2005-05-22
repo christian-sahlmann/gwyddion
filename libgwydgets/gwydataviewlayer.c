@@ -94,8 +94,6 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 
     gobject_class->finalize = gwy_data_view_layer_finalize;
 
-    klass->wants_repaint = NULL;
-
     klass->plugged = gwy_data_view_layer_real_plugged;
     klass->unplugged = gwy_data_view_layer_real_unplugged;
     klass->updated = NULL;
@@ -172,32 +170,6 @@ gwy_data_view_layer_finalize(GObject *object)
     gwy_object_unref(layer->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
-}
-
-/**
- * gwy_data_view_layer_wants_repaint:
- * @layer: A data view layer.
- *
- * Checks whether a layer wants repaint.
- * FIXME FIXME FIXME  This is probably flawed and will be replaced by
- * a signal.
- *
- * Returns: %TRUE if the the layer wants repaint itself, %FALSE otherwise.
- **/
-gboolean
-gwy_data_view_layer_wants_repaint(GwyDataViewLayer *layer)
-{
-    GwyDataViewLayerClass *layer_class;
-
-    if (!layer)
-        return FALSE;
-
-    layer_class = GWY_DATA_VIEW_LAYER_GET_CLASS(layer);
-    /* when a layer doesn't have wants_repaint, assume it always wants */
-    if (!layer_class->wants_repaint)
-        return TRUE;
-
-    return layer_class->wants_repaint(layer);
 }
 
 /**

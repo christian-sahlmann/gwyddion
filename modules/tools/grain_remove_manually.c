@@ -310,6 +310,7 @@ selection_finished_cb(GwyUnitoolState *state)
     if (controls->mode == GRAIN_REMOVE_MASK) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_data_field_grains_remove_grain(mask, col, row);
+        g_signal_emit_by_name(mask, "data_changed");
     }
     else {
         tmp = gwy_data_field_duplicate(mask);
@@ -335,12 +336,13 @@ selection_finished_cb(GwyUnitoolState *state)
             break;
         }
         g_object_unref(tmp);
-        if (controls->mode == GRAIN_REMOVE_BOTH)
+        g_signal_emit_by_name(dfield, "data_changed");
+        if (controls->mode == GRAIN_REMOVE_BOTH) {
             gwy_data_field_grains_remove_grain(mask, col, row);
+            g_signal_emit_by_name(mask, "data_changed");
+        }
     }
     gwy_vector_layer_unselect(state->layer);
-
-    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
 }
 
 static void

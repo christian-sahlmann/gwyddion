@@ -646,7 +646,7 @@ preview(ScarsControls *controls,
 
     scars_mark_do(args, controls->mydata);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(mask, "data_changed");
 
 }
 

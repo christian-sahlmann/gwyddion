@@ -443,7 +443,7 @@ preview(TipModelControls *controls,
         gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
     }
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    /*FIXME: gwy_data_view_update(GWY_DATA_VIEW(controls->view));*/
 }
 
 static void

@@ -393,7 +393,7 @@ apply(GwyUnitoolState *state)
         break;
     }
     /*gwy_vector_layer_unselect(state->layer);*/
-    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    g_signal_emit_by_name(dfield, "data_changed");
 }
 
 static void
@@ -544,7 +544,7 @@ draw_zoom(ToolControls *controls,
     min = gwy_container_get_double_by_name(mydata, "/0/base/min");
     if (!dfield) {
         gwy_data_field_fill(mydfield, min);
-        gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+        g_signal_emit_by_name(mydfield, "data_changed");
         return;
     }
 
@@ -559,7 +559,7 @@ draw_zoom(ToolControls *controls,
         gwy_data_field_fill(mydfield, min);
     gwy_data_field_area_copy(dfield, mydfield, xfrom, yfrom, xto, yto,
                              xdest, ydest);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(mydfield, "data_changed");
 }
 
 static gboolean

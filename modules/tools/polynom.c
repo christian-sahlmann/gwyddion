@@ -256,7 +256,7 @@ apply(GwyUnitoolState *state)
                              controls->fit, controls->exc, controls->dir);
 
     gwy_vector_layer_unselect(state->layer);
-    gwy_data_view_update(GWY_DATA_VIEW(layer->parent));
+    g_signal_emit_by_name(dfield, "data_changed");
 }
 
 static void

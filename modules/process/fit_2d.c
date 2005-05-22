@@ -511,7 +511,7 @@ update_view(Fit2dControls *controls, Fit2dArgs *args)
 
     g_object_unref(resultfield);
 
-    gwy_data_view_update(GWY_DATA_VIEW(controls->view));
+    g_signal_emit_by_name(outputfield, "data_changed");
 }
 
 /*call appropriate guess function and reset all result fields*/

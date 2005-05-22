@@ -42,7 +42,6 @@ struct _GwyLayerMask {
     GwyPixmapLayer parent_instance;
 
     GwyRGBA color;
-    gboolean changed;
 
     gpointer reserved1;
     gpointer reserved2;

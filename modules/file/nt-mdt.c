@@ -423,7 +423,6 @@ selection_changed(GtkWidget *button,
     gwy_container_set_object_by_name(controls->data, "/0/data",
                                      G_OBJECT(dfield));
     g_object_unref(dfield);
-    gwy_data_view_update(GWY_DATA_VIEW(controls->data_view));
 }
 
 static guint
@@ -496,6 +495,7 @@ select_which_data(MDTFile *mdtfile,
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
     layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
                                  GWY_PIXMAP_LAYER(layer));
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);

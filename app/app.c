@@ -1160,9 +1160,7 @@ gwy_app_data_view_update(GtkWidget *data_view)
     else if (!has_mask && has_alpha) {
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), NULL);
     }
-    else {
-        gwy_data_view_update(GWY_DATA_VIEW(data_view));
-    }
+    /* XXX: do the same for presentation */
 
     if (gwy_container_contains_by_name(data, "/0/mask"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
@@ -1538,7 +1536,7 @@ gwy_app_show_kill_cb(void)
     if (gwy_container_contains_by_name(data, "/0/show")) {
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
         gwy_container_remove_by_name(data, "/0/show");
-        gwy_data_view_update(GWY_DATA_VIEW(data_view));
+        gwy_app_data_view_update(data_view);
     }
 }
 
@@ -1556,8 +1554,6 @@ gwy_app_reset_color_range(void)
     data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
     min = gwy_container_remove_by_name(data, "/0/base/min");
     max = gwy_container_remove_by_name(data, "/0/base/max");
-    if (min || max)
-        gwy_data_view_update(GWY_DATA_VIEW(data_view));
 }
 
 /***** Documentation *******************************************************/

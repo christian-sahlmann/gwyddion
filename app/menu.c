@@ -288,7 +288,7 @@ gwy_app_run_process_func_cb(gchar *name)
  **/
 void
 gwy_app_run_process_func_in_mode(gchar *name,
-                                  GwyRunType run)
+                                 GwyRunType run)
 {
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
@@ -318,8 +318,16 @@ gwy_app_run_process_func_in_mode(gchar *name,
                                         "<proc>"));
     gwy_app_update_last_process_func(menu, name);
     /* FIXME: the ugliest hack! */
-    if (ok)
-        gwy_app_data_view_update(data_view);
+    if (ok) {
+        GObject *dfield;
+
+        if (gwy_container_gis_object_by_name(data, "/0/data", &dfield))
+            g_signal_emit_by_name(dfield, "data_changed");
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+            g_signal_emit_by_name(dfield, "data_changed");
+        if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+            g_signal_emit_by_name(dfield, "data_changed");
+    }
 
     /* re-get current data window, it may have changed */
     data_window = gwy_app_data_window_get_current();
