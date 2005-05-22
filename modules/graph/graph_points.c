@@ -179,6 +179,7 @@ points_dialog(GwyGrapher *graph)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
+    /*
     controls.xlabel = gtk_label_new("x");
     gtk_misc_set_alignment(GTK_MISC(controls.xlabel), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.xlabel, 1, 2, 0, 1, 0, 0, 2, 2);
@@ -186,12 +187,14 @@ points_dialog(GwyGrapher *graph)
     controls.ylabel = gtk_label_new("y");
     gtk_misc_set_alignment(GTK_MISC(controls.ylabel), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.ylabel, 2, 3, 0, 1, 0, 0, 2, 2);
-
+    
+    
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>Mouse:</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, 0, 0, 2, 2);
-
+    */
+    
     /* big table */
     table = gtk_table_new(6, 11, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
