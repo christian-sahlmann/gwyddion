@@ -378,6 +378,12 @@ gwy_grapher_set_status(GwyGrapher *grapher, GwyGraphStatusType status)
     grapher->area->status = status;
 }
 
+GwyGraphStatusType  
+gwy_grapher_get_status(GwyGrapher *grapher)
+{
+    return grapher->area->status;
+}
+
 /**
  * gwy_grapher_get_selection_number:
  * @grapher: A grapher widget.
@@ -392,6 +398,8 @@ gwy_grapher_get_selection_number(GwyGrapher *grapher)
 {
     if (grapher->area->status == GWY_GRAPH_STATUS_XSEL)
         return grapher->area->areasdata->data_areas->len;
+    else if (grapher->area->status ==  GWY_GRAPH_STATUS_POINTS)
+        return grapher->area->pointsdata->data_points->len;
     else return 0;
 }
 

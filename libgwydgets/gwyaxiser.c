@@ -198,6 +198,7 @@ gwy_axiser_init(GwyAxiser *axiser)
     axiser->has_unit = 0;
     axiser->unit = NULL;
     axiser->magnification_string = NULL;
+    axiser->magnification = 1;
 }
 
 /**
@@ -1132,12 +1133,14 @@ gwy_axiser_formatticks(GwyAxiser *a)
         format = gwy_si_unit_get_format(a->unit, MAX(average, range), format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
+        a->magnification = format->magnitude;
         range /= format->magnitude;
     } 
     else
     {
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = NULL;
+        a->magnification = 1;
     }
 
 
@@ -1382,6 +1385,20 @@ gwy_axiser_enable_label_edit(GwyAxiser *axiser, gboolean enable)
 {
     axiser->enable_label_edit = enable;
 }
+
+gdouble     
+gwy_axiser_get_magnification (GwyAxiser *axiser)
+{
+    return axiser->magnification;
+}
+
+GString*    
+gwy_axiser_get_magnification_string(GwyAxiser *axiser)
+{
+    return g_string_new(axiser->magnification_string->str);
+}
+
+
 
 /************************** Documentation ****************************/
 

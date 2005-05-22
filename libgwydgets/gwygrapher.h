@@ -91,6 +91,8 @@ void       gwy_grapher_change_model(GwyGrapher *grapher,
                                     GwyGraphModel *gmodel);
 void       gwy_grapher_set_status(GwyGrapher *grapher,
                                   GwyGraphStatusType status);
+GwyGraphStatusType  gwy_grapher_get_status(GwyGrapher *grapher);
+
 GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher);
 
 void       gwy_grapher_signal_selected(GwyGrapher *grapher);

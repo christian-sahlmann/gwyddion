@@ -104,6 +104,7 @@ struct _GwyAxiser {
 
     GwySIUnit *unit;                /*axiser unit (if any)*/
     GString *magnification_string;
+    gdouble magnification;
 
     GtkWidget *dialog;      /*axiser label and other properties dialog*/
 
@@ -143,6 +144,10 @@ gdouble     gwy_axiser_get_maximum        (GwyAxiser *axiser);
 gdouble     gwy_axiser_get_minimum        (GwyAxiser *axiser);
 gdouble     gwy_axiser_get_reqmaximum     (GwyAxiser *axiser);
 gdouble     gwy_axiser_get_reqminimum     (GwyAxiser *axiser);
+
+gdouble     gwy_axiser_get_magnification  (GwyAxiser *axiser);
+GString*    gwy_axiser_get_magnification_string(GwyAxiser *axiser);
+
 void        gwy_axiser_set_label          (GwyAxiser *axiser,
                                          GString *label_text);
 GString*    gwy_axiser_get_label          (GwyAxiser *axiser);

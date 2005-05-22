@@ -41,12 +41,14 @@ typedef struct {
     GPtrArray *slope;
     GPtrArray *labpoint;
     gint n;
+    gdouble x_mag;
+    gdouble y_mag;
 } PointsControls;
 
 
 static gboolean    module_register              (const gchar *name);
-static gboolean    points                       (GwyGraph *graph);
-static gboolean    points_dialog                (GwyGraph *graph);
+static gboolean    points                       (GwyGrapher *graph);
+static gboolean    points_dialog                (GwyGrapher *graph);
 static void        selection_updated_cb         (gpointer data);
 static void        points_dialog_closed_cb      (gpointer data);
 static void        points_dialog_response_cb    (gpointer data,
@@ -90,7 +92,7 @@ module_register(const gchar *name)
 }
 
 static gboolean
-points(GwyGraph *graph)
+points(GwyGrapher *graph)
 {
     if (!graph) {
         if (dialog)
@@ -99,7 +101,7 @@ points(GwyGraph *graph)
         return TRUE;
     }
 
-    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_POINTS);
+    gwy_grapher_set_status(graph, GWY_GRAPHER_STATUS_POINTS);
     if (!dialog)
         points_dialog(graph);
     gtk_widget_queue_draw(GTK_WIDGET(graph));
@@ -138,7 +140,7 @@ header_label(GtkWidget *table, gint row, gint col,
 }
 
 static gboolean
-points_dialog(GwyGraph *graph)
+points_dialog(GwyGrapher *graph)
 {
     gint i;
     GtkWidget *label;
@@ -202,10 +204,13 @@ points_dialog(GwyGraph *graph)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
-    header_label(table, 1, 1, "X", graph->x_unit, str);
-    header_label(table, 1, 2, "Y", graph->y_unit, str);
-    header_label(table, 1, 3, _("Length"), graph->x_unit, str);
-    header_label(table, 1, 4, _("Height"), graph->y_unit, str);
+
+    controls.x_mag = gwy_axiser_get_magnification(graph->axis_top);
+    controls.y_mag = gwy_axiser_get_magnification(graph->axis_left);
+    header_label(table, 1, 1, "X", gwy_axiser_get_magnification_string(graph->axis_top)->str, str);
+    header_label(table, 1, 2, "Y", gwy_axiser_get_magnification_string(graph->axis_left)->str, str);
+    header_label(table, 1, 3, _("Length"), gwy_axiser_get_magnification_string(graph->axis_top)->str, str);
+    header_label(table, 1, 4, _("Height"), gwy_axiser_get_magnification_string(graph->axis_left)->str, str);
     header_label(table, 1, 5, _("Angle"), "deg", str);
 
     for (i = 0; i < NMAX; i++) {
@@ -247,7 +252,7 @@ points_dialog(GwyGraph *graph)
     }
     g_string_free(str, TRUE);
 
-    selection_id = g_signal_connect_swapped(graph->area, "selected",
+    selection_id = g_signal_connect_swapped(graph, "selected",
                                             G_CALLBACK(selection_updated_cb),
                                             graph);
 
@@ -259,22 +264,25 @@ points_dialog(GwyGraph *graph)
 static void
 selection_updated_cb(gpointer data)
 {
-    GwyGraph *graph;
-    GwyGraphStatus_PointsData *cd;
-    GwyGraphDataPoint pnt, ppnt;
+    GwyGrapher *graph;
     gchar buffer[64];
     GtkWidget *label;
     GString *str;
     gint i, n;
+    gdouble *spoints;
 
-    graph = (GwyGraph *) data;
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS);
+    graph = (GwyGrapher *) data;
+    g_return_if_fail(GWY_IS_GRAPHER(graph));
+    g_return_if_fail(gwy_grapher_get_status(graph) == GWY_GRAPHER_STATUS_POINTS);
     /*FIXME TODO XXX this must be changed XXX TODO FIXME */
 
-    cd = (GwyGraphStatus_PointsData *) gwy_graph_get_status_data(graph);
+    if ((n = gwy_grapher_get_selection_number(graph))>0)
+        spoints = (gdouble *) g_malloc(2*gwy_grapher_get_selection_number(graph)*sizeof(gdouble));
 
+    gwy_grapher_get_selection(graph, spoints);
+    
     /*update mouse data */
+    /*
     if (graph->x_unit != NULL) {
         if ((fabs(cd->actual_data_point.x) <= 1e5
              && fabs(cd->actual_data_point.x) > 1e-2)
@@ -322,44 +330,31 @@ selection_updated_cb(gpointer data)
     }
 
     gtk_label_set_text(GTK_LABEL(controls.ylabel), buffer);
-
+    */
     /*update points data */
-    n = cd->n;
     str = g_string_new("");
     for (i = 0; i < NMAX; i++) {
         if (i < n) {
-            pnt = g_array_index(cd->data_points, GwyGraphDataPoint, i);
             label = g_ptr_array_index(controls.pointx, i);
-            value_label(label, pnt.x, str);
+            value_label(label, spoints[2*i]/controls.x_mag, str);
 
             label = g_ptr_array_index(controls.pointy, i);
-            value_label(label, pnt.y, str);
+            value_label(label, spoints[2*i + 1]/controls.y_mag, str);
 
             if (!i)
                 continue;
 
-            ppnt = g_array_index(cd->data_points, GwyGraphDataPoint, i-1);
             label = g_ptr_array_index(controls.distx, i);
-            value_label(label, pnt.x - ppnt.x, str);
+            value_label(label, (spoints[2*i] - spoints[2*(i-1)])/controls.x_mag, str);
 
             label = g_ptr_array_index(controls.disty, i);
-            value_label(label, pnt.y - ppnt.y, str);
+            value_label(label, (spoints[2*i + 1] - spoints[2*(i-1) + 1])/controls.y_mag, str);
 
             label = g_ptr_array_index(controls.slope, i);
-            if ((!graph->x_unit || !graph->y_unit)
-                || strstr(graph->x_unit, graph->y_unit) == graph->x_unit)
-                value_label(label,
-                            180.0/G_PI*atan2((pnt.y - ppnt.y),
-                                             (pnt.x - ppnt.x)),
-                            str);
-            else
-                value_label(label,
-                            180.0/G_PI
-                            *atan2((pnt.y - ppnt.y)
-                                   *get_unit_multiplicator(graph->y_unit),
-                                   (pnt.x - ppnt.x)
-                                   *get_unit_multiplicator(graph->x_unit)),
-                            str);
+            value_label(label,
+                        180.0/G_PI*atan2((spoints[2*i + 1] - spoints[2*(i-1) + 1]),
+                                         (spoints[2*i] - spoints[2*(i-1)])),
+                        str);
         }
         else {
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(controls.pointx, i)),
@@ -374,6 +369,8 @@ selection_updated_cb(gpointer data)
                                "");
         }
     }
+
+    if (n) g_free(spoints);
     g_string_free(str, TRUE);
 }
 
