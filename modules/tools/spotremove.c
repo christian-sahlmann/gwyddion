@@ -241,7 +241,8 @@ dialog_create(GwyUnitoolState *state)
     g_object_unref(data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls->view), (gdouble)SCALE);
 
-    layer = GWY_PIXMAP_LAYER(gwy_layer_basic_new());
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     gtk_table_attach(GTK_TABLE(table), controls->view, 0, 1, 0, 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
