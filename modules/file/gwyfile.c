@@ -171,6 +171,28 @@ gwyfile_save(GwyContainer *data,
     return ok;
 }
 
+static inline void
+gwy_byteswapped_copy(const guint8 *source,
+                     guint8 *dest,
+                     gsize size,
+                     gsize len,
+                     gsize byteswap)
+{
+    gsize i, k;
+
+    if (!byteswap) {
+        memcpy(dest, source, size*len);
+        return;
+    }
+
+    for (i = 0; i < len; i++) {
+        guint8 *b = dest + i*size;
+
+        for (k = 0; k < size; k++)
+            b[k ^ byteswap] = *(source++);
+    }
+}
+
 static inline gboolean
 gwy_serialize_unpack_boolean(const guchar *buffer,
                              gsize size,
