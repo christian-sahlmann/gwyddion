@@ -221,10 +221,8 @@ aafm_save(GwyContainer *data,
     z.f = MIN(gwy_data_field_get_xreal(dfield),
               gwy_data_field_get_yreal(dfield))/Angstrom;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    z.pp[0] = (*p)[3];
-    z.pp[1] = (*p)[2];
-    z.pp[2] = (*p)[1];
-    z.pp[3] = (*p)[0];
+    GWY_SWAP(guchar, z.pp[0], z.pp[3]);
+    GWY_SWAP(guchar, z.pp[1], z.pp[2]);
 #endif
     fwrite(&z, 1, sizeof(z), fh);
 
@@ -245,10 +243,8 @@ aafm_save(GwyContainer *data,
     else {
         z.f = ((gint)max - (gint)min)/2.0;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-        z.pp[0] = (*p)[3];
-        z.pp[1] = (*p)[2];
-        z.pp[2] = (*p)[1];
-        z.pp[3] = (*p)[0];
+        GWY_SWAP(guchar, z.pp[0], z.pp[3]);
+        GWY_SWAP(guchar, z.pp[1], z.pp[2]);
 #endif
         fwrite(&z, 1, sizeof(z), fh);
     }
