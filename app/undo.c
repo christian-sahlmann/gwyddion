@@ -236,7 +236,7 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
         for (l = available; l; l = g_list_next(l)) {
             lvl = (GwyAppUndoLevel*)l->data;
             for (j = 0; j < lvl->nitems; j++) {
-                jtem = lvl->items + i;
+                jtem = lvl->items + j;
                 if (!jtem->object)
                     continue;
                 if (G_TYPE_FROM_INSTANCE(jtem->object) == type) {
@@ -292,7 +292,7 @@ gwy_app_undo_undo_window(GwyDataWindow *data_window)
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_REDO
     };
-    GtkWidget *data_view;
+    GwyDataView *data_view;
     GwyAppUndoLevel *level;
     GwyContainer *data;
     GList *undo, *redo, *l;
@@ -345,7 +345,7 @@ gwy_app_undo_redo_window(GwyDataWindow *data_window)
             | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
         GWY_MENU_FLAG_UNDO
     };
-    GtkWidget *data_view;
+    GwyDataView *data_view;
     GwyAppUndoLevel *level;
     GList *undo, *redo, *l;
     GwyContainer *data;
@@ -409,17 +409,20 @@ gwy_app_undo_or_redo(GwyContainer *data,
         dfapp = NULL;
         gwy_container_gis_object(data, quark, &dfapp);
         if (df && dfapp) {
+            gwy_debug("Changing object <%s>", g_quark_to_string(quark));
             g_object_ref(dfapp);
             gwy_container_set_object(data, quark, df);
             level->items[i].object = dfapp;
             g_object_unref(df);
         }
         else if (df && !dfapp) {
+            gwy_debug("Restoring object <%s>", g_quark_to_string(quark));
             gwy_container_set_object(data, quark, df);
             level->items[i].object = NULL;
             g_object_unref(df);
         }
         else if (!df && dfapp) {
+            gwy_debug("Deleting object <%s>", g_quark_to_string(quark));
             level->items[i].object = dfapp;
             g_object_ref(level->items[i].object);
             gwy_container_remove(data, quark);
