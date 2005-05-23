@@ -127,7 +127,7 @@ rhkspm32_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-    if (fileinfo->buffer_len == MAGIC_SIZE
+    if (fileinfo->buffer_len > MAGIC_SIZE
         && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
 
@@ -187,7 +187,7 @@ rhkspm32_read_header(gchar *buffer,
     guint pos;
 
     rhkfile->date = g_strstrip(g_strndup(buffer + MAGIC_SIZE,
-                                        0x20 - MAGIC_SIZE));
+                                         0x20 - MAGIC_SIZE));
     if (sscanf(buffer + 0x20, "%d %d %d %d %d %d %d",
                &rhkfile->type, &rhkfile->data_type, &rhkfile->line_type,
                &rhkfile->xres, &rhkfile->yres, &rhkfile->size,
