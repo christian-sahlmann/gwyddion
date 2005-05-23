@@ -76,6 +76,7 @@ or <link linkend="gwy-math-nlfit-get-preset-formula">gwy_math_nlfit_get_preset_f
 @x: 
 @n_param: 
 @param: 
+@fixed_param: 
 @fmarq: 
 @user_data: 
 @deriv: 
@@ -272,6 +273,7 @@ or <link linkend="gwy-math-nlfit-get-preset-formula">gwy_math_nlfit_get_preset_f
 @x: 
 @n_param: 
 @param: 
+@fixed_param: 
 @ff: 
 @user_data: 
 @deriv: 

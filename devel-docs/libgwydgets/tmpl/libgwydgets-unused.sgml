@@ -678,6 +678,13 @@ GwyVMenuBar
 @alpha: 
 @use_alpha: 
 
+<!-- ##### SIGNAL GwyDataView::updated ##### -->
+<para>
+
+</para>
+
+@gwydataview: the object which received the signal.
+
 <!-- ##### SIGNAL GwyDataViewLayer::finished ##### -->
 <para>
 
@@ -702,52 +709,16 @@ GwyVMenuBar
 @ydata: 
 @params: 
 
-<!-- ##### ENUM GwyGrapherCurveType ##### -->
+<!-- ##### STRUCT GwyGrapherAutoProperties ##### -->
 <para>
 
 </para>
 
-@GWY_GRAPHER_CURVE_HIDDEN: 
-@GWY_GRAPHER_CURVE_POINTS: 
-@GWY_GRAPHER_CURVE_LINE: 
-@GWY_GRAPHER_CURVE_LINE_POINTS: 
-
-<!-- ##### ENUM GwyGrapherLabelPosition ##### -->
-<para>
-
-</para>
-
-@GWY_GRAPHER_LABEL_NORTHEAST: 
-@GWY_GRAPHER_LABEL_NORTHWEST: 
-@GWY_GRAPHER_LABEL_SOUTHEAST: 
-@GWY_GRAPHER_LABEL_SOUTHWEST: 
-@GWY_GRAPHER_LABEL_USER: 
-
-<!-- ##### ENUM GwyGrapherPointType ##### -->
-<para>
-
-</para>
-
-@GWY_GRAPHER_POINT_SQUARE: 
-@GWY_GRAPHER_POINT_CROSS: 
-@GWY_GRAPHER_POINT_CIRCLE: 
-@GWY_GRAPHER_POINT_STAR: 
-@GWY_GRAPHER_POINT_TIMES: 
-@GWY_GRAPHER_POINT_TRIANGLE_UP: 
-@GWY_GRAPHER_POINT_TRIANGLE_DOWN: 
-@GWY_GRAPHER_POINT_DIAMOND: 
-
-<!-- ##### ENUM GwyGrapherStatusType ##### -->
-<para>
-
-</para>
-
-@GWY_GRAPHER_STATUS_PLAIN: 
-@GWY_GRAPHER_STATUS_CURSOR: 
-@GWY_GRAPHER_STATUS_XSEL: 
-@GWY_GRAPHER_STATUS_YSEL: 
-@GWY_GRAPHER_STATUS_POINTS: 
-@GWY_GRAPHER_STATUS_ZOOM: 
+@is_line: 
+@is_point: 
+@line_size: 
+@point_size: 
+@color: 
 
 <!-- ##### ARG GwyLayerAxes:max-axes ##### -->
 <para>
@@ -1116,6 +1087,14 @@ GwyVMenuBar
 @layer: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_data_view_layer_wants_repaint ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_data_view_set_zoom_mode ##### -->
 <para>
 
@@ -1123,6 +1102,13 @@ GwyVMenuBar
 
 @data_window: 
 @zoom_mode: 
+
+<!-- ##### FUNCTION gwy_data_view_update ##### -->
+<para>
+
+</para>
+
+@data_view: 
 
 <!-- ##### FUNCTION gwy_data_window_get_units ##### -->
 <para>

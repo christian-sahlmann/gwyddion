@@ -20,6 +20,13 @@ Gwy3DLabel
 </para>
 
 
+<!-- ##### SIGNAL Gwy3DLabel::value-changed ##### -->
+<para>
+
+</para>
+
+@gwy3dlabel: the object which received the signal.
+
 <!-- ##### ARG Gwy3DLabel:default-text ##### -->
 <para>
 
@@ -56,6 +63,7 @@ Gwy3DLabel
 </para>
 
 @parent_class: 
+@value_changed: 
 
 <!-- ##### FUNCTION gwy_3d_label_new ##### -->
 <para>

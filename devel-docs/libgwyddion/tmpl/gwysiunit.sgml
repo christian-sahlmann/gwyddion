@@ -42,12 +42,20 @@ or number of significant digits --
 </para>
 
 
+<!-- ##### SIGNAL GwySIUnit::value-changed ##### -->
+<para>
+
+</para>
+
+@gwysiunit: the object which received the signal.
+
 <!-- ##### STRUCT GwySIUnitClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@value_changed: 
 @reserved1: 
 @reserved2: 
 

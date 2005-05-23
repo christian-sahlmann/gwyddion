@@ -105,8 +105,6 @@ GWY_SERIALIZABLE_GET_IFACE
 <FILE>gwycontainer</FILE>
 GWY_CONTAINER_PATHSEP
 GWY_CONTAINER_PATHSEP_STR
-GwyContainerNotifyFunc
-GwyKeyVal
 <TITLE>GwyContainer</TITLE>
 GwyContainer
 GwyContainerClass
@@ -209,6 +207,7 @@ gwy_math_fit_polynom
 gwy_math_choleski_decompose
 gwy_math_choleski_solve
 gwy_math_median
+gwy_math_sort
 </SECTION>
 
 <SECTION>
@@ -313,6 +312,9 @@ gwy_expr_compile
 gwy_expr_resolve_variables
 gwy_expr_get_variables
 gwy_expr_execute
+gwy_expr_vector_execute
+gwy_expr_define_constant
+gwy_expr_undefine_constant
 </SECTION>
 
 <SECTION>

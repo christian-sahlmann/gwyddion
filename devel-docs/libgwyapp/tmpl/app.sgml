@@ -121,10 +121,12 @@ Core application interface.
 
 </para>
 
-@graph: 
+@grapher: 
 @data_window: 
 @title: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@graph: 
 
 
 <!-- ##### FUNCTION gwy_app_graph_window_remove ##### -->

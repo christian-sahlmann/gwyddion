@@ -169,6 +169,15 @@ types
 </para>
 
 
+<!-- ##### USER_FUNCTION GwyContainerNotifyFunc ##### -->
+<para>
+
+</para>
+
+@container: 
+@path: 
+@user_data: 
+
 <!-- ##### USER_FUNCTION GwyDeserializeStructFunc ##### -->
 <para>
 
@@ -189,6 +198,15 @@ types
 
 @object: 
 @Returns: 
+
+<!-- ##### STRUCT GwyKeyVal ##### -->
+<para>
+
+</para>
+
+@key: 
+@value: 
+@changed: 
 
 <!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
 <para>
@@ -261,6 +279,13 @@ types
 @nspec: 
 @spec: 
 @Returns: 
+
+<!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
+<para>
+Emitted when value changes.
+</para>
+
+@gwywatchable: the object which received the signal.
 
 <!-- ##### STRUCT GwyWatchableClass ##### -->
 <para>

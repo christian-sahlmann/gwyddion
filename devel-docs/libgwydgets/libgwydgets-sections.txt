@@ -55,6 +55,7 @@ gwy_grapher_label_new
 gwy_grapher_label_refresh
 gwy_grapher_label_change_model
 gwy_grapher_label_draw_label_on_drawable
+gwy_grapher_label_enable_user_input
 <SUBSECTION Standard>
 GWY_GRAPHER_LABEL
 GWY_IS_GRAPHER_LABEL
@@ -69,7 +70,6 @@ GWY_GRAPHER_LABEL_GET_CLASS
 <TITLE>GwyDataViewLayer</TITLE>
 GwyDataViewLayer
 GwyDataViewLayerClass
-gwy_data_view_layer_wants_repaint
 gwy_data_view_layer_plugged
 gwy_data_view_layer_unplugged
 gwy_data_view_layer_updated
@@ -161,6 +161,7 @@ GWY_VRULER_GET_CLASS
 
 <SECTION>
 <FILE>gwyaxiser</FILE>
+GwyAxiserActiveAreaSpecs
 GwyAxiserTick
 GwyAxiserLabeledTick
 GwyAxiserParams
@@ -175,11 +176,14 @@ gwy_axiser_get_maximum
 gwy_axiser_get_minimum
 gwy_axiser_get_reqmaximum
 gwy_axiser_get_reqminimum
+gwy_axiser_get_magnification
+gwy_axiser_get_magnification_string
 gwy_axiser_set_label
 gwy_axiser_get_label
 gwy_axiser_set_unit
 gwy_axiser_enable_label_edit
 gwy_axiser_signal_rescaled
+gwy_axiser_draw_on_drawable
 <SUBSECTION Standard>
 GWY_AXISER
 GWY_IS_AXISER
@@ -222,6 +226,7 @@ GWY_LAYER_MASK_GET_CLASS
 
 <SECTION>
 <FILE>gwygrapherarea</FILE>
+GwyGrapherStatusType
 GwyGrapherStatus_PointData
 GwyGrapherStatus_CursorData
 GwyGrapherStatus_PointsData
@@ -238,6 +243,7 @@ gwy_grapher_area_set_selection
 gwy_grapher_area_change_model
 gwy_grapher_area_draw_area_on_drawable
 gwy_grapher_area_clear_selection
+gwy_grapher_area_enable_user_input
 <SUBSECTION Standard>
 GWY_GRAPHER_AREA
 GWY_IS_GRAPHER_AREA
@@ -249,15 +255,25 @@ GWY_GRAPHER_AREA_GET_CLASS
 </SECTION>
 <SECTION>
 <FILE>gwygrapher</FILE>
-GwyGrapherAutoProperties
 <TITLE>GwyGrapher</TITLE>
 gwy_grapher_new
 gwy_grapher_refresh
+gwy_grapher_refresh_and_reset
 gwy_grapher_change_model
 gwy_grapher_set_status
+gwy_grapher_get_status
+gwy_grapher_get_model
+gwy_grapher_signal_selected
 gwy_grapher_get_selection_number
 gwy_grapher_get_selection
 gwy_grapher_clear_selection
+gwy_grapher_request_x_range
+gwy_grapher_request_y_range
+gwy_grapher_get_x_range
+gwy_grapher_get_y_range
+gwy_grapher_enable_user_input
+gwy_grapher_export_pixmap
+gwy_grapher_export_postscript
 <SUBSECTION Standard>
 GWY_GRAPHER
 GWY_IS_GRAPHER
@@ -503,6 +519,25 @@ GwyGraphCurveModelClass
 gwy_graph_curve_model_new
 gwy_graph_curve_model_save_curve
 gwy_graph_add_curve_from_model
+gwy_graph_curve_model_set_data
+gwy_graph_curve_model_set_data_from_dataline
+gwy_graph_curve_model_set_description
+gwy_graph_curve_model_set_curve_type
+gwy_graph_curve_model_set_curve_point_type
+gwy_graph_curve_model_set_curve_point_size
+gwy_graph_curve_model_set_curve_line_style
+gwy_graph_curve_model_set_curve_line_size
+gwy_graph_curve_model_set_curve_color
+gwy_graph_curve_model_get_xdata
+gwy_graph_curve_model_get_ydata
+gwy_graph_curve_model_get_ndata
+gwy_graph_curve_model_get_description
+gwy_graph_curve_model_get_curve_type
+gwy_graph_curve_model_get_curve_point_type
+gwy_graph_curve_model_get_curve_point_size
+gwy_graph_curve_model_get_curve_line_style
+gwy_graph_curve_model_get_curve_line_size
+gwy_graph_curve_model_get_curve_color
 <SUBSECTION Standard>
 GWY_GRAPH_CURVE_MODEL
 GWY_IS_GRAPH_CURVE_MODEL
@@ -625,7 +660,6 @@ gwy_data_view_get_xmeasure
 gwy_data_view_get_ymeasure
 gwy_data_view_get_thumbnail
 gwy_data_view_get_pixbuf
-gwy_data_view_update
 <SUBSECTION Standard>
 GWY_DATA_VIEW
 GWY_IS_DATA_VIEW
@@ -645,7 +679,30 @@ gwy_graph_model_new
 gwy_graph_new_from_model
 gwy_graph_model_get_n_curves
 gwy_graph_model_add_curve
+gwy_graph_model_remove_curve_by_description
+gwy_graph_model_remove_curve_by_index
+gwy_graph_model_get_curve_by_description
+gwy_graph_model_get_curve_by_index
+gwy_graph_model_new_alike
 gwy_graph_model_remove_all_curves
+gwy_graph_model_set_title
+gwy_graph_model_set_label_position
+gwy_graph_model_set_label_has_frame
+gwy_graph_model_set_label_frame_thickness
+gwy_graph_model_set_label_reverse
+gwy_graph_model_set_label_visible
+gwy_graph_model_set_x_siunit
+gwy_graph_model_set_y_siunit
+gwy_graph_model_get_title
+gwy_graph_model_get_label_position
+gwy_graph_model_get_label_has_frame
+gwy_graph_model_get_label_frame_thickness
+gwy_graph_model_get_label_reverse
+gwy_graph_model_get_label_visible
+gwy_graph_model_get_x_siunit
+gwy_graph_model_get_y_siunit
+gwy_graph_model_export_ascii
+gwy_graph_model_signal_layout_changed
 <SUBSECTION Standard>
 GWY_GRAPH_MODEL
 GWY_IS_GRAPH_MODEL
@@ -712,7 +769,10 @@ GWY_3D_WINDOW_GET_CLASS
 <TITLE>GwyPixmapLayer</TITLE>
 GwyPixmapLayer
 GwyPixmapLayerClass
+gwy_pixmap_layer_wants_repaint
 gwy_pixmap_layer_paint
+gwy_pixmap_layer_set_data_key
+gwy_pixmap_layer_get_data_key
 <SUBSECTION Standard>
 GWY_PIXMAP_LAYER
 GWY_IS_PIXMAP_LAYER
@@ -804,6 +864,7 @@ GwyGraphStatusType
 GwyGraphPointType
 GwyGraphCurveType
 GwyGraphLabelPosition
+GwyGraphModelExportStyle
 </SECTION>
 
 <SECTION>
@@ -848,6 +909,8 @@ gwy_graph_curve_type_get_type
 GWY_TYPE_GRAPH_CURVE_TYPE
 gwy_graph_label_position_get_type
 GWY_TYPE_GRAPH_LABEL_POSITION
+gwy_graph_model_export_style_get_type
+GWY_TYPE_GRAPH_MODEL_EXPORT_STYLE
 </SECTION>
 
 <SECTION>
@@ -872,6 +935,9 @@ gwy_gdk_cursor_free_or_unref
 
 <SECTION>
 <FILE>gwygrapherbasics</FILE>
+GwyGrapherPointType
+GwyGrapherCurveType
+GwyGrapherLabelPosition
 GwyGrapherDataPoint
 GwyGrapherDataArea
 GwyGrapherActiveAreaSpecs

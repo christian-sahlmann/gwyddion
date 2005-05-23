@@ -69,6 +69,13 @@ queried with gwy_gradient_is_modifiable().
 </para>
 
 
+<!-- ##### SIGNAL GwyGradient::data-changed ##### -->
+<para>
+
+</para>
+
+@gwygradient: the object which received the signal.
+
 <!-- ##### STRUCT GwyGradientClass ##### -->
 <para>
 
@@ -76,6 +83,7 @@ queried with gwy_gradient_is_modifiable().
 
 @parent_class: 
 @gradients: 
+@data_changed: 
 @reserved1: 
 @reserved2: 
 

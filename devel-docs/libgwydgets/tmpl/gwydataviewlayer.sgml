@@ -47,21 +47,11 @@ A one #GwyDataView layer
 </para>
 
 @parent_class: 
-@wants_repaint: 
 @plugged: 
 @unplugged: 
 @updated: 
 @reserved1: 
 @reserved2: 
-
-<!-- ##### FUNCTION gwy_data_view_layer_wants_repaint ##### -->
-<para>
-
-</para>
-
-@layer: 
-@Returns: 
-
 
 <!-- ##### FUNCTION gwy_data_view_layer_plugged ##### -->
 <para>

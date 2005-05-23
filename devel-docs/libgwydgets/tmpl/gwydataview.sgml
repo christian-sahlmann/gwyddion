@@ -27,20 +27,12 @@ Data field displaying area
 
 @gwydataview: the object which received the signal.
 
-<!-- ##### SIGNAL GwyDataView::updated ##### -->
-<para>
-
-</para>
-
-@gwydataview: the object which received the signal.
-
 <!-- ##### STRUCT GwyDataViewClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
-@updated: 
 @redrawn: 
 @reserved2: 
 
@@ -223,13 +215,5 @@ Data field displaying area
 @max_width: 
 @max_height: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_data_view_update ##### -->
-<para>
-
-</para>
-
-@data_view: 
 
 

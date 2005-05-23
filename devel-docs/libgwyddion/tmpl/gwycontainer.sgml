@@ -68,30 +68,18 @@ gwy_container_set_double_by_name().
 
 
 
-<!-- ##### USER_FUNCTION GwyContainerNotifyFunc ##### -->
-<para>
-
-</para>
-
-@container: 
-@path: 
-@user_data: 
-
-
-<!-- ##### STRUCT GwyKeyVal ##### -->
-<para>
-
-</para>
-
-@key: 
-@value: 
-@changed: 
-
 <!-- ##### STRUCT GwyContainer ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### SIGNAL GwyContainer::item-changed ##### -->
+<para>
+
+</para>
+
+@gwycontainer: the object which received the signal.
 
 <!-- ##### STRUCT GwyContainerClass ##### -->
 <para>
@@ -99,6 +87,7 @@ gwy_container_set_double_by_name().
 </para>
 
 @parent_class: 
+@item_changed: 
 
 <!-- ##### MACRO gwy_container_duplicate ##### -->
 <para>

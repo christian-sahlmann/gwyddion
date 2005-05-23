@@ -40,13 +40,6 @@ In Gwyddion 2.0 this interface may either become actually used, or be removed.
 </para>
 
 
-<!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
-<para>
-Emitted when value changes.
-</para>
-
-@gwywatchable: the object which received the signal.
-
 <!-- ##### FUNCTION gwy_watchable_value_changed ##### -->
 <para>
 

@@ -23,7 +23,9 @@ The either gwy_expr_resolve_variables() or gwy_expr_get_variables() can be
 used to obtain information what variables are present in the expression
 and at which positions (variables are references by position, not name during
 final evaluation because of effieiency reasons). Subsequent evaluation with
-variable substitution is performed by gwy_expr_execute().
+variable substitution is performed by gwy_expr_execute(). Eventually,
+expression can be evaluated on each item of value arrays by
+gwy_expr_vector_execute().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -54,6 +56,7 @@ variable substitution is performed by gwy_expr_execute().
 @GWY_EXPR_ERROR_OPENING_PARENTHESIS: 
 @GWY_EXPR_ERROR_STRAY_COMMA: 
 @GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS: 
+@GWY_EXPR_ERROR_CONSTANT_NAME: 
 
 <!-- ##### STRUCT GwyExpr ##### -->
 <para>
@@ -137,6 +140,39 @@ variable substitution is performed by gwy_expr_execute().
 
 @expr: 
 @values: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_vector_execute ##### -->
+<para>
+
+</para>
+
+@expr: 
+@n: 
+@data: 
+@result: 
+
+
+<!-- ##### FUNCTION gwy_expr_define_constant ##### -->
+<para>
+
+</para>
+
+@expr: 
+@name: 
+@value: 
+@err: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_expr_undefine_constant ##### -->
+<para>
+
+</para>
+
+@expr: 
+@name: 
 @Returns: 
 
 

@@ -28,7 +28,6 @@ graph widgets and should be mostly ignored for now.
 </para>
 
 @parent_class: 
-@value_changed: 
 @reserved1: 
 @reserved2: 
 @reserved3: 
@@ -59,5 +58,180 @@ graph widgets and should be mostly ignored for now.
 
 @graph: 
 @gcmodel: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_data ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@xdata: 
+@ydata: 
+@n: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_data_from_dataline ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@dline: 
+@from_index: 
+@to_index: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_description ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@description: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_type ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@type: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_point_type ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@point_type: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_point_size ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@point_size: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_line_style ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@line_style: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_line_size ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@line_size: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_set_curve_color ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@color: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_xdata ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_ydata ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_ndata ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_description ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_type ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_point_type ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_point_size ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_line_style ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_line_size ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_get_curve_color ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@Returns: 
 
 

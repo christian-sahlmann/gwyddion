@@ -22,12 +22,20 @@ connected with 1D data, graphs, etc.
 </para>
 
 
+<!-- ##### SIGNAL GwyDataLine::data-changed ##### -->
+<para>
+
+</para>
+
+@gwydataline: the object which received the signal.
+
 <!-- ##### STRUCT GwyDataLineClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@data_changed: 
 
 <!-- ##### USER_FUNCTION GwyFFTFunc ##### -->
 <para>
@@ -69,6 +77,14 @@ connected with 1D data, graphs, etc.
 @model: 
 @nullme: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_data_changed ##### -->
+<para>
+
+</para>
+
+@data_line: 
 
 
 <!-- ##### FUNCTION gwy_data_line_resample ##### -->

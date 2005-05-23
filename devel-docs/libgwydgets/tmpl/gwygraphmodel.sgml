@@ -22,6 +22,13 @@ widgets and should be mostly ignored for now.
 </para>
 
 
+<!-- ##### SIGNAL GwyGraphModel::layout-updated ##### -->
+<para>
+
+</para>
+
+@gwygraphmodel: the object which received the signal.
+
 <!-- ##### ARG GwyGraphModel:n ##### -->
 <para>
 
@@ -38,8 +45,7 @@ widgets and should be mostly ignored for now.
 </para>
 
 @parent_class: 
-@value_changed: 
-@reserved1: 
+@layout_updated: 
 @reserved2: 
 @reserved3: 
 @reserved4: 
@@ -81,11 +87,226 @@ widgets and should be mostly ignored for now.
 @curve: 
 
 
+<!-- ##### FUNCTION gwy_graph_model_remove_curve_by_description ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@description: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_remove_curve_by_index ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@index_: 
+<!-- # Unused Parameters # -->
+@index: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_curve_by_description ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@description: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_curve_by_index ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@index_: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@index: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_new_alike ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_graph_model_remove_all_curves ##### -->
 <para>
 
 </para>
 
 @gmodel: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_title ##### -->
+<para>
+
+</para>
+
+@model: 
+@title: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_label_position ##### -->
+<para>
+
+</para>
+
+@model: 
+@position: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_label_has_frame ##### -->
+<para>
+
+</para>
+
+@model: 
+@label_has_frame: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_label_frame_thickness ##### -->
+<para>
+
+</para>
+
+@model: 
+@thickness: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_label_reverse ##### -->
+<para>
+
+</para>
+
+@model: 
+@reverse: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_label_visible ##### -->
+<para>
+
+</para>
+
+@model: 
+@visible: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_x_siunit ##### -->
+<para>
+
+</para>
+
+@model: 
+@siunit: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_set_y_siunit ##### -->
+<para>
+
+</para>
+
+@model: 
+@siunit: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_title ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_label_position ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_label_has_frame ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_label_frame_thickness ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_label_reverse ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_label_visible ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_x_siunit ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_y_siunit ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_export_ascii ##### -->
+<para>
+
+</para>
+
+@model: 
+@filename: 
+@export_units: 
+@export_metadata: 
+@export_style: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_signal_layout_changed ##### -->
+<para>
+
+</para>
+
+@model: 
 
 

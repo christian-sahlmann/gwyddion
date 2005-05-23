@@ -23,12 +23,20 @@ as they are connected with GwyDataField.
 </para>
 
 
+<!-- ##### SIGNAL GwyDataField::data-changed ##### -->
+<para>
+
+</para>
+
+@gwydatafield: the object which received the signal.
+
 <!-- ##### STRUCT GwyDataFieldClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@data_changed: 
 
 <!-- ##### MACRO gwy_data_field_invalidate ##### -->
 <para>
@@ -67,6 +75,14 @@ as they are connected with GwyDataField.
 @model: 
 @nullme: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_data_changed ##### -->
+<para>
+
+</para>
+
+@data_field: 
 
 
 <!-- ##### FUNCTION gwy_data_field_resample ##### -->

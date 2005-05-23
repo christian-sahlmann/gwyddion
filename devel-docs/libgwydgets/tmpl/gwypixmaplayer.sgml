@@ -30,12 +30,41 @@ Base class for #GwyDataView pixmap layers
 @reserved1: 
 @reserved2: 
 
+<!-- ##### FUNCTION gwy_pixmap_layer_wants_repaint ##### -->
+<para>
+
+</para>
+
+@pixmap_layer: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_pixmap_layer_paint ##### -->
 <para>
 
 </para>
 
+@pixmap_layer: 
+@Returns: 
+<!-- # Unused Parameters # -->
 @layer: 
+
+
+<!-- ##### FUNCTION gwy_pixmap_layer_set_data_key ##### -->
+<para>
+
+</para>
+
+@pixmap_layer: 
+@key: 
+
+
+<!-- ##### FUNCTION gwy_pixmap_layer_get_data_key ##### -->
+<para>
+
+</para>
+
+@pixmap_layer: 
 @Returns: 
 
 
