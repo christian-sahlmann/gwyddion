@@ -389,7 +389,7 @@ preview(RemoveControls *controls,
     mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                            "/0/mask"));
     mask_process(dfield, mask, args);
-    g_signal_emit_by_name(mask, "data_changed");
+    gwy_data_field_data_changed(mask);
 }
 
 static void

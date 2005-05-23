@@ -336,7 +336,7 @@ selection_finished_cb(GwyUnitoolState *state)
         break;
     }
     gwy_vector_layer_unselect(GWY_VECTOR_LAYER(layer));
-    g_signal_emit_by_name(mask, "data_changed");
+    gwy_data_field_data_changed(mask);
 }
 
 static void

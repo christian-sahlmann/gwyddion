@@ -450,7 +450,7 @@ preview(MarkControls *controls,
     mask_process(dfield, mask, args);
     controls->computed = TRUE;
     add_mask_layer(controls->view);
-    g_signal_emit_by_name(mask, "data_changed");
+    gwy_data_field_data_changed(mask);
 }
 
 static void

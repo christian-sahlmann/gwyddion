@@ -546,7 +546,7 @@ tip_update(TipBlindControls *controls,
 
     gwy_data_field_copy(buffer, vtipfield, FALSE);
     g_object_unref(buffer);
-    g_signal_emit_by_name(vtipfield, "data_changed");
+    gwy_data_field_data_changed(vtipfield);
 }
 
 static void

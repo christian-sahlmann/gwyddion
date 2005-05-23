@@ -644,7 +644,7 @@ preview(ScarsControls *controls,
 
     scars_mark_do(args, controls->mydata);
     add_mask_layer(controls->view);
-    g_signal_emit_by_name(mask, "data_changed");
+    gwy_data_field_data_changed(mask);
 }
 
 static const gchar *inverted_key = "/module/scars/inverted";

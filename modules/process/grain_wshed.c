@@ -434,7 +434,7 @@ preview(WshedControls *controls,
 
     if (controls->computed) {
         add_mask_layer(controls->view);
-        g_signal_emit_by_name(mask, "data_changed");
+        gwy_data_field_data_changed(mask);
     }
 }
 

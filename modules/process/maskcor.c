@@ -340,7 +340,7 @@ maskcor_do(MaskcorArgs *args)
         else
             gwy_container_set_object_by_name(data, "/0/mask", retfield);
         gwy_app_data_window_set_current(args->win1);
-        g_signal_emit_by_name(retfield, "data_changed");
+        gwy_data_field_data_changed(retfield);
     }
     g_object_unref(retfield);
 

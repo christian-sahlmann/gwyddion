@@ -426,7 +426,7 @@ update_view(Fftf1dControls *controls, Fftf1dArgs *args)
                             args->interpolation);
 
     gwy_data_field_copy(rfield, rvfield, FALSE);
-    g_signal_emit_by_name(rvfield, "data_changed");
+    gwy_data_field_data_changed(rvfield);
 }
 
 static void

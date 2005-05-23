@@ -386,7 +386,7 @@ rotate_preview_draw(RotateControls *controls,
     rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/show"));
     gwy_data_field_copy(dfield, rfield, FALSE);
     gwy_data_field_rotate(rfield, args->angle, args->interp);
-    g_signal_emit_by_name(rfield, "data_changed");
+    gwy_data_field_data_changed(rfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

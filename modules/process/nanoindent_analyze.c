@@ -1207,7 +1207,7 @@ compute_and_preview(IndentAnalyzeControls *controls)
     controls->computed = indent_analyze_do_the_hard_work (controls);
 
     if (controls->computed)
-        g_signal_emit_by_name(maskfield, "data_changed");
+        gwy_data_field_data_changed(maskfield);
 }
 
 /* =========== dialog control functions ========================= */
