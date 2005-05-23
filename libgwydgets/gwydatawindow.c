@@ -296,12 +296,12 @@ gwy_data_window_new(GwyDataView *data_view)
  *
  * Returns: The currently shown #GwyDataView.
  **/
-GtkWidget*
+GwyDataView*
 gwy_data_window_get_data_view(GwyDataWindow *data_window)
 {
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
-    return data_window->data_view;
+    return (GwyDataView*)data_window->data_view;
 }
 
 /**

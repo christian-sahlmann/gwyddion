@@ -321,7 +321,7 @@ gwy_app_undo_undo_window(GwyDataWindow *data_window)
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) - 1));
-    gwy_app_data_view_update(data_view);
+    gwy_app_data_view_update(GWY_DATA_VIEW(data_view));
     if (undo)
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
     if (gwy_container_contains_by_name(data, "/0/mask"))
@@ -374,7 +374,7 @@ gwy_app_undo_redo_window(GwyDataWindow *data_window)
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) + 1));
-    gwy_app_data_view_update(data_view);
+    gwy_app_data_view_update(GWY_DATA_VIEW(data_view));
     if (redo)
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
     if (gwy_container_contains_by_name(data, "/0/mask"))

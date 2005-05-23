@@ -211,7 +211,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
         RESPONSE_GUESS = 3
     };
     gint response, i, j;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkWidget *label;
 
@@ -256,8 +256,8 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     /*set up rescaled image of the surface*/
     controls.view = gwy_data_view_new(args->vdata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     /*set up fit controls*/
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);

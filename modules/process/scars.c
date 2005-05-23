@@ -77,6 +77,7 @@ static void        scars_mark_dialog_update_thresholds(GtkObject *adj,
                                                        ScarsControls *controls);
 static void        mask_color_change_cb              (GtkWidget *color_button,
                                                       ScarsControls *controls);
+static void        add_mask_layer                    (GtkWidget *data_view);
 static void        preview                           (ScarsControls *controls,
                                                       ScarsArgs *args);
 static void        scars_mark_do                     (ScarsArgs *args,
@@ -100,7 +101,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks and/or removes scars (horizontal linear artefacts)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -391,7 +392,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     ScarsControls controls;
     gint response;
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gint row;
 
@@ -415,8 +416,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
 
@@ -613,41 +613,38 @@ save_mask_color(GtkWidget *color_button,
 }
 
 static void
+add_mask_layer(GtkWidget *data_view)
+{
+    GwyPixmapLayer *layer;
+
+    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+    }
+}
+
+static void
 preview(ScarsControls *controls,
         ScarsArgs *args)
 {
     GwyDataField *mask, *dfield;
-    GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask)) {
-        gwy_data_field_resample(mask,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask))
         gwy_data_field_copy(dfield, mask, FALSE);
-        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
-            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                          GWY_PIXMAP_LAYER(layer));
-        }
-    }
     else {
         mask = gwy_data_field_duplicate(dfield);
         gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
         g_object_unref(mask);
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                      GWY_PIXMAP_LAYER(layer));
     }
 
     scars_mark_do(args, controls->mydata);
-
+    add_mask_layer(controls->view);
     g_signal_emit_by_name(mask, "data_changed");
-
 }
 
 static const gchar *inverted_key = "/module/scars/inverted";

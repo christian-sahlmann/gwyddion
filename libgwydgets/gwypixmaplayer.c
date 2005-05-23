@@ -31,8 +31,6 @@
 
 #define BITS_PER_SAMPLE 8
 
-/* Forward declarations */
-
 static void     gwy_pixmap_layer_class_init   (GwyPixmapLayerClass *klass);
 static void     gwy_pixmap_layer_init         (GwyPixmapLayer *layer);
 static void     gwy_pixmap_layer_destroy      (GtkObject *object);
@@ -40,8 +38,6 @@ static void     gwy_pixmap_layer_plugged      (GwyDataViewLayer *layer);
 static void     gwy_pixmap_layer_unplugged    (GwyDataViewLayer *layer);
 static void     gwy_pixmap_layer_item_changed (GwyPixmapLayer *pixmap_layer);
 static void     gwy_pixmap_layer_data_changed (GwyPixmapLayer *pixmap_layer);
-
-/* Local data */
 
 static GwyDataViewLayerClass *parent_class = NULL;
 
@@ -120,7 +116,6 @@ GdkPixbuf*
 gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 {
     GwyPixmapLayerClass *layer_class = GWY_PIXMAP_LAYER_GET_CLASS(pixmap_layer);
-    GdkPixbuf *pixbuf;
 
     g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), NULL);
     g_return_val_if_fail(layer_class->paint, NULL);

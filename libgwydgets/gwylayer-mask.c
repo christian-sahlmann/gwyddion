@@ -30,8 +30,6 @@
 
 #define BITS_PER_SAMPLE 8
 
-/* Forward declarations */
-
 static void       gwy_layer_mask_class_init        (GwyLayerMaskClass *klass);
 static void       gwy_layer_mask_init              (GwyLayerMask *layer);
 static GdkPixbuf* gwy_layer_mask_paint             (GwyPixmapLayer *layer);
@@ -40,8 +38,6 @@ static void       gwy_layer_mask_unplugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_update            (GwyLayerMask *layer);
 static void       gwy_layer_mask_save              (GwyLayerMask *layer);
 static void       gwy_layer_mask_restore           (GwyLayerMask *layer);
-
-/* Local data */
 
 static GwyPixmapLayerClass *parent_class = NULL;
 
@@ -99,23 +95,18 @@ gwy_layer_mask_init(G_GNUC_UNUSED GwyLayerMask *layer)
  *
  * By default, is uses a transparent color (thus not displaying anything),
  * or the color stored with the data as "/0/mask/red", "/0/mask/green",
- * "/0/mask/blue", and "/0/mask/alpha".  It gets the mask data from
- * "/0/mask".
+ * "/0/mask/blue", and "/0/mask/alpha".
  *
  * Returns: The newly created layer.
  **/
-GtkObject*
+GwyPixmapLayer*
 gwy_layer_mask_new(void)
 {
-    GtkObject *object;
-    GwyDataViewLayer *layer;
+    GwyLayerMask *layer;
 
-    gwy_debug("");
+    layer = g_object_new(GWY_TYPE_LAYER_MASK, NULL);
 
-    object = g_object_new(GWY_TYPE_LAYER_MASK, NULL);
-    layer = (GwyDataViewLayer*)object;
-
-    return object;
+    return (GwyPixmapLayer*)layer;
 }
 
 static GdkPixbuf*

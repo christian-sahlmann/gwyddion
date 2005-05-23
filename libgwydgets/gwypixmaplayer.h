@@ -56,8 +56,6 @@ struct _GwyPixmapLayerClass {
     GwyDataViewLayerClass parent_class;
 
     GdkPixbuf* (*paint)(GwyPixmapLayer *layer);
-    /* May anyone want to override this? */
-    /*gboolean (*wants_repaint)(GwyDataViewLayer *layer);*/
 
     gpointer reserved1;
     gpointer reserved2;

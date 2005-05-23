@@ -29,7 +29,6 @@ controls_changed => computed = FALSE
 
 #include <stdio.h>
 #include <string.h>
-#include <glib/gprintf.h>
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -189,7 +188,6 @@ static void             indentor_changed_cb(GtkWidget *item, IndentAnalyzeContro
 
 static void     set_mask_at (GwyDataField *mask, gint x, gint y, gdouble  m,  gint how );
 static void     level_data (IndentAnalyzeControls *c);
-static void     get_plane_slope_from_border (GwyDataField *dfield, gdouble *a, gdouble *b, gdouble *c);
 static void     get_field_xymin(GwyDataField *dfield, gdouble *min, gint *posx, gint *posy);
 static void     get_field_xymax(GwyDataField *dfield, gdouble *max, gint *posx, gint *posy);
 static GwyVec   data_field_average_normal_vector (GwyDataField *dfield, gint x, gint y, gint r);
@@ -344,7 +342,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
         RESPONSE_SAVE = 2
     };
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
 
     gchar siu[30];
     GwySIValueFormat* siformat;
@@ -368,6 +366,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
@@ -934,7 +933,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_container_gis_object_by_name(data, "/0/mask", (GObject**)&mask);
     if (!mask) {
-            mask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+            mask = gwy_data_field_duplicate(dfield);
             siunit = GWY_SI_UNIT(gwy_si_unit_new(""));
             gwy_data_field_set_si_unit_z(mask, siunit);
             g_object_unref(siunit);
@@ -1014,7 +1013,7 @@ static gboolean indent_analyze_do_the_hard_work(IndentAnalyzeControls *controls)
     g_object_unref(derdist);
 
    /* (marking)  INDENTATION */
-   indentmask = GWY_DATA_FIELD(gwy_serializable_duplicate(dfield));
+   indentmask = gwy_data_field_duplicate(dfield);
    gwy_data_field_fill(indentmask, 0.0);
    for(i = 0; i < args->nof_sides; i++) {
        height = -1e10;
@@ -1331,7 +1330,7 @@ static void read_data_from_controls (IndentAnalyzeControls *c)
 
 static void update_data_labels (IndentAnalyzeControls *c)
 {
-    gchar str[50];
+    GString *str;
     GwyDataField* dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(c->mydata, "/0/data"));
     GwySIValueFormat* siformat = gwy_data_field_get_value_format_xy (dfield,NULL);
     gdouble mag = siformat->magnitude;
@@ -1339,58 +1338,63 @@ static void update_data_labels (IndentAnalyzeControls *c)
 
     compute_expected_indent (c);
 
-    g_sprintf (str, "[%d, %d]px: %lf", c->args->minx, c->args->miny,
-             c->args->min_val/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_min_xy), str);
+    str = g_string_new("");
+    g_string_printf(str, "[%d, %d]px: %lf",
+                    c->args->minx, c->args->miny, c->args->min_val/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_min_xy), str->str);
 
-    g_sprintf (str, "[%d, %d]px: %lf", c->args->maxx, c->args->maxy,
-             c->args->max_val/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_max_xy), str);
+    g_string_printf(str, "[%d, %d]px: %lf",
+                    c->args->maxx, c->args->maxy, c->args->max_val/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_max_xy), str->str);
 
-    g_sprintf (str, "%lf", (c->args->max_val-c->args->min_val)/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_minmax), str);
+    g_string_printf(str, "%lf",
+                    (c->args->max_val - c->args->min_val)/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_minmax), str->str);
 /*
     sprintf (str, "%g (%.1lf %%)", c->args->area_above/mag/mag, 100.*(c->args->area_above/sxy));
-    gtk_label_set_text(c->w_area_above, str);
+    gtk_label_set_text(c->w_area_above, str->str);
     sprintf (str, "%g (%.1lf %%)", c->args->area_below/mag/mag, 100.*(c->args->area_below/sxy));
-    gtk_label_set_text(c->w_area_below, str);
+    gtk_label_set_text(c->w_area_below, str->str);
     sprintf (str, "%g (%.1lf %%)", c->args->area_plane/mag/mag, 100.*(c->args->area_plane/sxy));
-    gtk_label_set_text(c->w_area_plane, str);
+    gtk_label_set_text(c->w_area_plane, str->str);
 
     sprintf (str, "%g (+%.1f %%)", c->args->surface_above/mag/mag, 100.*c->args->surface_above/c->args->area_above);
-    gtk_label_set_text(c->w_surface_above, str);
+    gtk_label_set_text(c->w_surface_above, str->str);
     sprintf (str, "%g (+%.1lf %%)", c->args->surface_below/mag/mag, 100.*c->args->surface_below/c->args->surface_below);
-    gtk_label_set_text(c->w_surface_below, str);
+    gtk_label_set_text(c->w_surface_below, str->str);
 
     sprintf (str, "%g", c->args->volume_above/mag/mag/mag);
-    gtk_label_set_text(c->w_volume_above, str);
+    gtk_label_set_text(c->w_volume_above, str->str);
     sprintf (str, "%g", c->args->volume_below/mag/mag/mag);
-    gtk_label_set_text(c->w_volume_below, str);
+    gtk_label_set_text(c->w_volume_below, str->str);
 */
-    g_sprintf (str, "%g", (c->args->volume_above-c->args->volume_below)/mag/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_volume_dif), str);
+    g_string_printf(str, "%g",
+                    (c->args->volume_above - c->args->volume_below)
+                    /mag/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_volume_dif), str->str);
 
-    g_sprintf (str, "%g", c->args->volume_indent/mag/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_volume_indent), str);
-    g_sprintf (str, "%g", c->args->surface_indent/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_surface_indent), str);
-    g_sprintf (str, "%g", (c->args->area_indent)/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_area_indent), str);
+    g_string_printf(str, "%g", c->args->volume_indent/mag/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_volume_indent), str->str);
+    g_string_printf(str, "%g", c->args->surface_indent/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_surface_indent), str->str);
+    g_string_printf(str, "%g", (c->args->area_indent)/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_area_indent), str->str);
 
-    g_sprintf (str, "%g", c->args->surface_indent_exp/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_surface_indent_exp), str);
-    g_sprintf (str, "%g", (c->args->area_indent_exp)/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_area_indent_exp), str);
+    g_string_printf(str, "%g", c->args->surface_indent_exp/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_surface_indent_exp), str->str);
+    g_string_printf(str, "%g", (c->args->area_indent_exp)/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_area_indent_exp), str->str);
 
-    g_sprintf (str, "%g", c->args->surface_innerpileup/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_surface_innerpileup), str);
-    g_sprintf (str, "%g", (c->args->area_innerpileup)/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_area_innerpileup), str);
-    g_sprintf (str, "%g", c->args->surface_outerpileup/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_surface_outerpileup), str);
-    g_sprintf (str, "%g", (c->args->area_outerpileup)/mag/mag);
-    gtk_label_set_text(GTK_LABEL(c->w_area_outerpileup), str);
+    g_string_printf(str, "%g", c->args->surface_innerpileup/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_surface_innerpileup), str->str);
+    g_string_printf(str, "%g", (c->args->area_innerpileup)/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_area_innerpileup), str->str);
+    g_string_printf(str, "%g", c->args->surface_outerpileup/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_surface_outerpileup), str->str);
+    g_string_printf(str, "%g", (c->args->area_outerpileup)/mag/mag);
+    gtk_label_set_text(GTK_LABEL(c->w_area_outerpileup), str->str);
 
+    g_string_free(str, TRUE);
 }
 
 static void save_statistics_dialog (IndentAnalyzeControls* c)

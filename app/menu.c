@@ -260,8 +260,7 @@ guint
 gwy_app_run_process_func_cb(gchar *name)
 {
     GwyRunType run_types[] = {
-        GWY_RUN_INTERACTIVE, GWY_RUN_MODAL,
-        GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
+        GWY_RUN_MODAL, GWY_RUN_NONINTERACTIVE, GWY_RUN_WITH_DEFAULTS,
     };
     GwyRunType available_run_modes;
     gsize i;
@@ -296,7 +295,8 @@ gwy_app_run_process_func_in_mode(gchar *name,
         GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
     };
     GwyDataWindow *data_window;
-    GtkWidget *data_view, *menu;
+    GwyDataView *data_view;
+    GtkWidget *menu;
     GwyContainer *data;
     gboolean ok;
 
@@ -307,7 +307,7 @@ gwy_app_run_process_func_in_mode(gchar *name,
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(data_window);
     data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(data_view);
     g_return_if_fail(data);
     ok = gwy_process_func_run(name, data, run);
 
@@ -317,26 +317,24 @@ gwy_app_run_process_func_in_mode(gchar *name,
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));
     gwy_app_update_last_process_func(menu, name);
-    /* FIXME: the ugliest hack! */
-    if (ok) {
-        GObject *dfield;
-
-        if (gwy_container_gis_object_by_name(data, "/0/data", &dfield))
-            g_signal_emit_by_name(dfield, "data_changed");
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-            g_signal_emit_by_name(dfield, "data_changed");
-        if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-            g_signal_emit_by_name(dfield, "data_changed");
-    }
 
     /* re-get current data window, it may have changed */
     data_window = gwy_app_data_window_get_current();
+    if (data_window) {
+        data_view = gwy_data_window_get_data_view(data_window);
+        /* FIXME: Allow modules to just set /0/mask or /0/show and don't bother
+         * with data window layer setup like before.  It will have to be
+         * changed with multidata anyway */
+        gwy_app_data_view_update(data_view);
+    }
+    /*
     data = gwy_data_window_get_data(GWY_DATA_WINDOW(data_window));
     if (gwy_container_contains_by_name(data, "/0/mask"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
     if (gwy_container_contains_by_name(data, "/0/show"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
+    */
 }
 
 static void

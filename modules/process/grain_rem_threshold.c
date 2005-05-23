@@ -71,8 +71,8 @@ static void        remove_dialog_update_controls (RemoveControls *controls,
 static void        remove_dialog_update_args     (RemoveControls *controls,
                                                   RemoveArgs *args);
 static void        preview                       (RemoveControls *controls,
-                                                  RemoveArgs *args,
-                                                  GwyContainer *data);
+                                                  RemoveArgs *args);
+static void        add_mask_layer                (GtkWidget *data_view);
 static void        remove_th_do                  (RemoveArgs *args,
                                                   GwyContainer *data);
 static void        mask_process                  (GwyDataField *dfield,
@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -164,7 +164,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     };
     gint response;
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gint row;
 
@@ -187,8 +187,9 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    add_mask_layer(controls.view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
     if (gwy_data_field_get_xres(dfield) >= gwy_data_field_get_yres(dfield))
@@ -196,10 +197,6 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     else
         zoomval = PREVIEW_SIZE/(gdouble)gwy_data_field_get_yres(dfield);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
-
-    layer = gwy_layer_mask_new();
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view),
-                                  GWY_PIXMAP_LAYER(layer));
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
@@ -294,7 +291,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
 
             case RESPONSE_PREVIEW:
             remove_dialog_update_args(&controls, args);
-            preview(&controls, args, data);
+            preview(&controls, args);
             break;
 
             default:
@@ -383,21 +380,28 @@ save_mask_color(GtkWidget *color_button,
 
 static void
 preview(RemoveControls *controls,
-        RemoveArgs *args,
-        GwyContainer *data)
+        RemoveArgs *args)
 {
-    GwyDataField *maskfield, *dfield;
+    GwyDataField *mask, *dfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                           "/0/mask"));
+    mask_process(dfield, mask, args);
+    g_signal_emit_by_name(mask, "data_changed");
+}
 
-    /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
-                                         &maskfield))
-        mask_process(dfield, maskfield, args);
+static void
+add_mask_layer(GtkWidget *data_view)
+{
+    GwyPixmapLayer *layer;
 
-    g_signal_emit_by_name(maskfield, "data_changed");
-
+    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+    }
 }
 
 static void

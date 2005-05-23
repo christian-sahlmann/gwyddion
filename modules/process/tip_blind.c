@@ -170,7 +170,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
         RESPONSE_FULL
     };
     gint response, row;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkWidget *label;
 
@@ -219,8 +219,8 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     /*set up rescaled image of the tip*/
     controls.view = gwy_data_view_new(controls.vtip);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     /*set up tip estimation controls*/
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
@@ -441,7 +441,6 @@ reset(TipBlindControls *controls, TipBlindArgs *args)
                                       GTK_RESPONSE_OK, controls->good_tip);
 
     tip_update(controls, args);
-    g_signal_emit_by_name(tipfield, "data_changed");
 }
 
 static void
@@ -528,7 +527,6 @@ tip_blind_run(TipBlindControls *controls,
         g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
         gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
     }
-    g_signal_emit_by_name(tipfield, "data_changed");
 }
 
 static void
@@ -548,6 +546,7 @@ tip_update(TipBlindControls *controls,
 
     gwy_data_field_copy(buffer, vtipfield, FALSE);
     g_object_unref(buffer);
+    g_signal_emit_by_name(vtipfield, "data_changed");
 }
 
 static void

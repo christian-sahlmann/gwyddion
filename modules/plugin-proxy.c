@@ -148,7 +148,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1.1",
+    "3.1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -162,9 +162,9 @@ static GList *proc_plugins = NULL;
 static GList *file_plugins = NULL;
 
 static const GwyEnum run_mode_names[] = {
-    { "interactive",    GWY_RUN_INTERACTIVE },
     { "noninteractive", GWY_RUN_NONINTERACTIVE },
     { "modal",          GWY_RUN_MODAL },
+    { "interactive",    GWY_RUN_MODAL },
     { "with_defaults",  GWY_RUN_WITH_DEFAULTS },
     { NULL,             -1 }
 };

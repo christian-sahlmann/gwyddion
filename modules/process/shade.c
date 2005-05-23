@@ -175,7 +175,7 @@ shade_dialog(ShadeArgs *args,
              GwyContainer *data)
 {
     GtkWidget *dialog, *hbox, *table, *spin;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     const gchar *palette;
     ShadeControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -231,8 +231,8 @@ shade_dialog(ShadeArgs *args,
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/show");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 
     controls.in_update = FALSE;

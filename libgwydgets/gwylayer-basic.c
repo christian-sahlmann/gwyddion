@@ -28,8 +28,6 @@
 
 #define BITS_PER_SAMPLE 8
 
-/* Forward declarations */
-
 static void       gwy_layer_basic_class_init        (GwyLayerBasicClass *klass);
 static void       gwy_layer_basic_init              (GwyLayerBasic *layer);
 static void       gwy_layer_basic_destroy           (GtkObject *object);
@@ -38,8 +36,6 @@ static GdkPixbuf* gwy_layer_basic_paint             (GwyPixmapLayer *layer);
 static void       gwy_layer_basic_plugged           (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_unplugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_basic_update            (GwyLayerBasic *layer);
-
-/* Local data */
 
 static GwyPixmapLayerClass *parent_class = NULL;
 
@@ -78,8 +74,6 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
-
-    gwy_debug(" ");
 
     parent_class = g_type_class_peek_parent(klass);
 
@@ -126,27 +120,18 @@ gwy_layer_basic_destroy(GtkObject *object)
  * By default, is uses a gray gradient or gradient whose name is stored with
  * the data as "/0/base/palette".
  *
- * Other used container values: "/0/show" is shown instead of "/0/data" if
- * present.  If "/0/base/min" and "/0/base/max" is set, it is used as the
- * color scale range instead of fitting it to data value range.
- *
  * Returns: The newly created layer.
  **/
-GtkObject*
+GwyPixmapLayer*
 gwy_layer_basic_new(void)
 {
-    GtkObject *object;
     GwyLayerBasic *layer;
 
-    gwy_debug(" ");
-
-    object = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
-    layer = (GwyLayerBasic*)object;
-
+    layer = g_object_new(GWY_TYPE_LAYER_BASIC, NULL);
     layer->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     g_object_ref(layer->gradient);
 
-    return object;
+    return (GwyPixmapLayer*)layer;
 }
 
 static GdkPixbuf*

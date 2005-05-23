@@ -920,11 +920,8 @@ gwy_app_rerun_process_func_cb(gpointer user_data)
 
     /* try to find some mode `near' to requested one, otherwise just use any */
     if (!(run & available_run_modes)) {
-        if (run == GWY_RUN_MODAL
-            && (available_run_modes & GWY_RUN_INTERACTIVE))
-            run = GWY_RUN_INTERACTIVE;
-        else if (run == GWY_RUN_NONINTERACTIVE
-                 && (available_run_modes & GWY_RUN_WITH_DEFAULTS))
+        if (run == GWY_RUN_NONINTERACTIVE
+            && (available_run_modes & GWY_RUN_WITH_DEFAULTS))
             run = GWY_RUN_WITH_DEFAULTS;
         else
             run = 0;

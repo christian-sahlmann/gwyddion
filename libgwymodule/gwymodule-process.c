@@ -420,9 +420,6 @@ _gwy_process_func_remove(const gchar *name)
  *                          container to reproduce previous runs.
  * @GWY_RUN_MODAL: The function presents a [presumably simple] modal GUI to
  *                 the user, it returns after finishing all operations.
- * @GWY_RUN_INTERACTIVE: The function presents a non-modal GUI to the user,
- *                       it returns while after setting up the GUI, not after
- *                       finishing its work.
  * @GWY_RUN_MASK: The mask for all the run modes.
  *
  * Data processing function run-modes.

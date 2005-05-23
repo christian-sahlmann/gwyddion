@@ -182,11 +182,11 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     GtkWidget *dialog, *table, *hbox, *vbox;
     Fftf1dControls controls;
     enum {
-	    RESPONSE_RUN = 1,
+        RESPONSE_RUN = 1,
         RESPONSE_RESTORE = 2
     };
     gint response, newsize;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkWidget *label;
 
@@ -256,8 +256,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     /*set up rescaled image of the surface*/
     controls.view_original = gwy_data_view_new(args->original_vdata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_original),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_original), layer);
 
     /*set up fit controls*/
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_original, FALSE, FALSE, 4);
@@ -265,8 +265,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     /*set up rescaled image of the result*/
     controls.view_result = gwy_data_view_new(args->result_vdata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
@@ -455,10 +455,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_line_fill(args->weights, 1);
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 
-    for (i=0; i<MAX_PREV; i++)
-    {
+    for (i = 0; i < MAX_PREV; i++)
         xdata[i] = ((gdouble)i)/MAX_PREV;
-    }
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
 
     cmodel = GWY_GRAPH_CURVE_MODEL(gwy_graph_curve_model_new());
@@ -474,8 +472,6 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     if (args->update)
         update_view(controls, args);
-
-    /*FIXME: gwy_data_view_update(GWY_DATA_VIEW(controls->view_result));*/
 }
 
 static void

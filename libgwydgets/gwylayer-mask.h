@@ -56,7 +56,7 @@ struct _GwyLayerMaskClass {
 
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;
 
-GtkObject*       gwy_layer_mask_new             (void);
+GwyPixmapLayer*  gwy_layer_mask_new             (void);
 void             gwy_layer_mask_set_color       (GwyLayerMask *layer,
                                                  GwyRGBA *color);
 GwyRGBA          gwy_layer_mask_get_color       (GwyLayerMask *layer);

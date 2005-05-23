@@ -78,6 +78,7 @@ static void        wshed_invalidate             (GtkObject *adj,
                                                  WshedControls *controls);
 static void        preview                      (WshedControls *controls,
                                                  WshedArgs *args);
+static void        add_mask_layer               (GtkWidget *data_view);
 static gboolean    wshed_ok                     (WshedControls *controls,
                                                  WshedArgs *args,
                                                  GwyContainer *data);
@@ -108,7 +109,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -166,7 +167,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     };
     gint response;
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gint row;
 
@@ -189,8 +190,8 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     controls.mydata = gwy_container_duplicate(data);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
                                                              "/0/data"));
 
@@ -414,45 +415,39 @@ static void
 preview(WshedControls *controls,
         WshedArgs *args)
 {
-    GwyDataField *maskfield, *dfield;
-    GwyPixmapLayer *layer;
+    GwyDataField *mask, *dfield;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
     /*set up the mask*/
-    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask",
-                                         &maskfield)) {
-        gwy_data_field_resample(maskfield,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield, FALSE);
-
-        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
-            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                          layer);
-        }
-    }
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask))
+        gwy_data_field_copy(dfield, mask, FALSE);
     else {
-        maskfield = gwy_data_field_duplicate(dfield);
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         maskfield);
-        g_object_unref(maskfield);
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 layer);
-
+        mask = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
+        g_object_unref(mask);
     }
 
     wshed_dialog_update_values(controls, args);
-    controls->computed = mask_process(dfield, maskfield, args,
-                                      controls->dialog);
+    controls->computed = mask_process(dfield, mask, args, controls->dialog);
 
-    if (controls->computed)
-        g_signal_emit_by_name(maskfield, "data_changed");
+    if (controls->computed) {
+        add_mask_layer(controls->view);
+        g_signal_emit_by_name(mask, "data_changed");
+    }
+}
 
+static void
+add_mask_layer(GtkWidget *data_view)
+{
+    GwyPixmapLayer *layer;
+
+    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
+    }
 }
 
 static gboolean

@@ -66,7 +66,7 @@ void           gwy_app_3d_window_set_current       (GtkWidget *window);
 GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
 gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
                                                     const gchar *templ);
-void           gwy_app_data_view_update            (GtkWidget *data_view);
+void           gwy_app_data_view_update            (GwyDataView *data_view);
 GtkWidget*     gwy_app_main_window_get             (void);
 
 gboolean       gwy_app_quit                        (void);
