@@ -47,21 +47,22 @@ typedef struct {
     GtkTooltips *tooltips;
 } ToolControls;
 
-static gboolean   module_register       (const gchar *name);
-static gboolean   use                   (GwyDataWindow *data_window,
-                                         GwyToolSwitchEvent reason);
-static void       layer_setup           (GwyUnitoolState *state);
-static GtkWidget* dialog_create         (GwyUnitoolState *state);
-static void       dialog_update         (GwyUnitoolState *state,
-                                         GwyUnitoolUpdateType reason);
-static void       mode_changed_cb       (GwyUnitoolState *state,
-                                         GObject *item);
-static void       selection_finished_cb (GwyUnitoolState *state);
-static void       dialog_abandon        (GwyUnitoolState *state);
-static void       load_args             (GwyContainer *container,
-                                         ToolControls *controls);
-static void       save_args             (GwyContainer *container,
-                                         ToolControls *controls);
+static gboolean      module_register       (const gchar *name);
+static gboolean      use                   (GwyDataWindow *data_window,
+                                            GwyToolSwitchEvent reason);
+static void          layer_setup           (GwyUnitoolState *state);
+static GtkWidget*    dialog_create         (GwyUnitoolState *state);
+static void          dialog_update         (GwyUnitoolState *state,
+                                            GwyUnitoolUpdateType reason);
+static void          mode_changed_cb       (GwyUnitoolState *state,
+                                            GObject *item);
+static void          selection_finished_cb (GwyUnitoolState *state);
+static GwyDataField* maybe_add_mask        (GwyUnitoolState *state);
+static void          dialog_abandon        (GwyUnitoolState *state);
+static void          load_args             (GwyContainer *container,
+                                            ToolControls *controls);
+static void          save_args             (GwyContainer *container,
+                                            ToolControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -272,12 +273,11 @@ selection_finished_cb(GwyUnitoolState *state)
     GwyDataField *dfield, *mask = NULL;
     GwyDataViewLayer *layer;
     ToolControls *controls;
-    GwySIUnit *siunit;
     gint isel[4];
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_container_gis_object_by_name(data, "/0/mask", &mask);
     gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
@@ -285,14 +285,7 @@ selection_finished_cb(GwyUnitoolState *state)
     switch (controls->mode) {
         case MASK_EDIT_SET:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (!mask) {
-            mask = gwy_data_field_duplicate(dfield);
-            siunit = gwy_si_unit_new("");
-            gwy_data_field_set_si_unit_z(mask, siunit);
-            g_object_unref(siunit);
-            gwy_container_set_object_by_name(data, "/0/mask", mask);
-            g_object_unref(mask);
-        }
+        mask = maybe_add_mask(state);
         gwy_data_field_fill(mask, 0.0);
         gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
                                  1.0);
@@ -300,15 +293,7 @@ selection_finished_cb(GwyUnitoolState *state)
 
         case MASK_EDIT_ADD:
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (!mask) {
-            mask = gwy_data_field_duplicate(dfield);
-            siunit = gwy_si_unit_new("");
-            gwy_data_field_set_si_unit_z(mask, siunit);
-            g_object_unref(siunit);
-            gwy_container_set_object_by_name(data, "/0/mask", mask);
-            g_object_unref(mask);
-            gwy_data_field_fill(mask, 0.0);
-        }
+        mask = maybe_add_mask(state);
         gwy_data_field_area_fill(mask, isel[0], isel[1], isel[2], isel[3],
                                  1.0);
         break;
@@ -337,6 +322,35 @@ selection_finished_cb(GwyUnitoolState *state)
     }
     gwy_vector_layer_unselect(GWY_VECTOR_LAYER(layer));
     gwy_data_field_data_changed(mask);
+}
+
+static GwyDataField*
+maybe_add_mask(GwyUnitoolState *state)
+{
+    GwyDataField *mask;
+    GwyContainer *data;
+    GwyDataView *data_view;
+    GwyPixmapLayer *layer;
+    GwySIUnit *siunit;
+
+    data_view = gwy_data_window_get_data_view(state->data_window);
+    data = gwy_data_view_get_data(data_view);
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
+        mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                               "/0/data"));
+        mask = gwy_data_field_new_alike(mask, TRUE);
+        siunit = gwy_si_unit_new("");
+        gwy_data_field_set_si_unit_z(mask, siunit);
+        g_object_unref(siunit);
+        gwy_container_set_object_by_name(data, "/0/mask", mask);
+        g_object_unref(mask);
+    }
+    if (!(layer = gwy_data_view_get_alpha_layer(data_view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_data_view_set_alpha_layer(data_view, layer);
+    }
+    return mask;
 }
 
 static void
