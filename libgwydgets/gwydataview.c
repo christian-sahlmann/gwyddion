@@ -530,12 +530,14 @@ gwy_data_view_expose(GtkWidget *widget,
     if (xs >= xe || ys >= ye)
         return FALSE;
 
-    if ((data_view->base_layer
-         && gwy_pixmap_layer_wants_repaint(data_view->base_layer))
+    if (data_view->layers_changed
+        || (data_view->base_layer
+            && gwy_pixmap_layer_wants_repaint(data_view->base_layer))
         || (data_view->alpha_layer
             && gwy_pixmap_layer_wants_repaint(data_view->alpha_layer))) {
         gwy_data_view_paint(data_view);
         emit_redrawn = TRUE;
+        data_view->layers_changed = FALSE;
     }
 
     gdk_draw_pixbuf(widget->window,
@@ -740,6 +742,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
                                             data_view);
         gwy_data_view_layer_plugged(layer);
     }
+    data_view->layers_changed = TRUE;
     *which_layer = layer;
     gwy_data_view_update(data_view);
 }
@@ -765,7 +768,6 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
                             &data_view->base_layer,
                             &data_view->base_hid,
                             GWY_DATA_VIEW_LAYER(layer));
-    gwy_data_view_update(data_view);
 }
 
 /**
@@ -789,7 +791,6 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
                             &data_view->alpha_layer,
                             &data_view->alpha_hid,
                             GWY_DATA_VIEW_LAYER(layer));
-    gwy_data_view_update(data_view);
 }
 
 /**
@@ -811,7 +812,6 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
     g_return_if_fail(!layer || GWY_IS_VECTOR_LAYER(layer));
     gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL,
                             GWY_DATA_VIEW_LAYER(layer));
-    gwy_data_view_update(data_view);
 }
 
 /**

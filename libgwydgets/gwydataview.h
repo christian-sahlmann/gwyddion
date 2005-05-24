@@ -53,6 +53,8 @@ struct _GwyDataView {
     gulong base_hid;
     gulong alpha_hid;
 
+    gboolean layers_changed;
+
     gdouble zoom;    /* zoom (larger number means larger pixmaps) */
     gdouble newzoom;    /* new zoom value (when zoom is set, but widget not
                            yet resized) */
