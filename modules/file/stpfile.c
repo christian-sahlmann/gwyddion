@@ -18,7 +18,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * TODO:
+ * - skip Comments parts
+ * - read split files (and accept any kind of EOL in magic)
+ */
+
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -62,6 +69,12 @@ typedef struct {
     GtkWidget *data_view;
 } STPControls;
 
+typedef struct {
+    const gchar *key;
+    const gchar *meta;
+    const gchar *format;
+} MetaDataFormat;
+
 static gboolean      module_register       (const gchar *name);
 static gint          stpfile_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
@@ -81,9 +94,15 @@ static void          selection_changed     (GtkWidget *button,
                                             STPControls *controls);
 
 static const GwyEnum channels[] = {
-    { N_("Topography"), 1  },
-    { N_("Amplitude"),  2  },
-    { N_("Phase"),      13 },
+    { N_("Topography"),                  1  },
+    { N_("Current or Deflection"),       2  },
+    { N_("Electrochemical voltage"),     8  },
+    { N_("Topography and SPS"),          9  },
+    { N_("Topography and SPS scripted"), 10 },
+    { N_("Electrochemical current"),     12 },
+    { N_("Friction"),                    13 },
+    { N_("AUX in BNC"),                  14 },
+    { N_("External"),                    99 },
 };
 
 /* The module info. */
@@ -92,7 +111,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2.1",
+    "0.2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -294,13 +313,32 @@ process_metadata(STPFile *stpfile,
                  guint id,
                  GwyContainer *container)
 {
+    static const MetaDataFormat global_metadata[] = {
+        { "software", "Software", "%s" },
+        { "op_mode", "Operation mode", "%s" },
+        { "x_v_to_angs_0", "X calibration (linear)", "%s Å/V" },
+        { "x_v_to_angs_1", "X calibration (quadratic)", "%s Å/V<sup>2</sup>" },
+        { "y_v_to_angs_0", "Y calibration (linear)", "%s Å/V" },
+        { "y_v_to_angs_1", "Y calibration (quadratic)", "%s Å/V<sup>2</sup>" },
+        { "z_v_to_angs", "Z calibration", "%s Å/V" },
+        { "servo_sense", "Servo sign", "%s" },
+    };
+    static const MetaDataFormat local_metadata[] = {
+        { "i_servo_gain", "Integral servo gain", "%s" },
+        { "p_servo_gain", "Proportional servo gain", "%s" },
+        { "servo_range", "Servo range", "%s V" },
+        { "tip_bias", "Force setpoint (tip bias)", "%s V" },
+        { "line_freq", "Line frequency (requested)", "%s Hz" },
+    };
     STPData *data;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble q, r;
     gchar *p, *s;
     const gchar *title;
-    guint mode;
+    GString *key, *value;
+    gint power10;
+    guint mode, i;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
                                                              "/0/data"));
@@ -322,26 +360,41 @@ process_metadata(STPFile *stpfile,
         case 9:
         case 10:
         if (stpfile_get_double(stpfile->meta, "z_v_to_angs", &q)
-            && stpfile_get_double(stpfile->meta, "max_z_volt", &r)) {
+            && stpfile_get_double(data->meta, "servo_range", &r)) {
             gwy_data_field_multiply(dfield, q*r/32768*Angstrom);
-            gwy_debug("z_v_to_angs = %g, max_z_volt = %g", q, r);
+            gwy_debug("z_v_to_angs = %g, servo_range = %g", q, r);
         }
         else
             gwy_data_field_multiply(dfield, Angstrom/32768);
         break;
 
-        case 2:
+        case 2:    /* this channel is converted to nm by orig soft, but it
+                      doesn't make much sense */
         case 8:
         case 12:
         case 13:
         case 14:
-        r = 1.0;
-        stpfile_get_double(stpfile->meta, "convers_coeff", &r);
         gwy_data_field_add(dfield, -32768.0);
         gwy_data_field_multiply(dfield, 10.0/32768.0);
         siunit = gwy_si_unit_new("V");
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
+        break;
+
+        case 99:
+        if (stpfile_get_double(data->meta, "ExSourceZFact", &q)) {
+            s = g_hash_table_lookup(data->meta, "ExSourceZBip");
+            if (s && !strcmp(s, "TRUE"))
+                gwy_data_field_add(dfield, -32768);
+            gwy_data_field_multiply(dfield, q);
+
+            if ((s = g_hash_table_lookup(data->meta, "ExSourceZUnit"))) {
+                siunit = GWY_SI_UNIT(gwy_si_unit_new_parse(s, &power10));
+                gwy_data_field_set_si_unit_z(dfield, siunit);
+                g_object_unref(siunit);
+                gwy_data_field_multiply(dfield, pow10(power10));
+            }
+        }
         break;
 
         default:
@@ -353,47 +406,71 @@ process_metadata(STPFile *stpfile,
     /* Fix lateral scale */
     if (!stpfile_get_double(data->meta, "length_x", &r)) {
         g_warning("Missing or invalid x length");
-        r = 1e-6;
+        r = 1e4;
     }
     gwy_data_field_set_xreal(dfield, r*Angstrom);
 
     if (!stpfile_get_double(data->meta, "length_y", &r)) {
         g_warning("Missing or invalid y length");
-        r = 1e-6;
+        r = 1e4;
     }
     gwy_data_field_set_yreal(dfield, r*Angstrom);
 
     /* Metadata */
-    if ((p = g_hash_table_lookup(stpfile->meta, "software")))
-        gwy_container_set_string_by_name(container, "/meta/Software",
-                                         g_strdup(p));
-    if ((p = g_hash_table_lookup(stpfile->meta, "op_mode")))
-        gwy_container_set_string_by_name(container, "/meta/Operation mode",
-                                         g_strdup(p));
+    key = g_string_new("/meta/");
+    value = g_string_new("");
 
-    /* Local metadata */
+    /* Global */
+    for (i = 0; i < G_N_ELEMENTS(global_metadata); i++) {
+        if (!(p = g_hash_table_lookup(stpfile->meta, global_metadata[i].key)))
+            continue;
+
+        g_string_truncate(key, sizeof("/meta"));
+        g_string_append(key, global_metadata[i].meta);
+        g_string_printf(value, global_metadata[i].format, p);
+        gwy_container_set_string_by_name(container, key->str,
+                                         g_strdup(value->str));
+    }
+
+    /* Local */
+    for (i = 0; i < G_N_ELEMENTS(local_metadata); i++) {
+        if (!(p = g_hash_table_lookup(data->meta, local_metadata[i].key)))
+            continue;
+
+        g_string_truncate(key, sizeof("/meta"));
+        g_string_append(key, local_metadata[i].meta);
+        g_string_printf(value, local_metadata[i].format, p);
+        gwy_container_set_string_by_name(container, key->str,
+                                         g_strdup(value->str));
+    }
+
+    g_string_free(key, TRUE);
+    g_string_free(value, TRUE);
+
+    /* Special */
     if ((p = g_hash_table_lookup(data->meta, "Date"))
         && (s = g_hash_table_lookup(data->meta, "time")))
         gwy_container_set_string_by_name(container, "/meta/Date",
                                          g_strconcat(p, " ", s, NULL));
-    if ((p = g_hash_table_lookup(data->meta, "tip_bias")))
-        gwy_container_set_string_by_name(container, "/meta/Bias",
-                                         g_strdup_printf("%s V", p));
-    if ((p = g_hash_table_lookup(data->meta, "tip_bias")))
-        gwy_container_set_string_by_name(container, "/meta/Bias",
-                                         g_strdup_printf("%s V", p));
-    if ((p = g_hash_table_lookup(data->meta, "line_freq")))
-        gwy_container_set_string_by_name(container, "/meta/Line frequency",
-                                         g_strdup_printf("%s Hz", p));
     if ((p = g_hash_table_lookup(data->meta, "scan_dir"))) {
         if (!strcmp(p, "0"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
                                              g_strdup("Top to bottom"));
-        else if (strcmp(p, "1"))
+        else if (!strcmp(p, "1"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
                                              g_strdup("Bottom to top"));
+    }
+    if ((p = g_hash_table_lookup(data->meta, "collect_mode"))) {
+        if (!strcmp(p, "1"))
+            gwy_container_set_string_by_name(container,
+                                             "/meta/Line direction",
+                                             g_strdup("Left to right"));
+        else if (!strcmp(p, "2"))
+            gwy_container_set_string_by_name(container,
+                                             "/meta/Line direction",
+                                             g_strdup("Right to left"));
     }
 }
 
@@ -424,7 +501,7 @@ select_which_data(STPFile *stpfile)
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     GwyDataField *dfield;
     GwyEnum *choices;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GSList *radio, *rl;
     guint i, b, mode;
     gchar *p;
@@ -500,9 +577,8 @@ select_which_data(STPFile *stpfile)
                            120.0/MAX(stpfile->buffers[0].xres,
                                      stpfile->buffers[0].yres));
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);
