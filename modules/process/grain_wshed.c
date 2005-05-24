@@ -478,6 +478,7 @@ wshed_ok(WshedControls *controls,
         else
             gwy_container_set_object_by_name(data, "/0/mask", maskfield);
         controls->computed = TRUE;
+        gwy_data_field_data_changed(maskfield);
     }
     g_object_unref(maskfield);
 

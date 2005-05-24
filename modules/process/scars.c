@@ -336,6 +336,7 @@ scars_remove(GwyContainer *data, GwyRunType run)
     }
 
     g_object_unref(mask);
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }
@@ -379,6 +380,7 @@ scars_mark_do(ScarsArgs *args, GwyContainer *data)
     gwy_data_field_mark_scars(dfield, mask,
                               args->threshold_high, args->threshold_low,
                               args->min_len, args->max_width, args->inverted);
+    gwy_data_field_data_changed(mask);
 }
 
 static gboolean

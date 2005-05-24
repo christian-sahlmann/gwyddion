@@ -149,6 +149,7 @@ median(GwyContainer *data, GwyRunType run)
 
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_subtract_fields(dfield, dfield, background);
+    gwy_data_field_data_changed(dfield);
 
     if (!args.do_extract) {
         g_object_unref(background);

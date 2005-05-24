@@ -81,62 +81,50 @@ laplace(GwyContainer *data, GwyRunType run)
 
     g_assert(run & LAPLACE_RUN_MODES);
 
-    if (gwy_container_contains_by_name(data, "/0/mask")) {
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
-        maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/mask"));
-        buffer = gwy_data_field_new_alike(dfield, TRUE);
+    if (!gwy_container_contains_by_name(data, "/0/mask"))
+        return;
 
-        gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
+                                                                "/0/mask"));
+    buffer = gwy_data_field_new_alike(dfield, TRUE);
 
-        cor = 0.2;
-        error = 0;
-        maxer = gwy_data_field_get_rms(dfield)/1.0e4;
-        gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
-                           _("Laplace correction"));
+    gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
 
-        gwy_data_field_correct_average(dfield, maskfield);
+    cor = 0.2;
+    error = 0;
+    maxer = gwy_data_field_get_rms(dfield)/1.0e4;
+    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
+                       _("Laplace correction"));
 
-        lastfrac = 0;
-        starter = 0;
-        for (i = 0; i < 5000; i++) {
-            gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
-                                                     &error, &cor);
-            if (error < maxer)
-                break;
-            if (i==0)
-                starter = error;
+    gwy_data_field_correct_average(dfield, maskfield);
 
-            frac = log(error/starter)/log(maxer/starter);
-            if ((i/(gdouble)(5000)) > frac)
-                frac = i/(gdouble)(5000);
-            if (lastfrac > frac)
-                frac = lastfrac;
+    lastfrac = 0;
+    starter = 0;
+    for (i = 0; i < 5000; i++) {
+        gwy_data_field_correct_laplace_iteration(dfield, maskfield, buffer,
+                                                 &error, &cor);
+        if (error < maxer)
+            break;
+        if (i==0)
+            starter = error;
 
-            if (!gwy_app_wait_set_fraction(frac))
-                break;
-            lastfrac = frac;
-        }
-        gwy_app_wait_finish();
+        frac = log(error/starter)/log(maxer/starter);
+        if ((i/(gdouble)(5000)) > frac)
+            frac = i/(gdouble)(5000);
+        if (lastfrac > frac)
+            frac = lastfrac;
 
-        gwy_container_remove_by_name(data, "/0/mask");
-        g_object_unref(buffer);
+        if (!gwy_app_wait_set_fraction(frac))
+            break;
+        lastfrac = frac;
     }
-    else
-    {
-        /* XXX: this should not happen in the first place! */
-        dialog = gtk_message_dialog_new
-            (GTK_WINDOW(gwy_app_data_window_get_for_data(data)),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_INFO,
-             GTK_BUTTONS_CLOSE,
-             _("There is no mask to be used for computation."));
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return FALSE;
+    gwy_app_wait_finish();
 
-    }
+    gwy_container_remove_by_name(data, "/0/mask");
+    g_object_unref(buffer);
+    gwy_data_field_data_changed(dfield);
+
     return TRUE;
 }
 

@@ -148,6 +148,7 @@ laplacian(GwyContainer *data, GwyRunType run)
         show->data[j] = avg;
         show->data[j + dfield->xres*(dfield->yres-1)] = avg;
     }
+    gwy_data_field_data_changed(show);
 
     return TRUE;
 }
@@ -178,6 +179,7 @@ canny(GwyContainer *data, GwyRunType run)
     /*now we use fixed threshold, but in future, there could be API
      with some setting. We could also do smooting before apllying filter.*/
     gwy_data_field_filter_canny(show, 0.1);
+    gwy_data_field_data_changed(show);
 
     return TRUE;
 }
@@ -205,6 +207,7 @@ rms(GwyContainer *data, GwyRunType run)
     }
 
     gwy_data_field_filter_rms(show, 5);
+    gwy_data_field_data_changed(show);
 
     return TRUE;
 }
@@ -254,6 +257,7 @@ rms_edge(GwyContainer *data, GwyRunType run)
         }
     }
     g_object_unref(tmp);
+    gwy_data_field_data_changed(show);
 
     return TRUE;
 }
@@ -283,6 +287,8 @@ nonlinearity(GwyContainer *data, GwyRunType run)
                                         show);
     for (i = 0; i < xres*yres; i++)
         show->data[i] = sqrt(show->data[i]);
+
+    gwy_data_field_data_changed(show);
 
     return TRUE;
 }

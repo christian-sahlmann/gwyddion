@@ -139,6 +139,7 @@ shade(GwyContainer *data, GwyRunType run)
         }
 
         gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
+        gwy_data_field_data_changed(shadefield);
     }
 
     return ok;

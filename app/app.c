@@ -1170,12 +1170,14 @@ gwy_app_data_view_update(GwyDataView *data_view)
         gwy_pixmap_layer_set_data_key(layer, "/0/data");
 
     /* XXX XXX XXX backward autoupdate hack */
+    /*
     if (gwy_container_gis_object_by_name(data, "/0/data", &dfield))
         gwy_data_field_data_changed(dfield);
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
         gwy_data_field_data_changed(dfield);
     if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
         gwy_data_field_data_changed(dfield);
+        */
 
     if (has_mask)
         sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;

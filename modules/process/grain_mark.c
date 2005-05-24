@@ -497,6 +497,7 @@ mark_ok(MarkControls *controls,
     }
 
     mask_process(dfield, maskfield, args);
+    gwy_data_field_data_changed(maskfield);
 }
 
 static void

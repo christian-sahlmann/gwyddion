@@ -277,6 +277,7 @@ mask_grow_do(GwyDataField *dfield,
     }
     g_free(buffer);
     g_free(prow);
+    gwy_data_field_data_changed(dfield);
 }
 
 static void
@@ -333,6 +334,7 @@ mask_shrink_do(GwyDataField *dfield,
     }
     g_free(buffer);
     g_free(prow);
+    gwy_data_field_data_changed(dfield);
 }
 
 static const gchar *pixels_key = "/module/%s/pixels";

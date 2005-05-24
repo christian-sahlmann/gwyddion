@@ -85,6 +85,7 @@ outliers(GwyContainer *data, GwyRunType run)
 
     thresh = 3.0;
     gwy_data_field_mask_outliers(dfield, maskfield, thresh);
+    gwy_data_field_data_changed(maskfield);
 
     return TRUE;
 }

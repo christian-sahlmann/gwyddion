@@ -93,6 +93,7 @@ mask_invert(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     gwy_data_field_multiply(dfield, -1.0);
     gwy_data_field_add(dfield, 1.0);
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }

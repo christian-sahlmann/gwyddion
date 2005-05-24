@@ -132,10 +132,15 @@ flip_horizontally(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpointv(data, n, keys);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+    gwy_data_field_data_changed(dfield);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        gwy_data_field_data_changed(dfield);
+    }
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
         gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+        gwy_data_field_data_changed(dfield);
+    }
 
     return TRUE;
 }
@@ -157,10 +162,15 @@ flip_vertically(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpointv(data, n, keys);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+    gwy_data_field_data_changed(dfield);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        gwy_data_field_data_changed(dfield);
+    }
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
         gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+        gwy_data_field_data_changed(dfield);
+    }
 
     return TRUE;
 }
@@ -180,8 +190,11 @@ invert_value(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpointv(data, n, keys);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+    gwy_data_field_data_changed(dfield);
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
         gwy_data_field_invert(dfield, FALSE, FALSE, TRUE);
+        gwy_data_field_data_changed(dfield);
+    }
 
     return TRUE;
 }
@@ -289,10 +302,15 @@ rotate_180(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpointv(data, n, keys);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+    gwy_data_field_data_changed(dfield);
+    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
+        gwy_data_field_data_changed(dfield);
+    }
+    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield)) {
         gwy_data_field_rotate(dfield, G_PI, GWY_INTERPOLATION_ROUND);
+        gwy_data_field_data_changed(dfield);
+    }
 
     return TRUE;
 }

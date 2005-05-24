@@ -418,6 +418,7 @@ remove_th_do(RemoveArgs *args,
         maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                   "/0/mask"));
         mask_process(dfield, maskfield, args);
+        gwy_data_field_data_changed(maskfield);
     }
 
 }

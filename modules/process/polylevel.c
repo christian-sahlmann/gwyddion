@@ -153,6 +153,8 @@ poly_level_do(GwyContainer *data,
     gwy_data_field_area_subtract_polynom(dfield, 0, 0, xres, yres,
                                          args->col_degree, args->row_degree,
                                          coeffs);
+    gwy_data_field_data_changed(dfield);
+
     if (!args->do_extract) {
         g_free(coeffs);
         return;

@@ -107,6 +107,7 @@ level(GwyContainer *data, GwyRunType run)
     c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
               + by*gwy_data_field_get_yreal(dfield));
     gwy_data_field_plane_level(dfield, c, bx, by);
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }
@@ -125,6 +126,7 @@ level_rotate(GwyContainer *data, GwyRunType run)
                                 GWY_INTERPOLATION_BILINEAR);
     gwy_debug("b = %g, alpha = %g deg, c = %g, beta = %g deg",
               b, 180/G_PI*atan2(b, 1), c, 180/G_PI*atan2(c, 1));
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }
@@ -138,6 +140,7 @@ fix_zero(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_min(dfield));
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }
@@ -151,6 +154,7 @@ zero_mean(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }

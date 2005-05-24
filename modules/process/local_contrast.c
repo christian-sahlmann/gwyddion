@@ -326,6 +326,7 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     g_free(weight);
     g_object_unref(minfield);
     g_object_unref(maxfield);
+    gwy_data_field_data_changed(showfield);
 
     return TRUE;
 }

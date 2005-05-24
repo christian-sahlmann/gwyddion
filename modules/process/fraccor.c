@@ -73,21 +73,20 @@ module_register(const gchar *name)
 static gboolean
 fraccor(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *maskfield, *buffer;
+    GwyDataField *dfield, *maskfield;
 
     g_assert(run & FRACCOR_RUN_MODES);
 
     if (gwy_container_gis_object_by_name(data, "/0/mask", &maskfield)) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        buffer = gwy_data_field_new_alike(dfield, TRUE);
         gwy_app_undo_checkpoint(data, "/0/data", "/0/mask", NULL);
 
         gwy_data_field_fractal_correction(dfield, maskfield,
                                           GWY_INTERPOLATION_BILINEAR);
 
         gwy_container_remove_by_name(data, "/0/mask");
-        g_object_unref(buffer);
+        gwy_data_field_data_changed(dfield);
     }
     else {
         g_warning("There is no mask to be used for computation.");

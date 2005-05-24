@@ -110,6 +110,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     if (!canceled) {
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
         gwy_data_field_copy(dfield, old, FALSE);
+        gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
 

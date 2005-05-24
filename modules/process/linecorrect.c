@@ -120,6 +120,7 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
 
     g_object_unref(modi);
     g_object_unref(line);
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }
@@ -160,6 +161,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
         csum -= shift;
     }
     gwy_data_field_add(dfield, -csum/(xres*yres));
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }

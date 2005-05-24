@@ -104,6 +104,7 @@ entropy(GwyContainer *data, GwyRunType run)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     entropy_do(dfield);
+    gwy_data_field_data_changed(dfield);
 
     return TRUE;
 }

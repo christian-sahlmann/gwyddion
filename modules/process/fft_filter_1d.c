@@ -169,10 +169,10 @@ fftf_1d(GwyContainer *data, GwyRunType run)
 
     args.is_inverted = FALSE;
 
-    if ((ok = fftf_1d_dialog(&args, data)))
-	    fftf_1d_save_args(gwy_app_settings_get(), &args);
+    ok = fftf_1d_dialog(&args, data);
+    fftf_1d_save_args(gwy_app_settings_get(), &args);
 
-    return ok;
+    return FALSE;
 }
 
 

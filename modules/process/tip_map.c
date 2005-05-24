@@ -271,7 +271,7 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     gwy_app_wait_finish();
     /*set right output */
 
-    gwy_data_field_data_changed(dfield2);
+    gwy_data_field_data_changed(dfield);
     return TRUE;
 }
 

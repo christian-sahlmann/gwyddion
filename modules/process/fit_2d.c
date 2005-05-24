@@ -65,6 +65,7 @@ typedef struct {
 typedef struct {
     gint vxres;
     gint vyres;
+    GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *type;
     GtkWidget **param_des;
@@ -193,10 +194,10 @@ fit_2d(GwyContainer *data, GwyRunType run)
     args.fitter = NULL;
     args.is_fitted = 0;
 
-    if ((ok = fit_2d_dialog(&args, data)))
-        fit_2d_save_args(gwy_app_settings_get(), &args);
+    ok = fit_2d_dialog(&args, data);
+    fit_2d_save_args(gwy_app_settings_get(), &args);
 
-    return ok;
+    return FALSE;
 }
 
 
@@ -224,7 +225,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
@@ -600,8 +601,7 @@ fit_2d_run(Fit2dControls *controls,
 							      "/0/data"));
 
 
-    gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(args->original_data)),
-                        _("Initializing"));
+    gwy_app_wait_start(controls->dialog, _("Initializing"));
 
     weight = gwy_data_field_new(original_field->xres, original_field->yres,
                                 10, 10, FALSE);

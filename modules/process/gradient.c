@@ -129,6 +129,7 @@ gradient_filter(GwyContainer *data,
     else {
         g_critical("Function called under unregistered name `%s'", name);
     }
+    gwy_data_field_data_changed(gradfield);
 
     return TRUE;
 }

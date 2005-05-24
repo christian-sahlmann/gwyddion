@@ -175,6 +175,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
                             GWY_INTERPOLATION_BILINEAR);
     g_object_unref(wtcoefs);
     g_object_unref(dfield);
+    gwy_data_field_data_changed(mask);
 
     return TRUE;
 }
