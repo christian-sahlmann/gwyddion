@@ -391,9 +391,10 @@ gwy_app_undo_or_redo(GwyContainer *data,
         gwy_container_gis_object(data, quark, &dfapp);
         if (df && dfapp) {
             gwy_debug("Changing object <%s>", g_quark_to_string(quark));
-            g_object_ref(dfapp);
+            /* Note: we have to use duplicate to destroy object identity
+             * (user data, signals, ...) */
+            level->items[i].object = gwy_serializable_duplicate(dfapp);
             gwy_container_set_object(data, quark, df);
-            level->items[i].object = dfapp;
             g_object_unref(df);
         }
         else if (df && !dfapp) {
