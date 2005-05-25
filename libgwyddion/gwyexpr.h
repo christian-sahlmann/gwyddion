@@ -44,35 +44,36 @@ typedef enum {
 
 typedef struct _GwyExpr GwyExpr;
 
-GQuark    gwy_expr_error_quark       (void);
+GQuark       gwy_expr_error_quark       (void);
 
-GwyExpr*  gwy_expr_new               (void);
-void      gwy_expr_free              (GwyExpr *expr);
-gboolean  gwy_expr_evaluate          (GwyExpr *expr,
-                                      const gchar *text,
-                                      gdouble *result,
-                                      GError **err);
-gboolean  gwy_expr_compile           (GwyExpr *expr,
-                                      const gchar *text,
-                                      GError **err);
-guint     gwy_expr_resolve_variables (GwyExpr *expr,
-                                      guint n,
-                                      gchar * const *names,
-                                      guint *indices);
-gint      gwy_expr_get_variables     (GwyExpr *expr,
-                                      gchar ***names);
-gdouble   gwy_expr_execute           (GwyExpr *expr,
-                                      const gdouble *values);
-void      gwy_expr_vector_execute    (GwyExpr *expr,
-                                      guint n,
-                                      gdouble **data,
-                                      gdouble *result);
-gboolean  gwy_expr_define_constant   (GwyExpr *expr,
-                                      const gchar *name,
-                                      gdouble value,
-                                      GError **err);
-gboolean  gwy_expr_undefine_constant (GwyExpr *expr,
-                                      const gchar *name);
+GwyExpr*     gwy_expr_new               (void);
+void         gwy_expr_free              (GwyExpr *expr);
+gboolean     gwy_expr_evaluate          (GwyExpr *expr,
+                                         const gchar *text,
+                                         gdouble *result,
+                                         GError **err);
+gboolean     gwy_expr_compile           (GwyExpr *expr,
+                                         const gchar *text,
+                                         GError **err);
+guint        gwy_expr_resolve_variables (GwyExpr *expr,
+                                         guint n,
+                                         gchar * const *names,
+                                         guint *indices);
+gint         gwy_expr_get_variables     (GwyExpr *expr,
+                                         gchar ***names);
+gdouble      gwy_expr_execute           (GwyExpr *expr,
+                                         const gdouble *values);
+void         gwy_expr_vector_execute    (GwyExpr *expr,
+                                         guint n,
+                                         gdouble **data,
+                                         gdouble *result);
+gboolean     gwy_expr_define_constant   (GwyExpr *expr,
+                                         const gchar *name,
+                                         gdouble value,
+                                         GError **err);
+gboolean     gwy_expr_undefine_constant (GwyExpr *expr,
+                                         const gchar *name);
+const gchar* gwy_expr_get_expression    (GwyExpr *expr);
 
 G_END_DECLS
 

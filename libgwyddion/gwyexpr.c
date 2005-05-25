@@ -103,6 +103,7 @@ struct _GwyExprToken {
 
 struct _GwyExpr {
     /* Global context */
+    GString *expr;
     GScanner *scanner;
     GHashTable *constants;
     /* Variables */
@@ -738,7 +739,7 @@ gwy_expr_scan_tokens(GwyExpr *expr,
             t->token = token;
             t->value = expr->scanner->value;
             tokens = gwy_expr_token_list_prepend(tokens, t);
-            /* XXX: steal token value from scanner to avoid string duplication
+            /* TODO: steal token value from scanner to avoid string duplication
              * and freeing */
             scanner->value.v_string = NULL;
             scanner->token = G_TOKEN_NONE;
@@ -864,7 +865,6 @@ gwy_expr_initialize_scanner(GwyExpr *expr)
 /**
  * gwy_expr_parse:
  * @expr: An expression.
- * @text: String containing expression to parse.
  * @err: Location to store parsing error to
  *
  * Parses an expression to list of tokens, filling @expr->tokens.
@@ -873,11 +873,10 @@ gwy_expr_initialize_scanner(GwyExpr *expr)
  **/
 static gboolean
 gwy_expr_parse(GwyExpr *expr,
-               const gchar *text,
                GError **err)
 {
     gwy_expr_initialize_scanner(expr);
-    g_scanner_input_text(expr->scanner, text, strlen(text));
+    g_scanner_input_text(expr->scanner, expr->expr->str, expr->expr->len);
 
     if (!gwy_expr_scan_tokens(expr, err)) {
         g_assert(!err || *err);
@@ -1326,6 +1325,7 @@ gwy_expr_new(void)
      * we have to tell them apart when we get some symbol from scanner. */
     expr->constants = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                             NULL, g_free);
+    expr->expr = g_string_new("");
 
     return expr;
 }
@@ -1347,9 +1347,27 @@ gwy_expr_free(GwyExpr *expr)
         g_scanner_destroy(expr->scanner);
     if (expr->constants)
         g_hash_table_destroy(expr->constants);
+    g_string_free(expr->expr, TRUE);
     g_free(expr->input);
     g_free(expr->stack);
     g_free(expr);
+}
+
+/**
+ * gwy_expr_get_expression:
+ * @expr: An expression evaluator.
+ *
+ * Gets the expression string.
+ *
+ * Returns: The last string passed to gwy_expr_evaluate() or
+ *          gwy_expr_compile().  It is owned by @expr and must not be modified
+ *          or freed.
+ **/
+const gchar*
+gwy_expr_get_expression(GwyExpr *expr)
+{
+    g_return_val_if_fail(expr, NULL);
+    return expr->expr->str;
 }
 
 /**
@@ -1405,7 +1423,8 @@ gwy_expr_compile(GwyExpr *expr,
     g_return_val_if_fail(expr, FALSE);
     g_return_val_if_fail(text, FALSE);
 
-    if (!gwy_expr_parse(expr, text, err)
+    g_string_assign(expr->expr, text);
+    if (!gwy_expr_parse(expr, err)
         || !gwy_expr_transform_values(expr)
         || !gwy_expr_transform_to_rpn(expr, err)) {
         g_assert(!err || *err);
@@ -1671,6 +1690,7 @@ gwy_expr_undefine_constant(GwyExpr *expr,
  * @GWY_EXPR_ERROR_STRAY_COMMA: A comma at the start or end of list.
  * @GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS: Expression contains unresolved
  *                                         identifiers.
+ * @GWY_EXPR_ERROR_CONSTANT_NAME: Constant name is invalid.
  *
  * Error codes returned by expression parsing and execution.
  **/
