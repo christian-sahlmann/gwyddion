@@ -48,6 +48,13 @@ static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
+static void       gwy_app_data_view_setup_layers   (GwyDataView *data_view,
+                                                    GwyContainer *data);
+static void       gwy_app_data_view_mask_changed   (GwyContainer *data,
+                                                    GwyDataView *data_view);
+static void       gwy_app_data_view_show_changed   (GwyContainer *data,
+                                                    GwyDataView *data_view);
+static void       gwy_app_container_setup_mask     (GwyContainer *data);
 static void       gwy_app_data_window_list_updated (void);
 static void       gwy_app_data_window_add          (GwyDataWindow *window);
 static GtkWidget* gwy_app_menu_data_popup_create   (GtkAccelGroup *accel_group);
@@ -390,7 +397,6 @@ gwy_app_data_window_create(GwyContainer *data)
     static GtkWidget *popup_menu = NULL;
 
     GtkWidget *data_window, *data_view, *corner;
-    GwyPixmapLayer *layer;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     if (!popup_menu) {
@@ -399,15 +405,13 @@ gwy_app_data_window_create(GwyContainer *data)
     }
 
     data_view = gwy_data_view_new(data);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_app_data_view_setup_layers(GWY_DATA_VIEW(data_view), data);
     data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
     gtk_window_add_accel_group
         (GTK_WINDOW(data_window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
+    /* FIXME: integrate better to DataWindow? */
     {
         corner = gtk_toggle_button_new();
         g_object_set(G_OBJECT(corner),
@@ -444,7 +448,6 @@ gwy_app_data_window_create(GwyContainer *data)
                              popup_menu);
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
-    gwy_app_data_view_update(GWY_DATA_VIEW(data_view));
     /* Take no chances */
     gwy_app_data_window_add(GWY_DATA_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(data_window));
@@ -452,6 +455,126 @@ gwy_app_data_window_create(GwyContainer *data)
     gwy_app_data_window_list_updated();
 
     return data_window;
+}
+
+/**
+ * gwy_app_data_view_setup_layers:
+ * @data_view: A data view.
+ * @data: A container coreesponding to @data_view.
+ *
+ * Sets up data view layers according to container conents.
+ **/
+static void
+gwy_app_data_view_setup_layers(GwyDataView *data_view,
+                               GwyContainer *data)
+{
+    GwyPixmapLayer *layer;
+
+    /* base */
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
+
+    /* force sync */
+    gwy_app_data_view_mask_changed(data, data_view);
+    gwy_app_data_view_show_changed(data, data_view);
+
+    g_signal_connect(data, "item_changed::/0/mask",
+                     G_CALLBACK(gwy_app_data_view_mask_changed), data_view);
+    g_signal_connect(data, "item_changed::/0/show",
+                     G_CALLBACK(gwy_app_data_view_show_changed), data_view);
+}
+
+/**
+ * gwy_app_data_view_mask_changed:
+ * @data: A container coreesponding to @data_view.
+ * @data_view: A data view.
+ *
+ * Adds or removes alpha layer depending on container contents.
+ **/
+static void
+gwy_app_data_view_mask_changed(GwyContainer *data,
+                               GwyDataView *data_view)
+{
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
+    gboolean has_dfield, has_layer;
+    GwyPixmapLayer *layer;
+
+    has_dfield = gwy_container_contains_by_name(data, "/0/mask");
+    has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
+
+    if (has_dfield && !has_layer) {
+        gwy_app_container_setup_mask(data);
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_data_view_set_alpha_layer(data_view, layer);
+    }
+    else if (!has_dfield && has_layer)
+        gwy_data_view_set_alpha_layer(data_view, NULL);
+
+    if (has_dfield != has_layer) {
+        sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0;
+        gwy_app_toolbox_update_state(&sens_data);
+    }
+}
+
+/**
+ * gwy_app_data_view_mask_changed:
+ * @data: A container coreesponding to @data_view.
+ * @data_view: A data view.
+ *
+ * Sets base layer data key depending on container contents.
+ **/
+static void
+gwy_app_data_view_show_changed(GwyContainer *data,
+                               GwyDataView *data_view)
+{
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_SHOW, 0 };
+    gboolean has_dfield, has_layer;
+    GwyPixmapLayer *layer;
+    const gchar *data_key;
+
+    has_dfield = gwy_container_contains_by_name(data, "/0/show");
+    layer = gwy_data_view_get_base_layer(data_view);
+    data_key = gwy_pixmap_layer_get_data_key(layer);
+    has_layer = strcmp(data_key, "/0/show") == 0;
+
+    if (has_dfield && !has_layer)
+        gwy_pixmap_layer_set_data_key(layer, "/0/show");
+    else if (!has_dfield && has_layer)
+        gwy_pixmap_layer_set_data_key(layer, "/0/data");
+
+    if (has_dfield != has_layer) {
+        sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_SHOW : 0;
+        gwy_app_toolbox_update_state(&sens_data);
+    }
+}
+
+/**
+ * gwy_app_container_setup_mask:
+ * @data: A data container.
+ *
+ * Eventually copies default mask color to particular data mask color.
+ **/
+static void
+gwy_app_container_setup_mask(GwyContainer *data)
+{
+    static const gchar *keys[] = {
+        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
+    };
+
+    GwyContainer *settings;
+    gdouble x;
+    guint i;
+
+    settings = gwy_app_settings_get();
+    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
+        if (gwy_container_contains_by_name(data, keys[i]))
+            continue;
+        /* be noisy when we don't have default mask color */
+        x = gwy_container_get_double_by_name(settings, keys[i] + 2);
+        gwy_container_set_double_by_name(data, keys[i], x);
+    }
 }
 
 static void
@@ -1113,77 +1236,19 @@ gwy_app_get_current_window(GwyAppWindowType type)
  * gwy_app_data_view_update:
  * @data_view: A #GwyDataView.
  *
- * Repaints a data view.
- *
- * Use this function instead of gwy_data_view_update() if you want to
- * automatically show (hide) the mask layer if present (missing).
+ * Deprecated.  No longer does anything.
  **/
-void
-gwy_app_data_view_update(GwyDataView *data_view)
+G_GNUC_DEPRECATED void
+gwy_app_data_view_update(G_GNUC_UNUSED GwyDataView *data_view)
 {
+    /*
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW | GWY_MENU_FLAG_DATA,
+        GWY_MENU_FLAG_DATA,
         GWY_MENU_FLAG_DATA
     };
-    static const gchar *keys[] = {
-        "/0/mask/red", "/0/mask/green", "/0/mask/blue", "/0/mask/alpha"
-    };
-    GwyPixmapLayer *layer;
-    GwyContainer *data, *settings;
-    GwyDataField *dfield;
-    const gchar *data_key;
-    gboolean has_mask, has_alpha, has_show, has_presentation;
-    gdouble x;
-    gsize i;
 
-    gwy_debug("");
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = gwy_data_view_get_data(data_view);
-
-    has_mask = gwy_container_contains_by_name(data, "/0/mask");
-    has_alpha = gwy_data_view_get_alpha_layer(data_view) != NULL;
-    if (has_mask && !has_alpha) {
-        /* TODO: Container */
-        settings = gwy_app_settings_get();
-        for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-            if (gwy_container_contains_by_name(data, keys[i])
-                || !gwy_container_contains_by_name(settings, keys[i] + 2))
-                continue;
-            x = gwy_container_get_double_by_name(settings, keys[i] + 2);
-            gwy_container_set_double_by_name(data, keys[i], x);
-        }
-
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_data_view_set_alpha_layer(data_view, layer);
-    }
-    else if (!has_mask && has_alpha)
-        gwy_data_view_set_alpha_layer(data_view, NULL);
-
-    has_show = gwy_container_contains_by_name(data, "/0/show");
-    layer = gwy_data_view_get_base_layer(data_view);
-    data_key = gwy_pixmap_layer_get_data_key(layer);
-    has_presentation = strcmp(data_key, "/0/show") == 0;
-    if (has_show && !has_presentation)
-        gwy_pixmap_layer_set_data_key(layer, "/0/show");
-    else if (!has_show && has_presentation)
-        gwy_pixmap_layer_set_data_key(layer, "/0/data");
-
-    /* XXX XXX XXX backward autoupdate hack */
-    /*
-    if (gwy_container_gis_object_by_name(data, "/0/data", &dfield))
-        gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
-        gwy_data_field_data_changed(dfield);
-    if (gwy_container_gis_object_by_name(data, "/0/show", &dfield))
-        gwy_data_field_data_changed(dfield);
-        */
-
-    if (has_mask)
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (has_show)
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
+    */
 }
 
 /**
@@ -1534,7 +1599,6 @@ gwy_app_mask_kill_cb(void)
     if (gwy_container_contains_by_name(data, "/0/mask")) {
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
         gwy_container_remove_by_name(data, "/0/mask");
-        gwy_app_data_view_update(data_view);
     }
 }
 
@@ -1552,7 +1616,6 @@ gwy_app_show_kill_cb(void)
     if (gwy_container_contains_by_name(data, "/0/show")) {
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
         gwy_container_remove_by_name(data, "/0/show");
-        gwy_app_data_view_update(data_view);
     }
 }
 

@@ -940,7 +940,7 @@ static void
 gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
                                  GwyDataWindow *data_window)
 {
-    GtkWidget *data_view;
+    GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
@@ -968,7 +968,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
 
     data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    data = gwy_data_view_get_data(data_view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     rf->file_mtime = st.st_mtime;
@@ -993,7 +993,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
     }
 
-    pixbuf = gwy_data_view_get_pixbuf(GWY_DATA_VIEW(data_view),
+    pixbuf = gwy_data_view_get_pixbuf(data_view,
                                       TMS_NORMAL_THUMB_SIZE,
                                       TMS_NORMAL_THUMB_SIZE);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));

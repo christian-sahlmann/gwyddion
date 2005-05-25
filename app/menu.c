@@ -290,9 +290,7 @@ gwy_app_run_process_func_in_mode(gchar *name,
                                  GwyRunType run)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
-        GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_LAST_PROC
+        GWY_MENU_FLAG_LAST_PROC, GWY_MENU_FLAG_LAST_PROC
     };
     GwyDataWindow *data_window;
     GwyDataView *data_view;
@@ -317,24 +315,7 @@ gwy_app_run_process_func_in_mode(gchar *name,
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));
     gwy_app_update_last_process_func(menu, name);
-
-    /* re-get current data window, it may have changed */
-    data_window = gwy_app_data_window_get_current();
-    if (data_window) {
-        data_view = gwy_data_window_get_data_view(data_window);
-        /* FIXME: Allow modules to just set /0/mask or /0/show and don't bother
-         * with data window layer setup like before.  It will have to be
-         * changed with multidata anyway */
-        gwy_app_data_view_update(data_view);
-    }
-    /*
-    data = gwy_data_window_get_data(GWY_DATA_WINDOW(data_window));
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_menu_set_sensitive_recursive(menu, &sens_data);
-    */
 }
 
 static void

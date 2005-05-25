@@ -118,8 +118,7 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         "/0/data", "/0/mask", "/0/show", NULL
     };
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
     static gulong undo_level_id = 0;
@@ -127,7 +126,7 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     GObject *object;
     GList *undo, *redo, *available;
     const gchar **p, *key;
-    guint i;
+    guint i, modif;
 
     if (!UNDO_LEVELS)
         return 0;
@@ -193,14 +192,8 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     g_object_set_qdata(G_OBJECT(data), redo_key, redo);
 
     /* TODO */
-    g_object_set_qdata(G_OBJECT(data), modif_key,
-        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
-                                                           modif_key)) + 1));
-
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+    modif = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data), modif_key));
+    g_object_set_qdata(G_OBJECT(data), modif_key, GINT_TO_POINTER(modif + 1));
     gwy_app_toolbox_update_state(&sens_data);
 
     return level->id;
@@ -288,8 +281,7 @@ void
 gwy_app_undo_undo_window(GwyDataWindow *data_window)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_REDO
     };
     GwyDataView *data_view;
@@ -321,13 +313,8 @@ gwy_app_undo_undo_window(GwyDataWindow *data_window)
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) - 1));
-    gwy_app_data_view_update(GWY_DATA_VIEW(data_view));
     if (undo)
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
 }
 
@@ -341,8 +328,7 @@ void
 gwy_app_undo_redo_window(GwyDataWindow *data_window)
 {
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO
-            | GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA_SHOW,
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
     GwyDataView *data_view;
@@ -374,13 +360,8 @@ gwy_app_undo_redo_window(GwyDataWindow *data_window)
     g_object_set_qdata(G_OBJECT(data), modif_key,
         GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
                                                            modif_key)) + 1));
-    gwy_app_data_view_update(GWY_DATA_VIEW(data_view));
     if (redo)
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (gwy_container_contains_by_name(data, "/0/show"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
     gwy_app_toolbox_update_state(&sens_data);
 }
 

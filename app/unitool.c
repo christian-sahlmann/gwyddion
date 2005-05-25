@@ -191,7 +191,7 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
         g_signal_handler_disconnect(state->data_window, state->windowname_id);
 
     if (state->thumbnail_id && state->data_window) {
-        GtkWidget *data_view;
+        GwyDataView *data_view;
 
         gwy_debug("removing \"redrawn\" handler");
         data_view = gwy_data_window_get_data_view(state->data_window);
@@ -351,7 +351,8 @@ gwy_unitool_setup_accel_group(GwyUnitoolState *state)
 static void
 gwy_unitool_update_thumbnail(GwyUnitoolState *state)
 {
-    GtkWidget *box, *data_view, *image = NULL;
+    GtkWidget *box, *image = NULL;
+    GwyDataView *data_view;
     GdkPixbuf *pixbuf;
     GList *children, *c;
 
@@ -370,7 +371,7 @@ gwy_unitool_update_thumbnail(GwyUnitoolState *state)
     g_assert(image);
 
     data_view = gwy_data_window_get_data_view(state->data_window);
-    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view), 16);
+    pixbuf = gwy_data_view_get_thumbnail(data_view, 16);
     gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
     g_object_unref(pixbuf);
 }
@@ -473,7 +474,8 @@ gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
 GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
-    GtkWidget *frame, *label, *image, *hbox, *data_view;
+    GtkWidget *frame, *label, *image, *hbox;
+    GwyDataView *data_view;
 
     g_return_val_if_fail(state, NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);

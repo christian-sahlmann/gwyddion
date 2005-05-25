@@ -122,7 +122,8 @@ static void
 gwy_option_menu_data_window_append(GwyDataWindow *data_window,
                                    GtkWidget *menu)
 {
-    GtkWidget *item, *data_view, *image, *label, *hbox;
+    GtkWidget *item, *image, *label, *hbox;
+    GwyDataView *data_view;
     GdkPixbuf *pixbuf;
     gchar *filename;
 
@@ -130,8 +131,7 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
     data_view = gwy_data_window_get_data_view(data_window);
     filename = gwy_data_window_get_base_name(data_window);
 
-    pixbuf = gwy_data_view_get_thumbnail(GWY_DATA_VIEW(data_view),
-                                         THUMBNAIL_SIZE);
+    pixbuf = gwy_data_view_get_thumbnail(data_view, THUMBNAIL_SIZE);
     image = gtk_image_new_from_pixbuf(pixbuf);
     gwy_object_unref(pixbuf);
     hbox = gtk_hbox_new(FALSE, 6);
