@@ -31,13 +31,17 @@
 
 #define BITS_PER_SAMPLE 8
 
-static void     gwy_pixmap_layer_class_init   (GwyPixmapLayerClass *klass);
-static void     gwy_pixmap_layer_init         (GwyPixmapLayer *layer);
-static void     gwy_pixmap_layer_destroy      (GtkObject *object);
-static void     gwy_pixmap_layer_plugged      (GwyDataViewLayer *layer);
-static void     gwy_pixmap_layer_unplugged    (GwyDataViewLayer *layer);
-static void     gwy_pixmap_layer_item_changed (GwyPixmapLayer *pixmap_layer);
-static void     gwy_pixmap_layer_data_changed (GwyPixmapLayer *pixmap_layer);
+static void gwy_pixmap_layer_class_init         (GwyPixmapLayerClass *klass);
+static void gwy_pixmap_layer_init               (GwyPixmapLayer *layer);
+static void gwy_pixmap_layer_destroy            (GtkObject *object);
+static void gwy_pixmap_layer_plugged            (GwyDataViewLayer *layer);
+static void gwy_pixmap_layer_unplugged          (GwyDataViewLayer *layer);
+static void gwy_pixmap_layer_item_changed       (GwyPixmapLayer *pixmap_layer);
+static void gwy_pixmap_layer_data_changed       (GwyPixmapLayer *pixmap_layer);
+static void gwy_pixmap_layer_container_connect  (GwyPixmapLayer *pixmap_layer,
+                                                 const gchar *data_key_string);
+static void gwy_pixmap_layer_data_field_connect (GwyPixmapLayer *pixmap_layer);
+static void gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer);
 
 static GwyDataViewLayerClass *parent_class = NULL;
 
@@ -156,7 +160,7 @@ gwy_pixmap_layer_wants_repaint(GwyPixmapLayer *pixmap_layer)
  *
  * Eventually connects to new data field's "data_changed" signal.
  **/
-static inline void
+static void
 gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
 {
     GwyDataViewLayer *layer;
@@ -185,7 +189,7 @@ gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
  *
  * Disconnects from all data field's signals and drops reference to it.
  **/
-static inline void
+static void
 gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer)
 {
     if (!pixmap_layer->data_field)
@@ -201,27 +205,15 @@ static void
 gwy_pixmap_layer_plugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
-    const gchar *data_key_string;
-    gchar *detailed_signal;
 
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     if (!pixmap_layer->data_key)
         return;
 
-    /* Watch for changes in container */
-    data_key_string = g_quark_to_string(pixmap_layer->data_key);
-    g_assert(data_key_string);
-    detailed_signal = g_newa(gchar, sizeof("item_changed::")
-                                    + strlen(data_key_string));
-    g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), data_key_string);
-
-    pixmap_layer->item_changed_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_pixmap_layer_item_changed),
-                                   layer);
-
-    /* Watch for changes in the data field itself */
+    gwy_pixmap_layer_container_connect(pixmap_layer,
+                                       g_quark_to_string
+                                                     (pixmap_layer->data_key));
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
     pixmap_layer->wants_repaint = TRUE;
 }
@@ -254,7 +246,6 @@ gwy_pixmap_layer_item_changed(GwyPixmapLayer *pixmap_layer)
 {
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
-
     pixmap_layer->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
@@ -292,12 +283,33 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
         return;
     }
 
+    g_signal_handler_disconnect(layer->data, pixmap_layer->item_changed_id);
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     pixmap_layer->data_key = quark;
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
+    gwy_pixmap_layer_container_connect(pixmap_layer, key);
 
     pixmap_layer->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
+}
+
+static void
+gwy_pixmap_layer_container_connect(GwyPixmapLayer *pixmap_layer,
+                                   const gchar *data_key_string)
+{
+    GwyDataViewLayer *layer;
+    gchar *detailed_signal;
+
+    g_return_if_fail(data_key_string);
+    layer = GWY_DATA_VIEW_LAYER(pixmap_layer);
+    detailed_signal = g_newa(gchar, sizeof("item_changed::")
+                                    + strlen(data_key_string));
+    g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), data_key_string);
+
+    pixmap_layer->item_changed_id
+        = g_signal_connect_swapped(layer->data, detailed_signal,
+                                   G_CALLBACK(gwy_pixmap_layer_item_changed),
+                                   layer);
 }
 
 /**
