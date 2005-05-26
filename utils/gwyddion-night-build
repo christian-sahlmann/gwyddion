@@ -94,10 +94,20 @@ function check_coding_style() {
   find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
-  find -name \*.def | while read lib; do
-    l=$(basename $lib .def)
-    sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol ('$l'): /' $lib 1>&2
+  find . -path \*.libs/\*.so | grep -v '\..*\..*\..*\.' | while read lib; do
+    l=$(basename $lib .so)
+    nm $lib \
+      | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
+      | grep -v '^_' \
+      | sort -u >evil-symbols-l.tmp
+    grep -ho '\<gwy_[a-z_0-9]\{4,\}' $(dirname $(dirname $lib))/*.h \
+      | sort -u >evil-symbols-h.tmp
+    sort -m evil-symbols-h.tmp evil-symbols-h.tmp evil-symbols-l.tmp \
+      | uniq -u \
+      | sed -re 's/(.*)/Evil symbol ('$l'): \1/' 1>&2
+    #sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol ('$l'): /' $lib 1>&2
   done
+  rm -f evil-symbols-h.tmp evil-symbols-l.tmp
   find modules -name \*.so | while read mod; do
     m=$(basename $mod .so)
     nm $mod \
