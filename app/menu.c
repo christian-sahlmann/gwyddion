@@ -144,6 +144,9 @@ gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
     guint i, j;
 
     setup_sensitivity_keys();
+    gwy_debug("{%s, %s}",
+              debug_menu_sens_flags(data->flags),
+              debug_menu_sens_flags(data->set_to));
 
     obj = G_OBJECT(widget);
     /*gwy_debug("%s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));*/
@@ -289,8 +292,11 @@ void
 gwy_app_run_process_func_in_mode(gchar *name,
                                  GwyRunType run)
 {
+    /* FIXME: It makes no sense to set GWY_MENU_FLAG_DATA here.  But otherwise
+     * the last run func item never becomes sensitive. */
     GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_LAST_PROC, GWY_MENU_FLAG_LAST_PROC
+        GWY_MENU_FLAG_LAST_PROC | GWY_MENU_FLAG_DATA,
+        GWY_MENU_FLAG_LAST_PROC | GWY_MENU_FLAG_DATA
     };
     GwyDataWindow *data_window;
     GwyDataView *data_view;
@@ -309,9 +315,6 @@ gwy_app_run_process_func_in_mode(gchar *name,
     g_return_if_fail(data);
     ok = gwy_process_func_run(name, data, run);
 
-    /* update the menus regardless the function returns TRUE or not.
-     * functions changing nothing would never appear in the last-used
-     * menu and/or it would never become sensitive */
     menu = GTK_WIDGET(g_object_get_data(G_OBJECT(gwy_app_main_window_get()),
                                         "<proc>"));
     gwy_app_update_last_process_func(menu, name);

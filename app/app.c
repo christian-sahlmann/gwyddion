@@ -521,7 +521,8 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
     else if (!has_dfield && has_layer)
         gwy_data_view_set_alpha_layer(data_view, NULL);
 
-    if (has_dfield != has_layer) {
+    if (has_dfield != has_layer
+        && data == gwy_app_get_current_data()) {
         sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_MASK : 0;
         gwy_app_toolbox_update_state(&sens_data);
     }
@@ -553,7 +554,8 @@ gwy_app_data_view_show_changed(GwyContainer *data,
     else if (!has_dfield && has_layer)
         gwy_pixmap_layer_set_data_key(layer, "/0/data");
 
-    if (has_dfield != has_layer) {
+    if (has_dfield != has_layer
+        && data == gwy_app_get_current_data()) {
         sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_SHOW : 0;
         gwy_app_toolbox_update_state(&sens_data);
     }
