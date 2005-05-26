@@ -367,6 +367,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,

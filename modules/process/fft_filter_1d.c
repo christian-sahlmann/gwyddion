@@ -257,6 +257,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     controls.view_original = gwy_data_view_new(args->original_vdata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_original), layer);
 
     /*set up fit controls*/
@@ -266,6 +267,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     controls.view_result = gwy_data_view_new(args->result_vdata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);

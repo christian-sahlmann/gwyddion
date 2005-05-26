@@ -258,6 +258,7 @@ fit_2d_dialog(Fit2dArgs *args, GwyContainer *data)
     controls.view = gwy_data_view_new(args->vdata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     /*set up fit controls*/
