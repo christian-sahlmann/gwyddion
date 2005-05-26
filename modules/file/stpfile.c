@@ -567,8 +567,9 @@ select_which_data(STPFile *stpfile)
                                 stpfile->buffers[0].yres,
                                 1.0, 1.0, FALSE);
     read_data_field(dfield, stpfile->buffers);
-    gwy_container_set_object_by_name(controls.data, "/0/data",
-                                     (GObject*)dfield);
+    gwy_container_set_object_by_name(controls.data, "data", dfield);
+    gwy_container_set_enum_by_name(controls.data, "range-type",
+                                   GWY_LAYER_BASIC_RANGE_RMS);
     g_object_unref(dfield);
 
     controls.data_view = gwy_data_view_new(controls.data);
@@ -577,7 +578,8 @@ select_which_data(STPFile *stpfile)
                            120.0/MAX(stpfile->buffers[0].xres,
                                      stpfile->buffers[0].yres));
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
@@ -622,7 +624,7 @@ selection_changed(GtkWidget *button,
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "/0/data"));
+                                                             "data"));
     stpfile = controls->file;
     read_data_field(dfield, stpfile->buffers + i);
     gwy_data_field_data_changed(dfield);

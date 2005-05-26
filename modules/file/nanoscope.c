@@ -526,7 +526,7 @@ selection_changed(GtkWidget *button,
     g_assert(i != (guint)-1);
     l = g_list_nth(controls->list, i);
     dfield = ((NanoscopeData*)l->data)->data_field;
-    gwy_container_set_object_by_name(controls->data, "/0/data", dfield);
+    gwy_container_set_object_by_name(controls->data, "data", dfield);
 }
 
 static NanoscopeData*
@@ -535,7 +535,7 @@ select_which_data(GList *list)
     NanoscopeData *ndata, *ndata0;
     NanoscopeDialogControls controls;
     NanoscopeValue *val;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GtkWidget *dialog, *label, *hbox, *vbox, *align;
     GwyEnum *choices;
@@ -608,7 +608,9 @@ select_which_data(GList *list)
     l = g_list_nth(controls.list, 0);
     dfield = ((NanoscopeData*)l->data)->data_field;
     controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
+    gwy_container_set_object_by_name(controls.data, "data", dfield);
+    gwy_container_set_enum_by_name(controls.data, "range-type",
+                                   GWY_LAYER_BASIC_RANGE_RMS);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = 120.0/MAX(xres, yres);
@@ -617,9 +619,9 @@ select_which_data(GList *list)
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);

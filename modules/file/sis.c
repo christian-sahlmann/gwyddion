@@ -474,7 +474,7 @@ selection_changed(GtkWidget *button,
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
     dfield = extract_data(controls->sisfile, i/1024, i % 1024);
-    gwy_container_set_object_by_name(controls->data, "/0/data", dfield);
+    gwy_container_set_object_by_name(controls->data, "data", dfield);
     g_object_unref(dfield);
 }
 
@@ -535,7 +535,9 @@ select_which_data(SISFile *sisfile,
     i = choices[0].value;
     dfield = extract_data(sisfile, i/1024, i % 1024);
     controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
+    gwy_container_set_object_by_name(controls.data, "data", dfield);
+    gwy_container_set_enum_by_name(controls.data, "range-type",
+                                   GWY_LAYER_BASIC_RANGE_RMS);
     g_object_unref(dfield);
     add_metadata(sisfile, i/1024, i %1024, controls.data);
     xres = gwy_data_field_get_xres(dfield);
@@ -546,7 +548,8 @@ select_which_data(SISFile *sisfile,
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 

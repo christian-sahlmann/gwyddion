@@ -533,7 +533,7 @@ select_which_data(GPtrArray *ezdfile,
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     GwyDataField *dfield;
     GwyEnum *choices;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GSList *radio, *rl;
     guint i, b;
 
@@ -591,8 +591,9 @@ select_which_data(GPtrArray *ezdfile,
     controls.data = gwy_container_new();
     dfield = gwy_data_field_new(section->xres, section->yres, 1.0, 1.0, FALSE);
     read_data_field(dfield, section);
-    gwy_container_set_object_by_name(controls.data, "/0/data",
-                                     (GObject*)dfield);
+    gwy_container_set_object_by_name(controls.data, "data", dfield);
+    gwy_container_set_enum_by_name(controls.data, "range-type",
+                                   GWY_LAYER_BASIC_RANGE_RMS);
     g_object_unref(dfield);
 
     controls.data_view = gwy_data_view_new(controls.data);
@@ -600,9 +601,9 @@ select_which_data(GPtrArray *ezdfile,
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
                            120.0/MAX(section->xres, section->yres));
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);
@@ -646,7 +647,7 @@ selection_changed(GtkWidget *button,
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "/0/data"));
+                                                             "data"));
     ezdfile = controls->file;
     read_data_field(dfield, (EZDSection*)g_ptr_array_index(ezdfile, i));
     gwy_data_field_data_changed(dfield);

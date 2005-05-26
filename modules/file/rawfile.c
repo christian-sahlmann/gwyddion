@@ -1389,7 +1389,8 @@ preview_cb(RawFileControls *controls)
     zoom = 120.0/MAX(xres, yres);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
+    gwy_pixbuf_draw_data_field_with_rms(pixbuf, dfield, controls->gradient,
+                                        1.8);
     pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
                                       ceil(xres*zoom), ceil(yres*zoom),
                                       GDK_INTERP_TILES);

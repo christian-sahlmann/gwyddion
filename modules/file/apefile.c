@@ -368,7 +368,7 @@ select_which_data(APEFile *apefile)
     APEControls controls;
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     GwyEnum *choices;
-    GtkObject *layer;
+    GwyPixmapLayer*layer;
     GSList *radio, *rl;
     guint i, b;
 
@@ -421,17 +421,19 @@ select_which_data(APEFile *apefile)
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     controls.data = gwy_container_new();
-    gwy_container_set_object_by_name(controls.data, "/0/data",
+    gwy_container_set_object_by_name(controls.data, "data",
                                      apefile->data[0]);
+    gwy_container_set_enum_by_name(controls.data, "range-type",
+                                   GWY_LAYER_BASIC_RANGE_RMS);
 
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
                            120.0/apefile->res);
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);
@@ -472,7 +474,7 @@ selection_changed(GtkWidget *button,
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
-    gwy_container_set_object_by_name(controls->data, "/0/data",
+    gwy_container_set_object_by_name(controls->data, "data",
                                      controls->file->data[i]);
 }
 
