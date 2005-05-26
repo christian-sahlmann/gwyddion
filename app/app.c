@@ -106,16 +106,22 @@ gboolean
 gwy_app_main_window_save_position(void)
 {
     GwyContainer *settings;
-    gint x, y;
+    GdkScreen *screen;
+    gint x, y, w, h;
 
     g_return_val_if_fail(GTK_IS_WINDOW(gwy_app_main_window), FALSE);
 
     settings = gwy_app_settings_get();
+    screen = gtk_window_get_screen(GTK_WINDOW(gwy_app_main_window));
+    w = gdk_screen_get_width(screen);
+    h = gdk_screen_get_height(screen);
     /* FIXME: read the gtk_window_get_position() docs about how this is
      * a broken approach */
     gtk_window_get_position(GTK_WINDOW(gwy_app_main_window), &x, &y);
-    gwy_container_set_int32_by_name(settings, "/app/toolbox/position/x", x);
-    gwy_container_set_int32_by_name(settings, "/app/toolbox/position/y", y);
+    if (x >= 0 && y >= 0 && x < w && y < h) {
+        gwy_container_set_int32_by_name(settings, "/app/toolbox/position/x", x);
+        gwy_container_set_int32_by_name(settings, "/app/toolbox/position/y", y);
+    }
 
     /* to be usable as an event handler */
     return FALSE;
