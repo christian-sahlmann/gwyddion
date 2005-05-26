@@ -1,10 +1,40 @@
 1.99.2cvs20050419
 
 1.99.3
+Application:
+- Bugfixes were merged from 1.11 (bug #49, bug #54).
+- Running uninstalled is supported now (with caution).
+
 Library:
+- libgwyddion: Expression evaluator allows definition of user constats,
+  adds constant folding and vectorized expression execution.
+- libgwyddion: GwyContainer emits a signal "item_changed::/item/key" when
+  a item changes.
+- libgwyddion, libprocess, libgwydgets: GwyWatchable interface was removed,
+  some previous implementors have their own "value_changed" signal, some have
+  different signal(s), or none.
+- libprocess: GwyDataField and GwyDataLine have "data_changed" signal.
+- libgwydgets: GwyPixmapLayer can display data field identified by arbitrary
+  key (actually it requires to set a key now) and reacts on its
+  "data_changed" signal.
+- libgwydgets, libgwyapp: Explicite updates gwy_data_view_update() and
+  gwy_app_data_view_update() were removed as view updates are now triggered
+  by signals.
+- libgwyapp: Data processing module return value is ignored, functions have
+  to emit "data_changed" on changed data fields.
 - libgwyddion: A quicksort function specialized for doubles.
 - libgwyddion: Marquardt-Levenberg NL fitter derivation function can avoid
   derivations by fixed parameters, and the default numeric one avoids it.
+- libgwydmodule, libgwyapp: `Interactive' data processing run type was
+  removed.
+- Bugfixes were merged from 1.11.
+
+Modules:
+- All: Updated for data (view) notification changes.
+- Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
+
+Other:
+- Bugfixes were merged from 1.11 (bug #51).
 
 
 1.99.2
