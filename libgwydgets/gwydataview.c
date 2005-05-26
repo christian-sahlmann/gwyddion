@@ -345,14 +345,14 @@ gwy_data_view_size_request(GtkWidget *widget,
     GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *data_field;
+    const gchar *key;
 
     gwy_debug(" ");
 
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
-    /* TODO Container */
-    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
+    key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
+    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     requisition->width = data_view->newzoom
                          * gwy_data_field_get_xres(data_field);
     requisition->height = data_view->newzoom
@@ -392,11 +392,13 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
 {
     GtkWidget *widget;
     GwyDataField *data_field;
+    const gchar *key;
     gint width, height, scwidth, scheight, src_width, src_height;
 
-    data_field = GWY_DATA_FIELD(
-                     gwy_container_get_object_by_name(data_view->data,
-                                                      "/0/data"));
+    key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
+    data_field
+        = GWY_DATA_FIELD(gwy_container_get_object_by_name(data_view->data,
+                                                          key));
     src_width = gwy_data_field_get_xres(data_field);
     src_height = gwy_data_field_get_yres(data_field);
 

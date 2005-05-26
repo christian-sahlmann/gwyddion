@@ -332,6 +332,7 @@ gwy_data_window_measure_changed(GwyDataWindow *data_window)
     GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
+    const gchar *k;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(data_window->data_view);
@@ -339,8 +340,8 @@ gwy_data_window_measure_changed(GwyDataWindow *data_window)
     data = gwy_data_view_get_data(data_view);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    /* TODO Container */
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer(data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
     g_return_if_fail(dfield);
 
     /* horizontal */
@@ -508,13 +509,17 @@ static void
 gwy_data_window_update_units(GwyDataWindow *data_window)
 {
     GwyDataField *dfield;
+    GwyDataView *data_view;
     GwyContainer *data;
+    const gchar *k;
 
     gwy_debug(" ");
-    data = gwy_data_window_get_data(data_window);
+    data_view = GWY_DATA_VIEW(data_window->data_view);
+    data = gwy_data_view_get_data(data_view);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer(data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
     gwy_debug("before: coord_format = %p, value_format = %p",
               data_window->coord_format, data_window->value_format);
     data_window->coord_format
@@ -547,6 +552,7 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
     GwyContainer *data;
     GwyDataField *dfield;
     GtkStatusbar *sbar = GTK_STATUSBAR(data_window->statusbar);
+    const gchar *k;
     guint id;
     gdouble xreal, yreal, value;
     gint x, y;
@@ -559,8 +565,9 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
             return FALSE;
         gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
         data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
-        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                 "/0/data"));
+        k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer
+                                                                  (data_view));
+        dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
         gwy_debug("xreal = %g, yreal = %g, xr = %g, yr = %g, xi = %d, yi = %d",
                   gwy_data_field_get_xreal(dfield),
                   gwy_data_field_get_yreal(dfield),
@@ -789,14 +796,18 @@ static void
 gwy_data_window_data_view_updated(GwyDataWindow *data_window)
 {
     GwyContainer *data;
+    GwyDataView *data_view;
     GwyDataField *dfield;
     gdouble min, max;
+    const gchar *k;
 
     gwy_debug(" ");
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    data_view = GWY_DATA_VIEW(data_window->data_view);
+    k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer(data_view));
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
     if (!gwy_container_gis_double_by_name(data, "/0/base/min", &min))
         min = gwy_data_field_get_min(dfield);
     if (!gwy_container_gis_double_by_name(data, "/0/base/max", &max))

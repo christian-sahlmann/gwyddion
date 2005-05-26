@@ -174,7 +174,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
         break;
 
         case GWY_LAYER_BASIC_RANGE_RMS:
-        rms = 1.5;
+        rms = 1.8;
         if (basic_layer->rms_key)
             gwy_container_gis_double(data, basic_layer->rms_key, &rms);
         gwy_pixbuf_draw_data_field_with_rms(layer->pixbuf, data_field,
