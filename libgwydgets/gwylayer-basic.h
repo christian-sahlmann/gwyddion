@@ -69,17 +69,20 @@ struct _GwyLayerBasicClass {
     gpointer reserved2;
 };
 
-GType            gwy_layer_basic_get_type            (void) G_GNUC_CONST;
-
-GwyPixmapLayer*  gwy_layer_basic_new                 (void);
-void             gwy_layer_basic_set_gradient_key    (GwyLayerBasic *layer,
-                                                      const gchar *key);
-void             gwy_layer_basic_set_min_max_key     (GwyLayerBasic *layer,
-                                                      const gchar *prefix);
-void             gwy_layer_basic_set_rms_key         (GwyLayerBasic *layer,
-                                                      const gchar *key);
-void             gwy_layer_basic_set_range_type_key  (GwyLayerBasic *layer,
-                                                      const gchar *key);
+GType           gwy_layer_basic_get_type           (void) G_GNUC_CONST;
+GwyPixmapLayer* gwy_layer_basic_new                (void);
+void            gwy_layer_basic_set_gradient_key   (GwyLayerBasic *basic_layer,
+                                                    const gchar *key);
+const gchar*    gwy_layer_basic_get_gradient_key   (GwyLayerBasic *basic_layer);
+void            gwy_layer_basic_set_min_max_key    (GwyLayerBasic *basic_layer,
+                                                    const gchar *prefix);
+const gchar*    gwy_layer_basic_get_min_max_key    (GwyLayerBasic *basic_layer);
+void            gwy_layer_basic_set_rms_key        (GwyLayerBasic *basic_layer,
+                                                    const gchar *key);
+const gchar*    gwy_layer_basic_get_rms_key        (GwyLayerBasic *basic_layer);
+void            gwy_layer_basic_set_range_type_key (GwyLayerBasic *basic_layer,
+                                                    const gchar *key);
+const gchar*    gwy_layer_basic_get_range_type_key (GwyLayerBasic *basic_layer);
 
 G_END_DECLS
 

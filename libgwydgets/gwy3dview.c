@@ -525,11 +525,10 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name)) {
-        if (!gwy_container_gis_string_by_name(data, "/0/base/palette",
-                                              &name))
-            name = GWY_GRADIENT_DEFAULT;
-    }
+    name = GWY_GRADIENT_DEFAULT;
+    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name))
+        gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
+
     gwy3dview->gradient = gwy_gradients_get_gradient(name);
     if (!gwy3dview->gradient)
         gwy3dview->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
@@ -2041,6 +2040,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glMaterialf(GL_FRONT, GL_SHININESS, (GLfloat)mat_none->shininess * 128.0f);
 
     if (widget->show_axes) {
+        rx = 0.1;
         if (rx >= 0.0 && rx <= 90.0) {
             Ay = yres;
             Cx = xres;

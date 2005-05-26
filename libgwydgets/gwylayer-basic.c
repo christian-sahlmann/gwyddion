@@ -194,7 +194,7 @@ gwy_layer_basic_gradient_connect(GwyLayerBasic *basic_layer)
 {
     GwyDataViewLayer *layer;
     GwyGradient *gradient;
-    const gchar *s;
+    const guchar *s;
 
     g_return_if_fail(!basic_layer->gradient);
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
@@ -305,6 +305,13 @@ gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
     gwy_data_view_layer_updated(layer);
 }
 
+const gchar*
+gwy_layer_basic_get_gradient_key(GwyLayerBasic *basic_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
+    return g_quark_to_string(basic_layer->gradient_key);
+}
+
 void
 gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
                                    const gchar *key)
@@ -314,6 +321,13 @@ gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
                             &basic_layer->range_type_key,
                             &basic_layer->range_type_id);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+}
+
+const gchar*
+gwy_layer_basic_get_range_type_key(GwyLayerBasic *basic_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
+    return g_quark_to_string(basic_layer->range_type_key);
 }
 
 void
@@ -344,6 +358,27 @@ gwy_layer_basic_set_min_max_key(GwyLayerBasic *basic_layer,
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }
 
+const gchar*
+gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
+{
+    const gchar *prefix;
+    guint len;
+    gchar *s;
+
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
+    prefix = g_quark_to_string(basic_layer->min_key);
+    if (!prefix)
+        return NULL;
+
+    len = strlen(prefix);
+    g_assert(len >= 3);
+    s = g_newa(gchar, len-2);
+    g_strlcpy(s, prefix, len-3);
+
+    /* Eventually instantiate the quark string and return this one */
+    return g_quark_to_string(g_quark_from_string(s));
+}
+
 void
 gwy_layer_basic_set_rms_key(GwyLayerBasic *basic_layer,
                             const gchar *key)
@@ -352,6 +387,13 @@ gwy_layer_basic_set_rms_key(GwyLayerBasic *basic_layer,
     gwy_layer_basic_set_key(basic_layer, key,
                             &basic_layer->rms_key, &basic_layer->rms_id);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+}
+
+const gchar*
+gwy_layer_basic_get_rms_key(GwyLayerBasic *basic_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
+    return g_quark_to_string(basic_layer->rms_key);
 }
 
 static void
