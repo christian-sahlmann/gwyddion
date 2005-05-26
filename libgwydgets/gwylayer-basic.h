@@ -42,8 +42,22 @@ typedef struct _GwyLayerBasicClass GwyLayerBasicClass;
 struct _GwyLayerBasic {
     GwyPixmapLayer parent_instance;
 
+    GQuark range_type_key;
+    gulong range_type_id;
+
     GwyGradient *gradient;
+    GQuark gradient_key;
     gulong gradient_id;
+    gulong gradient_item_id;
+
+    GQuark min_key;
+    gulong min_id;
+
+    GQuark max_key;
+    gulong max_id;
+
+    GQuark rms_key;
+    gulong rms_id;
 
     gpointer reserved2;
 };
@@ -55,12 +69,17 @@ struct _GwyLayerBasicClass {
     gpointer reserved2;
 };
 
-GType            gwy_layer_basic_get_type        (void) G_GNUC_CONST;
+GType            gwy_layer_basic_get_type            (void) G_GNUC_CONST;
 
-GwyPixmapLayer*  gwy_layer_basic_new             (void);
-void             gwy_layer_basic_set_gradient    (GwyLayerBasic *layer,
-                                                  const gchar *gradient);
-const gchar*     gwy_layer_basic_get_gradient    (GwyLayerBasic *layer);
+GwyPixmapLayer*  gwy_layer_basic_new                 (void);
+void             gwy_layer_basic_set_gradient_key    (GwyLayerBasic *layer,
+                                                      const gchar *key);
+void             gwy_layer_basic_set_min_max_key     (GwyLayerBasic *layer,
+                                                      const gchar *prefix);
+void             gwy_layer_basic_set_rms_key         (GwyLayerBasic *layer,
+                                                      const gchar *key);
+void             gwy_layer_basic_set_range_type_key  (GwyLayerBasic *layer,
+                                                      const gchar *key);
 
 G_END_DECLS
 

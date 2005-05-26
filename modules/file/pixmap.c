@@ -1339,7 +1339,7 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     GdkPixbuf *pixbuf, *hrpixbuf, *vrpixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *scalepixbuf = NULL;
     GwySIUnit *siunit_xy, *siunit_z;
-    const guchar *samples;
+    const guchar *samples, *name;
     guchar *pixels;
     gint width, height, zwidth, zheight, hrh, vrw, scw, nsamp, y, lw;
     gdouble min, max;
@@ -1358,8 +1358,9 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
 
     layer = gwy_data_view_get_base_layer(data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
-    gradient = gwy_gradients_get_gradient(gwy_layer_basic_get_gradient
-                                                    (GWY_LAYER_BASIC(layer)));
+    name = GWY_GRADIENT_DEFAULT;
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
+    gradient = gwy_gradients_get_gradient(name);
     samples = gwy_gradient_get_samples(gradient, &nsamp);
     datapixbuf = gdk_pixbuf_copy(gwy_pixmap_layer_paint(layer));
     width = gdk_pixbuf_get_width(datapixbuf);

@@ -488,7 +488,7 @@ select_which_data(SISFile *sisfile,
     GwyDataField *dfield;
     gint xres, yres;
     gdouble zoomval;
-    GtkObject *layer;
+    GwyPixmapLayer *layer;
     GSList *radio, *rl;
     gint response;
     guint i;
@@ -546,9 +546,8 @@ select_which_data(SISFile *sisfile,
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view),
-                                 GWY_PIXMAP_LAYER(layer));
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_container_add(GTK_CONTAINER(align), controls.data_view);
 
     gtk_widget_show_all(dialog);

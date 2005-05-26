@@ -120,9 +120,13 @@ typedef enum {
     GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN = 0,
     GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT = 1,
     GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN = 2
-}
-GwyGraphModelExportStyle;
+} GwyGraphModelExportStyle;
 
+typedef enum {
+    GWY_LAYER_BASIC_RANGE_FULL,
+    GWY_LAYER_BASIC_RANGE_FIXED,
+    GWY_LAYER_BASIC_RANGE_RMS
+} GwyLayerBasicRangeType;
 
 G_END_DECLS
 

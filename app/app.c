@@ -475,10 +475,13 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
                                GwyContainer *data)
 {
     GwyPixmapLayer *layer;
+    GwyLayerBasic *blayer;
 
     /* base */
     layer = gwy_layer_basic_new();
+    blayer = GWY_LAYER_BASIC(layer);
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(blayer, "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     /* force sync */

@@ -483,8 +483,6 @@ tip_blind_run(TipBlindControls *controls,
 {
     GwyDataField *tipfield, *surface;
     GwyContainer *data;
-    GwyPixmapLayer *layer;
-    const guchar *name;
     gint count = -1;
 
     data = args->data;
@@ -520,13 +518,6 @@ tip_blind_run(TipBlindControls *controls,
 
     gwy_app_wait_finish();
     tip_update(controls, args);
-
-    if (gwy_container_gis_string_by_name(args->data, "/0/base/palette",
-                                         &name)) {
-        layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
-        g_return_if_fail(GWY_IS_LAYER_BASIC(layer));
-        gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
-    }
 }
 
 static void

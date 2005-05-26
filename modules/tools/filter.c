@@ -159,7 +159,7 @@ layer_setup(GwyUnitoolState *state)
 {
     ToolControls *controls;
     GwyContainer *data;
-    GtkWidget *data_view;
+    GwyDataView *data_view;
     GObject *shadefield;
 
     g_assert(CHECK_LAYER_TYPE(state->layer));
@@ -171,7 +171,7 @@ layer_setup(GwyUnitoolState *state)
         data_view = gwy_data_window_get_data_view(
                                      GWY_DATA_WINDOW(controls->last_preview));
         g_assert(data_view);
-        data = GWY_CONTAINER(gwy_data_view_get_data(GWY_DATA_VIEW(data_view)));
+        data = gwy_data_view_get_data(data_view);
         g_assert(data);
         shadefield = gwy_container_get_object_by_name(data, "/0/show");
         g_object_remove_weak_pointer(shadefield, &controls->last_preview);

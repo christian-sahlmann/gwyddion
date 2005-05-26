@@ -181,8 +181,10 @@ gwy_data_window_new(GwyDataView *data_view)
 {
     GdkGeometry geom = { 10, 10, 1000, 1000, 10, 10, 1, 1, 1.0, 1.0, 0 };
     GwyDataWindow *data_window;
+    GwyContainer *data;
     GwyPixmapLayer *layer;
     GtkWidget *vbox, *hbox;
+    const guchar *gradient;
 
     gwy_debug(" ");
 
@@ -202,6 +204,7 @@ gwy_data_window_new(GwyDataView *data_view)
                                   &geom,
                                   GDK_HINT_MIN_SIZE);
     gwy_data_window_fit_to_screen(data_window, data_view);
+    data = gwy_data_view_get_data(data_view);
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
@@ -263,9 +266,10 @@ gwy_data_window_new(GwyDataView *data_view)
     layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
     g_assert(GWY_IS_LAYER_BASIC(layer));
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL);
-    gwy_color_axis_set_gradient
-                         (GWY_COLOR_AXIS(data_window->coloraxis),
-                          gwy_layer_basic_get_gradient(GWY_LAYER_BASIC(layer)));
+    gradient = GWY_GRADIENT_DEFAULT;
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &gradient);
+    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
+                                gradient);
     gwy_data_window_data_view_updated(data_window);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->coloraxis,
                        FALSE, FALSE, 0);
@@ -770,14 +774,14 @@ static void
 gwy_data_window_gradient_selected(GtkWidget *item,
                                   GwyDataWindow *data_window)
 {
-    GwyPixmapLayer *layer;
+    GwyContainer *data;
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "gradient-name");
     gwy_debug("%s", name);
 
-    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
-    gwy_layer_basic_set_gradient(GWY_LAYER_BASIC(layer), name);
+    data = gwy_data_window_get_data(data_window);
+    gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(name));
     gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), name);
 }
 
