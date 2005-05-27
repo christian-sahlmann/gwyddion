@@ -185,8 +185,7 @@ gwy_data_window_new(GwyDataView *data_view)
     GwyPixmapLayer *layer;
     GtkWidget *vbox, *hbox;
     const guchar *gradient;
-
-    gwy_debug(" ");
+    const gchar *key;
 
     data_window = (GwyDataWindow*)g_object_new(GWY_TYPE_DATA_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(data_window), "data",
@@ -229,7 +228,7 @@ gwy_data_window_new(GwyDataView *data_view)
     data_window->statusbar_context_id
         = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
                                        "coordinates");
-    g_signal_connect(GTK_WIDGET(data_view), "motion_notify_event",
+    g_signal_connect(data_view, "motion_notify_event",
                      G_CALLBACK(gwy_data_window_update_statusbar), data_window);
 
     /***** main table *****/
@@ -248,14 +247,14 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->hruler,
                      1, 2, 0, 1,
                      GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
-    g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
+    g_signal_connect_swapped(data_view, "motion_notify_event",
                              class_motion_notify_callback(data_window->hruler),
                              data_window->hruler);
 
     data_window->vruler = gwy_vruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
                                   GWY_UNITS_PLACEMENT_NONE);
-    g_signal_connect_swapped(GTK_WIDGET(data_view), "motion_notify_event",
+    g_signal_connect_swapped(data_view, "motion_notify_event",
                              class_motion_notify_callback(data_window->vruler),
                              data_window->vruler);
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->vruler,
@@ -263,11 +262,12 @@ gwy_data_window_new(GwyDataView *data_view)
                      GTK_FILL, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
     /***** rhs stuff *****/
-    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(data_window->data_view));
+    layer = gwy_data_view_get_base_layer(data_view);
     g_assert(GWY_IS_LAYER_BASIC(layer));
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL);
+    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
     gradient = GWY_GRADIENT_DEFAULT;
-    gwy_container_gis_string_by_name(data, "/0/base/palette", &gradient);
+    gwy_container_gis_string_by_name(data, key, &gradient);
     gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
                                 gradient);
     gwy_data_window_data_view_updated(data_window);
@@ -782,13 +782,18 @@ gwy_data_window_gradient_selected(GtkWidget *item,
                                   GwyDataWindow *data_window)
 {
     GwyContainer *data;
-    const gchar *name;
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
+    const gchar *name, *key;
 
     name = g_object_get_data(G_OBJECT(item), "gradient-name");
     gwy_debug("%s", name);
 
-    data = gwy_data_window_get_data(data_window);
-    gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(name));
+    view = GWY_DATA_VIEW(data_window->data_view);
+    data = gwy_data_view_get_data(view);
+    layer = gwy_data_view_get_base_layer(view);
+    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
+    gwy_container_set_string_by_name(data, key, g_strdup(name));
     gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), name);
 }
 
@@ -796,22 +801,22 @@ static void
 gwy_data_window_data_view_updated(GwyDataWindow *data_window)
 {
     GwyContainer *data;
-    GwyDataView *data_view;
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
     gdouble min, max;
-    const gchar *k;
+    const gchar *key;
 
-    gwy_debug(" ");
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
 
-    data_view = GWY_DATA_VIEW(data_window->data_view);
-    k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer(data_view));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
-    if (!gwy_container_gis_double_by_name(data, "/0/base/min", &min))
-        min = gwy_data_field_get_min(dfield);
-    if (!gwy_container_gis_double_by_name(data, "/0/base/max", &max))
-        max = gwy_data_field_get_max(dfield);
+    view = GWY_DATA_VIEW(data_window->data_view);
+    layer = gwy_data_view_get_base_layer(view);
+    key = gwy_pixmap_layer_get_data_key(layer);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
+    gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
+    /* FIXME: we have to set units too, as at least data has different units
+     * than presentation */
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
     gwy_data_window_update_units(data_window);
 }

@@ -71,6 +71,9 @@ struct _GwyLayerBasicClass {
 
 GType           gwy_layer_basic_get_type           (void) G_GNUC_CONST;
 GwyPixmapLayer* gwy_layer_basic_new                (void);
+void            gwy_layer_basic_get_range          (GwyLayerBasic *basic_layer,
+                                                    gdouble *min,
+                                                    gdouble *max);
 void            gwy_layer_basic_set_gradient_key   (GwyLayerBasic *basic_layer,
                                                     const gchar *key);
 const gchar*    gwy_layer_basic_get_gradient_key   (GwyLayerBasic *basic_layer);

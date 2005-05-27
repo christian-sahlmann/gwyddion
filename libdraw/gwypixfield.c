@@ -143,37 +143,6 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
 }
 
 /**
- * gwy_pixbuf_draw_data_field_with_rms:
- * @pixbuf: A Gdk pixbuf to draw to.
- * @data_field: A data field to draw.
- * @gradient: A color gradient to draw with.
- * @rmsrange: Relative range around avergage data value, 1.0 corresponds to
- *            RMS.
- *
- * Paints a data field to a pixbuf with a RMS-determined color gradient range.
- *
- * Values equal or smaller to average-@rmsrange*rms are mapped to start of
- * @gradient, values greater or equal to average+@rmsrange*rms to its end,
- * values between are mapped linearly to @gradient.
- **/
-void
-gwy_pixbuf_draw_data_field_with_rms(GdkPixbuf *pixbuf,
-                                    GwyDataField *data_field,
-                                    GwyGradient *gradient,
-                                    gdouble rmsrange)
-{
-    gdouble rms, avg;
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-
-    avg = gwy_data_field_get_avg(data_field);
-    rms = gwy_data_field_get_rms(data_field);
-    gwy_pixbuf_draw_data_field_with_range(pixbuf, data_field, gradient,
-                                          avg - rmsrange*rms,
-                                          avg + rmsrange*rms);
-}
-
-/**
  * gwy_pixbuf_draw_data_field_as_mask:
  * @pixbuf: A Gdk pixbuf to draw to.
  * @data_field: A data field to draw.

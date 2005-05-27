@@ -33,10 +33,6 @@ void gwy_pixbuf_draw_data_field_with_range (GdkPixbuf *pixbuf,
                                             GwyGradient *gradient,
                                             gdouble minimum,
                                             gdouble maximum);
-void gwy_pixbuf_draw_data_field_with_rms   (GdkPixbuf *pixbuf,
-                                            GwyDataField *data_field,
-                                            GwyGradient *gradient,
-                                            gdouble rmsrange);
 void gwy_pixbuf_draw_data_field_as_mask    (GdkPixbuf *pixbuf,
                                             GwyDataField *data_field,
                                             GwyRGBA *color);

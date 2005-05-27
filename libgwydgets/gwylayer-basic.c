@@ -139,7 +139,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     GwyDataField *data_field;
     GwyLayerBasicRangeType range_type;
     GwyContainer *data;
-    gdouble min, max, rms;
+    gdouble min, max;
 
     basic_layer = GWY_LAYER_BASIC(layer);
     data = GWY_DATA_VIEW_LAYER(layer)->data;
@@ -153,37 +153,16 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     if (basic_layer->range_type_key)
         gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
 
-    switch (range_type) {
-        case GWY_LAYER_BASIC_RANGE_FULL:
+    /* Special-case full range, as gwy_pixbuf_draw_data_field() is simplier,
+     * it doesn't have to deal with outliers */
+    if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
         gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
                                    basic_layer->gradient);
-        break;
-
-        case GWY_LAYER_BASIC_RANGE_FIXED:
-        min = gwy_data_field_get_min(data_field);
-        if (basic_layer->min_key)
-            gwy_container_gis_double(data, basic_layer->min_key, &min);
-
-        max = gwy_data_field_get_max(data_field);
-        if (basic_layer->max_key)
-            gwy_container_gis_double(data, basic_layer->max_key, &max);
-
+    else {
+        gwy_layer_basic_get_range(basic_layer, &min, &max);
         gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
                                               basic_layer->gradient,
                                               min, max);
-        break;
-
-        case GWY_LAYER_BASIC_RANGE_RMS:
-        rms = 1.8;
-        if (basic_layer->rms_key)
-            gwy_container_gis_double(data, basic_layer->rms_key, &rms);
-        gwy_pixbuf_draw_data_field_with_rms(layer->pixbuf, data_field,
-                                            basic_layer->gradient, rms);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
     }
 
     return layer->pixbuf;
@@ -371,12 +350,68 @@ gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
         return NULL;
 
     len = strlen(prefix);
-    g_assert(len >= 3);
-    s = g_newa(gchar, len-2);
-    g_strlcpy(s, prefix, len-3);
+    g_assert(len >= 4);
+    s = g_newa(gchar, len-3);
+    g_strlcpy(s, prefix, len-4);
 
     /* Eventually instantiate the quark string and return this one */
     return g_quark_to_string(g_quark_from_string(s));
+}
+
+void
+gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
+                          gdouble *min,
+                          gdouble *max)
+{
+    GwyContainer *data;
+    GwyDataField *data_field;
+    GwyLayerBasicRangeType range_type;
+    gdouble rmin, rmax, avg, rms, r;
+
+    g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
+    data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
+    data_field = GWY_DATA_FIELD(GWY_PIXMAP_LAYER(basic_layer)->data_field);
+    g_return_if_fail(data && data_field);
+
+    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    if (basic_layer->range_type_key)
+        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
+
+    switch (range_type) {
+        case GWY_LAYER_BASIC_RANGE_FULL:
+        rmin = gwy_data_field_get_min(data_field);
+        rmax = gwy_data_field_get_max(data_field);
+        break;
+
+        case GWY_LAYER_BASIC_RANGE_FIXED:
+        if (!basic_layer->min_key
+            || !gwy_container_gis_double(data, basic_layer->min_key, &rmin))
+            rmin = gwy_data_field_get_min(data_field);
+
+        if (!basic_layer->max_key
+            || !gwy_container_gis_double(data, basic_layer->max_key, &rmax))
+            rmax = gwy_data_field_get_max(data_field);
+        break;
+
+        case GWY_LAYER_BASIC_RANGE_RMS:
+        r = 1.8;
+        if (basic_layer->rms_key)
+            gwy_container_gis_double(data, basic_layer->rms_key, &r);
+        avg = gwy_data_field_get_avg(data_field);
+        rms = gwy_data_field_get_rms(data_field);
+        rmin = avg - r*rms;
+        rmax = avg + r*rms;
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    if (min)
+        *min = rmin;
+    if (max)
+        *max = rmax;
 }
 
 void

@@ -37,7 +37,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/app.h>
@@ -1375,7 +1375,7 @@ preview_cb(RawFileControls *controls)
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf, *pixbuf2;
-    gint xres, yres;
+    gint xres, yres, avg, rms;
     gdouble zoom;
 
     update_dialog_values(controls);
@@ -1389,8 +1389,10 @@ preview_cb(RawFileControls *controls)
     zoom = 120.0/MAX(xres, yres);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xres, yres);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gwy_pixbuf_draw_data_field_with_rms(pixbuf, dfield, controls->gradient,
-                                        1.8);
+    avg = gwy_data_field_get_avg(dfield);
+    rms = gwy_data_field_get_rms(dfield);
+    gwy_pixbuf_draw_data_field_with_range(pixbuf, dfield, controls->gradient,
+                                          avg - 1.8*rms, avg + 1.8*rms);
     pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
                                       ceil(xres*zoom), ceil(yres*zoom),
                                       GDK_INTERP_TILES);
