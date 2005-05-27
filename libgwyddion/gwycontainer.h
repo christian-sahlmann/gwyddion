@@ -131,8 +131,7 @@ gboolean      gwy_container_gis_double            (GwyContainer *container,
 void          gwy_container_set_string            (GwyContainer *container,
                                                    GQuark key,
                                                    const guchar *value);
-G_CONST_RETURN
-guchar*       gwy_container_get_string            (GwyContainer *container,
+const guchar* gwy_container_get_string            (GwyContainer *container,
                                                    GQuark key);
 gboolean      gwy_container_gis_string            (GwyContainer *container,
                                                    GQuark key,

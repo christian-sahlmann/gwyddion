@@ -75,6 +75,12 @@ static void     gwy_container_class_init         (GwyContainerClass *klass);
 static void     gwy_container_init               (GwyContainer *container);
 static void     value_destroy_func               (gpointer data);
 static void     gwy_container_finalize           (GObject *object);
+static GValue*  gwy_container_get_value_of_type  (GwyContainer *container,
+                                                  GQuark key,
+                                                  GType type);
+static GValue*  gwy_container_gis_value_of_type  (GwyContainer *container,
+                                                  GQuark key,
+                                                  GType type);
 static gboolean gwy_container_try_set_one        (GwyContainer *container,
                                                   GQuark key,
                                                   GValue *value,
@@ -545,6 +551,55 @@ gwy_container_rename(GwyContainer *container,
     return TRUE;
 }
 
+static GValue*
+gwy_container_get_value_of_type(GwyContainer *container,
+                                GQuark key,
+                                GType type)
+{
+    GValue *p;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    g_return_val_if_fail(key, NULL);
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p) {
+        g_warning("%s: no value for key %u (%s)",
+                  GWY_CONTAINER_TYPE_NAME, key, g_quark_to_string(key));
+        return NULL;
+    }
+    if (!G_VALUE_HOLDS(p, type)) {
+        g_warning("%s: trying to get %s as boolean, key %u (%s)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p),
+                  key, g_quark_to_string(key));
+        return NULL;
+    }
+
+    return p;
+}
+
+static GValue*
+gwy_container_gis_value_of_type(GwyContainer *container,
+                                GQuark key,
+                                GType type)
+{
+    GValue *p;
+
+    if (!key)
+        return NULL;
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+
+    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
+    if (!p)
+        return NULL;
+    if (!G_VALUE_HOLDS(p, type)) {
+        g_warning("%s: trying to get %s as boolean, key %u (%s)",
+                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p),
+                  key, g_quark_to_string(key));
+        return NULL;
+    }
+
+    return p;
+}
+
 /**
  * gwy_container_get_value_by_name:
  * @c: A #GwyContainer.
@@ -603,19 +658,8 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
-    }
-    if (!G_VALUE_HOLDS_BOOLEAN(p)) {
-        g_warning("%s: trying to get %s as boolean (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
-    }
-    return g_value_get_boolean(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_BOOLEAN);
+    return G_LIKELY(p) ? g_value_get_boolean(p) : FALSE;
 }
 
 /**
@@ -648,22 +692,11 @@ gwy_container_gis_boolean(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_BOOLEAN(p)) {
-        g_warning("%s: trying to get %s as boolean (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_BOOLEAN))) {
+        *value = g_value_get_boolean(p);
+        return TRUE;
     }
-
-    *value = g_value_get_boolean(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -688,20 +721,8 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values,
-                                     GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
-    }
-    if (!G_VALUE_HOLDS_UCHAR(p)) {
-        g_warning("%s: trying to get %s as uchar (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
-    }
-    return g_value_get_uchar(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_UCHAR);
+    return G_LIKELY(p) ? g_value_get_uchar(p) : 0;
 }
 
 /**
@@ -734,22 +755,11 @@ gwy_container_gis_uchar(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_UCHAR(p)) {
-        g_warning("%s: trying to get %s as uchar (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_UCHAR))) {
+        *value = g_value_get_uchar(p);
+        return TRUE;
     }
-
-    *value = g_value_get_uchar(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -774,19 +784,8 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
-    }
-    if (!G_VALUE_HOLDS_INT(p)) {
-        g_warning("%s: trying to get %s as int32 (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
-    }
-    return g_value_get_int(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_INT);
+    return G_LIKELY(p) ? g_value_get_int(p) : 0;
 }
 
 /**
@@ -819,22 +818,11 @@ gwy_container_gis_int32(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_INT(p)) {
-        g_warning("%s: trying to get %s as int32 (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_INT))) {
+        *value = g_value_get_int(p);
+        return TRUE;
     }
-
-    *value = g_value_get_int(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -929,19 +917,8 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
-    }
-    if (!G_VALUE_HOLDS_INT64(p)) {
-        g_warning("%s: trying to get %s as int64 (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
-    }
-    return g_value_get_int64(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_INT64);
+    return G_LIKELY(p) ? g_value_get_int64(p) : 0;
 }
 
 /**
@@ -974,22 +951,11 @@ gwy_container_gis_int64(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_INT64(p)) {
-        g_warning("%s: trying to get %s as int64 (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_INT64))) {
+        *value = g_value_get_int64(p);
+        return TRUE;
     }
-
-    *value = g_value_get_int64(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -1014,19 +980,8 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
-    g_return_val_if_fail(key, 0);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return 0;
-    }
-    if (!G_VALUE_HOLDS_DOUBLE(p)) {
-        g_warning("%s: trying to get %s as double (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return 0;
-    }
-    return g_value_get_double(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_DOUBLE);
+    return G_LIKELY(p) ? g_value_get_double(p) : 0.0;
 }
 
 /**
@@ -1054,27 +1009,16 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
  **/
 gboolean
 gwy_container_gis_double(GwyContainer *container,
-                        GQuark key,
-                        gdouble *value)
+                         GQuark key,
+                         gdouble *value)
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_DOUBLE(p)) {
-        g_warning("%s: trying to get %s as double (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_DOUBLE))) {
+        *value = g_value_get_double(p);
+        return TRUE;
     }
-
-    *value = g_value_get_double(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -1098,24 +1042,13 @@ gwy_container_gis_double(GwyContainer *container,
  *
  * Returns: The string.
  **/
-G_CONST_RETURN guchar*
+const guchar*
 gwy_container_get_string(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
-    g_return_val_if_fail(key, NULL);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return NULL;
-    }
-    if (!G_VALUE_HOLDS_STRING(p)) {
-        g_warning("%s: trying to get %s as string (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return NULL;
-    }
-    return g_value_get_string(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_STRING);
+    return G_LIKELY(p) ? g_value_get_string(p) : NULL;
 }
 
 /**
@@ -1154,22 +1087,11 @@ gwy_container_gis_string(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_STRING(p)) {
-        g_warning("%s: trying to get %s as string (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_STRING))) {
+        *value = g_value_get_string(p);
+        return TRUE;
     }
-
-    *value = g_value_get_string(p);
-    return TRUE;
+    return FALSE;
 }
 
 /**
@@ -1202,20 +1124,8 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
-    g_return_val_if_fail(key, NULL);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p) {
-        g_warning("%s: no value for key %u", GWY_CONTAINER_TYPE_NAME, key);
-        return NULL;
-    }
-    if (!G_VALUE_HOLDS_OBJECT(p)) {
-        g_warning("%s: trying to get %s as object (key %u)",
-              GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return NULL;
-    }
-
-    return (gpointer)g_value_get_object(p);
+    p = gwy_container_get_value_of_type(container, key, G_TYPE_OBJECT);
+    return G_LIKELY(p) ? (gpointer)g_value_get_object(p) : NULL;
 }
 
 /**
@@ -1256,22 +1166,11 @@ gwy_container_gis_object(GwyContainer *container,
 {
     GValue *p;
 
-    if (!key)
-        return FALSE;
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    g_return_val_if_fail(value, FALSE);
-
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    if (!p)
-        return FALSE;
-    if (!G_VALUE_HOLDS_OBJECT(p)) {
-        g_warning("%s: trying to get %s as object (key %u)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p), key);
-        return FALSE;
+    if ((p = gwy_container_gis_value_of_type(container, key, G_TYPE_OBJECT))) {
+        *(GObject**)value = g_value_get_object(p);
+        return TRUE;
     }
-
-    *(GObject**)value = g_value_get_object(p);
-    return TRUE;
+    return FALSE;
 }
 
 static gboolean
