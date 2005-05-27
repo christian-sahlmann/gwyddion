@@ -240,7 +240,6 @@ gwy_container_new(void)
 {
     GwyContainer *container;
 
-    gwy_debug("");
     container = g_object_new(GWY_TYPE_CONTAINER, NULL);
 
     return container;
@@ -1174,6 +1173,48 @@ gwy_container_gis_object(GwyContainer *container,
 }
 
 static gboolean
+gwy_container_values_equal(GValue *value1,
+                           GValue *value2)
+{
+    GType type;
+
+    g_return_val_if_fail(value1 || value2, TRUE);
+    if (!value1 || !value2)
+        return FALSE;
+
+    type = G_VALUE_TYPE(value1);
+    if (type != G_VALUE_TYPE(value2))
+        return FALSE;
+
+    switch (type) {
+        case G_TYPE_BOOLEAN:
+        return g_value_get_boolean(value1) == g_value_get_boolean(value2);
+
+        case G_TYPE_UCHAR:
+        return g_value_get_uchar(value1) == g_value_get_uchar(value2);
+
+        case G_TYPE_INT:
+        return g_value_get_int(value1) == g_value_get_int(value2);
+
+        case G_TYPE_INT64:
+        return g_value_get_int64(value1) == g_value_get_int64(value2);
+
+        case G_TYPE_DOUBLE:
+        return g_value_get_double(value1) == g_value_get_double(value2);
+
+        case G_TYPE_STRING:
+        return !strcmp(g_value_get_string(value1), g_value_get_string(value2));
+
+        /* objects must be identical, so compare addresses */
+        case G_TYPE_OBJECT:
+        return g_value_get_object(value1) == g_value_get_object(value2);
+        break;
+    }
+
+    g_return_val_if_reached(FALSE);
+}
+
+static gboolean
 gwy_container_try_set_one(GwyContainer *container,
                           GQuark key,
                           GValue *value,
@@ -1181,6 +1222,7 @@ gwy_container_try_set_one(GwyContainer *container,
                           gboolean do_create)
 {
     GValue *old;
+    gboolean changed;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
     g_return_val_if_fail(key, FALSE);
@@ -1207,13 +1249,16 @@ gwy_container_try_set_one(GwyContainer *container,
         if (!do_replace)
             return FALSE;
         g_assert(G_IS_VALUE(old));
+        changed = !gwy_container_values_equal(value, old);
         g_value_unset(old);
     }
     else {
         if (!do_create)
             return FALSE;
+        /* old is actually new here, but who cares... */
         old = g_new0(GValue, 1);
         g_hash_table_insert(container->values, GINT_TO_POINTER(key), old);
+        changed = TRUE;
     }
     g_value_init(old, G_VALUE_TYPE(value));
     if (G_VALUE_HOLDS_STRING(value))
@@ -1221,7 +1266,7 @@ gwy_container_try_set_one(GwyContainer *container,
     else
         g_value_copy(value, old);
 
-    if (!container->no_changes)
+    if (changed && !container->no_changes)
         g_signal_emit(container, container_signals[ITEM_CHANGED], key);
 
     return TRUE;
