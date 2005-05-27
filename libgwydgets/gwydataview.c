@@ -351,8 +351,15 @@ gwy_data_view_size_request(GtkWidget *widget,
 
     data_view = GWY_DATA_VIEW(widget);
     data = data_view->data;
+    requisition->width = requisition->height = 2;
+    if (!data_view->base_layer)
+        return;
     key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
+    if (!key)
+        return;
     data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
+    if (!data_field)
+        return;
     requisition->width = data_view->newzoom
                          * gwy_data_field_get_xres(data_field);
     requisition->height = data_view->newzoom
@@ -770,6 +777,7 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
                             &data_view->base_layer,
                             &data_view->base_hid,
                             GWY_DATA_VIEW_LAYER(layer));
+    gtk_widget_queue_resize(GTK_WIDGET(data_view));
 }
 
 /**
