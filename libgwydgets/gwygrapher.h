@@ -74,7 +74,7 @@ struct _GwyGrapherClass {
     GtkTableClass parent_class;
 
     void (*gwygrapher)(GwyGrapher *grapher);
-    void (*selected)(GwyGrapherArea *area);
+    void (*selected)(GwyGrapher *grapher);
         
     
     gpointer reserved1;

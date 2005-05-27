@@ -25,6 +25,7 @@
 #include <gdk/gdk.h>
 
 #include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraphdata.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
@@ -39,7 +40,7 @@ int
 main(int argc, char *argv[])
 {
     GtkWidget *window;
-    GtkWidget *axis, *label, *area, *graph, *foo;
+    GtkWidget *axis, *label, *data, *area, *graph, *foo;
     GObject *gmodel;
     GwyGraphCurveModel *model;
     gint i, k;
@@ -105,36 +106,36 @@ main(int argc, char *argv[])
     dln = (GwyDataLine *)gwy_data_line_new(200, 200, 1);
 
     gmodel = gwy_graph_model_new(NULL);
-    graph = gwy_grapher_new(gmodel);
-
+    //graph = gwy_grapher_new(gmodel);
+    
+    data = gwy_graph_data_new(gmodel);
+    
     model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(model, xp, yp, 100);
+    gwy_graph_curve_model_set_data(model, xp, yp, 20);
     gwy_graph_curve_model_set_description(model, "parabola");
 
     gwy_graph_model_add_curve(gmodel, model);
-
+   
+    model = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(model, xp, ys, 10);
+    gwy_graph_curve_model_set_description(model, "cosi");
+   
+    gwy_graph_model_add_curve(gmodel, model);
+ 
+    
     gwy_graph_model_set_label_visible(gmodel, TRUE);
+    
+    gtk_container_add (GTK_CONTAINER (window), data);
 
-    gtk_container_add(GTK_CONTAINER(window), graph);
-
-    gwy_grapher_enable_user_input(graph, TRUE);
+    //gwy_grapher_enable_user_input(graph, TRUE);
     printf("show!\n");
-    gtk_widget_show(graph);
+    gtk_widget_show (data);
 
     printf("show all!\n");
     gtk_widget_show_all(window);
 
     printf("add!\n");
-
-    for (k = 0; k < 1; k++) {
-        gwy_graph_model_remove_all_curves(gmodel);
-        g_object_unref(model);
-        model = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_data(model, xp, yp, 100);
-        gwy_graph_model_add_curve(gmodel, model);
-        printf("%d ", k);
-    }
-    //printf("n of curves: %d\n", gwy_graph_model_get_n_curves(gmodel));
+    gtk_widget_show_all(window);
 
     gtk_main();
 

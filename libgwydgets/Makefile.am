@@ -27,6 +27,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygrapharea.h \
 	gwygraphcorner.h \
 	gwygraphcurvemodel.h \
+	gwygraphdata.h \
 	gwygraphmodel.h \
 	gwygraphlabel.h \
 	gwygrapherareadialog.h \
@@ -90,6 +91,7 @@ libgwydgets_la_SOURCES = \
 	gwygraph.c \
 	gwygrapharea.c \
 	gwygraphcurvemodel.c \
+	gwygraphdata.c \
 	gwygraphmodel.c \
 	gwygraphexport.c \
 	gwygraphcorner.c \
