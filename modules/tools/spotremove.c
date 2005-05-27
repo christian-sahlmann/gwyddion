@@ -206,6 +206,7 @@ dialog_create(GwyUnitoolState *state)
     GwyPixmapLayer *layer;
     GtkWidget *dialog, *table, *label, *frame, *vbox, *omenu;
     gdouble min, max;
+    const guchar *pal;
     gint row;
 
     gwy_debug("");
@@ -220,8 +221,9 @@ dialog_create(GwyUnitoolState *state)
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    controls->pal
-        = g_strdup(gwy_container_get_string_by_name(data, "/0/base/palette"));
+    pal = GWY_GRADIENT_DEFAULT;
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
+    controls->pal = g_strdup(pal);
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
 
@@ -243,6 +245,7 @@ dialog_create(GwyUnitoolState *state)
 
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     gtk_table_attach(GTK_TABLE(table), controls->view, 0, 1, 0, 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -290,7 +293,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *mydata;
     GwyDataField *mydfield;
     gint isel[4];
-    const gchar *pal;
+    const guchar *pal;
 
     gwy_debug("");
 
@@ -301,7 +304,8 @@ dialog_update(GwyUnitoolState *state,
     mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
     mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
                                                                "/0/data"));
-    pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+    pal = GWY_GRADIENT_DEFAULT;
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     if (strcmp(pal, controls->pal)) {
         gwy_container_set_string_by_name(mydata, "/0/base/palette",
                                          g_strdup(pal));
