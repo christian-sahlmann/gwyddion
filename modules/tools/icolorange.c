@@ -17,16 +17,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <app/app.h>
 #include <app/settings.h>
 #include <app/unitool.h>
@@ -56,9 +59,12 @@ typedef struct {
     gboolean initial_use;
     gdouble min;
     gdouble max;
-    gdouble datamin;
-    gdouble datamax;
+    gdouble datamin;    /* FIXME: remove, DataField can cache it now */
+    gdouble datamax;    /* FIXME: remove, DataField can cache it now */
     GwyDataLine *heightdist;
+    GSList *modelist;
+    gulong mode_id;    /* TODO */
+    gboolean update_caused_by_mode;    /* FIXME: ugly temporary workaround */
     /* storable state */
     GQuark key_min;
     GQuark key_max;
@@ -81,6 +87,11 @@ static void       do_preview_updated          (GtkWidget *toggle,
 static void       histogram_selection_changed (GwyUnitoolState *state);
 static void       update_percentages          (ToolControls *controls);
 static void       update_graph_selection      (ToolControls *controls);
+static GwyLayerBasicRangeType get_range_type  (GwyUnitoolState *state);
+static void       set_range_type            (GwyUnitoolState *state,
+                                             GwyLayerBasicRangeType range_type);
+static void       range_mode_changed          (GtkWidget *button,
+                                               GwyUnitoolState *state);
 static void       gwy_data_field_dh           (GwyDataField *dfield,
                                                GwyDataLine *dh,
                                                gint nsteps);
@@ -163,19 +174,37 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    ToolControls *controls;
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
+
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
+
+    controls = (ToolControls*)state->user_data;
+    if (controls->modelist)
+        gwy_radio_buttons_set_current(controls->modelist, "range-type",
+                                      get_range_type(state));
+
+    view = gwy_data_window_get_data_view(state->data_window);
+    layer = gwy_data_view_get_base_layer(view);
+    /* TODO: Container */
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), "/0/base");
 }
 
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
+    static const GwyEnum range_modes[] = {
+        { N_("Full"), GWY_LAYER_BASIC_RANGE_FULL },
+        { N_("Fixed"), GWY_LAYER_BASIC_RANGE_FIXED },
+        { N_("Auto"), GWY_LAYER_BASIC_RANGE_RMS },
+    };
     ToolControls *controls;
     GwyContainer *settings;
-    GtkWidget *dialog, *table, *frame, *label, *hbox;
+    GtkWidget *dialog, *table, *frame, *label, *hbox, *button;
+    GSList *modelist, *l;
     gint row;
-
-    gwy_debug(" ");
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
@@ -187,6 +216,20 @@ dialog_create(GwyUnitoolState *state)
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
+                       FALSE, FALSE, 0);
+
+    hbox = gtk_hbox_new(TRUE, 0);
+    modelist = gwy_radio_buttons_create(range_modes, G_N_ELEMENTS(range_modes),
+                                        "range-type",
+                                        G_CALLBACK(range_mode_changed), state,
+                                        get_range_type(state));
+    for (l = modelist; l; l = g_slist_next(l)) {
+        button = GTK_WIDGET(l->data);
+        gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, TRUE, 0);
+    }
+    controls->modelist = modelist;
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
     controls->histogram = gwy_graph_new();
@@ -279,6 +322,11 @@ dialog_update(GwyUnitoolState *state,
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
         return;
+
+    if (reason == GWY_UNITOOL_UPDATED_DATA && controls->update_caused_by_mode) {
+        controls->update_caused_by_mode = FALSE;
+        return;
+    }
 
     gwy_debug("%d (initial: %d)", reason, controls->initial_use);
     controls->in_update = TRUE;
@@ -467,12 +515,6 @@ apply(GwyUnitoolState *state)
     data = gwy_data_window_get_data(state->data_window);
     gwy_container_set_double(data, controls->key_min, controls->min);
     gwy_container_set_double(data, controls->key_max, controls->max);
-
-    /*FIXME:
-    gwy_data_view_update
-        (GWY_DATA_VIEW(gwy_data_window_get_data_view
-                           (GWY_DATA_WINDOW(state->data_window))));
-                           */
     controls->in_update = FALSE;
 }
 
@@ -546,6 +588,94 @@ update_graph_selection(ToolControls *controls)
         graph_max = grel_max*graph_range + graph->area->x_min;
         gwy_graph_area_set_selection(graph->area, graph_min, graph_max);
     }
+}
+
+static GwyLayerBasicRangeType
+get_range_type(GwyUnitoolState *state)
+{
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+    GwyContainer *container;
+    GwyLayerBasicRangeType range_type = GWY_LAYER_BASIC_RANGE_FULL;
+
+    view = gwy_data_window_get_data_view(state->data_window);
+    container = gwy_data_view_get_data(view);
+    layer = gwy_data_view_get_base_layer(view);
+    key = gwy_layer_basic_get_range_type_key(GWY_LAYER_BASIC(layer));
+    if (key)
+        gwy_container_gis_enum_by_name(container, key, &range_type);
+
+    return range_type;
+}
+
+static void
+set_range_type(GwyUnitoolState *state,
+               GwyLayerBasicRangeType range_type)
+{
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
+    const gchar *key;
+    GwyContainer *container;
+    GwyLayerBasicRangeType old_range_type = GWY_LAYER_BASIC_RANGE_FULL;
+
+    view = gwy_data_window_get_data_view(state->data_window);
+    container = gwy_data_view_get_data(view);
+    layer = gwy_data_view_get_base_layer(view);
+    key = gwy_layer_basic_get_range_type_key(GWY_LAYER_BASIC(layer));
+    if (key)
+        gwy_container_gis_enum_by_name(container, key, &old_range_type);
+    if (range_type == old_range_type)
+        return;
+
+    if (!key) {
+        /* TODO: Container */
+        key = "/0/data/range-type";
+        gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), key);
+    }
+    gwy_container_set_enum_by_name(container, key, range_type);
+}
+
+static void
+range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
+                   GwyUnitoolState *state)
+{
+    ToolControls *controls;
+    GwyLayerBasicRangeType range_type;
+    GwyDataView *view;
+    GwyPixmapLayer *layer;
+
+    controls = (ToolControls*)state->user_data;
+    range_type = gwy_radio_buttons_get_current(controls->modelist,
+                                               "range-type");
+    set_range_type(state, range_type);
+
+    /* FIXME: this is a copy of dialog_update() parts.  It's already too ugly
+     * to add another broken logic */
+
+    if (controls->in_update)
+        return;
+    controls->in_update = TRUE;
+
+    view = gwy_data_window_get_data_view(state->data_window);
+    layer = gwy_data_view_get_base_layer(view);
+    gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer),
+                              &controls->min, &controls->max);
+    update_percentages(controls);
+    update_graph_selection(controls);
+
+    if (state->is_visible) {
+        gwy_unitool_update_label(state->value_format, controls->cmin,
+                                 controls->min);
+        gwy_unitool_update_label(state->value_format, controls->cmax,
+                                 controls->max);
+    }
+
+    gtk_widget_set_sensitive(controls->histogram,
+                             range_type == GWY_LAYER_BASIC_RANGE_FIXED);
+
+    controls->update_caused_by_mode = TRUE;
+    controls->in_update = FALSE;
 }
 
 static void
