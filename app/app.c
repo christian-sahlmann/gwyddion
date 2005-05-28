@@ -26,6 +26,7 @@
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwygraphwindow.h>
 #include "gwyapp.h"
 #include "gwyappinternal.h"
 
@@ -823,8 +824,7 @@ gwy_app_graph_window_create_for_window(GwyGrapher *grapher,
     g_return_val_if_fail(GWY_IS_GRAPHER(grapher), NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(grapher));
+    window = gwy_graph_window_new(grapher);
     gtk_window_set_title(GTK_WINDOW(window),
                          title ? title : _("Untitled Graph"));
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
@@ -847,7 +847,6 @@ gwy_app_graph_window_create_for_window(GwyGrapher *grapher,
 
     current_graph = g_list_append(current_graph, window);
 
-    gtk_widget_show(GTK_WIDGET(grapher));
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 

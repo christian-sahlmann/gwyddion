@@ -159,8 +159,8 @@ get_cell_string(GwyGraphModel *model, gint curve_index, gint data_index, gint ax
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[curve_index]);
         if (data_index >= curvemodel->n) return g_strdup(" ");
         
-        if (axis_index == 0) return g_strdup_printf("%f", curvemodel->xdata[data_index]);
-        else return g_strdup_printf("%f", curvemodel->ydata[data_index]);
+        if (axis_index == 0) return g_strdup_printf("%g", curvemodel->xdata[data_index]);
+        else return g_strdup_printf("%g", curvemodel->ydata[data_index]);
     }
 }
 

@@ -165,15 +165,50 @@ gwy_graph_window_new(GwyGrapher *graph)
     gtk_container_add(GTK_CONTAINER(vbox), graphwindow->notebook);
     /*add buttons*/
 
+    hbox = gtk_hbox_new(FALSE, 0);
+
+    graphwindow->button_read_value = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_read_value),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_POINTER, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_read_value, TRUE, TRUE, 0);
+    
+    graphwindow->button_measure_points = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_measure_points),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, TRUE, TRUE, 4);
+ 
+    graphwindow->button_zoom_in = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_in),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_IN, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_in, TRUE, TRUE, 0);
+ 
+    graphwindow->button_zoom_out = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_out),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_OUT, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out, TRUE, TRUE, 4);
+
+    graphwindow->button_export_ascii = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_ascii),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_ascii, TRUE, TRUE, 0);
+
+    graphwindow->button_export_vector = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_vector),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_vector, TRUE, TRUE, 0);
+
+    graphwindow->button_export_bitmap = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_bitmap),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_bitmap, TRUE, TRUE, 0);
+
+
+    gtk_container_add(GTK_CONTAINER(vbox), hbox);
+    
     /*
-    button = gtk_button_new();
-    gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
-                       FALSE, FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(GWY_STOCK_LESS,
-                                               GTK_ICON_SIZE_BUTTON));
     gtk_tooltips_set_tip(gwy3dwindow->tips, button,
                          _("Show full controls"), NULL);
+    
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_graph_window_select_controls),

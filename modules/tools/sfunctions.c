@@ -314,6 +314,7 @@ apply(GwyUnitoolState *state)
     graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
     gtk_widget_set_size_request(graph, 400, 300);
 
+    
     gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
                                            state->data_window,
                                            _(sf_types[controls->out].name));

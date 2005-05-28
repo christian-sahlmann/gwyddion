@@ -403,8 +403,8 @@ gwy_app_run_graph_func_cb(gchar *name)
     graph_window = gwy_app_graph_window_get_current();
     g_return_if_fail(graph_window);
     graph = GTK_BIN(graph_window)->child;
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    gwy_graph_func_run(name, GWY_GRAPH(graph));
+    g_return_if_fail(GWY_IS_GRAPHER(graph));
+    gwy_graph_func_run(name, GWY_GRAPHER(graph));
     /* FIXME TODO: some equivalent of this:
     gwy_app_data_view_update(data_view);
     */
