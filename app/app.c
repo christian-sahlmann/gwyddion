@@ -1322,7 +1322,6 @@ gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
         { N_("/Remove _Mask"), gwy_app_mask_kill_cb, NULL },
         { N_("/Mask _Color"),  gwy_app_change_mask_color_cb, NULL },
         { N_("/Fix _Zero"), gwy_app_run_process_func_cb, "fix_zero" },
-        { N_("/Reset Color _Range"), gwy_app_reset_color_range, NULL },
         { N_("/Remove _Presentation"), gwy_app_show_kill_cb, NULL },
         { N_("/_Level"), gwy_app_run_process_func_cb, "level" },
         { N_("/Zoom _1:1"), gwy_app_zoom_set_cb, GINT_TO_POINTER(10000) },

@@ -270,7 +270,7 @@ gwy_unitool_selection_updated_real(GwyUnitoolState *state,
 }
 
 /*
- * Handle "updated" signal of DataView, eventually calling tool's callback.
+ * Handle "redrawn" signal of DataView, eventually calling tool's callback.
  */
 static void
 gwy_unitool_data_updated_cb(GwyUnitoolState *state)
