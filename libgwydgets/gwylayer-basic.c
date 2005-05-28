@@ -399,8 +399,10 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
             gwy_container_gis_double(data, basic_layer->rms_key, &r);
         avg = gwy_data_field_get_avg(data_field);
         rms = gwy_data_field_get_rms(data_field);
-        rmin = avg - r*rms;
-        rmax = avg + r*rms;
+        rmin = gwy_data_field_get_min(data_field);
+        rmax = gwy_data_field_get_max(data_field);
+        rmin = MAX(rmin, avg - r*rms);
+        rmax = MIN(rmax, avg + r*rms);
         break;
 
         default:
