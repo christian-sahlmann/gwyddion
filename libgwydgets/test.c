@@ -28,6 +28,7 @@
 #include <libgwydgets/gwygraphdata.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwygraphwindow.h>
 
 
 static void
@@ -40,7 +41,7 @@ int
 main(int argc, char *argv[])
 {
     GtkWidget *window;
-    GtkWidget *axis, *label, *data, *area, *graph, *foo;
+    GtkWidget *gwindow, *axis, *label, *data, *area, *graph, *foo;
     GObject *gmodel;
     GwyGraphCurveModel *model;
     gint i, k;
@@ -80,11 +81,11 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
 
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    //window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), NULL);
+    //g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), NULL);
 
-    gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+    //gtk_container_set_border_width(GTK_CONTAINER(window), 0);
 
     /*
        label = gwy_graph_label_new();
@@ -106,9 +107,7 @@ main(int argc, char *argv[])
     dln = (GwyDataLine *)gwy_data_line_new(200, 200, 1);
 
     gmodel = gwy_graph_model_new(NULL);
-    //graph = gwy_grapher_new(gmodel);
-    
-    data = gwy_graph_data_new(gmodel);
+    graph = gwy_grapher_new(gmodel);
     
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 20);
@@ -121,21 +120,22 @@ main(int argc, char *argv[])
     gwy_graph_curve_model_set_description(model, "cosi");
    
     gwy_graph_model_add_curve(gmodel, model);
- 
     
     gwy_graph_model_set_label_visible(gmodel, TRUE);
     
-    gtk_container_add (GTK_CONTAINER (window), data);
+
+    gwindow = gwy_graph_window_new(graph);
+    
+    //gtk_container_add (GTK_CONTAINER (window), gwindow);
 
     //gwy_grapher_enable_user_input(graph, TRUE);
-    printf("show!\n");
-    gtk_widget_show (data);
+    //printf("show!\n");
+    gtk_widget_show (gwindow);
+
+    g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);
 
     printf("show all!\n");
-    gtk_widget_show_all(window);
-
-    printf("add!\n");
-    gtk_widget_show_all(window);
+    gtk_widget_show_all(gwindow);
 
     gtk_main();
 

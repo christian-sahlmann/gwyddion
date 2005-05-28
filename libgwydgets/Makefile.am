@@ -30,6 +30,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphdata.h \
 	gwygraphmodel.h \
 	gwygraphlabel.h \
+	gwygraphwindow.h \
 	gwygrapherareadialog.h \
 	gwygrapherarea.h \
 	gwygrapherbasics.h \
@@ -96,6 +97,7 @@ libgwydgets_la_SOURCES = \
 	gwygraphexport.c \
 	gwygraphcorner.c \
 	gwygraphlabel.c \
+	gwygraphwindow.c \
 	gwygrapherareadialog.c \
 	gwygrapherarea.c \
 	gwygrapherbasics.c \
@@ -153,7 +155,7 @@ gwydgettypes.c: $(enum_headers) gwydgettypes.c.template
 endif
 
 # Note these are test programs not to be included in the distro
-#noinst_PROGRAMS = test
+noinst_PROGRAMS = test
 #
 #main_SOURCES = main.c
 #main_LDADD = libgwydgets.la \
@@ -161,12 +163,12 @@ endif
 #	$(libgwyprocess) \
 #	$(libgwyddion)
 #
-#test_SOURCES = test.c
-#test_LDADD = libgwydgets.la \
-#	$(libgwydraw) \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
-#
+test_SOURCES = test.c
+test_LDADD = libgwydgets.la \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+
 #create_data_SOURCES = create-data.c
 #create_data_LDADD = \
 #	$(libgwyprocess) \
