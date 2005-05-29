@@ -358,6 +358,36 @@ gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
     return g_quark_to_string(g_quark_from_string(s));
 }
 
+/* TODO: move to stats, cache it */
+static void
+gwy_data_field_get_ra_range(GwyDataField *data_field,
+                            gdouble *ra_minus,
+                            gdouble *ra_plus)
+{
+    gdouble avg, ram, rap, x;
+    gdouble *p;
+    guint nrap, i, n;
+
+    avg = gwy_data_field_get_avg(data_field);
+    nrap = 0;
+    rap = ram = 0.0;
+    n = data_field->xres*data_field->yres;
+    for (i = n, p = data_field->data; i; i--, p++) {
+        x = *p - avg;
+        if (x < 0)
+            ram -= x;
+        else {
+            rap += x;
+            nrap++;
+        }
+    }
+
+    if (ra_minus)
+        *ra_minus = (n - nrap) ? ram/(n - nrap) : 0.0;
+    if (ra_plus)
+        *ra_plus = nrap ? rap/nrap : 0.0;
+}
+
 void
 gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
                           gdouble *min,
@@ -366,7 +396,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     GwyContainer *data;
     GwyDataField *data_field;
     GwyLayerBasicRangeType range_type;
-    gdouble rmin, rmax, avg, rms, r;
+    gdouble rmin, rmax, ramin, ramax;
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
     data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
@@ -393,16 +423,14 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
             rmax = gwy_data_field_get_max(data_field);
         break;
 
-        case GWY_LAYER_BASIC_RANGE_RMS:
-        r = 1.8;
-        if (basic_layer->rms_key)
-            gwy_container_gis_double(data, basic_layer->rms_key, &r);
-        avg = gwy_data_field_get_avg(data_field);
-        rms = gwy_data_field_get_rms(data_field);
+        case GWY_LAYER_BASIC_RANGE_AUTO:
+        gwy_data_field_get_ra_range(data_field, &ramin, &ramax);
+        ramin = gwy_data_field_get_avg(data_field) - 2.5*ramin;
+        ramax = gwy_data_field_get_avg(data_field) + 2.5*ramax;
         rmin = gwy_data_field_get_min(data_field);
         rmax = gwy_data_field_get_max(data_field);
-        rmin = MAX(rmin, avg - r*rms);
-        rmax = MIN(rmax, avg + r*rms);
+        rmin = MAX(rmin, ramin);
+        rmax = MIN(rmax, ramax);
         break;
 
         default:
@@ -414,23 +442,6 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
         *min = rmin;
     if (max)
         *max = rmax;
-}
-
-void
-gwy_layer_basic_set_rms_key(GwyLayerBasic *basic_layer,
-                            const gchar *key)
-{
-    g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
-    gwy_layer_basic_set_key(basic_layer, key,
-                            &basic_layer->rms_key, &basic_layer->rms_id);
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
-}
-
-const gchar*
-gwy_layer_basic_get_rms_key(GwyLayerBasic *basic_layer)
-{
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
-    return g_quark_to_string(basic_layer->rms_key);
 }
 
 static void

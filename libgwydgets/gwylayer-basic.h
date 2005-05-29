@@ -56,9 +56,6 @@ struct _GwyLayerBasic {
     GQuark max_key;
     gulong max_id;
 
-    GQuark rms_key;
-    gulong rms_id;
-
     gpointer reserved2;
 };
 
@@ -80,9 +77,6 @@ const gchar*    gwy_layer_basic_get_gradient_key   (GwyLayerBasic *basic_layer);
 void            gwy_layer_basic_set_min_max_key    (GwyLayerBasic *basic_layer,
                                                     const gchar *prefix);
 const gchar*    gwy_layer_basic_get_min_max_key    (GwyLayerBasic *basic_layer);
-void            gwy_layer_basic_set_rms_key        (GwyLayerBasic *basic_layer,
-                                                    const gchar *key);
-const gchar*    gwy_layer_basic_get_rms_key        (GwyLayerBasic *basic_layer);
 void            gwy_layer_basic_set_range_type_key (GwyLayerBasic *basic_layer,
                                                     const gchar *key);
 const gchar*    gwy_layer_basic_get_range_type_key (GwyLayerBasic *basic_layer);

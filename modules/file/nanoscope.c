@@ -610,7 +610,7 @@ select_which_data(GList *list)
     controls.data = GWY_CONTAINER(gwy_container_new());
     gwy_container_set_object_by_name(controls.data, "data", dfield);
     gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_RMS);
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     zoomval = 120.0/MAX(xres, yres);

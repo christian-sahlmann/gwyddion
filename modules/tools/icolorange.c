@@ -198,7 +198,7 @@ dialog_create(GwyUnitoolState *state)
     static const GwyEnum range_modes[] = {
         { N_("Full"), GWY_LAYER_BASIC_RANGE_FULL },
         { N_("Fixed"), GWY_LAYER_BASIC_RANGE_FIXED },
-        { N_("Auto"), GWY_LAYER_BASIC_RANGE_RMS },
+        { N_("Auto"), GWY_LAYER_BASIC_RANGE_AUTO },
     };
     ToolControls *controls;
     GwyContainer *settings;

@@ -424,7 +424,7 @@ select_which_data(APEFile *apefile)
     gwy_container_set_object_by_name(controls.data, "data",
                                      apefile->data[0]);
     gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_RMS);
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
 
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);

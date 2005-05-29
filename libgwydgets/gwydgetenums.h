@@ -125,7 +125,7 @@ typedef enum {
 typedef enum {
     GWY_LAYER_BASIC_RANGE_FULL,
     GWY_LAYER_BASIC_RANGE_FIXED,
-    GWY_LAYER_BASIC_RANGE_RMS
+    GWY_LAYER_BASIC_RANGE_AUTO
 } GwyLayerBasicRangeType;
 
 G_END_DECLS

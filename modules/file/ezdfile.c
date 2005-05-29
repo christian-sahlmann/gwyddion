@@ -593,7 +593,7 @@ select_which_data(GPtrArray *ezdfile,
     read_data_field(dfield, section);
     gwy_container_set_object_by_name(controls.data, "data", dfield);
     gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_RMS);
+                                   GWY_LAYER_BASIC_RANGE_AUTO);
     g_object_unref(dfield);
 
     controls.data_view = gwy_data_view_new(controls.data);
