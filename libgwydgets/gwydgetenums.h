@@ -83,11 +83,11 @@ typedef enum {
 
 typedef enum {
     GWY_GRAPH_STATUS_PLAIN,
-    GWY_GRAPH_STATUS_CURSOR,
     GWY_GRAPH_STATUS_XSEL,
     GWY_GRAPH_STATUS_YSEL,
     GWY_GRAPH_STATUS_POINTS,
     GWY_GRAPH_STATUS_ZOOM,
+    GWY_GRAPH_STATUS_CURSOR,
 } GwyGraphStatusType;
 
 typedef enum {

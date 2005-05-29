@@ -33,6 +33,7 @@
 
 enum {
     SELECTED_SIGNAL,
+    MOUSEMOVED_SIGNAL,
     LAST_SIGNAL
 };
 
@@ -95,11 +96,23 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
     widget_class->size_allocate = gwy_grapher_size_allocate;
 
     klass->selected = NULL;
+    klass->mousemoved = NULL;
+    
     gwygrapher_signals[SELECTED_SIGNAL]
                 = g_signal_new ("selected",
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
                                 G_STRUCT_OFFSET (GwyGrapherClass, selected),
+                                NULL,
+                                NULL,
+                                g_cclosure_marshal_VOID__VOID,
+                                G_TYPE_NONE, 0);
+
+    gwygrapher_signals[MOUSEMOVED_SIGNAL]
+                = g_signal_new ("mousemoved",
+                                G_TYPE_FROM_CLASS (klass),
+                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                G_STRUCT_OFFSET (GwyGrapherClass, mousemoved),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -186,7 +199,10 @@ gwy_grapher_init(GwyGrapher *grapher)
 
     g_signal_connect_swapped(grapher->area, "selected",
                      G_CALLBACK(gwy_grapher_signal_selected), grapher);
-    
+
+    g_signal_connect_swapped(grapher->area, "mousemoved",
+                     G_CALLBACK(gwy_grapher_signal_mousemoved), grapher);
+     
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
@@ -414,11 +430,6 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
 
     switch (grapher->area->status)
     {
-        case GWY_GRAPH_STATUS_CURSOR:
-        selection[0] = grapher->area->cursordata->data_point.x;
-        selection[1] = grapher->area->cursordata->data_point.y;
-        break;
-        
         case GWY_GRAPH_STATUS_XSEL:    
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
@@ -534,6 +545,19 @@ gwy_grapher_signal_selected(GwyGrapher *grapher)
 {
     g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[SELECTED_SIGNAL], 0);
 }
+
+void       
+gwy_grapher_signal_mousemoved(GwyGrapher *grapher)
+{
+    g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[MOUSEMOVED_SIGNAL], 0);
+}
+
+void       
+gwy_grapher_get_cursor(GwyGrapher *grapher, gdouble *x_cursor, gdouble *y_cursor)
+{
+    gwy_grapher_area_get_cursor(grapher->area, x_cursor, y_cursor);
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

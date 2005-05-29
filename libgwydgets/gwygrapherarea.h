@@ -43,11 +43,10 @@ typedef struct _GwyGrapherAreaClass GwyGrapherAreaClass;
 
 typedef enum {
     GWY_GRAPHER_STATUS_PLAIN  = 0,
-    GWY_GRAPHER_STATUS_CURSOR = 1,
-    GWY_GRAPHER_STATUS_XSEL   = 2,
-    GWY_GRAPHER_STATUS_YSEL   = 3,
-    GWY_GRAPHER_STATUS_POINTS = 4,
-    GWY_GRAPHER_STATUS_ZOOM   = 5
+    GWY_GRAPHER_STATUS_XSEL   = 1,
+    GWY_GRAPHER_STATUS_YSEL   = 2,
+    GWY_GRAPHER_STATUS_POINTS = 3,
+    GWY_GRAPHER_STATUS_ZOOM   = 4
 } GwyGrapherStatusType;
 
 
@@ -102,11 +101,14 @@ struct _GwyGrapherArea {
     GwyGrapherStatus_CursorData *cursordata;
     GwyGrapherStatus_ZoomData *zoomdata;
 
+    GwyGrapherStatus_CursorData *actual_cursor_data;
+
     gpointer graph_model;
     GPtrArray *curves;
 
     /*selection drawing*/
     gboolean selecting;
+    gboolean mouse_present;
 
     /*real boundaries*/
     gint x_max;
@@ -147,6 +149,7 @@ struct _GwyGrapherAreaClass {
     GdkCursor *arrow_cursor;
     void (*selected)(GwyGrapherArea *area);
     void (*zoomed)(GwyGrapherArea *area);
+    void (*mousemoved)(GwyGrapherArea *area);
 
 
     gpointer reserved1;
@@ -162,6 +165,8 @@ void gwy_grapher_area_signal_selected(GwyGrapherArea *area);
 
 void gwy_grapher_area_signal_zoomed(GwyGrapherArea *area);
 
+void gwy_grapher_area_signal_mousemoved(GwyGrapherArea *area);
+
 void gwy_grapher_area_refresh(GwyGrapherArea *area);
 
 void gwy_grapher_area_set_selection(GwyGrapherArea *area, GwyGraphStatusType *status, gpointer statusdata);
@@ -175,6 +180,9 @@ void gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
 void gwy_grapher_area_clear_selection(GwyGrapherArea *area);
 
 void gwy_grapher_area_enable_user_input(GwyGrapherArea *area, gboolean enable);
+
+void gwy_grapher_area_get_cursor(GwyGrapherArea *area, gdouble *x_cursor, gdouble *y_cursor);
+
 
 G_END_DECLS
 

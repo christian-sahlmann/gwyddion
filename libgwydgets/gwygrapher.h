@@ -75,7 +75,7 @@ struct _GwyGrapherClass {
 
     void (*gwygrapher)(GwyGrapher *grapher);
     void (*selected)(GwyGrapher *grapher);
-        
+    void (*mousemoved)(GwyGrapher *grapher);    
     
     gpointer reserved1;
     gpointer reserved2;
@@ -96,12 +96,16 @@ GwyGraphStatusType  gwy_grapher_get_status(GwyGrapher *grapher);
 GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher);
 
 void       gwy_grapher_signal_selected(GwyGrapher *grapher);
+void       gwy_grapher_signal_mousemoved(GwyGrapher *grapher);
 
 gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
 void       gwy_grapher_get_selection(GwyGrapher *grapher,
                                      gdouble *selection);
 
 void       gwy_grapher_clear_selection(GwyGrapher *grapher);
+
+void       gwy_grapher_get_cursor(GwyGrapher *grapher,
+                                  gdouble *x_cursor, gdouble *y_cursor);
 
 void       gwy_grapher_request_x_range(GwyGrapher *grapher, gdouble x_min_req, gdouble x_max_req);
 void       gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, gdouble y_max_req);

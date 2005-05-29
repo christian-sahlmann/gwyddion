@@ -39,6 +39,7 @@
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
+    MOUSEMOVED_SIGNAL,
     LAST_SIGNAL
 };
 
@@ -64,6 +65,9 @@ static gboolean gwy_grapher_area_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
 static gboolean gwy_grapher_area_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
+static gboolean gwy_grapher_area_leave_notify         (GtkWidget *widget,
+                                                      GdkEventCrossing *event);
+
 static gint     gwy_grapher_area_find_curve           (GwyGrapherArea *area, 
                                                       gdouble x, gdouble y);
 static gint     gwy_grapher_area_find_selection       (GwyGrapherArea *area, 
@@ -163,9 +167,11 @@ gwy_grapher_area_class_init(GwyGrapherAreaClass *klass)
     widget_class->button_press_event = gwy_grapher_area_button_press;
     widget_class->button_release_event = gwy_grapher_area_button_release;
     widget_class->motion_notify_event = gwy_grapher_area_motion_notify;
-
+    widget_class->leave_notify_event = gwy_grapher_area_leave_notify;
+    
     klass->selected = NULL;
     klass->zoomed = NULL;
+    klass->mousemoved = NULL;
     klass->cross_cursor = NULL;
     klass->arrow_cursor = NULL;
     gwygrapherarea_signals[SELECTED_SIGNAL]
@@ -187,6 +193,16 @@ gwy_grapher_area_class_init(GwyGrapherAreaClass *klass)
                         NULL,
                         g_cclosure_marshal_VOID__VOID,
                         G_TYPE_NONE, 0);
+
+    gwygrapherarea_signals[MOUSEMOVED_SIGNAL]
+        = g_signal_new ("mousemoved",
+                        G_TYPE_FROM_CLASS (klass),
+                        G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                        G_STRUCT_OFFSET (GwyGrapherAreaClass, mousemoved),
+                        NULL,
+                        NULL,
+                        g_cclosure_marshal_VOID__VOID,
+                        G_TYPE_NONE, 0);
 }
 
 static void
@@ -198,16 +214,18 @@ gwy_grapher_area_init(GwyGrapherArea *area)
     area->gc = NULL;
     
     area->selecting = FALSE;
+    area->mouse_present = TRUE;
 
     area->pointdata = g_new(GwyGrapherStatus_PointData, 1);
     area->pointsdata = g_new(GwyGrapherStatus_PointsData, 1);
     area->areadata = g_new(GwyGrapherStatus_AreaData, 1);
     area->areasdata = g_new(GwyGrapherStatus_AreasData, 1);     
-    area->cursordata = g_new(GwyGrapherStatus_CursorData, 1);
     area->zoomdata = g_new(GwyGrapherStatus_ZoomData, 1);
 
     area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataArea));
     area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataPoint)); 
+  
+    area->actual_cursor_data = g_new(GwyGrapherStatus_CursorData, 1);
     
     area->colors = NULL;
     area->enable_user_input = TRUE;
@@ -635,12 +653,9 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
-    if (area->status == GWY_GRAPH_STATUS_CURSOR)
-    {
-        area->cursordata->data_point.x = dx;
-        area->cursordata->data_point.y = dy;
-        gwy_grapher_area_signal_selected(area);
-    }
+    area->actual_cursor_data->data_point.x = dx;
+    area->actual_cursor_data->data_point.y = dy;
+    gwy_grapher_area_signal_mousemoved(area);
     
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
@@ -897,6 +912,18 @@ gwy_grapher_area_signal_zoomed(GwyGrapherArea *area)
 }
 
 /**
+ * gwy_grapher_area_signal_mousemoved:
+ * @area: grapher area
+ *
+ * emit signal that user moved mouse over graph area.
+ **/
+void
+gwy_grapher_area_signal_mousemoved(GwyGrapherArea *area)
+{
+    g_signal_emit (G_OBJECT (area), gwygrapherarea_signals[MOUSEMOVED_SIGNAL], 0);
+}
+
+/**
  * gwy_grapher_area_signal_refresh:
  * @area: grapher area 
  *
@@ -990,5 +1017,42 @@ gwy_grapher_area_enable_user_input(GwyGrapherArea *area, gboolean enable)
     area->enable_user_input = enable;
     gwy_grapher_label_enable_user_input(area->lab, enable);
 }
+
+/**
+   * gwy_grapher_area_get_cursor:
+   * @area: grapher area
+   * @x_cursor: x value corresponding to cursor position
+   * @y_cursor: y value corresponding to cursor position
+   *
+   * Gets mouse cursor related values withing graph area
+   */
+void 
+gwy_grapher_area_get_cursor(GwyGrapherArea *area, gdouble *x_cursor, gdouble *y_cursor)
+{
+    if (area->mouse_present)
+    {
+        *x_cursor = area->actual_cursor_data->data_point.x;
+        *y_cursor = area->actual_cursor_data->data_point.y;
+
+    }
+    else
+    {
+        *x_cursor = 0;
+        *y_cursor = 0;
+    }
+}
+
+static 
+gboolean gwy_grapher_area_leave_notify(GtkWidget *widget, GdkEventCrossing *event)
+{
+    GwyGrapherArea *area = GWY_GRAPHER_AREA(widget);
+
+    printf("dafdfas\n");
+    area->mouse_present = FALSE;
+
+    return FALSE;
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

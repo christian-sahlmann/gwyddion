@@ -49,7 +49,6 @@ struct _GwyGraphWindow {
     GtkWidget *graph;
     GtkWidget *data;
 
-    GtkWidget *button_read_value;
     GtkWidget *button_measure_points;
     GtkWidget *button_measure_lines;
     
@@ -60,6 +59,9 @@ struct _GwyGraphWindow {
     GtkWidget *button_export_bitmap;
     GtkWidget *button_export_vector;
 
+    GtkWidget *label_what;
+    GtkWidget *label_x;
+    GtkWidget *label_y;
     
     GtkTooltips *tips;
 
