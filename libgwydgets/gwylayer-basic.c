@@ -207,6 +207,7 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
     GwyLayerBasic *basic_layer;
+    GwyLayerBasicRangeType range_type;
     GwyDataField *data_field = NULL;
     gint width, height;
 
@@ -225,6 +226,28 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
                              G_CALLBACK(gwy_layer_basic_gradient_item_changed));
     gwy_layer_basic_gradient_connect(basic_layer);
 
+    gwy_layer_basic_container_connect
+                              (basic_layer,
+                               g_quark_to_string(basic_layer->range_type_key),
+                               &basic_layer->range_type_id,
+                               G_CALLBACK(gwy_layer_basic_changed));
+
+    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    /*if (basic_layer->range_type_key)
+        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
+    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {*/
+        gwy_layer_basic_container_connect
+                                      (basic_layer,
+                                       g_quark_to_string(basic_layer->min_key),
+                                       &basic_layer->min_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+        gwy_layer_basic_container_connect
+                                      (basic_layer,
+                                       g_quark_to_string(basic_layer->max_key),
+                                       &basic_layer->max_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+    /*}*/
+
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
@@ -241,11 +264,21 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
 
-    if (basic_layer->gradient_item_id) {
+    if (basic_layer->range_type_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->range_type_id);
+    if (basic_layer->min_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->min_id);
+    if (basic_layer->max_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->max_id);
+    if (basic_layer->gradient_item_id)
         g_signal_handler_disconnect(layer->data, basic_layer->gradient_item_id);
-        basic_layer->gradient_item_id = 0;
-    }
     gwy_layer_basic_gradient_disconnect(basic_layer);
+
+    basic_layer->range_type_id = 0;
+    basic_layer->min_id = 0;
+    basic_layer->max_id = 0;
+    basic_layer->gradient_item_id = 0;
+
     gwy_object_unref(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
@@ -396,7 +429,7 @@ gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
     len = strlen(prefix);
     g_assert(len >= 4);
     s = g_newa(gchar, len-3);
-    g_strlcpy(s, prefix, len-4);
+    g_strlcpy(s, prefix, len-3);
 
     /* Eventually instantiate the quark string and return this one */
     return g_quark_to_string(g_quark_from_string(s));

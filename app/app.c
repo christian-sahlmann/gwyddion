@@ -483,6 +483,8 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
     blayer = GWY_LAYER_BASIC(layer);
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(blayer, "/0/base/palette");
+    gwy_layer_basic_set_range_type_key(blayer, "/0/base/range-type");
+    gwy_layer_basic_set_min_max_key(blayer, "/0/base");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
 
     /* force sync */
@@ -1626,22 +1628,6 @@ gwy_app_show_kill_cb(void)
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
         gwy_container_remove_by_name(data, "/0/show");
     }
-}
-
-static void
-gwy_app_reset_color_range(void)
-{
-    GwyDataWindow *data_window;
-    GwyDataView *data_view;
-    GwyContainer *data;
-    gboolean min, max;
-
-    data_window = gwy_app_data_window_get_current();
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(data_view);
-    min = gwy_container_remove_by_name(data, "/0/base/min");
-    max = gwy_container_remove_by_name(data, "/0/base/max");
 }
 
 /***** Documentation *******************************************************/

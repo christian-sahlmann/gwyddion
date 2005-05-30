@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <libgwyddion/gwymath.h>
@@ -163,8 +163,6 @@ use(GwyDataWindow *data_window,
         state->apply_doesnt_close = TRUE;
     }
     controls = (ToolControls*)state->user_data;
-    controls->key_min = g_quark_from_string("/0/base/min");
-    controls->key_max = g_quark_from_string("/0/base/max");
     controls->initial_use = TRUE;
     controls->range_source = USE_SELECTION;
 
@@ -177,6 +175,9 @@ layer_setup(GwyUnitoolState *state)
     ToolControls *controls;
     GwyDataView *view;
     GwyPixmapLayer *layer;
+    const gchar *prefix;
+    gchar *key;
+    guint len;
 
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer, "is_crop", FALSE, NULL);
@@ -188,8 +189,16 @@ layer_setup(GwyUnitoolState *state)
 
     view = gwy_data_window_get_data_view(state->data_window);
     layer = gwy_data_view_get_base_layer(view);
-    /* TODO: Container */
-    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), "/0/base");
+    prefix = gwy_layer_basic_get_min_max_key(GWY_LAYER_BASIC(layer));
+    g_assert(prefix);
+    len = strlen(prefix);
+    key = g_newa(gchar, len + sizeof("/min"));
+    g_stpcpy(g_stpcpy(key, prefix), "/min");
+    controls->key_min = g_quark_from_string(key);
+    g_printerr("key_min = <%s>\n", key);
+    key[len + 2] = 'a';
+    key[len + 3] = 'x';
+    controls->key_max = g_quark_from_string(key);
 }
 
 static GtkWidget*
