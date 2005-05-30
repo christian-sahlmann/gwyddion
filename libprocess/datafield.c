@@ -1278,7 +1278,7 @@ gwy_data_field_invert(GwyDataField *a,
         }
     }
 
-    /* Nothing changes in cache */
+    /* FIXME: we can recompute ARF and ART too */
     a->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS) | CBIT(MED);
     g_free(line);
 }
@@ -1302,12 +1302,14 @@ gwy_data_field_fill(GwyDataField *data_field, gdouble value)
 
     /* We can precompute stats */
     data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                         | CBIT(MED);
+                         | CBIT(MED) | CBIT(ARF) | CBIT(ART);
     CVAL(data_field, MIN) = value;
     CVAL(data_field, MAX) = value;
     CVAL(data_field, SUM) = data_field->xres * data_field->yres * value;
     CVAL(data_field, RMS) = 0.0;
     CVAL(data_field, MED) = value;
+    CVAL(data_field, ARF) = value;
+    CVAL(data_field, ART) = value;
 }
 
 /**
@@ -1361,12 +1363,14 @@ gwy_data_field_clear(GwyDataField *data_field)
 
     /* We can precompute stats */
     data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                         | CBIT(MED);
+                         | CBIT(MED) | CBIT(ARF) | CBIT(ART);
     CVAL(data_field, MIN) = 0.0;
     CVAL(data_field, MAX) = 0.0;
     CVAL(data_field, SUM) = 0.0;
     CVAL(data_field, RMS) = 0.0;
     CVAL(data_field, MED) = 0.0;
+    CVAL(data_field, ARF) = 0.0;
+    CVAL(data_field, ART) = 0.0;
 }
 
 /**
@@ -1429,14 +1433,18 @@ gwy_data_field_multiply(GwyDataField *data_field, gdouble value)
 
     /* We can transform stats */
     data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                          | CBIT(MED);
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART);
     CVAL(data_field, MIN) *= value;
     CVAL(data_field, MAX) *= value;
     CVAL(data_field, SUM) *= value;
     CVAL(data_field, RMS) *= value;
     CVAL(data_field, MED) *= value;
-    if (value < 0)
+    CVAL(data_field, ARF) *= value;
+    CVAL(data_field, ART) *= value;
+    if (value < 0) {
         GWY_SWAP(gdouble, CVAL(data_field, MIN), CVAL(data_field, MAX));
+        GWY_SWAP(gdouble, CVAL(data_field, ARF), CVAL(data_field, ART));
+    }
 }
 
 /**
@@ -1497,12 +1505,14 @@ gwy_data_field_add(GwyDataField *data_field, gdouble value)
 
     /* We can transform stats */
     data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                          | CBIT(MED);
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART);
     CVAL(data_field, MIN) += value;
     CVAL(data_field, MAX) += value;
     CVAL(data_field, SUM) += data_field->xres * data_field->yres * value;
     /* RMS doesn't change */
     CVAL(data_field, MED) += value;
+    CVAL(data_field, ARF) += value;
+    CVAL(data_field, ART) += value;
 }
 
 /**
@@ -2353,6 +2363,8 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  * @GWY_DATA_FIELD_CACHE_SUM: Sum of all values.
  * @GWY_DATA_FIELD_CACHE_RMS: Root mean square.
  * @GWY_DATA_FIELD_CACHE_MED: Median.
+ * @GWY_DATA_FIELD_CACHE_ARF: Auto-range from.
+ * @GWY_DATA_FIELD_CACHE_ART: Auto-range to.
  * @GWY_DATA_FIELD_CACHE_SIZE: The size of statistics cache.
  *
  * Cached data field quantity types.

@@ -69,6 +69,9 @@ gdouble gwy_data_field_area_get_surface_area(GwyDataField *data_field,
                                              gint width,
                                              gint height,
                                              GwyInterpolationType interpolation);
+void    gwy_data_field_get_autorange        (GwyDataField *data_field,
+                                             gdouble *from,
+                                             gdouble *to);
 void    gwy_data_field_get_stats            (GwyDataField *data_field,
                                              gdouble *avg,
                                              gdouble *ra,

@@ -402,53 +402,6 @@ gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
     return g_quark_to_string(g_quark_from_string(s));
 }
 
-/* TODO: move to stats, cache it */
-static void
-gwy_data_field_get_range(GwyDataField *data_field,
-                         gdouble *from,
-                         gdouble *to)
-{
-    enum { NDH = 512 };
-    guint dh[NDH];
-    gdouble min, max, rmin, rmax, q;
-    gdouble *p;
-    guint i, n, j;
-
-    min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_max(data_field);
-    if (min == max) {
-        if (from)
-            *from = min;
-        if (to)
-            *to = max;
-        return;
-    }
-    max += 1e-6*(max - min);
-    q = NDH/(max - min);
-
-    n = data_field->xres*data_field->yres;
-    memset(dh, 0, NDH*sizeof(guint));
-    for (i = n, p = data_field->data; i; i--, p++) {
-        j = (*p - min)*q;    /* rounding toward zero is ok here */
-        dh[j]++;
-    }
-
-    j = 0;
-    for (i = j = 0; dh[i] < 5e-2*n/NDH && j < 2e-2*n; i++)
-        j += dh[i];
-    rmin = min + i/q;
-
-    j = 0;
-    for (i = NDH-1, j = 0; dh[i] < 5e-2*n/NDH && j < 2e-2*n; i--)
-        j += dh[i];
-    rmax = min + (i + 1)/q;
-
-    if (from)
-        *from = rmin;
-    if (to)
-        *to = rmax;
-}
-
 /**
  * gwy_layer_basic_get_range:
  * @basic_layer: A basic data view layer.
@@ -465,7 +418,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     GwyContainer *data;
     GwyDataField *data_field;
     GwyLayerBasicRangeType range_type;
-    gdouble rmin, rmax, ramin, ramax;
+    gdouble rmin, rmax;
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
     data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
@@ -493,11 +446,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
         break;
 
         case GWY_LAYER_BASIC_RANGE_AUTO:
-        gwy_data_field_get_range(data_field, &ramin, &ramax);
-        rmin = gwy_data_field_get_min(data_field);
-        rmax = gwy_data_field_get_max(data_field);
-        rmin = MAX(rmin, ramin);
-        rmax = MIN(rmax, ramax);
+        gwy_data_field_get_autorange(data_field, &rmin, &rmax);
         break;
 
         default:

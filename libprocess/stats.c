@@ -330,7 +330,6 @@ gwy_data_field_get_rms(GwyDataField *data_field)
     return rms;
 }
 
-
 /**
  * gwy_data_field_area_get_rms:
  * @data_field: A data field.
@@ -379,6 +378,81 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
     rms = sqrt(fabs(sum2 - sum*sum/n)/n);
 
     return rms;
+}
+
+/**
+ * gwy_data_field_get_autorange:
+ * @data_field: A data field.
+ * @from: Location to store range start.
+ * @to: Location to store range end.
+ *
+ * Computes value range with outliers cut-off.
+ *
+ * The purpose of this function is to find a range is suitable for false color
+ * mapping.  The precise method how it is calculated is unspecified and may be
+ * subject to changes.
+ *
+ * However, it is guaranteed minimum <= @from <= @to <= maximum.
+ **/
+void
+gwy_data_field_get_autorange(GwyDataField *data_field,
+                             gdouble *from,
+                             gdouble *to)
+{
+    enum { AR_NDH = 512 };
+    guint dh[AR_NDH];
+    gdouble min, max, rmin, rmax, q;
+    gdouble *p;
+    guint i, n, j;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    gwy_debug("%s", CTEST(data_field, ARF) ? "cache" : "lame");
+    if ((!from || CTEST(data_field, ARF))
+        && (!to || CTEST(data_field, ART))) {
+        if (from)
+            *from = CVAL(data_field, ARF);
+        if (to)
+            *to = CVAL(data_field, ART);
+        return;
+    }
+
+    min = gwy_data_field_get_min(data_field);
+    max = gwy_data_field_get_max(data_field);
+    if (min == max) {
+        rmin = min;
+        rmax = max;
+    }
+    else {
+        max += 1e-6*(max - min);
+        q = AR_NDH/(max - min);
+
+        n = data_field->xres*data_field->yres;
+        memset(dh, 0, AR_NDH*sizeof(guint));
+        for (i = n, p = data_field->data; i; i--, p++) {
+            j = (*p - min)*q;    /* rounding toward zero is ok here */
+            dh[j]++;
+        }
+
+        j = 0;
+        for (i = j = 0; dh[i] < 5e-2*n/AR_NDH && j < 2e-2*n; i++)
+            j += dh[i];
+        rmin = min + i/q;
+
+        j = 0;
+        for (i = AR_NDH-1, j = 0; dh[i] < 5e-2*n/AR_NDH && j < 2e-2*n; i--)
+            j += dh[i];
+        rmax = min + (i + 1)/q;
+    }
+
+    if (from)
+        *from = rmin;
+    if (to)
+        *to = rmax;
+
+    CVAL(data_field, ARF) = rmin;
+    CVAL(data_field, ART) = rmax;
+    data_field->cached |= CBIT(ARF) | CBIT(ART);
 }
 
 /**
@@ -433,6 +507,11 @@ gwy_data_field_get_stats(GwyDataField *data_field,
         *kurtosis = c_sz4/(myrms)/(myrms)/nn - 3;
     if (rms)
         *rms = sqrt(myrms);
+
+    if (!CTEST(data_field, RMS)) {
+        CVAL(data_field, RMS) = sqrt(myrms);
+        data_field->cached |= CBIT(RMS);
+    }
 }
 
 /**
