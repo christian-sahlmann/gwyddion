@@ -117,9 +117,6 @@ gwy_layer_basic_destroy(GtkObject *object)
  *
  * Creates a new basic data displaying layer.
  *
- * By default, is uses a gray gradient or gradient whose name is stored with
- * the data as "/0/base/palette".
- *
  * Returns: The newly created layer.
  **/
 GwyPixmapLayer*
@@ -253,6 +250,13 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
+/**
+ * gwy_layer_basic_set_gradient_key:
+ * @basic_layer: A basic data view layer.
+ * @key: Container string key identifying the color gradient to use.
+ *
+ * Sets the gradient to use to visualize data.
+ **/
 void
 gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
                                  const gchar *key)
@@ -284,6 +288,14 @@ gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
     gwy_data_view_layer_updated(layer);
 }
 
+/**
+ * gwy_layer_basic_get_gradient_key:
+ * @basic_layer: A basic data view layer.
+ *
+ * Gets key identifying color gradient.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_layer_basic_get_gradient_key(GwyLayerBasic *basic_layer)
 {
@@ -291,6 +303,13 @@ gwy_layer_basic_get_gradient_key(GwyLayerBasic *basic_layer)
     return g_quark_to_string(basic_layer->gradient_key);
 }
 
+/**
+ * gwy_layer_basic_set_range_type_key:
+ * @basic_layer: A basic data view layer.
+ * @key: Container string key identifying the range type to use.
+ *
+ * Sets the color range mapping type to use to visualize data.
+ **/
 void
 gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
                                    const gchar *key)
@@ -302,6 +321,14 @@ gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }
 
+/**
+ * gwy_layer_basic_get_range_type_key:
+ * @basic_layer: A basic data view layer.
+ *
+ * Gets key identifying color range mapping type.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_layer_basic_get_range_type_key(GwyLayerBasic *basic_layer)
 {
@@ -309,6 +336,15 @@ gwy_layer_basic_get_range_type_key(GwyLayerBasic *basic_layer)
     return g_quark_to_string(basic_layer->range_type_key);
 }
 
+/**
+ * gwy_layer_basic_set_min_max_key:
+ * @basic_layer: A basic data view layer.
+ * @prefix: Prefix of keys identifying minimum and maximum values for fixed
+ *          range, "/min" and "/max" is appended to it to get the individual
+ *          minimum and maximum keys.
+ *
+ * Sets fixed range minimum and maximum.
+ **/
 void
 gwy_layer_basic_set_min_max_key(GwyLayerBasic *basic_layer,
                                 const gchar *prefix)
@@ -337,6 +373,14 @@ gwy_layer_basic_set_min_max_key(GwyLayerBasic *basic_layer,
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }
 
+/**
+ * gwy_layer_basic_get_min_max_key:
+ * @basic_layer: A basic data view layer.
+ *
+ * Gets prefix identifying fixed range minimum and maximum.
+ *
+ * Returns: The prefix, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
 {
@@ -405,6 +449,14 @@ gwy_data_field_get_range(GwyDataField *data_field,
         *to = rmax;
 }
 
+/**
+ * gwy_layer_basic_get_range:
+ * @basic_layer: A basic data view layer.
+ * @min: Location to store range minimum to.
+ * @max: Location to store range maximum to.
+ *
+ * Gets the range colors are mapped from in current mode.
+ **/
 void
 gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
                           gdouble *min,
