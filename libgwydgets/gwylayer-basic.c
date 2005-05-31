@@ -17,6 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -38,15 +39,13 @@ static void gwy_layer_basic_plugged              (GwyDataViewLayer *layer);
 static void gwy_layer_basic_unplugged            (GwyDataViewLayer *layer);
 static void gwy_layer_basic_gradient_connect     (GwyLayerBasic *layer);
 static void gwy_layer_basic_gradient_disconnect  (GwyLayerBasic *layer);
-static void gwy_layer_basic_set_key              (GwyLayerBasic *layer,
-                                                  const gchar *key,
-                                                  GQuark *quark,
-                                                  gulong *id);
+static void gwy_layer_basic_connect_min_max      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_container_connect    (GwyLayerBasic *basic_layer,
                                                   const gchar *data_key_string,
                                                   gulong *id,
                                                   GCallback callback);
 static void gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
 
 static GwyPixmapLayerClass *parent_class = NULL;
@@ -207,7 +206,6 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
     GwyLayerBasic *basic_layer;
-    GwyLayerBasicRangeType range_type;
     GwyDataField *data_field = NULL;
     gint width, height;
 
@@ -225,28 +223,12 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
                              &basic_layer->gradient_item_id,
                              G_CALLBACK(gwy_layer_basic_gradient_item_changed));
     gwy_layer_basic_gradient_connect(basic_layer);
-
+    gwy_layer_basic_connect_min_max(basic_layer);
     gwy_layer_basic_container_connect
                               (basic_layer,
                                g_quark_to_string(basic_layer->range_type_key),
                                &basic_layer->range_type_id,
-                               G_CALLBACK(gwy_layer_basic_changed));
-
-    range_type = GWY_LAYER_BASIC_RANGE_FULL;
-    /*if (basic_layer->range_type_key)
-        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {*/
-        gwy_layer_basic_container_connect
-                                      (basic_layer,
-                                       g_quark_to_string(basic_layer->min_key),
-                                       &basic_layer->min_id,
-                                       G_CALLBACK(gwy_layer_basic_changed));
-        gwy_layer_basic_container_connect
-                                      (basic_layer,
-                                       g_quark_to_string(basic_layer->max_key),
-                                       &basic_layer->max_id,
-                                       G_CALLBACK(gwy_layer_basic_changed));
-    /*}*/
+                               G_CALLBACK(gwy_layer_basic_range_type_changed));
 
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
@@ -263,6 +245,8 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
 
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
+
+    gwy_debug("disconnecting all handlers");
 
     if (basic_layer->range_type_id)
         g_signal_handler_disconnect(layer->data, basic_layer->range_type_id);
@@ -347,10 +331,27 @@ void
 gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
                                    const gchar *key)
 {
+    GwyDataViewLayer *layer;
+    GQuark q;
+
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
-    gwy_layer_basic_set_key(basic_layer, key,
-                            &basic_layer->range_type_key,
-                            &basic_layer->range_type_id);
+    q = key ? g_quark_from_string(key) : 0;
+    layer = GWY_DATA_VIEW_LAYER(basic_layer);
+    if (!layer->data || basic_layer->range_type_key == q) {
+        basic_layer->range_type_key = q;
+        return;
+    }
+
+    if (basic_layer->range_type_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->range_type_id);
+    basic_layer->range_type_key = q;
+    if (q)
+        gwy_layer_basic_container_connect
+                               (basic_layer, key, &basic_layer->range_type_id,
+                                G_CALLBACK(gwy_layer_basic_range_type_changed));
+    gwy_layer_basic_connect_min_max(basic_layer);
+
+    GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }
 
@@ -382,28 +383,67 @@ void
 gwy_layer_basic_set_min_max_key(GwyLayerBasic *basic_layer,
                                 const gchar *prefix)
 {
-    gchar *key = NULL;
+    GwyDataViewLayer *layer;
+    GQuark q;
     guint len;
+    gboolean changed = FALSE;
+    gchar *key = NULL;
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
-    if (prefix) {
-        len = strlen(prefix);
-        key = g_newa(gchar, len + sizeof("/min"));
-        g_stpcpy(g_stpcpy(key, prefix), "/min");
-        gwy_layer_basic_set_key(basic_layer, key,
-                                &basic_layer->min_key, &basic_layer->min_id);
-        key[len + 2] = 'a';
-        key[len + 3] = 'x';
-        gwy_layer_basic_set_key(basic_layer, key,
-                                &basic_layer->max_key, &basic_layer->max_id);
+    layer = GWY_DATA_VIEW_LAYER(basic_layer);
+    if (!prefix) {
+        gwy_debug("no prefix => disconnecting from min and max");
+
+        if (basic_layer->min_id)
+            g_signal_handler_disconnect(layer->data, basic_layer->min_id);
+        if (basic_layer->max_id)
+            g_signal_handler_disconnect(layer->data, basic_layer->max_id);
+
+        basic_layer->min_id = 0;
+        basic_layer->max_id = 0;
+
+        basic_layer->min_key = 0;
+        basic_layer->max_key = 0;
+
+        return;
     }
-    else {
-        gwy_layer_basic_set_key(basic_layer, NULL,
-                                &basic_layer->min_key, &basic_layer->min_id);
-        gwy_layer_basic_set_key(basic_layer, NULL,
-                                &basic_layer->max_key, &basic_layer->max_id);
+
+    gwy_debug("setting keys");
+
+    len = strlen(prefix);
+    key = g_newa(gchar, len + sizeof("/min"));
+    g_stpcpy(g_stpcpy(key, prefix), "/min");
+
+    q = key ? g_quark_from_string(key) : 0;
+    if (basic_layer->min_id && basic_layer->min_key != q) {
+        gwy_debug("reconnecting min");
+        g_signal_handler_disconnect(layer->data, basic_layer->min_id);
+        gwy_layer_basic_container_connect
+                                      (basic_layer, key,
+                                       &basic_layer->min_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+        changed = TRUE;
     }
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+    basic_layer->min_key = q;
+
+    key[len + 2] = 'a';
+    key[len + 3] = 'x';
+    q = key ? g_quark_from_string(key) : 0;
+    if (basic_layer->max_id && basic_layer->max_key != q) {
+        gwy_debug("reconnecting max");
+        g_signal_handler_disconnect(layer->data, basic_layer->max_id);
+        gwy_layer_basic_container_connect
+                                      (basic_layer, key,
+                                       &basic_layer->max_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+        changed = TRUE;
+    }
+    basic_layer->max_key = q;
+
+    if (changed) {
+        GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
+        gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+    }
 }
 
 /**
@@ -493,31 +533,49 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
         *max = rmax;
 }
 
+/**
+ * gwy_layer_basic_connect_min_max:
+ * @basic_layer: A basic data view layer.
+ *
+ * Connect to min, max container keys, or disconnect, depending on range type.
+ **/
 static void
-gwy_layer_basic_set_key(GwyLayerBasic *basic_layer,
-                        const gchar *key,
-                        GQuark *quark,
-                        gulong *id)
+gwy_layer_basic_connect_min_max(GwyLayerBasic *basic_layer)
 {
     GwyDataViewLayer *layer;
-    GQuark q;
+    GwyLayerBasicRangeType range_type;
 
-    q = key ? g_quark_from_string(key) : 0;
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
-    if (!layer->data || *quark == q) {
-        *quark = q;
-        return;
-    }
+    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    if (basic_layer->range_type_key)
+        gwy_container_gis_enum(layer->data, basic_layer->range_type_key,
+                               &range_type);
 
-    if (*id) {
-        g_signal_handler_disconnect(layer->data, *id);
-        *id = 0;
-    }
-    if ((*quark = q))
-        gwy_layer_basic_container_connect(basic_layer, key, id,
-                                          G_CALLBACK(gwy_layer_basic_changed));
+    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
+        gwy_debug("fixed => connecting to min and max");
 
-    GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
+        gwy_layer_basic_container_connect
+                                      (basic_layer,
+                                       g_quark_to_string(basic_layer->min_key),
+                                       &basic_layer->min_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+        gwy_layer_basic_container_connect
+                                      (basic_layer,
+                                       g_quark_to_string(basic_layer->max_key),
+                                       &basic_layer->max_id,
+                                       G_CALLBACK(gwy_layer_basic_changed));
+    }
+    else {
+        gwy_debug("non-fixed => disconnecting from min and max");
+
+        if (basic_layer->min_id)
+            g_signal_handler_disconnect(layer->data, basic_layer->min_id);
+        if (basic_layer->max_id)
+            g_signal_handler_disconnect(layer->data, basic_layer->max_id);
+
+        basic_layer->min_id = 0;
+        basic_layer->max_id = 0;
+    }
 }
 
 static void
@@ -529,8 +587,10 @@ gwy_layer_basic_container_connect(GwyLayerBasic *basic_layer,
     GwyDataViewLayer *layer;
     gchar *detailed_signal;
 
-    if (!data_key_string)
+    if (!data_key_string) {
+        *id = 0;
         return;
+    }
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
     detailed_signal = g_newa(gchar, sizeof("item_changed::")
                                     + strlen(data_key_string));
@@ -547,6 +607,13 @@ gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer)
     gwy_layer_basic_gradient_connect(basic_layer);
     GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+}
+
+static void
+gwy_layer_basic_range_type_changed(GwyLayerBasic *basic_layer)
+{
+    gwy_layer_basic_connect_min_max(basic_layer);
+    gwy_layer_basic_changed(basic_layer);
 }
 
 static void
