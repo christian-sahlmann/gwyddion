@@ -27,6 +27,7 @@
 
 #include <libgwydgets/gwygrapherbasics.h>
 
+#define GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR 1
 
 G_BEGIN_DECLS
 

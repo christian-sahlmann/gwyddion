@@ -297,12 +297,15 @@ gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
     gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
 }
 
+
 static void     
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
+    
     gwy_grapher_clear_selection(graphwindow->graph);
+    if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR) return;
+    
     gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_PLAIN);
-
     gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
 }
 

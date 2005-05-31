@@ -1002,6 +1002,7 @@ gwy_grapher_area_clear_selection(GwyGrapherArea *area)
         area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGrapherDataPoint));
     }
 
+    gwy_grapher_area_signal_selected(area);
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 

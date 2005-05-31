@@ -296,6 +296,9 @@ gwy_grapher_window_measure_dialog_new(GwyGrapher *graph)
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
+   
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                "Clear", GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
     
     return GTK_WIDGET(dialog);
 }
