@@ -93,9 +93,7 @@ gwy_layer_mask_init(G_GNUC_UNUSED GwyLayerMask *layer)
  *
  * Creates a new mask layer.
  *
- * By default, is uses a transparent color (thus not displaying anything),
- * or the color stored with the data as "/0/mask/red", "/0/mask/green",
- * "/0/mask/blue", and "/0/mask/alpha".
+ * By default, is uses a transparent color (thus not displaying anything).
  *
  * Returns: The newly created layer.
  **/
@@ -133,7 +131,7 @@ gwy_layer_mask_paint(GwyPixmapLayer *layer)
 
 /**
  * gwy_layer_mask_get_color:
- * @layer: A mask layer.
+ * @mask_layer: A mask layer.
  *
  * Returns the color used by a mask layer.
  *
@@ -199,6 +197,15 @@ gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
+/**
+ * gwy_layer_mask_set_color_key:
+ * @mask_layer: A mask layer.
+ * @prefix: Prefix of keys identifying mask color components, "/red", "/green",
+ *          "/blue", and "/alpha" is appended to it to get the individual
+ *          keys.
+ *
+ * Sets color components of a mask layer.
+ **/
 void
 gwy_layer_mask_set_color_key(GwyLayerMask *mask_layer,
                              const gchar *prefix)
@@ -218,6 +225,14 @@ gwy_layer_mask_set_color_key(GwyLayerMask *mask_layer,
     gwy_layer_mask_changed(GWY_PIXMAP_LAYER(mask_layer));
 }
 
+/**
+ * gwy_layer_mask_get_color_key:
+ * @mask_layer: A mask layer.
+ *
+ * Gets prefix identifying color components.
+ *
+ * Returns: The prefix, or %NULL if it isn't set.
+ **/
 const gchar*
 gwy_layer_mask_get_color_key(GwyLayerMask *mask_layer)
 {

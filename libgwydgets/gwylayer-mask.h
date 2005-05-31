@@ -59,7 +59,6 @@ struct _GwyLayerMaskClass {
 };
 
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;
-
 GwyPixmapLayer*  gwy_layer_mask_new             (void);
 void             gwy_layer_mask_set_color_key   (GwyLayerMask *mask_layer,
                                                  const gchar *prefix);

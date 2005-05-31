@@ -379,7 +379,7 @@ gwy_layer_basic_get_range_type_key(GwyLayerBasic *basic_layer)
  *          range, "/min" and "/max" is appended to it to get the individual
  *          minimum and maximum keys.
  *
- * Sets fixed range minimum and maximum.
+ * Sets basic layer fixed range minimum and maximum.
  **/
 void
 gwy_layer_basic_set_min_max_key(GwyLayerBasic *basic_layer,
