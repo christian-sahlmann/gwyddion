@@ -77,7 +77,6 @@ static void       gwy_app_3d_window_destroyed      (GtkWidget *gwy3dwindow,
 static void       gwy_app_3d_window_title_changed  (GtkWidget *data_window,
                                                     GtkWidget *gwy3dwindow);
 static void       gwy_app_3d_window_export         (Gwy3DWindow *window);
-static void       gwy_app_reset_color_range        (void);
 
 /*****************************************************************************
  *                                                                           *
@@ -522,6 +521,8 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
         gwy_app_container_setup_mask(data);
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, key);
+        /* TODO: Container */
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), key);
         gwy_data_view_set_alpha_layer(data_view, layer);
     }
     else if (!has_dfield && has_layer)
