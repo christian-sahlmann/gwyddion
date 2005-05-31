@@ -53,7 +53,6 @@ GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
                                              gint row,
                                              gint col);
 void         gwy_color_selector_for_mask    (const gchar *dialog_title,
-                                             GwyDataView *data_view,
                                              GwyColorButton *color_button,
                                              GwyContainer *container,
                                              const gchar *prefix);

@@ -399,12 +399,12 @@ static void
 mask_color_change_cb(GtkWidget *color_button,
                      MarkControls *controls)
 {
-    gwy_color_selector_for_mask(NULL,
-                                GWY_DATA_VIEW(controls->view),
-                                GWY_COLOR_BUTTON(color_button),
-                                NULL, "/0/mask");
-    load_mask_color(color_button,
-                    gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
+    GwyContainer *data;
+
+    data = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
+    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), data,
+                                "/0/mask");
+    load_mask_color(color_button, data);
 }
 
 static void

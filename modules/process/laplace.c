@@ -74,7 +74,6 @@ module_register(const gchar *name)
 static gboolean
 laplace(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *dialog;
     GwyDataField *dfield, *maskfield, *buffer;
     gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i;
@@ -82,7 +81,7 @@ laplace(GwyContainer *data, GwyRunType run)
     g_assert(run & LAPLACE_RUN_MODES);
 
     if (!gwy_container_contains_by_name(data, "/0/mask"))
-        return;
+        return FALSE;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     maskfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
@@ -127,7 +126,5 @@ laplace(GwyContainer *data, GwyRunType run)
 
     return TRUE;
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

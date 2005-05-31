@@ -408,7 +408,6 @@ gwy_table_attach_hscale(GtkWidget *table,
 /************************** Mask colors ****************************/
 
 typedef struct {
-    GwyDataView *data_view;
     GwyColorButton *color_button;
     GwyContainer *container;
     gchar *prefix;
@@ -438,14 +437,8 @@ mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
 /**
  * gwy_color_selector_for_mask:
  * @dialog_title: Title of the color selection dialog (%NULL to use default).
- * @data_view: Data view to update on color change (%NULL to not update
- *             any data view).
- *             FIXME: The data view layer should watch
- *             changes, and even if not, the argument should be a layer.
- *             will be changed.
  * @color_button: Color button to update on color change (or %NULL).
- * @container: Container to initialize the color from and save it to, may be
- *             %NULL to use @data_view's one if that is not %NULL.
+ * @container: Container to initialize the color from and save it to.
  * @prefix: Prefix in @container (normally "/0/mask").
  *
  * Creates and runs a color selector dialog for a mask.
@@ -455,7 +448,6 @@ mask_color_updated_cb(GtkWidget *sel, MaskColorSelectorData *mcsdata)
  **/
 void
 gwy_color_selector_for_mask(const gchar *dialog_title,
-                            GwyDataView *data_view,
                             GwyColorButton *color_button,
                             GwyContainer *container,
                             const gchar *prefix)
@@ -468,13 +460,8 @@ gwy_color_selector_for_mask(const gchar *dialog_title,
     gint response;
 
     g_return_if_fail(prefix && *prefix == '/');
-    if (!container) {
-        g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-        container = gwy_data_view_get_data(data_view);
-    }
 
     mcsdata = g_new(MaskColorSelectorData, 1);
-    mcsdata->data_view = data_view;
     mcsdata->color_button = color_button;
     mcsdata->container = container;
     mcsdata->prefix = g_strdup(prefix);
