@@ -607,7 +607,7 @@ static void
 gwy_layer_basic_range_type_changed(GwyLayerBasic *basic_layer)
 {
     gwy_layer_basic_reconnect_fixed(basic_layer);
-    gwy_layer_basic_changed(basic_layer);
+    gwy_layer_basic_changed(GWY_PIXMAP_LAYER(basic_layer));
 }
 
 static void
