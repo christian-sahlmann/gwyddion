@@ -360,7 +360,7 @@ gwy_container_deserialize_old(const guchar *buffer,
     pos = 0;
 
     container = (GwyContainer*)gwy_container_new();
-    container->no_changes = TRUE;
+    container->in_construction = TRUE;
     while (pos < mysize) {
         GType type;
         guchar *name;
@@ -423,7 +423,7 @@ gwy_container_deserialize_old(const guchar *buffer,
         }
     }
     *position += mysize;
-    container->no_changes = FALSE;
+    container->in_construction = FALSE;
 
     return (GObject*)container;
 }

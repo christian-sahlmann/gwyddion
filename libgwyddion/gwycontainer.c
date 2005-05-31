@@ -196,15 +196,23 @@ gwy_container_class_init(GwyContainerClass *klass)
 
     gobject_class->finalize = gwy_container_finalize;
 
-    /* XXX: differentiate insert, change, delete? */
+/**
+ * GwyContainer::item_changed:
+ * @gwycontainer: The #GwyContainer which received the signal.
+ * @string: The key identifying the changed item.
+ *
+ * The ::item_changed signal is emitted whenever a container item is changed.
+ * The detail is the string key identifier.
+ */
     container_signals[ITEM_CHANGED]
         = g_signal_new("item_changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
-                       G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED,
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED | G_SIGNAL_NO_RECURSE,
                        G_STRUCT_OFFSET(GwyContainerClass, item_changed),
                        NULL, NULL,
-                       g_cclosure_marshal_VOID__VOID,
-                       G_TYPE_NONE, 0);
+                       g_cclosure_marshal_VOID__STRING,
+                       G_TYPE_NONE, 1,
+                       G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE);
 }
 
 static void
@@ -371,7 +379,8 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 #endif
 
     g_hash_table_remove(container->values, GUINT_TO_POINTER(key));
-    g_signal_emit(container, container_signals[ITEM_CHANGED], key);
+    g_signal_emit(container, container_signals[ITEM_CHANGED], key,
+                  g_quark_to_string(key));
 
     return TRUE;
 }
@@ -391,6 +400,7 @@ guint
 gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
 {
     PrefixData pfdata;
+    GSList *l;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
 
@@ -405,7 +415,10 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
                                 &pfdata);
     pfdata.keylist = g_slist_reverse(pfdata.keylist);
-    /* TODO: emit signals */
+    for (l = pfdata.keylist; l; l = g_slist_next(l))
+        g_signal_emit(container, container_signals[ITEM_CHANGED],
+                      GPOINTER_TO_UINT(l->data),
+                      g_quark_to_string((GQuark)GPOINTER_TO_UINT(l->data)));
     g_slist_free(pfdata.keylist);
 
     return pfdata.count;
@@ -1266,8 +1279,9 @@ gwy_container_try_set_one(GwyContainer *container,
     else
         g_value_copy(value, old);
 
-    if (changed && !container->no_changes)
-        g_signal_emit(container, container_signals[ITEM_CHANGED], key);
+    if (changed && !container->in_construction)
+        g_signal_emit(container, container_signals[ITEM_CHANGED], key,
+                      g_quark_to_string(key));
 
     return TRUE;
 }
@@ -1801,10 +1815,10 @@ gwy_container_duplicate_real(GObject *object)
               */
     duplicate = gwy_container_new();
     /* don't emit signals when no one can be connected */
-    duplicate->no_changes = TRUE;
+    duplicate->in_construction = TRUE;
     g_hash_table_foreach(GWY_CONTAINER(object)->values,
                          hash_duplicate_func, duplicate);
-    duplicate->no_changes = FALSE;
+    duplicate->in_construction = FALSE;
 
     return (GObject*)duplicate;
 }
@@ -1928,11 +1942,11 @@ gwy_container_duplicate_by_prefix_valist(GwyContainer *container,
 
     /* don't emit signals when no one can be connected */
     duplicate = (GwyContainer*)gwy_container_new();
-    duplicate->no_changes = TRUE;
+    duplicate->in_construction = TRUE;
     pfxlist.container = duplicate;
     g_hash_table_foreach(container->values,
                          hash_prefix_duplicate_func, &pfxlist);
-    duplicate->no_changes = FALSE;
+    duplicate->in_construction = FALSE;
 
     g_free(pfxlist.prefixes);
     g_free(pfxlist.pfxclosed);
@@ -2170,7 +2184,7 @@ gwy_container_deserialize_from_text(const gchar *text)
     GQuark key;
 
     container = GWY_CONTAINER(gwy_container_new());
-    container->no_changes = TRUE;
+    container->in_construction = TRUE;
 
     for (tok = text; g_ascii_isspace(*tok); tok++)
         ;
@@ -2291,7 +2305,7 @@ gwy_container_deserialize_from_text(const gchar *text)
         for (tok = tok + len; g_ascii_isspace(*tok); tok++)
             ;
     }
-    container->no_changes = FALSE;
+    container->in_construction = FALSE;
 
     return container;
 

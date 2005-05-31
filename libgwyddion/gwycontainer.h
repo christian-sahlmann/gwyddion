@@ -43,13 +43,13 @@ struct _GwyContainer {
     GObject parent_instance;
 
     GHashTable *values;
-    gboolean no_changes : 1;
+    gboolean in_construction : 1;
 };
 
 struct _GwyContainerClass {
     GObjectClass parent_class;
 
-    void (*item_changed)(GwyContainer *container);
+    void (*item_changed)(GwyContainer *container, const gchar *key);
 };
 
 #define gwy_container_duplicate(container) ((GwyContainer*)gwy_serializable_duplicate(G_OBJECT(container)))
