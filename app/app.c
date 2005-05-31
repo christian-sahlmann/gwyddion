@@ -1582,7 +1582,7 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
     settings = gwy_app_settings_get();
     if (defaultc) {
         gwy_color_selector_for_mask(_("Change Default Mask Color"),
-                                    NULL, NULL, settings, "/mask");
+                                    NULL, settings, "/mask");
         return;
     }
 
@@ -1597,7 +1597,7 @@ gwy_app_change_mask_color_cb(G_GNUC_UNUSED gpointer unused,
         gwy_rgba_get_from_container(&rgba, settings, "/mask");
         gwy_rgba_store_to_container(&rgba, data, "/0/mask");
     }
-    gwy_color_selector_for_mask(NULL, data_view, NULL, data, "/0/mask");
+    gwy_color_selector_for_mask(NULL, NULL, data, "/0/mask");
 }
 
 /* FIXME: this functionality is provided by modules now -- remove? */
