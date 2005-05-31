@@ -41,7 +41,11 @@ typedef struct _GwyLayerMaskClass GwyLayerMaskClass;
 struct _GwyLayerMask {
     GwyPixmapLayer parent_instance;
 
-    GwyRGBA color;
+    GQuark color_key;
+    gulong red_id;
+    gulong green_id;
+    gulong blue_id;
+    gulong alpha_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -57,9 +61,10 @@ struct _GwyLayerMaskClass {
 GType            gwy_layer_mask_get_type        (void) G_GNUC_CONST;
 
 GwyPixmapLayer*  gwy_layer_mask_new             (void);
-void             gwy_layer_mask_set_color       (GwyLayerMask *layer,
-                                                 GwyRGBA *color);
-GwyRGBA          gwy_layer_mask_get_color       (GwyLayerMask *layer);
+void             gwy_layer_mask_set_color_key   (GwyLayerMask *mask_layer,
+                                                 const gchar *prefix);
+const gchar*     gwy_layer_mask_get_color_key   (GwyLayerMask *mask_layer);
+GwyRGBA          gwy_layer_mask_get_color       (GwyLayerMask *mask_layer);
 
 G_END_DECLS
 

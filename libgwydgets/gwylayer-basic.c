@@ -143,7 +143,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     /* TODO: We were special-casing "/0/show" here to ignore fixed range.
      * Move the logic where it belongs... */
     data_field = GWY_DATA_FIELD(layer->data_field);
-    g_return_val_if_fail(data_field, NULL);
+    g_return_val_if_fail(data && data_field, NULL);
 
     range_type = GWY_LAYER_BASIC_RANGE_FULL;
     if (basic_layer->range_type_key)

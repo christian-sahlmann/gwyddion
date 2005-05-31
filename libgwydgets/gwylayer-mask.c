@@ -30,14 +30,14 @@
 
 #define BITS_PER_SAMPLE 8
 
-static void       gwy_layer_mask_class_init        (GwyLayerMaskClass *klass);
-static void       gwy_layer_mask_init              (GwyLayerMask *layer);
-static GdkPixbuf* gwy_layer_mask_paint             (GwyPixmapLayer *layer);
-static void       gwy_layer_mask_plugged           (GwyDataViewLayer *layer);
-static void       gwy_layer_mask_unplugged         (GwyDataViewLayer *layer);
-static void       gwy_layer_mask_update            (GwyLayerMask *layer);
-static void       gwy_layer_mask_save              (GwyLayerMask *layer);
-static void       gwy_layer_mask_restore           (GwyLayerMask *layer);
+static void       gwy_layer_mask_class_init      (GwyLayerMaskClass *klass);
+static void       gwy_layer_mask_init            (GwyLayerMask *layer);
+static GdkPixbuf* gwy_layer_mask_paint           (GwyPixmapLayer *layer);
+static void       gwy_layer_mask_plugged         (GwyDataViewLayer *layer);
+static void       gwy_layer_mask_unplugged       (GwyDataViewLayer *layer);
+static void       gwy_layer_mask_connect_color   (GwyLayerMask *mask_layer);
+static void       gwy_layer_mask_disconnect_color(GwyLayerMask *mask_layer);
+static void       gwy_layer_mask_changed         (GwyPixmapLayer *pixmap_layer);
 
 static GwyPixmapLayerClass *parent_class = NULL;
 
@@ -115,57 +115,47 @@ gwy_layer_mask_paint(GwyPixmapLayer *layer)
     GwyDataField *data_field;
     GwyLayerMask *mask_layer;
     GwyContainer *data;
+    GwyRGBA color = { 0, 0, 0, 0 };
 
-    mask_layer = (GwyLayerMask*)layer;
+    mask_layer = GWY_LAYER_MASK(layer);
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
     data_field = GWY_DATA_FIELD(layer->data_field);
-    g_return_val_if_fail(data_field, NULL);
-    gwy_layer_mask_restore(mask_layer);
-    gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field,
-                                       &mask_layer->color);
+    g_return_val_if_fail(data && data_field, NULL);
+    if (mask_layer->color_key)
+        gwy_rgba_get_from_container(&color,
+                                    GWY_DATA_VIEW_LAYER(mask_layer)->data,
+                                    g_quark_to_string(mask_layer->color_key));
+    gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field, &color);
 
     return layer->pixbuf;
 }
 
 /**
- * gwy_layer_mask_set_color:
- * @layer: A #GwyLayerMask.
- * @color: The color @layer should use.
- *
- * Sets the color @layer should used.
- **/
-void
-gwy_layer_mask_set_color(GwyLayerMask *layer,
-                         GwyRGBA *color)
-{
-    GwyLayerMask *mask_layer;
-
-    g_return_if_fail(GWY_IS_LAYER_MASK(layer));
-    g_return_if_fail(color);
-
-    mask_layer = (GwyLayerMask*)layer;
-    memcpy(&mask_layer->color, color, sizeof(GwyRGBA));
-    gwy_layer_mask_save(layer);
-    gwy_layer_mask_update(layer);
-}
-
-/**
  * gwy_layer_mask_get_color:
- * @layer: A #GwyLayerMask.
+ * @layer: A mask layer.
  *
- * Returns the color used by @layer.
+ * Returns the color used by a mask layer.
  *
- * Returns: The color as #GwyPalette.
+ * Returns: The color as #GwyRGBA.
  **/
 GwyRGBA
-gwy_layer_mask_get_color(GwyLayerMask *layer)
+gwy_layer_mask_get_color(GwyLayerMask *mask_layer)
 {
-    GwyRGBA none = { 0, 0, 0, 0 };
+    GwyContainer *data;
+    GwyRGBA color = { 0, 0, 0, 0 };
 
-    g_return_val_if_fail(GWY_IS_LAYER_MASK(layer), none);
+    g_return_val_if_fail(GWY_IS_LAYER_MASK(mask_layer), color);
+    data = GWY_DATA_VIEW_LAYER(mask_layer)->data;
+    g_return_val_if_fail(data, color);
 
-    return GWY_LAYER_MASK(layer)->color;
+    if (!mask_layer->color_key)
+        return color;
+
+    gwy_rgba_get_from_container(&color, GWY_DATA_VIEW_LAYER(mask_layer)->data,
+                                g_quark_to_string(mask_layer->color_key));
+
+    return color;
 }
 
 static void
@@ -176,17 +166,18 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
     GwyLayerMask *mask_layer;
     gint width, height;
 
-    g_return_if_fail(GWY_IS_LAYER_MASK(layer));
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
+    mask_layer = GWY_LAYER_MASK(layer);
 
-    mask_layer = (GwyLayerMask*)layer;
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 
     data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data_field);
+
+    gwy_layer_mask_connect_color(mask_layer);
+
     width = gwy_data_field_get_xres(data_field);
     height = gwy_data_field_get_yres(data_field);
-    gwy_layer_mask_restore(mask_layer);
 
     pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
                                           BITS_PER_SAMPLE, width, height);
@@ -197,56 +188,110 @@ static void
 gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
+    GwyLayerMask *mask_layer;
 
-    g_return_if_fail(GWY_IS_LAYER_MASK(layer));
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
+    mask_layer = GWY_LAYER_MASK(layer);
+
+    gwy_layer_mask_disconnect_color(mask_layer);
 
     gwy_object_unref(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
 }
 
-static void
-gwy_layer_mask_update(GwyLayerMask *layer)
+void
+gwy_layer_mask_set_color_key(GwyLayerMask *mask_layer,
+                             const gchar *prefix)
 {
-    GWY_PIXMAP_LAYER(layer)->wants_repaint = TRUE;
-    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+    GQuark quark;
+
+    g_return_if_fail(GWY_IS_LAYER_MASK(mask_layer));
+
+    quark = prefix ? g_quark_try_string(prefix) : 0;
+    if (quark == mask_layer->color_key)
+        return;
+
+    gwy_layer_mask_disconnect_color(mask_layer);
+    mask_layer->color_key = quark;
+    gwy_layer_mask_connect_color(mask_layer);
+
+    gwy_layer_mask_changed(GWY_PIXMAP_LAYER(mask_layer));
+}
+
+const gchar*
+gwy_layer_mask_get_color_key(GwyLayerMask *mask_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_MASK(mask_layer), NULL);
+    return g_quark_to_string(mask_layer->color_key);
 }
 
 static void
-gwy_layer_mask_save(GwyLayerMask *layer)
+gwy_layer_mask_connect_color(GwyLayerMask *mask_layer)
 {
-    GwyContainer *data;
-    GwyRGBA *c;
+    GwyDataViewLayer *layer;
+    const gchar *prefix;
+    gchar *detailed_signal;
+    guint len;
 
-    data = GWY_DATA_VIEW_LAYER(layer)->data;
-    c = &layer->color;
-    /* TODO Container */
-    gwy_container_set_double_by_name(data, "/0/mask/red", c->r);
-    gwy_container_set_double_by_name(data, "/0/mask/green", c->g);
-    gwy_container_set_double_by_name(data, "/0/mask/blue", c->b);
-    gwy_container_set_double_by_name(data, "/0/mask/alpha", c->a);
+    layer = GWY_DATA_VIEW_LAYER(mask_layer);
+    if (!layer->data || !mask_layer->color_key)
+        return;
+
+    prefix = g_quark_to_string(mask_layer->color_key);
+    len = strlen(prefix);
+    detailed_signal = g_newa(gchar, len + sizeof("item_changed::")
+                                    + sizeof("/alpha"));
+    len += sizeof("item_changed::");
+
+    g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), prefix),
+             "/red");
+    mask_layer->red_id
+        = g_signal_connect_swapped(layer->data, detailed_signal,
+                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+
+    strcpy(detailed_signal + len, "green");
+    mask_layer->red_id
+        = g_signal_connect_swapped(layer->data, detailed_signal,
+                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+
+    strcpy(detailed_signal + len, "blue");
+    mask_layer->red_id
+        = g_signal_connect_swapped(layer->data, detailed_signal,
+                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+
+    strcpy(detailed_signal + len, "alpha");
+    mask_layer->red_id
+        = g_signal_connect_swapped(layer->data, detailed_signal,
+                                   G_CALLBACK(gwy_layer_mask_changed), layer);
 }
 
 static void
-gwy_layer_mask_restore(GwyLayerMask *layer)
+gwy_layer_mask_disconnect_color(GwyLayerMask *mask_layer)
 {
-    static const GwyRGBA default_color = { 1.0, 0.0, 0.0, 0.5 };
-    GwyContainer *data;
-    GwyRGBA *c;
+    GwyDataViewLayer *layer;
 
-    data = GWY_DATA_VIEW_LAYER(layer)->data;
-    c = &layer->color;
-    *c = default_color;
-    /* TODO Container */
-    if (gwy_container_contains_by_name(data, "/0/mask/red"))
-        c->r = gwy_container_get_double_by_name(data, "/0/mask/red");
-    if (gwy_container_contains_by_name(data, "/0/mask/green"))
-        c->g = gwy_container_get_double_by_name(data, "/0/mask/green");
-    if (gwy_container_contains_by_name(data, "/0/mask/blue"))
-        c->b = gwy_container_get_double_by_name(data, "/0/mask/blue");
-    if (gwy_container_contains_by_name(data, "/0/mask/alpha"))
-        c->a = gwy_container_get_double_by_name(data, "/0/mask/alpha");
-    gwy_debug("r = %f, g = %f, b = %f, a = %f", c->r, c->g, c->b, c->a);
+    layer = GWY_DATA_VIEW_LAYER(mask_layer);
+
+    if (mask_layer->red_id)
+        g_signal_handler_disconnect(layer->data, mask_layer->red_id);
+    if (mask_layer->green_id)
+        g_signal_handler_disconnect(layer->data, mask_layer->green_id);
+    if (mask_layer->blue_id)
+        g_signal_handler_disconnect(layer->data, mask_layer->blue_id);
+    if (mask_layer->alpha_id)
+        g_signal_handler_disconnect(layer->data, mask_layer->alpha_id);
+
+    mask_layer->red_id = 0;
+    mask_layer->green_id = 0;
+    mask_layer->blue_id = 0;
+    mask_layer->alpha_id = 0;
+}
+
+static void
+gwy_layer_mask_changed(GwyPixmapLayer *pixmap_layer)
+{
+    pixmap_layer->wants_repaint = TRUE;
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
