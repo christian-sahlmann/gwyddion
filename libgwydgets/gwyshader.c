@@ -84,6 +84,8 @@ static void     gwy_shader_update_mouse      (GwyShader *shader,
                                               gint x, gint y);
 static gboolean gwy_shader_mnemonic_activate (GtkWidget *widget,
                                               gboolean group_cycling);
+static void     gwy_shader_state_changed     (GtkWidget *widget,
+                                              GtkStateType state);
 static void     gwy_shader_update            (GwyShader *shader);
 
 
@@ -149,6 +151,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
     widget_class->motion_notify_event = gwy_shader_motion_notify;
     widget_class->key_press_event = gwy_shader_key_press;
     widget_class->mnemonic_activate = gwy_shader_mnemonic_activate;
+    widget_class->state_changed = gwy_shader_state_changed;
 
     klass->angle_changed = NULL;
 
@@ -171,12 +174,12 @@ gwy_shader_class_init(GwyShaderClass *klass)
                           GTK_UPDATE_CONTINUOUS,
                           G_PARAM_READWRITE));
 
-/**
- * GwyShader::angle-changed:
- * @gwyshader: The #GwyShader which received the signal.
- *
- * The ::angle_changed signal is emitted when the spherical angle changes.
- */
+    /**
+     * GwyShader::angle-changed:
+     * @gwyshader: The #GwyShader which received the signal.
+     *
+     * The ::angle_changed signal is emitted when the spherical angle changes.
+     */
     shader_signals[ANGLE_CHANGED]
         = g_signal_new("angle_changed",
                        G_OBJECT_CLASS_TYPE(object_class),
@@ -621,12 +624,15 @@ gwy_shader_make_pixmap(GwyShader *shader)
 static void
 gwy_shader_paint(GwyShader *shader)
 {
+    GtkStateType state;
     gint i, j, r2, grad_size;
     gint height, width;
     gdouble sphi, cphi, sth, cth;
     guchar *pixels;
     guint rowstride;
     guint32 *gradient;
+
+    state = GTK_WIDGET_STATE(GTK_WIDGET(shader));
 
     sphi = sin(shader->phi);
     cphi = cos(shader->phi);
@@ -658,6 +664,19 @@ gwy_shader_paint(GwyShader *shader)
             row += 4;
         }
     }
+
+    /* XXX: hack */
+    if (state == GTK_STATE_INSENSITIVE) {
+        for (i = 0; i < height; i++) {
+            guchar *row = pixels + i*rowstride + 4*(i%2);
+
+            for (j = i%2; j < width; j += 2) {
+                *(guint32*)row = 0;
+                row += 8;
+            }
+        }
+    }
+
     shader->old_theta = shader->theta;
     shader->old_phi = shader->phi;
 }
@@ -901,6 +920,20 @@ gwy_shader_mnemonic_activate(GtkWidget *widget,
     gtk_widget_grab_focus(widget);
 
     return TRUE;
+}
+
+static void
+gwy_shader_state_changed(GtkWidget *widget,
+                         GtkStateType state)
+{
+    if (state == GTK_STATE_INSENSITIVE
+        || GTK_WIDGET_STATE(widget) == GTK_STATE_INSENSITIVE) {
+        GWY_SHADER(widget)->old_theta = -1;
+        gtk_widget_queue_draw(widget);
+    }
+
+    if (GTK_WIDGET_CLASS(parent_class)->state_changed)
+        GTK_WIDGET_CLASS(parent_class)->state_changed(widget, state);
 }
 
 static void
