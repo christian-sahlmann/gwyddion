@@ -50,12 +50,11 @@ struct _GwyLayerBasic {
     gulong gradient_id;
     gulong gradient_item_id;
 
-    GQuark min_key;
+    GQuark fixed_key;
     gulong min_id;
-
-    GQuark max_key;
     gulong max_id;
 
+    gpointer reserved1;
     gpointer reserved2;
 };
 
