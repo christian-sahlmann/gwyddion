@@ -177,7 +177,7 @@ shade_dialog(ShadeArgs *args,
 {
     GtkWidget *dialog, *hbox, *table, *spin;
     GwyPixmapLayer *layer;
-    const gchar *palette;
+    const guchar *palette;
     ShadeControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response, row;
@@ -201,7 +201,8 @@ shade_dialog(ShadeArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    palette = gwy_container_get_string_by_name(data, "/0/base/palette");
+    palette = GWY_GRADIENT_DEFAULT;
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &palette);
     controls.shader = gwy_shader_new(palette);
     gwy_shader_set_angle(GWY_SHADER(controls.shader), args->theta, args->phi);
     gtk_widget_set_size_request(controls.shader, 72, 72);
