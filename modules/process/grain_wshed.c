@@ -447,6 +447,7 @@ add_mask_layer(GtkWidget *data_view)
     if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(data_view))) {
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
         gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(data_view), layer);
     }
 }
