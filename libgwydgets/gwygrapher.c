@@ -34,6 +34,7 @@
 enum {
     SELECTED_SIGNAL,
     MOUSEMOVED_SIGNAL,
+    ZOOMED_SIGNAL,
     LAST_SIGNAL
 };
 
@@ -49,6 +50,8 @@ static void     rescaled_cb                    (GtkWidget *widget,
 static void     replot_cb                        (GObject *gobject, 
                                                   GParamSpec *arg1, 
                                                   GwyGrapher *grapher);
+static void     zoomed_cb                         (GwyGrapher *grapher);
+
 static GtkWidgetClass *parent_class = NULL;
 static guint gwygrapher_signals[LAST_SIGNAL] = { 0 };
 
@@ -97,6 +100,7 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
 
     klass->selected = NULL;
     klass->mousemoved = NULL;
+    klass->zoomed = NULL;
     
     gwygrapher_signals[SELECTED_SIGNAL]
                 = g_signal_new ("selected",
@@ -113,6 +117,16 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
                                 G_STRUCT_OFFSET (GwyGrapherClass, mousemoved),
+                                NULL,
+                                NULL,
+                                g_cclosure_marshal_VOID__VOID,
+                                G_TYPE_NONE, 0);
+
+    gwygrapher_signals[ZOOMED_SIGNAL]
+                = g_signal_new ("zoomed",
+                                G_TYPE_FROM_CLASS (klass),
+                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                                G_STRUCT_OFFSET (GwyGrapherClass, zoomed),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -203,6 +217,9 @@ gwy_grapher_init(GwyGrapher *grapher)
     g_signal_connect_swapped(grapher->area, "mousemoved",
                      G_CALLBACK(gwy_grapher_signal_mousemoved), grapher);
      
+    g_signal_connect_swapped(grapher->area, "zoomed",
+                     G_CALLBACK(zoomed_cb), grapher);
+
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->area), 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
 
@@ -553,11 +570,33 @@ gwy_grapher_signal_mousemoved(GwyGrapher *grapher)
 }
 
 void       
+gwy_grapher_signal_zoomed(GwyGrapher *grapher)
+{
+    g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[ZOOMED_SIGNAL], 0);
+}
+
+void       
 gwy_grapher_get_cursor(GwyGrapher *grapher, gdouble *x_cursor, gdouble *y_cursor)
 {
     gwy_grapher_area_get_cursor(grapher->area, x_cursor, y_cursor);
 }
 
 
+void       
+gwy_grapher_zoom_in(GwyGrapher *grapher)
+{
+    gwy_grapher_set_status(grapher, GWY_GRAPHER_STATUS_ZOOM);
+}
+
+void       
+gwy_grapher_zoom_out(GwyGrapher *grapher)
+{
+}
+
+static void
+zoomed_cb(GwyGrapher *grapher)
+{
+    gwy_grapher_signal_zoomed(grapher);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

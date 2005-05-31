@@ -76,6 +76,7 @@ struct _GwyGrapherClass {
     void (*gwygrapher)(GwyGrapher *grapher);
     void (*selected)(GwyGrapher *grapher);
     void (*mousemoved)(GwyGrapher *grapher);    
+    void (*zoomed)(GwyGrapher *grapher);
     
     gpointer reserved1;
     gpointer reserved2;
@@ -97,6 +98,7 @@ GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher);
 
 void       gwy_grapher_signal_selected(GwyGrapher *grapher);
 void       gwy_grapher_signal_mousemoved(GwyGrapher *grapher);
+void       gwy_grapher_signal_zoomed(GwyGrapher *grapher);
 
 gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
 void       gwy_grapher_get_selection(GwyGrapher *grapher,
@@ -122,6 +124,8 @@ void       gwy_grapher_export_postscript(GwyGrapher *grapher, const gchar *filen
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels);
 
+void       gwy_grapher_zoom_in(GwyGrapher *grapher);
+void       gwy_grapher_zoom_out(GwyGrapher *grapher);
 
 
 G_END_DECLS

@@ -572,6 +572,15 @@ gwy_grapher_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
+    
+    if (area->status == GWY_GRAPH_STATUS_ZOOM)
+    {
+        area->zoomdata->xmin = dx;
+        area->zoomdata->ymin = dy;
+        area->zoomdata->width = 0;
+        area->zoomdata->height = 0;
+        area->selecting = 1;
+    }
 
     
     return TRUE;
@@ -611,7 +620,12 @@ gwy_grapher_area_button_release(GtkWidget *widget, GdkEventButton *event)
          gwy_grapher_area_signal_selected(area);
     }
 
-
+    if (area->status == GWY_GRAPH_STATUS_ZOOM
+                             && (area->selecting != 0)) {
+         area->selecting = FALSE;
+         gwy_grapher_area_signal_zoomed(area);
+    }
+ 
     if (area->active) {
         gwy_grapher_area_draw_child_rectangle(area);
 
@@ -669,6 +683,23 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
+    if (area->status == GWY_GRAPH_STATUS_ZOOM
+                             && (area->selecting != 0)) {
+        if (dx < area->zoomdata->xmin) {
+            area->zoomdata->width = area->zoomdata->xmin - dx;
+            area->zoomdata->xmin = dx;
+        }
+        else
+            area->zoomdata->width = dx - area->zoomdata->xmin;
+
+        if (dy < area->zoomdata->ymin) {
+            area->zoomdata->height = area->zoomdata->ymin - dy;
+            area->zoomdata->ymin = dy;
+        }
+        else
+            area->zoomdata->height = dy - area->zoomdata->ymin;
+    }    
+
     /*widget (label) movement*/
     if (area->active) {
 
@@ -689,6 +720,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         area->yoff = y - area->y0;
         gwy_grapher_area_draw_child_rectangle(area);
     }
+
 
     return FALSE;
 }
