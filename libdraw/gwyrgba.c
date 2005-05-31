@@ -24,22 +24,20 @@
 #include <libgwyddion/gwymath.h>
 #include "gwyrgba.h"
 
-static gboolean quarks_initialized = FALSE;
-static GQuark sett_keys[4];
-static GQuark data_keys[4];
-
-static void initialize_quarks(void);
+static void gwy_rgba_compute_color_quarks (const gchar *prefix,
+                                           GQuark quarks[4]);
 
 GType
-gwy_rgba_get_type (void)
+gwy_rgba_get_type(void)
 {
-  static GType rgba_type = 0;
+    static GType rgba_type = 0;
 
-  if (rgba_type == 0)
-    rgba_type = g_boxed_type_register_static("GwyRGBA",
-                                            (GBoxedCopyFunc)gwy_rgba_copy,
-                                            (GBoxedFreeFunc)gwy_rgba_free);
-  return rgba_type;
+    if (rgba_type == 0)
+        rgba_type = g_boxed_type_register_static("GwyRGBA",
+                                                 (GBoxedCopyFunc)gwy_rgba_copy,
+                                                 (GBoxedFreeFunc)gwy_rgba_free);
+
+    return rgba_type;
 }
 
 /**
@@ -210,44 +208,16 @@ gwy_rgba_get_from_container(GwyRGBA *rgba,
                             GwyContainer *container,
                             const gchar *prefix)
 {
-    gchar *buffer;
-    gsize len;
-    gboolean ok;
+    GQuark keys[4];
+    gboolean ok = TRUE;
 
-    gwy_debug("");
     g_return_val_if_fail(rgba && container && prefix, FALSE);
 
-    if (!quarks_initialized)
-        initialize_quarks();
-
-    /* optimize for common cases */
-    if (!strcmp(prefix, "/0/mask")) {
-        return gwy_container_gis_double(container, data_keys[0], &rgba->r)
-               && gwy_container_gis_double(container, data_keys[1], &rgba->g)
-               && gwy_container_gis_double(container, data_keys[2], &rgba->b)
-               && gwy_container_gis_double(container, data_keys[3], &rgba->a);
-    }
-    if (!strcmp(prefix, "/mask")) {
-        return gwy_container_gis_double(container, sett_keys[0], &rgba->r)
-               && gwy_container_gis_double(container, sett_keys[1], &rgba->g)
-               && gwy_container_gis_double(container, sett_keys[2], &rgba->b)
-               && gwy_container_gis_double(container, sett_keys[3], &rgba->a);
-    }
-
-    /* quarkize keys */
-    ok = TRUE;
-    len = strlen(prefix);
-    buffer = g_new(gchar, len + 6 + 1);
-    strcpy(buffer, prefix);
-    strcpy(buffer + len, "/red");
-    ok &= gwy_container_gis_double_by_name(container, buffer, &rgba->r);
-    strcpy(buffer + len, "/green");
-    ok &= gwy_container_gis_double_by_name(container, buffer, &rgba->g);
-    strcpy(buffer + len, "/blue");
-    ok &= gwy_container_gis_double_by_name(container, buffer, &rgba->b);
-    strcpy(buffer + len, "/alpha");
-    ok &= gwy_container_gis_double_by_name(container, buffer, &rgba->a);
-    g_free(buffer);
+    gwy_rgba_compute_color_quarks(prefix, keys);
+    ok &= gwy_container_gis_double(container, keys[0], &rgba->r);
+    ok &= gwy_container_gis_double(container, keys[1], &rgba->g);
+    ok &= gwy_container_gis_double(container, keys[2], &rgba->b);
+    ok &= gwy_container_gis_double(container, keys[3], &rgba->a);
 
     return ok;
 }
@@ -256,7 +226,7 @@ gwy_rgba_get_from_container(GwyRGBA *rgba,
  * gwy_rgba_store_to_container:
  * @rgba: A #GwyRGBA.
  * @container: A #GwyContainer to store the color components to.
- * @prefix: Prefix in @container, e.g. "/0/mask" (it would try to store
+ * @prefix: Prefix in @container, e.g. "/0/mask" (it will store
  *          "/0/mask/red", "/0/mask/green", etc. then).
  *
  * Stores RGBA color components to a container.
@@ -266,60 +236,35 @@ gwy_rgba_store_to_container(const GwyRGBA *rgba,
                             GwyContainer *container,
                             const gchar *prefix)
 {
-    gchar *buffer;
-    gsize len;
+    GQuark keys[4];
 
-    gwy_debug("");
     g_return_if_fail(rgba && container && prefix);
 
-    if (!quarks_initialized)
-        initialize_quarks();
-
-    /* optimize for common cases */
-    if (!strcmp(prefix, "/0/mask")) {
-        gwy_container_set_double(container, data_keys[0], rgba->r);
-        gwy_container_set_double(container, data_keys[1], rgba->g);
-        gwy_container_set_double(container, data_keys[2], rgba->b);
-        gwy_container_set_double(container, data_keys[3], rgba->a);
-        return;
-    }
-    if (!strcmp(prefix, "/mask")) {
-        gwy_container_set_double(container, sett_keys[0], rgba->r);
-        gwy_container_set_double(container, sett_keys[1], rgba->g);
-        gwy_container_set_double(container, sett_keys[2], rgba->b);
-        gwy_container_set_double(container, sett_keys[3], rgba->a);
-        return;
-    }
-
-    /* quarkize keys */
-    len = strlen(prefix);
-    buffer = g_new(gchar, len + 6 + 1);
-    strcpy(buffer, prefix);
-    strcpy(buffer + len, "/red");
-    gwy_container_set_double_by_name(container, buffer, rgba->r);
-    strcpy(buffer + len, "/green");
-    gwy_container_set_double_by_name(container, buffer, rgba->g);
-    strcpy(buffer + len, "/blue");
-    gwy_container_set_double_by_name(container, buffer, rgba->b);
-    strcpy(buffer + len, "/alpha");
-    gwy_container_set_double_by_name(container, buffer, rgba->a);
-    g_free(buffer);
+    gwy_rgba_compute_color_quarks(prefix, keys);
+    gwy_container_set_double(container, keys[0], rgba->r);
+    gwy_container_set_double(container, keys[1], rgba->g);
+    gwy_container_set_double(container, keys[2], rgba->b);
+    gwy_container_set_double(container, keys[3], rgba->a);
 }
 
 static void
-initialize_quarks(void)
+gwy_rgba_compute_color_quarks(const gchar *prefix,
+                              GQuark quarks[4])
 {
-    sett_keys[0] = g_quark_from_static_string("/mask/red");
-    sett_keys[1] = g_quark_from_static_string("/mask/green");
-    sett_keys[2] = g_quark_from_static_string("/mask/blue");
-    sett_keys[3] = g_quark_from_static_string("/mask/alpha");
+    gchar *key;
+    guint len;
 
-    data_keys[0] = g_quark_from_static_string("/0/mask/red");
-    data_keys[1] = g_quark_from_static_string("/0/mask/green");
-    data_keys[2] = g_quark_from_static_string("/0/mask/blue");
-    data_keys[3] = g_quark_from_static_string("/0/mask/alpha");
+    len = strlen(prefix);
+    key = g_newa(gchar, len + sizeof("/alpha"));
 
-    quarks_initialized = TRUE;
+    g_stpcpy(g_stpcpy(key, prefix), "/red");
+    quarks[0] = g_quark_from_string(key);
+    strcpy(key + len + 1, "green");
+    quarks[1] = g_quark_from_string(key);
+    strcpy(key + len + 1, "blue");
+    quarks[2] = g_quark_from_string(key);
+    strcpy(key + len + 1, "alpha");
+    quarks[3] = g_quark_from_string(key);
 }
 
 /************************** Documentation ****************************/
