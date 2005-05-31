@@ -214,7 +214,7 @@ gwy_grapher_area_init(GwyGrapherArea *area)
     area->gc = NULL;
     
     area->selecting = FALSE;
-    area->mouse_present = TRUE;
+    area->mouse_present = FALSE;
 
     area->pointdata = g_new(GwyGrapherStatus_PointData, 1);
     area->pointsdata = g_new(GwyGrapherStatus_PointsData, 1);
@@ -254,7 +254,8 @@ gwy_grapher_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
     gtk_widget_add_events(GTK_WIDGET(area), GDK_BUTTON_PRESS_MASK
                           | GDK_BUTTON_RELEASE_MASK
                           | GDK_BUTTON_MOTION_MASK
-                          | GDK_POINTER_MOTION_MASK);
+                          | GDK_POINTER_MOTION_MASK
+                          | GDK_LEAVE_NOTIFY_MASK);
 
     area->area_dialog = GWY_GRAPHER_AREA_DIALOG(gwy_grapher_area_dialog_new());
     g_signal_connect(area->area_dialog, "response",
@@ -653,6 +654,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
+    area->mouse_present = TRUE;
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
     gwy_grapher_area_signal_mousemoved(area);
@@ -1047,7 +1049,6 @@ gboolean gwy_grapher_area_leave_notify(GtkWidget *widget, GdkEventCrossing *even
 {
     GwyGrapherArea *area = GWY_GRAPHER_AREA(widget);
 
-    printf("dafdfas\n");
     area->mouse_present = FALSE;
 
     return FALSE;

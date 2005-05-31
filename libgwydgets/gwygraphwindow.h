@@ -27,6 +27,7 @@
 #include <gtk/gtktooltips.h>
 
 #include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraphwindowmeasuredialog.h>
 
 G_BEGIN_DECLS
 
@@ -48,6 +49,8 @@ struct _GwyGraphWindow {
     GtkWidget *notebook;
     GtkWidget *graph;
     GtkWidget *data;
+
+    GwyGrapherWindowMeasureDialog *measure_dialog;
 
     GtkWidget *button_measure_points;
     GtkWidget *button_measure_lines;

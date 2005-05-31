@@ -42,6 +42,8 @@ static void     gwy_graph_window_init                (GwyGraphWindow *graphwindo
 static void     gwy_graph_window_destroy             (GtkObject *object);
 static void     gwy_graph_window_finalize            (GObject *object);
 static void     gwy_graph_cursor_motion_cb           (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_measure_cb          (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_measure_finished_cb (GwyGraphWindow *graphwindow, gint response);
 
 /* Local data */
 
@@ -175,7 +177,11 @@ gwy_graph_window_new(GwyGrapher *graph)
     gtk_container_add(GTK_CONTAINER(graphwindow->button_measure_points),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, FALSE, FALSE, 4);
- 
+    g_signal_connect_swapped(graphwindow->button_measure_points, "clicked",
+                           G_CALLBACK(gwy_graph_window_measure_cb),
+                           graphwindow);
+    
+    
     graphwindow->button_zoom_in = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_in),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_IN, GTK_ICON_SIZE_BUTTON)); 
@@ -202,18 +208,23 @@ gwy_graph_window_new(GwyGrapher *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_bitmap, FALSE, FALSE, 0);
 
     graphwindow->label_what = gtk_label_new("Cursor values:");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, TRUE, FALSE, 4);
 
-    graphwindow->label_x = gtk_label_new("");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_x, TRUE, TRUE, 4);
+    graphwindow->label_x = gtk_label_new("       ");
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_x, TRUE, FALSE, 4);
 
-    graphwindow->label_y = gtk_label_new("");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, TRUE, TRUE, 4);
+    graphwindow->label_y = gtk_label_new("       ");
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, TRUE, FALSE, 4);
 
     
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox);
-    
+   
+    graphwindow->measure_dialog = GWY_GRAPHER_WINDOW_MEASURE_DIALOG(gwy_grapher_window_measure_dialog_new(graphwindow->graph));
+    g_signal_connect_swapped(graphwindow->measure_dialog, "response",
+                           G_CALLBACK(gwy_graph_window_measure_finished_cb),
+                           graphwindow);
+     
     /*
     gtk_tooltips_set_tip(gwy3dwindow->tips, button,
                          _("Show full controls"), NULL);
@@ -267,15 +278,32 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     
     g_snprintf(buffer, sizeof(buffer), "%.4f", x/xmag);
     xstring = g_string_prepend(xstring, buffer);
-    gtk_label_set_text(graphwindow->label_x, xstring->str);
+    gtk_label_set_markup(graphwindow->label_x, xstring->str);
 
     g_snprintf(buffer, sizeof(buffer), "%.4f", y/ymag);
     ystring = g_string_prepend(ystring, buffer);
-    gtk_label_set_text(graphwindow->label_y, ystring->str);
+    gtk_label_set_markup(graphwindow->label_y, ystring->str);
     
     g_string_free(xstring, TRUE);
     g_string_free(ystring, TRUE);
 }
 
+static void     
+gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
+{
+    gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_POINTS);
+    gwy_grapher_signal_selected(graphwindow->graph);
+
+    gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
+}
+
+static void     
+gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
+{
+    gwy_grapher_clear_selection(graphwindow->graph);
+    gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_PLAIN);
+
+    gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
