@@ -1,4 +1,4 @@
-1.99.2cvs20050527
+1.99.2cvs20050601
 
 1.99.3
 Application:
@@ -20,6 +20,10 @@ Library:
 - libgwydgets, libgwyapp: Explicite updates gwy_data_view_update() and
   gwy_app_data_view_update() were removed as view updates are now triggered
   by signals.
+- libgwydgets: GwyLayerBasic and GwyLayerMask no longer have their own
+  properties, they take all values directly from container.
+- libgwydgets, libprocess: GwyLayerBasic color range mode are explicite now,
+  auto-range mode was implemented.
 - libgwyapp: Data processing module return value is ignored, functions have
   to emit "data_changed" on changed data fields.
 - libgwyddion: A quicksort function specialized for doubles.
@@ -27,10 +31,16 @@ Library:
   derivations by fixed parameters, and the default numeric one avoids it.
 - libgwydmodule, libgwyapp: `Interactive' data processing run type was
   removed.
+- libgwyddion, libprocess: SI Unit value formats styles were exposed in the
+  API, each value format get function now has an addition style parameter.
+- libgwydgets: Shader widget has rudiemntary support for insensitive state.
 - Bugfixes were merged from 1.11.
 
 Modules:
 - All: Updated for data (view) notification changes.
+- File import modules use auto-range mode for preview, that should improve
+  preview of data with outliers.
+- IColorange supports auto-range mode.
 - Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
 
 Other:
