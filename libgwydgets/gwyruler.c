@@ -587,13 +587,17 @@ gwy_ruler_update_value_format(GwyRuler *ruler)
     if (!max)
         max = 1.2;
 
-    ruler->vformat = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                            max, max/12,
-                                                            ruler->vformat);
+    ruler->vformat
+        = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                 max, max/12,
+                                                 ruler->vformat);
     if (ruler->vformat->precision > 1)
-        ruler->vformat = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                                max/12, max/24,
-                                                                ruler->vformat);
+        ruler->vformat
+            = gwy_si_unit_get_format_with_resolution(ruler->units,
+                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                     max/12, max/24,
+                                                     ruler->vformat);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

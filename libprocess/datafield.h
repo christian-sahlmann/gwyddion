@@ -110,10 +110,12 @@ void              gwy_data_field_set_si_unit_xy      (GwyDataField *data_field,
                                                       GwySIUnit *si_unit);
 void              gwy_data_field_set_si_unit_z       (GwyDataField *data_field,
                                                       GwySIUnit *si_unit);
-GwySIValueFormat* gwy_data_field_get_value_format_xy (GwyDataField *data_field,
-                                                      GwySIValueFormat *format);
-GwySIValueFormat* gwy_data_field_get_value_format_z  (GwyDataField *data_field,
-                                                      GwySIValueFormat *format);
+GwySIValueFormat* gwy_data_field_get_value_format_xy(GwyDataField *data_field,
+                                                     GwySIUnitFormatStyle style,
+                                                     GwySIValueFormat *format);
+GwySIValueFormat* gwy_data_field_get_value_format_z (GwyDataField *data_field,
+                                                     GwySIUnitFormatStyle style,
+                                                     GwySIValueFormat *format);
 
 gdouble           gwy_data_field_itor                (GwyDataField *data_field,
                                                       gdouble row);

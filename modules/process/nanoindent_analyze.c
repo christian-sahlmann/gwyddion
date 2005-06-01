@@ -442,7 +442,9 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
 
     /* "statistical" labels */
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    siformat = gwy_data_field_get_value_format_xy (dfield,NULL);
+    siformat = gwy_data_field_get_value_format_xy(dfield,
+                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                  NULL);
     strcpy(siu, siformat->units);
 
     controls.w_min_xy = gtk_label_new ("");
@@ -1333,7 +1335,9 @@ static void update_data_labels (IndentAnalyzeControls *c)
 {
     GString *str;
     GwyDataField* dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(c->mydata, "/0/data"));
-    GwySIValueFormat* siformat = gwy_data_field_get_value_format_xy (dfield,NULL);
+    GwySIValueFormat* siformat = gwy_data_field_get_value_format_xy(dfield,
+                                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                                    NULL);
     gdouble mag = siformat->magnitude;
     gdouble sxy = dfield->xreal*dfield->yreal;
 
@@ -1446,7 +1450,9 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(c->mydata, "/0/data"));
     sxy = dfield->xreal*dfield->yreal;
-    siformat = gwy_data_field_get_value_format_xy (dfield,NULL);
+    siformat = gwy_data_field_get_value_format_xy(dfield,
+                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                  NULL);
     mag = siformat->magnitude;
 
     out = fopen( filename_sys, "w");

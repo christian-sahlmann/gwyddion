@@ -700,13 +700,15 @@ test_si_unit()
 }
 
 #define dsiunitd(si, dig, val, vf) \
-    vf = gwy_si_unit_get_format_with_digits(si, val, dig, vf); \
+    vf = gwy_si_unit_get_format_with_digits(si, GWY_SI_UNIT_FORMAT_PLAIN, \
+                                            val, dig, vf); \
     fprintf(stderr, "(%s,\t%g,\td=%d) -> %.*f %s\n", \
             gwy_si_unit_get_unit_string(si), val, dig, \
             vf->precision, val/vf->magnitude, vf->units)
 
 #define dsiunitr(si, res, val, vf) \
-    vf = gwy_si_unit_get_format_with_resolution(si, val, res, vf); \
+    vf = gwy_si_unit_get_format_with_resolution(si, GWY_SI_UNIT_FORMAT_PLAIN, \
+                                                val, res, vf); \
     fprintf(stderr, "(%s,\t%g,\tr=%g)\t-> %.*f %s\n", \
             gwy_si_unit_get_unit_string(si), val, res, \
             vf->precision, val/vf->magnitude, vf->units)

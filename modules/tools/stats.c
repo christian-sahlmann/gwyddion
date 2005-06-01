@@ -144,13 +144,16 @@ use(GwyDataWindow *data_window,
         siunitxy = gwy_si_unit_duplicate(siunitxy);
         gwy_si_unit_power(siunitxy, 2, siunitxy);
         controls->vform2
-            = gwy_si_unit_get_format_with_resolution(siunitxy, xreal*yreal, q,
+            = gwy_si_unit_get_format_with_resolution(siunitxy,
+                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                     xreal*yreal, q,
                                                      controls->vform2);
         g_object_unref(siunitxy);
 
         siunitdeg = (GwySIUnit*)gwy_si_unit_new("deg"); /* degree */
         controls->vformdeg
             = gwy_si_unit_get_format_with_resolution(siunitdeg,
+                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                      360, 0.01,
                                                      controls->vformdeg);
         g_object_unref(siunitdeg);

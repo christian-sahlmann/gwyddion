@@ -523,9 +523,13 @@ gwy_data_window_update_units(GwyDataWindow *data_window)
     gwy_debug("before: coord_format = %p, value_format = %p",
               data_window->coord_format, data_window->value_format);
     data_window->coord_format
-        = gwy_data_field_get_value_format_xy(dfield, data_window->coord_format);
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                             data_window->coord_format);
     data_window->value_format
-        = gwy_data_field_get_value_format_z(dfield, data_window->value_format);
+        = gwy_data_field_get_value_format_z(dfield,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            data_window->value_format);
     gwy_debug("after: coord_format = %p, value_format = %p",
               data_window->coord_format, data_window->value_format);
     gwy_debug("after: coord_format = {%d, %g, %s}, value_format = {%d, %g, %s}",

@@ -5,6 +5,8 @@ libgwyddionincludedir = $(pkgincludedir)/libgwyddion
 libgwyddioninclude_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
+	gwyddionenums.h \
+	gwyddiontypes.h \
 	gwydebugobjects.h \
 	gwyentities.h \
 	gwyexpr.h \
@@ -18,9 +20,16 @@ libgwyddioninclude_HEADERS = \
 	gwywatchable.h \
 	gwywin32unistd.h
 
+built_sources = \
+	gwyddiontypes.h \
+	gwyddiontypes.c
+
 lib_LTLIBRARIES = libgwyddion.la
 
 EXTRA_DIST = \
+	$(built_sources) \
+	gwyddiontypes.c.template \
+	gwyddiontypes.h.template \
 	makefile.msc \
 	libgwyddion.def
 
@@ -47,15 +56,43 @@ libgwyddion_la_SOURCES = \
 	gwysiunit.c \
 	gwywatchable.c
 
+INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_PIXMAP_DIR=\"$(pkgdatadir)/pixmaps\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
+
+clean-local:
+	rm -f core.* *~ testser.object *.xgen
+
+if MAINTAINER_MODE
+enum_headers = gwyddionenums.h
+stamp_files = stamp-gwyddionenums.h
+
+MAINTAINERCLEANFILES = $(built_sources) $(stamp_files)
+
+BUILT_SOURCES = $(built_sources)
+
+gwyddiontypes.h: stamp-gwyddiontypes.h
+	@true
+
+stamp-gwyddiontypes.h: $(enum_headers) gwyddiontypes.h.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwyddiontypes.h.template $(enum_headers) ) \
+	  >gwyddiontypes.h.xgen \
+	&& (cmp -s gwyddiontypes.h.xgen gwyddiontypes.h \
+		|| cp gwyddiontypes.h.xgen gwyddiontypes.h ) \
+	&& rm -f gwyddiontypes.h.xgen \
+	&& echo timestamp >stamp-gwyddiontypes.h
+
+gwyddiontypes.c: $(enum_headers) gwyddiontypes.c.template
+	( cd $(srcdir) \
+	  && glib-mkenums --template gwyddiontypes.c.template $(enum_headers) ) \
+	>gwyddiontypes.c.xgen \
+	&& cp gwyddiontypes.c.xgen gwyddiontypes.c  \
+	&& rm -f gwyddiontypes.c.xgen
+endif
+
 #noinst_PROGRAMS = main
 #main_SOURCES = \
 #	main.c \
 #	gwytestser.c
 #
 #main_LDADD = libgwyddion.la
-
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_PIXMAP_DIR=\"$(pkgdatadir)/pixmaps\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
-
-clean-local:
-	rm -f core.* *~ testser.object

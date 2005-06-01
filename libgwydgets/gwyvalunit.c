@@ -251,7 +251,8 @@ void
 gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 {
     GwySIValueFormat *format;
-    format = gwy_si_unit_get_format(val_unit->base_si_unit, value, NULL);
+    format = gwy_si_unit_get_format(val_unit->base_si_unit,
+                                    GWY_SI_UNIT_FORMAT_VFMARKUP, value, NULL);
 
     val_unit->unit = floor(log10(format->magnitude)); /* /3 */
     val_unit->dival = value/pow10(val_unit->unit);  /*1000*/

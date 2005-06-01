@@ -630,7 +630,9 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
 
     /* $x */
     unit = gwy_data_field_get_si_unit_xy(gwy3dview->data);
-    format = gwy_si_unit_get_format_with_resolution(unit, xreal, xreal/3, NULL);
+    format = gwy_si_unit_get_format_with_resolution(unit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    xreal, xreal/3, NULL);
     g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
                xreal/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "x");
@@ -638,7 +640,8 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
         g_hash_table_insert(gwy3dview->variables, "x", g_strdup(buffer));
 
     /* $y */
-    gwy_si_unit_get_format_with_resolution(unit, yreal, yreal/3, format);
+    gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                           yreal, yreal/3, format);
     g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
                yreal/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "y");
@@ -647,7 +650,8 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
 
     /* $max */
     unit = gwy_data_field_get_si_unit_z(gwy3dview->data);
-    gwy_si_unit_get_format_with_resolution(unit, maximum, range/3, format);
+    gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                           maximum, range/3, format);
     g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
                data_max/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "max");

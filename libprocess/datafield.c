@@ -955,6 +955,7 @@ gwy_data_field_set_si_unit_z(GwyDataField *data_field,
 /**
  * gwy_data_field_get_value_format_xy:
  * @data_field: A data field.
+ * @style: Unit format style.
  * @format: A SI value format to modify, or %NULL to allocate a new one.
  *
  * Finds value format good for displaying coordinates of a data field.
@@ -964,6 +965,7 @@ gwy_data_field_set_si_unit_z(GwyDataField *data_field,
  **/
 GwySIValueFormat*
 gwy_data_field_get_value_format_xy(GwyDataField *data_field,
+                                   GwySIUnitFormatStyle style,
                                    GwySIValueFormat *format)
 {
     gdouble max, unit;
@@ -975,12 +977,13 @@ gwy_data_field_get_value_format_xy(GwyDataField *data_field,
                data_field->yreal/data_field->yres);
     return gwy_si_unit_get_format_with_resolution
                                    (gwy_data_field_get_si_unit_xy(data_field),
-                                    max, unit, format);
+                                    style, max, unit, format);
 }
 
 /**
  * gwy_data_field_get_value_format_z:
  * @data_field: A data field.
+ * @style: Unit format style.
  * @format: A SI value format to modify, or %NULL to allocate a new one.
  *
  * Finds value format good for displaying values of a data field.
@@ -990,6 +993,7 @@ gwy_data_field_get_value_format_xy(GwyDataField *data_field,
  **/
 GwySIValueFormat*
 gwy_data_field_get_value_format_z(GwyDataField *data_field,
+                                  GwySIUnitFormatStyle style,
                                   GwySIValueFormat *format)
 {
     gdouble max, min;
@@ -1001,7 +1005,7 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
     max = MAX(min, max);
 
     return gwy_si_unit_get_format(gwy_data_field_get_si_unit_z(data_field),
-                                  max, format);
+                                  style, max, format);
 }
 
 /**

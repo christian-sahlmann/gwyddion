@@ -475,13 +475,17 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         if (axis->min == 0)
             g_string_printf(strmax, "0.0");
         else {
-            format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
+            format = gwy_si_unit_get_format(axis->siunit,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            axis->max, NULL);
             g_string_printf(strmax, "0.0 ");
             g_string_append(strmax, format->units);
         }
     }
     else {
-        format = gwy_si_unit_get_format(axis->siunit, axis->max, NULL);
+        format = gwy_si_unit_get_format(axis->siunit,
+                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                        axis->max, NULL);
         g_string_printf(strmax, "%3.1f ", axis->max/format->magnitude);
         g_string_append(strmax, format->units);
     }
@@ -492,14 +496,18 @@ gwy_color_axis_draw_label(GtkWidget *widget)
         if (axis->max == 0)
             g_string_printf(strmin, "0.0");
         else {
-            format = gwy_si_unit_get_format(axis->siunit, axis->max, format);
+            format = gwy_si_unit_get_format(axis->siunit,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            axis->max, format);
             g_string_printf(strmin, "0.0 ");
             g_string_append(strmin, format->units);
         }
     }
     else {
         /*yes, realy axis->max*/
-        format = gwy_si_unit_get_format(axis->siunit, axis->max, format);
+        format = gwy_si_unit_get_format(axis->siunit,
+                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                        axis->max, format);
         g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude);
         g_string_append(strmin, format->units);
     }

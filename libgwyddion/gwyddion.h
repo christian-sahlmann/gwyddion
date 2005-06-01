@@ -22,6 +22,8 @@
 #define __GWY_GWYDDION_H__
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyddionenums.h>
+#include <libgwyddion/gwyddiontypes.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>

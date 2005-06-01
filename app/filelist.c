@@ -978,7 +978,8 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
     siunit = gwy_data_field_get_si_unit_xy(dfield);
-    vf = gwy_si_unit_get_format(siunit, sqrt(xreal*yreal), NULL);
+    vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                sqrt(xreal*yreal), NULL);
     g_free(rf->image_real_size);
     rf->image_real_size
         = g_strdup_printf("%.*f×%.*f%s%s",

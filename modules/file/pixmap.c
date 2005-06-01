@@ -1674,7 +1674,9 @@ hruler(gint size,
     s = g_new(gchar, bufsize);
     layout = prepare_layout(zoom);
 
-    format = gwy_si_unit_get_format_with_resolution(siunit, real, real/12,
+    format = gwy_si_unit_get_format_with_resolution(siunit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    real, real/12,
                                                     NULL);
 
     g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
@@ -1754,7 +1756,9 @@ vruler(gint size,
     s = g_new(gchar, bufsize);
     layout = prepare_layout(zoom);
 
-    format = gwy_si_unit_get_format_with_resolution(siunit, real, real/12,
+    format = gwy_si_unit_get_format_with_resolution(siunit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    real, real/12,
                                                     NULL);
 
     /* note the algorithm is the same to force consistency between axes,
@@ -1838,7 +1842,9 @@ fmscale(gint size,
     layout = prepare_layout(zoom);
 
     x = MAX(fabs(bot), fabs(top));
-    format = gwy_si_unit_get_format_with_resolution(siunit, x, x/120, NULL);
+    format = gwy_si_unit_get_format_with_resolution(siunit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    x, x/120, NULL);
 
     g_snprintf(s, bufsize, "%.*f %s",
                format->precision, top/format->magnitude, format->units);

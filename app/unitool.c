@@ -229,6 +229,9 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state,
     state->is_visible = FALSE;
 }
 
+/* FIXME: this is wrong.
+ * Header formats must use GWY_SI_UNIT_FORMAT_MARKUP, while in-line formats
+ * GWY_SI_UNIT_FORMAT_VFMARKUP. */
 static void
 gwy_unitool_compute_formats(GwyUnitoolState *state)
 {
@@ -238,9 +241,11 @@ gwy_unitool_compute_formats(GwyUnitoolState *state)
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     state->coord_format
-        = gwy_data_field_get_value_format_xy(dfield, state->coord_format);
+        = gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_MARKUP,
+                                             state->coord_format);
     state->value_format
-        = gwy_data_field_get_value_format_z(dfield, state->value_format);
+        = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_MARKUP,
+                                            state->value_format);
 }
 
 /*

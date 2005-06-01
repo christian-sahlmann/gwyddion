@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <libgwyddion/gwyserializable.h>
+#include <libgwyddion/gwyddionenums.h>
 
 G_BEGIN_DECLS
 
@@ -87,13 +88,16 @@ gboolean          gwy_si_unit_equal                 (GwySIUnit *siunit1,
                                                      GwySIUnit *siunit2);
 
 GwySIValueFormat* gwy_si_unit_get_format                (GwySIUnit *siunit,
+                                                         GwySIUnitFormatStyle style,
                                                          gdouble value,
                                                          GwySIValueFormat *format);
 GwySIValueFormat* gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
+                                                         GwySIUnitFormatStyle style,
                                                          gdouble maximum,
                                                          gdouble resolution,
                                                          GwySIValueFormat *format);
 GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
+                                                         GwySIUnitFormatStyle style,
                                                          gdouble maximum,
                                                          gint sdigits,
                                                          GwySIValueFormat *format);

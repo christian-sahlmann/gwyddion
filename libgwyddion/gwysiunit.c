@@ -54,7 +54,7 @@ typedef struct {
     const gchar *unit_times;
     const gchar *unit_division;
     const gchar *power_unit_separator;
-} GwySIFormatStyle;
+} GwySIStyleSpec;
 
 static gboolean    gwy_si_unit_parse         (GwySIUnit *siunit,
                                               const gchar *string);
@@ -69,9 +69,9 @@ static GwySIUnit*  gwy_si_unit_power_multiply(GwySIUnit *siunit1,
 static GwySIUnit*  gwy_si_unit_canonicalize  (GwySIUnit *siunit);
 const gchar*       gwy_si_unit_prefix        (gint power);
 static gchar*    gwy_si_unit_format_as_plain_string(GwySIUnit *siunit,
-                                                    const GwySIFormatStyle *fs);
+                                                    const GwySIStyleSpec *fs);
 static GString*    gwy_si_unit_format        (GwySIUnit *siunit,
-                                              const GwySIFormatStyle *fs);
+                                              const GwySIStyleSpec *fs);
 
 
 static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
@@ -134,20 +134,28 @@ static const gchar *known_units[] = {
 };
 
 /* Unit formats */
-static const GwySIFormatStyle format_style_plain = {
+static const GwySIStyleSpec format_style_plain = {
     "10^", "^", NULL, " ", "/", " "
 };
-static const GwySIFormatStyle format_style_markup = {
+static const GwySIStyleSpec format_style_markup = {
     "10<sup>", "<sup>", "</sup>", " ", "/", " "
 };
-static const GwySIFormatStyle format_style_vfmarkup = {
+static const GwySIStyleSpec format_style_vfmarkup = {
     "× 10<sup>", "<sup>", "</sup>", " ", "/", " "
 };
-static const GwySIFormatStyle format_style_backwoods = {
+static const GwySIStyleSpec format_style_TeX = {
+    "10^{", "^{", "}", "\\,", "/", "\\,"
+};
+/* Unused */
+static const GwySIStyleSpec format_style_backwoods = {
     "1e", NULL, NULL, " ", "/", " "
 };
-static const GwySIFormatStyle format_style_TeX = {
-    "10^{", "^{", "}", "\\,", "/", "\\,"
+
+static const GwySIStyleSpec *format_styles[] = {
+    &format_style_plain,
+    &format_style_markup,
+    &format_style_vfmarkup,
+    &format_style_TeX,
 };
 
 static GObjectClass *parent_class = NULL;
@@ -440,9 +448,21 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
     return gwy_si_unit_format_as_plain_string(siunit, &format_style_plain);
 }
 
+static inline const GwySIStyleSpec*
+gwy_si_unit_find_style_spec(GwySIUnitFormatStyle style)
+{
+    if ((guint)style > GWY_SI_UNIT_FORMAT_TEX) {
+        g_warning("Invalid format style");
+        style = GWY_SI_UNIT_FORMAT_PLAIN;
+    }
+
+    return format_styles[style];
+}
+
 /**
  * gwy_si_unit_get_format:
  * @siunit: An SI unit.
+ * @style: Unit format style.
  * @value: input value
  * @format: returned number representation parameters
  *
@@ -455,12 +475,16 @@ gwy_si_unit_get_unit_string(GwySIUnit *siunit)
  **/
 GwySIValueFormat*
 gwy_si_unit_get_format(GwySIUnit *siunit,
+                       GwySIUnitFormatStyle style,
                        gdouble value,
                        GwySIValueFormat *format)
 {
+    const GwySIStyleSpec *spec;
+
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
 
+    spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
     else
@@ -475,8 +499,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(value/12, value,
                                                       &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
 
     return format;
 }
@@ -485,6 +508,7 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
 /**
  * gwy_si_unit_get_format_with_resolution:
  * @siunit: A SI unit.
+ * @style: Unit format style.
  * @maximum: The maximum value to be represented.
  * @resolution: The smallest step (approximately) that should make a visible
  *              difference in the representation.
@@ -501,13 +525,17 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
  **/
 GwySIValueFormat*
 gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
+                                       GwySIUnitFormatStyle style,
                                        gdouble maximum,
                                        gdouble resolution,
                                        GwySIValueFormat *format)
 {
+    const GwySIStyleSpec *spec;
+
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
 
+    spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
     else
@@ -523,8 +551,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
                                                       &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
 
     return format;
 }
@@ -532,6 +559,7 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
 /**
  * gwy_si_unit_get_format_with_digits:
  * @siunit: A SI unit.
+ * @style: Unit format style.
  * @maximum: The maximum value to be represented.
  * @sdigits: The number of significant digits the value should have.
  * @format: A value format to set-up, may be %NULL, a new value format is
@@ -548,13 +576,17 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
  **/
 GwySIValueFormat*
 gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
+                                   GwySIUnitFormatStyle style,
                                    gdouble maximum,
                                    gint sdigits,
                                    GwySIValueFormat *format)
 {
+    const GwySIStyleSpec *spec;
+
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
 
+    spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
     else
@@ -570,8 +602,7 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
             = gwy_math_humanize_numbers(maximum/pow10(sdigits),
                                         maximum, &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit,
-                                                       &format_style_vfmarkup);
+    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
 
     return format;
 }
@@ -1020,7 +1051,7 @@ gwy_si_unit_canonicalize(GwySIUnit *siunit)
 
 static gchar*
 gwy_si_unit_format_as_plain_string(GwySIUnit *siunit,
-                                   const GwySIFormatStyle *fs)
+                                   const GwySIStyleSpec *fs)
 {
     GString *string;
     gchar *s;
@@ -1034,7 +1065,7 @@ gwy_si_unit_format_as_plain_string(GwySIUnit *siunit,
 
 static GString*
 gwy_si_unit_format(GwySIUnit *siunit,
-                   const GwySIFormatStyle *fs)
+                   const GwySIStyleSpec *fs)
 {
     GString *string;
     const gchar *prefix = "No GCC, this can't be used uninitialized";

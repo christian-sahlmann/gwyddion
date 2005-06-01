@@ -1130,7 +1130,8 @@ gwy_axiser_formatticks(GwyAxiser *a)
     if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
         && (range > 1000 || average > 1000 || range < 0.001 || average < 0.001))
     {
-        format = gwy_si_unit_get_format(a->unit, MAX(average, range), format);
+        format = gwy_si_unit_get_format(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                        MAX(average, range), format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
