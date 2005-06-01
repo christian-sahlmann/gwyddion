@@ -685,19 +685,8 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
                              && (area->selecting != 0)) {
-        if (dx < area->zoomdata->xmin) {
-            area->zoomdata->width = area->zoomdata->xmin - dx;
-            area->zoomdata->xmin = dx;
-        }
-        else
-            area->zoomdata->width = dx - area->zoomdata->xmin;
-
-        if (dy < area->zoomdata->ymin) {
-            area->zoomdata->height = area->zoomdata->ymin - dy;
-            area->zoomdata->ymin = dy;
-        }
-        else
-            area->zoomdata->height = dy - area->zoomdata->ymin;
+         area->zoomdata->width = dx - area->zoomdata->xmin;
+         area->zoomdata->height = dy - area->zoomdata->ymin;
     }    
 
     /*widget (label) movement*/

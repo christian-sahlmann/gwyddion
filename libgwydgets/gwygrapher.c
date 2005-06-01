@@ -474,6 +474,30 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         }
         break;
 
+        case GWY_GRAPH_STATUS_ZOOM:
+        if (grapher->area->zoomdata->width>0)
+        {
+            selection[0] = grapher->area->zoomdata->xmin;
+            selection[1] = grapher->area->zoomdata->width;
+        }
+        else
+        {
+            selection[0] = grapher->area->zoomdata->xmin + grapher->area->zoomdata->width;
+            selection[1] = -grapher->area->zoomdata->width;
+        }
+
+        if (grapher->area->zoomdata->height>0)
+        {
+            selection[2] = grapher->area->zoomdata->ymin;
+            selection[3] = grapher->area->zoomdata->height;
+        }
+        else
+        {
+            selection[2] = grapher->area->zoomdata->ymin + grapher->area->zoomdata->height;
+            selection[3] = -grapher->area->zoomdata->height;
+        }
+         break;
+        
         default:
         g_assert_not_reached();   
     }
@@ -591,11 +615,37 @@ gwy_grapher_zoom_in(GwyGrapher *grapher)
 void       
 gwy_grapher_zoom_out(GwyGrapher *grapher)
 {
+    gwy_grapher_refresh(grapher);
+    gwy_grapher_signal_zoomed(grapher);
 }
 
 static void
 zoomed_cb(GwyGrapher *grapher)
 {
+    gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
+    gdouble selection[4];
+    
+    if (grapher->area->status != GWY_GRAPHER_STATUS_ZOOM) return;
+    gwy_grapher_get_selection(grapher, selection);
+   
+    x_reqmin = selection[0];
+    x_reqmax = selection[0] + selection[1];
+    y_reqmin = selection[2];
+    y_reqmax = selection[2] + selection[3];
+         
+    gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
+    gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
+    gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
+    gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
+
+    grapher->graph_model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
+    grapher->graph_model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
+    grapher->graph_model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
+    grapher->graph_model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+
+    /*refresh widgets*/
+    gwy_grapher_set_status(grapher, GWY_GRAPHER_STATUS_PLAIN);
+    gwy_grapher_area_refresh(grapher->area);
     gwy_grapher_signal_zoomed(grapher);
 }
 
