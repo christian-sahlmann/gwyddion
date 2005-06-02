@@ -51,6 +51,7 @@ static void     gwy_graph_window_measure_finished_cb (GwyGraphWindow *graphwindo
 /* Local data */
 
 static GtkWindowClass *parent_class = NULL;
+static GwyGrapherStatusType last_status = 0;
 
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -305,8 +306,8 @@ static void
 gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 {
     gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_POINTS);
+    gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
     gwy_grapher_signal_selected(graphwindow->graph);
-
     gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
 }
 
@@ -314,7 +315,6 @@ gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 static void     
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
-    
     gwy_grapher_clear_selection(graphwindow->graph);
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR) return;
     
@@ -326,9 +326,12 @@ static void
 gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
+    {
+        last_status = gwy_grapher_get_status(graphwindow->graph);
         gwy_grapher_zoom_in(graphwindow->graph);
+    }
     else
-        gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_PLAIN);
+        gwy_grapher_set_status(graphwindow->graph, last_status);
 }
 
 static void     
@@ -341,6 +344,7 @@ static void
 gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
+    gwy_grapher_set_status(graphwindow->graph, last_status);
 }
 
 

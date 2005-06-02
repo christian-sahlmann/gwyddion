@@ -457,7 +457,7 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     }
 
     /*draw discrete selection (points)*/
-    if (area->status == GWY_GRAPH_STATUS_POINTS)
+    if (area->status == GWY_GRAPH_STATUS_POINTS || area->status == GWY_GRAPH_STATUS_ZOOM)
         gwy_grapher_draw_selection_points(drawable,
                                          gc, &specs,
                                          (GwyGrapherDataPoint *)area->pointsdata->data_points->data, 
