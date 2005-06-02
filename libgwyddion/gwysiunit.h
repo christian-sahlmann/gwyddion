@@ -41,6 +41,7 @@ typedef struct {
     gdouble magnitude;
     gint precision;
     gchar *units;
+    GString *units_gstring;
 } GwySIValueFormat;
 
 struct _GwySIUnit {

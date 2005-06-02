@@ -68,10 +68,9 @@ static GwySIUnit*  gwy_si_unit_power_multiply(GwySIUnit *siunit1,
                                               GwySIUnit *result);
 static GwySIUnit*  gwy_si_unit_canonicalize  (GwySIUnit *siunit);
 const gchar*       gwy_si_unit_prefix        (gint power);
-static gchar*    gwy_si_unit_format_as_plain_string(GwySIUnit *siunit,
-                                                    const GwySIStyleSpec *fs);
 static GString*    gwy_si_unit_format        (GwySIUnit *siunit,
-                                              const GwySIStyleSpec *fs);
+                                              const GwySIStyleSpec *fs,
+                                              GString *string);
 
 
 static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
@@ -442,10 +441,17 @@ gwy_si_unit_set_unit_string_parse(GwySIUnit *siunit,
 gchar*
 gwy_si_unit_get_unit_string(GwySIUnit *siunit)
 {
+    GString *string;
+    gchar *s;
+
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
     siunit->power10 = 0;
 
-    return gwy_si_unit_format_as_plain_string(siunit, &format_style_plain);
+    string = gwy_si_unit_format(siunit, &format_style_plain, NULL);
+    s = string->str;
+    g_string_free(string, FALSE);
+
+    return s;
 }
 
 static inline const GwySIStyleSpec*
@@ -491,12 +497,12 @@ gwy_si_unit_get_format_for_power10(GwySIUnit *siunit,
     spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
-    else
-        g_free(format->units);
 
     siunit->power10 = power10;
     format->magnitude = pow10(power10);
-    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
+    format->units_gstring = gwy_si_unit_format(siunit, spec,
+                                               format->units_gstring);
+    format->units = format->units_gstring->str;
 
     return format;
 }
@@ -531,8 +537,6 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
     spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
-    else
-        g_free(format->units);
 
     value = fabs(value);
     if (!value) {
@@ -543,7 +547,9 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(value/12, value,
                                                       &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
+    format->units_gstring = gwy_si_unit_format(siunit, spec,
+                                               format->units_gstring);
+    format->units = format->units_gstring->str;
 
     return format;
 }
@@ -581,8 +587,6 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
     spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
-    else
-        g_free(format->units);
 
     maximum = fabs(maximum);
     resolution = fabs(resolution);
@@ -594,7 +598,9 @@ gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
         format->magnitude = gwy_math_humanize_numbers(resolution, maximum,
                                                       &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
+    format->units_gstring = gwy_si_unit_format(siunit, spec,
+                                               format->units_gstring);
+    format->units = format->units_gstring->str;
 
     return format;
 }
@@ -632,8 +638,6 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
     spec = gwy_si_unit_find_style_spec(style);
     if (!format)
         format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
-    else
-        g_free(format->units);
 
     maximum = fabs(maximum);
     if (!maximum) {
@@ -645,7 +649,9 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
             = gwy_math_humanize_numbers(maximum/pow10(sdigits),
                                         maximum, &format->precision);
     siunit->power10 = ROUND(log10(format->magnitude));
-    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
+    format->units_gstring = gwy_si_unit_format(siunit, spec,
+                                               format->units_gstring);
+    format->units = format->units_gstring->str;
 
     return format;
 }
@@ -659,7 +665,8 @@ gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
 void
 gwy_si_unit_value_format_free(GwySIValueFormat *format)
 {
-    g_free(format->units);
+    if (format->units_gstring)
+        g_string_free(format->units_gstring, TRUE);
     g_free(format);
 }
 
@@ -1092,30 +1099,19 @@ gwy_si_unit_canonicalize(GwySIUnit *siunit)
     return siunit;
 }
 
-static gchar*
-gwy_si_unit_format_as_plain_string(GwySIUnit *siunit,
-                                   const GwySIStyleSpec *fs)
-{
-    GString *string;
-    gchar *s;
-
-    string = gwy_si_unit_format(siunit, fs);
-    s = string->str;
-    g_string_free(string, FALSE);
-
-    return s;
-}
-
 static GString*
 gwy_si_unit_format(GwySIUnit *siunit,
-                   const GwySIStyleSpec *fs)
+                   const GwySIStyleSpec *fs,
+                   GString *string)
 {
-    GString *string;
     const gchar *prefix = "No GCC, this can't be used uninitialized";
     GwySimpleUnit *unit;
     gint i, prefix_bearer, move_me_to_end;
 
-    string = g_string_new("");
+    if (!string)
+        string = g_string_new("");
+    else
+        g_string_truncate(string, 0);
 
     /* if there is a single unit with negative exponent, move it to the end
      * TODO: we may want more sophistication here */
@@ -1248,9 +1244,14 @@ gwy_si_unit_prefix(gint power)
  * GwySIValueFormat:
  * @magnitude: Number to divide a quantity by (a power of 1000).
  * @precision: Number of decimal places to format a quantity to.
- * @units: Units to put after quantity divided by @magnitude.
+ * @units: Units to put after quantity divided by @magnitude.  This is actually
+ *         an alias to @units_gstring->str.
+ * @units_gstring: #GString used to represent @units internally.
  *
  * A physical quantity formatting information.
+ *
+ * You should not generally modify the units part manually, if you do, modify
+ * @units_gstring and update @units to @units_gstring->str.
  */
 
 /**
