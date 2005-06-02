@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-05-13 04:24+0200\n"
+"POT-Creation-Date: 2005-06-02 04:16+0200\n"
 "PO-Revision-Date: 2005-05-07 15:49+0200\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -122,18 +122,18 @@ msgstr "Nascondi comandi completi"
 msgid "Basic"
 msgstr "Base"
 
-#: libgwydgets/gwy3dwindow.c:344 modules/process/shade.c:224
+#: libgwydgets/gwy3dwindow.c:344 modules/process/shade.c:226
 msgid "_Phi:"
 msgstr "_Phi:"
 
 #: libgwydgets/gwy3dwindow.c:344 libgwydgets/gwy3dwindow.c:347
 #: libgwydgets/gwy3dwindow.c:427 libgwydgets/gwy3dwindow.c:433
-#: modules/process/rotate.c:240 modules/process/tip_model.c:243
-#: modules/process/tip_model.c:249 modules/process/unrotate.c:334
+#: modules/process/rotate.c:240 modules/process/tip_model.c:244
+#: modules/process/tip_model.c:250 modules/process/unrotate.c:335
 msgid "deg"
 msgstr "deg"
 
-#: libgwydgets/gwy3dwindow.c:347 modules/process/shade.c:216
+#: libgwydgets/gwy3dwindow.c:347 modules/process/shade.c:218
 msgid "_Theta:"
 msgstr "_Theta:"
 
@@ -201,7 +201,7 @@ msgstr "_Verticale:"
 msgid "Scale size _automatically"
 msgstr "Ridimensiona _automaticamente"
 
-#: libgwydgets/gwy3dwindow.c:529 modules/tools/filter.c:254
+#: libgwydgets/gwy3dwindow.c:529 modules/tools/filter.c:253
 msgid "Si_ze:"
 msgstr "Dimensione:"
 
@@ -210,23 +210,23 @@ msgid "pixels"
 msgstr "pixel"
 
 #: libgwydgets/gwy3dwindow.c:535 modules/file/pixmap.c:665
-#: modules/file/pixmap.c:1551 modules/file/rawfile.c:481
+#: modules/file/pixmap.c:1552 modules/file/rawfile.c:481
 #: modules/process/angle_dist.c:184 modules/process/calibrate.c:214
 #: modules/process/cwt.c:179 modules/process/dwt.c:178
-#: modules/process/dwtanisotropy.c:192 modules/process/dwtcorrection.c:173
+#: modules/process/dwtanisotropy.c:193 modules/process/dwtcorrection.c:173
 #: modules/process/dwtdenoise.c:186 modules/process/fft.c:313
-#: modules/process/fractal.c:209 modules/process/grain_mark.c:202
-#: modules/process/grain_rem_threshold.c:174 modules/process/grain_wshed.c:176
+#: modules/process/fractal.c:209 modules/process/grain_mark.c:203
+#: modules/process/grain_rem_threshold.c:174 modules/process/grain_wshed.c:177
 #: modules/process/local_contrast.c:136 modules/process/mask_grow_shrink.c:174
-#: modules/process/median-bg.c:180 modules/process/polylevel.c:190
+#: modules/process/median-bg.c:182 modules/process/polylevel.c:192
 #: modules/process/rotate.c:222 modules/process/scale.c:163
-#: modules/process/scars.c:403 modules/process/shade.c:188
-#: modules/process/slope_dist.c:196 modules/process/sphere-revolve.c:216
+#: modules/process/scars.c:406 modules/process/shade.c:189
+#: modules/process/slope_dist.c:196 modules/process/sphere-revolve.c:218
 #: modules/process/tip_model.c:179 modules/process/unrotate.c:216
 msgid "_Reset"
 msgstr "_Ripristina"
 
-#: libgwydgets/gwydgetutils.c:487
+#: libgwydgets/gwydgetutils.c:475
 msgid "Change Mask Color"
 msgstr "Cambia colore maschera"
 
@@ -281,6 +281,27 @@ msgstr "Spessore cornice:"
 #: libgwydgets/gwygrapherlabeldialog.c:126
 msgid "_reversed"
 msgstr "invertito"
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:240
+#: modules/graph/graph_points.c:205
+msgid "<b>Points</b>"
+msgstr "<b>Punti</b>"
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:250
+#: modules/graph/graph_points.c:215
+msgid "Length"
+msgstr "Lunghezza"
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:251 app/unitool.c:718
+#: modules/graph/graph_points.c:216
+msgid "Height"
+msgstr "Altezza"
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:252
+#: modules/graph/graph_points.c:217 modules/process/angle_dist.c:167
+#: modules/process/crosscor.c:97
+msgid "Angle"
+msgstr "Angolo"
 
 #: libgwydgets/gwyoptionmenus.c:567
 msgid "Round"
@@ -532,7 +553,7 @@ msgstr ""
 "versione 2 o (a scelta) ogni versione successiva. Per il testo completo "
 "della licenza vedi il COPYING incluso nel pacchetto sorgente</small>"
 
-#: app/app.c:214
+#: app/app.c:229
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -543,56 +564,52 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:696 app/app.c:750
+#: app/app.c:836 app/app.c:889
 msgid "Untitled Graph"
 msgstr "Grafico senza titolo"
 
-#: app/app.c:878
+#: app/app.c:1018
 msgid "Export"
 msgstr "Esporta"
 
-#: app/app.c:882
+#: app/app.c:1022
 msgid "Export 3D view to PNG image"
 msgstr "Esporta veduta 3D come immagine PNG"
 
-#: app/app.c:1200 app/app.c:1212
+#: app/app.c:1299 app/app.c:1311
 #, c-format
 msgid "Untitled %d"
 msgstr "Senza titolo %d"
 
-#: app/app.c:1230 app/toolbox.c:754
+#: app/app.c:1329 app/toolbox.c:754
 msgid "/Remove _Mask"
 msgstr "/Rimuovi _Maschera"
 
-#: app/app.c:1231 app/toolbox.c:770
+#: app/app.c:1330 app/toolbox.c:770
 msgid "/Mask _Color"
 msgstr "/_Colore Maschera"
 
-#: app/app.c:1232
+#: app/app.c:1331
 msgid "/Fix _Zero"
 msgstr "/Fissa _Zero"
 
-#: app/app.c:1233
-msgid "/Reset Color _Range"
-msgstr "/Azzera Intervallo Colore"
-
-#: app/app.c:1234 app/toolbox.c:762
+#: app/app.c:1332 app/toolbox.c:762
 msgid "/Remove _Presentation"
 msgstr "/Rimuovi _Presentazione"
 
-#: app/app.c:1235
+#: app/app.c:1333
 msgid "/_Level"
 msgstr "/_Livella"
 
-#: app/app.c:1236
+#: app/app.c:1334
 msgid "/Zoom _1:1"
 msgstr "/Zoom _1:1"
 
-#: app/app.c:1459
+#: app/app.c:1557
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
-#: app/app.c:1486
+#: app/app.c:1584
 msgid "Change Default Mask Color"
 msgstr "Cambia Colore Predefinito Maschera"
 
@@ -714,15 +731,15 @@ msgstr ""
 msgid "(none)"
 msgstr "(nessuno)"
 
-#: app/menu.c:367
+#: app/menu.c:357
 msgid "Repeat"
 msgstr "Ripeti"
 
-#: app/menu.c:375
+#: app/menu.c:365
 msgid "Re-show"
 msgstr "Mostra di nuovo"
 
-#: app/menu.c:524
+#: app/menu.c:514
 msgid "_Document history"
 msgstr "Cronologia"
 
@@ -965,27 +982,23 @@ msgstr "/_Duplica"
 msgid "/Default Mask _Color"
 msgstr "/_Colore Maschera predefinita"
 
-#: app/unitool.c:435
+#: app/unitool.c:442
 msgid "_Hide"
 msgstr "Nascondi"
 
-#: app/unitool.c:684
+#: app/unitool.c:692
 msgid "<b>Origin</b>"
 msgstr "<b>Origine</b>"
 
-#: app/unitool.c:700
+#: app/unitool.c:708
 msgid "<b>Size</b>"
 msgstr "<b>Dimensioni</b>"
 
-#: app/unitool.c:705
+#: app/unitool.c:713
 msgid "Width"
 msgstr "Larghezza"
 
-#: app/unitool.c:710 modules/graph/graph_points.c:208
-msgid "Height"
-msgstr "Altezza"
-
-#: app/unitool.c:799 app/unitool.c:803 app/unitool.c:810 app/unitool.c:817
+#: app/unitool.c:807 app/unitool.c:811 app/unitool.c:818 app/unitool.c:825
 #: modules/file/pixmap.c:689 modules/file/pixmap.c:696
 #: modules/tools/level3.c:198 modules/tools/profile.c:255
 #: modules/tools/readvalue.c:179
@@ -1010,14 +1023,16 @@ msgid "Channel %u"
 msgstr "Canale %u"
 
 #: modules/file/apefile.c:392 modules/file/ezdfile.c:560
-#: modules/file/nanoscope.c:578 modules/file/nt-mdt.c:453
-#: modules/file/sis.c:505 modules/file/stpfile.c:431
+#: modules/file/nanoscope.c:577 modules/file/nt-mdt.c:451
+#: modules/file/rhk-spm32.c:500 modules/file/sis.c:504
+#: modules/file/stpfile.c:534
 msgid "Select Data"
 msgstr "Seleziona Dati"
 
 #: modules/file/apefile.c:409 modules/file/ezdfile.c:577
-#: modules/file/nanoscope.c:595 modules/file/nt-mdt.c:470
-#: modules/file/sis.c:522 modules/file/stpfile.c:448
+#: modules/file/nanoscope.c:594 modules/file/nt-mdt.c:468
+#: modules/file/rhk-spm32.c:517 modules/file/sis.c:521
+#: modules/file/stpfile.c:551
 msgid "Data to load:"
 msgstr "Dati da caricare:"
 
@@ -1185,27 +1200,27 @@ msgstr "Uso"
 msgid "as data"
 msgstr "come dati"
 
-#: modules/file/pixmap.c:1526
+#: modules/file/pixmap.c:1527
 msgid "_Data alone"
 msgstr "Solo dati"
 
-#: modules/file/pixmap.c:1527
+#: modules/file/pixmap.c:1528
 msgid "Data + _rulers"
 msgstr "Dati + scala"
 
-#: modules/file/pixmap.c:1528
+#: modules/file/pixmap.c:1529
 msgid "_Everything"
 msgstr "Tutto"
 
-#: modules/file/pixmap.c:1548
+#: modules/file/pixmap.c:1549
 msgid "Export "
 msgstr "Esporta"
 
-#: modules/file/pixmap.c:1571
+#: modules/file/pixmap.c:1572
 msgid "_Zoom:"
 msgstr "Ingrandisci:"
 
-#: modules/file/pixmap.c:1575
+#: modules/file/pixmap.c:1576
 msgid "Output:"
 msgstr "Output:"
 
@@ -1294,7 +1309,7 @@ msgid "S_quare sample"
 msgstr "Campione quadrato"
 
 #: modules/file/rawfile.c:709 modules/process/crosscor.c:227
-#: modules/process/crosscor.c:247 modules/process/tip_blind.c:249
+#: modules/process/crosscor.c:247 modules/process/tip_blind.c:250
 msgid "_Width:"
 msgstr "Larghezza:"
 
@@ -1455,57 +1470,62 @@ msgstr ""
 "Analisi di %s fallita:\n"
 "%s."
 
-#: modules/file/rawfile.c:1551
+#: modules/file/rawfile.c:1554
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Il nome `%s' non è valido"
 
-#: modules/file/rawfile.c:2005
+#: modules/file/rawfile.c:2008
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Non abbastanza linee (%d) per l'offset (%d)"
 
-#: modules/file/rawfile.c:2030
+#: modules/file/rawfile.c:2033
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2043
+#: modules/file/rawfile.c:2046
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr "Mi aspettavo `%c' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2057
+#: modules/file/rawfile.c:2060
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr "Mi aspettavo `%s' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2074 modules/file/rawfile.c:2088
-#: modules/file/rawfile.c:2114
+#: modules/file/rawfile.c:2077 modules/file/rawfile.c:2091
+#: modules/file/rawfile.c:2117
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Dati spazzatura `%.16s' nella riga %u, colonna %u"
 
-#: modules/file/rawfile.c:2100
+#: modules/file/rawfile.c:2103
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
 
-#: modules/file/rawfile.c:2126
+#: modules/file/rawfile.c:2129
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
 "Delimitatore aspettato`%s' dopo dati in fila %u, colonna %u, ottenuto`%.16s'"
 
-#: modules/file/rhk-spm32.c:94
+#: modules/file/rhk-spm32.c:144
 msgid "Imports RHK Technology SPM32 data files."
 msgstr "Importa file dati SPM32 RHK Technology"
 
-#: modules/file/rhk-spm32.c:110
+#: modules/file/rhk-spm32.c:160
 msgid "RHK SPM32 files (.sm2)"
 msgstr "File RHK SPM32 (.sm2)"
+
+#: modules/file/rhk-spm32.c:495
+#, c-format
+msgid "Page %u (%s)"
+msgstr ""
 
 #: modules/file/sis.c:356
 msgid "Imports SIS (Surface Imaging Systems) data files."
@@ -1531,15 +1551,56 @@ msgstr "Importa file dati Omicron STMPRG (tp ta)."
 msgid "Omicron STMPRG files (tp ta)"
 msgstr "file Omicron STMPRG (.tp, .ta)"
 
-#: modules/file/stpfile.c:87
+#: modules/file/stpfile.c:97
+msgid "Topography"
+msgstr ""
+
+#: modules/file/stpfile.c:98
+msgid "Current or Deflection"
+msgstr ""
+
+#: modules/file/stpfile.c:99
+msgid "Electrochemical voltage"
+msgstr ""
+
+#: modules/file/stpfile.c:100
+msgid "Topography and SPS"
+msgstr ""
+
+#: modules/file/stpfile.c:101
+msgid "Topography and SPS scripted"
+msgstr ""
+
+#: modules/file/stpfile.c:102
+msgid "Electrochemical current"
+msgstr ""
+
+#: modules/file/stpfile.c:103
+msgid "Friction"
+msgstr ""
+
+#: modules/file/stpfile.c:104
+msgid "AUX in BNC"
+msgstr ""
+
+#: modules/file/stpfile.c:105
+msgid "External"
+msgstr ""
+
+#: modules/file/stpfile.c:112
 msgid "Imports Molecular Imaging STP data files."
 msgstr "Importa file dati STP Molecular Imaging"
 
-#: modules/file/stpfile.c:103
+#: modules/file/stpfile.c:128
 msgid "STP files (.stp)"
 msgstr "File STP (.stp)"
 
-#: modules/file/stpfile.c:427
+#: modules/file/stpfile.c:527
+#, c-format
+msgid "Buffer %u (%s)"
+msgstr ""
+
+#: modules/file/stpfile.c:530
 #, fuzzy, c-format
 msgid "Buffer %u"
 msgstr "Buffer %u"
@@ -1565,7 +1626,7 @@ msgid "Fit graph"
 msgstr "Adatta grafico"
 
 #: modules/graph/graph_cd.c:259 modules/graph/graph_fit.c:273
-#: modules/process/fit_2d.c:219
+#: modules/process/fit_2d.c:220
 msgid "_Fit"
 msgstr "Adatta"
 
@@ -1582,7 +1643,7 @@ msgid "Graph data curve"
 msgstr "Curva dati grafico"
 
 #: modules/graph/graph_cd.c:871 modules/graph/graph_fit.c:960
-#: modules/process/fit_2d.c:980
+#: modules/process/fit_2d.c:981
 #, c-format
 msgid ""
 "Cannot save report to %s.\n"
@@ -1592,17 +1653,17 @@ msgstr ""
 "%s\n"
 
 #: modules/graph/graph_cd.c:895 modules/graph/graph_fit.c:984
-#: modules/process/fit_2d.c:1004
+#: modules/process/fit_2d.c:1005
 msgid "Save Fit Report"
 msgstr "Salva il Fit Report"
 
 #: modules/graph/graph_cd.c:952 modules/graph/graph_fit.c:1041
-#: modules/process/fit_2d.c:1044
+#: modules/process/fit_2d.c:1045
 msgid "Fit results"
 msgstr "Risultati del Fit"
 
 #: modules/graph/graph_cd.c:965 modules/graph/graph_fit.c:1054
-#: modules/process/fit_2d.c:1056
+#: modules/process/fit_2d.c:1057
 msgid "<b>Data:</b>"
 msgstr "<b>Dati:</b>"
 
@@ -1615,17 +1676,17 @@ msgid "X range:"
 msgstr "Intervallo X:"
 
 #: modules/graph/graph_cd.c:990 modules/graph/graph_fit.c:1079
-#: modules/process/fit_2d.c:1062
+#: modules/process/fit_2d.c:1063
 msgid "<b>Function:</b>"
 msgstr "<b>Funzione:</b>"
 
 #: modules/graph/graph_cd.c:1011 modules/graph/graph_fit.c:1091
-#: modules/process/fit_2d.c:1067
+#: modules/process/fit_2d.c:1068
 msgid "<b>Results</b>"
 msgstr "<b>Risultati</b>"
 
 #: modules/graph/graph_cd.c:1063 modules/graph/graph_fit.c:1157
-#: modules/process/fit_2d.c:1135
+#: modules/process/fit_2d.c:1136
 msgid ""
 "\n"
 "===== Fit Results =====\n"
@@ -1634,7 +1695,7 @@ msgstr ""
 "===== Risultati Fit =====\n"
 
 #: modules/graph/graph_cd.c:1066 modules/graph/graph_fit.c:1160
-#: modules/process/fit_2d.c:1138
+#: modules/process/fit_2d.c:1139
 #, c-format
 msgid "Data: %s\n"
 msgstr "Dati: %s\n"
@@ -1655,7 +1716,7 @@ msgid "Fitted function:  %s\n"
 msgstr "Funzione adattata:  %s\n"
 
 #: modules/graph/graph_cd.c:1075 modules/graph/graph_fit.c:1169
-#: modules/process/fit_2d.c:1141
+#: modules/process/fit_2d.c:1142
 msgid ""
 "\n"
 "Results\n"
@@ -1687,36 +1748,36 @@ msgstr "/Adatta Grafico"
 msgid "_Reset inits"
 msgstr "_Ripristina inits"
 
-#: modules/graph/graph_fit.c:279 modules/process/fit_2d.c:221
+#: modules/graph/graph_fit.c:279 modules/process/fit_2d.c:222
 msgid "_Plot inits"
 msgstr "Metti in grafico inits"
 
-#: modules/graph/graph_fit.c:310 modules/process/fit_2d.c:270
+#: modules/graph/graph_fit.c:310 modules/process/fit_2d.c:272
 msgid "<b>Fitting parameters:</b>"
 msgstr "<b>Adattamento parametri:</b>"
 
-#: modules/graph/graph_fit.c:322 modules/process/fit_2d.c:313
+#: modules/graph/graph_fit.c:322 modules/process/fit_2d.c:315
 msgid "<b>Initial</b>"
 msgstr "<b>Iniziale</b>"
 
-#: modules/graph/graph_fit.c:328 modules/process/fit_2d.c:319
+#: modules/graph/graph_fit.c:328 modules/process/fit_2d.c:321
 #: modules/process/fractal.c:283
 msgid "<b>Result</b>"
 msgstr "<b>Risultato</b>"
 
-#: modules/graph/graph_fit.c:334 modules/process/fit_2d.c:326
+#: modules/graph/graph_fit.c:334 modules/process/fit_2d.c:328
 msgid "<b>Error</b>"
 msgstr "<b>Errore</b>"
 
-#: modules/graph/graph_fit.c:340 modules/process/fit_2d.c:332
+#: modules/graph/graph_fit.c:340 modules/process/fit_2d.c:334
 msgid "<b>Fix</b>"
 msgstr "<b>Fissa</b>"
 
-#: modules/graph/graph_fit.c:398 modules/process/fit_2d.c:391
+#: modules/graph/graph_fit.c:398 modules/process/fit_2d.c:393
 msgid "<b>Correlation matrix:</b>"
 msgstr "<b>Matrice di correlazione:</b>"
 
-#: modules/graph/graph_fit.c:416 modules/process/fit_2d.c:410
+#: modules/graph/graph_fit.c:416 modules/process/fit_2d.c:412
 msgid "<b>Chi-square result:</b>"
 msgstr "<b>Risulatato Chi quadrato:</b>"
 
@@ -1732,20 +1793,20 @@ msgstr "Da"
 msgid "To"
 msgstr "a"
 
-#: modules/graph/graph_fit.c:677 modules/tools/stats.c:308
-#: modules/tools/stats.c:309 modules/tools/stats.c:310
+#: modules/graph/graph_fit.c:677 modules/tools/stats.c:311
+#: modules/tools/stats.c:312 modules/tools/stats.c:313
 msgid "N.A."
 msgstr "N.A."
 
-#: modules/graph/graph_fit.c:1114 modules/process/fit_2d.c:1092
+#: modules/graph/graph_fit.c:1114 modules/process/fit_2d.c:1093
 msgid "Residual sum:"
 msgstr "Somma residuale:"
 
-#: modules/graph/graph_fit.c:1122 modules/process/fit_2d.c:1100
+#: modules/graph/graph_fit.c:1122 modules/process/fit_2d.c:1101
 msgid "<b>Correlation matrix</b>"
 msgstr "<b>Matrice di correlazione</b>"
 
-#: modules/graph/graph_fit.c:1182 modules/process/fit_2d.c:1155
+#: modules/graph/graph_fit.c:1182 modules/process/fit_2d.c:1156
 #, c-format
 msgid ""
 "\n"
@@ -1754,7 +1815,7 @@ msgstr ""
 "\n"
 "Somma residuale:   %g\n"
 
-#: modules/graph/graph_fit.c:1184 modules/process/fit_2d.c:1157
+#: modules/graph/graph_fit.c:1184 modules/process/fit_2d.c:1158
 msgid ""
 "\n"
 "Correlation matrix\n"
@@ -1762,34 +1823,17 @@ msgstr ""
 "\n"
 "matrice di correlazione\n"
 
-#: modules/graph/graph_points.c:67
+#: modules/graph/graph_points.c:69
 msgid "Measure distances between points"
 msgstr "Misura distanza tra punti"
 
-#: modules/graph/graph_points.c:83
+#: modules/graph/graph_points.c:85
 msgid "/_Measure Distances"
 msgstr "/_Misura Distanze"
 
-#: modules/graph/graph_points.c:148
+#: modules/graph/graph_points.c:150
 msgid "Measure distances"
 msgstr "Misura distanze"
-
-#: modules/graph/graph_points.c:189
-msgid "<b>Mouse:</b>"
-msgstr "<b>Mouse:</b>"
-
-#: modules/graph/graph_points.c:200
-msgid "<b>Points</b>"
-msgstr "<b>Punti</b>"
-
-#: modules/graph/graph_points.c:207
-msgid "Length"
-msgstr "Lunghezza"
-
-#: modules/graph/graph_points.c:209 modules/process/angle_dist.c:167
-#: modules/process/crosscor.c:97
-msgid "Angle"
-msgstr "Angolo"
 
 #: modules/graph/graph_unzoom.c:54
 msgid "/Zoom _Out"
@@ -1877,7 +1921,7 @@ msgstr "Distribuzione Angolo"
 msgid "Output _size:"
 msgstr "Dimensione output"
 
-#: modules/process/angle_dist.c:204 modules/process/grain_wshed.c:219
+#: modules/process/angle_dist.c:204 modules/process/grain_wshed.c:221
 msgid "_Number of steps:"
 msgstr "_Numero step:"
 
@@ -2043,8 +2087,8 @@ msgid "Search size"
 msgstr "Ricerca Dimensioni"
 
 #: modules/process/crosscor.c:233 modules/process/crosscor.c:253
-#: modules/process/grain_mark.c:242 modules/process/grain_rem_threshold.c:219
-#: modules/process/tip_blind.c:256
+#: modules/process/grain_mark.c:244 modules/process/grain_rem_threshold.c:217
+#: modules/process/tip_blind.c:257
 msgid "_Height:"
 msgstr "Altezza:"
 
@@ -2063,8 +2107,8 @@ msgid "Add _low score results mask"
 msgstr "Aggiungi maschera risultati a bassa incidenza"
 
 #: modules/process/crosscor.c:281 modules/process/dwtdenoise.c:224
-#: modules/process/grain_wshed.c:236 modules/process/maskcor.c:194
-#: modules/process/tip_blind.c:274
+#: modules/process/grain_wshed.c:238 modules/process/maskcor.c:194
+#: modules/process/tip_blind.c:275
 msgid "_Threshold:"
 msgstr "Soglia:"
 
@@ -2097,9 +2141,9 @@ msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 
 #: modules/process/cwt.c:210 modules/process/dwt.c:203
-#: modules/process/dwtanisotropy.c:209 modules/process/dwtcorrection.c:189
+#: modules/process/dwtanisotropy.c:210 modules/process/dwtcorrection.c:189
 #: modules/process/dwtdenoise.c:212 modules/process/fft.c:339
-#: modules/process/fft_filter_1d.c:338 modules/process/fractal.c:230
+#: modules/process/fft_filter_1d.c:340 modules/process/fractal.c:230
 #: modules/process/nanoindent_adjust.c:245 modules/process/rotate.c:248
 #: modules/process/scale.c:206 modules/process/unrotate.c:274
 #: modules/tools/profile.c:272
@@ -2107,7 +2151,7 @@ msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
 #: modules/process/cwt.c:215 modules/process/dwt.c:209
-#: modules/process/dwtanisotropy.c:215 modules/process/dwtcorrection.c:195
+#: modules/process/dwtanisotropy.c:216 modules/process/dwtcorrection.c:195
 #: modules/process/dwtdenoise.c:218
 msgid "_Wavelet type:"
 msgstr "Tipo _Wavelet:"
@@ -2137,15 +2181,15 @@ msgstr "/Trasformate _Integrali/DWT _Anisotropa..."
 msgid "DWT Anisotropy"
 msgstr "DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:191
+#: modules/process/dwtanisotropy.c:192
 msgid "2D DWT Anisotropy"
 msgstr "2D DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:221
+#: modules/process/dwtanisotropy.c:222
 msgid "X/Y ratio threshold:"
 msgstr "X/Y rapporto soglia:"
 
-#: modules/process/dwtanisotropy.c:230
+#: modules/process/dwtanisotropy.c:231
 msgid "Low level exclude limit:"
 msgstr "Limite di esclusione inferiore:"
 
@@ -2319,101 +2363,101 @@ msgstr "Esegui"
 msgid "_Restore PS"
 msgstr "_Ripristina PS"
 
-#: modules/process/fft_filter_1d.c:280
+#: modules/process/fft_filter_1d.c:282
 msgid "<b>Power spectrum (select areas by mouse):</b>"
 msgstr "<b>Potere spettrale (selezione area con il mouse):</b>"
 
-#: modules/process/fft_filter_1d.c:300
+#: modules/process/fft_filter_1d.c:302
 msgid "<b>Settings:</b>"
 msgstr "<b>Preferenze:</b>"
 
-#: modules/process/fft_filter_1d.c:306
+#: modules/process/fft_filter_1d.c:308
 msgid "Suppress type:"
 msgstr "Tipo eliminazione:"
 
-#: modules/process/fft_filter_1d.c:319 modules/process/fit_2d.c:289
+#: modules/process/fft_filter_1d.c:321 modules/process/fit_2d.c:291
 msgid "Preview type:"
 msgstr "Tipo Anteprima:"
 
-#: modules/process/fft_filter_1d.c:345 modules/tools/filter.c:240
+#: modules/process/fft_filter_1d.c:347 modules/tools/filter.c:239
 msgid "_Direction:"
 msgstr "_Direzione:"
 
-#: modules/process/fft_filter_1d.c:349
+#: modules/process/fft_filter_1d.c:351
 msgid "_Update dynamically"
 msgstr "Aggiorna dinamicamente"
 
-#: modules/process/fft_filter_1d.c:567
+#: modules/process/fft_filter_1d.c:566
 msgid "Filtered data"
 msgstr "Dati filtrati"
 
-#: modules/process/fft_filter_1d.c:577
+#: modules/process/fft_filter_1d.c:576
 msgid "Null"
 msgstr "Nullo"
 
-#: modules/process/fft_filter_1d.c:578
+#: modules/process/fft_filter_1d.c:577
 msgid "Suppress"
 msgstr "Elimina"
 
-#: modules/process/fft_filter_1d.c:590
+#: modules/process/fft_filter_1d.c:589
 msgid "Marked"
 msgstr "Segnato"
 
-#: modules/process/fft_filter_1d.c:591
+#: modules/process/fft_filter_1d.c:590
 msgid "Unmarked"
 msgstr "Non segnato"
 
-#: modules/process/fit_2d.c:149
+#: modules/process/fit_2d.c:150
 msgid "2D fitting"
 msgstr "2D fitting"
 
-#: modules/process/fit_2d.c:168
+#: modules/process/fit_2d.c:169
 msgid "/_Level/_Fit Sphere..."
 msgstr "/_Livella/_Fit Sfera"
 
-#: modules/process/fit_2d.c:218
+#: modules/process/fit_2d.c:219
 msgid "Fit sphere"
 msgstr "Fit sfera"
 
-#: modules/process/fit_2d.c:220
+#: modules/process/fit_2d.c:221
 msgid "_Guess"
 msgstr "Indovina"
 
-#: modules/process/fit_2d.c:276
+#: modules/process/fit_2d.c:278
 msgid "Function type:"
 msgstr "Tipo funzione:"
 
-#: modules/process/fit_2d.c:604 modules/process/grain_wshed.c:532
-#: modules/process/tip_blind.c:497 modules/process/tip_map.c:265
+#: modules/process/fit_2d.c:605 modules/process/grain_wshed.c:530
+#: modules/process/tip_blind.c:495 modules/process/tip_map.c:265
 #: modules/process/tip_reconstruction.c:263
 msgid "Initializing"
 msgstr "Inizializzazione"
 
-#: modules/process/fit_2d.c:623
+#: modules/process/fit_2d.c:624
 msgid "Fitting"
 msgstr "Fitting"
 
-#: modules/process/fit_2d.c:700
+#: modules/process/fit_2d.c:701
 msgid "Data"
 msgstr "Dati"
 
-#: modules/process/fit_2d.c:701
+#: modules/process/fit_2d.c:702
 msgid "Fit result"
 msgstr "Adatta risultato"
 
-#: modules/process/fit_2d.c:702
+#: modules/process/fit_2d.c:703
 msgid "Difference"
 msgstr "Differenza"
 
-#: modules/process/fit_2d.c:714
+#: modules/process/fit_2d.c:715
 msgid "Sphere (up)"
 msgstr "Sfera (superiore)"
 
-#: modules/process/fit_2d.c:715
+#: modules/process/fit_2d.c:716
 msgid "Sphere (down)"
 msgstr "Sfera (inferiore)"
 
-#: modules/process/fit_2d.c:1140
+#: modules/process/fit_2d.c:1141
 msgid "Fitted function: sphere\n"
 msgstr "Funzione adattata: sfera\n"
 
@@ -2515,52 +2559,52 @@ msgstr "/_Grana/Distribuzione Dimensioni"
 msgid "Grain size histogram"
 msgstr "Istogramma dimensione grana"
 
-#: modules/process/grain_mark.c:119
+#: modules/process/grain_mark.c:120
 msgid "Marks grains by thresholding (height, slope, curvature)."
 msgstr "Segna grana per soglia (altezza, pendenza, curvatura)"
 
-#: modules/process/grain_mark.c:135
+#: modules/process/grain_mark.c:136
 msgid "/_Grains/_Mark by Threshold..."
 msgstr "/_Grana/Segna per soglia"
 
-#: modules/process/grain_mark.c:200
+#: modules/process/grain_mark.c:201
 msgid "Mark Grains by Threshold"
 msgstr "Segna grana per soglia"
 
-#: modules/process/grain_mark.c:201 modules/process/grain_rem_threshold.c:173
-#: modules/process/grain_wshed.c:175 modules/process/tip_model.c:178
+#: modules/process/grain_mark.c:202 modules/process/grain_rem_threshold.c:173
+#: modules/process/grain_wshed.c:176 modules/process/tip_model.c:178
 msgid "_Update Preview"
 msgstr "Aggiorna Anteprima"
 
-#: modules/process/grain_mark.c:236 modules/process/grain_rem_threshold.c:211
+#: modules/process/grain_mark.c:238 modules/process/grain_rem_threshold.c:209
 msgid "<b>Threshold By</b>"
 msgstr "<b>Soglia</b>"
 
-#: modules/process/grain_mark.c:246
+#: modules/process/grain_mark.c:248
 msgid "_Slope:"
 msgstr "Pendenza:"
 
-#: modules/process/grain_mark.c:250
+#: modules/process/grain_mark.c:252
 msgid "_Curvature:"
 msgstr "_Curvatura:"
 
-#: modules/process/grain_mark.c:256 modules/process/grain_rem_threshold.c:236
-#: modules/process/grain_wshed.c:269 modules/tools/profile.c:248
+#: modules/process/grain_mark.c:258 modules/process/grain_rem_threshold.c:234
+#: modules/process/grain_wshed.c:271 modules/tools/profile.c:248
 #: modules/tools/sfunctions.c:195
 msgid "<b>Options</b>"
 msgstr "<b>Opzioni</b>"
 
-#: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:242
-#: modules/process/grain_wshed.c:275
+#: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:240
+#: modules/process/grain_wshed.c:277
 msgid "_Invert height"
 msgstr "_Inverti altezza"
 
-#: modules/process/grain_mark.c:273
+#: modules/process/grain_mark.c:275
 msgid "Mer_ge mode:"
 msgstr "Fusione:"
 
-#: modules/process/grain_mark.c:282 modules/process/grain_rem_threshold.c:259
-#: modules/process/grain_wshed.c:289 modules/process/scars.c:475
+#: modules/process/grain_mark.c:284 modules/process/grain_rem_threshold.c:257
+#: modules/process/grain_wshed.c:291 modules/process/scars.c:479
 msgid "_Mask color:"
 msgstr "Colore _Maschera:"
 
@@ -2576,59 +2620,59 @@ msgstr "/_Grana/_Rimuovi per soglia..."
 msgid "Remove Grains by Threshold"
 msgstr "Rimuovi grana per soglia"
 
-#: modules/process/grain_rem_threshold.c:228
+#: modules/process/grain_rem_threshold.c:226
 msgid "_Area:"
 msgstr "_Area:"
 
-#: modules/process/grain_rem_threshold.c:250
+#: modules/process/grain_rem_threshold.c:248
 msgid "_Selection mode:"
 msgstr "_Seleziona modo:"
 
-#: modules/process/grain_wshed.c:109
+#: modules/process/grain_wshed.c:110
 msgid "Marks grains by watershed algorithm."
 msgstr "Segna grana usando un algoritmo watershed"
 
-#: modules/process/grain_wshed.c:125
+#: modules/process/grain_wshed.c:126
 msgid "/_Grains/Mark by _Watershed..."
 msgstr "/_Grana/Segna per _Watershed..."
 
-#: modules/process/grain_wshed.c:173
+#: modules/process/grain_wshed.c:174
 msgid "Mark Grains by Watershed"
 msgstr "Segna grana per Watershed"
 
-#: modules/process/grain_wshed.c:211
+#: modules/process/grain_wshed.c:213
 msgid "<b>Grain Location</b>"
 msgstr "<b>Locazione Grana</b>"
 
-#: modules/process/grain_wshed.c:227
+#: modules/process/grain_wshed.c:229
 msgid "_Drop size:"
 msgstr "_Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:244
+#: modules/process/grain_wshed.c:246
 msgid "<b>Segmentation</b>"
 msgstr "<b>Segmentazione</b>"
 
-#: modules/process/grain_wshed.c:252
+#: modules/process/grain_wshed.c:254
 msgid "Num_ber of steps:"
 msgstr "Numero di step:"
 
-#: modules/process/grain_wshed.c:260
+#: modules/process/grain_wshed.c:262
 msgid "Dr_op size:"
 msgstr "Dimensioni Goccia:"
 
-#: modules/process/grain_wshed.c:544
+#: modules/process/grain_wshed.c:542
 msgid "Finding minima"
 msgstr "Ricerca minimi"
 
-#: modules/process/grain_wshed.c:550
+#: modules/process/grain_wshed.c:548
 msgid "Locating"
 msgstr "Localizzando"
 
-#: modules/process/grain_wshed.c:557
+#: modules/process/grain_wshed.c:555
 msgid "Watershed"
 msgstr "Watershed"
 
-#: modules/process/grain_wshed.c:563
+#: modules/process/grain_wshed.c:561
 msgid "Marking boundaries"
 msgstr "Marcatura confini"
 
@@ -2646,10 +2690,6 @@ msgstr "/_Correzione Dati/_Rimozione dati sotto la maschera"
 #: modules/process/laplace.c:97
 msgid "Laplace correction"
 msgstr "Correzione di Laplace"
-
-#: modules/process/laplace.c:134
-msgid "There is no mask to be used for computation."
-msgstr "Manca una maschera da usare per il calcolo"
 
 #: modules/process/level.c:45
 msgid ""
@@ -2795,24 +2835,24 @@ msgstr "Sottrae sottofondo utilizzando un algoritmo basato sul grado"
 msgid "/_Level/_Median Level..."
 msgstr "/_Livella/Livellamento _Mediano..."
 
-#: modules/process/median-bg.c:144
+#: modules/process/median-bg.c:145
 msgid "Median-leveling"
 msgstr "Livellamento mediano"
 
-#: modules/process/median-bg.c:179
+#: modules/process/median-bg.c:181
 msgid "Median Level"
 msgstr "Livella Mediano"
 
-#: modules/process/median-bg.c:198 modules/process/sphere-revolve.c:234
+#: modules/process/median-bg.c:200 modules/process/sphere-revolve.c:236
 msgid "Real _radius:"
 msgstr "Raggio _reale:"
 
-#: modules/process/median-bg.c:208 modules/process/sphere-revolve.c:244
+#: modules/process/median-bg.c:210 modules/process/sphere-revolve.c:246
 msgid "_Pixel radius:"
 msgstr "_Pixel raggio:"
 
-#: modules/process/median-bg.c:216 modules/process/polylevel.c:232
-#: modules/process/sphere-revolve.c:265
+#: modules/process/median-bg.c:218 modules/process/polylevel.c:234
+#: modules/process/sphere-revolve.c:267
 msgid "E_xtract background"
 msgstr "E_strai Sottofondo"
 
@@ -2859,92 +2899,92 @@ msgstr ""
 "La punta ha un rapporto range/risoluzione differente dall'immagine e verrà "
 "ricampionata"
 
-#: modules/process/nanoindent_analyze.c:232
+#: modules/process/nanoindent_analyze.c:230
 msgid "Do nothing"
 msgstr "Non fare nulla"
 
-#: modules/process/nanoindent_analyze.c:233
+#: modules/process/nanoindent_analyze.c:231
 msgid "Plane level"
 msgstr "Livella piano"
 
-#: modules/process/nanoindent_analyze.c:234
+#: modules/process/nanoindent_analyze.c:232
 msgid "Plane rotate"
 msgstr "Ruota piano"
 
-#: modules/process/nanoindent_analyze.c:247
+#: modules/process/nanoindent_analyze.c:245
 msgid "New"
 msgstr "Nuovo"
 
-#: modules/process/nanoindent_analyze.c:248
+#: modules/process/nanoindent_analyze.c:246
 msgid "AND"
 msgstr "E"
 
-#: modules/process/nanoindent_analyze.c:249
+#: modules/process/nanoindent_analyze.c:247
 msgid "OR"
 msgstr "O"
 
-#: modules/process/nanoindent_analyze.c:250
+#: modules/process/nanoindent_analyze.c:248
 msgid "NOT"
 msgstr "NON"
 
-#: modules/process/nanoindent_analyze.c:251
+#: modules/process/nanoindent_analyze.c:249
 msgid "XOR"
 msgstr "XOR"
 
-#: modules/process/nanoindent_analyze.c:268
+#: modules/process/nanoindent_analyze.c:266
 msgid "Nothing"
 msgstr "Nulla"
 
-#: modules/process/nanoindent_analyze.c:269
+#: modules/process/nanoindent_analyze.c:267
 msgid "Above"
 msgstr "Sopra"
 
-#: modules/process/nanoindent_analyze.c:270
+#: modules/process/nanoindent_analyze.c:268
 msgid "Bellow"
 msgstr "Sotto"
 
-#: modules/process/nanoindent_analyze.c:271
+#: modules/process/nanoindent_analyze.c:269
 msgid "Plane"
 msgstr "Piano"
 
-#: modules/process/nanoindent_analyze.c:272
+#: modules/process/nanoindent_analyze.c:270
 msgid "Impression"
 msgstr "Impressione"
 
-#: modules/process/nanoindent_analyze.c:273
+#: modules/process/nanoindent_analyze.c:271
 msgid "Inner Pile-up"
 msgstr "Inner Pile-up"
 
-#: modules/process/nanoindent_analyze.c:274
+#: modules/process/nanoindent_analyze.c:272
 #, fuzzy
 msgid "Outer Pile-up"
 msgstr "Outer Pile-up"
 
-#: modules/process/nanoindent_analyze.c:275
+#: modules/process/nanoindent_analyze.c:273
 msgid "Special points"
 msgstr "Ounti speciali"
 
-#: modules/process/nanoindent_analyze.c:276
+#: modules/process/nanoindent_analyze.c:274
 msgid "Faces border"
 msgstr "Contorno facce"
 
-#: modules/process/nanoindent_analyze.c:286
+#: modules/process/nanoindent_analyze.c:284
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)"
 msgstr "Analizza struttura nanoindentazione (volumi, superfici, ....)"
 
-#: modules/process/nanoindent_analyze.c:302
+#: modules/process/nanoindent_analyze.c:300
 msgid "/Indento_r/_Analyze..."
 msgstr "/Indentazione/_Analizza..."
 
-#: modules/process/nanoindent_analyze.c:355
+#: modules/process/nanoindent_analyze.c:353
 msgid "Indentaion statistics"
 msgstr "Statistiche indentazione"
 
-#: modules/process/nanoindent_analyze.c:356
+#: modules/process/nanoindent_analyze.c:354
 msgid "_Compute & mark"
 msgstr "_Calcola & segna"
 
-#: modules/process/nanoindent_analyze.c:357
+#: modules/process/nanoindent_analyze.c:355
 msgid "_Save statistics"
 msgstr "_Salva statistiche"
 
@@ -2976,65 +3016,57 @@ msgstr "Tolleranza angolo 1:"
 msgid "Theta range:"
 msgstr "Intervallo theta"
 
-#: modules/process/nanoindent_analyze.c:449
+#: modules/process/nanoindent_analyze.c:451
 msgid "Indent centre at"
 msgstr "Centra indentazione a:"
 
-#: modules/process/nanoindent_analyze.c:452
+#: modules/process/nanoindent_analyze.c:454
 msgid "Maximum at"
 msgstr "Massimo a"
 
-#: modules/process/nanoindent_analyze.c:455
+#: modules/process/nanoindent_analyze.c:457
 msgid "Max-min diference"
 msgstr "Differenza massimo-minimo"
 
-#: modules/process/nanoindent_analyze.c:462
+#: modules/process/nanoindent_analyze.c:464
 msgid "Expected A_d:"
 msgstr "A_d aspettata:"
 
-#: modules/process/nanoindent_analyze.c:465
+#: modules/process/nanoindent_analyze.c:467
 msgid "Expected A_p:"
 msgstr "A_p aspettata:"
 
-#: modules/process/nanoindent_analyze.c:506
+#: modules/process/nanoindent_analyze.c:508
 msgid "Volume above-below"
 msgstr "Volume sopra-sotto"
 
-#: modules/process/nanoindent_analyze.c:516
+#: modules/process/nanoindent_analyze.c:518
 msgid "Indent. volume"
 msgstr "Volume indent."
 
-#: modules/process/nanoindent_analyze.c:522
+#: modules/process/nanoindent_analyze.c:524
 msgid "Indent. A_d"
 msgstr "A_d indent."
 
-#: modules/process/nanoindent_analyze.c:525
+#: modules/process/nanoindent_analyze.c:527
 msgid "Indent. A_p"
 msgstr "A_p indent"
 
-#: modules/process/nanoindent_analyze.c:534
+#: modules/process/nanoindent_analyze.c:536
 msgid "Inner Pile-Up A_d"
 msgstr "Inner Pile-Up A_d"
 
-#: modules/process/nanoindent_analyze.c:537
+#: modules/process/nanoindent_analyze.c:539
 msgid "Inner Pile-Up A_p"
 msgstr "Inner Pile-Up A_p"
 
-#: modules/process/nanoindent_analyze.c:540
+#: modules/process/nanoindent_analyze.c:542
 msgid "Outer Pile-Up A_d"
 msgstr "Outer Pile-Up A_d"
 
-#: modules/process/nanoindent_analyze.c:543
+#: modules/process/nanoindent_analyze.c:545
 msgid "Outer Pile-Up A_p"
 msgstr "Outer Pile-Up A_p"
-
-#: modules/process/nanoindent_mark.c:45
-msgid "Creates mask of nanoindentation hole."
-msgstr "Crea maschera di buco di nanoindentazione."
-
-#: modules/process/nanoindent_mark.c:61
-msgid "/_Nanoindentation/_Mask of nanoindentation"
-msgstr "/_Nanoindentazione/_Maschera di nanoindentazione"
 
 #: modules/process/outliers.c:43
 msgid "Creates mask of outliers."
@@ -3052,23 +3084,23 @@ msgstr "Sottrae sottofondo polinomiale."
 msgid "/_Level/_Polynomial Background..."
 msgstr "/_Livella/Sottofondo polinomiale..."
 
-#: modules/process/polylevel.c:174
+#: modules/process/polylevel.c:176
 msgid "Background"
 msgstr "Sottofondo"
 
-#: modules/process/polylevel.c:188
+#: modules/process/polylevel.c:190
 msgid "Remove Polynomial Background"
 msgstr "Rimuovi Sottofondo Polinomiale"
 
-#: modules/process/polylevel.c:207
+#: modules/process/polylevel.c:209
 msgid "_Horizontal polynom degree:"
 msgstr "Grado polinomio orizzontale:"
 
-#: modules/process/polylevel.c:215
+#: modules/process/polylevel.c:217
 msgid "_Vertical polynom degree:"
 msgstr "Grado polinomio verticale:"
 
-#: modules/process/polylevel.c:221
+#: modules/process/polylevel.c:223
 msgid "_Same degrees"
 msgstr "Gradi uguali"
 
@@ -3128,47 +3160,47 @@ msgstr "Nuova Larghezza:"
 msgid "New _height:"
 msgstr "Nuova Altezza:"
 
-#: modules/process/scars.c:101
+#: modules/process/scars.c:102
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
 msgstr "Evidenzia e/o rimuove salti (artefatti lineari orizzontali)"
 
-#: modules/process/scars.c:117
+#: modules/process/scars.c:118
 msgid "/_Correct Data/M_ark Scars..."
 msgstr "/_Correzione Dati/Segna danni"
 
-#: modules/process/scars.c:124
+#: modules/process/scars.c:125
 msgid "/_Correct Data/Remove _Scars"
 msgstr "/_Correzione Dati/Rimuovi danni"
 
-#: modules/process/scars.c:399
+#: modules/process/scars.c:402
 msgid "Mark Scars"
 msgstr "Segna danni"
 
-#: modules/process/scars.c:402
+#: modules/process/scars.c:405
 msgid "_Update preview"
 msgstr "Aggiorna anteprima"
 
-#: modules/process/scars.c:435
+#: modules/process/scars.c:439
 msgid "Maximum _width:"
 msgstr "Larghezza massima:"
 
-#: modules/process/scars.c:440
+#: modules/process/scars.c:444
 msgid "Minimum _length:"
 msgstr "Lunghezza minima:"
 
-#: modules/process/scars.c:445
+#: modules/process/scars.c:449
 msgid "_Hard threshold:"
 msgstr "Soglia dura:"
 
-#: modules/process/scars.c:446 modules/process/scars.c:454
+#: modules/process/scars.c:450 modules/process/scars.c:458
 msgid "RMS"
 msgstr "RMS"
 
-#: modules/process/scars.c:454
+#: modules/process/scars.c:458
 msgid "_Soft threshold:"
 msgstr "Soglia morbida:"
 
-#: modules/process/scars.c:463
+#: modules/process/scars.c:467
 msgid "_Negative"
 msgstr "_Negativo"
 
@@ -3180,7 +3212,7 @@ msgstr "Crea una presentazione dati ombreggiata"
 msgid "/_Display/_Shading..."
 msgstr "/Mostra/Ombreggiatura..."
 
-#: modules/process/shade.c:187
+#: modules/process/shade.c:188
 msgid "Shading"
 msgstr "Ombreggiatura"
 
@@ -3229,19 +3261,19 @@ msgstr ""
 msgid "/_Level/Revolve _Arc..."
 msgstr "/_Livella/Ruota _Arco..."
 
-#: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:146
+#: modules/process/sphere-revolve.c:206 modules/tools/polynom.c:146
 msgid "_Horizontal direction"
 msgstr "Direzione orizzontale"
 
-#: modules/process/sphere-revolve.c:205 modules/tools/polynom.c:147
+#: modules/process/sphere-revolve.c:207 modules/tools/polynom.c:147
 msgid "_Vertical direction"
 msgstr "Direzione verticale"
 
-#: modules/process/sphere-revolve.c:206
+#: modules/process/sphere-revolve.c:208
 msgid "_Both directions"
 msgstr "Entrambe le direzioni"
 
-#: modules/process/sphere-revolve.c:215
+#: modules/process/sphere-revolve.c:217
 msgid "Revolve Arc"
 msgstr "Ruota Arco"
 
@@ -3269,19 +3301,19 @@ msgstr "Esegui Completo"
 msgid "_Reset Tip"
 msgstr "Azzera punta"
 
-#: modules/process/tip_blind.c:237 modules/process/tip_model.c:227
+#: modules/process/tip_blind.c:238 modules/process/tip_model.c:228
 msgid "Related _data:"
 msgstr "Dati correlati:"
 
-#: modules/process/tip_blind.c:242
+#: modules/process/tip_blind.c:243
 msgid "Estimated Tip Size"
 msgstr "Dimensioni punta stimate"
 
-#: modules/process/tip_blind.c:263
+#: modules/process/tip_blind.c:264
 msgid "_Same resolution"
 msgstr "Uguale risoluzione"
 
-#: modules/process/tip_blind.c:284
+#: modules/process/tip_blind.c:285
 msgid "Use _boundaries"
 msgstr "Usa confini"
 
@@ -3350,31 +3382,31 @@ msgstr "/Punta/_Modello Punta"
 msgid "Model Tip"
 msgstr "Modello punta"
 
-#: modules/process/tip_model.c:233
+#: modules/process/tip_model.c:234
 msgid "Tip _type:"
 msgstr "Tipo Punta"
 
-#: modules/process/tip_model.c:238
+#: modules/process/tip_model.c:239
 msgid "_Number of sides:"
 msgstr "_Numero facce:"
 
-#: modules/process/tip_model.c:243
+#: modules/process/tip_model.c:244
 msgid "Tip _slope:"
 msgstr "Pendenza Punta"
 
-#: modules/process/tip_model.c:249
+#: modules/process/tip_model.c:250
 msgid "Tip _rotation:"
 msgstr "Rotazione Punta"
 
-#: modules/process/tip_model.c:254
+#: modules/process/tip_model.c:255
 msgid "Tip _apex radius:"
 msgstr "Raggio apicale punta:"
 
-#: modules/process/tip_model.c:263
+#: modules/process/tip_model.c:264
 msgid "Resolution will be determined according to tip type."
 msgstr "La risoluzione sarà determinata in funzione del tipo di punta."
 
-#: modules/process/tip_model.c:510
+#: modules/process/tip_model.c:500
 #, c-format
 msgid "Tip resolution: %d x %d pixels"
 msgstr "Risoluzione punta:%d x %d  pixels"
@@ -3489,43 +3521,43 @@ msgstr ""
 msgid "Basic filters"
 msgstr "Filtri Base."
 
-#: modules/tools/filter.c:188
+#: modules/tools/filter.c:187
 msgid "Mean value"
 msgstr "Valore medio"
 
-#: modules/tools/filter.c:189
+#: modules/tools/filter.c:188
 msgid "Median value"
 msgstr "Valore mediano"
 
-#: modules/tools/filter.c:190
+#: modules/tools/filter.c:189
 msgid "Conservative denoise"
 msgstr "Denoise conservativo"
 
-#: modules/tools/filter.c:191 modules/tools/stats.c:182
+#: modules/tools/filter.c:190 modules/tools/stats.c:185
 msgid "Minimum"
 msgstr "Minimo"
 
-#: modules/tools/filter.c:192 modules/tools/stats.c:183
+#: modules/tools/filter.c:191 modules/tools/stats.c:186
 msgid "Maximum"
 msgstr "Massimo"
 
-#: modules/tools/filter.c:193
+#: modules/tools/filter.c:192
 msgid "Kuwahara"
 msgstr "Kuwahara"
 
-#: modules/tools/filter.c:205
+#: modules/tools/filter.c:204
 msgid "Filters"
 msgstr "Filtri"
 
-#: modules/tools/filter.c:226
+#: modules/tools/filter.c:225
 msgid "<b>Filter</b>"
 msgstr "<b>Filtra</b>"
 
-#: modules/tools/filter.c:234 modules/tools/polynom.c:196
+#: modules/tools/filter.c:233 modules/tools/polynom.c:196
 msgid "_Type:"
 msgstr "_Tipo:"
 
-#: modules/tools/filter.c:260
+#: modules/tools/filter.c:259
 msgid "_Update preview dynamically"
 msgstr "Aggiorna vista dinamicamente"
 
@@ -3572,7 +3604,7 @@ msgstr "Rimuovi:"
 msgid "_Data removal method:"
 msgstr "Metodo rimozione dati:"
 
-#: modules/tools/icolorange.c:96
+#: modules/tools/icolorange.c:107
 msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
@@ -3581,23 +3613,31 @@ msgstr ""
 "l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, "
 "per i dati o per l'altezza dell'istogramma di distribuzione"
 
-#: modules/tools/icolorange.c:125
+#: modules/tools/icolorange.c:136
 msgid "Stretch color range to part of data."
 msgstr "Estendi intervallo colore a parte dei dati"
 
-#: modules/tools/icolorange.c:184
-msgid "Color Range"
-msgstr "Intervallo colore"
-
-#: modules/tools/icolorange.c:217
-msgid "Range"
-msgstr "Intervallo"
-
-#: modules/tools/icolorange.c:236
+#: modules/tools/icolorange.c:208 modules/tools/icolorange.c:288
 msgid "Full"
 msgstr "Completo"
 
-#: modules/tools/icolorange.c:256
+#: modules/tools/icolorange.c:209
+msgid "Fixed"
+msgstr ""
+
+#: modules/tools/icolorange.c:210
+msgid "Auto"
+msgstr ""
+
+#: modules/tools/icolorange.c:222
+msgid "Color Range"
+msgstr "Intervallo colore"
+
+#: modules/tools/icolorange.c:269
+msgid "Range"
+msgstr "Intervallo"
+
+#: modules/tools/icolorange.c:308
 msgid "_Instant apply"
 msgstr "Applica istantaneamente"
 
@@ -3621,37 +3661,37 @@ msgstr "Livella"
 msgid "_Averaging radius:"
 msgstr "Media raggio:"
 
-#: modules/tools/maskedit.c:70
+#: modules/tools/maskedit.c:71
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 "Strumento modifica maschere, permette di aggiungere o rimuovere aree "
 "selezionate interattivamente"
 
-#: modules/tools/maskedit.c:98
+#: modules/tools/maskedit.c:99
 msgid "Edit mask"
 msgstr "Modifica maschera"
 
-#: modules/tools/maskedit.c:162
+#: modules/tools/maskedit.c:163
 msgid "Set mask to selection"
 msgstr "Seleziona Maschera"
 
-#: modules/tools/maskedit.c:167
+#: modules/tools/maskedit.c:168
 msgid "Add selection to mask"
 msgstr "Aggiungi selezione "
 
-#: modules/tools/maskedit.c:172
+#: modules/tools/maskedit.c:173
 msgid "Subtract selection from mask"
 msgstr "Sottrai selezione"
 
-#: modules/tools/maskedit.c:177
+#: modules/tools/maskedit.c:178
 msgid "Intersect selection with mask"
 msgstr "Interseca selezione e maschera"
 
-#: modules/tools/maskedit.c:192
+#: modules/tools/maskedit.c:193
 msgid "Mask Editor"
 msgstr "Modifica maschera"
 
-#: modules/tools/maskedit.c:208
+#: modules/tools/maskedit.c:209
 msgid "Mode:"
 msgstr "Modo:"
 
@@ -3725,7 +3765,7 @@ msgstr "Spessore:"
 msgid "_Separate profiles"
 msgstr "_Separa Profili"
 
-#: modules/tools/profile.c:431
+#: modules/tools/profile.c:434
 msgid "Profiles"
 msgstr "Profili"
 
@@ -3813,11 +3853,11 @@ msgstr "Pseudo-Laplace"
 msgid "Manually remove spots"
 msgstr "Rimuovi macchie manualmente"
 
-#: modules/tools/spotremove.c:216
+#: modules/tools/spotremove.c:217
 msgid "Remove Spots"
 msgstr "Rimuovi macchie"
 
-#: modules/tools/spotremove.c:264
+#: modules/tools/spotremove.c:268
 msgid "Removal _method:"
 msgstr "Metodo rimozione:"
 
@@ -3835,50 +3875,65 @@ msgstr ""
 msgid "Statistical quantities"
 msgstr "Quantità statistiche."
 
-#: modules/tools/stats.c:177
+#: modules/tools/stats.c:180
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/stats.c:178
+#: modules/tools/stats.c:181
 msgid "Rms"
 msgstr "Rms"
 
-#: modules/tools/stats.c:179
+#: modules/tools/stats.c:182
 msgid "Skew"
 msgstr "Skew"
 
-#: modules/tools/stats.c:180
+#: modules/tools/stats.c:183
 msgid "Kurtosis"
 msgstr "curtosi"
 
-#: modules/tools/stats.c:181
+#: modules/tools/stats.c:184
 msgid "Average height"
 msgstr "Altezza media"
 
-#: modules/tools/stats.c:184
+#: modules/tools/stats.c:187
 msgid "Median"
 msgstr "Mediana"
 
-#: modules/tools/stats.c:185
+#: modules/tools/stats.c:188
 msgid "Projected area"
 msgstr "Proiezione area"
 
-#: modules/tools/stats.c:186
+#: modules/tools/stats.c:189
 msgid "Area"
 msgstr "Area"
 
-#: modules/tools/stats.c:187
+#: modules/tools/stats.c:190
 msgid "Inclination theta"
 msgstr "Inclinazione theta"
 
-#: modules/tools/stats.c:188
+#: modules/tools/stats.c:191
 msgid "Inclination phi"
 msgstr "Inclinazione phi"
 
-#: modules/tools/stats.c:200
+#: modules/tools/stats.c:203
 msgid "Statistical Quantities"
 msgstr "Quantità statistiche"
 
-#: modules/tools/stats.c:214
+#: modules/tools/stats.c:217
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametri</b>"
+
+#~ msgid "/Reset Color _Range"
+#~ msgstr "/Azzera Intervallo Colore"
+
+#~ msgid "There is no mask to be used for computation."
+#~ msgstr "Manca una maschera da usare per il calcolo"
+
+#~ msgid "Creates mask of nanoindentation hole."
+#~ msgstr "Crea maschera di buco di nanoindentazione."
+
+#~ msgid "/_Nanoindentation/_Mask of nanoindentation"
+#~ msgstr "/_Nanoindentazione/_Maschera di nanoindentazione"
+
+#~ msgid "<b>Mouse:</b>"
+#~ msgstr "<b>Mouse:</b>"
