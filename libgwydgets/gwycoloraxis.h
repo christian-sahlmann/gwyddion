@@ -42,7 +42,10 @@ struct _GwyColorAxis {
     GtkWidget widget;
 
     GwyGradient *gradient;
-    GdkPixbuf *pixbuf;
+    gulong gradient_id;
+
+    GdkPixbuf *stripe;
+    gint stripe_width;
 
     GtkOrientation orientation;
     gdouble min;
@@ -52,8 +55,9 @@ struct _GwyColorAxis {
     GwySIUnit *siunit;
 
     gint tick_length;
-    gint textarea;    /*text area width*/
     PangoFontDescription *font;
+
+    gboolean has_labels : 1;
 
     gpointer reserved2;
 };
