@@ -602,12 +602,12 @@ gwy_data_field_resize(GwyDataField *data_field,
                data_field->data + i*data_field->xres + ulcol,
                xres*sizeof(gdouble));
     }
+    data_field->xreal *= (gdouble)xres/data_field->xres;
+    data_field->yreal *= (gdouble)yres/data_field->yres;
     data_field->xres = xres;
     data_field->yres = yres;
     GWY_SWAP(gdouble*, data_field->data, b->data);
     g_object_unref(b);
-    data_field->xreal *= xres/data_field->xres;
-    data_field->yreal *= yres/data_field->yres;
 
     gwy_data_field_invalidate(data_field);
 }
