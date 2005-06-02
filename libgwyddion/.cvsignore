@@ -9,3 +9,6 @@ main
 core.*
 *.def
 makefile.msc
+gwyddiontypes.c
+gwyddiontypes.h
+stamp-gwyddiontypes.h
