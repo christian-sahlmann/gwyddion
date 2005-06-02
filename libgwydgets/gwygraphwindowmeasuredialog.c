@@ -149,8 +149,7 @@ selection_updated_cb(GwyGrapher *graph, GwyGrapherWindowMeasureDialog *dialog)
     gdouble *spoints;
 
     g_return_if_fail(GWY_IS_GRAPHER(graph));
-    g_return_if_fail(gwy_grapher_get_status(graph) == GWY_GRAPHER_STATUS_POINTS);
-    /*FIXME TODO XXX this must be changed XXX TODO FIXME */
+    if (gwy_grapher_get_status(graph) != GWY_GRAPHER_STATUS_POINTS) return;
 
     if ((n = gwy_grapher_get_selection_number(graph))>0)
         spoints = (gdouble *) g_malloc(2*gwy_grapher_get_selection_number(graph)*sizeof(gdouble));
