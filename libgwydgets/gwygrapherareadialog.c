@@ -525,9 +525,9 @@ label_change_cb(GtkWidget *button, GwyGrapherAreaDialog *dialog)
     response = gtk_dialog_run(GTK_DIALOG(selector));
     if (response == GTK_RESPONSE_APPLY)
     {
-        //g_string_assign(cmodel->description, gwy_sci_text_get_text(GWY_SCI_TEXT(selector->sci_text)));
+       /*g_string_assign(cmodel->description, gwy_sci_text_get_text(GWY_SCI_TEXT(selector->sci_text)));*/
         gwy_graph_curve_model_set_description(cmodel, gwy_sci_text_get_text(GWY_SCI_TEXT(selector->sci_text)));
-        //refresh(dialog);
+       /*refresh(dialog);*/
     }    
     
     gtk_widget_destroy(GTK_WIDGET(selector));

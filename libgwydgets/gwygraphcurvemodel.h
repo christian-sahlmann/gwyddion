@@ -75,8 +75,6 @@ struct _GwyGraphCurveModel {
 struct _GwyGraphCurveModelClass {
     GObjectClass parent_class;
 
-    //void (*value_changed)(GwyGraphCurveModel *gcmodel);  /* XXX: only formal */
-
     gpointer reserved1;
     gpointer reserved2;
     gpointer reserved3;

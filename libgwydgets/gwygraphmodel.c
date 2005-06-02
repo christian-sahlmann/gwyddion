@@ -674,7 +674,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
     {
         g_object_unref(gmodel->curves[i]);
     }
-    //g_free(gmodel->curves);    
+   /*g_free(gmodel->curves);    */
 
     
     gmodel->ncurves = 0;

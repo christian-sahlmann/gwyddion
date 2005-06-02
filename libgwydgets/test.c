@@ -81,11 +81,11 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
 
-    //window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+   /*window = gtk_window_new(GTK_WINDOW_TOPLEVEL);*/
 
-    //g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), NULL);
+   /*g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(destroy), NULL);*/
 
-    //gtk_container_set_border_width(GTK_CONTAINER(window), 0);
+   /*gtk_container_set_border_width(GTK_CONTAINER(window), 0);*/
 
     /*
        label = gwy_graph_label_new();
@@ -126,10 +126,10 @@ main(int argc, char *argv[])
 
     gwindow = gwy_graph_window_new(graph);
     
-    //gtk_container_add (GTK_CONTAINER (window), gwindow);
+   /*gtk_container_add (GTK_CONTAINER (window), gwindow);*/
 
-    //gwy_grapher_enable_user_input(graph, TRUE);
-    //printf("show!\n");
+   /*gwy_grapher_enable_user_input(graph, TRUE);*/
+   /*printf("show!\n");*/
     gtk_widget_show (gwindow);
 
     g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);
