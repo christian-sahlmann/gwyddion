@@ -284,7 +284,7 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
  * Emits signal "data_changed" on a data line.
  **/
 void
-gwy_data_line_value_changed(GwyDataLine *data_line)
+gwy_data_line_data_changed(GwyDataLine *data_line)
 {
     g_signal_emit(data_line, data_line_signals[DATA_CHANGED], 0);
 }
