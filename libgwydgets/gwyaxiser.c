@@ -443,7 +443,7 @@ gwy_axiser_autoset(GwyAxiser *axiser, gint width, gint height)
     if (axiser->orientation == GTK_POS_TOP
         || axiser->orientation == GTK_POS_BOTTOM) {
 
-        axiser->par.major_maxticks = width/70; /*empirical equation*/
+        axiser->par.major_maxticks = width/50; /*empirical equation*/
         if (width < 300) 
             axiser->par.minor_division = 5;
         else 
@@ -452,7 +452,7 @@ gwy_axiser_autoset(GwyAxiser *axiser, gint width, gint height)
     if (axiser->orientation == GTK_POS_LEFT
         || axiser->orientation == GTK_POS_RIGHT) {
 
-        axiser->par.major_maxticks = height/50; /*empirical equation*/
+        axiser->par.major_maxticks = height/40; /*empirical equation*/
         if (height < 150)
             axiser->par.minor_division = 5;
         else 

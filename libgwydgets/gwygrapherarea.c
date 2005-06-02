@@ -74,6 +74,9 @@ static gint     gwy_grapher_area_find_selection       (GwyGrapherArea *area,
                                                       gdouble x, gdouble y);
 static gint     gwy_grapher_area_find_point           (GwyGrapherArea *area, 
                                                       gdouble x, gdouble y);
+static void     gwy_grapher_area_draw_zoom            (GdkDrawable *drawable,
+                                                       GdkGC *gc,
+                                                       GwyGrapherArea *area);
 
 /* Forward declarations - area related*/
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
@@ -405,6 +408,10 @@ gwy_grapher_area_expose(GtkWidget *widget,
                                            0, 0, widget->allocation.width, widget->allocation.height,
                                            area);
 
+    if (area->status == GWY_GRAPH_STATUS_ZOOM
+                                     && (area->selecting != 0)) 
+                gwy_grapher_area_draw_zoom(GTK_LAYOUT (widget)->bin_window, area->gc, area);
+    
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
 
     GTK_WIDGET_CLASS(parent_class)->expose_event(widget, event);
@@ -471,6 +478,46 @@ gwy_grapher_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     gdk_draw_line(drawable, gc, 0, height-1, 0, 0);
                 
 }
+
+static void 
+gwy_grapher_area_draw_zoom(GdkDrawable *drawable, GdkGC *gc, GwyGrapherArea *area)
+{
+    gint xmin, ymin, xmax, ymax;
+    
+    if (area->zoomdata->width == 0 || area->zoomdata->height == 0) return;
+    gdk_gc_set_function(gc, GDK_INVERT);
+    
+    if (area->zoomdata->width < 0)
+    {
+        xmin = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin + area->zoomdata->width);
+        xmax = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin);
+    }
+    else
+    {
+        xmin = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin);
+        xmax = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin + area->zoomdata->width);
+    }
+    
+    if (area->zoomdata->height > 0)
+    {
+        ymin = data_to_scr_y(GTK_WIDGET(area), area->zoomdata->ymin + area->zoomdata->height);
+        ymax = data_to_scr_y(GTK_WIDGET(area), area->zoomdata->ymin);
+    }
+    else
+    {
+        ymin = data_to_scr_y(GTK_WIDGET(area), area->zoomdata->ymin);
+        ymax = data_to_scr_y(GTK_WIDGET(area), area->zoomdata->ymin + area->zoomdata->height);
+    }
+
+    gdk_draw_rectangle(drawable, area->gc, 0,
+                       xmin,
+                       ymin,
+                       xmax - xmin,
+                       ymax - ymin);
+
+    gdk_gc_set_function(area->gc, GDK_COPY);
+}
+
 
 
 static gboolean
@@ -687,6 +734,7 @@ gwy_grapher_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
                              && (area->selecting != 0)) {
          area->zoomdata->width = dx - area->zoomdata->xmin;
          area->zoomdata->height = dy - area->zoomdata->ymin;
+         gtk_widget_queue_draw(widget);
     }    
 
     /*widget (label) movement*/
@@ -903,10 +951,9 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
  
     area = GWY_GRAPHER_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
-
     return widget->allocation.height
            - (data - model->y_min)
-             /((model->y_max - model->y_min)/(widget->allocation.height-1));
+             /((model->y_max - model->y_min)/((gdouble)widget->allocation.height-1));
 }
 
 /**
