@@ -19,7 +19,7 @@
  */
 
 #include <string.h>
-
+#include <stdio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
@@ -185,11 +185,11 @@ gwy_graph_window_new(GwyGrapher *graph)
                            graphwindow);
     
     
-    graphwindow->button_zoom_in = gtk_button_new();
+    graphwindow->button_zoom_in = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_in),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_IN, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_in, FALSE, FALSE, 0);
-    g_signal_connect_swapped(graphwindow->button_zoom_in, "clicked",
+    g_signal_connect_swapped(graphwindow->button_zoom_in, "toggled",
                            G_CALLBACK(gwy_graph_window_zoom_in_cb),
                            graphwindow);
   
@@ -325,7 +325,10 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 static void     
 gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
-    gwy_grapher_zoom_in(graphwindow->graph);
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
+        gwy_grapher_zoom_in(graphwindow->graph);
+    else
+        gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_PLAIN);
 }
 
 static void     
@@ -337,6 +340,7 @@ gwy_graph_window_zoom_out_cb(GwyGraphWindow *graphwindow)
 static void     
 gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
 }
 
 
