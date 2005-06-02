@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic _at_ biochem.mpg.de>",
-    "1.1",
+    "1.2",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -151,12 +151,12 @@ dialog_create(GwyUnitoolState *state)
     str = g_string_new("");
 
     controls->units[0] = label= gtk_label_new(NULL);
-    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->units[1] = label = gtk_label_new(NULL);
-    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
@@ -167,7 +167,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->units[3] = label = gtk_label_new(NULL);
-    g_string_printf(str, "<b>R</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>R</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1, GTK_FILL, 0, 2, 2);
 
@@ -233,13 +233,13 @@ update_labels(GwyUnitoolState *state)
 
     str = g_string_new("");
 
-    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[0]), str->str);
 
-    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[1]), str->str);
 
-    g_string_printf(str, "<b>R</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>R</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[3]), str->str);
 
     for (i = 0; i < NLINES; i++) {
@@ -251,14 +251,14 @@ update_labels(GwyUnitoolState *state)
             r = sqrt(dx*dx + dy*dy);
             a = atan2(dy, dx) * 180.0/G_PI;
 
-            gwy_unitool_update_label_no_units(state->coord_format,
+            gwy_unitool_update_label_no_units(state->coord_hformat,
                                               controls->positions[2*i+ 0], dx);
-            gwy_unitool_update_label_no_units(state->coord_format,
+            gwy_unitool_update_label_no_units(state->coord_hformat,
                                               controls->positions[2*i+ 1], dy);
 
             g_string_printf(str, "%#6.2f", a);
             gtk_label_set_markup(GTK_LABEL(controls->vectors[2*i+0]), str->str);
-            gwy_unitool_update_label_no_units(state->coord_format,
+            gwy_unitool_update_label_no_units(state->coord_hformat,
                                               controls->vectors[2*i+ 1], r);
 
         }
@@ -280,7 +280,6 @@ dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
-    GwySIValueFormat *units;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
@@ -291,7 +290,6 @@ dialog_update(GwyUnitoolState *state,
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    units = state->coord_format;
     is_visible = state->is_visible;
     nselected = gwy_vector_layer_get_selection(state->layer, lines);
     if (!is_visible && !nselected)

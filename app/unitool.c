@@ -218,10 +218,14 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state,
             state->func_slots->dialog_abandon(state);
         gtk_widget_destroy(state->dialog);
     }
-    g_free(state->coord_format);
-    g_free(state->value_format);
+    gwy_si_unit_value_format_free(state->coord_format);
+    gwy_si_unit_value_format_free(state->value_format);
+    gwy_si_unit_value_format_free(state->coord_hformat);
+    gwy_si_unit_value_format_free(state->value_hformat);
     state->coord_format = NULL;
     state->value_format = NULL;
+    state->coord_hformat = NULL;
+    state->value_hformat = NULL;
     state->layer = NULL;
     state->dialog = NULL;
     state->windowname = NULL;
@@ -241,11 +245,21 @@ gwy_unitool_compute_formats(GwyUnitoolState *state)
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     state->coord_format
-        = gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_MARKUP,
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP,
                                              state->coord_format);
     state->value_format
-        = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_MARKUP,
+        = gwy_data_field_get_value_format_z(dfield,
+                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
                                             state->value_format);
+    state->coord_hformat
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_MARKUP,
+                                             state->coord_hformat);
+    state->value_hformat
+        = gwy_data_field_get_value_format_z(dfield,
+                                            GWY_SI_UNIT_FORMAT_MARKUP,
+                                            state->value_hformat);
 }
 
 /*
@@ -882,9 +896,13 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
  * @windowname: The name of @data_window.
  * @dialog: The tool dialog.
  * @coord_format: Format good for coordinate representation
- *               (to be used in gwy_unitool_update_label() for coordinates).
+ *                (to be used in gwy_unitool_update_label() for coordinates).
  * @value_format: Format good for value representation
- *               (to be used in gwy_unitool_update_label() for values).
+ *                (to be used in gwy_unitool_update_label() for values).
+ * @coord_format: Format good for standalone coordinate unit representation
+ *                (e.g., in table headers).
+ * @value_format: Format good for standalone value unit representation
+ *                (e.g., in table headers).
  * @apply_doesnt_close: When set to %TRUE "Apply" button doesn't close (hide)
  *                      the tool dialog.
  *

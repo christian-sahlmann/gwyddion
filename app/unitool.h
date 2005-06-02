@@ -53,6 +53,8 @@ typedef struct {
 
     GwySIValueFormat *coord_format;
     GwySIValueFormat *value_format;
+    GwySIValueFormat *coord_hformat;
+    GwySIValueFormat *value_hformat;
 
     gboolean apply_doesnt_close;
 

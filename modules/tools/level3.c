@@ -149,18 +149,18 @@ dialog_create(GwyUnitoolState *state)
     str = g_string_new("");
 
     controls->xunits = label = gtk_label_new(NULL);
-    g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>X</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->yunits = label = gtk_label_new(NULL);
-    g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>Y</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->zunits = label = gtk_label_new(NULL);
     g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
-                    state->value_format->units);
+                    state->value_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
 
@@ -231,25 +231,25 @@ dialog_update(GwyUnitoolState *state,
         return;
 
     str = g_string_new("");
-    g_string_printf(str, "<b>X</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>X</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->xunits), str->str);
 
-    g_string_printf(str, "<b>Y</b> [%s]", state->coord_format->units);
+    g_string_printf(str, "<b>Y</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->yunits), str->str);
 
     g_string_printf(str, "<b>%s</b> [%s]", _("Value"),
-                    state->value_format->units);
+                    state->value_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->zunits), str->str);
     g_string_free(str, TRUE);
 
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
-            gwy_unitool_update_label_no_units(state->coord_format,
+            gwy_unitool_update_label_no_units(state->coord_hformat,
                                               controls->coords[i], points[i]);
             if (i%2 == 0) {
                 val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
                                                 radius);
-                gwy_unitool_update_label_no_units(state->value_format,
+                gwy_unitool_update_label_no_units(state->value_hformat,
                                                   controls->values[i/2], val);
             }
         }
