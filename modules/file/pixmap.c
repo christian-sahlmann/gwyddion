@@ -648,6 +648,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     GtkObject *adj;
     GtkAdjustment *adj2;
     GtkWidget *dialog, *table, *label, *align, *button, *hbox;
+    GwySIUnit *unit;
     enum { RESPONSE_RESET = 1 };
     gint response;
     gchar *s, *title;
@@ -724,8 +725,9 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    unit = gwy_si_unit_new("m");
     controls.xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                      -12, 3, "m",
+                                                      -12, 3, unit,
                                                       args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
@@ -757,7 +759,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.zreal,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("_Z-scale"));
+    label = gtk_label_new_with_mnemonic(_("_Z-scale (per sample unit):"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zreal);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -765,11 +767,12 @@ pixmap_load_dialog(PixmapLoadArgs *args,
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     controls.zexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                     -12, 3, _("m/sample unit"),
+                                                     -12, 3, unit,
                                                      args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+    g_object_unref(unit);
     row++;
 
     if (!mapknown) {

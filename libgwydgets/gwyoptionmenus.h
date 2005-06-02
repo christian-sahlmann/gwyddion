@@ -67,7 +67,7 @@ GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
                                               gint from,
                                               gint to,
-                                              const gchar *unit,
+                                              GwySIUnit *unit,
                                               gint current);
 GtkWidget* gwy_option_menu_create            (const GwyEnum *entries,
                                               gint nentries,

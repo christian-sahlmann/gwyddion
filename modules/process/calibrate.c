@@ -205,9 +205,9 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 {
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *spin, *table, *label, *align;
+    GwySIUnit *unit;
     GwyDataField *dfield;
     CalibrateControls controls;
-    gchar *s;
     gint row, response;
 
     dialog = gtk_dialog_new_with_buttons(_("Calibrate"), NULL, 0,
@@ -248,11 +248,11 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-    s = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_xy(dfield));
+    unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.xyexponent
         = gwy_option_menu_metric_unit(G_CALLBACK(xyexponent_changed_cb),
-                                      &controls, -15, 6, s, args->xyexponent);
-    g_free(s);
+                                      &controls, -15, 6, unit,
+                                      args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -289,11 +289,11 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    s = gwy_si_unit_get_unit_string(gwy_data_field_get_si_unit_z(dfield));
+    unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.zexponent
         = gwy_option_menu_metric_unit(G_CALLBACK(zexponent_changed_cb),
-                                      &controls, -15, 6, s, args->zexponent);
-    g_free(s);
+                                      &controls, -15, 6, unit,
+                                      args->zexponent);
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
 

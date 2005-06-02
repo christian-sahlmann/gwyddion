@@ -460,15 +460,59 @@ gwy_si_unit_find_style_spec(GwySIUnitFormatStyle style)
 }
 
 /**
+ * gwy_si_unit_get_format_for_power10:
+ * @siunit: An SI unit.
+ * @style: Unit format style.
+ * @power10: Power of 10, in the same sense as gwy_si_unit_new_parse()
+ *           returns it.
+ * @format: A value format to set-up, may be %NULL, a new value format is
+ *          allocated then.
+ *
+ * Finds format for representing a specific power-of-10 multiple of a unit.
+ *
+ * The values should be then printed as value/@format->magnitude
+ * [@format->units] with @format->precision decimal places.
+ *
+ * This function does not change the precision field of @format.
+ *
+ * Returns: The value format.  If @format was %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_si_unit_get_format_for_power10(GwySIUnit *siunit,
+                                   GwySIUnitFormatStyle style,
+                                   gint power10,
+                                   GwySIValueFormat *format)
+{
+    const GwySIStyleSpec *spec;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
+
+    spec = gwy_si_unit_find_style_spec(style);
+    if (!format)
+        format = (GwySIValueFormat*)g_new0(GwySIValueFormat, 1);
+    else
+        g_free(format->units);
+
+    siunit->power10 = power10;
+    format->magnitude = pow10(power10);
+    format->units = gwy_si_unit_format_as_plain_string(siunit, spec);
+
+    return format;
+}
+
+/**
  * gwy_si_unit_get_format:
  * @siunit: An SI unit.
  * @style: Unit format style.
- * @value: input value
- * @format: returned number representation parameters
+ * @value: Value the format should be suitable for.
+ * @format: A value format to set-up, may be %NULL, a new value format is
+ *          allocated then.
  *
- * Finds reasonable representation for a number.
- * This means that number @value should
- * be written as @value / @format->magnitude [@format->units].
+ * Finds a good format for representing a value.
+ *
+ * The values should be then printed as value/@format->magnitude
+ * [@format->units] with @format->precision decimal places.
  *
  * Returns: The value format.  If @format was %NULL, a newly allocated format
  *          is returned, otherwise (modified) @format itself is returned.
@@ -503,7 +547,6 @@ gwy_si_unit_get_format(GwySIUnit *siunit,
 
     return format;
 }
-
 
 /**
  * gwy_si_unit_get_format_with_resolution:

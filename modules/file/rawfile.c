@@ -638,9 +638,10 @@ rawfile_dialog_info_page(RawFileArgs *args,
                          RawFileControls *controls)
 {
     GtkWidget *vbox, *label, *table, *button, *align;
+    GwySIValueFormat *format;
+    GwySIUnit *unit;
     GtkObject *adj;
-    gint row, precision;
-    gdouble magnitude;
+    gint row;
     gchar *s;
 
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
@@ -662,11 +663,12 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 2, row, row+1);
 
-    magnitude = gwy_math_humanize_numbers(0.004*file->filesize,
-                                          1.0*file->filesize,
-                                          &precision);
-    s = g_strdup_printf("(%.*f %sB)", precision, file->filesize/magnitude,
-                        gwy_math_SI_prefix(magnitude));
+    unit = gwy_si_unit_new("B");
+    format = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    file->filesize, NULL);
+    s = g_strdup_printf("(%.*f %sB)", format->precision,
+                        file->filesize/format->magnitude, format->units);
+    gwy_si_unit_value_format_free(format);
     label = gtk_label_new(s);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 2, 3, row, row+1);
@@ -713,8 +715,9 @@ rawfile_dialog_info_page(RawFileArgs *args,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
+    gwy_si_unit_set_unit_string(unit, "m");
     controls->xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                       -12, 3, "m",
+                                                       -12, 3, unit,
                                                        args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
@@ -746,20 +749,20 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls->zscale,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(_("_Z-scale:"));
+    label = gtk_label_new_with_mnemonic(_("_Z-scale (per sample unit):"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->zscale);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
-    controls->zexponent
-        = gwy_option_menu_metric_unit(NULL, NULL,
-                                      -12, 3, _("m/sample unit"),
-                                      args->zexponent);
+    controls->zexponent = gwy_option_menu_metric_unit(NULL, NULL,
+                                                      -12, 3, unit,
+                                                      args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
+    g_object_unref(unit);
     row++;
 
     return vbox;

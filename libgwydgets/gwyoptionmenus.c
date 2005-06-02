@@ -831,15 +831,15 @@ gwy_option_menu_metric_unit(GCallback callback,
                             gpointer cbdata,
                             gint from,
                             gint to,
-                            const gchar *unit,
+                            GwySIUnit *unit,
                             gint current)
 {
-    static const gint min = -8;
-    static const gint max = 8;
+    static const gint min = -18;
+    static const gint max = 18;
 
     GtkWidget *omenu;
     GwyEnum *entries;
-    gchar *s;
+    GwySIValueFormat *format = NULL;
     gint i, n;
 
     from = CLAMP(from/3, min, max);
@@ -850,11 +850,14 @@ gwy_option_menu_metric_unit(GCallback callback,
     n = (to - from) + 1;
     entries = g_new(GwyEnum, n + 1);
     for (i = from; i <= to; i++) {
-        s = g_strconcat(gwy_math_SI_prefix(pow10(3.0*i)), unit, NULL);
-        entries[i - from].name = s;
+        format = gwy_si_unit_get_format_for_power10(unit,
+                                                    GWY_SI_UNIT_FORMAT_MARKUP,
+                                                    3*i, format);
+        entries[i - from].name = g_strdup(format->units);
         entries[i - from].value = 3*i;
     }
     entries[n].name = NULL;
+    gwy_si_unit_value_format_free(format);
 
     omenu = gwy_option_menu_create_real(entries, n, "metric-unit",
                                         callback, cbdata,

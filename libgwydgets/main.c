@@ -209,6 +209,7 @@ static void
 test(void)
 {
     GtkWidget *window, *table, *omenu, *widget;
+    GwySIUnit *unit;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width(GTK_CONTAINER(window), 4);
@@ -243,12 +244,14 @@ test(void)
                                       GWY_ZOOM_MODE_CBRT2);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
 
+    unit = gwy_si_unit_new("Hz");
     widget = gtk_label_new("Metric units: ");
     gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 4, 5);
     omenu = gwy_option_menu_metric_unit(G_CALLBACK(menu_callback),
                                         "metric_unit",
-                                        -12, 3, "Hz", -6);
+                                        -12, 3, unit, -6);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 4, 5);
+    g_object_unref(unit);
 
     gtk_widget_show_all(window);
     g_signal_connect(G_OBJECT(window), "destroy",

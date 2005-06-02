@@ -87,21 +87,25 @@ GwySIUnit*        gwy_si_unit_power                 (GwySIUnit *siunit,
 gboolean          gwy_si_unit_equal                 (GwySIUnit *siunit1,
                                                      GwySIUnit *siunit2);
 
-GwySIValueFormat* gwy_si_unit_get_format                (GwySIUnit *siunit,
-                                                         GwySIUnitFormatStyle style,
-                                                         gdouble value,
-                                                         GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_get_format            (GwySIUnit *siunit,
+                                                     GwySIUnitFormatStyle style,
+                                                     gdouble value,
+                                                     GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_get_format_for_power10(GwySIUnit *siunit,
+                                                     GwySIUnitFormatStyle style,
+                                                     gint power10,
+                                                     GwySIValueFormat *format);
 GwySIValueFormat* gwy_si_unit_get_format_with_resolution(GwySIUnit *siunit,
                                                          GwySIUnitFormatStyle style,
                                                          gdouble maximum,
                                                          gdouble resolution,
                                                          GwySIValueFormat *format);
-GwySIValueFormat* gwy_si_unit_get_format_with_digits    (GwySIUnit *siunit,
-                                                         GwySIUnitFormatStyle style,
-                                                         gdouble maximum,
-                                                         gint sdigits,
-                                                         GwySIValueFormat *format);
-void              gwy_si_unit_value_format_free         (GwySIValueFormat *format);
+GwySIValueFormat* gwy_si_unit_get_format_with_digits(GwySIUnit *siunit,
+                                                     GwySIUnitFormatStyle style,
+                                                     gdouble maximum,
+                                                     gint sdigits,
+                                                     GwySIValueFormat *format);
+void              gwy_si_unit_value_format_free     (GwySIValueFormat *format);
 
 
 G_END_DECLS

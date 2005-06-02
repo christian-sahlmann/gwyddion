@@ -34,43 +34,6 @@
 #define DSWAP(x, y) GWY_SWAP(gdouble, x, y)
 
 /**
- * gwy_math_SI_prefix:
- * @magnitude: A power of 1000.
- *
- * Finds SI prefix corresponding to a given power of 1000.
- *
- * In fact, @magnitude doesn't have to be power of 1000, but then the result
- * is mostly meaningless.
- *
- * Returns: The SI unit prefix corresponding to @magnitude, "?" if @magnitude
- *          is outside of the SI prefix range.  The returned value must be
- *          considered constant and never modified or freed.
- **/
-const gchar*
-gwy_math_SI_prefix(gdouble magnitude)
-{
-    static const gchar *positive[] = {
-        "", "k", "M", "G", "T", "P", "E", "Z", "Y"
-    };
-    static const gchar *negative[] = {
-        "", "m", "µ", "n", "p", "f", "a", "z", "y"
-    };
-    static const gchar *unknown = "?";
-    gint i;
-
-    i = ROUND(log10(magnitude)/3.0);
-    if (i >= 0 && i < (gint)G_N_ELEMENTS(positive))
-        return positive[i];
-    if (i <= 0 && -i < (gint)G_N_ELEMENTS(negative))
-        return negative[-i];
-    /* FIXME: the vertical ruler text placing routine can't reasonably
-     * break things like 10<sup>-36</sup> to lines */
-    g_warning("magnitude %g outside of prefix range.  FIXME!", magnitude);
-
-    return unknown;
-}
-
-/**
  * gwy_math_humanize_numbers:
  * @unit: The smallest possible step.
  * @maximum: The maximum possible value.

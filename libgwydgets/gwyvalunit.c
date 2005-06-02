@@ -160,8 +160,7 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
     val_unit->selection
         = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed),
                                       val_unit,
-                                      -12, 6,
-                                      gwy_si_unit_get_unit_string(si_unit),
+                                      -12, 6, si_unit,
                                       val_unit->unit);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 2);
 
