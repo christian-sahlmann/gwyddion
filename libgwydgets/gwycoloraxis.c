@@ -32,12 +32,10 @@
 
 #define GWY_COLOR_AXIS_TYPE_NAME "GwyColorAxis"
 
-/* Forward declarations - widget related*/
+
 static void     gwy_color_axis_class_init         (GwyColorAxisClass *klass);
 static void     gwy_color_axis_init               (GwyColorAxis *axis);
 static void     gwy_color_axis_destroy            (GtkObject *object);
-static void     gwy_color_axis_finalize           (GObject *object);
-
 static void     gwy_color_axis_realize            (GtkWidget *widget);
 static void     gwy_color_axis_unrealize          (GtkWidget *widget);
 static void     gwy_color_axis_size_request       (GtkWidget *widget,
@@ -46,17 +44,13 @@ static void     gwy_color_axis_size_allocate      (GtkWidget *widget,
                                                    GtkAllocation *allocation);
 static gboolean gwy_color_axis_expose             (GtkWidget *widget,
                                                    GdkEventExpose *event);
-static gboolean gwy_color_axis_button_press       (GtkWidget *widget,
-                                                   GdkEventButton *event);
-static gboolean gwy_color_axis_button_release     (GtkWidget *widget,
-                                                   GdkEventButton *event);
 static void     gwy_color_axis_adjust             (GwyColorAxis *axis,
                                                    gint width,
                                                    gint height);
 static void     gwy_color_axis_draw_label         (GtkWidget *widget);
 static void     gwy_color_axis_update             (GwyColorAxis *axis);
 
-/* Local data */
+
 static GtkWidgetClass *parent_class = NULL;
 
 GType
@@ -78,9 +72,9 @@ gwy_color_axis_get_type(void)
             NULL,
         };
         gwy_color_axis_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                      GWY_COLOR_AXIS_TYPE_NAME,
-                                                      &gwy_color_axis_info,
-                                                      0);
+                                                     GWY_COLOR_AXIS_TYPE_NAME,
+                                                     &gwy_color_axis_info,
+                                                     0);
     }
 
     return gwy_color_axis_type;
@@ -89,7 +83,6 @@ gwy_color_axis_get_type(void)
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
@@ -98,8 +91,6 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
 
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_color_axis_finalize;
-
     object_class->destroy = gwy_color_axis_destroy;
 
     widget_class->realize = gwy_color_axis_realize;
@@ -107,17 +98,14 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
     widget_class->size_request = gwy_color_axis_size_request;
     widget_class->unrealize = gwy_color_axis_unrealize;
     widget_class->size_allocate = gwy_color_axis_size_allocate;
-    widget_class->button_press_event = gwy_color_axis_button_press;
-    widget_class->button_release_event = gwy_color_axis_button_release;
-
 }
 
 static void
 gwy_color_axis_init(GwyColorAxis *axis)
 {
     axis->orientation = GTK_ORIENTATION_VERTICAL;
-    axis->tick_length = 5;
-    axis->stripe_width = 12;
+    axis->tick_length = 6;
+    axis->stripe_width = 10;
     axis->has_labels = TRUE;
 }
 
@@ -140,8 +128,8 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
 
     axis = gtk_type_new(gwy_color_axis_get_type());
     axis->orientation = orientation;
-    axis->min = min;
-    axis->max = max;
+    axis->min = MIN(min, max);
+    axis->max = MAX(min, max);
 
     /* XXX */
     axis->font = pango_font_description_from_string("Helvetica 10");
@@ -151,7 +139,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
                                    G_CALLBACK(gwy_color_axis_update), axis);
     g_object_ref(axis->gradient);
 
-    axis->siunit = GWY_SI_UNIT(gwy_si_unit_new("m"));
+    axis->siunit = gwy_si_unit_new("");
 
     return GTK_WIDGET(axis);
 }
@@ -171,19 +159,6 @@ gwy_color_axis_new(GtkOrientation orientation)
 }
 
 static void
-gwy_color_axis_finalize(GObject *object)
-{
-    GwyColorAxis *axis;
-
-    axis = (GwyColorAxis*)object;
-    gwy_object_unref(axis->stripe);
-    g_object_unref(axis->siunit);
-    g_object_unref(axis->gradient);
-
-    G_OBJECT_CLASS(parent_class)->finalize(object);
-}
-
-static void
 gwy_color_axis_destroy(GtkObject *object)
 {
     GwyColorAxis *axis;
@@ -193,6 +168,9 @@ gwy_color_axis_destroy(GtkObject *object)
         g_signal_handler_disconnect(axis->gradient, axis->gradient_id);
         axis->gradient_id = 0;
     }
+    gwy_object_unref(axis->siunit);
+    gwy_object_unref(axis->gradient);
+    gwy_object_unref(axis->stripe);
 
     GTK_OBJECT_CLASS(parent_class)->destroy(object);
 }
@@ -249,8 +227,10 @@ gwy_color_axis_size_request(GtkWidget *widget,
                             GtkRequisition *requisition)
 {
     GwyColorAxis *axis;
+
     axis = GWY_COLOR_AXIS(widget);
 
+    /* XXX */
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         requisition->width = 80;
         requisition->height = 100;
@@ -259,7 +239,6 @@ gwy_color_axis_size_request(GtkWidget *widget,
         requisition->width = 100;
         requisition->height = 80;
     }
-
 }
 
 static void
@@ -281,7 +260,6 @@ gwy_color_axis_size_allocate(GtkWidget *widget,
                                allocation->width, allocation->height);
     }
     gwy_color_axis_adjust(axis, allocation->width, allocation->height);
-
 }
 
 static void
@@ -335,7 +313,6 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
             }
         }
     }
-
 }
 
 static gboolean
@@ -384,185 +361,87 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     GString *strmin, *strmax;
     GdkGC *gc;
     PangoRectangle rect;
-    gint xthickness, ythickness, off;
+    gint xthickness, ythickness, width, height, swidth, tlength, off;
+    gdouble max;
 
     axis = GWY_COLOR_AXIS(widget);
     xthickness = widget->style->xthickness;
     ythickness = widget->style->ythickness;
+    width = widget->allocation.width;
+    height = widget->allocation.height;
+    swidth = axis->stripe_width;
+    tlength = axis->tick_length;
+    off = swidth + 1
+          + ((axis->orientation == GTK_ORIENTATION_VERTICAL)
+             ? xthickness : ythickness);
 
-    /*compute minimum and maximum numbers*/
-    strmax = g_string_new(" ");
-    if (axis->max == 0) {
-        if (axis->min == 0)
-            g_string_printf(strmax, "0.0");
-        else {
-            format = gwy_si_unit_get_format(axis->siunit,
-                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                            axis->max, NULL);
-            g_string_printf(strmax, "0.0 ");
-            g_string_append(strmax, format->units);
-        }
+    /* Compute minimum and maximum numbers */
+    strmin = g_string_new("");
+    strmax = g_string_new("");
+    max = MAX(fabs(axis->min), fabs(axis->max));
+    if (max == 0) {
+        g_string_assign(strmin, "0.0");
+        g_string_assign(strmax, "0.0");
     }
     else {
         format = gwy_si_unit_get_format(axis->siunit,
-                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                        axis->max, NULL);
-        g_string_printf(strmax, "%3.1f ", axis->max/format->magnitude);
-        g_string_append(strmax, format->units);
-    }
-
-
-    strmin = g_string_new(" ");
-    if (axis->min == 0) {
-        if (axis->max == 0)
-            g_string_printf(strmin, "0.0");
-        else {
-            format = gwy_si_unit_get_format(axis->siunit,
-                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                            axis->max, format);
-            g_string_printf(strmin, "0.0 ");
-            g_string_append(strmin, format->units);
-        }
-    }
-    else {
-        /*yes, realy axis->max*/
-        format = gwy_si_unit_get_format(axis->siunit,
-                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                        axis->max, format);
-        g_string_printf(strmin, "%3.1f ", axis->min/format->magnitude);
-        g_string_append(strmin, format->units);
+                                        GWY_SI_UNIT_FORMAT_VFMARKUP, max, NULL);
+        g_string_printf(strmin, "%3.1f %s",
+                        axis->min/format->magnitude, format->units);
+        g_string_printf(strmax, "%3.1f %s",
+                        axis->max/format->magnitude, format->units);
     }
 
     layout = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_font_description(layout, axis->font);
 
+    /* Draw frame around false color scale */
+    gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-        off = axis->stripe_width + widget->style->xthickness + 1;
-        /*draw frame around axis*/
-        gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
-        gdk_draw_rectangle(widget->window, gc, FALSE,
-                           0, 0,
-                           axis->stripe_width,
-                           widget->allocation.height - 1);
-
+        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, swidth, height - 1);
         gdk_draw_line(widget->window, gc,
-                      axis->stripe_width,
-                      0,
-                      axis->stripe_width + axis->tick_length,
-                      0);
-
+                      swidth, 0, swidth + tlength, 0);
         gdk_draw_line(widget->window, gc,
-                      axis->stripe_width,
-                      widget->allocation.height/2,
-                      axis->stripe_width + axis->tick_length,
-                      widget->allocation.height/2);
-
+                      swidth, height/2, swidth + tlength, height/2);
         gdk_draw_line(widget->window, gc,
-                      axis->stripe_width,
-                      widget->allocation.height - 1,
-                      axis->stripe_width + axis->tick_length,
-                      widget->allocation.height - 1);
-
-
-        /*draw text*/
-        gc = widget->style->text_gc[GTK_WIDGET_STATE(widget)];
-
-        pango_layout_set_markup(layout,  strmax->str, strmax->len);
-        pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, gc,
-                        off,
-                        ythickness,
-                        layout);
-
-        pango_layout_set_markup(layout,  strmin->str, strmin->len);
-        pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, gc,
-                        off,
-                        widget->allocation.height - rect.height - ythickness,
-                        layout);
+                      swidth, height - 1, swidth + tlength, height - 1);
     }
     else {
-        /*draw frame around axis*/
-        gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
-        gdk_draw_rectangle(widget->window, gc, FALSE,
-                           0,
-                           widget->allocation.height - 1 - axis->stripe_width,
-                           widget->allocation.width - 1,
-                           axis->stripe_width);
-
-        /* FIXME
+        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, width - 1, swidth);
         gdk_draw_line(widget->window, gc,
-                      0,
-                      axis->textarea - axis->tick_length,
-                      0,
-                      axis->textarea);
-
+                      0, swidth, 0, swidth + tlength);
         gdk_draw_line(widget->window, gc,
-                      widget->allocation.width/2,
-                      axis->textarea - axis->tick_length,
-                      widget->allocation.width/2,
-                      axis->textarea);
-
+                      width/2, swidth, width/2, swidth + tlength);
         gdk_draw_line(widget->window, gc,
-                      widget->allocation.width - 1,
-                      axis->textarea - axis->tick_length,
-                      widget->allocation.width - 1,
-                      axis->textarea);
-
-
-        gc = widget->style->text_gc[GTK_WIDGET_STATE(widget)];
-
-        pango_layout_set_markup(layout,  strmin->str, strmin->len);
-        pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, gc, 2,
-                        axis->textarea - rect.height - 2, layout);
-
-        pango_layout_set_markup(layout,  strmax->str, strmax->len);
-        pango_layout_get_pixel_extents(layout, NULL, &rect);
-        gdk_draw_layout(widget->window, gc,
-                        widget->allocation.width - rect.width - 2,
-                        axis->textarea - rect.height - 2, layout);
-        */
+                      width - 1, swidth, width - 1, swidth + tlength);
     }
 
-    gwy_si_unit_value_format_free(format);
+    /* Draw text */
+    gc = widget->style->text_gc[GTK_WIDGET_STATE(widget)];
+
+    pango_layout_set_markup(layout,  strmax->str, strmax->len);
+    pango_layout_get_pixel_extents(layout, NULL, &rect);
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
+        gdk_draw_layout(widget->window, gc, off, ythickness, layout);
+    else
+        gdk_draw_layout(widget->window, gc, xthickness, off, layout);
+
+    pango_layout_set_markup(layout,  strmin->str, strmin->len);
+    pango_layout_get_pixel_extents(layout, NULL, &rect);
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL)
+        gdk_draw_layout(widget->window, gc,
+                        off, height - rect.height - ythickness,
+                        layout);
+    else
+        gdk_draw_layout(widget->window, gc,
+                        width - rect.width - xthickness, off,
+                        layout);
+
+    if (format)
+        gwy_si_unit_value_format_free(format);
     g_object_unref(layout);
-}
-
-static gboolean
-gwy_color_axis_button_press(GtkWidget *widget,
-                             GdkEventButton *event)
-{
-    GwyColorAxis *axis;
-
-    gwy_debug("");
-
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
-    axis = GWY_COLOR_AXIS(widget);
-
-
-    return FALSE;
-}
-
-static gboolean
-gwy_color_axis_button_release(GtkWidget *widget,
-                               GdkEventButton *event)
-{
-    GwyColorAxis *axis;
-
-    gwy_debug("");
-
-    g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_COLOR_AXIS(widget), FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-
-    axis = GWY_COLOR_AXIS(widget);
-
-
-    return FALSE;
+    g_string_free(strmin, TRUE);
+    g_string_free(strmax, TRUE);
 }
 
 /**
@@ -599,8 +478,12 @@ gwy_color_axis_set_range(GwyColorAxis *axis,
                          gdouble max)
 {
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
-    axis->min = min;
-    axis->max = max;
+
+    if (axis->min == MIN(min, max) && axis->max == MAX(min, max))
+        return;
+
+    axis->min = MIN(min, max);
+    axis->max = MAX(min, max);
     gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
@@ -654,10 +537,10 @@ gwy_color_axis_get_gradient(GwyColorAxis *axis)
 static void
 gwy_color_axis_update(GwyColorAxis *axis)
 {
-    g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
     gwy_color_axis_adjust(axis,
                           GTK_WIDGET(axis)->allocation.width,
                           GTK_WIDGET(axis)->allocation.height);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
