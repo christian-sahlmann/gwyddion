@@ -1396,7 +1396,9 @@ gwy_axiser_get_magnification (GwyAxiser *axiser)
 GString*    
 gwy_axiser_get_magnification_string(GwyAxiser *axiser)
 {
-    return g_string_new(axiser->magnification_string->str);
+    if (axiser->magnification_string != NULL)
+        return g_string_new(axiser->magnification_string->str);
+    else return g_string_new("");
 }
 
 

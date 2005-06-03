@@ -616,7 +616,6 @@ void
 gwy_grapher_zoom_out(GwyGrapher *grapher)
 {
     gwy_grapher_refresh(grapher);
-    gwy_grapher_signal_zoomed(grapher);
 }
 
 static void
