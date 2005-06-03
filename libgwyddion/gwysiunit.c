@@ -56,36 +56,33 @@ typedef struct {
     const gchar *power_unit_separator;
 } GwySIStyleSpec;
 
-static gboolean    gwy_si_unit_parse         (GwySIUnit *siunit,
-                                              const gchar *string);
-GwySIUnit*         gwy_si_unit_power_real    (GwySIUnit *siunit,
-                                              gint power,
-                                              GwySIUnit *result);
-static GwySIUnit*  gwy_si_unit_power_multiply(GwySIUnit *siunit1,
-                                              gint power1,
-                                              GwySIUnit *siunit2,
-                                              gint power2,
-                                              GwySIUnit *result);
-static GwySIUnit*  gwy_si_unit_canonicalize  (GwySIUnit *siunit);
-const gchar*       gwy_si_unit_prefix        (gint power);
-static GString*    gwy_si_unit_format        (GwySIUnit *siunit,
-                                              const GwySIStyleSpec *fs,
-                                              GString *string);
-
-
-static void        gwy_si_unit_class_init        (GwySIUnitClass *klass);
-static void        gwy_si_unit_init              (GwySIUnit *si_unit);
-static void        gwy_si_unit_finalize          (GObject *object);
-static void        gwy_si_unit_serializable_init (GwySerializableIface *iface);
-static GByteArray* gwy_si_unit_serialize         (GObject *obj,
-                                                  GByteArray *buffer);
-static GObject*    gwy_si_unit_deserialize       (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-static GObject*    gwy_si_unit_duplicate_real    (GObject *object);
-static void        gwy_si_unit_clone_real        (GObject *source,
-                                                  GObject *copy);
-
+static void         gwy_si_unit_class_init        (GwySIUnitClass *klass);
+static void         gwy_si_unit_init              (GwySIUnit *si_unit);
+static void         gwy_si_unit_finalize          (GObject *object);
+static void         gwy_si_unit_serializable_init (GwySerializableIface *iface);
+static GByteArray*  gwy_si_unit_serialize         (GObject *obj,
+                                                   GByteArray *buffer);
+static GObject*     gwy_si_unit_deserialize       (const guchar *buffer,
+                                                   gsize size,
+                                                   gsize *position);
+static GObject*     gwy_si_unit_duplicate_real    (GObject *object);
+static void         gwy_si_unit_clone_real        (GObject *source,
+                                                   GObject *copy);
+static gboolean     gwy_si_unit_parse             (GwySIUnit *siunit,
+                                                   const gchar *string);
+static GwySIUnit*   gwy_si_unit_power_real        (GwySIUnit *siunit,
+                                                   gint power,
+                                                   GwySIUnit *result);
+static GwySIUnit*   gwy_si_unit_power_multiply    (GwySIUnit *siunit1,
+                                                   gint power1,
+                                                   GwySIUnit *siunit2,
+                                                   gint power2,
+                                                   GwySIUnit *result);
+static GwySIUnit*   gwy_si_unit_canonicalize      (GwySIUnit *siunit);
+static const gchar* gwy_si_unit_prefix            (gint power);
+static GString*     gwy_si_unit_format            (GwySIUnit *siunit,
+                                                   const GwySIStyleSpec *fs,
+                                                   GString *string);
 
 /* FIXME: unused */
 static const GwyUnitTraits unit_traits[] = {
@@ -989,7 +986,7 @@ gwy_si_unit_power(GwySIUnit *siunit,
     return result;
 }
 
-GwySIUnit*
+static GwySIUnit*
 gwy_si_unit_power_real(GwySIUnit *siunit,
                        gint power,
                        GwySIUnit *result)
@@ -1219,7 +1216,7 @@ gwy_si_unit_format(GwySIUnit *siunit,
     return string;
 }
 
-const gchar*
+static const gchar*
 gwy_si_unit_prefix(gint power)
 {
     gint i;
