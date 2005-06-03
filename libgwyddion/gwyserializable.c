@@ -390,7 +390,7 @@ gwy_byteswapped_append(guint8 *source,
 
 /**
  * ctype_size:
- * @ctype: Component type, as in gwy_serialize_pack().
+ * @ctype: Component type, as in gwy_serialize_pack_object_struct().
  *
  * Compute type size based on type letter.
  *
@@ -437,7 +437,7 @@ ctype_size(guchar ctype)
  *
  * Stores a 32bit integer to a buffer.
  **/
-void
+static void
 gwy_serialize_store_int32(GByteArray *buffer,
                           gsize position,
                           guint32 value)
@@ -446,237 +446,29 @@ gwy_serialize_store_int32(GByteArray *buffer,
     memcpy(buffer->data + position, &value, sizeof(guint32));
 }
 
-/* FIXME: remove in 2.0 */
 /**
- * gwy_serialize_pack:
- * @buffer: A buffer to which the serialized values should be appended,
- *          or %NULL.
- * @templ: A template string.
- * @...: A list of atomic values to serialize.
+ * gwy_serialize_pack_object_header:
+ * @buffer: A buffer to which the serialized object header should be appended.
+ * @object_name: Object name.
  *
- * Serializes a list of plain atomic types.
+ * Packs object name and size to a byte buffer.
  *
- * The @templ string can contain following characters:
- *
- * 'b' for a a boolean, 'c' for a character, 'i' for a 32bit integer,
- * 'q' for a 64bit integer, 'd' for a gdouble, 's' for a null-terminated string.
- *
- * 'C' for a character array (a #gsize length followed by a pointer to the
- * array), 'I' for a 32bit integer array, 'Q' for a 64bit integer array,
- * 'D' for a gdouble array.
- *
- * 'o' for a serializable object.
+ * As the size is unknown, placeholder value 0 is stored instead.
+ * It has to be filled later with gwy_serialize_store_int32().
  *
  * Returns: @buffer or a newly allocated #GByteArray with serialization of
- *          given values appended.
+ *          object header appended.
  **/
-GByteArray*
-gwy_serialize_pack(GByteArray *buffer,
-                   const gchar *templ,
-                   ...)
+static GByteArray*
+gwy_serialize_pack_object_header(GByteArray *buffer,
+                                 const guchar *object_name)
 {
-    va_list ap;
-    gsize nargs, i, j;
+    gint32 value = 0;
 
-    g_return_val_if_fail(templ, buffer);
-    gwy_debug("templ: %s", templ);
-    nargs = strlen(templ);
-    if (!nargs)
-        return buffer;
-
-    gwy_debug("nargs = %" G_GSIZE_FORMAT ", buffer = %p", nargs, buffer);
     if (!buffer)
         buffer = g_byte_array_new();
-
-    va_start(ap, templ);
-    for (i = 0; i < nargs; i++) {
-        gwy_debug("<%c> %u", templ[i], buffer->len);
-        switch (templ[i]) {
-            case 'b': {
-                char value = va_arg(ap, gboolean);  /* store it as char */
-
-                value = !!value;
-                g_byte_array_append(buffer, &value, 1);
-            }
-            break;
-
-            case 'c': {
-                char value = va_arg(ap, int);
-
-                g_byte_array_append(buffer, &value, 1);
-            }
-            break;
-
-            case 'C': {
-                gint32 alen = va_arg(ap, gsize);
-                gint32 lealen = GINT32_TO_LE(alen);
-                guchar *value = va_arg(ap, guchar*);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                g_byte_array_append(buffer, value, alen*sizeof(char));
-            }
-            break;
-
-            case 'i': {
-                gint32 value = va_arg(ap, gint32);
-
-                value = GINT32_TO_LE(value);
-                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint32));
-            }
-            break;
-
-            case 'I': {
-                guint32 alen = va_arg(ap, gsize);
-                guint32 lealen = GINT32_TO_LE(alen);
-                gint32 *value = va_arg(ap, gint32*);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)value,
-                                    alen*sizeof(gint32));
-#else
-                gwy_byteswapped_append((guint8*)value,
-                                       buffer,
-                                       sizeof(gint32),
-                                       alen,
-                                       (1 << sizeof(gint32)) - 1);
-#endif
-            }
-            break;
-
-            case 'q':
-            {
-                gint64 value = va_arg(ap, gint64);
-
-                value = GINT64_TO_LE(value);
-                g_byte_array_append(buffer, (guint8*)&value, sizeof(gint64));
-            }
-            break;
-
-            case 'Q': {
-                guint32 alen = va_arg(ap, gsize);
-                guint32 lealen = GUINT32_TO_LE(alen);
-                gint64 *value = va_arg(ap, gint64*);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)value,
-                                    alen*sizeof(gint64));
-#else
-                gwy_byteswapped_append((guint8*)value,
-                                       buffer,
-                                       sizeof(gint64),
-                                       alen,
-                                       (1 << sizeof(gint64)) - 1);
-#endif
-            }
-            break;
-
-            case 'd': {
-                gdouble value = va_arg(ap, double);
-
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)&value, sizeof(gdouble));
-#else
-                gwy_byteswapped_append((guint8*)&value,
-                                       buffer,
-                                       sizeof(gdouble),
-                                       1,
-                                       (1 << sizeof(gdouble)) - 1);
-#endif
-            }
-            break;
-
-            case 'D': {
-                guint32 alen = va_arg(ap, gsize);
-                guint32 lealen = GUINT32_TO_LE(alen);
-                gdouble *value = va_arg(ap, double*);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-                g_byte_array_append(buffer, (guint8*)value,
-                                    alen*sizeof(gdouble));
-#else
-                gwy_byteswapped_append((guint8*)value,
-                                       buffer,
-                                       sizeof(gdouble),
-                                       alen,
-                                       (1 << sizeof(gdouble)) - 1);
-#endif
-            }
-            break;
-
-            case 's': {
-                guchar *value = va_arg(ap, guchar*);
-
-                if (!value) {
-                    g_warning("representing NULL as an empty string");
-                    g_byte_array_append(buffer, "", 1);
-                }
-                else
-                    g_byte_array_append(buffer, value, strlen(value) + 1);
-            }
-            break;
-
-            case 'S': {
-                gint32 alen = va_arg(ap, gsize);
-                gint32 lealen = GINT32_TO_LE(alen);
-                guchar **value = va_arg(ap, guchar**);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                for (j = 0; j < alen; j++) {
-                    guchar *s = value[j];
-
-                    if (!value) {
-                        g_warning("representing NULL as an empty string");
-                        g_byte_array_append(buffer, "", 1);
-                    }
-                    else
-                        g_byte_array_append(buffer, s, strlen(s) + 1);
-                }
-            }
-            break;
-
-            case 'o': {
-                GObject *value = va_arg(ap, GObject*);
-
-                if (G_UNLIKELY(!value))
-                    g_critical("Object cannot be NULL");
-                else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
-                    g_critical("Object must be serializable");
-                else
-                    gwy_serializable_serialize(value, buffer);
-            }
-            break;
-
-            case 'O': {
-                gint32 alen = va_arg(ap, gsize);
-                gint32 lealen = GINT32_TO_LE(alen);
-                GObject **value = va_arg(ap, GObject**);
-
-                g_byte_array_append(buffer, (guint8*)&lealen, sizeof(gint32));
-                for (j = 0; j < alen; j++) {
-                    GObject *obj = value[j];
-
-                    if (G_UNLIKELY(!obj))
-                        g_critical("Object cannot be NULL");
-                    else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(obj)))
-                        g_critical("Object must be serializable");
-                    else
-                        gwy_serializable_serialize(obj, buffer);
-                }
-            }
-            break;
-
-            default:
-            g_error("wrong spec <%c> in templare <%s>", templ[i], templ);
-            va_end(ap);
-            return buffer;
-            break;
-        }
-    }
-
-    va_end(ap);
+    g_byte_array_append(buffer, object_name, strlen(object_name) + 1);
+    g_byte_array_append(buffer, (guint8*)&value, sizeof(gint32));
 
     return buffer;
 }
@@ -688,11 +480,13 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
                                  gsize nspec,
                                  const GwySerializeSpec *spec)
 {
-    gsize before_obj;
-    guint i;
+    gsize before_obj, i;
 
+    g_return_val_if_fail(spec || !nspec, buffer);
+    g_return_val_if_fail(object_name && *object_name, buffer);
     gwy_debug("init size: %u, buffer = %p", buffer ? buffer->len : 0, buffer);
-    buffer = gwy_serialize_pack(buffer, "si", object_name, 0);
+
+    buffer = gwy_serialize_pack_object_header(buffer, object_name);
     before_obj = buffer->len;
     gwy_debug("+head size: %u", buffer->len);
     for (i = 0; i < nspec; i++)
@@ -728,9 +522,11 @@ gwy_serialize_object_items(GByteArray *buffer,
     GwySerializeSpec sp;
     gsize before_obj, i;
 
-    g_return_val_if_fail(items, buffer);
+    g_return_val_if_fail(items || !nitems, buffer);
+    g_return_val_if_fail(object_name && *object_name, buffer);
     gwy_debug("init size: %u, buffer = %p", buffer ? buffer->len : 0, buffer);
-    buffer = gwy_serialize_pack(buffer, "si", object_name, 0);
+
+    buffer = gwy_serialize_pack_object_header(buffer, object_name);
     before_obj = buffer->len;
     gwy_debug("+head size: %u", buffer->len);
 
@@ -1147,7 +943,8 @@ gwy_serialize_skip_type(const guchar *buffer,
     *position = size;
 }
 
-gboolean
+/* FIXME: Merge into gwy_serialize_unpack_object_struct()? */
+static gboolean
 gwy_serialize_unpack_struct(const guchar *buffer,
                             gsize size,
                             gsize nspec,
