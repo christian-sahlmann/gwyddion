@@ -32,10 +32,6 @@
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
 
-static gdouble  square_area                      (GwyDataField *data_field,
-                                                  gint ulcol, gint ulrow,
-                                                  gint brcol, gint brrow);
-
 /**
  * gwy_data_field_get_max:
  * @data_field: A data field.
@@ -98,6 +94,10 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
                          max);
     if (!width || !height)
         return max;
+
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_max(dfield);
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
@@ -176,6 +176,10 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
     if (!width || !height)
         return min;
 
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_min(dfield);
+
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
         gdouble *drow = datapos + i*dfield->xres;
@@ -247,6 +251,10 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          sum);
+
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_sum(dfield);
 
     datapos = dfield->data + row*dfield->xres + col;
     for (i = 0; i < height; i++) {
@@ -362,6 +370,10 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
                          rms);
     if (!width || !height)
         return rms;
+
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_rms(dfield);
 
     sum = gwy_data_field_area_get_sum(dfield, col, row, width, height);
     datapos = dfield->data + row*dfield->xres + col;
@@ -813,27 +825,86 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     return TRUE;
 }
 
+static inline gdouble
+square_area2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+             gdouble x, gdouble y)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/2.0;
+
+    return (sqrt(1 + (z1 - z2)*(z1 - z2)/x + (z1 + z2 - c)*(z1 + z2 - c)/y)
+            + sqrt(1 + (z2 - z3)*(z2 - z3)/y + (z2 + z3 - c)*(z2 + z3 - c)/x)
+            + sqrt(1 + (z3 - z4)*(z3 - z4)/x + (z3 + z4 - c)*(z3 + z4 - c)/y)
+            + sqrt(1 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x));
+}
+
+static inline gdouble
+square_area1(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
+             gdouble q)
+{
+    gdouble c;
+
+    c = (z1 + z2 + z3 + z4)/4.0;
+    z1 -= c;
+    z2 -= c;
+    z3 -= c;
+    z4 -= c;
+
+    return (sqrt(1 + 2*(z1*z1 + z2*z2)/q)
+            + sqrt(1 + 2*(z2*z2 + z3*z3)/q)
+            + sqrt(1 + 2*(z3*z3 + z4*z4)/q)
+            + sqrt(1 + 2*(z4*z4 + z1*z1)/q));
+}
+
 /**
  * gwy_data_field_get_surface_area:
  * @data_field: A data field.
- * @interpolation: interpolation method
  *
  * Computes surface area of a data field.
  *
  * Returns: surface area
  **/
 gdouble
-gwy_data_field_get_surface_area(GwyDataField *a,
-                                G_GNUC_UNUSED
-                                GwyInterpolationType interpolation)
+gwy_data_field_get_surface_area(GwyDataField *data_field)
 {
-    gint i, j;
-    gdouble sum = 0;
+    gint i, j, xres;
+    gdouble x, y, q, sum = 0.0;
 
-    for (i = 0; i < (a->xres - 1); i++) {
-        for (j = 0; j < (a->yres - 1); j++)
-            sum += square_area(a, i, j, i + 1, j + 1);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), sum);
+
+    gwy_debug("%s", CTEST(data_field, ARE) ? "cache" : "lame");
+    if (CTEST(data_field, ARE))
+        return CVAL(data_field, ARE);
+
+    xres = data_field->xres;
+    x = data_field->xreal/data_field->xres;
+    y = data_field->yreal/data_field->yres;
+    q = x*y;
+    x = x*x;
+    y = y*y;
+
+    if (fabs(log(x/y)) < 1e-7) {
+        for (i = 1; i < data_field->yres; i++) {
+            gdouble *r = data_field->data + xres*i;
+
+            for (j = 1; j < xres; j++)
+                sum += square_area1(r[j], r[j-1], r[j-xres], r[j-xres-1], q);
+        }
     }
+    else {
+        for (i = 1; i < data_field->yres; i++) {
+            gdouble *r = data_field->data + xres*i;
+
+            for (j = 1; j < xres; j++)
+                sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1], x, y);
+        }
+    }
+
+    sum *= q/4;
+    CVAL(data_field, ARE) = sum;
+    data_field->cached |= CBIT(ARE);
+
     return sum;
 }
 
@@ -844,7 +915,6 @@ gwy_data_field_get_surface_area(GwyDataField *a,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @interpolation: Interpolation method.
  *
  * Computes surface area of a rectangular part of a data field.
  *
@@ -853,12 +923,10 @@ gwy_data_field_get_surface_area(GwyDataField *a,
 gdouble
 gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                                      gint col, gint row,
-                                     gint width, gint height,
-                                     G_GNUC_UNUSED
-                                     GwyInterpolationType interpolation)
+                                     gint width, gint height)
 {
-    gint i, j;
-    gdouble sum = 0.0;
+    gint i, j, xres;
+    gdouble x, y, q, sum = 0.0;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
     g_return_val_if_fail(col >= 0 && row >= 0
@@ -869,63 +937,35 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
     if (!width || !height)
         return sum;
 
-    for (i = 0; i < height-1; i++) {
-        for (j = 0; j < width-1; j++)
-            sum += square_area(dfield, col+j, row+i, col+j+1, row+i+1);
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_surface_area(dfield);
+
+    xres = dfield->xres;
+    x = dfield->xreal/dfield->xres;
+    y = dfield->yreal/dfield->yres;
+    q = x*y;
+    x = x*x;
+    y = y*y;
+
+    if (fabs(log(x/y)) < 1e-7) {
+        for (i = 1; i < height; i++) {
+            gdouble *r = dfield->data + xres*(i + row) + col;
+
+            for (j = 1; j < width; j++)
+                sum += square_area1(r[j], r[j-1], r[j-xres], r[j-xres-1], q);
+        }
+    }
+    else {
+        for (i = 1; i < height; i++) {
+            gdouble *r = dfield->data + xres*(i + row) + col;
+
+            for (j = 1; j < width; j++)
+                sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1], x, y);
+        }
     }
 
-    return sum;
-}
-
-/**
- * square_area:
- * @data_field: data
- * @ulcol: upper-left coordinate (in pixel units)
- * @ulrow: upper-left coordinate (in pixel units)
- * @brcol: bottom-right coordinate (in pixel units)
- * @brrow: bottom-right coordinate (in pixel units)
- *
- * Computes surface area of a rectangular part of a data field.
- *
- * Returns: Surface area (in real units).
- **/
-static gdouble
-square_area(GwyDataField *data_field, gint ulcol, gint ulrow, gint brcol,
-            gint brrow)
-{
-    gdouble x, z1, z2, z3, z4, a, b, c, d, e, f, s1, s2, sa, sb, res;
-
-    /* FIXME: this does not work when x and y measures are different */
-    x = data_field->xreal / data_field->xres;
-
-    z1 = data_field->data[(ulcol) + data_field->xres * (ulrow)];
-    z2 = data_field->data[(brcol) + data_field->xres * (ulrow)];
-    z3 = data_field->data[(ulcol) + data_field->xres * (brrow)];
-    z4 = data_field->data[(brcol) + data_field->xres * (brrow)];
-
-    a = hypot(x, z1 - z2);
-    b = hypot(x, z1 - z3);
-    c = hypot(x, z3 - z4);
-    d = hypot(x, z2 - z4);
-    e = sqrt(2 * x * x + (z3 - z2) * (z3 - z2));
-    f = sqrt(2 * x * x + (z4 - z1) * (z4 - z1));
-
-    s1 = (a + b + e)/2;
-    s2 = (c + d + e)/2;
-    sa = sqrt(s1 * (s1 - a) * (s1 - b) * (s1 - e))
-         + sqrt(s2 * (s2 - c) * (s2 - d) * (s2 - e));
-
-    s1 = (a + d + f)/2;
-    s2 = (c + b + f)/2;
-    sb = sqrt(s1 * (s1 - a) * (s1 - d) * (s1 - f))
-         + sqrt(s2 * (s2 - c) * (s2 - b) * (s2 - f));
-
-    if (sa < sb)
-        res = sa;
-    else
-        res = sb;
-
-    return res;
+    return sum*q/4;
 }
 
 /**
@@ -951,9 +991,9 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
 
     nder = gwy_data_line_get_res(derdist);
     der = gwy_data_line_get_data(derdist);
-    data = gwy_data_field_get_data(dfield);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
+    data = dfield->data;
+    xres = dfield->xres;
+    yres = dfield->yres;
     memset(der, 0, nder*sizeof(gdouble));
     if (kernel_size > 0) {
         for (row = 0; row + kernel_size < yres; row++) {
@@ -1014,6 +1054,10 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
     if (!width || !height)
         return median;
 
+    if (col == 0 && width == dfield->xres
+        && row == 0 && height == dfield->yres)
+        return gwy_data_field_get_median(dfield);
+
     buffer = g_new(gdouble, width*height);
     datapos = dfield->data + row*dfield->xres + col;
     if (height == 1 || (col == 0 && width == dfield->xres))
@@ -1040,6 +1084,8 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
 gdouble
 gwy_data_field_get_median(GwyDataField *data_field)
 {
+    gint xres, yres;
+    gdouble *buffer;
     gdouble med;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
@@ -1048,9 +1094,11 @@ gwy_data_field_get_median(GwyDataField *data_field)
     if (CTEST(data_field, MED))
         return CVAL(data_field, MED);
 
-    med = gwy_data_field_area_get_median(data_field,
-                                         0, 0,
-                                         data_field->xres, data_field->yres);
+    xres = data_field->xres;
+    yres = data_field->yres;
+    buffer = g_memdup(data_field->data, xres*yres*sizeof(gdouble));
+    med = gwy_math_median(xres*yres, buffer);
+    g_free(buffer);
 
     CVAL(data_field, MED) = med;
     data_field->cached |= CBIT(MED);

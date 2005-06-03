@@ -184,7 +184,7 @@ gwy_data_field_new(gint xres, gint yres,
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
         data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                             | CBIT(MED);
+                             | CBIT(MED) | CBIT(ARF) | CBIT(ART);
         /* Values cleared implicitely */
     }
     else
@@ -223,7 +223,7 @@ gwy_data_field_new_alike(GwyDataField *model,
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
         data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
-                             | CBIT(MED);
+                             | CBIT(MED) | CBIT(ARF) | CBIT(ART);
         /* Values cleared implicitely */
     }
     else
@@ -2369,6 +2369,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
  * @GWY_DATA_FIELD_CACHE_MED: Median.
  * @GWY_DATA_FIELD_CACHE_ARF: Auto-range from.
  * @GWY_DATA_FIELD_CACHE_ART: Auto-range to.
+ * @GWY_DATA_FIELD_CACHE_ARE: Surface area.
  * @GWY_DATA_FIELD_CACHE_SIZE: The size of statistics cache.
  *
  * Cached data field quantity types.
