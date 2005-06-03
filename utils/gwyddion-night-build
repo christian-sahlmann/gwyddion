@@ -100,7 +100,7 @@ function check_coding_style() {
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
       | grep -v '^_' \
       | sort -u >evil-symbols-l.tmp
-    grep -ho '\<gwy_[a-z_0-9]\{4,\}' $(dirname $(dirname $lib))/*.h \
+    grep -ho '\<gwy_[A-Za-z0-9_]\{4,\}' $(dirname $(dirname $lib))/*.h \
       | sort -u >evil-symbols-h.tmp
     sort -m evil-symbols-h.tmp evil-symbols-h.tmp evil-symbols-l.tmp \
       | uniq -u \
