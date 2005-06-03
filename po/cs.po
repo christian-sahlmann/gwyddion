@@ -2164,7 +2164,7 @@ msgstr "2D DWT"
 
 #: modules/process/dwtanisotropy.c:84
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr ""
+msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
 
 #: modules/process/dwtanisotropy.c:100
 msgid "/_Integral Transforms/DWT _Anisotropy..."
@@ -2849,19 +2849,19 @@ msgstr "_Extrahovat pozadí"
 
 #: modules/process/nanoindent_adjust.c:95
 msgid "Adjust images of two indentor prints."
-msgstr ""
+msgstr "Srovnat dva obrázky vtisků indentoru"
 
 #: modules/process/nanoindent_adjust.c:111
 msgid "/Indento_r/Ad_just..."
-msgstr ""
+msgstr "/Indento_r/Srovnat..."
 
 #: modules/process/nanoindent_adjust.c:177
 msgid "Imprints adjustment"
-msgstr ""
+msgstr "Srovnání vtisků"
 
 #: modules/process/nanoindent_adjust.c:192
 msgid "_Indentor model imprint:"
-msgstr ""
+msgstr "Modelování vtisku indentoru"
 
 #: modules/process/nanoindent_adjust.c:203
 msgid "Imprint to be _adjusted:"
@@ -2869,15 +2869,15 @@ msgstr ""
 
 #: modules/process/nanoindent_adjust.c:214
 msgid "_Move data"
-msgstr ""
+msgstr "_Posunout data"
 
 #: modules/process/nanoindent_adjust.c:223
 msgid "_Rotate data"
-msgstr ""
+msgstr "_Otočit data"
 
 #: modules/process/nanoindent_adjust.c:232
 msgid "E_xtrapolate result data out of measured range"
-msgstr ""
+msgstr "E_xtrapolovat chybějící data na okrajích"
 
 #: modules/process/nanoindent_adjust.c:311 modules/process/tip_dilation.c:229
 #: modules/process/tip_map.c:231 modules/process/tip_reconstruction.c:229
@@ -2899,7 +2899,7 @@ msgstr "Rotovat rovinu"
 
 #: modules/process/nanoindent_analyze.c:245
 msgid "New"
-msgstr ""
+msgstr "Nový"
 
 #: modules/process/nanoindent_analyze.c:246
 msgid "AND"
@@ -2919,139 +2919,139 @@ msgstr "Xor"
 
 #: modules/process/nanoindent_analyze.c:266
 msgid "Nothing"
-msgstr ""
+msgstr "Nic"
 
 #: modules/process/nanoindent_analyze.c:267
 msgid "Above"
-msgstr ""
+msgstr "Objem nad"
 
 #: modules/process/nanoindent_analyze.c:268
 msgid "Bellow"
-msgstr ""
+msgstr "Objem pod"
 
 #: modules/process/nanoindent_analyze.c:269
 msgid "Plane"
-msgstr ""
+msgstr "Rovinu"
 
 #: modules/process/nanoindent_analyze.c:270
 msgid "Impression"
-msgstr ""
+msgstr "Vtisk"
 
 #: modules/process/nanoindent_analyze.c:271
 msgid "Inner Pile-up"
-msgstr ""
+msgstr "Vnitřní část vytlačení"
 
 #: modules/process/nanoindent_analyze.c:272
 msgid "Outer Pile-up"
-msgstr ""
+msgstr "Vnější část vytlačení"
 
 #: modules/process/nanoindent_analyze.c:273
 msgid "Special points"
-msgstr ""
+msgstr "Speciální body"
 
 #: modules/process/nanoindent_analyze.c:274
 msgid "Faces border"
-msgstr ""
+msgstr "Rozhraní stěn"
 
 #: modules/process/nanoindent_analyze.c:284
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)"
-msgstr ""
+msgstr "Analýza vtisků indentoru"
 
 #: modules/process/nanoindent_analyze.c:300
 msgid "/Indento_r/_Analyze..."
-msgstr ""
+msgstr "/Indento_r/_Analyzovat..."
 
 #: modules/process/nanoindent_analyze.c:353
 msgid "Indentaion statistics"
-msgstr ""
+msgstr "Statistika"
 
 #: modules/process/nanoindent_analyze.c:354
 msgid "_Compute & mark"
-msgstr ""
+msgstr "Počítat a označit"
 
 #: modules/process/nanoindent_analyze.c:355
 msgid "_Save statistics"
-msgstr ""
+msgstr "Uložit _statistiku"
 
 #: modules/process/nanoindent_analyze.c:395
 msgid "Data field leveling:"
-msgstr ""
+msgstr "Proložení dat:"
 
 #: modules/process/nanoindent_analyze.c:404
 msgid "Marked areas:"
-msgstr ""
+msgstr "Označené plochy:"
 
 #: modules/process/nanoindent_analyze.c:411
 msgid "Indentor type:"
-msgstr ""
+msgstr "Typ indentoru"
 
 #: modules/process/nanoindent_analyze.c:419
 msgid "Mask creation type:"
-msgstr ""
+msgstr "Vytvoření masky:"
 
 #: modules/process/nanoindent_analyze.c:424
 msgid "Ref. plane tolerance:"
-msgstr ""
+msgstr "Tolerance ref. roviny:"
 
 #: modules/process/nanoindent_analyze.c:429
 msgid "Angle 1 tolerance:"
-msgstr ""
+msgstr "Úhlová tolerance:"
 
 #: modules/process/nanoindent_analyze.c:434
 msgid "Theta range:"
-msgstr ""
+msgstr "Rozsah úhlu theta:"
 
 #: modules/process/nanoindent_analyze.c:451
 msgid "Indent centre at"
-msgstr ""
+msgstr "Střed vtisku v bodě"
 
 #: modules/process/nanoindent_analyze.c:454
 msgid "Maximum at"
-msgstr ""
+msgstr "Maimumv bodě"
 
 #: modules/process/nanoindent_analyze.c:457
 msgid "Max-min diference"
-msgstr ""
+msgstr "Z-ový rozsah"
 
 #: modules/process/nanoindent_analyze.c:464
 msgid "Expected A_d:"
-msgstr ""
+msgstr "Očekávané A_d:"
 
 #: modules/process/nanoindent_analyze.c:467
 msgid "Expected A_p:"
-msgstr ""
+msgstr "Očekávané A_p:"
 
 #: modules/process/nanoindent_analyze.c:508
 msgid "Volume above-below"
-msgstr ""
+msgstr "Objem nad-pod"
 
 #: modules/process/nanoindent_analyze.c:518
 msgid "Indent. volume"
-msgstr ""
+msgstr "Objem vtisku"
 
 #: modules/process/nanoindent_analyze.c:524
 msgid "Indent. A_d"
-msgstr ""
+msgstr "A_d vtisku"
 
 #: modules/process/nanoindent_analyze.c:527
 msgid "Indent. A_p"
-msgstr ""
+msgstr "A_p vtisku"
 
 #: modules/process/nanoindent_analyze.c:536
 msgid "Inner Pile-Up A_d"
-msgstr ""
+msgstr "A_d vnitřní části vytlačení"
 
 #: modules/process/nanoindent_analyze.c:539
 msgid "Inner Pile-Up A_p"
-msgstr ""
+msgstr "A_p vnitřní části vytlačení"
 
 #: modules/process/nanoindent_analyze.c:542
 msgid "Outer Pile-Up A_d"
-msgstr ""
+msgstr "A_d vnější části vytlačení"
 
 #: modules/process/nanoindent_analyze.c:545
 msgid "Outer Pile-Up A_p"
-msgstr ""
+msgstr "A_p vnější části vytlačení"
 
 #: modules/process/outliers.c:43
 msgid "Creates mask of outliers."
