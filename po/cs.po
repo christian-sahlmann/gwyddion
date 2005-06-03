@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
 "POT-Creation-Date: 2005-06-02 04:16+0200\n"
-"PO-Revision-Date: 2005-04-04 15:24+0200\n"
+"PO-Revision-Date: 2005-06-03 14:44+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -1521,7 +1521,7 @@ msgstr "RHK SPM32 soubory (.sm2)"
 #: modules/file/rhk-spm32.c:495
 #, c-format
 msgid "Page %u (%s)"
-msgstr ""
+msgstr "Stránka %u (%s)"
 
 #: modules/file/sis.c:356
 msgid "Imports SIS (Surface Imaging Systems) data files."
@@ -1549,31 +1549,31 @@ msgstr "Soubory Omicron STMPRG (tp ta)"
 
 #: modules/file/stpfile.c:97
 msgid "Topography"
-msgstr ""
+msgstr "Topografie"
 
 #: modules/file/stpfile.c:98
 msgid "Current or Deflection"
-msgstr ""
+msgstr "Proud nebo výchylka"
 
 #: modules/file/stpfile.c:99
 msgid "Electrochemical voltage"
-msgstr ""
+msgstr "Elektrochemické napětí"
 
 #: modules/file/stpfile.c:100
 msgid "Topography and SPS"
-msgstr ""
+msgstr "Topografie a SPS"
 
 #: modules/file/stpfile.c:101
 msgid "Topography and SPS scripted"
-msgstr ""
+msgstr "Topografie a skriptované SPS"
 
 #: modules/file/stpfile.c:102
 msgid "Electrochemical current"
-msgstr ""
+msgstr "Elektrochemický proud"
 
 #: modules/file/stpfile.c:103
 msgid "Friction"
-msgstr ""
+msgstr "Tření"
 
 #: modules/file/stpfile.c:104
 msgid "AUX in BNC"
@@ -1581,7 +1581,7 @@ msgstr ""
 
 #: modules/file/stpfile.c:105
 msgid "External"
-msgstr ""
+msgstr "Vnější"
 
 #: modules/file/stpfile.c:112
 msgid "Imports Molecular Imaging STP data files."
@@ -1594,7 +1594,7 @@ msgstr "STP soubory (.stp)"
 #: modules/file/stpfile.c:527
 #, c-format
 msgid "Buffer %u (%s)"
-msgstr ""
+msgstr "Datové pole %u (%s)"
 
 #: modules/file/stpfile.c:530
 #, c-format
@@ -3605,7 +3605,7 @@ msgstr "Plný"
 
 #: modules/tools/icolorange.c:209
 msgid "Fixed"
-msgstr ""
+msgstr "Pevný"
 
 #: modules/tools/icolorange.c:210
 msgid "Auto"
