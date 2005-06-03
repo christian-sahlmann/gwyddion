@@ -45,7 +45,7 @@ typedef struct {
     gdouble size;
     gboolean do_extract;
     /* interface only */
-    GwySIValueFormat valform;
+    GwySIValueFormat *valform;
     gdouble pixelsize;
 } Sphrev1DArgs;
 
@@ -87,7 +87,7 @@ Sphrev1DArgs sphrev_defaults = {
     SPHREV_HORIZONTAL,
     20,
     FALSE,
-    { 1.0, 0, NULL },
+    NULL,
     0,
 };
 
@@ -142,15 +142,18 @@ sphrev(GwyContainer *data, GwyRunType run)
     xr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
     yr = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     args.pixelsize = hypot(xr, yr);
-    gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                       &args.valform);
+    args.valform
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
     gwy_debug("pixelsize = %g, vf = (%g, %d, %s)",
-              args.pixelsize, args.valform.magnitude, args.valform.precision,
-              args.valform.units);
+              args.pixelsize, args.valform->magnitude, args.valform->precision,
+              args.valform->units);
 
     ok = (run != GWY_RUN_MODAL) || sphrev_dialog(&args);
     if (run == GWY_RUN_MODAL)
         sphrev_save_args(gwy_app_settings_get(), &args);
+
+    gwy_si_unit_value_format_free(args.valform);
     if (!ok)
         return FALSE;
 
@@ -230,13 +233,13 @@ sphrev_dialog(Sphrev1DArgs *args)
     row = 0;
     controls.in_update = TRUE;
 
-    q = args->pixelsize/args->valform.magnitude;
+    q = args->pixelsize/args->valform->magnitude;
     gwy_debug("q = %f", q);
     controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
     spin = gwy_table_attach_hscale(table, row, _("Real _radius:"),
-                                   args->valform.units, controls.radius,
+                                   args->valform->units, controls.radius,
                                    GWY_HSCALE_SQRT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform.precision);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform->precision);
     g_object_set_data(G_OBJECT(controls.radius), "controls", &controls);
     g_signal_connect(controls.radius, "value_changed",
                      G_CALLBACK(radius_changed_cb), args);
@@ -330,7 +333,7 @@ radius_changed_cb(GtkAdjustment *adj,
 
     controls->in_update = TRUE;
     args->size = gtk_adjustment_get_value(adj)
-                 * args->valform.magnitude/args->pixelsize;
+                 * args->valform->magnitude/args->pixelsize;
     sphrev_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -364,7 +367,7 @@ sphrev_dialog_update(Sphrev1DControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->radius),
                              args->size
-                             * args->pixelsize/args->valform.magnitude);
+                             * args->pixelsize/args->valform->magnitude);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
     gwy_radio_buttons_set_current(controls->direction, "direction-type",
                                   args->direction);

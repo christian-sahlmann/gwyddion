@@ -39,7 +39,7 @@ typedef struct {
     gdouble size;
     gboolean do_extract;
     /* interface only */
-    GwySIValueFormat valform;
+    GwySIValueFormat *valform;
     gdouble pixelsize;
 } MedianBgArgs;
 
@@ -74,7 +74,7 @@ static void          median_save_args          (GwyContainer *container,
 MedianBgArgs median_defaults = {
     20,
     FALSE,
-    { 1.0, 0, NULL },
+    NULL,
     0,
 };
 
@@ -129,15 +129,18 @@ median(GwyContainer *data, GwyRunType run)
     xr = gwy_data_field_get_xreal(dfield)/gwy_data_field_get_xres(dfield);
     yr = gwy_data_field_get_yreal(dfield)/gwy_data_field_get_yres(dfield);
     args.pixelsize = hypot(xr, yr);
-    gwy_data_field_get_value_format_xy(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                       &args.valform);
+    args.valform
+        = gwy_data_field_get_value_format_xy(dfield,
+                                             GWY_SI_UNIT_FORMAT_VFMARKUP, NULL);
     gwy_debug("pixelsize = %g, vf = (%g, %d, %s)",
-              args.pixelsize, args.valform.magnitude, args.valform.precision,
-              args.valform.units);
+              args.pixelsize, args.valform->magnitude, args.valform->precision,
+              args.valform->units);
 
     ok = (run != GWY_RUN_MODAL) || median_dialog(&args);
     if (run == GWY_RUN_MODAL)
         median_save_args(gwy_app_settings_get(), &args);
+
+    gwy_si_unit_value_format_free(args.valform);
     if (!ok)
         return FALSE;
 
@@ -194,13 +197,13 @@ median_dialog(MedianBgArgs *args)
     row = 0;
     controls.in_update = TRUE;
 
-    q = args->pixelsize/args->valform.magnitude;
+    q = args->pixelsize/args->valform->magnitude;
     gwy_debug("q = %f", q);
     controls.radius = gtk_adjustment_new(q*args->size, q, 16384*q, q, 10*q, 0);
     spin = gwy_table_attach_hscale(table, row, _("Real _radius:"),
-                                   args->valform.units,
+                                   args->valform->units,
                                    controls.radius, GWY_HSCALE_SQRT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform.precision);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform->precision);
     g_object_set_data(G_OBJECT(controls.radius), "controls", &controls);
     g_signal_connect(controls.radius, "value_changed",
                      G_CALLBACK(radius_changed_cb), args);
@@ -269,7 +272,7 @@ radius_changed_cb(GtkAdjustment *adj,
 
     controls->in_update = TRUE;
     args->size = gtk_adjustment_get_value(adj)
-                 * args->valform.magnitude/args->pixelsize;
+                 * args->valform->magnitude/args->pixelsize;
     median_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -303,7 +306,7 @@ median_dialog_update(MedianBgControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->radius),
                              args->size
-                             * args->pixelsize/args->valform.magnitude);
+                             * args->pixelsize/args->valform->magnitude);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size), args->size);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->do_extract),
                                  args->do_extract);
