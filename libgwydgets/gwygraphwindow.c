@@ -47,6 +47,9 @@ static void     gwy_graph_window_zoom_in_cb          (GwyGraphWindow *graphwindo
 static void     gwy_graph_window_zoom_out_cb         (GwyGraphWindow *graphwindow);
 static void     gwy_graph_window_zoom_finished_cb    (GwyGraphWindow *graphwindow);
 static void     gwy_graph_window_measure_finished_cb (GwyGraphWindow *graphwindow, gint response);
+static void     gwy_graph_window_export_vector_cb    (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_export_ascii_cb     (GwyGraphWindow *graphwindow);
+static void     gwy_graph_window_export_bitmap_cb    (GwyGraphWindow *graphwindow);
 
 /* Local data */
 
@@ -206,17 +209,27 @@ gwy_graph_window_new(GwyGrapher *graph)
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_ascii),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_ascii, FALSE, FALSE, 0);
-
+    g_signal_connect_swapped(graphwindow->button_export_ascii, "clicked",
+                           G_CALLBACK(gwy_graph_window_export_ascii_cb),
+                           graphwindow);
+ 
     graphwindow->button_export_vector = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_vector),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_vector, FALSE, FALSE, 0);
-
+    g_signal_connect_swapped(graphwindow->button_export_vector, "clicked",
+                           G_CALLBACK(gwy_graph_window_export_vector_cb),
+                           graphwindow);
+ 
     graphwindow->button_export_bitmap = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_bitmap),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_bitmap, FALSE, FALSE, 0);
-
+    g_signal_connect_swapped(graphwindow->button_export_bitmap, "clicked",
+                           G_CALLBACK(gwy_graph_window_export_bitmap_cb),
+                           graphwindow);
+     
+    
     graphwindow->label_what = gtk_label_new("Cursor values:");
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, TRUE, FALSE, 4);
 
@@ -365,6 +378,23 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
     gwy_grapher_set_status(graphwindow->graph, last_status);
     /*printf("zoom finished: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
 }
+
+static void     
+gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
+{
+}
+
+static void     
+gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
+{
+}
+
+static void     
+gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)
+{
+}
+
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

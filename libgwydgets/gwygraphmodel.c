@@ -1010,7 +1010,31 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
                              gboolean export_units, gboolean export_metadata,
                              GwyGraphModelExportStyle export_style)
 {
+    FILE *fw;
+    fw = fopen(filename, "w");
     
+    switch(export_style) {
+        case (GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN):
+        fprintf(fw, "plain\n");
+        break;
+
+        case (GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT):
+        fprintf(fw, "gnuplot\n");
+        break;
+        
+        case (GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN):
+        fprintf(fw, "origin\n");
+        break;
+         
+        case (GWY_GRAPH_MODEL_EXPORT_ASCII_CSV):
+        fprintf(fw, "origin\n");
+        break;
+
+        default:
+        break;
+    }
+
+    fclose(fw);
 }
 
 
