@@ -66,11 +66,11 @@
 
   <chapter id="WidgetUtilities">
     <title>Widget Utilities</title>
+    <xi:include href="xml/gwydgetenums.xml"/>
     <xi:include href="xml/gwydgetutils.xml"/>
     <xi:include href="xml/gwystock.xml"/>
     <xi:include href="xml/gwyoptionmenus.xml"/>
     <xi:include href="xml/gwyradiobuttons.xml"/>
-    <xi:include href="xml/gwydgetenums.xml"/>
     <xi:include href="xml/gwydgets.xml"/>
   </chapter>
 </book>

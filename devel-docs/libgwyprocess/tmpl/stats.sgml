@@ -86,9 +86,9 @@ stats
 </para>
 
 @data_field: 
-@interpolation: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@interpolation: 
 @a: 
 
 
@@ -217,15 +217,25 @@ stats
 @row: 
 @width: 
 @height: 
-@interpolation: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@interpolation: 
 @dfield: 
 @a: 
 @ulcol: 
 @ulrow: 
 @brcol: 
 @brrow: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_autorange ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@from: 
+@to: 
 
 
 <!-- ##### FUNCTION gwy_data_field_get_stats ##### -->

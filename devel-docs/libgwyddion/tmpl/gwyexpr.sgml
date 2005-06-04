@@ -176,3 +176,12 @@ gwy_expr_vector_execute().
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_expr_get_expression ##### -->
+<para>
+
+</para>
+
+@expr: 
+@Returns: 
+
+

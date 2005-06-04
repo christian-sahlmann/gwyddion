@@ -35,6 +35,7 @@ or number of significant digits --
 @magnitude: 
 @precision: 
 @units: 
+@units_gstring: 
 
 <!-- ##### STRUCT GwySIUnit ##### -->
 <para>
@@ -163,7 +164,20 @@ or number of significant digits --
 </para>
 
 @siunit: 
+@style: 
 @value: 
+@format: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_si_unit_get_format_for_power10 ##### -->
+<para>
+
+</para>
+
+@siunit: 
+@style: 
+@power10: 
 @format: 
 @Returns: 
 
@@ -174,6 +188,7 @@ or number of significant digits --
 </para>
 
 @siunit: 
+@style: 
 @maximum: 
 @resolution: 
 @format: 
@@ -186,6 +201,7 @@ or number of significant digits --
 </para>
 
 @siunit: 
+@style: 
 @maximum: 
 @sdigits: 
 @format: 

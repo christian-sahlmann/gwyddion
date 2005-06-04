@@ -57,7 +57,6 @@ gwy_rgba_store_to_container
 <FILE>gwypixfield</FILE>
 gwy_pixbuf_draw_data_field
 gwy_pixbuf_draw_data_field_with_range
-gwy_pixbuf_draw_data_field_with_rms
 gwy_pixbuf_draw_data_field_as_mask
 </SECTION>
 

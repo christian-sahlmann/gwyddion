@@ -43,15 +43,6 @@ fitter</link>
 @x: 
 
 
-<!-- ##### FUNCTION gwy_math_SI_prefix ##### -->
-<para>
-
-</para>
-
-@magnitude: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_math_humanize_numbers ##### -->
 <para>
 

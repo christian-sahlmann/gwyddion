@@ -10,7 +10,7 @@
     This library contains basic classes and interfaces not directly related
     to GUI or data processing, and various utility functions.
   </para>
-  <xi:include href="xml/gwywatchable.xml"/>
+  <xi:include href="xml/gwyddionenums.xml"/>
   <xi:include href="xml/gwyserializable.xml"/>
   <xi:include href="xml/gwycontainer.xml"/>
   <xi:include href="xml/gwymacros.xml"/>

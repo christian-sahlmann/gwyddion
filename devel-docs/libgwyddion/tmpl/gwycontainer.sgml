@@ -80,6 +80,10 @@ gwy_container_set_double_by_name().
 </para>
 
 @gwycontainer: the object which received the signal.
+@:
+@:
+@:
+@: 
 
 <!-- ##### STRUCT GwyContainerClass ##### -->
 <para>

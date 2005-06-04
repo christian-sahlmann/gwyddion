@@ -144,6 +144,20 @@ GWY_COLOR_BUTTON_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygraphwindow</FILE>
+<TITLE>GwyGraphWindow</TITLE>
+gwy_graph_window_new
+gwy_graph_window_get_graph
+<SUBSECTION Standard>
+GWY_GRAPH_WINDOW
+GWY_IS_GRAPH_WINDOW
+GWY_TYPE_GRAPH_WINDOW
+gwy_graph_window_get_type
+GWY_GRAPH_WINDOW_CLASS
+GWY_IS_GRAPH_WINDOW_CLASS
+GWY_GRAPH_WINDOW_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwyvruler</FILE>
 <TITLE>GwyVRuler</TITLE>
 GwyVRuler
@@ -212,7 +226,8 @@ GWY_GRAPHER_CORNER_GET_CLASS
 GwyLayerMask
 GwyLayerMaskClass
 gwy_layer_mask_new
-gwy_layer_mask_set_color
+gwy_layer_mask_set_color_key
+gwy_layer_mask_get_color_key
 gwy_layer_mask_get_color
 <SUBSECTION Standard>
 GWY_LAYER_MASK
@@ -224,6 +239,21 @@ GWY_IS_LAYER_MASK_CLASS
 GWY_LAYER_MASK_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwygraphwindowmeasuredialog</FILE>
+GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR
+GWY_GRAPHER_WINDOW_MEASURE_DIALOG
+GWY_GRAPHER_WINDOW_MEASURE_DIALOG_CLASS
+GWY_GRAPHER_WINDOW_MEASURE_DIALOG_GET_CLASS
+<TITLE>GwyGrapherWindowMeasureDialog</TITLE>
+gwy_grapher_window_measure_dialog_new
+gwy_grapher_window_measure_dialog_set_curve_data
+<SUBSECTION Standard>
+GWY_IS_GRAPHER_MEASURE_DIALOG
+GWY_TYPE_GRAPHER_MEASURE_DIALOG
+gwy_grapher_window_measure_dialog_get_type
+GWY_IS_GRAPHER_MEASURE_DIALOG_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwygrapherarea</FILE>
 GwyGrapherStatusType
@@ -238,12 +268,14 @@ GwyGrapherAreaCurve
 gwy_grapher_area_new
 gwy_grapher_area_signal_selected
 gwy_grapher_area_signal_zoomed
+gwy_grapher_area_signal_mousemoved
 gwy_grapher_area_refresh
 gwy_grapher_area_set_selection
 gwy_grapher_area_change_model
 gwy_grapher_area_draw_area_on_drawable
 gwy_grapher_area_clear_selection
 gwy_grapher_area_enable_user_input
+gwy_grapher_area_get_cursor
 <SUBSECTION Standard>
 GWY_GRAPHER_AREA
 GWY_IS_GRAPHER_AREA
@@ -264,9 +296,12 @@ gwy_grapher_set_status
 gwy_grapher_get_status
 gwy_grapher_get_model
 gwy_grapher_signal_selected
+gwy_grapher_signal_mousemoved
+gwy_grapher_signal_zoomed
 gwy_grapher_get_selection_number
 gwy_grapher_get_selection
 gwy_grapher_clear_selection
+gwy_grapher_get_cursor
 gwy_grapher_request_x_range
 gwy_grapher_request_y_range
 gwy_grapher_get_x_range
@@ -274,6 +309,8 @@ gwy_grapher_get_y_range
 gwy_grapher_enable_user_input
 gwy_grapher_export_pixmap
 gwy_grapher_export_postscript
+gwy_grapher_zoom_in
+gwy_grapher_zoom_out
 <SUBSECTION Standard>
 GWY_GRAPHER
 GWY_IS_GRAPHER
@@ -499,8 +536,13 @@ GWY_SHADER_GET_CLASS
 GwyLayerBasic
 GwyLayerBasicClass
 gwy_layer_basic_new
-gwy_layer_basic_set_gradient
-gwy_layer_basic_get_gradient
+gwy_layer_basic_get_range
+gwy_layer_basic_set_gradient_key
+gwy_layer_basic_get_gradient_key
+gwy_layer_basic_set_min_max_key
+gwy_layer_basic_get_min_max_key
+gwy_layer_basic_set_range_type_key
+gwy_layer_basic_get_range_type_key
 <SUBSECTION Standard>
 GWY_LAYER_BASIC
 GWY_IS_LAYER_BASIC
@@ -746,6 +788,24 @@ GWY_GRAPH_AREA_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwygraphdata</FILE>
+<TITLE>GwyGraphData</TITLE>
+gwy_graph_data_new
+gwy_graph_data_refresh
+gwy_graph_data_change_model
+gwy_graph_data_get_model
+gwy_graph_data_signal_selected
+gwy_graph_data_clear_selection
+<SUBSECTION Standard>
+GWY_GRAPH_DATA
+GWY_IS_GRAPH_DATA
+GWY_TYPE_GRAPH_DATA
+gwy_graph_data_get_type
+GWY_GRAPH_DATA_CLASS
+GWY_IS_GRAPH_DATA_CLASS
+GWY_GRAPH_DATA_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwy3dwindow</FILE>
 <TITLE>Gwy3DWindow</TITLE>
 Gwy3DWindow
@@ -865,6 +925,7 @@ GwyGraphPointType
 GwyGraphCurveType
 GwyGraphLabelPosition
 GwyGraphModelExportStyle
+GwyLayerBasicRangeType
 </SECTION>
 
 <SECTION>
@@ -911,6 +972,8 @@ gwy_graph_label_position_get_type
 GWY_TYPE_GRAPH_LABEL_POSITION
 gwy_graph_model_export_style_get_type
 GWY_TYPE_GRAPH_MODEL_EXPORT_STYLE
+gwy_layer_basic_range_type_get_type
+GWY_TYPE_LAYER_BASIC_RANGE_TYPE
 </SECTION>
 
 <SECTION>

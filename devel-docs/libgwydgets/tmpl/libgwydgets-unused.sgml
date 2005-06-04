@@ -1384,6 +1384,14 @@ GwyVMenuBar
 @layer: 
 @orientation: 
 
+<!-- ##### FUNCTION gwy_layer_basic_get_gradient ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_layer_basic_get_palette ##### -->
 <para>
 
@@ -1392,6 +1400,22 @@ GwyVMenuBar
 @layer: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_layer_basic_get_rms_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_layer_basic_set_gradient ##### -->
+<para>
+
+</para>
+
+@layer: 
+@gradient: 
+
 <!-- ##### FUNCTION gwy_layer_basic_set_palette ##### -->
 <para>
 
@@ -1399,6 +1423,14 @@ GwyVMenuBar
 
 @layer: 
 @palette: 
+
+<!-- ##### FUNCTION gwy_layer_basic_set_rms_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@key: 
 
 <!-- ##### FUNCTION gwy_layer_cursor_free_or_unref ##### -->
 <para>
@@ -1453,6 +1485,14 @@ GwyVMenuBar
 </para>
 
 @layer: 
+
+<!-- ##### FUNCTION gwy_layer_mask_set_color ##### -->
+<para>
+
+</para>
+
+@layer: 
+@color: 
 
 <!-- ##### FUNCTION gwy_layer_pointer_get_point ##### -->
 <para>

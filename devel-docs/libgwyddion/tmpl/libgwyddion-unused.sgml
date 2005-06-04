@@ -611,6 +611,14 @@ Emitted when value changes.
 @inventory: 
 @n: 
 
+<!-- ##### FUNCTION gwy_math_SI_prefix ##### -->
+<para>
+
+</para>
+
+@magnitude: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_math_nlfit_fit_with_fixed ##### -->
 <para>
 

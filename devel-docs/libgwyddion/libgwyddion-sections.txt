@@ -15,6 +15,7 @@ gwy_si_unit_divide
 gwy_si_unit_power
 gwy_si_unit_equal
 gwy_si_unit_get_format
+gwy_si_unit_get_format_for_power10
 gwy_si_unit_get_format_with_resolution
 gwy_si_unit_get_format_with_digits
 gwy_si_unit_value_format_free
@@ -186,6 +187,11 @@ GWY_CONTAINER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyddionenums</FILE>
+GwySIUnitFormatStyle
+</SECTION>
+
+<SECTION>
 <FILE>gwydebugobjects</FILE>
 GwyDebugObjectsDumpFlags
 gwy_debug_objects_creation
@@ -197,7 +203,6 @@ gwy_debug_objects_clear
 <SECTION>
 <FILE>gwymath</FILE>
 ROUND
-gwy_math_SI_prefix
 gwy_math_humanize_numbers
 gwy_math_find_nearest_line
 gwy_math_find_nearest_point
@@ -254,6 +259,12 @@ gwy_md5_get_digest
 </SECTION>
 
 <SECTION>
+<FILE>gwyddiontypes</FILE>
+gwy_si_unit_format_style_get_type
+GWY_TYPE_SI_UNIT_FORMAT_STYLE
+</SECTION>
+
+<SECTION>
 <FILE>gwyddion</FILE>
 gwy_type_init
 </SECTION>
@@ -264,6 +275,10 @@ GwyTextEntity
 gwy_entities_entity_to_utf8
 gwy_entities_text_to_utf8
 gwy_entities_get_entities
+</SECTION>
+
+<SECTION>
+<FILE>stamp-gwyddiontypes</FILE>
 </SECTION>
 
 <SECTION>
@@ -315,6 +330,7 @@ gwy_expr_execute
 gwy_expr_vector_execute
 gwy_expr_define_constant
 gwy_expr_undefine_constant
+gwy_expr_get_expression
 </SECTION>
 
 <SECTION>

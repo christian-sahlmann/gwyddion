@@ -94,6 +94,9 @@ Mask processing merging (namely used in grain processing).
 @GWY_DATA_FIELD_CACHE_SUM: 
 @GWY_DATA_FIELD_CACHE_RMS: 
 @GWY_DATA_FIELD_CACHE_MED: 
+@GWY_DATA_FIELD_CACHE_ARF: 
+@GWY_DATA_FIELD_CACHE_ART: 
+@GWY_DATA_FIELD_CACHE_ARE: 
 @GWY_DATA_FIELD_CACHE_SIZE: 
 
 <!-- ##### ENUM GwyComputationStateType ##### -->

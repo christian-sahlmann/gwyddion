@@ -279,6 +279,7 @@ as they are connected with GwyDataField.
 </para>
 
 @data_field: 
+@style: 
 @format: 
 @Returns: 
 
@@ -289,6 +290,7 @@ as they are connected with GwyDataField.
 </para>
 
 @data_field: 
+@style: 
 @format: 
 @Returns: 
 

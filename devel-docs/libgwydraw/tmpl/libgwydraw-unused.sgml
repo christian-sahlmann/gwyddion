@@ -259,6 +259,16 @@ GwyPaletteDef
 @i: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field_with_rms ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@gradient: 
+@rmsrange: 
+
 <!-- ##### FUNCTION gwy_pixfield_do ##### -->
 <para>
 

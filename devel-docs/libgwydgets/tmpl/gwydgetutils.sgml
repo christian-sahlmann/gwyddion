@@ -87,10 +87,11 @@ gwydgetutils
 </para>
 
 @dialog_title: 
-@data_view: 
 @color_button: 
 @container: 
 @prefix: 
+<!-- # Unused Parameters # -->
+@data_view: 
 
 
 <!-- ##### FUNCTION gwy_dialog_prevent_delete_cb ##### -->

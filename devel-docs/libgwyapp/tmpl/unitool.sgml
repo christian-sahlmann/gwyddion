@@ -78,6 +78,8 @@ Universal tool template.
 @dialog: 
 @coord_format: 
 @value_format: 
+@coord_hformat: 
+@value_hformat: 
 @apply_doesnt_close: 
 
 <!-- ##### USER_FUNCTION GwyUnitoolFunc ##### -->

@@ -37,13 +37,22 @@ Mask color layer
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_layer_mask_set_color ##### -->
+<!-- ##### FUNCTION gwy_layer_mask_set_color_key ##### -->
 <para>
 
 </para>
 
-@layer: 
-@color: 
+@mask_layer: 
+@prefix: 
+
+
+<!-- ##### FUNCTION gwy_layer_mask_get_color_key ##### -->
+<para>
+
+</para>
+
+@mask_layer: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_layer_mask_get_color ##### -->
@@ -51,7 +60,9 @@ Mask color layer
 
 </para>
 
-@layer: 
+@mask_layer: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@layer: 
 
 

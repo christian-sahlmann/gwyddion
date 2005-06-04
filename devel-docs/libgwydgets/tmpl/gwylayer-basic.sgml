@@ -39,21 +39,67 @@ Display data colored with a gradient
 @data: 
 
 
-<!-- ##### FUNCTION gwy_layer_basic_set_gradient ##### -->
+<!-- ##### FUNCTION gwy_layer_basic_get_range ##### -->
 <para>
 
 </para>
 
-@layer: 
-@gradient: 
+@basic_layer: 
+@min: 
+@max: 
 
 
-<!-- ##### FUNCTION gwy_layer_basic_get_gradient ##### -->
+<!-- ##### FUNCTION gwy_layer_basic_set_gradient_key ##### -->
 <para>
 
 </para>
 
-@layer: 
+@basic_layer: 
+@key: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_get_gradient_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_set_min_max_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@prefix: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_get_min_max_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_set_range_type_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
+@key: 
+
+
+<!-- ##### FUNCTION gwy_layer_basic_get_range_type_key ##### -->
+<para>
+
+</para>
+
+@basic_layer: 
 @Returns: 
 
 
