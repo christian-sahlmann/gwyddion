@@ -183,6 +183,7 @@ gwy_gl_material_new(const gchar *name)
  *
  * Returns: The new Open GL material definition as a #GObject.
  **/
+/*
 GObject*
 gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 {
@@ -205,7 +206,7 @@ gwy_gl_material_new_as_copy(GwyGLMaterial *src_glmaterial)
 
     return (GObject*)(glmaterial);
 }
-
+*/
 
 /**
  * gwy_gl_material_get_name:

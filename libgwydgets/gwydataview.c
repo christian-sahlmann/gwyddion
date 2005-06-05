@@ -645,15 +645,7 @@ gwy_data_view_key_release(GtkWidget *widget,
     return gwy_vector_layer_key_release(GWY_VECTOR_LAYER(data_view->top_layer), event);
 }
 
-/**
- * gwy_data_view_update:
- * @data_view: A #GwyDataView.
- *
- * Instructs a data view to update self and repaint.
- *
- * XXX: Deprecated.  It merely causes an expose event on the data view now.
- **/
-void
+static void
 gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
