@@ -22,7 +22,6 @@
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
-#include "app.h"
 #include "menu.h"
 #include "undo.h"
 
@@ -41,19 +40,29 @@ typedef struct {
     GwyAppUndoItem *items;
 } GwyAppUndoLevel;
 
-static void       gwy_app_undo_reuse_levels   (GwyAppUndoLevel *level,
-                                               GList *available);
-static void       gwy_app_undo_or_redo        (GwyContainer *data,
-                                               GwyAppUndoLevel *level);
-static GList*     gwy_list_split              (GList *list,
-                                               guint n,
-                                               GList **tail);
-static void       gwy_app_undo_list_free      (GList *list);
-static void       gwy_app_undo_setup_keys     (void);
+typedef struct {
+    gpointer container;
+    GList *undo;
+    GList *redo;
+    gint modif;
+} GwyAppUndo;
 
-static GQuark undo_key = 0;
-static GQuark redo_key = 0;
-static GQuark modif_key = 0;
+static void        gwy_app_undo_reuse_levels        (GwyAppUndoLevel *level,
+                                                     GList *available);
+static void        gwy_app_undo_or_redo             (GwyContainer *data,
+                                                     GwyAppUndoLevel *level);
+static GList*      gwy_list_split                   (GList *list,
+                                                     guint n,
+                                                     GList **tail);
+static void        gwy_app_undo_container_finalized (gpointer userdata,
+                                                     GObject *deceased_data);
+static void        gwy_app_undo_list_free           (GList *list);
+static gboolean    gwy_app_undo_compare_data        (gconstpointer a,
+                                                     gconstpointer b);
+static GwyAppUndo* gwy_app_undo_get_for_data        (GwyContainer *data,
+                                                     gboolean do_create);
+
+static GList *container_list = NULL;
 
 /**
  * gwy_app_undo_checkpoint:
@@ -122,11 +131,13 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         GWY_MENU_FLAG_UNDO
     };
     static gulong undo_level_id = 0;
+
+    GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GObject *object;
-    GList *undo, *redo, *available;
+    GList *available;
     const gchar **p, *key;
-    guint i, modif;
+    guint i;
 
     if (!UNDO_LEVELS)
         return 0;
@@ -136,9 +147,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         g_warning("Nothing to save for undo, no undo level will be created.");
         return 0UL;
     }
-
-    if (!undo_key)
-        gwy_app_undo_setup_keys();
 
     for (i = 0; i < n; i++) {
         key = keys[i];
@@ -157,7 +165,7 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 
     /* create new undo level */
     undo_level_id++;
-    gwy_debug("Creating a new undo level #%lu", undo_level_id);
+    gwy_debug("Creating a new appundo->undo level #%lu", undo_level_id);
     level = g_new(GwyAppUndoLevel, 1);
     level->nitems = n;
     level->items = g_new0(GwyAppUndoItem, n);
@@ -175,25 +183,17 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     }
 
     /* add to the undo queue */
-    undo = (GList*)g_object_get_qdata(G_OBJECT(data), undo_key);
-    g_assert(!undo || !undo->prev);
-    redo = (GList*)g_object_get_qdata(G_OBJECT(data), redo_key);
-    g_assert(!redo || !redo->prev);
+    appundo = gwy_app_undo_get_for_data(data, TRUE);
 
     /* gather undo/redo levels we are going to free for potential reuse */
-    undo = gwy_list_split(undo, UNDO_LEVELS-1, &available);
-    available = g_list_concat(available, redo);
-    redo = NULL;
+    appundo->undo = gwy_list_split(appundo->undo, UNDO_LEVELS-1, &available);
+    available = g_list_concat(available, appundo->redo);
+    appundo->redo = NULL;
 
     gwy_app_undo_reuse_levels(level, available);
+    appundo->undo = g_list_prepend(appundo->undo, level);
+    appundo->modif++;    /* TODO */
 
-    undo = g_list_prepend(undo, level);
-    g_object_set_qdata(G_OBJECT(data), undo_key, undo);
-    g_object_set_qdata(G_OBJECT(data), redo_key, redo);
-
-    /* TODO */
-    modif = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data), modif_key));
-    g_object_set_qdata(G_OBJECT(data), modif_key, GINT_TO_POINTER(modif + 1));
     gwy_app_toolbox_update_state(&sens_data);
 
     return level->id;
@@ -261,119 +261,75 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
 
 
 /**
- * gwy_app_undo_undo:
+ * gwy_app_undo_undo_container:
+ * @data: A data container.
  *
- * Performs undo for the current data window.
+ * Performs undo on a data container.
+ *
+ * It must have undo available.
  **/
 void
-gwy_app_undo_undo(void)
-{
-    gwy_app_undo_undo_window(gwy_app_data_window_get_current());
-}
-
-/**
- * gwy_app_undo_undo_window:
- * @data_window: A data window (with undo available).
- *
- * Performs undo for the data window @data_window.
- **/
-void
-gwy_app_undo_undo_window(GwyDataWindow *data_window)
+gwy_app_undo_undo_container(GwyContainer *data)
 {
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_REDO
     };
-    GwyDataView *data_view;
+    GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
-    GwyContainer *data;
-    GList *undo, *redo, *l;
+    GList *l;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    g_return_if_fail(appundo && appundo->undo);
 
-    undo = (GList*)g_object_get_qdata(G_OBJECT(data), undo_key);
-    g_return_if_fail(undo);
-    g_assert(!undo->prev);
-    redo = (GList*)g_object_get_qdata(G_OBJECT(data), redo_key);
-    g_assert(!redo || !redo->prev);
-
-    level = (GwyAppUndoLevel*)undo->data;
+    level = (GwyAppUndoLevel*)appundo->undo->data;
     gwy_debug("Undoing to undo level id #%lu", level->id);
     gwy_app_undo_or_redo(data, level);
 
-    l = undo;
-    undo = g_list_remove_link(undo, l);
-    redo = g_list_concat(l, redo);
-    g_object_set_qdata(G_OBJECT(data), undo_key, undo);
-    g_object_set_qdata(G_OBJECT(data), redo_key, redo);
-    /* TODO */
-    g_object_set_qdata(G_OBJECT(data), modif_key,
-        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
-                                                           modif_key)) - 1));
-    if (undo)
+    l = appundo->undo;
+    appundo->undo = g_list_remove_link(appundo->undo, l);
+    appundo->redo = g_list_concat(l, appundo->redo);
+    appundo->modif--;    /* TODO */
+
+    if (appundo->undo)
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
     gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**
  * gwy_app_undo_redo_window:
- * @data_window: A data window (with redo available).
+ * @data: A data container.
  *
- * Performs redo for the data window @data_window.
+ * Performs undo on a data container.
+ *
+ * It must have redo available.
  **/
 void
-gwy_app_undo_redo_window(GwyDataWindow *data_window)
+gwy_app_undo_redo_container(GwyContainer *data)
 {
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
-    GwyDataView *data_view;
+    GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
-    GList *undo, *redo, *l;
-    GwyContainer *data;
+    GList *l;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    data_view = gwy_data_window_get_data_view(data_window);
-    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(data_view));
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    g_return_if_fail(appundo && appundo->redo);
 
-    redo = (GList*)g_object_get_qdata(G_OBJECT(data), redo_key);
-    g_return_if_fail(redo);
-    g_assert(!redo->prev);
-    undo = (GList*)g_object_get_qdata(G_OBJECT(data), undo_key);
-    g_assert(!undo || !undo->prev);
-
-    level = (GwyAppUndoLevel*)redo->data;
+    level = (GwyAppUndoLevel*)appundo->redo->data;
     gwy_debug("Redoing to undo level id #%lu", level->id);
     gwy_app_undo_or_redo(data, level);
 
-    l = redo;
-    redo = g_list_remove_link(redo, l);
-    undo = g_list_concat(l, undo);
-    g_object_set_qdata(G_OBJECT(data), undo_key, undo);
-    g_object_set_qdata(G_OBJECT(data), redo_key, redo);
-    /* TODO */
-    g_object_set_qdata(G_OBJECT(data), modif_key,
-        GINT_TO_POINTER(GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(data),
-                                                           modif_key)) + 1));
-    if (redo)
+    l = appundo->redo;
+    appundo->redo = g_list_remove_link(appundo->redo, l);
+    appundo->undo = g_list_concat(l, appundo->undo);
+    appundo->modif++;    /* TODO */
+
+    if (appundo->redo)
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
     gwy_app_toolbox_update_state(&sens_data);
-}
-
-/**
- * gwy_app_undo_redo:
- *
- * Performs redo for the current data window.
- **/
-void
-gwy_app_undo_redo(void)
-{
-    gwy_app_undo_redo_window(gwy_app_data_window_get_current());
 }
 
 static void
@@ -414,29 +370,6 @@ gwy_app_undo_or_redo(GwyContainer *data,
     }
 }
 
-static void
-gwy_app_undo_list_free(GList *list)
-{
-    GwyAppUndoLevel *level;
-    GList *l;
-    guint i;
-
-    if (!list)
-        return;
-
-    for (l = g_list_first(list); l; l = g_list_next(l)) {
-        level = (GwyAppUndoLevel*)l->data;
-        for (i = 0; i < level->nitems; i++) {
-            if (level->items[i].object) {
-                gwy_debug("Item (%lu,%x) destroyed",
-                          level->id, level->items[i].key);
-            }
-            gwy_object_unref(level->items[i].object);
-        }
-    }
-    g_list_free(list);
-}
-
 /**
  * gwy_list_split:
  * @list: A list.
@@ -472,37 +405,72 @@ gwy_list_split(GList *list,
 }
 
 /**
- * gwy_app_data_window_has_undo:
- * @data_window: A data window.
+ * gwy_app_undo_container_has_undo:
+ * @data: Data container to get undo infomation of.
  *
- * Returns wheter there is any undo available for @data_window.
+ * Returns whether there is any undo available for a container.
  *
  * Returns: %TRUE if there is undo, %FALSE otherwise.
  **/
 gboolean
-gwy_app_data_window_has_undo(GwyDataWindow *data_window)
+gwy_app_undo_container_has_undo(GwyContainer *data)
 {
-    GObject *data;
+    GwyAppUndo *appundo;
 
-    data = G_OBJECT(gwy_data_window_get_data(data_window));
-    return g_object_get_qdata(data, undo_key) != NULL;
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    return appundo && appundo->undo;
 }
 
 /**
- * gwy_app_data_window_has_redo:
- * @data_window: A data window.
+ * gwy_app_undo_container_has_redo:
+ * @data: Data container to get redo infomation of.
  *
- * Returns wheter there is any redo available for @data_window.
+ * Returns whether there is any redo available for a container.
  *
  * Returns: %TRUE if there is redo, %FALSE otherwise.
  **/
 gboolean
-gwy_app_data_window_has_redo(GwyDataWindow *data_window)
+gwy_app_undo_container_has_redo(GwyContainer *data)
 {
-    GObject *data;
+    GwyAppUndo *appundo;
 
-    data = G_OBJECT(gwy_data_window_get_data(data_window));
-    return g_object_get_qdata(data, redo_key) != NULL;
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    return appundo && appundo->redo;
+}
+
+/**
+ * gwy_app_undo_container_get_modified:
+ * @data: Data container to get modification infomation of.
+ *
+ * Tests whether a container was modified.
+ *
+ * FIXME: it may not work.
+ *
+ * Returns: %TRUE if container was modified, %FALSE otherwise.
+ **/
+gint
+gwy_app_undo_container_get_modified(GwyContainer *data)
+{
+    GwyAppUndo *appundo;
+
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    return appundo ? appundo->modif : 0;
+}
+
+/**
+ * gwy_app_undo_container_set_unmodified:
+ * @data: Data container to set modification infomation of.
+ *
+ * Marks a data container as umodified (that is, saved).
+ **/
+void
+gwy_app_undo_container_set_unmodified(GwyContainer *data)
+{
+    GwyAppUndo *appundo;
+
+    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    if (appundo)
+        appundo->modif = 0;
 }
 
 /**
@@ -511,22 +479,83 @@ gwy_app_data_window_has_redo(GwyDataWindow *data_window)
  *
  * Removes all undo and redo information for a data window.
  **/
-void
-gwy_app_undo_clear(GwyDataWindow *data_window)
+static void
+gwy_app_undo_container_finalized(G_GNUC_UNUSED gpointer userdata,
+                                 GObject *deceased_data)
 {
-    GObject *data;
+    GwyAppUndo *appundo;
 
-    data = G_OBJECT(gwy_data_window_get_data(data_window));
-    gwy_app_undo_list_free((GList*)g_object_get_qdata(data, undo_key));
-    gwy_app_undo_list_free((GList*)g_object_get_qdata(data, redo_key));
+    gwy_debug("Freeing undo for Container %p", deceased_data);
+    /* must not typecast with GWY_CONTAINER(), it doesn't exist any more */
+    appundo = gwy_app_undo_get_for_data((GwyContainer*)deceased_data, FALSE);
+    g_return_if_fail(appundo);
+    gwy_app_undo_list_free(appundo->redo);
+    gwy_app_undo_list_free(appundo->undo);
+    g_free(appundo);
 }
 
 static void
-gwy_app_undo_setup_keys(void)
+gwy_app_undo_list_free(GList *list)
 {
-    undo_key = g_quark_from_static_string("gwy-app-undo");
-    redo_key = g_quark_from_static_string("gwy-app-redo");
-    modif_key = g_quark_from_static_string("gwy-app-modified");
+    GwyAppUndoLevel *level;
+    GList *l;
+    guint i;
+
+    if (!list)
+        return;
+
+    for (l = g_list_first(list); l; l = g_list_next(l)) {
+        level = (GwyAppUndoLevel*)l->data;
+        for (i = 0; i < level->nitems; i++) {
+            if (level->items[i].object) {
+                gwy_debug("Item (%lu,%x) destroyed",
+                          level->id, level->items[i].key);
+            }
+            gwy_object_unref(level->items[i].object);
+        }
+    }
+    g_list_free(list);
+}
+
+static gboolean
+gwy_app_undo_compare_data(gconstpointer a,
+                          gconstpointer b)
+{
+    GwyAppUndo *ua = (GwyAppUndo*)a;
+
+    /* sign does not matter, only used for equality test */
+    return (guchar*)ua->container - (guchar*)b;
+}
+
+static GwyAppUndo*
+gwy_app_undo_get_for_data(GwyContainer *data,
+                          gboolean do_create)
+{
+    GwyAppUndo *appundo;
+    GList *l;
+
+    l = g_list_find_custom(container_list, data, &gwy_app_undo_compare_data);
+    if (!l) {
+        if (!do_create)
+            return NULL;
+
+        gwy_debug("Creating undo for Container %p", data);
+        appundo = g_new0(GwyAppUndo, 1);
+        appundo->container = data;
+        container_list = g_list_prepend(container_list, appundo);
+        g_object_weak_ref(G_OBJECT(data), gwy_app_undo_container_finalized,
+                          NULL);
+
+        return appundo;
+    }
+
+    /* move container to head */
+    if (l != container_list) {
+        container_list = g_list_remove_link(container_list, l);
+        container_list = g_list_concat(l, container_list);
+    }
+
+    return (GwyAppUndo*)l->data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

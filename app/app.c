@@ -202,7 +202,7 @@ gather_unsaved_cb(GwyDataWindow *data_window,
 {
     GwyContainer *data = gwy_data_window_get_data(data_window);
 
-    if (g_object_get_data(G_OBJECT(data), "gwy-app-modified"))
+    if (gwy_app_undo_container_get_modified(data))
         *unsaved = g_slist_prepend(*unsaved, data_window);
 }
 
@@ -319,12 +319,12 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
-    if (gwy_app_data_window_has_undo(window))
+    data = gwy_data_window_get_data(window);
+    if (gwy_app_undo_container_has_undo(data))
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
-    if (gwy_app_data_window_has_redo(window))
+    if (gwy_app_undo_container_has_redo(data))
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
 
-    data = gwy_data_window_get_data(window);
     if (gwy_container_contains_by_name(data, "/0/mask"))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
     if (gwy_container_contains_by_name(data, "/0/show"))
@@ -365,7 +365,6 @@ gwy_app_data_window_remove(GwyDataWindow *window)
                    window);
         return;
     }
-    gwy_app_undo_clear(window);
     current_data = g_list_delete_link(current_data, item);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));

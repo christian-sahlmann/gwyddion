@@ -60,6 +60,8 @@ static void       toolbox_dnd_data_received    (GtkWidget *widget,
                                                 gpointer user_data);
 static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
+static void       gwy_app_undo_cb              (void);
+static void       gwy_app_redo_cb              (void);
 
 static GtkTargetEntry dnd_target_table[] = {
   { "STRING",     0, DND_TARGET_STRING },
@@ -721,7 +723,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         {
             N_("/_Undo"),
             "<control>Z",
-            gwy_app_undo_undo,
+            gwy_app_undo_cb,
             0,
             "<StockItem>",
             GTK_STOCK_UNDO 
@@ -729,7 +731,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         {
             N_("/_Redo"),
             "<control>Y",
-            gwy_app_undo_redo,
+            gwy_app_redo_cb,
             0,
             "<StockItem>",
             GTK_STOCK_REDO 
@@ -1004,6 +1006,24 @@ delete_app_window(void)
 
     g_signal_emit_by_name(gwy_app_main_window_get(), "delete_event",
                           NULL, &boo);
+}
+
+static void
+gwy_app_undo_cb(void)
+{
+    GwyContainer *data;
+
+    if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
+        gwy_app_undo_undo_container(data);
+}
+
+static void
+gwy_app_redo_cb(void)
+{
+    GwyContainer *data;
+
+    if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
+        gwy_app_undo_redo_container(data);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
