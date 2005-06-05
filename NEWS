@@ -1,19 +1,19 @@
-1.99.2cvs20050601
+1.99.2cvs20050605
 
 1.99.3
 Application:
 - Bugfixes were merged from 1.11 (bug #49, bug #54).
 - Running uninstalled is supported now (with caution).
+- Metadata browser closes with corresponding data window; if a browser for
+  some data already exists, it's presented instead of creating a second one.
 
 Library:
-- libgwyddion: Expression evaluator allows definition of user constats,
-  adds constant folding and vectorized expression execution.
 - libgwyddion: GwyContainer emits a signal "item_changed::/item/key" when
   a item changes.
-- libgwyddion, libprocess, libgwydgets: GwyWatchable interface was removed,
+- libgwyddion, libgwyprocess, libgwydgets: GwyWatchable interface was removed,
   some previous implementors have their own "value_changed" signal, some have
   different signal(s), or none.
-- libprocess: GwyDataField and GwyDataLine have "data_changed" signal.
+- libgwyprocess: GwyDataField and GwyDataLine have "data_changed" signal.
 - libgwydgets: GwyPixmapLayer can display data field identified by arbitrary
   key (actually it requires to set a key now) and reacts on its
   "data_changed" signal.
@@ -22,18 +22,33 @@ Library:
   by signals.
 - libgwydgets: GwyLayerBasic and GwyLayerMask no longer have their own
   properties, they take all values directly from container.
-- libgwydgets, libprocess: GwyLayerBasic color range mode are explicite now,
+- libgwydgets, libgwyprocess: GwyLayerBasic color range mode are explicite now,
   auto-range mode was implemented.
 - libgwyapp: Data processing module return value is ignored, functions have
   to emit "data_changed" on changed data fields.
-- libgwyddion: A quicksort function specialized for doubles.
+- libgwyddion: A quicksort function specialized for doubles was added.
 - libgwyddion: Marquardt-Levenberg NL fitter derivation function can avoid
   derivations by fixed parameters, and the default numeric one avoids it.
 - libgwydmodule, libgwyapp: `Interactive' data processing run type was
   removed.
-- libgwyddion, libprocess: SI Unit value formats styles were exposed in the
+- libgwyddion, libgwyprocess: SI Unit value formats styles were exposed in the
   API, each value format get function now has an addition style parameter.
 - libgwydgets: Shader widget has rudiemntary support for insensitive state.
+- libgwyddion: Deprecated gwy_math_SI_unit_prefix() was removed,
+  gwy_si_unit_get_format_for_pow10() should replace it.
+- libgwydgets: gwy_option_menu_metric_unit() takes a SI Unit instead of
+  a string now.
+- libgwyddion: Expression evaluator allows definition of user constats,
+  adds constant folding and vectorized expression execution.
+- libgwyprocess: gwy_data_field_resize() calculates new physical dimensions
+  correctly.
+- libgwyprocess: Surface area calculation was reimplemented with a faster and
+  more precise method, and it's cached now.
+- libgwyprocess: Basic statistics function on data field parts are diverted
+  to full-field statistics if part is complete data field, allowing better
+  cache utilization.
+- libgwyapp: All undo functions work on Containers now, some were renamed to
+  acommodate that; object-data trickery was replaced with a proper API.
 - Bugfixes were merged from 1.11.
 
 Modules:
@@ -51,15 +66,16 @@ Other:
 Library:
 - libgwymodule: File detection functions now get a struct with various file
   information instead of filename as first argument.
-- libprocess: Data field stats caching was implemented.
-- libprocess, libgwydgets, libgwymodule: All enum types are registered in
+- libgwyprocess: Data field stats caching was implemented.
+- libgwyprocess, libgwydgets, libgwymodule: All enum types are registered in
   GObject type system, enum class properties were changed from guints to real
   enums.
 - libgwyddion: SI Unit GwyWatchable interface actually works.
 - libgwyddion: Marquardt-Levenberg NL fitter supports linked parameters (API
   changed).
-- libprocess: Proper types and enmus were defined for FFT functions.
-- libprocess: GwyDataLine clean-up, including removal of some bogus interfaces.
+- libgwyprocess: Proper types and enmus were defined for FFT functions.
+- libgwyprocess: GwyDataLine clean-up, including removal of some bogus
+  interfaces.
 - libgwyddion: GwySerializable has a new method clone to transform an
   object to duplicate of an existing one.
 - libgwydgets: A function to maintain one global PangoFT2Map was introduced,
@@ -95,26 +111,52 @@ Library:
   GwyGradient).
 - libgwydgets: Gwy3DLabels were replaced by (conceptually different)
   Gwy3DLabel, other changes in Gwy3DView data types.
-- libprocess: Circular dependency between datafield.h (dataline.h) and
+- libgwyprocess: Circular dependency between datafield.h (dataline.h) and
   specialized method headers have been broken: datafield.h no longer includes
   specialized headers.
-- libprocess, libgwydgets, libgwymodule: Enum definitions were extracted to
+- libgwyprocess, libgwydgets, libgwymodule: Enum definitions were extracted to
   a separate header; enums are registered as GObject types.
 - libgwydgets: Headers no longer directly depends on GL headers,
   GwyGLMaterial uses ordinary gdoubles.
-- libprocess, libgwydgets: Many deprecated/unimplemented functions were
+- libgwyprocess, libgwydgets: Many deprecated/unimplemented functions were
   removed, some unimplemented function arguments were removed.
-- libprocess: Angle arguments in degrees were changed to radians.
-- libgwyddion, libprocess, libgwydgets: non-widget object constructors
+- libgwyprocess: Angle arguments in degrees were changed to radians.
+- libgwyddion, libgwyprocess, libgwydgets: non-widget object constructors
   (Container, SIUnit, DataField, ...) return particular types instead of
   GObject*
-- libprocess: GwySIUnit internal representation changed from plain string to
+- libgwyprocess: GwySIUnit internal representation changed from plain string to
   structured.
-- libprocess: Broken conservative filter was fixed.
+- libgwyprocess: Broken conservative filter was fixed.
 - libgwydgets, libgwyapp: 3D windows are properly destroyed when closed.
 
 Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
+1.11
+Application:
+- Markup works in metadata browser (bug #49).
+- Toolbox is not restored to off-screen position after quitting app minimized
+  (bug #54).
+- Translations updated: Italian, Czech.
+
+Modules:
+- RHK SPM32: Supports multipage files.
+- SPMLab: Imports data with correct units (bug #44).
+- NT-MDT: Incorrect data import was fixed (bug #46).
+- STPFile: Incorrect height data import was fixed.
+- NT-MDT: GUI problems with files containing too many channels were mitigated
+  (bug #42).
+- Assing AFM: compilation failure on big endian architectures was fixed
+  (bug #52).
+- Fix zero, zero mean value: Move fixed color range together with data
+  (if it exists).
+
+Library:
+- libgwyprocess: Grain size distribution x-scale was corrected.
+
+Other:
+- Wrong libtool detection in autogen.sh was fixed (bug #51).
 
 
 1.10
@@ -141,9 +183,9 @@ Library:
   now.
 - libgwyddion: gwy_si_unit_get_unit_strings() recomposes the string from
   internal representation so that works for nontrivial units too.
-- libprocess: Rotation correction mysteriously broken on Win32 was no less
+- libgwyprocess: Rotation correction mysteriously broken on Win32 was no less
   mysteriously fixed.
-- libprocess: Nanoindentation functions.
+- libgwyprocess: Nanoindentation functions.
 - libgwydgets: 3D view reflected with respect to 2D was fixed.
 
 
@@ -164,7 +206,7 @@ Modules:
 - Stats: Displays inclination angles too.
 - Createc: Supports more format versions.
 - Rawfile: Warning message when adding a new preset was fixed, shows only
-           file basename in Info tab.
+  file basename in Info tab.
 - Line correct: Another experimental Median line correct method.
 
 Library:
@@ -269,10 +311,10 @@ Library:
 - libgwyprocess: vaious functions related with discrete wavelet transform.
 - libgwyprocess: Speed of most grain methods was considerably improved.
 - libgwydgets: 3D View light position marker was fixed to reflect actual light
-               position
+  position
 - libgwydgets: Graph colors consistent between different visuals (bug #22)
 - libgwyddion: Serialization packer and unpacker for hash-like objects, new
-               primitive types: string list, object list.
+  primitive types: string list, object list.
 
 Other:
 - pkg-config file broken by 1.6 build system clean up was updated.
