@@ -40,7 +40,9 @@ static void       gwy_meta_browser_add_line      (gpointer hkey,
                                                   GtkListStore *store);
 static GtkWidget* gwy_meta_browser_construct     (GwyContainer *data);
 static void       gwy_meta_destroy               (GtkWidget *window,
-                                                  GtkWidget *browser);
+                                                  GwyContainer *data);
+static void       gwy_meta_data_finalized        (GtkWidget *window,
+                                                  GwyContainer *data);
 
 enum {
     META_KEY,
@@ -65,6 +67,11 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
 
     data = gwy_data_window_get_data(data_window);
     g_return_if_fail(GWY_IS_CONTAINER(data));
+    if ((window = GTK_WIDGET(g_object_get_data(G_OBJECT(data),
+                                               "metadata-browser")))) {
+        gtk_window_present(GTK_WINDOW(window));
+        return;
+    }
     filename = gwy_data_window_get_base_name(data_window);
 
     browser = gwy_meta_browser_construct(data);
@@ -89,9 +96,6 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     gtk_window_set_title(GTK_WINDOW(window), title);
     g_free(title);
     g_free(filename);
-    /* XXX: WTF?
-    gtk_window_set_wmclass(GTK_WINDOW(window), "toolbox",
-                           g_get_application_name());*/
 
     gtk_widget_size_request(browser, &request);
     gtk_window_set_default_size(GTK_WINDOW(window),
@@ -104,7 +108,10 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
                                    GTK_POLICY_AUTOMATIC);
     gtk_container_add(GTK_CONTAINER(scroll), browser);
     gtk_container_add(GTK_CONTAINER(window), scroll);
-    g_signal_connect(window, "destroy", G_CALLBACK(gwy_meta_destroy), browser);
+    g_object_set_data(G_OBJECT(data), "metadata-browser", window);
+    g_signal_connect(window, "destroy", G_CALLBACK(gwy_meta_destroy), data);
+    g_object_weak_ref(G_OBJECT(data), (GWeakNotify)&gwy_meta_data_finalized,
+                      window);
     gtk_widget_show_all(window);
 }
 
@@ -236,12 +243,18 @@ gwy_meta_browser_add_line(gpointer hkey,
 
 static void
 gwy_meta_destroy(GtkWidget *window,
-                 GtkWidget *browser)
+                 GwyContainer *data)
 {
-    GtkTreeModel *model;
+    g_object_weak_unref(G_OBJECT(data), (GWeakNotify)&gwy_meta_data_finalized,
+                        window);
+    g_object_set_data(G_OBJECT(data), "metadata-browser", NULL);
+}
 
-    gwy_debug("");
-    model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser));
+static void
+gwy_meta_data_finalized(GtkWidget *window,
+                        GwyContainer *data)
+{
+    g_signal_handlers_disconnect_by_func(window, &gwy_meta_destroy, data);
     gtk_widget_destroy(window);
 }
 

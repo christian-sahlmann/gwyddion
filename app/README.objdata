@@ -24,14 +24,13 @@ Toolbox menu items and buttons:
     "sensitive":         The sensitivity flags that apply to this widget
     "sensitive-state":   The current sensitivity flags
 
-Data containers:
-    "gwy-app-modified":  Integer modification level, 0 means unmodified
-    "gwy-app-undo":      GList of undo level data
-    "gwy-app-redo":      GList of redo level data
-
 DataFields:
     "is_preview":	       If set on a presentation, it marks it as a preview
                          that should not be duplicated (this is really dirty).
+
+Data Containers:
+    "metadata-browser"   If set, there is already a metadata browser active for
+                         this data and the pointer is its window widget.
 
 File selectors:
     "file-type":         The file type this file selector was run for
