@@ -316,7 +316,7 @@ gwy_pixmap_layer_container_connect(GwyPixmapLayer *pixmap_layer,
 }
 
 /**
- * gwy_pixmap_layer_set_data_key:
+ * gwy_pixmap_layer_get_data_key:
  * @pixmap_layer: A pixmap layer.
  *
  * Gets the key identifying data field this pixmap layer displays.
