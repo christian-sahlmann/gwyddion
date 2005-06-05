@@ -899,10 +899,10 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
  *                (to be used in gwy_unitool_update_label() for coordinates).
  * @value_format: Format good for value representation
  *                (to be used in gwy_unitool_update_label() for values).
- * @coord_format: Format good for standalone coordinate unit representation
- *                (e.g., in table headers).
- * @value_format: Format good for standalone value unit representation
- *                (e.g., in table headers).
+ * @coord_hformat: Format good for standalone coordinate unit representation
+ *                 (e.g., in table headers).
+ * @value_hformat: Format good for standalone value unit representation
+ *                 (e.g., in table headers).
  * @apply_doesnt_close: When set to %TRUE "Apply" button doesn't close (hide)
  *                      the tool dialog.
  *
