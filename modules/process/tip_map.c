@@ -241,7 +241,7 @@ static gboolean
 tip_certainty_map_do(TipCertaintyMapArgs *args)
 {
     GwyContainer *data;
-    GwyDataField *dfield, *dfield1, *dfield2;
+    GwyDataField *dfield, *dfield1, *dfield2, *mask = NULL;
     GwyDataWindow *operand1, *operand2;
 
     operand1 = args->win1;
@@ -253,23 +253,20 @@ tip_certainty_map_do(TipCertaintyMapArgs *args)
     data = gwy_data_window_get_data(operand2);
     dfield2 = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_app_undo_checkpoint(data, "/0/data", NULL);
-
     /*result fields - after computation result should be at dfield */
-    gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
-        dfield = gwy_data_field_duplicate(dfield2);
-        gwy_container_set_object_by_name(data, "/0/mask", dfield);
-        g_object_unref(dfield);
-    }
+    dfield = gwy_data_field_duplicate(dfield2);
     gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing"));
-    if (!gwy_tip_cmap(dfield1, dfield2, dfield,
+    if (gwy_tip_cmap(dfield1, dfield2, dfield,
                       gwy_app_wait_set_fraction,
                       gwy_app_wait_set_message)) {
-        gwy_app_undo_undo_window(args->win2);
+        gwy_app_undo_checkpoint(data, "/0/mask", NULL);
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &mask))
+            gwy_data_field_copy(dfield, mask, FALSE);
+        else
+            gwy_container_set_object_by_name(data, "/0/mask", dfield);
+        g_object_unref(dfield);
     }
     gwy_app_wait_finish();
-    /*set right output */
 
     gwy_data_field_data_changed(dfield);
     return TRUE;
