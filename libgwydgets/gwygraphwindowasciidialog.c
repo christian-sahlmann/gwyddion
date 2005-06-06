@@ -33,6 +33,11 @@ static void     gwy_grapher_window_ascii_dialog_finalize         (GObject *objec
 static gboolean gwy_grapher_window_ascii_dialog_delete           (GtkWidget *widget,
                                                   GdkEventAny *event);
 
+static void     units_changed_cb                                 (GwyGrapherWindowAsciiDialog *dialog);
+static void     metadata_changed_cb                              (GwyGrapherWindowAsciiDialog *dialog);
+static void     labels_changed_cb                                 (GwyGrapherWindowAsciiDialog *dialog);
+
+
 static GtkDialogClass *parent_class = NULL;
 
 GType
@@ -94,6 +99,24 @@ gwy_grapher_window_ascii_dialog_init(GwyGrapherWindowAsciiDialog *dialog)
     GtkWidget *label;
     gwy_debug("");
 
+    dialog->check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                            dialog->check_labels);
+    g_signal_connect_swapped(dialog->check_labels, "clicked",
+                             G_CALLBACK(labels_changed_cb), dialog);
+    
+    dialog->check_units = gtk_check_button_new_with_mnemonic(_("Export _units"));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                            dialog->check_units);
+    g_signal_connect_swapped(dialog->check_units, "clicked",
+                             G_CALLBACK(units_changed_cb), dialog);
+     
+    dialog->check_metadata = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                            dialog->check_metadata);
+    g_signal_connect_swapped(dialog->check_metadata, "clicked",
+                             G_CALLBACK(metadata_changed_cb), dialog);
+       
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -118,5 +141,23 @@ gwy_grapher_window_ascii_dialog_finalize(GObject *object)
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
+
+
+static void     
+units_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+{
+}
+
+static void     
+labels_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+{
+}
+
+static void     
+metadata_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+{
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
