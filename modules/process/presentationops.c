@@ -93,13 +93,13 @@ presentation_extract(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble min, max;
-    const gchar *pal;
+    const guchar *pal = NULL;
 
     g_return_val_if_fail(run & PRESENTATIONOPS_RUN_MODES, FALSE);
     dfield = gwy_container_get_object_by_name(data, "/0/show");
     g_return_val_if_fail(dfield, FALSE);
 
-    pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
@@ -113,7 +113,9 @@ presentation_extract(GwyContainer *data, GwyRunType run)
     data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
-    gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));
+    if (pal)
+        gwy_container_set_string_by_name(data, "/0/base/palette",
+                                         g_strdup(pal));
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);

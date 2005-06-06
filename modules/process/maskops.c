@@ -119,13 +119,13 @@ mask_extract(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    const gchar *pal;
+    const guchar *pal = NULL;
 
     g_return_val_if_fail(run & MASKOPS_RUN_MODES, FALSE);
     dfield = gwy_container_get_object_by_name(data, "/0/mask");
     g_return_val_if_fail(dfield, FALSE);
 
-    pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_clamp(dfield, 0.0, 1.0);
     siunit = gwy_si_unit_new("");
@@ -135,7 +135,9 @@ mask_extract(GwyContainer *data, GwyRunType run)
     data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
-    gwy_container_set_string_by_name(data, "/0/base/palette", g_strdup(pal));
+    if (pal)
+        gwy_container_set_string_by_name(data, "/0/base/palette",
+                                         g_strdup(pal));
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
