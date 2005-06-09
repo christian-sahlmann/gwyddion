@@ -12,6 +12,7 @@ file_PROGRAMS = \
 	createc.so \
 	ezdfile.so \
 	gwyfile.so \
+	jpkscan.so \
 	nanoscope.so \
 	nt-mdt.so \
 	pixmap.so \
@@ -50,6 +51,9 @@ ezdfile_so_LDFLAGS = $(module_ldflags),ezdfile.so
 
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
+
+jpkscan_so_SOURCES = jpk.h jpkscan.c
+jpkscan_so_LDFLAGS = $(module_ldflags),jpkscan.so
 
 nanoscope_so_SOURCES = nanoscope.c
 nanoscope_so_LDFLAGS = $(module_ldflags),nanoscope.so
