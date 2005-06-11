@@ -346,9 +346,16 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
 
     gchar siu[30];
     GwySIValueFormat* siformat;
+    GwyRGBA rgba;
     gint row;
 
     controls.args = args;
+
+    /* XXX: move, where it belongs, once someone adds mask color button */
+    if (!gwy_rgba_get_from_container(&rgba, data, "/0/mask")) {
+        gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
+        gwy_rgba_store_to_container(&rgba, data, "/0/mask");
+    }
 
     dialog = gtk_dialog_new_with_buttons(_("Indentaion statistics"), NULL, 0,
                                          _("_Compute & mark"), RESPONSE_COMPUTE,
@@ -457,6 +464,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     gwy_table_attach_row(table, row, _("Max-min diference"), siu,controls.w_minmax);
     row++;
 
+    /* XXX XXX XXX What the fuck is this? XXX XXX XXX */
     strcpy(siu, siformat->units);
     strcat(siu, "^2");
 
@@ -1171,46 +1179,33 @@ indent_analyze_ok(GwyContainer *data, IndentAnalyzeControls *controls)
 static void
 compute_and_preview(IndentAnalyzeControls *controls)
 {
-    GwyDataField *maskfield, *dfield;
+    GwyDataField *mask, *dfield;
     GwyPixmapLayer *layer;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,"/0/data"));
 
-    read_data_from_controls (controls);
+    read_data_from_controls(controls);
 
     /*set up the mask*/
-    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
-        maskfield
-            = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                              "/0/mask"));
-        gwy_data_field_resample(maskfield,
-                                gwy_data_field_get_xres(dfield),
-                                gwy_data_field_get_yres(dfield),
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, maskfield, FALSE);
-
-        if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
-            layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-            gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                          layer);
-        }
-    }
+    if (gwy_container_gis_object_by_name(controls->mydata, "/0/mask", &mask))
+        gwy_data_field_copy(dfield, mask, FALSE);
     else {
-        maskfield
-            = GWY_DATA_FIELD(gwy_serializable_duplicate(G_OBJECT(dfield)));
-        gwy_container_set_object_by_name(controls->mydata, "/0/mask",
-                                         G_OBJECT(maskfield));
-        g_object_unref(maskfield);
-        layer = GWY_PIXMAP_LAYER(gwy_layer_mask_new());
-        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view),
-                                 layer);
-
+        mask = gwy_data_field_duplicate(dfield);
+        gwy_container_set_object_by_name(controls->mydata, "/0/mask", mask);
+        g_object_unref(mask);
     }
 
     controls->computed = indent_analyze_do_the_hard_work (controls);
+    if (!controls->computed)
+        return;
 
-    if (controls->computed)
-        gwy_data_field_data_changed(maskfield);
+    if (!gwy_data_view_get_alpha_layer(GWY_DATA_VIEW(controls->view))) {
+        layer = gwy_layer_mask_new();
+        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+        gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), layer);
+    }
+    gwy_data_field_data_changed(mask);
 }
 
 /* =========== dialog control functions ========================= */
