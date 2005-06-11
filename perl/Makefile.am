@@ -26,7 +26,7 @@ man3.stamp: $(Gwyddion_PERL)
 	@touch man3.stamp
 
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(man3dir)
+	$(mkdir_p) $(DESTDIR)$(man3dir)
 	for i in $(man3_pages); do \
 	    $(INSTALL_DATA) $$i $(DESTDIR)$(man3dir); \
 	done

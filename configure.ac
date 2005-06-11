@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.2, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.2cvs20050611, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.2
@@ -52,7 +52,7 @@ AM_CONFIG_HEADER(config.h)
 AC_CANONICAL_TARGET
 dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
 dnl strictness level.
-AM_INIT_AUTOMAKE([1.6 foreign check-news dist-bzip2])
+AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.

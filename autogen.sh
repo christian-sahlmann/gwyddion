@@ -10,7 +10,6 @@ ACLOCAL_FLAGS="-I m4"
 # When runnig autogen.sh one normally wants this.
 CONF_FLAGS="--enable-maintainer-mode"
 AUTOCONF=${AUTOCONF:-autoconf}
-LIBTOOL=${LIBTOOL:-libtool}
 LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 AUTOMAKE=${AUTOMAKE:-automake}
 ACLOCAL=${ACLOCAL:-aclocal}
@@ -23,7 +22,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
   echo "**ERROR**: You must have \`autoconf' installed to re-generate"
   echo "all the $PROJECT Makefiles."
   echo "Download the appropriate package for your distribution,"
-  echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/."
+  echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/."
   DIE=1
   NO_AUTOCONF=yes
 }
@@ -32,8 +31,8 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
   ($LIBTOOLIZE --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have \`libtool' installed."
-    echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.4.tar.gz"
-    echo "(or a newer version if it is available)"
+    echo "Download the appropriate package for your distribution,"
+    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/libtool/."
     DIE=1
     NO_LIBTOOL=yes
   }
@@ -43,8 +42,8 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
   echo
   echo "**ERROR**: You must have \`automake' installed to re-generate"
   echo "all the $PROJECT Makefiles."
-  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.6.1.tar.gz"
-  echo "(or a newer version if it is available) and read README.devel."
+  echo "Download the appropriate package for your distribution,"
+  echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/."
   DIE=1
   NO_AUTOMAKE=yes
 }
@@ -57,7 +56,7 @@ if test -z "$NO_AUTOCONF"; then
     echo "**ERROR**: You need at least autoconf-2.59 installed to re-generate"
     echo "all the $PROJECT Makefiles."
     echo "Download the appropriate package for your distribution,"
-    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/."
+    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/."
     DIE=1
   else
     test -z "$QUIET" && echo "Autoconf $AC_VERSION: OK"
@@ -66,12 +65,12 @@ fi
 
 if test -z "$NO_AUTOMAKE"; then
   AM_VERSION=`$AUTOMAKE --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
-  if test "$AM_VERSION" '<' "1.6"; then
+  if test "$AM_VERSION" '<' "1.7"; then
     echo
     echo "**ERROR**: You need at least automake-1.6 installed to re-generate"
     echo "all the $PROJECT Makefiles."
-    echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.6.1.tar.gz"
-    echo "(or a newer version if it is available) and read README.devel."
+    echo "Download the appropriate package for your distribution,"
+    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/."
     DIE=1
   else
     test -z "$QUIET" && echo "Automake $AM_VERSION: OK"
@@ -83,8 +82,8 @@ test -n "$NO_AUTOMAKE" || ($ACLOCAL --version) < /dev/null > /dev/null 2>&1 || {
   echo
   echo "**ERROR**: Missing \`aclocal'.  The version of \`automake'"
   echo "installed doesn't appear recent enough."
-  echo "Get ftp://ftp.gnu.org/pub/gnu/automake-1.6.1.tar.gz"
-  echo "(or a newer version if it is available) and read README.devel."
+  echo "Download the appropriate package for your distribution,"
+  echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/."
   DIE=1
 }
 
@@ -94,8 +93,8 @@ if test -z "$NO_LIBTOOL"; then
     echo
     echo "**ERROR**: You need at least libtool-1.4 installed to re-generate"
     echo "all the $PROJECT Makefiles."
-    echo "Get ftp://ftp.gnu.org/pub/gnu/libtool-1.4.tar.gz"
-    echo "(or a newer version if it is available) and read README.devel."
+    echo "Download the appropriate package for your distribution,"
+    echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/libtool/."
     DIE=1
   else
     test -z "$QUIET" && echo "Libtool $LT_VERSION: OK"
@@ -125,19 +124,6 @@ test -z "$QUIET" && echo processing $dir
     echo "(BTW, why are you re-generating everything?)"
     exit 1
   }
-
-# Automake-1.8 and newer don't add mkinstalldirs, but automake-1.6 doesn't
-# define mkdir_p, so we still use mkinstalldirs.  Try to add it when missing.
-if ! test -f mkinstalldirs; then
-  am_dir=`readlink install-sh`
-  am_dir=`dirname $am_dir`
-  if test -f $am_dir/mkinstalldirs; then
-    ln -s $am_dir/mkinstalldirs .
-  else
-    echo "**Warning**: Cannot find \`mkinstalldirs'.  Either you have too new automake"
-    echo "or whatever.  Please add it manually, otherwise \`make install' will fail."
-  fi
-fi
 
 if test -z "$*"; then
   echo "**Warning**: I am going to run \`configure' with $CONF_FLAGS."
