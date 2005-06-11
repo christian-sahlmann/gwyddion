@@ -38,6 +38,7 @@
 #endif
 
 /* FIXME: TIFF breaks badly on Win32, nooone knows why */
+/* FIXME: Retest! It might by our confused MS non-hreaded RT library linking */
 #ifdef G_OS_WIN32
 #  undef HAVE_TIFF
 #endif
@@ -276,7 +277,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.7",
+    "4.7.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -403,7 +404,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         if (g_str_has_suffix(fileinfo->name_lowercase, extensions[ext]))
             break;
     }
-    score = extensions[ext] ? 20 : 0;
+    score = extensions[ext] ? 19 : 0;
     g_strfreev(extensions);
     if (only_name) /* || !score)*/
         return score;
@@ -454,7 +455,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     if (gdk_pixbuf_loader_write(loader,
                                 fileinfo->buffer, fileinfo->buffer_len, &err))
-        score = 100;
+        score = 80;
     else {
         gwy_debug("%s", err->message);
         g_clear_error(&err);
