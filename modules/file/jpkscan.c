@@ -428,7 +428,7 @@ tiff_load_channel (TIFF         *tif,
 
   tiff_get_custom_boolean (tif, JPK_TIFFTAG_Grid_Reflect, &reflect);
 
-  if (reflect)
+  if (! reflect)
     data += (jlen - 1) * ilen;
 
   for (j = 0; j < jlen; j++)
@@ -446,9 +446,9 @@ tiff_load_channel (TIFF         *tif,
         }
 
       if (reflect)
-        data -= ilen;
-      else
         data += ilen;
+      else
+        data -= ilen;
     }
 
   /*  add the GwyDataField to the container  */
