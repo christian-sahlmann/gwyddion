@@ -46,6 +46,8 @@ typedef enum {
     GWY_EXPR_CODE_HYPOT,
     GWY_EXPR_CODE_ATAN2,
     GWY_EXPR_CODE_ABS,
+    GWY_EXPR_CODE_FLOOR,
+    GWY_EXPR_CODE_CEIL,
     GWY_EXPR_CODE_SQRT,
     GWY_EXPR_CODE_CBRT,
     GWY_EXPR_CODE_SIN,
@@ -62,6 +64,9 @@ typedef enum {
     GWY_EXPR_CODE_COSH,
     GWY_EXPR_CODE_SINH,
     GWY_EXPR_CODE_TANH,
+    GWY_EXPR_CODE_ACOSH,
+    GWY_EXPR_CODE_ASINH,
+    GWY_EXPR_CODE_ATANH,
 } GwyExprOpCode;
 
 typedef enum {
@@ -144,7 +149,12 @@ make_function_1_1(atan)
 make_function_1_1(cosh)
 make_function_1_1(sinh)
 make_function_1_1(tanh)
+make_function_1_1(acosh)
+make_function_1_1(asinh)
+make_function_1_1(atanh)
 make_function_1_1(fabs)
+make_function_1_1(floor)
+make_function_1_1(ceil)
 make_function_2_1(pow)
 make_function_2_1(hypot)
 make_function_2_1(atan2)
@@ -174,6 +184,8 @@ static const GwyExprFunction call_table[] = {
     { gwy_expr_hypot,      "hypot",  2,  1,  GWY_EXPR_CODE_HYPOT,    },
     { gwy_expr_atan2,      "atan2",  2,  1,  GWY_EXPR_CODE_ATAN2,    },
     { gwy_expr_fabs,       "abs",    1,  1,  GWY_EXPR_CODE_ABS,      },
+    { gwy_expr_floor,      "floor",  1,  1,  GWY_EXPR_CODE_FLOOR,    },
+    { gwy_expr_ceil,       "ceil",   1,  1,  GWY_EXPR_CODE_CEIL,     },
     { gwy_expr_sqrt,       "sqrt",   1,  1,  GWY_EXPR_CODE_SQRT,     },
     { gwy_expr_cbrt,       "cbrt",   1,  1,  GWY_EXPR_CODE_CBRT,     },
     { gwy_expr_sin,        "sin",    1,  1,  GWY_EXPR_CODE_SIN,      },
@@ -190,6 +202,9 @@ static const GwyExprFunction call_table[] = {
     { gwy_expr_cosh,       "cosh",   1,  1,  GWY_EXPR_CODE_COSH,     },
     { gwy_expr_sinh,       "sinh",   1,  1,  GWY_EXPR_CODE_SINH,     },
     { gwy_expr_tanh,       "tanh",   1,  1,  GWY_EXPR_CODE_TANH,     },
+    { gwy_expr_acosh,      "acosh",  1,  1,  GWY_EXPR_CODE_ACOSH,    },
+    { gwy_expr_asinh,      "asinh",  1,  1,  GWY_EXPR_CODE_ASINH,    },
+    { gwy_expr_atanh,      "atanh",  1,  1,  GWY_EXPR_CODE_ATANH,    },
 };
 
 /* Maximum number of function arguments */
