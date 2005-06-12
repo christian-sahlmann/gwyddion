@@ -31,8 +31,21 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PROP_0,
+    PROP_DATA_KEY
+};
+
 static void gwy_pixmap_layer_class_init         (GwyPixmapLayerClass *klass);
 static void gwy_pixmap_layer_init               (GwyPixmapLayer *layer);
+static void gwy_pixmap_layer_set_property       (GObject *object,
+                                                 guint prop_id,
+                                                 const GValue *value,
+                                                 GParamSpec *pspec);
+static void gwy_pixmap_layer_get_property       (GObject *object,
+                                                 guint prop_id,
+                                                 GValue *value,
+                                                 GParamSpec *pspec);
 static void gwy_pixmap_layer_destroy            (GtkObject *object);
 static void gwy_pixmap_layer_plugged            (GwyDataViewLayer *layer);
 static void gwy_pixmap_layer_unplugged          (GwyDataViewLayer *layer);
@@ -77,14 +90,33 @@ static void
 gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
 {
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
     parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->set_property = gwy_pixmap_layer_set_property;
+    gobject_class->get_property = gwy_pixmap_layer_get_property;
 
     object_class->destroy = gwy_pixmap_layer_destroy;
 
     layer_class->plugged = gwy_pixmap_layer_plugged;
     layer_class->unplugged = gwy_pixmap_layer_unplugged;
+
+    /**
+     * GwyPixmapLayer:data-key:
+     *
+     * The :data_key property is the key used to identify displayed
+     * #GwyDataField in container.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_DATA_KEY,
+         g_param_spec_string("data_key",
+                             "Data key",
+                             "Data field key in container",
+                             NULL, G_PARAM_READWRITE));
+
 }
 
 static void
@@ -102,6 +134,44 @@ gwy_pixmap_layer_destroy(GtkObject *object)
     gwy_object_unref(layer->pixbuf);
 
     GTK_OBJECT_CLASS(parent_class)->destroy(object);
+}
+
+static void
+gwy_pixmap_layer_set_property(GObject *object,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyPixmapLayer *pixmap_layer = GWY_PIXMAP_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_DATA_KEY:
+        gwy_pixmap_layer_set_data_key(pixmap_layer, g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_pixmap_layer_get_property(GObject*object,
+                              guint prop_id,
+                              GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyPixmapLayer *pixmap_layer = GWY_PIXMAP_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_DATA_KEY:
+        g_value_set_string(value, g_quark_to_string(pixmap_layer->data_key));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
