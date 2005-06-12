@@ -25,7 +25,6 @@ EXTRA_DIST = \
 	gwyddion.spec\
 	make.msc \
 	makefile.msc \
-	mkinstalldirs \
 	rules.msc \
 	version.h
 
