@@ -124,8 +124,7 @@ void   gwy_data_field_area_get_inclination  (GwyDataField *data_field,
 void   gwy_data_field_get_inclination       (GwyDataField *data_field,
                                              gdouble *theta,
                                              gdouble *phi);
-
-
+void   gwy_data_field_normalize             (GwyDataField *data_field);
 
 G_END_DECLS
 

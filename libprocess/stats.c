@@ -1273,5 +1273,28 @@ gwy_data_field_get_inclination(GwyDataField *data_field,
                                         phi);
 }
 
+/**
+ * gwy_data_field_normalize:
+ * @data_field: A data field.
+ *
+ * Normalizes data in a data field to range 0.0 to 1.0.
+ *
+ * If @data_field is filled with only one value, it is changed to 0.0.
+ **/
+void
+gwy_data_field_normalize(GwyDataField *data_field)
+{
+    gdouble min, max;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    min = gwy_data_field_get_min(data_field);
+    if (min)
+        gwy_data_field_add(data_field, -min);
+    max = gwy_data_field_get_max(data_field);
+    if (max)
+        gwy_data_field_multiply(data_field, 1.0/max);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
