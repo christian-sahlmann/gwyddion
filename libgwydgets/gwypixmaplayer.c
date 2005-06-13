@@ -104,8 +104,8 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
     /**
      * GwyPixmapLayer:data-key:
      *
-     * The :data_key property is the container key used to identify displayed
-     * #GwyDataField in container.
+     * The :data_key property is the container key used to identify
+     * displayed #GwyDataField in container.
      */
     g_object_class_install_property
         (gobject_class,
@@ -114,7 +114,6 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
                              "Data key",
                              "Key identifying data field in container",
                              NULL, G_PARAM_READWRITE));
-
 }
 
 static void

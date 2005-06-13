@@ -30,8 +30,21 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PROP_0,
+    PROP_COLOR_KEY
+};
+
 static void       gwy_layer_mask_class_init      (GwyLayerMaskClass *klass);
 static void       gwy_layer_mask_init            (GwyLayerMask *layer);
+static void       gwy_layer_mask_set_property    (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void       gwy_layer_mask_get_property    (GObject *object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
 static GdkPixbuf* gwy_layer_mask_paint           (GwyPixmapLayer *layer);
 static void       gwy_layer_mask_plugged         (GwyDataViewLayer *layer);
 static void       gwy_layer_mask_unplugged       (GwyDataViewLayer *layer);
@@ -73,19 +86,76 @@ static void
 gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
 {
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
 
     parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->set_property = gwy_layer_mask_set_property;
+    gobject_class->get_property = gwy_layer_mask_get_property;
 
     layer_class->plugged = gwy_layer_mask_plugged;
     layer_class->unplugged = gwy_layer_mask_unplugged;
 
     pixmap_class->paint = gwy_layer_mask_paint;
+
+    /**
+     * GwyPixmapLayer:color-key:
+     *
+     * The :color_key property is the container key used to identify mask color
+     * in container.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_COLOR_KEY,
+         g_param_spec_string("color_key",
+                             "Color key",
+                             "Key prefix identifying mask color in container",
+                             NULL, G_PARAM_READWRITE));
 }
 
 static void
 gwy_layer_mask_init(G_GNUC_UNUSED GwyLayerMask *layer)
 {
+}
+
+static void
+gwy_layer_mask_set_property(GObject *object,
+                            guint prop_id,
+                            const GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyLayerMask *layer_mask = GWY_LAYER_MASK(object);
+
+    switch (prop_id) {
+        case PROP_COLOR_KEY:
+        gwy_layer_mask_set_color_key(layer_mask, g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_layer_mask_get_property(GObject*object,
+                            guint prop_id,
+                            GValue *value,
+                            GParamSpec *pspec)
+{
+    GwyLayerMask *layer_mask = GWY_LAYER_MASK(object);
+
+    switch (prop_id) {
+        case PROP_COLOR_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(layer_mask->color_key));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
