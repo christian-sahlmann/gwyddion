@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/gwyapp.h>
@@ -110,6 +111,7 @@ static gboolean
 shade(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *shadefield;
+    GwySIUnit *siunit;
     ShadeArgs args;
     gboolean ok;
 
@@ -126,19 +128,24 @@ shade(GwyContainer *data, GwyRunType run)
         shade_save_args(gwy_app_settings_get(), &args);
     if (ok) {
         gwy_app_undo_checkpoint(data, "/0/show", NULL);
+        siunit = gwy_si_unit_new("");
         if (gwy_container_gis_object_by_name(data, "/0/show", &shadefield)) {
             gwy_data_field_resample(shadefield,
                                     gwy_data_field_get_xres(dfield),
                                     gwy_data_field_get_yres(dfield),
                                     GWY_INTERPOLATION_NONE);
+            gwy_data_field_set_si_unit_z(shadefield, siunit);
         }
         else {
-            shadefield = gwy_data_field_duplicate(dfield);
+            shadefield = gwy_data_field_new_alike(dfield, FALSE);
+            gwy_data_field_set_si_unit_z(shadefield, siunit);
             gwy_container_set_object_by_name(data, "/0/show", shadefield);
             g_object_unref(shadefield);
         }
+        g_object_unref(siunit);
 
         gwy_data_field_shade(dfield, shadefield, args.theta, args.phi);
+        gwy_data_field_normalize(shadefield);
         gwy_data_field_data_changed(shadefield);
     }
 

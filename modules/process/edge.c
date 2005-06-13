@@ -149,7 +149,7 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     else if (!strcmp(name, "nonlinearity"))
         nonlinearity_do(dfield, show);
     else {
-        g_warning("Module called under unknown name: %s", name);
+        g_warning("Function called under unregistered name: %s", name);
         gwy_data_field_copy(dfield, show, FALSE);
     }
 

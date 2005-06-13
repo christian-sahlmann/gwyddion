@@ -38,7 +38,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Basic operations with presentation: extraction, removal."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -91,7 +91,6 @@ presentation_extract(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *data_window;
     GwyDataField *dfield;
-    GwySIUnit *siunit;
     gdouble min, max;
     const guchar *pal = NULL;
 
@@ -101,14 +100,7 @@ presentation_extract(GwyContainer *data, GwyRunType run)
 
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     dfield = gwy_data_field_duplicate(dfield);
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
-    gwy_data_field_add(dfield, -min);
-    if (max > min)
-        gwy_data_field_multiply(dfield, 1.0/(max - min));
-    siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
+    gwy_data_field_normalize(dfield);
 
     data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);

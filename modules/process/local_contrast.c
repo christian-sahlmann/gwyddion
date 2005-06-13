@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Maximizes local contrast."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -214,6 +214,7 @@ static gboolean
 contrast_do(GwyContainer *data, ContrastArgs *args)
 {
     GwyDataField *dfield, *minfield, *maxfield, *showfield;
+    GwySIUnit *siunit;
     const gdouble *dat, *min, *max;
     gdouble *show, *weight;
     gdouble mins, maxs, v, vc, minv, maxv;
@@ -229,15 +230,18 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
         return FALSE;
 
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    siunit = gwy_si_unit_new("");
     if (gwy_container_gis_object_by_name(data, "/0/show", &showfield)) {
         gwy_data_field_resample(showfield, xres, yres, GWY_INTERPOLATION_NONE);
-        gwy_data_field_copy(dfield, showfield, FALSE);
+        gwy_data_field_set_si_unit_z(showfield, siunit);
     }
     else {
         showfield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_set_si_unit_z(showfield, siunit);
         gwy_container_set_object_by_name(data, "/0/show", showfield);
         g_object_unref(showfield);
     }
+    g_object_unref(siunit);
 
     minfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_minimum(minfield, args->size);
@@ -326,6 +330,7 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     g_free(weight);
     g_object_unref(minfield);
     g_object_unref(maxfield);
+    gwy_data_field_normalize(showfield);
     gwy_data_field_data_changed(showfield);
 
     return TRUE;

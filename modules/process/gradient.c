@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/gwyapp.h>
@@ -43,7 +44,7 @@ static GwyModuleInfo module_info = {
     N_("Creates presentations with various gradients "
        "(Sobel, Prewitt)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -99,23 +100,27 @@ gradient_filter(GwyContainer *data,
                 const gchar *name)
 {
     GwyDataField *dfield, *gradfield;
+    GwySIUnit *siunit;
 
-    g_assert(run & GRADIENT_RUN_MODES);
+    g_return_val_if_fail(run & GRADIENT_RUN_MODES, FALSE);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_app_undo_checkpoint(data, "/0/show", NULL);
+    siunit = gwy_si_unit_new("");
     if (gwy_container_gis_object_by_name(data, "/0/show", &gradfield)) {
         gwy_data_field_resample(gradfield,
                                 gwy_data_field_get_xres(dfield),
                                 gwy_data_field_get_yres(dfield),
                                 GWY_INTERPOLATION_NONE);
+        gwy_data_field_set_si_unit_z(gradfield, siunit);
     }
     else {
-        gradfield = gwy_data_field_duplicate(dfield);
+        gradfield = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_set_si_unit_z(gradfield, siunit);
         gwy_container_set_object_by_name(data, "/0/show", gradfield);
         g_object_unref(gradfield);
     }
-
+    g_object_unref(siunit);
     gwy_data_field_copy(dfield, gradfield, FALSE);
 
     if (!strcmp(name, "sobel_horizontal"))
@@ -127,8 +132,9 @@ gradient_filter(GwyContainer *data,
     else if (!strcmp(name, "prewitt_vertical"))
         gwy_data_field_filter_prewitt(gradfield, GWY_ORIENTATION_VERTICAL);
     else {
-        g_critical("Function called under unregistered name `%s'", name);
+        g_warning("Function called under unregistered name `%s'", name);
     }
+    gwy_data_field_normalize(gradfield);
     gwy_data_field_data_changed(gradfield);
 
     return TRUE;
