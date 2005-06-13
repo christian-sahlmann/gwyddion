@@ -65,7 +65,7 @@ gdouble      gwy_expr_execute           (GwyExpr *expr,
                                          const gdouble *values);
 void         gwy_expr_vector_execute    (GwyExpr *expr,
                                          guint n,
-                                         gdouble **data,
+                                         const gdouble **data,
                                          gdouble *result);
 gboolean     gwy_expr_define_constant   (GwyExpr *expr,
                                          const gchar *name,

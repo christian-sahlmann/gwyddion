@@ -318,7 +318,7 @@ gwy_expr_stack_interpret(GwyExpr *expr)
 static inline void
 gwy_expr_stack_interpret_vectors(GwyExpr *expr,
                                  guint n,
-                                 gdouble **data,
+                                 const gdouble **data,
                                  gdouble *result)
 {
     guint i, j;
@@ -1575,7 +1575,7 @@ gwy_expr_execute(GwyExpr *expr,
 void
 gwy_expr_vector_execute(GwyExpr *expr,
                         guint n,
-                        gdouble **data,
+                        const gdouble **data,
                         gdouble *result)
 {
     g_return_if_fail(expr);
