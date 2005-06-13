@@ -86,7 +86,7 @@ static GwyModuleInfo module_info = {
     N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -378,37 +378,33 @@ arithmetic_do(ArithmeticArgs *args)
     GtkWidget *data_window;
     GwyContainer *data;
     GwyDataField *dfield, *result = NULL;
-    const gdouble *d[WIN_ARGS];
-    gdouble *values;
+    /* We know the expression can't contain more variables than WIN_ARGS */
+    const gdouble *d[WIN_ARGS + 1];
     gdouble *r = NULL;
     gboolean first = TRUE;
-    guint n = 0, i, j, max;
+    guint n = 0, i;
 
     g_return_if_fail(!args->err);
 
-    max = 0;
+    d[0] = NULL;
     for (i = 0; i < WIN_ARGS; i++) {
+        if (!args->pos[i])
+            continue;
+
         data = gwy_data_window_get_data(args->win[i]);
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        d[i] = gwy_data_field_get_data_const(dfield);
-        if (first && args->pos[i]) {
+        d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
+        if (first) {
             first = FALSE;
             n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
             result = gwy_data_field_new_alike(dfield, FALSE);
             r = gwy_data_field_get_data(result);
         }
-        max = MAX(max, args->pos[i]);
     }
     g_return_if_fail(!first);
 
-    values = g_newa(gdouble, max+1);
-    for (j = 0; j < n; j++) {
-        for (i = 0; i < WIN_ARGS; i++) {
-            values[args->pos[i]] = d[i][j];
-            r[j] = gwy_expr_execute(args->expr, values);
-        }
-    }
+    gwy_expr_vector_execute(args->expr, n, d, r);
 
     data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", result);
