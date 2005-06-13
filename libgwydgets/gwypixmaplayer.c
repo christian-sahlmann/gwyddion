@@ -29,8 +29,6 @@
 
 #define GWY_PIXMAP_LAYER_TYPE_NAME "GwyPixmapLayer"
 
-#define BITS_PER_SAMPLE 8
-
 enum {
     PROP_0,
     PROP_DATA_KEY
@@ -106,7 +104,7 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
     /**
      * GwyPixmapLayer:data-key:
      *
-     * The :data_key property is the key used to identify displayed
+     * The :data_key property is the container key used to identify displayed
      * #GwyDataField in container.
      */
     g_object_class_install_property
@@ -114,7 +112,7 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
          PROP_DATA_KEY,
          g_param_spec_string("data_key",
                              "Data key",
-                             "Data field key in container",
+                             "Key identifying data field in container",
                              NULL, G_PARAM_READWRITE));
 
 }
@@ -165,7 +163,8 @@ gwy_pixmap_layer_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_DATA_KEY:
-        g_value_set_string(value, g_quark_to_string(pixmap_layer->data_key));
+        g_value_set_static_string(value,
+                                  g_quark_to_string(pixmap_layer->data_key));
         break;
 
         default:

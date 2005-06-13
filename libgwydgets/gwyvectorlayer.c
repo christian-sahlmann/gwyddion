@@ -28,7 +28,6 @@
 #define GWY_VECTOR_LAYER_TYPE_NAME "GwyVectorLayer"
 
 #define GWY_SCROLL_DELAY_LENGTH  300
-#define BITS_PER_SAMPLE 8
 
 enum {
     SELECTION_FINISHED,

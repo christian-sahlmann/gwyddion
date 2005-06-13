@@ -31,9 +31,24 @@
 
 #define BITS_PER_SAMPLE 8
 
+enum {
+    PROP_0,
+    PROP_GRADIENT_KEY,
+    PROP_RANGE_TYPE_KEY,
+    PROP_MIN_MAX_KEY
+};
+
 static void gwy_layer_basic_class_init           (GwyLayerBasicClass *klass);
 static void gwy_layer_basic_init                 (GwyLayerBasic *layer);
 static void gwy_layer_basic_destroy              (GtkObject *object);
+static void gwy_layer_basic_set_property         (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void gwy_layer_basic_get_property         (GObject *object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
 static GdkPixbuf* gwy_layer_basic_paint          (GwyPixmapLayer *layer);
 static void gwy_layer_basic_plugged              (GwyDataViewLayer *layer);
 static void gwy_layer_basic_unplugged            (GwyDataViewLayer *layer);
@@ -89,10 +104,14 @@ static void
 gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
 {
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
 
     parent_class = g_type_class_peek_parent(klass);
+
+    gobject_class->set_property = gwy_layer_basic_set_property;
+    gobject_class->get_property = gwy_layer_basic_get_property;
 
     object_class->destroy = gwy_layer_basic_destroy;
 
@@ -100,6 +119,49 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     layer_class->unplugged = gwy_layer_basic_unplugged;
 
     pixmap_class->paint = gwy_layer_basic_paint;
+
+    /**
+     * GwyLayerBasic:gradient-key:
+     *
+     * The :gradient_key property is the container key used to identify
+     * #GwyGradient data is colored with.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_GRADIENT_KEY,
+         g_param_spec_string("gradient_key",
+                             "Gradient key",
+                             "Key identifying gradient in container",
+                             NULL, G_PARAM_READWRITE));
+
+    /**
+     * GwyLayerBasic:range-type-key:
+     *
+     * The :range_type_key property is the container key used to identify
+     * color range type.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_RANGE_TYPE_KEY,
+         g_param_spec_string("range_type_key",
+                             "Range type key",
+                             "Key identifying color range type in container",
+                             NULL, G_PARAM_READWRITE));
+
+    /**
+     * GwyLayerBasic:min-max-key:
+     *
+     * The :min_max_key property is the container key used to identify
+     * fixed range minimum and maximum.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MIN_MAX_KEY,
+         g_param_spec_string("min_max_key",
+                             "Min, max key",
+                             "Key prefix identifying fixed range minimum and "
+                             "maximum in container",
+                             NULL, G_PARAM_READWRITE));
 }
 
 static void
@@ -116,6 +178,66 @@ gwy_layer_basic_destroy(GtkObject *object)
     gwy_object_unref(layer->gradient);
 
     GTK_OBJECT_CLASS(parent_class)->destroy(object);
+}
+
+static void
+gwy_layer_basic_set_property(GObject *object,
+                             guint prop_id,
+                             const GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyLayerBasic *layer_basic = GWY_LAYER_BASIC(object);
+
+    switch (prop_id) {
+        case PROP_GRADIENT_KEY:
+        gwy_layer_basic_set_gradient_key(layer_basic,
+                                         g_value_get_string(value));
+        break;
+
+        case PROP_RANGE_TYPE_KEY:
+        gwy_layer_basic_set_range_type_key(layer_basic,
+                                           g_value_get_string(value));
+        break;
+
+        case PROP_MIN_MAX_KEY:
+        gwy_layer_basic_set_min_max_key(layer_basic,
+                                        g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_layer_basic_get_property(GObject*object,
+                             guint prop_id,
+                             GValue *value,
+                             GParamSpec *pspec)
+{
+    GwyLayerBasic *layer_basic = GWY_LAYER_BASIC(object);
+
+    switch (prop_id) {
+        case PROP_GRADIENT_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(layer_basic->gradient_key));
+        break;
+
+        case PROP_RANGE_TYPE_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(layer_basic->range_type_key));
+        break;
+
+        case PROP_MIN_MAX_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(layer_basic->fixed_key));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
