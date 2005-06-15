@@ -18,17 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-#include <glib-object.h>
-
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwydebugobjects.h>
+#include <string.h>
 #include <libdraw/gwypixfield.h>
+
 #include "gwylayer-mask.h"
 
 #define GWY_LAYER_MASK_TYPE_NAME "GwyLayerMask"
-
-#define BITS_PER_SAMPLE 8
 
 enum {
     PROP_0,
@@ -194,6 +190,7 @@ gwy_layer_mask_paint(GwyPixmapLayer *layer)
         gwy_rgba_get_from_container(&color,
                                     GWY_DATA_VIEW_LAYER(mask_layer)->data,
                                     g_quark_to_string(mask_layer->color_key));
+    gwy_pixmap_layer_make_pixbuf(layer, TRUE);
     gwy_pixbuf_draw_data_field_as_mask(layer->pixbuf, data_field, &color);
 
     return layer->pixbuf;
@@ -229,27 +226,13 @@ gwy_layer_mask_get_color(GwyLayerMask *mask_layer)
 static void
 gwy_layer_mask_plugged(GwyDataViewLayer *layer)
 {
-    GwyDataField *data_field;
-    GwyPixmapLayer *pixmap_layer;
     GwyLayerMask *mask_layer;
-    gint width, height;
 
-    pixmap_layer = GWY_PIXMAP_LAYER(layer);
     mask_layer = GWY_LAYER_MASK(layer);
 
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
 
-    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
-    g_return_if_fail(data_field);
-
     gwy_layer_mask_connect_color(mask_layer);
-
-    width = gwy_data_field_get_xres(data_field);
-    height = gwy_data_field_get_yres(data_field);
-
-    pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE,
-                                          BITS_PER_SAMPLE, width, height);
-    gwy_debug_objects_creation(G_OBJECT(pixmap_layer->pixbuf));
 }
 
 static void

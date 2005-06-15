@@ -19,6 +19,7 @@
  */
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 
 #include <string.h>
 #include <gtk/gtksignal.h>
@@ -28,6 +29,8 @@
 #include "gwypixmaplayer.h"
 
 #define GWY_PIXMAP_LAYER_TYPE_NAME "GwyPixmapLayer"
+
+#define BITS_PER_SAMPLE 8
 
 enum {
     PROP_0,
@@ -397,5 +400,41 @@ gwy_pixmap_layer_get_data_key(GwyPixmapLayer *pixmap_layer)
     g_return_val_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer), NULL);
     return g_quark_to_string(pixmap_layer->data_key);
 }
+
+/**
+ * gwy_pixmap_layer_make_pixbuf:
+ * @pixmap_layer: A pixmap layer.
+ * @has_alpha: Whether pixbuf should have alpha channel.
+ *
+ * Creates or resizes pixmap layer #GdkPixbuf to match its data field.
+ *
+ * This method is intended for pixmap layer implementation.
+ **/
+void
+gwy_pixmap_layer_make_pixbuf(GwyPixmapLayer *pixmap_layer,
+                             gboolean has_alpha)
+{
+    GwyDataField *data_field;
+    gint dwidth, dheight, pwidth, pheight;
+
+    g_return_if_fail(GWY_IS_PIXMAP_LAYER(pixmap_layer));
+    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
+    g_return_if_fail(data_field);
+    dwidth = gwy_data_field_get_xres(data_field);
+    dheight = gwy_data_field_get_yres(data_field);
+    if (pixmap_layer->pixbuf) {
+        pwidth = gdk_pixbuf_get_width(pixmap_layer->pixbuf);
+        pheight = gdk_pixbuf_get_height(pixmap_layer->pixbuf);
+        if (pwidth == dwidth && pheight == dheight)
+            return;
+
+        gwy_object_unref(pixmap_layer->pixbuf);
+    }
+
+    pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, has_alpha,
+                                          BITS_PER_SAMPLE, dwidth, dheight);
+    gwy_debug_objects_creation(G_OBJECT(pixmap_layer->pixbuf));
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

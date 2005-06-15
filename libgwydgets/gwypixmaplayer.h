@@ -67,6 +67,8 @@ GdkPixbuf*       gwy_pixmap_layer_paint         (GwyPixmapLayer *pixmap_layer);
 void             gwy_pixmap_layer_set_data_key  (GwyPixmapLayer *pixmap_layer,
                                                  const gchar *key);
 const gchar*     gwy_pixmap_layer_get_data_key  (GwyPixmapLayer *pixmap_layer);
+void             gwy_pixmap_layer_make_pixbuf   (GwyPixmapLayer *pixmap_layer,
+                                                 gboolean has_alpha);
 
 G_END_DECLS
 

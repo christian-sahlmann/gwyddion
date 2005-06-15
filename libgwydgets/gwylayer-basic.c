@@ -20,16 +20,13 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
-#include <libgwyddion/gwydebugobjects.h>
-#include <libgwyddion/gwycontainer.h>
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
+
 #include "gwydgetenums.h"
 #include "gwylayer-basic.h"
 
 #define GWY_LAYER_BASIC_TYPE_NAME "GwyLayerBasic"
-
-#define BITS_PER_SAMPLE 8
 
 enum {
     PROP_0,
@@ -280,6 +277,7 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
 
     /* Special-case full range, as gwy_pixbuf_draw_data_field() is simplier,
      * it doesn't have to deal with outliers */
+    gwy_pixmap_layer_make_pixbuf(layer, FALSE);
     if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
         gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
                                    basic_layer->gradient);
@@ -333,18 +331,11 @@ gwy_layer_basic_gradient_disconnect(GwyLayerBasic *layer)
 static void
 gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 {
-    GwyPixmapLayer *pixmap_layer;
     GwyLayerBasic *basic_layer;
-    GwyDataField *data_field = NULL;
-    gint width, height;
 
-    pixmap_layer = GWY_PIXMAP_LAYER(layer);
     basic_layer = GWY_LAYER_BASIC(layer);
 
     GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
-
-    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
-    g_return_if_fail(data_field);
 
     gwy_layer_basic_container_connect
                             (basic_layer,
@@ -358,12 +349,6 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
                                &basic_layer->range_type_id,
                                G_CALLBACK(gwy_layer_basic_range_type_changed));
     gwy_layer_basic_reconnect_fixed(basic_layer);
-
-    width = gwy_data_field_get_xres(data_field);
-    height = gwy_data_field_get_yres(data_field);
-    pixmap_layer->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE,
-                                          BITS_PER_SAMPLE, width, height);
-    gwy_debug_objects_creation(G_OBJECT(pixmap_layer->pixbuf));
 }
 
 static void
