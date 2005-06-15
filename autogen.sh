@@ -67,7 +67,7 @@ if test -z "$NO_AUTOMAKE"; then
   AM_VERSION=`$AUTOMAKE --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
   if test "$AM_VERSION" '<' "1.7"; then
     echo
-    echo "**ERROR**: You need at least automake-1.6 installed to re-generate"
+    echo "**ERROR**: You need at least automake-1.7 installed to re-generate"
     echo "all the $PROJECT Makefiles."
     echo "Download the appropriate package for your distribution,"
     echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/automake/."
