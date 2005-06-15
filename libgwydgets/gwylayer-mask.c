@@ -100,7 +100,7 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
     pixmap_class->paint = gwy_layer_mask_paint;
 
     /**
-     * GwyPixmapLayer:color-key:
+     * GwyLayerMask:color-key:
      *
      * The :color_key property is the container key used to identify mask color
      * in container.
