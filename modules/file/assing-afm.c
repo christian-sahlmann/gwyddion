@@ -27,15 +27,6 @@
 #endif
 #include <libgwyddion/gwywin32unistd.h>
 
-#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
-#include <sys/stat.h>
-/* And now we are in a deep s... */
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -46,7 +37,6 @@
 #define EXTENSION ".afm"
 
 #define Angstrom (1e-10)
-#define Z_SCALE (0.5*Angstrom)
 
 typedef struct {
     guint res;
@@ -70,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4.1",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -124,6 +114,7 @@ aafm_load(const gchar *filename)
     GError *err = NULL;
     AFMFile afmfile;
     GwyDataField *dfield;
+    gdouble min, max;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
@@ -153,7 +144,12 @@ aafm_load(const gchar *filename)
     read_binary_data(afmfile.res, gwy_data_field_get_data(dfield), p);
     p += 2*afmfile.res*afmfile.res;
     afmfile.range = get_FLOAT(&p);
-    gwy_data_field_multiply(dfield, Z_SCALE);
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
+    if (min == max)
+        gwy_data_field_clear(dfield);
+    else
+        gwy_data_field_multiply(dfield, afmfile.range/(max - min)*Angstrom);
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, unit);
@@ -196,11 +192,11 @@ aafm_save(GwyContainer *data,
     union { guchar pp[4]; float f; } z;
     guint16 res, r;
     gint16 *x;
-    gint16 v, min, max;
+    gint16 v;
     gint i, j, xres, yres, n;
     GwyDataField *dfield;
     const gdouble *d;
-    gdouble avg;
+    gdouble min, max, q, z0;
     FILE *fh;
     gboolean ok = TRUE;
 
@@ -217,7 +213,16 @@ aafm_save(GwyContainer *data,
     r = GUINT16_TO_LE(res);
     fwrite(&res, 1, sizeof(r), fh);
 
-    avg = gwy_data_field_get_avg(dfield);
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
+    if (min == max) {
+        q = 0.0;
+        z0 = 0.0;
+    }
+    else {
+        q = 65533.0/(max - min);
+        z0 = -32766.5*(max + min)/(max - min);
+    }
     z.f = MIN(gwy_data_field_get_xreal(dfield),
               gwy_data_field_get_yreal(dfield))/Angstrom;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
@@ -227,13 +232,9 @@ aafm_save(GwyContainer *data,
     fwrite(&z, 1, sizeof(z), fh);
 
     x = g_new(gint16, n);
-    min = max = 0;
     for (i = 0; i < res; i++) {
         for (j = 0; j < res; j++) {
-            v = ROUND((d[(res-1 - j)*res + i] - avg)/Z_SCALE);
-            v = MAX(v, -32766);
-            min = MIN(v, min);
-            max = MAX(v, min);
+            v = ROUND(d[(res-1 - j)*res + i]*q + z0);
             x[i*res + j] = GINT16_TO_LE(v);
         }
     }
@@ -241,7 +242,7 @@ aafm_save(GwyContainer *data,
     if (!(ok = (fwrite(x, 1, 2*n, fh) == 2*n)))
         unlink(filename);
     else {
-        z.f = ((gint)max - (gint)min)/2.0;
+        z.f = (max - min)/Angstrom;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
         GWY_SWAP(guchar, z.pp[0], z.pp[3]);
         GWY_SWAP(guchar, z.pp[1], z.pp[2]);
