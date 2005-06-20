@@ -26,6 +26,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwylayer-basic.h>
 #include <libprocess/stats.h>
 
 #include "jpk.h"
@@ -713,19 +714,35 @@ jpkscan_meta_key (const gchar *desc)
 
 /*  dialog  */
 
+static void
+jpkscan_combo_changed (GtkComboBox *combo,
+                       GwyDataView *view)
+{
+  gint   idx = gtk_combo_box_get_active (combo);
+  GQuark key = jpkscan_data_key (idx);
+
+  gwy_pixmap_layer_set_data_key (gwy_data_view_get_base_layer (view),
+                                 g_quark_to_string (key));
+}
+
 static gint
 jpkscan_dialog (GwyContainer *container,
                 const gchar  *filename,
                 gint          idx)
 {
   GtkWidget *dialog;
-  GtkWidget *vbox;
   GtkWidget *hbox;
+  GtkWidget *vbox;
+  GtkWidget *hbox2;
+  GtkWidget *vbox2;
   GtkWidget *label;
   GtkWidget *combo;
+  GtkWidget *view;
   gchar     *name;
   gchar     *text;
   gint       i;
+
+  GwyPixmapLayer *layer;
 
   dialog = gtk_dialog_new_with_buttons (_("Open JPK Image"), 0, 0,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -755,19 +772,38 @@ jpkscan_dialog (GwyContainer *container,
   gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
   gtk_widget_show (label);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_hbox_new (FALSE, 12);
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
   gtk_widget_show (hbox);
 
+  vbox2 = gtk_vbox_new (FALSE, 6);
+  gtk_box_pack_start (GTK_BOX (hbox), vbox2, TRUE, TRUE, 0);
+  gtk_widget_show (vbox2);
+
+  hbox2 = gtk_hbox_new (FALSE, 6);
+  gtk_box_pack_start (GTK_BOX (vbox2), hbox2, FALSE, FALSE, 0);
+  gtk_widget_show (hbox2);
+
   label = gtk_label_new_with_mnemonic (_("Ch_annel:"));
-  gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox2), label, FALSE, FALSE, 0);
   gtk_widget_show (label);
 
   combo = gtk_combo_box_new_text ();
-  gtk_box_pack_start (GTK_BOX (hbox), combo, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (hbox2), combo, TRUE, TRUE, 0);
   gtk_widget_show (combo);
 
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
+
+  view = gwy_data_view_new (container);
+  gtk_box_pack_start (GTK_BOX (hbox), view, FALSE, FALSE, 0);
+  gtk_widget_show (view);
+
+  layer = gwy_layer_basic_new ();
+  gwy_data_view_set_base_layer (GWY_DATA_VIEW (view), layer);
+
+  g_signal_connect (combo, "changed",
+                    G_CALLBACK (jpkscan_combo_changed),
+                    view);
 
   for (i = 0;; i++)
     {
@@ -778,8 +814,18 @@ jpkscan_dialog (GwyContainer *container,
         break;
 
       object = gwy_container_get_object (container, jpkscan_data_key (i));
+
       gtk_combo_box_append_text (GTK_COMBO_BOX (combo),
                                  g_object_get_data (object, "channel-name"));
+
+      if (i == 0)
+        {
+          gint xres = gwy_data_field_get_xres (GWY_DATA_FIELD (object));
+          gint yres = gwy_data_field_get_yres (GWY_DATA_FIELD (object));
+
+          gwy_data_view_set_zoom (GWY_DATA_VIEW (view),
+                                  120.0 / MAX (xres, yres));
+        }
     }
 
   gtk_combo_box_set_active (GTK_COMBO_BOX (combo), idx);
