@@ -106,7 +106,7 @@ static GwyModuleInfo module_info =
   module_register,
   N_("Imports JPK image scans."),
   "Sven Neumann <neumann@jpk.com>",
-  "0.1",
+  "0.2",
   "JPK Instruments AG",
   "2005",
 };
@@ -161,6 +161,7 @@ jpkscan_load (const gchar *filename)
 {
   GwyContainer *container;
   GObject      *object;
+  GQuark        key = g_quark_from_string ("/0/data");
   gint          idx = 0;
 
   gwy_debug ("Loading <%s>", filename);
@@ -182,37 +183,26 @@ jpkscan_load (const gchar *filename)
       idx = jpkscan_dialog (container, filename, idx);
     }
 
-  if (idx < 0)       /*  user cancelled loading                    */
+  if (idx < 0)  /*  user cancelled loading   */
     {
       g_object_unref (container);
       return NULL;
     }
-  else if (idx > 0)  /*  rename the selected channel to "/0/data"  */
-    {
-      gwy_container_rename (container,
-                            jpkscan_data_key (idx), jpkscan_data_key (0),
-                            TRUE);
-    }
+
+  /*  rename the selected channel to "/0/data"  */
+  gwy_container_rename (container, jpkscan_data_key (idx), key, TRUE);
+
+  /*  remove the other channels  */
+  gwy_container_remove_by_prefix (container, "/jpk/");
 
   /*  add the name of the selected channel to the container meta data  */
-  object = gwy_container_get_object (container, jpkscan_data_key (0));
+  object = gwy_container_get_object (container, key);
   if (object)
     {
       const gchar *name = g_object_get_data (object, "channel-name");
 
       gwy_container_set_string (container,
                                 jpkscan_meta_key ("Channel"), g_strdup (name));
-    }
-
-  /*  remove all other channels  */
-  for (idx = 1;; idx++)
-    {
-      GQuark  key = jpkscan_data_key (idx);
-
-      if (gwy_container_contains (container, key))
-        gwy_container_remove (container, key);
-      else
-        break;
     }
 
   return container;
@@ -691,7 +681,7 @@ meta_store_double (GwyContainer *container,
 static GQuark
 jpkscan_data_key (gint idx)
 {
-  gchar  *key   = g_strdup_printf ("/%d/data", idx);
+  gchar  *key   = g_strdup_printf ("/jpk/%d/data", idx);
   GQuark  quark = g_quark_from_string (key);
 
   g_free (key);
@@ -813,7 +803,7 @@ jpkscan_dialog (GwyContainer *container,
       if (! gwy_container_contains (container, key))
         break;
 
-      object = gwy_container_get_object (container, jpkscan_data_key (i));
+      object = gwy_container_get_object (container, key);
 
       gtk_combo_box_append_text (GTK_COMBO_BOX (combo),
                                  g_object_get_data (object, "channel-name"));
