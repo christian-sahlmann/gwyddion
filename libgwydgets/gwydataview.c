@@ -38,6 +38,11 @@ enum {
     LAST_SIGNAL
 };
 
+enum {
+    PROP_0,
+    PROP_ZOOM
+};
+
 /* Forward declarations */
 
 static void     gwy_data_view_class_init           (GwyDataViewClass *klass);
@@ -63,6 +68,7 @@ static void     simple_gdk_pixbuf_composite        (GdkPixbuf *source,
 static void     simple_gdk_pixbuf_scale_or_copy    (GdkPixbuf *source,
                                                     GdkPixbuf *dest);
 static void     gwy_data_view_make_pixmap          (GwyDataView *data_view);
+static GwyDataField* gwy_data_view_get_base_field  (GwyDataView *data_view);
 static void     gwy_data_view_paint                (GwyDataView *data_view);
 static gboolean gwy_data_view_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
@@ -106,7 +112,6 @@ gwy_data_view_get_type(void)
             (GInstanceInitFunc)gwy_data_view_init,
             NULL,
         };
-        gwy_debug(" ");
         gwy_data_view_type = g_type_register_static(GTK_TYPE_WIDGET,
                                                     GWY_DATA_VIEW_TYPE_NAME,
                                                     &gwy_data_view_info,
@@ -150,14 +155,27 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 
     klass->redrawn = NULL;
 
-/**
- * GwyDataView::redrawn:
- * @gwydataview: The #GwyDataView which received the signal.
- *
- * The ::redrawn signal is emitted when #GwyDataView redraws pixbufs after an
- * update.  That is, when it's the right time to get a new pixbuf from
- * gwy_data_view_get_thumbnail() or gwy_data_view_get_pixbuf().
- */
+    /**
+     * GwyDataView:zoom:
+     *
+     * The :zoom property is the ratio between displayed and real data size.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_ZOOM,
+         g_param_spec_double("zoom",
+                             "Zoom",
+                             "Ratio between displayed and real data size",
+                             1/16.0, 16.0, 1.0, G_PARAM_READWRITE));
+
+    /**
+     * GwyDataView::redrawn:
+     * @gwydataview: The #GwyDataView which received the signal.
+     *
+     * The ::redrawn signal is emitted when #GwyDataView redraws pixbufs after
+     * an update.  That is, when it's the right time to get a new pixbuf from
+     * gwy_data_view_get_thumbnail() or gwy_data_view_get_pixbuf().
+     */
     data_view_signals[REDRAWN]
         = g_signal_new("redrawn",
                        G_OBJECT_CLASS_TYPE(object_class),
@@ -171,8 +189,6 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
 static void
 gwy_data_view_init(GwyDataView *data_view)
 {
-    gwy_debug(" ");
-
     data_view->zoom = 1.0;
     data_view->newzoom = 1.0;
 }
@@ -201,7 +217,6 @@ gwy_data_view_new(GwyContainer *data)
 {
     GtkWidget *data_view;
 
-    gwy_debug(" ");
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     data_view = gtk_widget_new(GWY_TYPE_DATA_VIEW, NULL);
@@ -248,7 +263,8 @@ gwy_data_view_finalize(GObject *object)
     gwy_object_unref(data_view->base_layer);
     gwy_object_unref(data_view->alpha_layer);
     gwy_object_unref(data_view->top_layer);
-    gwy_debug("    child data ref count %d", G_OBJECT(data_view->data)->ref_count);
+    gwy_debug("    child data ref count %d",
+              G_OBJECT(data_view->data)->ref_count);
     gwy_object_unref(data_view->data);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -273,7 +289,13 @@ gwy_data_view_set_property(GObject *object,
                            const GValue *value,
                            GParamSpec *pspec)
 {
+    GwyDataView *data_view = GWY_DATA_VIEW(object);
+
     switch (prop_id) {
+        case PROP_ZOOM:
+        gwy_data_view_set_zoom(data_view, g_value_get_double(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -287,7 +309,13 @@ gwy_data_view_get_property(GObject *object,
                            GValue *value,
                            GParamSpec *pspec)
 {
+    GwyDataView *data_view = GWY_DATA_VIEW(object);
+
     switch (prop_id) {
+        case PROP_ZOOM:
+        g_value_set_double(value, gwy_data_view_get_zoom(data_view));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -399,16 +427,19 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
 {
     GtkWidget *widget;
     GwyDataField *data_field;
-    const gchar *key;
     gint width, height, scwidth, scheight, src_width, src_height;
 
-    key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
-    data_field
-        = GWY_DATA_FIELD(gwy_container_get_object_by_name(data_view->data,
-                                                          key));
+    data_field = gwy_data_view_get_base_field(data_view);
+    g_return_if_fail(data_field);
     src_width = gwy_data_field_get_xres(data_field);
     src_height = gwy_data_field_get_yres(data_field);
 
+    if (data_view->base_pixbuf) {
+        width = gdk_pixbuf_get_width(data_view->base_pixbuf);
+        height = gdk_pixbuf_get_height(data_view->base_pixbuf);
+        if (width != src_width || height != src_height)
+            gwy_object_unref(data_view->base_pixbuf);
+    }
     if (!data_view->base_pixbuf) {
         data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                                 FALSE,
@@ -427,7 +458,6 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
     widget = GTK_WIDGET(data_view);
     data_view->zoom = MIN((gdouble)widget->allocation.width/src_width,
                           (gdouble)widget->allocation.height/src_height);
-    data_view->newzoom = data_view->zoom;
     scwidth = floor(src_width * data_view->zoom + 0.000001);
     scheight = floor(src_height * data_view->zoom + 0.000001);
     data_view->xmeasure = gwy_data_field_get_xreal(data_field)/scwidth;
@@ -444,6 +474,18 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
         gwy_data_view_paint(data_view);
     }
+}
+
+static GwyDataField*
+gwy_data_view_get_base_field(GwyDataView *data_view)
+{
+    const gchar *key;
+    gpointer *data_field;
+
+    key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
+    data_field = gwy_container_get_object_by_name(data_view->data, key);
+
+    return GWY_DATA_FIELD(data_field);
 }
 
 static void
@@ -573,15 +615,14 @@ gwy_data_view_button_press(GtkWidget *widget,
                            GdkEventButton *event)
 {
     GwyDataView *data_view;
-
-    gwy_debug(" ");
-    g_return_val_if_fail(event, FALSE);
+    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
+    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_button_press(GWY_VECTOR_LAYER(data_view->top_layer), event);
+    return gwy_vector_layer_button_press(vector_layer, event);
 }
 
 static gboolean
@@ -589,15 +630,14 @@ gwy_data_view_button_release(GtkWidget *widget,
                              GdkEventButton *event)
 {
     GwyDataView *data_view;
-
-    gwy_debug(" ");
-    g_return_val_if_fail(event, FALSE);
+    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
+    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_button_release(GWY_VECTOR_LAYER(data_view->top_layer), event);
+    return gwy_vector_layer_button_release(vector_layer, event);
 }
 
 static gboolean
@@ -605,14 +645,14 @@ gwy_data_view_motion_notify(GtkWidget *widget,
                             GdkEventMotion *event)
 {
     GwyDataView *data_view;
-
-    g_return_val_if_fail(event, FALSE);
+    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
+    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_motion_notify(GWY_VECTOR_LAYER(data_view->top_layer), event);
+    return gwy_vector_layer_motion_notify(vector_layer, event);
 }
 
 static gboolean
@@ -620,14 +660,14 @@ gwy_data_view_key_press(GtkWidget *widget,
                         GdkEventKey *event)
 {
     GwyDataView *data_view;
-
-    g_return_val_if_fail(event, FALSE);
+    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
+    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_key_press(GWY_VECTOR_LAYER(data_view->top_layer), event);
+    return gwy_vector_layer_key_press(vector_layer, event);
 }
 
 static gboolean
@@ -635,31 +675,53 @@ gwy_data_view_key_release(GtkWidget *widget,
                           GdkEventKey *event)
 {
     GwyDataView *data_view;
-
-    g_return_val_if_fail(event, FALSE);
+    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
+    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_key_release(GWY_VECTOR_LAYER(data_view->top_layer), event);
+    return gwy_vector_layer_key_release(vector_layer, event);
 }
 
 static void
 gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
+    GwyDataField *data_field;
+    gint dxres, dyres, pxres, pyres;
+    gboolean need_resize = FALSE;
 
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     widget = GTK_WIDGET(data_view);
-    if (widget->window)
+    if (!widget->window)
+        return;
+
+    data_field = gwy_data_view_get_base_field(data_view);
+    g_return_if_fail(data_field);    /* Fail hard as widget->window exists */
+    dxres = gwy_data_field_get_xres(data_field);
+    dyres = gwy_data_field_get_yres(data_field);
+    if (data_view->base_pixbuf) {
+        pxres = gdk_pixbuf_get_width(data_view->base_pixbuf);
+        pyres = gdk_pixbuf_get_height(data_view->base_pixbuf);
+        gwy_debug("field: %dx%d, pixbuf: %dx%d", dxres, dyres, pxres, pyres);
+        if (pxres != dxres || pyres != dyres)
+            need_resize = TRUE;
+    }
+
+    if (need_resize) {
+        gwy_debug("need resize");
+        gtk_widget_queue_resize(widget);
+    }
+    else
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
 }
 
 /**
  * gwy_data_view_get_base_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the base layer this data view currently uses.
  *
@@ -677,7 +739,7 @@ gwy_data_view_get_base_layer(GwyDataView *data_view)
 
 /**
  * gwy_data_view_get_alpha_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the alpha layer this data view currently uses, or %NULL if none
  * is present.
@@ -694,7 +756,7 @@ gwy_data_view_get_alpha_layer(GwyDataView *data_view)
 
 /**
  * gwy_data_view_get_top_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the top layer this data view currently uses, or %NULL if none
  * is present.
@@ -750,7 +812,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
 
 /**
  * gwy_data_view_set_base_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @layer: A layer to be used as the base layer for @data_view.
  *
  * Plugs @layer to @data_view as the base layer.
@@ -774,7 +836,7 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
 
 /**
  * gwy_data_view_set_alpha_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @layer: A layer to be used as the alpha layer for @data_view.
  *
  * Plugs @layer to @data_view as the alpha layer.
@@ -797,7 +859,7 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
 
 /**
  * gwy_data_view_set_top_layer:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @layer: A layer to be used as the top layer for @data_view.
  *
  * Plugs @layer to @data_view as the top layer.
@@ -818,7 +880,7 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
 
 /**
  * gwy_data_view_get_hexcess:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Return the horizontal excess of widget size to data size.
  *
@@ -839,7 +901,7 @@ gwy_data_view_get_hexcess(GwyDataView* data_view)
 
 /**
  * gwy_data_view_get_vexcess:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Return the vertical excess of widget size to data size.
  *
@@ -860,7 +922,7 @@ gwy_data_view_get_vexcess(GwyDataView *data_view)
 
 /**
  * gwy_data_view_set_zoom:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @zoom: A new zoom value.
  *
  * Sets zoom of @data_view to @zoom.
@@ -875,11 +937,6 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
                        gdouble zoom)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    /* XXX: what was this meant for?
-    if (!data_view->pixbuf || !data_view->base_pixbuf)
-        return;
-        */
-
     gwy_debug("zoom = %g, new = %g", data_view->newzoom, zoom);
     if (fabs(log(data_view->newzoom/zoom)) < 0.001)
         return;
@@ -890,13 +947,17 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
 
 /**
  * gwy_data_view_get_zoom:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
- * Returns current zoom of @data_view.
+ * Returns current zoom of a data view.
+ *
+ * More precisely the zoom value requested by gwy_data_view_set_zoom(), real
+ * zoom may differ a bit due to pixel rounding.
  *
  * When a resize is queued, the new zoom value is returned.
  *
- * Returns: The zoom.
+ * Returns: The zoom as a ratio between displayed size and base data field
+ *          size.
  **/
 gdouble
 gwy_data_view_get_zoom(GwyDataView *data_view)
@@ -907,7 +968,7 @@ gwy_data_view_get_zoom(GwyDataView *data_view)
 
 /**
  * gwy_data_view_get_xmeasure:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the ratio between horizontal physical lengths and horizontal
  * screen lengths in pixels.
@@ -923,7 +984,7 @@ gwy_data_view_get_xmeasure(GwyDataView *data_view)
 
 /**
  * gwy_data_view_get_ymeasure:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the ratio between vertical physical lengths and horizontal
  * screen lengths in pixels.
@@ -939,7 +1000,7 @@ gwy_data_view_get_ymeasure(GwyDataView *data_view)
 
 /**
  * gwy_data_view_get_data:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  *
  * Returns the data container used by @data_view.
  *
@@ -954,7 +1015,7 @@ gwy_data_view_get_data(GwyDataView *data_view)
 
 /**
  * gwy_data_view_coords_xy_clamp:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @xscr: A screen x-coordinate relative to widget origin.
  * @yscr: A screen y-coordinate relative to widget origin.
  *
@@ -983,7 +1044,7 @@ gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
 
 /**
  * gwy_data_view_coords_xy_to_real:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @xscr: A screen x-coordinate relative to widget origin.
  * @yscr: A screen y-coordinate relative to widget origin.
  * @xreal: Where the physical x-coordinate in the data sample should be stored.
@@ -1007,7 +1068,7 @@ gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
 
 /**
  * gwy_data_view_coords_real_to_xy:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @xreal: A physical x-coordinate in the data sample..
  * @yreal: A physical y-coordinate in the data sample.
  * @xscr: Where the screen x-coordinate relative to widget origin should be
@@ -1033,7 +1094,7 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
 
 /**
  * gwy_data_view_get_thumbnail:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @size: Requested thumbnail size.
  *
  * Creates and returns a thumbnail of the data view.
@@ -1076,7 +1137,7 @@ gwy_data_view_get_thumbnail(GwyDataView *data_view,
 
 /**
  * gwy_data_view_get_pixbuf:
- * @data_view: A #GwyDataView.
+ * @data_view: A data view.
  * @max_width: Pixbuf width that should not be exceeeded.  Value smaller than
  *             1 means unlimited size.
  * @max_height: Pixbuf height that should not be exceeeded.  Value smaller than

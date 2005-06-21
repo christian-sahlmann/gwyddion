@@ -55,9 +55,8 @@ struct _GwyDataView {
 
     gboolean layers_changed;
 
-    gdouble zoom;    /* zoom (larger number means larger pixmaps) */
-    gdouble newzoom;    /* new zoom value (when zoom is set, but widget not
-                           yet resized) */
+    gdouble zoom;    /* real zoom (larger number means larger pixmaps) */
+    gdouble newzoom;    /* requested (ideal) zoom value */
     gdouble xmeasure;    /* physical units per pixel */
     gdouble ymeasure;    /* physical units per pixel */
     gint xoff;    /* x offset of the pixbuf from widget->allocation.x */
