@@ -248,6 +248,10 @@ gwy_data_field_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
 
     data_field = GWY_DATA_FIELD(obj);
+    if (!data_field->si_unit_xy)
+        data_field->si_unit_xy = gwy_si_unit_new("m");
+    if (!data_field->si_unit_z)
+        data_field->si_unit_z = gwy_si_unit_new("m");
     datasize = data_field->xres*data_field->yres;
     {
         GwySerializeSpec spec[] = {
