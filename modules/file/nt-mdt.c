@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -388,7 +388,7 @@ mdt_load(const gchar *filename)
             sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
             dfield = extract_scanned_data(sdframe);
             if (dfield) {
-                data = GWY_CONTAINER(gwy_container_new());
+                data = gwy_container_new();
                 gwy_container_set_object_by_name(data, "/0/data",
                                                  G_OBJECT(dfield));
                 g_object_unref(dfield);
@@ -429,7 +429,7 @@ select_which_data(MDTFile *mdtfile,
                   GwyEnum *choices,
                   guint n)
 {
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
+    GtkWidget *dialog, *label, *vbox, *hbox, *align, *scroll, *svbox;
     MDTScannedDataFrame *sdframe;
     MDTDialogControls controls;
     GwyDataField *dfield;
@@ -459,21 +459,35 @@ select_which_data(MDTFile *mdtfile,
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 1.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
-    vbox = gtk_vbox_new(TRUE, 0);
+    vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(align), vbox);
 
     label = gtk_label_new(_("Data to load:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
+
+    if (n > 8) {
+        scroll = gtk_scrolled_window_new(NULL, NULL);
+        gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                       GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+        svbox = gtk_vbox_new(TRUE, 0);
+        gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll),
+                                              svbox);
+    }
+    else
+        svbox = vbox;
 
     radio = gwy_radio_buttons_create(choices, n, "data",
                                      G_CALLBACK(selection_changed), &controls,
                                      0);
     for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(svbox), GTK_WIDGET(rl->data),
+                           FALSE, FALSE, 0);
 
     /* preview */
     align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
@@ -482,7 +496,7 @@ select_which_data(MDTFile *mdtfile,
     i = choices[0].value;
     sdframe = (MDTScannedDataFrame*)mdtfile->frames[i].frame_data;
     dfield = extract_scanned_data(sdframe);
-    controls.data = GWY_CONTAINER(gwy_container_new());
+    controls.data = gwy_container_new();
     gwy_container_set_object_by_name(controls.data, "data", dfield);
     gwy_container_set_enum_by_name(controls.data, "range-type",
                                    GWY_LAYER_BASIC_RANGE_AUTO);
