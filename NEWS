@@ -1,4 +1,4 @@
-1.99.2cvs20050605
+1.99.2cvs20050622
 
 1.99.3
 Application:
@@ -45,17 +45,21 @@ Library:
 - libgwyprocess: Surface area calculation was reimplemented with a faster and
   more precise method, and it's cached now.
 - libgwyprocess: Basic statistics function on data field parts are diverted
-  to full-field statistics if part is complete data field, allowing better
-  cache utilization.
+  to full-field statistics if part is actually complete data field, allowing
+  better cache utilization.
+- libgwyprocess: DataField stats cache is serialized and deserialized.
 - libgwyapp: All undo functions work on Containers now, some were renamed to
   acommodate that; object-data trickery was replaced with a proper API.
+- libgwydgets: DataView can resize when base data field size changes.
 - Bugfixes were merged from 1.11.
 
 Modules:
+- JPK Scan (new): JPK data file import (bug #57).
 - All: Updated for data (view) notification changes.
 - File import modules use auto-range mode for preview, that should improve
   preview of data with outliers.
 - IColorange supports auto-range mode.
+- Points layer: Supports set_selection().
 - Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
 
 Other:
