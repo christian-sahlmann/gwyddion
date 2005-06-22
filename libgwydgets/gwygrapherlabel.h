@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_LABEL_H__
-#define __GWY_GRAPHER_LABEL_H__
+#ifndef __GWY_GRAPH_LABEL_H__
+#define __GWY_GRAPH_LABEL_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
@@ -27,18 +27,18 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER_LABEL            (gwy_grapher_label_get_type())
-#define GWY_GRAPHER_LABEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_LABEL, GwyGrapherLabel))
-#define GWY_GRAPHER_LABEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_LABEL, GwyGrapherLabel))
-#define GWY_IS_GRAPHER_LABEL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_LABEL))
-#define GWY_IS_GRAPHER_LABEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_LABEL))
-#define GWY_GRAPHER_LABEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_LABEL, GwyGrapherLabelClass))
+#define GWY_TYPE_GRAPH_LABEL            (gwy_graph_label_get_type())
+#define GWY_GRAPH_LABEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_LABEL, GwyGraphLabel))
+#define GWY_GRAPH_LABEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_LABEL, GwyGraphLabel))
+#define GWY_IS_GRAPH_LABEL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_LABEL))
+#define GWY_IS_GRAPH_LABEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_LABEL))
+#define GWY_GRAPH_LABEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_LABEL, GwyGraphLabelClass))
 
-typedef struct _GwyGrapherLabel      GwyGrapherLabel;
-typedef struct _GwyGrapherLabelClass GwyGrapherLabelClass;
+typedef struct _GwyGraphLabel      GwyGraphLabel;
+typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
 
 
-struct _GwyGrapherLabel {
+struct _GwyGraphLabel {
     GtkWidget widget;
 
     PangoFontDescription *label_font;
@@ -54,29 +54,29 @@ struct _GwyGrapherLabel {
     gpointer reserved2;
 };
 
-struct _GwyGrapherLabelClass {
+struct _GwyGraphLabelClass {
     GtkWidgetClass parent_class;
 
-    void (*selected)(GwyGrapherLabel *label);
+    void (*selected)(GwyGraphLabel *label);
     
     gpointer reserved1;
     gpointer reserved2;
 };
 
 
-GtkWidget* gwy_grapher_label_new();
+GtkWidget* gwy_graph_label_new();
 
-GType gwy_grapher_label_get_type(void) G_GNUC_CONST;
+GType gwy_graph_label_get_type(void) G_GNUC_CONST;
 
-void gwy_grapher_label_refresh(GwyGrapherLabel *label);
+void gwy_graph_label_refresh(GwyGraphLabel *label);
 
-void gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel);
+void gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel);
 
-void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
+void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
                                               gint x, gint y, gint width, gint height,
-                                              GwyGrapherLabel *label);
+                                              GwyGraphLabel *label);
 
-void gwy_grapher_label_enable_user_input(GwyGrapherLabel *label, gboolean enable);
+void gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable);
 
 G_END_DECLS
 

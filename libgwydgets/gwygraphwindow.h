@@ -50,7 +50,7 @@ struct _GwyGraphWindow {
     GtkWidget *graph;
     GtkWidget *data;
 
-    GwyGrapherWindowMeasureDialog *measure_dialog;
+    GwyGraphWindowMeasureDialog *measure_dialog;
 
     GtkWidget *button_measure_points;
     GtkWidget *button_measure_lines;
@@ -89,7 +89,7 @@ struct _GwyGraphWindowClass {
     gpointer reserved4;
 };
 
-GtkWidget* gwy_graph_window_new                      (GwyGrapher *graph);
+GtkWidget* gwy_graph_window_new                      (GwyGraph *graph);
 GType      gwy_graph_window_get_type                 (void) G_GNUC_CONST;
 GtkWidget* gwy_graph_window_get_graph              (GwyGraphWindow *graphwindow);
 

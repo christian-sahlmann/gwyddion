@@ -29,7 +29,7 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
-#define GWY_GRAPHER_TYPE_NAME "GwyGrapher"
+#define GWY_GRAPH_TYPE_NAME "GwyGraph"
 
 enum {
     SELECTED_SIGNAL,
@@ -39,18 +39,18 @@ enum {
 };
 
 
-static void     gwy_grapher_class_init           (GwyGrapherClass *klass);
-static void     gwy_grapher_init                 (GwyGrapher *grapher);
-static void     gwy_grapher_size_request         (GtkWidget *widget,
+static void     gwy_graph_class_init           (GwyGraphClass *klass);
+static void     gwy_graph_init                 (GwyGraph *grapher);
+static void     gwy_graph_size_request         (GtkWidget *widget,
                                                 GtkRequisition *requisition);
-static void     gwy_grapher_size_allocate        (GtkWidget *widget,
+static void     gwy_graph_size_allocate        (GtkWidget *widget,
                                                 GtkAllocation *allocation);
 static void     rescaled_cb                    (GtkWidget *widget,
-                                                GwyGrapher *grapher);
+                                                GwyGraph *grapher);
 static void     replot_cb                        (GObject *gobject, 
                                                   GParamSpec *arg1, 
-                                                  GwyGrapher *grapher);
-static void     zoomed_cb                         (GwyGrapher *grapher);
+                                                  GwyGraph *grapher);
+static void     zoomed_cb                         (GwyGraph *grapher);
 
 static GtkWidgetClass *parent_class = NULL;
 static guint gwygrapher_signals[LAST_SIGNAL] = { 0 };
@@ -58,35 +58,35 @@ static guint gwygrapher_signals[LAST_SIGNAL] = { 0 };
 
 
 GType
-gwy_grapher_get_type(void)
+gwy_graph_get_type(void)
 {
-    static GType gwy_grapher_type = 0;
-    if (!gwy_grapher_type) {
-        static const GTypeInfo gwy_grapher_info = {
-         sizeof(GwyGrapherClass),
+    static GType gwy_graph_type = 0;
+    if (!gwy_graph_type) {
+        static const GTypeInfo gwy_graph_info = {
+         sizeof(GwyGraphClass),
          NULL,
          NULL,
-         (GClassInitFunc)gwy_grapher_class_init,
+         (GClassInitFunc)gwy_graph_class_init,
          NULL,
          NULL,
-         sizeof(GwyGrapher),
+         sizeof(GwyGraph),
          0,
-         (GInstanceInitFunc)gwy_grapher_init,
+         (GInstanceInitFunc)gwy_graph_init,
          NULL,
          };
         gwy_debug("");
-        gwy_grapher_type = g_type_register_static (GTK_TYPE_TABLE,
-                                                 GWY_GRAPHER_TYPE_NAME,
-                                                 &gwy_grapher_info,
+        gwy_graph_type = g_type_register_static (GTK_TYPE_TABLE,
+                                                 GWY_GRAPH_TYPE_NAME,
+                                                 &gwy_graph_info,
                                                  0);
 
     }
 
-    return gwy_grapher_type;
+    return gwy_graph_type;
 }
 
 static void
-gwy_grapher_class_init(GwyGrapherClass *klass)
+gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
 
@@ -95,8 +95,8 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    widget_class->size_request = gwy_grapher_size_request;
-    widget_class->size_allocate = gwy_grapher_size_allocate;
+    widget_class->size_request = gwy_graph_size_request;
+    widget_class->size_allocate = gwy_graph_size_allocate;
 
     klass->selected = NULL;
     klass->mousemoved = NULL;
@@ -106,7 +106,7 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
                 = g_signal_new ("selected",
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGrapherClass, selected),
+                                G_STRUCT_OFFSET (GwyGraphClass, selected),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -116,7 +116,7 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
                 = g_signal_new ("mousemoved",
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGrapherClass, mousemoved),
+                                G_STRUCT_OFFSET (GwyGraphClass, mousemoved),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -126,7 +126,7 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
                 = g_signal_new ("zoomed",
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGrapherClass, zoomed),
+                                G_STRUCT_OFFSET (GwyGraphClass, zoomed),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -135,7 +135,7 @@ gwy_grapher_class_init(GwyGrapherClass *klass)
 
 
 static void
-gwy_grapher_size_request(GtkWidget *widget, GtkRequisition *requisition)
+gwy_graph_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
     GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
     requisition->width = 300;
@@ -143,18 +143,18 @@ gwy_grapher_size_request(GtkWidget *widget, GtkRequisition *requisition)
 }
 
 static void
-gwy_grapher_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
+gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
-    GwyGrapher *grapher;
+    GwyGraph *grapher;
     gwy_debug("");
 
-    grapher = GWY_GRAPHER(widget);
+    grapher = GWY_GRAPH(widget);
     GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
 }
 
 
 static void
-gwy_grapher_init(GwyGrapher *grapher)
+gwy_graph_init(GwyGraph *grapher)
 {
     gwy_debug("");
 
@@ -186,10 +186,10 @@ gwy_grapher_init(GwyGrapher *grapher)
     gtk_widget_show(GTK_WIDGET(grapher->axis_left));
     gtk_widget_show(GTK_WIDGET(grapher->axis_right));
 
-    grapher->corner_tl = GWY_GRAPHER_CORNER(gwy_grapher_corner_new());
-    grapher->corner_bl = GWY_GRAPHER_CORNER(gwy_grapher_corner_new());
-    grapher->corner_tr = GWY_GRAPHER_CORNER(gwy_grapher_corner_new());
-    grapher->corner_br = GWY_GRAPHER_CORNER(gwy_grapher_corner_new());
+    grapher->corner_tl = GWY_GRAPH_CORNER(gwy_graph_corner_new());
+    grapher->corner_bl = GWY_GRAPH_CORNER(gwy_graph_corner_new());
+    grapher->corner_tr = GWY_GRAPH_CORNER(gwy_graph_corner_new());
+    grapher->corner_br = GWY_GRAPH_CORNER(gwy_graph_corner_new());
 
 
     gtk_table_attach(GTK_TABLE (grapher), GTK_WIDGET(grapher->corner_tl), 0, 1, 0, 1,
@@ -206,16 +206,16 @@ gwy_grapher_init(GwyGrapher *grapher)
     gtk_widget_show(GTK_WIDGET(grapher->corner_tr));
     gtk_widget_show(GTK_WIDGET(grapher->corner_br));
 
-    grapher->area = GWY_GRAPHER_AREA(gwy_grapher_area_new(NULL,NULL));
+    grapher->area = GWY_GRAPH_AREA(gwy_graph_area_new(NULL,NULL));
 
     grapher->area->status = GWY_GRAPH_STATUS_PLAIN;
     grapher->enable_user_input = TRUE;
 
     g_signal_connect_swapped(grapher->area, "selected",
-                     G_CALLBACK(gwy_grapher_signal_selected), grapher);
+                     G_CALLBACK(gwy_graph_signal_selected), grapher);
 
     g_signal_connect_swapped(grapher->area, "mousemoved",
-                     G_CALLBACK(gwy_grapher_signal_mousemoved), grapher);
+                     G_CALLBACK(gwy_graph_signal_mousemoved), grapher);
      
     g_signal_connect_swapped(grapher->area, "zoomed",
                      G_CALLBACK(zoomed_cb), grapher);
@@ -229,7 +229,7 @@ gwy_grapher_init(GwyGrapher *grapher)
 
 
 /**
- * gwy_grapher_new:
+ * gwy_graph_new:
  * @gmodel: A grapher model.
  * @enable: Enable or disable user to change label
  *
@@ -238,19 +238,19 @@ gwy_grapher_init(GwyGrapher *grapher)
  * Returns: new grapher widget.
  **/
 GtkWidget*
-gwy_grapher_new(GwyGraphModel *gmodel)
+gwy_graph_new(GwyGraphModel *gmodel)
 {
-    GtkWidget *grapher = GTK_WIDGET(g_object_new(gwy_grapher_get_type(), NULL));
+    GtkWidget *grapher = GTK_WIDGET(g_object_new(gwy_graph_get_type(), NULL));
     gwy_debug("");
 
     if (gmodel != NULL)
     {
-       gwy_grapher_change_model(GWY_GRAPHER(grapher), gmodel);    
+       gwy_graph_change_model(GWY_GRAPH(grapher), gmodel);    
     
        g_signal_connect_swapped(gmodel, "value_changed",
-                     G_CALLBACK(gwy_grapher_refresh), grapher);
+                     G_CALLBACK(gwy_graph_refresh), grapher);
 
-       gwy_grapher_refresh(grapher);
+       gwy_graph_refresh(grapher);
     }
     
     return grapher;
@@ -259,7 +259,7 @@ gwy_grapher_new(GwyGraphModel *gmodel)
 
 
 /**
- * gwy_grapher_enable_axis_label_update:
+ * gwy_graph_enable_axis_label_update:
  * @grapher: A grapher widget.
  * @enable: Enable or disable user to change label
  *
@@ -267,7 +267,7 @@ gwy_grapher_new(GwyGraphModel *gmodel)
  * changing text.
  **/
 void
-gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)
+gwy_graph_enable_axis_label_edit(GwyGraph *grapher, gboolean enable)
 {
     gwy_axiser_enable_label_edit(grapher->axis_top, enable);
     gwy_axiser_enable_label_edit(grapher->axis_bottom, enable);
@@ -278,14 +278,14 @@ gwy_grapher_enable_axis_label_edit(GwyGrapher *grapher, gboolean enable)
 
 
 /**
- * gwy_grapher_refresh:
+ * gwy_graph_refresh:
  * @grapher: A grapher widget.
  *
  * Refresh all the graph widgets according to the model.
  *
  **/
 void       
-gwy_grapher_refresh(GwyGrapher *grapher)
+gwy_graph_refresh(GwyGraph *grapher)
 {
     GwyGraphModel *model;
     GwyGraphCurveModel *curvemodel;
@@ -328,33 +328,33 @@ gwy_grapher_refresh(GwyGrapher *grapher)
     }
 
     /*refresh widgets*/
-    gwy_grapher_area_refresh(grapher->area);
+    gwy_graph_area_refresh(grapher->area);
     
 }
 
 /**
- * gwy_grapher_refresh_reset:
+ * gwy_graph_refresh_reset:
  * @grapher: A grapher widget.
  *
  * Refresh all the graph widgets according to the model.
  * The axis will be set to display all data in a best way.
  **/
 void       
-gwy_grapher_refresh_reset(GwyGrapher *grapher)
+gwy_graph_refresh_reset(GwyGraph *grapher)
 {
     /*refresh widgets*/
-    gwy_grapher_area_refresh(grapher->area);
+    gwy_graph_area_refresh(grapher->area);
     
 }
 static void 
-replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
+replot_cb(GObject *gobject, GParamSpec *arg1, GwyGraph *grapher)
 {
     if (grapher == NULL || grapher->graph_model == NULL) return;
-    gwy_grapher_refresh(grapher);
+    gwy_graph_refresh(grapher);
 }
 
 /**
- * gwy_grapher_change_model:
+ * gwy_graph_change_model:
  * @grapher: A grapher widget.
  * @gmodel: new grapher model 
  *
@@ -363,16 +363,16 @@ replot_cb(GObject *gobject, GParamSpec *arg1, GwyGrapher *grapher)
  *
  **/
 void
-gwy_grapher_change_model(GwyGrapher *grapher, GwyGraphModel *gmodel)
+gwy_graph_change_model(GwyGraph *grapher, GwyGraphModel *gmodel)
 {
     grapher->graph_model = gmodel;
 
     g_signal_connect(gmodel, "notify", G_CALLBACK(replot_cb), grapher);
-    gwy_grapher_area_change_model(grapher->area, gmodel);
+    gwy_graph_area_change_model(grapher->area, gmodel);
 }
 
 static void     
-rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
+rescaled_cb(GtkWidget *widget, GwyGraph *grapher)
 {   
     GwyGraphModel *model;
     if (grapher->graph_model == NULL) return;
@@ -382,22 +382,22 @@ rescaled_cb(GtkWidget *widget, GwyGrapher *grapher)
     model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
     model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
 
-    gwy_grapher_area_refresh(grapher->area);
+    gwy_graph_area_refresh(grapher->area);
 }
 
 /**
- * gwy_grapher_get_model:
+ * gwy_graph_get_model:
  * @grapher: A grapher widget.
  *
  * Returns: GraphModel associated with this grapher widget.
  **/
-GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher)
+GwyGraphModel *gwy_graph_get_model(GwyGraph *grapher)
 {
     return  grapher->graph_model;
 }
 
 /**
- * gwy_grapher_set_status:
+ * gwy_graph_set_status:
  * @grapher: A grapher widget.
  * @status: new grapher model 
  *
@@ -406,19 +406,19 @@ GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher)
  *
  **/
 void
-gwy_grapher_set_status(GwyGrapher *grapher, GwyGraphStatusType status)
+gwy_graph_set_status(GwyGraph *grapher, GwyGraphStatusType status)
 {
     grapher->area->status = status;
 }
 
 GwyGraphStatusType  
-gwy_grapher_get_status(GwyGrapher *grapher)
+gwy_graph_get_status(GwyGraph *grapher)
 {
     return grapher->area->status;
 }
 
 /**
- * gwy_grapher_get_selection_number:
+ * gwy_graph_get_selection_number:
  * @grapher: A grapher widget.
  *
  * Set status of the grapher widget. Status determines the way how the grapher
@@ -427,7 +427,7 @@ gwy_grapher_get_status(GwyGrapher *grapher)
  * Returns: number of selections
  **/
 gint       
-gwy_grapher_get_selection_number(GwyGrapher *grapher)
+gwy_graph_get_selection_number(GwyGraph *grapher)
 {
     if (grapher->area->status == GWY_GRAPH_STATUS_XSEL)
         return grapher->area->areasdata->data_areas->len;
@@ -437,11 +437,11 @@ gwy_grapher_get_selection_number(GwyGrapher *grapher)
 }
 
 void
-gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
+gwy_graph_get_selection(GwyGraph *grapher, gdouble *selection)
 {
     gint i;
-    GwyGrapherDataArea *data_area;
-    GwyGrapherDataPoint *data_point;
+    GwyGraphDataArea *data_area;
+    GwyGraphDataPoint *data_point;
     
     if (selection == NULL) return;
 
@@ -450,7 +450,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         case GWY_GRAPH_STATUS_XSEL:    
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
-            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
+            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGraphDataArea, i);
             selection[2*i] = data_area->xmin;
             selection[2*i + 1] = data_area->xmax;
         }
@@ -459,7 +459,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         case GWY_GRAPH_STATUS_YSEL:
         for (i = 0; i < grapher->area->areasdata->data_areas->len; i++)
         {
-            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGrapherDataArea, i);
+            data_area = &g_array_index(grapher->area->areasdata->data_areas, GwyGraphDataArea, i);
             selection[2*i] = data_area->ymin;
             selection[2*i + 1] = data_area->ymax;
         }
@@ -468,7 +468,7 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
         case GWY_GRAPH_STATUS_POINTS:
         for (i = 0; i < grapher->area->pointsdata->data_points->len; i++)
         {
-            data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGrapherDataPoint, i);
+            data_point = &g_array_index(grapher->area->pointsdata->data_points, GwyGraphDataPoint, i);
             selection[2*i] = data_point->x;
             selection[2*i + 1] = data_point->y;
         }
@@ -504,13 +504,13 @@ gwy_grapher_get_selection(GwyGrapher *grapher, gdouble *selection)
 }
 
 void       
-gwy_grapher_clear_selection(GwyGrapher *grapher)
+gwy_graph_clear_selection(GwyGraph *grapher)
 {
-    gwy_grapher_area_clear_selection(grapher->area);
+    gwy_graph_area_clear_selection(grapher->area);
 }
 
 void       
-gwy_grapher_request_x_range(GwyGrapher *grapher, gdouble x_min_req, gdouble x_max_req)
+gwy_graph_request_x_range(GwyGraph *grapher, gdouble x_min_req, gdouble x_max_req)
 {
     GwyGraphModel *model;
     
@@ -524,11 +524,11 @@ gwy_grapher_request_x_range(GwyGrapher *grapher, gdouble x_min_req, gdouble x_ma
     model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
 
     /*refresh widgets*/
-    gwy_grapher_area_refresh(grapher->area);
+    gwy_graph_area_refresh(grapher->area);
  }
 
 void       
-gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, gdouble y_max_req)
+gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_req)
 {
     GwyGraphModel *model;
     
@@ -542,18 +542,18 @@ gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, gdouble y_ma
     model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
 
     /*refresh widgets*/
-    gwy_grapher_area_refresh(grapher->area);
+    gwy_graph_area_refresh(grapher->area);
  }
 
 void       
-gwy_grapher_get_x_range(GwyGrapher *grapher, gdouble *x_min, gdouble *x_max)
+gwy_graph_get_x_range(GwyGraph *grapher, gdouble *x_min, gdouble *x_max)
 {
     *x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
     *x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
 }
 
 void       
-gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max)
+gwy_graph_get_y_range(GwyGraph *grapher, gdouble *y_min, gdouble *y_max)
 {
     *y_min = gwy_axiser_get_minimum(grapher->axis_left);
     *y_max = gwy_axiser_get_maximum(grapher->axis_left);
@@ -561,17 +561,17 @@ gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max)
 
 
 /**
- * gwy_grapher_enable_user_input:
+ * gwy_graph_enable_user_input:
  * @grapher: A grapher widget.
  * @enable: whether to enable user input
  *
  * Enables/disables all the graph/curve settings dialogs to be invoked by mouse clicks.
  **/
 void
-gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable)
+gwy_graph_enable_user_input(GwyGraph *grapher, gboolean enable)
 {
     grapher->enable_user_input = enable;
-    gwy_grapher_area_enable_user_input(grapher->area, enable);
+    gwy_graph_area_enable_user_input(grapher->area, enable);
     gwy_axiser_enable_label_edit(grapher->axis_top, enable);
     gwy_axiser_enable_label_edit(grapher->axis_bottom, enable);
     gwy_axiser_enable_label_edit(grapher->axis_left, enable);
@@ -582,50 +582,50 @@ gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable)
 
 
 void       
-gwy_grapher_signal_selected(GwyGrapher *grapher)
+gwy_graph_signal_selected(GwyGraph *grapher)
 {
     g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[SELECTED_SIGNAL], 0);
 }
 
 void       
-gwy_grapher_signal_mousemoved(GwyGrapher *grapher)
+gwy_graph_signal_mousemoved(GwyGraph *grapher)
 {
     g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[MOUSEMOVED_SIGNAL], 0);
 }
 
 void       
-gwy_grapher_signal_zoomed(GwyGrapher *grapher)
+gwy_graph_signal_zoomed(GwyGraph *grapher)
 {
     g_signal_emit (G_OBJECT (grapher), gwygrapher_signals[ZOOMED_SIGNAL], 0);
 }
 
 void       
-gwy_grapher_get_cursor(GwyGrapher *grapher, gdouble *x_cursor, gdouble *y_cursor)
+gwy_graph_get_cursor(GwyGraph *grapher, gdouble *x_cursor, gdouble *y_cursor)
 {
-    gwy_grapher_area_get_cursor(grapher->area, x_cursor, y_cursor);
+    gwy_graph_area_get_cursor(grapher->area, x_cursor, y_cursor);
 }
 
 
 void       
-gwy_grapher_zoom_in(GwyGrapher *grapher)
+gwy_graph_zoom_in(GwyGraph *grapher)
 {
-    gwy_grapher_set_status(grapher, GWY_GRAPHER_STATUS_ZOOM);
+    gwy_graph_set_status(grapher, GWY_GRAPH_STATUS_ZOOM);
 }
 
 void       
-gwy_grapher_zoom_out(GwyGrapher *grapher)
+gwy_graph_zoom_out(GwyGraph *grapher)
 {
-    gwy_grapher_refresh(grapher);
+    gwy_graph_refresh(grapher);
 }
 
 static void
-zoomed_cb(GwyGrapher *grapher)
+zoomed_cb(GwyGraph *grapher)
 {
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gdouble selection[4];
     
-    if (grapher->area->status != GWY_GRAPHER_STATUS_ZOOM) return;
-    gwy_grapher_get_selection(grapher, selection);
+    if (grapher->area->status != GWY_GRAPH_STATUS_ZOOM) return;
+    gwy_graph_get_selection(grapher, selection);
    
     x_reqmin = selection[0];
     x_reqmax = selection[0] + selection[1];
@@ -643,9 +643,9 @@ zoomed_cb(GwyGrapher *grapher)
     grapher->graph_model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
 
     /*refresh widgets*/
-    gwy_grapher_set_status(grapher, GWY_GRAPHER_STATUS_PLAIN);
-    gwy_grapher_area_refresh(grapher->area);
-    gwy_grapher_signal_zoomed(grapher);
+    gwy_graph_set_status(grapher, GWY_GRAPH_STATUS_PLAIN);
+    gwy_graph_area_refresh(grapher->area);
+    gwy_graph_signal_zoomed(grapher);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

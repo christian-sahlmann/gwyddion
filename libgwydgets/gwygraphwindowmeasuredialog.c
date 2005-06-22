@@ -32,54 +32,54 @@
 #include <libgwyddion/gwymacros.h>
 
 
-#define GWY_GRAPHER_MEASURE_DIALOG_TYPE_NAME "GwyGrapherWindowMeasureDialog"
+#define GWY_GRAPH_MEASURE_DIALOG_TYPE_NAME "GwyGraphWindowMeasureDialog"
 
 
 
-static void     gwy_grapher_window_measure_dialog_class_init       (GwyGrapherWindowMeasureDialogClass *klass);
-static void     gwy_grapher_window_measure_dialog_init             (GwyGrapherWindowMeasureDialog *dialog);
-static void     gwy_grapher_window_measure_dialog_finalize         (GObject *object);
-static gboolean gwy_grapher_window_measure_dialog_delete           (GtkWidget *widget,
+static void     gwy_graph_window_measure_dialog_class_init       (GwyGraphWindowMeasureDialogClass *klass);
+static void     gwy_graph_window_measure_dialog_init             (GwyGraphWindowMeasureDialog *dialog);
+static void     gwy_graph_window_measure_dialog_finalize         (GObject *object);
+static gboolean gwy_graph_window_measure_dialog_delete           (GtkWidget *widget,
                                                                     GdkEventAny *event);
 
-static void     selection_updated_cb                               (GwyGrapher *graph, 
-                                                                    GwyGrapherWindowMeasureDialog *dialog);
+static void     selection_updated_cb                               (GwyGraph *graph, 
+                                                                    GwyGraphWindowMeasureDialog *dialog);
     
 static gint NMAX = 10;
 static gulong selection_id = 0;
 static GtkDialogClass *parent_class = NULL;
 
 GType
-gwy_grapher_window_measure_dialog_get_type(void)
+gwy_graph_window_measure_dialog_get_type(void)
 {
-    static GType gwy_grapher_window_measure_dialog_type = 0;
+    static GType gwy_graph_window_measure_dialog_type = 0;
 
-    if (!gwy_grapher_window_measure_dialog_type) {
-        static const GTypeInfo gwy_grapher_window_measure_dialog_info = {
-            sizeof(GwyGrapherWindowMeasureDialogClass),
+    if (!gwy_graph_window_measure_dialog_type) {
+        static const GTypeInfo gwy_graph_window_measure_dialog_info = {
+            sizeof(GwyGraphWindowMeasureDialogClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_grapher_window_measure_dialog_class_init,
+            (GClassInitFunc)gwy_graph_window_measure_dialog_class_init,
             NULL,
             NULL,
-            sizeof(GwyGrapherWindowMeasureDialog),
+            sizeof(GwyGraphWindowMeasureDialog),
             0,
-            (GInstanceInitFunc)gwy_grapher_window_measure_dialog_init,
+            (GInstanceInitFunc)gwy_graph_window_measure_dialog_init,
             NULL,
         };
         gwy_debug("");
-        gwy_grapher_window_measure_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_GRAPHER_MEASURE_DIALOG_TYPE_NAME,
-                                                      &gwy_grapher_window_measure_dialog_info,
+        gwy_graph_window_measure_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
+                                                      GWY_GRAPH_MEASURE_DIALOG_TYPE_NAME,
+                                                      &gwy_graph_window_measure_dialog_info,
                                                       0);
 
     }
 
-    return gwy_grapher_window_measure_dialog_type;
+    return gwy_graph_window_measure_dialog_type;
 }
 
 static void
-gwy_grapher_window_measure_dialog_class_init(GwyGrapherWindowMeasureDialogClass *klass)
+gwy_graph_window_measure_dialog_class_init(GwyGraphWindowMeasureDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
@@ -88,12 +88,12 @@ gwy_grapher_window_measure_dialog_class_init(GwyGrapherWindowMeasureDialogClass 
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_grapher_window_measure_dialog_finalize;
-    widget_class->delete_event = gwy_grapher_window_measure_dialog_delete;
+    gobject_class->finalize = gwy_graph_window_measure_dialog_finalize;
+    widget_class->delete_event = gwy_graph_window_measure_dialog_delete;
 }
 
 static gboolean
-gwy_grapher_window_measure_dialog_delete(GtkWidget *widget,
+gwy_graph_window_measure_dialog_delete(GtkWidget *widget,
                        G_GNUC_UNUSED GdkEventAny *event)
 {
     gwy_debug("");
@@ -134,13 +134,13 @@ header_label(GtkWidget *table, gint row, gint col,
 
 
 static void
-gwy_grapher_window_measure_dialog_init(GwyGrapherWindowMeasureDialog *dialog)
+gwy_graph_window_measure_dialog_init(GwyGraphWindowMeasureDialog *dialog)
 {
    gwy_debug("");
 }
 
 static void
-selection_updated_cb(GwyGrapher *graph, GwyGrapherWindowMeasureDialog *dialog)
+selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
 {
     gchar buffer[64];
     GtkWidget *label;
@@ -148,13 +148,13 @@ selection_updated_cb(GwyGrapher *graph, GwyGrapherWindowMeasureDialog *dialog)
     gint i, n;
     gdouble *spoints;
 
-    g_return_if_fail(GWY_IS_GRAPHER(graph));
-    if (gwy_grapher_get_status(graph) != GWY_GRAPHER_STATUS_POINTS) return;
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_POINTS) return;
 
-    if ((n = gwy_grapher_get_selection_number(graph))>0)
-        spoints = (gdouble *) g_malloc(2*gwy_grapher_get_selection_number(graph)*sizeof(gdouble));
+    if ((n = gwy_graph_get_selection_number(graph))>0)
+        spoints = (gdouble *) g_malloc(2*gwy_graph_get_selection_number(graph)*sizeof(gdouble));
 
-    gwy_grapher_get_selection(graph, spoints);
+    gwy_graph_get_selection(graph, spoints);
     
     /*update points data */
     str = g_string_new("");
@@ -203,15 +203,15 @@ selection_updated_cb(GwyGrapher *graph, GwyGrapherWindowMeasureDialog *dialog)
 #include <stdio.h>
 
 GtkWidget *
-gwy_grapher_window_measure_dialog_new(GwyGrapher *graph)
+gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 {
     GtkWidget *label, *table, *button;
-    GwyGrapherWindowMeasureDialog *dialog;
+    GwyGraphWindowMeasureDialog *dialog;
     gint row = 0, i;
     GString *str;
     
     gwy_debug("");
-    dialog = GWY_GRAPHER_WINDOW_MEASURE_DIALOG (g_object_new (gwy_grapher_window_measure_dialog_get_type (), NULL));
+    dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG (g_object_new (gwy_graph_window_measure_dialog_get_type (), NULL));
 
     dialog->graph = graph;
 
@@ -242,12 +242,12 @@ gwy_grapher_window_measure_dialog_new(GwyGrapher *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
 
-    dialog->x_mag = gwy_axiser_get_magnification(GWY_GRAPHER(dialog->graph)->axis_top);
-    dialog->y_mag = gwy_axiser_get_magnification(GWY_GRAPHER(dialog->graph)->axis_left);
-    header_label(table, 1, 1, "X", gwy_axiser_get_magnification_string(GWY_GRAPHER(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 2, "Y", gwy_axiser_get_magnification_string(GWY_GRAPHER(dialog->graph)->axis_left)->str, str);
-    header_label(table, 1, 3, _("Length"), gwy_axiser_get_magnification_string(GWY_GRAPHER(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 4, _("Height"), gwy_axiser_get_magnification_string(GWY_GRAPHER(dialog->graph)->axis_left)->str, str);
+    dialog->x_mag = gwy_axiser_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
+    dialog->y_mag = gwy_axiser_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
+    header_label(table, 1, 1, "X", gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label(table, 1, 2, "Y", gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    header_label(table, 1, 3, _("Length"), gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label(table, 1, 4, _("Height"), gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
     header_label(table, 1, 5, _("Angle"), "deg", str);
 
     for (i = 0; i < NMAX; i++) {
@@ -303,11 +303,11 @@ gwy_grapher_window_measure_dialog_new(GwyGrapher *graph)
 }
 
 static void
-gwy_grapher_window_measure_dialog_finalize(GObject *object)
+gwy_graph_window_measure_dialog_finalize(GObject *object)
 {
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPHER_MEASURE_DIALOG(object));
+    g_return_if_fail(GWY_IS_GRAPH_MEASURE_DIALOG(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }

@@ -240,9 +240,9 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->graphmodel = gwy_graph_model_new(NULL);
-    controls->graph = gwy_grapher_new(controls->graphmodel);
+    controls->graph = gwy_graph_new(controls->graphmodel);
     gtk_widget_set_size_request(controls->graph, 400, 150);
-    gwy_grapher_enable_user_input(controls->graph, FALSE);
+    gwy_graph_enable_user_input(controls->graph, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, FALSE, FALSE, 0);
 
     return dialog;
@@ -276,7 +276,7 @@ dialog_update(GwyUnitoolState *state,
 
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPHER_CURVE_LINE);
+    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
     
     
     dataline = gwy_data_line_new(10, 10, FALSE);
@@ -311,11 +311,11 @@ apply(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
 
-    graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+    graph = gwy_graph_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
     gtk_widget_set_size_request(graph, 400, 300);
 
     
-    gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
                                            state->data_window,
                                            _(sf_types[controls->out].name));
 

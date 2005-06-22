@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 GtkWidget* gwy_app_graph_list_new     (GwyDataWindow *data_window);
 void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
-                                       GwyGrapher *graph);
+                                       GwyGraph *graph);
 
 G_END_DECLS
 

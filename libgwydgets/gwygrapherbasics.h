@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_BASIC__
-#define __GWY_GRAPHER_BASIC__
+#ifndef __GWY_GRAPH_BASIC__
+#define __GWY_GRAPH_BASIC__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
@@ -29,46 +29,46 @@
 #include <libgwydgets/gwygrapher.h>
 
 G_BEGIN_DECLS
+/*
+typedef enum {
+    GWY_GRAPH_POINT_SQUARE        = 0,
+    GWY_GRAPH_POINT_CROSS         = 1,
+    GWY_GRAPH_POINT_CIRCLE        = 2,
+    GWY_GRAPH_POINT_STAR          = 3,
+    GWY_GRAPH_POINT_TIMES         = 4,
+    GWY_GRAPH_POINT_TRIANGLE_UP   = 5,
+    GWY_GRAPH_POINT_TRIANGLE_DOWN = 6,
+    GWY_GRAPH_POINT_DIAMOND       = 7
+} GwyGraphPointType;
 
 typedef enum {
-    GWY_GRAPHER_POINT_SQUARE        = 0,
-    GWY_GRAPHER_POINT_CROSS         = 1,
-    GWY_GRAPHER_POINT_CIRCLE        = 2,
-    GWY_GRAPHER_POINT_STAR          = 3,
-    GWY_GRAPHER_POINT_TIMES         = 4,
-    GWY_GRAPHER_POINT_TRIANGLE_UP   = 5,
-    GWY_GRAPHER_POINT_TRIANGLE_DOWN = 6,
-    GWY_GRAPHER_POINT_DIAMOND       = 7
-} GwyGrapherPointType;
-
-typedef enum {
-    GWY_GRAPHER_CURVE_HIDDEN      = 0,
-    GWY_GRAPHER_CURVE_POINTS      = 1,
-    GWY_GRAPHER_CURVE_LINE        = 2,
-    GWY_GRAPHER_CURVE_LINE_POINTS = 3
-} GwyGrapherCurveType;
+    GWY_GRAPH_CURVE_HIDDEN      = 0,
+    GWY_GRAPH_CURVE_POINTS      = 1,
+    GWY_GRAPH_CURVE_LINE        = 2,
+    GWY_GRAPH_CURVE_LINE_POINTS = 3
+} GwyGraphCurveType;
 
 
 typedef enum {
-    GWY_GRAPHER_LABEL_NORTHEAST = 0,
-    GWY_GRAPHER_LABEL_NORTHWEST = 1,
-    GWY_GRAPHER_LABEL_SOUTHEAST = 2,
-    GWY_GRAPHER_LABEL_SOUTHWEST = 3,
-    GWY_GRAPHER_LABEL_USER      = 4
-} GwyGrapherLabelPosition;
-
+    GWY_GRAPH_LABEL_NORTHEAST = 0,
+    GWY_GRAPH_LABEL_NORTHWEST = 1,
+    GWY_GRAPH_LABEL_SOUTHEAST = 2,
+    GWY_GRAPH_LABEL_SOUTHWEST = 3,
+    GWY_GRAPH_LABEL_USER      = 4
+} GwyGraphLabelPosition;
+*/
 
 typedef struct {
     gdouble x;
     gdouble y;
-} GwyGrapherDataPoint;
+} GwyGraphDataPoint;
 
 typedef struct {
     gdouble xmin;
     gdouble xmax;
     gdouble ymin;
     gdouble ymax;
-} GwyGrapherDataArea;
+} GwyGraphDataArea;
 
 typedef struct {
     gint xmin;         /*x offset of the active area with respect to drawable left border*/
@@ -81,10 +81,10 @@ typedef struct {
     gdouble real_width; /*real units values*/
     gboolean log_x;     /*x axis is logarithmic*/
     gboolean log_y;     /*y axis is logarithmic*/
-} GwyGrapherActiveAreaSpecs;
+} GwyGraphActiveAreaSpecs;
 
 
-void  gwy_grapher_draw_point (GdkDrawable *drawable,
+void  gwy_graph_draw_point (GdkDrawable *drawable,
                             GdkGC *gc, 
                             gint x,
                             gint y,
@@ -93,7 +93,7 @@ void  gwy_grapher_draw_point (GdkDrawable *drawable,
                             GwyRGBA *color, 
                             gboolean clear);
 
-void gwy_grapher_draw_line   (GdkDrawable *drawable,
+void gwy_graph_draw_line   (GdkDrawable *drawable,
                             GdkGC *gc,
                             gint x_from,
                             gint y_from,
@@ -103,24 +103,24 @@ void gwy_grapher_draw_line   (GdkDrawable *drawable,
                             gint size,
                             GwyRGBA *color);
 
-void gwy_grapher_draw_curve  (GdkDrawable *drawable,
+void gwy_graph_draw_curve  (GdkDrawable *drawable,
                             GdkGC *gc,
-                            GwyGrapherActiveAreaSpecs *specs,
+                            GwyGraphActiveAreaSpecs *specs,
                             GObject *curvemodel);
 
-void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
+void gwy_graph_draw_selection_points(GdkDrawable *drawable,
                             GdkGC *gc,
-                            GwyGrapherActiveAreaSpecs *specs,
-                            GwyGrapherDataPoint *data_points,
+                            GwyGraphActiveAreaSpecs *specs,
+                            GwyGraphDataPoint *data_points,
                             gint n_of_points);
 
-void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
+void gwy_graph_draw_selection_areas(GdkDrawable *drawable,
                                     GdkGC *gc,
-                                    GwyGrapherActiveAreaSpecs *specs,
-                                    GwyGrapherDataArea *data_areas,
+                                    GwyGraphActiveAreaSpecs *specs,
+                                    GwyGraphDataArea *data_areas,
                                     gint n_of_areas);
 
 
-#endif /*__GWY_GRAPHER_BASIC_H__*/
+#endif /*__GWY_GRAPH_BASIC_H__*/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

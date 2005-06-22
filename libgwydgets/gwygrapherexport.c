@@ -27,7 +27,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygrapher.h"
 
-void       gwy_grapher_export_pixmap(GwyGrapher *grapher, const gchar *filename,
+void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels)
 {
@@ -43,7 +43,7 @@ void       gwy_grapher_export_pixmap(GwyGrapher *grapher, const gchar *filename,
     
 }
 
-void       gwy_grapher_export_postscript(GwyGrapher *grapher, const gchar *filename,
+void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels)
 {

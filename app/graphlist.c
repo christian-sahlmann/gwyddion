@@ -88,7 +88,7 @@ static void       gwy_app_graph_list_orphaned        (GtkWidget *graph_view);
 
 void
 gwy_app_graph_list_add(GwyDataWindow *data_window,
-                       GwyGrapher *graph)
+                       GwyGraph *graph)
 {
     GwyContainer *data;
     GtkListStore *store;
@@ -100,10 +100,10 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
 
     gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    g_return_if_fail(GWY_IS_GRAPHER(graph));
+    g_return_if_fail(GWY_IS_GRAPH(graph));
 
     data = gwy_data_window_get_data(data_window);
-    gmodel = gwy_grapher_get_model(graph);
+    gmodel = gwy_graph_get_model(graph);
     /*gmodel = gwy_graph_model_new(graph);*/
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
 
@@ -392,7 +392,7 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
         return FALSE;
     }
 
-    graph = gwy_graph_new_from_model(GWY_GRAPH_MODEL(gmodel));
+    graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
     /* XXX: redraw assures the toggles get into a consistent state.  A more
      * fine-grained method should be probably used... */
@@ -583,7 +583,7 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
                                   gpointer list)
 {
     GObject *gmodel;
-    GwyGrapher *graph;
+    GwyGraph *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
     graph = GWY_GRAPH_MODEL(gmodel)->graph;

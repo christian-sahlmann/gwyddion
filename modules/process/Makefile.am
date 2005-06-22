@@ -21,9 +21,7 @@ process_PROGRAMS = \
 	fft_filter_1d.so \
 	fit_2d.so \
 	fraccor.so \
-	fractal.so \
 	gradient.so \
-	grain_dist.so \
 	grain_mark.so \
 	grain_rem_threshold.so \
 	grain_wshed.so \
@@ -44,7 +42,6 @@ process_PROGRAMS = \
 	scale.so \
 	scars.so \
 	shade.so \
-	slope_dist.so \
 	sphere-revolve.so \
 	tip_blind.so \
 	tip_dilation.so \
@@ -110,8 +107,8 @@ fit_2d_so_LDFLAGS = $(module_ldflags),fit_2d.so
 fft_so_SOURCES = fft.c
 fft_so_LDFLAGS = $(module_ldflags),fft.so
 
-fractal_so_SOURCES = fractal.c
-fractal_so_LDFLAGS = $(module_ldflags),fractal.so
+#fractal_so_SOURCES = fractal.c
+#fractal_so_LDFLAGS = $(module_ldflags),fractal.so
 
 fraccor_so_SOURCES = fraccor.c
 fraccor_so_LDFLAGS = $(module_ldflags),fraccor.so
@@ -128,8 +125,8 @@ grain_rem_threshold_so_LDFLAGS = $(module_ldflags),grain_rem_threshold.so
 grain_wshed_so_SOURCES = grain_wshed.c
 grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
 
-grain_dist_so_SOURCES = grain_dist.c
-grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
+#grain_dist_so_SOURCES = grain_dist.c
+#grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
 
 #indent_analyze_so_SOURCES = indent_analyze.c
 #indent_analyze_so_LDFLAGS = $(module_ldflags),indent_analyze.so
@@ -185,8 +182,8 @@ scars_so_LDFLAGS = $(module_ldflags),scars.so
 shade_so_SOURCES = shade.c
 shade_so_LDFLAGS = $(module_ldflags),shade.so
 
-slope_dist_so_SOURCES = slope_dist.c
-slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
+#slope_dist_so_SOURCES = slope_dist.c
+#slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
 
 sphere_revolve_so_SOURCES = sphere-revolve.c
 sphere_revolve_so_LDFLAGS = $(module_ldflags),sphere-revolve.so

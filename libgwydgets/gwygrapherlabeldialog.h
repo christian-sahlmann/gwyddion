@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_LABEL_DIALOG_H__
-#define __GWY_GRAPHER_LABEL_DIALOG_H__
+#ifndef __GWY_GRAPH_LABEL_DIALOG_H__
+#define __GWY_GRAPH_LABEL_DIALOG_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -30,17 +30,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER_LABEL_DIALOG            (gwy_grapher_label_dialog_get_type())
-#define GWY_GRAPHER_LABEL_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_LABEL_DIALOG, GwyGrapherLabelDialog))
-#define GWY_GRAPHER_LABEL_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_LABEL_DIALOG, GwyGrapherLabelDialog))
-#define GWY_IS_GRAPHER_LABEL_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_LABEL_DIALOG))
-#define GWY_IS_GRAPHER_LABEL_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_LABEL_DIALOG))
-#define GWY_GRAPHER_LABEL_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_LABEL_DIALOG, GwyGrapherLabelDialogClass))
+#define GWY_TYPE_GRAPH_LABEL_DIALOG            (gwy_graph_label_dialog_get_type())
+#define GWY_GRAPH_LABEL_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_LABEL_DIALOG, GwyGraphLabelDialog))
+#define GWY_GRAPH_LABEL_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_LABEL_DIALOG, GwyGraphLabelDialog))
+#define GWY_IS_GRAPH_LABEL_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_LABEL_DIALOG))
+#define GWY_IS_GRAPH_LABEL_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_LABEL_DIALOG))
+#define GWY_GRAPH_LABEL_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_LABEL_DIALOG, GwyGraphLabelDialogClass))
 
-typedef struct _GwyGrapherLabelDialog      GwyGrapherLabelDialog;
-typedef struct _GwyGrapherLabelDialogClass GwyGrapherLabelDialogClass;
+typedef struct _GwyGraphLabelDialog      GwyGraphLabelDialog;
+typedef struct _GwyGraphLabelDialogClass GwyGraphLabelDialogClass;
 
-struct _GwyGrapherLabelDialog {
+struct _GwyGraphLabelDialog {
     GtkDialog dialog;
 
     GtkObject *linesize;
@@ -52,17 +52,17 @@ struct _GwyGrapherLabelDialog {
     gpointer reserved2;
 };
 
-struct _GwyGrapherLabelDialogClass {
+struct _GwyGraphLabelDialogClass {
     GtkDialogClass parent_class;
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType       gwy_grapher_label_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_grapher_label_dialog_new      (void);
+GType       gwy_graph_label_dialog_get_type (void) G_GNUC_CONST;
+GtkWidget*  gwy_graph_label_dialog_new      (void);
 
-void        gwy_grapher_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model);
+void        gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model);
 
 G_END_DECLS
 

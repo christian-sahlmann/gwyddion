@@ -54,7 +54,7 @@ static void     gwy_graph_window_export_bitmap_cb    (GwyGraphWindow *graphwindo
 /* Local data */
 
 static GtkWindowClass *parent_class = NULL;
-static GwyGrapherStatusType last_status = 0;
+static GwyGraphStatusType last_status = 0;
 
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -135,7 +135,7 @@ gwy_graph_window_destroy(GtkObject *object)
  * Returns: A newly created widget, as #GtkWidget.
  **/
 GtkWidget*
-gwy_graph_window_new(GwyGrapher *graph)
+gwy_graph_window_new(GwyGraph *graph)
 {
     GwyGraphWindow *graphwindow;
     GtkScrolledWindow *swindow;
@@ -143,7 +143,7 @@ gwy_graph_window_new(GwyGrapher *graph)
     GtkWidget *label;
     
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GRAPHER(graph), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
 
     graphwindow = (GwyGraphWindow*)g_object_new(GWY_TYPE_GRAPH_WINDOW, NULL);
     gtk_window_set_wmclass(GTK_WINDOW(graphwindow), "data",
@@ -166,7 +166,7 @@ gwy_graph_window_new(GwyGrapher *graph)
                              
     
     swindow = GTK_SCROLLED_WINDOW(gtk_scrolled_window_new(NULL, NULL));
-    graphwindow->data = gwy_graph_data_new(gwy_grapher_get_model(graph));
+    graphwindow->data = gwy_graph_data_new(gwy_graph_get_model(graph));
     gtk_container_add(GTK_CONTAINER(swindow), graphwindow->data);
 
     label = gtk_label_new("Data");
@@ -243,7 +243,7 @@ gwy_graph_window_new(GwyGrapher *graph)
 
     gtk_container_add(GTK_CONTAINER(vbox), hbox);
    
-    graphwindow->measure_dialog = GWY_GRAPHER_WINDOW_MEASURE_DIALOG(gwy_grapher_window_measure_dialog_new(graphwindow->graph));
+    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(gwy_graph_window_measure_dialog_new(graphwindow->graph));
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);
@@ -294,13 +294,13 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     gdouble xmag, ymag;
     GString *xstring, *ystring;
     
-    gwy_grapher_get_cursor(graphwindow->graph, &x, &y);
+    gwy_graph_get_cursor(graphwindow->graph, &x, &y);
 
-    xmag = gwy_axiser_get_magnification(GWY_GRAPHER(graphwindow->graph)->axis_top);
-    xstring = gwy_axiser_get_magnification_string(GWY_GRAPHER(graphwindow->graph)->axis_top);
+    xmag = gwy_axiser_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_top);
+    xstring = gwy_axiser_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_top);
 
-    ymag = gwy_axiser_get_magnification(GWY_GRAPHER(graphwindow->graph)->axis_left);
-    ystring = gwy_axiser_get_magnification_string(GWY_GRAPHER(graphwindow->graph)->axis_left);
+    ymag = gwy_axiser_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_left);
+    ystring = gwy_axiser_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
     
     
     g_snprintf(buffer, sizeof(buffer), "%.4f", x/xmag);
@@ -318,65 +318,65 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 static void     
 gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("measure: startstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("measure: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_POINTS);
+    gwy_graph_set_status(graphwindow->graph, GWY_GRAPH_STATUS_POINTS);
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-    gwy_grapher_signal_selected(graphwindow->graph);
+    gwy_graph_signal_selected(graphwindow->graph);
     gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
-    /*printf("measure: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("measure: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 
 static void     
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
-    /*printf("measured: startstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("measured: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
   
-    gwy_grapher_clear_selection(graphwindow->graph);
+    gwy_graph_clear_selection(graphwindow->graph);
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR) 
         return;
    
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_grapher_set_status(graphwindow->graph, GWY_GRAPHER_STATUS_PLAIN);
+    gwy_graph_set_status(graphwindow->graph, GWY_GRAPH_STATUS_PLAIN);
 
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
     gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
-    /*printf("measured: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("measured: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     
 }
 
 static void     
 gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom in: startstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("zoom in: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
     {
-        last_status = gwy_grapher_get_status(graphwindow->graph);
-        gwy_grapher_zoom_in(graphwindow->graph);
+        last_status = gwy_graph_get_status(graphwindow->graph);
+        gwy_graph_zoom_in(graphwindow->graph);
     }
     else
-        gwy_grapher_set_status(graphwindow->graph, last_status);
+        gwy_graph_set_status(graphwindow->graph, last_status);
 
-    /*printf("zoom in: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("zoom in: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     
 }
 
 static void     
 gwy_graph_window_zoom_out_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom out: startstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
-    gwy_grapher_zoom_out(graphwindow->graph);
-    /*printf("zoom out: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("zoom out: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
+    gwy_graph_zoom_out(graphwindow->graph);
+    /*printf("zoom out: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 static void     
 gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom finished: startstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    /*printf("zoom finished: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_grapher_set_status(graphwindow->graph, last_status);
-    /*printf("zoom finished: endstat: %d\n", gwy_grapher_get_status(graphwindow->graph));*/
+    gwy_graph_set_status(graphwindow->graph, last_status);
+    /*printf("zoom finished: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 static void     

@@ -21,7 +21,6 @@
 #ifndef __GWY_GRAPH_MODEL_H__
 #define __GWY_GRAPH_MODEL_H__
 
-#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwyddion/gwysiunit.h>
 
@@ -43,7 +42,7 @@ typedef struct _GwyGraphModelClass GwyGraphModelClass;
 struct _GwyGraphModel {
     GObject parent_instance;
 
-    GwyGraph *graph;
+    GtkWidget *graph;
     gulong graph_destroy_hid;
 
     gint ncurves;
@@ -95,7 +94,7 @@ struct _GwyGraphModelClass {
 
 
 GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_model_new            (GwyGraph *graph);
+GObject*   gwy_graph_model_new            (GtkWidget *graph);
 GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 
@@ -142,6 +141,6 @@ void      gwy_graph_model_signal_layout_changed(GwyGraphModel *model);
 
 G_END_DECLS
 
-#endif /* __GWY_GRAPHER_MODEL_H__ */
+#endif /* __GWY_GRAPH_MODEL_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

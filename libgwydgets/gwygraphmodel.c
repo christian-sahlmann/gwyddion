@@ -23,6 +23,7 @@
 #include <libgwyddion/gwyddion.h>
 #include "gwygraphcurvemodel.h"
 #include "gwygraphmodel.h"
+#include "gwygrapher.h"
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
@@ -39,8 +40,9 @@ static GObject* gwy_graph_model_deserialize     (const guchar *buffer,
 static GObject* gwy_graph_model_duplicate       (GObject *object);
 static void   gwy_graph_model_graph_destroyed   (GwyGraph *graph,
                                                  GwyGraphModel *gmodel);
-static void   gwy_graph_model_save_graph        (GwyGraphModel *gmodel,
+/*static void   gwy_graph_model_save_graph        (GwyGraphModel *gmodel,
                                                  GwyGraph *graph);
+*/
 static void     gwy_graph_model_set_property  (GObject *object,
                                                 guint prop_id,
                                                const GValue *value,
@@ -218,7 +220,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
  * Returns: New graph model as a #GObject.
  **/
 GObject*
-gwy_graph_model_new(GwyGraph *graph)
+gwy_graph_model_new(GtkWidget *graph)
 {
     GwyGraphModel *gmodel;
     GtkWidget *window;
@@ -278,13 +280,14 @@ gwy_graph_model_graph_destroyed(GwyGraph *graph,
                                   GwyGraphModel *gmodel)
 {
     gwy_debug("");
-    gwy_graph_model_save_graph(gmodel, graph);
+    /*gwy_graph_model_save_graph(gmodel, graph);*/
     g_signal_handler_disconnect(gmodel->graph, gmodel->graph_destroy_hid);
     gmodel->graph_destroy_hid = 0;
     gmodel->graph = NULL;
 }
 
 /* actually copy save from a -- usually just dying -- graph */
+/*
 static void
 gwy_graph_model_save_graph(GwyGraphModel *gmodel,
                            GwyGraph *graph)
@@ -294,11 +297,11 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
 
     gwy_debug("");
     g_assert(graph && graph == gmodel->graph);
-
+/*
     /* FIXME: we access object fields directly now as we are supposed to know
      * some their internals anyway. */
     /* graph */
-    if ((gmodel->has_x_unit = graph->has_x_unit))
+/*    if ((gmodel->has_x_unit = graph->has_x_unit))
         gwy_si_unit_set_unit_string(GWY_SI_UNIT(gmodel->x_unit),
                                     graph->x_unit);
     else
@@ -314,9 +317,9 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     gmodel->y_min = graph->y_reqmin;
     gmodel->x_max = graph->x_reqmax;
     gmodel->y_max = graph->y_reqmax;
-
+/*
     /* axes */
-    g_string_assign(gmodel->top_label,
+/*    g_string_assign(gmodel->top_label,
                     gwy_axis_get_label(graph->axis_top)->str);
     g_string_assign(gmodel->bottom_label,
                     gwy_axis_get_label(graph->axis_bottom)->str);
@@ -326,7 +329,7 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
                     gwy_axis_get_label(graph->axis_right)->str);
 
     /* label */
-    gmodel->label_position = graph->area->lab->par.position;
+/*    gmodel->label_position = graph->area->lab->par.position;
     gmodel->label_has_frame = graph->area->lab->par.is_frame;
     gmodel->label_frame_thickness = graph->area->lab->par.frame_thickness;
 
@@ -337,19 +340,19 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
      * 3. replace already existing curves  <-- if lucky, only this happens
      * 4. fill new curves
      */
-    nacurves = graph->area->curves->len;
+/*    nacurves = graph->area->curves->len;
     /* 1. clear */
-    for (i = nacurves; i < gmodel->ncurves; i++)
+/*    for (i = nacurves; i < gmodel->ncurves; i++)
         gwy_object_unref(gmodel->curves[i]);
     /* 2. realloc */
-    gmodel->curves = g_renew(GObject*, gmodel->curves, nacurves);
+/*    gmodel->curves = g_renew(GObject*, gmodel->curves, nacurves);
     /* 3. replace */
-    for (i = 0; i < gmodel->ncurves; i++) {
+/*    for (i = 0; i < gmodel->ncurves; i++) {
         gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
         gwy_graph_curve_model_save_curve(gcmodel, graph, i);
     }
     /* 4. fill */
-    for (i = gmodel->ncurves; i < nacurves; i++) {
+/*    for (i = gmodel->ncurves; i < nacurves; i++) {
         gmodel->curves[i] = gwy_graph_curve_model_new();
         gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
         gwy_graph_curve_model_save_curve(gcmodel, graph, i);
@@ -357,6 +360,7 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     gmodel->ncurves = nacurves;
 }
 
+/*
 GtkWidget*
 gwy_graph_new_from_model(GwyGraphModel *gmodel)
 {
@@ -416,6 +420,7 @@ gwy_graph_new_from_model(GwyGraphModel *gmodel)
 
     return graph_widget;
 }
+*/
 
 static GByteArray*
 gwy_graph_model_serialize(GObject *obj,
@@ -427,8 +432,8 @@ gwy_graph_model_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), NULL);
 
     gmodel = GWY_GRAPH_MODEL(obj);
-    if (gmodel->graph)
-        gwy_graph_model_save_graph(gmodel, gmodel->graph);
+    /*if (gmodel->graph)
+        gwy_graph_model_save_graph(gmodel, gmodel->graph);*/
     {
         GwySerializeSpec spec[] = {
             { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
@@ -652,9 +657,9 @@ gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
     
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
 
-    if (gmodel->graph)
+    /*if (gmodel->graph)
         return gwy_graph_get_number_of_curves(gmodel->graph);
-    else
+    else*/
         return gmodel->ncurves;
         
 }

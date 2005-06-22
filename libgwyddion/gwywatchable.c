@@ -84,7 +84,7 @@ gwy_watchable_base_init(G_GNUC_UNUSED gpointer g_class)
                      G_TYPE_NONE, 0);
     initialized = TRUE;
 }
-
+#include <stdio.h>
 /**
  * gwy_watchable_value_changed:
  * @watchable: A #GObject implementing #GwyWatchable interface.
@@ -98,7 +98,6 @@ gwy_watchable_value_changed(GObject *watchable)
     g_return_if_fail(GWY_IS_WATCHABLE(watchable));
     gwy_debug("emitting value_changed on %s",
               g_type_name(G_TYPE_FROM_INSTANCE(watchable)));
-
     g_signal_emit(watchable, gwy_watchable_signals[VALUE_CHANGED], 0);
 }
 

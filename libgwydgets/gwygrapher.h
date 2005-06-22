@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GTK_GGPLOT_H__
-#define __GTK_GGPLOT_H__
+#ifndef __GTK_GRAPH_H__
+#define __GTK_GRAPH_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -36,18 +36,18 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER            (gwy_grapher_get_type())
-#define GWY_GRAPHER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER, GwyGrapher))
-#define GWY_GRAPHER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER, GwyGrapher))
-#define GWY_IS_GRAPHER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER))
-#define GWY_IS_GRAPHER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER))
-#define GWY_GRAPHER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER, GwyGrapherClass))
+#define GWY_TYPE_GRAPH            (gwy_graph_get_type())
+#define GWY_GRAPH(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH, GwyGraph))
+#define GWY_GRAPH_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH, GwyGraph))
+#define GWY_IS_GRAPH(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH))
+#define GWY_IS_GRAPH_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH))
+#define GWY_GRAPH_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH, GwyGraphClass))
 
-typedef struct _GwyGrapher      GwyGrapher;
-typedef struct _GwyGrapherClass GwyGrapherClass;
+typedef struct _GwyGraph      GwyGraph;
+typedef struct _GwyGraphClass GwyGraphClass;
 
 
-struct _GwyGrapher {
+struct _GwyGraph {
     GtkTable table;
 
     GwyAxiser *axis_top;
@@ -55,12 +55,12 @@ struct _GwyGrapher {
     GwyAxiser *axis_right;
     GwyAxiser *axis_bottom;
 
-    GwyGrapherCorner *corner_tl;
-    GwyGrapherCorner *corner_bl;
-    GwyGrapherCorner *corner_tr;
-    GwyGrapherCorner *corner_br;
+    GwyGraphCorner *corner_tl;
+    GwyGraphCorner *corner_bl;
+    GwyGraphCorner *corner_tr;
+    GwyGraphCorner *corner_br;
 
-    GwyGrapherArea *area;
+    GwyGraphArea *area;
 
     GwyGraphModel *graph_model;
 
@@ -70,62 +70,62 @@ struct _GwyGrapher {
     gpointer reserved2;
 };
 
-struct _GwyGrapherClass {
+struct _GwyGraphClass {
     GtkTableClass parent_class;
 
-    void (*gwygrapher)(GwyGrapher *grapher);
-    void (*selected)(GwyGrapher *grapher);
-    void (*mousemoved)(GwyGrapher *grapher);    
-    void (*zoomed)(GwyGrapher *grapher);
+    void (*gwygrapher)(GwyGraph *grapher);
+    void (*selected)(GwyGraph *grapher);
+    void (*mousemoved)(GwyGraph *grapher);    
+    void (*zoomed)(GwyGraph *grapher);
     
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GtkWidget *gwy_grapher_new(GwyGraphModel *gmodel);
-GType      gwy_grapher_get_type(void) G_GNUC_CONST;
+GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
+GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
-void       gwy_grapher_refresh(GwyGrapher *grapher);
-void       gwy_grapher_refresh_and_reset(GwyGrapher *grapher);
+void       gwy_graph_refresh(GwyGraph *grapher);
+void       gwy_graph_refresh_and_reset(GwyGraph *grapher);
 
-void       gwy_grapher_change_model(GwyGrapher *grapher, 
+void       gwy_graph_change_model(GwyGraph *grapher, 
                                     GwyGraphModel *gmodel);
-void       gwy_grapher_set_status(GwyGrapher *grapher,
+void       gwy_graph_set_status(GwyGraph *grapher,
                                   GwyGraphStatusType status);
-GwyGraphStatusType  gwy_grapher_get_status(GwyGrapher *grapher);
+GwyGraphStatusType  gwy_graph_get_status(GwyGraph *grapher);
 
-GwyGraphModel *gwy_grapher_get_model(GwyGrapher *grapher);
+GwyGraphModel *gwy_graph_get_model(GwyGraph *grapher);
 
-void       gwy_grapher_signal_selected(GwyGrapher *grapher);
-void       gwy_grapher_signal_mousemoved(GwyGrapher *grapher);
-void       gwy_grapher_signal_zoomed(GwyGrapher *grapher);
+void       gwy_graph_signal_selected(GwyGraph *grapher);
+void       gwy_graph_signal_mousemoved(GwyGraph *grapher);
+void       gwy_graph_signal_zoomed(GwyGraph *grapher);
 
-gint       gwy_grapher_get_selection_number(GwyGrapher *grapher);
-void       gwy_grapher_get_selection(GwyGrapher *grapher,
+gint       gwy_graph_get_selection_number(GwyGraph *grapher);
+void       gwy_graph_get_selection(GwyGraph *grapher,
                                      gdouble *selection);
 
-void       gwy_grapher_clear_selection(GwyGrapher *grapher);
+void       gwy_graph_clear_selection(GwyGraph *grapher);
 
-void       gwy_grapher_get_cursor(GwyGrapher *grapher,
+void       gwy_graph_get_cursor(GwyGraph *grapher,
                                   gdouble *x_cursor, gdouble *y_cursor);
 
-void       gwy_grapher_request_x_range(GwyGrapher *grapher, gdouble x_min_req, gdouble x_max_req);
-void       gwy_grapher_request_y_range(GwyGrapher *grapher, gdouble y_min_req, gdouble y_max_req);
-void       gwy_grapher_get_x_range(GwyGrapher *grapher, gdouble *x_min, gdouble *x_max);
-void       gwy_grapher_get_y_range(GwyGrapher *grapher, gdouble *y_min, gdouble *y_max);
+void       gwy_graph_request_x_range(GwyGraph *grapher, gdouble x_min_req, gdouble x_max_req);
+void       gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_req);
+void       gwy_graph_get_x_range(GwyGraph *grapher, gdouble *x_min, gdouble *x_max);
+void       gwy_graph_get_y_range(GwyGraph *grapher, gdouble *y_min, gdouble *y_max);
 
-void       gwy_grapher_enable_user_input(GwyGrapher *grapher, gboolean enable);
+void       gwy_graph_enable_user_input(GwyGraph *grapher, gboolean enable);
 
 
-void       gwy_grapher_export_pixmap(GwyGrapher *grapher, const gchar *filename, 
+void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename, 
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels);
-void       gwy_grapher_export_postscript(GwyGrapher *grapher, const gchar *filename,
+void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels);
 
-void       gwy_grapher_zoom_in(GwyGrapher *grapher);
-void       gwy_grapher_zoom_out(GwyGrapher *grapher);
+void       gwy_graph_zoom_in(GwyGraph *grapher);
+void       gwy_graph_zoom_out(GwyGraph *grapher);
 
 
 G_END_DECLS

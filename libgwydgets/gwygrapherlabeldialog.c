@@ -30,57 +30,57 @@
 #include "gwygraphmodel.h"
 #include <libgwyddion/gwymacros.h>
 
-#define GWY_GRAPHER_LABEL_DIALOG_TYPE_NAME "GwyGrapherLabelDialog"
+#define GWY_GRAPH_LABEL_DIALOG_TYPE_NAME "GwyGraphLabelDialog"
 
 
 
-static void     gwy_grapher_label_dialog_class_init       (GwyGrapherLabelDialogClass *klass);
-static void     gwy_grapher_label_dialog_init             (GwyGrapherLabelDialog *dialog);
-static void     gwy_grapher_label_dialog_finalize         (GObject *object);
-static gboolean gwy_grapher_label_dialog_delete           (GtkWidget *widget,
+static void     gwy_graph_label_dialog_class_init       (GwyGraphLabelDialogClass *klass);
+static void     gwy_graph_label_dialog_init             (GwyGraphLabelDialog *dialog);
+static void     gwy_graph_label_dialog_finalize         (GObject *object);
+static gboolean gwy_graph_label_dialog_delete           (GtkWidget *widget,
                                                           GdkEventAny *event);
 
 static void     linesize_changed_cb                      (GtkObject *adj,
-                                                          GwyGrapherLabelDialog *dialog);
-static void     refresh                                  (GwyGrapherLabelDialog *dialog);
+                                                          GwyGraphLabelDialog *dialog);
+static void     refresh                                  (GwyGraphLabelDialog *dialog);
 static void     reverse_changed_cb                       (GtkToggleButton *button,
-                                                          GwyGrapherLabelDialog *dialog);
+                                                          GwyGraphLabelDialog *dialog);
 
 
 
 static GtkDialogClass *parent_class = NULL;
 
 GType
-gwy_grapher_label_dialog_get_type(void)
+gwy_graph_label_dialog_get_type(void)
 {
-    static GType gwy_grapher_label_dialog_type = 0;
+    static GType gwy_graph_label_dialog_type = 0;
 
-    if (!gwy_grapher_label_dialog_type) {
-        static const GTypeInfo gwy_grapher_label_dialog_info = {
-            sizeof(GwyGrapherLabelDialogClass),
+    if (!gwy_graph_label_dialog_type) {
+        static const GTypeInfo gwy_graph_label_dialog_info = {
+            sizeof(GwyGraphLabelDialogClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_grapher_label_dialog_class_init,
+            (GClassInitFunc)gwy_graph_label_dialog_class_init,
             NULL,
             NULL,
-            sizeof(GwyGrapherLabelDialog),
+            sizeof(GwyGraphLabelDialog),
             0,
-            (GInstanceInitFunc)gwy_grapher_label_dialog_init,
+            (GInstanceInitFunc)gwy_graph_label_dialog_init,
             NULL,
         };
         gwy_debug("");
-        gwy_grapher_label_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_GRAPHER_LABEL_DIALOG_TYPE_NAME,
-                                                      &gwy_grapher_label_dialog_info,
+        gwy_graph_label_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
+                                                      GWY_GRAPH_LABEL_DIALOG_TYPE_NAME,
+                                                      &gwy_graph_label_dialog_info,
                                                       0);
 
     }
 
-    return gwy_grapher_label_dialog_type;
+    return gwy_graph_label_dialog_type;
 }
 
 static void
-gwy_grapher_label_dialog_class_init(GwyGrapherLabelDialogClass *klass)
+gwy_graph_label_dialog_class_init(GwyGraphLabelDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
@@ -89,12 +89,12 @@ gwy_grapher_label_dialog_class_init(GwyGrapherLabelDialogClass *klass)
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_grapher_label_dialog_finalize;
-    widget_class->delete_event = gwy_grapher_label_dialog_delete;
+    gobject_class->finalize = gwy_graph_label_dialog_finalize;
+    widget_class->delete_event = gwy_graph_label_dialog_delete;
 }
 
 static gboolean
-gwy_grapher_label_dialog_delete(GtkWidget *widget,
+gwy_graph_label_dialog_delete(GtkWidget *widget,
                        G_GNUC_UNUSED GdkEventAny *event)
 {
     gwy_debug("");
@@ -104,7 +104,7 @@ gwy_grapher_label_dialog_delete(GtkWidget *widget,
 }
 
 static void
-gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
+gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
 {
     GtkWidget *label, *table;
     gint row = 0;
@@ -144,25 +144,25 @@ gwy_grapher_label_dialog_init(GwyGrapherLabelDialog *dialog)
 
 
 GtkWidget *
-gwy_grapher_label_dialog_new()
+gwy_graph_label_dialog_new()
 {
     gwy_debug("");
-    return GTK_WIDGET (g_object_new (gwy_grapher_label_dialog_get_type (), NULL));
+    return GTK_WIDGET (g_object_new (gwy_graph_label_dialog_get_type (), NULL));
 }
 
 static void
-gwy_grapher_label_dialog_finalize(GObject *object)
+gwy_graph_label_dialog_finalize(GObject *object)
 {
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPHER_LABEL_DIALOG(object));
+    g_return_if_fail(GWY_IS_GRAPH_LABEL_DIALOG(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 
 static void
-refresh(GwyGrapherLabelDialog *dialog)
+refresh(GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
@@ -174,16 +174,16 @@ refresh(GwyGrapherLabelDialog *dialog)
 
 
 void        
-gwy_grapher_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
+gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
 {
-    GwyGrapherLabelDialog *gadialog = GWY_GRAPHER_LABEL_DIALOG(dialog);
+    GwyGraphLabelDialog *gadialog = GWY_GRAPH_LABEL_DIALOG(dialog);
 
     gadialog->graph_model = model;
     refresh(dialog);
 }
 
 static void     
-linesize_changed_cb(GtkObject *adj, GwyGrapherLabelDialog *dialog)
+linesize_changed_cb(GtkObject *adj, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;
@@ -193,7 +193,7 @@ linesize_changed_cb(GtkObject *adj, GwyGrapherLabelDialog *dialog)
 }
 
 static void     
-reverse_changed_cb(GtkToggleButton *button, GwyGrapherLabelDialog *dialog)
+reverse_changed_cb(GtkToggleButton *button, GwyGraphLabelDialog *dialog)
 {
     GwyGraphModel *model;
     if (dialog->graph_model == NULL) return;

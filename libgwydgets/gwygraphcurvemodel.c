@@ -176,6 +176,7 @@ gwy_graph_curve_model_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+/*
 gboolean
 gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
                                  GwyGraph *graph,
@@ -195,7 +196,7 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
         return FALSE;
 
     /* data */
-    n = gwy_graph_get_data_size(graph, index_);
+/*    n = gwy_graph_get_data_size(graph, index_);
     if (n != gcmodel->n) {
         gcmodel->n = n;
         gcmodel->xdata = g_renew(gdouble, gcmodel->xdata, n);
@@ -204,14 +205,14 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
     gwy_graph_get_data(graph, gcmodel->xdata, gcmodel->ydata, index_);
 
     /* properties */
-    str = gwy_graph_get_label(graph, index_);
+/*    str = gwy_graph_get_label(graph, index_);
     g_string_assign(gcmodel->description, str->str);
     /* FIXME: direct access */
-    curve = (GwyGraphAreaCurve*)g_ptr_array_index(graph->area->curves, index_);
+/*    curve = (GwyGraphAreaCurve*)g_ptr_array_index(graph->area->curves, index_);
     params = &curve->params;
     /* XXX FIXME: this now uses some random unitialized memory as the color.
      * Fix the graph! */
-    gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
+/*    gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
 
     gcmodel->type = GWY_GRAPH_CURVE_HIDDEN;
     if (params->is_point)
@@ -251,6 +252,7 @@ gwy_graph_add_curve_from_model(GwyGraph *graph,
                              gcmodel->n, gcmodel->description,
                              &params);
 }
+*/
 
 static GByteArray*
 gwy_graph_curve_model_serialize(GObject *object,

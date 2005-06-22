@@ -83,7 +83,7 @@ dist(GwyContainer *data, GwyRunType run)
                          FALSE);
 
     gmodel = gwy_graph_model_new(NULL);
-    graph = gwy_grapher_new(gmodel);
+    graph = gwy_graph_new(gmodel);
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dataline = gwy_data_line_new(10, 10, TRUE);
@@ -102,7 +102,7 @@ dist(GwyContainer *data, GwyRunType run)
                                         units->magnitude, 1, units->units, " ");
 */
     data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph), data_window,
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
                                            _("Grain size distribution"));
 
     g_object_unref(dataline);

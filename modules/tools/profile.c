@@ -282,9 +282,9 @@ dialog_create(GwyUnitoolState *state)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     controls->graphmodel = gwy_graph_model_new(NULL);
-    controls->graph = gwy_grapher_new(controls->graphmodel);
+    controls->graph = gwy_graph_new(controls->graphmodel);
     gtk_widget_set_size_request(controls->graph, 400, 150);
-    gwy_grapher_enable_user_input(controls->graph, FALSE);
+    gwy_graph_enable_user_input(controls->graph, FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, TRUE, TRUE, 0);
 
     return dialog;
@@ -375,7 +375,7 @@ dialog_update(GwyUnitoolState *state,
                                                   xl1, yl1, xl2, yl2, lineres, controls->size,
                                                   controls->interp);
             gcmodel = gwy_graph_curve_model_new();
-            gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPHER_CURVE_LINE);
+            gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
             gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                          controls->dtl->pdata[i],
                                                          0, 0);
@@ -419,17 +419,17 @@ apply(GwyUnitoolState *state)
             model->ncurves = 1;
             model->curves = g_new(GObject*, model->ncurves);
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
-            graph = gwy_grapher_new(model);
+            graph = gwy_graph_new(model);
             gtk_widget_set_size_request(graph, 400, 300);
             gwy_app_graph_window_create_for_window
-                                    (GWY_GRAPHER(graph), state->data_window,
+                                    (GWY_GRAPH(graph), state->data_window,
                                      ((GString*)controls->str->pdata[i])->str);
         }
     }
     else {
-        graph = gwy_grapher_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+        graph = gwy_graph_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
         gtk_widget_set_size_request(graph, 400, 300);
-        gwy_app_graph_window_create_for_window(GWY_GRAPHER(graph),
+        gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
                                                state->data_window,
                                                _("Profiles"));
     }

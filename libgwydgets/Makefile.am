@@ -23,13 +23,9 @@ libgwydgetsinclude_HEADERS = \
 	gwydgettypes.h \
 	gwydgetutils.h \
 	gwyglmaterial.h \
-	gwygraph.h \
-	gwygrapharea.h \
-	gwygraphcorner.h \
 	gwygraphcurvemodel.h \
 	gwygraphdata.h \
 	gwygraphmodel.h \
-	gwygraphlabel.h \
 	gwygraphwindow.h \
 	gwygraphwindowasciidialog.h \
 	gwygraphwindowmeasuredialog.h \
@@ -91,14 +87,9 @@ libgwydgets_la_SOURCES = \
 	gwydgettypes.c \
 	gwydgetutils.c \
 	gwyglmaterial.c \
-	gwygraph.c \
-	gwygrapharea.c \
 	gwygraphcurvemodel.c \
 	gwygraphdata.c \
 	gwygraphmodel.c \
-	gwygraphexport.c \
-	gwygraphcorner.c \
-	gwygraphlabel.c \
 	gwygraphwindow.c \
 	gwygraphwindowasciidialog.c \
 	gwygraphwindowmeasuredialog.c \

@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_AREA_DIALOG_H__
-#define __GWY_GRAPHER_AREA_DIALOG_H__
+#ifndef __GWY_GRAPH_AREA_DIALOG_H__
+#define __GWY_GRAPH_AREA_DIALOG_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -30,17 +30,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER_AREA_DIALOG            (gwy_grapher_area_dialog_get_type())
-#define GWY_GRAPHER_AREA_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_AREA_DIALOG, GwyGrapherAreaDialog))
-#define GWY_GRAPHER_AREA_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_AREA_DIALOG, GwyGrapherAreaDialog))
-#define GWY_IS_GRAPHER_AREA_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_AREA_DIALOG))
-#define GWY_IS_GRAPHER_AREA_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_AREA_DIALOG))
-#define GWY_GRAPHER_AREA_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_AREA_DIALOG, GwyGrapherAreaDialogClass))
+#define GWY_TYPE_GRAPH_AREA_DIALOG            (gwy_graph_area_dialog_get_type())
+#define GWY_GRAPH_AREA_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_AREA_DIALOG, GwyGraphAreaDialog))
+#define GWY_GRAPH_AREA_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_AREA_DIALOG, GwyGraphAreaDialog))
+#define GWY_IS_GRAPH_AREA_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_AREA_DIALOG))
+#define GWY_IS_GRAPH_AREA_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_AREA_DIALOG))
+#define GWY_GRAPH_AREA_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_AREA_DIALOG, GwyGraphAreaDialogClass))
 
-typedef struct _GwyGrapherAreaDialog      GwyGrapherAreaDialog;
-typedef struct _GwyGrapherAreaDialogClass GwyGrapherAreaDialogClass;
+typedef struct _GwyGraphAreaDialog      GwyGraphAreaDialog;
+typedef struct _GwyGraphAreaDialogClass GwyGraphAreaDialogClass;
 
-struct _GwyGrapherAreaDialog {
+struct _GwyGraphAreaDialog {
     GtkDialog dialog;
 
     GtkWidget *curvetype_menu;
@@ -57,17 +57,17 @@ struct _GwyGrapherAreaDialog {
     gpointer reserved2;
 };
 
-struct _GwyGrapherAreaDialogClass {
+struct _GwyGraphAreaDialogClass {
     GtkDialogClass parent_class;
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType       gwy_grapher_area_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_grapher_area_dialog_new      (void);
+GType       gwy_graph_area_dialog_get_type (void) G_GNUC_CONST;
+GtkWidget*  gwy_graph_area_dialog_new      (void);
 
-void        gwy_grapher_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
+void        gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
 
 G_END_DECLS
 

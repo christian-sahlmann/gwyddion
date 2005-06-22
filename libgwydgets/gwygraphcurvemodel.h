@@ -21,9 +21,11 @@
 #ifndef __GWY_GRAPH_CURVE_MODEL_H__
 #define __GWY_GRAPH_CURVE_MODEL_H__
 
-#include <libgwydgets/gwygraph.h>
+/*#include <libgwydgets/gwygraph.h>*/
+#include <gtk/gtk.h>
 #include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwydgetenums.h>
+#include <libprocess/dataline.h>
 
 G_BEGIN_DECLS
 
@@ -83,11 +85,12 @@ struct _GwyGraphCurveModelClass {
 
 GType      gwy_graph_curve_model_get_type       (void) G_GNUC_CONST;
 GObject*   gwy_graph_curve_model_new            (void);
-gboolean   gwy_graph_curve_model_save_curve     (GwyGraphCurveModel *gcmodel,
+/*gboolean   gwy_graph_curve_model_save_curve     (GwyGraphCurveModel *gcmodel,
                                                  GwyGraph *graph,
                                                  gint index_);
 void       gwy_graph_add_curve_from_model       (GwyGraph *graph,
                                                  GwyGraphCurveModel *gcmodel);
+*/
 void       gwy_graph_curve_model_set_data       (GwyGraphCurveModel *gcmodel,
                                                  gdouble *xdata,
                                                  gdouble *ydata,

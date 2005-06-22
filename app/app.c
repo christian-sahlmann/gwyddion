@@ -821,13 +821,13 @@ gwy_app_graph_window_create(GtkWidget *graph)
  * Returns: The newly created graph window.
  **/
 GtkWidget*
-gwy_app_graph_window_create_for_window(GwyGrapher *grapher,
+gwy_app_graph_window_create_for_window(GwyGraph *grapher,
                                        GwyDataWindow *data_window,
                                        const gchar *title)
 {
     GtkWidget *window;
 
-    g_return_val_if_fail(GWY_IS_GRAPHER(grapher), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH(grapher), NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
     window = gwy_graph_window_new(grapher);
@@ -873,13 +873,13 @@ gwy_app_graph_window_create_for_window(GwyGrapher *grapher,
  * Returns: The newly created graph window.
  **/
 GtkWidget*
-gwy_app_grapher_window_create_for_window(GwyGrapher *grapher,
+gwy_app_grapher_window_create_for_window(GwyGraph *grapher,
                                        GwyDataWindow *data_window,
                                        const gchar *title)
 {
     GtkWidget *window;
 
-    g_return_val_if_fail(GWY_IS_GRAPHER(grapher), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH(grapher), NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

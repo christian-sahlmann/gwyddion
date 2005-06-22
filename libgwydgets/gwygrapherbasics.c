@@ -29,23 +29,23 @@
 #include <stdio.h>
 
 static gint 
-x_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
+x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
     return specs->xmin + (gint)((data - specs->real_xmin)
          /(specs->real_width)*((gdouble)specs->width-1));
 }
 
 static gint 
-y_data_to_pixel(GwyGrapherActiveAreaSpecs *specs, gdouble data)
+y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
     return specs->ymin + specs->height - (gint)((data - specs->real_ymin)
          /(specs->real_height)*((gdouble)specs->height-1));
 }
 
 void
-gwy_grapher_draw_curve (GdkDrawable *drawable,
+gwy_graph_draw_curve (GdkDrawable *drawable,
                         GdkGC *gc,
-                        GwyGrapherActiveAreaSpecs *specs,
+                        GwyGraphActiveAreaSpecs *specs,
                         GObject *curvemodel)
 {
     gint i, x, y, xn=0, yn=0;
@@ -71,7 +71,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
         if (i<(cmodel->n-1) 
             && (cmodel->type == GWY_GRAPH_CURVE_LINE 
                 || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
-                 gwy_grapher_draw_line(drawable, gc,
+                 gwy_graph_draw_line(drawable, gc,
                                   x,
                                   y,
                                   xn,
@@ -82,7 +82,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
          
         if ((cmodel->type == GWY_GRAPH_CURVE_POINTS 
              || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
-                 gwy_grapher_draw_point(drawable, gc,
+                 gwy_graph_draw_point(drawable, gc,
                                   x,
                                   y,
                                   cmodel->point_type, cmodel->point_size,
@@ -92,7 +92,7 @@ gwy_grapher_draw_curve (GdkDrawable *drawable,
 
 
 void
-gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
+gwy_graph_draw_line (GdkDrawable *drawable, GdkGC *gc,
                         gint x_from, gint y_from, gint x_to, gint y_to,
                         GdkLineStyle line_style,
                         gint size, GwyRGBA *color)
@@ -124,7 +124,7 @@ gwy_grapher_draw_line (GdkDrawable *drawable, GdkGC *gc,
 
 
 void
-gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
+gwy_graph_draw_point (GdkDrawable *drawable, GdkGC *gc,
                         gint x, gint y, GwyGraphPointType type,
                         gint size, GwyRGBA *color, gboolean clear)
 {
@@ -225,9 +225,9 @@ gwy_grapher_draw_point (GdkDrawable *drawable, GdkGC *gc,
     } 
 }
 
-void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
-                                       GdkGC *gc, GwyGrapherActiveAreaSpecs *specs,
-                                       GwyGrapherDataPoint *data_points, gint n_of_points)
+void gwy_graph_draw_selection_points(GdkDrawable *drawable,
+                                       GdkGC *gc, GwyGraphActiveAreaSpecs *specs,
+                                       GwyGraphDataPoint *data_points, gint n_of_points)
 {
     gint i, size;
     GwyRGBA color;
@@ -242,7 +242,7 @@ void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
     
     for (i = 0; i<n_of_points; i++)
     {
-       gwy_grapher_draw_point (drawable, gc,
+       gwy_graph_draw_point (drawable, gc,
                         x_data_to_pixel(specs, data_points[i].x), 
                         y_data_to_pixel(specs, data_points[i].y), 
                         GWY_GRAPH_POINT_CROSS,
@@ -250,9 +250,9 @@ void gwy_grapher_draw_selection_points(GdkDrawable *drawable,
     }
 }
 
-void gwy_grapher_draw_selection_areas(GdkDrawable *drawable,
-                                      GdkGC *gc, GwyGrapherActiveAreaSpecs *specs,
-                                      GwyGrapherDataArea *data_areas, gint n_of_areas)
+void gwy_graph_draw_selection_areas(GdkDrawable *drawable,
+                                      GdkGC *gc, GwyGraphActiveAreaSpecs *specs,
+                                      GwyGraphDataArea *data_areas, gint n_of_areas)
 {
     gint i;
     gint xmin, xmax, ymin, ymax;

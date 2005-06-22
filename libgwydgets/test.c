@@ -107,7 +107,7 @@ main(int argc, char *argv[])
     dln = (GwyDataLine *)gwy_data_line_new(200, 200, 1);
 
     gmodel = gwy_graph_model_new(NULL);
-    graph = gwy_grapher_new(gmodel);
+    graph = gwy_graph_new(gmodel);
     
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, yp, 20);
@@ -128,7 +128,7 @@ main(int argc, char *argv[])
     
    /*gtk_container_add (GTK_CONTAINER (window), gwindow);*/
 
-   /*gwy_grapher_enable_user_input(graph, TRUE);*/
+   /*gwy_graph_enable_user_input(graph, TRUE);*/
    /*printf("show!\n");*/
     gtk_widget_show (gwindow);
 

@@ -22,7 +22,7 @@
 #define __GWY_MODULE_GRAPH_H__
 
 #include <gtk/gtkobject.h>
-#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapher.h>
 
 G_BEGIN_DECLS
 

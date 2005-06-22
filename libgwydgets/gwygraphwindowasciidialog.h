@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_WINDOW_ASCII_DIALOG_H__
-#define __GWY_GRAPHER_WINDOW_ASCII_DIALOG_H__
+#ifndef __GWY_GRAPH_WINDOW_ASCII_DIALOG_H__
+#define __GWY_GRAPH_WINDOW_ASCII_DIALOG_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -29,17 +29,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG            (gwy_grapher_window_ascii_dialog_get_type())
-#define GWY_GRAPHER_WINDOW_ASCII_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG, GwyGrapherWindowAsciiDialog))
-#define GWY_GRAPHER_WINDOW_ASCII_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG, GwyGrapherWindowAsciiDialog))
-#define GWY_IS_GRAPHER_WINDOW_ASCII_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG))
-#define GWY_IS_GRAPHER_WINDOW_ASCII_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG))
-#define GWY_GRAPHER_WINDOW_ASCII_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_WINDOW_ASCII_DIALOG, GwyGrapherWindowAsciiDialogClass))
+#define GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG            (gwy_graph_window_ascii_dialog_get_type())
+#define GWY_GRAPH_WINDOW_ASCII_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG, GwyGraphWindowAsciiDialog))
+#define GWY_GRAPH_WINDOW_ASCII_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG, GwyGraphWindowAsciiDialog))
+#define GWY_IS_GRAPH_WINDOW_ASCII_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG))
+#define GWY_IS_GRAPH_WINDOW_ASCII_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG))
+#define GWY_GRAPH_WINDOW_ASCII_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG, GwyGraphWindowAsciiDialogClass))
 
-typedef struct _GwyGrapherWindowAsciiDialog      GwyGrapherWindowAsciiDialog;
-typedef struct _GwyGrapherWindowAsciiDialogClass GwyGrapherWindowAsciiDialogClass;
+typedef struct _GwyGraphWindowAsciiDialog      GwyGraphWindowAsciiDialog;
+typedef struct _GwyGraphWindowAsciiDialogClass GwyGraphWindowAsciiDialogClass;
 
-struct _GwyGrapherWindowAsciiDialog {
+struct _GwyGraphWindowAsciiDialog {
     GtkDialog dialog;
 
     GtkWidget *preference;
@@ -51,15 +51,15 @@ struct _GwyGrapherWindowAsciiDialog {
     gpointer reserved2;
 };
 
-struct _GwyGrapherWindowAsciiDialogClass {
+struct _GwyGraphWindowAsciiDialogClass {
     GtkDialogClass parent_class;
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType       gwy_grapher_window_ascii_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_grapher_window_ascii_dialog_new      (void);
+GType       gwy_graph_window_ascii_dialog_get_type (void) G_GNUC_CONST;
+GtkWidget*  gwy_graph_window_ascii_dialog_new      (void);
 
 
 G_END_DECLS

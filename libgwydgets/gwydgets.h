@@ -38,12 +38,19 @@
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyglmaterial.h>
-#include <libgwydgets/gwygraph.h>
+/*#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
+*/
+#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygrapherarea.h>
+#include <libgwydgets/gwygraphercorner.h>
+#include <libgwydgets/gwygrapherlabel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
+/*
 #include <libgwydgets/gwygraphlabel.h>
+*/
 #include <libgwydgets/gwyhruler.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>

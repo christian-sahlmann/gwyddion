@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GRAPHER_WINDOW_MEASURE_DIALOG_H__
-#define __GWY_GRAPHER_WINDOW_MEASURE_DIALOG_H__
+#ifndef __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
+#define __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -31,17 +31,17 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GRAPHER_MEASURE_DIALOG            (gwy_grapher_window_measure_dialog_get_type())
-#define GWY_GRAPHER_WINDOW_MEASURE_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPHER_MEASURE_DIALOG, GwyGrapherWindowMeasureDialog))
-#define GWY_GRAPHER_WINDOW_MEASURE_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPHER_MEASURE_DIALOG, GwyGrapherWindowMeasureDialog))
-#define GWY_IS_GRAPHER_MEASURE_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPHER_MEASURE_DIALOG))
-#define GWY_IS_GRAPHER_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPHER_MEASURE_DIALOG))
-#define GWY_GRAPHER_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPHER_MEASURE_DIALOG, GwyGrapherWindowMeasureDialogClass))
+#define GWY_TYPE_GRAPH_MEASURE_DIALOG            (gwy_graph_window_measure_dialog_get_type())
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialog))
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialog))
+#define GWY_IS_GRAPH_MEASURE_DIALOG(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG))
+#define GWY_IS_GRAPH_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_MEASURE_DIALOG))
+#define GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
 
-typedef struct _GwyGrapherWindowMeasureDialog      GwyGrapherWindowMeasureDialog;
-typedef struct _GwyGrapherWindowMeasureDialogClass GwyGrapherWindowMeasureDialogClass;
+typedef struct _GwyGraphWindowMeasureDialog      GwyGraphWindowMeasureDialog;
+typedef struct _GwyGraphWindowMeasureDialogClass GwyGraphWindowMeasureDialogClass;
 
-struct _GwyGrapherWindowMeasureDialog {
+struct _GwyGraphWindowMeasureDialog {
     GtkDialog dialog;
 
     GtkWidget *graph;
@@ -63,17 +63,17 @@ struct _GwyGrapherWindowMeasureDialog {
     gpointer reserved2;
 };
 
-struct _GwyGrapherWindowMeasureDialogClass {
+struct _GwyGraphWindowMeasureDialogClass {
     GtkDialogClass parent_class;
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType       gwy_grapher_window_measure_dialog_get_type (void) G_GNUC_CONST;
-GtkWidget*  gwy_grapher_window_measure_dialog_new      (GwyGrapher *graph);
+GType       gwy_graph_window_measure_dialog_get_type (void) G_GNUC_CONST;
+GtkWidget*  gwy_graph_window_measure_dialog_new      (GwyGraph *graph);
 
-void        gwy_grapher_window_measure_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
+void        gwy_graph_window_measure_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel);
 
 G_END_DECLS
 

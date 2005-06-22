@@ -25,52 +25,52 @@
 #include "gwygraphwindowasciidialog.h"
 #include <libgwyddion/gwymacros.h>
 
-#define GWY_GRAPHER_WINDOW_ASCII_DIALOG_TYPE_NAME "GwyGrapherWindowAsciiDialog"
+#define GWY_GRAPH_WINDOW_ASCII_DIALOG_TYPE_NAME "GwyGraphWindowAsciiDialog"
 
-static void     gwy_grapher_window_ascii_dialog_class_init       (GwyGrapherWindowAsciiDialogClass *klass);
-static void     gwy_grapher_window_ascii_dialog_init             (GwyGrapherWindowAsciiDialog *dialog);
-static void     gwy_grapher_window_ascii_dialog_finalize         (GObject *object);
-static gboolean gwy_grapher_window_ascii_dialog_delete           (GtkWidget *widget,
+static void     gwy_graph_window_ascii_dialog_class_init       (GwyGraphWindowAsciiDialogClass *klass);
+static void     gwy_graph_window_ascii_dialog_init             (GwyGraphWindowAsciiDialog *dialog);
+static void     gwy_graph_window_ascii_dialog_finalize         (GObject *object);
+static gboolean gwy_graph_window_ascii_dialog_delete           (GtkWidget *widget,
                                                   GdkEventAny *event);
 
-static void     units_changed_cb                                 (GwyGrapherWindowAsciiDialog *dialog);
-static void     metadata_changed_cb                              (GwyGrapherWindowAsciiDialog *dialog);
-static void     labels_changed_cb                                 (GwyGrapherWindowAsciiDialog *dialog);
+static void     units_changed_cb                                 (GwyGraphWindowAsciiDialog *dialog);
+static void     metadata_changed_cb                              (GwyGraphWindowAsciiDialog *dialog);
+static void     labels_changed_cb                                 (GwyGraphWindowAsciiDialog *dialog);
 
 
 static GtkDialogClass *parent_class = NULL;
 
 GType
-gwy_grapher_window_ascii_dialog_get_type(void)
+gwy_graph_window_ascii_dialog_get_type(void)
 {
-    static GType gwy_grapher_window_ascii_dialog_type = 0;
+    static GType gwy_graph_window_ascii_dialog_type = 0;
 
-    if (!gwy_grapher_window_ascii_dialog_type) {
-        static const GTypeInfo gwy_grapher_window_ascii_dialog_info = {
-            sizeof(GwyGrapherWindowAsciiDialogClass),
+    if (!gwy_graph_window_ascii_dialog_type) {
+        static const GTypeInfo gwy_graph_window_ascii_dialog_info = {
+            sizeof(GwyGraphWindowAsciiDialogClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_grapher_window_ascii_dialog_class_init,
+            (GClassInitFunc)gwy_graph_window_ascii_dialog_class_init,
             NULL,
             NULL,
-            sizeof(GwyGrapherWindowAsciiDialog),
+            sizeof(GwyGraphWindowAsciiDialog),
             0,
-            (GInstanceInitFunc)gwy_grapher_window_ascii_dialog_init,
+            (GInstanceInitFunc)gwy_graph_window_ascii_dialog_init,
             NULL,
         };
         gwy_debug("");
-        gwy_grapher_window_ascii_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
-                                                      GWY_GRAPHER_WINDOW_ASCII_DIALOG_TYPE_NAME,
-                                                      &gwy_grapher_window_ascii_dialog_info,
+        gwy_graph_window_ascii_dialog_type = g_type_register_static(GTK_TYPE_DIALOG,
+                                                      GWY_GRAPH_WINDOW_ASCII_DIALOG_TYPE_NAME,
+                                                      &gwy_graph_window_ascii_dialog_info,
                                                       0);
 
     }
 
-    return gwy_grapher_window_ascii_dialog_type;
+    return gwy_graph_window_ascii_dialog_type;
 }
 
 static void
-gwy_grapher_window_ascii_dialog_class_init(GwyGrapherWindowAsciiDialogClass *klass)
+gwy_graph_window_ascii_dialog_class_init(GwyGraphWindowAsciiDialogClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
@@ -79,12 +79,12 @@ gwy_grapher_window_ascii_dialog_class_init(GwyGrapherWindowAsciiDialogClass *kla
     widget_class = (GtkWidgetClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_grapher_window_ascii_dialog_finalize;
-    widget_class->delete_event = gwy_grapher_window_ascii_dialog_delete;
+    gobject_class->finalize = gwy_graph_window_ascii_dialog_finalize;
+    widget_class->delete_event = gwy_graph_window_ascii_dialog_delete;
 }
 
 static gboolean
-gwy_grapher_window_ascii_dialog_delete(GtkWidget *widget,
+gwy_graph_window_ascii_dialog_delete(GtkWidget *widget,
                        G_GNUC_UNUSED GdkEventAny *event)
 {
     gwy_debug("");
@@ -94,7 +94,7 @@ gwy_grapher_window_ascii_dialog_delete(GtkWidget *widget,
 }
 
 static void
-gwy_grapher_window_ascii_dialog_init(GwyGrapherWindowAsciiDialog *dialog)
+gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
 {
     GtkWidget *label;
     gwy_debug("");
@@ -126,35 +126,35 @@ gwy_grapher_window_ascii_dialog_init(GwyGrapherWindowAsciiDialog *dialog)
 }
 
 GtkWidget *
-gwy_grapher_window_ascii_dialog_new()
+gwy_graph_window_ascii_dialog_new()
 {
     gwy_debug("");
-    return GTK_WIDGET (g_object_new (gwy_grapher_window_ascii_dialog_get_type (), NULL));
+    return GTK_WIDGET (g_object_new (gwy_graph_window_ascii_dialog_get_type (), NULL));
 }
 
 static void
-gwy_grapher_window_ascii_dialog_finalize(GObject *object)
+gwy_graph_window_ascii_dialog_finalize(GObject *object)
 {
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPHER_WINDOW_ASCII_DIALOG(object));
+    g_return_if_fail(GWY_IS_GRAPH_WINDOW_ASCII_DIALOG(object));
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 
 static void     
-units_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+units_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
 }
 
 static void     
-labels_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+labels_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
 }
 
 static void     
-metadata_changed_cb(GwyGrapherWindowAsciiDialog *dialog)
+metadata_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
 }
 

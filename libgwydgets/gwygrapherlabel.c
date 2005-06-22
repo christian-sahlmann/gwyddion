@@ -26,66 +26,66 @@
 #include "gwygrapher.h"
 #include "gwygraphmodel.h"
 
-#define GWY_GRAPHER_LABEL_TYPE_NAME "GwyGrapherLabel"
+#define GWY_GRAPH_LABEL_TYPE_NAME "GwyGraphLabel"
 
 
 /* Forward declarations - widget related*/
-static void     gwy_grapher_label_class_init           (GwyGrapherLabelClass *klass);
-static void     gwy_grapher_label_init                 (GwyGrapherLabel *label);
-static void     gwy_grapher_label_finalize             (GObject *object);
+static void     gwy_graph_label_class_init           (GwyGraphLabelClass *klass);
+static void     gwy_graph_label_init                 (GwyGraphLabel *label);
+static void     gwy_graph_label_finalize             (GObject *object);
 
-static void     gwy_grapher_label_realize              (GtkWidget *widget);
-static void     gwy_grapher_label_unrealize            (GtkWidget *widget);
-static void     gwy_grapher_label_size_request         (GtkWidget *widget,
+static void     gwy_graph_label_realize              (GtkWidget *widget);
+static void     gwy_graph_label_unrealize            (GtkWidget *widget);
+static void     gwy_graph_label_size_request         (GtkWidget *widget,
                                                       GtkRequisition *requisition);
-static void     gwy_grapher_label_size_allocate        (GtkWidget *widget,
+static void     gwy_graph_label_size_allocate        (GtkWidget *widget,
                                                       GtkAllocation *allocation);
-static gboolean gwy_grapher_label_expose               (GtkWidget *widget,
+static gboolean gwy_graph_label_expose               (GtkWidget *widget,
                                                       GdkEventExpose *event);
 
-static gboolean gwy_grapher_label_button_press         (GtkWidget *widget,
+static gboolean gwy_graph_label_button_press         (GtkWidget *widget,
                                                       GdkEventButton *event);
-/*static gboolean gwy_grapher_label_button_release       (GtkWidget *widget,
+/*static gboolean gwy_graph_label_button_release       (GtkWidget *widget,
                                                       GdkEventButton *event);
 */
 
 /* Forward declarations - label related*/
-void            gwy_grapher_label_draw_label           (GtkWidget *widget);
+void            gwy_graph_label_draw_label           (GtkWidget *widget);
 
 /* Local data */
 
 static GtkWidgetClass *parent_class = NULL;
 
 GType
-gwy_grapher_label_get_type(void)
+gwy_graph_label_get_type(void)
 {
-    static GType gwy_grapher_label_type = 0;
+    static GType gwy_graph_label_type = 0;
 
-    if (!gwy_grapher_label_type) {
-        static const GTypeInfo gwy_grapher_label_info = {
-            sizeof(GwyGrapherLabelClass),
+    if (!gwy_graph_label_type) {
+        static const GTypeInfo gwy_graph_label_info = {
+            sizeof(GwyGraphLabelClass),
             NULL,
             NULL,
-            (GClassInitFunc)gwy_grapher_label_class_init,
+            (GClassInitFunc)gwy_graph_label_class_init,
             NULL,
             NULL,
-            sizeof(GwyGrapherLabel),
+            sizeof(GwyGraphLabel),
             0,
-            (GInstanceInitFunc)gwy_grapher_label_init,
+            (GInstanceInitFunc)gwy_graph_label_init,
             NULL,
         };
         gwy_debug("");
-        gwy_grapher_label_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                      GWY_GRAPHER_LABEL_TYPE_NAME,
-                                                      &gwy_grapher_label_info,
+        gwy_graph_label_type = g_type_register_static(GTK_TYPE_WIDGET,
+                                                      GWY_GRAPH_LABEL_TYPE_NAME,
+                                                      &gwy_graph_label_info,
                                                       0);
     }
 
-    return gwy_grapher_label_type;
+    return gwy_graph_label_type;
 }
 
 static void
-gwy_grapher_label_class_init(GwyGrapherLabelClass *klass)
+gwy_graph_label_class_init(GwyGraphLabelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
@@ -98,18 +98,18 @@ gwy_grapher_label_class_init(GwyGrapherLabelClass *klass)
 
     parent_class = g_type_class_peek_parent(klass);
 
-    gobject_class->finalize = gwy_grapher_label_finalize;
+    gobject_class->finalize = gwy_graph_label_finalize;
 
-    widget_class->realize = gwy_grapher_label_realize;
-    widget_class->expose_event = gwy_grapher_label_expose;
-    widget_class->size_request = gwy_grapher_label_size_request;
-    widget_class->unrealize = gwy_grapher_label_unrealize;
-    widget_class->size_allocate = gwy_grapher_label_size_allocate;
+    widget_class->realize = gwy_graph_label_realize;
+    widget_class->expose_event = gwy_graph_label_expose;
+    widget_class->size_request = gwy_graph_label_size_request;
+    widget_class->unrealize = gwy_graph_label_unrealize;
+    widget_class->size_allocate = gwy_graph_label_size_allocate;
     
 }
 
 static void
-gwy_grapher_label_init(GwyGrapherLabel *label)
+gwy_graph_label_init(GwyGraphLabel *label)
 {
     gwy_debug("");
     label->reqwidth = 10;
@@ -118,20 +118,20 @@ gwy_grapher_label_init(GwyGrapherLabel *label)
 }
 
 /**
- * gwy_grapher_label_new:
+ * gwy_graph_label_new:
  * 
  * creates new grapher label. 
  *
  * Returns: new grapher label 
  **/
 GtkWidget*
-gwy_grapher_label_new()
+gwy_graph_label_new()
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
 
     gwy_debug("");
 
-    label = gtk_type_new (gwy_grapher_label_get_type ());
+    label = gtk_type_new (gwy_graph_label_get_type ());
 
     label->label_font = pango_font_description_new();
     pango_font_description_set_family(label->label_font, "Helvetica");
@@ -146,25 +146,25 @@ gwy_grapher_label_new()
 }
 
 static void
-gwy_grapher_label_finalize(GObject *object)
+gwy_graph_label_finalize(GObject *object)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
 
-    gwy_debug("finalizing a GwyGrapherLabel (refcount = %u)", object->ref_count);
+    gwy_debug("finalizing a GwyGraphLabel (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(GWY_IS_GRAPHER_LABEL(object));
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(object));
 
-    label = GWY_GRAPHER_LABEL(object);
+    label = GWY_GRAPH_LABEL(object);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void
-gwy_grapher_label_unrealize(GtkWidget *widget)
+gwy_graph_label_unrealize(GtkWidget *widget)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
 
-    label = GWY_GRAPHER_LABEL(widget);
+    label = GWY_GRAPH_LABEL(widget);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -173,21 +173,21 @@ gwy_grapher_label_unrealize(GtkWidget *widget)
 
 
 static void
-gwy_grapher_label_realize(GtkWidget *widget)
+gwy_graph_label_realize(GtkWidget *widget)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
     GdkWindowAttr attributes;
     gint attributes_mask;
     GtkStyle *s;
 
-    gwy_debug("realizing a GwyGrapherLabel (%ux%u)",
+    gwy_debug("realizing a GwyGraphLabel (%ux%u)",
               widget->allocation.width, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_GRAPHER_LABEL(widget));
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-    label = GWY_GRAPHER_LABEL(widget);
+    label = GWY_GRAPH_LABEL(widget);
 
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
@@ -225,10 +225,10 @@ gwy_grapher_label_realize(GtkWidget *widget)
 
 
 static void
-gwy_grapher_label_size_request(GtkWidget *widget,
+gwy_graph_label_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
     gwy_debug("");
 
     if (widget==NULL)
@@ -238,7 +238,7 @@ gwy_grapher_label_size_request(GtkWidget *widget,
     }
     else
     {
-        label = GWY_GRAPHER_LABEL(widget);
+        label = GWY_GRAPH_LABEL(widget);
         requisition->width = label->reqwidth;
         requisition->height = label->reqheight;
     }
@@ -246,20 +246,20 @@ gwy_grapher_label_size_request(GtkWidget *widget,
 
 
 static void
-gwy_grapher_label_size_allocate(GtkWidget *widget,
+gwy_graph_label_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
 
     gwy_debug("");
 
     g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_GRAPHER_LABEL(widget));
+    g_return_if_fail(GWY_IS_GRAPH_LABEL(widget));
     g_return_if_fail(allocation != NULL);
 
     widget->allocation = *allocation;
     if (GTK_WIDGET_REALIZED(widget)) {
-        label = GWY_GRAPHER_LABEL(widget);
+        label = GWY_GRAPH_LABEL(widget);
 
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
@@ -269,33 +269,33 @@ gwy_grapher_label_size_allocate(GtkWidget *widget,
 }
 
 static gboolean
-gwy_grapher_label_expose(GtkWidget *widget,
+gwy_graph_label_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
 
     g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPHER_LABEL(widget), FALSE);
+    g_return_val_if_fail(GWY_IS_GRAPH_LABEL(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
     gwy_debug("");
 
     if (event->count > 0)
         return FALSE;
 
-    label = GWY_GRAPHER_LABEL(widget);
+    label = GWY_GRAPH_LABEL(widget);
 
     gdk_window_clear_area(widget->window,
                           0, 0,
                           widget->allocation.width,
                           widget->allocation.height);
 
-    gwy_grapher_label_draw_label(widget);
+    gwy_graph_label_draw_label(widget);
     return FALSE;
 }
 
-void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
+void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
                                               gint x, gint y, gint width, gint height,
-                                              GwyGrapherLabel *label)
+                                              GwyGraphLabel *label)
 {
     gint ypos, winheight, winwidth, winx, winy, frame_off;
     gint i;
@@ -338,12 +338,12 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
         if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
         {
             if (model->label_reverse)
-                gwy_grapher_draw_line(drawable, gc, 
+                gwy_graph_draw_line(drawable, gc, 
                                       winwidth - 20 - frame_off, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2,
                                       curvemodel->line_style, curvemodel->line_size,
                                       &(curvemodel->color));
             else
-                gwy_grapher_draw_line(drawable, gc, 
+                gwy_graph_draw_line(drawable, gc, 
                                       5 + frame_off, ypos + rect.height/2, 20 + frame_off, ypos + rect.height/2,
                                       curvemodel->line_style, curvemodel->line_size,
                                       &(curvemodel->color));
@@ -351,12 +351,12 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
         if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
         {
             if (model->label_reverse)
-                gwy_grapher_draw_point (drawable, gc, 
+                gwy_graph_draw_point (drawable, gc, 
                                      winwidth - 13 - frame_off, ypos + rect.height/2,
                                    curvemodel->point_type, curvemodel->point_size,
                                    &(curvemodel->color), FALSE); 
             else
-                gwy_grapher_draw_point (drawable, gc, 
+                gwy_graph_draw_point (drawable, gc, 
                                      12 + frame_off, ypos + rect.height/2,
                                    curvemodel->point_type, curvemodel->point_size,
                                    &(curvemodel->color), FALSE);
@@ -396,20 +396,20 @@ void gwy_grapher_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, 
   
 }
 
-void gwy_grapher_label_draw_label(GtkWidget *widget)
+void gwy_graph_label_draw_label(GtkWidget *widget)
 {
     gint winheight, winwidth, windepth, winx, winy;
-    GwyGrapherLabel *label;
+    GwyGraphLabel *label;
     PangoLayout *layout;
     GdkGC *mygc;
 
     mygc = gdk_gc_new(widget->window);
 
-    label = GWY_GRAPHER_LABEL(widget);
+    label = GWY_GRAPH_LABEL(widget);
     layout = gtk_widget_create_pango_layout(widget, "");
 
     gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);    
-    gwy_grapher_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
+    gwy_graph_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
                                              0, 0, winwidth, winheight,
                                              label);
     g_object_unref((GObject *)mygc);
@@ -418,7 +418,7 @@ void gwy_grapher_label_draw_label(GtkWidget *widget)
 
 /*determine requested size of label (will be needed by grapharea to put the label into layout)*/
 static void
-set_requised_size(GwyGrapherLabel *label)
+set_requised_size(GwyGraphLabel *label)
 {
     gint i;
     PangoLayout *layout;
@@ -448,7 +448,7 @@ set_requised_size(GwyGrapherLabel *label)
 
 /*synchronize label with information in graphmodel*/
 void 
-gwy_grapher_label_refresh(GwyGrapherLabel *label)
+gwy_graph_label_refresh(GwyGraphLabel *label)
 {
     GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
     
@@ -464,14 +464,14 @@ gwy_grapher_label_refresh(GwyGrapherLabel *label)
 
 /*set model*/
 void
-gwy_grapher_label_change_model(GwyGrapherLabel *label, gpointer gmodel)
+gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel)
 {
     label->graph_model = gmodel;
 }
 
 
 void
-gwy_grapher_label_enable_user_input(GwyGrapherLabel *label, gboolean enable)
+gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
 {
     label->enable_user_input = enable;
 }
