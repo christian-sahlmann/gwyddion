@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -551,6 +551,7 @@ gwy_layer_select_unselect(GwyVectorLayer *layer)
         gwy_layer_select_undraw(layer, parent->window);
     select_layer->selected = FALSE;
     gwy_layer_select_save(select_layer);
+    gwy_vector_layer_updated(layer);
 }
 
 static void
@@ -562,8 +563,10 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
     GtkWidget *parent;
 
     gwy_debug("n = %d", n);
-    if (!n)
+    if (!n) {
         gwy_layer_select_unselect(layer);
+        return;
+    }
     g_return_if_fail(selection);
     g_return_if_fail(n > 0 && n <= 1);
     g_return_if_fail(GWY_IS_LAYER_SELECT(layer));
@@ -579,6 +582,7 @@ gwy_layer_select_set_selection(GwyVectorLayer *layer,
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
     if (parent)
         gwy_layer_select_draw(layer, parent->window);
+    gwy_vector_layer_updated(layer);
     gwy_vector_layer_selection_finished(layer);
 }
 

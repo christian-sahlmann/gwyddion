@@ -101,6 +101,9 @@ static void       gwy_layer_points_set_max_points  (GwyLayerPoints *layer,
 static gint       gwy_layer_points_get_selection   (GwyVectorLayer *layer,
                                                     gdouble *points);
 static void       gwy_layer_points_unselect        (GwyVectorLayer *layer);
+static void       gwy_layer_points_set_selection   (GwyVectorLayer *layer,
+                                                    gint n,
+                                                    gdouble *selection);
 static void       gwy_layer_points_save            (GwyLayerPoints *layer,
                                                     gint i);
 static void       gwy_layer_points_restore         (GwyLayerPoints *layer);
@@ -122,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of several points, displayed as crosses."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -198,6 +201,7 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
     vector_class->button_release = gwy_layer_points_button_released;
     vector_class->get_selection = gwy_layer_points_get_selection;
     vector_class->unselect = gwy_layer_points_unselect;
+    vector_class->set_selection = gwy_layer_points_set_selection;
 
     klass->near_cursor = NULL;
     klass->move_cursor = NULL;
@@ -536,6 +540,41 @@ gwy_layer_points_unselect(GwyVectorLayer *layer)
         gwy_layer_points_undraw(layer, parent->window);
     points_layer->nselected = 0;
     gwy_layer_points_save(points_layer, -1);
+    gwy_vector_layer_updated(layer);
+}
+
+static void
+gwy_layer_points_set_selection(GwyVectorLayer *layer,
+                               gint n,
+                               gdouble *selection)
+{
+    GwyLayerPoints *points_layer;
+    GtkWidget *parent;
+
+    gwy_debug("n = %d", n);
+    if (!n) {
+        gwy_layer_points_unselect(layer);
+        return;
+    }
+    g_return_if_fail(selection);
+    g_return_if_fail(GWY_IS_LAYER_POINTS(layer));
+    points_layer = GWY_LAYER_POINTS(layer);
+    g_return_if_fail(n > 0 && n <= points_layer->npoints);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (parent)
+        gwy_layer_points_undraw(layer, parent->window);
+
+    points_layer->nselected = n;
+    memcpy(points_layer->points, selection, 2*n*sizeof(gdouble));
+    gwy_layer_points_save(points_layer, -1);
+
+    if (parent)
+        gwy_layer_points_draw(layer, parent->window);
+
+    gwy_vector_layer_updated(layer);
+    if (points_layer->nselected == points_layer->npoints)
+        gwy_vector_layer_selection_finished(layer);
 }
 
 static void
