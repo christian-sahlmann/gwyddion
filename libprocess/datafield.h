@@ -50,7 +50,7 @@ struct _GwyDataField {
     GwySIUnit *si_unit_xy;
     GwySIUnit *si_unit_z;
 
-    gushort cached;
+    guint32 cached;
     gdouble cache[GWY_DATA_FIELD_CACHE_SIZE];
 };
 

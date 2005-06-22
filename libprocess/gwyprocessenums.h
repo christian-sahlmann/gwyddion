@@ -83,7 +83,7 @@ typedef enum {
     GWY_DATA_FIELD_CACHE_ARF,
     GWY_DATA_FIELD_CACHE_ART,
     GWY_DATA_FIELD_CACHE_ARE,
-    GWY_DATA_FIELD_CACHE_SIZE = 16
+    GWY_DATA_FIELD_CACHE_SIZE = 30
 } GwyDataFieldCached;
 
 typedef enum {
