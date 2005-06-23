@@ -26,7 +26,8 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
-#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -71,6 +72,7 @@ typedef struct {
     gboolean do_preview;
     gdouble rel_min;
     gdouble rel_max;
+    GwyGraphModel *histogram_model;
 } ToolControls;
 
 static gboolean   module_register             (const gchar *name);
@@ -241,7 +243,8 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    controls->histogram = gwy_graph_new();
+    controls->histogram_model = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
+    controls->histogram = gwy_graph_new(GWY_GRAPH_MODEL(controls->histogram_model));
     /* XXX */
     gtk_widget_set_size_request(controls->histogram, 240, 160);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->histogram,
@@ -326,7 +329,9 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     ToolControls *controls;
+    GwyGraphCurveModel *curvemodel;
     gint isel[4];
+    gdouble selection[20]; /*XXX this should be 2 after limiting number of selections in grapher*/
 
     controls = (ToolControls*)state->user_data;
     if (controls->in_update)
@@ -359,9 +364,10 @@ dialog_update(GwyUnitoolState *state,
     }
 
     if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
-        GwyGraphAutoProperties prop;
-        GString *graph_title;
-
+        gwy_graph_model_remove_all_curves(controls->histogram_model);
+        
+        curvemodel = gwy_graph_curve_model_new();
+        
         controls->datamin = gwy_data_field_get_min(dfield);
         controls->datamax = gwy_data_field_get_max(dfield);
         controls->min = controls->datamin;
@@ -372,18 +378,13 @@ dialog_update(GwyUnitoolState *state,
 
         gwy_data_field_dh(dfield, controls->heightdist, HIST_RES);
 
-        /* Update the curve even if not visible to get graph ranges right */
-        gwy_graph_clear(graph);
-        gwy_graph_get_autoproperties(graph, &prop);
-        prop.is_point = 0;
-        prop.is_line = 1;
-        gwy_graph_set_autoproperties(graph, &prop);
 
-        /* XXX */
-        graph_title = g_string_new("");
-        gwy_graph_add_dataline(graph, controls->heightdist,
-                               0, graph_title, NULL);
-        g_string_free(graph_title, TRUE);
+        gwy_graph_curve_model_set_data_from_dataline(curvemodel, controls->heightdist,
+                               0, 0);
+        gwy_graph_curve_model_set_description(curvemodel, _("histogram"));
+        gwy_graph_curve_model_set_curve_type(curvemodel, GWY_GRAPH_CURVE_LINE);
+
+        gwy_graph_model_add_curve(controls->histogram_model, curvemodel);
     }
 
     switch (reason) {
@@ -458,22 +459,10 @@ dialog_update(GwyUnitoolState *state,
             update_graph_selection(controls);
         }
         else {
-            GwyGraphStatus_SelData *fuck;
-
-            /* XXX */
-            fuck = (GwyGraphStatus_SelData*)gwy_graph_get_status_data(graph);
-            gwy_debug("graph selection: [%g, %g]",
-                      fuck->data_start, fuck->data_end);
-            if (fuck->data_start == fuck->data_end) {
-                controls->min = controls->datamin;
-                controls->max = controls->datamax;
-            }
-            else {
-                controls->min = MIN(fuck->data_start, fuck->data_end);
-                controls->max = MAX(fuck->data_end, fuck->data_start);
-                controls->min += controls->datamin;
-                controls->max += controls->datamin;
-            }
+            gwy_graph_get_selection(graph, selection);
+            controls->min = selection[0];
+            controls->max = selection[1];
+            
             update_percentages(controls);
         }
     }
@@ -576,16 +565,23 @@ update_graph_selection(ToolControls *controls)
     GwyGraph *graph;
     gdouble graph_min, graph_max, graph_range;
     gdouble grel_min, grel_max;
+    gdouble selection[2];
 
     graph = GWY_GRAPH(controls->histogram);
     gwy_debug("%f %f", controls->rel_min, controls->rel_max);
 
     if (controls->rel_min == 0.0 && controls->rel_max == 1.0)
+    {
+        selection[0] = graph->area->x_min;
+        selection[1] = graph->area->x_min;
         gwy_graph_area_set_selection(graph->area,
-                                     graph->area->x_min,
-                                     graph->area->x_min);
+                                     GWY_GRAPH_STATUS_XSEL,
+                                     selection,
+                                     1);
+    }
     else {
-        /* XXX */
+        /* XXX tomu nejak nerozumim*/
+        /*
         grel_min = (controls->rel_min*(graph->x_reqmax - graph->x_reqmin)
                     + graph->x_reqmin - graph->x_min)
                    /(graph->x_max - graph->x_min);
@@ -595,7 +591,19 @@ update_graph_selection(ToolControls *controls)
         graph_range = graph->area->x_max - graph->area->x_min;
         graph_min = grel_min*graph_range + graph->area->x_min;
         graph_max = grel_max*graph_range + graph->area->x_min;
-        gwy_graph_area_set_selection(graph->area, graph_min, graph_max);
+        */
+        
+        graph_range = graph->area->x_max - graph->area->x_min;
+        graph_min = controls->rel_min*graph_range + graph->area->x_min;
+        graph_max = controls->rel_max*graph_range + graph->area->x_min;
+         
+        selection[0] = graph_min;
+        selection[1] = graph_max;
+        gwy_graph_area_set_selection(graph->area,
+                                     GWY_GRAPH_STATUS_XSEL,
+                                     selection,
+                                     1);
+         
     }
 }
 

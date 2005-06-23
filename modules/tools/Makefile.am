@@ -9,6 +9,7 @@ tools_PROGRAMS = \
 	crop.so \
 	filter.so \
 	grain_remove_manually.so \
+	icolorange.so \
 	level3.so \
 	maskedit.so \
 	polynom.so \
@@ -38,8 +39,8 @@ filter_so_LDFLAGS = $(module_ldflags),filter.so
 grain_remove_manually_so_SOURCES = grain_remove_manually.c
 grain_remove_manually_so_LDFLAGS = $(module_ldflags),grain_remove_manually.so
 
-#icolorange_so_SOURCES = icolorange.c
-#icolorange_so_LDFLAGS = $(module_ldflags),icolorange.so
+icolorange_so_SOURCES = icolorange.c
+icolorange_so_LDFLAGS = $(module_ldflags),icolorange.so
 
 level3_so_SOURCES = level3.c
 level3_so_LDFLAGS = $(module_ldflags),level3.so

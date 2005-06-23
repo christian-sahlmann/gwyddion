@@ -1075,6 +1075,38 @@ gwy_graph_area_clear_selection(GwyGraphArea *area)
 }
 
 
+void 
+gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, 
+                             gdouble* selection, gint n_of_selections)
+{
+    gint i;
+    GwyGraphDataArea areadata;
+    area->status = status;
+
+    if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
+    {
+        for (i=0; i<n_of_selections; i++)
+        {
+            if (area->status == GWY_GRAPH_STATUS_XSEL)
+            {
+                areadata.xmin = selection[2*i];
+                areadata.xmax = selection[2*i + 1];
+                areadata.ymin = GWY_GRAPH_MODEL(area->graph_model)->y_min;
+                areadata.ymax = GWY_GRAPH_MODEL(area->graph_model)->y_max;
+            }
+            else
+            {
+                areadata.xmin = GWY_GRAPH_MODEL(area->graph_model)->x_min;
+                areadata.xmax = GWY_GRAPH_MODEL(area->graph_model)->x_max;
+                areadata.ymin = selection[2*i];
+                areadata.ymax = selection[2*i + 1];
+            }
+        }
+        g_array_append_val(area->areasdata->data_areas, areadata);         
+    }
+}
+
+
 /**
  * gwy_graph_area_enable_user_input:
  * @area: grapher area
