@@ -30,6 +30,12 @@ typedef struct {
     gchar *none_label;
 } MenuInfo;
 
+typedef struct {
+    GtkWidget *menu;
+    GwyDataWindowMenuFilterFunc filter;
+    gpointer user_data;
+} MenuFilterData;
+
 enum {
     THUMBNAIL_SIZE = 16
 };
@@ -38,10 +44,10 @@ static GQuark omenu_data_window_key = 0;
 static GQuark omenu_data_window_id_key = 0;
 static GQuark omenu_data_window_info_key = 0;
 
-static void       gwy_option_menu_data_window_append(GwyDataWindow *data_window,
-                                                     GtkWidget *menu);
-static void       gwy_option_menu_data_window_update(GtkWidget *omenu);
-static void       gwy_option_menu_data_window_destroy(GtkWidget *omenu);
+static void gwy_option_menu_data_window_append (GwyDataWindow *data_window,
+                                                MenuFilterData *filterdata);
+static void gwy_option_menu_data_window_update (GtkWidget *omenu);
+static void gwy_option_menu_data_window_destroy(GtkWidget *omenu);
 
 /**
  * gwy_option_menu_data_window:
@@ -51,6 +57,36 @@ static void       gwy_option_menu_data_window_destroy(GtkWidget *omenu);
  * @none_label: Label to use for `none' menu item.  If it is %NULL, no `none'
  *              item is created, if it is empty, a default label is used.
  * @current: Data window to be shown as currently selected.
+ *
+ * Creates an option menu of existing data windows, with thumbnails.
+ *
+ * See gwy_option_menu_data_window_filtered() for discussion.
+ *
+ * Returns: The newly created option menu as a #GtkWidget.
+ **/
+GtkWidget*
+gwy_option_menu_data_window(GCallback callback,
+                            gpointer cbdata,
+                            const gchar *none_label,
+                            GtkWidget *current)
+{
+    return gwy_option_menu_data_window_filtered(callback, cbdata,
+                                                none_label, current,
+                                                NULL, NULL);
+}
+
+/**
+ * gwy_option_menu_data_window_filtered:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            no callback).
+ * @cbdata: User data passed to the callback.
+ * @none_label: Label to use for `none' menu item.  If it is %NULL, no `none'
+ *              item is created, if it is empty, a default label is used.
+ * @current: Data window to be shown as currently selected.
+ * @filter: Function to filter windows with.  Only windows for which it
+ *          returns %TRUE are added to the option menu.  May be %NULL to
+ *          add all windows.
+ * @user_data: Data to pass to @filter as second argument.
  *
  * Creates an option menu of existing data windows, with thumbnails.
  *
@@ -65,12 +101,15 @@ static void       gwy_option_menu_data_window_destroy(GtkWidget *omenu);
  * Returns: The newly created option menu as a #GtkWidget.
  **/
 GtkWidget*
-gwy_option_menu_data_window(GCallback callback,
-                            gpointer cbdata,
-                            const gchar *none_label,
-                            GtkWidget *current)
+gwy_option_menu_data_window_filtered(GCallback callback,
+                                     gpointer cbdata,
+                                     const gchar *none_label,
+                                     GtkWidget *current,
+                                     GwyDataWindowMenuFilterFunc filter,
+                                     gpointer user_data)
 {
     GtkWidget *omenu, *menu, *item;
+    MenuFilterData filterdata;
     MenuInfo *info;
     gulong id;
     GList *c;
@@ -88,8 +127,11 @@ gwy_option_menu_data_window(GCallback callback,
     g_object_set_qdata(G_OBJECT(omenu), omenu_data_window_id_key,
                        GINT_TO_POINTER(TRUE));
     menu = gtk_menu_new();
+    filterdata.menu = menu;
+    filterdata.filter = filter;
+    filterdata.user_data = user_data;
     gwy_app_data_window_foreach((GFunc)gwy_option_menu_data_window_append,
-                                menu);
+                                &filterdata);
     if (none_label) {
         if (!*none_label)
             none_label = _("(none)");
@@ -120,14 +162,19 @@ gwy_option_menu_data_window(GCallback callback,
 
 static void
 gwy_option_menu_data_window_append(GwyDataWindow *data_window,
-                                   GtkWidget *menu)
+                                   MenuFilterData *filterdata)
 {
     GtkWidget *item, *image, *label, *hbox;
     GwyDataView *data_view;
     GdkPixbuf *pixbuf;
     gchar *filename;
 
-    gwy_debug("adding %p to %p", data_window, menu);
+    gwy_debug("maybe adding %p to %p", data_window, filterdata->menu);
+    if (filterdata->filter
+        && !filterdata->filter(data_window, filterdata->user_data))
+        return;
+    gwy_debug("%p passed filter", data_window, filterdata->menu);
+
     data_view = gwy_data_window_get_data_view(data_window);
     filename = gwy_data_window_get_base_name(data_window);
 
@@ -141,7 +188,7 @@ gwy_option_menu_data_window_append(GwyDataWindow *data_window,
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(item), hbox);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(filterdata->menu), item);
     g_object_set_qdata(G_OBJECT(item), omenu_data_window_key, data_window);
     g_free(filename);
 }

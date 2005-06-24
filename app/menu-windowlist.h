@@ -25,10 +25,19 @@
 
 G_BEGIN_DECLS
 
+typedef gboolean (*GwyDataWindowMenuFilterFunc)(GwyDataWindow *data_window,
+                                                gpointer user_data);
+
 GtkWidget* gwy_option_menu_data_window             (GCallback callback,
                                                     gpointer cbdata,
                                                     const gchar *none_label,
                                                     GtkWidget *current);
+GtkWidget* gwy_option_menu_data_window_filtered    (GCallback callback,
+                                                    gpointer cbdata,
+                                                    const gchar *none_label,
+                                                    GtkWidget *current,
+                                                    GwyDataWindowMenuFilterFunc filter,
+                                                    gpointer user_data);
 gboolean   gwy_option_menu_data_window_set_history (GtkWidget *option_menu,
                                                     GtkWidget *current);
 GtkWidget* gwy_option_menu_data_window_get_history (GtkWidget *option_menu);
