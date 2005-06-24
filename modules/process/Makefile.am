@@ -16,6 +16,7 @@ process_PROGRAMS = \
 	dwtdenoise.so \
 	edge.so \
 	entropy.so \
+	facet_analysis.so \
 	facet-level.so \
 	fft.so \
 	fft_filter_1d.so \
@@ -97,6 +98,9 @@ edge_so_LDFLAGS = $(module_ldflags),edge.so
 
 entropy_so_SOURCES = entropy.c
 entropy_so_LDFLAGS = $(module_ldflags),entropy.so
+
+facet_analysis_so_SOURCES = facet_analysis.c
+facet_analysis_so_LDFLAGS = $(module_ldflags),facet_analysis.so
 
 facet_level_so_SOURCES = facet-level.c
 facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
