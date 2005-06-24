@@ -36,7 +36,7 @@
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 
-#define TEST_WHAT TEST_VECTOR_SHADE
+#define TEST_WHAT TEST_DATA_VIEW
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
@@ -107,21 +107,34 @@ test(void)
 
 /***** DATA VIEW [[[ ********************************************************/
 #if (TEST_WHAT == TEST_DATA_VIEW)
-#define FILENAME "test.gwy"
 
-static void
-quit_callback(GObject *data)
+static GwyDataField*
+make_data_field(void)
 {
-    FILE *fh;
-    guchar *buffer = NULL;
-    gsize size = 0;
+    GwyDataField *data_field;
+    gdouble *data;
+    gint r, i, j;
 
-    fh = fopen(FILENAME, "wb");
-    buffer = gwy_serializable_serialize(data, buffer, &size);
-    fwrite(buffer, 1, size, fh);
-    fclose(fh);
+    r = random() % 400 + 40;
+    data_field = gwy_data_field_new(r, r, 1, 1, FALSE);
+    data = gwy_data_field_get_data(data_field);
+    for (i = 0; i < r; i++) {
+        for (j = 0; j < r; j++)
+            data[i*r + j] = sin(i/3.0) + sin(j/7.0);
+    }
 
-    gtk_main_quit();
+    return data_field;
+}
+
+static gboolean
+button_press(GwyContainer *data)
+{
+    GwyDataField *data_field;
+
+    data_field = make_data_field();
+    gwy_container_set_object_by_name(data, "data", data_field);
+
+    return FALSE;
 }
 
 static void
@@ -129,41 +142,30 @@ test(void)
 {
     GwyContainer *data;
     GtkWidget *window, *view;
-    GObject *data_field;
-    GwyDataViewLayer *layer;
-    gchar *buffer = NULL;
-    gsize size = 0;
-    gsize pos = 0;
-    GError *err = NULL;
-    GwyPalette *palette;
+    GwyDataField *data_field;
+    GwyPixmapLayer *layer;
 
-    /* FIXME: this is necessary to initialize the object system */
-    g_type_class_ref(gwy_data_field_get_type());
-
-    g_file_get_contents(FILENAME, &buffer, &size, &err);
-    g_assert(!err);
-    data = GWY_CONTAINER(gwy_serializable_deserialize(buffer+4, size-1, &pos));
-
-    data_field = gwy_container_get_object_by_name(data, "/0/data");
+    data = gwy_container_new();
+    data_field = make_data_field();
+    gwy_container_set_object_by_name(data, "data", data_field);
+    g_object_unref(data_field);
 
     view = gwy_data_view_new(data);
-    layer = (GwyDataViewLayer*)gwy_layer_basic_new();
-    palette = (GwyPalette*)(gwy_palette_new(NULL));
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), GWY_PIXMAP_LAYER(layer));
-    gwy_palette_set_by_name(palette, GWY_PALETTE_RAINBOW2);
-    gwy_layer_basic_set_palette(GWY_LAYER_BASIC(layer), palette);
-    g_object_unref(palette);
-
-    layer = (GwyDataViewLayer*)gwy_layer_axes_new();
-    gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), GWY_VECTOR_LAYER(layer));
-
     g_object_unref(data);
+    gtk_widget_set_size_request(view, 200, 200);
+    g_signal_connect_swapped(view, "button_press_event",
+                             G_CALLBACK(button_press), data);
 
-    window = gwy_data_window_new(GWY_DATA_VIEW(view));
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_add(GTK_CONTAINER(window), view);
 
     gtk_widget_show_all(window);
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
-                             G_CALLBACK(quit_callback), data);
+                             G_CALLBACK(gtk_main_quit), data);
 }
 #endif
 /***** ]]] DATA VIEW ********************************************************/
@@ -290,8 +292,7 @@ main(int argc, char *argv[])
     g_random_set_seed(seed);
 
     gtk_init(&argc, &argv);
-    gwy_palette_def_setup_presets();
-    gwy_draw_type_init();
+    gwy_widgets_type_init();
     gwy_stock_register_stock_items();
     test();
     gtk_main();

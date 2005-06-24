@@ -23,16 +23,16 @@
 #include <string.h>
 #include <math.h>
 
-#include <libgwyddion/gwycontainer.h>
-#include <libprocess/datafield.h>
+#include <libgwyddion/gwyddion.h>
+#include <libprocess/gwyprocess.h>
 
-#define N 240
+#define N 400
 #define R 20
 
 int
 main(void)
 {
-    static const gchar *magic_header = "GWYO";
+    static const gchar *magic_header = "GWYP";
     FILE *fh;
     GwyContainer *container;
     GwyDataField *df, *kernel;
@@ -43,8 +43,10 @@ main(void)
     GByteArray *buffer;
 
     g_type_init();
+    gwy_process_type_init();
     srand(42);
-    container = (GwyContainer*)gwy_container_new();
+    container = gwy_container_new();
+    /*
     df = gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
     kernel = gwy_data_field_new(R, R, 1, 1, FALSE);
     r1 = rand()/(gdouble)RAND_MAX;
@@ -83,7 +85,21 @@ main(void)
     gwy_data_field_area_convolve(df, kernel, 0, 0, N, N);
     gwy_data_field_resample(kernel, 4, 4, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_area_convolve(df, kernel, 0, 0, N, N);
-    gwy_container_set_object_by_name(container, "/0/data", G_OBJECT(df));
+    */
+    df = gwy_data_field_new(N, N, 6e-8, 6e-8, FALSE);
+    data = df->data;
+    r = 16.0 * G_PI/180.0;
+    r3 = 190.0 * G_PI/180.0;
+    r1 = tan(r)*cos(r3);
+    r2 = tan(r)*sin(r3);
+    for (i = 0; i < N; i++) {
+        y = i*df->yreal/df->yres;
+        for (j = 0; j < N; j++) {
+            x = j*df->xreal/df->xres;
+            data[i*N + j] = r1*x + r2*y;
+        }
+    }
+    gwy_container_set_object_by_name(container, "/0/data", df);
     /*
        df = gwy_data_field_new(N, N, 4.1e-8, 4.1e-8, FALSE);
        data = df->data;
@@ -98,7 +114,6 @@ main(void)
        row[j] = CLAMP(row[j], 0.0, 1.0);
        }
        }
-     */
     gwy_container_set_object_by_name(container, "/0/mask", G_OBJECT(df));
     gwy_container_set_double_by_name(container, "/0/mask/red", 1.0);
     gwy_container_set_double_by_name(container, "/0/mask/blue", 0.1);
@@ -108,6 +123,7 @@ main(void)
         g_strdup("$Id$"));
     gwy_container_set_string_by_name(container, "/meta/bracket-test",
                                      g_strdup("["));
+     */
     buffer = gwy_serializable_serialize(G_OBJECT(container), NULL);
 
     fh = fopen("bracket.gwy", "wb");
