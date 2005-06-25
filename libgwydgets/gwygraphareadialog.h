@@ -25,7 +25,7 @@
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
 
-#include <libgwydgets/gwygrapherbasics.h>
+#include <libgwydgets/gwygraphbasics.h>
 
 
 G_BEGIN_DECLS

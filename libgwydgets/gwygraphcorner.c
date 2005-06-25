@@ -27,14 +27,14 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwygraphcorner.h"
+#include "gwygraph.h"
 
 #define GWY_GRAPH_CORNER_TYPE_NAME "GwyGraphCorner"
 
 
 /* Forward declarations - widget related*/
 static void     gwy_graph_corner_class_init           (GwyGraphCornerClass *klass);
-static void     gwy_graph_corner_init                 (GwyGraphCorner *graph_corner);
+static void     gwy_graph_corner_init                 (GwyGraphCorner *grapher_corner);
 static void     gwy_graph_corner_finalize             (GObject *object);
 
 static void     gwy_graph_corner_realize              (GtkWidget *widget);
@@ -109,7 +109,7 @@ gwy_graph_corner_class_init(GwyGraphCornerClass *klass)
 }
 
 static void
-gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
+gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *grapher_corner)
 {
     gwy_debug("");
 
@@ -126,25 +126,25 @@ gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
 GtkWidget*
 gwy_graph_corner_new()
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     gwy_debug("");
 
-    graph_corner = gtk_type_new (gwy_graph_corner_get_type ());
+    grapher_corner = gtk_type_new (gwy_graph_corner_get_type ());
 
-     return GTK_WIDGET(graph_corner);
+     return GTK_WIDGET(grapher_corner);
 }
 
 static void
 gwy_graph_corner_finalize(GObject *object)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     gwy_debug("finalizing a GwyGraphCorner (refcount = %u)", object->ref_count);
 
     g_return_if_fail(GWY_IS_GRAPH_CORNER(object));
 
-    graph_corner = GWY_GRAPH_CORNER(object);
+    grapher_corner = GWY_GRAPH_CORNER(object);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -152,9 +152,9 @@ gwy_graph_corner_finalize(GObject *object)
 static void
 gwy_graph_corner_unrealize(GtkWidget *widget)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -165,7 +165,7 @@ gwy_graph_corner_unrealize(GtkWidget *widget)
 static void
 gwy_graph_corner_realize(GtkWidget *widget)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
     GdkWindowAttr attributes;
     gint attributes_mask;
     GtkStyle *s;
@@ -177,7 +177,7 @@ gwy_graph_corner_realize(GtkWidget *widget)
     g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
@@ -222,10 +222,10 @@ static void
 gwy_graph_corner_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
     gwy_debug("");
 
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
     requisition->width = 10;
     requisition->height = 10;
@@ -235,7 +235,7 @@ static void
 gwy_graph_corner_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     gwy_debug("");
 
@@ -246,7 +246,7 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
     widget->allocation = *allocation;
 
     if (GTK_WIDGET_REALIZED(widget)) {
-        graph_corner = GWY_GRAPH_CORNER(widget);
+        grapher_corner = GWY_GRAPH_CORNER(widget);
 
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
@@ -260,7 +260,7 @@ static gboolean
 gwy_graph_corner_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
@@ -269,7 +269,7 @@ gwy_graph_corner_expose(GtkWidget *widget,
     if (event->count > 0)
         return FALSE;
 
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
     gdk_window_clear_area(widget->window,
                           0, 0,
@@ -284,14 +284,14 @@ static gboolean
 gwy_graph_corner_button_press(GtkWidget *widget,
                              GdkEventButton *event)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     gwy_debug("");
             g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
 
     return FALSE;
@@ -301,7 +301,7 @@ static gboolean
 gwy_graph_corner_button_release(GtkWidget *widget,
                                GdkEventButton *event)
 {
-    GwyGraphCorner *graph_corner;
+    GwyGraphCorner *grapher_corner;
 
     gwy_debug("");
 
@@ -310,7 +310,7 @@ gwy_graph_corner_button_release(GtkWidget *widget,
     g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
-    graph_corner = GWY_GRAPH_CORNER(widget);
+    grapher_corner = GWY_GRAPH_CORNER(widget);
 
 
     return FALSE;

@@ -26,7 +26,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libdraw/gwyrgba.h>
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 /*

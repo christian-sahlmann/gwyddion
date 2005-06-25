@@ -23,7 +23,7 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwygrapher.h"
+#include "gwygraph.h"
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 #include <stdio.h>

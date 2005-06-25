@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include "gwydgets.h"
 #include "gwyoptionmenus.h"
-#include "gwygrapher.h"
+#include "gwygraph.h"
 #include "gwygraphwindowmeasuredialog.h"
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"

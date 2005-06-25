@@ -26,7 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>

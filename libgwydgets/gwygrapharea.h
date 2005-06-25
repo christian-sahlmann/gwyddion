@@ -24,9 +24,8 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtklayout.h>
-
-#include <libgwydgets/gwydgetenums.h>
-#include <libgwydgets/gwygraphlabel.h>
+#include <libgwydgets/gwygraphareadialog.h>
+#include <libgwydgets/gwygraphlabeldialog.h>
 
 G_BEGIN_DECLS
 
@@ -40,105 +39,90 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphArea      GwyGraphArea;
 typedef struct _GwyGraphAreaClass GwyGraphAreaClass;
 
-/*single curve data*/
-typedef struct {
-    gdouble *xvals;     /*screen coordinates of points*/
-    gdouble *yvals;     /*screen coordinates of points*/
-    gint N;              /*number of points*/
-} GwyGraphAreaCurvePoints;
+/*
+typedef enum {
+    GWY_GRAPH_STATUS_PLAIN  = 0,
+    GWY_GRAPH_STATUS_XSEL   = 1,
+    GWY_GRAPH_STATUS_YSEL   = 2,
+    GWY_GRAPH_STATUS_POINTS = 3,
+    GWY_GRAPH_STATUS_ZOOM   = 4
+} GwyGraphStatusType;
+*/
 
 typedef struct {
-   gdouble x;
-   gdouble y;
-   char *x_unit;
-   char *y_unit;
-} GwyGraphDataPoint;
+  GwyGraphDataPoint data_point;
+} GwyGraphStatus_PointData;
 
 typedef struct {
-   gdouble i;
-   gdouble j;
-} GwyGraphScrPoint;
-
-typedef struct {
-   GwyGraphScrPoint scr_point;
-   GwyGraphDataPoint data_point;
+  GwyGraphDataPoint data_point;
 } GwyGraphStatus_CursorData;
-
-typedef struct {
-   gint scr_start;
-   gint scr_end;
-   gdouble data_start;
-   gdouble data_end;
-} GwyGraphStatus_SelData;
-
-typedef struct {
-   GwyGraphScrPoint actual_scr_point;
-   GwyGraphDataPoint actual_data_point;
-   GArray *scr_points;
-   GArray *data_points;
-   gint n;
+                                                                                                                                                               typedef struct {
+  GArray *data_points;
 } GwyGraphStatus_PointsData;
+                                                                                                                                                             
+typedef struct {
+  GwyGraphDataArea data_area;
+} GwyGraphStatus_AreaData;
+                                                                                                                                                             
+typedef struct {
+  GArray *data_areas;
+} GwyGraphStatus_AreasData;
 
 typedef struct {
-  gint x;
-  gint y;
-  gint width;
-  gint height;
   gdouble xmin;
-  gdouble xmax;
   gdouble ymin;
-  gdouble ymax;
+  gdouble width;
+  gdouble height;
 } GwyGraphStatus_ZoomData;
 
-/*NOTE: GwyGraphAreaCurveParams is defined in gwygraphlabel.h*/
 
 /*single curve*/
 typedef struct {
-    GwyGraphAreaCurvePoints data;       /*original data including its size*/
-    GwyGraphAreaCurveParams params;     /*parameters of plot*/
     GdkPoint *points;           /*points to be directly plotted*/
     
     gpointer reserved;
 } GwyGraphAreaCurve;
 
-/*overall properties of area*/
-typedef struct {
-    int ble;
-} GwyGraphAreaParams;
 
-/*graph area structure*/
+/*grapher area structure*/
 struct _GwyGraphArea {
     GtkLayout parent_instance;
 
     GdkGC *gc;
                     /*label*/
     GwyGraphLabel *lab;
-    GwyGraphAreaParams par;
 
     GwyGraphStatusType status;
-    GwyGraphStatus_SelData *seldata;
+    GwyGraphStatus_PointData *pointdata;
     GwyGraphStatus_PointsData *pointsdata;
+    GwyGraphStatus_AreaData *areadata;
+    GwyGraphStatus_AreasData *areasdata;
     GwyGraphStatus_CursorData *cursordata;
     GwyGraphStatus_ZoomData *zoomdata;
 
-    /*drawing*/
-    GPtrArray *curves;
-    gdouble x_shift;
-    gdouble y_shift;
-    gdouble x_multiply;
-    gdouble y_multiply;
-    gdouble x_max;
-    gdouble x_min;
-    gdouble y_max;
-    gdouble y_min;
-    gint newline;
+    GwyGraphStatus_CursorData *actual_cursor_data;
 
-    gint old_width;
-    gint old_height;
+    gpointer graph_model;
+    GPtrArray *curves;
 
     /*selection drawing*/
     gboolean selecting;
+    gboolean mouse_present;
 
+    /*real boundaries*/
+    gint x_max;
+    gint x_min;
+    gint y_max;
+    gint y_min;
+
+    gint old_width;
+    gint old_height;
+    gboolean newline;
+   
+    /*linestyle dialog*/
+    GwyGraphAreaDialog *area_dialog;
+    GwyGraphLabelDialog *label_dialog;
+    
     /*label movement*/
     GtkWidget *active;
     gint x0;
@@ -148,13 +132,15 @@ struct _GwyGraphArea {
 
     GdkColor *colors;
 
+    gboolean enable_user_input;
+    
     gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
     gpointer reserved5;
 };
 
-/*graph area class*/
+/*grapher area class*/
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
@@ -162,6 +148,7 @@ struct _GwyGraphAreaClass {
     GdkCursor *arrow_cursor;
     void (*selected)(GwyGraphArea *area);
     void (*zoomed)(GwyGraphArea *area);
+    void (*mousemoved)(GwyGraphArea *area);
 
 
     gpointer reserved1;
@@ -173,19 +160,28 @@ GtkWidget* gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjust
 
 GType gwy_graph_area_get_type(void) G_GNUC_CONST;
 
-void gwy_graph_area_set_style(GwyGraphArea *area, GwyGraphAreaParams style);
-
-void gwy_graph_area_set_boundaries(GwyGraphArea *area, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max);
-
-void gwy_graph_area_add_curve(GwyGraphArea *area, GwyGraphAreaCurve *curve);
-
-void gwy_graph_area_clear(GwyGraphArea *area);
-
 void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
-void gwy_graph_area_set_selection(GwyGraphArea *area, gdouble from, gdouble to);
+void gwy_graph_area_signal_mousemoved(GwyGraphArea *area);
+
+void gwy_graph_area_refresh(GwyGraphArea *area);
+
+void gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, gdouble* selection, gint n_of_selections);
+
+void gwy_graph_area_change_model(GwyGraphArea *area, gpointer gmodel);
+
+void gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
+                                            gint x, gint y, gint width, gint height,
+                                            GwyGraphArea *area);
+
+void gwy_graph_area_clear_selection(GwyGraphArea *area);
+
+void gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable);
+
+void gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor);
+
 
 G_END_DECLS
 

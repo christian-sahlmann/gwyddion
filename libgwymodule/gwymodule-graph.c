@@ -23,7 +23,7 @@
 #include <gtk/gtkmenubar.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 
 #include "gwymoduleinternal.h"
 #include "gwymodule-graph.h"

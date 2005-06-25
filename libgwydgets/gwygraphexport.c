@@ -27,46 +27,40 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
-void
-gwy_graph_export_ascii(GwyGraph *graph, const char *filename)
+void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
+                                     gboolean export_title, gboolean export_axis,
+                                     gboolean export_labels)
 {
-    FILE *fw;
-    gint i, j, maxj = 0;
-    GwyGraphAreaCurve *pcurve;
+    /*create pixmap*/
+    
+    /*plot area*/
+    
+    /*plot axis*/
 
-    if (!(fw = fopen(filename, "w"))) {
-        g_warning("Could not open file for graph export.");
-        return;
-    }
+    /*plot label*/
 
-
-    for (i = 0; i < graph->n_of_curves; i++) {
-        pcurve = g_ptr_array_index(graph->area->curves, i);
-        if (maxj < pcurve->data.N)
-            maxj = pcurve->data.N;
-        fprintf(fw, "x%d ", i + 1);
-        if (graph->has_x_unit)
-            fprintf(fw, "[%s]       ", graph->x_unit);
-        fprintf(fw, "y%d ", i + 1);
-        if (graph->has_y_unit)
-            fprintf(fw, "[%s]       ", graph->y_unit);
-
-    }
-    fprintf(fw, "\n");
-
-    for (j = 0; j < maxj; j++) {
-        for (i = 0; i < graph->n_of_curves; i++) {
-            pcurve = g_ptr_array_index(graph->area->curves, i);
-            if (j < pcurve->data.N) {
-                fprintf(fw, "%e  %e ", pcurve->data.xvals[j],
-                        pcurve->data.yvals[j]);
-            }
-            else
-                fprintf(fw, "                           ");
-        }
-        fprintf(fw, "\n");
-    }
-    fclose(fw);
+    /*save pixmap*/
+    
 }
+
+void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
+                                         gboolean export_title, gboolean export_axis,
+                                         gboolean export_labels)
+{
+    /*create stream*/
+
+    /*write header*/
+
+    /*write label*/
+    
+    /*write axis*/
+
+    /*write area*/
+
+    /*save stream*/
+
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

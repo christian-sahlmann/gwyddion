@@ -22,7 +22,7 @@
 #define __GWY_APP_GRAPH_LIST_H__
 
 #include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 

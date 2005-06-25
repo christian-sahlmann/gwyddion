@@ -42,8 +42,9 @@ typedef struct _GwyGraphModelClass GwyGraphModelClass;
 struct _GwyGraphModel {
     GObject parent_instance;
 
-    GtkWidget *graph;
+    /*GtkWidget *graph;
     gulong graph_destroy_hid;
+    */
 
     gint ncurves;
     GObject **curves;
@@ -95,7 +96,9 @@ struct _GwyGraphModelClass {
 
 GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
 GObject*   gwy_graph_model_new            (GtkWidget *graph);
-GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);
+
+/*GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);*/
+
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 
 void       gwy_graph_model_add_curve      (GwyGraphModel *gmodel,

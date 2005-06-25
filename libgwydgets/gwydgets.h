@@ -42,10 +42,10 @@
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>
 */
-#include <libgwydgets/gwygrapher.h>
-#include <libgwydgets/gwygrapherarea.h>
-#include <libgwydgets/gwygraphercorner.h>
-#include <libgwydgets/gwygrapherlabel.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygrapharea.h>
+#include <libgwydgets/gwygraphcorner.h>
+#include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwydgets/gwygraphmodel.h>
 /*

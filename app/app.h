@@ -25,7 +25,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
 /*#include <libgwydgets/gwygraph.h>*/
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
 

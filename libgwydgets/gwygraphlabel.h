@@ -25,8 +25,6 @@
 #include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
 
-#include <libgwydgets/gwydgetenums.h>
-
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_LABEL            (gwy_graph_label_get_type())
@@ -39,46 +37,18 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphLabel      GwyGraphLabel;
 typedef struct _GwyGraphLabelClass GwyGraphLabelClass;
 
-/*single curve properties*/
-typedef struct {
-    gint is_line;   /* XXX: booleans should be booleans */
-    gint is_point;   /* XXX: booleans should be booleans */
-
-    gint point_size;
-    gint point_type;   /* XXX: enmus should be enums */
-
-    GdkLineStyle line_style;
-    gint line_size;
-
-    GString *description;
-    GdkColor color;
-
-    /* when adding meaningful fields, please make sure GwyGraphCurveModel
-     * understands them too */
-    gpointer reserved1;
-    gpointer reserved2;
-} GwyGraphAreaCurveParams;
-
-
-typedef struct {
-    gboolean is_frame;
-    gint frame_thickness;
-    gint position;
-    PangoFontDescription *font;
-
-    gpointer reserved1;
-    gpointer reserved2;
-} GwyGraphLabelParams;
 
 struct _GwyGraphLabel {
     GtkWidget widget;
 
-    GwyGraphLabelParams par;
-    gboolean is_visible;
-    gint maxwidth;
-    gint maxheight;
+    PangoFontDescription *label_font;
+    gpointer graph_model;
 
-    GPtrArray *curve_params;
+    gint *samplepos;
+    gint reqheight;
+    gint reqwidth;
+
+    gboolean enable_user_input;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -98,17 +68,15 @@ GtkWidget* gwy_graph_label_new();
 
 GType gwy_graph_label_get_type(void) G_GNUC_CONST;
 
-void gwy_graph_label_set_visible(GwyGraphLabel *label, gboolean is_visible);
+void gwy_graph_label_refresh(GwyGraphLabel *label);
 
-void gwy_graph_label_set_style(GwyGraphLabel *label, GwyGraphLabelParams style);
+void gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel);
 
-void gwy_graph_label_add_curve(GwyGraphLabel *label, GwyGraphAreaCurveParams *params);
+void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
+                                              gint x, gint y, gint width, gint height,
+                                              GwyGraphLabel *label);
 
-void gwy_graph_label_clear(GwyGraphLabel *label);
-
-void  gwy_graph_draw_point (GdkWindow *window,
-                            GdkGC *gc, gint i, gint j,
-                            gint type, gint size, GdkColor *color, gboolean clear);
+void gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable);
 
 G_END_DECLS
 

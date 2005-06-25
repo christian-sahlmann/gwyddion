@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GTK_PLOT_H__
-#define __GTK_PLOT_H__
+#ifndef __GTK_GRAPH_H__
+#define __GTK_GRAPH_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -28,8 +28,11 @@
 #include <libprocess/dataline.h>
 
 #include <libgwydgets/gwyaxis.h>
-#include <libgwydgets/gwygrapharea.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphbasics.h>
+#include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygraphcorner.h>
+#include <libgwydgets/gwygrapharea.h>
 
 G_BEGIN_DECLS
 
@@ -43,22 +46,14 @@ G_BEGIN_DECLS
 typedef struct _GwyGraph      GwyGraph;
 typedef struct _GwyGraphClass GwyGraphClass;
 
-typedef struct {
-    gboolean is_line;
-    gboolean is_point;
-    gint line_size;
-    gint point_size;
-    GdkColor color;
-} GwyGraphAutoProperties;
-
 
 struct _GwyGraph {
     GtkTable table;
 
-    GwyAxis *axis_top;
-    GwyAxis *axis_left;
-    GwyAxis *axis_right;
-    GwyAxis *axis_bottom;
+    GwyAxiser *axis_top;
+    GwyAxiser *axis_left;
+    GwyAxiser *axis_right;
+    GwyAxiser *axis_bottom;
 
     GwyGraphCorner *corner_tl;
     GwyGraphCorner *corner_bl;
@@ -67,23 +62,9 @@ struct _GwyGraph {
 
     GwyGraphArea *area;
 
-    gint n_of_curves;
-    gint n_of_autocurves;
+    GwyGraphModel *graph_model;
 
-    GwyGraphAutoProperties autoproperties;
-
-    gdouble x_max, x_reqmax;
-    gdouble x_min, x_reqmin;
-    gdouble y_max, y_reqmax;
-    gdouble y_min, y_reqmin;
-
-    gboolean has_x_unit;
-    gboolean has_y_unit;
-    gchar *x_unit;
-    gchar *y_unit;
-
-    GwyGraphStatus_SelData seldata;
-    GwyGraphStatus_PointsData pointsdata;
+    gboolean enable_user_input;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -92,56 +73,60 @@ struct _GwyGraph {
 struct _GwyGraphClass {
     GtkTableClass parent_class;
 
-    void (*gwygraph)(GwyGraph *graph);
-
+    void (*gwygraph)(GwyGraph *grapher);
+    void (*selected)(GwyGraph *grapher);
+    void (*mousemoved)(GwyGraph *grapher);    
+    void (*zoomed)(GwyGraph *grapher);
+    
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GtkWidget *gwy_graph_new();
+GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
+void       gwy_graph_refresh(GwyGraph *grapher);
+void       gwy_graph_refresh_and_reset(GwyGraph *grapher);
 
-/*basic interfaces*/
+void       gwy_graph_change_model(GwyGraph *grapher, 
+                                    GwyGraphModel *gmodel);
+void       gwy_graph_set_status(GwyGraph *grapher,
+                                  GwyGraphStatusType status);
+GwyGraphStatusType  gwy_graph_get_status(GwyGraph *grapher);
 
-void gwy_graph_add_dataline_with_units(GwyGraph *graph, GwyDataLine *dataline,
-                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params,
-            gdouble x_order, gdouble y_order, char *x_unit, char *y_unit);
+GwyGraphModel *gwy_graph_get_model(GwyGraph *grapher);
 
-void gwy_graph_add_dataline(GwyGraph *graph, GwyDataLine *dataline,
-                              gdouble shift, GString *label, GwyGraphAreaCurveParams *params);
+void       gwy_graph_signal_selected(GwyGraph *grapher);
+void       gwy_graph_signal_mousemoved(GwyGraph *grapher);
+void       gwy_graph_signal_zoomed(GwyGraph *grapher);
 
-void gwy_graph_add_datavalues(GwyGraph *graph, gdouble *xvals, gdouble *yvals,
-                              gint n, GString *label, GwyGraphAreaCurveParams *params);
+gint       gwy_graph_get_selection_number(GwyGraph *grapher);
+void       gwy_graph_get_selection(GwyGraph *grapher,
+                                     gdouble *selection);
 
-void gwy_graph_clear(GwyGraph *graph);
-void gwy_graph_set_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
-void gwy_graph_get_autoproperties(GwyGraph *graph, GwyGraphAutoProperties *autoproperties);
+void       gwy_graph_clear_selection(GwyGraph *grapher);
 
-/* XXX: this is implemented in gwygraphexport.c */
-void gwy_graph_export_ascii(GwyGraph *graph, const char *filename);
+void       gwy_graph_get_cursor(GwyGraph *grapher,
+                                  gdouble *x_cursor, gdouble *y_cursor);
 
-/*graph status (selections enabled) handling*/
+void       gwy_graph_request_x_range(GwyGraph *grapher, gdouble x_min_req, gdouble x_max_req);
+void       gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_req);
+void       gwy_graph_get_x_range(GwyGraph *grapher, gdouble *x_min, gdouble *x_max);
+void       gwy_graph_get_y_range(GwyGraph *grapher, gdouble *y_min, gdouble *y_max);
 
-void               gwy_graph_set_status(GwyGraph *graph,
-          GwyGraphStatusType status);
+void       gwy_graph_enable_user_input(GwyGraph *grapher, gboolean enable);
 
-GwyGraphStatusType gwy_graph_get_status(GwyGraph *graph);
 
-gpointer           gwy_graph_get_status_data(GwyGraph *graph);
+void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename, 
+                                     gboolean export_title, gboolean export_axis,
+                                     gboolean export_labels);
+void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
+                                         gboolean export_title, gboolean export_axis,
+                                         gboolean export_labels);
 
-void gwy_graph_get_boundaries(GwyGraph *graph, gdouble *x_min, gdouble *x_max, gdouble *y_min, gdouble *y_max);
-void gwy_graph_set_boundaries(GwyGraph *graph, gdouble x_min, gdouble x_max, gdouble y_min, gdouble y_max);
+void       gwy_graph_zoom_in(GwyGraph *grapher);
+void       gwy_graph_zoom_out(GwyGraph *grapher);
 
-void gwy_graph_unzoom(GwyGraph *graph);
-
-void gwy_graph_get_data(GwyGraph *graph, gdouble *xval, gdouble *yval, gint curve);
-gint gwy_graph_get_data_size(GwyGraph *graph, gint curve);
-gint gwy_graph_get_number_of_curves(GwyGraph *graph);
-
-GString *gwy_graph_get_label(GwyGraph *graph, gint curve);
-
-void gwy_graph_enable_axis_label_edit(GwyGraph *graph, gboolean enable);
 
 G_END_DECLS
 

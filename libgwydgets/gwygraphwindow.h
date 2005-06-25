@@ -26,7 +26,7 @@
 #include <gtk/gtkwindow.h>
 #include <gtk/gtktooltips.h>
 
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphwindowmeasuredialog.h>
 
 G_BEGIN_DECLS

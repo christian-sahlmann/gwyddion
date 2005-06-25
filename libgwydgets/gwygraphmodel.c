@@ -23,7 +23,7 @@
 #include <libgwyddion/gwyddion.h>
 #include "gwygraphcurvemodel.h"
 #include "gwygraphmodel.h"
-#include "gwygrapher.h"
+#include "gwygraph.h"
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
@@ -180,9 +180,9 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)gmodel);
 
-    gmodel->graph = NULL;
+    /*gmodel->graph = NULL;
     gmodel->graph_destroy_hid = 0;
-
+*/
     gmodel->ncurves = 0;
     gmodel->curves = NULL;
 
@@ -228,6 +228,7 @@ gwy_graph_model_new(GtkWidget *graph)
     gwy_debug("");
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL, NULL);
 
+    /*
     gmodel->graph = graph;
     if (graph) {
         g_assert(GWY_IS_GRAPH(graph));
@@ -240,6 +241,7 @@ gwy_graph_model_new(GtkWidget *graph)
                                G_CALLBACK(gwy_graph_model_graph_destroyed),
                                gmodel);
     }
+    */
 
     return (GObject*)(gmodel);
 }
@@ -253,11 +255,13 @@ gwy_graph_model_finalize(GObject *object)
     gwy_debug("");
 
     gmodel = GWY_GRAPH_MODEL(object);
+    /*
     if (gmodel->graph_destroy_hid) {
         g_assert(GWY_IS_GRAPH(gmodel->graph));
         g_signal_handler_disconnect(gmodel->graph,
                                     gmodel->graph_destroy_hid);
     }
+    */
 
     g_object_unref(gmodel->x_unit);
     g_object_unref(gmodel->y_unit);
@@ -281,9 +285,10 @@ gwy_graph_model_graph_destroyed(GwyGraph *graph,
 {
     gwy_debug("");
     /*gwy_graph_model_save_graph(gmodel, graph);*/
-    g_signal_handler_disconnect(gmodel->graph, gmodel->graph_destroy_hid);
+    /*g_signal_handler_disconnect(gmodel->graph, gmodel->graph_destroy_hid);
     gmodel->graph_destroy_hid = 0;
     gmodel->graph = NULL;
+    */
 }
 
 /* actually copy save from a -- usually just dying -- graph */
@@ -297,8 +302,8 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
 
     gwy_debug("");
     g_assert(graph && graph == gmodel->graph);
-/*
-    /* FIXME: we access object fields directly now as we are supposed to know
+
+     FIXME: we access object fields directly now as we are supposed to know
      * some their internals anyway. */
     /* graph */
 /*    if ((gmodel->has_x_unit = graph->has_x_unit))
@@ -317,8 +322,8 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     gmodel->y_min = graph->y_reqmin;
     gmodel->x_max = graph->x_reqmax;
     gmodel->y_max = graph->y_reqmax;
-/*
-    /* axes */
+
+     axes */
 /*    g_string_assign(gmodel->top_label,
                     gwy_axis_get_label(graph->axis_top)->str);
     g_string_assign(gmodel->bottom_label,
@@ -328,12 +333,12 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     g_string_assign(gmodel->right_label,
                     gwy_axis_get_label(graph->axis_right)->str);
 
-    /* label */
+     label */
 /*    gmodel->label_position = graph->area->lab->par.position;
     gmodel->label_has_frame = graph->area->lab->par.is_frame;
     gmodel->label_frame_thickness = graph->area->lab->par.frame_thickness;
 
-    /* curves */
+     curves */
     /* somewhat hairy; trying to avoid redundant reallocations:
      * 1. clear extra curves that model has and graph has not
      * 2. realloc curves to the right size
@@ -341,17 +346,17 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
      * 4. fill new curves
      */
 /*    nacurves = graph->area->curves->len;
-    /* 1. clear */
+     1. clear */
 /*    for (i = nacurves; i < gmodel->ncurves; i++)
         gwy_object_unref(gmodel->curves[i]);
-    /* 2. realloc */
+     2. realloc */
 /*    gmodel->curves = g_renew(GObject*, gmodel->curves, nacurves);
-    /* 3. replace */
+     3. replace */
 /*    for (i = 0; i < gmodel->ncurves; i++) {
         gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
         gwy_graph_curve_model_save_curve(gcmodel, graph, i);
     }
-    /* 4. fill */
+     4. fill */
 /*    for (i = gmodel->ncurves; i < nacurves; i++) {
         gmodel->curves[i] = gwy_graph_curve_model_new();
         gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
@@ -360,7 +365,7 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     gmodel->ncurves = nacurves;
 }
 
-/*
+
 GtkWidget*
 gwy_graph_new_from_model(GwyGraphModel *gmodel)
 {
@@ -544,9 +549,9 @@ gwy_graph_model_duplicate(GObject *object)
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(object), NULL);
 
     gmodel = GWY_GRAPH_MODEL(object);
-    if (gmodel->graph)
+    /*if (gmodel->graph)
         return gwy_graph_model_new(gmodel->graph);
-
+    */
     duplicate = (GwyGraphModel*)gwy_graph_model_new_alike(gmodel);
     
     duplicate->ncurves = gmodel->ncurves;

@@ -26,7 +26,7 @@
 #include <libprocess/fractals.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwygraphmodel.h>
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <app/settings.h>

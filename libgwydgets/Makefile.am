@@ -11,7 +11,6 @@ libgwydgetsinclude_HEADERS = \
 	gwy3dview.h \
 	gwy3dwindow.h \
 	gwyaxis.h \
-	gwyaxiser.h \
 	gwyaxisdialog.h \
 	gwycoloraxis.h \
 	gwycolorbutton.h \
@@ -29,13 +28,13 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphwindow.h \
 	gwygraphwindowasciidialog.h \
 	gwygraphwindowmeasuredialog.h \
-	gwygrapherareadialog.h \
-	gwygrapherarea.h \
-	gwygrapherbasics.h \
-	gwygraphercorner.h \
-	gwygrapher.h \
-	gwygrapherlabeldialog.h \
-	gwygrapherlabel.h \
+	gwygraphareadialog.h \
+	gwygrapharea.h \
+	gwygraphbasics.h \
+	gwygraphcorner.h \
+	gwygraph.h \
+	gwygraphlabeldialog.h \
+	gwygraphlabel.h \
 	gwyhruler.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
@@ -76,7 +75,6 @@ libgwydgets_la_SOURCES = \
 	gwy3dview.c \
 	gwy3dwindow.c \
 	gwyaxis.c \
-	gwyaxiser.c \
 	gwyaxisdialog.c \
 	gwycoloraxis.c \
 	gwycolorbutton.c \
@@ -93,13 +91,13 @@ libgwydgets_la_SOURCES = \
 	gwygraphwindow.c \
 	gwygraphwindowasciidialog.c \
 	gwygraphwindowmeasuredialog.c \
-	gwygrapherareadialog.c \
-	gwygrapherarea.c \
-	gwygrapherbasics.c \
-	gwygraphercorner.c \
-	gwygrapher.c \
-	gwygrapherlabeldialog.c \
-	gwygrapherlabel.c \
+	gwygraphareadialog.c \
+	gwygrapharea.c \
+	gwygraphbasics.c \
+	gwygraphcorner.c \
+	gwygraph.c \
+	gwygraphlabeldialog.c \
+	gwygraphlabel.c \
 	gwyhruler.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \

@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include <libgwydgets/gwygrapher.h>
+#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygraphdata.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>

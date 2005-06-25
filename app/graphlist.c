@@ -368,9 +368,11 @@ gwy_app_graph_list_hide_graph(GtkTreeModel *store,
     GObject *gmodel;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    /* XXX
     graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
     if (graph)
         gtk_widget_destroy(gtk_widget_get_toplevel(graph));
+        */
     g_object_unref(gmodel);
 
     return FALSE;
@@ -387,10 +389,11 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
 
     list = GTK_WIDGET(userdata);
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    /* XXX
     if (GWY_GRAPH_MODEL(gmodel)->graph) {
         g_object_unref(gmodel);
         return FALSE;
-    }
+    }*/
 
     graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
@@ -419,10 +422,11 @@ gwy_app_graph_list_delete_graph(GtkTreeModel *store,
     gchar key[32];
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    /* XXX
     graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
     if (graph)
         gtk_widget_destroy(gtk_widget_get_toplevel(graph));
-
+     */
     gtk_list_store_remove(GTK_LIST_STORE(store), iter);
     id = GPOINTER_TO_INT(g_object_get_data(gmodel, "gwy-app-graph-list-id"));
     g_assert(id);
@@ -497,7 +501,9 @@ gwy_app_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_return_if_fail(GWY_IS_GRAPH_MODEL(gmodel));
     switch (id) {
         case GRAPHLIST_VISIBLE:
+        /* XXX
         g_object_set(cell, "active", gmodel->graph != NULL, NULL);
+        */
         break;
 
         case GRAPHLIST_TITLE:
@@ -586,6 +592,7 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
     GwyGraph *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    /*
     graph = GWY_GRAPH_MODEL(gmodel)->graph;
     if (graph)
         g_signal_handlers_disconnect_matched(graph,
@@ -594,6 +601,7 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
                                              0, 0, 0,
                                              gtk_widget_queue_draw,
                                              list);
+    */
     g_object_unref(gmodel);
 
     return FALSE;
