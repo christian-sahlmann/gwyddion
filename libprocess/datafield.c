@@ -1103,7 +1103,6 @@ gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
         return FALSE;
 }
 
-
 /**
  * gwy_data_field_get_val:
  * @data_field: A data field.
@@ -1111,6 +1110,10 @@ gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
  * @row: Row index.
  *
  * Gets value at given position in a data field.
+ *
+ * Do not access data with this function inside inner loops, it's slow.
+ * Get raw data buffer with gwy_data_field_get_data_const() and access it
+ * directly instead.
  *
  * Returns: Value at (@col, @row).
  **/
@@ -1129,6 +1132,9 @@ gwy_data_field_get_val(GwyDataField *data_field, gint col, gint row)
  * @value: Value to set.
  *
  * Sets value at given position in a data field.
+ *
+ * Do not set data with this function inside inner loops, it's slow.  Get raw
+ * data buffer with gwy_data_field_get_data() and write to it directly instead.
  **/
 void
 gwy_data_field_set_val(GwyDataField *data_field,
