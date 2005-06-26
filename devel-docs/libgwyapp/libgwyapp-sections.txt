@@ -98,7 +98,9 @@ gwy_app_toolbox_update_state
 
 <SECTION>
 <FILE>menu-windowlist</FILE>
+GwyDataWindowMenuFilterFunc
 gwy_option_menu_data_window
+gwy_option_menu_data_window_filtered
 gwy_option_menu_data_window_set_history
 gwy_option_menu_data_window_get_history
 </SECTION>
@@ -107,13 +109,12 @@ gwy_option_menu_data_window_get_history
 <FILE>undo</FILE>
 gwy_app_undo_checkpoint
 gwy_app_undo_checkpointv
-gwy_app_undo_undo
-gwy_app_undo_undo_window
-gwy_app_undo_redo
-gwy_app_undo_redo_window
-gwy_app_data_window_has_undo
-gwy_app_data_window_has_redo
-gwy_app_undo_clear
+gwy_app_undo_undo_container
+gwy_app_undo_redo_container
+gwy_app_undo_container_has_undo
+gwy_app_undo_container_has_redo
+gwy_app_undo_container_get_modified
+gwy_app_undo_container_set_unmodified
 </SECTION>
 
 <SECTION>

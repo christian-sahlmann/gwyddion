@@ -22,26 +22,38 @@ be introduced probably.
 
 </para>
 
-<!-- ##### STRUCT GwyGraphAutoProperties ##### -->
-<para>
-This structure corresponds to settings of display mode of data that
-are added with no specific display mode requests (lines/points, line color, etc.).
-For these data, drawing properties are determined automatically, in order
-to make curves distinguishable. These automatically generated curve properties
-are saved here.
-</para>
-
-@is_line: 
-@is_point: 
-@line_size: 
-@point_size: 
-@color: 
-
 <!-- ##### STRUCT GwyGraph ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### SIGNAL GwyGraph::mousemoved ##### -->
+<para>
+
+</para>
+
+@:
+
+@gwygraph: the object which received the signal.
+
+<!-- ##### SIGNAL GwyGraph::selected ##### -->
+<para>
+
+</para>
+
+@:
+
+@gwygraph: the object which received the signal.
+
+<!-- ##### SIGNAL GwyGraph::zoomed ##### -->
+<para>
+
+</para>
+
+@:
+
+@gwygraph: the object which received the signal.
 
 <!-- ##### STRUCT GwyGraphClass ##### -->
 <para>
@@ -50,6 +62,9 @@ are saved here.
 
 @parent_class: 
 @gwygraph: 
+@selected: 
+@mousemoved: 
+@zoomed: 
 @reserved1: 
 @reserved2: 
 
@@ -58,83 +73,33 @@ are saved here.
 
 </para>
 
+@gmodel: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_add_dataline_with_units ##### -->
+<!-- ##### FUNCTION gwy_graph_refresh ##### -->
 <para>
 
 </para>
 
-@graph: 
-@dataline: 
-@shift: 
-@label: 
-@params: 
-@x_order: 
-@y_order: 
-@x_unit: 
-@y_unit: 
+@grapher: 
 
 
-<!-- ##### FUNCTION gwy_graph_add_dataline ##### -->
+<!-- ##### FUNCTION gwy_graph_refresh_and_reset ##### -->
 <para>
 
 </para>
 
-@graph: 
-@dataline: 
-@shift: 
-@label: 
-@params: 
+@grapher: 
 
 
-<!-- ##### FUNCTION gwy_graph_add_datavalues ##### -->
+<!-- ##### FUNCTION gwy_graph_change_model ##### -->
 <para>
 
 </para>
 
-@graph: 
-@xvals: 
-@yvals: 
-@n: 
-@label: 
-@params: 
-
-
-<!-- ##### FUNCTION gwy_graph_clear ##### -->
-<para>
-
-</para>
-
-@graph: 
-
-
-<!-- ##### FUNCTION gwy_graph_set_autoproperties ##### -->
-<para>
-
-</para>
-
-@graph: 
-@autoproperties: 
-
-
-<!-- ##### FUNCTION gwy_graph_get_autoproperties ##### -->
-<para>
-
-</para>
-
-@graph: 
-@autoproperties: 
-
-
-<!-- ##### FUNCTION gwy_graph_export_ascii ##### -->
-<para>
-
-</para>
-
-@graph: 
-@filename: 
+@grapher: 
+@gmodel: 
 
 
 <!-- ##### FUNCTION gwy_graph_set_status ##### -->
@@ -142,7 +107,7 @@ are saved here.
 
 </para>
 
-@graph: 
+@grapher: 
 @status: 
 
 
@@ -151,99 +116,165 @@ are saved here.
 
 </para>
 
-@graph: 
+@grapher: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_get_status_data ##### -->
+<!-- ##### FUNCTION gwy_graph_get_model ##### -->
 <para>
 
 </para>
 
-@graph: 
+@grapher: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@status: 
 
 
-<!-- ##### FUNCTION gwy_graph_get_boundaries ##### -->
+<!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
 <para>
 
 </para>
 
-@graph: 
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_signal_zoomed ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_selection_number ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_selection ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@selection: 
+
+
+<!-- ##### FUNCTION gwy_graph_clear_selection ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_cursor ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@x_cursor: 
+@y_cursor: 
+
+
+<!-- ##### FUNCTION gwy_graph_request_x_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@x_min_req: 
+@x_max_req: 
+
+
+<!-- ##### FUNCTION gwy_graph_request_y_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@y_min_req: 
+@y_max_req: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_x_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
 @x_min: 
 @x_max: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_y_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
 @y_min: 
 @y_max: 
 
 
-<!-- ##### FUNCTION gwy_graph_set_boundaries ##### -->
+<!-- ##### FUNCTION gwy_graph_enable_user_input ##### -->
 <para>
 
 </para>
 
-@graph: 
-@x_min: 
-@x_max: 
-@y_min: 
-@y_max: 
-
-
-<!-- ##### FUNCTION gwy_graph_unzoom ##### -->
-<para>
-
-</para>
-
-@graph: 
-
-
-<!-- ##### FUNCTION gwy_graph_get_data ##### -->
-<para>
-
-</para>
-
-@graph: 
-@xval: 
-@yval: 
-@curve: 
-
-
-<!-- ##### FUNCTION gwy_graph_get_data_size ##### -->
-<para>
-
-</para>
-
-@graph: 
-@curve: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_graph_get_number_of_curves ##### -->
-<para>
-
-</para>
-
-@graph: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_graph_get_label ##### -->
-<para>
-
-</para>
-
-@graph: 
-@curve: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_graph_enable_axis_label_edit ##### -->
-<para>
-
-</para>
-
-@graph: 
+@grapher: 
 @enable: 
+
+
+<!-- ##### FUNCTION gwy_graph_export_pixmap ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@filename: 
+@export_title: 
+@export_axis: 
+@export_labels: 
+
+
+<!-- ##### FUNCTION gwy_graph_export_postscript ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@filename: 
+@export_title: 
+@export_axis: 
+@export_labels: 
+
+
+<!-- ##### FUNCTION gwy_graph_zoom_in ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_zoom_out ##### -->
+<para>
+
+</para>
+
+@grapher: 
 
 

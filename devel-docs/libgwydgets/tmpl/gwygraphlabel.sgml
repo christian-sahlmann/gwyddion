@@ -15,34 +15,6 @@ the GwyGraph widget. It plots a curves legend.
 
 </para>
 
-<!-- ##### STRUCT GwyGraphAreaCurveParams ##### -->
-<para>
-
-</para>
-
-@is_line: 
-@is_point: 
-@point_size: 
-@point_type: 
-@line_style: 
-@line_size: 
-@description: 
-@color: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyGraphLabelParams ##### -->
-<para>
-
-</para>
-
-@is_frame: 
-@frame_thickness: 
-@position: 
-@font: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### STRUCT GwyGraphLabel ##### -->
 <para>
 
@@ -67,34 +39,7 @@ the GwyGraph widget. It plots a curves legend.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_label_set_visible ##### -->
-<para>
-
-</para>
-
-@label: 
-@is_visible: 
-
-
-<!-- ##### FUNCTION gwy_graph_label_set_style ##### -->
-<para>
-
-</para>
-
-@label: 
-@style: 
-
-
-<!-- ##### FUNCTION gwy_graph_label_add_curve ##### -->
-<para>
-
-</para>
-
-@label: 
-@params: 
-
-
-<!-- ##### FUNCTION gwy_graph_label_clear ##### -->
+<!-- ##### FUNCTION gwy_graph_label_refresh ##### -->
 <para>
 
 </para>
@@ -102,18 +47,36 @@ the GwyGraph widget. It plots a curves legend.
 @label: 
 
 
-<!-- ##### FUNCTION gwy_graph_draw_point ##### -->
+<!-- ##### FUNCTION gwy_graph_label_change_model ##### -->
 <para>
 
 </para>
 
-@window: 
+@label: 
+@gmodel: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_draw_label_on_drawable ##### -->
+<para>
+
+</para>
+
+@drawable: 
 @gc: 
-@i: 
-@j: 
-@type: 
-@size: 
-@color: 
-@clear: 
+@layout: 
+@x: 
+@y: 
+@width: 
+@height: 
+@label: 
+
+
+<!-- ##### FUNCTION gwy_graph_label_enable_user_input ##### -->
+<para>
+
+</para>
+
+@label: 
+@enable: 
 
 

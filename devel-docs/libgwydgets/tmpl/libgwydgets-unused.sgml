@@ -507,6 +507,27 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### MACRO GWY_GRAPHER_WINDOW_MEASURE_DIALOG ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GWY_GRAPHER_WINDOW_MEASURE_DIALOG_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+<!-- ##### MACRO GWY_GRAPHER_WINDOW_MEASURE_DIALOG_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
 <!-- ##### MACRO GWY_GRAPH_LABEL_NORTHEAST ##### -->
 <para>
 
@@ -626,6 +647,45 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### STRUCT GwyAxis ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
+<para>
+
+</para>
+
+@gwyaxis: the object which received the signal.
+
+<!-- ##### STRUCT GwyAxisClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@label_updated: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### STRUCT GwyAxisParams ##### -->
+<para>
+
+</para>
+
+@major_length: 
+@major_thickness: 
+@major_maxticks: 
+@major_printmode: 
+@minor_length: 
+@minor_thickness: 
+@minor_division: 
+@line_thickness: 
+@major_font: 
+@label_font: 
+
 <!-- ##### ENUM GwyAxiserScaleFormat ##### -->
 <para>
 
@@ -699,6 +759,53 @@ GwyVMenuBar
 
 @gwygrapharea: the object which received the signal.
 
+<!-- ##### STRUCT GwyGraphAreaCurveParams ##### -->
+<para>
+
+</para>
+
+@is_line: 
+@is_point: 
+@point_size: 
+@point_type: 
+@line_style: 
+@line_size: 
+@description: 
+@color: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### STRUCT GwyGraphAreaCurvePoints ##### -->
+<para>
+
+</para>
+
+@xvals: 
+@yvals: 
+@N: 
+
+<!-- ##### STRUCT GwyGraphAreaParams ##### -->
+<para>
+
+</para>
+
+@ble: 
+
+<!-- ##### STRUCT GwyGraphAutoProperties ##### -->
+<para>
+This structure corresponds to settings of display mode of data that
+are added with no specific display mode requests (lines/points, line color, etc.).
+For these data, drawing properties are determined automatically, in order
+to make curves distinguishable. These automatically generated curve properties
+are saved here.
+</para>
+
+@is_line: 
+@is_point: 
+@line_size: 
+@point_size: 
+@color: 
+
 <!-- ##### STRUCT GwyGraphEpitomeCurve ##### -->
 <para>
 
@@ -708,6 +815,60 @@ GwyVMenuBar
 @xdata: 
 @ydata: 
 @params: 
+
+<!-- ##### STRUCT GwyGraphLabelParams ##### -->
+<para>
+
+</para>
+
+@is_frame: 
+@frame_thickness: 
+@position: 
+@font: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### STRUCT GwyGraphScrPoint ##### -->
+<para>
+
+</para>
+
+@i: 
+@j: 
+
+<!-- ##### STRUCT GwyGraphStatus_SelData ##### -->
+<para>
+
+</para>
+
+@scr_start: 
+@scr_end: 
+@data_start: 
+@data_end: 
+
+<!-- ##### STRUCT GwyGrapherActiveAreaSpecs ##### -->
+<para>
+
+</para>
+
+@xmin: 
+@ymin: 
+@height: 
+@width: 
+@real_xmin: 
+@real_ymin: 
+@real_height: 
+@real_width: 
+@log_x: 
+@log_y: 
+
+<!-- ##### STRUCT GwyGrapherAreaCurve ##### -->
+<para>
+
+</para>
+
+@points: 
+@reserved: 
 
 <!-- ##### STRUCT GwyGrapherAutoProperties ##### -->
 <para>
@@ -719,6 +880,123 @@ GwyVMenuBar
 @line_size: 
 @point_size: 
 @color: 
+
+<!-- ##### ENUM GwyGrapherCurveType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPHER_CURVE_HIDDEN: 
+@GWY_GRAPHER_CURVE_POINTS: 
+@GWY_GRAPHER_CURVE_LINE: 
+@GWY_GRAPHER_CURVE_LINE_POINTS: 
+
+<!-- ##### STRUCT GwyGrapherDataArea ##### -->
+<para>
+
+</para>
+
+@xmin: 
+@xmax: 
+@ymin: 
+@ymax: 
+
+<!-- ##### STRUCT GwyGrapherDataPoint ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+
+<!-- ##### ENUM GwyGrapherLabelPosition ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPHER_LABEL_NORTHEAST: 
+@GWY_GRAPHER_LABEL_NORTHWEST: 
+@GWY_GRAPHER_LABEL_SOUTHEAST: 
+@GWY_GRAPHER_LABEL_SOUTHWEST: 
+@GWY_GRAPHER_LABEL_USER: 
+
+<!-- ##### ENUM GwyGrapherPointType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPHER_POINT_SQUARE: 
+@GWY_GRAPHER_POINT_CROSS: 
+@GWY_GRAPHER_POINT_CIRCLE: 
+@GWY_GRAPHER_POINT_STAR: 
+@GWY_GRAPHER_POINT_TIMES: 
+@GWY_GRAPHER_POINT_TRIANGLE_UP: 
+@GWY_GRAPHER_POINT_TRIANGLE_DOWN: 
+@GWY_GRAPHER_POINT_DIAMOND: 
+
+<!-- ##### ENUM GwyGrapherStatusType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPHER_STATUS_PLAIN: 
+@GWY_GRAPHER_STATUS_XSEL: 
+@GWY_GRAPHER_STATUS_YSEL: 
+@GWY_GRAPHER_STATUS_POINTS: 
+@GWY_GRAPHER_STATUS_ZOOM: 
+
+<!-- ##### STRUCT GwyGrapherStatus_AreaData ##### -->
+<para>
+
+</para>
+
+@data_area: 
+
+<!-- ##### STRUCT GwyGrapherStatus_AreasData ##### -->
+<para>
+
+</para>
+
+@data_areas: 
+
+<!-- ##### STRUCT GwyGrapherStatus_CursorData ##### -->
+<para>
+
+</para>
+
+@data_point: 
+
+<!-- ##### STRUCT GwyGrapherStatus_PointData ##### -->
+<para>
+
+</para>
+
+@data_point: 
+
+<!-- ##### STRUCT GwyGrapherStatus_PointsData ##### -->
+<para>
+
+</para>
+
+@data_points: 
+
+<!-- ##### STRUCT GwyGrapherStatus_ZoomData ##### -->
+<para>
+
+</para>
+
+@xmin: 
+@ymin: 
+@width: 
+@height: 
+
+<!-- ##### STRUCT GwyLabeledTick ##### -->
+<para>
+
+</para>
+
+@t: 
+@ttext: 
 
 <!-- ##### ARG GwyLayerAxes:max-axes ##### -->
 <para>
@@ -762,6 +1040,14 @@ GwyVMenuBar
 </para>
 
 @gwyspherecoords: the object which received the signal.
+
+<!-- ##### STRUCT GwyTick ##### -->
+<para>
+
+</para>
+
+@value: 
+@scrpos: 
 
 <!-- ##### MACRO P_ ##### -->
 <para>
@@ -930,6 +1216,14 @@ GwyVMenuBar
 @gwy3dview: 
 @use_lights: 
 
+<!-- ##### FUNCTION gwy_axis_enable_label_edit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@enable: 
+
 <!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
 <para>
 
@@ -937,6 +1231,114 @@ GwyVMenuBar
 
 @axis: 
 @enable: 
+
+<!-- ##### FUNCTION gwy_axis_get_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_get_maximum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_get_minimum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_get_reqmaximum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_get_reqminimum ##### -->
+<para>
+
+</para>
+
+@axis: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_new ##### -->
+<para>
+
+</para>
+
+@orientation: 
+@min: 
+@max: 
+@label: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axis_set_auto ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_auto: 
+
+<!-- ##### FUNCTION gwy_axis_set_label ##### -->
+<para>
+
+</para>
+
+@axis: 
+@label_text: 
+
+<!-- ##### FUNCTION gwy_axis_set_logarithmic ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_logarithmic: 
+
+<!-- ##### FUNCTION gwy_axis_set_req ##### -->
+<para>
+
+</para>
+
+@axis: 
+@min: 
+@max: 
+
+<!-- ##### FUNCTION gwy_axis_set_style ##### -->
+<para>
+
+</para>
+
+@axis: 
+@style: 
+
+<!-- ##### FUNCTION gwy_axis_set_unit ##### -->
+<para>
+
+</para>
+
+@axis: 
+@unit: 
+
+<!-- ##### FUNCTION gwy_axis_set_visible ##### -->
+<para>
+
+</para>
+
+@axis: 
+@is_visible: 
 
 <!-- ##### FUNCTION gwy_color_axis_get_palette ##### -->
 <para>
@@ -1191,53 +1593,110 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### FUNCTION gwy_graph_draw_curve ##### -->
+<!-- ##### FUNCTION gwy_graph_add_curve_from_model ##### -->
 <para>
 
 </para>
 
-@drawable: 
-@gc: 
-@specs: 
-@curvemodel: 
+@graph: 
+@gcmodel: 
 
-<!-- ##### FUNCTION gwy_graph_draw_line ##### -->
+<!-- ##### FUNCTION gwy_graph_add_dataline ##### -->
 <para>
 
 </para>
 
-@drawable: 
-@gc: 
-@x_from: 
-@y_from: 
-@x_to: 
-@y_to: 
-@type: 
-@line_style: 
-@size: 
-@color: 
+@graph: 
+@dataline: 
+@shift: 
+@label: 
+@params: 
 
-<!-- ##### FUNCTION gwy_graph_draw_selection_areas ##### -->
+<!-- ##### FUNCTION gwy_graph_add_dataline_with_units ##### -->
 <para>
 
 </para>
 
-@drawable: 
-@gc: 
-@specs: 
-@data_areas: 
-@n_of_areas: 
+@graph: 
+@dataline: 
+@shift: 
+@label: 
+@params: 
+@x_order: 
+@y_order: 
+@x_unit: 
+@y_unit: 
 
-<!-- ##### FUNCTION gwy_graph_draw_selection_points ##### -->
+<!-- ##### FUNCTION gwy_graph_add_datavalues ##### -->
 <para>
 
 </para>
 
-@drawable: 
-@gc: 
-@specs: 
-@data_points: 
-@n_of_points: 
+@graph: 
+@xvals: 
+@yvals: 
+@n: 
+@label: 
+@params: 
+
+<!-- ##### FUNCTION gwy_graph_area_add_curve ##### -->
+<para>
+
+</para>
+
+@area: 
+@curve: 
+
+<!-- ##### FUNCTION gwy_graph_area_clear ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_graph_area_set_boundaries ##### -->
+<para>
+
+</para>
+
+@area: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
+
+<!-- ##### FUNCTION gwy_graph_area_set_style ##### -->
+<para>
+
+</para>
+
+@area: 
+@style: 
+
+<!-- ##### FUNCTION gwy_graph_clear ##### -->
+<para>
+
+</para>
+
+@graph: 
+
+<!-- ##### FUNCTION gwy_graph_curve_model_save_curve ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+@graph: 
+@index_: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_enable_axis_label_edit ##### -->
+<para>
+
+</para>
+
+@graph: 
+@enable: 
 
 <!-- ##### FUNCTION gwy_graph_enable_axis_label_update ##### -->
 <para>
@@ -1255,6 +1714,109 @@ GwyVMenuBar
 @graph: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_graph_export_ascii ##### -->
+<para>
+
+</para>
+
+@graph: 
+@filename: 
+
+<!-- ##### FUNCTION gwy_graph_get_autoproperties ##### -->
+<para>
+
+</para>
+
+@graph: 
+@autoproperties: 
+
+<!-- ##### FUNCTION gwy_graph_get_boundaries ##### -->
+<para>
+
+</para>
+
+@graph: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
+
+<!-- ##### FUNCTION gwy_graph_get_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@xval: 
+@yval: 
+@curve: 
+
+<!-- ##### FUNCTION gwy_graph_get_data_size ##### -->
+<para>
+
+</para>
+
+@graph: 
+@curve: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_get_label ##### -->
+<para>
+
+</para>
+
+@graph: 
+@curve: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_get_number_of_curves ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_get_status_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+@status: 
+
+<!-- ##### FUNCTION gwy_graph_label_add_curve ##### -->
+<para>
+
+</para>
+
+@label: 
+@params: 
+
+<!-- ##### FUNCTION gwy_graph_label_clear ##### -->
+<para>
+
+</para>
+
+@label: 
+
+<!-- ##### FUNCTION gwy_graph_label_set_style ##### -->
+<para>
+
+</para>
+
+@label: 
+@style: 
+
+<!-- ##### FUNCTION gwy_graph_label_set_visible ##### -->
+<para>
+
+</para>
+
+@label: 
+@is_visible: 
+
 <!-- ##### FUNCTION gwy_graph_new_from_epitome ##### -->
 <para>
 
@@ -1263,12 +1825,167 @@ GwyVMenuBar
 @gepitome: 
 @Returns: 
 
-<!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
+<!-- ##### FUNCTION gwy_graph_new_from_model ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_graph_set_autoproperties ##### -->
 <para>
 
 </para>
 
 @graph: 
+@autoproperties: 
+
+<!-- ##### FUNCTION gwy_graph_set_boundaries ##### -->
+<para>
+
+</para>
+
+@graph: 
+@x_min: 
+@x_max: 
+@y_min: 
+@y_max: 
+
+<!-- ##### FUNCTION gwy_graph_unzoom ##### -->
+<para>
+
+</para>
+
+@graph: 
+
+<!-- ##### FUNCTION gwy_grapher_area_change_model ##### -->
+<para>
+
+</para>
+
+@area: 
+@gmodel: 
+
+<!-- ##### FUNCTION gwy_grapher_area_clear_selection ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_area_dialog_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_area_dialog_set_curve_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@cmodel: 
+
+<!-- ##### FUNCTION gwy_grapher_area_draw_area_on_drawable ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@x: 
+@y: 
+@width: 
+@height: 
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_area_enable_user_input ##### -->
+<para>
+
+</para>
+
+@area: 
+@enable: 
+
+<!-- ##### FUNCTION gwy_grapher_area_get_cursor ##### -->
+<para>
+
+</para>
+
+@area: 
+@x_cursor: 
+@y_cursor: 
+
+<!-- ##### FUNCTION gwy_grapher_area_new ##### -->
+<para>
+
+</para>
+
+@hadjustment: 
+@vadjustment: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_area_refresh ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_area_set_selection ##### -->
+<para>
+
+</para>
+
+@area: 
+@status: 
+@statusdata: 
+
+<!-- ##### FUNCTION gwy_grapher_area_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_area_signal_selected ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_area_signal_zoomed ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_grapher_change_model ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@gmodel: 
+
+<!-- ##### FUNCTION gwy_grapher_clear_selection ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_corner_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gwy_grapher_curve_model_new ##### -->
 <para>
@@ -1286,6 +2003,215 @@ GwyVMenuBar
 @grapher: 
 @index_: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_draw_curve ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@curvemodel: 
+
+<!-- ##### FUNCTION gwy_grapher_draw_line ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@x_from: 
+@y_from: 
+@x_to: 
+@y_to: 
+@line_style: 
+@size: 
+@color: 
+
+<!-- ##### FUNCTION gwy_grapher_draw_point ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@x: 
+@y: 
+@type: 
+@size: 
+@color: 
+@clear: 
+
+<!-- ##### FUNCTION gwy_grapher_draw_selection_areas ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@data_areas: 
+@n_of_areas: 
+
+<!-- ##### FUNCTION gwy_grapher_draw_selection_points ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@data_points: 
+@n_of_points: 
+
+<!-- ##### FUNCTION gwy_grapher_enable_user_input ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@enable: 
+
+<!-- ##### FUNCTION gwy_grapher_export_pixmap ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@filename: 
+@export_title: 
+@export_axis: 
+@export_labels: 
+
+<!-- ##### FUNCTION gwy_grapher_export_postscript ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@filename: 
+@export_title: 
+@export_axis: 
+@export_labels: 
+
+<!-- ##### FUNCTION gwy_grapher_get_cursor ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@x_cursor: 
+@y_cursor: 
+
+<!-- ##### FUNCTION gwy_grapher_get_model ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_get_selection ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@selection: 
+
+<!-- ##### FUNCTION gwy_grapher_get_selection_number ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_get_status ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_get_x_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@x_min: 
+@x_max: 
+
+<!-- ##### FUNCTION gwy_grapher_get_y_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@y_min: 
+@y_max: 
+
+<!-- ##### FUNCTION gwy_grapher_label_change_model ##### -->
+<para>
+
+</para>
+
+@label: 
+@gmodel: 
+
+<!-- ##### FUNCTION gwy_grapher_label_dialog_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_label_dialog_set_graph_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@model: 
+
+<!-- ##### FUNCTION gwy_grapher_label_draw_label_on_drawable ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@layout: 
+@x: 
+@y: 
+@width: 
+@height: 
+@label: 
+
+<!-- ##### FUNCTION gwy_grapher_label_enable_user_input ##### -->
+<para>
+
+</para>
+
+@label: 
+@enable: 
+
+<!-- ##### FUNCTION gwy_grapher_label_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_label_refresh ##### -->
+<para>
+
+</para>
+
+@label: 
 
 <!-- ##### FUNCTION gwy_grapher_model_add_curve ##### -->
 <para>
@@ -1318,6 +2244,14 @@ GwyVMenuBar
 
 @gmodel: 
 
+<!-- ##### FUNCTION gwy_grapher_new ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_grapher_new_from_model ##### -->
 <para>
 
@@ -1325,6 +2259,104 @@ GwyVMenuBar
 
 @gmodel: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_refresh ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_refresh_and_reset ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_request_x_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@x_min_req: 
+@x_max_req: 
+
+<!-- ##### FUNCTION gwy_grapher_request_y_range ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@y_min_req: 
+@y_max_req: 
+
+<!-- ##### FUNCTION gwy_grapher_set_status ##### -->
+<para>
+
+</para>
+
+@grapher: 
+@status: 
+
+<!-- ##### FUNCTION gwy_grapher_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_signal_selected ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_signal_zoomed ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_window_ascii_dialog_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_window_measure_dialog_new ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_grapher_window_measure_dialog_set_curve_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@cmodel: 
+
+<!-- ##### FUNCTION gwy_grapher_zoom_in ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_grapher_zoom_out ##### -->
+<para>
+
+</para>
+
+@grapher: 
 
 <!-- ##### FUNCTION gwy_interpolation_option_menu ##### -->
 <para>

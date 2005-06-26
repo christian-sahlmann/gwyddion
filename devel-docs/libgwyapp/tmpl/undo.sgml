@@ -46,59 +46,54 @@ main application.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_undo ##### -->
+<!-- ##### FUNCTION gwy_app_undo_undo_container ##### -->
 <para>
 
 </para>
 
+@data: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_undo_window ##### -->
+<!-- ##### FUNCTION gwy_app_undo_redo_container ##### -->
 <para>
 
 </para>
 
-@data_window: 
+@data: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_redo ##### -->
+<!-- ##### FUNCTION gwy_app_undo_container_has_undo ##### -->
 <para>
 
 </para>
 
-
-
-<!-- ##### FUNCTION gwy_app_undo_redo_window ##### -->
-<para>
-
-</para>
-
-@data_window: 
-
-
-<!-- ##### FUNCTION gwy_app_data_window_has_undo ##### -->
-<para>
-
-</para>
-
-@data_window: 
+@data: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_data_window_has_redo ##### -->
+<!-- ##### FUNCTION gwy_app_undo_container_has_redo ##### -->
 <para>
 
 </para>
 
-@data_window: 
+@data: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_clear ##### -->
+<!-- ##### FUNCTION gwy_app_undo_container_get_modified ##### -->
 <para>
 
 </para>
 
-@data_window: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_undo_container_set_unmodified ##### -->
+<para>
+
+</para>
+
+@data: 
 
 

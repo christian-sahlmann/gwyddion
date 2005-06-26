@@ -3,7 +3,6 @@
 gwy_3d_label_get_type
 gwy_3d_view_get_type
 gwy_3d_window_get_type
-gwy_axis_get_type
 gwy_axis_dialog_get_type
 gwy_color_axis_get_type
 gwy_color_button_get_type
@@ -12,11 +11,15 @@ gwy_data_view_layer_get_type
 gwy_data_window_get_type
 gwy_gl_material_get_type
 gwy_graph_get_type
+gwy_graph_data_get_type
 gwy_graph_area_get_type
 gwy_graph_model_get_type
 gwy_graph_curve_model_get_type
 gwy_graph_corner_get_type
 gwy_graph_label_get_type
+gwy_graph_window_get_type
+gwy_graph_window_measure_dialog_get_type
+gwy_graph_window_ascii_dialog_get_type
 gwy_hruler_get_type
 gwy_layer_basic_get_type
 gwy_layer_mask_get_type

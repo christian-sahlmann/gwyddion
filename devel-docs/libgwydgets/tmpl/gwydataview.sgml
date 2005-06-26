@@ -27,6 +27,11 @@ Data field displaying area
 
 @gwydataview: the object which received the signal.
 
+<!-- ##### ARG GwyDataView:zoom ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyDataViewClass ##### -->
 <para>
 

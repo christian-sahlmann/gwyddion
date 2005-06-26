@@ -343,6 +343,7 @@ gwy_data_field_get_normal_coeffs
 gwy_data_field_area_get_normal_coeffs
 gwy_data_field_area_get_inclination
 gwy_data_field_get_inclination
+gwy_data_field_normalize
 </SECTION>
 
 <SECTION>

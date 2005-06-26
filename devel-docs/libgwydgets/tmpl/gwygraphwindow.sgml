@@ -1,0 +1,51 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraphWindow
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyGraphWindow ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphWindowClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+@reserved3: 
+@reserved4: 
+
+<!-- ##### FUNCTION gwy_graph_window_new ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_window_get_graph ##### -->
+<para>
+
+</para>
+
+@graphwindow: 
+@Returns: 
+
+

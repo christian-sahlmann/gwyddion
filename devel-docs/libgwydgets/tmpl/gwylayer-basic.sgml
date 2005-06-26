@@ -20,6 +20,21 @@ Display data colored with a gradient
 </para>
 
 
+<!-- ##### ARG GwyLayerBasic:gradient-key ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyLayerBasic:min-max-key ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyLayerBasic:range-type-key ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyLayerBasicClass ##### -->
 <para>
 

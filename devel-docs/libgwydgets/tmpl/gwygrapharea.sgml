@@ -17,92 +17,58 @@ a set of data curves with a given plot properties.
 
 </para>
 
-<!-- ##### STRUCT GwyGraphAreaCurvePoints ##### -->
+<!-- ##### STRUCT GwyGraphStatus_PointData ##### -->
 <para>
 
 </para>
 
-@xvals: 
-@yvals: 
-@N: 
-
-<!-- ##### STRUCT GwyGraphDataPoint ##### -->
-<para>
-
-</para>
-
-@x: 
-@y: 
-@x_unit: 
-@y_unit: 
-
-<!-- ##### STRUCT GwyGraphScrPoint ##### -->
-<para>
-
-</para>
-
-@i: 
-@j: 
+@data_point: 
 
 <!-- ##### STRUCT GwyGraphStatus_CursorData ##### -->
 <para>
 
 </para>
 
-@scr_point: 
 @data_point: 
-
-<!-- ##### STRUCT GwyGraphStatus_SelData ##### -->
-<para>
-
-</para>
-
-@scr_start: 
-@scr_end: 
-@data_start: 
-@data_end: 
 
 <!-- ##### STRUCT GwyGraphStatus_PointsData ##### -->
 <para>
 
 </para>
 
-@actual_scr_point: 
-@actual_data_point: 
-@scr_points: 
 @data_points: 
-@n: 
+
+<!-- ##### STRUCT GwyGraphStatus_AreaData ##### -->
+<para>
+
+</para>
+
+@data_area: 
+
+<!-- ##### STRUCT GwyGraphStatus_AreasData ##### -->
+<para>
+
+</para>
+
+@data_areas: 
 
 <!-- ##### STRUCT GwyGraphStatus_ZoomData ##### -->
 <para>
 
 </para>
 
-@x: 
-@y: 
+@xmin: 
+@ymin: 
 @width: 
 @height: 
-@xmin: 
-@xmax: 
-@ymin: 
-@ymax: 
 
 <!-- ##### STRUCT GwyGraphAreaCurve ##### -->
 <para>
 
 </para>
 
-@data: 
-@params: 
 @points: 
 @reserved: 
-
-<!-- ##### STRUCT GwyGraphAreaParams ##### -->
-<para>
-
-</para>
-
-@ble: 
 
 <!-- ##### STRUCT GwyGraphArea ##### -->
 <para>
@@ -110,10 +76,21 @@ a set of data curves with a given plot properties.
 </para>
 
 
+<!-- ##### SIGNAL GwyGraphArea::mousemoved ##### -->
+<para>
+
+</para>
+
+@:
+
+@gwygrapharea: the object which received the signal.
+
 <!-- ##### SIGNAL GwyGraphArea::selected ##### -->
 <para>
 
 </para>
+
+@:
 
 @gwygrapharea: the object which received the signal.
 
@@ -121,6 +98,8 @@ a set of data curves with a given plot properties.
 <para>
 
 </para>
+
+@:
 
 @gwygrapharea: the object which received the signal.
 
@@ -134,6 +113,7 @@ a set of data curves with a given plot properties.
 @arrow_cursor: 
 @selected: 
 @zoomed: 
+@mousemoved: 
 @reserved1: 
 @reserved2: 
 
@@ -145,44 +125,6 @@ a set of data curves with a given plot properties.
 @hadjustment: 
 @vadjustment: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_graph_area_set_style ##### -->
-<para>
-
-</para>
-
-@area: 
-@style: 
-
-
-<!-- ##### FUNCTION gwy_graph_area_set_boundaries ##### -->
-<para>
-
-</para>
-
-@area: 
-@x_min: 
-@x_max: 
-@y_min: 
-@y_max: 
-
-
-<!-- ##### FUNCTION gwy_graph_area_add_curve ##### -->
-<para>
-
-</para>
-
-@area: 
-@curve: 
-
-
-<!-- ##### FUNCTION gwy_graph_area_clear ##### -->
-<para>
-
-</para>
-
-@area: 
 
 
 <!-- ##### FUNCTION gwy_graph_area_signal_selected ##### -->
@@ -201,13 +143,80 @@ a set of data curves with a given plot properties.
 @area: 
 
 
+<!-- ##### FUNCTION gwy_graph_area_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@area: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_refresh ##### -->
+<para>
+
+</para>
+
+@area: 
+
+
 <!-- ##### FUNCTION gwy_graph_area_set_selection ##### -->
 <para>
 
 </para>
 
 @area: 
-@from: 
-@to: 
+@status: 
+@selection: 
+@n_of_selections: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_change_model ##### -->
+<para>
+
+</para>
+
+@area: 
+@gmodel: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_draw_area_on_drawable ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@x: 
+@y: 
+@width: 
+@height: 
+@area: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_clear_selection ##### -->
+<para>
+
+</para>
+
+@area: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_enable_user_input ##### -->
+<para>
+
+</para>
+
+@area: 
+@enable: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_get_cursor ##### -->
+<para>
+
+</para>
+
+@area: 
+@x_cursor: 
+@y_cursor: 
 
 

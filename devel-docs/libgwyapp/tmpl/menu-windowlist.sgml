@@ -14,6 +14,16 @@ Option menu of data windows.
 
 </para>
 
+<!-- ##### USER_FUNCTION GwyDataWindowMenuFilterFunc ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@user_data: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_option_menu_data_window ##### -->
 <para>
 
@@ -23,6 +33,20 @@ Option menu of data windows.
 @cbdata: 
 @none_label: 
 @current: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_option_menu_data_window_filtered ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@none_label: 
+@current: 
+@filter: 
+@user_data: 
 @Returns: 
 
 

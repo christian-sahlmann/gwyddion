@@ -35,13 +35,17 @@
 
   <chapter id="GraphWidgets">
     <title>Graph</title>
-    <xi:include href="xml/gwyaxis.xml"/>
-    <xi:include href="xml/gwygrapharea.xml"/>
-    <xi:include href="xml/gwygraphcorner.xml"/>
-    <xi:include href="xml/gwygraphlabel.xml"/>
     <xi:include href="xml/gwygraph.xml"/>
+    <xi:include href="xml/gwygraphwindow.xml"/>
     <xi:include href="xml/gwygraphmodel.xml"/>
     <xi:include href="xml/gwygraphcurvemodel.xml"/>
+    <xi:include href="xml/gwygrapharea.xml"/>
+    <xi:include href="xml/gwyaxisdialog.xml"/>
+    <xi:include href="xml/gwygraphlabel.xml"/>
+    <xi:include href="xml/gwygraphdata.xml"/>
+    <xi:include href="xml/gwygraphwindowasciidialog.xml"/>
+    <xi:include href="xml/gwygraphwindowmeasuredialog.xml"/>
+    <xi:include href="xml/gwygraphcorner.xml"/>
   </chapter>
 
   <chapter id="Widgets3D">

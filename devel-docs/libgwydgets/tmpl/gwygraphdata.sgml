@@ -1,0 +1,90 @@
+<!-- ##### SECTION Title ##### -->
+GwyGraphData
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyGraphData ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyGraphData::selected ##### -->
+<para>
+
+</para>
+
+@gwygraphdata: the object which received the signal.
+
+<!-- ##### STRUCT GwyGraphDataClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@selected: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_graph_data_new ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_data_refresh ##### -->
+<para>
+
+</para>
+
+@graph_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_data_change_model ##### -->
+<para>
+
+</para>
+
+@graph_data: 
+@gmodel: 
+
+
+<!-- ##### FUNCTION gwy_graph_data_get_model ##### -->
+<para>
+
+</para>
+
+@graph_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_data_signal_selected ##### -->
+<para>
+
+</para>
+
+@graph_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_data_clear_selection ##### -->
+<para>
+
+</para>
+
+@graph_data: 
+
+

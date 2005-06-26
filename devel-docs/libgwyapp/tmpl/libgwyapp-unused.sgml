@@ -152,6 +152,22 @@ toolbox
 </para>
 
 
+<!-- ##### FUNCTION gwy_app_data_window_has_redo ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_app_data_window_has_undo ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_app_graph_list ##### -->
 <para>
 
@@ -330,6 +346,39 @@ toolbox
 
 </para>
 
+
+<!-- ##### FUNCTION gwy_app_undo_clear ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+<!-- ##### FUNCTION gwy_app_undo_redo ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_app_undo_redo_window ##### -->
+<para>
+
+</para>
+
+@data_window: 
+
+<!-- ##### FUNCTION gwy_app_undo_undo ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gwy_app_undo_undo_window ##### -->
+<para>
+
+</para>
+
+@data_window: 
 
 <!-- ##### FUNCTION gwy_app_zoom_set_cb ##### -->
 <para>

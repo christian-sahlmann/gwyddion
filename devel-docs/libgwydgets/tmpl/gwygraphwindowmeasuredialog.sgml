@@ -1,0 +1,80 @@
+<!-- ##### SECTION Title ##### -->
+GwyGrapherWindowMeasureDialog
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### MACRO GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_GRAPH_WINDOW_MEASURE_DIALOG ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### MACRO GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+
+<!-- ##### MACRO GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+
+<!-- ##### STRUCT GwyGraphWindowMeasureDialog ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphWindowMeasureDialogClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_graph_window_measure_dialog_new ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_window_measure_dialog_set_curve_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@cmodel: 
+
+

@@ -17,7 +17,21 @@ with ranges in the requested interval.
 
 </para>
 
-<!-- ##### STRUCT GwyTick ##### -->
+<!-- ##### STRUCT GwyAxiserActiveAreaSpecs ##### -->
+<para>
+
+</para>
+
+@xmin: 
+@ymin: 
+@height: 
+@width: 
+@real_xmin: 
+@real_ymin: 
+@real_height: 
+@real_width: 
+
+<!-- ##### STRUCT GwyAxiserTick ##### -->
 <para>
 
 </para>
@@ -25,7 +39,7 @@ with ranges in the requested interval.
 @value: 
 @scrpos: 
 
-<!-- ##### STRUCT GwyLabeledTick ##### -->
+<!-- ##### STRUCT GwyAxiserLabeledTick ##### -->
 <para>
 
 </para>
@@ -33,7 +47,7 @@ with ranges in the requested interval.
 @t: 
 @ttext: 
 
-<!-- ##### STRUCT GwyAxisParams ##### -->
+<!-- ##### STRUCT GwyAxiserParams ##### -->
 <para>
 
 </para>
@@ -49,30 +63,7 @@ with ranges in the requested interval.
 @major_font: 
 @label_font: 
 
-<!-- ##### STRUCT GwyAxis ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
-<para>
-
-</para>
-
-@gwyaxis: the object which received the signal.
-
-<!-- ##### STRUCT GwyAxisClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@label_updated: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### FUNCTION gwy_axis_new ##### -->
+<!-- ##### FUNCTION gwy_axiser_new ##### -->
 <para>
 
 </para>
@@ -84,121 +75,158 @@ with ranges in the requested interval.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_logarithmic ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_logarithmic ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_logarithmic: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_visible ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_visible ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_visible: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_auto ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_auto ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_auto: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_req ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_req ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @min: 
 @max: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_style ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_style ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @style: 
 
 
-<!-- ##### FUNCTION gwy_axis_get_maximum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_maximum ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_get_minimum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_minimum ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_get_reqmaximum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_reqmaximum ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_get_reqminimum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_reqminimum ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_label ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_magnification ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axiser_get_magnification_string ##### -->
+<para>
+
+</para>
+
+@axiser: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_axiser_set_label ##### -->
+<para>
+
+</para>
+
+@axiser: 
 @label_text: 
 
 
-<!-- ##### FUNCTION gwy_axis_get_label ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_label ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_axis_set_unit ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_unit ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @unit: 
 
 
-<!-- ##### FUNCTION gwy_axis_enable_label_edit ##### -->
+<!-- ##### FUNCTION gwy_axiser_enable_label_edit ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @enable: 
+
+
+<!-- ##### FUNCTION gwy_axiser_signal_rescaled ##### -->
+<para>
+
+</para>
+
+@axiser: 
+
+
+<!-- ##### FUNCTION gwy_axiser_draw_on_drawable ##### -->
+<para>
+
+</para>
+
+@drawable: 
+@gc: 
+@specs: 
+@axiser: 
 
 

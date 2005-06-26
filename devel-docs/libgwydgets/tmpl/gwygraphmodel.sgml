@@ -60,15 +60,6 @@ widgets and should be mostly ignored for now.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_new_from_model ##### -->
-<para>
-
-</para>
-
-@gmodel: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_graph_model_get_n_curves ##### -->
 <para>
 

@@ -20,6 +20,11 @@ Mask color layer
 </para>
 
 
+<!-- ##### ARG GwyLayerMask:color-key ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyLayerMaskClass ##### -->
 <para>
 

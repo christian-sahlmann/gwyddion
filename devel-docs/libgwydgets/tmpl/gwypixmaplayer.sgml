@@ -20,6 +20,11 @@ Base class for #GwyDataView pixmap layers
 </para>
 
 
+<!-- ##### ARG GwyPixmapLayer:data-key ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyPixmapLayerClass ##### -->
 <para>
 
@@ -66,5 +71,14 @@ Base class for #GwyDataView pixmap layers
 
 @pixmap_layer: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_pixmap_layer_make_pixbuf ##### -->
+<para>
+
+</para>
+
+@pixmap_layer: 
+@has_alpha: 
 
 
