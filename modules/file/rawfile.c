@@ -666,7 +666,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     unit = gwy_si_unit_new("B");
     format = gwy_si_unit_get_format(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     file->filesize, NULL);
-    s = g_strdup_printf("(%.*f %sB)", format->precision,
+    s = g_strdup_printf("(%.*f %s)", format->precision,
                         file->filesize/format->magnitude, format->units);
     gwy_si_unit_value_format_free(format);
     label = gtk_label_new(s);
