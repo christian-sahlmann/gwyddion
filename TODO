@@ -18,14 +18,6 @@ Quite a few of these items are intrusive and will have to wait for the next
 unstable version.
 
 ============================================================================
-Worst API bugs and otherwise things that will probably change in 2.0:
-- GwyDataField function naming is a mess, some are functions don't have _area
-  in name at all, some have it in silly places, there are two different
-  area border conventions; GwyDataLine is not much better
-- gwy_ruler_draw_pos() and gwy_ruler_draw_ticks() got to the public API
-  somehow, but they were never meant to
-- Unitool has no free slots to extend
-- Some things may benefit from being objects after all: e.g., modules
 Elaboration of 2.0 items started on http://gwyddion.net/gwyddion-2/.
 
 ============================================================================
@@ -36,8 +28,6 @@ Unimplemented stuff:
   entire data field
 - libprocess/grains.c: gwy_data_field_grains_get_average() is not implemented
   at all
-- libgwydgets/gwy3dview.c: gwy_3d_view_get_pixbuf() does not implement
-  @xres, @yres
 
 ============================================================================
 Release checklist:
@@ -50,7 +40,7 @@ Release checklist:
 - make sure gwyddion.iss.in contains all translations (XXX: automatize this)
 - update version in configure.ac
 - update version in gwyddion-night-build
-- switch segfault on critical messages off
+- switch segfault on critical messages off (stable only)
 - check and update NEWS, generate HTML version
 - generate on-line module list
 - make sure devel-docs/libfoo/libfoo.types loads all new types
