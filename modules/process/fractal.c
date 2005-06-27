@@ -70,6 +70,7 @@ typedef struct {
     GtkWidget *out;
     GtkWidget *graph;
     GtkWidget *results[GWY_FRACTAL_LAST];
+    GObject *graph_model;
 } FractalControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -89,10 +90,11 @@ static void        fractal_dialog_update      (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
 static void        ok_cb                      (FractalArgs *args,
+                                               FractalControls *controls,
                                                GwyContainer *data);
 static gboolean    update_graph               (FractalArgs *args,
-                                               GwyContainer *data,
-                                               GwyGraph *graph);
+                                               FractalControls *controls,
+                                               GwyContainer *data);
 static void        fractal_dialog_recompute    (FractalControls *controls,
                                                FractalArgs *args,
                                                GwyContainer *data);
@@ -216,7 +218,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 4);
+                       TRUE, TRUE, 4);
 
     /*controls*/
     vbox = gtk_vbox_new(FALSE, 0);
@@ -295,10 +297,12 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     }
 
     /*graph*/
-    controls.graph = gwy_graph_new();
-    gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls.graph), FALSE);
+    controls.graph_model = gwy_graph_model_new(NULL);
+    controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.graph_model));
+    gtk_widget_set_size_request(controls.graph, 500, 250);
+    
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
-                       FALSE, FALSE, 4);
+                       TRUE, TRUE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
     g_signal_connect(GWY_GRAPH(controls.graph)->area,
                      "selected", G_CALLBACK(graph_selected), &controls);
@@ -317,14 +321,13 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             break;
 
             case GTK_RESPONSE_OK:
-            ok_cb(args, data);
+            ok_cb(args, &controls, data);
             break;
 
             case RESPONSE_RESET:
             args->from[args->out] = 0;
             args->to[args->out] = 0;
-            gwy_graph_set_status(GWY_GRAPH(controls.graph),
-                                 GWY_GRAPH_STATUS_XSEL);
+            gwy_graph_clear_selection(controls.graph);
             fractal_dialog_update(&controls, args, data);
             break;
 
@@ -399,7 +402,7 @@ fractal_dialog_update(FractalControls *controls,
     gwy_option_menu_set_history(controls->interp, "interpolation-type",
                                 args->interp);
 
-    if (update_graph(args, data, GWY_GRAPH(controls->graph))) {
+    if (update_graph(args, controls, data)) {
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->result[args->out]);
         gtk_label_set_text(GTK_LABEL(controls->results[args->out]), buffer);
     }
@@ -407,28 +410,26 @@ fractal_dialog_update(FractalControls *controls,
 
 static void
 ok_cb(FractalArgs *args,
+      FractalControls *controls,
       GwyContainer *data)
 {
     GtkWidget *graph;
     GwyDataWindow *data_window;
 
-    graph = gwy_graph_new();
-    update_graph(args, data, GWY_GRAPH(graph));
+    graph = gwy_graph_new(controls->graph_model);
+    update_graph(args, controls, data);
     data_window = gwy_app_data_window_get_for_data(data);
     gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
                                            _(methods[args->out].name));
 }
-
 static gboolean
 update_graph(FractalArgs *args,
-             GwyContainer *data,
-             GwyGraph *graph)
+             FractalControls *controls,
+             GwyContainer *data)
 {
     GwyDataField *dfield;
     GwyDataLine *xline, *yline, *xfit, *yfit, *xnline, *ynline;
-    GString *label;
-    GwyGraphAreaCurveParams *params;
-    GwyGraphAutoProperties prop;
+    GwyGraphCurveModel *gcmodel;
     gint i, res;
     gboolean is_line;
     gdouble a, b;
@@ -445,22 +446,15 @@ update_graph(FractalArgs *args,
     method_funcs[args->out](dfield, xline, yline, args->interp);
     if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)))
         args->result[args->out] = dim_funcs[args->out](xnline, ynline, &a, &b);
-    label = g_string_new(_(methods[args->out].name));
 
-    params = g_new(GwyGraphAreaCurveParams, 1);
-    params->is_line = 0;
-    params->is_point = 1;
-    params->point_type = 0;
-    params->point_size = 8;
-    params->color.pixel = 0x00a50800;    /* FIXME */
-
-    gwy_graph_clear(graph);
-    gwy_graph_add_datavalues(graph,
-                             gwy_data_line_get_data(xline),
-                             gwy_data_line_get_data(yline),
-                             gwy_data_line_get_res(xline),
-                             label, params);
-
+    gwy_graph_model_remove_all_curves(GWY_GRAPH_MODEL(controls->graph_model));
+    
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_POINTS);
+    gwy_graph_curve_model_set_data(gcmodel, xline->data, yline->data, xline->res);
+    gwy_graph_curve_model_set_description(gcmodel, _(methods[args->out].name));                                                 
+    gwy_graph_model_add_curve(controls->graph_model, gcmodel);
+    
     res = gwy_data_line_get_res(xnline);
     if (is_line) {
         xfit = gwy_data_line_duplicate(xnline);
@@ -470,14 +464,12 @@ update_graph(FractalArgs *args,
         for (i = 0; i < res; i++)
             ydata[i] = xdata[i]*a + b;
 
-        gwy_graph_get_autoproperties(graph, &prop);
-        prop.is_point = 0;
-        gwy_graph_set_autoproperties(graph, &prop);
-
-        g_string_assign(label, _("Linear fit"));
-        gwy_graph_add_datavalues(graph, xdata, ydata, res, label, NULL);
+        gcmodel = gwy_graph_curve_model_new();
+        gwy_graph_curve_model_set_data(gcmodel, xfit->data, yfit->data, xfit->res);
+        gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
+        gwy_graph_curve_model_set_description(gcmodel, _("Linear fit"));
+        gwy_graph_model_add_curve(controls->graph_model, gcmodel);
     }
-    g_string_free(label, TRUE);
     g_object_unref(xline);
     g_object_unref(yline);
     g_object_unref(xnline);
@@ -510,17 +502,20 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
 {
     FractalArgs *args;
     gdouble from, to;
+    gdouble selection[10]; /*FIXME limit this to two*/
 
+    gwy_graph_get_selection(controls->graph, selection);
+    
     args = controls->args;
-    if (area->seldata->data_start == area->seldata->data_end) {
+    if (gwy_graph_get_selection_number(controls->graph)==0 || selection[0] == selection[1]) {
         gtk_label_set_text(GTK_LABEL(controls->from), _("minimum"));
         gtk_label_set_text(GTK_LABEL(controls->to), _("maximum"));
         args->from[args->out] = 0;
         args->to[args->out] = 0;
     }
     else {
-        from = area->seldata->data_start;
-        to = area->seldata->data_end;
+        from = selection[0];
+        to = selection[1];
 
         if (from > to)
             GWY_SWAP(gdouble, from, to);

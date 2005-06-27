@@ -679,7 +679,7 @@ void
 gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 {
     gint i;
-    
+   
     for (i = 0; i < gmodel->ncurves; i++)
     {
         g_object_unref(gmodel->curves[i]);

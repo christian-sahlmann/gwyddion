@@ -22,7 +22,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include <stdio.h>
+#include <libgwydgets/gwydgets.h>
 
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
@@ -31,15 +33,37 @@ void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels)
 {
+    GdkPixmap *pixmap;
+    GdkPixbuf *pixbuf;
+    GdkColormap *cmap;
+    GdkGC *gc;
+    gint width, height;
+    GError *error=NULL;
+    
     /*create pixmap*/
+    width = 800;
+    height = 600;
+    pixmap = gdk_pixmap_new(NULL, width, height, 24);
     
     /*plot area*/
+    gc = gdk_gc_new(pixmap);
+    cmap = gdk_colormap_get_system();
+    gwy_graph_area_draw_area_on_drawable(pixmap, gc,
+                                         0, 0, width, height,
+                                         grapher->area);
+        
     
     /*plot axis*/
 
     /*plot label*/
 
     /*save pixmap*/
+    pixbuf = gdk_pixbuf_get_from_drawable(NULL,
+                                          pixmap,
+                                          cmap,
+                                          0, 0, 0, 0,
+                                          -1, -1);
+    gdk_pixbuf_savev(pixbuf, filename, "png", NULL, NULL, &error);
     
 }
 
@@ -47,7 +71,10 @@ void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels)
 {
+    FILE *fw;
+    
     /*create stream*/
+    fw = fopen(filename, "w");
 
     /*write header*/
 
@@ -58,7 +85,7 @@ void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
     /*write area*/
 
     /*save stream*/
-
+    fclose(fw);
 }
 
 

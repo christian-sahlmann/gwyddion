@@ -18,6 +18,7 @@ process_PROGRAMS = \
 	entropy.so \
 	facet_analysis.so \
 	facet-level.so \
+	fractal.so \
 	fft.so \
 	fft_filter_1d.so \
 	fit_2d.so \
@@ -89,6 +90,9 @@ dwtanisotropy_so_LDFLAGS = $(module_ldflags),dwtanisotropy.so
 
 fft_filter_1d_so_SOURCES = fft_filter_1d.c
 fft_filter_1d_so_LDFLAGS = $(module_ldflags),fft_filter_1d.so 
+
+fractal_so_SOURCES = fractal.c
+fractal_so_LDFLAGS = $(module_ldflags),fractal.so
 
 dwtdenoise_so_SOURCES = dwtdenoise.c
 dwtdenoise_so_LDFLAGS = $(module_ldflags),dwtdenoise.so

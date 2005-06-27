@@ -29,6 +29,7 @@
 #include "gwydgets.h"
 #include "gwygraphwindow.h"
 #include "gwygraphdata.h"
+#include <libgwydgets/gwygraphwindowasciidialog.h>
 
 #define GWY_GRAPH_WINDOW_TYPE_NAME "GwyGraphWindow"
 
@@ -382,17 +383,92 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 static void     
 gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
 {
+    GtkDialog *filedialog;
+    gchar *filename;
+
+    filedialog = gtk_file_chooser_dialog_new ("Export to postscript",
+                                              GTK_WINDOW(graphwindow),
+                                              GTK_FILE_CHOOSER_ACTION_SAVE,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                              NULL);
+    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+    {
+       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+       gwy_graph_export_postscript(GWY_GRAPH(graphwindow->graph), filename,
+                                   TRUE, TRUE, TRUE);
+    }
+    gtk_widget_destroy(filedialog);
+      
 }
 
 static void     
 gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
 {
+    GwyGraphWindowAsciiDialog *dialog;
+    GtkDialog *filedialog;
+    gchar *filename;
+    gboolean units, labels, metadata;
+    GwyGraphModelExportStyle style;
+
+    dialog = gwy_graph_window_ascii_dialog_new();
+   
+    int result = gtk_dialog_run (GTK_DIALOG (dialog));
+    switch (result)
+    {
+       case GTK_RESPONSE_OK:
+       gwy_graph_window_ascii_dialog_get_data(dialog, 
+                                              &style, 
+                                              &units,
+                                              &labels,
+                                              &metadata);
+       filedialog = gtk_file_chooser_dialog_new ("Export to ASCII File",
+                                                 GTK_WINDOW(graphwindow),
+                                                 GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                                 NULL);
+       if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+       {
+           filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+           gwy_graph_model_export_ascii(GWY_GRAPH(graphwindow->graph)->graph_model, filename,
+                                        units, metadata,
+                                        style);
+               
+       }
+       gtk_widget_destroy(filedialog);
+
+       
+       break;
+                                                
+       default:
+       break;
+    }
+    
+    gtk_widget_destroy (dialog);
+    
 }
 
 static void     
 gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)
 {
-}
+    GtkDialog *filedialog;
+    gchar *filename;
+
+    filedialog = gtk_file_chooser_dialog_new ("Export to bitmap",
+                                              GTK_WINDOW(graphwindow),
+                                              GTK_FILE_CHOOSER_ACTION_SAVE,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                              NULL);
+    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+    {
+       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+       gwy_graph_export_pixmap(GWY_GRAPH(graphwindow->graph), filename,
+                               TRUE, TRUE, TRUE);
+    }
+    gtk_widget_destroy(filedialog);
+ }
 
 
 

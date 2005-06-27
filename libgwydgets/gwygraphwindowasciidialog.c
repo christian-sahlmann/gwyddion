@@ -27,6 +27,14 @@
 
 #define GWY_GRAPH_WINDOW_ASCII_DIALOG_TYPE_NAME "GwyGraphWindowAsciiDialog"
 
+GwyEnum style_type[] = {
+    {N_("Plain text"),             GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN   },
+    {N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT },
+    {N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV     },
+    {N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN  },
+};
+               
+
 static void     gwy_graph_window_ascii_dialog_class_init       (GwyGraphWindowAsciiDialogClass *klass);
 static void     gwy_graph_window_ascii_dialog_init             (GwyGraphWindowAsciiDialog *dialog);
 static void     gwy_graph_window_ascii_dialog_finalize         (GObject *object);
@@ -35,7 +43,10 @@ static gboolean gwy_graph_window_ascii_dialog_delete           (GtkWidget *widge
 
 static void     units_changed_cb                                 (GwyGraphWindowAsciiDialog *dialog);
 static void     metadata_changed_cb                              (GwyGraphWindowAsciiDialog *dialog);
-static void     labels_changed_cb                                 (GwyGraphWindowAsciiDialog *dialog);
+static void     labels_changed_cb                                (GwyGraphWindowAsciiDialog *dialog);
+static void     style_cb                                         (GtkWidget *item, 
+                                                                  GwyGraphWindowAsciiDialog *dialog);
+
 
 
 static GtkDialogClass *parent_class = NULL;
@@ -99,6 +110,15 @@ gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
     GtkWidget *label;
     gwy_debug("");
 
+    dialog->style = GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN;
+    dialog->preference =  gwy_option_menu_create(style_type,
+                          G_N_ELEMENTS(style_type), "style",
+                          G_CALLBACK(style_cb), dialog,
+                          dialog->style);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                    dialog->preference);
+    
+    
     dialog->check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_labels);
@@ -122,7 +142,10 @@ gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
 
-        
+    gtk_widget_show_all(dialog->preference);
+    gtk_widget_show(dialog->check_units);
+    gtk_widget_show(dialog->check_labels);
+    gtk_widget_show(dialog->check_metadata);
 }
 
 GtkWidget *
@@ -146,16 +169,38 @@ gwy_graph_window_ascii_dialog_finalize(GObject *object)
 static void     
 units_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
+    dialog->units = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_units));
 }
 
 static void     
 labels_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
+    dialog->labels = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_labels));
 }
 
 static void     
 metadata_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
+    dialog->metadata = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_metadata));
+}
+
+static void     
+style_cb(GtkWidget *item, GwyGraphWindowAsciiDialog *dialog)
+{
+    dialog->style = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "style"));
+}
+
+void  gwy_graph_window_ascii_dialog_get_data(GwyGraphWindowAsciiDialog *dialog,
+                                             GwyGraphModelExportStyle *style,
+                                             gboolean* units,
+                                             gboolean* labels,
+                                             gboolean* metadata)
+{
+    g_return_if_fail(GWY_IS_GRAPH_WINDOW_ASCII_DIALOG(dialog));
+    *style = dialog->style;
+    *units = dialog->units;
+    *labels = dialog->labels;
+    *metadata = dialog->metadata;
 }
 
 

@@ -96,6 +96,7 @@ libgwydgets_la_SOURCES = \
 	gwygraphbasics.c \
 	gwygraphcorner.c \
 	gwygraph.c \
+	gwygraphexport.c \
 	gwygraphlabeldialog.c \
 	gwygraphlabel.c \
 	gwyhruler.c \

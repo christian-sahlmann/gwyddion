@@ -24,8 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
-
-#include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwydgets.h>
 
 G_BEGIN_DECLS
 
@@ -47,6 +46,11 @@ struct _GwyGraphWindowAsciiDialog {
     GtkWidget *check_units;
     GtkWidget *check_metadata;
 
+    gboolean units;
+    gboolean labels;
+    gboolean metadata;
+    GwyGraphModelExportStyle style;
+    
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -60,6 +64,12 @@ struct _GwyGraphWindowAsciiDialogClass {
 
 GType       gwy_graph_window_ascii_dialog_get_type (void) G_GNUC_CONST;
 GtkWidget*  gwy_graph_window_ascii_dialog_new      (void);
+
+void  gwy_graph_window_ascii_dialog_get_data(GwyGraphWindowAsciiDialog *dialog,
+                                             GwyGraphModelExportStyle *style,
+                                             gboolean* units,
+                                             gboolean* labels,
+                                             gboolean* metadata);
 
 
 G_END_DECLS
