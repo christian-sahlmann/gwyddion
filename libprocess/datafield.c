@@ -117,10 +117,10 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
     gobject_class->finalize = gwy_data_field_finalize;
 
 /**
- * GwyDataField::data_changed:
+ * GwyDataField::data-changed:
  * @gwydatafield: The #GwyDataField which received the signal.
  *
- * The ::data_changed signal is never emitted by data field itself.  It
+ * The ::data-changed signal is never emitted by data field itself.  It
  * is intended as a means to notify others data field users they should
  * update themselves.
  */

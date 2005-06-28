@@ -178,7 +178,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
      * GwyShader::angle-changed:
      * @gwyshader: The #GwyShader which received the signal.
      *
-     * The ::angle_changed signal is emitted when the spherical angle changes.
+     * The ::angle-changed signal is emitted when the spherical angle changes.
      */
     shader_signals[ANGLE_CHANGED]
         = g_signal_new("angle_changed",

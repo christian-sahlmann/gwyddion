@@ -100,12 +100,12 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
     gobject_class->finalize = gwy_inventory_finalize;
 
 /**
- * GwyInventory::item_inserted:
+ * GwyInventory::item-inserted:
  * @gwyinventory: The #GwyInventory which received the signal.
  * @arg1: Position an item was inserted at.
  * @user_data: User data set when the signal handler was connected.
  *
- * The ::item_inserted signal is emitted when an item is inserted into
+ * The ::item-inserted signal is emitted when an item is inserted into
  * an inventory.
  **/
     gwy_inventory_signals[ITEM_INSERTED] =
@@ -119,12 +119,12 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_TYPE_UINT);
 
 /**
- * GwyInventory::item_deleted:
+ * GwyInventory::item-deleted:
  * @gwyinventory: The #GwyInventory which received the signal.
  * @arg1: Position an item was deleted from.
  * @user_data: User data set when the signal handler was connected.
  *
- * The ::item_deleted signal is emitted when an item is deleted from
+ * The ::item-deleted signal is emitted when an item is deleted from
  * an inventory.
  **/
     gwy_inventory_signals[ITEM_INSERTED] =
@@ -138,12 +138,12 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_TYPE_UINT);
 
 /**
- * GwyInventory::item_updated:
+ * GwyInventory::item-updated:
  * @gwyinventory: The #GwyInventory which received the signal.
  * @arg1: Position of updated item.
  * @user_data: User data set when the signal handler was connected.
  *
- * The ::item_updated signal is emitted when an item in an inventory
+ * The ::item-updated signal is emitted when an item in an inventory
  * is updated.
  **/
     gwy_inventory_signals[ITEM_UPDATED] =
@@ -157,12 +157,12 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_TYPE_UINT);
 
 /**
- * GwyInventory::items_reordered:
+ * GwyInventory::items-reordered:
  * @gwyinventory: The #GwyInventory which received the signal.
  * @arg1: Position of updated item.
  * @user_data: User data set when the signal handler was connected.
  *
- * The ::items_reordered signal is emitted when item in an inventory
+ * The ::items-reordered signal is emitted when item in an inventory
  * are reordered.
  **/
     gwy_inventory_signals[ITEMS_REORDERED] =

@@ -216,10 +216,10 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
     gobject_class->finalize = gwy_si_unit_finalize;
 
 /**
- * GwySIUnit::value_changed:
+ * GwySIUnit::value-changed:
  * @gwysiunit: The #GwySIUnit which received the signal.
  *
- * The ::value_changed signal is emitted whenever SI unit changes.
+ * The ::value-changed signal is emitted whenever SI unit changes.
  */
     si_unit_signals[VALUE_CHANGED]
         = g_signal_new("value_changed",

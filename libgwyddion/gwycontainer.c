@@ -196,11 +196,19 @@ gwy_container_class_init(GwyContainerClass *klass)
 
     gobject_class->finalize = gwy_container_finalize;
 
+    /**
+    * GwyContainer::item-changed:
+    * @gwycontainer: The #GwyContainer which received the signal.
+    * @arg1: The key identifying the changed item.
+    *
+    * The ::item-changed signal is emitted whenever a container item is
+    * changed.  The detail is the string key identifier.
+    */
     container_signals[ITEM_CHANGED]
         = g_signal_new("item_changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED
-                            | G_SIGNAL_NO_RECURSE,
+                           | G_SIGNAL_NO_RECURSE,
                        G_STRUCT_OFFSET(GwyContainerClass, item_changed),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__STRING,

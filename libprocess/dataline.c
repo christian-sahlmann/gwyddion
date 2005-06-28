@@ -109,10 +109,10 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
     gobject_class->finalize = gwy_data_line_finalize;
 
 /**
- * GwyDataLine::data_changed:
+ * GwyDataLine::data-changed:
  * @gwydataline: The #GwyDataLine which received the signal.
  *
- * The ::data_changed signal is never emitted by data line itself.  It
+ * The ::data-changed signal is never emitted by data line itself.  It
  * is intended as a means to notify others data line users they should
  * update themselves.
  */
