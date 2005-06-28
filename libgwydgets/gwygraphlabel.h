@@ -75,6 +75,10 @@ void gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel);
 void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
                                               gint x, gint y, gint width, gint height,
                                               GwyGraphLabel *label);
+GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
+                                       gint x, gint y,
+                                       gint width, gint height);
+
 
 void gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable);
 

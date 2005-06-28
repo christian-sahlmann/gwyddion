@@ -476,4 +476,86 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
     label->enable_user_input = enable;
 }
 
+
+static gchar *symbols[] = 
+{
+    "Box",
+    "Cross",
+    "Circle",
+    "Star",
+    "Times",
+    "TriU",
+    "TriD",
+    "Dia",
+};
+
+GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
+                                      gint x, gint y,
+                                      gint width, gint height)
+{
+    gint i, j;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
+    GString *out;
+    GString *symbol;
+    gint xpos, ypos;
+    gint pointsize;
+    gint linesize;
+    gint fontsize = 15;
+    
+    out = g_string_new("%%Label\n");
+
+    g_string_append_printf(out, "/Times-Roman findfont\n");
+    g_string_append_printf(out, "%d scalefont\n setfont\n", fontsize);
+
+            
+    model = GWY_GRAPH_MODEL(label->graph_model);
+    g_string_append_printf(out, "/box {\n"
+                           "newpath\n"
+                           "%d setlinewidth\n"
+                           "%d %d M\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "closepath\n"
+                           "} def\n",
+                           model->label_frame_thickness,
+                           x, y, 
+                           x + width, y,
+                           x + width, y + height,
+                           x, y + height);
+
+    g_string_append_printf(out, "gsave\n");
+    g_string_append_printf(out, "box\n");
+    g_string_append_printf(out, "gsave\n");
+    g_string_append_printf(out, "stroke\n");
+    g_string_append_printf(out, "grestore\n");
+    g_string_append_printf(out, "clip\n");
+    
+    
+    xpos = 5;
+    ypos = height - fontsize;
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+        pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
+        g_string_append_printf(out, "/hpt %d def\n", pointsize);
+        g_string_append_printf(out, "/vpt %d def\n", pointsize);
+        g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
+        g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
+        g_string_append_printf(out, "%d setlinewidth\n", linesize);
+        g_string_append_printf(out, "%d %d M\n", x + xpos, y + ypos);
+        g_string_append_printf(out, "%d %d L\n", x + xpos + 20, y + ypos);
+        g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/4));
+        g_string_append_printf(out, "(%s) show\n", gwy_graph_curve_model_get_description(curvemodel));
+        g_string_append_printf(out, "stroke\n");
+        ypos -= fontsize + 5;
+    }
+    g_string_append_printf(out, "grestore\n");
+    
+    return out;                         
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

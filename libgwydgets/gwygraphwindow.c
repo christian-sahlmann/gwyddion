@@ -297,11 +297,11 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     
     gwy_graph_get_cursor(graphwindow->graph, &x, &y);
 
-    xmag = gwy_axiser_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_top);
-    xstring = gwy_axiser_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_top);
+    xmag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_top);
+    xstring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_top);
 
-    ymag = gwy_axiser_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_left);
-    ystring = gwy_axiser_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
+    ymag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_left);
+    ystring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
     
     
     g_snprintf(buffer, sizeof(buffer), "%.4f", x/xmag);

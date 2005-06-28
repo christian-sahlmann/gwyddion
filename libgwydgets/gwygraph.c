@@ -164,10 +164,10 @@ gwy_graph_init(GwyGraph *grapher)
     gtk_table_set_row_spacings (GTK_TABLE (grapher), 0);
     gtk_table_set_col_spacings (GTK_TABLE (grapher), 0);
 
-    grapher->axis_top = GWY_AXISER(gwy_axiser_new(GTK_POS_TOP, 2.24, 5.21, "x"));
-    grapher->axis_bottom = GWY_AXISER(gwy_axiser_new(GTK_POS_BOTTOM, 2.24, 5.21, "x"));
-    grapher->axis_left = GWY_AXISER(gwy_axiser_new(GTK_POS_LEFT, 100, 500, "y"));
-    grapher->axis_right = GWY_AXISER(gwy_axiser_new(GTK_POS_RIGHT, 100, 500, "y"));
+    grapher->axis_top = GWY_AXIS(gwy_axis_new(GTK_POS_TOP, 2.24, 5.21, "x"));
+    grapher->axis_bottom = GWY_AXIS(gwy_axis_new(GTK_POS_BOTTOM, 2.24, 5.21, "x"));
+    grapher->axis_left = GWY_AXIS(gwy_axis_new(GTK_POS_LEFT, 100, 500, "y"));
+    grapher->axis_right = GWY_AXIS(gwy_axis_new(GTK_POS_RIGHT, 100, 500, "y"));
 
     g_signal_connect(grapher->axis_left, "rescaled", G_CALLBACK(rescaled_cb), grapher);
     g_signal_connect(grapher->axis_bottom, "rescaled", G_CALLBACK(rescaled_cb), grapher);
@@ -269,10 +269,10 @@ gwy_graph_new(GwyGraphModel *gmodel)
 void
 gwy_graph_enable_axis_label_edit(GwyGraph *grapher, gboolean enable)
 {
-    gwy_axiser_enable_label_edit(grapher->axis_top, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_bottom, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_left, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_right, enable);
+    gwy_axis_enable_label_edit(grapher->axis_top, enable);
+    gwy_axis_enable_label_edit(grapher->axis_bottom, enable);
+    gwy_axis_enable_label_edit(grapher->axis_left, enable);
+    gwy_axis_enable_label_edit(grapher->axis_right, enable);
 }
 
 
@@ -295,10 +295,10 @@ gwy_graph_refresh(GwyGraph *grapher)
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
-    gwy_axiser_set_unit(grapher->axis_top, model->x_unit);
-    gwy_axiser_set_unit(grapher->axis_bottom, model->x_unit);
-    gwy_axiser_set_unit(grapher->axis_left, model->y_unit);
-    gwy_axiser_set_unit(grapher->axis_right, model->y_unit);
+    gwy_axis_set_unit(grapher->axis_top, model->x_unit);
+    gwy_axis_set_unit(grapher->axis_bottom, model->x_unit);
+    gwy_axis_set_unit(grapher->axis_left, model->y_unit);
+    gwy_axis_set_unit(grapher->axis_right, model->y_unit);
     if (model->ncurves > 0)
     {
     
@@ -316,15 +316,15 @@ gwy_graph_refresh(GwyGraph *grapher)
                 if (y_reqmax < curvemodel->ydata[j]) y_reqmax = curvemodel->ydata[j];
             }
         }
-        gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
-        gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
-        gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
-        gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
+        gwy_axis_set_req(grapher->axis_top, x_reqmin, x_reqmax);
+        gwy_axis_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
+        gwy_axis_set_req(grapher->axis_left, y_reqmin, y_reqmax);
+        gwy_axis_set_req(grapher->axis_right, y_reqmin, y_reqmax);
 
-        model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
-        model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
-        model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
-        model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+        model->x_max = gwy_axis_get_maximum(grapher->axis_bottom);
+        model->x_min = gwy_axis_get_minimum(grapher->axis_bottom);
+        model->y_max = gwy_axis_get_maximum(grapher->axis_left);
+        model->y_min = gwy_axis_get_minimum(grapher->axis_left);
     }
 
     /*refresh widgets*/
@@ -377,10 +377,10 @@ rescaled_cb(GtkWidget *widget, GwyGraph *grapher)
     GwyGraphModel *model;
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
-    model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
-    model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
-    model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
-    model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+    model->x_max = gwy_axis_get_maximum(grapher->axis_bottom);
+    model->x_min = gwy_axis_get_minimum(grapher->axis_bottom);
+    model->y_max = gwy_axis_get_maximum(grapher->axis_left);
+    model->y_min = gwy_axis_get_minimum(grapher->axis_left);
 
     gwy_graph_area_refresh(grapher->area);
 }
@@ -517,11 +517,11 @@ gwy_graph_request_x_range(GwyGraph *grapher, gdouble x_min_req, gdouble x_max_re
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
-    gwy_axiser_set_req(grapher->axis_top, x_min_req, x_max_req);
-    gwy_axiser_set_req(grapher->axis_bottom, x_min_req, x_max_req);
+    gwy_axis_set_req(grapher->axis_top, x_min_req, x_max_req);
+    gwy_axis_set_req(grapher->axis_bottom, x_min_req, x_max_req);
 
-    model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
-    model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
+    model->x_max = gwy_axis_get_maximum(grapher->axis_bottom);
+    model->x_min = gwy_axis_get_minimum(grapher->axis_bottom);
 
     /*refresh widgets*/
     gwy_graph_area_refresh(grapher->area);
@@ -535,11 +535,11 @@ gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_re
     if (grapher->graph_model == NULL) return;
     model = GWY_GRAPH_MODEL(grapher->graph_model);
 
-    gwy_axiser_set_req(grapher->axis_left, y_min_req, y_max_req);
-    gwy_axiser_set_req(grapher->axis_right, y_min_req, y_max_req);
+    gwy_axis_set_req(grapher->axis_left, y_min_req, y_max_req);
+    gwy_axis_set_req(grapher->axis_right, y_min_req, y_max_req);
 
-    model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
-    model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+    model->y_max = gwy_axis_get_maximum(grapher->axis_left);
+    model->y_min = gwy_axis_get_minimum(grapher->axis_left);
 
     /*refresh widgets*/
     gwy_graph_area_refresh(grapher->area);
@@ -548,15 +548,15 @@ gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_re
 void       
 gwy_graph_get_x_range(GwyGraph *grapher, gdouble *x_min, gdouble *x_max)
 {
-    *x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
-    *x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
+    *x_min = gwy_axis_get_minimum(grapher->axis_bottom);
+    *x_max = gwy_axis_get_maximum(grapher->axis_bottom);
 }
 
 void       
 gwy_graph_get_y_range(GwyGraph *grapher, gdouble *y_min, gdouble *y_max)
 {
-    *y_min = gwy_axiser_get_minimum(grapher->axis_left);
-    *y_max = gwy_axiser_get_maximum(grapher->axis_left);
+    *y_min = gwy_axis_get_minimum(grapher->axis_left);
+    *y_max = gwy_axis_get_maximum(grapher->axis_left);
 }
 
 
@@ -572,10 +572,10 @@ gwy_graph_enable_user_input(GwyGraph *grapher, gboolean enable)
 {
     grapher->enable_user_input = enable;
     gwy_graph_area_enable_user_input(grapher->area, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_top, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_bottom, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_left, enable);
-    gwy_axiser_enable_label_edit(grapher->axis_right, enable);
+    gwy_axis_enable_label_edit(grapher->axis_top, enable);
+    gwy_axis_enable_label_edit(grapher->axis_bottom, enable);
+    gwy_axis_enable_label_edit(grapher->axis_left, enable);
+    gwy_axis_enable_label_edit(grapher->axis_right, enable);
     
     
 }
@@ -632,15 +632,15 @@ zoomed_cb(GwyGraph *grapher)
     y_reqmin = selection[2];
     y_reqmax = selection[2] + selection[3];
          
-    gwy_axiser_set_req(grapher->axis_top, x_reqmin, x_reqmax);
-    gwy_axiser_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
-    gwy_axiser_set_req(grapher->axis_left, y_reqmin, y_reqmax);
-    gwy_axiser_set_req(grapher->axis_right, y_reqmin, y_reqmax);
+    gwy_axis_set_req(grapher->axis_top, x_reqmin, x_reqmax);
+    gwy_axis_set_req(grapher->axis_bottom, x_reqmin, x_reqmax);
+    gwy_axis_set_req(grapher->axis_left, y_reqmin, y_reqmax);
+    gwy_axis_set_req(grapher->axis_right, y_reqmin, y_reqmax);
 
-    grapher->graph_model->x_max = gwy_axiser_get_maximum(grapher->axis_bottom);
-    grapher->graph_model->x_min = gwy_axiser_get_minimum(grapher->axis_bottom);
-    grapher->graph_model->y_max = gwy_axiser_get_maximum(grapher->axis_left);
-    grapher->graph_model->y_min = gwy_axiser_get_minimum(grapher->axis_left);
+    grapher->graph_model->x_max = gwy_axis_get_maximum(grapher->axis_bottom);
+    grapher->graph_model->x_min = gwy_axis_get_minimum(grapher->axis_bottom);
+    grapher->graph_model->y_max = gwy_axis_get_maximum(grapher->axis_left);
+    grapher->graph_model->y_min = gwy_axis_get_minimum(grapher->axis_left);
 
     /*refresh widgets*/
     gwy_graph_set_status(grapher, GWY_GRAPH_STATUS_PLAIN);

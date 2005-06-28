@@ -285,10 +285,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 
     controls.gmodel = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
     controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.gmodel));
-    gwy_axiser_set_visible(GWY_GRAPH(controls.graph)->axis_top, FALSE);
-    gwy_axiser_set_visible(GWY_GRAPH(controls.graph)->axis_left, FALSE);
-    gwy_axiser_set_visible(GWY_GRAPH(controls.graph)->axis_bottom, FALSE);
-    gwy_axiser_set_visible(GWY_GRAPH(controls.graph)->axis_right, FALSE);
+    gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_top, FALSE);
+    gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_left, FALSE);
+    gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_bottom, FALSE);
+    gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_right, FALSE);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
 
     g_signal_connect(GWY_GRAPH(controls.graph)->area, "selected",

@@ -67,22 +67,106 @@ void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
     
 }
 
-void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
+void       
+gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels)
 {
     FILE *fw;
+    gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
+    GString *psaxis, *psarea, *pslabel;
+    GwyAxisActiveAreaSpecs specs;
+   
+    width = 600;
+    height = 450;
+    areax = 60;
+    areay = 60;
+    areaw = width - 2*areax;
+    areah = height - 2*areay;
+    hpt = vpt = 8;
+    
+    labelh = 60;
+    labelw = 100;
+    labelx = width - areax - labelw - 5;
+    labely = height - areay - labelh - 5;
     
     /*create stream*/
     fw = fopen(filename, "w");
 
     /*write header*/
+    fprintf(fw, "%%!PS-Adobe EPSF-3.0\n");
+    fprintf(fw, "%%%%Title: %s\n", filename);
+    fprintf(fw, "%%%%Creator: Gwyddion\n");
+    fprintf(fw, "%%%%BoundingBox: %d %d %d %d\n", 0, 0, width, height);
+    fprintf(fw, "%%%%Orientation: Portrait\n");
+    fprintf(fw, "%%%%EndComments\n");
+    fprintf(fw, "/hpt %d def\n", hpt);
+    fprintf(fw, "/vpt %d def\n", vpt);
+    fprintf(fw, "/hpt2 hpt 2 mul def\n");
+    fprintf(fw, "/vpt2 vpt 2 mul def\n");
+    fprintf(fw, "/M {moveto} bind def\n");
+    fprintf(fw, "/L {lineto} bind def\n");
+    fprintf(fw, "/R {rmoveto} bind def\n");
+    fprintf(fw, "/V {rlineto} bind def\n");
+    fprintf(fw, "/N {newpath moveto} bind def\n");
+    fprintf(fw, "/R {rmoveto} bind def\n");
+    fprintf(fw, "/C {setrgbcolor} bind def\n");
+    fprintf(fw, "/Pnt { stroke [] 0 setdash\n"
+                "gsave 1 setlinecap M 0 0 V stroke grestore } def\n");
+    fprintf(fw, "/Dia { stroke [] 0 setdash 2 copy vpt add M\n"
+                "hpt neg vpt neg V hpt vpt neg V\n"
+                "hpt vpt V hpt neg vpt V closepath stroke\n"
+                " } def\n");
+    fprintf(fw, "/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M\n"
+                "0 vpt2 neg V hpt2 0 V 0 vpt2 V\n"
+                "hpt2 neg 0 V closepath stroke\n"
+                " } def\n");
+    fprintf(fw, "/Circle { stroke [] 0 setdash 2 copy\n"
+                "hpt 0 360 arc stroke } def\n");
+    fprintf(fw, "/Times { stroke [] 0 setdash exch hpt sub exch vpt add M\n"
+                "hpt2 vpt2 neg V currentpoint stroke M\n"
+                "hpt2 neg 0 R hpt2 vpt2 V stroke } def\n");
+    fprintf(fw, "/Cross { stroke [] 0 setdash vpt sub M 0 vpt2 V\n"
+                "currentpoint stroke M\n"
+                "hpt neg vpt neg R hpt2 0 V stroke\n"
+                "} def\n");
+    fprintf(fw, "/Star { 2 copy Cross Times } def\n");
+    fprintf(fw, "/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M\n"
+                "hpt neg vpt -1.62 mul V\n"
+                "hpt 2 mul 0 V\n"
+                "hpt neg vpt 1.62 mul V closepath stroke\n"
+                "} def\n");
+    fprintf(fw, "/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M\n"
+                "hpt neg vpt 1.62 mul V\n"
+                "hpt 2 mul 0 V\n"
+                "hpt neg vpt -1.62 mul V closepath stroke\n"
+                "} def\n");
+    fprintf(fw, "/Times-Roman findfont\n");
+    fprintf(fw, "%%%%EndProlog\n");
 
-    /*write label*/
     
-    /*write axis*/
+    /*write axises*/
+    psaxis = gwy_axis_export_vector(grapher->axis_bottom, areax, 0, areaw, areay);
+    fprintf(fw, "%s", psaxis->str);
+    g_string_free(psaxis, TRUE);
+    psaxis = gwy_axis_export_vector(grapher->axis_top, areax, areay + areah, areaw, areay);
+    fprintf(fw, "%s", psaxis->str);
+    g_string_free(psaxis, TRUE);
+    psaxis = gwy_axis_export_vector(grapher->axis_left, 0, areay, areax, areah);
+    fprintf(fw, "%s", psaxis->str);
+    g_string_free(psaxis, TRUE);
+    psaxis = gwy_axis_export_vector(grapher->axis_right, areax + areaw, areay, areax, areah);
+    fprintf(fw, "%s", psaxis->str);
+    g_string_free(psaxis, TRUE);
+
 
     /*write area*/
+    psarea = gwy_graph_area_export_vector(grapher->area, areax, areay, areaw, areah);
+    fprintf(fw, "%s", psarea->str);
+
+    /*write label*/
+    pslabel = gwy_graph_label_export_vector(grapher->area->lab, labelx, labely, labelw, labelh);
+    fprintf(fw, "%s", pslabel->str);
 
     /*save stream*/
     fclose(fw);

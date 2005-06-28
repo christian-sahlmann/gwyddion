@@ -242,12 +242,12 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
 
-    dialog->x_mag = gwy_axiser_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
-    dialog->y_mag = gwy_axiser_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
-    header_label(table, 1, 1, "X", gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 2, "Y", gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
-    header_label(table, 1, 3, _("Length"), gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 4, _("Height"), gwy_axiser_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    dialog->x_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
+    dialog->y_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
+    header_label(table, 1, 1, "X", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label(table, 1, 2, "Y", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    header_label(table, 1, 3, _("Length"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label(table, 1, 4, _("Height"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
     header_label(table, 1, 5, _("Angle"), "deg", str);
 
     for (i = 0; i < NMAX; i++) {

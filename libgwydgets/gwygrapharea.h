@@ -109,7 +109,7 @@ struct _GwyGraphArea {
     gboolean selecting;
     gboolean mouse_present;
 
-    /*real boundaries*/
+    /*XXX remove this? It is not set! real boundaries*/
     gint x_max;
     gint x_min;
     gint y_max;
@@ -175,6 +175,9 @@ void gwy_graph_area_change_model(GwyGraphArea *area, gpointer gmodel);
 void gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
                                             gint x, gint y, gint width, gint height,
                                             GwyGraphArea *area);
+GString* gwy_graph_area_export_vector(GwyGraphArea *area, 
+                                      gint x, gint y, 
+                                      gint width, gint height);
 
 void gwy_graph_area_clear_selection(GwyGraphArea *area);
 

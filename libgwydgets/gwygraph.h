@@ -50,10 +50,10 @@ typedef struct _GwyGraphClass GwyGraphClass;
 struct _GwyGraph {
     GtkTable table;
 
-    GwyAxiser *axis_top;
-    GwyAxiser *axis_left;
-    GwyAxiser *axis_right;
-    GwyAxiser *axis_bottom;
+    GwyAxis *axis_top;
+    GwyAxis *axis_left;
+    GwyAxis *axis_right;
+    GwyAxis *axis_bottom;
 
     GwyGraphCorner *corner_tl;
     GwyGraphCorner *corner_bl;

@@ -1156,5 +1156,105 @@ gboolean gwy_graph_area_leave_notify(GtkWidget *widget, GdkEventCrossing *event)
 }
 
 
+static gchar *symbols[] = 
+{
+    "Box",
+    "Cross",
+    "Circle",
+    "Star",
+    "Times",
+    "TriU",
+    "TriD",
+    "Dia",
+};
+
+GString* gwy_graph_area_export_vector(GwyGraphArea *area,
+                                      gint x, gint y,
+                                      gint width, gint height)
+{
+    gint i, j;
+    GwyGraphCurveModel *curvemodel;
+    GwyGraphModel *model;
+    GString *out;
+    GString *symbol;
+    gdouble xmult, ymult;
+    gint pointsize;
+    gint linesize;
+    
+    out = g_string_new("%%Area\n");
+
+    model = GWY_GRAPH_MODEL(area->graph_model);
+    if ((model->x_max - model->x_min)==0 || (model->y_max - model->y_min)==0)
+    {
+        g_warning("Graph null range.\n");
+        return out;
+    }
+    
+    xmult = width/(model->x_max - model->x_min);
+    ymult = height/(model->y_max - model->y_min);
+
+    g_string_append_printf(out, "/box {\n"
+                           "newpath\n"
+                           "%d %d M\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "%d %d L\n"
+                           "closepath\n"
+                           "} def\n",
+                           x, y, 
+                           x + width, y,
+                           x + width, y + height,
+                           x, y + height);
+
+    g_string_append_printf(out, "gsave\n");
+    g_string_append_printf(out, "box\n");
+    g_string_append_printf(out, "clip\n");
+    
+    
+    for (i=0; i<model->ncurves; i++)
+    {
+        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+        pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
+        linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
+        g_string_append_printf(out, "/hpt %d def\n", pointsize);
+        g_string_append_printf(out, "/vpt %d def\n", pointsize);
+        g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
+        g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
+        g_string_append_printf(out, "%d setlinewidth\n", linesize);
+
+        for (j=0; j<(curvemodel->n - 1); j++)
+        {
+            if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
+            {
+                if (j==0) g_string_append_printf(out, "%d %d M\n", 
+                                   (gint)(x + curvemodel->xdata[j]*xmult), 
+                                   (gint)(y + curvemodel->ydata[j]*ymult));
+                else 
+                {
+                    g_string_append_printf(out, "%d %d M\n", 
+                                   (gint)(x + curvemodel->xdata[j-1]*xmult), 
+                                   (gint)(y + curvemodel->ydata[j-1]*ymult)); 
+                    g_string_append_printf(out, "%d %d L\n", 
+                                   (gint)(x + curvemodel->xdata[j]*xmult), 
+                                   (gint)(y + curvemodel->ydata[j]*ymult));
+                }
+            }
+            if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
+            {
+                g_string_append_printf(out, "%d %d %s\n", 
+                          (gint)(x + curvemodel->xdata[j]*xmult), 
+                          (gint)(y + curvemodel->ydata[j]*ymult),
+                          symbols[curvemodel->point_type]); 
+                 
+            }
+        }
+        g_string_append_printf(out, "stroke\n");
+    }
+    g_string_append_printf(out, "grestore\n");
+    
+    return out;                         
+}
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

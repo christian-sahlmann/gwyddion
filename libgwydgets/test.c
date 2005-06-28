@@ -118,12 +118,21 @@ main(int argc, char *argv[])
     model = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_data(model, xp, ys, 10);
     gwy_graph_curve_model_set_description(model, "cosi");
-   
+    gwy_graph_curve_model_set_curve_point_type(model, GWY_GRAPH_POINT_CIRCLE);
+    gwy_graph_curve_model_set_curve_point_size(model, 6);
+    gwy_graph_curve_model_set_curve_line_size(model, 3);
+    
     gwy_graph_model_add_curve(gmodel, model);
     
     gwy_graph_model_set_label_visible(gmodel, TRUE);
     
 
+    gwy_graph_export_postscript(graph, "pokus.eps",
+                                TRUE, TRUE,
+                                TRUE);
+        
+        return 0;
+    
     gwindow = gwy_graph_window_new(graph);
     
    /*gtk_container_add (GTK_CONTAINER (window), gwindow);*/
