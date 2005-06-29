@@ -693,14 +693,14 @@ gwy_data_field_facet_distribution(GwyDataField *dfield,
             gdouble z;
 
             z = data[i*res + j]
-                + 0.3*(data[i*xres + j - 1]
-                       + data[i*xres + j + 1]
-                       + data[i*xres - xres + j]
-                       + data[i*xres + xres + j])
-                + 0.1*(data[i*xres - xres + j - 1]
-                       + data[i*xres - xres + j + 1]
-                       + data[i*xres + xres + j - 1]
-                       + data[i*xres + xres + j + 1]);
+                + 0.3*(data[i*res + j - 1]
+                       + data[i*res + j + 1]
+                       + data[i*res - res + j]
+                       + data[i*res + res + j])
+                + 0.1*(data[i*res - res + j - 1]
+                       + data[i*res - res + j + 1]
+                       + data[i*res + res + j - 1]
+                       + data[i*res + res + j + 1]);
             if (G_UNLIKELY(z > max)) {
                 max = z;
                 mi = i;
