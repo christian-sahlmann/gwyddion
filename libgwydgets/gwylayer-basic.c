@@ -120,13 +120,13 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     /**
      * GwyLayerBasic:gradient-key:
      *
-     * The :gradient_key property is the container key used to identify
+     * The :gradient-key property is the container key used to identify
      * #GwyGradient data is colored with.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_GRADIENT_KEY,
-         g_param_spec_string("gradient_key",
+         g_param_spec_string("gradient-key",
                              "Gradient key",
                              "Key identifying gradient in container",
                              NULL, G_PARAM_READWRITE));
@@ -134,13 +134,13 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     /**
      * GwyLayerBasic:range-type-key:
      *
-     * The :range_type_key property is the container key used to identify
+     * The :range-type-key property is the container key used to identify
      * color range type.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_RANGE_TYPE_KEY,
-         g_param_spec_string("range_type_key",
+         g_param_spec_string("range-type-key",
                              "Range type key",
                              "Key identifying color range type in container",
                              NULL, G_PARAM_READWRITE));
@@ -148,13 +148,13 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     /**
      * GwyLayerBasic:min-max-key:
      *
-     * The :min_max_key property is the container key used to identify
+     * The :min-max-key property is the container key prefix used to identify
      * fixed range minimum and maximum.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_MIN_MAX_KEY,
-         g_param_spec_string("min_max_key",
+         g_param_spec_string("min-max-key",
                              "Min, max key",
                              "Key prefix identifying fixed range minimum and "
                              "maximum in container",
@@ -313,7 +313,7 @@ gwy_layer_basic_gradient_connect(GwyLayerBasic *basic_layer)
 
     g_object_ref(basic_layer->gradient);
     basic_layer->gradient_id
-        = g_signal_connect_swapped(basic_layer->gradient, "data_changed",
+        = g_signal_connect_swapped(basic_layer->gradient, "data-changed",
                                    G_CALLBACK(gwy_layer_basic_changed), layer);
 }
 
@@ -647,11 +647,11 @@ gwy_layer_basic_connect_fixed(GwyLayerBasic *basic_layer)
 
     prefix = g_quark_to_string(basic_layer->fixed_key);
     len = strlen(prefix);
-    detailed_signal = g_newa(gchar, len + sizeof("item_changed::")
+    detailed_signal = g_newa(gchar, len + sizeof("item-changed::")
                                     + sizeof("/min"));
-    len += sizeof("item_changed::");
+    len += sizeof("item-changed::");
 
-    g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), prefix),
+    g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), prefix),
              "/min");
     basic_layer->min_id
         = g_signal_connect_swapped(layer->data, detailed_signal,
@@ -693,9 +693,9 @@ gwy_layer_basic_container_connect(GwyLayerBasic *basic_layer,
         *id = 0;
         return;
     }
-    detailed_signal = g_newa(gchar, sizeof("item_changed::")
+    detailed_signal = g_newa(gchar, sizeof("item-changed::")
                                     + strlen(data_key_string));
-    g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), data_key_string);
+    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), data_key_string);
 
     *id = g_signal_connect_swapped(layer->data, detailed_signal,
                                    G_CALLBACK(callback), layer);

@@ -117,7 +117,7 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
  * update themselves.
  */
     data_line_signals[DATA_CHANGED]
-        = g_signal_new("data_changed",
+        = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyDataLineClass, data_changed),

@@ -63,7 +63,7 @@ gwy_app_splash_create(void)
     gtk_window_set_type_hint(GTK_WINDOW(window),
                              GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
 
-    g_signal_connect_swapped(window, "delete_event",
+    g_signal_connect_swapped(window, "delete-event",
                              G_CALLBACK(exit), GINT_TO_POINTER(0));
     /* we don't want the splash screen to send the startup notification */
     gtk_window_set_auto_startup_notification(FALSE);

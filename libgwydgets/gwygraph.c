@@ -33,7 +33,7 @@
 
 enum {
     SELECTED_SIGNAL,
-    MOUSEMOVED_SIGNAL,
+    MOUSE_MOVED_SIGNAL,
     ZOOMED_SIGNAL,
     LAST_SIGNAL
 };
@@ -99,7 +99,7 @@ gwy_graph_class_init(GwyGraphClass *klass)
     widget_class->size_allocate = gwy_graph_size_allocate;
 
     klass->selected = NULL;
-    klass->mousemoved = NULL;
+    klass->mouse_moved = NULL;
     klass->zoomed = NULL;
     
     gwygraph_signals[SELECTED_SIGNAL]
@@ -112,11 +112,11 @@ gwy_graph_class_init(GwyGraphClass *klass)
                                 g_cclosure_marshal_VOID__VOID,
                                 G_TYPE_NONE, 0);
 
-    gwygraph_signals[MOUSEMOVED_SIGNAL]
-                = g_signal_new ("mousemoved",
+    gwygraph_signals[MOUSE_MOVED_SIGNAL]
+                = g_signal_new ("mouse-moved",
                                 G_TYPE_FROM_CLASS (klass),
                                 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGraphClass, mousemoved),
+                                G_STRUCT_OFFSET (GwyGraphClass, mouse_moved),
                                 NULL,
                                 NULL,
                                 g_cclosure_marshal_VOID__VOID,
@@ -214,8 +214,8 @@ gwy_graph_init(GwyGraph *grapher)
     g_signal_connect_swapped(grapher->area, "selected",
                      G_CALLBACK(gwy_graph_signal_selected), grapher);
 
-    g_signal_connect_swapped(grapher->area, "mousemoved",
-                     G_CALLBACK(gwy_graph_signal_mousemoved), grapher);
+    g_signal_connect_swapped(grapher->area, "mouse-moved",
+                     G_CALLBACK(gwy_graph_signal_mouse_moved), grapher);
      
     g_signal_connect_swapped(grapher->area, "zoomed",
                      G_CALLBACK(zoomed_cb), grapher);
@@ -588,9 +588,9 @@ gwy_graph_signal_selected(GwyGraph *grapher)
 }
 
 void       
-gwy_graph_signal_mousemoved(GwyGraph *grapher)
+gwy_graph_signal_mouse_moved(GwyGraph *grapher)
 {
-    g_signal_emit (G_OBJECT (grapher), gwygraph_signals[MOUSEMOVED_SIGNAL], 0);
+    g_signal_emit (G_OBJECT (grapher), gwygraph_signals[MOUSE_MOVED_SIGNAL], 0);
 }
 
 void       

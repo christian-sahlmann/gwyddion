@@ -167,7 +167,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_UPDATE_POLICY,
-        g_param_spec_enum("update_policy",
+        g_param_spec_enum("update-policy",
                           "Update Policy",
                           "When value change causes signal emission",
                           GTK_TYPE_UPDATE_TYPE,
@@ -181,7 +181,7 @@ gwy_shader_class_init(GwyShaderClass *klass)
      * The ::angle-changed signal is emitted when the spherical angle changes.
      */
     shader_signals[ANGLE_CHANGED]
-        = g_signal_new("angle_changed",
+        = g_signal_new("angle-changed",
                        G_OBJECT_CLASS_TYPE(object_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyShaderClass, angle_changed),
@@ -225,7 +225,7 @@ gwy_shader_new(const gchar *gradient)
     g_object_ref(shader->gradient);
 
     shader->gradient_change_id
-        = g_signal_connect_swapped(shader->gradient, "data_changed",
+        = g_signal_connect_swapped(shader->gradient, "data-changed",
                                    G_CALLBACK(gwy_shader_update), shader);
 
     return (GtkWidget*)shader;
@@ -507,7 +507,7 @@ gwy_shader_set_gradient(GwyShader *shader,
     g_object_ref(grad);
     shader->gradient = grad;
     shader->gradient_change_id
-        = g_signal_connect_swapped(shader->gradient, "data_changed",
+        = g_signal_connect_swapped(shader->gradient, "data-changed",
                                    G_CALLBACK(gwy_shader_update), shader);
     g_object_unref(old);
 

@@ -148,7 +148,7 @@ struct _GwyGraphAreaClass {
     GdkCursor *arrow_cursor;
     void (*selected)(GwyGraphArea *area);
     void (*zoomed)(GwyGraphArea *area);
-    void (*mousemoved)(GwyGraphArea *area);
+    void (*mouse_moved)(GwyGraphArea *area);
 
 
     gpointer reserved1;
@@ -164,7 +164,7 @@ void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
-void gwy_graph_area_signal_mousemoved(GwyGraphArea *area);
+void gwy_graph_area_signal_mouse_moved(GwyGraphArea *area);
 
 void gwy_graph_area_refresh(GwyGraphArea *area);
 

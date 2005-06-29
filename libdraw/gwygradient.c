@@ -146,7 +146,7 @@ gwy_gradient_class_init(GwyGradientClass *klass)
                                              NULL, g_object_unref);
 
     gradient_signals[DATA_CHANGED]
-        = g_signal_new("data_changed",
+        = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyGradientClass, data_changed),

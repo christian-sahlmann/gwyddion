@@ -171,7 +171,7 @@ gwy_ruler_class_init(GwyRulerClass *class)
     g_object_class_install_property
         (gobject_class,
          PROP_MAX_SIZE,
-         g_param_spec_double("max_size",
+         g_param_spec_double("max-size",
                              "Maximum size",
                              "Maximum size of the ruler",
                              -G_MAXDOUBLE,
@@ -182,7 +182,7 @@ gwy_ruler_class_init(GwyRulerClass *class)
     g_object_class_install_property
         (gobject_class,
          PROP_UNITS_PLACEMENT,
-         g_param_spec_enum("units_placement",
+         g_param_spec_enum("units-placement",
                            "Units placement",
                            "The placement of units on the ruler, if any",
                            GWY_TYPE_UNITS_PLACEMENT,

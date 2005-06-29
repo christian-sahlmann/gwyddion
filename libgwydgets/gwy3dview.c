@@ -224,13 +224,13 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     /**
      * Gwy3DView:movement-type:
      *
-     * The :movement property represents type of action on user pointer
+     * The :movement-type property represents type of action on user pointer
      * drag.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_MOVEMENT,
-         g_param_spec_enum("movement_type",
+         g_param_spec_enum("movement-type",
                            "Movement type",
                            "What quantity is changed when uses moves pointer",
                            GWY_TYPE_3D_MOVEMENT,
@@ -255,12 +255,12 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     /**
      * Gwy3DView:show-axes:
      *
-     * The :show_axes property determines whether axes around data are shown.
+     * The :show-axes property determines whether axes around data are shown.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_SHOW_AXES,
-         g_param_spec_boolean("show_axes",
+         g_param_spec_boolean("show-axes",
                               "Show axes",
                               "Whether to show axies around data",
                               TRUE, G_PARAM_READWRITE));
@@ -268,26 +268,21 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     /**
      * Gwy3DView:show-labels:
      *
-     * The :show_labels property determines whether axis labels are shown.
+     * The :show-labels property determines whether axis labels are shown.
      * Note when axes themselves are not shown, neither are labels.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_SHOW_LABELS,
-         g_param_spec_boolean("show_labels",
+         g_param_spec_boolean("show-labels",
                               "Show labels",
                               "Whether to show axis labels",
                               TRUE, G_PARAM_READWRITE));
 
-    /**
-     * Gwy3DView:projection:
-     *
-     * The :projection property represents type of 3D to 2D projection.
-     */
     g_object_class_install_property
         (gobject_class,
          PROP_REDUCED_SIZE,
-         g_param_spec_uint("reduced_size",
+         g_param_spec_uint("reduced-size",
                            "Reduced size",
                            "The size of downsampled data in quick view",
                            4, 4096, 100, G_PARAM_READWRITE));
@@ -535,7 +530,7 @@ gwy_3d_view_new(GwyContainer *data)
     gwy_container_set_string_by_name(data, "/0/3d/palette",
                                      g_strdup(name));
     g_object_ref(gwy3dview->gradient);
-    g_signal_connect_swapped(gwy3dview->gradient, "data_changed",
+    g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
 
@@ -600,7 +595,7 @@ gwy_3d_view_new(GwyContainer *data)
         }
 
         gwy3dview->label_signal_ids[2*i]
-            = g_signal_connect_swapped(gwy3dview->labels[i], "value_changed",
+            = g_signal_connect_swapped(gwy3dview->labels[i], "value-changed",
                                        G_CALLBACK(gwy_3d_label_changed),
                                        gwy3dview);
         gwy3dview->label_signal_ids[2*i + 1]
@@ -801,7 +796,7 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
                                          0, 0, NULL, NULL, gwy3dview);
     g_object_ref(grad);
     gwy3dview->gradient = grad;
-    g_signal_connect_swapped(gwy3dview->gradient, "data_changed",
+    g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
     gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",

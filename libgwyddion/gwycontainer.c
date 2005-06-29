@@ -205,7 +205,7 @@ gwy_container_class_init(GwyContainerClass *klass)
     * changed.  The detail is the string key identifier.
     */
     container_signals[ITEM_CHANGED]
-        = g_signal_new("item_changed",
+        = g_signal_new("item-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST | G_SIGNAL_DETAILED
                            | G_SIGNAL_NO_RECURSE,

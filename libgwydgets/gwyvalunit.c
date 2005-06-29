@@ -106,7 +106,7 @@ gwy_val_unit_class_init(GwyValUnitClass *klass)
     widget_class->size_allocate = gwy_val_unit_size_allocate;
 
     gwyvalunit_signals[VALUE_CHANGED_SIGNAL]
-        = g_signal_new("value_changed",
+        = g_signal_new("value-changed",
                        G_TYPE_FROM_CLASS(klass),
                        G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
                        G_STRUCT_OFFSET(GwyValUnitClass, value_changed),

@@ -107,13 +107,13 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
     /**
      * GwyPixmapLayer:data-key:
      *
-     * The :data_key property is the container key used to identify
+     * The :data-key property is the container key used to identify
      * displayed #GwyDataField in container.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_DATA_KEY,
-         g_param_spec_string("data_key",
+         g_param_spec_string("data-key",
                              "Data key",
                              "Key identifying data field in container",
                              NULL, G_PARAM_READWRITE));
@@ -249,7 +249,7 @@ gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)
     g_object_ref(pixmap_layer->data_field);
     pixmap_layer->data_changed_id
         = g_signal_connect_swapped(pixmap_layer->data_field,
-                                   "data_changed",
+                                   "data-changed",
                                    G_CALLBACK(gwy_pixmap_layer_data_changed),
                                    layer);
 }
@@ -377,9 +377,9 @@ gwy_pixmap_layer_container_connect(GwyPixmapLayer *pixmap_layer,
 
     g_return_if_fail(data_key_string);
     layer = GWY_DATA_VIEW_LAYER(pixmap_layer);
-    detailed_signal = g_newa(gchar, sizeof("item_changed::")
+    detailed_signal = g_newa(gchar, sizeof("item-changed::")
                                     + strlen(data_key_string));
-    g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), data_key_string);
+    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), data_key_string);
 
     pixmap_layer->item_changed_id
         = g_signal_connect_swapped(layer->data, detailed_signal,

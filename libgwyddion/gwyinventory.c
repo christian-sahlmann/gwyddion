@@ -109,7 +109,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
  * an inventory.
  **/
     gwy_inventory_signals[ITEM_INSERTED] =
-        g_signal_new("item_inserted",
+        g_signal_new("item-inserted",
                      GWY_TYPE_INVENTORY,
                      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
                      G_STRUCT_OFFSET(GwyInventoryClass, item_inserted),
@@ -128,7 +128,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
  * an inventory.
  **/
     gwy_inventory_signals[ITEM_INSERTED] =
-        g_signal_new("item_deleted",
+        g_signal_new("item-deleted",
                      GWY_TYPE_INVENTORY,
                      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
                      G_STRUCT_OFFSET(GwyInventoryClass, item_deleted),
@@ -147,7 +147,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
  * is updated.
  **/
     gwy_inventory_signals[ITEM_UPDATED] =
-        g_signal_new("item_updated",
+        g_signal_new("item-updated",
                      GWY_TYPE_INVENTORY,
                      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
                      G_STRUCT_OFFSET(GwyInventoryClass, item_updated),
@@ -166,7 +166,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
  * are reordered.
  **/
     gwy_inventory_signals[ITEMS_REORDERED] =
-        g_signal_new("items_reordered",
+        g_signal_new("items-reordered",
                      GWY_TYPE_INVENTORY,
                      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
                      G_STRUCT_OFFSET(GwyInventoryClass, items_reordered),

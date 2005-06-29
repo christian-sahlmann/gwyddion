@@ -135,7 +135,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
  * on how particular subclasses define it).
  */
     vector_layer_signals[SELECTION_FINISHED] =
-        g_signal_new("selection_finished",
+        g_signal_new("selection-finished",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyVectorLayerClass, selection_finished),
@@ -146,7 +146,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_UPDATE_POLICY,
-        g_param_spec_enum("update_policy",
+        g_param_spec_enum("update-policy",
                           "Update Policy",
                           "When value change causes signal emission",
                           GTK_TYPE_UPDATE_TYPE,
@@ -453,7 +453,7 @@ gwy_vector_layer_set_update_policy(GwyVectorLayer *layer,
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
 
     layer->update_policy = policy;
-    g_object_notify(G_OBJECT(layer), "update_policy");
+    g_object_notify(G_OBJECT(layer), "update-policy");
 }
 
 /**

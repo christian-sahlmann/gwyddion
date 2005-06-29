@@ -145,7 +145,7 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
     g_object_class_install_property
         (gobject_class,
          PROP_USE_ALPHA,
-         g_param_spec_boolean("use_alpha", "Use alpha",
+         g_param_spec_boolean("use-alpha", "Use alpha",
                               "Whether or not to give the color "
                               "an alpha value",
                               FALSE,
@@ -350,7 +350,7 @@ gwy_color_button_init(GwyColorButton *color_button)
     pango_layout_get_pixel_extents(layout, NULL, &rect);
     gtk_widget_set_size_request(color_button->drawing_area,
                                 rect.width - 2, rect.height - 2);
-    g_signal_connect(color_button->drawing_area, "expose_event",
+    g_signal_connect(color_button->drawing_area, "expose-event",
                      G_CALLBACK(expose_event), color_button);
     gtk_container_add(GTK_CONTAINER(alignment), color_button->drawing_area);
     gtk_widget_show(color_button->drawing_area);

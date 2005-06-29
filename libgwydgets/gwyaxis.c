@@ -143,7 +143,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
     klass->rescaled = NULL;
 
     axiser_signals[LABEL_UPDATED] =
-        g_signal_new("label_updated",
+        g_signal_new("label-updated",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyAxisClass, label_updated),

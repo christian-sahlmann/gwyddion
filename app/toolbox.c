@@ -430,14 +430,14 @@ gwy_app_toolbox_create(void)
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
                       dnd_target_table, G_N_ELEMENTS(dnd_target_table),
                       GDK_ACTION_COPY);
-    g_signal_connect(toolbox, "drag_data_received",
+    g_signal_connect(toolbox, "drag-data-received",
                      G_CALLBACK(toolbox_dnd_data_received), NULL);
 
     /***************************************************************/
     /* XXX */
-    g_signal_connect(toolbox, "delete_event",
+    g_signal_connect(toolbox, "delete-event",
                      G_CALLBACK(gwy_app_main_window_save_position), NULL);
-    g_signal_connect(toolbox, "delete_event", G_CALLBACK(gwy_app_quit), NULL);
+    g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
 

@@ -75,7 +75,7 @@ struct _GwyGraphClass {
 
     void (*gwygraph)(GwyGraph *grapher);
     void (*selected)(GwyGraph *grapher);
-    void (*mousemoved)(GwyGraph *grapher);    
+    void (*mouse_moved)(GwyGraph *grapher);    
     void (*zoomed)(GwyGraph *grapher);
     
     gpointer reserved1;
@@ -97,7 +97,7 @@ GwyGraphStatusType  gwy_graph_get_status(GwyGraph *grapher);
 GwyGraphModel *gwy_graph_get_model(GwyGraph *grapher);
 
 void       gwy_graph_signal_selected(GwyGraph *grapher);
-void       gwy_graph_signal_mousemoved(GwyGraph *grapher);
+void       gwy_graph_signal_mouse_moved(GwyGraph *grapher);
 void       gwy_graph_signal_zoomed(GwyGraph *grapher);
 
 gint       gwy_graph_get_selection_number(GwyGraph *grapher);

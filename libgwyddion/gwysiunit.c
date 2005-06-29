@@ -198,7 +198,6 @@ gwy_si_unit_get_type(void)
 static void
 gwy_si_unit_serializable_init(GwySerializableIface *iface)
 {
-    gwy_debug("");
     /* initialize stuff */
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;
@@ -222,7 +221,7 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
  * The ::value-changed signal is emitted whenever SI unit changes.
  */
     si_unit_signals[VALUE_CHANGED]
-        = g_signal_new("value_changed",
+        = g_signal_new("value-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwySIUnitClass, value_changed),

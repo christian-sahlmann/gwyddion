@@ -259,7 +259,7 @@ gwy_graph_window_new(GwyGraph *graph)
                              GINT_TO_POINTER(FALSE));
      */
 
-    g_signal_connect_swapped(graphwindow->graph, "mousemoved", 
+    g_signal_connect_swapped(graphwindow->graph, "mouse-moved", 
                              G_CALLBACK(gwy_graph_cursor_motion_cb), graphwindow);
 
     g_signal_connect_swapped(graphwindow->graph, "zoomed", 

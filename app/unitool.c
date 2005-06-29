@@ -111,7 +111,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     gwy_unitool_compute_formats(state);
     if (!state->dialog) {
         state->dialog = slot->dialog_create(state);
-        g_signal_connect(state->dialog, "delete_event",
+        g_signal_connect(state->dialog, "delete-event",
                          G_CALLBACK(gwy_dialog_prevent_delete_cb), NULL);
         gwy_unitool_setup_accel_group(state);
         gtk_dialog_set_has_separator(GTK_DIALOG(state->dialog), FALSE);
@@ -131,7 +131,7 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    G_CALLBACK(gwy_unitool_data_updated_cb),
                                    state);
     state->windowname_id
-        = g_signal_connect_swapped(data_window, "title_changed",
+        = g_signal_connect_swapped(data_window, "title-changed",
                                    G_CALLBACK(gwy_unitool_name_changed_cb),
                                    state);
     state->response_id

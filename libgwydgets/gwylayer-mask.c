@@ -98,13 +98,13 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
     /**
      * GwyLayerMask:color-key:
      *
-     * The :color_key property is the container key used to identify mask color
+     * The :color-key property is the container key used to identify mask color
      * in container.
      */
     g_object_class_install_property
         (gobject_class,
          PROP_COLOR_KEY,
-         g_param_spec_string("color_key",
+         g_param_spec_string("color-key",
                              "Color key",
                              "Key prefix identifying mask color in container",
                              NULL, G_PARAM_READWRITE));
@@ -307,11 +307,11 @@ gwy_layer_mask_connect_color(GwyLayerMask *mask_layer)
 
     prefix = g_quark_to_string(mask_layer->color_key);
     len = strlen(prefix);
-    detailed_signal = g_newa(gchar, len + sizeof("item_changed::")
+    detailed_signal = g_newa(gchar, len + sizeof("item-changed::")
                                     + sizeof("/alpha"));
-    len += sizeof("item_changed::");
+    len += sizeof("item-changed::");
 
-    g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item_changed::"), prefix),
+    g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), prefix),
              "/red");
     mask_layer->red_id
         = g_signal_connect_swapped(layer->data, detailed_signal,

@@ -157,7 +157,7 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(vbox), widget, TRUE, TRUE, 0);
     gtk_widget_show(widget);
 
-    g_signal_connect(about, "delete_event",
+    g_signal_connect(about, "delete-event",
                      G_CALLBACK(about_close), NULL);
     g_signal_connect(about, "response",
                      G_CALLBACK(about_close), NULL);

@@ -135,7 +135,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
     axis->font = pango_font_description_from_string("Helvetica 10");
     axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
     axis->gradient_id
-        = g_signal_connect_swapped(axis->gradient, "data_changed",
+        = g_signal_connect_swapped(axis->gradient, "data-changed",
                                    G_CALLBACK(gwy_color_axis_update), axis);
     g_object_ref(axis->gradient);
 
@@ -511,7 +511,7 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
     g_object_ref(grad);
     axis->gradient = grad;
     axis->gradient_id
-        = g_signal_connect_swapped(axis->gradient, "data_changed",
+        = g_signal_connect_swapped(axis->gradient, "data-changed",
                                    G_CALLBACK(gwy_color_axis_update), axis);
     g_object_unref(old);
 

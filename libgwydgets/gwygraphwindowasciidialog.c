@@ -108,7 +108,6 @@ static void
 gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
 {
     GtkWidget *label;
-    gwy_debug("");
 
     dialog->style = GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN;
     dialog->preference =  gwy_option_menu_create(style_type,

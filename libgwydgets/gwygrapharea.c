@@ -39,7 +39,7 @@
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
-    MOUSEMOVED_SIGNAL,
+    MOUSE_MOVED_SIGNAL,
     LAST_SIGNAL
 };
 
@@ -174,7 +174,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     
     klass->selected = NULL;
     klass->zoomed = NULL;
-    klass->mousemoved = NULL;
+    klass->mouse_moved = NULL;
     klass->cross_cursor = NULL;
     klass->arrow_cursor = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL]
@@ -197,11 +197,11 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
                         g_cclosure_marshal_VOID__VOID,
                         G_TYPE_NONE, 0);
 
-    gwygrapharea_signals[MOUSEMOVED_SIGNAL]
-        = g_signal_new ("mousemoved",
+    gwygrapharea_signals[MOUSE_MOVED_SIGNAL]
+        = g_signal_new ("mouse-moved",
                         G_TYPE_FROM_CLASS (klass),
                         G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                        G_STRUCT_OFFSET (GwyGraphAreaClass, mousemoved),
+                        G_STRUCT_OFFSET (GwyGraphAreaClass, mouse_moved),
                         NULL,
                         NULL,
                         g_cclosure_marshal_VOID__VOID,
@@ -718,7 +718,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->mouse_present = TRUE;
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
-    gwy_graph_area_signal_mousemoved(area);
+    gwy_graph_area_signal_mouse_moved(area);
     
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
@@ -982,15 +982,15 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 }
 
 /**
- * gwy_graph_area_signal_mousemoved:
+ * gwy_graph_area_signal_mouse_moved:
  * @area: grapher area
  *
  * emit signal that user moved mouse over graph area.
  **/
 void
-gwy_graph_area_signal_mousemoved(GwyGraphArea *area)
+gwy_graph_area_signal_mouse_moved(GwyGraphArea *area)
 {
-    g_signal_emit (G_OBJECT (area), gwygrapharea_signals[MOUSEMOVED_SIGNAL], 0);
+    g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
 }
 
 /**

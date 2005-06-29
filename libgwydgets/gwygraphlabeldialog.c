@@ -115,7 +115,7 @@ gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     dialog->linesize = gtk_adjustment_new(1, 0, 6, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Frame thickness:"), NULL,
                                 dialog->linesize);
-    g_signal_connect(dialog->linesize, "value_changed",
+    g_signal_connect(dialog->linesize, "value-changed",
                      G_CALLBACK(linesize_changed_cb), dialog);
     row++;
 

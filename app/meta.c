@@ -81,7 +81,7 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
                                         GTK_BUTTONS_OK,
                                         N_("There is no metadata in %s."),
                                         filename);
-        g_signal_connect(window, "delete_event",
+        g_signal_connect(window, "delete-event",
                          G_CALLBACK(gtk_widget_destroy), NULL);
         g_signal_connect(window, "response",
                          G_CALLBACK(gtk_widget_destroy), NULL);

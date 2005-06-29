@@ -121,15 +121,15 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 
     klass->title_changed = NULL;
 
-/**
- * GwyDataWindow::title-changed:
- * @gwydatawindow: The #GwyDataWindow which received the signal.
- *
- * The ::title-changed signal is emitted when the title of #GwyDataWindow
- * changes.
- */
+    /**
+     * GwyDataWindow::title-changed:
+     * @gwydatawindow: The #GwyDataWindow which received the signal.
+     *
+     * The ::title-changed signal is emitted when the title of #GwyDataWindow
+     * changes.
+     */
     data_window_signals[TITLE_CHANGED] =
-        g_signal_new("title_changed",
+        g_signal_new("title-changed",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataWindowClass, title_changed),
@@ -207,7 +207,7 @@ gwy_data_window_new(GwyDataView *data_view)
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
-    g_signal_connect_data(data_view, "size_allocate",
+    g_signal_connect_data(data_view, "size-allocate",
                            G_CALLBACK(gwy_data_window_zoom_changed),
                            data_window,
                            NULL, G_CONNECT_AFTER | G_CONNECT_SWAPPED);
@@ -228,7 +228,7 @@ gwy_data_window_new(GwyDataView *data_view)
     data_window->statusbar_context_id
         = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
                                        "coordinates");
-    g_signal_connect(data_view, "motion_notify_event",
+    g_signal_connect(data_view, "motion-notify-event",
                      G_CALLBACK(gwy_data_window_update_statusbar), data_window);
 
     /***** main table *****/
@@ -247,14 +247,14 @@ gwy_data_window_new(GwyDataView *data_view)
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->hruler,
                      1, 2, 0, 1,
                      GTK_EXPAND | GTK_SHRINK | GTK_FILL, GTK_FILL, 0, 0);
-    g_signal_connect_swapped(data_view, "motion_notify_event",
+    g_signal_connect_swapped(data_view, "motion-notify-event",
                              class_motion_notify_callback(data_window->hruler),
                              data_window->hruler);
 
     data_window->vruler = gwy_vruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
                                   GWY_UNITS_PLACEMENT_NONE);
-    g_signal_connect_swapped(data_view, "motion_notify_event",
+    g_signal_connect_swapped(data_view, "motion-notify-event",
                              class_motion_notify_callback(data_window->vruler),
                              data_window->vruler);
     gtk_table_attach(GTK_TABLE(data_window->table), data_window->vruler,
@@ -273,7 +273,7 @@ gwy_data_window_new(GwyDataView *data_view)
     gwy_data_window_data_view_updated(data_window);
     gtk_box_pack_start(GTK_BOX(hbox), data_window->coloraxis,
                        FALSE, FALSE, 0);
-    g_signal_connect_swapped(data_window->coloraxis, "button_press_event",
+    g_signal_connect_swapped(data_window->coloraxis, "button-press-event",
                              G_CALLBACK(gwy_data_window_color_axis_clicked),
                              data_window);
 

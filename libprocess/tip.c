@@ -655,8 +655,7 @@ gwy_tip_erosion(GwyDataField *tip,
  * gwy_tip_cmap:
  * @tip: Tip data.
  * @surface: Surface data.
- * @result: Pointer where to store result ceratainty map data.
- *          (allocated #GwyDataField)
+ * @result: Data field to store ceratainty map data to.
  * @set_fraction: Function that sets fraction to output (or %NULL).
  * @set_message: Function that sets message to output (of %NULL).
  *

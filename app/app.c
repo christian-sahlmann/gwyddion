@@ -447,7 +447,7 @@ gwy_app_data_window_create(GwyContainer *data)
                      G_CALLBACK(gwy_app_graph_list_toggle_cb), data_window);
 
     current_data = g_list_append(current_data, data_window);
-    g_signal_connect_swapped(data_view, "button_press_event",
+    g_signal_connect_swapped(data_view, "button-press-event",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
                              popup_menu);
     g_signal_connect_swapped(data_window, "popup-menu",
@@ -491,9 +491,9 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
     gwy_app_data_view_mask_changed(data, "/0/mask", data_view);
     gwy_app_data_view_show_changed(data, "/0/show", data_view);
 
-    g_signal_connect(data, "item_changed::/0/mask",
+    g_signal_connect(data, "item-changed::/0/mask",
                      G_CALLBACK(gwy_app_data_view_mask_changed), data_view);
-    g_signal_connect(data, "item_changed::/0/show",
+    g_signal_connect(data, "item-changed::/0/show",
                      G_CALLBACK(gwy_app_data_view_show_changed), data_view);
 }
 
@@ -952,7 +952,7 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
     }
 
     graph_view = gwy_app_graph_list_new(data_window);
-    g_signal_connect_swapped(graph_view, "delete_event",
+    g_signal_connect_swapped(graph_view, "delete-event",
                              G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
     gtk_window_set_transient_for(GTK_WINDOW(graph_view),
                                  GTK_WINDOW(data_window));

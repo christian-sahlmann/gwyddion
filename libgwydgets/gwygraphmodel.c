@@ -640,10 +640,10 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
     g_object_ref(curve);
     gmodel->ncurves++;
             
-    g_signal_connect_swapped(curve, "value_changed",
+    g_signal_connect_swapped(curve, "value-changed",
                       G_CALLBACK(gwy_watchable_value_changed), gmodel);
     
-    g_signal_connect_swapped(curve, "value_changed",
+    g_signal_connect_swapped(curve, "value-changed",
                       G_CALLBACK(test_value_changed), gmodel);
     
     g_object_notify(G_OBJECT(gmodel), "n");
