@@ -446,11 +446,20 @@ gwy_layer_points_button_pressed(GwyVectorLayer *layer,
         gwy_layer_points_undraw_point(points_layer, window, i);
     }
     else {
-        /* add a point, or do nothing when maximum is reached */
-        if (points_layer->nselected == points_layer->npoints)
-            return FALSE;
-        i = points_layer->inear = points_layer->nselected;
-        points_layer->nselected++;
+        /* add a point,
+         * do nothing when maximum is reached,
+         * but if there's only one point to select, move it here */
+        if (points_layer->nselected == points_layer->npoints) {
+            if (points_layer->npoints > 1)
+                return FALSE;
+
+            i = points_layer->inear = 0;
+            gwy_layer_points_undraw_point(points_layer, window, 0);
+        }
+        else {
+            i = points_layer->inear = points_layer->nselected;
+            points_layer->nselected++;
+        }
     }
     points_layer->button = event->button;
     points_layer->points[2*i] = xreal;
