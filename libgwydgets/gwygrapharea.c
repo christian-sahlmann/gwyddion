@@ -958,10 +958,10 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 
 /**
  * gwy_graph_area_signal_selected:
- * @area: grapher area
+ * @area: graph area
  *
  * emit signal that something was selected by mouse. "Something" depends on the
- * actual grapher status (points, horizontal selection, etc.).
+ * actual graph status (points, horizontal selection, etc.).
  **/
 void
 gwy_graph_area_signal_selected(GwyGraphArea *area)
@@ -971,7 +971,7 @@ gwy_graph_area_signal_selected(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_signal_zoomed:
- * @area: grapher area
+ * @area: graph area
  *
  * emit signal that user finished drawing zoom rectangle by mouse.
  **/
@@ -995,7 +995,7 @@ gwy_graph_area_signal_mouse_moved(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_signal_refresh:
- * @area: grapher area 
+ * @area: graph area 
  *
  * Refreshes the area with respect to graph model.
  **/
@@ -1005,14 +1005,14 @@ gwy_graph_area_refresh(GwyGraphArea *area)
     /*refresh label*/
     if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
     {
-        gtk_widget_show(area->lab);
+        gtk_widget_show(GTK_WIDGET(area->lab));
     
         gwy_graph_label_refresh(area->lab);
         /*re-adjust label position*/
         gwy_graph_area_adjust_label(area);
     }
     else
-        gtk_widget_hide(area->lab);
+        gtk_widget_hide(GTK_WIDGET(area->lab));
 
     /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -1020,7 +1020,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_change_model:
- * @area: grapher area 
+ * @area: graph area 
  *
  * Changes the graph model. Calls refresh afterwards.
  **/
@@ -1109,7 +1109,7 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
 
 /**
  * gwy_graph_area_enable_user_input:
- * @area: grapher area
+ * @area: graph area
  * @enable: enable/disable user input
  *
  * Enables/disables all the user input dialogs to be invoked by clicking by mouse.
@@ -1123,7 +1123,7 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
 
 /**
    * gwy_graph_area_get_cursor:
-   * @area: grapher area
+   * @area: graph area
    * @x_cursor: x value corresponding to cursor position
    * @y_cursor: y value corresponding to cursor position
    *
@@ -1176,8 +1176,8 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     GString *out;
-    GString *symbol;
     gdouble xmult, ymult;
+    GwyRGBA *color;
     gint pointsize;
     gint linesize;
     
@@ -1216,34 +1216,36 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
         linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
+        color = gwy_graph_curve_model_get_curve_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
         g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
         g_string_append_printf(out, "%d setlinewidth\n", linesize);
+        g_string_append_printf(out, "%f %f %f setrgbcolor\n", color->r, color->g, color->b);
 
         for (j=0; j<(curvemodel->n - 1); j++)
         {
             if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 if (j==0) g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(x + curvemodel->xdata[j]*xmult), 
-                                   (gint)(y + curvemodel->ydata[j]*ymult));
+                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                                   (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
                 else 
                 {
                     g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(x + curvemodel->xdata[j-1]*xmult), 
-                                   (gint)(y + curvemodel->ydata[j-1]*ymult)); 
+                                   (gint)(x + (curvemodel->xdata[j-1] - model->x_min)*xmult), 
+                                   (gint)(y + (curvemodel->ydata[j-1] - model->y_min)*ymult)); 
                     g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(x + curvemodel->xdata[j]*xmult), 
-                                   (gint)(y + curvemodel->ydata[j]*ymult));
+                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                                   (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
                 }
             }
             if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
                 g_string_append_printf(out, "%d %d %s\n", 
-                          (gint)(x + curvemodel->xdata[j]*xmult), 
-                          (gint)(y + curvemodel->ydata[j]*ymult),
+                          (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                          (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult),
                           symbols[curvemodel->point_type]); 
                  
             }

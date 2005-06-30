@@ -88,8 +88,8 @@ struct _GwyAxis {
 
     gdouble reqmin;
     gdouble reqmax;
-    gdouble max;                /*axiser beginning value*/
-    gdouble min;                /*axiser end value*/
+    gdouble max;                /*axis beginning value*/
+    gdouble min;                /*axis end value*/
 
     GArray *mjticks;            /*array of GwyLabeledTicks*/
     GArray *miticks;            /*array of GwyTicks*/
@@ -98,11 +98,11 @@ struct _GwyAxis {
     gint label_y_pos;
     GString *label_text;
 
-    GwySIUnit *unit;                /*axiser unit (if any)*/
+    GwySIUnit *unit;                /*axis unit (if any)*/
     GString *magnification_string;
     gdouble magnification;
 
-    GtkWidget *dialog;      /*axiser label and other properties dialog*/
+    GtkWidget *dialog;      /*axis label and other properties dialog*/
 
     gboolean enable_label_edit;
     gpointer reserved1;
@@ -112,8 +112,8 @@ struct _GwyAxis {
 struct _GwyAxisClass {
     GtkWidgetClass parent_class;
 
-    void (*label_updated)(GwyAxis *axiser);
-    void (*rescaled)(GwyAxis *axiser);
+    void (*label_updated)(GwyAxis *axis);
+    void (*rescaled)(GwyAxis *axis);
         
     gpointer reserved1;
     gpointer reserved2;
@@ -125,39 +125,44 @@ GtkWidget*  gwy_axis_new                (gint orientation,
                                          gdouble min,
                                          gdouble max,
                                          const gchar *label);
-void        gwy_axis_set_logarithmic    (GwyAxis *axiser,
+void        gwy_axis_set_logarithmic    (GwyAxis *axis,
                                          gboolean is_logarithmic);
-void        gwy_axis_set_visible        (GwyAxis *axiser,
+void        gwy_axis_set_visible        (GwyAxis *axis,
                                          gboolean is_visible);
-void        gwy_axis_set_auto           (GwyAxis *axiser,
+void        gwy_axis_set_auto           (GwyAxis *axis,
                                          gboolean is_auto);
-void        gwy_axis_set_req            (GwyAxis *axiser,
+void        gwy_axis_set_req            (GwyAxis *axis,
                                          gdouble min,
                                          gdouble max);
-void        gwy_axis_set_style          (GwyAxis *axiser,
+void        gwy_axis_set_style          (GwyAxis *axis,
                                          GwyAxisParams style);
-gdouble     gwy_axis_get_maximum        (GwyAxis *axiser);
-gdouble     gwy_axis_get_minimum        (GwyAxis *axiser);
-gdouble     gwy_axis_get_reqmaximum     (GwyAxis *axiser);
-gdouble     gwy_axis_get_reqminimum     (GwyAxis *axiser);
+gdouble     gwy_axis_get_maximum        (GwyAxis *axis);
+gdouble     gwy_axis_get_minimum        (GwyAxis *axis);
+gdouble     gwy_axis_get_reqmaximum     (GwyAxis *axis);
+gdouble     gwy_axis_get_reqminimum     (GwyAxis *axis);
 
-gdouble     gwy_axis_get_magnification  (GwyAxis *axiser);
-GString*    gwy_axis_get_magnification_string(GwyAxis *axiser);
+gdouble     gwy_axis_get_magnification  (GwyAxis *axis);
+GString*    gwy_axis_get_magnification_string(GwyAxis *axis);
 
-void        gwy_axis_set_label          (GwyAxis *axiser,
+void        gwy_axis_set_label          (GwyAxis *axis,
                                          GString *label_text);
-GString*    gwy_axis_get_label          (GwyAxis *axiser);
-void        gwy_axis_set_unit           (GwyAxis *axiser,
+GString*    gwy_axis_get_label          (GwyAxis *axis);
+void        gwy_axis_set_unit           (GwyAxis *axis,
                                            GwySIUnit *unit);
-void        gwy_axis_enable_label_edit  (GwyAxis *axiser,
+void        gwy_axis_enable_label_edit  (GwyAxis *axis,
                                          gboolean enable);
-void        gwy_axis_signal_rescaled   (GwyAxis *axiser);
+void        gwy_axis_signal_rescaled   (GwyAxis *axis);
 
 void        gwy_axis_draw_on_drawable  (GdkDrawable *drawable, 
                                           GdkGC *gc, 
                                           gint xmin, gint ymin, gint width, gint height,
-                                          GwyAxis *axiser);
-GString*    gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint height);
+                                          GwyAxis *axis);
+GString*    gwy_axis_export_vector       (GwyAxis *axis, 
+                                          gint xmin, 
+                                          gint ymin, 
+                                          gint width, 
+                                          gint height,
+                                          gint fontsize);
 
 G_END_DECLS
 

@@ -142,18 +142,18 @@ gwy_graph_window_measure_dialog_init(GwyGraphWindowMeasureDialog *dialog)
 static void
 selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
 {
-    gchar buffer[64];
     GtkWidget *label;
     GString *str;
     gint i, n;
-    gdouble *spoints;
+    gdouble *spoints = NULL;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
     if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_POINTS) return;
 
     if ((n = gwy_graph_get_selection_number(graph))>0)
         spoints = (gdouble *) g_malloc(2*gwy_graph_get_selection_number(graph)*sizeof(gdouble));
-
+ 
+    
     gwy_graph_get_selection(graph, spoints);
     
     /*update points data */
@@ -205,15 +205,15 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
 GtkWidget *
 gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 {
-    GtkWidget *label, *table, *button;
+    GtkWidget *label, *table;
     GwyGraphWindowMeasureDialog *dialog;
-    gint row = 0, i;
+    gint i;
     GString *str;
     
     gwy_debug("");
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG (g_object_new (gwy_graph_window_measure_dialog_get_type (), NULL));
 
-    dialog->graph = graph;
+    dialog->graph = GTK_WIDGET(graph);
 
 
     dialog->labpoint = g_ptr_array_new();

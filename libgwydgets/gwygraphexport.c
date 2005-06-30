@@ -29,7 +29,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
-void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
+void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels)
 {
@@ -43,14 +43,16 @@ void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
     /*create pixmap*/
     width = 800;
     height = 600;
-    pixmap = gdk_pixmap_new(NULL, width, height, 24);
+
+    cmap = gdk_colormap_new(gdk_visual_get_best_with_depth(8), TRUE);
+    pixmap = gdk_pixmap_new(NULL, width, height, 8);                                            
+    gdk_drawable_set_colormap(pixmap, cmap);
     
     /*plot area*/
     gc = gdk_gc_new(pixmap);
-    cmap = gdk_colormap_get_system();
     gwy_graph_area_draw_area_on_drawable(pixmap, gc,
                                          0, 0, width, height,
-                                         grapher->area);
+                                         graph->area);
         
     
     /*plot axis*/
@@ -68,7 +70,7 @@ void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename,
 }
 
 void       
-gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
+gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels)
 {
@@ -76,17 +78,23 @@ gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
     GwyAxisActiveAreaSpecs specs;
+    gint fontsize = 20;
    
     width = 600;
     height = 450;
-    areax = 60;
-    areay = 60;
+    areax = 90;
+    areay = 90;
     areaw = width - 2*areax;
     areah = height - 2*areay;
     hpt = vpt = 8;
-    
-    labelh = 60;
-    labelw = 100;
+   
+    /*TODO remove the empirical quadratic part of these relations*/
+    labelh = graph->area->lab->reqheight*fontsize
+        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE
+        - 0.07*fontsize*fontsize;
+    labelw = graph->area->lab->reqwidth*fontsize
+        /(gdouble)pango_font_description_get_size(graph->area->lab->label_font)*PANGO_SCALE
+        - 0.08*fontsize*fontsize;
     labelx = width - areax - labelw - 5;
     labely = height - areay - labelh - 5;
     
@@ -146,26 +154,26 @@ gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
 
     
     /*write axises*/
-    psaxis = gwy_axis_export_vector(grapher->axis_bottom, areax, 0, areaw, areay);
+    psaxis = gwy_axis_export_vector(graph->axis_bottom, areax, 0, areaw, areay, fontsize);
     fprintf(fw, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(grapher->axis_top, areax, areay + areah, areaw, areay);
+    psaxis = gwy_axis_export_vector(graph->axis_top, areax, areay + areah, areaw, areay, fontsize);
     fprintf(fw, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(grapher->axis_left, 0, areay, areax, areah);
+    psaxis = gwy_axis_export_vector(graph->axis_left, 0, areay, areax, areah, fontsize);
     fprintf(fw, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
-    psaxis = gwy_axis_export_vector(grapher->axis_right, areax + areaw, areay, areax, areah);
+    psaxis = gwy_axis_export_vector(graph->axis_right, areax + areaw, areay, areax, areah, fontsize);
     fprintf(fw, "%s", psaxis->str);
     g_string_free(psaxis, TRUE);
 
 
     /*write area*/
-    psarea = gwy_graph_area_export_vector(grapher->area, areax, areay, areaw, areah);
+    psarea = gwy_graph_area_export_vector(graph->area, areax, areay, areaw, areah);
     fprintf(fw, "%s", psarea->str);
 
     /*write label*/
-    pslabel = gwy_graph_label_export_vector(grapher->area->lab, labelx, labely, labelw, labelh);
+    pslabel = gwy_graph_label_export_vector(graph->area->lab, labelx, labely, labelw, labelh, fontsize);
     fprintf(fw, "%s", pslabel->str);
 
     /*save stream*/

@@ -537,7 +537,6 @@ label_change_cb(GtkWidget *button, GwyGraphAreaDialog *dialog)
 void        
 gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
 {
-    GwyGraphCurveModel *ccmodel;
     GwyGraphAreaDialog *gadialog = GWY_GRAPH_AREA_DIALOG(dialog);
 
     gadialog->curve_model = cmodel;

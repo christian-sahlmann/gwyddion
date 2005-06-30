@@ -195,7 +195,7 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
     if (index_ < 0 || index_ >= n)
         return FALSE;
 
-    /* data */
+     data */
 /*    n = gwy_graph_get_data_size(graph, index_);
     if (n != gcmodel->n) {
         gcmodel->n = n;
@@ -204,13 +204,13 @@ gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
     }
     gwy_graph_get_data(graph, gcmodel->xdata, gcmodel->ydata, index_);
 
-    /* properties */
+     properties */
 /*    str = gwy_graph_get_label(graph, index_);
     g_string_assign(gcmodel->description, str->str);
-    /* FIXME: direct access */
+     FIXME: direct access */
 /*    curve = (GwyGraphAreaCurve*)g_ptr_array_index(graph->area->curves, index_);
     params = &curve->params;
-    /* XXX FIXME: this now uses some random unitialized memory as the color.
+     XXX FIXME: this now uses some random unitialized memory as the color.
      * Fix the graph! */
 /*    gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
 

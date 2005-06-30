@@ -42,10 +42,6 @@ typedef struct _GwyGraphModelClass GwyGraphModelClass;
 struct _GwyGraphModel {
     GObject parent_instance;
 
-    /*GtkWidget *graph;
-    gulong graph_destroy_hid;
-    */
-
     gint ncurves;
     GObject **curves;
 
@@ -60,7 +56,7 @@ struct _GwyGraphModel {
     gboolean has_y_unit;
     GwySIUnit *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
     GwySIUnit *y_unit;
-
+    
     GString *top_label;
     GString *bottom_label;
     GString *left_label;
@@ -95,9 +91,7 @@ struct _GwyGraphModelClass {
 
 
 GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_model_new            (GtkWidget *graph);
-
-/*GtkWidget* gwy_graph_new_from_model       (GwyGraphModel *gmodel);*/
+GObject*   gwy_graph_model_new            ();
 
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 

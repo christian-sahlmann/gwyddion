@@ -41,7 +41,7 @@ enum {
 
 /* Forward declarations - widget related*/
 static void     gwy_axis_class_init           (GwyAxisClass *klass);
-static void     gwy_axis_init                 (GwyAxis *axiser);
+static void     gwy_axis_init                 (GwyAxis *axis);
 static void     gwy_axis_finalize             (GObject *object);
 
 static void     gwy_axis_realize              (GtkWidget *widget);
@@ -57,7 +57,7 @@ static gboolean gwy_axis_button_press         (GtkWidget *widget,
 static gboolean gwy_axis_button_release       (GtkWidget *widget,
                                                GdkEventButton *event);
 
-/* Forward declarations - axiser related*/
+/* Forward declarations - axis related*/
 static gdouble  gwy_axis_dbl_raise            (gdouble x, gint y);
 static gdouble  gwy_axis_quantize_normal_tics (gdouble arg, gint guide);
 static gint     gwy_axis_normalscale          (GwyAxis *a);
@@ -67,14 +67,14 @@ static gint     gwy_axis_formatticks          (GwyAxis *a);
 static gint     gwy_axis_precompute           (GwyAxis *a,
                                                gint scrmin,
                                                gint scrmax);
-static void     gwy_axis_draw_axiser          (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser);
-static void     gwy_axis_draw_ticks           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser);
-static void     gwy_axis_draw_tlabels         (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser);
-static void     gwy_axis_draw_label           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser);
-static void     gwy_axis_autoset              (GwyAxis *axiser,
+static void     gwy_axis_draw_axis          (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
+static void     gwy_axis_draw_ticks           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
+static void     gwy_axis_draw_tlabels         (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
+static void     gwy_axis_draw_label           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
+static void     gwy_axis_autoset              (GwyAxis *axis,
                                                gint width,
                                                gint height);
-static void     gwy_axis_adjust               (GwyAxis *axiser,
+static void     gwy_axis_adjust               (GwyAxis *axis,
                                                gint width,
                                                gint height);
 static void     gwy_axis_entry                (GwyAxisDialog *dialog,
@@ -85,7 +85,7 @@ static void     gwy_axis_entry                (GwyAxisDialog *dialog,
 
 static GtkWidgetClass *parent_class = NULL;
 
-static guint axiser_signals[LAST_SIGNAL] = { 0 };
+static guint axis_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_axis_get_type(void)
@@ -142,7 +142,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
     klass->label_updated = NULL;
     klass->rescaled = NULL;
 
-    axiser_signals[LABEL_UPDATED] =
+    axis_signals[LABEL_UPDATED] =
         g_signal_new("label-updated",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
@@ -150,7 +150,7 @@ gwy_axis_class_init(GwyAxisClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
-    axiser_signals[RESCALED] =
+    axis_signals[RESCALED] =
         g_signal_new("rescaled",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
@@ -161,117 +161,117 @@ gwy_axis_class_init(GwyAxisClass *klass)
 }
 
 static void
-gwy_axis_init(GwyAxis *axiser)
+gwy_axis_init(GwyAxis *axis)
 {
     gwy_debug("");
 
-    axiser->gc = NULL;
-    axiser->is_visible = 1;
-    axiser->is_logarithmic = 0;
-    axiser->is_auto = 1;
-    axiser->is_standalone = 0;
-    /*axiser->orientation = GTK_POS_TOP;*/
-    axiser->max = 0;
-    axiser->min = 0;
-    /*axiser->mjticks = NULL;*/
-    /*axiser->miticks = NULL;*/
-    axiser->label_x_pos = 0;
-    axiser->label_y_pos = 0;
-    /*axiser->label_text = NULL;*/
-    axiser->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
+    axis->gc = NULL;
+    axis->is_visible = 1;
+    axis->is_logarithmic = 0;
+    axis->is_auto = 1;
+    axis->is_standalone = 0;
+    /*axis->orientation = GTK_POS_TOP;*/
+    axis->max = 0;
+    axis->min = 0;
+    /*axis->mjticks = NULL;*/
+    /*axis->miticks = NULL;*/
+    axis->label_x_pos = 0;
+    axis->label_y_pos = 0;
+    /*axis->label_text = NULL;*/
+    axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
 
-    axiser->par.major_length = 10;
-    axiser->par.major_thickness = 1;
-    axiser->par.major_maxticks = 20;
+    axis->par.major_length = 10;
+    axis->par.major_thickness = 1;
+    axis->par.major_maxticks = 20;
 
-    axiser->par.minor_length = 5;
-    axiser->par.minor_thickness = 1;
-    axiser->par.minor_division = 10;
-    axiser->par.line_thickness = 1;
+    axis->par.minor_length = 5;
+    axis->par.minor_thickness = 1;
+    axis->par.minor_division = 10;
+    axis->par.line_thickness = 1;
 
-    /*axiser->dialog = NULL;*/
-    axiser->reqmax = 100;
-    axiser->reqmin = 0;
+    /*axis->dialog = NULL;*/
+    axis->reqmax = 100;
+    axis->reqmin = 0;
 
-    axiser->enable_label_edit = TRUE;
+    axis->enable_label_edit = TRUE;
 
-    axiser->has_unit = 0;
-    axiser->unit = NULL;
-    axiser->magnification_string = NULL;
-    axiser->magnification = 1;
+    axis->has_unit = 0;
+    axis->unit = NULL;
+    axis->magnification_string = NULL;
+    axis->magnification = 1;
 }
 
 /**
  * gwy_axis_new:
- * @orientation:  axiser orientation
+ * @orientation:  axis orientation
  * @min: minimum value
  * @max: maximum value
- * @label: axiser label
+ * @label: axis label
  *
- * Creates new axiser.
+ * Creates new axis.
  *
- * Returns: new axiser
+ * Returns: new axis
  **/
 GtkWidget*
 gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     gwy_debug("");
 
-    axiser = GWY_AXIS(g_object_new(GWY_TYPE_AXISER, NULL));
-    axiser->reqmin = min;
-    axiser->reqmax = max;
-    axiser->orientation = orientation;
+    axis = GWY_AXIS(g_object_new(GWY_TYPE_AXISER, NULL));
+    axis->reqmin = min;
+    axis->reqmax = max;
+    axis->orientation = orientation;
 
-    axiser->label_text = g_string_new(label);
-    axiser->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
-    axiser->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
+    axis->label_text = g_string_new(label);
+    axis->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
+    axis->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
 
-    axiser->label_x_pos = 20;
-    axiser->label_y_pos = 20;
+    axis->label_x_pos = 20;
+    axis->label_y_pos = 20;
 
-    axiser->par.major_font = pango_font_description_new();
-    pango_font_description_set_family(axiser->par.major_font, "Helvetica");
-    pango_font_description_set_style(axiser->par.major_font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(axiser->par.major_font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(axiser->par.major_font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(axiser->par.major_font, 10*PANGO_SCALE);
+    axis->par.major_font = pango_font_description_new();
+    pango_font_description_set_family(axis->par.major_font, "Helvetica");
+    pango_font_description_set_style(axis->par.major_font, PANGO_STYLE_NORMAL);
+    pango_font_description_set_variant(axis->par.major_font, PANGO_VARIANT_NORMAL);
+    pango_font_description_set_weight(axis->par.major_font, PANGO_WEIGHT_NORMAL);
+    pango_font_description_set_size(axis->par.major_font, 10*PANGO_SCALE);
 
-    axiser->par.label_font = pango_font_description_new();
-    pango_font_description_set_family(axiser->par.label_font, "Helvetica");
-    pango_font_description_set_style(axiser->par.label_font, PANGO_STYLE_NORMAL);
-    pango_font_description_set_variant(axiser->par.label_font, PANGO_VARIANT_NORMAL);
-    pango_font_description_set_weight(axiser->par.label_font, PANGO_WEIGHT_NORMAL);
-    pango_font_description_set_size(axiser->par.label_font, 12*PANGO_SCALE);
+    axis->par.label_font = pango_font_description_new();
+    pango_font_description_set_family(axis->par.label_font, "Helvetica");
+    pango_font_description_set_style(axis->par.label_font, PANGO_STYLE_NORMAL);
+    pango_font_description_set_variant(axis->par.label_font, PANGO_VARIANT_NORMAL);
+    pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
+    pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
 
-    axiser->dialog = gwy_axis_dialog_new();
+    axis->dialog = gwy_axis_dialog_new();
 
     /* FIXME: emits a spurious label_updated? */
-    g_signal_connect(axiser->dialog, "response",
-                     G_CALLBACK(gwy_axis_entry), axiser);
-    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axiser->dialog)->sci_text),
+    g_signal_connect(axis->dialog, "response",
+                     G_CALLBACK(gwy_axis_entry), axis);
+    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
                           label);
 
-    return GTK_WIDGET(axiser);
+    return GTK_WIDGET(axis);
 }
 
 static void
 gwy_axis_finalize(GObject *object)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
 
     g_return_if_fail(GWY_IS_AXISER(object));
 
-    axiser = GWY_AXIS(object);
+    axis = GWY_AXIS(object);
 
-    g_string_free(axiser->label_text, TRUE);
-    g_array_free(axiser->mjticks, FALSE);
-    g_array_free(axiser->miticks, FALSE);
+    g_string_free(axis->label_text, TRUE);
+    g_array_free(axis->mjticks, FALSE);
+    g_array_free(axis->miticks, FALSE);
 
-    gtk_widget_destroy(axiser->dialog);
+    gtk_widget_destroy(axis->dialog);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -279,9 +279,9 @@ gwy_axis_finalize(GObject *object)
 static void
 gwy_axis_unrealize(GtkWidget *widget)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
     if (GTK_WIDGET_CLASS(parent_class)->unrealize)
         GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
@@ -292,7 +292,7 @@ gwy_axis_unrealize(GtkWidget *widget)
 static void
 gwy_axis_realize(GtkWidget *widget)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
     GdkWindowAttr attributes;
     gint attributes_mask;
     GtkStyle *s;
@@ -304,7 +304,7 @@ gwy_axis_realize(GtkWidget *widget)
     g_return_if_fail(GWY_IS_AXISER(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
@@ -343,24 +343,24 @@ gwy_axis_realize(GtkWidget *widget)
 
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
 
-    axiser->gc = gdk_gc_new(widget->window);
+    axis->gc = gdk_gc_new(widget->window);
     
     /*compute ticks*/
-    gwy_axis_adjust(axiser, widget->allocation.width, widget->allocation.height);
+    gwy_axis_adjust(axis, widget->allocation.width, widget->allocation.height);
 }
 
 static void
 gwy_axis_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
     gwy_debug("");
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
-    if (axiser->is_visible) {
-        if (axiser->orientation == GTK_POS_LEFT 
-            || axiser->orientation == GTK_POS_RIGHT) {
+    if (axis->is_visible) {
+        if (axis->orientation == GTK_POS_LEFT 
+            || axis->orientation == GTK_POS_RIGHT) {
             requisition->width = 80;
             requisition->height = 100;
         }
@@ -380,7 +380,7 @@ static void
 gwy_axis_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     gwy_debug("");
 
@@ -390,73 +390,73 @@ gwy_axis_size_allocate(GtkWidget *widget,
 
     widget->allocation = *allocation;
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
     if (GTK_WIDGET_REALIZED(widget)) {
 
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
     }
-    gwy_axis_adjust(axiser, allocation->width, allocation->height);
+    gwy_axis_adjust(axis, allocation->width, allocation->height);
 
 }
 
 static void
-gwy_axis_adjust(GwyAxis *axiser, gint width, gint height)
+gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
 
-    if (axiser->orientation == GTK_POS_TOP
-        || axiser->orientation == GTK_POS_BOTTOM) {
-        axiser->label_x_pos = width/2;
-        if (axiser->orientation == GTK_POS_TOP)
-            axiser->label_y_pos = 40;
+    if (axis->orientation == GTK_POS_TOP
+        || axis->orientation == GTK_POS_BOTTOM) {
+        axis->label_x_pos = width/2;
+        if (axis->orientation == GTK_POS_TOP)
+            axis->label_y_pos = 40;
         else
-            axiser->label_y_pos = height - 50;
+            axis->label_y_pos = height - 50;
     }
-    if (axiser->orientation == GTK_POS_LEFT
-        || axiser->orientation == GTK_POS_RIGHT) {
-        axiser->label_y_pos = height/2;
-        if (axiser->orientation == GTK_POS_LEFT)
-            axiser->label_x_pos = 40;
+    if (axis->orientation == GTK_POS_LEFT
+        || axis->orientation == GTK_POS_RIGHT) {
+        axis->label_y_pos = height/2;
+        if (axis->orientation == GTK_POS_LEFT)
+            axis->label_x_pos = 40;
         else
-            axiser->label_x_pos = width - 40;
+            axis->label_x_pos = width - 40;
     }
 
 
-    if (axiser->is_auto)
-        gwy_axis_autoset(axiser, width, height);
-    gwy_axis_scale(axiser);
+    if (axis->is_auto)
+        gwy_axis_autoset(axis, width, height);
+    gwy_axis_scale(axis);
 
-    if (axiser->orientation == GTK_POS_TOP
-        || axiser->orientation == GTK_POS_BOTTOM)
-        gwy_axis_precompute(axiser, 0, width);
+    if (axis->orientation == GTK_POS_TOP
+        || axis->orientation == GTK_POS_BOTTOM)
+        gwy_axis_precompute(axis, 0, width);
     else
-        gwy_axis_precompute(axiser, 0, height);
+        gwy_axis_precompute(axis, 0, height);
 
 
-    gtk_widget_queue_draw(axiser);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 static void
-gwy_axis_autoset(GwyAxis *axiser, gint width, gint height)
+gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 {
-    if (axiser->orientation == GTK_POS_TOP
-        || axiser->orientation == GTK_POS_BOTTOM) {
+    if (axis->orientation == GTK_POS_TOP
+        || axis->orientation == GTK_POS_BOTTOM) {
 
-        axiser->par.major_maxticks = width/50; /*empirical equation*/
+        axis->par.major_maxticks = width/50; /*empirical equation*/
         if (width < 300) 
-            axiser->par.minor_division = 5;
+            axis->par.minor_division = 5;
         else 
-            axiser->par.minor_division = 10;
+            axis->par.minor_division = 10;
     }
-    if (axiser->orientation == GTK_POS_LEFT
-        || axiser->orientation == GTK_POS_RIGHT) {
+    if (axis->orientation == GTK_POS_LEFT
+        || axis->orientation == GTK_POS_RIGHT) {
 
-        axiser->par.major_maxticks = height/40; /*empirical equation*/
+        axis->par.major_maxticks = height/40; /*empirical equation*/
         if (height < 150)
-            axiser->par.minor_division = 5;
+            axis->par.minor_division = 5;
         else 
-            axiser->par.minor_division = 10;
+            axis->par.minor_division = 10;
        
     }
 
@@ -465,23 +465,23 @@ gwy_axis_autoset(GwyAxis *axiser, gint width, gint height)
 
 /**
  * gwy_axis_set_logarithmic:
- * @axiser: axiser 
+ * @axis: axis 
  * @is_logarithmic: logarithimc mode
  *
  * Sets logarithmic mode. Untested.
  **/
 void
-gwy_axis_set_logarithmic(GwyAxis *axiser,
+gwy_axis_set_logarithmic(GwyAxis *axis,
                          gboolean is_logarithmic)
 {
-    axiser->is_logarithmic = is_logarithmic;
+    axis->is_logarithmic = is_logarithmic;
 }
 
 static gboolean
 gwy_axis_expose(GtkWidget *widget,
                 GdkEventExpose *event)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
@@ -490,7 +490,7 @@ gwy_axis_expose(GtkWidget *widget,
     if (event->count > 0)
         return FALSE;
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
     gdk_window_clear_area(widget->window,
                           0, 0,
@@ -499,7 +499,7 @@ gwy_axis_expose(GtkWidget *widget,
 
 
     gwy_axis_draw_on_drawable(widget->window,
-                                axiser->gc,
+                                axis->gc,
                                 0, 0,
                                 widget->allocation.width,
                                 widget->allocation.height,
@@ -509,7 +509,7 @@ gwy_axis_expose(GtkWidget *widget,
 
 void 
 gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin, gint width, gint height,
-                    GwyAxis *axiser)
+                    GwyAxis *axis)
 {
     GwyAxisActiveAreaSpecs specs;
     specs.xmin = xmin;
@@ -517,20 +517,20 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin
     specs.width = width;
     specs.height = height;
      
-    if (axiser->is_standalone && axiser->is_visible) 
-        gwy_axis_draw_axiser(drawable, gc, &specs, axiser);
-    if (axiser->is_visible) gwy_axis_draw_ticks(drawable, gc, &specs, axiser);
-    if (axiser->is_visible) gwy_axis_draw_tlabels(drawable, gc, &specs, axiser);
-    if (axiser->is_visible) gwy_axis_draw_label(drawable, gc, &specs, axiser);
+    if (axis->is_standalone && axis->is_visible) 
+        gwy_axis_draw_axis(drawable, gc, &specs, axis);
+    if (axis->is_visible) gwy_axis_draw_ticks(drawable, gc, &specs, axis);
+    if (axis->is_visible) gwy_axis_draw_tlabels(drawable, gc, &specs, axis);
+    if (axis->is_visible) gwy_axis_draw_label(drawable, gc, &specs, axis);
 }
 
 static void
-gwy_axis_draw_axiser(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser)
+gwy_axis_draw_axis(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
-    gdk_gc_set_line_attributes (gc, axiser->par.line_thickness,
+    gdk_gc_set_line_attributes (gc, axis->par.line_thickness,
                                 GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
-    switch (axiser->orientation) {
+    switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_line(drawable, gc,
                       0, 0,
@@ -564,26 +564,26 @@ gwy_axis_draw_axiser(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *s
 
 
 static void
-gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser)
+gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
     guint i;
     GwyAxisTick *pmit;
     GwyAxisLabeledTick *pmjt;
 
 
-    gdk_gc_set_line_attributes (gc, axiser->par.major_thickness,
+    gdk_gc_set_line_attributes (gc, axis->par.major_thickness,
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
-    for (i = 0; i < axiser->mjticks->len; i++) {
-        pmjt = &g_array_index (axiser->mjticks, GwyAxisLabeledTick, i);
+    for (i = 0; i < axis->mjticks->len; i++) {
+        pmjt = &g_array_index (axis->mjticks, GwyAxisLabeledTick, i);
 
-        switch (axiser->orientation) {
+        switch (axis->orientation) {
             case GTK_POS_BOTTOM:
             gdk_draw_line(drawable, gc,
                           pmjt->t.scrpos,
                           0,
                           pmjt->t.scrpos,
-                          axiser->par.major_length);
+                          axis->par.major_length);
             break;
 
             case GTK_POS_TOP:
@@ -591,14 +591,14 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
                           pmjt->t.scrpos,
                           specs->height-1,
                           pmjt->t.scrpos,
-                          specs->height-1 - axiser->par.major_length);
+                          specs->height-1 - axis->par.major_length);
             break;
 
             case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
                           0,
                           specs->height-1 - pmjt->t.scrpos,
-                          axiser->par.major_length,
+                          axis->par.major_length,
                           specs->height-1 - pmjt->t.scrpos);
             break;
 
@@ -606,7 +606,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
             gdk_draw_line(drawable, gc,
                           specs->width-1,
                           specs->height-1 - pmjt->t.scrpos,
-                          specs->width-1 - axiser->par.major_length,
+                          specs->width-1 - axis->par.major_length,
                           specs->height-1 - pmjt->t.scrpos);
             break;
 
@@ -616,19 +616,19 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
         }
     }
 
-    gdk_gc_set_line_attributes(gc, axiser->par.minor_thickness,
+    gdk_gc_set_line_attributes(gc, axis->par.minor_thickness,
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
-    for (i = 0; i < axiser->miticks->len; i++) {
-        pmit = &g_array_index (axiser->miticks, GwyAxisTick, i);
+    for (i = 0; i < axis->miticks->len; i++) {
+        pmit = &g_array_index (axis->miticks, GwyAxisTick, i);
 
-        switch (axiser->orientation) {
+        switch (axis->orientation) {
             case GTK_POS_BOTTOM:
             gdk_draw_line(drawable, gc,
                           pmit->scrpos,
                           0,
                           pmit->scrpos,
-                          axiser->par.minor_length);
+                          axis->par.minor_length);
             break;
 
             case GTK_POS_TOP:
@@ -636,14 +636,14 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
                           pmit->scrpos,
                           specs->height-1,
                           pmit->scrpos,
-                          specs->height-1 - axiser->par.minor_length);
+                          specs->height-1 - axis->par.minor_length);
             break;
 
             case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
                           0,
                           specs->height-1 - pmit->scrpos,
-                          axiser->par.minor_length,
+                          axis->par.minor_length,
                           specs->height-1 - pmit->scrpos);
             break;
 
@@ -651,7 +651,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
             gdk_draw_line(drawable, gc,
                           specs->width-1,
                           specs->height-1 - pmit->scrpos,
-                          specs->width-1 - axiser->par.minor_length,
+                          specs->width-1 - axis->par.minor_length,
                           specs->height-1 - pmit->scrpos);
             break;
 
@@ -663,7 +663,7 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
 }
 
 static void
-gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser)
+gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
     guint i;
     GwyAxisLabeledTick *pmjt;
@@ -675,35 +675,35 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     layout = pango_layout_new(context);
-    pango_layout_set_font_description(layout, axiser->par.major_font);
+    pango_layout_set_font_description(layout, axis->par.major_font);
 
     sep = 3;
 
-    for (i = 0; i < axiser->mjticks->len; i++) {
-        pmjt = &g_array_index(axiser->mjticks, GwyAxisLabeledTick, i);
+    for (i = 0; i < axis->mjticks->len; i++) {
+        pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
         pango_layout_set_text(layout,  pmjt->ttext->str, pmjt->ttext->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
-        switch (axiser->orientation) {
+        switch (axis->orientation) {
             case GTK_POS_BOTTOM:
             xpos = pmjt->t.scrpos - rect.width/2;
-            ypos = axiser->par.major_length + sep;
+            ypos = axis->par.major_length + sep;
             break;
 
             case GTK_POS_TOP:
             xpos = pmjt->t.scrpos - rect.width/2;
             ypos = specs->height-1
-                   - axiser->par.major_length - rect.height;
+                   - axis->par.major_length - rect.height;
             break;
 
             case GTK_POS_LEFT:
-            xpos = axiser->par.major_length + sep;
+            xpos = axis->par.major_length + sep;
             ypos = specs->height-1 - pmjt->t.scrpos - rect.height/2;
             break;
 
             case GTK_POS_RIGHT:
             xpos = specs->width-1
-                   - axiser->par.major_length - sep - rect.width;
+                   - axis->par.major_length - sep - rect.width;
             ypos = specs->height-1
                    - pmjt->t.scrpos - rect.height/2;
             break;
@@ -728,7 +728,7 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 }
 
 static void
-gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axiser)
+gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
     PangoLayout *layout;
     PangoContext *context;
@@ -740,14 +740,14 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
 
    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     layout = pango_layout_new(context);
-    pango_layout_set_font_description(layout, axiser->par.major_font);
+    pango_layout_set_font_description(layout, axis->par.major_font);
 
-    plotlabel = g_string_new(axiser->label_text->str);
+    plotlabel = g_string_new(axis->label_text->str);
 
-    if (axiser->has_unit) {
+    if (axis->has_unit) {
         g_string_append(plotlabel, " [");
-        if (axiser->magnification_string) g_string_append(plotlabel, axiser->magnification_string->str);
-        else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axiser->unit));
+        if (axis->magnification_string) g_string_append(plotlabel, axis->magnification_string->str);
+        else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
         g_string_append(plotlabel, "]");
     }
 
@@ -755,17 +755,17 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
     pango_layout_get_pixel_extents(layout, NULL, &rect);
     /*context = gtk_widget_create_pango_context (widget);
     */
-    switch (axiser->orientation) {
+    switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
-                        axiser->label_x_pos - rect.width/2, axiser->label_y_pos,
+                        axis->label_x_pos - rect.width/2, axis->label_y_pos,
                         layout);
         break;
 
         case GTK_POS_TOP:
         gdk_draw_layout(drawable, gc,
-                        axiser->label_x_pos - rect.width/2,
-                        axiser->label_y_pos,
+                        axis->label_x_pos - rect.width/2,
+                        axis->label_y_pos,
                         layout);
         break;
 
@@ -775,15 +775,15 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
         pango_layout_context_changed (layout);
         pango_layout_get_size (layout, &width, &height);*/
         gdk_draw_layout(drawable, gc,
-                        axiser->label_x_pos,
-                        axiser->label_y_pos,
+                        axis->label_x_pos,
+                        axis->label_y_pos,
                         layout);
         break;
 
         case GTK_POS_RIGHT:
         gdk_draw_layout(drawable, gc,
-                        axiser->label_x_pos - rect.width,
-                        axiser->label_y_pos,
+                        axis->label_x_pos - rect.width,
+                        axis->label_y_pos,
                         layout);
         break;
 
@@ -801,17 +801,17 @@ static gboolean
 gwy_axis_button_press(GtkWidget *widget,
                       GdkEventButton *event)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
-    if (axiser->enable_label_edit)
-        gtk_widget_show_all(axiser->dialog);
+    if (axis->enable_label_edit)
+        gtk_widget_show_all(axis->dialog);
 
     return FALSE;
 }
@@ -820,14 +820,14 @@ static gboolean
 gwy_axis_button_release(GtkWidget *widget,
                         GdkEventButton *event)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
 
     gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
-    axiser = GWY_AXIS(widget);
+    axis = GWY_AXIS(widget);
 
     return FALSE;
 }
@@ -835,27 +835,27 @@ gwy_axis_button_release(GtkWidget *widget,
 static void
 gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 {
-    GwyAxis *axiser;
+    GwyAxis *axis;
     GdkRectangle rec;
 
     gwy_debug("");
 
-    axiser = GWY_AXIS(user_data);
-    g_assert(GWY_IS_AXISER(axiser));
+    axis = GWY_AXIS(user_data);
+    g_assert(GWY_IS_AXISER(axis));
 
-    rec.x = GTK_WIDGET(axiser)->allocation.x;
-    rec.y = GTK_WIDGET(axiser)->allocation.y;
-    rec.width = GTK_WIDGET(axiser)->allocation.width;
-    rec.height = GTK_WIDGET(axiser)->allocation.height;
+    rec.x = GTK_WIDGET(axis)->allocation.x;
+    rec.y = GTK_WIDGET(axis)->allocation.y;
+    rec.width = GTK_WIDGET(axis)->allocation.width;
+    rec.height = GTK_WIDGET(axis)->allocation.height;
 
     if (arg1 == GTK_RESPONSE_APPLY) {
         gchar *text;
 
         text = gwy_sci_text_get_text(GWY_SCI_TEXT(dialog->sci_text));
-        g_string_assign(axiser->label_text, text);
+        g_string_assign(axis->label_text, text);
         g_free(text);
-        g_signal_emit(axiser, axiser_signals[LABEL_UPDATED], 0);
-        gtk_widget_queue_draw(GTK_WIDGET(axiser));
+        g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
+        gtk_widget_queue_draw(GTK_WIDGET(axis));
     }
     else if (arg1 == GTK_RESPONSE_CLOSE) {
         gtk_widget_hide(GTK_WIDGET(dialog));
@@ -864,9 +864,9 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 
 
 void        
-gwy_axis_signal_rescaled(GwyAxis *axiser)
+gwy_axis_signal_rescaled(GwyAxis *axis)
 {
-    g_signal_emit(axiser, axiser_signals[RESCALED], 0);
+    g_signal_emit(axis, axis_signals[RESCALED], 0);
 }
 
 static gdouble
@@ -1106,7 +1106,7 @@ gwy_axis_formatticks(GwyAxis *a)
 {
     guint i;
     gdouble value;
-    gdouble range, crange; /*only for automode and precision*/
+    gdouble range; /*only for automode and precision*/
     gdouble average;
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
@@ -1206,220 +1206,221 @@ gwy_axis_formatticks(GwyAxis *a)
 
 /**
  * gwy_axis_set_visible:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  * @is_visible: visibility
  *
- * Sets visibility of axiser.
+ * Sets visibility of axis.
  **/
 void
-gwy_axis_set_visible(GwyAxis *axiser, gboolean is_visible)
+gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 {
-    axiser->is_visible = is_visible;
+    axis->is_visible = is_visible;
 }
 
 /**
  * gwy_axis_set_auto:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  * @is_auto: auto preperty
  *
- * Sets the auto property. If TRUE, axiser changes fonts
+ * Sets the auto property. If TRUE, axis changes fonts
  * and ticks sizes to produce reasonable output at different
  * widget sizes.
  **/
 void
-gwy_axis_set_auto(GwyAxis *axiser, gboolean is_auto)
+gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 {
-    axiser->is_auto = is_auto;
+    axis->is_auto = is_auto;
 }
 
 /**
  * gwy_axis_set_req:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  * @min: minimum requisistion
  * @max: maximum requisition
  *
- * Set requisition of axiser boundaries. Axiser will fix the boundaries
+ * Set requisition of axis boundaries. Axiser will fix the boundaries
  * to satisfy requisition but still have reasonable tick values and spacing.
  **/
 void
-gwy_axis_set_req(GwyAxis *axiser, gdouble min, gdouble max)
+gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
-    axiser->reqmin = min;
-    axiser->reqmax = max;
+    axis->reqmin = min;
+    axis->reqmax = max;
     
-    /*prevent axiser to allow null range. It has no sense*/
-    if (min==max) axiser->reqmax += 10.0;
+    /*prevent axis to allow null range. It has no sense*/
+    if (min==max) axis->reqmax += 10.0;
   
-    gwy_axis_adjust(axiser,
-                    (GTK_WIDGET(axiser))->allocation.width,
-                    (GTK_WIDGET(axiser))->allocation.height);
+    gwy_axis_adjust(axis,
+                    (GTK_WIDGET(axis))->allocation.width,
+                    (GTK_WIDGET(axis))->allocation.height);
 }
 
 /**
  * gwy_axis_set_style:
- * @axiser: axiser widget 
- * @style: axiser style
+ * @axis: axis widget 
+ * @style: axis style
  *
- * Set axiser style. The style affects used tick sizes, fonts etc.
+ * Set axis style. The style affects used tick sizes, fonts etc.
  **/
 void
-gwy_axis_set_style(GwyAxis *axiser, GwyAxisParams style)
+gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 {
-    axiser->par = style;
-    gwy_axis_adjust(axiser,
-                    (GTK_WIDGET(axiser))->allocation.width,
-                    (GTK_WIDGET(axiser))->allocation.height);
+    axis->par = style;
+    gwy_axis_adjust(axis,
+                    (GTK_WIDGET(axis))->allocation.width,
+                    (GTK_WIDGET(axis))->allocation.height);
 }
 
 /**
  * gwy_axis_get_maximum:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  *
  * 
  *
- * Returns: real maximum of axiser
+ * Returns: real maximum of axis
  **/
 gdouble
-gwy_axis_get_maximum(GwyAxis *axiser)
+gwy_axis_get_maximum(GwyAxis *axis)
 {
-    return axiser->max;
+    return axis->max;
 }
 
 /**
  * gwy_axis_get_minimum:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  *
  * 
  *
- * Returns: real minimum of axiser
+ * Returns: real minimum of axis
  **/
 gdouble
-gwy_axis_get_minimum(GwyAxis *axiser)
+gwy_axis_get_minimum(GwyAxis *axis)
 {
-    return axiser->min;
+    return axis->min;
 }
 
 /**
  * gwy_axis_get_reqmaximum:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  *
  * 
  *
- * Returns: axiser requisition maximum
+ * Returns: axis requisition maximum
  **/
 gdouble
-gwy_axis_get_reqmaximum(GwyAxis *axiser)
+gwy_axis_get_reqmaximum(GwyAxis *axis)
 {
-    return axiser->reqmax;
+    return axis->reqmax;
 }
 
 /**
  * gwy_axis_get_reqminimum:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  *
  * 
  *
- * Returns: axiser requisition minimum
+ * Returns: axis requisition minimum
  **/
 gdouble
-gwy_axis_get_reqminimum(GwyAxis *axiser)
+gwy_axis_get_reqminimum(GwyAxis *axis)
 {
-    return axiser->reqmin;
+    return axis->reqmin;
 }
 
 /**
  * gwy_axis_set_label:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  * @label_text: label to be set
  *
  * sets the label text
  **/
 void
-gwy_axis_set_label(GwyAxis *axiser, GString *label_text)
+gwy_axis_set_label(GwyAxis *axis, GString *label_text)
 {
     gwy_debug("label_text = <%s>", label_text->str);
-    g_string_assign(axiser->label_text, label_text->str);
-    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axiser->dialog)->sci_text),
+    g_string_assign(axis->label_text, label_text->str);
+    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
                           label_text->str);
-    g_signal_emit(axiser, axiser_signals[LABEL_UPDATED], 0);
-    gtk_widget_queue_draw(GTK_WIDGET(axiser));
+    g_signal_emit(axis, axis_signals[LABEL_UPDATED], 0);
+    gtk_widget_queue_draw(GTK_WIDGET(axis));
 }
 
 /**
  * gwy_axis_get_label:
- * @axiser: axiser widget 
+ * @axis: axis widget 
  *
  * 
  *
- * Returns: axiser label string
+ * Returns: axis label string
  **/
 GString*
-gwy_axis_get_label(GwyAxis *axiser)
+gwy_axis_get_label(GwyAxis *axis)
 {
-    return axiser->label_text;
+    return axis->label_text;
 }
 
 /**
  * gwy_axis_set_unit:
- * @axiser: axiser widget 
- * @unit: axiser unit
+ * @axis: axis widget 
+ * @unit: axis unit
  *
- * Sets the axiser unit. This will be added automatically
+ * Sets the axis unit. This will be added automatically
  * to the label.
  **/
 void
-gwy_axis_set_unit(GwyAxis *axiser, GwySIUnit *unit)
+gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 {
-    axiser->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
-    axiser->has_unit = 1;
+    axis->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
+    axis->has_unit = 1;
 }
 
 
 /**
  * gwy_axis_enable_label_edit:
- * @axiser: Axiser widget 
- * @enable: enable/disable user to change axiser label 
+ * @axis: Axiser widget 
+ * @enable: enable/disable user to change axis label 
  *
- * Enables/disables user to change axiser label by clicking on axiser widget.
+ * Enables/disables user to change axis label by clicking on axis widget.
  *
  * Since: 1.3.
  **/
 void
-gwy_axis_enable_label_edit(GwyAxis *axiser, gboolean enable)
+gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
 {
-    axiser->enable_label_edit = enable;
+    axis->enable_label_edit = enable;
 }
 
 gdouble     
-gwy_axis_get_magnification (GwyAxis *axiser)
+gwy_axis_get_magnification (GwyAxis *axis)
 {
-    return axiser->magnification;
+    return axis->magnification;
 }
 
 GString*    
-gwy_axis_get_magnification_string(GwyAxis *axiser)
+gwy_axis_get_magnification_string(GwyAxis *axis)
 {
-    if (axiser->magnification_string != NULL)
-        return g_string_new(axiser->magnification_string->str);
+    if (axis->magnification_string != NULL)
+        return g_string_new(axis->magnification_string->str);
     else return g_string_new("");
 }
 
 
 GString*    
-gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint height)
+gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin, 
+                        gint width, gint height, gint fontsize)
 {
     GString *out;
     gdouble mult;
     GwyAxisLabeledTick *pmjt;
     GwyAxisTick *pmit;
+    GString *plotlabel;
     gint i;
-    gint fontsize = 15;
     gint linewidth = 2;
 
-    if (axiser->orientation == GTK_POS_TOP || axiser->orientation == GTK_POS_BOTTOM)
-        mult = width/(axiser->max - axiser->min);
+    if (axis->orientation == GTK_POS_TOP || axis->orientation == GTK_POS_BOTTOM)
+        mult = width/(axis->max - axis->min);
     else
-        mult = height/(axiser->max - axiser->min);
+        mult = height/(axis->max - axis->min);
 
     out = g_string_new("%%Axis\n");
    
@@ -1428,7 +1429,7 @@ gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint 
     g_string_append_printf(out, "%d setlinewidth\n", linewidth);
 
     /*draw axis*/
-    switch (axiser->orientation) {
+    switch (axis->orientation) {
         /*note that the eps geometry starts in the bottom left point*/
             case GTK_POS_TOP:
             g_string_append_printf(out, "%d %d M\n", xmin, ymin);
@@ -1458,34 +1459,34 @@ gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint 
 
     /*draw ticks*/
     g_string_append_printf(out, "%%MajorTicks\n");
-    for (i = 0; i < axiser->mjticks->len; i++) {
-        pmjt = &g_array_index (axiser->mjticks, GwyAxisLabeledTick, i);
+    for (i = 0; i < axis->mjticks->len; i++) {
+        pmjt = &g_array_index (axis->mjticks, GwyAxisLabeledTick, i);
 
-        switch (axiser->orientation) {
+        switch (axis->orientation) {
             case GTK_POS_TOP:
-            g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmjt->t.value*mult), ymin);
-            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmjt->t.value*mult), ymin+axiser->par.major_length);
+            g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmjt->t.value*mult - axis->min*mult), ymin);
+            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmjt->t.value*mult - axis->min*mult), ymin+axis->par.major_length);
             g_string_append_printf(out, "%d %d R\n", -(gint)(pmjt->ttext->len*(fontsize/4)), 5);
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_BOTTOM:
-            g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmjt->t.value*mult), ymin + height);
-            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmjt->t.value*mult), ymin + height - axiser->par.major_length);
+            g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmjt->t.value*mult - axis->min*mult), ymin + height);
+            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmjt->t.value*mult - axis->min*mult), ymin + height - axis->par.major_length);
             g_string_append_printf(out, "%d %d R\n", -(gint)(pmjt->ttext->len*(fontsize/4)), -fontsize);
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_LEFT:
-            g_string_append_printf(out, "%d %d M\n", xmin + width, (gint)(ymin + pmjt->t.value*mult));
-            g_string_append_printf(out, "%d %d L\n", xmin + width - axiser->par.major_length, (gint)(ymin + pmjt->t.value*mult));
+            g_string_append_printf(out, "%d %d M\n", xmin + width, (gint)(ymin + pmjt->t.value*mult - axis->min*mult));
+            g_string_append_printf(out, "%d %d L\n", xmin + width - axis->par.major_length, (gint)(ymin + pmjt->t.value*mult - axis->min*mult));
             g_string_append_printf(out, "%d %d R\n", -(gint)(pmjt->ttext->len*(fontsize/2)) - 5, -(gint)(fontsize/2.5));
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
 
             case GTK_POS_RIGHT:
-            g_string_append_printf(out, "%d %d M\n", xmin, (gint)(ymin + pmjt->t.value*mult));
-            g_string_append_printf(out, "%d %d L\n", xmin + axiser->par.major_length, (gint)(ymin + pmjt->t.value*mult));
+            g_string_append_printf(out, "%d %d M\n", xmin, (gint)(ymin + pmjt->t.value*mult - axis->min*mult));
+            g_string_append_printf(out, "%d %d L\n", xmin + axis->par.major_length, (gint)(ymin + pmjt->t.value*mult - axis->min*mult));
             g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/2.5));
             g_string_append_printf(out, "(%s) show\n", pmjt->ttext->str);
             break;
@@ -1498,28 +1499,28 @@ gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint 
 
   }
     g_string_append_printf(out, "%%MinorTicks\n");
-    for (i = 0; i < axiser->miticks->len; i++) {
-        pmit = &g_array_index (axiser->miticks, GwyAxisTick, i);
+    for (i = 0; i < axis->miticks->len; i++) {
+        pmit = &g_array_index (axis->miticks, GwyAxisTick, i);
 
-        switch (axiser->orientation) {
+        switch (axis->orientation) {
             case GTK_POS_TOP:
             g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmit->value*mult), ymin);
-            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmit->value*mult), ymin+axiser->par.minor_length);
+            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmit->value*mult), ymin+axis->par.minor_length);
             break;
 
             case GTK_POS_BOTTOM:
             g_string_append_printf(out, "%d %d M\n", (gint)(xmin + pmit->value*mult), ymin + height);
-            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmit->value*mult), ymin + height - axiser->par.minor_length);
+            g_string_append_printf(out, "%d %d L\n", (gint)(xmin + pmit->value*mult), ymin + height - axis->par.minor_length);
             break;
 
             case GTK_POS_LEFT:
             g_string_append_printf(out, "%d %d M\n", xmin + width, (gint)(ymin + pmit->value*mult));
-            g_string_append_printf(out, "%d %d L\n", xmin + width - axiser->par.minor_length, (gint)(ymin + pmit->value*mult));
+            g_string_append_printf(out, "%d %d L\n", xmin + width - axis->par.minor_length, (gint)(ymin + pmit->value*mult));
             break;
 
             case GTK_POS_RIGHT:
             g_string_append_printf(out, "%d %d M\n", xmin, (gint)(ymin + pmit->value*mult));
-            g_string_append_printf(out, "%d %d L\n", xmin +  axiser->par.minor_length, (gint)(ymin + pmit->value*mult));
+            g_string_append_printf(out, "%d %d L\n", xmin +  axis->par.minor_length, (gint)(ymin + pmit->value*mult));
             break;
 
             default:
@@ -1529,6 +1530,49 @@ gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint 
         g_string_append_printf(out, "stroke\n");
   }
 
+    g_string_append_printf(out, "%%AxisLabel\n");
+
+    plotlabel = g_string_new(axis->label_text->str);
+    if (axis->has_unit) {
+        g_string_append(plotlabel, " [");
+        if (axis->magnification_string) g_string_append(plotlabel, axis->magnification_string->str);
+        else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
+        g_string_append(plotlabel, "]");
+    }
+
+
+    switch (axis->orientation) {
+        case GTK_POS_TOP:
+        g_string_append_printf(out, "%d %d M\n", (gint)(xmin + width/2 - axis->label_text->len*fontsize/2), ymin + height - 8);
+        g_string_append_printf(out, "(%s) show\n", plotlabel->str);
+        break;
+
+        case GTK_POS_BOTTOM:
+        g_string_append_printf(out, "%d %d M\n", (gint)(xmin + width/2 - axis->label_text->len*fontsize/2), ymin + 8);
+        g_string_append_printf(out, "(%s) show\n", plotlabel->str);
+        break;
+
+        case GTK_POS_LEFT:
+        g_string_append_printf(out, "%d %d M\n", (gint)(xmin + fontsize/2 + 5), (gint)(ymin + height/2 - axis->label_text->len*fontsize/2));
+        g_string_append_printf(out, "gsave\n");
+        g_string_append_printf(out, "90 rotate\n");
+        g_string_append_printf(out, "(%s) show\n", plotlabel->str);
+        g_string_append_printf(out, "grestore\n");
+         break;
+
+        case GTK_POS_RIGHT:
+        g_string_append_printf(out, "%d %d M\n", (gint)(xmin + width - fontsize/2 - 5), (gint)(ymin + height/2 + axis->label_text->len*fontsize/2));
+        g_string_append_printf(out, "gsave\n");
+        g_string_append_printf(out, "270 rotate\n");
+        g_string_append_printf(out, "(%s) show\n", plotlabel->str);
+        g_string_append_printf(out, "grestore\n");
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+     
 
     return out;
 }
@@ -1544,7 +1588,7 @@ gwy_axis_export_vector (GwyAxis *axiser, gint xmin, gint ymin, gint width, gint 
  * @GWY_AXIS_INT: Integer format.
  * @GWY_AXIS_AUTO: Automatical format.
  *
- * Labeled axiser tick mark format.
+ * Labeled axis tick mark format.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

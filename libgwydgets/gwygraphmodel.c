@@ -180,9 +180,6 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)gmodel);
 
-    /*gmodel->graph = NULL;
-    gmodel->graph_destroy_hid = 0;
-*/
     gmodel->ncurves = 0;
     gmodel->curves = NULL;
 
@@ -220,28 +217,12 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
  * Returns: New graph model as a #GObject.
  **/
 GObject*
-gwy_graph_model_new(GtkWidget *graph)
+gwy_graph_model_new()
 {
     GwyGraphModel *gmodel;
-    GtkWidget *window;
 
     gwy_debug("");
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL, NULL);
-
-    /*
-    gmodel->graph = graph;
-    if (graph) {
-        g_assert(GWY_IS_GRAPH(graph));
-        window = gtk_widget_get_ancestor(GTK_WIDGET(graph), GTK_TYPE_WINDOW);
-        if (window)
-            g_string_assign(gmodel->title,
-                            gtk_window_get_title(GTK_WINDOW(window)));
-        gmodel->graph_destroy_hid
-            = g_signal_connect(graph, "destroy",
-                               G_CALLBACK(gwy_graph_model_graph_destroyed),
-                               gmodel);
-    }
-    */
 
     return (GObject*)(gmodel);
 }
@@ -255,13 +236,6 @@ gwy_graph_model_finalize(GObject *object)
     gwy_debug("");
 
     gmodel = GWY_GRAPH_MODEL(object);
-    /*
-    if (gmodel->graph_destroy_hid) {
-        g_assert(GWY_IS_GRAPH(gmodel->graph));
-        g_signal_handler_disconnect(gmodel->graph,
-                                    gmodel->graph_destroy_hid);
-    }
-    */
 
     g_object_unref(gmodel->x_unit);
     g_object_unref(gmodel->y_unit);
@@ -365,66 +339,6 @@ gwy_graph_model_save_graph(GwyGraphModel *gmodel,
     gmodel->ncurves = nacurves;
 }
 
-
-GtkWidget*
-gwy_graph_new_from_model(GwyGraphModel *gmodel)
-{
-    GtkWidget *graph_widget;
-    GwyGraphCurveModel *gcmodel;
-    gchar *BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS;
-    GwyGraph *graph;
-    gint i;
-
-    g_return_val_if_fail(gmodel->graph == NULL, gwy_graph_new());
-
-    graph_widget = gwy_graph_new();
-    graph = GWY_GRAPH(graph_widget);
-
-    gmodel->graph = graph;
-    gmodel->graph_destroy_hid
-        = g_signal_connect(graph, "destroy",
-                           G_CALLBACK(gwy_graph_model_graph_destroyed), gmodel);
-
-    graph->area->lab->par.position = gmodel->label_position;
-    graph->area->lab->par.is_frame = gmodel->label_has_frame;
-    graph->area->lab->par.frame_thickness = gmodel->label_frame_thickness;
-
-    for (i = 0; i < gmodel->ncurves; i++) {
-        gcmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
-        gwy_graph_add_curve_from_model(graph, gcmodel);
-    }
-
-    gwy_axis_set_label(graph->axis_top, gmodel->top_label);
-    gwy_axis_set_label(graph->axis_bottom, gmodel->bottom_label);
-    gwy_axis_set_label(graph->axis_left, gmodel->left_label);
-    gwy_axis_set_label(graph->axis_right, gmodel->right_label);
-    if (gmodel->has_x_unit) {
-        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->x_unit));
-        gwy_axis_set_unit(graph->axis_top,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        gwy_axis_set_unit(graph->axis_bottom,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-    }
-    if (gmodel->has_y_unit) {
-        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = gwy_si_unit_get_unit_string(GWY_SI_UNIT(gmodel->y_unit));
-        gwy_axis_set_unit(graph->axis_left,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS
-            = g_strdup(BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-        gwy_axis_set_unit(graph->axis_right,
-                          BRAINDEAD_SI_UNIT_CANT_RETURN_CONSTANT_STRINGS);
-    }
-
-    gwy_graph_set_boundaries(graph,
-                             gmodel->x_min, gmodel->x_max,
-                             gmodel->y_min, gmodel->y_max);
-
-    return graph_widget;
-}
 */
 
 static GByteArray*
@@ -539,6 +453,14 @@ gwy_graph_model_deserialize(const guchar *buffer,
     return (GObject*)gmodel;
 }
 
+/**
+* gwy_graph_model_duplicate:
+* @gmodel: A #GwyGraphModel.
+*
+* Creates duplicate of the graph model @gmodel.
+*
+* Returns: new graph model
+**/
 static GObject*
 gwy_graph_model_duplicate(GObject *object)
 {
@@ -549,9 +471,6 @@ gwy_graph_model_duplicate(GObject *object)
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(object), NULL);
 
     gmodel = GWY_GRAPH_MODEL(object);
-    /*if (gmodel->graph)
-        return gwy_graph_model_new(gmodel->graph);
-    */
     duplicate = (GwyGraphModel*)gwy_graph_model_new_alike(gmodel);
     
     duplicate->ncurves = gmodel->ncurves;
@@ -579,7 +498,16 @@ gwy_graph_model_get_property  (GObject*object,
 {
 }
 
-
+/**
+* gwy_graph_model_new_alike:
+* @gmodel: A #GwyGraphModel.
+*
+* Creates new graph model object that has the same settings as @gmodel.
+* This includes axis/label visibility, actual plotting range, etc.
+* Curves are not duplicated or referenced.
+*
+* Returns: new graph model
+**/
 GObject*   
 gwy_graph_model_new_alike(GwyGraphModel *gmodel)
 {
@@ -625,18 +553,16 @@ void test_value_changed(GwyGraphModel *gmodel)
 * within the @curve structure. The curve is duplicated to put data inside
 * model, therefore it should be freed by user when not necessary.
 **/
-
 void       
 gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
 {
     GObject **newcurves;
-    gint i;
     
     newcurves = g_new(GObject*, gmodel->ncurves+1);
     
-    gmodel->curves = g_renew(GwyGraphCurveModel*,
+    gmodel->curves = (GObject **)g_renew(GwyGraphCurveModel*,
                              gmodel->curves, gmodel->ncurves+1);
-    gmodel->curves[gmodel->ncurves] = curve;
+    gmodel->curves[gmodel->ncurves] = G_OBJECT(curve);
     g_object_ref(curve);
     gmodel->ncurves++;
             
@@ -976,6 +902,13 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
 }
 
 
+/**
+* gwy_graph_model_set_x_siunit:
+* @model: A #GwyGraphModel.
+* @siunit: physical unit for x axis
+*
+* Sets the physical unit for graph x axis
+**/
 void       
 gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
 {
@@ -984,6 +917,13 @@ gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
     gwy_graph_model_signal_layout_changed(model);
 }
 
+/**
+* gwy_graph_model_set_y_siunit:
+* @model: A #GwyGraphModel.
+* @siunit: physical unit for y axis
+*
+* Sets the physical unit for graph y axis
+**/
 void       
 gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
 {
@@ -992,12 +932,24 @@ gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
     gwy_graph_model_signal_layout_changed(model);
 }
 
+/**
+* gwy_graph_model_get_x_siunit:
+* @model: A #GwyGraphModel.
+*
+* Returns: physical unit for graph x axis
+**/
 GwySIUnit*
 gwy_graph_model_get_x_siunit(GwyGraphModel *model)
 {
     return GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(model->x_unit)));
 }
 
+/**
+* gwy_graph_model_get_y_siunit:
+* @model: A #GwyGraphModel.
+*
+* Returns: physical unit for graph y axis
+**/
 GwySIUnit*
 gwy_graph_model_get_y_siunit(GwyGraphModel *model)
 {

@@ -169,7 +169,7 @@ refresh(GwyGraphLabelDialog *dialog)
     model = GWY_GRAPH_MODEL(dialog->graph_model);
     
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), model->label_frame_thickness);
-    gtk_toggle_button_set_active(dialog->reversed, model->label_reverse);     
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->reversed), model->label_reverse);     
 }
 
 
@@ -179,7 +179,7 @@ gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
     GwyGraphLabelDialog *gadialog = GWY_GRAPH_LABEL_DIALOG(dialog);
 
     gadialog->graph_model = model;
-    refresh(dialog);
+    refresh(GTK_WIDGET(dialog));
 }
 
 static void     

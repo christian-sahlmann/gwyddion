@@ -31,6 +31,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodulebrowser.h>
+#include <libgwydgets/gwydgets.h>
 #include "app.h"
 #include "menu.h"
 #include "filelist.h"
@@ -397,14 +398,13 @@ find_repeat_last_item(GtkWidget *menu,
 void
 gwy_app_run_graph_func_cb(gchar *name)
 {
-    GtkWidget *graph_window, *graph;
+    GtkWidget *graph_window;
 
     gwy_debug("`%s'", name);
     graph_window = gwy_app_graph_window_get_current();
-    g_return_if_fail(graph_window);
-    graph = GTK_BIN(graph_window)->child;
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    gwy_graph_func_run(name, GWY_GRAPH(graph));
+    g_return_if_fail(GWY_IS_GRAPH_WINDOW(graph_window));
+    g_return_if_fail(GWY_IS_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
+    gwy_graph_func_run(name, GWY_GRAPH(GWY_GRAPH_WINDOW(graph_window)->graph));
     /* FIXME TODO: some equivalent of this:
     gwy_app_data_view_update(data_view);
     */

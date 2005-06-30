@@ -43,11 +43,6 @@ static void     gwy_graph_label_size_allocate        (GtkWidget *widget,
 static gboolean gwy_graph_label_expose               (GtkWidget *widget,
                                                       GdkEventExpose *event);
 
-static gboolean gwy_graph_label_button_press         (GtkWidget *widget,
-                                                      GdkEventButton *event);
-/*static gboolean gwy_graph_label_button_release       (GtkWidget *widget,
-                                                      GdkEventButton *event);
-*/
 
 /* Forward declarations - label related*/
 void            gwy_graph_label_draw_label           (GtkWidget *widget);
@@ -120,9 +115,9 @@ gwy_graph_label_init(GwyGraphLabel *label)
 /**
  * gwy_graph_label_new:
  * 
- * creates new grapher label. 
+ * creates new graph label. 
  *
- * Returns: new grapher label 
+ * Returns: new graph label 
  **/
 GtkWidget*
 gwy_graph_label_new()
@@ -491,17 +486,17 @@ static gchar *symbols[] =
 
 GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
                                       gint x, gint y,
-                                      gint width, gint height)
+                                      gint width, gint height,
+                                      gint fontsize)
 {
-    gint i, j;
+    gint i;
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     GString *out;
-    GString *symbol;
     gint xpos, ypos;
+    GwyRGBA *color;
     gint pointsize;
     gint linesize;
-    gint fontsize = 15;
     
     out = g_string_new("%%Label\n");
 
@@ -531,6 +526,8 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
     g_string_append_printf(out, "stroke\n");
     g_string_append_printf(out, "grestore\n");
     g_string_append_printf(out, "clip\n");
+    g_string_append_printf(out, "1 setgray\n");
+    g_string_append_printf(out, "fill\n");
     
     
     xpos = 5;
@@ -540,11 +537,13 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
         pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
         linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
+        color = gwy_graph_curve_model_get_curve_color(curvemodel);
         g_string_append_printf(out, "/hpt %d def\n", pointsize);
         g_string_append_printf(out, "/vpt %d def\n", pointsize);
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
         g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
         g_string_append_printf(out, "%d setlinewidth\n", linesize);
+        g_string_append_printf(out, "%f %f %f setrgbcolor\n", color->r, color->g, color->b);
         g_string_append_printf(out, "%d %d M\n", x + xpos, y + ypos);
         g_string_append_printf(out, "%d %d L\n", x + xpos + 20, y + ypos);
         g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/4));

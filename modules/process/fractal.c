@@ -299,7 +299,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     /*graph*/
     controls.graph_model = gwy_graph_model_new(NULL);
     controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.graph_model));
-    gtk_widget_set_size_request(controls.graph, 500, 250);
+    gtk_widget_set_size_request(controls.graph, 400, 300);
     
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        TRUE, TRUE, 4);

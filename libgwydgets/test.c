@@ -127,7 +127,7 @@ main(int argc, char *argv[])
     gwy_graph_model_set_label_visible(gmodel, TRUE);
     
 
-    gwy_graph_export_postscript(graph, "pokus.eps",
+    gwy_graph_export_pixmap(graph, "pokus.png",
                                 TRUE, TRUE,
                                 TRUE);
         

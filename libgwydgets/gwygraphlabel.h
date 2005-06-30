@@ -77,7 +77,8 @@ void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, Pa
                                               GwyGraphLabel *label);
 GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
                                        gint x, gint y,
-                                       gint width, gint height);
+                                       gint width, gint height,
+                                       gint fontsize);
 
 
 void gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable);

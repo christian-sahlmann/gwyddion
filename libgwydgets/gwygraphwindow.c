@@ -152,9 +152,9 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_window_set_resizable(GTK_WINDOW(graphwindow), TRUE);
 
     vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_WINDOW(graphwindow), vbox);
+    gtk_container_add(GTK_CONTAINER(GTK_WINDOW(graphwindow)), vbox);
 
-    graphwindow->graph = graph;
+    graphwindow->graph = GTK_WIDGET(graph);
     
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
@@ -241,10 +241,10 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, TRUE, FALSE, 4);
 
     
-
     gtk_container_add(GTK_CONTAINER(vbox), hbox);
    
-    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(gwy_graph_window_measure_dialog_new(graphwindow->graph));
+    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(
+                                                gwy_graph_window_measure_dialog_new(GWY_GRAPH(graphwindow->graph)));
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);
@@ -295,7 +295,7 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     gdouble xmag, ymag;
     GString *xstring, *ystring;
     
-    gwy_graph_get_cursor(graphwindow->graph, &x, &y);
+    gwy_graph_get_cursor(GWY_GRAPH(graphwindow->graph), &x, &y);
 
     xmag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_top);
     xstring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_top);
@@ -306,11 +306,11 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     
     g_snprintf(buffer, sizeof(buffer), "%.4f", x/xmag);
     xstring = g_string_prepend(xstring, buffer);
-    gtk_label_set_markup(graphwindow->label_x, xstring->str);
+    gtk_label_set_markup(GTK_LABEL(graphwindow->label_x), xstring->str);
 
     g_snprintf(buffer, sizeof(buffer), "%.4f", y/ymag);
     ystring = g_string_prepend(ystring, buffer);
-    gtk_label_set_markup(graphwindow->label_y, ystring->str);
+    gtk_label_set_markup(GTK_LABEL(graphwindow->label_y), ystring->str);
     
     g_string_free(xstring, TRUE);
     g_string_free(ystring, TRUE);
@@ -321,9 +321,9 @@ gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 {
     /*printf("measure: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(graphwindow->graph, GWY_GRAPH_STATUS_POINTS);
+    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_POINTS);
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-    gwy_graph_signal_selected(graphwindow->graph);
+    gwy_graph_signal_selected(GWY_GRAPH(graphwindow->graph));
     gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
     /*printf("measure: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
@@ -334,12 +334,12 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
     /*printf("measured: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
   
-    gwy_graph_clear_selection(graphwindow->graph);
+    gwy_graph_clear_selection(GWY_GRAPH(graphwindow->graph));
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR) 
         return;
    
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(graphwindow->graph, GWY_GRAPH_STATUS_PLAIN);
+    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_PLAIN);
 
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
     gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
@@ -353,11 +353,11 @@ gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
     /*printf("zoom in: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
     {
-        last_status = gwy_graph_get_status(graphwindow->graph);
-        gwy_graph_zoom_in(graphwindow->graph);
+        last_status = gwy_graph_get_status(GWY_GRAPH(graphwindow->graph));
+        gwy_graph_zoom_in(GWY_GRAPH(graphwindow->graph));
     }
     else
-        gwy_graph_set_status(graphwindow->graph, last_status);
+        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
 
     /*printf("zoom in: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     
@@ -367,7 +367,7 @@ static void
 gwy_graph_window_zoom_out_cb(GwyGraphWindow *graphwindow)
 {
     /*printf("zoom out: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
-    gwy_graph_zoom_out(graphwindow->graph);
+    gwy_graph_zoom_out(GWY_GRAPH(graphwindow->graph));
     /*printf("zoom out: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
@@ -376,7 +376,7 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
     /*printf("zoom finished: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(graphwindow->graph, last_status);
+    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
     /*printf("zoom finished: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
@@ -386,19 +386,19 @@ gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
     GtkDialog *filedialog;
     gchar *filename;
 
-    filedialog = gtk_file_chooser_dialog_new ("Export to postscript",
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to postscript",
                                               GTK_WINDOW(graphwindow),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                              NULL);
+                                              NULL));
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
        gwy_graph_export_postscript(GWY_GRAPH(graphwindow->graph), filename,
                                    TRUE, TRUE, TRUE);
     }
-    gtk_widget_destroy(filedialog);
+    gtk_widget_destroy(GTK_WIDGET(filedialog));
       
 }
 
@@ -410,10 +410,10 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
     gchar *filename;
     gboolean units, labels, metadata;
     GwyGraphModelExportStyle style;
+    gint result;
 
-    dialog = gwy_graph_window_ascii_dialog_new();
-   
-    int result = gtk_dialog_run (GTK_DIALOG (dialog));
+    dialog = GWY_GRAPH_WINDOW_ASCII_DIALOG(gwy_graph_window_ascii_dialog_new());
+    result = gtk_dialog_run (GTK_DIALOG (dialog));
     switch (result)
     {
        case GTK_RESPONSE_OK:
@@ -422,12 +422,12 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
                                               &units,
                                               &labels,
                                               &metadata);
-       filedialog = gtk_file_chooser_dialog_new ("Export to ASCII File",
+       filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to ASCII File",
                                                  GTK_WINDOW(graphwindow),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE,
                                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                  GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                                 NULL);
+                                                 NULL));
        if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
        {
            filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
@@ -436,7 +436,7 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
                                         style);
                
        }
-       gtk_widget_destroy(filedialog);
+       gtk_widget_destroy(GTK_WIDGET(filedialog));
 
        
        break;
@@ -445,7 +445,7 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
        break;
     }
     
-    gtk_widget_destroy (dialog);
+    gtk_widget_destroy(GTK_WIDGET(dialog));
     
 }
 
@@ -455,19 +455,19 @@ gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)
     GtkDialog *filedialog;
     gchar *filename;
 
-    filedialog = gtk_file_chooser_dialog_new ("Export to bitmap",
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
                                               GTK_WINDOW(graphwindow),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                               GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-                                              NULL);
+                                              NULL));
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
        gwy_graph_export_pixmap(GWY_GRAPH(graphwindow->graph), filename,
                                TRUE, TRUE, TRUE);
     }
-    gtk_widget_destroy(filedialog);
+    gtk_widget_destroy(GTK_WIDGET(filedialog));
  }
 
 

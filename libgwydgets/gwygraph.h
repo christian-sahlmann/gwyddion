@@ -85,47 +85,47 @@ struct _GwyGraphClass {
 GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
-void       gwy_graph_refresh(GwyGraph *grapher);
-void       gwy_graph_refresh_and_reset(GwyGraph *grapher);
+void       gwy_graph_refresh(GwyGraph *graph);
+void       gwy_graph_refresh_and_reset(GwyGraph *graph);
 
-void       gwy_graph_change_model(GwyGraph *grapher, 
+void       gwy_graph_change_model(GwyGraph *graph, 
                                     GwyGraphModel *gmodel);
-void       gwy_graph_set_status(GwyGraph *grapher,
+void       gwy_graph_set_status(GwyGraph *graph,
                                   GwyGraphStatusType status);
-GwyGraphStatusType  gwy_graph_get_status(GwyGraph *grapher);
+GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
 
-GwyGraphModel *gwy_graph_get_model(GwyGraph *grapher);
+GwyGraphModel *gwy_graph_get_model(GwyGraph *graph);
 
 void       gwy_graph_signal_selected(GwyGraph *grapher);
 void       gwy_graph_signal_mouse_moved(GwyGraph *grapher);
 void       gwy_graph_signal_zoomed(GwyGraph *grapher);
 
-gint       gwy_graph_get_selection_number(GwyGraph *grapher);
-void       gwy_graph_get_selection(GwyGraph *grapher,
+gint       gwy_graph_get_selection_number(GwyGraph *graph);
+void       gwy_graph_get_selection(GwyGraph *graph,
                                      gdouble *selection);
 
-void       gwy_graph_clear_selection(GwyGraph *grapher);
+void       gwy_graph_clear_selection(GwyGraph *graph);
 
-void       gwy_graph_get_cursor(GwyGraph *grapher,
+void       gwy_graph_get_cursor(GwyGraph *graph,
                                   gdouble *x_cursor, gdouble *y_cursor);
 
-void       gwy_graph_request_x_range(GwyGraph *grapher, gdouble x_min_req, gdouble x_max_req);
-void       gwy_graph_request_y_range(GwyGraph *grapher, gdouble y_min_req, gdouble y_max_req);
-void       gwy_graph_get_x_range(GwyGraph *grapher, gdouble *x_min, gdouble *x_max);
-void       gwy_graph_get_y_range(GwyGraph *grapher, gdouble *y_min, gdouble *y_max);
+void       gwy_graph_request_x_range(GwyGraph *graph, gdouble x_min_req, gdouble x_max_req);
+void       gwy_graph_request_y_range(GwyGraph *graph, gdouble y_min_req, gdouble y_max_req);
+void       gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max);
+void       gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max);
 
-void       gwy_graph_enable_user_input(GwyGraph *grapher, gboolean enable);
+void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
 
 
-void       gwy_graph_export_pixmap(GwyGraph *grapher, const gchar *filename, 
+void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename, 
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels);
-void       gwy_graph_export_postscript(GwyGraph *grapher, const gchar *filename,
+void       gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
                                          gboolean export_title, gboolean export_axis,
                                          gboolean export_labels);
 
-void       gwy_graph_zoom_in(GwyGraph *grapher);
-void       gwy_graph_zoom_out(GwyGraph *grapher);
+void       gwy_graph_zoom_in(GwyGraph *graph);
+void       gwy_graph_zoom_out(GwyGraph *graph);
 
 
 G_END_DECLS

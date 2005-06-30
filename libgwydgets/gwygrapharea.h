@@ -84,7 +84,7 @@ typedef struct {
 } GwyGraphAreaCurve;
 
 
-/*grapher area structure*/
+/*graph area structure*/
 struct _GwyGraphArea {
     GtkLayout parent_instance;
 
@@ -140,7 +140,7 @@ struct _GwyGraphArea {
     gpointer reserved5;
 };
 
-/*grapher area class*/
+/*graph area class*/
 struct _GwyGraphAreaClass {
     GtkLayoutClass parent_class;
 
