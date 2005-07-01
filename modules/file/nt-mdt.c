@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.1",
+    "0.3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -861,7 +861,7 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
 
     data = gwy_data_field_get_data(dfield);
     p = (gint16*)dataframe->image;
-    for (i = 0; i < dataframe->fm_yres*dataframe->fm_yres; i++)
+    for (i = 0; i < dataframe->fm_xres*dataframe->fm_yres; i++)
         data[i] = zscale*GINT16_FROM_LE(p[i]);
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
