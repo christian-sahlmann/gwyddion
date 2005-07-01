@@ -52,8 +52,6 @@ struct _GwyDataWindow {
     GtkWidget *statusbar;
     GtkWidget *coloraxis;
 
-    GwyZoomMode zoom_mode;  /* reserved for future use */
-
     guint statusbar_context_id;
     guint statusbar_message_id;
     GwySIValueFormat *coord_format;
@@ -78,9 +76,6 @@ GwyDataView*  gwy_data_window_get_data_view        (GwyDataWindow *data_window);
 GwyContainer* gwy_data_window_get_data             (GwyDataWindow *data_window);
 void          gwy_data_window_set_zoom             (GwyDataWindow *data_window,
                                                     gint izoom);
-void          gwy_data_window_set_zoom_mode        (GwyDataWindow *data_window,
-                                                    GwyZoomMode zoom_mode);
-GwyZoomMode   gwy_data_window_get_zoom_mode        (GwyDataWindow *data_window);
 void          gwy_data_window_update_title         (GwyDataWindow *data_window);
 gchar*        gwy_data_window_get_base_name        (GwyDataWindow *data_window);
 GtkWidget*    gwy_data_window_get_ul_corner_widget (GwyDataWindow *data_window);

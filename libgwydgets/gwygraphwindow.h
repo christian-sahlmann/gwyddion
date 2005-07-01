@@ -44,8 +44,6 @@ typedef struct _GwyGraphWindowClass GwyGraphWindowClass;
 struct _GwyGraphWindow {
     GtkWindow parent_instance;
 
-    GwyZoomMode zoom_mode;  /* reserved for future use */
-
     GtkWidget *notebook;
     GtkWidget *graph;
     GtkWidget *data;

@@ -62,14 +62,6 @@ typedef enum {
     GWY_UNITS_PLACEMENT_AT_ZERO
 } GwyUnitsPlacement;
 
-/* XXX: used in unused data window feature */
-typedef enum {
-    GWY_ZOOM_MODE_SQRT2,
-    GWY_ZOOM_MODE_CBRT2,
-    GWY_ZOOM_MODE_PIX4PIX,
-    GWY_ZOOM_MODE_HALFPIX
-} GwyZoomMode;
-
 /* XXX */
 typedef enum {
     GWY_HSCALE_DEFAULT          = 0,

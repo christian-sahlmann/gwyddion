@@ -36,8 +36,6 @@
 
 #define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
 
-#define CBRT2 1.259921049894873164767210607277
-
 enum {
     TITLE_CHANGED,
     LAST_SIGNAL
@@ -70,13 +68,6 @@ static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 static GtkWindowClass *parent_class = NULL;
 
 static guint data_window_signals[LAST_SIGNAL] = { 0 };
-
-static const gdouble zoom_factors[] = {
-    G_SQRT2,
-    CBRT2,
-    1.0,
-    0.5,
-};
 
 GType
 gwy_data_window_get_type(void)
@@ -112,8 +103,6 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
 
-    gwy_debug(" ");
-
     object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
@@ -139,11 +128,8 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 }
 
 static void
-gwy_data_window_init(GwyDataWindow *data_window)
+gwy_data_window_init(G_GNUC_UNUSED GwyDataWindow *data_window)
 {
-    gwy_debug(" ");
-
-    data_window->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
 }
 
 static void
@@ -417,92 +403,39 @@ void
 gwy_data_window_set_zoom(GwyDataWindow *data_window,
                          gint izoom)
 {
-    gdouble rzoom, factor;
+    gdouble factor = 0.5;    /* Half-pixel zoom */
+    gdouble rzoom;
     gint curzoom = 0;
 
     gwy_debug("%d", izoom);
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     g_return_if_fail(izoom == -1 || izoom == 1
                      || (izoom >= 625 && izoom <= 160000));
-    g_return_if_fail(data_window->zoom_mode <= GWY_ZOOM_MODE_HALFPIX);
 
     rzoom = gwy_data_view_get_zoom(GWY_DATA_VIEW(data_window->data_view));
-    factor = zoom_factors[data_window->zoom_mode];
     switch (izoom) {
         case -1:
         case 1:
-        switch (data_window->zoom_mode) {
-            case GWY_ZOOM_MODE_SQRT2:
-            case GWY_ZOOM_MODE_CBRT2:
-            curzoom = floor(log(rzoom)/log(factor) + 0.5);
-            break;
+        if (rzoom >= 1)
+            curzoom = floor((rzoom - 1.0)/factor + 0.5);
+        else
+            curzoom = -floor((1.0/rzoom - 1.0)/factor + 0.5);
+        break;
 
-            case GWY_ZOOM_MODE_PIX4PIX:
-            case GWY_ZOOM_MODE_HALFPIX:
-            if (rzoom >= 1)
-                curzoom = floor((rzoom - 1.0)/factor + 0.5);
-            else
-                curzoom = -floor((1.0/rzoom - 1.0)/factor + 0.5);
-            break;
-        }
         curzoom += izoom;
-        switch (data_window->zoom_mode) {
-            case GWY_ZOOM_MODE_SQRT2:
-            case GWY_ZOOM_MODE_CBRT2:
-            rzoom = exp(log(factor)*curzoom);
-            break;
-
-            case GWY_ZOOM_MODE_PIX4PIX:
-            case GWY_ZOOM_MODE_HALFPIX:
-            if (curzoom >= 0)
-                rzoom = 1.0 + curzoom*factor;
-            else
-                rzoom = 1.0/(1.0 - curzoom*factor);
-            break;
-        }
+        if (curzoom >= 0)
+            rzoom = 1.0 + curzoom*factor;
+        else
+            rzoom = 1.0/(1.0 - curzoom*factor);
         break;
 
         default:
         rzoom = izoom/10000.0;
         break;
     }
-    rzoom = CLAMP(rzoom, 1/8.0, 8.0);
+    rzoom = CLAMP(rzoom, 1/12.0, 12.0);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(data_window->data_view), rzoom);
     gwy_data_window_lame_resize(data_window);
-}
-
-/**
- * gwy_data_window_set_zoom_mode:
- * @data_window: A data window.
- * @zoom_mode: A zoom mode to use.
- *
- * Sets the zoom mode @data_window should use to @zoom_mode.
- *
- * It does not affect the current zoom in any way, only its changes in the
- * future.
- **/
-void
-gwy_data_window_set_zoom_mode(GwyDataWindow *data_window,
-                              GwyZoomMode zoom_mode)
-{
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-    g_return_if_fail(data_window->zoom_mode <= GWY_ZOOM_MODE_HALFPIX);
-    data_window->zoom_mode = zoom_mode;
-}
-
-/**
- * gwy_data_window_get_zoom_mode:
- * @data_window: A data window.
- *
- * Returns the current zoom mode of a data window @data_window.
- *
- * Returns: The current zoom mode.
- **/
-GwyZoomMode
-gwy_data_window_get_zoom_mode(GwyDataWindow *data_window)
-{
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), 0);
-    return data_window->zoom_mode;
 }
 
 static void
@@ -819,8 +752,6 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     key = gwy_pixmap_layer_get_data_key(layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
-    /* FIXME: we have to set units too, as at least data has different units
-     * than presentation */
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
     gwy_data_window_update_units(data_window);
 }

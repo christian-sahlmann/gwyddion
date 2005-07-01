@@ -121,8 +121,6 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
 
-    gwy_debug("");
-
     object_class = (GtkObjectClass*)klass;
     parent_class = g_type_class_peek_parent(klass);
 
@@ -144,10 +142,7 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
 static void
 gwy_3d_window_init(Gwy3DWindow *gwy3dwindow)
 {
-    gwy_debug("");
-
     gwy3dwindow->gwy3dview = NULL;
-    gwy3dwindow->zoom_mode = GWY_ZOOM_MODE_HALFPIX;
 }
 
 static void
