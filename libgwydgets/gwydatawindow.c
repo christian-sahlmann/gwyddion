@@ -420,8 +420,6 @@ gwy_data_window_set_zoom(GwyDataWindow *data_window,
             curzoom = floor((rzoom - 1.0)/factor + 0.5);
         else
             curzoom = -floor((1.0/rzoom - 1.0)/factor + 0.5);
-        break;
-
         curzoom += izoom;
         if (curzoom >= 0)
             rzoom = 1.0 + curzoom*factor;
