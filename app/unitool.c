@@ -233,9 +233,6 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state,
     state->is_visible = FALSE;
 }
 
-/* FIXME: this is wrong.
- * Header formats must use GWY_SI_UNIT_FORMAT_MARKUP, while in-line formats
- * GWY_SI_UNIT_FORMAT_VFMARKUP. */
 static void
 gwy_unitool_compute_formats(GwyUnitoolState *state)
 {
