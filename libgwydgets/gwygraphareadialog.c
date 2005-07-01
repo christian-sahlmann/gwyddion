@@ -205,7 +205,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     dialog->pointsize = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Point size:"), NULL,
                                 dialog->pointsize);
-    g_signal_connect(dialog->pointsize, "value_changed",
+    g_signal_connect(dialog->pointsize, "value-changed",
                      G_CALLBACK(pointsize_changed_cb), dialog);
     row++;
     
@@ -219,7 +219,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     dialog->linesize = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Line thickness:"), NULL,
                                 dialog->linesize);
-    g_signal_connect(dialog->linesize, "value_changed",
+    g_signal_connect(dialog->linesize, "value-changed",
                      G_CALLBACK(linesize_changed_cb), dialog);
      
     gtk_dialog_add_button(GTK_DIALOG(dialog),

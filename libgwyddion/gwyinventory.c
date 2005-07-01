@@ -289,7 +289,7 @@ gwy_inventory_new_filled(const GwyItemType *item_type,
     }
     if (inventory->is_watchable) {
         for (i = 0; i < nitems; i++)
-            g_signal_connect_swapped(items[i], "value_changed",
+            g_signal_connect_swapped(items[i], "value-changed",
                                      G_CALLBACK(gwy_inventory_item_changed),
                                      inventory);
     }
@@ -716,7 +716,7 @@ gwy_inventory_insert_item(GwyInventory *inventory,
                         GUINT_TO_POINTER(inventory->items->len));
 
     if (inventory->is_watchable)
-        g_signal_connect_swapped(item, "value_changed",
+        g_signal_connect_swapped(item, "value-changed",
                                  G_CALLBACK(gwy_inventory_item_changed),
                                  inventory);
 
@@ -784,7 +784,7 @@ gwy_inventory_insert_nth_item(GwyInventory *inventory,
     }
 
     if (inventory->is_watchable)
-        g_signal_connect_swapped(item, "value_changed",
+        g_signal_connect_swapped(item, "value-changed",
                                  G_CALLBACK(gwy_inventory_item_changed),
                                  inventory);
 

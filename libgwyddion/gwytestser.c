@@ -295,7 +295,7 @@ static void
 gwy_test_ser_value_changed(GObject *test_ser)
 {
     gwy_debug("signal: GwyTestSer changed");
-    g_signal_emit_by_name(GWY_TEST_SER(test_ser), "value_changed", NULL);
+    g_signal_emit_by_name(GWY_TEST_SER(test_ser), "value-changed", NULL);
 }
 
 void

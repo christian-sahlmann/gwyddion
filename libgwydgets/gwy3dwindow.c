@@ -131,7 +131,7 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
 
     /*
     gwy3dwindow_signals[TITLE_CHANGED] =
-        g_signal_new("title_changed",
+        g_signal_new("title-changed",
                      G_OBJECT_CLASS_TYPE(object_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(Gwy3DWindowClass, title_changed),

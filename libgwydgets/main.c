@@ -95,7 +95,7 @@ test(void)
         gwy_shader_set_update_policy(GWY_SHADER(shade[i]),
                                      GTK_UPDATE_DELAYED);
         gtk_box_pack_start(GTK_BOX(box), shade[i], TRUE, TRUE, 0);
-        hid[i] = g_signal_connect(shade[i], "angle_changed",
+        hid[i] = g_signal_connect(shade[i], "angle-changed",
                                   G_CALLBACK(foo_cb), GINT_TO_POINTER(i));
     }
 

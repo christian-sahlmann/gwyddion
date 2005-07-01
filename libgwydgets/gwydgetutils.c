@@ -330,9 +330,9 @@ gwy_table_attach_hscale(GtkWidget *table,
                                                     (u - l)/GWY_HSCALE_WIDTH,
                                                     10*(u - l)/GWY_HSCALE_WIDTH,
                                                     0));
-            g_signal_connect(adj, "value_changed",
+            g_signal_connect(adj, "value-changed",
                              G_CALLBACK(gwy_hscale_update_log), scale_adj);
-            g_signal_connect(scale_adj, "value_changed",
+            g_signal_connect(scale_adj, "value-changed",
                              G_CALLBACK(gwy_hscale_update_exp), adj);
         }
         else if (base_style == GWY_HSCALE_SQRT) {
@@ -344,9 +344,9 @@ gwy_table_attach_hscale(GtkWidget *table,
                                                     (u - l)/GWY_HSCALE_WIDTH,
                                                     10*(u - l)/GWY_HSCALE_WIDTH,
                                                     0));
-            g_signal_connect(adj, "value_changed",
+            g_signal_connect(adj, "value-changed",
                              G_CALLBACK(gwy_hscale_update_sqrt), scale_adj);
-            g_signal_connect(scale_adj, "value_changed",
+            g_signal_connect(scale_adj, "value-changed",
                              G_CALLBACK(gwy_hscale_update_sq), adj);
         }
         else
