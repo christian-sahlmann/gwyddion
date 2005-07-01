@@ -393,6 +393,7 @@ gwy_data_view_size_request(GtkWidget *widget,
     requisition->height = data_view->newzoom
                           * gwy_data_field_get_yres(data_field);
 
+    data_view->size_requested = TRUE;
     gwy_debug("requesting %d x %d",
               requisition->width, requisition->height);
 }
@@ -412,14 +413,20 @@ gwy_data_view_size_allocate(GtkWidget *widget,
 
     widget->allocation = *allocation;
 
-    if (GTK_WIDGET_REALIZED(widget)) {
-        data_view = GWY_DATA_VIEW(widget);
+    if (!GTK_WIDGET_REALIZED(widget))
+        return;
 
-        gdk_window_move_resize(widget->window,
-                               allocation->x, allocation->y,
-                               allocation->width, allocation->height);
-        gwy_data_view_make_pixmap(data_view);
-    }
+    data_view = GWY_DATA_VIEW(widget);
+    gdk_window_move_resize(widget->window,
+                           allocation->x, allocation->y,
+                           allocation->width, allocation->height);
+    gwy_data_view_make_pixmap(data_view);
+    /* Update ideal zoom after a `spontanoues' size-allocate when someone
+     * simply changed the size w/o asking us.  But if we were queried first,
+     * be persistent and request the same zoom also next time */
+    if (!data_view->size_requested)
+        data_view->newzoom = data_view->zoom;
+    data_view->size_requested = FALSE;
 }
 
 static void
@@ -951,8 +958,10 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
  *
  * Returns current zoom of a data view.
  *
- * More precisely the zoom value requested by gwy_data_view_set_zoom(), real
- * zoom may differ a bit due to pixel rounding.
+ * More precisely the zoom value requested by gwy_data_view_set_zoom(), if
+ * it's in use (real zoom may differ a bit due to pixel rounding).  If zoom
+ * was set by explicite widget size change, real and requested zoom are
+ * considered to be the same.
  *
  * When a resize is queued, the new zoom value is returned.
  *

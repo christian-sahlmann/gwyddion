@@ -53,7 +53,8 @@ struct _GwyDataView {
     gulong base_hid;
     gulong alpha_hid;
 
-    gboolean layers_changed;
+    gboolean layers_changed : 1;
+    gboolean size_requested : 1;
 
     gdouble zoom;    /* real zoom (larger number means larger pixmaps) */
     gdouble newzoom;    /* requested (ideal) zoom value */
