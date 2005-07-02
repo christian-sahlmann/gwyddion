@@ -29,6 +29,9 @@ pixmapdata_DATA = \
 	gwy_grains_remove-24.png \
 	gwy_grains_water-24.png \
 	gwy_graph-24.png \
+	gwy_graph_export_ascii-24.png \
+	gwy_graph_export_bitmap-24.png \
+	gwy_graph_export_vector-24.png \
 	gwy_graph_fit_func-24.png \
 	gwy_graph_gauss-24.png \
 	gwy_graph_halfgauss-24.png \
