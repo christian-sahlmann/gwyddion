@@ -23,9 +23,9 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <pango/pango.h>
 #include <stdio.h>
 #include <libgwydgets/gwydgets.h>
-
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 
@@ -37,13 +37,24 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     GdkPixbuf *pixbuf;
     GdkColormap *cmap;
     GdkGC *gc;
-    gint width, height;
+    gint width, height, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GError *error=NULL;
+    PangoLayout *layout;
+    PangoContext *context;
     
     /*create pixmap*/
-    width = 800;
-    height = 600;
-
+    width = 600;
+    height = 450;
+    areax = 90;
+    areay = 90;
+    areaw = width - 2*areax;
+    areah = height - 2*areay;
+   
+    labelh = graph->area->lab->reqheight;
+    labelw = graph->area->lab->reqwidth;
+    labelx = width - areax - labelw - 5;
+    labely = height - areay - labelh - 5;
+ 
     cmap = gdk_colormap_new(gdk_visual_get_best_with_depth(8), TRUE);
     pixmap = gdk_pixmap_new(NULL, width, height, 8);                                            
     gdk_drawable_set_colormap(pixmap, cmap);
@@ -51,13 +62,34 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     /*plot area*/
     gc = gdk_gc_new(pixmap);
     gwy_graph_area_draw_area_on_drawable(pixmap, gc,
-                                         0, 0, width, height,
+                                         areax, areay, areaw, areah,
                                          graph->area);
         
     
     /*plot axis*/
+    gwy_axis_draw_on_drawable(pixmap, gc,
+                              areax, 0, width - areax, areay,
+                              graph->axis_top);
+    gwy_axis_draw_on_drawable(pixmap, gc,
+                              areax, height - areay, width - areax, areay,
+                              graph->axis_bottom);
+    gwy_axis_draw_on_drawable(pixmap, gc,
+                              0, areay, areax, height - areay,
+                              graph->axis_left);
+    gwy_axis_draw_on_drawable(pixmap, gc,
+                              width - areax, areay, areax, height - areay,
+                              graph->axis_right);
+
 
     /*plot label*/
+    
+    /*XXX context = pango_context_new(); this function is not known to compiler,
+     probably due to undefined PANGO_ENABLE_BACKEND, check this.*/
+    pango_context_set_font_description(context, graph->area->lab->label_font);
+    layout = pango_layout_new(context);
+    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
+                                           labelx, labely, labelw, labelh,
+                                           graph->area->lab);
 
     /*save pixmap*/
     pixbuf = gdk_pixbuf_get_from_drawable(NULL,
@@ -77,7 +109,6 @@ gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
     FILE *fw;
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GString *psaxis, *psarea, *pslabel;
-    GwyAxisActiveAreaSpecs specs;
     gint fontsize = 20;
    
     width = 600;

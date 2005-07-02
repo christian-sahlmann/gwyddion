@@ -131,8 +131,8 @@ GwySIUnit*     gwy_graph_model_get_x_siunit(GwyGraphModel *model);
 GwySIUnit*     gwy_graph_model_get_y_siunit(GwyGraphModel *model);
 
 void      gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename, 
-                                       gboolean export_units, gboolean export_metadata,
-                                       GwyGraphModelExportStyle export_style);
+                                       gboolean export_units, gboolean export_labels,
+                                       gboolean export_metadata, GwyGraphModelExportStyle export_style);
 
 void      gwy_graph_model_signal_layout_changed(GwyGraphModel *model);
 

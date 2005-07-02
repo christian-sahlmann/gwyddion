@@ -452,7 +452,7 @@ fit_dialog(FitArgs *args)
     /*graph*/
     args->graph_model = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
     controls.graph = gwy_graph_new(args->graph_model);
-    /*gwy_graph_enable_axis_label_edit(GWY_GRAPH(controls.graph), FALSE);*/
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);

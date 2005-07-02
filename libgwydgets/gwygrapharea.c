@@ -441,7 +441,6 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.real_width = model->x_max - model->x_min;
     specs.real_height = model->y_max - model->y_min;
     specs.log_x = specs.log_y = FALSE;
-
     /*draw continuous selection*/
     if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
         gwy_graph_draw_selection_areas(drawable,
@@ -1036,7 +1035,7 @@ static void
 gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog, gint arg1, gpointer user_data)
 {
     if (arg1 == GTK_RESPONSE_APPLY) {
-        /*gwy_graph_area_refresh(GWY_GRAPH_AREA(user_data));*/
+        gwy_graph_area_refresh(GWY_GRAPH_AREA(user_data));
     }
     else if (arg1 == GTK_RESPONSE_CLOSE) {
         gtk_widget_hide(GTK_WIDGET(dialog));
@@ -1054,7 +1053,13 @@ gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_d
     }
 }
 
-
+/**
+ * gwy_graph_area_clear_selection:
+ * @area: graph area 
+ *
+ * Clear all the selections. If you use grapher area as a part of
+ * #GwyGrapher use the #GwyGrapher clear selection function preferably.
+ **/
 void 
 gwy_graph_area_clear_selection(GwyGraphArea *area)
 {
@@ -1074,7 +1079,16 @@ gwy_graph_area_clear_selection(GwyGraphArea *area)
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
-
+/**
+ * gwy_graph_area_set_selection:
+ * @area: graph area 
+ * @status: status of selection to be set
+ * @selection: selection data field
+ * @n_of_selections: number of selections to be set
+ *
+ * Set selection data for given values and status.
+ * Refresh graph area after doing this to see any change.
+ **/
 void 
 gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, 
                              gdouble* selection, gint n_of_selections)

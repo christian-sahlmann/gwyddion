@@ -196,8 +196,8 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     /* XXX: GwyGraph has no such thing */
     gmodel->title = g_string_new("FIXME: Mysterious Graph");
     gmodel->top_label = g_string_new("");
-    gmodel->bottom_label = g_string_new("");
-    gmodel->left_label = g_string_new("");
+    gmodel->bottom_label = g_string_new("x");
+    gmodel->left_label = g_string_new("y");
     gmodel->right_label = g_string_new("");
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
@@ -969,27 +969,127 @@ gwy_graph_model_get_y_siunit(GwyGraphModel *model)
 **/
 void
 gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
-                             gboolean export_units, gboolean export_metadata,
-                             GwyGraphModelExportStyle export_style)
+                             gboolean export_units, gboolean export_labels, 
+                             gboolean export_metadata, GwyGraphModelExportStyle export_style)
 {
     FILE *fw;
+    GwyGraphCurveModel *cmodel;
+    GwySIValueFormat *xformat = NULL, *yformat = NULL;
+    gdouble xaverage, xrange, yaverage, yrange;
+    gdouble xmult, ymult;
+    GString *labels, *descriptions, *units;
+    gint i, j, max, ndata;
+    
     fw = fopen(filename, "w");
+
+    if (export_units)
+    {
+        xaverage = (model->x_max + model->x_min)/2;
+        xrange = model->x_max - model->x_min;
+        xformat = gwy_si_unit_get_format(model->x_unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                        MAX(xaverage, xrange), xformat);
+        xmult = xformat->magnitude;
+        
+        yaverage = (model->y_max + model->y_min)/2;
+        yrange = model->y_max - model->y_min;
+        yformat = gwy_si_unit_get_format(model->y_unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                        MAX(yaverage, yrange), yformat);                                
+        ymult = yformat->magnitude;
+    }
+    else
+    {
+        xmult = 1;
+        ymult = 1;
+    }
     
     switch(export_style) {
         case (GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN):
-        fprintf(fw, "plain\n");
+        case (GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN):
+        labels = g_string_new("");
+        descriptions = g_string_new("");
+        units = g_string_new("");
+        for (i = 0; i < model->ncurves; i++)
+        {
+            cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+            if (export_metadata) g_string_append_printf(descriptions, "%s             ", cmodel->description->str);
+            if (export_labels) g_string_append_printf(labels, "%s       %s           ", model->bottom_label->str, model->left_label->str);
+            if (export_units) g_string_append_printf(units, "[%s]     [%s]         ", xformat->units, yformat->units);
+        }
+        if (export_metadata) fprintf(fw, "%s\n", descriptions->str);
+        if (export_labels) fprintf(fw, "%s\n", labels->str);
+        if (export_units) fprintf(fw, "%s\n", units->str);
+        g_string_free(descriptions, TRUE);
+        g_string_free(labels, TRUE);
+        g_string_free(units, TRUE);
+               
+        max = 0;
+        for (i = 0; i < model->ncurves; i++) 
+            if ((ndata = gwy_graph_curve_model_get_ndata(GWY_GRAPH_CURVE_MODEL(model->curves[i]))) > max)
+                max = ndata;
+
+        for (j = 0; j < max; j++)
+        {
+            for (i = 0; i < model->ncurves; i++)
+            {
+                cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+                if (gwy_graph_curve_model_get_ndata(cmodel) > j)
+                    fprintf(fw, "%g  %g            ", cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+                else
+                    fprintf(fw, "-          -              ");
+            }
+            fprintf(fw, "\n");
+        }
         break;
 
         case (GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT):
-        fprintf(fw, "gnuplot\n");
+        for (i = 0; i < model->ncurves; i++)
+        {
+            cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+            if (export_metadata) fprintf(fw, "# %s\n", cmodel->description->str);
+            if (export_labels) fprintf(fw, "# %s      %s\n", model->bottom_label->str, model->left_label->str);
+            if (export_units) fprintf(fw, "# [%s]    [%s]\n", xformat->units, yformat->units);
+            for (j=0; j<cmodel->n; j++)
+                fprintf(fw, "%g   %g\n", cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+            fprintf(fw, "\n\n");
+        }
+                             
         break;
         
-        case (GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN):
-        fprintf(fw, "origin\n");
-        break;
-         
         case (GWY_GRAPH_MODEL_EXPORT_ASCII_CSV):
-        fprintf(fw, "origin\n");
+        labels = g_string_new("");
+        descriptions = g_string_new("");
+        units = g_string_new("");
+        for (i = 0; i < model->ncurves; i++)
+        {
+            cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+            if (export_metadata) g_string_append_printf(descriptions, "%s;", cmodel->description->str);
+            if (export_labels) g_string_append_printf(labels, "%s;%s;", model->bottom_label->str, model->left_label->str);
+            if (export_units) g_string_append_printf(units, "[%s];[%s];", xformat->units, yformat->units);
+        }
+        if (export_metadata) fprintf(fw, "%s\n", descriptions->str);
+        if (export_labels) fprintf(fw, "%s\n", labels->str);
+        if (export_units) fprintf(fw, "%s\n", units->str);
+        g_string_free(descriptions, TRUE);
+        g_string_free(labels, TRUE);
+        g_string_free(units, TRUE);
+               
+        max = 0;
+        for (i = 0; i < model->ncurves; i++) 
+            if ((ndata = gwy_graph_curve_model_get_ndata(GWY_GRAPH_CURVE_MODEL(model->curves[i]))) > max)
+                max = ndata;
+
+        for (j = 0; j < max; j++)
+        {
+            for (i = 0; i < model->ncurves; i++)
+            {
+                cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+                if (gwy_graph_curve_model_get_ndata(cmodel) > j)
+                    fprintf(fw, "%g;%g;", cmodel->xdata[j]/xmult, cmodel->ydata[j]/ymult);
+                else
+                    fprintf(fw, ";;");
+            }
+            fprintf(fw, "\n");
+        }
         break;
 
         default:

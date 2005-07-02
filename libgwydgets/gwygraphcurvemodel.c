@@ -599,6 +599,18 @@ gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
     return gcmodel->line_size;
 }
 
+/**
+* gwy_graph_curve_model_set_data_from_dataline:
+* @gcmodel: A #GwyGraphCurveModel.
+* @dline: A #GwyDataLine
+* @from_index: index where to start
+* @to_index: where to stop
+* 
+* Sets the curve data from #GwyDataLine. The range of import can be
+* modified using parameters @from_index and @to_index that are
+* interpreted directly as data indices within the #GwyDataLine.
+* In case that @from_index == @to_index full #GwyDataLine is used.
+**/
 void
 gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                             GwyDataLine *dline,

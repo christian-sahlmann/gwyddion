@@ -304,6 +304,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        TRUE, TRUE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     g_signal_connect(GWY_GRAPH(controls.graph)->area,
                      "selected", G_CALLBACK(graph_selected), &controls);
 

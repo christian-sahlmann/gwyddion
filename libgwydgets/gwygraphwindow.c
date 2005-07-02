@@ -208,7 +208,7 @@ gwy_graph_window_new(GwyGraph *graph)
  
     graphwindow->button_export_ascii = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_ascii),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ASCII, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_ascii, FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_export_ascii, "clicked",
                            G_CALLBACK(gwy_graph_window_export_ascii_cb),
@@ -216,7 +216,7 @@ gwy_graph_window_new(GwyGraph *graph)
  
     graphwindow->button_export_vector = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_vector),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_VECTOR, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_vector, FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_export_vector, "clicked",
                            G_CALLBACK(gwy_graph_window_export_vector_cb),
@@ -224,7 +224,7 @@ gwy_graph_window_new(GwyGraph *graph)
  
     graphwindow->button_export_bitmap = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_bitmap),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH, GTK_ICON_SIZE_BUTTON)); 
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_BITMAP, GTK_ICON_SIZE_BUTTON)); 
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_bitmap, FALSE, FALSE, 0);
     g_signal_connect_swapped(graphwindow->button_export_bitmap, "clicked",
                            G_CALLBACK(gwy_graph_window_export_bitmap_cb),
@@ -232,16 +232,16 @@ gwy_graph_window_new(GwyGraph *graph)
      
     
     graphwindow->label_what = gtk_label_new("Cursor values:");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, TRUE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, FALSE, FALSE, 4);
 
-    graphwindow->label_x = gtk_label_new("       ");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_x, TRUE, FALSE, 4);
+    graphwindow->label_x = gtk_label_new("          ");
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_x, FALSE, FALSE, 4);
 
-    graphwindow->label_y = gtk_label_new("       ");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, TRUE, FALSE, 4);
+    graphwindow->label_y = gtk_label_new("          ");
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, FALSE, FALSE, 4);
 
     
-    gtk_container_add(GTK_CONTAINER(vbox), hbox);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
    
     graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(
                                                 gwy_graph_window_measure_dialog_new(GWY_GRAPH(graphwindow->graph)));
@@ -432,7 +432,7 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
        {
            filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
            gwy_graph_model_export_ascii(GWY_GRAPH(graphwindow->graph)->graph_model, filename,
-                                        units, metadata,
+                                        units, labels, metadata,
                                         style);
                
        }

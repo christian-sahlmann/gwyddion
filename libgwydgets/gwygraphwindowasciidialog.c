@@ -117,20 +117,27 @@ gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                     dialog->preference);
     
+   
+    dialog->units = TRUE;
+    dialog->metadata = TRUE;
+    dialog->labels = TRUE;
     
     dialog->check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_labels), dialog->labels);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_labels);
     g_signal_connect_swapped(dialog->check_labels, "clicked",
                              G_CALLBACK(labels_changed_cb), dialog);
     
     dialog->check_units = gtk_check_button_new_with_mnemonic(_("Export _units"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_units), dialog->units);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_units);
     g_signal_connect_swapped(dialog->check_units, "clicked",
                              G_CALLBACK(units_changed_cb), dialog);
      
     dialog->check_metadata = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_metadata), dialog->metadata);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_metadata);
     g_signal_connect_swapped(dialog->check_metadata, "clicked",
