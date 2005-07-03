@@ -389,7 +389,7 @@ gwy_app_toolbox_create(void)
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
     labels = g_slist_append(labels, label);
 
-    toolbar = gtk_table_new(2, 4, TRUE);
+    toolbar = gtk_table_new(1, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
