@@ -8,10 +8,13 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 libgwyapp = $(top_builddir)/app/libgwyapp.la
 moduledir = $(top_srcdir)/modules
 
+GUIDE_MAP = user-guide-modules
+
 EXTRA_DIST = \
 	modules-web.xsl \
 	update-msvc.py \
 	update-potfiles.sh \
+	$(GUIDE_MAP) \
 	vim-syn-gen.py
 
 module-list: modules.xml module-list.html module-list-nocss.html
@@ -37,8 +40,8 @@ CLEANFILES = \
 
 INCLUDES = -I$(top_srcdir)
 
-modules.xml: dump-modules $(moduledir)/*.c $(moduledir)/*/*.c
-	./dump-modules >modules.xml
+modules.xml: dump-modules $(GUIDE_MAP) $(moduledir)/*.c $(moduledir)/*/*.c
+	./dump-modules $(GUIDE_MAP) >modules.xml
 
 module-list.html: modules.xml modules-web.xsl
 	$(XSLTPROC) modules-web.xsl modules.xml >module-list.html

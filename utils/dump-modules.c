@@ -171,8 +171,8 @@ add_info(const gchar *name,
 
 /* Main */
 int
-main(G_GNUC_UNUSED int argc,
-     G_GNUC_UNUSED char *argv[])
+main(int argc,
+     char *argv[])
 {
     /* modules we know we don't like to see in the list (XXX: hack) */
     const gchar *filter_modules[] = {
@@ -188,7 +188,11 @@ main(G_GNUC_UNUSED int argc,
 #endif  /* G_OS_WIN32 */
 
     g_type_init();
-    read_user_guide("user-guide-modules");
+    if (argc < 2) {
+        g_printerr("Need user guide map.\n");
+        return 1;
+    }
+    read_user_guide(argv[1]);
 
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
