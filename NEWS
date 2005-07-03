@@ -51,6 +51,16 @@ Library:
 - libgwyapp: All undo functions work on Containers now, some were renamed to
   acommodate that; object-data trickery was replaced with a proper API.
 - libgwydgets: DataView can resize when base data field size changes.
+- libgwydgets: Former GwyGraph was replaced with new widget (called GwyGrapher
+  in previous versions). The new graph widget is constructed to draw
+  directly GwyGraphModel data, is able to handle multiple selections
+  and is constructed to be easily exported to various formats.
+- libgwydgets: GwyGraphWindow is now being constructed as a result
+  of any processing module creating graphs. This widget supports graph zooms
+  and graph measuring that was previously in several graph modules. 
+  It is also possible to see the data values directly as a table.
+  GwyGraphWindow currently handles also exports to bitmap, text and postscript,
+  which will be probably moved to modules in next verison.
 - Bugfixes were merged from 1.11.
 
 Modules:
@@ -61,6 +71,8 @@ Modules:
 - IColorange supports auto-range mode.
 - Points layer: Supports set_selection().
 - Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
+- graph_points, graph_measure, graph_zoom, graph_unzoom removed as this
+  functionality is now in the GwyGraphWindow widget directly.
 
 Other:
 - Bugfixes were merged from 1.11 (bug #51).
