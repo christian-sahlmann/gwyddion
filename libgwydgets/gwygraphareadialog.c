@@ -33,7 +33,6 @@
 
 
 #define GWY_GRAPH_AREA_DIALOG_TYPE_NAME "GwyGraphAreaDialog"
-#define BITS_PER_SAMPLE 24
 #define POINT_SAMPLE_HEIGHT 20
 #define POINT_SAMPLE_WIDTH 20
 #define LINE_SAMPLE_HEIGHT 20
@@ -337,7 +336,7 @@ gwy_sample_point_to_gtkimage(GwyGraphPointType type)
 
     pixmap = gdk_pixmap_new(NULL,
                             POINT_SAMPLE_WIDTH, POINT_SAMPLE_HEIGHT,
-                            BITS_PER_SAMPLE);
+                            gdk_visual_get_best_depth());
 
     gc = gdk_gc_new(pixmap);
     gcl.pixel = 0x0ffffff;
@@ -421,7 +420,7 @@ gwy_sample_line_to_gtkimage(GdkLineStyle type)
 
     pixmap = gdk_pixmap_new(NULL,
                             LINE_SAMPLE_WIDTH, LINE_SAMPLE_HEIGHT,
-                            BITS_PER_SAMPLE);
+                            gdk_visual_get_best_depth());
 
     gc = gdk_gc_new(pixmap);
     gcl.pixel = 0x0ffffff;
