@@ -1,4 +1,10 @@
-- Update po in MAIN after GWYDDION-1
+GWYDDION-1
+- Fix Reset in Facet Analysis, add separate Find-maxima, mark selected range
+  of angles on slope view
+- Fix Indentor analysis
+
+HEAD
+- Merge it.po update from Livia
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
@@ -6,7 +12,6 @@
               GwyDWTDenoiseType, GwyWindowingType, GwyTipType
   libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
-- Check for cases where datafield is replaced in container, one is undo
 - Make GWY_PSPEC() public, if it works
 - Find out why there's no cursor in 3D window entries and fix it
 - Use GObject macros for type declarations
@@ -14,6 +19,8 @@
 - Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
 - Add preview to: artithmetic
 - It should be possible to export images with selections drawn
+- It should be possible to export measurement from Distance tool (and the
+  number of lines should be increased)
 - Make things actually compile with --disable-gl, also improve GL/gl.h,
   GL/glu.h checking
 - Check or rework filename handling to work with Gtk+ 2.6
@@ -21,7 +28,6 @@
   for near final state
 - Write a Postscript export module based on JP's work
 - Convert Logarithmic scale value to logarithmic presentation
-- Do something reasonable with results of pow10, hypot, etc. detection
 - Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
@@ -42,4 +48,3 @@
 - Do something with `Remove mask' in Edit menu
 - Unitool: Make data windows switchable in tool dialog.
 - Use gtk_paint_* to keep style in widgets.
-- gwyddion-remote
