@@ -1,4 +1,4 @@
-1.99.2cvs20050622
+1.99.2cvs20050703
 
 1.99.3
 Application:
@@ -8,11 +8,11 @@ Application:
   some data already exists, it's presented instead of creating a second one.
 
 Library:
-- libgwyddion: GwyContainer emits a signal "item_changed::/item/key" when
+- libgwyddion: GwyContainer emits a signal "item-changed::/item/key" when
   a item changes.
-- libgwyddion, libgwyprocess, libgwydgets: GwyWatchable interface was removed,
-  some previous implementors have their own "value_changed" signal, some have
-  different signal(s), or none.
+- libgwyddion, libgwyprocess, libgwydgets: GwyWatchable interface was
+  deprecated, and will be removed in 1.99.4.  Some previous implementors have
+  their own "value-changed" signal, some have different signal(s), or none.
 - libgwyprocess: GwyDataField and GwyDataLine have "data_changed" signal.
 - libgwydgets: GwyPixmapLayer can display data field identified by arbitrary
   key (actually it requires to set a key now) and reacts on its
@@ -51,6 +51,7 @@ Library:
 - libgwyapp: All undo functions work on Containers now, some were renamed to
   acommodate that; object-data trickery was replaced with a proper API.
 - libgwydgets: DataView can resize when base data field size changes.
+- libgwydgets: Unused DataWindow zoom mode setting was removed.
 - libgwydgets: Former GwyGraph was replaced with new widget (called GwyGrapher
   in previous versions). The new graph widget is constructed to draw
   directly GwyGraphModel data, is able to handle multiple selections
