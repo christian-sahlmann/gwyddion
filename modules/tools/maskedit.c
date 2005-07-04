@@ -145,7 +145,7 @@ layer_setup(GwyUnitoolState *state)
     controls->finished_id
         = g_signal_connect_swapped(state->layer, "selection-finished",
                                    G_CALLBACK(selection_finished_cb), state);
-    g_object_set(state->layer, "is_crop", FALSE, NULL);
+    g_object_set(state->layer, "is-crop", FALSE, NULL);
 }
 
 static GtkWidget*

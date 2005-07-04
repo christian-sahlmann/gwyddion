@@ -130,7 +130,7 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "is_crop", FALSE, NULL);
+    g_object_set(state->layer, "is-crop", FALSE, NULL);
 }
 
 static GtkWidget*

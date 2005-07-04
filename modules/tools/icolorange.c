@@ -182,7 +182,7 @@ layer_setup(GwyUnitoolState *state)
     guint len;
 
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "is_crop", FALSE, NULL);
+    g_object_set(state->layer, "is-crop", FALSE, NULL);
 
     controls = (ToolControls*)state->user_data;
     if (controls->modelist)
@@ -197,7 +197,6 @@ layer_setup(GwyUnitoolState *state)
     key = g_newa(gchar, len + sizeof("/min"));
     g_stpcpy(g_stpcpy(key, prefix), "/min");
     controls->key_min = g_quark_from_string(key);
-    g_printerr("key_min = <%s>\n", key);
     key[len + 2] = 'a';
     key[len + 3] = 'x';
     controls->key_max = g_quark_from_string(key);

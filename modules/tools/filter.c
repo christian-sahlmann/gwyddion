@@ -163,7 +163,7 @@ layer_setup(GwyUnitoolState *state)
     GObject *shadefield;
 
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "is_crop", FALSE, NULL);
+    g_object_set(state->layer, "is-crop", FALSE, NULL);
 
     controls = (ToolControls*)state->user_data;
     gwy_debug("last preview %p\n", controls->last_preview);

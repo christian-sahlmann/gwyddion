@@ -272,7 +272,7 @@ facets_dialog(FacetsArgs *args,
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     vlayer = g_object_new(g_type_from_name("GwyLayerPoints"), NULL);
-    g_object_set(G_OBJECT(vlayer), "max_points", 1, NULL);
+    g_object_set(G_OBJECT(vlayer), "max-points", 1, NULL);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view),
                                 GWY_VECTOR_LAYER(vlayer));
     g_signal_connect(vlayer, "updated",
@@ -296,7 +296,7 @@ facets_dialog(FacetsArgs *args,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.fview), layer);
 
     vlayer = g_object_new(g_type_from_name("GwyLayerPoints"), NULL);
-    g_object_set(G_OBJECT(vlayer), "max_points", 1, NULL);
+    g_object_set(G_OBJECT(vlayer), "max-points", 1, NULL);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.fview),
                                 GWY_VECTOR_LAYER(vlayer));
     g_signal_connect(vlayer, "updated",
