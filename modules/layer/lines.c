@@ -224,7 +224,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_MAX_LINES,
-        g_param_spec_int("max_lines",
+        g_param_spec_int("max-lines",
                          "Maximum number of lines",
                          "The maximum number of lines that can be selected",
                          1, 1024, 3,
@@ -232,7 +232,7 @@ gwy_layer_lines_class_init(GwyLayerLinesClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_LINE_NUMBERS,
-        g_param_spec_boolean("line_numbers",
+        g_param_spec_boolean("line-numbers",
                              "Number lines",
                              "Whether to attach line numbers to the lines.",
                              TRUE,

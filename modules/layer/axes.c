@@ -209,7 +209,7 @@ gwy_layer_axes_class_init(GwyLayerAxesClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_MAX_AXES,
-        g_param_spec_int("max_axes",
+        g_param_spec_int("max-axes",
                          "Maximum number of axes",
                          "The maximum number of axes that can be selected",
                          1, 1024, 3,

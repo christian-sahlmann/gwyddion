@@ -207,7 +207,7 @@ gwy_layer_select_class_init(GwyLayerSelectClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_IS_CROP,
-        g_param_spec_boolean("is_crop",
+        g_param_spec_boolean("is-crop",
                              "Crop style",
                              "Whether the selection is crop-style instead of "
                              "plain rectangle",

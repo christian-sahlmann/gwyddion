@@ -209,7 +209,7 @@ gwy_layer_points_class_init(GwyLayerPointsClass *klass)
     g_object_class_install_property(
         gobject_class,
         PROP_MAX_POINTS,
-        g_param_spec_int("max_points",
+        g_param_spec_int("max-points",
                          "Maximum number of points",
                          "The maximum number of points that can be selected",
                          1, 1024, 3,
