@@ -335,8 +335,8 @@ main (int argc, char *argv[])
 
   /*g3w = GWY_3d_view(gwy3D);*/
   /* Signal handler */
-  g_signal_connect_swapped (G_OBJECT (gwy3D), "button_press_event",
-                            G_CALLBACK (button_press_event_popup_menu), menu);
+  g_signal_connect_swapped(gwy3D, "button-press-event",
+                           G_CALLBACK(button_press_event_popup_menu), menu);
 
   gtk_widget_show (window);
 

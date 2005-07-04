@@ -141,7 +141,7 @@ gwy_module_browser_construct(GtkWidget *parent)
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
-    g_signal_connect(G_OBJECT(tree), "cursor-changed",
+    g_signal_connect(tree, "cursor-changed",
                      G_CALLBACK(update_module_info_cb), parent);
 
     return tree;

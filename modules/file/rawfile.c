@@ -544,7 +544,7 @@ rawfile_dialog(RawFileArgs *args,
                      G_CALLBACK(xyreal_changed_cb), &controls);
 
     /* presets */
-    g_signal_connect_swapped(G_OBJECT(controls.presetlist), "cursor-changed",
+    g_signal_connect_swapped(controls.presetlist, "cursor-changed",
                              G_CALLBACK(preset_selected_cb), &controls);
 
     /* preview */
@@ -1096,22 +1096,22 @@ rawfile_dialog_preset_page(RawFileArgs *args,
 
     button = gtk_button_new_with_mnemonic(_("_Load"));
     gtk_container_add(GTK_CONTAINER(bbox), button);
-    g_signal_connect_swapped(G_OBJECT(button), "clicked",
+    g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_load_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Store"));
     gtk_container_add(GTK_CONTAINER(bbox), button);
-    g_signal_connect_swapped(G_OBJECT(button), "clicked",
+    g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_store_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Rename"));
     gtk_container_add(GTK_CONTAINER(bbox), button);
-    g_signal_connect_swapped(G_OBJECT(button), "clicked",
+    g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_rename_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Delete"));
     gtk_container_add(GTK_CONTAINER(bbox), button);
-    g_signal_connect_swapped(G_OBJECT(button), "clicked",
+    g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_delete_cb), controls);
 
     table = gtk_table_new(1, 3, FALSE);

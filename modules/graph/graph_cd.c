@@ -424,7 +424,7 @@ fit_dialog(FitArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    g_signal_connect(GWY_GRAPH(controls.graph), "selected",
+    g_signal_connect(controls.graph, "selected",
                          G_CALLBACK(graph_selected), args);
                             
     

@@ -277,7 +277,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.threshold,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
-    g_signal_connect(GWY_VAL_UNIT(controls.threshold), "value_changed",
+    g_signal_connect(controls.threshold, "value_changed",
                      G_CALLBACK(thresh_changed_cb), args);
     row++;
 
