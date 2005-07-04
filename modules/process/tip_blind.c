@@ -249,14 +249,14 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     controls.xres = gtk_adjustment_new(args->xres, MIN_RES, MAX_RES, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("_Width:"), "px", controls.xres, 0);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
-    g_signal_connect(controls.xres, "value_changed",
+    g_signal_connect(controls.xres, "value-changed",
                      G_CALLBACK(width_changed_cb), &controls);
     row++;
 
     controls.yres = gtk_adjustment_new(args->yres, MIN_RES, MAX_RES, 1, 10, 0);
     gwy_table_attach_hscale(table, row, _("_Height:"), "px", controls.yres, 0);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
-    g_signal_connect(controls.yres, "value_changed",
+    g_signal_connect(controls.yres, "value-changed",
                      G_CALLBACK(height_changed_cb), &controls);
     row++;
 
@@ -277,7 +277,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.threshold,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
-    g_signal_connect(controls.threshold, "value_changed",
+    g_signal_connect(controls.threshold, "value-changed",
                      G_CALLBACK(thresh_changed_cb), args);
     row++;
 

@@ -179,7 +179,7 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
                                    GWY_HSCALE_CHECK);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     *check = g_object_get_data(G_OBJECT(*adj), "check");
-    g_signal_connect(*adj, "value_changed", G_CALLBACK(mark_invalidate), data);
+    g_signal_connect(*adj, "value-changed", G_CALLBACK(mark_invalidate), data);
     (*row)++;
 }
 

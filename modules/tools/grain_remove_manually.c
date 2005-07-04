@@ -162,7 +162,7 @@ layer_setup(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     g_assert(CHECK_LAYER_TYPE(state->layer));
     controls->finished_id
-        = g_signal_connect_swapped(state->layer, "selection_finished",
+        = g_signal_connect_swapped(state->layer, "selection-finished",
                                    G_CALLBACK(selection_finished_cb), state);
 }
 

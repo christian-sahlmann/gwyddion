@@ -208,7 +208,7 @@ poly_level_dialog(PolyLevelArgs *args)
     gwy_table_attach_hscale(table, row++,
                             _("_Horizontal polynom degree:"), NULL,
                             controls.col_degree, 0);
-    g_signal_connect(controls.col_degree, "value_changed",
+    g_signal_connect(controls.col_degree, "value-changed",
                      G_CALLBACK(poly_level_degree_changed), &controls);
 
     controls.row_degree = gtk_adjustment_new(args->row_degree,
@@ -216,7 +216,7 @@ poly_level_dialog(PolyLevelArgs *args)
     gwy_table_attach_hscale(table, row++,
                             _("_Vertical polynom degree:"), NULL,
                             controls.row_degree, 0);
-    g_signal_connect(controls.row_degree, "value_changed",
+    g_signal_connect(controls.row_degree, "value-changed",
                      G_CALLBACK(poly_level_degree_changed), &controls);
 
     controls.same_degree

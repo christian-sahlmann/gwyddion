@@ -205,7 +205,7 @@ median_dialog(MedianBgArgs *args)
                                    controls.radius, GWY_HSCALE_SQRT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), args->valform->precision);
     g_object_set_data(G_OBJECT(controls.radius), "controls", &controls);
-    g_signal_connect(controls.radius, "value_changed",
+    g_signal_connect(controls.radius, "value-changed",
                      G_CALLBACK(radius_changed_cb), args);
     row++;
 
@@ -213,7 +213,7 @@ median_dialog(MedianBgArgs *args)
     spin = gwy_table_attach_hscale(table, row, _("_Pixel radius:"), "px",
                                    controls.size, GWY_HSCALE_SQRT);
     g_object_set_data(G_OBJECT(controls.size), "controls", &controls);
-    g_signal_connect(controls.size, "value_changed",
+    g_signal_connect(controls.size, "value-changed",
                      G_CALLBACK(size_changed_cb), args);
     row++;
 

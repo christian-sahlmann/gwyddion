@@ -224,7 +224,7 @@ shade_dialog(ShadeArgs *args,
                                         0.0, 90.0, 5.0, 15.0, 0.0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Theta:"), "deg",
                                        controls.theta);
-    g_signal_connect(controls.theta, "value_changed",
+    g_signal_connect(controls.theta, "value-changed",
                      G_CALLBACK(theta_changed_cb), &controls);
     row++;
 
@@ -232,7 +232,7 @@ shade_dialog(ShadeArgs *args,
                                       0.0, 360.0, 5.0, 30.0, 0.0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Phi:"), "deg",
                                        controls.phi);
-    g_signal_connect(controls.phi, "value_changed",
+    g_signal_connect(controls.phi, "value-changed",
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 

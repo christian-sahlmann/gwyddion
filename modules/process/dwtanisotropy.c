@@ -222,7 +222,7 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
                        _("X/Y ratio threshold:"), NULL,
                        controls.ratio);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.ratio, "value_changed",
+    g_signal_connect(controls.ratio, "value-changed",
              G_CALLBACK(ratio_changed_cb), args);
 
     controls.lowlimit = gtk_adjustment_new(args->lowlimit,
@@ -231,7 +231,7 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
                        _("Low level exclude limit:"), NULL,
                        controls.lowlimit);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    g_signal_connect(controls.lowlimit, "value_changed",
+    g_signal_connect(controls.lowlimit, "value-changed",
              G_CALLBACK(lowlimit_changed_cb), args);
 
 

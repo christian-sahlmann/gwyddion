@@ -254,7 +254,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     controls.radius = gwy_val_unit_new(_("Tip _apex radius:"),
                                        gwy_data_field_get_si_unit_xy(dfield));
-    g_signal_connect(controls.radius, "value_changed",
+    g_signal_connect(controls.radius, "value-changed",
                      G_CALLBACK(radius_changed_cb), args);
     gwy_val_unit_set_value(GWY_VAL_UNIT(controls.radius), args->radius);
     gtk_table_attach(GTK_TABLE(table), controls.radius, 0, 3, row, row+1,

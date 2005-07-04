@@ -801,10 +801,10 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     g_signal_connect_swapped(controls.xymeasureeq, "toggled",
                              G_CALLBACK(xymeasureeq_changed_cb), &controls);
     adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.xreal));
-    g_signal_connect(adj2, "value_changed",
+    g_signal_connect(adj2, "value-changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
     adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
-    g_signal_connect(adj2, "value_changed",
+    g_signal_connect(adj2, "value-changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
     pixmap_load_update_controls(&controls, args);
 

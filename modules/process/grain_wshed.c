@@ -220,7 +220,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                                1.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Number of steps:"), "",
                             controls.locate_steps, 0);
-    g_signal_connect(controls.locate_steps, "value_changed",
+    g_signal_connect(controls.locate_steps, "value-changed",
                      G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
@@ -229,7 +229,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("_Drop size:"), "%",
                                    controls.locate_dropsize, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.locate_dropsize, "value_changed",
+    g_signal_connect(controls.locate_dropsize, "value-changed",
                      G_CALLBACK(wshed_invalidate), &controls);
 
     row++;
@@ -237,7 +237,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                                 0.0, 100.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("_Threshold:"), "px<sup>2</sup>",
                             controls.locate_thresh, 0);
-    g_signal_connect(controls.locate_thresh, "value_changed",
+    g_signal_connect(controls.locate_thresh, "value-changed",
                      G_CALLBACK(wshed_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
@@ -253,7 +253,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
                                               1.0, 1000.0, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("Num_ber of steps:"), "",
                             controls.wshed_steps, 0);
-    g_signal_connect(controls.wshed_steps, "value_changed",
+    g_signal_connect(controls.wshed_steps, "value-changed",
                      G_CALLBACK(wshed_invalidate), &controls);
     row++;
 
@@ -262,7 +262,7 @@ wshed_dialog(WshedArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("Dr_op size:"), "%",
                                    controls.wshed_dropsize, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.wshed_dropsize, "value_changed",
+    g_signal_connect(controls.wshed_dropsize, "value-changed",
                      G_CALLBACK(wshed_invalidate), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;

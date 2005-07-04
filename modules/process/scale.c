@@ -181,7 +181,7 @@ scale_dialog(ScaleArgs *args)
                                    controls.ratio, GWY_HSCALE_LOG);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_object_set_data(G_OBJECT(controls.ratio), "controls", &controls);
-    g_signal_connect(controls.ratio, "value_changed",
+    g_signal_connect(controls.ratio, "value-changed",
                      G_CALLBACK(scale_changed_cb), args);
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
@@ -189,7 +189,7 @@ scale_dialog(ScaleArgs *args)
     spin = gwy_table_attach_hscale(table, 1, _("New _width:"), "px",
                                    controls.xres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
-    g_signal_connect(controls.xres, "value_changed",
+    g_signal_connect(controls.xres, "value-changed",
                      G_CALLBACK(width_changed_cb), args);
 
     controls.yres = gtk_adjustment_new(args->ratio*args->yres,
@@ -197,7 +197,7 @@ scale_dialog(ScaleArgs *args)
     spin = gwy_table_attach_hscale(table, 2, _("New _height:"), "px",
                                    controls.yres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
-    g_signal_connect(controls.yres, "value_changed",
+    g_signal_connect(controls.yres, "value-changed",
                      G_CALLBACK(height_changed_cb), args);
 
     controls.interp

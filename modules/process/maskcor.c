@@ -194,7 +194,7 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
     spin = gwy_table_attach_hscale(table, 3, _("_Threshold:"), NULL, adj, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(adj, args->result != GWY_MASKCOR_SCORE);
-    g_signal_connect(adj, "value_changed",
+    g_signal_connect(adj, "value-changed",
                      G_CALLBACK(maskcor_threshold_cb),
                      &args->threshold);
 

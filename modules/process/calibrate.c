@@ -332,17 +332,17 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     row++;
 
-    g_signal_connect(controls.xreal, "value_changed",
+    g_signal_connect(controls.xreal, "value-changed",
                      G_CALLBACK(xreal_changed_cb), &controls);
-    g_signal_connect(controls.yreal, "value_changed",
+    g_signal_connect(controls.yreal, "value-changed",
                      G_CALLBACK(yreal_changed_cb), &controls);
-    g_signal_connect(controls.zreal, "value_changed",
+    g_signal_connect(controls.zreal, "value-changed",
                      G_CALLBACK(zreal_changed_cb), &controls);
-    g_signal_connect(controls.xratio, "value_changed",
+    g_signal_connect(controls.xratio, "value-changed",
                      G_CALLBACK(xratio_changed_cb), &controls);
-    g_signal_connect(controls.yratio, "value_changed",
+    g_signal_connect(controls.yratio, "value-changed",
                      G_CALLBACK(yratio_changed_cb), &controls);
-    g_signal_connect(controls.zratio, "value_changed",
+    g_signal_connect(controls.zratio, "value-changed",
                      G_CALLBACK(zratio_changed_cb), &controls);
     g_signal_connect(controls.square, "toggled",
                      G_CALLBACK(square_changed_cb), &controls);

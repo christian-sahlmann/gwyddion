@@ -197,7 +197,7 @@ dialog_create(GwyUnitoolState *state)
     controls->radius = gtk_adjustment_new((gdouble)radius, 1, 16, 1, 5, 16);
     gwy_table_attach_spinbutton(table, 9, _("_Averaging radius:"), _("px"),
                                 controls->radius);
-    g_signal_connect_swapped(controls->radius, "value_changed",
+    g_signal_connect_swapped(controls->radius, "value-changed",
                              G_CALLBACK(dialog_update), state);
 
     return dialog;

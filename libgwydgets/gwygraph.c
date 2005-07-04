@@ -205,10 +205,10 @@ gwy_graph_new(GwyGraphModel *gmodel)
     g_signal_connect(graph->axis_left, "rescaled", G_CALLBACK(rescaled_cb), graph);
     g_signal_connect(graph->axis_bottom, "rescaled", G_CALLBACK(rescaled_cb), graph);
   
-    g_signal_connect(graph->axis_left, "label_updated", G_CALLBACK(label_updated_cb), graph);
-    g_signal_connect(graph->axis_right, "label_updated", G_CALLBACK(label_updated_cb), graph);
-    g_signal_connect(graph->axis_top, "label_updated", G_CALLBACK(label_updated_cb), graph);
-    g_signal_connect(graph->axis_bottom, "label_updated", G_CALLBACK(label_updated_cb), graph);
+    g_signal_connect(graph->axis_left, "label-updated", G_CALLBACK(label_updated_cb), graph);
+    g_signal_connect(graph->axis_right, "label-updated", G_CALLBACK(label_updated_cb), graph);
+    g_signal_connect(graph->axis_top, "label-updated", G_CALLBACK(label_updated_cb), graph);
+    g_signal_connect(graph->axis_bottom, "label-updated", G_CALLBACK(label_updated_cb), graph);
     
 
     gtk_table_attach(GTK_TABLE (graph), GTK_WIDGET(graph->axis_top), 1, 2, 0, 1,

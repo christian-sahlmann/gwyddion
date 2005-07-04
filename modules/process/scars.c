@@ -449,7 +449,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row++, _("_Hard threshold:"),
                                    _("RMS"), controls.threshold_high, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.threshold_high, "value_changed",
+    g_signal_connect(controls.threshold_high, "value-changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
                      &controls);
 
@@ -458,7 +458,7 @@ scars_mark_dialog(ScarsArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("_Soft threshold:"), _("RMS"),
                                    controls.threshold_low, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
-    g_signal_connect(controls.threshold_low, "value_changed",
+    g_signal_connect(controls.threshold_low, "value-changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
                      &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);

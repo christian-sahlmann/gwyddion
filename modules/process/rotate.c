@@ -239,7 +239,7 @@ rotate_dialog(RotateArgs *args,
                                         -360, 360, 1, 30, 0);
     gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg"),
                             controls.angle, 0);
-    g_signal_connect(controls.angle, "value_changed",
+    g_signal_connect(controls.angle, "value-changed",
                      G_CALLBACK(angle_changed_cb), &controls);
 
     controls.interp
