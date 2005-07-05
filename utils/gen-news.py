@@ -1,9 +1,17 @@
 #!/usr/bin/python
 # @(#) $Id$
-import re, sys
+import re, sys, time
 from xml.sax.saxutils import escape
 
 bugzilla_url = 'http://trific.ath.cx/bugzilla/show_bug.cgi?id='
+
+def format_date(d):
+    # Don't depend on locale
+    months = (None, 'January', 'February', 'March', 'April',
+              'May', 'June', 'July', 'August',
+              'September', 'October', 'November', 'December')
+    d = time.strptime(d, '%Y-%m-%d')
+    return '%s %d, %d' % (months[d.tm_mon], d.tm_mday, d.tm_year)
 
 in_list = False
 in_item = False
@@ -13,12 +21,14 @@ text = []
 for line in sys.stdin.readlines():
     line = line.rstrip()
     # Version
-    m = re.match(r'^(?P<version>\d[0-9a-z.]*)$', line)
+    m = re.match(r'^(?P<version>\d[0-9a-z.]*)\s+'
+                 + r'\((?P<date>\d+-\d+-\d+)\)$', line)
     if m:
         ver = m.group('version')
         if ver.find('cvs') > -1:
             continue
         text.append('\n<h2 id="v%s">Version %s</h2>' % (ver, ver))
+        text.append('<p>Released: %s.</p>' % format_date(m.group('date')))
         version_list.append(ver)
         continue
     # Component

@@ -1,6 +1,5 @@
-1.99.2cvs20050703
 
-1.99.3
+1.99.3 (2005-07-06)
 Application:
 - Bugfixes were merged from 1.11 (bug #49, bug #54).
 - Running uninstalled is supported now (with caution).
@@ -79,7 +78,7 @@ Other:
 - Bugfixes were merged from 1.11 (bug #51).
 
 
-1.99.2
+1.99.2 (2005-04-18)
 Library:
 - libgwymodule: File detection functions now get a struct with various file
   information instead of filename as first argument.
@@ -114,7 +113,7 @@ Other:
 - A platform info header gwyconfig.h was introduced, similar to glibconfig.h.
 
 
-1.99.1
+1.99.1 (2005-03-22)
 Application:
 - Support for long deprecated binary settings file was removed
 
@@ -150,7 +149,7 @@ Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
 
 
-1.11
+1.11 (2005-06-03)
 Application:
 - Markup works in metadata browser (bug #49).
 - Toolbox is not restored to off-screen position after quitting app minimized
@@ -176,7 +175,7 @@ Other:
 - Wrong libtool detection in autogen.sh was fixed (bug #51).
 
 
-1.10
+1.10 (2005-04-07)
 Application:
 - Translations updated: Czech, Italian.
 
@@ -206,7 +205,7 @@ Library:
 - libgwydgets: 3D view reflected with respect to 2D was fixed.
 
 
-1.9
+1.9 (2005-03-09)
 Application:
 - Startup time improved.
 - Italian translation added (partial).
@@ -239,7 +238,7 @@ Other:
 - Compilation and run-time problems on AMD64 were fixed.
 
 
-1.8
+1.8 (2005-01-24)
 Application:
 - Option --no-splash recognized anywhere in command line, --debug-objects
   added.
@@ -294,7 +293,7 @@ Other:
 - Simple gwyddion(1) manual page.
 
 
-1.7
+1.7 (2004-12-12)
 Application:
 - Graphs are associated with their data window, it's possible show/hide them
   and they are saved with data.  Note version 1.4 and older may fail to load
@@ -337,7 +336,7 @@ Other:
 - pkg-config file broken by 1.6 build system clean up was updated.
 
 
-1.6
+1.6 (2004-10-26)
 Application:
 - Crash when a top-level menus is detached was fixed (bug #30).
 - Internationalization support (gettext) was added, currently works only on
@@ -390,7 +389,7 @@ Other:
 - Sample C++ plug-in mangling units was fixed (bug #36).
 
 
-1.5
+1.5 (2004-09-21)
 This version requires GtkGLExt in addition to Gtk+ due to the new 3D data
 display capabilities (but it is still backward compatible with 1.4 and 1.3).
 Application:
@@ -428,7 +427,7 @@ Modules:
 - Rawfile: Allows to select decimal point or decimal comma in ASCII import.
 
 
-1.4
+1.4 (2004-08-04)
 Application:
 - Forgetting settings on MS Windows was fixed.
 - Rudimentary Drag'n'Drop support (drag a file to toolbox to load it).
@@ -479,7 +478,7 @@ Other:
 - Standard vector layers were documented.
 
 
-1.3
+1.3 (2004-06-02)
 This version is binary and source incompatbile with previous ones.  Modules
 have to be recompiled and, in some cases, updated.
 Application:
@@ -513,7 +512,7 @@ Library:
 - libgwyapp: Data window option menus directly display thumbnails.
 
 
-1.2
+1.2 (2004-05-21)
 Application:
 - Recognizes --version and --help options.
 - Data window zoom is keyboard controlable (+, =, -, z).
@@ -561,7 +560,7 @@ Other:
 - Several new palettes.
 
 
-1.1
+1.1 (2004-04-13)
 Application:
 - Creating mask by correlation (new).  This can be useful for searching
   for specific patterns on the surface, for example on interferometric
@@ -613,13 +612,13 @@ Other:
   was clarified.
 
 
-1.0
+1.0 (2004-03-10)
 Gwyddion:
 - Data can be exported to bitmaps with rules, units, scale, etc.
 - Physical unit handling was improved.
 - Tons of bugfixes.
 
 
-0.99.1
+0.99.1 (2004-03-02)
 Release candidate 1 for v1.0.
 
