@@ -14,6 +14,7 @@ gwyddionmime_DATA = gwyddion.xml
 man1_MANS = gwyddion.1
 
 EXTRA_DIST = \
+	gwyconfig.h.win32 \
 	gwyddion-devel.iss \
 	gwyddion-devel.iss.in \
 	gwyddion.iss \
