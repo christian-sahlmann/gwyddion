@@ -14,6 +14,7 @@ configure
 libtool
 ltmain.sh
 stamp-h1
+gwyconfig.h
 gwyddion.spec
 *.tar.gz
 *.tar.bz2
