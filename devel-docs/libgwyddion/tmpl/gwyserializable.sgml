@@ -7,28 +7,30 @@ Abstract interface for serializable objects.
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 GwySerializable is an abstract interface for value-like object that can be
-serialized and deserialized.  You can serialize any object implementing
-this interface with
-<link linkend="gwy-serializable-serialize">gwy_serializable_serialize()</link>
-and the restore (deserialize) it with
-<link linkend="gwy-serializable-deserialize">gwy_serializable_deserialize()</link>.
-It is also posible it duplicate any such object with
-<link linkend="gwy-serializable-duplicate">gwy_serializable_duplicate()</link>.
+serialized and deserialized.  You can serialize any object implementing this
+interface with gwy_serializable_serialize() and the restore (deserialize) it
+with gwy_serializable_deserialize(). It is also posible it duplicate any such
+object with gwy_serializable_duplicate() and transform one object to copy of
+another with gwy_serializable_clone().
 </para>
 
 <para>
-The only functions that should be used for implementation of serialization
-and deserialization in your classes, are the most high-level ones:
-gwy_serialize_pack_object_struct(), gwy_serialize_unpack_object_struct(),
-gwy_serialize_object_items(), and gwy_deserialize_object_hash().
+Note all #GwySerializable methods work with object `value', whatever it means
+for a particular type.  Beside that, objects also have their identity which
+is unique and can't be subject of cloning.  It consists of properties like
+memory address or references held by object users.  Two important properties
+related to identity (and thus NOT retained) are: signals connected to
+a particular object and user data set with g_object_set_data() or
+g_object_set_qdata().
+</para>
+
+<para>
+You should implement serialization and deserialization in your classes with
+gwy_serialize_pack_object_struct() and gwy_serialize_unpack_object_struct()
+or with gwy_serialize_object_items() and gwy_deserialize_object_hash().
 The former two are useful for struct-like objects (most objects are of this
 kind), the latter two for hash-like objects, i.e., objects that can contain
 components of arbitrary name and type.
-</para>
-
-<para>
-All the low-level functions are deprecated and will be removed in Gwyddion
-2.0.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -60,8 +62,6 @@ All the low-level functions are deprecated and will be removed in Gwyddion
 @serializable: 
 @buffer: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@size: 
 
 
 <!-- ##### USER_FUNCTION GwyDeserializeFunc ##### -->
@@ -138,98 +138,28 @@ All the low-level functions are deprecated and will be removed in Gwyddion
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->
 <para>
-Appends serialization of object with g_type_name() @object_name and components
-described by @spec to @buffer in gwy-file format.
+
 </para>
 
-<para>
-Here's how a serialization method of a simple object whose state is described
-by a single real number <structfield>foo</structfield> could look (without
-error checking):
-</para>
-<informalexample><programlisting><![CDATA[
-static guchar*
-my_object_serialize(GObject *obj,
-                    guchar *buffer,
-                    gsize *size)
-{
-    MyObject *my_object = MY_OBJECT(obj);
-    GwySerializeSpec spec[] = {
-        { 'd', "foo", &my_object->foo, NULL, },
-    };
-
-    return gwy_serialize_pack_object_struct(buffer, size,
-                                            "MyObject",
-                                            G_N_ELEMENTS(spec), spec);
-}
-]]></programlisting></informalexample>
-
-@buffer: A buffer to which the serialized components should be appended.
-@object_name: The g_type_name() of the object.
-@nspec: The number of items in @spec.
-@spec: The components to serialize.
-@Returns: The buffer with serialization of @spec components appended.
+@buffer: 
+@object_name: 
+@nspec: 
+@spec: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_serialize_unpack_object_struct ##### -->
 <para>
-Deserializes an object with named components packed into gwy-file format by
-gwy_serialize_pack_object_struct().
+
 </para>
 
-<para>
-Extra components are ignored (but cause a warning), components of different
-type than expected cause failure, missing components are not detected.
-</para>
-
-<para>
-It is safe to pass pointers to existing non-atomic objects (strings, arrays,
-objects) in @spec values, they will be dereferenced and freed as necessary
-when an unpacked value is about to replace them.
-For the same reason it is an error to pass pointers to unintialized memory
-there, always initialize non-atomic @spec values to %NULL pointers, at
-least.
-</para>
-
-<para>
-Caller is responsible for use/clean-up of these values if deserialization
-succeeds or not.
-</para>
-
-<para>
-Here's how a deserialization method of a simple object whose state is described
-by a single real number <structfield>foo</structfield> could look (without
-error checking):
-</para>
-<informalexample><programlisting><![CDATA[
-static GObject*
-my_object_deserialize(const guchar *buffer,
-                      gsize size,
-                      gsize *position)
-{
-    double foo = 1.0;
-    GwySerializeSpec spec[] = {
-        { 'd', "foo", &foo, NULL, },
-    };
-    MyObject *my_object;
-
-    gwy_serialize_unpack_object_struct(buffer, size, position,
-                                       "MyObject",
-                                       G_N_ELEMENTS(spec), spec);
-    return my_object_new(foo);
-}
-]]></programlisting></informalexample>
-
-@buffer: A memory location containing a serialized object at position
-         @position.
-@size: Current size of @buffer, new size is returned here.
-@position: The position of the object in @buffer, it's updated to
-           point after it.
-@object_name: The g_type_name() of the object.
-@nspec: The number of items in @spec.
-@spec: The components to deserialize.
-@Returns: Whether the unpacking succeeded
-          (see description body for definition of success and failure).
+@buffer: 
+@size: 
+@position: 
+@object_name: 
+@nspec: 
+@spec: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_serialize_object_items ##### -->

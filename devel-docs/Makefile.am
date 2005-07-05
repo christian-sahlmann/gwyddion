@@ -13,8 +13,7 @@ EXTRA_DIST = \
 	README \
 	README.QA \
 	makefile.msc \
-	add-objects.py \
-	gtk-doc.mk
+	add-objects.py
 
 docs:
 	@set fnord $$MAKEFLAGS; amf=$$2; \

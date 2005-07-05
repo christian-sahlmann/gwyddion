@@ -473,7 +473,37 @@ gwy_serialize_pack_object_header(GByteArray *buffer,
     return buffer;
 }
 
-/* Documented in template */
+/**
+ * gwy_serialize_pack_object_struct:
+ * @buffer: A buffer to which the serialized components should be appended.
+ * @object_name: The g_type_name() of the object.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to serialize.
+ *
+ * Appends serialization of object with g_type_name() @object_name and
+ * components described by @spec to @buffer in gwy-file format.
+ *
+ * Here's how a serialization method of a simple object whose state is
+ * described by a single real number foo< could look (without error checking):
+ * <informalexample><programlisting>
+ * static guchar*
+ * my_object_serialize(GObject *obj,
+ *                     guchar *buffer,
+ *                     gsize *size)
+ * {
+ *     MyObject *my_object = MY_OBJECT(obj);
+ *     GwySerializeSpec spec[] = {
+ *         { 'd', "foo", &amp;my_object-&gt;foo, NULL, },
+ *     };
+ *     <!-- Hello, gtk-doc! -->
+ *     return gwy_serialize_pack_object_struct(buffer, size,
+ *                                             "MyObject",
+ *                                             G_N_ELEMENTS(spec), spec);
+ * }
+ * </programlisting></informalexample>
+ *
+ * Returns: The buffer with serialization of @spec components appended.
+ **/
 GByteArray*
 gwy_serialize_pack_object_struct(GByteArray *buffer,
                                  const guchar *object_name,
@@ -1008,7 +1038,57 @@ gwy_serialize_unpack_struct(const guchar *buffer,
     return TRUE;
 }
 
-/* Documented in template */
+/**
+ * gwy_serialize_unpack_object_struct:
+ * @buffer: A memory location containing a serialized object at position
+ *          @position.
+ * @size: Current size of @buffer, new size is returned here.
+ * @position: The position of the object in @buffer, it's updated to point
+ *            after it.
+ * @object_name: The g_type_name() of the object.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to deserialize.
+ *
+ * Deserializes an object with named components packed into gwy-file format by
+ * gwy_serialize_pack_object_struct().
+ *
+ * Extra components are ignored (but cause a warning), components of different
+ * type than expected cause failure, missing components are not detected.
+ *
+ * It is safe to pass pointers to existing non-atomic objects (strings, arrays,
+ * objects) in @spec values, they will be dereferenced and freed as necessary
+ * when an unpacked value is about to replace them.
+ * For the same reason it is an error to pass pointers to unintialized memory
+ * there, always initialize non-atomic @spec values to %NULL pointers, at
+ * least.
+ *
+ * Caller is responsible for use/clean-up of these values if deserialization
+ * succeeds or not.
+ *
+ * Here's how a deserialization method of a simple object whose state is
+ * described by a single real number @foo could look (without error checking):
+ * <informalexample><programlisting>
+ * static GObject*
+ * my_object_deserialize(const guchar *buffer,
+ *                       gsize size,
+ *                       gsize *position)
+ * {
+ *     double foo = 1.0;
+ *     GwySerializeSpec spec[] = {
+ *         { 'd', "foo", &amp;foo, NULL, },
+ *     };
+ *     MyObject *my_object;
+ *     <!-- Hello, gtk-doc! -->
+ *     gwy_serialize_unpack_object_struct(buffer, size, position,
+ *                                        "MyObject",
+ *                                        G_N_ELEMENTS(spec), spec);
+ *     return my_object_new(foo);
+ * }
+ * </programlisting></informalexample>
+ *
+ * Returns: Whether the unpacking succeeded
+ *          (see description body for definition of success and failure).
+ **/
 gboolean
 gwy_serialize_unpack_object_struct(const guchar *buffer,
                                    gsize size,
@@ -1752,11 +1832,15 @@ gwy_serialize_check_string(const guchar *buffer,
 
 /**
  * GwySerializeSpec:
- * @ctype: Component type, as in gwy_serialize_pack_object_struct().
- * @name: Component name as a null terminated string.
+ * @ctype: Component type, see description body for possible values.
+ * @name: Component name as a nul-terminated string.
  * @value: Pointer to component (always add one level of indirection; for
- *         an object, a #GObject** pointer should be stored).
- * @array_size: Pointer to array size if component is an array, NULL
+ *         an object, a #GObject** pointer should be stored).  If it is
+ *         %NULL, the component is ignored.  For serialization it means it
+ *         is not serialized, for deserialization it means its existence
+ *         is acknowledged (no unknown component warning) but it's skipped
+ *         instead of unpacking.
+ * @array_size: Pointer to array size if component is an array, %NULL
  *              otherwise.
  *
  * A structure containing information for one object/struct component
@@ -1765,12 +1849,29 @@ gwy_serialize_check_string(const guchar *buffer,
  * This component information is used in gwy_serialize_pack_object_struct()
  * and gwy_serialize_unpack_object_struct() suitable for (de)serialization
  * of struct-like objects.
+ *
+ * Following atomic component types (@ctype's) exist:
+ * <literal>'b'</literal> for a boolean,
+ * <literal>'c'</literal> for a character,
+ * <literal>'i'</literal> for a 32bit integer,
+ * <literal>'q'</literal> for a 64bit integer,
+ * <literal>'d'</literal> for a gdouble,
+ * <literal>'s'</literal> for a nul-terminated string,
+ * <literal>'o'</literal> for a serializable object.
+ *
+ * And array component types:
+ * <literal>'C'</literal> for a character array,
+ * <literal>'I'</literal> for a 32bit integer array,
+ * <literal>'Q'</literal> for a 64bit integer array,
+ * <literal>'D'</literal> for a gdouble array,
+ * <literal>'S'</literal> for an array of nul-terminated strings,
+ * <literal>'O'</literal> for an array of objects.
  **/
 
 /**
  * GwySerializeItem:
- * @ctype: Component type, as in gwy_serialize_object_items().
- * @name: Component name as a null terminated string.
+ * @ctype: Component type, see #GwySerializeSpec for details.
+ * @name: Component name as a nul-terminated string.
  * @value: Component value.
  * @array_size: Array size if component is an array, unused otherwise.
  *

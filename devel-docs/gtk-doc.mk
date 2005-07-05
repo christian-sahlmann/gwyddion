@@ -1,7 +1,7 @@
-# To be included in Makefile.am
-###########################################################################
-# Everything below here is generic and you shouldn't need to change it.
-###########################################################################
+# Generic gtk-doc rules.
+# @(#) $Id$
+# Included in all API-docs Makefile.am's, if you change anything here, it's
+# affects all subdirs.
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
@@ -65,7 +65,7 @@ tmpl.stamp: tmpl-build.stamp
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
 	cd $(srcdir) && \
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --output-format=xml $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
@@ -154,7 +154,6 @@ dist-hook: dist-check-gtkdoc dist-hook-local
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
 	-cp $(srcdir)/html/*.png $(distdir)/html
-
 
 .PHONY : dist-hook-local
 
