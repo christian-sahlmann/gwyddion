@@ -111,12 +111,12 @@ gwy_serializable_serialize(GObject *serializable,
 
     g_return_val_if_fail(serializable, NULL);
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
-    gwy_debug("serializing a %s",
+    gwy_debug("serializing a `%s'",
               g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
 
     serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
     if (!serialize_method) {
-        g_error("%s doesn't implement serialize()",
+        g_error("`%s' doesn't implement serialize()",
                 g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
         return NULL;
     }
@@ -168,7 +168,7 @@ gwy_serializable_deserialize(const guchar *buffer,
     /* Get type from name */
     type = g_type_from_name((gchar*)(buffer + *position));
     if (!type) {
-        g_warning("Type %s is unknown. %s",
+        g_warning("Type `%s' is unknown. %s",
                   buffer + *position, generic_skip_msg);
         gwy_serialize_skip_type(buffer, size, position, 'o');
         return NULL;
@@ -177,15 +177,15 @@ gwy_serializable_deserialize(const guchar *buffer,
     /* Get class from type */
     classref = g_type_class_ref(type);
     g_assert(classref);   /* this really should not fail */
-    gwy_debug("deserializing a %s", g_type_name(type));
+    gwy_debug("deserializing a `%s'", g_type_name(type));
     if (!G_TYPE_IS_INSTANTIATABLE(type)) {
-        g_warning("Type %s is not instantiable. %s",
+        g_warning("Type `%s' is not instantiable. %s",
                   buffer + *position, generic_skip_msg);
         gwy_serialize_skip_type(buffer, size, position, 'o');
         return NULL;
     }
     if (!g_type_is_a(type, GWY_TYPE_SERIALIZABLE)) {
-        g_warning("Type %s is not serializable. %s",
+        g_warning("Type `%s' is not serializable. %s",
                   buffer + *position, generic_skip_msg);
         gwy_serialize_skip_type(buffer, size, position, 'o');
         return NULL;
@@ -199,7 +199,7 @@ gwy_serializable_deserialize(const guchar *buffer,
                 g_type_interface_peek(g_type_class_peek(type),
                                       GWY_TYPE_SERIALIZABLE))->deserialize;
     if (!deserialize_method) {
-        g_critical("Class %s doesn't implement deserialize()", buffer);
+        g_critical("Class `%s' doesn't implement deserialize()", buffer);
         gwy_serialize_skip_type(buffer, size, position, 'o');
         return NULL;
     }
@@ -211,10 +211,10 @@ gwy_serializable_deserialize(const guchar *buffer,
         /* If deserialize fails, don't trust it and prefer generic object
          * skip. */
         *position = oldposition;
-        g_warning("Object %s deserialization failed. %s",
+        g_warning("Object `%s' deserialization failed. %s",
                   buffer + *position, generic_skip_msg);
         gwy_serialize_skip_type(buffer, size, position, 'o');
-        g_warning("Cannot safely unref class after failed %s deserialization",
+        g_warning("Cannot safely unref class after failed `%s' deserialization",
                   g_type_name(type));
     }
     return object;
@@ -259,13 +259,13 @@ gwy_serializable_duplicate_hard_way(GObject *object)
     gsize position = 0;
     GObject *duplicate;
 
-    g_warning("%s doesn't have its own duplicate() method, "
+    g_warning("`%s' doesn't have its own duplicate() method, "
               "forced to duplicate it the hard way.",
               g_type_name(G_TYPE_FROM_INSTANCE(object)));
 
     buffer = gwy_serializable_serialize(object, NULL);
     if (!buffer) {
-        g_critical("%s serialization failed",
+        g_critical("`%s' serialization failed",
                    g_type_name(G_TYPE_FROM_INSTANCE(object)));
         return NULL;
     }
@@ -304,7 +304,7 @@ gwy_serializable_clone(GObject *source,
 
     clone_method = GWY_SERIALIZABLE_GET_IFACE(copy)->clone;
     if (!clone_method) {
-        g_error("%s doesn't implement clone()",
+        g_error("`%s' doesn't implement clone()",
                 g_type_name(G_TYPE_FROM_INSTANCE(copy)));
         return;
     }
@@ -489,8 +489,13 @@ gwy_serialize_pack_object_struct(GByteArray *buffer,
     buffer = gwy_serialize_pack_object_header(buffer, object_name);
     before_obj = buffer->len;
     gwy_debug("+head size: %u", buffer->len);
-    for (i = 0; i < nspec; i++)
+    for (i = 0; i < nspec; i++) {
+        if (!spec[i].value) {
+            gwy_debug("ignoring item `%s' with NULL value", spec[i].name);
+            continue;
+        }
         gwy_serialize_spec(buffer, spec + i);
+    }
     gwy_debug("+body size: %u", buffer->len);
     gwy_serialize_store_int32(buffer, before_obj - sizeof(guint32),
                               buffer->len - before_obj);
@@ -975,13 +980,18 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         }
         ctype = gwy_deserialize_char(buffer, size, &position);
         if ((gsize)(sp - spec) == nspec) {
-            g_warning("Extra component %s of type `%c'", name, ctype);
+            g_warning("Extra component `%s' of type `%c'", name, ctype);
+            gwy_serialize_skip_type(buffer, size, &position, ctype);
+            continue;
+        }
+        if (!sp->value) {
+            gwy_debug("ignoring item `%s' with NULL value", sp->name);
             gwy_serialize_skip_type(buffer, size, &position, ctype);
             continue;
         }
 
         if (ctype != sp->ctype) {
-            g_warning("Bad or unknown type `%c' of %s (expected `%c')",
+            g_warning("Bad or unknown type `%c' of `%s' (expected `%c')",
                       ctype, name, sp->ctype);
             return FALSE;
         }
