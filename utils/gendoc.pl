@@ -80,14 +80,16 @@ foreach my $dir (glob "*") {
         s#<img\s+src=".*? alt="(.*?)"\s+/>#$1#sg;
         s#<meta name="generator".*?>##sgi;
         s#(<style type="text/css">).*?(</style>)#$1$css$2#sg;
+        s#<link rel="stylesheet".*?>#<style type="text/css">$css</style>#sg;
         s#(<head>\n)#$1<link rel="stylesheet" type="text/css" href="/CSS/colors-yeti.css"/>#sg;
         if ($f =~ /\/index.html$/) {
-            s#href="(.*?).html\b#href="$1/#sg;
+            s#href="([^/].*?).html\b#href="$1/#sg;
         }
         else {
             s#href="index.html\b#href="../#sg;
-            s#href="([^"]*).html\b#href="../$1/#sg;
+            s#href="([^/][^"]*).html\b#href="../$1/#sg;
         }
+        s#href="/usr/share/gtk-doc/html/#href="http://developer.gnome.org/doc/API/2.0/#g;
         s#(</body>)#$footer$1#;
         $f =~ s/.*\///;
         $f =~ s/\.html$/.xhtml/;
