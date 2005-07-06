@@ -740,8 +740,10 @@ gwy_app_graph_window_get_current(void)
  *
  * Eventually adds @window it to the graph window list if it isn't present
  * there.
+ *
+ * Returns: Always FALSE, no matter what (to be usable as an event handler).
  **/
-void
+gboolean
 gwy_app_graph_window_set_current(GtkWidget *window)
 {
     static const GwyMenuSensData sens_data = {
@@ -752,12 +754,14 @@ gwy_app_graph_window_set_current(GtkWidget *window)
     gwy_debug("%p", window);
 
     item = g_list_find(current_graph, window);
-    g_return_if_fail(item);
+    g_return_val_if_fail(item, FALSE);
     current_graph = g_list_remove_link(current_graph, item);
     current_graph = g_list_concat(item, current_graph);
 
     gwy_app_toolbox_update_state(&sens_data);
     gwy_app_set_current_window(window);
+
+    return FALSE;
 }
 
 /**
@@ -1076,8 +1080,10 @@ gwy_app_3d_window_get_current(void)
  *
  * Eventually adds @window it to the 3D view window list if it isn't present
  * there.
+ *
+ * Returns: Always FALSE, no matter what (to be usable as an event handler).
  **/
-void
+gboolean
 gwy_app_3d_window_set_current(GtkWidget *window)
 {
     /*
@@ -1090,13 +1096,16 @@ gwy_app_3d_window_set_current(GtkWidget *window)
     gwy_debug("%p", window);
 
     item = g_list_find(current_3d, window);
-    g_return_if_fail(item);
+    g_return_val_if_fail(item, FALSE);
     current_3d = g_list_remove_link(current_3d, item);
     current_3d = g_list_concat(item, current_3d);
 
     /* FIXME: hangs.
-     * gwy_app_toolbox_update_state(&sens_data);*/
+     * gwy_app_toolbox_update_state(&sens_data);
+     * FIXME FIXME: does it still hang after return value fix? */
     gwy_app_set_current_window(window);
+
+    return FALSE;
 }
 
 /**

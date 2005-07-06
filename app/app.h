@@ -56,12 +56,12 @@ GtkWidget*  gwy_app_graph_window_create_for_window (GwyGraph *grapher,
                                                     const gchar *title);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
-void           gwy_app_graph_window_set_current    (GtkWidget *window);
+gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);
 
 GtkWidget*     gwy_app_3d_window_create            (GwyDataWindow *data_window);
 void           gwy_app_3d_window_remove            (GtkWidget *window);
 GtkWidget*     gwy_app_3d_window_get_current       (void);
-void           gwy_app_3d_window_set_current       (GtkWidget *window);
+gboolean       gwy_app_3d_window_set_current       (GtkWidget *window);
 
 GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
 gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
