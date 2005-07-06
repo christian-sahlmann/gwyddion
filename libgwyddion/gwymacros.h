@@ -73,6 +73,10 @@
     y = __unsafe_swap; \
     } while (0)
 
+#define GWY_FIND_PSPEC(type, id, spectype) \
+    G_PARAM_SPEC_##spectype(g_object_class_find_property \
+                                (G_OBJECT_CLASS(g_type_class_peek(type)), id))
+
 G_BEGIN_DECLS
 
 #ifdef G_HAVE_GNUC_VARARGS

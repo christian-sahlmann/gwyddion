@@ -26,12 +26,7 @@
 
 #define GWY_3D_LABEL_TYPE_NAME "Gwy3DLabel"
 
-#define GWY_GET_PSPEC(type, id, spec) \
-    G_PARAM_SPEC_##spec(g_object_class_find_property \
-                            (G_OBJECT_CLASS(g_type_class_peek \
-                                                    (GWY_TYPE_##type)), id))
-
-#define GEOM_PSPEC(id) GWY_GET_PSPEC(3D_LABEL, id, DOUBLE)
+#define GEOM_PSPEC(id) GWY_FIND_PSPEC(GWY_TYPE_3D_LABEL, id, DOUBLE)
 
 enum {
     VALUE_CHANGED,

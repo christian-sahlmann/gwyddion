@@ -858,6 +858,17 @@ gwy_str_next_line(gchar **buffer)
  **/
 
 /**
+ * GWY_FIND_PSPEC:
+ * @type: Object type (e.g. %GWY_TYPE_CONTAINER).
+ * @id: Property id.
+ * @spectype: Param spec type (e.g. <literal>DOUBLE</literal>).
+ *
+ * A convenience g_object_class_find_property() wrapper.
+ *
+ * It expands to property spec cast to correct type (@spec).
+ **/
+
+/**
  * chmod:
  * @file: File name.
  * @mode: Permissions to set on @file.
@@ -883,7 +894,7 @@ gwy_str_next_line(gchar **buffer)
  **/
 
 /**
- * unlink:
+ * g_unlink:
  * @file: File name.
  *
  * Macro usable as unlink() on Win32.
