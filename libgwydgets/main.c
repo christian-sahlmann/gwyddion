@@ -29,14 +29,15 @@
 #include <libgwydgets/gwyshader.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libdraw/gwydraw.h>
-#include <libprocess/datafield.h>
+#include <libprocess/level.h>
 
 #define TEST_VECTOR_SHADE 0
 #define TEST_DATA_VIEW 1
 #define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
+#define TEST_GWY3DVIEW 4
 
-#define TEST_WHAT TEST_DATA_VIEW
+#define TEST_WHAT TEST_GWY3DVIEW
 
 /***** VECTOR SHADE [[[ *****************************************************/
 #if (TEST_WHAT == TEST_VECTOR_SHADE)
@@ -280,6 +281,55 @@ test(void)
 #endif
 /***** ]]] GTKDOC INFO ******************************************************/
 
+/***** GWY3DVIEW [[[ ********************************************************/
+#if (TEST_WHAT == TEST_GWY3DVIEW)
+static void
+test(void)
+{
+    GtkWidget *window, *view, *vbox, *notebook, *entry;
+    GwyContainer *data;
+    GwyDataField *dfield;
+
+    data = gwy_container_new();
+    dfield = gwy_data_field_new(200, 200, 1.0, 1.0, TRUE);
+    gwy_data_field_plane_level(dfield, 0.0, 0.01, 0.03);
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    gwy_container_set_string_by_name(data, "/0/base/palette",
+                                     g_strdup("Spring"));
+    g_object_unref(dfield);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(gtk_main_quit), NULL);
+    gtk_container_add(GTK_CONTAINER(window), gtk_label_new("Label"));
+    gtk_widget_show_all(window);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window), "destroy",
+                     G_CALLBACK(gtk_main_quit), NULL);
+    vbox = gtk_vbox_new(FALSE, 4);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
+
+    view = gwy_3d_view_new(data);
+    gwy_3d_view_set_movement_type(GWY_3D_VIEW(view), GWY_3D_MOVEMENT_ROTATION);
+    gtk_box_pack_start(GTK_BOX(vbox), view, TRUE, TRUE, 0);
+
+    notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(vbox), notebook, FALSE, FALSE, 0);
+
+    entry = gtk_entry_new();
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), entry,
+                             gtk_label_new("Foo"));
+
+    entry = gtk_entry_new();
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), entry,
+                             gtk_label_new("Bar"));
+
+    gtk_widget_show_all(window);
+}
+#endif
+/***** ]]] GWY3DVIEW ********************************************************/
+
 int
 main(int argc, char *argv[])
 {
@@ -293,7 +343,9 @@ main(int argc, char *argv[])
 
     gtk_init(&argc, &argv);
     gwy_widgets_type_init();
+    gwy_widgets_gl_init();
     gwy_stock_register_stock_items();
+    gwy_gl_material_setup_presets();
     test();
     gtk_main();
 
