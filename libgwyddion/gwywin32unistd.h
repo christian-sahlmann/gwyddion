@@ -30,8 +30,11 @@
 
 #define chmod(file, mode)     _chmod(file, mode)
 #define getpid()              _getpid()
+
+#ifndef GWY_DISABLE_DEPRECATED
 #define mkdir(dir, mode)      _mkdir(dir)
 #define unlink(file)          _unlink(file)
+#endif  /* GWY_DISABLE_DEPRECATED */
 
 #ifndef S_ISREG
 #define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)

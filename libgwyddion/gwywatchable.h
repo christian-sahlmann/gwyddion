@@ -25,11 +25,12 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
+
 #define GWY_TYPE_WATCHABLE           (gwy_watchable_get_type())
 #define GWY_WATCHABLE(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_WATCHABLE, GwyWatchable))
 #define GWY_IS_WATCHABLE(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_WATCHABLE))
 #define GWY_WATCHABLE_GET_IFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_WATCHABLE, GwyWatchableIface))
-
 
 typedef struct _GwyWatchableIface GwyWatchableIface;
 typedef struct _GwyWatchable      GwyWatchable;       /* dummy */
@@ -40,9 +41,10 @@ struct _GwyWatchableIface {
     void (*value_changed)(GObject *watchable);
 };
 
-
 GType         gwy_watchable_get_type         (void) G_GNUC_CONST;
 void          gwy_watchable_value_changed    (GObject *watchable);
+
+#endif  /* GWY_DISABLE_DEPRECATED */
 
 G_END_DECLS
 
