@@ -1,10 +1,9 @@
 GWYDDION-1
-- Fix Reset in Facet Analysis, add separate Find-maxima, mark selected range
-  of angles on slope view
 - Fix Indentor analysis
 
 HEAD
 - Merge it.po update from Livia
+- Merge Facet Analysis improvements
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
@@ -12,8 +11,6 @@ HEAD
               GwyDWTDenoiseType, GwyWindowingType, GwyTipType
   libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
-- Make GWY_PSPEC() public, if it works
-- Find out why there's no cursor in 3D window entries and fix it
 - Use GObject macros for type declarations
 - Check whether we always emit notification when object properties change
 - Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
