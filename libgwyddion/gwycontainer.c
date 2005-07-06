@@ -71,8 +71,6 @@ typedef struct {
 } SerializeData;
 
 static void     gwy_container_serializable_init  (GwySerializableIface *iface);
-static void     gwy_container_class_init         (GwyContainerClass *klass);
-static void     gwy_container_init               (GwyContainer *container);
 static void     value_destroy_func               (gpointer data);
 static void     gwy_container_finalize           (GObject *object);
 static GValue*  gwy_container_get_value_of_type  (GwyContainer *container,
@@ -133,52 +131,15 @@ static guint    token_length                     (const gchar *text);
 static gchar*   dequote_token                    (const gchar *tok,
                                                   gsize *len);
 
-static GObjectClass *parent_class = NULL;
-
 static guint container_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_container_get_type(void)
-{
-    static GType gwy_container_type = 0;
-
-    if (!gwy_container_type) {
-        static const GTypeInfo gwy_container_info = {
-            sizeof(GwyContainerClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_container_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyContainer),
-            0,
-            (GInstanceInitFunc)gwy_container_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_container_serializable_init, NULL, 0
-        };
-
-        gwy_debug("");
-        gwy_container_type = g_type_register_static(G_TYPE_OBJECT,
-                                                    GWY_CONTAINER_TYPE_NAME,
-                                                    &gwy_container_info,
-                                                    0);
-        g_type_add_interface_static(gwy_container_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_container_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwyContainer, gwy_container, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_container_serializable_init))
 
 static void
 gwy_container_serializable_init(GwySerializableIface *iface)
 {
-    gwy_debug("");
-
-    /* initialize stuff */
     iface->serialize = gwy_container_serialize;
     iface->deserialize = gwy_container_deserialize;
     iface->duplicate = gwy_container_duplicate_real;
@@ -189,10 +150,6 @@ static void
 gwy_container_class_init(GwyContainerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-
-    gwy_debug("");
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_container_finalize;
 
@@ -219,7 +176,6 @@ gwy_container_class_init(GwyContainerClass *klass)
 static void
 gwy_container_init(GwyContainer *container)
 {
-    gwy_debug("");
     gwy_debug_objects_creation((GObject*)container);
     container->values = g_hash_table_new_full(NULL, NULL,
                                               NULL, value_destroy_func);
@@ -230,11 +186,9 @@ gwy_container_finalize(GObject *object)
 {
     GwyContainer *container = (GwyContainer*)object;
 
-    gwy_debug("");
-
     g_hash_table_destroy(container->values);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_container_parent_class)->finalize(object);
 }
 
 /**

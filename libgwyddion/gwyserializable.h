@@ -30,6 +30,15 @@ G_BEGIN_DECLS
 #define GWY_IS_SERIALIZABLE(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SERIALIZABLE))
 #define GWY_SERIALIZABLE_GET_IFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE((obj), GWY_TYPE_SERIALIZABLE, GwySerializableIface))
 
+#define GWY_IMPLEMENT_SERIALIZABLE(iface_init) \
+    { \
+        static const GInterfaceInfo gwy_serializable_iface_info = { \
+            (GInterfaceInitFunc)iface_init, NULL, NULL \
+        }; \
+        g_type_add_interface_static(g_define_type_id, \
+                                    GWY_TYPE_SERIALIZABLE, \
+                                    &gwy_serializable_iface_info); \
+    }
 
 typedef struct _GwySerializableIface GwySerializableIface;
 typedef struct _GwySerializable      GwySerializable;        /* dummy */

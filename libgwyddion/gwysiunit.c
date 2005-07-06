@@ -56,8 +56,6 @@ typedef struct {
     const gchar *power_unit_separator;
 } GwySIStyleSpec;
 
-static void         gwy_si_unit_class_init        (GwySIUnitClass *klass);
-static void         gwy_si_unit_init              (GwySIUnit *si_unit);
 static void         gwy_si_unit_finalize          (GObject *object);
 static void         gwy_si_unit_serializable_init (GwySerializableIface *iface);
 static GByteArray*  gwy_si_unit_serialize         (GObject *obj,
@@ -154,51 +152,15 @@ static const GwySIStyleSpec *format_styles[] = {
     &format_style_TeX,
 };
 
-static GObjectClass *parent_class = NULL;
-
 static guint si_unit_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_si_unit_get_type(void)
-{
-    static GType gwy_si_unit_type = 0;
-
-    if (!gwy_si_unit_type) {
-        static const GTypeInfo gwy_si_unit_info = {
-            sizeof(GwySIUnitClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_si_unit_class_init,
-            NULL,
-            NULL,
-            sizeof(GwySIUnit),
-            0,
-            (GInstanceInitFunc)gwy_si_unit_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_si_unit_serializable_init,
-            NULL,
-            NULL
-        };
-
-        gwy_si_unit_type = g_type_register_static(G_TYPE_OBJECT,
-                                                  GWY_SI_UNIT_TYPE_NAME,
-                                                  &gwy_si_unit_info,
-                                                  0);
-        g_type_add_interface_static(gwy_si_unit_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_si_unit_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwySIUnit, gwy_si_unit, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_si_unit_serializable_init))
 
 static void
 gwy_si_unit_serializable_init(GwySerializableIface *iface)
 {
-    /* initialize stuff */
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;
     iface->duplicate = gwy_si_unit_duplicate_real;
@@ -209,8 +171,6 @@ static void
 gwy_si_unit_class_init(GwySIUnitClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_si_unit_finalize;
 
@@ -244,7 +204,7 @@ gwy_si_unit_finalize(GObject *object)
     if (si_unit->units)
         g_array_free(si_unit->units, TRUE);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_si_unit_parent_class)->finalize(object);
 }
 
 static GByteArray*
