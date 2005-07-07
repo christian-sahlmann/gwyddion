@@ -72,15 +72,17 @@ function printerr() {
 function extract_build_documentation() {
   test -s $tmplog || echo "=====[ build_documentation ]====="
   logfile=build_documentation.log
-  grep -P '^(WARNING|ERROR)\b.*(\n\s+.*)*|Entering directory|^\d+%' \
+  e='Entering directory'
+  l='Leaving directory'
+  grep -P "^(WARNING|ERROR)\\b.*(\\n\\s+.*)*|$e|$l|^\\d+%" \
     $logfile | grep -v -f build_documentation.ignore >$tmplog
-  libs=$(grep 'Entering directory' $logfile | sed -e 's#.*/##' -e 's/.$//')
+  libs=$(grep "$e" $logfile | sed -e 's#.*/##' -e 's/.$//')
   for x in $libs; do
     echo -n "$x: "
-    sed -n -e "/Entering directory .*\\/$x'/,/^[0-9]\\+%/p" $tmplog \
-      | sed -n -e '${s/ symbols*//g;p}'
-    sed -n -e "/Entering directory .*\\/$x'/,/^[0-9]\\+%/p" $tmplog \
-      | sed -e '1d' -e '$d'
+    sed -n -e "/$e .*\\/$x'/,/$l .*\\$x'/p" $tmplog \
+      | sed -n -e '/ symbol /{s/ symbols*//g;p}'
+    sed -n -e "/$e .*\\/$x'/,/$l .*\\$x'/p" $tmplog \
+      | sed -e '1d;$d;/ symbol /d'
   done
 }
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 disabled=
 pkgname=gwyddion
-basever=1.99.2
-dont_update_version=
+basever=1.99.3
+dont_update_version=no_dont_update_no_stinking_version
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
@@ -85,7 +85,7 @@ function build_documentation() {
   for x in libgwyddion libgwyprocess libgwydraw libgwydgets; do
     make -C $x -k docs &>/dev/null
   done
-  touch */*-decl-list.txt
+  rm */sgml-build.stamp */html-build.stamp
   make -k docs
 }
 
