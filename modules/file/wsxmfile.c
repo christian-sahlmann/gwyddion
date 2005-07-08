@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -275,10 +275,17 @@ process_metadata(GHashTable *meta,
         gwy_data_field_multiply(dfield, 1e-9);
     }
     else {
-        siunit = gwy_si_unit_new_parse(end, &power10);
+        /* import `arbitrary units' as unit-less */
+        while (g_ascii_isspace(*end))
+            end++;
+        if (!strcmp(end, "a.u."))
+            siunit = gwy_si_unit_new("");
+        else {
+            siunit = gwy_si_unit_new_parse(end, &power10);
+            r *= pow10(power10);
+        }
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
-        r *= pow10(power10);
 
         min = gwy_data_field_get_min(dfield);
         max = gwy_data_field_get_max(dfield);
