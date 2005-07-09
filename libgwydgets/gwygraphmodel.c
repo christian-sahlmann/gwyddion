@@ -210,7 +210,6 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
 
 /**
  * gwy_graph_model_new:
- * @graph: A graph to represent.
  *
  * Creates a new graph model.
  *
@@ -390,7 +389,7 @@ gwy_graph_model_deserialize(const guchar *buffer,
 
     g_return_val_if_fail(buffer, NULL);
 
-    gmodel = (GwyGraphModel*)gwy_graph_model_new(NULL);
+    gmodel = (GwyGraphModel*)gwy_graph_model_new();
     {
         gchar *top_label, *bottom_label, *left_label, *right_label, *title;
         GwySerializeSpec spec[] = {
@@ -515,7 +514,7 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
 
     gwy_debug("");
 
-    duplicate = (GwyGraphModel*)gwy_graph_model_new(NULL);
+    duplicate = (GwyGraphModel*)gwy_graph_model_new();
     /* widget stuff is already initialized to NULL */
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->has_x_unit = gmodel->has_x_unit;
@@ -569,7 +568,7 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
 
 /**
 * gwy_graph_model_get_n_curves:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 *
 * Returns: number of curves in graph model.
 **/
@@ -588,7 +587,7 @@ gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
 
 /**
 * gwy_graph_model_remove_all_curves:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 *
 * Removes all the curves from graph model
 **/
@@ -612,7 +611,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 
 /**
 * gwy_graph_model_remove_curve_by_desciption:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 * @description: curve description (label)
 *
 * Removes all the curves having same description string as @description.
@@ -645,7 +644,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
 
 /**
 * gwy_graph_model_remove_curve_by_index:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 * @index_: curve index (within GwyGraphModel structure)
 *
 * Removes the curve having given index. 
@@ -676,7 +675,7 @@ gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint index)
 
 /**
 * gwy_graph_model_get_curve_by_desciption:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 * @description: curve description (label)
 *
 * Returns: first curve that has sescription (label) given by @description. Note that this
@@ -700,7 +699,7 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *descripti
 
 /**
 * gwy_graph_model_get_curve_by_desciption:
-* @model: A #GwyGraphModel.
+* @gmodel: A #GwyGraphModel.
 * @index_: curve index (within GwyGraphModel structure)
 *
 * Returns: curve with given index. Note that this
@@ -952,6 +951,7 @@ gwy_graph_model_get_y_siunit(GwyGraphModel *model)
 * @model: A #GwyGraphModel.
 * @filename: name of file to be created 
 * @export_units: export units in the column header
+* @export_labels: export labels in the column header
 * @export_metadata: export all graph metadata within file header
 * @export_style: style of values export to be readable by cetain program directly.
 *

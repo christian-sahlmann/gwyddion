@@ -239,7 +239,7 @@ dialog_create(GwyUnitoolState *state)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->graphmodel = gwy_graph_model_new(NULL);
+    controls->graphmodel = gwy_graph_model_new();
     controls->graph = gwy_graph_new(controls->graphmodel);
     gtk_widget_set_size_request(controls->graph, 400, 150);
     gwy_graph_enable_user_input(controls->graph, FALSE);

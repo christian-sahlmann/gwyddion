@@ -106,7 +106,7 @@ main(int argc, char *argv[])
 
     dln = (GwyDataLine *)gwy_data_line_new(200, 200, 1);
 
-    gmodel = gwy_graph_model_new(NULL);
+    gmodel = gwy_graph_model_new();
     graph = gwy_graph_new(gmodel);
     
     model = gwy_graph_curve_model_new();

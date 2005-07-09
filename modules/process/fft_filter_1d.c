@@ -283,7 +283,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
-    controls.gmodel = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
+    controls.gmodel = GWY_GRAPH_MODEL(gwy_graph_model_new());
     controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.gmodel));
     gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_top, FALSE);
     gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_left, FALSE);

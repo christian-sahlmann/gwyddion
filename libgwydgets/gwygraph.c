@@ -166,7 +166,6 @@ gwy_graph_init(G_GNUC_UNUSED GwyGraph *graph)
 /**
  * gwy_graph_new:
  * @gmodel: A graph model.
- * @enable: Enable or disable user to change label
  *
  * Creates graph widget based on information in model. 
  *
@@ -274,24 +273,6 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
 
 
-/**
- * gwy_graph_enable_axis_label_update:
- * @graph: A graph widget.
- * @enable: Enable or disable user to change label
- *
- * Enables/disables user to interact with graph label by clickig on it and
- * changing text.
- **/
-void
-gwy_graph_enable_axis_label_edit(GwyGraph *graph, gboolean enable)
-{
-    gwy_axis_enable_label_edit(graph->axis_top, enable);
-    gwy_axis_enable_label_edit(graph->axis_bottom, enable);
-    gwy_axis_enable_label_edit(graph->axis_left, enable);
-    gwy_axis_enable_label_edit(graph->axis_right, enable);
-}
-
-
 
 /**
  * gwy_graph_refresh:
@@ -355,7 +336,7 @@ gwy_graph_refresh(GwyGraph *graph)
  * Refresh all the graph widgets according to the model.
  * The axis will be set to display all data in a best way.
  **/
-void       
+static void       
 gwy_graph_refresh_reset(GwyGraph *graph)
 {
     /*refresh widgets*/

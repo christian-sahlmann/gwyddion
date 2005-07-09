@@ -1583,10 +1583,10 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
 
 /**
  * GwyAxisScaleFormat:
- * @GWY_AXIS_FLOAT: Floating point format.
- * @GWY_AXIS_EXP: Exponential (`scienfitic') format.
- * @GWY_AXIS_INT: Integer format.
- * @GWY_AXIS_AUTO: Automatical format.
+ * @GWY_AXIS_SCALE_FORMAT_FLOAT: Floating point format.
+ * @GWY_AXIS_SCALE_FORMAT_EXP: Exponential (`scienfitic') format.
+ * @GWY_AXIS_SCALE_FORMAT_INT: Integer format.
+ * @GWY_AXIS_SCALE_FORMAT_AUTO: Automatical format.
  *
  * Labeled axis tick mark format.
  **/

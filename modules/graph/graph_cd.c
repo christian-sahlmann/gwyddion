@@ -418,7 +418,7 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
 
-    args->graph_model = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
+    args->graph_model = GWY_GRAPH_MODEL(gwy_graph_model_new());
     controls.graph = gwy_graph_new(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);

@@ -242,7 +242,7 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    controls->histogram_model = GWY_GRAPH_MODEL(gwy_graph_model_new(NULL));
+    controls->histogram_model = GWY_GRAPH_MODEL(gwy_graph_model_new());
     controls->histogram = gwy_graph_new(GWY_GRAPH_MODEL(controls->histogram_model));
     gwy_graph_enable_user_input(GWY_GRAPH(controls->histogram), FALSE);
     gtk_widget_set_size_request(controls->histogram, 240, 160);

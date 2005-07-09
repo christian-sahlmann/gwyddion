@@ -108,7 +108,6 @@ gwy_graph_data_init(G_GNUC_UNUSED GwyGraphData *graph_data)
 /**
  * gwy_graph_data_new:
  * @gmodel: A graph_data model.
- * @enable: Enable or disable user to change label
  *
  * Creates graph_data widget based on information in model. 
  *
@@ -148,7 +147,7 @@ get_max_n(GwyGraphModel *model)
     return max;
 }
 
-gchar *
+static gchar *
 get_cell_string(GwyGraphModel *model, gint curve_index, gint data_index, gint axis_index)
 {
     GwyGraphCurveModel *curvemodel;

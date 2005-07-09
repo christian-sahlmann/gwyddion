@@ -129,9 +129,9 @@ gwy_graph_window_destroy(GtkObject *object)
 
 /**
  * gwy_graph_window_new:
- * @gwy3dview: A #Gwy3DView containing the data-displaying widget to show.
+ * @graph: A GwyGraph object containing the graph.
  *
- * Creates a new OpenGL 3D data displaying window.
+ * Creates a new window showind graph.
  *
  * Returns: A newly created widget, as #GtkWidget.
  **/
