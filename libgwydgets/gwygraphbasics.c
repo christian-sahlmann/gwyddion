@@ -126,7 +126,7 @@ gwy_graph_draw_line (GdkDrawable *drawable, GdkGC *gc,
 void
 gwy_graph_draw_point (GdkDrawable *drawable, GdkGC *gc,
                         gint x, gint y, GwyGraphPointType type,
-                        gint size, GwyRGBA *color, gboolean clear)
+                        gint size, GwyRGBA *color, G_GNUC_UNUSED gboolean clear)
 {
     GdkColor gcl;
     GdkColormap *colormap;

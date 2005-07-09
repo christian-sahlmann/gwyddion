@@ -30,8 +30,8 @@
 #include "gwygraph.h"
 
 void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
-                                     gboolean export_title, gboolean export_axis,
-                                     gboolean export_labels)
+                                     G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
+                                     G_GNUC_UNUSED gboolean export_labels)
 {
     GdkPixmap *pixmap;
     GdkPixbuf *pixbuf;
@@ -40,7 +40,7 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     gint width, height, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
     GError *error=NULL;
     PangoLayout *layout;
-    PangoContext *context;
+    PangoContext *context = NULL;
     
     /*create pixmap*/
     width = 600;
@@ -103,8 +103,8 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
 
 void       
 gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
-                                         gboolean export_title, gboolean export_axis,
-                                         gboolean export_labels)
+                                         G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
+                                         G_GNUC_UNUSED gboolean export_labels)
 {
     FILE *fw;
     gint width, height, hpt, vpt, areax, areay, areaw, areah, labelx, labely, labelw, labelh;

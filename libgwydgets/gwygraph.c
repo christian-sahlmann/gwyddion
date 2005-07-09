@@ -1,9 +1,5 @@
 /*
-<<<<<<< gwygraph.c
  *  @(#) $Id$
-=======
- *  @(#) $Id$
->>>>>>> 1.52
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -160,7 +156,7 @@ gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 
 
 static void
-gwy_graph_init(GwyGraph *graph)
+gwy_graph_init(G_GNUC_UNUSED GwyGraph *graph)
 {
     gwy_debug("");
 
@@ -367,7 +363,7 @@ gwy_graph_refresh_reset(GwyGraph *graph)
     
 }
 static void 
-replot_cb(GObject *gobject, GParamSpec *arg1, GwyGraph *graph)
+replot_cb(G_GNUC_UNUSED GObject *gobject, G_GNUC_UNUSED GParamSpec *arg1, GwyGraph *graph)
 {
     if (graph == NULL || graph->graph_model == NULL) return;
     gwy_graph_refresh(graph);
@@ -392,7 +388,7 @@ gwy_graph_change_model(GwyGraph *graph, GwyGraphModel *gmodel)
 }
 
 static void     
-rescaled_cb(GtkWidget *widget, GwyGraph *graph)
+rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
 {   
     GwyGraphModel *model;
     if (graph->graph_model == NULL) return;

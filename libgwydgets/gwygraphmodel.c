@@ -254,8 +254,8 @@ gwy_graph_model_finalize(GObject *object)
 }
 
 static void
-gwy_graph_model_graph_destroyed(GwyGraph *graph,
-                                  GwyGraphModel *gmodel)
+gwy_graph_model_graph_destroyed(G_GNUC_UNUSED GwyGraph *graph,
+                                  G_GNUC_UNUSED GwyGraphModel *gmodel)
 {
     gwy_debug("");
     /*gwy_graph_model_save_graph(gmodel, graph);*/
@@ -483,18 +483,18 @@ gwy_graph_model_duplicate(GObject *object)
 
 
 static void     
-gwy_graph_model_set_property  (GObject *object,
-                                               guint prop_id,
-                                               const GValue *value,
-                                               GParamSpec *pspec)
+gwy_graph_model_set_property  (G_GNUC_UNUSED GObject *object,
+                                               G_GNUC_UNUSED guint prop_id,
+                                               G_GNUC_UNUSED const GValue *value,
+                                               G_GNUC_UNUSED GParamSpec *pspec)
 {
 }
 
 static void     
-gwy_graph_model_get_property  (GObject*object,
-                                               guint prop_id,
-                                               GValue *value,
-                                               GParamSpec *pspec)
+gwy_graph_model_get_property  (G_GNUC_UNUSED GObject*object,
+                                               G_GNUC_UNUSED guint prop_id,
+                                               G_GNUC_UNUSED GValue *value,
+                                               G_GNUC_UNUSED GParamSpec *pspec)
 {
 }
 
@@ -538,12 +538,6 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     return (GObject*)duplicate;
 }
 
-#include <stdio.h>
-void test_value_changed(GwyGraphModel *gmodel)
-{
-
-    printf("graphmodel: value changed refresh call got from curve\n");
-}
 /**
 * gwy_graph_model_add_curve:
 * @gmodel: A #GwyGraphModel.
@@ -568,9 +562,6 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
             
     g_signal_connect_swapped(curve, "value-changed",
                       G_CALLBACK(gwy_watchable_value_changed), gmodel);
-    
-    g_signal_connect_swapped(curve, "value-changed",
-                      G_CALLBACK(test_value_changed), gmodel);
     
     g_object_notify(G_OBJECT(gmodel), "n");
 }

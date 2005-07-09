@@ -105,7 +105,7 @@ gwy_graph_window_class_init(GwyGraphWindowClass *klass)
 }
 
 static void
-gwy_graph_window_init(GwyGraphWindow *graphwindow)
+gwy_graph_window_init(G_GNUC_UNUSED GwyGraphWindow *graphwindow)
 {
     gwy_debug("");
 

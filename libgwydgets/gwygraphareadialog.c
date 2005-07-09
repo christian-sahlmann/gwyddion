@@ -486,7 +486,7 @@ refresh(GwyGraphAreaDialog *dialog)
 }
 
 static void     
-color_change_cb(GtkWidget *color_button, GwyGraphAreaDialog *dialog)
+color_change_cb(G_GNUC_UNUSED GtkWidget *color_button, GwyGraphAreaDialog *dialog)
 {
     GdkColor gcl;
     GwyGraphCurveModel *cmodel;
@@ -509,7 +509,7 @@ color_change_cb(GtkWidget *color_button, GwyGraphAreaDialog *dialog)
 }
 
 static void     
-label_change_cb(GtkWidget *button, GwyGraphAreaDialog *dialog)
+label_change_cb(G_GNUC_UNUSED GtkWidget *button, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     GwyAxisDialog* selector;

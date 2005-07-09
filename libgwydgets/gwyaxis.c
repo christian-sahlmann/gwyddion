@@ -728,7 +728,7 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 }
 
 static void
-gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, G_GNUC_UNUSED GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
     PangoLayout *layout;
     PangoContext *context;

@@ -107,8 +107,6 @@ gwy_graph_window_ascii_dialog_delete(GtkWidget *widget,
 static void
 gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
 {
-    GtkWidget *label;
-
     dialog->style = GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN;
     dialog->preference =  gwy_option_menu_create(style_type,
                           G_N_ELEMENTS(style_type), "style",

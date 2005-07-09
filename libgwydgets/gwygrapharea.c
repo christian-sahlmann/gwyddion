@@ -1160,7 +1160,7 @@ gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_curs
 }
 
 static 
-gboolean gwy_graph_area_leave_notify(GtkWidget *widget, GdkEventCrossing *event)
+gboolean gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
 {
     GwyGraphArea *area = GWY_GRAPH_AREA(widget);
 

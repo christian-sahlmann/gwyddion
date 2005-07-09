@@ -98,7 +98,7 @@ gwy_graph_data_class_init(GwyGraphDataClass *klass)
 
 
 static void
-gwy_graph_data_init(GwyGraphData *graph_data)
+gwy_graph_data_init(G_GNUC_UNUSED GwyGraphData *graph_data)
 {
     gwy_debug("");
 
@@ -127,7 +127,7 @@ gwy_graph_data_new(GwyGraphModel *gmodel)
        g_signal_connect_swapped(gmodel, "value-changed",
                      G_CALLBACK(gwy_graph_data_refresh), graph_data);
 
-       gwy_graph_data_refresh(graph_data);
+       gwy_graph_data_refresh(GWY_GRAPH_DATA(graph_data));
     }
     
     return graph_data;
@@ -187,7 +187,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
     GtkTreeViewColumn *xcolumn, *ycolumn;
     GtkCellRenderer *renderer;
     GtkListStore *store;   
-    gint i, j;
+    gint i;
     GString *description;
    
     if (graph_data->graph_model == NULL) return;
@@ -222,7 +222,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
  
     }
      
-    gtk_tree_view_set_model(tview, store);
+    gtk_tree_view_set_model(tview, GTK_LIST_STORE(store));
   
     /*make two columns for each curve*/
     for (i=0; i<model->ncurves; i++)

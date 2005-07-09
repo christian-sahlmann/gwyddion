@@ -103,7 +103,7 @@ gwy_app_graph_list_add(GwyDataWindow *data_window,
     g_return_if_fail(GWY_IS_GRAPH(graph));
 
     data = gwy_data_window_get_data(data_window);
-    gmodel = gwy_graph_get_model(graph);
+    gmodel = G_OBJECT(gwy_graph_get_model(graph));
     /*gmodel = gwy_graph_model_new(graph);*/
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
 
@@ -364,15 +364,9 @@ gwy_app_graph_list_hide_graph(GtkTreeModel *store,
                               GtkTreeIter *iter,
                               G_GNUC_UNUSED gpointer userdata)
 {
-    GtkWidget *graph;
     GObject *gmodel;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    /* XXX
-    graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
-    if (graph)
-        gtk_widget_destroy(gtk_widget_get_toplevel(graph));
-        */
     g_object_unref(gmodel);
 
     return FALSE;
@@ -389,11 +383,6 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
 
     list = GTK_WIDGET(userdata);
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    /* XXX
-    if (GWY_GRAPH_MODEL(gmodel)->graph) {
-        g_object_unref(gmodel);
-        return FALSE;
-    }*/
 
     graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);

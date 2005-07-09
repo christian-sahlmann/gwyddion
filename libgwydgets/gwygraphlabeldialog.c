@@ -179,7 +179,7 @@ gwy_graph_label_dialog_set_graph_data(GtkWidget *dialog, GObject *model)
     GwyGraphLabelDialog *gadialog = GWY_GRAPH_LABEL_DIALOG(dialog);
 
     gadialog->graph_model = model;
-    refresh(GTK_WIDGET(dialog));
+    refresh(GWY_GRAPH_LABEL_DIALOG(dialog));
 }
 
 static void     

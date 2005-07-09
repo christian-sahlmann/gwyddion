@@ -134,7 +134,7 @@ header_label(GtkWidget *table, gint row, gint col,
 
 
 static void
-gwy_graph_window_measure_dialog_init(GwyGraphWindowMeasureDialog *dialog)
+gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *dialog)
 {
    gwy_debug("");
 }
