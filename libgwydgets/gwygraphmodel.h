@@ -91,7 +91,7 @@ struct _GwyGraphModelClass {
 
 
 GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_model_new            ();
+GObject*   gwy_graph_model_new            (void);
 
 gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
 

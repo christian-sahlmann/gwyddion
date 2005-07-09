@@ -217,7 +217,7 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
  * Returns: New graph model as a #GObject.
  **/
 GObject*
-gwy_graph_model_new()
+gwy_graph_model_new(void)
 {
     GwyGraphModel *gmodel;
 
