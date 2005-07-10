@@ -202,7 +202,7 @@ print_help(void)
 "They may be other Gtk+, Gdk, and GtkGLExt options, depending on platform, on\n"
 "how it was compiled, and on loaded modules.  Please see Gtk+ documentation.\n"
         );
-    puts("Please report bugs in Gwyddion bugzilla "
+    puts("Please report bugs to Gwyddion bugzilla "
          "http://trific.ath.cx/bugzilla/");
 }
 
