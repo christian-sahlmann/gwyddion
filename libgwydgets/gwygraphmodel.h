@@ -89,52 +89,55 @@ struct _GwyGraphModelClass {
     gpointer reserved5;
 };
 
+#define gwy_graph_model_duplicate(gmodel) \
+        (GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(gmodel))))
 
-GType      gwy_graph_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_model_new            (void);
-
-gint       gwy_graph_model_get_n_curves   (GwyGraphModel *gmodel);
-
-void       gwy_graph_model_add_curve      (GwyGraphModel *gmodel,
-                                           GwyGraphCurveModel *curve);
-void       gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
-                                                gchar *description);
-void       gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel,
-                                                 gint index_);
-GwyGraphCurveModel*  gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
-                                                gchar *description);
-GwyGraphCurveModel*  gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel,
-                                                gint index_);
-
-GObject*   gwy_graph_model_new_alike(GwyGraphModel *gmodel);
-
-void       gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel);
-
-void       gwy_graph_model_set_title(GwyGraphModel *model, gchar *title);
-
-void       gwy_graph_model_set_label_position(GwyGraphModel *model, GwyGraphLabelPosition position);
-void       gwy_graph_model_set_label_has_frame(GwyGraphModel *model, gboolean label_has_frame);
-void       gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness);
-void       gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse);
-void       gwy_graph_model_set_label_visible(GwyGraphModel *model, gboolean visible);
-void       gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit);
-void       gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit);
-
-gchar*     gwy_graph_model_get_title(GwyGraphModel *model);
-
-GwyGraphLabelPosition  gwy_graph_model_get_label_position(GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_has_frame(GwyGraphModel *model);
+GType          gwy_graph_model_get_type                 (void) G_GNUC_CONST;
+GwyGraphModel* gwy_graph_model_new                      (void);
+GwyGraphModel* gwy_graph_model_new_alike                (GwyGraphModel *gmodel);
+gint           gwy_graph_model_get_n_curves             (GwyGraphModel *gmodel);
+void           gwy_graph_model_add_curve                (GwyGraphModel *gmodel,
+                                                         GwyGraphCurveModel *curve);
+void         gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
+                                                         gchar *description);
+void           gwy_graph_model_remove_curve_by_index    (GwyGraphModel *gmodel,
+                                                         gint index_);
+GwyGraphCurveModel* gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
+                                                             gchar *description);
+GwyGraphCurveModel* gwy_graph_model_get_curve_by_index  (GwyGraphModel *gmodel,
+                                                         gint index_);
+void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
+void           gwy_graph_model_set_title                (GwyGraphModel *model,
+                                                         gchar *title);
+void           gwy_graph_model_set_label_position       (GwyGraphModel *model,
+                                                         GwyGraphLabelPosition position);
+void           gwy_graph_model_set_label_has_frame      (GwyGraphModel *model,
+                                                         gboolean label_has_frame);
+void           gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model,
+                                                         gint thickness);
+void           gwy_graph_model_set_label_reverse        (GwyGraphModel *model,
+                                                         gboolean reverse);
+void           gwy_graph_model_set_label_visible        (GwyGraphModel *model,
+                                                         gboolean visible);
+void           gwy_graph_model_set_x_siunit             (GwyGraphModel *model,
+                                                         GwySIUnit *siunit);
+void           gwy_graph_model_set_y_siunit             (GwyGraphModel *model,
+                                                         GwySIUnit *siunit);
+gchar*         gwy_graph_model_get_title                (GwyGraphModel *model);
+GwyGraphLabelPosition gwy_graph_model_get_label_position(GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_has_frame      (GwyGraphModel *model);
 gint           gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_reverse(GwyGraphModel *model);
-gboolean       gwy_graph_model_get_label_visible(GwyGraphModel *model);
-GwySIUnit*     gwy_graph_model_get_x_siunit(GwyGraphModel *model);
-GwySIUnit*     gwy_graph_model_get_y_siunit(GwyGraphModel *model);
-
-void      gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename, 
-                                       gboolean export_units, gboolean export_labels,
-                                       gboolean export_metadata, GwyGraphModelExportStyle export_style);
-
-void      gwy_graph_model_signal_layout_changed(GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_reverse        (GwyGraphModel *model);
+gboolean       gwy_graph_model_get_label_visible        (GwyGraphModel *model);
+GwySIUnit*     gwy_graph_model_get_x_siunit             (GwyGraphModel *model);
+GwySIUnit*     gwy_graph_model_get_y_siunit             (GwyGraphModel *model);
+void           gwy_graph_model_export_ascii             (GwyGraphModel *model,
+                                                         const gchar *filename,
+                                                         gboolean export_units,
+                                                         gboolean export_labels,
+                                                         gboolean export_metadata,
+                                                         GwyGraphModelExportStyle export_style);
+void           gwy_graph_model_signal_layout_changed    (GwyGraphModel *model);
 
 G_END_DECLS
 

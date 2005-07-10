@@ -418,7 +418,7 @@ fit_dialog(FitArgs *args)
     gtk_container_add(GTK_CONTAINER(vbox), hbox2);
 
 
-    args->graph_model = GWY_GRAPH_MODEL(gwy_graph_model_new());
+    args->graph_model = gwy_graph_model_new();
     controls.graph = gwy_graph_new(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
@@ -527,7 +527,7 @@ plot_inits(FitArgs *args, FitControls *controls)
 
     graph_update(controls, args);
 
-    cmodel = GWY_GRAPH_CURVE_MODEL(gwy_graph_curve_model_new());
+    cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_curve_model_set_description(cmodel, "fit");
     gwy_graph_curve_model_set_data(cmodel,
@@ -600,7 +600,7 @@ recompute(FitArgs *args, FitControls *controls)
 
     graph_update(controls, args);
 
-    cmodel = GWY_GRAPH_CURVE_MODEL(gwy_graph_curve_model_new());
+    cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_curve_model_set_data(cmodel,
                                    xdata->data,

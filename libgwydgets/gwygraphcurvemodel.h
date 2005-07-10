@@ -82,9 +82,11 @@ struct _GwyGraphCurveModelClass {
     gpointer reserved3;
 };
 
+#define gwy_graph_curve_model_duplicate(gcmodel) \
+        (GWY_GRAPH_CURVE_MODEL(gwy_serializable_duplicate(G_OBJECT(gcmodel))))
 
 GType      gwy_graph_curve_model_get_type       (void) G_GNUC_CONST;
-GObject*   gwy_graph_curve_model_new            (void);
+GwyGraphCurveModel*   gwy_graph_curve_model_new (void);
 /*gboolean   gwy_graph_curve_model_save_curve     (GwyGraphCurveModel *gcmodel,
                                                  GwyGraph *graph,
                                                  gint index_);

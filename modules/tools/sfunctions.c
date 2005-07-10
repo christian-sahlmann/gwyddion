@@ -311,7 +311,7 @@ apply(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
 
-    graph = gwy_graph_new(GWY_GRAPH_MODEL(gwy_serializable_duplicate(G_OBJECT(controls->graphmodel))));
+    graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
     gtk_widget_set_size_request(graph, 400, 300);
 
     

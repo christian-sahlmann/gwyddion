@@ -283,8 +283,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
-    controls.gmodel = GWY_GRAPH_MODEL(gwy_graph_model_new());
-    controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.gmodel));
+    controls.gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(controls.gmodel);
     gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_top, FALSE);
     gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_left, FALSE);
     gwy_axis_set_visible(GWY_GRAPH(controls.graph)->axis_bottom, FALSE);
@@ -461,7 +461,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
         xdata[i] = ((gdouble)i)/MAX_PREV;
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
 
-    cmodel = GWY_GRAPH_CURVE_MODEL(gwy_graph_curve_model_new());
+    cmodel = gwy_graph_curve_model_new();
     cmodel->xdata = xdata;
     cmodel->type = GWY_GRAPH_CURVE_LINE;
     cmodel->ydata = dline->data;

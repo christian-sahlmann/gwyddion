@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 {
     GtkWidget *window;
     GtkWidget *gwindow, *axis, *label, *data, *area, *graph, *foo;
-    GObject *gmodel;
+    GwyGraphModel *gmodel;
     GwyGraphCurveModel *model;
     gint i, k;
     GString *str1, *str2, *str3, *str4, *str5;

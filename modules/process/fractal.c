@@ -70,7 +70,7 @@ typedef struct {
     GtkWidget *out;
     GtkWidget *graph;
     GtkWidget *results[GWY_FRACTAL_LAST];
-    GObject *graph_model;
+    GwyGraphModel *graph_model;
 } FractalControls;
 
 static gboolean    module_register            (const gchar *name);
@@ -298,7 +298,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
 
     /*graph*/
     controls.graph_model = gwy_graph_model_new();
-    controls.graph = gwy_graph_new(GWY_GRAPH_MODEL(controls.graph_model));
+    controls.graph = gwy_graph_new(controls.graph_model);
     gtk_widget_set_size_request(controls.graph, 400, 300);
     
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
@@ -448,7 +448,7 @@ update_graph(FractalArgs *args,
     if ((is_line = remove_datapoints(xline, yline, xnline, ynline, args)))
         args->result[args->out] = dim_funcs[args->out](xnline, ynline, &a, &b);
 
-    gwy_graph_model_remove_all_curves(GWY_GRAPH_MODEL(controls->graph_model));
+    gwy_graph_model_remove_all_curves(controls->graph_model);
     
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_POINTS);

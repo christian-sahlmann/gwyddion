@@ -379,20 +379,19 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
                               gpointer userdata)
 {
     GtkWidget *graph, *list, *window;
-    GObject *gmodel;
+    GwyGraphModel *gmodel;
 
     list = GTK_WIDGET(userdata);
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
 
-    graph = gwy_graph_new(GWY_GRAPH_MODEL(gmodel));
+    graph = gwy_graph_new(gmodel);
     g_object_set_data(G_OBJECT(graph), "graph-model", gmodel);
     /* XXX: redraw assures the toggles get into a consistent state.  A more
      * fine-grained method should be probably used... */
     g_signal_connect_swapped(graph, "destroy",
                              G_CALLBACK(gtk_widget_queue_draw), list);
     window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window),
-                         GWY_GRAPH_MODEL(gmodel)->title->str);
+    gtk_window_set_title(GTK_WINDOW(window), gmodel->title->str);
     g_object_unref(gmodel);
 
     return FALSE;
@@ -405,14 +404,14 @@ gwy_app_graph_list_delete_graph(GtkTreeModel *store,
                                 G_GNUC_UNUSED gpointer userdata)
 {
     GtkWidget *graph;
-    GObject *gmodel;
+    GwyGraphModel *gmodel;
     GwyContainer *data;
     gint id;
     gchar key[32];
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
     /* XXX
-    graph = GTK_WIDGET(GWY_GRAPH_MODEL(gmodel)->graph);
+    graph = GTK_WIDGET(gmodel->graph);
     if (graph)
         gtk_widget_destroy(gtk_widget_get_toplevel(graph));
      */
@@ -577,12 +576,12 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
                                   GtkTreeIter *iter,
                                   gpointer list)
 {
-    GObject *gmodel;
+    GwyGraphModel *gmodel;
     GwyGraph *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
     /*
-    graph = GWY_GRAPH_MODEL(gmodel)->graph;
+    graph = gmodel->graph;
     if (graph)
         g_signal_handlers_disconnect_matched(graph,
                                              G_SIGNAL_MATCH_FUNC

@@ -82,7 +82,7 @@ dist(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(gwy_container_contains_by_name(data, "/0/mask"),
                          FALSE);
 
-    gmodel = gwy_graph_model_new(NULL);
+    gmodel = gwy_graph_model_new();
     graph = gwy_graph_new(gmodel);
     
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));

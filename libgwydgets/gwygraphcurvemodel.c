@@ -37,7 +37,7 @@ static GByteArray* gwy_graph_curve_model_serialize    (GObject *object,
 static GObject* gwy_graph_curve_model_deserialize     (const guchar *buffer,
                                                        gsize size,
                                                        gsize *position);
-static GObject* gwy_graph_curve_model_duplicate       (GObject *object);
+static GObject* gwy_graph_curve_model_duplicate_real  (GObject *object);
 
 
 static GObjectClass *parent_class = NULL;
@@ -93,7 +93,7 @@ gwy_graph_curve_model_serializable_init(GwySerializableIface *iface)
     /* initialize stuff */
     iface->serialize = gwy_graph_curve_model_serialize;
     iface->deserialize = gwy_graph_curve_model_deserialize;
-    iface->duplicate = gwy_graph_curve_model_duplicate;
+    iface->duplicate = gwy_graph_curve_model_duplicate_real;
 }
 
 static void
@@ -151,7 +151,7 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
  *
  * Returns: New empty graph curve model as a #GObject.
  **/
-GObject*
+GwyGraphCurveModel*
 gwy_graph_curve_model_new(void)
 {
     GwyGraphCurveModel *gcmodel;
@@ -160,7 +160,7 @@ gwy_graph_curve_model_new(void)
     gcmodel = (GwyGraphCurveModel*)g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                                                 NULL);
 
-    return (GObject*)(gcmodel);
+    return (gcmodel);
 }
 
 static void
@@ -295,7 +295,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
-    gcmodel = (GwyGraphCurveModel*)gwy_graph_curve_model_new();
+    gcmodel = gwy_graph_curve_model_new();
     {
         gint nxdata, nydata;
         gchar *description = NULL;
@@ -336,7 +336,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
 }
 
 static GObject*
-gwy_graph_curve_model_duplicate(GObject *object)
+gwy_graph_curve_model_duplicate_real(GObject *object)
 {
     GwyGraphCurveModel *gcmodel, *duplicate;
 
@@ -344,7 +344,7 @@ gwy_graph_curve_model_duplicate(GObject *object)
     g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(object), NULL);
 
     gcmodel = GWY_GRAPH_CURVE_MODEL(object);
-    duplicate = (GwyGraphCurveModel*)gwy_graph_curve_model_new();
+    duplicate = gwy_graph_curve_model_new();
 
     if ((duplicate->n = gcmodel->n)) {
         duplicate->xdata = g_memdup(gcmodel->xdata, gcmodel->n*sizeof(gdouble));
