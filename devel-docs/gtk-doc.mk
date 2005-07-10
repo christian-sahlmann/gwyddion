@@ -45,6 +45,9 @@ scan-build.stamp: $(HFILE_GLOB)
 	fi
 	cd $(srcdir) && \
 	  gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --ignore-headers="$(IGNORE_HFILES)" $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
+		${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	fi
 	touch scan-build.stamp
 
 $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
@@ -66,9 +69,6 @@ sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml $(MKDB_OPTIONS)
-	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-		${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
-	fi
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp

@@ -80,14 +80,11 @@ function build_project() {
 
 function build_documentation() {
   cd ./devel-docs
-  rm -fv */*.stamp */*-sections.txt */*-decl-list.txt
-  # A bit dirty, rebuild only subdirs with objects
-  for x in libgwyddion libgwyprocess libgwydraw libgwydgets; do
-    make -C $x -k docs &>/dev/null
-  done
-  rm */sgml-build.stamp */html-build.stamp
+  make -k clean >/dev/null
+  rm -fv */*-sections.txt */*-decl-list.txt
   make -k docs
 }
+
 
 function check_coding_style() {
   find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \

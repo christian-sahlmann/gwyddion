@@ -18,11 +18,11 @@ cat >autostuff.ignore <<':'
 
 cat >build_documentation.ignore <<':'
 ^Writing .* for [^ ]\+(.*)
-^lib.*-scan\.c: In function `.*':
-^lib.*-scan\.c:[0-9]*: warning: unused parameter `.*'
+^lib.*-scan\.c: In function
+^lib.*-scan\.c:[0-9]*: warning: unused parameter
+^lib.*-scan\.c:[0-9]*: warning: .* shadows a previous local
+^lib.*-scan\.c:[0-9]*: warning: shadowed declaration is here
 ^Computing chunks\.\.\.
-^grep: \./libgwymodule\.types: No such file or directory
-^grep: \./libgwyapp\.types: No such file or directory
 ^  These can be found in [a-z]\+-unused\.txt\.
 ^  They should be added to [a-z]\+-sections\.txt in the appropriate place\.
 ':'
