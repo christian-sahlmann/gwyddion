@@ -2,9 +2,26 @@ GWYDDION-1
 - Fix Indentor analysis
 
 HEAD
+- Graphs:
+  datawindow graph list broken
+  graph titles don't work
+  still uses GwyWatchable
+  silly public signal emitors, mouse-moved
+  property get/set not implemented
+  too large value warning on ACF
+  old graph saving code, various crap and nonsense comments
+  gwy_graph_model_get_*_siunit return copies -- why? (set() also sets copies)
+  selection API is strange and partially duplicated between Graph and GraphArea
+  no proper API for hiding graph parts
+  impossible to limit the number of selections
+  impossible(?) to hide curve descriptions
+  stray "layout-updated" signal in GwyGraphModel
+  layout issues
 - Merge it.po update from Livia
 - Merge Facet Analysis improvements
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
+- Fix tooltips situation, there should be probable one global GtkTooltips
+  and everyone should use that
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
               GwyComputationStateType, GwyDWTType,
