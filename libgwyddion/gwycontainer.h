@@ -52,7 +52,8 @@ struct _GwyContainerClass {
     void (*item_changed)(GwyContainer *container, const gchar *key);
 };
 
-#define gwy_container_duplicate(container) ((GwyContainer*)gwy_serializable_duplicate(G_OBJECT(container)))
+#define gwy_container_duplicate(container) \
+        ((GwyContainer*)gwy_serializable_duplicate(G_OBJECT(container)))
 
 GType         gwy_container_get_type              (void) G_GNUC_CONST;
 GwyContainer* gwy_container_new                   (void);

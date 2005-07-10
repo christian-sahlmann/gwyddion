@@ -62,7 +62,8 @@ struct _GwyDataFieldClass {
 
 #define gwy_data_field_invalidate(data_field) data_field->cached = 0
 
-#define gwy_data_field_duplicate(data_field) ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
+#define gwy_data_field_duplicate(data_field) \
+        ((GwyDataField*)gwy_serializable_duplicate(G_OBJECT(data_field)))
 
 GType             gwy_data_field_get_type  (void) G_GNUC_CONST;
 
