@@ -324,6 +324,27 @@ gwy_module_do_register_module(const gchar *filename,
     return ok ? mod_info : NULL;
 }
 
+#ifdef G_OS_WIN32
+static gboolean
+gwy_str_has_suffix_nocase(const gchar *s,
+                          const gchar *suffix)
+{
+    guint len, suffix_len;
+
+    if (!suffix || !*suffix)
+        return TRUE;
+
+    g_return_val_if_fail(s, FALSE);
+
+    len = strlen(s);
+    suffix_len = strlen(suffix);
+    if (len < suffix_len)
+        return FALSE;
+
+    return !g_ascii_strcasecmp(s + len - suffix_len, suffix);
+}
+#endif
+
 static void
 gwy_load_modules_in_dir(GDir *gdir,
                         const gchar *dirname,
