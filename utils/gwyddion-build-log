@@ -79,9 +79,9 @@ function extract_build_documentation() {
   libs=$(grep "$e" $logfile | sed -e 's#.*/##' -e 's/.$//')
   for x in $libs; do
     echo -n "$x: "
-    sed -n -e "/$e .*\\/$x'/,/$l .*\\$x'/p" $tmplog \
+    sed -n -e "/$e .*\\/$x'/,/$l .*\\/$x'/p" $tmplog \
       | sed -n -e '/ symbol /{s/ symbols*//g;p}'
-    sed -n -e "/$e .*\\/$x'/,/$l .*\\$x'/p" $tmplog \
+    sed -n -e "/$e .*\\/$x'/,/$l .*\\/$x'/p" $tmplog \
       | sed -e '1d;$d;/ symbol /d'
   done
 }

@@ -1,4 +1,5 @@
 #!/bin/bash
+# @(#) $Id$
 disabled=
 pkgname=gwyddion
 basever=1.99.3
@@ -8,8 +9,7 @@ projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 installroot=$HOME/tmp
 gtkdocdir="/share/gtk-doc/html/*"
-gtkdocdirs=(/usr /usr/local $installroot/usr)
-gtkdocdirs=${gtkdocdirs[@]/%/$gtkdocdir}
+gtkdocdirs=(/usr /usr/local /opt/gnome $installroot/usr)
 gnainsindex=$HOME/lib/gtk.gnains
 phpswroot=$HOME/PHP/software
 rpmtopdir=$(rpm --showrc | grep '^-[0-9]\+: _topdir' | cut -f2)
@@ -165,7 +165,9 @@ function release_dists() {
 
 function gnains_index() {
   which gnains-mkindex || return
-  gnains-mkindex -f $gnainsindex $gtkdocdirs
+  for d in ${gtkdocdirs[@]/%/$gtkdocdir}; do
+    test -f "$d/index.sgml" && echo $d
+  done | xargs gnains-mkindex -f $gnainsindex
 }
 
 

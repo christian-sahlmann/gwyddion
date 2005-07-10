@@ -35,11 +35,11 @@ docs: html-build.stamp
 
 scan-build.stamp: $(HFILE_GLOB)
 	@echo '*** Scanning header files ***'
-	if grep -l '^..*$$' $(srcdir)/$(DOC_MODULE).types > /dev/null ; then \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir) ; \
+	if test -s $(srcdir)/$(DOC_MODULE).types; then \
+	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
 	else \
 	    cd $(srcdir) ; \
-	    for i in $(SCANOBJ_FILES) ; do \
+	    for i in $(SCANOBJ_FILES); do \
                test -f $$i || touch $$i ; \
 	    done \
 	fi
@@ -66,6 +66,9 @@ sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
 	@echo '*** Building SGML ***'
 	cd $(srcdir) && \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml $(MKDB_OPTIONS)
+	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
+		${top_srcdir}/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	fi
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
