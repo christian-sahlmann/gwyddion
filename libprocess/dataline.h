@@ -62,7 +62,7 @@ typedef void (*GwyFFTFunc)(GwyTransformDirection dir,
                            GwyInterpolationType interpolation);
 
 #define gwy_data_line_duplicate(data_line) \
-        ((GwyDataLine*)gwy_serializable_duplicate(G_OBJECT(data_line)))
+        (GWY_DATA_LINE(gwy_serializable_duplicate(G_OBJECT(data_line))))
 
 GType  gwy_data_line_get_type  (void) G_GNUC_CONST;
 

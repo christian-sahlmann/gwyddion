@@ -63,7 +63,7 @@ struct _GwySIUnitClass {
 };
 
 #define gwy_si_unit_duplicate(siunit) \
-        ((GwySIUnit*)gwy_serializable_duplicate(G_OBJECT(siunit)))
+        (GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(siunit))))
 
 GType gwy_si_unit_get_type  (void) G_GNUC_CONST;
 
