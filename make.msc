@@ -86,7 +86,7 @@ PANGO_LIBS = pango-$(PANGO_VER).lib
 PANGOWIN32_LIBS = $(PANGO_LIBS) pangowin32-$(PANGO_VER).lib
 
 PANGOFT2_CFLAGS = $(PANGO_CFLAGS) -I "$(GTK_TOP)\include\freetype2"
-PANGOFT2_LIBS = $(PANGO_LIBS) pangoft2-$(PANGO_VER).lib libfreetype.lib
+PANGOFT2_LIBS = $(PANGO_LIBS) pangoft2-$(PANGO_VER).lib freetype.lib
 
 PNG_CFLAGS = -I "$(GTK_TOP)\include\libpng12" $(ZLIB_CFLAGS)
 PNG_LIBS = libpng.lib $(ZLIB_LIBS)

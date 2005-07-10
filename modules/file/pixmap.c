@@ -32,15 +32,16 @@
 
 #ifdef HAVE_TIFFIO_H
 #  ifdef HAVE_LIBTIFF
-#    include <tiffio.h>
 #    define HAVE_TIFF
 #  endif
 #endif
 
-/* FIXME: TIFF breaks badly on Win32, nooone knows why */
-/* FIXME: Retest! It might by our confused MS non-hreaded RT library linking */
 #ifdef G_OS_WIN32
-#  undef HAVE_TIFF
+#  define HAVE_TIFF 1
+#endif
+
+#ifdef HAVE_TIFF
+#  include <tiffio.h>
 #endif
 
 #include <libgwyddion/gwyddion.h>
@@ -277,7 +278,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.7.1",
+    "4.7.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

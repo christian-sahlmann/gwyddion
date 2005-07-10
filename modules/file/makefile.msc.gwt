@@ -12,6 +12,7 @@ LIB_CFLAGS = \
 	$(APP_CFLAGS) \
 	$(JPEG_CFLAGS) \
 	$(PNG_CFLAGS) \
+	$(TIFF_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 
 MOD_LINK = \
@@ -19,6 +20,7 @@ MOD_LINK = \
 	$(APP_LIBS) \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
+	$(TIFF_LIBS) \
 	/libpath:$(TOP_SRCDIR)\libgwyddion \
 	/libpath:$(TOP_SRCDIR)\libprocess \
 	/libpath:$(TOP_SRCDIR)\libdraw \
