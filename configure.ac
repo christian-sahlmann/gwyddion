@@ -1,10 +1,10 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.2cvs20050611, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
-LIBRARY_RELEASE=1.99.2
+LIBRARY_RELEASE=1.99.3
 PACKAGE_URL="http://gwyddion.net/"
 AC_PREREQ(2.52)
 AC_CONFIG_SRCDIR(app/app.c)
@@ -242,6 +242,9 @@ AC_CHECK_FUNC([setenv])
 AC_CHECK_FUNC([cbrt], [gwy_have_cbrt=yes], [gwy_have_cbrt=no])
 AC_CHECK_FUNC([hypot], [gwy_have_hypot=yes], [gwy_have_hypot=no])
 AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
+AC_CHECK_FUNC([acosh], [gwy_have_acosh=yes], [gwy_have_acosh=no])
+AC_CHECK_FUNC([asinh], [gwy_have_asinh=yes], [gwy_have_asinh=no])
+AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
 
 dnl I18n stuff
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
@@ -280,7 +283,7 @@ AC_CONFIG_COMMANDS([gwyconfig.h],
 _______EOF
 
   if test x$gwy_have_pow10 = xno; then
-    echo '#define pow10(x) exp(G_LN2*(x))' >>$outfile
+    echo '#define pow10(x) exp(G_LN10*(x))' >>$outfile
   else
     echo '/* pow10() is defined */' >>$outfile
   fi
@@ -296,6 +299,24 @@ _______EOF
     echo '#define cbrt(x) pow((x), 1.0/3.0)' >>$outfile
   else
     echo '/* cbrt() is defined */' >>$outfile
+  fi
+
+  if test x$gwy_have_acosh = xno; then
+    echo 'static inline double acosh(double x) { return log(x+sqrt(x*x - 1); }' >>$outfile
+  else
+    echo '/* acosh() is defined */' >>$outfile
+  fi
+
+  if test x$gwy_have_asinh = xno; then
+    echo 'static inline double asinh(double x) { return log(x+sqrt(x*x + 1); }' >>$outfile
+  else
+    echo '/* asinh() is defined */' >>$outfile
+  fi
+
+  if test x$gwy_have_atanh = xno; then
+    echo 'static inline double atanh(double x) { return log((1 + x)/(1 - x)); }' >>$outfile
+  else
+    echo '/* atanh() is defined */' >>$outfile
   fi
 
   cat >>$outfile <<_______EOF
