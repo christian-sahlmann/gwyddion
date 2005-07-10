@@ -282,7 +282,7 @@ logger(const gchar *log_domain,
 
     fprintf(logfile, "%s%s%s\n",
             log_domain ? log_domain : "",
-            log_domain ? ": " : ""
+            log_domain ? ": " : "",
             message);
     fflush(logfile);
 }
