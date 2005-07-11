@@ -1,7 +1,7 @@
 
-1.99.3 (2005-07-06)
+1.99.3 (2005-07-11)
 Application:
-- Bugfixes were merged from 1.11 (bug #49, bug #54).
+- Bugfixes were merged from 1.11 (bug #49, bug #54) and some from 1.12.
 - Running uninstalled is supported now (with caution).
 - Metadata browser closes with corresponding data window; if a browser for
   some data already exists, it's presented instead of creating a second one.
@@ -47,6 +47,8 @@ Library:
   to full-field statistics if part is actually complete data field, allowing
   better cache utilization.
 - libgwyprocess: DataField stats cache is serialized and deserialized.
+- libgwyddion: Support for optional component serialization and
+  desetialization.
 - libgwyapp: All undo functions work on Containers now, some were renamed to
   acommodate that; object-data trickery was replaced with a proper API.
 - libgwydgets: DataView can resize when base data field size changes.
@@ -65,17 +67,22 @@ Library:
 
 Modules:
 - JPK Scan (new): JPK data file import (bug #57).
+- Facet Analysis (new): Visualizes, marks and measures facet orientations
+  (not fully forward-ported from 1.12).
 - All: Updated for data (view) notification changes.
 - File import modules use auto-range mode for preview, that should improve
   preview of data with outliers.
 - IColorange supports auto-range mode.
-- Points layer: Supports set_selection().
+- Points layer: Supports set_selection(), if selection is one point it does
+  not have to be dragged, click is enough to move it.
+- Pixmap: Import from TIFF images was enables on MS Windows too.
 - Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
 - graph_points, graph_measure, graph_zoom, graph_unzoom removed as this
   functionality is now in the GwyGraphWindow widget directly.
 
 Other:
 - Bugfixes were merged from 1.11 (bug #51).
+- It should build on Win32 again.
 
 
 1.99.2 (2005-04-18)
