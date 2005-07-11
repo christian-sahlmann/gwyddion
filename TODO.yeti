@@ -16,6 +16,7 @@ HEAD
   impossible to limit the number of selections
   impossible(?) to hide curve descriptions
   stray "layout-updated" signal in GwyGraphModel
+  old graph modules are still present
   layout issues
 - Merge it.po update from Livia
 - Merge Facet Analysis improvements
