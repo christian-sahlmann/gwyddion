@@ -45,7 +45,7 @@ static gboolean gwy_graph_label_expose               (GtkWidget *widget,
 
 
 /* Forward declarations - label related*/
-void            gwy_graph_label_draw_label           (GtkWidget *widget);
+static void     gwy_graph_label_draw_label           (GtkWidget *widget);
 
 /* Local data */
 
