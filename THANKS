@@ -23,6 +23,7 @@ Paolo Messina <paolo.messina@unifi.it>
     for APE Research file format specifications.
 
 Marc Tobias Wenzel <mtwenzel@iapp.de>
+Nick Hatch <nicholas.hatch@gmail.com>
     for BCR and RHK SPM32 file format specifications and samples.
 
 Sungjun Lee <lsjun@phya.snu.ac.kr>
@@ -30,7 +31,12 @@ Ignacio Horcas <ignacio.horcas@nanotec.es>
     for Nanotec WSxM file format specifications and samples.
 
 Marcelo Nakamura <marnak@usp.br>
+Peter Eaton <peter.eaton@fc.up.pt>
     for Molecular Imaging data file samples.
+
+Christopher Anderson <sidewinder.asu@gmail.com>
+Ken Egan <kegan@molec.com>
+    for Molecular Imaging format specification.
 
 Simone Pisana <sp406@eng.cam.ac.uk>
     for SPMLab R6 data file samples.
