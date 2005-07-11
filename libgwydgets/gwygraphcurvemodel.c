@@ -683,4 +683,14 @@ gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
     return &gcmodel->color;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * gwy_graph_curve_model_duplicate:
+ * @gcmodel: A graph curve model to duplicate.
+ *
+ * Convenience macro doing gwy_serializable_duplicate() with all the necessary
+ * typecasting.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
