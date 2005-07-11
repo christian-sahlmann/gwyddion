@@ -45,8 +45,6 @@ enum {
     PROP_DEFAULT_TEXT
 };
 
-static void        gwy_3d_label_class_init        (Gwy3DLabelClass *klass);
-static void        gwy_3d_label_init              (Gwy3DLabel *label);
 static void        gwy_3d_label_finalize          (GObject *object);
 static void        gwy_3d_label_serializable_init (GwySerializableIface *iface);
 static GByteArray* gwy_3d_label_serialize         (GObject *obj,
@@ -74,46 +72,11 @@ static void        gwy_3d_label_adj_value_changed (Gwy3DLabel *label,
 static void        gwy_3d_label_adj_changed       (Gwy3DLabel *label,
                                                    GtkAdjustment *adj);
 
-static GObjectClass *parent_class = NULL;
-
 static guint gwy_3d_label_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_3d_label_get_type(void)
-{
-    static GType gwy_3d_label_type = 0;
-
-    if (!gwy_3d_label_type) {
-        static const GTypeInfo gwy_3d_label_info = {
-            sizeof(Gwy3DLabelClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_3d_label_class_init,
-            NULL,
-            NULL,
-            sizeof(Gwy3DLabel),
-            0,
-            (GInstanceInitFunc)gwy_3d_label_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_3d_label_serializable_init,
-            NULL,
-            NULL
-        };
-
-        gwy_3d_label_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_3D_LABEL_TYPE_NAME,
-                                                   &gwy_3d_label_info,
-                                                   0);
-        g_type_add_interface_static(gwy_3d_label_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_3d_label_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (Gwy3DLabel, gwy_3d_label, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_3d_label_serializable_init))
 
 static void
 gwy_3d_label_serializable_init(GwySerializableIface *iface)
@@ -129,7 +92,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    parent_class = g_type_class_peek_parent(klass);
+    gwy_3d_label_parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_3d_label_finalize;
     gobject_class->set_property = gwy_3d_label_set_property;
@@ -226,7 +189,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
 static void
 gwy_3d_label_init(Gwy3DLabel *label)
 {
-    gwy_debug_objects_creation((GObject*)label);
+    gwy_debug_objects_creation(G_OBJECT(label));
 }
 
 static void
@@ -262,7 +225,7 @@ gwy_3d_label_finalize(GObject *object)
                                          gwy_3d_label_adj_changed, label);
     gwy_object_unref(label->size);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_3d_label_parent_class)->finalize(object);
 }
 
 static GByteArray*

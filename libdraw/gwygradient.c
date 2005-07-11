@@ -47,8 +47,6 @@ enum {
     LAST_SIGNAL
 };
 
-static void         gwy_gradient_class_init       (GwyGradientClass *klass);
-static void         gwy_gradient_init             (GwyGradient *gradient);
 static void         gwy_gradient_finalize         (GObject *object);
 static void         gwy_gradient_serializable_init(GwySerializableIface *iface);
 static void         gwy_gradient_sanitize         (GwyGradient *gradient);
@@ -85,47 +83,11 @@ static const GwyRGBA violet_color = { 1, 0, 1, 1 };
 static const GwyRGBA yellow_color = { 1, 1, 0, 1 };
 static const GwyGradientPoint null_point = { 0, { 0, 0, 0, 0 } };
 
-static GObjectClass *parent_class = NULL;
-
 static guint gradient_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_gradient_get_type(void)
-{
-    static GType gwy_gradient_type = 0;
-
-    if (!gwy_gradient_type) {
-        static const GTypeInfo gwy_gradient_info = {
-            sizeof(GwyGradientClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_gradient_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGradient),
-            0,
-            (GInstanceInitFunc)gwy_gradient_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_gradient_serializable_init,
-            NULL,
-            NULL
-        };
-
-        gwy_debug("");
-        gwy_gradient_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_GRADIENT_TYPE_NAME,
-                                                   &gwy_gradient_info,
-                                                   0);
-        g_type_add_interface_static(gwy_gradient_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_gradient_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwyGradient, gwy_gradient, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_gradient_serializable_init))
 
 static void
 gwy_gradient_serializable_init(GwySerializableIface *iface)
@@ -140,7 +102,7 @@ gwy_gradient_class_init(GwyGradientClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    parent_class = g_type_class_peek_parent(klass);
+    gwy_gradient_parent_class = g_type_class_peek_parent(klass);
     gobject_class->finalize = gwy_gradient_finalize;
     klass->gradients = g_hash_table_new_full(g_str_hash, g_str_equal,
                                              NULL, g_object_unref);
@@ -159,7 +121,7 @@ static void
 gwy_gradient_init(GwyGradient *gradient)
 {
     gradient->modifiable = TRUE;
-    gwy_debug_objects_creation((GObject*)gradient);
+    gwy_debug_objects_creation(G_OBJECT(gradient));
 }
 
 static void
@@ -181,7 +143,7 @@ gwy_gradient_finalize(GObject *object)
     g_free(gradient->pixels);
     g_free(gradient->name);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_gradient_parent_class)->finalize(object);
 }
 
 /**

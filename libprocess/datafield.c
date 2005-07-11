@@ -40,65 +40,26 @@ enum {
     LAST_SIGNAL
 };
 
-static void     gwy_data_field_class_init        (GwyDataFieldClass *klass);
-static void     gwy_data_field_init              (GObject *object);
-static void     gwy_data_field_finalize          (GObject *object);
-static void     gwy_data_field_serializable_init (GwySerializableIface *iface);
-static GByteArray* gwy_data_field_serialize      (GObject *obj,
-                                                  GByteArray *buffer);
-static GObject* gwy_data_field_deserialize       (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-static GObject* gwy_data_field_duplicate_real    (GObject *object);
-static void     gwy_data_field_clone_real        (GObject *source,
-                                                  GObject *copy);
-
-static GObjectClass *parent_class = NULL;
+static void       gwy_data_field_finalize         (GObject *object);
+static void       gwy_data_field_serializable_init(GwySerializableIface *iface);
+static GByteArray* gwy_data_field_serialize       (GObject *obj,
+                                                   GByteArray *buffer);
+static GObject*   gwy_data_field_deserialize      (const guchar *buffer,
+                                                   gsize size,
+                                                   gsize *position);
+static GObject*   gwy_data_field_duplicate_real   (GObject *object);
+static void       gwy_data_field_clone_real       (GObject *source,
+                                                   GObject *copy);
 
 static guint data_field_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_data_field_get_type(void)
-{
-    static GType gwy_data_field_type = 0;
-
-    if (!gwy_data_field_type) {
-        static const GTypeInfo gwy_data_field_info = {
-            sizeof(GwyDataFieldClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_data_field_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyDataField),
-            0,
-            (GInstanceInitFunc)gwy_data_field_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_data_field_serializable_init,
-            NULL,
-            NULL
-        };
-
-        gwy_data_field_type = g_type_register_static(G_TYPE_OBJECT,
-                                                     GWY_DATA_FIELD_TYPE_NAME,
-                                                     &gwy_data_field_info,
-                                                     0);
-        g_type_add_interface_static(gwy_data_field_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_data_field_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwyDataField, gwy_data_field, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_data_field_serializable_init))
 
 static void
 gwy_data_field_serializable_init(GwySerializableIface *iface)
 {
-    gwy_debug("");
-    /* initialize stuff */
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
     iface->duplicate = gwy_data_field_duplicate_real;
@@ -110,9 +71,7 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("");
-
-    parent_class = g_type_class_peek_parent(klass);
+    gwy_data_field_parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_field_finalize;
 
@@ -135,10 +94,9 @@ gwy_data_field_class_init(GwyDataFieldClass *klass)
 }
 
 static void
-gwy_data_field_init(GObject *object)
+gwy_data_field_init(GwyDataField *data_field)
 {
-    gwy_debug("");
-    gwy_debug_objects_creation(object);
+    gwy_debug_objects_creation(G_OBJECT(data_field));
 }
 
 static void
@@ -151,7 +109,7 @@ gwy_data_field_finalize(GObject *object)
     gwy_object_unref(data_field->si_unit_z);
     g_free(data_field->data);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_data_field_parent_class)->finalize(object);
 }
 
 /**
