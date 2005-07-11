@@ -22,6 +22,7 @@
 #define __GWY_APP_MENU_H__
 
 #include <gtk/gtkwidget.h>
+#include <gtk/gtktooltips.h>
 #include <gtk/gtkitemfactory.h>
 #include <libgwymodule/gwymodule-process.h>
 
@@ -48,19 +49,20 @@ struct _GwyMenuSensData {
     GwyMenuSensFlags set_to;
 };
 
-void       gwy_app_menu_set_sensitive_recursive   (GtkWidget *widget,
-                                                   const GwyMenuSensData *data);
-void       gwy_app_menu_recent_files_update       (GList *recent_files);
-void       gwy_app_menu_set_flags_recursive       (GtkWidget *widget,
-                                                   const GwyMenuSensData *data);
-void       gwy_app_menu_set_sensitive_array       (GtkItemFactory *item_factory,
-                                                   const gchar *root,
-                                                   const gchar **items,
-                                                   const GwyMenuSensFlags flags);
-void       gwy_app_menu_set_sensitive_both        (GtkWidget *item,
-                                                   GwyMenuSensFlags flags,
-                                                   GwyMenuSensFlags state);
-void       gwy_app_toolbox_update_state           (const GwyMenuSensData *sens_data);
+void     gwy_app_menu_set_sensitive_recursive(GtkWidget *widget,
+                                              const GwyMenuSensData *data);
+void     gwy_app_menu_recent_files_update    (GList *recent_files);
+void     gwy_app_menu_set_flags_recursive    (GtkWidget *widget,
+                                              const GwyMenuSensData *data);
+void     gwy_app_menu_set_sensitive_array    (GtkItemFactory *item_factory,
+                                              const gchar *root,
+                                              const gchar **items,
+                                              const GwyMenuSensFlags flags);
+void     gwy_app_menu_set_sensitive_both     (GtkWidget *item,
+                                              GwyMenuSensFlags flags,
+                                              GwyMenuSensFlags state);
+void     gwy_app_toolbox_update_state        (const GwyMenuSensData *sens_data);
+GtkTooltips* gwy_app_tooltips_get            (void);
 
 G_END_DECLS
 

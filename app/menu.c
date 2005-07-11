@@ -62,6 +62,8 @@ static GQuark sensitive_state_key = 0;
 int gwy_app_n_recent_files = 10;
 static GtkWidget *recent_files_menu = NULL;
 
+static GtkTooltips *app_tooltips = NULL;
+
 /* FIXME: how can MSVC can get to needing this when we are not DEBUGging? */
 #if (defined(DEBUG) || defined(_MSC_VER))
 static gchar*
@@ -571,6 +573,19 @@ gwy_app_toolbox_update_state(const GwyMenuSensData *sens_data)
     for (l = g_object_get_data(obj, "toolbars"); l; l = g_slist_next(l))
         gwy_app_menu_set_sensitive_recursive(GTK_WIDGET(l->data),
                                              sens_data);
+}
+
+GtkTooltips*
+gwy_app_tooltips_get(void)
+{
+    if (!app_tooltips) {
+        app_tooltips = gtk_tooltips_new();
+        /* Take ownership.  FIXME: Someone should free it later */
+        g_object_ref(app_tooltips);
+        gtk_object_sink(GTK_OBJECT(app_tooltips));
+    }
+
+    return app_tooltips;
 }
 
 /***** Documentation *******************************************************/

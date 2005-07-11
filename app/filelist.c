@@ -124,7 +124,6 @@ typedef struct {
     GtkWidget *list;
     GtkWidget *open;
     GtkWidget *prune;
-    GtkTooltips *tooltips;
     GdkPixbuf *failed_pixbuf;
 } Controls;
 
@@ -170,7 +169,7 @@ static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
 static guint remember_recent_files = 512;
 
 static Controls gcontrols = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 };
 
 /**
@@ -197,9 +196,6 @@ gwy_app_recent_file_list_new(void)
     gtk_window_set_default_size(GTK_WINDOW(gcontrols.window), -1,
                                 3*gdk_screen_height()/4);
 
-    /* FIXME: who will unref this beast? */
-    gcontrols.tooltips = gtk_tooltips_new();
-
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(gcontrols.window), vbox);
 
@@ -218,7 +214,7 @@ gwy_app_recent_file_list_new(void)
     gcontrols.prune = gwy_stock_like_button_new(_("_Prune"),
                                                 GTK_STOCK_FIND);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.prune, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gcontrols.tooltips, gcontrols.prune,
+    gtk_tooltips_set_tip(gwy_app_tooltips_get(), gcontrols.prune,
                          _("Remove entries of files that no longer exist"),
                          NULL);
     g_signal_connect_swapped(gcontrols.prune, "clicked",
@@ -227,14 +223,14 @@ gwy_app_recent_file_list_new(void)
 
     button = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
     gtk_box_pack_start(GTK_BOX(buttonbox), button, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gcontrols.tooltips, button,
+    gtk_tooltips_set_tip(gwy_app_tooltips_get(), button,
                          _("Close file list"), NULL);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gtk_widget_destroy), gcontrols.window);
 
     gcontrols.open = gtk_button_new_from_stock(GTK_STOCK_OPEN);
     gtk_box_pack_start(GTK_BOX(buttonbox), gcontrols.open, TRUE, TRUE, 0);
-    gtk_tooltips_set_tip(gcontrols.tooltips, gcontrols.open,
+    gtk_tooltips_set_tip(gwy_app_tooltips_get(), gcontrols.open,
                          _("Open selected file"), NULL);
     g_signal_connect_swapped(gcontrols.open, "clicked",
                              G_CALLBACK(gwy_app_recent_file_list_open), list);

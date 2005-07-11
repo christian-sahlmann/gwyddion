@@ -317,7 +317,7 @@ gwy_app_toolbox_create(void)
     gtk_container_add(GTK_CONTAINER(toolbox), vbox);
     container = vbox;
 
-    tooltips = gtk_tooltips_new();
+    tooltips = gwy_app_tooltips_get();
 
     menus = toolbox_add_menubar(container,
                                 gwy_app_menu_create_file_menu(accel_group),
