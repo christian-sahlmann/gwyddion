@@ -1,7 +1,15 @@
 GWYDDION-1
 - Fix Indentor analysis
+- Fix leaking SI Units in FFT
+
+SF CVS cleanup:
+- modules/tools -> modules/tool
+- modules/layer/*.c,v -> modules/layer/layer-*.c,v
+- libgwydgets/gwyglmaterial.*,v -> libdraw/gwyglmaterial.*,v
 
 HEAD
+- Solve global tooltips ownership, Gwy3DWindow and GwyGraphWindow need tooltips
+  too
 - Graphs:
   datawindow graph list broken
   graph titles don't work
@@ -18,7 +26,6 @@ HEAD
   stray "layout-updated" signal in GwyGraphModel
   old graph modules are still present
   layout issues
-- Merge it.po update from Livia
 - Merge Facet Analysis improvements
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix tooltips situation, there should be probable one global GtkTooltips
