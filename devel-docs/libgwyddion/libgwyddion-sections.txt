@@ -81,6 +81,7 @@ GWY_INVENTORY_GET_CLASS
 </SECTION>
 <SECTION>
 <FILE>gwyserializable</FILE>
+GWY_IMPLEMENT_SERIALIZABLE
 GwySerializableIface
 GwySerializable
 GwySerializeFunc
@@ -341,6 +342,7 @@ _
 N_
 gwy_object_unref
 GWY_SWAP
+GWY_FIND_PSPEC
 gwy_debug
 gwy_debug_gnu
 </SECTION>

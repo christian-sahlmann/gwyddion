@@ -32,6 +32,14 @@ graph widgets and should be mostly ignored for now.
 @reserved2: 
 @reserved3: 
 
+<!-- ##### MACRO gwy_graph_curve_model_duplicate ##### -->
+<para>
+
+</para>
+
+@gcmodel: 
+
+
 <!-- ##### FUNCTION gwy_graph_curve_model_new ##### -->
 <para>
 

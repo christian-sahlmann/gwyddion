@@ -37,3 +37,15 @@ GwyGrapherWindowAsciiDialog
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_window_ascii_dialog_get_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@style: 
+@units: 
+@labels: 
+@metadata: 
+
+

@@ -77,24 +77,6 @@ Data display window
 @zoom1000: 
 
 
-<!-- ##### FUNCTION gwy_data_window_set_zoom_mode ##### -->
-<para>
-
-</para>
-
-@data_window: 
-@zoom_mode: 
-
-
-<!-- ##### FUNCTION gwy_data_window_get_zoom_mode ##### -->
-<para>
-
-</para>
-
-@data_window: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_data_window_update_title ##### -->
 <para>
 

@@ -51,12 +51,30 @@ widgets and should be mostly ignored for now.
 @reserved4: 
 @reserved5: 
 
+<!-- ##### MACRO gwy_graph_model_duplicate ##### -->
+<para>
+
+</para>
+
+@gmodel: 
+
+
 <!-- ##### FUNCTION gwy_graph_model_new ##### -->
 <para>
 
 </para>
 
+@Returns: 
+<!-- # Unused Parameters # -->
 @graph: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_new_alike ##### -->
+<para>
+
+</para>
+
+@gmodel: 
 @Returns: 
 
 
@@ -93,8 +111,9 @@ widgets and should be mostly ignored for now.
 </para>
 
 @gmodel: 
-@index_: 
+@cindex: 
 <!-- # Unused Parameters # -->
+@index_: 
 @index: 
 
 
@@ -114,19 +133,11 @@ widgets and should be mostly ignored for now.
 </para>
 
 @gmodel: 
-@index_: 
+@cindex: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@index_: 
 @index: 
-
-
-<!-- ##### FUNCTION gwy_graph_model_new_alike ##### -->
-<para>
-
-</para>
-
-@gmodel: 
-@Returns: 
 
 
 <!-- ##### FUNCTION gwy_graph_model_remove_all_curves ##### -->
@@ -289,6 +300,7 @@ widgets and should be mostly ignored for now.
 @model: 
 @filename: 
 @export_units: 
+@export_labels: 
 @export_metadata: 
 @export_style: 
 

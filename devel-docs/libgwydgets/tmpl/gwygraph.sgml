@@ -28,12 +28,10 @@ be introduced probably.
 </para>
 
 
-<!-- ##### SIGNAL GwyGraph::mousemoved ##### -->
+<!-- ##### SIGNAL GwyGraph::mouse-moved ##### -->
 <para>
 
 </para>
-
-@:
 
 @gwygraph: the object which received the signal.
 
@@ -63,7 +61,7 @@ be introduced probably.
 @parent_class: 
 @gwygraph: 
 @selected: 
-@mousemoved: 
+@mouse_moved: 
 @zoomed: 
 @reserved1: 
 @reserved2: 
@@ -82,14 +80,8 @@ be introduced probably.
 
 </para>
 
-@grapher: 
-
-
-<!-- ##### FUNCTION gwy_graph_refresh_and_reset ##### -->
-<para>
-
-</para>
-
+@graph: 
+<!-- # Unused Parameters # -->
 @grapher: 
 
 
@@ -98,8 +90,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @gmodel: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_set_status ##### -->
@@ -107,8 +101,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @status: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_status ##### -->
@@ -116,8 +112,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_model ##### -->
@@ -125,8 +123,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
@@ -137,7 +137,7 @@ be introduced probably.
 @grapher: 
 
 
-<!-- ##### FUNCTION gwy_graph_signal_mousemoved ##### -->
+<!-- ##### FUNCTION gwy_graph_signal_mouse_moved ##### -->
 <para>
 
 </para>
@@ -158,8 +158,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_selection ##### -->
@@ -167,8 +169,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @selection: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_clear_selection ##### -->
@@ -176,6 +180,8 @@ be introduced probably.
 
 </para>
 
+@graph: 
+<!-- # Unused Parameters # -->
 @grapher: 
 
 
@@ -184,9 +190,11 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @x_cursor: 
 @y_cursor: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_request_x_range ##### -->
@@ -194,9 +202,11 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @x_min_req: 
 @x_max_req: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_request_y_range ##### -->
@@ -204,9 +214,11 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @y_min_req: 
 @y_max_req: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_x_range ##### -->
@@ -214,9 +226,11 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @x_min: 
 @x_max: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_get_y_range ##### -->
@@ -224,9 +238,11 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @y_min: 
 @y_max: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_enable_user_input ##### -->
@@ -234,8 +250,10 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @enable: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_export_pixmap ##### -->
@@ -243,11 +261,13 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @filename: 
 @export_title: 
 @export_axis: 
 @export_labels: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_export_postscript ##### -->
@@ -255,11 +275,13 @@ be introduced probably.
 
 </para>
 
-@grapher: 
+@graph: 
 @filename: 
 @export_title: 
 @export_axis: 
 @export_labels: 
+<!-- # Unused Parameters # -->
+@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_zoom_in ##### -->
@@ -267,6 +289,8 @@ be introduced probably.
 
 </para>
 
+@graph: 
+<!-- # Unused Parameters # -->
 @grapher: 
 
 
@@ -275,6 +299,8 @@ be introduced probably.
 
 </para>
 
+@graph: 
+<!-- # Unused Parameters # -->
 @grapher: 
 
 

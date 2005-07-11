@@ -620,6 +620,12 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### MACRO GWY_TYPE_ZOOM_MODE ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_VMENU_BAR ##### -->
 <para>
 
@@ -647,30 +653,29 @@ GwyVMenuBar
 </para>
 
 
-<!-- ##### STRUCT GwyAxis ##### -->
+<!-- ##### STRUCT GwyAxiserActiveAreaSpecs ##### -->
 <para>
 
 </para>
 
+@xmin: 
+@ymin: 
+@height: 
+@width: 
+@real_xmin: 
+@real_ymin: 
+@real_height: 
+@real_width: 
 
-<!-- ##### SIGNAL GwyAxis::label-updated ##### -->
+<!-- ##### STRUCT GwyAxiserLabeledTick ##### -->
 <para>
 
 </para>
 
-@gwyaxis: the object which received the signal.
+@t: 
+@ttext: 
 
-<!-- ##### STRUCT GwyAxisClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@label_updated: 
-@reserved1: 
-@reserved2: 
-
-<!-- ##### STRUCT GwyAxisParams ##### -->
+<!-- ##### STRUCT GwyAxiserParams ##### -->
 <para>
 
 </para>
@@ -695,6 +700,14 @@ GwyVMenuBar
 @GWY_AXISER_EXP: 
 @GWY_AXISER_INT: 
 @GWY_AXISER_AUTO: 
+
+<!-- ##### STRUCT GwyAxiserTick ##### -->
+<para>
+
+</para>
+
+@value: 
+@scrpos: 
 
 <!-- ##### STRUCT GwyColorAxisParams ##### -->
 <para>
@@ -752,10 +765,28 @@ GwyVMenuBar
 
 @gwydataviewlayer: the object which received the signal.
 
+<!-- ##### SIGNAL GwyGraph::mousemoved ##### -->
+<para>
+
+</para>
+
+@:
+
+@gwygraph: the object which received the signal.
+
 <!-- ##### SIGNAL GwyGraphArea::gwygrapharea-selected ##### -->
 <para>
 
 </para>
+
+@gwygrapharea: the object which received the signal.
+
+<!-- ##### SIGNAL GwyGraphArea::mousemoved ##### -->
+<para>
+
+</para>
+
+@:
 
 @gwygrapharea: the object which received the signal.
 
@@ -1049,6 +1080,16 @@ are saved here.
 @value: 
 @scrpos: 
 
+<!-- ##### ENUM GwyZoomMode ##### -->
+<para>
+
+</para>
+
+@GWY_ZOOM_MODE_SQRT2: 
+@GWY_ZOOM_MODE_CBRT2: 
+@GWY_ZOOM_MODE_PIX4PIX: 
+@GWY_ZOOM_MODE_HALFPIX: 
+
 <!-- ##### MACRO P_ ##### -->
 <para>
 
@@ -1216,14 +1257,6 @@ are saved here.
 @gwy3dview: 
 @use_lights: 
 
-<!-- ##### FUNCTION gwy_axis_enable_label_edit ##### -->
-<para>
-
-</para>
-
-@axis: 
-@enable: 
-
 <!-- ##### FUNCTION gwy_axis_enable_set_label ##### -->
 <para>
 
@@ -1232,47 +1265,81 @@ are saved here.
 @axis: 
 @enable: 
 
-<!-- ##### FUNCTION gwy_axis_get_label ##### -->
+<!-- ##### FUNCTION gwy_axiser_draw_on_drawable ##### -->
 <para>
 
 </para>
 
-@axis: 
-@Returns: 
+@drawable: 
+@gc: 
+@specs: 
+@axiser: 
 
-<!-- ##### FUNCTION gwy_axis_get_maximum ##### -->
+<!-- ##### FUNCTION gwy_axiser_enable_label_edit ##### -->
 <para>
 
 </para>
 
-@axis: 
-@Returns: 
+@axiser: 
+@enable: 
 
-<!-- ##### FUNCTION gwy_axis_get_minimum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_label ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
-<!-- ##### FUNCTION gwy_axis_get_reqmaximum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_magnification ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
-<!-- ##### FUNCTION gwy_axis_get_reqminimum ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_magnification_string ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @Returns: 
 
-<!-- ##### FUNCTION gwy_axis_new ##### -->
+<!-- ##### FUNCTION gwy_axiser_get_maximum ##### -->
+<para>
+
+</para>
+
+@axiser: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axiser_get_minimum ##### -->
+<para>
+
+</para>
+
+@axiser: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axiser_get_reqmaximum ##### -->
+<para>
+
+</para>
+
+@axiser: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axiser_get_reqminimum ##### -->
+<para>
+
+</para>
+
+@axiser: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_axiser_new ##### -->
 <para>
 
 </para>
@@ -1283,62 +1350,69 @@ are saved here.
 @label: 
 @Returns: 
 
-<!-- ##### FUNCTION gwy_axis_set_auto ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_auto ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_auto: 
 
-<!-- ##### FUNCTION gwy_axis_set_label ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_label ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @label_text: 
 
-<!-- ##### FUNCTION gwy_axis_set_logarithmic ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_logarithmic ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_logarithmic: 
 
-<!-- ##### FUNCTION gwy_axis_set_req ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_req ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @min: 
 @max: 
 
-<!-- ##### FUNCTION gwy_axis_set_style ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_style ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @style: 
 
-<!-- ##### FUNCTION gwy_axis_set_unit ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_unit ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @unit: 
 
-<!-- ##### FUNCTION gwy_axis_set_visible ##### -->
+<!-- ##### FUNCTION gwy_axiser_set_visible ##### -->
 <para>
 
 </para>
 
-@axis: 
+@axiser: 
 @is_visible: 
+
+<!-- ##### FUNCTION gwy_axiser_signal_rescaled ##### -->
+<para>
+
+</para>
+
+@axiser: 
 
 <!-- ##### FUNCTION gwy_color_axis_get_palette ##### -->
 <para>
@@ -1520,6 +1594,14 @@ are saved here.
 @data_window: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_data_window_get_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_data_window_set_units ##### -->
 <para>
 
@@ -1527,6 +1609,14 @@ are saved here.
 
 @data_window: 
 @units: 
+
+<!-- ##### FUNCTION gwy_data_window_set_zoom_mode ##### -->
+<para>
+
+</para>
+
+@data_window: 
+@zoom_mode: 
 
 <!-- ##### FUNCTION gwy_fft_output_menu ##### -->
 <para>
@@ -1672,6 +1762,13 @@ are saved here.
 
 @area: 
 @style: 
+
+<!-- ##### FUNCTION gwy_graph_area_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@area: 
 
 <!-- ##### FUNCTION gwy_graph_clear ##### -->
 <para>
@@ -1833,6 +1930,14 @@ are saved here.
 @gmodel: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_graph_refresh_and_reset ##### -->
+<para>
+
+</para>
+
+@graph: 
+@grapher: 
+
 <!-- ##### FUNCTION gwy_graph_set_autoproperties ##### -->
 <para>
 
@@ -1851,6 +1956,13 @@ are saved here.
 @x_max: 
 @y_min: 
 @y_max: 
+
+<!-- ##### FUNCTION gwy_graph_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@grapher: 
 
 <!-- ##### FUNCTION gwy_graph_unzoom ##### -->
 <para>
@@ -2836,6 +2948,13 @@ are saved here.
 @callback: 
 @cbdata: 
 @current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_zoom_mode_get_type ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 <!-- ##### FUNCTION gwy_zoom_mode_option_menu ##### -->

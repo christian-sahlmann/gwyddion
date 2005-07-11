@@ -68,6 +68,16 @@ Utility macros.
 @y: 
 
 
+<!-- ##### MACRO GWY_FIND_PSPEC ##### -->
+<para>
+
+</para>
+
+@type: 
+@id: 
+@spectype: 
+
+
 <!-- ##### MACRO gwy_debug ##### -->
 <para>
 

@@ -38,6 +38,14 @@ components of arbitrary name and type.
 
 </para>
 
+<!-- ##### MACRO GWY_IMPLEMENT_SERIALIZABLE ##### -->
+<para>
+
+</para>
+
+@iface_init: 
+
+
 <!-- ##### STRUCT GwySerializableIface ##### -->
 <para>
 

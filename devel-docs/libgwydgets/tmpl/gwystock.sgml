@@ -170,6 +170,27 @@ The "Graph" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAPH_ASCII ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_BITMAP ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_VECTOR ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GRAPH_FIT_FUNC ##### -->
 <para>
 The "Graph-Fit-Func" stock icon.

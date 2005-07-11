@@ -76,12 +76,10 @@ a set of data curves with a given plot properties.
 </para>
 
 
-<!-- ##### SIGNAL GwyGraphArea::mousemoved ##### -->
+<!-- ##### SIGNAL GwyGraphArea::mouse-moved ##### -->
 <para>
 
 </para>
-
-@:
 
 @gwygrapharea: the object which received the signal.
 
@@ -113,7 +111,7 @@ a set of data curves with a given plot properties.
 @arrow_cursor: 
 @selected: 
 @zoomed: 
-@mousemoved: 
+@mouse_moved: 
 @reserved1: 
 @reserved2: 
 
@@ -143,7 +141,7 @@ a set of data curves with a given plot properties.
 @area: 
 
 
-<!-- ##### FUNCTION gwy_graph_area_signal_mousemoved ##### -->
+<!-- ##### FUNCTION gwy_graph_area_signal_mouse_moved ##### -->
 <para>
 
 </para>
@@ -191,6 +189,19 @@ a set of data curves with a given plot properties.
 @width: 
 @height: 
 @area: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_export_vector ##### -->
+<para>
+
+</para>
+
+@area: 
+@x: 
+@y: 
+@width: 
+@height: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_graph_area_clear_selection ##### -->

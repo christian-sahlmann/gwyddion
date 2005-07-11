@@ -71,6 +71,20 @@ the GwyGraph widget. It plots a curves legend.
 @label: 
 
 
+<!-- ##### FUNCTION gwy_graph_label_export_vector ##### -->
+<para>
+
+</para>
+
+@label: 
+@x: 
+@y: 
+@width: 
+@height: 
+@fontsize: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_graph_label_enable_user_input ##### -->
 <para>
 
