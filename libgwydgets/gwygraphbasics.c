@@ -48,7 +48,7 @@ gwy_graph_draw_curve (GdkDrawable *drawable,
                         GwyGraphActiveAreaSpecs *specs,
                         GObject *curvemodel)
 {
-    gint i, x, y, xn=0, yn=0;
+    gint i, x, y, pxn=0, pyn=0;
     GwyGraphCurveModel *cmodel;
     cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
     for (i=0; i<(cmodel->n); i++)
@@ -60,13 +60,13 @@ gwy_graph_draw_curve (GdkDrawable *drawable,
         }
         else
         {
-            x = xn;
-            y = yn;
+            x = pxn;
+            y = pyn;
         }
         if (i<(cmodel->n-1))
         {
-            xn = x_data_to_pixel(specs, cmodel->xdata[i+1]);
-            yn = y_data_to_pixel(specs, cmodel->ydata[i+1]);
+            pxn = x_data_to_pixel(specs, cmodel->xdata[i+1]);
+            pyn = y_data_to_pixel(specs, cmodel->ydata[i+1]);
         }
         if (i<(cmodel->n-1) 
             && (cmodel->type == GWY_GRAPH_CURVE_LINE 
@@ -74,8 +74,8 @@ gwy_graph_draw_curve (GdkDrawable *drawable,
                  gwy_graph_draw_line(drawable, gc,
                                   x,
                                   y,
-                                  xn,
-                                  yn,
+                                  pxn,
+                                  pyn,
                                   cmodel->line_style, cmodel->line_size,
                                   &(cmodel->color));
              

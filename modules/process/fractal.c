@@ -328,7 +328,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             case RESPONSE_RESET:
             args->from[args->out] = 0;
             args->to[args->out] = 0;
-            gwy_graph_clear_selection(controls.graph);
+            gwy_graph_clear_selection(GWY_GRAPH(controls.graph));
             fractal_dialog_update(&controls, args, data);
             break;
 
@@ -505,10 +505,10 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
     gdouble from, to;
     gdouble selection[10]; /*FIXME limit this to two*/
 
-    gwy_graph_get_selection(controls->graph, selection);
+    gwy_graph_get_selection(GWY_GRAPH(controls->graph), selection);
     
     args = controls->args;
-    if (gwy_graph_get_selection_number(controls->graph)==0 || selection[0] == selection[1]) {
+    if (gwy_graph_get_selection_number(GWY_GRAPH(controls->graph))==0 || selection[0] == selection[1]) {
         gtk_label_set_text(GTK_LABEL(controls->from), _("minimum"));
         gtk_label_set_text(GTK_LABEL(controls->to), _("maximum"));
         args->from[args->out] = 0;

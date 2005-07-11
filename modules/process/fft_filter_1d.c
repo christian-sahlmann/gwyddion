@@ -479,7 +479,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 static void
 graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
 {
-    gint i, j, nofselection;
+    gint i, nofselection;
     gdouble beg, end;
     gdouble *selection;
 

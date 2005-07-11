@@ -38,11 +38,6 @@ static GObject* gwy_graph_model_deserialize     (const guchar *buffer,
                                                  gsize size,
                                                  gsize *position);
 static GObject* gwy_graph_model_duplicate_real       (GObject *object);
-static void   gwy_graph_model_graph_destroyed   (GwyGraph *graph,
-                                                 GwyGraphModel *gmodel);
-/*static void   gwy_graph_model_save_graph        (GwyGraphModel *gmodel,
-                                                 GwyGraph *graph);
-*/
 static void     gwy_graph_model_set_property  (GObject *object,
                                                 guint prop_id,
                                                const GValue *value,
@@ -252,17 +247,6 @@ gwy_graph_model_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static void
-gwy_graph_model_graph_destroyed(G_GNUC_UNUSED GwyGraph *graph,
-                                  G_GNUC_UNUSED GwyGraphModel *gmodel)
-{
-    gwy_debug("");
-    /*gwy_graph_model_save_graph(gmodel, graph);*/
-    /*g_signal_handler_disconnect(gmodel->graph, gmodel->graph_destroy_hid);
-    gmodel->graph_destroy_hid = 0;
-    gmodel->graph = NULL;
-    */
-}
 
 /* actually copy save from a -- usually just dying -- graph */
 /*
@@ -645,12 +629,12 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
 /**
 * gwy_graph_model_remove_curve_by_index:
 * @gmodel: A #GwyGraphModel.
-* @index_: curve index (within GwyGraphModel structure)
+* @cindex: curve index (within GwyGraphModel structure)
 *
 * Removes the curve having given index.
 **/
 void
-gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint index)
+gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint cindex)
 {
     GObject **newcurves;
     GwyGraphCurveModel *cmodel;
@@ -660,7 +644,7 @@ gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint index)
 
     for (i = 0; i < gmodel->ncurves; i++)
     {
-        if (i == index) continue;
+        if (i == cindex) continue;
         cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
         newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_object_unref(gmodel->curves[i]);
@@ -700,17 +684,17 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *descripti
 /**
 * gwy_graph_model_get_curve_by_desciption:
 * @gmodel: A #GwyGraphModel.
-* @index_: curve index (within GwyGraphModel structure)
+* @cindex: curve index (within GwyGraphModel structure)
 *
 * Returns: curve with given index. Note that this
 * is pointer to data in GraphModel, therefore make a copy if you want to use
 * it for some other purposes and do not free it unless you know what you are doing.
 **/
 GwyGraphCurveModel*
-gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint index)
+gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint cindex)
 {
-    if (index>=gwy_graph_model_get_n_curves(gmodel) || index<0) return NULL;
-    else return GWY_GRAPH_CURVE_MODEL(gmodel->curves[index]);
+    if (cindex>=gwy_graph_model_get_n_curves(gmodel) || cindex<0) return NULL;
+    else return GWY_GRAPH_CURVE_MODEL(gmodel->curves[cindex]);
 }
 
 

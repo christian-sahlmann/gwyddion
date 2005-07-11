@@ -86,7 +86,6 @@ GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
 void       gwy_graph_refresh(GwyGraph *graph);
-void       gwy_graph_refresh_and_reset(GwyGraph *graph);
 
 void       gwy_graph_change_model(GwyGraph *graph, 
                                     GwyGraphModel *gmodel);

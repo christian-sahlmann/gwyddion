@@ -284,7 +284,7 @@ dialog_create(GwyUnitoolState *state)
     controls->graphmodel = gwy_graph_model_new();
     controls->graph = gwy_graph_new(controls->graphmodel);
     gtk_widget_set_size_request(controls->graph, 400, 150);
-    gwy_graph_enable_user_input(controls->graph, FALSE);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls->graph), FALSE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, TRUE, TRUE, 0);
 
     return dialog;

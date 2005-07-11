@@ -101,11 +101,11 @@ void           gwy_graph_model_add_curve                (GwyGraphModel *gmodel,
 void         gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
                                                          gchar *description);
 void           gwy_graph_model_remove_curve_by_index    (GwyGraphModel *gmodel,
-                                                         gint index_);
+                                                         gint cindex);
 GwyGraphCurveModel* gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
                                                              gchar *description);
 GwyGraphCurveModel* gwy_graph_model_get_curve_by_index  (GwyGraphModel *gmodel,
-                                                         gint index_);
+                                                         gint cindex);
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
 void           gwy_graph_model_set_title                (GwyGraphModel *model,
                                                          gchar *title);

@@ -221,7 +221,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
  
     }
      
-    gtk_tree_view_set_model(tview, GTK_LIST_STORE(store));
+    gtk_tree_view_set_model(tview, GTK_TREE_MODEL(store));
   
     /*make two columns for each curve*/
     for (i=0; i<model->ncurves; i++)

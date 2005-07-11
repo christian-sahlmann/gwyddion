@@ -329,20 +329,6 @@ gwy_graph_refresh(GwyGraph *graph)
     
 }
 
-/**
- * gwy_graph_refresh_reset:
- * @graph: A graph widget.
- *
- * Refresh all the graph widgets according to the model.
- * The axis will be set to display all data in a best way.
- **/
-static void       
-gwy_graph_refresh_reset(GwyGraph *graph)
-{
-    /*refresh widgets*/
-    gwy_graph_area_refresh(graph->area);
-    
-}
 static void 
 replot_cb(G_GNUC_UNUSED GObject *gobject, G_GNUC_UNUSED GParamSpec *arg1, GwyGraph *graph)
 {

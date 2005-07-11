@@ -391,7 +391,8 @@ void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, Pa
   
 }
 
-void gwy_graph_label_draw_label(GtkWidget *widget)
+static void 
+gwy_graph_label_draw_label(GtkWidget *widget)
 {
     gint winheight, winwidth, windepth, winx, winy;
     GwyGraphLabel *label;

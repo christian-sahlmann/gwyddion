@@ -1020,6 +1020,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 /**
  * gwy_graph_area_change_model:
  * @area: graph area 
+ * @gmodel: new graph model
  *
  * Changes the graph model. Calls refresh afterwards.
  **/

@@ -403,20 +403,14 @@ gwy_app_graph_list_delete_graph(GtkTreeModel *store,
                                 GtkTreeIter *iter,
                                 G_GNUC_UNUSED gpointer userdata)
 {
-    GtkWidget *graph;
     GwyGraphModel *gmodel;
     GwyContainer *data;
     gint id;
     gchar key[32];
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    /* XXX
-    graph = GTK_WIDGET(gmodel->graph);
-    if (graph)
-        gtk_widget_destroy(gtk_widget_get_toplevel(graph));
-     */
     gtk_list_store_remove(GTK_LIST_STORE(store), iter);
-    id = GPOINTER_TO_INT(g_object_get_data(gmodel, "gwy-app-graph-list-id"));
+    id = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(gmodel), "gwy-app-graph-list-id"));
     g_assert(id);
     g_snprintf(key, sizeof(key), "/0/graph/graph/%d", id);
     data = (GwyContainer*)g_object_get_data(G_OBJECT(store), "container");
@@ -577,19 +571,8 @@ gwy_app_graph_list_release_gmodel(GtkTreeModel *store,
                                   gpointer list)
 {
     GwyGraphModel *gmodel;
-    GwyGraph *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GMODEL, &gmodel, -1);
-    /*
-    graph = gmodel->graph;
-    if (graph)
-        g_signal_handlers_disconnect_matched(graph,
-                                             G_SIGNAL_MATCH_FUNC
-                                             | G_SIGNAL_MATCH_DATA,
-                                             0, 0, 0,
-                                             gtk_widget_queue_draw,
-                                             list);
-    */
     g_object_unref(gmodel);
 
     return FALSE;

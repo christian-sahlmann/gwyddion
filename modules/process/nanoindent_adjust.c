@@ -363,19 +363,19 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
 static void        
 expand_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
 {
-     args->expand = gtk_toggle_button_get_active(toggle);
+     args->expand = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
 static void        
 move_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
 {
-     args->move = gtk_toggle_button_get_active(toggle);
+     args->move = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
 static void        
 rotate_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
 {
-     args->rotate = gtk_toggle_button_get_active(toggle);
+     args->rotate = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
 static void        
@@ -387,10 +387,10 @@ interp_changed_cb(GObject *item, NanoindentAdjustArgs *args)
 }
 
 static gdouble
-dist(gint x1, gint y1, gint x2, gint y2)
+dist(gint px1, gint py1, gint px2, gint py2)
 {
-    return sqrt(((gdouble)x2 - (gdouble)x1)*((gdouble)x2 - (gdouble)x1) 
-                + ((gdouble)y2 - (gdouble)y1)*((gdouble)y2 - (gdouble)y1));
+    return sqrt(((gdouble)px2 - (gdouble)px1)*((gdouble)px2 - (gdouble)px1) 
+                + ((gdouble)py2 - (gdouble)py1)*((gdouble)py2 - (gdouble)py1));
 }
 
 /*compute weighted minimum*/
