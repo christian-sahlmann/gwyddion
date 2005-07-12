@@ -421,6 +421,7 @@ fit_dialog(FitArgs *args)
     args->graph_model = gwy_graph_model_new();
     controls.graph = gwy_graph_new(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
+    gwy_graph_set_selection_limit(GWY_GRAPH(controls.graph), 1);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
     gtk_widget_set_size_request(controls.graph, 400, 300);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
@@ -699,7 +700,7 @@ graph_selected(GwyGraph *graph, FitArgs *args)
 {
     gchar buffer[24];
     gdouble xmin, xmax, ymin, ymax;
-    gdouble selection[20];
+    gdouble selection[2];
 
     gwy_graph_get_selection(graph, selection);
     

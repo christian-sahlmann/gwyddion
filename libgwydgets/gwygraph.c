@@ -428,6 +428,31 @@ gwy_graph_get_selection_number(GwyGraph *graph)
 }
 
 /**
+ * gwy_graph_set_selection_limit:
+ * @graph: A graph widget
+ * @limit: maximum muber of selections
+ *
+ * Set maximum number of selections done by mouse
+*/
+void
+gwy_graph_set_selection_limit(GwyGraph *graph, gint limit)
+{
+    gwy_graph_area_set_selection_limit(graph->area, limit);
+}
+
+/**
+ * gwy_graph_get_selection_limit:
+ * @graph: A graph widget
+ *
+ * Returns: maximum number of selections done by mouse
+*/
+gint
+gwy_graph_get_selection_limit(GwyGraph *graph)
+{
+    return gwy_graph_area_get_selection_limit(graph->area);
+}
+
+/**
  * gwy_graph_get_selection:
  * @graph: A graph widget.
  * @selection: allocated field of gdoubles 

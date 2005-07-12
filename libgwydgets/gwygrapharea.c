@@ -232,6 +232,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     
     area->colors = NULL;
     area->enable_user_input = TRUE;
+    area->selection_limit = 10;
     
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
@@ -571,7 +572,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (area->status == GWY_GRAPH_STATUS_POINTS)
     {
-        if (event->button == 1) /*add selection*/
+        if (event->button == 1 && area->pointsdata->data_points->len < area->selection_limit) /*add selection*/
         {
             datpnt.x = dx;
             datpnt.y = dy;
@@ -589,7 +590,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
     {
-        if (event->button == 1) /*add selection*/
+        if (event->button == 1 && area->areasdata->data_areas->len < area->selection_limit) /*add selection*/
         {
             if (area->status == GWY_GRAPH_STATUS_XSEL)
             {
@@ -1272,6 +1273,29 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     return out;                         
 }
 
+/**
+   * gwy_graph_area_set_selection_limit:
+   * @area: graph area
+   * @limit: maximum muber of selections
+   *
+   * Set maximum number of selections done by mouse
+   */
+void 
+gwy_graph_area_set_selection_limit(GwyGraphArea *area, gint limit)
+{
+    area->selection_limit = limit;
+}
 
+/**
+   * gwy_graph_area_get_selection_limit:
+   * @area: graph area
+   *
+   * Returns: maximum number of selections done by mouse
+   */
+gint
+gwy_graph_area_get_selection_limit(GwyGraphArea *area)
+{
+    return area->selection_limit;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

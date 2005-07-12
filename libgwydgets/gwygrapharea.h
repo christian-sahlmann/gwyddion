@@ -133,8 +133,8 @@ struct _GwyGraphArea {
     GdkColor *colors;
 
     gboolean enable_user_input;
+    gint selection_limit; 
     
-    gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
     gpointer reserved5;
@@ -169,6 +169,10 @@ void gwy_graph_area_signal_mouse_moved(GwyGraphArea *area);
 void gwy_graph_area_refresh(GwyGraphArea *area);
 
 void gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, gdouble* selection, gint n_of_selections);
+
+void gwy_graph_area_set_selection_limit(GwyGraphArea *area, gint limit);
+
+gint gwy_graph_area_get_selection_limit(GwyGraphArea *area);
 
 void gwy_graph_area_change_model(GwyGraphArea *area, gpointer gmodel);
 
