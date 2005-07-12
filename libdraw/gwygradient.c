@@ -102,7 +102,6 @@ gwy_gradient_class_init(GwyGradientClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_gradient_parent_class = g_type_class_peek_parent(klass);
     gobject_class->finalize = gwy_gradient_finalize;
     klass->gradients = g_hash_table_new_full(g_str_hash, g_str_equal,
                                              NULL, g_object_unref);

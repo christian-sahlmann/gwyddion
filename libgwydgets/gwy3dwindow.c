@@ -28,9 +28,6 @@
 #include <libgwyddion/gwymath.h>
 #include "gwydgets.h"
 
-#define GWY_3D_WINDOW_TYPE_NAME "Gwy3DWindow"
-
-#define CBRT2 1.259921049894873164767210607277
 #define DEFAULT_SIZE 360
 
 enum {
@@ -44,8 +41,6 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_3d_window_class_init          (Gwy3DWindowClass *klass);
-static void     gwy_3d_window_init                (Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_destroy             (GtkObject *object);
 static void     gwy_3d_window_finalize            (GObject *object);
 static void     gwy_3d_window_pack_buttons        (Gwy3DWindow *gwy3dwindow,
@@ -76,44 +71,9 @@ static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
 static void     gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window);
 /* Local data */
 
-static GtkWindowClass *parent_class = NULL;
-
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
-static const gdouble zoom_factors[] = {
-    G_SQRT2,
-    CBRT2,
-    1.0,
-    0.5,
-};
-
-GType
-gwy_3d_window_get_type(void)
-{
-    static GType gwy_3d_window_type = 0;
-
-    if (!gwy_3d_window_type) {
-        static const GTypeInfo gwy_3d_window_info = {
-            sizeof(Gwy3DWindowClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_3d_window_class_init,
-            NULL,
-            NULL,
-            sizeof(Gwy3DWindow),
-            0,
-            (GInstanceInitFunc)gwy_3d_window_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_3d_window_type = g_type_register_static(GTK_TYPE_WINDOW,
-                                                    GWY_3D_WINDOW_TYPE_NAME,
-                                                    &gwy_3d_window_info,
-                                                    0);
-    }
-
-    return gwy_3d_window_type;
-}
+G_DEFINE_TYPE(Gwy3DWindow, gwy_3d_window, GTK_TYPE_WINDOW)
 
 static void
 gwy_3d_window_class_init(Gwy3DWindowClass *klass)
@@ -122,7 +82,6 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
     GtkObjectClass *object_class;
 
     object_class = (GtkObjectClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_3d_window_finalize;
     object_class->destroy = gwy_3d_window_destroy;
@@ -150,12 +109,9 @@ gwy_3d_window_finalize(GObject *object)
 {
     Gwy3DWindow *gwy3dwindow;
 
-    gwy_debug("finalizing a Gwy3DWindow %p (refcount = %u)",
-              object, object->ref_count);
-
     gwy3dwindow = GWY_3D_WINDOW(object);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_3d_window_parent_class)->finalize(object);
 }
 
 static void
@@ -167,7 +123,7 @@ gwy_3d_window_destroy(GtkObject *object)
     g_free(gwy3dwindow->buttons);
     gwy3dwindow->buttons = NULL;
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_3d_window_parent_class)->destroy(object);
 }
 
 static void

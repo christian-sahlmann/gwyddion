@@ -65,8 +65,6 @@ enum {
     PROP_UNITS_PLACEMENT,
 };
 
-static void    gwy_ruler_class_init          (GwyRulerClass  *klass);
-static void    gwy_ruler_init                (GwyRuler       *ruler);
 static void    gwy_ruler_realize             (GtkWidget      *widget);
 static void    gwy_ruler_unrealize           (GtkWidget      *widget);
 static void    gwy_ruler_size_allocate       (GtkWidget      *widget,
@@ -84,34 +82,8 @@ static void    gwy_ruler_get_property        (GObject        *object,
                                               GParamSpec     *pspec);
 static void    gwy_ruler_update_value_format (GwyRuler       *ruler);
 
-static GtkWidgetClass *parent_class;
 
-
-GType
-gwy_ruler_get_type(void)
-{
-    static GType ruler_type = 0;
-
-    if (!ruler_type) {
-        static const GTypeInfo ruler_info = {
-            sizeof(GwyRulerClass),
-            NULL,           /* base_init */
-            NULL,           /* base_finalize */
-            (GClassInitFunc)gwy_ruler_class_init,
-            NULL,           /* class_finalize */
-            NULL,           /* class_data */
-            sizeof(GwyRuler),
-            0,              /* n_preallocs */
-            (GInstanceInitFunc)gwy_ruler_init,
-            NULL,
-        };
-
-        ruler_type = g_type_register_static(GTK_TYPE_WIDGET, "GwyRuler",
-                                            &ruler_info, 0);
-    }
-
-    return ruler_type;
-}
+G_DEFINE_ABSTRACT_TYPE(GwyRuler, gwy_ruler, GTK_TYPE_WIDGET)
 
 static void
 gwy_ruler_class_init(GwyRulerClass *class)
@@ -121,8 +93,6 @@ gwy_ruler_class_init(GwyRulerClass *class)
 
     gobject_class = G_OBJECT_CLASS(class);
     widget_class = (GtkWidgetClass*)class;
-
-    parent_class = g_type_class_peek_parent(class);
 
     gobject_class->set_property = gwy_ruler_set_property;
     gobject_class->get_property = gwy_ruler_get_property;
@@ -449,8 +419,8 @@ gwy_ruler_unrealize(GtkWidget *widget)
     gwy_object_unref(ruler->units);
     gwy_si_unit_value_format_free(ruler->vformat);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        (GTK_WIDGET_CLASS(parent_class)->unrealize)(widget);
+    if (GTK_WIDGET_CLASS(gwy_ruler_parent_class)->unrealize)
+        (GTK_WIDGET_CLASS(gwy_ruler_parent_class)->unrealize)(widget);
 }
 
 static void

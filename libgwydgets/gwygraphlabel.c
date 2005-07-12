@@ -26,58 +26,24 @@
 #include "gwygraph.h"
 #include "gwygraphmodel.h"
 
-#define GWY_GRAPH_LABEL_TYPE_NAME "GwyGraphLabel"
-
-
 /* Forward declarations - widget related*/
-static void     gwy_graph_label_class_init           (GwyGraphLabelClass *klass);
-static void     gwy_graph_label_init                 (GwyGraphLabel *label);
-static void     gwy_graph_label_finalize             (GObject *object);
-
-static void     gwy_graph_label_realize              (GtkWidget *widget);
-static void     gwy_graph_label_unrealize            (GtkWidget *widget);
-static void     gwy_graph_label_size_request         (GtkWidget *widget,
-                                                      GtkRequisition *requisition);
-static void     gwy_graph_label_size_allocate        (GtkWidget *widget,
-                                                      GtkAllocation *allocation);
-static gboolean gwy_graph_label_expose               (GtkWidget *widget,
-                                                      GdkEventExpose *event);
+static void     gwy_graph_label_finalize     (GObject *object);
+static void     gwy_graph_label_realize      (GtkWidget *widget);
+static void     gwy_graph_label_unrealize    (GtkWidget *widget);
+static void     gwy_graph_label_size_request (GtkWidget *widget,
+                                              GtkRequisition *requisition);
+static void     gwy_graph_label_size_allocate(GtkWidget *widget,
+                                              GtkAllocation *allocation);
+static gboolean gwy_graph_label_expose       (GtkWidget *widget,
+                                              GdkEventExpose *event);
 
 
 /* Forward declarations - label related*/
-static void     gwy_graph_label_draw_label           (GtkWidget *widget);
+static void     gwy_graph_label_draw_label   (GtkWidget *widget);
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
-
-GType
-gwy_graph_label_get_type(void)
-{
-    static GType gwy_graph_label_type = 0;
-
-    if (!gwy_graph_label_type) {
-        static const GTypeInfo gwy_graph_label_info = {
-            sizeof(GwyGraphLabelClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_label_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphLabel),
-            0,
-            (GInstanceInitFunc)gwy_graph_label_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_graph_label_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                      GWY_GRAPH_LABEL_TYPE_NAME,
-                                                      &gwy_graph_label_info,
-                                                      0);
-    }
-
-    return gwy_graph_label_type;
-}
+G_DEFINE_TYPE(GwyGraphLabel, gwy_graph_label, GTK_TYPE_WIDGET)
 
 static void
 gwy_graph_label_class_init(GwyGraphLabelClass *klass)
@@ -86,12 +52,8 @@ gwy_graph_label_class_init(GwyGraphLabelClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
-
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_label_finalize;
 
@@ -151,7 +113,7 @@ gwy_graph_label_finalize(GObject *object)
 
     label = GWY_GRAPH_LABEL(object);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_graph_label_parent_class)->finalize(object);
 }
 
 static void
@@ -161,8 +123,8 @@ gwy_graph_label_unrealize(GtkWidget *widget)
 
     label = GWY_GRAPH_LABEL(widget);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_graph_label_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_graph_label_parent_class)->unrealize(widget);
 }
 
 

@@ -24,15 +24,11 @@
 
 #include "gwylayer-mask.h"
 
-#define GWY_LAYER_MASK_TYPE_NAME "GwyLayerMask"
-
 enum {
     PROP_0,
     PROP_COLOR_KEY
 };
 
-static void       gwy_layer_mask_class_init      (GwyLayerMaskClass *klass);
-static void       gwy_layer_mask_init            (GwyLayerMask *layer);
 static void       gwy_layer_mask_set_property    (GObject *object,
                                                   guint prop_id,
                                                   const GValue *value,
@@ -48,35 +44,7 @@ static void       gwy_layer_mask_connect_color   (GwyLayerMask *mask_layer);
 static void       gwy_layer_mask_disconnect_color(GwyLayerMask *mask_layer);
 static void       gwy_layer_mask_changed         (GwyPixmapLayer *pixmap_layer);
 
-static GwyPixmapLayerClass *parent_class = NULL;
-
-GType
-gwy_layer_mask_get_type(void)
-{
-    static GType gwy_layer_mask_type = 0;
-
-    if (!gwy_layer_mask_type) {
-        static const GTypeInfo gwy_layer_mask_info = {
-            sizeof(GwyLayerMaskClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_layer_mask_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyLayerMask),
-            0,
-            (GInstanceInitFunc)gwy_layer_mask_init,
-            NULL,
-        };
-        gwy_layer_mask_type
-            = g_type_register_static(GWY_TYPE_PIXMAP_LAYER,
-                                     GWY_LAYER_MASK_TYPE_NAME,
-                                     &gwy_layer_mask_info,
-                                     0);
-    }
-
-    return gwy_layer_mask_type;
-}
+G_DEFINE_TYPE(GwyLayerMask, gwy_layer_mask, GWY_TYPE_PIXMAP_LAYER)
 
 static void
 gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
@@ -84,8 +52,6 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->set_property = gwy_layer_mask_set_property;
     gobject_class->get_property = gwy_layer_mask_get_property;
@@ -230,7 +196,7 @@ gwy_layer_mask_plugged(GwyDataViewLayer *layer)
 
     mask_layer = GWY_LAYER_MASK(layer);
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_mask_parent_class)->plugged(layer);
 
     gwy_layer_mask_connect_color(mask_layer);
 }
@@ -247,7 +213,7 @@ gwy_layer_mask_unplugged(GwyDataViewLayer *layer)
     gwy_layer_mask_disconnect_color(mask_layer);
 
     gwy_object_unref(pixmap_layer->pixbuf);
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_mask_parent_class)->unplugged(layer);
 }
 
 /**

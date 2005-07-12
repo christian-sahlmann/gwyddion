@@ -27,15 +27,9 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwyshader.h"
 
-#define GWY_SHADER_TYPE_NAME "GwyShader"
-
 #define GWY_SHADER_DELAY_LENGTH  300
 #define BITS_PER_SAMPLE 8
 #define SHADER_SMALLEST_SIZE 24
-
-#ifndef HAVE_HYPOT
-#define hypot(x, y) sqrt((x)*(x) + (y)*(y))
-#endif
 
 enum {
     PROP_0,
@@ -48,10 +42,9 @@ enum {
     ANGLE_CHANGED,
     LAST_SIGNAL
 };
+
 /* Forward declarations */
 
-static void     gwy_shader_class_init        (GwyShaderClass *klass);
-static void     gwy_shader_init              (GwyShader *shader);
 static void     gwy_shader_finalize          (GObject *object);
 static void     gwy_shader_set_property      (GObject *object,
                                               guint prop_id,
@@ -88,40 +81,11 @@ static void     gwy_shader_state_changed     (GtkWidget *widget,
                                               GtkStateType state);
 static void     gwy_shader_update            (GwyShader *shader);
 
-
 /* Local data */
-
-static GtkWidgetClass *parent_class = NULL;
 
 static guint shader_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_shader_get_type(void)
-{
-    static GType gwy_shader_type = 0;
-
-    if (!gwy_shader_type) {
-        static const GTypeInfo gwy_shader_info = {
-            sizeof(GwyShaderClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_shader_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyShader),
-            0,
-            (GInstanceInitFunc)gwy_shader_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_shader_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                 GWY_SHADER_TYPE_NAME,
-                                                 &gwy_shader_info,
-                                                 0);
-    }
-
-    return gwy_shader_type;
-}
+G_DEFINE_TYPE(GwyShader, gwy_shader, GTK_TYPE_WIDGET)
 
 static void
 gwy_shader_class_init(GwyShaderClass *klass)
@@ -130,12 +94,8 @@ gwy_shader_class_init(GwyShaderClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
-
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_shader_finalize;
     gobject_class->set_property = gwy_shader_set_property;
@@ -193,7 +153,6 @@ gwy_shader_class_init(GwyShaderClass *klass)
 static void
 gwy_shader_init(GwyShader *shader)
 {
-    gwy_debug("");
     shader->update_policy = GTK_UPDATE_CONTINUOUS;
     GTK_WIDGET_SET_FLAGS(shader, GTK_CAN_FOCUS);
 }
@@ -242,7 +201,7 @@ gwy_shader_finalize(GObject *object)
     g_signal_handler_disconnect(shader->gradient, shader->gradient_change_id);
     gwy_object_unref(shader->gradient);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_shader_parent_class)->finalize(object);
 }
 
 static void
@@ -261,8 +220,8 @@ gwy_shader_unrealize(GtkWidget *widget)
         shader->timer_id = 0;
     }
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_shader_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_shader_parent_class)->unrealize(widget);
 }
 
 
@@ -932,8 +891,8 @@ gwy_shader_state_changed(GtkWidget *widget,
         gtk_widget_queue_draw(widget);
     }
 
-    if (GTK_WIDGET_CLASS(parent_class)->state_changed)
-        GTK_WIDGET_CLASS(parent_class)->state_changed(widget, state);
+    if (GTK_WIDGET_CLASS(gwy_shader_parent_class)->state_changed)
+        GTK_WIDGET_CLASS(gwy_shader_parent_class)->state_changed(widget, state);
 }
 
 static void

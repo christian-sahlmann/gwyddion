@@ -28,8 +28,6 @@
 #include "gwypixmaplayer.h"
 #include "gwydataview.h"
 
-#define GWY_DATA_VIEW_LAYER_TYPE_NAME "GwyDataViewLayer"
-
 #define BITS_PER_SAMPLE 8
 
 enum {
@@ -41,54 +39,21 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_data_view_layer_class_init   (GwyDataViewLayerClass *klass);
-static void     gwy_data_view_layer_init         (GwyDataViewLayer *layer);
-static void     gwy_data_view_layer_finalize     (GObject *object);
-static void     gwy_data_view_layer_real_plugged (GwyDataViewLayer *layer);
-static void     gwy_data_view_layer_real_unplugged (GwyDataViewLayer *layer);
+static void gwy_data_view_layer_finalize      (GObject *object);
+static void gwy_data_view_layer_real_plugged  (GwyDataViewLayer *layer);
+static void gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer);
 
 /* Local data */
 
-static GtkObjectClass *parent_class = NULL;
-
 static guint data_view_layer_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_data_view_layer_get_type(void)
-{
-    static GType gwy_data_view_layer_type = 0;
-
-    if (!gwy_data_view_layer_type) {
-        static const GTypeInfo gwy_data_view_layer_info = {
-            sizeof(GwyDataViewLayerClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_data_view_layer_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyDataViewLayer),
-            0,
-            (GInstanceInitFunc)gwy_data_view_layer_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_data_view_layer_type
-            = g_type_register_static(GTK_TYPE_OBJECT,
-                                     GWY_DATA_VIEW_LAYER_TYPE_NAME,
-                                     &gwy_data_view_layer_info,
-                                     0);
-    }
-
-    return gwy_data_view_layer_type;
-}
+G_DEFINE_ABSTRACT_TYPE(GwyDataViewLayer, gwy_data_view_layer, GTK_TYPE_OBJECT)
 
 static void
 gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_view_layer_finalize;
 
@@ -146,10 +111,8 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
 }
 
 static void
-gwy_data_view_layer_init(GwyDataViewLayer *layer)
+gwy_data_view_layer_init(G_GNUC_UNUSED GwyDataViewLayer *layer)
 {
-    layer->parent = NULL;
-    layer->data = NULL;
 }
 
 static void
@@ -160,7 +123,7 @@ gwy_data_view_layer_finalize(GObject *object)
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(object));
     layer = GWY_DATA_VIEW_LAYER(object);
     gwy_object_unref(layer->data);
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_data_view_layer_parent_class)->finalize(object);
 }
 
 /**

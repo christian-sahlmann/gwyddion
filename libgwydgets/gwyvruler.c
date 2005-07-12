@@ -71,49 +71,23 @@ static const gdouble steps[GWY_SCALE_LAST] = {
 };
 
 
-static void     gwy_vruler_class_init    (GwyVRulerClass *klass);
-static void     gwy_vruler_init          (GwyVRuler      *vruler);
-static gboolean gwy_vruler_motion_notify (GtkWidget      *widget,
-                                          GdkEventMotion *event);
-static void     gwy_vruler_draw_ticks    (GwyRuler       *ruler);
-static void     gwy_vruler_real_draw_ticks(GwyRuler *ruler,
-                                           gint pixelsize,
-                                           gint min_label_spacing,
-                                           gint min_tick_spacing);
-static void     gwy_vruler_draw_pos      (GwyRuler       *ruler);
-static gdouble       compute_base            (gdouble max,
-                                              gdouble basebase);
-static GwyScaleScale next_scale              (GwyScaleScale scale,
-                                              gdouble *base,
-                                              gdouble measure,
-                                              gint min_incr);
+static gboolean      gwy_vruler_motion_notify  (GtkWidget *widget,
+                                                GdkEventMotion *event);
+static void          gwy_vruler_draw_ticks     (GwyRuler *ruler);
+static void          gwy_vruler_real_draw_ticks(GwyRuler *ruler,
+                                                gint pixelsize,
+                                                gint min_label_spacing,
+                                                gint min_tick_spacing);
+static void          gwy_vruler_draw_pos       (GwyRuler *ruler);
+static gdouble       compute_base              (gdouble max,
+                                                gdouble basebase);
+static GwyScaleScale next_scale                (GwyScaleScale scale,
+                                                gdouble *base,
+                                                gdouble measure,
+                                                gint min_incr);
 
 
-GType
-gwy_vruler_get_type(void)
-{
-    static GType vruler_type = 0;
-
-    if (!vruler_type) {
-        static const GTypeInfo vruler_info = {
-            sizeof(GwyVRulerClass),
-            NULL,           /* base_init */
-            NULL,           /* base_finalize */
-            (GClassInitFunc)gwy_vruler_class_init,
-            NULL,           /* class_finalize */
-            NULL,           /* class_data */
-            sizeof(GwyVRuler),
-            0,              /* n_preallocs */
-            (GInstanceInitFunc)gwy_vruler_init,
-            NULL,
-        };
-
-        vruler_type = g_type_register_static(GWY_TYPE_RULER, "GwyVRuler",
-                                             &vruler_info, 0);
-    }
-
-    return vruler_type;
-}
+G_DEFINE_TYPE(GwyVRuler, gwy_vruler, GWY_TYPE_RULER)
 
 static void
 gwy_vruler_class_init(GwyVRulerClass *klass)

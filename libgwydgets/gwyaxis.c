@@ -31,8 +31,6 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyaxis.h"
 
-#define GWY_AXIS_TYPE_NAME "GwyAxis"
-
 enum {
     LABEL_UPDATED,
     RESCALED,
@@ -40,8 +38,6 @@ enum {
 };
 
 /* Forward declarations - widget related*/
-static void     gwy_axis_class_init           (GwyAxisClass *klass);
-static void     gwy_axis_init                 (GwyAxis *axis);
 static void     gwy_axis_finalize             (GObject *object);
 
 static void     gwy_axis_realize              (GtkWidget *widget);
@@ -83,37 +79,9 @@ static void     gwy_axis_entry                (GwyAxisDialog *dialog,
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
-
 static guint axis_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_axis_get_type(void)
-{
-    static GType gwy_axis_type = 0;
-
-    if (!gwy_axis_type) {
-        static const GTypeInfo gwy_axis_info = {
-            sizeof(GwyAxisClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_axis_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyAxis),
-            0,
-            (GInstanceInitFunc)gwy_axis_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_axis_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                      GWY_AXIS_TYPE_NAME,
-                                                      &gwy_axis_info,
-                                                      0);
-    }
-
-    return gwy_axis_type;
-}
+G_DEFINE_TYPE(GwyAxis, gwy_axis, GTK_TYPE_WIDGET)
 
 static void
 gwy_axis_class_init(GwyAxisClass *klass)
@@ -122,12 +90,8 @@ gwy_axis_class_init(GwyAxisClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
-
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_axis_finalize;
 
@@ -273,7 +237,7 @@ gwy_axis_finalize(GObject *object)
 
     gtk_widget_destroy(axis->dialog);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
 }
 
 static void
@@ -283,8 +247,8 @@ gwy_axis_unrealize(GtkWidget *widget)
 
     axis = GWY_AXIS(widget);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
 }
 
 

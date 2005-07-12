@@ -31,62 +31,32 @@
 #include "gwygraphdata.h"
 #include <libgwydgets/gwygraphwindowasciidialog.h>
 
-#define GWY_GRAPH_WINDOW_TYPE_NAME "GwyGraphWindow"
-
 #define DEFAULT_SIZE 360
 
 
 /* Forward declarations */
 
-static void     gwy_graph_window_class_init          (GwyGraphWindowClass *klass);
-static void     gwy_graph_window_init                (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_destroy             (GtkObject *object);
-static void     gwy_graph_window_finalize            (GObject *object);
-static void     gwy_graph_cursor_motion_cb           (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_measure_cb          (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_zoom_in_cb          (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_zoom_out_cb         (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_zoom_finished_cb    (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_measure_finished_cb (GwyGraphWindow *graphwindow, gint response);
-static void     gwy_graph_window_export_vector_cb    (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_export_ascii_cb     (GwyGraphWindow *graphwindow);
-static void     gwy_graph_window_export_bitmap_cb    (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_destroy            (GtkObject *object);
+static void gwy_graph_window_finalize           (GObject *object);
+static void gwy_graph_cursor_motion_cb          (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_measure_cb         (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_zoom_in_cb         (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_zoom_out_cb        (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_zoom_finished_cb   (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
+                                                 gint response);
+static void gwy_graph_window_export_vector_cb   (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_export_ascii_cb    (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_export_bitmap_cb   (GwyGraphWindow *graphwindow);
 
 /* Local data */
 
-static GtkWindowClass *parent_class = NULL;
+/* XXX XXX XXX extreme brain damage XXX XXX XXX */
 static GwyGraphStatusType last_status = 0;
 
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
-
-GType
-gwy_graph_window_get_type(void)
-{
-    static GType gwy_graph_window_type = 0;
-
-    if (!gwy_graph_window_type) {
-        static const GTypeInfo gwy_graph_window_info = {
-            sizeof(GwyGraphWindowClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_window_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphWindow),
-            0,
-            (GInstanceInitFunc)gwy_graph_window_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_graph_window_type = g_type_register_static(GTK_TYPE_WINDOW,
-                                                    GWY_GRAPH_WINDOW_TYPE_NAME,
-                                                    &gwy_graph_window_info,
-                                                    0);
-    }
-
-    return gwy_graph_window_type;
-}
+G_DEFINE_TYPE(GwyGraphWindow, gwy_graph_window, GTK_TYPE_WINDOW)
 
 static void
 gwy_graph_window_class_init(GwyGraphWindowClass *klass)
@@ -94,10 +64,7 @@ gwy_graph_window_class_init(GwyGraphWindowClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
 
-    gwy_debug("");
-
     object_class = (GtkObjectClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_window_finalize;
     object_class->destroy = gwy_graph_window_destroy;
@@ -114,16 +81,13 @@ gwy_graph_window_init(G_GNUC_UNUSED GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_finalize(GObject *object)
 {
-    gwy_debug("finalizing a GwyGraphWindow %p (refcount = %u)",
-              object, object->ref_count);
-
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_graph_window_parent_class)->finalize(object);
 }
 
 static void
 gwy_graph_window_destroy(GtkObject *object)
 {
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_graph_window_parent_class)->destroy(object);
 }
 
 

@@ -92,8 +92,6 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_3d_label_parent_class = g_type_class_peek_parent(klass);
-
     gobject_class->finalize = gwy_3d_label_finalize;
     gobject_class->set_property = gwy_3d_label_set_property;
     gobject_class->get_property = gwy_3d_label_get_property;

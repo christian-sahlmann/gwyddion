@@ -65,8 +65,6 @@ gwy_data_line_class_init(GwyDataLineClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_data_line_parent_class = g_type_class_peek_parent(klass);
-
     gobject_class->finalize = gwy_data_line_finalize;
 
 /**

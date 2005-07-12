@@ -25,8 +25,6 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyvectorlayer.h"
 
-#define GWY_VECTOR_LAYER_TYPE_NAME "GwyVectorLayer"
-
 #define GWY_SCROLL_DELAY_LENGTH  300
 
 enum {
@@ -42,8 +40,6 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_vector_layer_class_init    (GwyVectorLayerClass *klass);
-static void     gwy_vector_layer_init          (GwyVectorLayer *layer);
 static void     gwy_vector_layer_finalize      (GObject *object);
 static void     gwy_vector_layer_set_property  (GObject *object,
                                                 guint prop_id,
@@ -61,38 +57,9 @@ static gboolean gwy_vector_layer_timer         (GwyVectorLayer *layer);
 
 /* Local data */
 
-static GwyDataViewLayerClass *parent_class = NULL;
-
 static guint vector_layer_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_vector_layer_get_type(void)
-{
-    static GType gwy_vector_layer_type = 0;
-
-    if (!gwy_vector_layer_type) {
-        static const GTypeInfo gwy_vector_layer_info = {
-            sizeof(GwyVectorLayerClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_vector_layer_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyVectorLayer),
-            0,
-            (GInstanceInitFunc)gwy_vector_layer_init,
-            NULL,
-        };
-        gwy_debug(" ");
-        gwy_vector_layer_type
-            = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
-                                     GWY_VECTOR_LAYER_TYPE_NAME,
-                                     &gwy_vector_layer_info,
-                                     0);
-    }
-
-    return gwy_vector_layer_type;
-}
+G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer, GWY_TYPE_DATA_VIEW_LAYER)
 
 static void
 gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
@@ -100,10 +67,6 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
-
-    gwy_debug(" ");
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_vector_layer_finalize;
     gobject_class->set_property = gwy_vector_layer_set_property;
@@ -157,13 +120,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 static void
 gwy_vector_layer_init(GwyVectorLayer *layer)
 {
-    gwy_debug(" ");
-
-    layer->gc = NULL;
-    layer->layout = NULL;
-    layer->timer = 0;
     layer->update_policy = GTK_UPDATE_CONTINUOUS;
-    layer->in_selection = FALSE;
 }
 
 static void
@@ -173,14 +130,12 @@ gwy_vector_layer_finalize(GObject *object)
 
     gwy_debug(" ");
 
-    g_return_if_fail(GWY_IS_VECTOR_LAYER(object));
-
     layer = GWY_VECTOR_LAYER(object);
 
     gwy_object_unref(layer->gc);
     gwy_object_unref(layer->layout);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_vector_layer_parent_class)->finalize(object);
 }
 
 static void
@@ -538,7 +493,7 @@ gwy_vector_layer_plugged(GwyDataViewLayer *layer)
     g_signal_connect_swapped(layer->parent, "direction-changed",
                              G_CALLBACK(gwy_vector_layer_update_context),
                              layer);
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->plugged(layer);
 }
 
 static void
@@ -562,7 +517,7 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
                                          layer);
     gwy_object_unref(vector_layer->layout);
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
 }
 
 static void

@@ -18,7 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtkmain.h>
@@ -33,8 +32,6 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 #include "gwydgetutils.h"
-
-#define GWY_GRAPH_AREA_TYPE_NAME "GwyGraphArea"
 
 enum {
     SELECTED_SIGNAL,
@@ -51,8 +48,6 @@ enum {
 };
 
 /* Forward declarations - widget related*/
-static void     gwy_graph_area_class_init           (GwyGraphAreaClass *klass);
-static void     gwy_graph_area_init                 (GwyGraphArea *area);
 static void     gwy_graph_area_finalize             (GObject *object);
 
 static void     gwy_graph_area_realize              (GtkWidget *widget);
@@ -116,38 +111,9 @@ static void            gwy_graph_area_clamp_coords_for_child(GwyGraphArea *area,
 
 /* Local data */
 
-static GtkWidgetClass *parent_class = NULL;
-
 static guint gwygrapharea_signals[LAST_SIGNAL] = { 0 };
 
-
-GType
-gwy_graph_area_get_type(void)
-{
-    static GType gwy_graph_area_type = 0;
-
-    if (!gwy_graph_area_type) {
-        static const GTypeInfo gwy_graph_area_info = {
-            sizeof(GwyGraphAreaClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_area_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphArea),
-            0,
-            (GInstanceInitFunc)gwy_graph_area_init,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_graph_area_type = g_type_register_static(GTK_TYPE_LAYOUT,
-                                                      GWY_GRAPH_AREA_TYPE_NAME,
-                                                      &gwy_graph_area_info,
-                                                      0);
-    }
-
-    return gwy_graph_area_type;
-}
+G_DEFINE_TYPE(GwyGraphArea, gwy_graph_area, GTK_TYPE_LAYOUT)
 
 static void
 gwy_graph_area_class_init(GwyGraphAreaClass *klass)
@@ -155,11 +121,8 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkWidgetClass *widget_class;
 
-
-    gwy_debug("");
-
     widget_class = (GtkWidgetClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
+
     gobject_class->finalize = gwy_graph_area_finalize;
 
     widget_class->realize = gwy_graph_area_realize;
@@ -178,34 +141,34 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     klass->cross_cursor = NULL;
     klass->arrow_cursor = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL]
-        = g_signal_new ("selected",
-                        G_TYPE_FROM_CLASS (klass),
-                        G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                        G_STRUCT_OFFSET (GwyGraphAreaClass, selected),
-                        NULL,
-                        NULL,
-                        g_cclosure_marshal_VOID__VOID,
-                        G_TYPE_NONE, 0);
+        = g_signal_new("selected",
+                       G_TYPE_FROM_CLASS (klass),
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                       G_STRUCT_OFFSET(GwyGraphAreaClass, selected),
+                       NULL,
+                       NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 
     gwygrapharea_signals[ZOOMED_SIGNAL]
-        = g_signal_new ("zoomed",
-                        G_TYPE_FROM_CLASS (klass),
-                        G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                        G_STRUCT_OFFSET (GwyGraphAreaClass, zoomed),
-                        NULL,
-                        NULL,
-                        g_cclosure_marshal_VOID__VOID,
-                        G_TYPE_NONE, 0);
+        = g_signal_new("zoomed",
+                       G_TYPE_FROM_CLASS (klass),
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                       G_STRUCT_OFFSET(GwyGraphAreaClass, zoomed),
+                       NULL,
+                       NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 
     gwygrapharea_signals[MOUSE_MOVED_SIGNAL]
-        = g_signal_new ("mouse-moved",
-                        G_TYPE_FROM_CLASS (klass),
-                        G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                        G_STRUCT_OFFSET (GwyGraphAreaClass, mouse_moved),
-                        NULL,
-                        NULL,
-                        g_cclosure_marshal_VOID__VOID,
-                        G_TYPE_NONE, 0);
+        = g_signal_new("mouse-moved",
+                       G_TYPE_FROM_CLASS (klass),
+                       G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                       G_STRUCT_OFFSET(GwyGraphAreaClass, mouse_moved),
+                       NULL,
+                       NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -294,7 +257,7 @@ gwy_graph_area_finalize(GObject *object)
     g_array_free(area->areasdata->data_areas, TRUE);
     g_array_free(area->pointsdata->data_points, TRUE);
         
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
 
 static void
@@ -317,7 +280,7 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     area = GWY_GRAPH_AREA(widget);
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
-    GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
+    GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->size_allocate(widget, allocation);
     if (((area->old_width != widget->allocation.width
           || area->old_height != widget->allocation.height)
          || area->newline == 1)
@@ -338,8 +301,8 @@ gwy_graph_area_realize(GtkWidget *widget)
     GwyGraphArea *area;
     gboolean success[COLOR_LAST];
 
-    if (GTK_WIDGET_CLASS(parent_class)->realize)
-        GTK_WIDGET_CLASS(parent_class)->realize(widget);
+    if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->realize)
+        GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->realize(widget);
 
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
@@ -380,8 +343,8 @@ gwy_graph_area_unrealize(GtkWidget *widget)
 
     gwy_object_unref(area->gc);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize(widget);
 }
 
 
@@ -415,7 +378,7 @@ gwy_graph_area_expose(GtkWidget *widget,
     
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
 
-    GTK_WIDGET_CLASS(parent_class)->expose_event(widget, event);
+    GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
     return FALSE;
 }
 

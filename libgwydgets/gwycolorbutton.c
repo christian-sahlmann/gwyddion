@@ -63,9 +63,6 @@ enum
     PROP_COLOR,
 };
 
-static void gwy_color_button_class_init    (GwyColorButtonClass *klass);
-static void gwy_color_button_init          (GwyColorButton      *color_button);
-
 /* gobject signals */
 static void gwy_color_button_finalize      (GObject             *object);
 static void gwy_color_button_set_property  (GObject        *object,
@@ -84,34 +81,7 @@ static void gwy_color_button_state_changed (GtkWidget *widget,
 static void gwy_color_button_style_set     (GtkWidget *widget,
                                             GtkStyle  *previous_style);
 
-static gpointer parent_class = NULL;
-
-GType
-gwy_color_button_get_type (void)
-{
-    static GType color_button_type = 0;
-
-    if (!color_button_type) {
-        static const GTypeInfo color_button_info = {
-            sizeof(GwyColorButtonClass),
-            NULL,           /* base_init */
-            NULL,           /* base_finalize */
-            (GClassInitFunc)gwy_color_button_class_init,
-            NULL,           /* class_finalize */
-            NULL,           /* class_data */
-            sizeof(GwyColorButton),
-            0,              /* n_preallocs */
-            (GInstanceInitFunc)gwy_color_button_init,
-            NULL,
-        };
-
-        color_button_type
-            = g_type_register_static(GTK_TYPE_BUTTON, "GwyColorButton",
-                                     &color_button_info, 0);
-    }
-
-    return color_button_type;
-}
+G_DEFINE_TYPE(GwyColorButton, gwy_color_button, GTK_TYPE_BUTTON)
 
 static void
 gwy_color_button_class_init(GwyColorButtonClass *klass)
@@ -125,8 +95,6 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
     object_class = GTK_OBJECT_CLASS(klass);
     widget_class = GTK_WIDGET_CLASS(klass);
     button_class = GTK_BUTTON_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->get_property = gwy_color_button_get_property;
     gobject_class->set_property = gwy_color_button_set_property;
@@ -299,7 +267,7 @@ gwy_color_button_realize (GtkWidget *widget)
 {
     GwyColorButton *color_button = GWY_COLOR_BUTTON(widget);
 
-    GTK_WIDGET_CLASS(parent_class)->realize(widget);
+    GTK_WIDGET_CLASS(gwy_color_button_parent_class)->realize(widget);
 
     if (color_button->gc == NULL)
         color_button->gc = gdk_gc_new(widget->window);
@@ -313,7 +281,7 @@ gwy_color_button_style_set(GtkWidget *widget,
 {
     GwyColorButton *color_button = GWY_COLOR_BUTTON(widget);
 
-    GTK_WIDGET_CLASS(parent_class)->style_set(widget, previous_style);
+    GTK_WIDGET_CLASS(gwy_color_button_parent_class)->style_set(widget, previous_style);
 
     if (GTK_WIDGET_REALIZED(widget))
         gwy_object_unref(color_button->pixbuf);
@@ -383,7 +351,7 @@ gwy_color_button_finalize(GObject *object)
     gwy_object_unref(color_button->gc);
     gwy_object_unref(color_button->pixbuf);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_color_button_parent_class)->finalize(object);
 }
 
 

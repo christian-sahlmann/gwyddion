@@ -30,11 +30,6 @@
 
 #include "gwycoloraxis.h"
 
-#define GWY_COLOR_AXIS_TYPE_NAME "GwyColorAxis"
-
-
-static void     gwy_color_axis_class_init         (GwyColorAxisClass *klass);
-static void     gwy_color_axis_init               (GwyColorAxis *axis);
 static void     gwy_color_axis_destroy            (GtkObject *object);
 static void     gwy_color_axis_realize            (GtkWidget *widget);
 static void     gwy_color_axis_unrealize          (GtkWidget *widget);
@@ -50,35 +45,7 @@ static void     gwy_color_axis_adjust             (GwyColorAxis *axis,
 static void     gwy_color_axis_draw_label         (GtkWidget *widget);
 static void     gwy_color_axis_update             (GwyColorAxis *axis);
 
-
-static GtkWidgetClass *parent_class = NULL;
-
-GType
-gwy_color_axis_get_type(void)
-{
-    static GType gwy_color_axis_type = 0;
-
-    if (!gwy_color_axis_type) {
-        static const GTypeInfo gwy_color_axis_info = {
-            sizeof(GwyColorAxisClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_color_axis_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyColorAxis),
-            0,
-            (GInstanceInitFunc)gwy_color_axis_init,
-            NULL,
-        };
-        gwy_color_axis_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                     GWY_COLOR_AXIS_TYPE_NAME,
-                                                     &gwy_color_axis_info,
-                                                     0);
-    }
-
-    return gwy_color_axis_type;
-}
+G_DEFINE_TYPE(GwyColorAxis, gwy_color_axis, GTK_TYPE_WIDGET)
 
 static void
 gwy_color_axis_class_init(GwyColorAxisClass *klass)
@@ -88,8 +55,6 @@ gwy_color_axis_class_init(GwyColorAxisClass *klass)
 
     object_class = GTK_OBJECT_CLASS(klass);
     widget_class = GTK_WIDGET_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     object_class->destroy = gwy_color_axis_destroy;
 
@@ -172,14 +137,14 @@ gwy_color_axis_destroy(GtkObject *object)
     gwy_object_unref(axis->gradient);
     gwy_object_unref(axis->stripe);
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_color_axis_parent_class)->destroy(object);
 }
 
 static void
 gwy_color_axis_unrealize(GtkWidget *widget)
 {
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_color_axis_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_color_axis_parent_class)->unrealize(widget);
 }
 
 static void

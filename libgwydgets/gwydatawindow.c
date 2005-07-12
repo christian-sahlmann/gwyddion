@@ -34,8 +34,6 @@
 #include "gwycoloraxis.h"
 #include "gwyoptionmenus.h"
 
-#define GWY_DATA_WINDOW_TYPE_NAME "GwyDataWindow"
-
 enum {
     TITLE_CHANGED,
     LAST_SIGNAL
@@ -43,8 +41,6 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_data_window_class_init        (GwyDataWindowClass *klass);
-static void     gwy_data_window_init              (GwyDataWindow *data_window);
 static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_measure_changed   (GwyDataWindow *data_window);
 static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
@@ -65,37 +61,9 @@ static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 
 /* Local data */
 
-static GtkWindowClass *parent_class = NULL;
-
 static guint data_window_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_data_window_get_type(void)
-{
-    static GType gwy_data_window_type = 0;
-
-    if (!gwy_data_window_type) {
-        static const GTypeInfo gwy_data_window_info = {
-            sizeof(GwyDataWindowClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_data_window_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyDataWindow),
-            0,
-            (GInstanceInitFunc)gwy_data_window_init,
-            NULL,
-        };
-        gwy_debug(" ");
-        gwy_data_window_type = g_type_register_static(GTK_TYPE_WINDOW,
-                                                      GWY_DATA_WINDOW_TYPE_NAME,
-                                                      &gwy_data_window_info,
-                                                      0);
-    }
-
-    return gwy_data_window_type;
-}
+G_DEFINE_TYPE(GwyDataWindow, gwy_data_window, GTK_TYPE_WINDOW)
 
 static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
@@ -104,7 +72,6 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     GtkObjectClass *object_class;
 
     object_class = (GtkObjectClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_window_finalize;
 
@@ -148,7 +115,7 @@ gwy_data_window_finalize(GObject *object)
     if (data_window->value_format)
         gwy_si_unit_value_format_free(data_window->value_format);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_data_window_parent_class)->finalize(object);
 }
 
 #define class_motion_notify_callback(x) \

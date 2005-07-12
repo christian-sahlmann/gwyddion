@@ -26,8 +26,6 @@
 #include "gwydgetenums.h"
 #include "gwylayer-basic.h"
 
-#define GWY_LAYER_BASIC_TYPE_NAME "GwyLayerBasic"
-
 enum {
     PROP_0,
     PROP_GRADIENT_KEY,
@@ -35,8 +33,6 @@ enum {
     PROP_MIN_MAX_KEY
 };
 
-static void gwy_layer_basic_class_init           (GwyLayerBasicClass *klass);
-static void gwy_layer_basic_init                 (GwyLayerBasic *layer);
 static void gwy_layer_basic_destroy              (GtkObject *object);
 static void gwy_layer_basic_set_property         (GObject *object,
                                                   guint prop_id,
@@ -67,35 +63,7 @@ static void gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
 
-static GwyPixmapLayerClass *parent_class = NULL;
-
-GType
-gwy_layer_basic_get_type(void)
-{
-    static GType gwy_layer_basic_type = 0;
-
-    if (!gwy_layer_basic_type) {
-        static const GTypeInfo gwy_layer_basic_info = {
-            sizeof(GwyLayerBasicClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_layer_basic_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyLayerBasic),
-            0,
-            (GInstanceInitFunc)gwy_layer_basic_init,
-            NULL,
-        };
-        gwy_layer_basic_type
-            = g_type_register_static(GWY_TYPE_PIXMAP_LAYER,
-                                     GWY_LAYER_BASIC_TYPE_NAME,
-                                     &gwy_layer_basic_info,
-                                     0);
-    }
-
-    return gwy_layer_basic_type;
-}
+G_DEFINE_TYPE(GwyLayerBasic, gwy_layer_basic, GWY_TYPE_PIXMAP_LAYER)
 
 static void
 gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
@@ -104,8 +72,6 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyPixmapLayerClass *pixmap_class = GWY_PIXMAP_LAYER_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->set_property = gwy_layer_basic_set_property;
     gobject_class->get_property = gwy_layer_basic_get_property;
@@ -174,7 +140,7 @@ gwy_layer_basic_destroy(GtkObject *object)
     layer = GWY_LAYER_BASIC(object);
     gwy_object_unref(layer->gradient);
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_layer_basic_parent_class)->destroy(object);
 }
 
 static void
@@ -335,7 +301,7 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 
     basic_layer = GWY_LAYER_BASIC(layer);
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_basic_parent_class)->plugged(layer);
 
     gwy_layer_basic_container_connect
                             (basic_layer,
@@ -373,7 +339,7 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     basic_layer->gradient_item_id = 0;
 
     gwy_object_unref(pixmap_layer->pixbuf);
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_basic_parent_class)->unplugged(layer);
 }
 
 /**

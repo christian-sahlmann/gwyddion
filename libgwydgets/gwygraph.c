@@ -29,8 +29,6 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
-#define GWY_GRAPH_TYPE_NAME "GwyGraph"
-
 enum {
     SELECTED_SIGNAL,
     MOUSE_MOVED_SIGNAL,
@@ -39,8 +37,6 @@ enum {
 };
 
 
-static void     gwy_graph_class_init           (GwyGraphClass *klass);
-static void     gwy_graph_init                 (GwyGraph *graph);
 static void     gwy_graph_size_request         (GtkWidget *widget,
                                                 GtkRequisition *requisition);
 static void     gwy_graph_size_allocate        (GtkWidget *widget,
@@ -54,38 +50,9 @@ static void     zoomed_cb                         (GwyGraph *graph);
 static void     label_updated_cb               (GwyAxis *axis, 
                                                 GwyGraph *graph);
 
-static GtkWidgetClass *parent_class = NULL;
 static guint gwygraph_signals[LAST_SIGNAL] = { 0 };
 
-
-
-GType
-gwy_graph_get_type(void)
-{
-    static GType gwy_graph_type = 0;
-    if (!gwy_graph_type) {
-        static const GTypeInfo gwy_graph_info = {
-         sizeof(GwyGraphClass),
-         NULL,
-         NULL,
-         (GClassInitFunc)gwy_graph_class_init,
-         NULL,
-         NULL,
-         sizeof(GwyGraph),
-         0,
-         (GInstanceInitFunc)gwy_graph_init,
-         NULL,
-         };
-        gwy_debug("");
-        gwy_graph_type = g_type_register_static (GTK_TYPE_TABLE,
-                                                 GWY_GRAPH_TYPE_NAME,
-                                                 &gwy_graph_info,
-                                                 0);
-
-    }
-
-    return gwy_graph_type;
-}
+G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
 
 static void
 gwy_graph_class_init(GwyGraphClass *klass)
@@ -95,7 +62,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
     gwy_debug("");
 
     widget_class = (GtkWidgetClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
 
     widget_class->size_request = gwy_graph_size_request;
     widget_class->size_allocate = gwy_graph_size_allocate;
@@ -105,41 +71,41 @@ gwy_graph_class_init(GwyGraphClass *klass)
     klass->zoomed = NULL;
     
     gwygraph_signals[SELECTED_SIGNAL]
-                = g_signal_new ("selected",
-                                G_TYPE_FROM_CLASS (klass),
-                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGraphClass, selected),
-                                NULL,
-                                NULL,
-                                g_cclosure_marshal_VOID__VOID,
-                                G_TYPE_NONE, 0);
+                = g_signal_new("selected",
+                               G_TYPE_FROM_CLASS(klass),
+                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                               G_STRUCT_OFFSET(GwyGraphClass, selected),
+                               NULL,
+                               NULL,
+                               g_cclosure_marshal_VOID__VOID,
+                               G_TYPE_NONE, 0);
 
     gwygraph_signals[MOUSE_MOVED_SIGNAL]
-                = g_signal_new ("mouse-moved",
-                                G_TYPE_FROM_CLASS (klass),
-                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGraphClass, mouse_moved),
-                                NULL,
-                                NULL,
-                                g_cclosure_marshal_VOID__VOID,
-                                G_TYPE_NONE, 0);
+                = g_signal_new("mouse-moved",
+                               G_TYPE_FROM_CLASS(klass),
+                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                               G_STRUCT_OFFSET(GwyGraphClass, mouse_moved),
+                               NULL,
+                               NULL,
+                               g_cclosure_marshal_VOID__VOID,
+                               G_TYPE_NONE, 0);
 
     gwygraph_signals[ZOOMED_SIGNAL]
-                = g_signal_new ("zoomed",
-                                G_TYPE_FROM_CLASS (klass),
-                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                                G_STRUCT_OFFSET (GwyGraphClass, zoomed),
-                                NULL,
-                                NULL,
-                                g_cclosure_marshal_VOID__VOID,
-                                G_TYPE_NONE, 0);
+                = g_signal_new("zoomed",
+                               G_TYPE_FROM_CLASS(klass),
+                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                               G_STRUCT_OFFSET(GwyGraphClass, zoomed),
+                               NULL,
+                               NULL,
+                               g_cclosure_marshal_VOID__VOID,
+                               G_TYPE_NONE, 0);
 }
 
 
 static void
 gwy_graph_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
-    GTK_WIDGET_CLASS(parent_class)->size_request(widget, requisition);
+    GTK_WIDGET_CLASS(gwy_graph_parent_class)->size_request(widget, requisition);
     requisition->width = 300;
     requisition->height = 200;
 }
@@ -151,7 +117,7 @@ gwy_graph_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     gwy_debug("");
 
     graph = GWY_GRAPH(widget);
-    GTK_WIDGET_CLASS(parent_class)->size_allocate(widget, allocation);
+    GTK_WIDGET_CLASS(gwy_graph_parent_class)->size_allocate(widget, allocation);
 }
 
 

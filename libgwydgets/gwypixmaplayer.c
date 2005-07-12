@@ -28,8 +28,6 @@
 
 #include "gwypixmaplayer.h"
 
-#define GWY_PIXMAP_LAYER_TYPE_NAME "GwyPixmapLayer"
-
 #define BITS_PER_SAMPLE 8
 
 enum {
@@ -37,8 +35,6 @@ enum {
     PROP_DATA_KEY
 };
 
-static void gwy_pixmap_layer_class_init         (GwyPixmapLayerClass *klass);
-static void gwy_pixmap_layer_init               (GwyPixmapLayer *layer);
 static void gwy_pixmap_layer_set_property       (GObject *object,
                                                  guint prop_id,
                                                  const GValue *value,
@@ -57,35 +53,7 @@ static void gwy_pixmap_layer_container_connect  (GwyPixmapLayer *pixmap_layer,
 static void gwy_pixmap_layer_data_field_connect (GwyPixmapLayer *pixmap_layer);
 static void gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer);
 
-static GwyDataViewLayerClass *parent_class = NULL;
-
-GType
-gwy_pixmap_layer_get_type(void)
-{
-    static GType gwy_pixmap_layer_type = 0;
-
-    if (!gwy_pixmap_layer_type) {
-        static const GTypeInfo gwy_pixmap_layer_info = {
-            sizeof(GwyPixmapLayerClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_pixmap_layer_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyPixmapLayer),
-            0,
-            (GInstanceInitFunc)gwy_pixmap_layer_init,
-            NULL,
-        };
-        gwy_pixmap_layer_type
-            = g_type_register_static(GWY_TYPE_DATA_VIEW_LAYER,
-                                     GWY_PIXMAP_LAYER_TYPE_NAME,
-                                     &gwy_pixmap_layer_info,
-                                     0);
-    }
-
-    return gwy_pixmap_layer_type;
-}
+G_DEFINE_ABSTRACT_TYPE(GwyPixmapLayer, gwy_pixmap_layer, GWY_TYPE_DATA_VIEW_LAYER)
 
 static void
 gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
@@ -93,8 +61,6 @@ gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->set_property = gwy_pixmap_layer_set_property;
     gobject_class->get_property = gwy_pixmap_layer_get_property;
@@ -133,7 +99,7 @@ gwy_pixmap_layer_destroy(GtkObject *object)
     gwy_object_unref(layer->data_field);
     gwy_object_unref(layer->pixbuf);
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_pixmap_layer_parent_class)->destroy(object);
 }
 
 static void
@@ -278,7 +244,7 @@ gwy_pixmap_layer_plugged(GwyDataViewLayer *layer)
 {
     GwyPixmapLayer *pixmap_layer;
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_pixmap_layer_parent_class)->plugged(layer);
     pixmap_layer = GWY_PIXMAP_LAYER(layer);
     if (!pixmap_layer->data_key)
         return;
@@ -303,7 +269,7 @@ gwy_pixmap_layer_unplugged(GwyDataViewLayer *layer)
         g_signal_handler_disconnect(layer->data, pixmap_layer->item_changed_id);
     pixmap_layer->item_changed_id = 0;
 
-    GWY_DATA_VIEW_LAYER_CLASS(parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_pixmap_layer_parent_class)->unplugged(layer);
 }
 
 /**

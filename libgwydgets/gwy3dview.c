@@ -49,8 +49,6 @@
 #define DEG_2_RAD (G_PI / 180.0)
 #define RAD_2_DEG (180.0 / G_PI)
 
-#define GWY_3D_VIEW_TYPE_NAME "Gwy3DView"
-
 #define BITS_PER_SAMPLE 8
 #define GWY_3D_VIEW_DEFAULT_SIZE_X 260
 #define GWY_3D_VIEW_DEFAULT_SIZE_Y 260
@@ -80,8 +78,6 @@ typedef struct {
 
 /* Forward declarations */
 
-static void          gwy_3d_view_class_init     (Gwy3DViewClass *klass);
-static void          gwy_3d_view_init           (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_destroy        (GtkObject *object);
 static void          gwy_3d_view_finalize       (GObject *object);
 static void          gwy_3d_view_set_property   (GObject *object,
@@ -147,8 +143,6 @@ static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
 
 /* Local data */
 
-static GtkDrawingAreaClass *parent_class = NULL;
-
 static GQuark container_key_quark = 0;
 
 /* Must match Gwy3DViewLabel */
@@ -163,33 +157,7 @@ labels[] = {
     { "/0/3d/label/max",  "$max"  },
 };
 
-GType
-gwy_3d_view_get_type(void)
-{
-    static GType gwy_3d_view_type = 0;
-
-    if (!gwy_3d_view_type) {
-        static const GTypeInfo gwy_3d_view_info = {
-            sizeof(Gwy3DViewClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_3d_view_class_init,
-            NULL,
-            NULL,
-            sizeof(Gwy3DView),
-            0,
-            (GInstanceInitFunc)gwy_3d_view_init,
-            NULL,
-        };
-        gwy_debug(" ");
-        gwy_3d_view_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                  GWY_3D_VIEW_TYPE_NAME,
-                                                  &gwy_3d_view_info,
-                                                  0);
-    }
-
-    return gwy_3d_view_type;
-}
+G_DEFINE_TYPE(Gwy3DView, gwy_3d_view, GTK_TYPE_WIDGET)
 
 static void
 gwy_3d_view_class_init(Gwy3DViewClass *klass)
@@ -202,8 +170,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_3d_view_finalize;
     gobject_class->set_property = gwy_3d_view_set_property;
@@ -345,7 +311,7 @@ gwy_3d_view_destroy(GtkObject *object)
         gwy3dview->label_signal_ids = NULL;
     }
 
-    GTK_OBJECT_CLASS(parent_class)->destroy(object);
+    GTK_OBJECT_CLASS(gwy_3d_view_parent_class)->destroy(object);
 }
 
 static void
@@ -357,7 +323,7 @@ gwy_3d_view_finalize(GObject *object)
 
     g_hash_table_destroy(gwy3dview->variables);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_3d_view_parent_class)->finalize(object);
 }
 
 static void
@@ -451,8 +417,8 @@ gwy_3d_view_unrealize(GtkWidget *widget)
     g_object_unref(gwy3dview->ft2_context);
     g_object_unref(gwy3dview->ft2_font_map);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_3d_view_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_3d_view_parent_class)->unrealize(widget);
 }
 
 /**

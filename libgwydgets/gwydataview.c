@@ -28,8 +28,6 @@
 #include <libprocess/datafield.h>
 #include "gwydataview.h"
 
-#define GWY_DATA_VIEW_TYPE_NAME "GwyDataView"
-
 #define BITS_PER_SAMPLE 8
 
 enum {
@@ -45,8 +43,6 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_data_view_class_init           (GwyDataViewClass *klass);
-static void     gwy_data_view_init                 (GwyDataView *data_view);
 static void     gwy_data_view_destroy              (GtkObject *object);
 static void     gwy_data_view_finalize             (GObject *object);
 static void     gwy_data_view_set_property         (GObject *object,
@@ -87,39 +83,11 @@ static void     gwy_data_view_set_layer            (GwyDataView *data_view,
                                                     gulong *hid,
                                                     GwyDataViewLayer *layer);
 
-
 /* Local data */
-
-static GtkWidgetClass *parent_class = NULL;
 
 static guint data_view_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_data_view_get_type(void)
-{
-    static GType gwy_data_view_type = 0;
-
-    if (!gwy_data_view_type) {
-        static const GTypeInfo gwy_data_view_info = {
-            sizeof(GwyDataViewClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_data_view_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyDataView),
-            0,
-            (GInstanceInitFunc)gwy_data_view_init,
-            NULL,
-        };
-        gwy_data_view_type = g_type_register_static(GTK_TYPE_WIDGET,
-                                                    GWY_DATA_VIEW_TYPE_NAME,
-                                                    &gwy_data_view_info,
-                                                    0);
-    }
-
-    return gwy_data_view_type;
-}
+G_DEFINE_TYPE(GwyDataView, gwy_data_view, GTK_TYPE_WIDGET)
 
 static void
 gwy_data_view_class_init(GwyDataViewClass *klass)
@@ -128,12 +96,8 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    gwy_debug(" ");
-
     object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
-
-    parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_data_view_finalize;
     gobject_class->set_property = gwy_data_view_set_property;
@@ -244,8 +208,8 @@ gwy_data_view_destroy(GtkObject *object)
     gwy_data_view_set_layer(data_view, &data_view->base_layer,
                             &data_view->base_hid, NULL);
 
-    if (GTK_OBJECT_CLASS(parent_class)->destroy)
-        (*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
+    if (GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)
+        (*GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)(object);
 }
 
 static void
@@ -267,7 +231,7 @@ gwy_data_view_finalize(GObject *object)
               G_OBJECT(data_view->data)->ref_count);
     gwy_object_unref(data_view->data);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_data_view_parent_class)->finalize(object);
 }
 
 static void
@@ -278,8 +242,8 @@ gwy_data_view_unrealize(GtkWidget *widget)
     gwy_object_unref(data_view->pixbuf);
     gwy_object_unref(data_view->base_pixbuf);
 
-    if (GTK_WIDGET_CLASS(parent_class)->unrealize)
-        GTK_WIDGET_CLASS(parent_class)->unrealize(widget);
+    if (GTK_WIDGET_CLASS(gwy_data_view_parent_class)->unrealize)
+        GTK_WIDGET_CLASS(gwy_data_view_parent_class)->unrealize(widget);
 }
 
 
