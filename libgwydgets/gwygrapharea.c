@@ -523,6 +523,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         return FALSE;
     }
+    
     if (area->status == GWY_GRAPH_STATUS_PLAIN && gmodel->ncurves > 0 && area->enable_user_input == TRUE)
     {
         curve = gwy_graph_area_find_curve(area, dx, dy);
@@ -625,6 +626,9 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
             areadata->xmax = dx;
          else
             areadata->ymax = dy;
+
+         if (areadata->xmax == areadata->xmin || areadata->ymax == areadata->ymin)
+             g_array_remove_index(area->areasdata->data_areas, area->areasdata->data_areas->len - 1);
          area->selecting = FALSE;
          gtk_widget_queue_draw(GTK_WIDGET(area));
          gwy_graph_area_signal_selected(area);

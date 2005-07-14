@@ -388,6 +388,7 @@ out_changed_cb(GObject *item,
     args->out = GPOINTER_TO_INT(g_object_get_data(item, "fractal-type"));
 
     gwy_graph_set_status(GWY_GRAPH(controls->graph), GWY_GRAPH_STATUS_XSEL);
+    gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
     fractal_dialog_update(controls, args, controls->data);
     update_labels(controls, args);
 }
