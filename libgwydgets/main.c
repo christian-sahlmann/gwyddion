@@ -101,7 +101,7 @@ test(void)
     }
 
     gtk_widget_show_all(win);
-    g_signal_connect(G_OBJECT(win), "destroy", gtk_main_quit, NULL);
+    g_signal_connect(win, "destroy", gtk_main_quit, NULL);
 }
 #endif
 /***** ]]] VECTOR SHADE *****************************************************/
@@ -154,7 +154,7 @@ test(void)
     view = gwy_data_view_new(data);
     g_object_unref(data);
     gtk_widget_set_size_request(view, 200, 200);
-    g_signal_connect_swapped(view, "button_press_event",
+    g_signal_connect_swapped(view, "button-press-event",
                              G_CALLBACK(button_press), data);
 
     layer = gwy_layer_basic_new();
@@ -165,7 +165,7 @@ test(void)
     gtk_container_add(GTK_CONTAINER(window), view);
 
     gtk_widget_show_all(window);
-    g_signal_connect_swapped(G_OBJECT(window), "destroy",
+    g_signal_connect_swapped(window, "destroy",
                              G_CALLBACK(gtk_main_quit), data);
 }
 #endif
@@ -257,7 +257,7 @@ test(void)
     g_object_unref(unit);
 
     gtk_widget_show_all(window);
-    g_signal_connect(G_OBJECT(window), "destroy",
+    g_signal_connect(window, "destroy",
                      G_CALLBACK(gtk_main_quit), NULL);
 }
 #endif
