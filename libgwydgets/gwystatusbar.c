@@ -1,34 +1,21 @@
-/* GTK - The GIMP Toolkit
- * Copyright (C) 1995-1997 Peter Mattis, Spencer Kimball and Josh MacDonald
- * GwyStatusbar Copyright (C) 1998 Shawn T. Amundson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
-
 /*
- * Modified by the GTK+ Team and others 1997-2000.  See the AUTHORS
- * file for a list of people on the GTK+ Team.  See the ChangeLog
- * files for a list of changes.  These files are distributed with
- * GTK+ at ftp://ftp.gtk.org/pub/gtk/.
- */
-
-/*
- * Inhertited from GtkStatusbar by Yeti 2004.
+ *  @(#) $Id$
+ *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
- * GtkStatusbar doesn't support markup in the messages.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
 #include <gtk/gtkstatusbar.h>
@@ -37,41 +24,11 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwystatusbar.h"
 
-#define GWY_STATUSBAR_TYPE_NAME "GwyStatusbar"
-
-static void     gwy_statusbar_class_init     (GwyStatusbarClass *klass);
 static void     gwy_statusbar_update_markup  (GtkStatusbar *statusbar,
                                               guint context_id,
                                               const gchar *text);
 
-static GtkStatusbarClass *parent_class;
-
-GType
-gwy_statusbar_get_type (void)
-{
-    static GType gwy_statusbar_type = 0;
-
-    if (!gwy_statusbar_type) {
-        static const GTypeInfo gwy_statusbar_info = {
-            sizeof(GwyStatusbarClass),
-            NULL,           /* base_init */
-            NULL,           /* base_finalize */
-            (GClassInitFunc)gwy_statusbar_class_init,
-            NULL,           /* class_finalize */
-            NULL,           /* class_data */
-            sizeof(GwyStatusbar),
-            0,              /* n_preallocs */
-            NULL,
-            NULL,
-        };
-        gwy_debug("");
-        gwy_statusbar_type = g_type_register_static(GTK_TYPE_STATUSBAR,
-                                                    GWY_STATUSBAR_TYPE_NAME,
-                                                    &gwy_statusbar_info, 0);
-    }
-
-    return gwy_statusbar_type;
-}
+G_DEFINE_TYPE(GwyStatusbar, gwy_statusbar, GTK_TYPE_STATUSBAR)
 
 static void
 gwy_statusbar_class_init(GwyStatusbarClass *klass)
@@ -79,10 +36,14 @@ gwy_statusbar_class_init(GwyStatusbarClass *klass)
     GtkStatusbarClass *statusbar_class;
 
     statusbar_class = GTK_STATUSBAR_CLASS(klass);
-    parent_class = g_type_class_peek_parent(klass);
 
     statusbar_class->text_pushed = gwy_statusbar_update_markup;
     statusbar_class->text_popped = gwy_statusbar_update_markup;
+}
+
+static void
+gwy_statusbar_init(G_GNUC_UNUSED GwyStatusbar *statusbar)
+{
 }
 
 /**

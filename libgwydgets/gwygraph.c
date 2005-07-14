@@ -59,8 +59,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
 
-    gwy_debug("");
-
     widget_class = (GtkWidgetClass*)klass;
 
     widget_class->size_request = gwy_graph_size_request;

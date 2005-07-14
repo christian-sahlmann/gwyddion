@@ -29,60 +29,23 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
-#define GWY_GRAPH_DATA_TYPE_NAME "GwyGraphData"
-
 enum {
     SELECTED_SIGNAL,
     LAST_SIGNAL
 };
 
-
-static void     gwy_graph_data_class_init           (GwyGraphDataClass *klass);
-static void     gwy_graph_data_init                 (GwyGraphData *graph_data);
 static void     clean_gtk_tree_view                  (GtkTreeView *widget);
 
-static GtkTreeViewClass *parent_class = NULL;
 static guint gwygraph_data_signals[LAST_SIGNAL] = { 0 };
 
-
-
-GType
-gwy_graph_data_get_type(void)
-{
-    static GType gwy_graph_data_type = 0;
-    if (!gwy_graph_data_type) {
-        static const GTypeInfo gwy_graph_data_info = {
-         sizeof(GwyGraphDataClass),
-         NULL,
-         NULL,
-         (GClassInitFunc)gwy_graph_data_class_init,
-         NULL,
-         NULL,
-         sizeof(GwyGraphData),
-         0,
-         (GInstanceInitFunc)gwy_graph_data_init,
-         NULL,
-         };
-        gwy_debug("");
-        gwy_graph_data_type = g_type_register_static (GTK_TYPE_TREE_VIEW,
-                                                 GWY_GRAPH_DATA_TYPE_NAME,
-                                                 &gwy_graph_data_info,
-                                                 0);
-
-    }
-
-    return gwy_graph_data_type;
-}
+G_DEFINE_TYPE(GwyGraphData, gwy_graph_data, GTK_TYPE_TREE_VIEW)
 
 static void
 gwy_graph_data_class_init(GwyGraphDataClass *klass)
 {
     GtkTreeViewClass *widget_class;
 
-    gwy_debug("");
-
     widget_class = (GtkTreeViewClass*)klass;
-    parent_class = g_type_class_peek_parent(klass);
 
     klass->selected = NULL;
     gwygraph_data_signals[SELECTED_SIGNAL]
@@ -101,7 +64,6 @@ static void
 gwy_graph_data_init(G_GNUC_UNUSED GwyGraphData *graph_data)
 {
     gwy_debug("");
-
 }
 
 
@@ -254,6 +216,7 @@ gwy_graph_data_refresh(GwyGraphData *graph_data)
 
 
 /* Remove all columns from a GtkTreeView */
+/* XXX: use gtk_list_store_clear() */
 static void
 clean_gtk_tree_view (GtkTreeView *widget)
 {
