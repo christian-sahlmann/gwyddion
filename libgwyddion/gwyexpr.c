@@ -1518,8 +1518,8 @@ gwy_expr_resolve_variables(GwyExpr *expr,
     g_return_val_if_fail(!n || (names && indices), 0);
 
     requested = g_newa(gboolean, expr->identifiers->len);
-    memset(requested, 0, expr->identifiers->len*sizeof(gboolean*));
-    memset(indices, 0, n*sizeof(guint*));
+    memset(requested, 0, expr->identifiers->len*sizeof(gboolean));
+    memset(indices, 0, n*sizeof(guint));
     for (i = 0; i < n; i++) {
         for (j = 1; j < expr->identifiers->len; j++) {
             if (!strcmp(names[i],
