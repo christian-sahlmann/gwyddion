@@ -5,7 +5,7 @@ use strict;
 use HTML::Entities;
 use POSIX qw(getcwd);
 
-my $man2html = '/usr/libexec/yelp-man2html';
+my $man2html = '/usr/bin/man2html';
 my $tidy = 'tidy -asxhtml -q';
 my $unsafe_chars = "<>\"&";
 my $base = $ENV{'HOME'} . "/PHP/software/gwyddion";
@@ -46,7 +46,7 @@ sub gen_plaintext {
 sub gen_manpage {
   my $filename = $_[0];
   my $output = $_[1];
-  $_ = qx(cat $filename | $man2html | $tidy 2>/dev/null);
+  $_ = qx($man2html <$filename | $tidy 2>/dev/null);
   print "$filename\n";
   s#(<[^>]*>)#\L$1\E#sg;
   s#<head>.*</head>##s;
@@ -70,15 +70,36 @@ foreach my $dir (glob "*") {
     chdir $dir;
     foreach my $f (glob "html/*.html") {
         print "$dir/$f\n";
-        $_ = qx(cat $f | sed -e 's:</*gtkdoc[^>]*>::gi' | $tidy 2>/dev/null);
+        $_ = qx(sed -e 's:</*gtkdoc[^>]*>::gi' $f | $tidy 2>/dev/null);
+        # Lowercase attributes
         s#((?:class|rel)=".*?")#\L$1\E#sg;
+        # Remove <body> attributes
         s#<body[^>]*>#<body>#s;
-        s#(<.*?)(>[^<]*)<a( id=".*?").*?>(.*?)</a>#$1$3$2$4#sg;
+        # Move id= attributes directly to elements
+        s#(<[^/].*?)(>[^<]*)<a( id=".*?").*?>(.*?)</a>#$1$3$2$4#sg;
+        # Remove spaces before colons
         s#>(&nbsp;| | ):<#>:<#sg;
+        # Remove silly EOLs
         s#&\#13;\n+##sg;
+        # Remove <div> attributes and whitespace before
+        s#\s*<div\b[^>]*>##sg;
+        # Remove whitespace before </div>
+        s#\s*</div>##sg;
+        # Remove whitespace before </a>
+        s#\s*</a>#</a>#sg;
+        # Add "api-since" class to Since: version
+        s#(Since:? [\d.]+)#<span class="api-since">$1</span>#sg;
+        # Remove leading empty lines from preforematted text
+        s#(<pre\b[^>]*>)\n+#$1\n#sg;
+        # Remove <p> inside <td> (XXX: what about multi-para?)
         s#(<td .*?>\s*)<p>(.*?)</p>(\s*</td>)#$1$2$3#sg;
+        # Replace images that have alt= (that is navigation) with alt text
         s#<img\s+src=".*? alt="(.*?)"\s+/>#$1#sg;
+        s#\s+cellpadding=".*?"##sg;
+        s#\s+cellspacing=".*?"##sg;
         s#<meta name="generator".*?>##sgi;
+        # Change warnings from titles to normal bold paragraphs
+        s#<h3 class="title">Warning</h3>\n#<p><b class="warning">Warning:</b></p>#sg;
         s#(<style type="text/css">).*?(</style>)#$1$css$2#sg;
         s#<link rel="stylesheet".*?>#<style type="text/css">$css</style>#sg;
         s#(<head>\n)#$1<link rel="stylesheet" type="text/css" href="/CSS/colors-yeti.css"/>#sg;
