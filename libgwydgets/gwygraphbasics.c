@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <math.h>
 #include <gtk/gtkmain.h>
 #include <glib-object.h>
@@ -26,7 +27,6 @@
 #include "gwygraph.h"
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
-#include <stdio.h>
 
 static gint 
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)

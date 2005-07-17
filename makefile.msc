@@ -21,7 +21,7 @@ DOCUMENTS = \
 	COPYING.wri
 
 ## targets
-all: gwyconfig.h sub-all $(DOCUMENTS)
+all: gwyconfig.h config.h sub-all $(DOCUMENTS)
 
 clean:: sub-clean
 
@@ -37,5 +37,8 @@ COPYING.wri: COPYING
 
 gwyconfig.h: data\gwyconfig.h.win32
 	copy data\gwyconfig.h.win32 gwyconfig.h
+
+config.h: data\config.h.win32
+	copy data\config.h.win32 config.h
 
 # vim: ft=make

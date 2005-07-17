@@ -27,6 +27,7 @@
  * - saving
 */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>

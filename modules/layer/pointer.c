@@ -32,6 +32,7 @@
  * Returns: The newly created layer.
  */
 
+#include "config.h"
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>

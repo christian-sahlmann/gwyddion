@@ -39,6 +39,7 @@
  * more control.  DnD did not fit then and was removed too.
  */
 
+#include "config.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtkbutton.h>
 #include <gtk/gtkmain.h>

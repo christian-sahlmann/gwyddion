@@ -18,10 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
+#include "config.h"
 #include <gtk/gtkmain.h>
 #include <glib-object.h>
-#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
 #include "gwygraphmodel.h"

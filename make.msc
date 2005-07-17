@@ -50,7 +50,7 @@ LINKDEBUG = /debug
 
 LDFLAGS = /machine:ix86 $(LINKDEBUG) /nologo
 
-COMMON_CFLAGS = -DGWYDDION_COMPILATION -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include"
+COMMON_CFLAGS = -I "$(GTK_TOP)\include" -I "$(MSC_TOP)\include"
 COMMON_LDFLAGS = /libpath:"$(GTK_TOP)\lib" /libpath:"$(MSC_TOP)\lib"
 
 # For things needing to link everything, that is from libgwydgets up

@@ -51,6 +51,7 @@
  * a scale-free solution and later support for GwySIUnit was added.
  */
 
+#include "config.h"
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include "gwyruler.h"

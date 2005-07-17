@@ -14,6 +14,8 @@ gwyddionmime_DATA = gwyddion.xml
 man1_MANS = gwyddion.1
 
 EXTRA_DIST = \
+	config.h.win32.in \
+	config.h.win32 \
 	gwyconfig.h.win32 \
 	gwyddion-devel.iss \
 	gwyddion-devel.iss.in \
@@ -24,7 +26,6 @@ EXTRA_DIST = \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
-	version.h.in \
 	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)
 

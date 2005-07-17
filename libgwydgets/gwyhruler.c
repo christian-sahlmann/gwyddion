@@ -49,6 +49,7 @@
  * and a few drawing functions.
  */
 
+#include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>

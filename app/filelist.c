@@ -33,6 +33,7 @@
  * - Do NOT store thumbnails for anything in ~/.thumbnails
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 
 #include <string.h>

@@ -24,6 +24,7 @@
  * - read split files (and accept any kind of EOL in magic)
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>

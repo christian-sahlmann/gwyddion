@@ -18,12 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifdef _MSC_VER
-#include "version.h"
-#else
 #include "config.h"
-#endif
-
 #include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

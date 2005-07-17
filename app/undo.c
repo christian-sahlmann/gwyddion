@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <stdarg.h>
 #include <string.h>
 #include <libgwyddion/gwyddion.h>

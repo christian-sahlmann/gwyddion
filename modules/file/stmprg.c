@@ -30,6 +30,7 @@
  * - height vs. current, sol_z vs. sol_h etc.
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>

@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwynlfit.h>
+#include <libgwyddion/gwysiunit.h>
 #include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS

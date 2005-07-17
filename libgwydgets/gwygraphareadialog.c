@@ -18,11 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <math.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
-#include <stdio.h>
 #include "gwydgets.h"
 #include "gwyoptionmenus.h"
 #include "gwygraph.h"

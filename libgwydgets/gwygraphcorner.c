@@ -18,11 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <math.h>
-#include <stdio.h>
+#include "config.h"
 #include <gtk/gtk.h>
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
 
 #include <glib-object.h>
 

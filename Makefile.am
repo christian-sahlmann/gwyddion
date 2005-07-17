@@ -25,8 +25,7 @@ EXTRA_DIST = \
 	gwyddion.spec\
 	make.msc \
 	makefile.msc \
-	rules.msc \
-	version.h
+	rules.msc
 
 DISTCLEANFILES = gwyconfig.h
 

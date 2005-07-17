@@ -27,6 +27,7 @@ controls_changed => computed = FALSE
 */
 
 
+#include "config.h"
 #include <string.h>
 
 #include <glib/gstdio.h>

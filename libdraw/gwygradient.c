@@ -26,6 +26,7 @@
  * - test
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <libgwyddion/gwyutils.h>

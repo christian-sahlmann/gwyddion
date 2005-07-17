@@ -24,6 +24,7 @@
  * 2004 to fit better in Gwyddion */
 
 
+#include "config.h"
 #include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <string.h>

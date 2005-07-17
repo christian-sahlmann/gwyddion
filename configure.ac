@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050717, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -45,7 +45,7 @@ AC_CONFIG_FILES(\
   data/gwyddion.iss \
   data/gwyddion-devel.iss \
   data/gwyddion.pc \
-  version.h:data/version.h.in \
+  data/config.h.win32 \
 )
 AM_CONFIG_HEADER(config.h)
 
@@ -211,7 +211,7 @@ AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([tiff],[TIFFOpen])
 PACKAGE_LIBS="$PACKAGE_LIBS $GOBJECT_LIBS $LIBS"
 # XXX: need Gtk+ headers.
-PACKAGE_CFLAGS="-DGWYDDION_COMPILATION $PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
+PACKAGE_CFLAGS="$PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
 
 dnl Checks for header files.
 AC_HEADER_STDC

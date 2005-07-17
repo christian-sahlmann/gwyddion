@@ -19,6 +19,7 @@
  */
 /* TODO: some metadata, MDA, ... */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>

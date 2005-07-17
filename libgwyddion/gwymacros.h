@@ -21,25 +21,11 @@
 #ifndef __GWY_GWYMACROS_H__
 #define __GWY_GWYMACROS_H__
 
-#ifdef GWYDDION_COMPILATION
-#ifdef _MSC_VER
-#include "version.h"
-#else
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#else
-/* XXX: whatever */
-#endif
-#endif  /* _MSC_VER */
-#endif  /* GWYDDION_COMPILATION */
-
 #include <stdarg.h>
-
 #include <glib.h>
-
 #include <gwyconfig.h>
 
-/* XXX: move to gwyconfig.h? */
+/* FIXME: move to gwyconfig.h? or just config.h? */
 #ifdef ENABLE_NLS
 #include <libintl.h>
 #else
