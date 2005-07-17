@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <glib/gstdio.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -405,7 +407,7 @@ gwy_app_recent_file_list_prune(Controls *controls)
         gwy_debug("<%s>", rf->file_utf8);
         if (!g_file_test(rf->file_utf8, G_FILE_TEST_IS_REGULAR)) {
             if (rf->thumb_sys && rf->thumb_state != FILE_STATE_FAILED)
-                unlink(rf->thumb_sys);
+                g_unlink(rf->thumb_sys);
             gwy_recent_file_free(rf);
             ok = gtk_list_store_remove(controls->store, &iter);
         }
@@ -626,7 +628,7 @@ gwy_app_recent_file_list_save(const gchar *filename)
     FILE *fh;
 
     g_return_val_if_fail(gcontrols.store, FALSE);
-    fh = fopen(filename, "w");
+    fh = g_fopen(filename, "w");
     if (!fh)
         return FALSE;
 
@@ -1018,9 +1020,9 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 #ifndef G_OS_WIN32
     chmod(fnm, 0600);
 #endif
-    unlink(rf->thumb_sys);
-    if (rename(fnm, rf->thumb_sys) != 0) {
-        unlink(fnm);
+    g_unlink(rf->thumb_sys);
+    if (g_rename(fnm, rf->thumb_sys) != 0) {
+        g_unlink(fnm);
         rf->thumb_state = FILE_STATE_FAILED;
         rf->thumb_mtime = 0;
     }

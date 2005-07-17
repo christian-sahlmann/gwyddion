@@ -19,9 +19,11 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#include <glib/gstdio.h>
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
@@ -336,7 +338,7 @@ main(int argc, char *argv[])
     FILE *fh;
     guint32 seed;
 
-    fh = fopen("/dev/urandom", "rb");
+    fh = g_fopen("/dev/urandom", "rb");
     fread(&seed, sizeof(guint32), 1, fh);
     fclose(fh);
     g_random_set_seed(seed);

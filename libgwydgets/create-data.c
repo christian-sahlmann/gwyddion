@@ -19,9 +19,10 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
+
+#include <glib/gstdio.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/gwyprocess.h>
@@ -126,7 +127,7 @@ main(void)
      */
     buffer = gwy_serializable_serialize(G_OBJECT(container), NULL);
 
-    fh = fopen("bracket.gwy", "wb");
+    fh = g_fopen("bracket.gwy", "wb");
     fwrite(magic_header, 1, strlen(magic_header), fh);
     fwrite(buffer->data, 1, buffer->len, fh);
     fclose(fh);

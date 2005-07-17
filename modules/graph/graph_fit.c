@@ -18,10 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <glib/gstdio.h>
+
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwyddion.h>
@@ -916,7 +918,7 @@ save_report_cb(GtkWidget *button, GString *report)
     filename_sys = g_strdup(filename);
     gtk_widget_destroy(dialog);
 
-    fh = fopen(filename_sys, "a");
+    fh = g_fopen(filename_sys, "a");
     if (fh) {
         fputs(report->str, fh);
         fclose(fh);

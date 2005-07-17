@@ -18,12 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
+
+#define __USE_GNU
+#include <math.h>
+
 #include <libgwyddion/gwymacros.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <glib.h>
+#include <glib/gstdio.h>
+
 #include <gdk/gdk.h>
 
 #ifdef HAVE_UNISTD_H
@@ -424,7 +427,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         && strncmp(fileinfo->buffer, "BM", 2) != 0)
         return 0;
     if (strcmp(name, "pnm") == 0
-        && (fileinfo->buffer[0] != 'P' || !isdigit(fileinfo->buffer[1])))
+        && (fileinfo->buffer[0] != 'P' || !g_ascii_isdigit(fileinfo->buffer[1])))
         return 0;
     if (strcmp(name, "xpm") == 0
         && strncmp(fileinfo->buffer, "/* XPM */", 9) != 0)
@@ -500,7 +503,7 @@ pixmap_load(const gchar *filename,
     format_info = find_format(name);
     g_return_val_if_fail(format_info, 0);
 
-    if (!(fh = fopen(filename, "rb")))
+    if (!(fh = g_fopen(filename, "rb")))
         return NULL;
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
@@ -1126,7 +1129,7 @@ pixmap_save_ppm(GwyContainer *data,
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
 
-    fh = fopen(filename, "wb");
+    fh = g_fopen(filename, "wb");
     if (!fh) {
         g_warning("PPM `%s' write failed!", filename);
         g_object_unref(pixbuf);
@@ -1190,7 +1193,7 @@ pixmap_save_bmp(GwyContainer *data,
     bmprowstride = 12*((width + 3)/4);
     bmplen = height*bmprowstride + sizeof(bmp_head);
 
-    fh = fopen(filename, "wb");
+    fh = g_fopen(filename, "wb");
     if (!fh) {
         g_warning("PPM `%s' write failed!", filename);
         g_object_unref(pixbuf);
@@ -1271,7 +1274,7 @@ pixmap_save_targa(GwyContainer *data,
     targa_head[14] = (height) & 0xff;
     targa_head[15] = (height >> 8) & 0xff;
 
-    fh = fopen(filename, "wb");
+    fh = g_fopen(filename, "wb");
     if (!fh) {
         g_warning("TARGA `%s' write failed!", filename);
         g_object_unref(pixbuf);

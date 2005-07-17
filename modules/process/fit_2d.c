@@ -18,12 +18,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+
+#include <glib/gstdio.h>
+
+#include <libgwyddion/gwymacros.h>
+
 #include <gtk/gtk.h>
+
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
@@ -966,7 +970,7 @@ save_report_cb(GtkWidget *button, GString *report)
     filename_sys = g_strdup(filename);
     gtk_widget_destroy(dialog);
 
-    fh = fopen(filename_sys, "a");
+    fh = g_fopen(filename_sys, "a");
     if (fh) {
         fputs(report->str, fh);
         fclose(fh);

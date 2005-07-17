@@ -18,10 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
-
-#include <stdio.h>
 #include <string.h>
+
+#include <glib/gstdio.h>
+
+#include <libgwyddion/gwymacros.h>
 
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
@@ -86,7 +87,7 @@ asciiexport_save(GwyContainer *data,
     gdouble *d;
     FILE *fh;
 
-    if (!(fh = fopen(filename, "w")))
+    if (!(fh = g_fopen(filename, "w")))
         return FALSE;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -97,7 +98,7 @@ asciiexport_save(GwyContainer *data,
         for (j = 0; j < xres; j++) {
             if (fprintf(fh, "%g%c", d[i*xres + j],
                         j == xres-1 ? '\n' : '\t') < 2) {
-                unlink(filename);
+                g_unlink(filename);
                 return FALSE;
             }
         }

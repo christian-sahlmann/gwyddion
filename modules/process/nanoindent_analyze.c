@@ -27,9 +27,10 @@ controls_changed => computed = FALSE
 */
 
 
-#include <stdio.h>
 #include <string.h>
-#include <glib.h>
+
+#include <glib/gstdio.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
@@ -706,7 +707,7 @@ static GwyVec data_field_average_normal_vector (GwyDataField *dfield, gint x, gi
     }
 
 /*
-FILE* deb = fopen("anv.txt","a");
+FILE* deb = g_fopen("anv.txt","a");
 fprintf(deb,"%lf %lf %lf->", v.x,v.y,v.z);
 
     if(r) {
@@ -745,7 +746,7 @@ static void set_mask_at (GwyDataField *mask, gint x, gint y, gdouble m,  gint ho
         case GWY_HOW_MARK_OR:
         act_mask = (act_mask || im);
    /*    if(act_mask){
-             FILE* fl = fopen ("setmask.txt","a");
+             FILE* fl = g_fopen ("setmask.txt","a");
                             fprintf(fl, "[%d %d]%d %d %lf\n", x,y,act_mask, im, (double)(act_mask || im));
                             fclose(fl);
                             }
@@ -1414,11 +1415,11 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
 
     if (!c->computed) /*nothing to output*/
     {
-      g = gtk_message_dialog_new (gwy_app_main_window_get(),
-                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                          GTK_MESSAGE_ERROR,
-                          GTK_BUTTONS_CLOSE,
-                         "There is no statistics computed yet.");
+      g = gtk_message_dialog_new (GTK_WINDOW (gwy_app_main_window_get()),
+                                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                                  GTK_MESSAGE_ERROR,
+                                  GTK_BUTTONS_CLOSE,
+                                  "There is no statistics computed yet.");
       gtk_dialog_run (GTK_DIALOG (g));
       gtk_widget_destroy (g);
       return;
@@ -1450,7 +1451,7 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
                                                   NULL);
     mag = siformat->magnitude;
 
-    out = fopen( filename_sys, "w");
+    out = g_fopen( filename_sys, "w");
     if(out) {
 
     fprintf (out, "%s\n",  filename_sys );

@@ -18,10 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <string.h>
+
+#include <glib/gstdio.h>
+
 #include <libgwyddion/gwymacros.h>
 
-#include <stdio.h>
-#include <string.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
@@ -157,13 +159,13 @@ gwyfile_save(GwyContainer *data,
     FILE *fh;
     gboolean ok = TRUE;
 
-    if (!(fh = fopen(filename, "wb")))
+    if (!(fh = g_fopen(filename, "wb")))
         return FALSE;
     buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
-        unlink(filename);
+        g_unlink(filename);
     }
     fclose(fh);
     g_byte_array_free(buffer, TRUE);

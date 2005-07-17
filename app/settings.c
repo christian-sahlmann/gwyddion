@@ -20,9 +20,10 @@
 
 #include <libgwyddion/gwymacros.h>
 
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include <glib/gstdio.h>
 
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -108,7 +109,7 @@ gwy_app_settings_save(const gchar *filename)
     gwy_debug("Saving text settings to `%s'", filename);
     settings = gwy_app_settings_get();
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
-    fh = fopen(filename, "w");
+    fh = g_fopen(filename, "w");
     if (!fh) {
         g_warning("Cannot save text settings to `%s': %s",
                   filename, g_strerror(errno));

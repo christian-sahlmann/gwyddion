@@ -18,11 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
-#include <glib.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+
+#include <glib.h>
+#include <glib/gstdio.h>
+
 #include <gtk/gtk.h>
 #include "gwypalettedef.h"
 #include "gwypalette.h"
@@ -80,7 +82,7 @@ int main(void)
     size = 0;
     buffer = NULL;
     buffer = gwy_serializable_serialize((GObject *)p, buffer, &size);
-    fh = fopen("test.palettedef", "wb");
+    fh = g_fopen("test.palettedef", "wb");
     fwrite(buffer, 1, size, fh);
     fclose(fh);
     g_object_unref((GObject *)p);

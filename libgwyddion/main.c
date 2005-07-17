@@ -18,9 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <glib/gstdio.h>
+
 #include "gwyddion.h"
 #include "gwytestser.h"
 
@@ -82,7 +84,7 @@ test_serializable_iface(void)
     g_message("size of both objects: %" G_GSIZE_FORMAT, size);
     g_object_unref(ser);
     g_message("writing objects to %s", FILENAME);
-    fh = fopen(FILENAME, "wb");
+    fh = g_fopen(FILENAME, "wb");
     fwrite(array->data, 1, array->len, fh);
     fclose(fh);
     g_byte_array_free(array, TRUE);
@@ -257,7 +259,7 @@ test_container_serialization(void)
     array = gwy_serializable_serialize(G_OBJECT(container), array);
     g_object_unref(container);
 
-    fh = fopen(FILENAME, "wb");
+    fh = g_fopen(FILENAME, "wb");
     fwrite(array->data, 1, array->len, fh);
     fclose(fh);
     g_byte_array_free(array, TRUE);

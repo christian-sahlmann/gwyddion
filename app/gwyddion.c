@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glib/gstdio.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -246,7 +248,7 @@ setup_logging(void)
     FILE *logfile;
 
     log_filename = gwy_app_settings_get_log_filename();
-    logfile = fopen(log_filename, "w");
+    logfile = g_fopen(log_filename, "w");
     for (i = 0; i < G_N_ELEMENTS(domains); i++)
         g_log_set_handler(domains[i],
                           G_LOG_LEVEL_DEBUG | G_LOG_LEVEL_MESSAGE

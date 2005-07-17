@@ -45,17 +45,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <errno.h>
+
+#include <glib/gstdio.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <libgwyddion/gwywin32unistd.h>
-
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
 
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
@@ -139,6 +136,7 @@ static FILE*           open_temporary_file       (gchar **filename);
 static GwyContainer*   text_dump_import          (GwyContainer *old_data,
                                                   gchar *buffer,
                                                   gsize size);
+static gchar*        decode_glib_encoded_filename(const gchar *filename);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -522,13 +520,13 @@ proc_plugin_proxy_run(GwyContainer *data,
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
     args[2] = g_strdup(gwy_enum_to_string(run, run_mode_names, -1));
-    args[3] = filename;
+    args[3] = decode_glib_encoded_filename(filename);
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
     if (!err)
         ok &= g_file_get_contents(filename, &buffer, &size, &err);
-    unlink(filename);
+    g_unlink(filename);
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
@@ -542,6 +540,7 @@ proc_plugin_proxy_run(GwyContainer *data,
                     err ? err->message : "it returned garbage.");
         ok = FALSE;
     }
+    g_free(args[3]);
     g_free(args[2]);
     g_clear_error(&err);
     g_free(buffer);
@@ -687,13 +686,13 @@ file_plugin_proxy_load(const gchar *filename,
     args[0] = info->file;
     args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_LOAD, file_op_names, -1));
     args[2] = tmpname;
-    args[3] = g_strdup(filename);
+    args[3] = decode_glib_encoded_filename(filename);
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
     if (!err)
         ok &= g_file_get_contents(tmpname, &buffer, &size, &err);
-    unlink(tmpname);
+    g_unlink(tmpname);
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
@@ -752,11 +751,11 @@ file_plugin_proxy_save(GwyContainer *data,
     args[0] = info->file;
     args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_SAVE, file_op_names, -1));
     args[2] = tmpname;
-    args[3] = g_strdup(filename);
+    args[3] = decode_glib_encoded_filename(filename);
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
-    unlink(tmpname);
+    g_unlink(tmpname);
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
@@ -1093,7 +1092,7 @@ open_temporary_file(gchar **filename)
     buf[sizeof(buf)-1] = '\0';
     *filename = g_build_filename(g_get_tmp_dir(), buf, NULL);
 
-    fh = fopen(*filename, "wb");
+    fh = g_fopen(*filename, "wb");
     if (!fh)
         g_warning("Cannot create a temporary file: %s", g_strerror(errno));
 #else
@@ -1265,6 +1264,20 @@ fail:
     gwy_container_remove_by_prefix(data, NULL);
     g_object_unref(data);
     return NULL;
+}
+
+/* Convert GLib-encoded file name to on-disk file name to be used with
+ * NON-widechar libc functions.  In fact, we just don't know what methods
+ * plug-ins may use to open files.  Why file names can't be just sequences
+ * of bytes... */
+static gchar*
+decode_glib_encoded_filename(const gchar *filename)
+{
+#ifdef G_OS_WIN32
+    return g_locale_from_utf8(filename, -1, NULL, NULL, NULL);
+#else
+    return g_strdup(filename);
+#endif
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

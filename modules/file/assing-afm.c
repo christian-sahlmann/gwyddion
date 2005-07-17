@@ -18,9 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
-#include <stdio.h>
+
+#include <glib/gstdio.h>
+
+#include <libgwyddion/gwymacros.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -200,7 +202,7 @@ aafm_save(GwyContainer *data,
     FILE *fh;
     gboolean ok = TRUE;
 
-    if (!(fh = fopen(filename, "wb")))
+    if (!(fh = g_fopen(filename, "wb")))
         return FALSE;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -240,7 +242,7 @@ aafm_save(GwyContainer *data,
     }
     /* FIXME */
     if (!(ok = (fwrite(x, 1, 2*n, fh) == 2*n)))
-        unlink(filename);
+        g_unlink(filename);
     else {
         z.f = (max - min)/Angstrom;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)

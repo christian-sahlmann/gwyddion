@@ -18,9 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
-#include <stdio.h>
+
+#include <glib/gstdio.h>
+
+#include <libgwyddion/gwymacros.h>
+
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
@@ -335,13 +338,13 @@ gwy_file_detect_fill_info(GwyFileDetectInfo *fileinfo,
     if (only_name)
         return TRUE;
 
-    if (stat(fileinfo->name, &st) != 0) {
+    if (g_stat(fileinfo->name, &st) != 0) {
         g_free((gpointer)fileinfo->name_lowercase);
         return FALSE;
     }
     fileinfo->file_size = st.st_size;
 
-    if (!(fh = fopen(fileinfo->name, "rb"))) {
+    if (!(fh = g_fopen(fileinfo->name, "rb"))) {
         g_free((gpointer)fileinfo->name_lowercase);
         return FALSE;
     }

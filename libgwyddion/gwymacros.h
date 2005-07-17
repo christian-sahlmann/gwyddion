@@ -34,12 +34,8 @@
 #endif  /* GWYDDION_COMPILATION */
 
 #include <stdarg.h>
-#include <glibconfig.h>
-#include <glib/gmacros.h>
-#include <glib/gstrfuncs.h>
-#include <glib/gmem.h>
-#include <glib/gutils.h>
-#include <glib/gmessages.h>
+
+#include <glib.h>
 
 #include <gwyconfig.h>
 

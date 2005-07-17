@@ -19,12 +19,11 @@
  */
 
 #include <math.h>
-#include <glib.h>
+#include <glib/gstdio.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <pango/pango.h>
-#include <stdio.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwyddion/gwymacros.h>
 #include "gwygraph.h"
@@ -130,7 +129,7 @@ gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
     labely = height - areay - labelh - 5;
     
     /*create stream*/
-    fw = fopen(filename, "w");
+    fw = g_fopen(filename, "w");
 
     /*write header*/
     fprintf(fw, "%%!PS-Adobe EPSF-3.0\n");

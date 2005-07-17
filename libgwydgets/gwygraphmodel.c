@@ -20,7 +20,10 @@
 
 #include <string.h>
 
+#include <glib/gstdio.h>
+
 #include <libgwyddion/gwyddion.h>
+
 #include "gwygraphcurvemodel.h"
 #include "gwygraphmodel.h"
 #include "gwygraph.h"
@@ -947,7 +950,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
 
-    fw = fopen(filename, "w");
+    fw = g_fopen(filename, "w");
 
     if (export_units)
     {
