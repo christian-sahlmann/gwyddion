@@ -18,12 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#include <string.h>
-
-#define __USE_GNU
-#include <math.h>
-
 #include <libgwyddion/gwymacros.h>
+#include <string.h>
+#include <math.h>
 
 #include <glib/gstdio.h>
 
