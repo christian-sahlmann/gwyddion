@@ -192,7 +192,7 @@ AC_PATH_X
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || CPPFLAGS="$CPPFLAGS -L$x_libraries"
 
-PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.4.0])
+PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.6.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
