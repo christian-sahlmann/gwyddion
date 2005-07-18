@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050717, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050718, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -158,7 +158,9 @@ if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
   GWY_PROG_CC_OPTION([WNO_SYS_HEADERS],[-Wno-system-headers],,)
   GWY_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
-  GWY_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
+  # FIXME: GLib headers don't compile cleanly with this warning
+  #GWY_PROG_CC_OPTION([WREDUNDANT],[-Wredundant-decls],,)
+  PROG_CC_WREDUNDANT=
   # FIXME: We would like an error, but gcc can't make one w/o -std, which is
   # too much.
   GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
