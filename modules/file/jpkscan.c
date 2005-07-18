@@ -43,13 +43,13 @@ static GwyContainer * jpkscan_load_tiff  (const gchar             *filename);
 static gboolean       tiff_check_version       (gint               macro,
                                                 gint               micro);
 
-static void           tiff_load_channel        (TIFF               *tif,
-                                                GwyContainer       *container,
-                                                gint                idx,
-                                                gint                ilen,
-                                                gint                jlen,
-                                                gdouble             ulen,
-                                                gdouble             vlen);
+static void           tiff_load_channel        (TIFF              *tif,
+                                                GwyContainer      *container,
+                                                gint               idx,
+                                                gint               ilen,
+                                                gint               jlen,
+                                                gdouble            ulen,
+                                                gdouble            vlen);
 
 static void           tiff_load_meta           (TIFF               *tif,
                                                 GwyContainer       *container);
@@ -97,7 +97,6 @@ static gint           jpkscan_dialog           (GwyContainer       *container,
 static void           jpkscan_error_dialog     (const gchar        *title,
                                                 const gchar        *format,
                                                 ...) G_GNUC_PRINTF(2, 3);
-static gchar        * jpkscan_display_basename (const gchar       *filename);
 
 
 /* The module info. */
@@ -748,7 +747,7 @@ jpkscan_dialog (GwyContainer *container,
   gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), vbox, TRUE, TRUE, 0);
   gtk_widget_show (vbox);
 
-  name = jpkscan_display_basename (filename);
+  name = g_filename_display_basename (filename);
   text = g_strdup_printf (_("Select a channel to load from\n"
                             "<b>%s</b>"), name);
   g_free (name);
@@ -837,66 +836,22 @@ jpkscan_error_dialog (const gchar *title,
                       ...)
 {
   GtkWidget *dialog;
-  GtkWidget *box;
-  GtkWidget *label;
   gchar     *message;
   va_list    args;
 
-  dialog = gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL,
-                                   GTK_MESSAGE_ERROR,
+  dialog = gtk_message_dialog_new (NULL,
+                                   GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR,
                                    GTK_BUTTONS_OK,
                                    title);
-
-  /*  The following code could (and should) be replaced by a call to
-   *  gtk_message_dialog_format_secondary_text() (requires GTK+ >= 2.6).
-   */
 
   va_start (args, format);
   message = g_strdup_vprintf (format, args);
   va_end (args);
 
-  label = g_object_new (GTK_TYPE_LABEL,
-                        "label",   message,
-                        "xalign",  0.0,
-                        "yalign",  0.0,
-                        "wrap",    TRUE,
-                        "justify", GTK_JUSTIFY_LEFT,
-                        NULL);
-
-  box = gtk_widget_get_parent (GTK_MESSAGE_DIALOG (dialog)->label);
-  gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-  gtk_widget_show (label);
-
+  gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
+                                            message);
   g_free (message);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
-}
-
-static gchar *
-jpkscan_display_basename (const gchar *filename)
-{
-  gchar  *basename;
-  gchar  *display_name;
-  GError *error = NULL;
-
-  /*  The following code could (and should) be replaced by a call to
-   *  g_filename_display_basename() (requires GLib >= 2.6).
-   */
-
-  g_return_val_if_fail (filename != NULL, NULL);
-
-  basename = g_path_get_basename (filename);
-  display_name = g_filename_to_utf8 (basename, -1, NULL, NULL, &error);
-  g_free (basename);
-
-  if (! display_name)
-    {
-      g_warning ("Error converting filename to UTF8: %s", error->message);
-      g_error_free (error);
-
-      return g_strdup (_("(invalid filename encoding)"));
-    }
-
-  return display_name;
 }
