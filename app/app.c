@@ -1414,7 +1414,7 @@ gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
 }
 
 static void
-gwy_app_data_popup_menu_position(GtkMenu *menu,
+gwy_app_data_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
                                  gint *x,
                                  gint *y,
                                  gboolean *push_in,

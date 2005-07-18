@@ -24,6 +24,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
 #include <gtk/gtkwindow.h>
+#include <gtk/gtktooltips.h>
 
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwysiunit.h>
@@ -81,6 +82,8 @@ gchar*        gwy_data_window_get_base_name        (GwyDataWindow *data_window);
 GtkWidget*    gwy_data_window_get_ul_corner_widget (GwyDataWindow *data_window);
 void          gwy_data_window_set_ul_corner_widget (GwyDataWindow *data_window,
                                                     GtkWidget *corner);
+void          gwy_data_window_class_set_tooltips   (GtkTooltips *tips);
+GtkTooltips*  gwy_data_window_class_get_tooltips   (void);
 
 G_END_DECLS
 

@@ -70,7 +70,15 @@ static void     gwy_3d_window_auto_scale_changed  (GtkToggleButton *check,
 static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window);
+static void     gwy_3d_window_set_tooltip         (GtkWidget *widget,
+                                                   const gchar *tip_text);
+
 /* Local data */
+
+/* These are actually class data.  To put them to Class struct someone would
+ * have to do class_ref() and live with this reference to the end of time. */
+static GtkTooltips *tooltips = NULL;
+static gboolean tooltips_set = FALSE;
 
 /*static guint gwy3dwindow_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -100,9 +108,13 @@ gwy_3d_window_class_init(Gwy3DWindowClass *klass)
 }
 
 static void
-gwy_3d_window_init(Gwy3DWindow *gwy3dwindow)
+gwy_3d_window_init(G_GNUC_UNUSED Gwy3DWindow *gwy3dwindow)
 {
-    gwy3dwindow->gwy3dview = NULL;
+    if (!tooltips_set && !tooltips) {
+        tooltips = gtk_tooltips_new();
+        g_object_ref(tooltips);
+        gtk_object_sink(GTK_OBJECT(tooltips));
+    }
 }
 
 static void
@@ -174,8 +186,7 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
                                  G_CALLBACK(gwy_3d_window_set_mode),
                                  GINT_TO_POINTER(buttons[i].mode));
         g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-        gtk_tooltips_set_tip(gwy3dwindow->tips, button,
-                             _(buttons[i].tooltip), NULL);
+        gwy_3d_window_set_tooltip(button, _(buttons[i].tooltip));
         gwy3dwindow->buttons[offset + buttons[i].mode] = button;
         if (!group)
             group = GTK_RADIO_BUTTON(button);
@@ -231,8 +242,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gwy3dwindow->gwy3dview = (GtkWidget*)gwy3dview;
     gtk_box_pack_start(GTK_BOX(hbox), gwy3dwindow->gwy3dview, TRUE, TRUE, 0);
 
-    gwy3dwindow->tips = gtk_tooltips_new();
-
     /* Small toolbar */
     gwy3dwindow->vbox_small = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_end(GTK_BOX(hbox), gwy3dwindow->vbox_small, FALSE, FALSE, 0);
@@ -244,8 +253,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(GWY_STOCK_LESS,
                                                GTK_ICON_SIZE_BUTTON));
-    gtk_tooltips_set_tip(gwy3dwindow->tips, button,
-                         _("Show full controls"), NULL);
+    gwy_3d_window_set_tooltip(button, _("Show full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_3d_window_select_controls),
@@ -269,8 +277,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(GWY_STOCK_MORE,
                                                GTK_ICON_SIZE_BUTTON));
-    gtk_tooltips_set_tip(gwy3dwindow->tips, button,
-                         _("Hide full controls"), NULL);
+    gwy_3d_window_set_tooltip(button, _("Hide full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_3d_window_select_controls),
@@ -572,9 +579,51 @@ gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
                        FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(button),
                       gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON));
-    gtk_tooltips_set_tip(gwy3dwindow->tips, button, tooltip, NULL);
+    gwy_3d_window_set_tooltip(button, tooltip);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
     g_signal_connect(button, "clicked", G_CALLBACK(callback), cbdata);
+}
+
+/**
+ * gwy_3d_window_class_set_tooltips:
+ * @tips: Tooltips object #Gwy3DWindow's should use for setting tooltips.
+ *        A %NULL value disables tooltips altogether.
+ *
+ * Sets the tooltips object to use for adding tooltips to 3D window parts.
+ *
+ * This is a class method.  It affects only newly cerated 3D windows, existing
+ * 3D windows will continue to use the tooltips they were constructed with.
+ *
+ * If no class tooltips object is set before first #Gwy3DWindow is created,
+ * the class instantiates one on its own.  You can normally obtain it with
+ * gwy_3d_window_class_get_tooltips() then.  The class takes a reference on
+ * the tooltips in either case.
+ **/
+void
+gwy_3d_window_class_set_tooltips(GtkTooltips *tips)
+{
+    g_return_if_fail(!tips || GTK_IS_TOOLTIPS(tips));
+
+    if (tips) {
+        g_object_ref(tips);
+        gtk_object_sink(GTK_OBJECT(tips));
+    }
+    gwy_object_unref(tooltips);
+    tooltips = tips;
+    tooltips_set = TRUE;
+}
+
+/**
+ * gwy_3d_window_class_get_tooltips:
+ *
+ * Gets the tooltips object used for adding tooltips to 3D window parts.
+ *
+ * Returns: The #GtkTooltips object.
+ **/
+GtkTooltips*
+gwy_3d_window_class_get_tooltips(void)
+{
+    return tooltips;
 }
 
 static void
@@ -778,6 +827,14 @@ gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window)
 
      gtk_toggle_button_set_active
          (GTK_TOGGLE_BUTTON(window->labels_autosize_check), TRUE);
+}
+
+static void
+gwy_3d_window_set_tooltip(GtkWidget *widget,
+                          const gchar *tip_text)
+{
+    if (tooltips)
+        gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

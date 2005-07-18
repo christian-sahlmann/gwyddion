@@ -52,10 +52,10 @@ struct _GwyGraphWindow {
 
     GtkWidget *button_measure_points;
     GtkWidget *button_measure_lines;
-    
+
     GtkWidget *button_zoom_in;
     GtkWidget *button_zoom_out;
-    
+
     GtkWidget *button_export_ascii;
     GtkWidget *button_export_bitmap;
     GtkWidget *button_export_vector;
@@ -63,8 +63,6 @@ struct _GwyGraphWindow {
     GtkWidget *label_what;
     GtkWidget *label_x;
     GtkWidget *label_y;
-    
-    GtkTooltips *tips;
 
     GtkWidget *widget1;
     GtkWidget *widget2;
@@ -87,9 +85,11 @@ struct _GwyGraphWindowClass {
     gpointer reserved4;
 };
 
-GtkWidget* gwy_graph_window_new                      (GwyGraph *graph);
-GType      gwy_graph_window_get_type                 (void) G_GNUC_CONST;
-GtkWidget* gwy_graph_window_get_graph              (GwyGraphWindow *graphwindow);
+GType        gwy_graph_window_get_type          (void) G_GNUC_CONST;
+GtkWidget*   gwy_graph_window_new               (GwyGraph *graph);
+GtkWidget*   gwy_graph_window_get_graph         (GwyGraphWindow *graphwindow);
+void         gwy_graph_window_class_set_tooltips(GtkTooltips *tips);
+GtkTooltips* gwy_graph_window_class_get_tooltips(void);
 
 G_END_DECLS
 

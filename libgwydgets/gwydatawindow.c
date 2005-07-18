@@ -59,8 +59,15 @@ static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
 static void     gwy_data_window_gradient_selected (GtkWidget *item,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
+static void     gwy_data_window_set_tooltip       (GtkWidget *widget,
+                                                   const gchar *tip_text);
 
 /* Local data */
+
+/* These are actually class data.  To put them to Class struct someone would
+ * have to do class_ref() and live with this reference to the end of time. */
+static GtkTooltips *tooltips = NULL;
+static gboolean tooltips_set = FALSE;
 
 static guint data_window_signals[LAST_SIGNAL] = { 0 };
 
@@ -98,6 +105,11 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
 static void
 gwy_data_window_init(G_GNUC_UNUSED GwyDataWindow *data_window)
 {
+    if (!tooltips_set && !tooltips) {
+        tooltips = gtk_tooltips_new();
+        g_object_ref(tooltips);
+        gtk_object_sink(GTK_OBJECT(tooltips));
+    }
 }
 
 static void
@@ -632,6 +644,49 @@ gwy_data_window_set_ul_corner_widget(GwyDataWindow *data_window,
                          GTK_FILL, GTK_FILL, 0, 0);
 }
 
+/**
+ * gwy_data_window_class_set_tooltips:
+ * @tips: Tooltips object #GwyDataWindow's should use for setting tooltips.
+ *        A %NULL value disables tooltips altogether.
+ *
+ * Sets the tooltips object to use for adding tooltips to data window parts.
+ *
+ * This is a class method.  It affects only newly cerated data windows,
+ * existing data windows will continue to use the tooltips they were
+ * constructed with.
+ *
+ * If no class tooltips object is set before first #GwyDataWindow is created,
+ * the class instantiates one on its own.  You can normally obtain it with
+ * gwy_data_window_class_get_tooltips() then.  The class takes a reference on
+ * the tooltips in either case.
+ **/
+void
+gwy_data_window_class_set_tooltips(GtkTooltips *tips)
+{
+    g_return_if_fail(!tips || GTK_IS_TOOLTIPS(tips));
+
+    if (tips) {
+        g_object_ref(tips);
+        gtk_object_sink(GTK_OBJECT(tips));
+    }
+    gwy_object_unref(tooltips);
+    tooltips = tips;
+    tooltips_set = TRUE;
+}
+
+/**
+ * gwy_data_window_class_get_tooltips:
+ *
+ * Gets the tooltips object used for adding tooltips to Data window parts.
+ *
+ * Returns: The #GtkTooltips object.
+ **/
+GtkTooltips*
+gwy_data_window_class_get_tooltips(void)
+{
+    return tooltips;
+}
+
 static void
 gwy_data_window_zoom_changed(GwyDataWindow *data_window)
 {
@@ -722,5 +777,12 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     gwy_data_window_update_units(data_window);
 }
 
+static void
+gwy_data_window_set_tooltip(GtkWidget *widget,
+                            const gchar *tip_text)
+{
+    if (tooltips)
+        gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

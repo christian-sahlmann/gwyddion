@@ -64,7 +64,6 @@ struct _Gwy3DWindow {
     GtkWidget *actions;
     GtkWidget *vbox_small;
     GtkWidget *vbox_large;
-    GtkTooltips *tips;
 
     GtkWidget *widget2;
     GtkWidget *widget3;
@@ -89,16 +88,18 @@ struct _Gwy3DWindowClass {
     gpointer reserved4;
 };
 
-GtkWidget* gwy_3d_window_new                      (Gwy3DView *gwy3dview);
-GType      gwy_3d_window_get_type                 (void) G_GNUC_CONST;
-GtkWidget* gwy_3d_window_get_3d_view              (Gwy3DWindow *gwy3dwindow);
-void       gwy_3d_window_add_action_widget        (Gwy3DWindow *gwy3dwindow,
-                                                   GtkWidget *widget);
-void       gwy_3d_window_add_small_toolbar_button (Gwy3DWindow *gwy3dwindow,
-                                                   const gchar *stock_id,
-                                                   const gchar *tooltip,
-                                                   GCallback callback,
-                                                   gpointer cbdata);
+GType        gwy_3d_window_get_type                (void) G_GNUC_CONST;
+GtkWidget*   gwy_3d_window_new                     (Gwy3DView *gwy3dview);
+GtkWidget*   gwy_3d_window_get_3d_view             (Gwy3DWindow *gwy3dwindow);
+void         gwy_3d_window_add_action_widget       (Gwy3DWindow *gwy3dwindow,
+                                                    GtkWidget *widget);
+void         gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
+                                                    const gchar *stock_id,
+                                                    const gchar *tooltip,
+                                                    GCallback callback,
+                                                    gpointer cbdata);
+void         gwy_3d_window_class_set_tooltips      (GtkTooltips *tips);
+GtkTooltips* gwy_3d_window_class_get_tooltips      (void);
 
 G_END_DECLS
 

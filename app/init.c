@@ -19,11 +19,12 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwydgets.h>
-#include <string.h>
+#include <app/menu.h>
 #include "gwyddion.h"
 
 static GSList *palettes = NULL;
@@ -51,6 +52,10 @@ gwy_app_init(void)
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
     gwy_gl_material_setup_presets();
+    /* XXX: These reference are never released. */
+    gwy_data_window_class_set_tooltips(gwy_app_tooltips_get());
+    gwy_3d_window_class_set_tooltips(gwy_app_tooltips_get());
+    gwy_graph_window_class_set_tooltips(gwy_app_tooltips_get());
 
     gwy_app_init_set_window_icon();
 
