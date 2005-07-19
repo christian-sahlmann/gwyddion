@@ -1428,6 +1428,8 @@ static void save_statistics_dialog (IndentAnalyzeControls* c)
 
     /* SAVE .TXT statistics */
     dialog = GTK_FILE_SELECTION(gtk_file_selection_new("Save indentation statistics"));
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog),
+                                    gwy_app_get_current_directory());
     if (gwy_container_contains_by_name(c->mydata, "/filename")) {
         strcpy(filename_utf8, gwy_container_get_string_by_name(c->mydata, "/filename"));
         strcpy(filename_sys, g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL) );

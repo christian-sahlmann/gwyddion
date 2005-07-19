@@ -956,6 +956,8 @@ results_window_response_cb(GtkWidget *window,
 
     g_assert(report);
     dialog = gtk_file_selection_new(_("Save Fit Report"));
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog),
+                                    gwy_app_get_current_directory());
 
     g_signal_connect(GTK_FILE_SELECTION(dialog)->ok_button, "clicked",
                      G_CALLBACK(save_report_cb), report);

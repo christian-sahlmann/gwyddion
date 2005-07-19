@@ -23,12 +23,6 @@
 
 #include <string.h>
 
-/* chdir */
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <libgwyddion/gwywin32unistd.h>
-
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
@@ -48,6 +42,8 @@ static gboolean          confirm_overwrite     (GtkWindow *parent,
                                                 const gchar *filename);
 static void              remove_data_window_callback (GtkWidget *selector,
                                                       GwyDataWindow *data_window);
+
+static gchar *current_dir = NULL;
 
 void
 gwy_app_file_open_cb(void)
@@ -146,7 +142,7 @@ gwy_app_file_export_cb(const gchar *name)
                                      G_CALLBACK(file_save_as_ok_cb));
     if (!selector)
         return;
-    gtk_file_selection_set_filename(selector, "");
+    gtk_file_selection_set_filename(selector, gwy_app_get_current_directory());
     g_object_set_data(G_OBJECT(selector), "file-type", (gpointer)name);
     gtk_widget_show_all(GTK_WIDGET(selector));
 }
@@ -170,7 +166,6 @@ create_save_as_dialog(const gchar *title,
     GwyDataWindow *data_window;
     GwyContainer *data;
     const gchar *filename_utf8;  /* in UTF-8 */
-    const gchar *filename_sys;  /* in system (disk) encoding */
 
     data_window = gwy_app_data_window_get_current();
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
@@ -178,12 +173,18 @@ create_save_as_dialog(const gchar *title,
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     selector = GTK_FILE_SELECTION(gtk_file_selection_new(title));
-    if (gwy_container_contains_by_name(data, "/filename"))
+    if (gwy_container_contains_by_name(data, "/filename")) {
+        gchar *filename_sys;
+
         filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
+        filename_sys = g_filename_from_utf8(filename_utf8, -1,
+                                            NULL, NULL, NULL);
+        gtk_file_selection_set_filename(selector, filename_sys);
+        g_free(filename_sys);
+    }
     else
-        filename_utf8 = "";
-    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
-    gtk_file_selection_set_filename(selector, filename_sys);
+        gtk_file_selection_set_filename(selector,
+                                        gwy_app_get_current_directory());
     g_object_set_data(G_OBJECT(selector), "data", data);
     g_object_set_data(G_OBJECT(selector), "window", data_window);
 
@@ -206,7 +207,7 @@ create_open_dialog(const gchar *title,
     GtkFileSelection *selector;
 
     selector = GTK_FILE_SELECTION(gtk_file_selection_new(title));
-    gtk_file_selection_set_filename(selector, "");
+    gtk_file_selection_set_filename(selector, gwy_app_get_current_directory());
 
     g_signal_connect_swapped(selector->ok_button, "clicked",
                              G_CALLBACK(ok_callback), selector);
@@ -252,7 +253,6 @@ file_real_open(const gchar *filename_sys,
     GtkWidget *data_window;
     const gchar *filename_utf8;  /* in UTF-8 */
     GwyContainer *data;
-    gchar *dirname;
 
     if (name)
         data = gwy_file_func_run_load(name, filename_sys);
@@ -268,10 +268,7 @@ file_real_open(const gchar *filename_sys,
                                         filename_sys);
 
         /* change directory to that of the loaded file */
-        dirname = g_path_get_dirname(filename_sys);   /* FIXME: utf-8? */
-        if (strcmp(dirname, "."))
-            chdir(dirname);
-        g_free(dirname);
+        gwy_app_set_current_directory(filename_sys);
     }
     else {
         /* TODO: show some warning */
@@ -290,7 +287,6 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     GwyContainer *data;
     const gchar *name;
     gboolean ok;
-    gchar *dirname;
 
     data = GWY_CONTAINER(g_object_get_data(G_OBJECT(selector), "data"));
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -334,10 +330,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 
     /* change directory to that of the saved file */
-    dirname = g_path_get_dirname(filename_sys);   /* FIXME: utf-8? */
-    if (strcmp(dirname, "."))
-        chdir(dirname);
-    g_free(dirname);
+    gwy_app_set_current_directory(filename_sys);
 }
 
 static gboolean
@@ -408,5 +401,69 @@ gwy_app_file_open_initial(gchar **args, gint n)
     }
     g_free(cwd);
 }
+
+/**
+ * gwy_app_get_current_directory:
+ *
+ * Returns what the app uses as `current directory'.
+ *
+ * Warning: This function is probably temporary.
+ *
+ * Returns: A string in GLib file name encoding that should not be modified
+ *          neither freed, valid only until next call to
+ *          gwy_app_set_current_directory().  It ends with a
+ *          %G_DIR_SEPARATOR_S.
+ **/
+const gchar*
+gwy_app_get_current_directory(void)
+{
+    if (!current_dir) {
+        gchar *s = g_get_current_dir();
+
+        gwy_app_set_current_directory(s);
+        g_free(s);
+    }
+
+    return current_dir;
+}
+
+/**
+ * gwy_app_set_current_directory:
+ * @directory: The directory to set, or a filename to take directory part
+ *             from, it must be an absolute path.  In GLib file name encoding.
+ *
+ * Sets what the app should use as `current directory'.
+ *
+ * Warning: This function is probably temporary.
+ **/
+void
+gwy_app_set_current_directory(const gchar *directory)
+{
+    g_return_if_fail(directory);
+
+    if (g_file_test(directory, G_FILE_TEST_IS_DIR)) {
+        g_free(current_dir);
+        if (g_str_has_suffix(directory, G_DIR_SEPARATOR_S))
+            current_dir = g_strdup(directory);
+        else
+            current_dir = g_strconcat(directory, G_DIR_SEPARATOR_S, NULL);
+    }
+    else if (g_file_test(directory, G_FILE_TEST_EXISTS)) {
+        gchar *s;
+
+        g_free(current_dir);
+        s = g_path_get_dirname(directory);
+        /* "/" */
+        if (g_str_has_suffix(s, G_DIR_SEPARATOR_S))
+            current_dir = s;
+        else {
+            current_dir = g_strconcat(s, G_DIR_SEPARATOR_S, NULL);
+            g_free(s);
+        }
+    }
+    else
+        g_warning("Invalid or nonexistent directory `%s'", directory);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

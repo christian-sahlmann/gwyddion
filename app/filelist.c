@@ -427,7 +427,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
 {
     GwyContainer *data;
     GtkWidget *data_window;
-    gchar *filename_sys, *dirname;
+    gchar *filename_sys;
 
     /* XXX: this is copied from file_real_open().
      * Need an API for doing such things.
@@ -445,11 +445,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
                                         filename_utf8,
                                         filename_sys);
 
-        /* change directory to that of the loaded file */
-        dirname = g_path_get_dirname(filename_sys);
-        if (strcmp(dirname, "."))
-            chdir(dirname);
-        g_free(dirname);
+        gwy_app_set_current_directory(filename_sys);
     }
     g_free(filename_sys);
 }

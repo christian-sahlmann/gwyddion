@@ -74,6 +74,8 @@ ascii(GwyGraph *graph)
     }
 
     dialog = gtk_file_selection_new(_("Export Graph to File"));
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog),
+                                    gwy_app_get_current_directory());
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     if (response == GTK_RESPONSE_OK) {
         selected_filename
