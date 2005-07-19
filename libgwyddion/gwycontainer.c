@@ -1231,7 +1231,7 @@ gwy_container_try_set_one(GwyContainer *container,
     }
     g_value_init(old, G_VALUE_TYPE(value));
     if (G_VALUE_HOLDS_STRING(value))
-        g_value_set_string_take_ownership(old, g_value_peek_pointer(value));
+        g_value_take_string(old, g_value_peek_pointer(value));
     else
         g_value_copy(value, old);
 
@@ -1568,7 +1568,7 @@ gwy_container_set_string(GwyContainer *container,
 
     memset(&gvalue, 0, sizeof(GValue));
     g_value_init(&gvalue, G_TYPE_STRING);
-    g_value_set_string_take_ownership(&gvalue, (gchar*)value);
+    g_value_take_string(&gvalue, (gchar*)value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
 }
 

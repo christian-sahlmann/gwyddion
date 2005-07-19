@@ -479,8 +479,10 @@ gwy_layer_lines_setup_label(GwyLayerLines *layer,
                                                     -1);
     gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
     gdk_gc_set_function(gc, GDK_COPY);
-    gdk_color_black(gdk_gc_get_colormap(gc), &color);
-    gdk_gc_set_foreground(gc, &color);
+    color.red = 0;
+    color.green = 0;
+    color.blue = 0;
+    gdk_gc_set_rgb_fg_color (gc, &color);
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, rect.width, rect.height);
     gdk_draw_layout(pixmap, vector_layer->gc, -rect.x, -rect.y,
                     vector_layer->layout);
