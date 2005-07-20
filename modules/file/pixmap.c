@@ -31,16 +31,6 @@
 #  include <unistd.h>
 #endif
 
-#ifdef HAVE_TIFFIO_H
-#  ifdef HAVE_LIBTIFF
-#    define HAVE_TIFF
-#  endif
-#endif
-
-#ifdef G_OS_WIN32
-#  define HAVE_TIFF 1
-#endif
-
 #ifdef HAVE_TIFF
 #  include <tiffio.h>
 #endif
@@ -269,7 +259,7 @@ static const PixmapLoadArgs pixmap_load_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Exports data as as pixmap images and imports data from pixmap images. "
+    N_("Exports data as pixmap images and imports data from pixmap images. "
        "Supports following image formats for export: "
        "PNG, "
        "JPEG, "
@@ -279,7 +269,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.7.2",
+    "4.7.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

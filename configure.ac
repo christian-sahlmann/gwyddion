@@ -205,7 +205,7 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 # GtkGlExt
 # FIXME: Doesn't work, must wait for 2.0
 GWY_WITH([gl],,[OpenGL 3D view widgets])
-if test "$enable_gl" != no; then
+if test "x$enable_gl" != "xno"; then
   # Repeat pangoft2 here to maintain assertion GTK flags are subset of GTKGLEXT
   PKG_CHECK_MODULES(GTKGLEXT,[pangoft2 gtkglext-1.0],
                    [AC_DEFINE(HAVE_GTKGLEXT,1,
@@ -214,7 +214,31 @@ if test "$enable_gl" != no; then
 fi
 
 AC_CHECK_LIB([m],[sqrt])
-AC_CHECK_LIB([tiff],[TIFFOpen])
+
+# TIFF
+# TODO: Add some message to end of configure what is supported and what isn't
+# Missing libtiff is not fatal.
+GWY_WITH([libtiff],,[build with TIFF support])
+if test x$enable_libtiff != xno && test -z "$LIBTIFF"; then
+  AC_CHECK_LIB(tiff, TIFFReadScanline,
+    [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff', [enable_libtiff=no])],
+    [AC_CHECK_LIB(tiff, TIFFWriteScanline,
+      [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff -ljpeg -lz',
+        [enable_libtiff=no])],
+      [AC_CHECK_LIB(tiff34, TIFFFlushData,
+        [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff34 -ljpeg -lz',
+          [enable_libtiff=no])],
+        [enable_libtiff=no;],
+        [-ljpeg -lz])],
+      [-ljpeg -lz])],
+    [])
+fi
+if test x$enable_libtiff != xno && test -n "$LIBTIFF"; then
+  AC_DEFINE(HAVE_TIFF,1,[Define if we have the TIFF library.])
+fi
+AM_CONDITIONAL([HAVE_TIFF],[test x$enable_libtiff != xno && test -n "$LIBTIFF"])
+AC_SUBST(LIBTIFF)
+
 PACKAGE_LIBS="$PACKAGE_LIBS $GOBJECT_LIBS $LIBS"
 # XXX: need Gtk+ headers.
 PACKAGE_CFLAGS="$PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
@@ -226,7 +250,6 @@ AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
   GL/gl.h \
-  tiffio.h \
   fcntl.h \
   stdbool.h \
   sys/stat.h \

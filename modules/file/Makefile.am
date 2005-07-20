@@ -4,6 +4,10 @@ filedir = $(pkglibdir)/modules/file
 
 module_ldflags = -shared -Wl,-soname
 
+if HAVE_TIFF
+tiff_modules = jpkscan.so
+endif
+
 file_PROGRAMS = \
 	asciiexport.so \
 	apefile.so \
@@ -12,7 +16,7 @@ file_PROGRAMS = \
 	createc.so \
 	ezdfile.so \
 	gwyfile.so \
-	jpkscan.so \
+	$(tiff_modules) \
 	nanoscope.so \
 	nt-mdt.so \
 	pixmap.so \
@@ -52,8 +56,10 @@ ezdfile_so_LDFLAGS = $(module_ldflags),ezdfile.so
 gwyfile_so_SOURCES = gwyfile.c
 gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
 
+if HAVE_TIFF
 jpkscan_so_SOURCES = jpk.h jpkscan.c
-jpkscan_so_LDFLAGS = $(module_ldflags),jpkscan.so
+jpkscan_so_LDFLAGS = $(module_ldflags),jpkscan.so $(LIBTIFF)
+endif
 
 nanoscope_so_SOURCES = nanoscope.c
 nanoscope_so_LDFLAGS = $(module_ldflags),nanoscope.so
@@ -62,7 +68,7 @@ nt_mdt_so_SOURCES = nt-mdt.c
 nt_mdt_so_LDFLAGS = $(module_ldflags),nt-mdt.so
 
 pixmap_so_SOURCES = pixmap.c
-pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so
+pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so $(LIBTIFF)
 
 rawfile_so_SOURCES = rawfile.c
 rawfile_so_LDFLAGS = $(module_ldflags),rawfile.so

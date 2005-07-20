@@ -10,3 +10,6 @@
 #ifdef _MSC_VER
 #define ENABLE_NLS 1
 #endif
+
+/* All Win32 Gtk+ packages has libtiff */
+#define HAVE_TIFF 1
