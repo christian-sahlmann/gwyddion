@@ -267,7 +267,6 @@ AC_TYPE_SIGNAL
 dnl Checks for library functions.
 AC_FUNC_MMAP
 AC_CHECK_FUNC([getline])
-AC_CHECK_FUNC([setenv])
 AC_CHECK_FUNC([cbrt], [gwy_have_cbrt=yes], [gwy_have_cbrt=no])
 AC_CHECK_FUNC([hypot], [gwy_have_hypot=yes], [gwy_have_hypot=no])
 AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
