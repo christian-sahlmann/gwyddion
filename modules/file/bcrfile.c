@@ -20,15 +20,20 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "get.h"
+
+#ifndef HAVE_POW10
+#define pow10(x) (exp(G_LN10*(x)))
+#endif
 
 #define HEADER_SIZE 2048
 
@@ -67,7 +72,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -152,10 +157,11 @@ file_load_real(const guchar *buffer,
                GHashTable *meta)
 {
     GwyDataField *dfield;
+    GwySIUnit *siunit1 = NULL, *siunit2 = NULL;
     gboolean intelmode = TRUE;
     BCRFileType type;
-    gdouble q;
-    gint xres, yres;
+    gdouble q, qq;
+    gint xres, yres, power10;
     guchar *s;
 
     s = g_memdup(buffer, HEADER_SIZE);
@@ -203,17 +209,50 @@ file_load_real(const guchar *buffer,
                              type, intelmode);
 
     if ((s = g_hash_table_lookup(meta, "xlength"))
-        && (q = g_ascii_strtod(s, NULL)) > 0)
-        gwy_data_field_set_xreal(dfield, 1e-9*q);
+        && (q = g_ascii_strtod(s, NULL)) > 0) {
+        if (!(s = g_hash_table_lookup(meta, "xunit")))
+            s = "nm";
+
+        siunit1 = gwy_si_unit_new_parse(s, &power10);
+        q *= pow10(power10);
+        gwy_data_field_set_si_unit_xy(dfield, siunit1);
+        gwy_data_field_set_xreal(dfield, q);
+    }
 
     if ((s = g_hash_table_lookup(meta, "ylength"))
-        && (q = g_ascii_strtod(s, NULL)) > 0)
-        gwy_data_field_set_yreal(dfield, 1e-9*q);
+        && (q = g_ascii_strtod(s, NULL)) > 0) {
+        if ((s = g_hash_table_lookup(meta, "yunit")))
+            s = "nm";
+
+        siunit2 = gwy_si_unit_new_parse(s, &power10);
+        q *= pow10(power10);
+        if (siunit1 && !gwy_si_unit_equal(siunit1, siunit2))
+            g_warning("Incompatible x and y units");
+        g_object_unref(siunit2);
+        gwy_data_field_set_yreal(dfield, q);
+    }
+    gwy_object_unref(siunit1);
+
+    if (!(s = g_hash_table_lookup(meta, "zunit")))
+        s = "nm";
+    siunit1 = gwy_si_unit_new_parse(s, &power10);
+    gwy_data_field_set_si_unit_z(dfield, siunit1);
+    g_object_unref(siunit1);
+    q = pow10(power10);
 
     if (type == BCR_FILE_INT16
         && (s = g_hash_table_lookup(meta, "bit2nm"))
-        && (q = g_ascii_strtod(s, NULL)) > 0)
-        gwy_data_field_multiply(dfield, 1e-9*q);
+        && (qq = g_ascii_strtod(s, NULL)) > 0)
+        gwy_data_field_multiply(dfield, q*qq);
+    /*
+    else
+       FIXME: ignoring powers of 10 is the right thing when zunit is unset,
+       but otherwise?
+     */
+
+    if ((s = g_hash_table_lookup(meta, "zmin"))
+        && (qq = g_ascii_strtod(s, NULL)) > 0)
+        gwy_data_field_add(dfield, q*qq - gwy_data_field_get_min(dfield));
 
     return dfield;
 }
