@@ -742,48 +742,6 @@ gwy_canonicalize_path(const gchar *path)
     return spath;
 }
 
-/* XXX: Note this function is backported from GLib 2.4 */
-/**
- * gwy_setenv:
- * @variable: The environment variable to set, must not contain '='.
- * @value: The value for to set the variable to.
- * @overwrite: Whether to change the variable if it already exists.
- *
- * Sets an environment variable.
- *
- * Note that on some systems, the memory used for the variable and its value
- * can't be reclaimed later.
- *
- * Returns: %FALSE if the environment variable couldn't be set.
- */
-gboolean
-gwy_setenv(const gchar *variable,
-           const gchar *value,
-           gboolean overwrite)
-{
-    gint result;
-#ifndef HAVE_SETENV
-    gchar *string;
-#endif
-
-    g_return_val_if_fail(strchr(variable, '=') == NULL, FALSE);
-
-#ifdef HAVE_SETENV
-    result = setenv(variable, value, overwrite);
-#else
-    if (!overwrite && g_getenv(variable) != NULL)
-        return TRUE;
-
-    /* This results in a leak when you overwrite existing
-     * settings. It would be fairly easy to fix this by keeping
-     * our own parallel array or hash table.
-     */
-    string = g_strconcat(variable, "=", value, NULL);
-    result = putenv(string);
-#endif
-    return result == 0;
-}
-
 /**
  * gwy_str_next_line:
  * @buffer: A character buffer containing some text.

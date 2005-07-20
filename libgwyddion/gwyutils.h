@@ -23,12 +23,12 @@
 
 #include <glib.h>
 
+G_BEGIN_DECLS
+
 typedef struct {
     const gchar *name;
     gint value;
 } GwyEnum;
-
-G_BEGIN_DECLS
 
 void     gwy_hash_table_to_slist_cb (gpointer unused_key,
                                      gpointer value,
@@ -74,9 +74,6 @@ G_CONST_RETURN
 gchar*   gwy_get_home_dir           (void);
 gchar*   gwy_canonicalize_path      (const gchar *path);
 gchar*   gwy_sgettext               (const gchar *msgid);
-gboolean gwy_setenv                 (const gchar *variable,
-                                     const gchar *value,
-                                     gboolean overwrite);
 gchar*   gwy_str_next_line          (gchar **buffer);
 
 G_END_DECLS

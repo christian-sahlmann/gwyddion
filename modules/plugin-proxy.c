@@ -184,8 +184,8 @@ module_register(const gchar *name)
     libpath = g_path_get_dirname(dir);
     g_free(dir);
     gwy_debug("plug-in library path is: %s", libpath);
-    gwy_setenv("GWYPLUGINLIB", libpath, TRUE);
-    /* Don't free(libpath), some systems don't like it. */
+    g_setenv("GWYPLUGINLIB", libpath, TRUE);
+    /* Don't g_free(libpath), some systems don't like it. */
 
     plugin_path = gwy_find_self_dir("plugins");
     g_return_val_if_fail(plugin_path, FALSE);
