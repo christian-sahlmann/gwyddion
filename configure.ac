@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050718, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050720, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -55,7 +55,7 @@ dnl strictness level.
 AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
 AM_MAINTAINER_MODE
 
-dnl Checks for programs.
+dnl Checks for programs and systems.
 AC_DISABLE_STATIC
 AC_PROG_AWK
 AC_PROG_CC
@@ -72,6 +72,21 @@ AC_PROG_LN_S
 AC_CHECK_PROGS([STRIP],[strip])
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 gtk_CHECK_GTK_DOC
+
+# Win32
+AC_MSG_CHECKING([for native Win32])
+case "$target_or_host" in
+  *-*-mingw*)
+    os_win32=yes
+    TARGET_CFLAGS="-mms-bitfields"
+    TARGET_LDFLAGS="-mwindows"
+    ;;
+  *)
+    os_win32=no
+    ;;
+esac
+AC_MSG_RESULT([$os_win32])
+AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
 
 # XDG stuff
 AC_CHECK_PROGS([UPDATE_DESKTOP_DATABASE],[update-desktop-database],:)
@@ -169,17 +184,6 @@ if test "$GCC" = yes; then
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WREDUNDANT $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WNO_SIGN_COMPARE $PROG_CC_WMIXED_DECL"
   MATH_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO"
 fi
-
-case $target_os in
-  mingw*)
-    TARGET_CFLAGS="-mms-bitfields"
-    TARGET_LDFLAGS="-mwindows"
-    ;;
-  *)
-    #STRIP="echo"  FIXME: WTF?
-    ;;
-esac
-TARGET_CFLAGS="$TARGET_CFLAGS"
 
 dnl Dirty path hack.  Helps some people with badly set up search paths.
 if test "$prefix" = "NONE"; then
