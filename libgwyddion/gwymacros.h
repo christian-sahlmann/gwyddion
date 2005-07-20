@@ -59,6 +59,8 @@
     G_PARAM_SPEC_##spectype(g_object_class_find_property \
                                 (G_OBJECT_CLASS(g_type_class_peek(type)), id))
 
+#define gwy_strequal(a, b) (!strcmp((a), (b)))
+
 G_BEGIN_DECLS
 
 #ifdef G_HAVE_GNUC_VARARGS
