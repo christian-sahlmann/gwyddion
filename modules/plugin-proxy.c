@@ -42,19 +42,18 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
-#include <glib/gstdio.h>
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <libgwyddion/gwywin32unistd.h>
 
+#include <glib/gstdio.h>
+
+#include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgets.h>

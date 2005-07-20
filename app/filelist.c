@@ -45,7 +45,10 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <libgwyddion/gwywin32unistd.h>
+
+#ifdef _WIN32
+#include <process.h>
+#endif
 
 #if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
 #include <sys/stat.h>
@@ -76,8 +79,9 @@
  * but they are very image-like... */
 #define KEY_THUMB_IMAGE_WIDTH "tEXt::Thumb::Image::Width"
 #define KEY_THUMB_IMAGE_HEIGHT "tEXt::Thumb::Image::Height"
-/* Gwyddion specific, unimplemented */
+/* Gwyddion specific */
 #define KEY_THUMB_GWY_REAL_SIZE "tEXt::Thumb::X-Gwyddion::RealSize"
+/* Gwyddion specific, unimplemented */
 #define KEY_THUMB_GWY_IMAGES "tEXt::Thumb::X-Gwyddion::Images"
 #define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
 

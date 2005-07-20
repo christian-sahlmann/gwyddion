@@ -19,18 +19,12 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-
 #include <string.h>
 #include <errno.h>
 
 #include <glib/gstdio.h>
 
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#include <libgwyddion/gwywin32unistd.h>
-
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libdraw/gwyrgba.h>

@@ -19,20 +19,15 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <glib/gstdio.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <libgwyddion/gwywin32unistd.h>
-
 #include <gtk/gtkglinit.h>
+
+#include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyutils.h>

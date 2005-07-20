@@ -17,8 +17,7 @@ libgwyddioninclude_HEADERS = \
 	gwyserializable.h \
 	gwyutils.h \
 	gwysiunit.h \
-	gwywatchable.h \
-	gwywin32unistd.h
+	gwywatchable.h
 
 built_sources = \
 	gwyddiontypes.h \
