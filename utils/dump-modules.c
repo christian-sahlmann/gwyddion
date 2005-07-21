@@ -225,7 +225,7 @@ main(int argc,
             tag_print("userguide", s);
         tag_print("description", info->info->blurb);
         /* don't print plugin-proxy's stolen functions (XXX: hack) */
-        if (!strcmp(info->name, "plugin-proxy")) {
+        if (gwy_strequal(info->name, "plugin-proxy")) {
             tag_print("funclist", NULL);
             tag_close();
             continue;
@@ -245,13 +245,13 @@ main(int argc,
             tag_print("name", name);
 
             /* dig more info about particular function types */
-            if (!strcmp(class, "proc"))
+            if (gwy_strequal(class, "proc"))
                 menu_path_print(gwy_process_func_get_menu_path(name), "info");
-            else if (!strcmp(class, "graph"))
+            else if (gwy_strequal(class, "graph"))
                 menu_path_print(gwy_graph_func_get_menu_path(name), "info");
-            else if (!strcmp(class, "file"))
+            else if (gwy_strequal(class, "file"))
                 menu_path_print(gwy_file_func_get_description(name), "info");
-            else if (!strcmp(class, "tool"))
+            else if (gwy_strequal(class, "tool"))
                 tag_print("info", gwy_tool_func_get_tooltip(name));
 
             g_free(class);
