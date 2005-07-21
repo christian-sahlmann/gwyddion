@@ -2,55 +2,77 @@
 
 processdir = $(pkglibdir)/modules/process
 
-module_ldflags = -shared -Wl,-soname
+process_LTLIBRARIES = \
+	angle_dist.la		\
+	arithmetic.la		\
+	basicops.la		\
+	calibrate.la		\
+	crosscor.la		\
+	cwt.la			\
+	dwt.la			\
+	dwtanisotropy.la	\
+	dwtdenoise.la		\
+	edge.la			\
+	entropy.la		\
+	facet_analysis.la	\
+	facet-level.la		\
+	fractal.la		\
+	fft.la			\
+	fft_filter_1d.la	\
+	fit_2d.la		\
+	fraccor.la		\
+	gradient.la		\
+	grain_mark.la		\
+	grain_rem_threshold.la	\
+	grain_wshed.la		\
+	laplace.la		\
+	level.la		\
+	linecorrect.la		\
+	local_contrast.la	\
+	mask_grow_shrink.la	\
+	maskcor.la		\
+	maskops.la		\
+	median-bg.la		\
+	nanoindent_adjust.la	\
+	nanoindent_analyze.la	\
+	outliers.la		\
+	polylevel.la		\
+	presentationops.la	\
+	rotate.la		\
+	scale.la		\
+	scars.la		\
+	shade.la		\
+	sphere-revolve.la	\
+	tip_blind.la		\
+	tip_dilation.la		\
+	tip_map.la		\
+	tip_model.la		\
+	tip_reconstruction.la	\
+	unrotate.la
 
-process_PROGRAMS = \
-	angle_dist.so \
-	arithmetic.so \
-	basicops.so \
-	calibrate.so \
-	crosscor.so \
-	cwt.so \
-	dwt.so \
-	dwtanisotropy.so \
-	dwtdenoise.so \
-	edge.so \
-	entropy.so \
-	facet_analysis.so \
-	facet-level.so \
-	fractal.so \
-	fft.so \
-	fft_filter_1d.so \
-	fit_2d.so \
-	fraccor.so \
-	gradient.so \
-	grain_mark.so \
-	grain_rem_threshold.so \
-	grain_wshed.so \
-	laplace.so \
-	level.so \
-	linecorrect.so \
-	local_contrast.so \
-	mask_grow_shrink.so \
-	maskcor.so \
-	maskops.so \
-	median-bg.so \
-	nanoindent_adjust.so \
-	nanoindent_analyze.so \
-	outliers.so \
-	polylevel.so \
-	presentationops.so \
-	rotate.so \
-	scale.so \
-	scars.so \
-	shade.so \
-	sphere-revolve.so \
-	tip_blind.so \
-	tip_dilation.so \
-	tip_map.so \
-	tip_model.so \
-	tip_reconstruction.so \
-	unrotate.so
+
+EXTRA_DIST = \
+	makefile.msc
+
+INCLUDES = -I$(top_srcdir)
+
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
+
+
+if OS_WIN32
+no_undefined = -no-undefined
+endif
+
+AM_LDFLAGS = -avoid-version -module $(no_undefined)
+
+module_libadd = \
+	$(top_builddir)/app/libgwyapp.la		\
+	$(top_builddir)/libdraw/libgwydraw.la		\
+	$(top_builddir)/libgwyddion/libgwyddion.la	\
+	$(top_builddir)/libgwydgets/libgwydgets.la	\
+	$(top_builddir)/libgwymodule/libgwymodule.la	\
+	$(top_builddir)/libprocess/libgwyprocess.la	\
+	@GTK_LIBS@
 
 
 #############################################################################
@@ -58,165 +80,159 @@ process_PROGRAMS = \
 # If you have no idea, please return to basic school.
 #############################################################################
 
-EXTRA_DIST = \
-	makefile.msc
+angle_dist_la_SOURCES = angle_dist.c
+angle_dist_la_LIBADD = $(module_libadd)
 
-angle_dist_so_SOURCES = angle_dist.c
-angle_dist_so_LDFLAGS = $(module_ldflags),angle_dist.so
+arithmetic_la_SOURCES = arithmetic.c
+arithmetic_la_LIBADD = $(module_libadd)
 
-arithmetic_so_SOURCES = arithmetic.c
-arithmetic_so_LDFLAGS = $(module_ldflags),arithmetic.so
+basicops_la_SOURCES = basicops.c
+basicops_la_LIBADD = $(module_libadd)
 
-basicops_so_SOURCES = basicops.c
-basicops_so_LDFLAGS = $(module_ldflags),basicops.so
+calibrate_la_SOURCES = calibrate.c
+calibrate_la_LIBADD = $(module_libadd)
 
-calibrate_so_SOURCES = calibrate.c
-calibrate_so_LDFLAGS = $(module_ldflags),calibrate.so
+crosscor_la_SOURCES = crosscor.c
+crosscor_la_LIBADD = $(module_libadd)
 
-crosscor_so_SOURCES = crosscor.c
-crosscor_so_LDFLAGS = $(module_ldflags),crosscor.so
+cwt_la_SOURCES = cwt.c
+cwt_la_LIBADD = $(module_libadd)
 
-cwt_so_SOURCES = cwt.c
-cwt_so_LDFLAGS = $(module_ldflags),cwt.so
+dwt_la_SOURCES = dwt.c
+dwt_la_LIBADD = $(module_libadd)
 
-dwt_so_SOURCES = dwt.c
-dwt_so_LDFLAGS = $(module_ldflags),dwt.so
+dwtanisotropy_la_SOURCES = dwtanisotropy.c
+dwtanisotropy_la_LIBADD = $(module_libadd)
 
-dwtanisotropy_so_SOURCES = dwtanisotropy.c
-dwtanisotropy_so_LDFLAGS = $(module_ldflags),dwtanisotropy.so
+#dwtcorrection_la_SOURCES = dwtcorrection.c
+#dwtcorrection_la_LIBADD = $(module_libadd)
 
-#dwtcorrection_so_SOURCES = dwtcorrection.c
-#dwtcorrection_so_LDFLAGS = $(module_ldflags),dwtcorrection.so
+fft_filter_1d_la_SOURCES = fft_filter_1d.c
+fft_filter_1d_la_LIBADD = $(module_libadd)
 
-fft_filter_1d_so_SOURCES = fft_filter_1d.c
-fft_filter_1d_so_LDFLAGS = $(module_ldflags),fft_filter_1d.so 
+fractal_la_SOURCES = fractal.c
+fractal_la_LIBADD = $(module_libadd)
 
-fractal_so_SOURCES = fractal.c
-fractal_so_LDFLAGS = $(module_ldflags),fractal.so
+dwtdenoise_la_SOURCES = dwtdenoise.c
+dwtdenoise_la_LIBADD = $(module_libadd)
 
-dwtdenoise_so_SOURCES = dwtdenoise.c
-dwtdenoise_so_LDFLAGS = $(module_ldflags),dwtdenoise.so
+edge_la_SOURCES = edge.c
+edge_la_LIBADD = $(module_libadd)
 
-edge_so_SOURCES = edge.c
-edge_so_LDFLAGS = $(module_ldflags),edge.so
+entropy_la_SOURCES = entropy.c
+entropy_la_LIBADD = $(module_libadd)
 
-entropy_so_SOURCES = entropy.c
-entropy_so_LDFLAGS = $(module_ldflags),entropy.so
+facet_analysis_la_SOURCES = facet_analysis.c
+facet_analysis_la_LIBADD = $(module_libadd)
 
-facet_analysis_so_SOURCES = facet_analysis.c
-facet_analysis_so_LDFLAGS = $(module_ldflags),facet_analysis.so
+facet_level_la_SOURCES = facet-level.c
+facet_level_la_LIBADD = $(module_libadd)
 
-facet_level_so_SOURCES = facet-level.c
-facet_level_so_LDFLAGS = $(module_ldflags),facet-level.so
+fit_2d_la_SOURCES = fit_2d.c
+fit_2d_la_LIBADD = $(module_libadd)
 
-fit_2d_so_SOURCES = fit_2d.c
-fit_2d_so_LDFLAGS = $(module_ldflags),fit_2d.so
+fft_la_SOURCES = fft.c
+fft_la_LIBADD = $(module_libadd)
 
-fft_so_SOURCES = fft.c
-fft_so_LDFLAGS = $(module_ldflags),fft.so
+#fractal_la_SOURCES = fractal.c
+#fractal_la_LIBADD = $(module_libadd)
 
-#fractal_so_SOURCES = fractal.c
-#fractal_so_LDFLAGS = $(module_ldflags),fractal.so
+fraccor_la_SOURCES = fraccor.c
+fraccor_la_LIBADD = $(module_libadd)
 
-fraccor_so_SOURCES = fraccor.c
-fraccor_so_LDFLAGS = $(module_ldflags),fraccor.so
+gradient_la_SOURCES = gradient.c
+gradient_la_LIBADD = $(module_libadd)
 
-gradient_so_SOURCES = gradient.c
-gradient_so_LDFLAGS = $(module_ldflags),gradient.so
+grain_mark_la_SOURCES = grain_mark.c
+grain_mark_la_LIBADD = $(module_libadd)
 
-grain_mark_so_SOURCES = grain_mark.c
-grain_mark_so_LDFLAGS = $(module_ldflags),grain_mark.so
+grain_rem_threshold_la_SOURCES = grain_rem_threshold.c
+grain_rem_threshold_la_LIBADD = $(module_libadd)
 
-grain_rem_threshold_so_SOURCES = grain_rem_threshold.c
-grain_rem_threshold_so_LDFLAGS = $(module_ldflags),grain_rem_threshold.so
+grain_wshed_la_SOURCES = grain_wshed.c
+grain_wshed_la_LIBADD = $(module_libadd)
 
-grain_wshed_so_SOURCES = grain_wshed.c
-grain_wshed_so_LDFLAGS = $(module_ldflags),grain_wshed.so
+#grain_dist_la_SOURCES = grain_dist.c
+#grain_dist_la_LIBADD = $(module_libadd)
 
-#grain_dist_so_SOURCES = grain_dist.c
-#grain_dist_so_LDFLAGS = $(module_ldflags),grain_dist.so
+#indent_analyze_la_SOURCES = indent_analyze.c
+#indent_analyze_la_LIBADD = $(module_libadd)
 
-#indent_analyze_so_SOURCES = indent_analyze.c
-#indent_analyze_so_LDFLAGS = $(module_ldflags),indent_analyze.so
+laplace_la_SOURCES = laplace.c
+laplace_la_LIBADD = $(module_libadd)
 
-laplace_so_SOURCES = laplace.c
-laplace_so_LDFLAGS = $(module_ldflags),laplace.so
+level_la_SOURCES = level.c
+level_la_LIBADD = $(module_libadd)
 
-level_so_SOURCES = level.c
-level_so_LDFLAGS = $(module_ldflags),level.so
+linecorrect_la_SOURCES = linecorrect.c
+linecorrect_la_LIBADD = $(module_libadd)
 
-linecorrect_so_SOURCES = linecorrect.c
-linecorrect_so_LDFLAGS = $(module_ldflags),linecorrect.so
+local_contrast_la_SOURCES = local_contrast.c
+local_contrast_la_LIBADD = $(module_libadd)
 
-local_contrast_so_SOURCES = local_contrast.c
-local_contrast_so_LDFLAGS = $(module_ldflags),local_contrast.so
+nanoindent_adjust_la_SOURCES = nanoindent_adjust.c
+nanoindent_adjust_la_LIBADD = $(module_libadd)
 
-nanoindent_adjust_so_SOURCES = nanoindent_adjust.c
-nanoindent_adjust_so_LDFLAGS = $(module_ldflags),nanoindent_adjust.so
+nanoindent_analyze_la_SOURCES = nanoindent_analyze.c
+nanoindent_analyze_la_LIBADD = $(module_libadd)
 
-nanoindent_analyze_so_SOURCES = nanoindent_analyze.c
-nanoindent_analyze_so_LDFLAGS = $(module_ldflags),nanoindent_analyze.so
+mask_grow_shrink_la_SOURCES = mask_grow_shrink.c
+mask_grow_shrink_la_LIBADD = $(module_libadd)
 
-mask_grow_shrink_so_SOURCES = mask_grow_shrink.c
-mask_grow_shrink_so_LDFLAGS = $(module_ldflags),mask_grow_shrink.so
+maskcor_la_SOURCES = maskcor.c
+maskcor_la_LIBADD = $(module_libadd)
 
-maskcor_so_SOURCES = maskcor.c
-maskcor_so_LDFLAGS = $(module_ldflags),maskcor.so
+maskops_la_SOURCES = maskops.c
+maskops_la_LIBADD = $(module_libadd)
 
-maskops_so_SOURCES = maskops.c
-maskops_so_LDFLAGS = $(module_ldflags),maskops.so
+median_bg_la_SOURCES = median-bg.c
+median_bg_la_LIBADD = $(module_libadd)
 
-median_bg_so_SOURCES = median-bg.c
-median_bg_so_LDFLAGS = $(module_ldflags),median-bg.so
+outliers_la_SOURCES = outliers.c
+outliers_la_LIBADD = $(module_libadd)
 
-outliers_so_SOURCES = outliers.c
-outliers_so_LDFLAGS = $(module_ldflags),outliers.so
+polylevel_la_SOURCES = polylevel.c
+polylevel_la_LIBADD = $(module_libadd)
 
-polylevel_so_SOURCES = polylevel.c
-polylevel_so_LDFLAGS = $(module_ldflags),polylevel.so
+presentationops_la_SOURCES = presentationops.c
+presentationops_la_LIBADD = $(module_libadd)
 
-presentationops_so_SOURCES = presentationops.c
-presentationops_so_LDFLAGS = $(module_ldflags),presentationops.so
+rotate_la_SOURCES = rotate.c
+rotate_la_LIBADD = $(module_libadd)
 
-rotate_so_SOURCES = rotate.c
-rotate_so_LDFLAGS = $(module_ldflags),rotate.so
+scale_la_SOURCES = scale.c
+scale_la_LIBADD = $(module_libadd)
 
-scale_so_SOURCES = scale.c
-scale_so_LDFLAGS = $(module_ldflags),scale.so
+scars_la_SOURCES = scars.c
+scars_la_LIBADD = $(module_libadd)
 
-scars_so_SOURCES = scars.c
-scars_so_LDFLAGS = $(module_ldflags),scars.so
+shade_la_SOURCES = shade.c
+shade_la_LIBADD = $(module_libadd)
 
-shade_so_SOURCES = shade.c
-shade_so_LDFLAGS = $(module_ldflags),shade.so
+#slope_dist_la_SOURCES = slope_dist.c
+#slope_dist_la_LIBADD = $(module_libadd)
 
-#slope_dist_so_SOURCES = slope_dist.c
-#slope_dist_so_LDFLAGS = $(module_ldflags),slope_dist.so
+sphere_revolve_la_SOURCES = sphere-revolve.c
+sphere_revolve_la_LIBADD = $(module_libadd)
 
-sphere_revolve_so_SOURCES = sphere-revolve.c
-sphere_revolve_so_LDFLAGS = $(module_ldflags),sphere-revolve.so
+tip_blind_la_SOURCES = tip_blind.c
+tip_blind_la_LIBADD = $(module_libadd)
 
-tip_blind_so_SOURCES = tip_blind.c
-tip_blind_so_LDFLAGS = $(module_ldflags),tip_blind.so
+tip_dilation_la_SOURCES = tip_dilation.c
+tip_dilation_la_LIBADD = $(module_libadd)
 
-tip_dilation_so_SOURCES = tip_dilation.c
-tip_dilation_so_LDFLAGS = $(module_ldflags),tip_dilation.so
+tip_map_la_SOURCES = tip_map.c
+tip_map_la_LIBADD = $(module_libadd)
 
-tip_map_so_SOURCES = tip_map.c
-tip_map_so_LDFLAGS = $(module_ldflags),tip_map.so
+tip_model_la_SOURCES = tip_model.c
+tip_model_la_LIBADD = $(module_libadd)
 
-tip_model_so_SOURCES = tip_model.c
-tip_model_so_LDFLAGS = $(module_ldflags),tip_model.so
+tip_reconstruction_la_SOURCES = tip_reconstruction.c
+tip_reconstruction_la_LIBADD = $(module_libadd)
 
-tip_reconstruction_so_SOURCES = tip_reconstruction.c
-tip_reconstruction_so_LDFLAGS = $(module_ldflags),tip_reconstruction.so
+unrotate_la_SOURCES = unrotate.c
+unrotate_la_LIBADD = $(module_libadd)
 
-unrotate_so_SOURCES = unrotate.c
-unrotate_so_LDFLAGS = $(module_ldflags),unrotate.so
-
-
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
 
 clean-local:
 	rm -f core.* *~

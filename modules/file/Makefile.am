@@ -1,32 +1,32 @@
 # @(#) $Id$ */
 
-filedir = $(pkglibdir)/modules/file
-
-module_ldflags = -shared -Wl,-soname
-
 if HAVE_TIFF
-tiff_modules = jpkscan.so
+tiff_modules = jpkscan.la
 endif
 
-file_PROGRAMS = \
-	asciiexport.so \
-	apefile.so \
-	assing-afm.so \
-	bcrfile.so \
-	createc.so \
-	ezdfile.so \
-	gwyfile.so \
-	$(tiff_modules) \
-	nanoscope.so \
-	nt-mdt.so \
-	pixmap.so \
-	rawfile.so \
-	rhk-spm32.so \
-	sis.so \
-	spmlab.so \
-	stmprg.so \
-	stpfile.so \
-	wsxmfile.so
+
+filedir = $(pkglibdir)/modules/file
+
+file_LTLIBRARIES = \
+	asciiexport.la	\
+	apefile.la	\
+	assing-afm.la	\
+	bcrfile.la	\
+	createc.la	\
+	ezdfile.la	\
+	gwyfile.la	\
+	nanoscope.la	\
+	nt-mdt.la	\
+	pixmap.la	\
+	rawfile.la	\
+	rhk-spm32.la	\
+	sis.la		\
+	spmlab.la	\
+	stmprg.la	\
+	stpfile.la	\
+	wsxmfile.la	\
+	$(tiff_modules)
+
 
 noinst_HEADERS = \
 	get.h \
@@ -35,64 +35,85 @@ noinst_HEADERS = \
 EXTRA_DIST = \
 	makefile.msc
 
-asciiexport_so_SOURCES = asciiexport.c
-asciiexport_so_LDFLAGS = $(module_ldflags),asciiexport.so
-
-apefile_so_SOURCES = apefile.c
-apefile_so_LDFLAGS = $(module_ldflags),apefile.so
-
-assing_afm_so_SOURCES = assing-afm.c
-assing_afm_so_LDFLAGS = $(module_ldflags),assing-afm.so
-
-bcrfile_so_SOURCES = bcrfile.c
-bcrfile_so_LDFLAGS = $(module_ldflags),bcrfile.so
-
-createc_so_SOURCES = createc.c
-createc_so_LDFLAGS = $(module_ldflags),createc.so
-
-ezdfile_so_SOURCES = ezdfile.c
-ezdfile_so_LDFLAGS = $(module_ldflags),ezdfile.so
-
-gwyfile_so_SOURCES = gwyfile.c
-gwyfile_so_LDFLAGS = $(module_ldflags),gwyfile.so
-
-if HAVE_TIFF
-jpkscan_so_SOURCES = jpk.h jpkscan.c
-jpkscan_so_LDFLAGS = $(module_ldflags),jpkscan.so $(LIBTIFF)
-endif
-
-nanoscope_so_SOURCES = nanoscope.c
-nanoscope_so_LDFLAGS = $(module_ldflags),nanoscope.so
-
-nt_mdt_so_SOURCES = nt-mdt.c
-nt_mdt_so_LDFLAGS = $(module_ldflags),nt-mdt.so
-
-pixmap_so_SOURCES = pixmap.c
-pixmap_so_LDFLAGS = $(module_ldflags),pixmap.so $(LIBTIFF)
-
-rawfile_so_SOURCES = rawfile.c
-rawfile_so_LDFLAGS = $(module_ldflags),rawfile.so
-
-rhk_spm32_so_SOURCES = rhk-spm32.c
-rhk_spm32_so_LDFLAGS = $(module_ldflags),rhk-spm32.so
-
-sis_so_SOURCES = sis.c
-sis_so_LDFLAGS = $(module_ldflags),sis.so
-
-spmlab_so_SOURCES = spmlab.c
-spmlab_so_LDFLAGS = $(module_ldflags),spmlab.so
-
-stmprg_so_SOURCES = stmprg.c
-stmprg_so_LDFLAGS = $(module_ldflags),stmprg.so
-
-stpfile_so_SOURCES = stpfile.c
-stpfile_so_LDFLAGS = $(module_ldflags),stpfile.so
-
-wsxmfile_so_SOURCES = wsxmfile.c
-wsxmfile_so_LDFLAGS = $(module_ldflags),wsxmfile.so
 
 INCLUDES = -I$(top_srcdir)
+
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
+
+
+if OS_WIN32
+no_undefined = -no-undefined
+endif
+
+AM_LDFLAGS = -avoid-version -module $(no_undefined)
+
+
+module_libadd = \
+	$(top_builddir)/app/libgwyapp.la		\
+	$(top_builddir)/libdraw/libgwydraw.la		\
+	$(top_builddir)/libgwyddion/libgwyddion.la	\
+	$(top_builddir)/libgwydgets/libgwydgets.la	\
+	$(top_builddir)/libgwymodule/libgwymodule.la	\
+	$(top_builddir)/libprocess/libgwyprocess.la	\
+	@GTK_LIBS@
+
+
+asciiexport_la_SOURCES = asciiexport.c
+asciiexport_la_LIBADD = $(module_libadd)
+
+apefile_la_SOURCES = apefile.c
+apefile_la_LIBADD = $(module_libadd)
+
+assing_afm_la_SOURCES = assing-afm.c
+assing_afm_la_LIBADD = $(module_libadd)
+
+bcrfile_la_SOURCES = bcrfile.c
+bcrfile_la_LIBADD = $(module_libadd)
+
+createc_la_SOURCES = createc.c
+createc_la_LIBADD = $(module_libadd)
+
+ezdfile_la_SOURCES = ezdfile.c
+ezdfile_la_LIBADD = $(module_libadd)
+
+gwyfile_la_SOURCES = gwyfile.c
+gwyfile_la_LIBADD = $(module_libadd)
+
+if HAVE_TIFF
+jpkscan_la_SOURCES = jpk.h jpkscan.c
+jpkscan_la_LIBADD = $(module_libadd) $(LIBTIFF)
+endif
+
+nanoscope_la_SOURCES = nanoscope.c
+nanoscope_la_LIBADD = $(module_libadd)
+
+nt_mdt_la_SOURCES = nt-mdt.c
+nt_mdt_la_LIBADD = $(module_libadd)
+
+pixmap_la_SOURCES = pixmap.c
+pixmap_la_LIBADD = $(module_libadd) $(LIBTIFF)
+
+rawfile_la_SOURCES = rawfile.c
+rawfile_la_LIBADD = $(module_libadd)
+
+rhk_spm32_la_SOURCES = rhk-spm32.c
+rhk_spm32_la_LIBADD = $(module_libadd)
+
+sis_la_SOURCES = sis.c
+sis_la_LIBADD = $(module_libadd)
+
+spmlab_la_SOURCES = spmlab.c
+spmlab_la_LIBADD = $(module_libadd)
+
+stmprg_la_SOURCES = stmprg.c
+stmprg_la_LIBADD = $(module_libadd)
+
+stpfile_la_SOURCES = stpfile.c
+stpfile_la_LIBADD = $(module_libadd)
+
+wsxmfile_la_SOURCES = wsxmfile.c
+wsxmfile_la_LIBADD = $(module_libadd)
+
 
 clean-local:
 	rm -f core.* *~

@@ -2,73 +2,93 @@
 
 toolsdir = $(pkglibdir)/modules/tool
 
-module_ldflags = -shared -Wl,-soname
+tools_LTLIBRARIES = \
+	distance.la		\
+	crop.la			\
+	filter.la		\
+	grain_remove_manually.la\
+	icolorange.la		\
+	level3.la		\
+	maskedit.la		\
+	polynom.la		\
+	profile.la		\
+	readvalue.la		\
+	sfunctions.la		\
+	spotremove.la		\
+	stats.la
 
-tools_PROGRAMS = \
-	distance.so \
-	crop.so \
-	filter.so \
-	grain_remove_manually.so \
-	icolorange.so \
-	level3.so \
-	maskedit.so \
-	polynom.so \
-	profile.so \
-	readvalue.so \
-	sfunctions.so \
-	spotremove.so \
-	stats.so
+
+EXTRA_DIST = \
+	makefile.msc
+
+
+INCLUDES = -I$(top_srcdir)
+
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
+
+
+if OS_WIN32
+no_undefined = -no-undefined
+endif
+
+AM_LDFLAGS = -avoid-version -module $(no_undefined)
+
+
+module_libadd = \
+	$(top_builddir)/app/libgwyapp.la		\
+	$(top_builddir)/libdraw/libgwydraw.la		\
+	$(top_builddir)/libgwyddion/libgwyddion.la	\
+	$(top_builddir)/libgwydgets/libgwydgets.la	\
+	$(top_builddir)/libgwymodule/libgwymodule.la	\
+	$(top_builddir)/libprocess/libgwyprocess.la	\
+	@GTK_LIBS@
+
 
 #############################################################################
 # If you know what an alphabet is, please keep the alphabetic order.
 # If you have no idea, please return to basic school.
 #############################################################################
 
-EXTRA_DIST = \
-	makefile.msc
 
-crop_so_SOURCES = crop.c
-crop_so_LDFLAGS = $(module_ldflags),crop.so
+crop_la_SOURCES = crop.c
+crop_la_libadd = $(module_libadd)
 
-distance_so_SOURCES = distance.c
-distance_so_LDFLAGS = $(module_ldflags),distance.so
+distance_la_SOURCES = distance.c
+distance_la_libadd = $(module_libadd)
 
-filter_so_SOURCES = filter.c
-filter_so_LDFLAGS = $(module_ldflags),filter.so
+filter_la_SOURCES = filter.c
+filter_la_libadd = $(module_libadd)
 
-grain_remove_manually_so_SOURCES = grain_remove_manually.c
-grain_remove_manually_so_LDFLAGS = $(module_ldflags),grain_remove_manually.so
+grain_remove_manually_la_SOURCES = grain_remove_manually.c
+grain_remove_manually_la_libadd = $(module_libadd)
 
-icolorange_so_SOURCES = icolorange.c
-icolorange_so_LDFLAGS = $(module_ldflags),icolorange.so
+icolorange_la_SOURCES = icolorange.c
+icolorange_la_libadd = $(module_libadd)
 
-level3_so_SOURCES = level3.c
-level3_so_LDFLAGS = $(module_ldflags),level3.so
+level3_la_SOURCES = level3.c
+level3_la_libadd = $(module_libadd)
 
-maskedit_so_SOURCES = maskedit.c
-maskedit_so_LDFLAGS = $(module_ldflags),maskedit.so
+maskedit_la_SOURCES = maskedit.c
+maskedit_la_libadd = $(module_libadd)
 
-polynom_so_SOURCES = polynom.c
-polynom_so_LDFLAGS = $(module_ldflags),polynom.so
+polynom_la_SOURCES = polynom.c
+polynom_la_libadd = $(module_libadd)
 
-profile_so_SOURCES = profile.c
-profile_so_LDFLAGS = $(module_ldflags),profile.so
+profile_la_SOURCES = profile.c
+profile_la_libadd = $(module_libadd)
 
-readvalue_so_SOURCES = readvalue.c
-readvalue_so_LDFLAGS = $(module_ldflags),readvalue.so
+readvalue_la_SOURCES = readvalue.c
+readvalue_la_libadd = $(module_libadd)
 
-stats_so_SOURCES = stats.c
-stats_so_LDFLAGS = $(module_ldflags),stats.so
+stats_la_SOURCES = stats.c
+stats_la_libadd = $(module_libadd)
 
-sfunctions_so_SOURCES = sfunctions.c
-sfunctions_so_LDFLAGS = $(module_ldflags),sfunctions.so
+sfunctions_la_SOURCES = sfunctions.c
+sfunctions_la_libadd = $(module_libadd)
 
-spotremove_so_SOURCES = spotremove.c
-spotremove_so_LDFLAGS = $(module_ldflags),spotremove.so
+spotremove_la_SOURCES = spotremove.c
+spotremove_la_libadd = $(module_libadd)
 
-
-INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
 
 clean-local:
 	rm -f core.* *~
