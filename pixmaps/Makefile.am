@@ -44,6 +44,7 @@ pixmapdata_DATA = \
 	gwy_graph_zoom_out-24.png \
 	gwy_gwyddion-60.png \
 	gwy_gwyddion-32.png \
+	gwy_italic-24.png \
 	gwy_less-24.png \
 	gwy_light_rotate-24.png \
 	gwy_line_correction-24.png \
