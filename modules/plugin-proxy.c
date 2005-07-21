@@ -568,7 +568,7 @@ proc_find_plugin(const gchar *name,
 
     for (l = proc_plugins; l; l = g_list_next(l)) {
         info = (ProcPluginInfo*)l->data;
-        if (strcmp(info->func.name, name) == 0)
+        if (gwy_strequal(info->func.name, name))
             break;
     }
     if (!l) {
@@ -829,7 +829,7 @@ file_find_plugin(const gchar *name,
 
     for (l = file_plugins; l; l = g_list_next(l)) {
         info = (FilePluginInfo*)l->data;
-        if (strcmp(info->func.name, name) == 0)
+        if (gwy_strequal(info->func.name, name))
             break;
     }
     if (!l) {
@@ -1144,7 +1144,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         }
         *val = '\0';
         val++;
-        if (strcmp(val, "[") != 0 || !pos || *pos != '[') {
+        if (!gwy_strequal(val, "[") || !pos || *pos != '[') {
             gwy_debug("<%s>=<%s>", line, val);
             if (*val)
                 gwy_container_set_string_by_name(data, line, g_strdup(val));
@@ -1249,7 +1249,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         memcpy(dfield->data, pos, n);
         pos += n;
         val = gwy_str_next_line(&pos);
-        if (strcmp(val, "]]") != 0) {
+        if (!gwy_strequal(val, "]]")) {
             g_warning("Missed end of data field.");
             gwy_object_unref(dfield);
             goto fail;

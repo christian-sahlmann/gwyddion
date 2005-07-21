@@ -375,8 +375,8 @@ gwy_app_toolbox_create(void)
                             tooltips);
         if (!button)
             continue;
-        if (!strcmp(proc_actions[i].cbdata, "remove_threshold")
-            || !strcmp(proc_actions[i].cbdata, "grain_dist"))
+        if (gwy_strequal(proc_actions[i].cbdata, "remove_threshold")
+            || gwy_strequal(proc_actions[i].cbdata, "grain_dist"))
             gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
         j++;
     }

@@ -1522,7 +1522,7 @@ gwy_expr_resolve_variables(GwyExpr *expr,
     memset(indices, 0, n*sizeof(guint));
     for (i = 0; i < n; i++) {
         for (j = 1; j < expr->identifiers->len; j++) {
-            if (!strcmp(names[i],
+            if (gwy_strequal(names[i],
                         (gchar*)g_ptr_array_index(expr->identifiers, j))) {
                 indices[i] = j;
                 requested[j] = TRUE;

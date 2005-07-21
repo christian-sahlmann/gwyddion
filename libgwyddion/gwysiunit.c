@@ -755,11 +755,11 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                 g_string_prepend(buf, "°");
             }
         }
-        else if (!strcmp(buf->str, "°"))
+        else if (gwy_strequal(buf->str, "°"))
             g_string_assign(buf, "deg");
         else if (buf->str[0] == '\305' && !buf->str[1])
             g_string_assign(buf, "Å");
-        else if (!strcmp(buf->str, "Å"))
+        else if (gwy_strequal(buf->str, "Å"))
             g_string_assign(buf, "Å");
 
         /* get prefix, but be careful not to split mol to mili-ol */
@@ -826,11 +826,11 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         }
 
         /* handle some ugly, but quite common units */
-        if (!strcmp(buf->str, "Å")) {
+        if (gwy_strequal(buf->str, "Å")) {
             pfpower -= 10;
             g_string_assign(buf, "m");
         }
-        else if (!strcmp(buf->str, "%")) {
+        else if (gwy_strequal(buf->str, "%")) {
             pfpower -= 2;
             g_string_assign(buf, "");
         }

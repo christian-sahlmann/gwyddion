@@ -1000,7 +1000,7 @@ gwy_serialize_unpack_struct(const guchar *buffer,
         }
 
         for (sp = spec; (gsize)(sp - spec) < nspec; sp++) {
-            if (strcmp(sp->name, buffer + position) == 0)
+            if (gwy_strequal(sp->name, buffer + position))
                 break;
         }
         name = buffer + position;
@@ -1799,7 +1799,7 @@ gwy_serialize_check_string(const guchar *buffer,
     g_assert(size > 0);
     g_return_val_if_fail(position < size, 0);
     p = (guchar*)memchr(buffer + position, 0, size - position);
-    if (!p || (compare_to && strcmp(buffer + position, compare_to)))
+    if (!p || (compare_to && !gwy_strequal(buffer + position, compare_to)))
         return 0;
 
     return (p - buffer) + 1 - position;

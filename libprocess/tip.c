@@ -292,7 +292,7 @@ gwy_tip_model_get_preset_by_name(const gchar *name)
     gsize i;
 
     for (i = 0; i < G_N_ELEMENTS(tip_presets); i++) {
-        if (strcmp(name, tip_presets[i].tip_name) == 0)
+        if (gwy_strequal(name, tip_presets[i].tip_name))
             return tip_presets + i;
     }
     return NULL;

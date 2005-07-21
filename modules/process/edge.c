@@ -139,15 +139,15 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
     }
     g_object_unref(siunit);
 
-    if (!strcmp(name, "laplacian"))
+    if (gwy_strequal(name, "laplacian"))
         laplacian_do(dfield, show);
-    else if (!strcmp(name, "canny"))
+    else if (gwy_strequal(name, "canny"))
         canny_do(dfield, show);
-    else if (!strcmp(name, "rms"))
+    else if (gwy_strequal(name, "rms"))
         rms_do(dfield, show);
-    else if (!strcmp(name, "rms_edge"))
+    else if (gwy_strequal(name, "rms_edge"))
         rms_edge_do(dfield, show);
-    else if (!strcmp(name, "nonlinearity"))
+    else if (gwy_strequal(name, "nonlinearity"))
         nonlinearity_do(dfield, show);
     else {
         g_warning("Function called under unregistered name: %s", name);

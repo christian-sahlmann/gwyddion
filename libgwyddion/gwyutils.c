@@ -110,7 +110,7 @@ gwy_string_to_enum(const gchar *str,
     gint j;
 
     for (j = n; j && enum_table->name; j--, enum_table++) {
-        if (strcmp(str, enum_table->name) == 0)
+        if (gwy_strequal(str, enum_table->name))
             return enum_table->value;
     }
 
@@ -176,7 +176,7 @@ gwy_string_to_flags(const gchar *str,
         const GwyEnum *e = enum_table;
 
         for (j = n; j && e->name; j--, e++) {
-            if (strcmp(strings[i], e->name) == 0) {
+            if (gwy_strequal(strings[i], e->name)) {
                 enumval |= e->value;
                 break;
             }
@@ -545,7 +545,7 @@ gwy_find_self_dir(const gchar *dirname)
     }
 
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
-        if (strcmp(dirname, paths[i].id) == 0)
+        if (gwy_strequal(dirname, paths[i].id))
             return g_strdup(paths[i].path);
     }
     g_critical("Cannot find directory for `%s'", dirname);

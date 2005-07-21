@@ -137,7 +137,7 @@ mask_grow(GwyContainer *data, GwyRunType run, const gchar *name)
     g_return_val_if_fail(dfield, FALSE);
 
     for (i = 0; i < G_N_ELEMENTS(grow_shrink_meta); i++) {
-        if (!strcmp(grow_shrink_meta[i].name, name))
+        if (gwy_strequal(grow_shrink_meta[i].name, name))
             break;
     }
     g_return_val_if_fail(i < G_N_ELEMENTS(grow_shrink_meta), FALSE);

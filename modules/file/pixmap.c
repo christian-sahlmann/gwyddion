@@ -295,15 +295,15 @@ module_register(const gchar *name)
 
         fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
         /* ignore some really silly formats */
-        if (strcmp(fmtname, "ico") == 0
-            || strcmp(fmtname, "ani") == 0
-            || strcmp(fmtname, "wbmp") == 0
+        if (gwy_strequal(fmtname, "ico")
+            || gwy_strequal(fmtname, "ani")
+            || gwy_strequal(fmtname, "wbmp")
             /* libwmf loader seems to try to claim ownership of almost
              * arbitrary binary data, prints error messages, and it's silly
              * to load WMF to Gwyddion anyway */
-            || strcmp(fmtname, "wmf") == 0
-            || strcmp(fmtname, "xbm") == 0
-            || strcmp(fmtname, "svg") == 0) {
+            || gwy_strequal(fmtname, "wmf")
+            || gwy_strequal(fmtname, "xbm")
+            || gwy_strequal(fmtname, "svg")) {
             g_free(fmtname);
             continue;
         }
@@ -317,7 +317,7 @@ module_register(const gchar *name)
         format_info->pixbuf_format = pixbuf_format;
         for (i = 0; i < G_N_ELEMENTS(saveable_formats); i++) {
             /* FIXME: hope we have the same format names */
-            if (strcmp(fmtname, saveable_formats[i].name) == 0) {
+            if (gwy_strequal(fmtname, saveable_formats[i].name)) {
                 gwy_debug("Found GdkPixbuf loader for known type: %s", fmtname);
                 func_info->file_desc = saveable_formats[i].description;
                 func_info->save = saveable_formats[i].save;
@@ -408,35 +408,35 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
-    if (strcmp(name, "png") == 0
+    if (gwy_strequal(name, "png")
         && memcmp(fileinfo->buffer, "\x89PNG\r\n\x1a\n", 8) != 0)
         return 0;
-    if (strcmp(name, "bmp") == 0
+    if (gwy_strequal(name, "bmp")
         && strncmp(fileinfo->buffer, "BM", 2) != 0)
         return 0;
-    if (strcmp(name, "pnm") == 0
+    if (gwy_strequal(name, "pnm")
         && (fileinfo->buffer[0] != 'P' || !g_ascii_isdigit(fileinfo->buffer[1])))
         return 0;
-    if (strcmp(name, "xpm") == 0
+    if (gwy_strequal(name, "xpm")
         && strncmp(fileinfo->buffer, "/* XPM */", 9) != 0)
         return 0;
-    if (strcmp(name, "tiff") == 0
+    if (gwy_strequal(name, "tiff")
         && memcmp(fileinfo->buffer, "MM\x00\x2a", 4) != 0
         && memcmp(fileinfo->buffer, "II\x2a\x00", 4) != 0)
         return 0;
-    if (strcmp(name, "jpeg") == 0
+    if (gwy_strequal(name, "jpeg")
         && memcmp(fileinfo->buffer, "\xff\xd8", 2) != 0)
         return 0;
-    if (strcmp(name, "pcx") == 0
+    if (gwy_strequal(name, "pcx")
         && (fileinfo->buffer[0] != '\x0a' || fileinfo->buffer[1] > 0x05))
         return 0;
-    if (strcmp(name, "gif") == 0
+    if (gwy_strequal(name, "gif")
         && strncmp(fileinfo->buffer, "GIF8", 4) != 0)
         return 0;
-    if (strcmp(name, "svg") == 0
+    if (gwy_strequal(name, "svg")
         && strncmp(fileinfo->buffer, "<?xml", 5) != 0)
         return 0;
-    if (strcmp(name, "ras") == 0
+    if (gwy_strequal(name, "ras")
         && memcmp(fileinfo->buffer, "\x59\xa6\x6a\x95", 4) != 0)
         return 0;
     /* FIXME: cannot detect targa, must try loader */
@@ -1959,7 +1959,7 @@ find_format(const gchar *name)
 
     for (l = pixmap_formats; l; l = g_slist_next(l)) {
         PixmapFormatInfo *format_info = (PixmapFormatInfo*)l->data;
-        if (strcmp(format_info->func_info->name, name) == 0)
+        if (gwy_strequal(format_info->func_info->name, name))
             return format_info;
     }
 

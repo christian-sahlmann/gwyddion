@@ -174,9 +174,9 @@ file_load_real(const guchar *buffer,
         return NULL;
     }
 
-    if (!strcmp(s, "bcrstm"))
+    if (gwy_strequal(s, "bcrstm"))
         type = BCR_FILE_INT16;
-    else if (!strcmp(s, "bcrf"))
+    else if (gwy_strequal(s, "bcrf"))
         type = BCR_FILE_FLOAT;
     else {
         g_warning("Cannot understand file type header `%s'", s);

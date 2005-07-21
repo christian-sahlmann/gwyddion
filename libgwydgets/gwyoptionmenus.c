@@ -97,7 +97,7 @@ gwy_gradient_menu_create(const gchar *current,
         gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "gradient-name", (gpointer)name);
-        if (current && strcmp(current, name) == 0)
+        if (current && gwy_strequal(current, name))
             idx = i;
         i++;
     }
@@ -251,7 +251,7 @@ gwy_gl_material_menu_create(const gchar *current,
         GwyGLMaterial *gl_material = (GwyGLMaterial*)l->data;
         const gchar *name = gwy_gl_material_get_name(gl_material);
 
-        if (strcmp(name, GWY_GL_MATERIAL_NONE) == 0)
+        if (gwy_strequal(name, GWY_GL_MATERIAL_NONE))
             continue;
 
         image = gwy_sample_gl_material_to_gtkimage(gl_material);
@@ -264,7 +264,7 @@ gwy_gl_material_menu_create(const gchar *current,
         gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "material-name", (gpointer)name);
-        if (current && strcmp(current, name) == 0)
+        if (current && gwy_strequal(current, name))
             idx = i;
         i++;
     }

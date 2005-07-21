@@ -251,7 +251,7 @@ file_detect_max_score_cb(const gchar *key,
 {
     gint score;
 
-    g_assert(strcmp(key, func_info->info.name) == 0);
+    g_assert(gwy_strequal(key, func_info->info.name));
 
     if (!func_info->info.detect)
         return;

@@ -279,9 +279,9 @@ file_read_header(STPFile *stpfile,
         g_hash_table_replace(meta, key, value);
 
         if (data) {
-            if (!strcmp(key, "samples_x"))
+            if (gwy_strequal(key, "samples_x"))
                 data->xres = atol(value);
-            if (!strcmp(key, "samples_y"))
+            if (gwy_strequal(key, "samples_y"))
                 data->yres = atol(value);
         }
     }
@@ -385,7 +385,7 @@ process_metadata(STPFile *stpfile,
         case 99:
         if (stpfile_get_double(data->meta, "ExSourceZFact", &q)) {
             s = g_hash_table_lookup(data->meta, "ExSourceZBip");
-            if (s && !strcmp(s, "TRUE"))
+            if (s && gwy_strequal(s, "TRUE"))
                 gwy_data_field_add(dfield, -32768);
             gwy_data_field_multiply(dfield, q);
 
@@ -454,21 +454,21 @@ process_metadata(STPFile *stpfile,
         gwy_container_set_string_by_name(container, "/meta/Date",
                                          g_strconcat(p, " ", s, NULL));
     if ((p = g_hash_table_lookup(data->meta, "scan_dir"))) {
-        if (!strcmp(p, "0"))
+        if (gwy_strequal(p, "0"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
                                              g_strdup("Top to bottom"));
-        else if (!strcmp(p, "1"))
+        else if (gwy_strequal(p, "1"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Scanning direction",
                                              g_strdup("Bottom to top"));
     }
     if ((p = g_hash_table_lookup(data->meta, "collect_mode"))) {
-        if (!strcmp(p, "1"))
+        if (gwy_strequal(p, "1"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Line direction",
                                              g_strdup("Left to right"));
-        else if (!strcmp(p, "2"))
+        else if (gwy_strequal(p, "2"))
             gwy_container_set_string_by_name(container,
                                              "/meta/Line direction",
                                              g_strdup("Right to left"));

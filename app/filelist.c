@@ -718,7 +718,7 @@ gwy_app_recent_file_list_update(GwyDataWindow *data_window,
                 gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                    FILELIST_RAW, &rf,
                                    -1);
-                if (strcmp(filename_utf8, rf->file_utf8) == 0) {
+                if (gwy_strequal(filename_utf8, rf->file_utf8)) {
                     found = TRUE;
                     break;
                 }

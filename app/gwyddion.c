@@ -141,29 +141,29 @@ process_preinit_options(int *argc,
     if (*argc == 1)
         return;
 
-    if (!strcmp((*argv)[1], "--help") || !strcmp((*argv)[1], "-h")) {
+    if (gwy_strequal((*argv)[1], "--help") || gwy_strequal((*argv)[1], "-h")) {
         print_help();
         exit(0);
     }
 
-    if (!strcmp((*argv)[1], "--version") || !strcmp((*argv)[1], "-v")) {
+    if (gwy_strequal((*argv)[1], "--version") || gwy_strequal((*argv)[1], "-v")) {
         printf("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
         exit(0);
     }
 
     for (i = j = 1; i < *argc; i++) {
-        if (!strcmp((*argv)[i], "--"))
+        if (gwy_strequal((*argv)[i], "--"))
             ignore = TRUE;
 
         (*argv)[j] = (*argv)[i];
 
         if (!ignore) {
-            if (!strcmp((*argv)[i], "--no-splash")) {
+            if (gwy_strequal((*argv)[i], "--no-splash")) {
                 gwy_app_splash_enable(FALSE);
                 continue;
             }
 
-            if (!strcmp((*argv)[i], "--debug-objects")) {
+            if (gwy_strequal((*argv)[i], "--debug-objects")) {
                 enable_object_debugging = TRUE;
                 continue;
             }
@@ -268,7 +268,7 @@ logger(const gchar *log_domain,
     if (!last)
         last = g_string_new("");
 
-    if (!strcmp(message, last->str)) {
+    if (gwy_strequal(message, last->str)) {
         count++;
         return;
     }

@@ -156,7 +156,7 @@ wsxmfile_load(const gchar *filename)
     }
 
     if ((p = g_hash_table_lookup(meta, "General Info::Image Data Type"))) {
-        if (!strcmp(p, "double"))
+        if (gwy_strequal(p, "double"))
             type = WSXM_DATA_DOUBLE;
         else
             g_warning("Unknown data type %s", p);
@@ -279,7 +279,7 @@ process_metadata(GHashTable *meta,
         /* import `arbitrary units' as unit-less */
         while (g_ascii_isspace(*end))
             end++;
-        if (!strcmp(end, "a.u."))
+        if (gwy_strequal(end, "a.u."))
             siunit = gwy_si_unit_new("");
         else {
             siunit = gwy_si_unit_new_parse(end, &power10);

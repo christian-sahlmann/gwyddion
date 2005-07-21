@@ -245,7 +245,7 @@ attach_info_line(GtkWidget *table,
     GtkWidget *label;
     gboolean multiline;
 
-    multiline = (strcmp(key, "desc") == 0) || (strcmp(key, "funcs") == 0);
+    multiline = gwy_strequal(key, "desc") || gwy_strequal(key, "funcs");
     label = gtk_label_new(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, multiline ? 0.0 : 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);

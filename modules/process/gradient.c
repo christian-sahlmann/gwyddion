@@ -124,13 +124,13 @@ gradient_filter(GwyContainer *data,
     g_object_unref(siunit);
     gwy_data_field_copy(dfield, gradfield, FALSE);
 
-    if (!strcmp(name, "sobel_horizontal"))
+    if (gwy_strequal(name, "sobel_horizontal"))
         gwy_data_field_filter_sobel(gradfield, GWY_ORIENTATION_HORIZONTAL);
-    else if (!strcmp(name, "sobel_vertical"))
+    else if (gwy_strequal(name, "sobel_vertical"))
         gwy_data_field_filter_sobel(gradfield, GWY_ORIENTATION_VERTICAL);
-    else if (!strcmp(name, "prewitt_horizontal"))
+    else if (gwy_strequal(name, "prewitt_horizontal"))
         gwy_data_field_filter_prewitt(gradfield, GWY_ORIENTATION_HORIZONTAL);
-    else if (!strcmp(name, "prewitt_vertical"))
+    else if (gwy_strequal(name, "prewitt_vertical"))
         gwy_data_field_filter_prewitt(gradfield, GWY_ORIENTATION_VERTICAL);
     else {
         g_warning("Function called under unregistered name `%s'", name);

@@ -278,52 +278,52 @@ file_read_header(GPtrArray *ezdfile,
         *p = '\0';
         p++;
 
-        if (!strcmp(line, "SaveMode")) {
+        if (gwy_strequal(line, "SaveMode")) {
             if (strcmp(p, "Binary"))
                 g_warning("SaveMode is not Binary, this is not supported");
         }
-        else if (!strcmp(line, "SaveBits"))
+        else if (gwy_strequal(line, "SaveBits"))
             section->bitdepth = atol(p);
-        else if (!strcmp(line, "SaveSign")) {
-            section->sign = !strcmp(p, "Signed");
+        else if (gwy_strequal(line, "SaveSign")) {
+            section->sign = gwy_strequal(p, "Signed");
             if (!section->sign)
                 g_warning("SaveSign is not Signed, this is not supported");
         }
-        else if (!strcmp(line, "SaveOrder")) {
-            if (!strcmp(p, "Intel"))
+        else if (gwy_strequal(line, "SaveOrder")) {
+            if (gwy_strequal(p, "Intel"))
                 section->byteorder = G_LITTLE_ENDIAN;
             else
                 g_warning("SaveOrder is not Intel, this is not supported");
         }
-        else if (!strcmp(line, "Points"))
+        else if (gwy_strequal(line, "Points"))
             section->xres = atol(p);
-        else if (!strcmp(line, "Lines"))
+        else if (gwy_strequal(line, "Lines"))
             section->yres = atol(p);
         /* FIXME: this is ugly and eventually incorrect, if dimensions can
          * be exchanged */
-        else if (!strcmp(line, "Dim0Name"))
+        else if (gwy_strequal(line, "Dim0Name"))
             section->xrange.name = g_strdup(p);
-        else if (!strcmp(line, "Dim1Name"))
+        else if (gwy_strequal(line, "Dim1Name"))
             section->yrange.name = g_strdup(p);
-        else if (!strcmp(line, "Dim2Name"))
+        else if (gwy_strequal(line, "Dim2Name"))
             section->zrange.name = g_strdup(p);
-        else if (!strcmp(line, "Dim0Unit"))
+        else if (gwy_strequal(line, "Dim0Unit"))
             section->xrange.unit = g_strdup(p);
-        else if (!strcmp(line, "Dim1Unit"))
+        else if (gwy_strequal(line, "Dim1Unit"))
             section->yrange.unit = g_strdup(p);
-        else if (!strcmp(line, "Dim2Unit"))
+        else if (gwy_strequal(line, "Dim2Unit"))
             section->zrange.unit = g_strdup(p);
-        else if (!strcmp(line, "Dim0Min"))
+        else if (gwy_strequal(line, "Dim0Min"))
             section->xrange.min = g_ascii_strtod(p, NULL);
-        else if (!strcmp(line, "Dim1Min"))
+        else if (gwy_strequal(line, "Dim1Min"))
             section->yrange.min = g_ascii_strtod(p, NULL);
-        else if (!strcmp(line, "Dim2Min"))
+        else if (gwy_strequal(line, "Dim2Min"))
             section->zrange.min = g_ascii_strtod(p, NULL);
-        else if (!strcmp(line, "Dim0Range"))
+        else if (gwy_strequal(line, "Dim0Range"))
             section->xrange.range = g_ascii_strtod(p, NULL);
-        else if (!strcmp(line, "Dim1Range"))
+        else if (gwy_strequal(line, "Dim1Range"))
             section->yrange.range = g_ascii_strtod(p, NULL);
-        else if (!strcmp(line, "Dim2Range"))
+        else if (gwy_strequal(line, "Dim2Range"))
             section->zrange.range = g_ascii_strtod(p, NULL);
         else
             g_hash_table_replace(section->meta, g_strdup(line), g_strdup(p));
@@ -383,7 +383,7 @@ find_data_offsets(const gchar *buffer,
             section = NULL;
             for (k = 1; k < ezdfile->len; k++) {
                 section = (EZDSection*)g_ptr_array_index(ezdfile, k);
-                if (!strcmp(section->name, p))
+                if (gwy_strequal(section->name, p))
                     break;
             }
             if (!section) {
@@ -480,7 +480,7 @@ process_metadata(GPtrArray *ezdfile,
     smd.str = g_string_new("/meta/");
     for (i = 0; i < ezdfile->len; i++) {
         section = (EZDSection*)g_ptr_array_index(ezdfile, i);
-        if (!strcmp(section->name, "DataSet-Info"))
+        if (gwy_strequal(section->name, "DataSet-Info"))
             g_hash_table_foreach(section->meta, store_meta, &smd);
     }
     g_string_free(smd.str, TRUE);

@@ -422,7 +422,7 @@ gwy_cdline_get_preset_by_name(const gchar *name)
     gsize i;
 
     for (i = 0; i < G_N_ELEMENTS(fitting_presets); i++) {
-        if (strcmp(name, fitting_presets[i].function_name) == 0)
+        if (gwy_strequal(name, fitting_presets[i].function_name))
             return fitting_presets + i;
     }
     return NULL;

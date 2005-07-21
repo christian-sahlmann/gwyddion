@@ -201,7 +201,7 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
                            GWY_INTERPOLATION_NONE);
 
     func_name = gwy_math_nlfit_get_preset_name(args->fitfunc);
-    if (strcmp(func_name, "Gaussian (PSDF)") == 0)  /* || something */
+    if (gwy_strequal(func_name, "Gaussian (PSDF)"))  /* || something */
         skip_first_point = TRUE;
 
     j = 0;

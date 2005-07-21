@@ -1489,7 +1489,7 @@ preset_rename_cb(RawFileControls *controls)
 
     gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
     newname = gtk_entry_get_text(GTK_ENTRY(controls->presetname));
-    if (!strcmp(newname, name)
+    if (gwy_strequal(newname, name)
         || !preset_validate_name(controls, newname, TRUE))
         return;
 
@@ -1575,7 +1575,7 @@ preset_find_by_name(GtkTreeModel *store,
 
     do {
         gtk_tree_model_get(store, iter, RAW_PRESET_NAME, &name, -1);
-        if (!strcmp(name, preset_name))
+        if (gwy_strequal(name, preset_name))
             return TRUE;
     } while (gtk_tree_model_iter_next(store, iter));
 

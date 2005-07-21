@@ -383,10 +383,10 @@ tiff_load_channel (TIFF         *tif,
 
       if (tiff_get_custom_string (tif, JPK_TIFFTAG_Slot_Name(i), &string) &&
           string                                                          &&
-          strcmp (string, slot) == 0)
+          gwy_strequal(string, slot))
         {
           tiff_get_custom_string (tif, JPK_TIFFTAG_Scaling_Type(i), &string);
-          g_return_if_fail (strcmp (string, "LinearScaling") == 0);
+          g_return_if_fail (gwy_strequal(string, "LinearScaling"));
 
           tiff_get_custom_double (tif, JPK_TIFFTAG_Scaling_Multiply(i), &mult);
           tiff_get_custom_double (tif, JPK_TIFFTAG_Scaling_Offset(i), &offset);
@@ -514,13 +514,13 @@ tiff_load_meta (TIFF         *tif,
 
   if (tiff_get_custom_string (tif, JPK_TIFFTAG_Feedback_Mode, &string))
     {
-      if (strcmp (string, "contact") == 0)
+      if (gwy_strequal(string, "contact"))
         {
           tiff_load_meta_double (tif, container,
                                  JPK_TIFFTAG_Feedback_Baseline, "V",
                                  "Feedback Baseline");
         }
-      else if (strcmp (string, "intermittent") == 0)
+      else if (gwy_strequal(string, "intermittent"))
         {
            tiff_load_meta_double (tif, container,
                                  JPK_TIFFTAG_Feedback_Amplitude, "V",

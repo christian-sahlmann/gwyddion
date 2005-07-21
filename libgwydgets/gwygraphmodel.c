@@ -609,7 +609,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     for (i = 0; i < gmodel->ncurves; i++)
     {
         cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
-        if (strcmp(description, cmodel->description->str)==0) continue;
+        if (gwy_strequal(description, cmodel->description->str)) continue;
 
         newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_object_unref(gmodel->curves[i]);
@@ -671,7 +671,7 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *descripti
     for (i = 0; i < gmodel->ncurves; i++)
     {
         cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
-        if (strcmp(description, cmodel->description->str)==0) return cmodel;
+        if (gwy_strequal(description, cmodel->description->str)) return cmodel;
     }
 
     return NULL;

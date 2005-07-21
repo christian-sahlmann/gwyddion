@@ -178,30 +178,30 @@ test(void)
 static void
 menu_callback(GObject *menu_item, const gchar *which_menu)
 {
-    if (strcmp(which_menu, "palette") == 0) {
+    if (gwy_strequal(which_menu, "palette")) {
         g_message("Palette: %s",
                   (gchar*)g_object_get_data(menu_item, "palette-name"));
         return;
     }
-    if (strcmp(which_menu, "interpolation") == 0) {
+    if (gwy_strequal(which_menu, "interpolation")) {
         g_message("Interpolation: %d",
                   GPOINTER_TO_INT(g_object_get_data(menu_item,
                                                     "interpolation-type")));
         return;
     }
-    if (strcmp(which_menu, "windowing") == 0) {
+    if (gwy_strequal(which_menu, "windowing")) {
         g_message("Windowing: %d",
                   GPOINTER_TO_INT(g_object_get_data(menu_item,
                                                     "windowing-type")));
         return;
     }
-    if (strcmp(which_menu, "zoom_mode") == 0) {
+    if (gwy_strequal(which_menu, "zoom_mode")) {
         g_message("Zoom mode: %d",
                   GPOINTER_TO_INT(g_object_get_data(menu_item,
                                                     "zoom-mode")));
         return;
     }
-    if (strcmp(which_menu, "metric_unit") == 0) {
+    if (gwy_strequal(which_menu, "metric_unit")) {
         g_message("Metric unit: %d",
                   GPOINTER_TO_INT(g_object_get_data(menu_item,
                                                     "metric-unit")));

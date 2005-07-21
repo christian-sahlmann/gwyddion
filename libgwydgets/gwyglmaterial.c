@@ -539,7 +539,7 @@ gwy_gl_material_sample(GwyGLMaterial *glmaterial,
 
     k = 0;
     cor = 1.0/(size - 1.0);
-    if (strcmp(glmaterial->name, GWY_GL_MATERIAL_NONE) == 0)
+    if (gwy_strequal(glmaterial->name, GWY_GL_MATERIAL_NONE))
         alpha = 0;
     else
         alpha = 255;

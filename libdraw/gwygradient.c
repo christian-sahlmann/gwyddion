@@ -1502,7 +1502,7 @@ gwy_gradient_parse(const gchar *text)
 
     p = str = g_strdup(text);
 
-    if (!(line = gwy_str_next_line(&p)) || strcmp(line, magic_header)) {
+    if (!(line = gwy_str_next_line(&p)) || !gwy_strequal(line, magic_header)) {
         g_warning("Wrong magic header");
         goto fail;
     }
@@ -1521,7 +1521,7 @@ gwy_gradient_parse(const gchar *text)
         goto fail;
     }
 
-    if (!(line = gwy_str_next_line(&p)) || strcmp(line, "data")) {
+    if (!(line = gwy_str_next_line(&p)) || !gwy_strequal(line, "data")) {
         g_warning("Expected gradient `%s' data", name);
         goto fail;
     }

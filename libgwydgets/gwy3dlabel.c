@@ -499,7 +499,7 @@ gwy_3d_label_set_text(Gwy3DLabel *label,
                       const gchar *text)
 {
     g_return_if_fail(GWY_IS_3D_LABEL(label));
-    if (!strcmp(text, label->text->str))
+    if (gwy_strequal(text, label->text->str))
         return;
 
     g_string_assign(label->text, text);

@@ -216,15 +216,15 @@ nanoscope_load(const gchar *filename)
     for (l = list; ok && l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
-        if (strcmp(g_hash_table_lookup(hash, "#self"), "Scanner list") == 0) {
+        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Scanner list")) {
             scannerlist = hash;
             continue;
         }
-        if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao scan list") == 0) {
+        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Ciao scan list")) {
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
-        if (strcmp(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
+        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
@@ -287,7 +287,7 @@ add_metadata(gpointer hkey,
     NanoscopeValue *val = (NanoscopeValue*)hvalue;
     gchar *s, *v, *w;
 
-    if (!strcmp(key, "#self")
+    if (gwy_strequal(key, "#self")
         || !val->hard_value_str
         || !val->hard_value_str[0])
         return;
@@ -326,7 +326,7 @@ fill_metadata(GwyContainer *data,
     for (l = list; l; l = g_list_next(l)) {
         GHashTable *h = ((NanoscopeData*)l->data)->hash;
         for (i = 0; i < G_N_ELEMENTS(hashes); i++) {
-            if (strcmp(g_hash_table_lookup(h, "#self"), hashes[i]) == 0) {
+            if (gwy_strequal(g_hash_table_lookup(h, "#self"), hashes[i])) {
                 g_hash_table_foreach(h, add_metadata, data);
                 break;
             }
@@ -490,7 +490,7 @@ get_physical_scale(GHashTable *hash,
     *scale = val->hard_value*sval->hard_value;
 
     if (!sval->hard_value_units || !*sval->hard_value_units) {
-        if (strcmp(val->soft_scale, "Sens. Phase") == 0)
+        if (gwy_strequal(val->soft_scale, "Sens. Phase"))
             siunit = gwy_si_unit_new("deg");
         else
             siunit = gwy_si_unit_new("V");
@@ -743,7 +743,7 @@ read_hash(gchar **buffer)
     line = gwy_str_next_line(buffer);
     if (line[0] != '\\' || line[1] != '*')
         return NULL;
-    if (!strcmp(line, "\\*File list end")) {
+    if (gwy_strequal(line, "\\*File list end")) {
         gwy_debug("FILE LIST END");
         return NULL;
     }

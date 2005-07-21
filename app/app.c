@@ -555,7 +555,7 @@ gwy_app_data_view_show_changed(GwyContainer *data,
     has_dfield = gwy_container_contains_by_name(data, key);
     layer = gwy_data_view_get_base_layer(data_view);
     data_key = gwy_pixmap_layer_get_data_key(layer);
-    has_layer = strcmp(data_key, key) == 0;
+    has_layer = gwy_strequal(data_key, key);
 
     if (has_dfield && !has_layer)
         gwy_pixmap_layer_set_data_key(layer, key);
