@@ -38,6 +38,12 @@ enum {
     GWY_SCI_TEXT_SUPERSCRIPT = 4
 };
 
+enum {
+    COLUMN_ENTITY,
+    COLUMN_UTF8,
+    NUM_COLUMNS
+};
+
 /* Forward declarations - widget related*/
 static void     gwy_sci_text_class_init           (GwySciTextClass *klass);
 static void     gwy_sci_text_init                 (GwySciText *sci_text);
@@ -57,14 +63,11 @@ static void     gwy_sci_text_edited               (GtkEntry *entry);
 static void     gwy_sci_text_entity_selected      (GwySciText *sci_text);
 static void     gwy_sci_text_button_some_pressed  (GtkButton *button,
                                                    gpointer p);
-static GList*   stupid_put_entities               (GList *items);
-static GList*   stupid_put_entity                 (GList *items, gsize i);
 
 /* Local data */
 static GtkWidgetClass *parent_class = NULL;
 
-const GwyTextEntity *ENTITIES = NULL;
-
+static GtkTreeModel *model = NULL;
 
 GType
 gwy_sci_text_get_type(void)
@@ -86,9 +89,9 @@ gwy_sci_text_get_type(void)
         };
         gwy_debug("");
         gwy_sci_text_type = g_type_register_static(GTK_TYPE_VBOX,
-                                                      GWY_SCI_TEXT_TYPE_NAME,
-                                                      &gwy_sci_text_info,
-                                                      0);
+                                                   GWY_SCI_TEXT_TYPE_NAME,
+                                                   &gwy_sci_text_info,
+                                                   0);
     }
 
     return gwy_sci_text_type;
@@ -100,6 +103,9 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
+    GtkListStore *store;
+    const GwyTextEntity *entities;
+    gint i;
 
     gwy_debug("");
 
@@ -114,7 +120,19 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
     widget_class->unrealize = gwy_sci_text_unrealize;
     widget_class->size_allocate = gwy_sci_text_size_allocate;
 
-    ENTITIES = gwy_entities_get_entities();
+    entities = gwy_entities_get_entities();
+
+    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
+    for (i = 0; entities[i].entity; i++) {
+        GtkTreeIter  iter;
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                           COLUMN_ENTITY, entities[i].entity,
+                           COLUMN_UTF8,   entities[i].utf8,
+                           -1);
+    }
+
+    model = GTK_TREE_MODEL (store);
 }
 
 static GtkWidget*
@@ -133,7 +151,8 @@ static void
 gwy_sci_text_init(GwySciText *sci_text)
 {
     GtkWidget *lab1, *frame, *lower, *upper, *bold, *italic, *add, *hbox;
-    GList *items = NULL;
+    GtkCellLayout *layout;
+    GtkCellRenderer *cell;
 
     gwy_debug("");
 
@@ -144,7 +163,6 @@ gwy_sci_text_init(GwySciText *sci_text)
     sci_text->entry = GTK_ENTRY(gtk_entry_new());
     gtk_label_set_mnemonic_widget(GTK_LABEL(lab1), GTK_WIDGET(sci_text->entry));
     sci_text->label = GTK_LABEL(gtk_label_new(" "));
-    sci_text->entities = GTK_COMBO(gtk_combo_new());
     lower = gwy_image_button_new_from_stock(GWY_STOCK_SUBSCRIPT);
     upper = gwy_image_button_new_from_stock(GWY_STOCK_SUPERSCRIPT);
     bold = gwy_image_button_new_from_stock(GWY_STOCK_BOLD);
@@ -152,10 +170,28 @@ gwy_sci_text_init(GwySciText *sci_text)
     add = gtk_button_new_with_mnemonic("A_dd symbol");
     hbox = gtk_hbox_new(FALSE, 0);
 
-    items = stupid_put_entities(NULL);
-    gtk_combo_set_popdown_strings(GTK_COMBO(sci_text->entities), items);
+    sci_text->entities = GTK_COMBO_BOX(gtk_combo_box_new_with_model(model));
+    gtk_combo_box_set_active(sci_text->entities, 0);
 
-    gtk_editable_set_editable(GTK_EDITABLE(sci_text->entities->entry), FALSE);
+    /*  a compact cell layout for the popup (in table mode)  */
+    gtk_combo_box_set_wrap_width (sci_text->entities, 10);
+    layout = GTK_CELL_LAYOUT(sci_text->entities);
+
+    cell = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(layout, cell, FALSE);
+    gtk_cell_layout_set_attributes(layout, cell, "text", COLUMN_UTF8, NULL);
+
+    /*  use a more descriptive cell layout for the box itself  */
+    layout = GTK_CELL_LAYOUT (GTK_BIN (sci_text->entities)->child);
+    gtk_cell_layout_clear (layout);
+
+    cell = gtk_cell_renderer_text_new ();
+    gtk_cell_layout_pack_start (layout, cell, FALSE);
+    gtk_cell_layout_set_attributes (layout, cell, "text", COLUMN_UTF8, NULL);
+
+    cell = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(layout, cell, TRUE);
+    gtk_cell_layout_set_attributes(layout, cell, "text", COLUMN_ENTITY, NULL);
 
     gtk_widget_show(lab1);
     gtk_widget_show(frame);
@@ -185,7 +221,6 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_box_pack_start(GTK_BOX(hbox), upper, FALSE, FALSE, 0);
 
     gtk_widget_set_events(GTK_WIDGET(sci_text->entry), GDK_KEY_RELEASE_MASK);
-    gtk_widget_set_events(sci_text->entities->list, GDK_BUTTON_PRESS_MASK);
 
     g_signal_connect(sci_text->entry, "changed",
                      G_CALLBACK(gwy_sci_text_edited), NULL);
@@ -327,25 +362,29 @@ static void
 gwy_sci_text_entity_selected(GwySciText *sci_text)
 {
     GtkEditable *editable;
+    GtkTreeIter  iter;
+    gchar *entity, *p;
     gint pos;
-    gchar *text, *p;
-    const gchar *utf8;
 
     gwy_debug("");
 
+    if (! gtk_combo_box_get_active_iter(sci_text->entities, &iter))
+        return;
+
+    gtk_tree_model_get(gtk_combo_box_get_model(sci_text->entities),
+                       &iter,
+                       COLUMN_ENTITY, &entity,
+                       -1);
+
+    p = g_strconcat("&", entity, ";", NULL);
+    g_free (entity);
+
     editable = GTK_EDITABLE(sci_text->entry);
-    text = gtk_editable_get_chars(GTK_EDITABLE(sci_text->entities->entry),
-                                  0, -1);
-    p = strrchr(text, ' ');
-    g_assert(p);
-    p++;
-    utf8 = gwy_entities_entity_to_utf8(p);
-    p = g_strconcat("&", p, ";", NULL);
     pos = gtk_editable_get_position(editable);
     gtk_editable_insert_text(editable, p, strlen(p), &pos);
     gtk_editable_set_position(editable, pos);
-    g_free(text);
     g_free(p);
+
     gwy_sci_text_edited(sci_text->entry);
 }
 
@@ -397,36 +436,6 @@ gwy_sci_text_button_some_pressed(GtkButton *button, gpointer p)
         }
     }
     gwy_sci_text_edited(sci_text->entry);
-}
-
-
-static GList*
-stupid_put_entity(GList *items, gsize i)
-{
-    GString *text, *entity;
-    text = g_string_new("");
-    entity = g_string_new("");
-
-    g_string_assign(text, ENTITIES[i].entity);
-    g_string_assign(entity, ENTITIES[i].utf8);
-    g_string_prepend(text, "  ");
-    g_string_prepend(text, entity->str);
-    items = g_list_append(items, text->str);
-
-    g_string_free(entity, 1);
-    return items;
-}
-
-
-static GList*
-stupid_put_entities(GList *items)
-{
-    gsize i;
-
-    for (i = 0; ENTITIES[i].entity; i++)
-        items = stupid_put_entity(items, i);
-
-    return items;
 }
 
 /**

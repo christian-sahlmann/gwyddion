@@ -51,7 +51,7 @@ struct _GwySciText {
     GdkGC *gc;
     GtkEntry *entry;
     GtkLabel *label;
-    GtkCombo *entities;
+    GtkComboBox *entities;
 
     GwySciTextParams par;
 
