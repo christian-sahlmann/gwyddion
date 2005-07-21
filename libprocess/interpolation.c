@@ -26,7 +26,7 @@
 
 /**
  * gwy_interpolation_get_dval:
- * @x: requested value coordinate 
+ * @x: requested value coordinate
  * @x1_: x coordinate of first value
  * @y1_: y coordinate of first value
  * @x2_: x coordinate of second value
@@ -56,7 +56,7 @@ gwy_interpolation_get_dval(gdouble x,
         else
             return y2_;
     }
-    else if (interpolation==GWY_INTERPOLATION_BILINEAR) {
+    else if (interpolation == GWY_INTERPOLATION_BILINEAR) {
         return y1_ + (x - x1_)/(x2_ - x1_)*(y2_ - y1_);
     }
     else {
@@ -71,16 +71,16 @@ gwy_interpolation_get_dval(gdouble x,
  * @data: array of 4 gdoubles (see below)
  * @interpolation: interpolation type
  *
- * Function computes interpolateed value bettween 2 or 4 
+ * Function computes interpolateed value bettween 2 or 4
  * equidistant values. For using %GWY_INTERPOLATION_NONE,
  * %GWY_INTERPOLATION_ROUND or %GWY_INTERPOLATION_BILINEAR
  * it is enough to use @data in format {0, data[i], data[i+1], 0}
  * and function computes value at data[i+x]. For four value
- * interpolations you have to prapare @data as 
+ * interpolations you have to prepare @data as
  * {data[i-1], data[i], data[i+1], data[i+2]} and function again
  * returns value at data[i+x].
  *
- * Returns: interpolated value
+ * Returns: Interpolated value.
  **/
 gdouble
 gwy_interpolation_get_dval_of_equidists(gdouble x,
@@ -215,34 +215,34 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 /* Maple source of Hornerization.
 
 {VERSION 5 0 "IBM INTEL LINUX" "5.0" }
-{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
-1 0 0 0 0 1 }{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0 
+{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0
+1 0 0 0 0 1 }{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0
 0 0 0 0 0 0 0 0 0 0 }0 0 0 -1 -1 -1 0 0 0 0 0 0 -1 0 }}
 {SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 23 "restart; with(codege
 n):" }}}{EXCHG {PARA 0 "" 0 "" {TEXT -1 17 "Key interpolation" }}}
 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 146 "intp := [ -1/2*w1*w1*w1 + 5
 /2*w1*w1 - 4*w1 + 2, 3/2*w2*w2*w2 - 5/2*w2*w2 + 1, 3/2*w3*w3*w3 - 5/2*
-w3*w3 + 1, -1/2*w4*w4*w4 + 5/2*w4*w4 - 4*w4 + 2];" }}{PARA 0 "" 0 "" 
+w3*w3 + 1, -1/2*w4*w4*w4 + 5/2*w4*w4 - 4*w4 + 2];" }}{PARA 0 "" 0 ""
 {TEXT -1 0 "" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 88 "hintp := co
 nvert(subs(w1 = rest+1, w2 = rest, w3 = 1-rest, w4 = 2-rest, intp), ho
 rner); " }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1
-], w2 = hintp[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA 
-0 "" 0 "" {TEXT -1 21 "Bspline interpolation" }}}{EXCHG {PARA 0 "> " 
+], w2 = hintp[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA
+0 "" 0 "" {TEXT -1 21 "Bspline interpolation" }}}{EXCHG {PARA 0 "> "
 0 "" {MPLTEXT 1 0 107 "intp := [ (2-w1)*(2-w1)*(2-w1)/6, 2/3 - 1/2*w2*
 w2*(2-w2), 2/3 - 1/2*w3*w3*(2-w3), (2-w4)*(2-w4)*(2-w4)/6 ];" }}}
 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 88 "hintp := convert(subs(w1 = r
 est+1, w2 = rest, w3 = 1-rest, w4 = 2-rest, intp), horner); " }}}
 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1], w2 = hint
-p[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA 0 "" 0 "" 
-{TEXT -1 19 "OMOMS interpolation" }}}{EXCHG {PARA 0 "> " 0 "" 
+p[2], w3 = hintp[3], w4 = hintp[4] ] );" }}}{EXCHG {PARA 0 "" 0 ""
+{TEXT -1 19 "OMOMS interpolation" }}}{EXCHG {PARA 0 "> " 0 ""
 {MPLTEXT 1 0 172 "intp := [ -1/6*w1*w1*w1 + w1*w1 - 85/42*w1 + 29/21, \+
 1/2*w2*w2*w2 - w2*w2 + w2/14 + 13/21, 1/2*w3*w3*w3 - w3*w3 + w3/14 + 1
-3/21, -1/6*w4*w4*w4 + w4*w4 - 85/42*w4 + 29/21 ]; " }}}{EXCHG {PARA 0 
+3/21, -1/6*w4*w4*w4 + w4*w4 - 85/42*w4 + 29/21 ]; " }}}{EXCHG {PARA 0
 "> " 0 "" {MPLTEXT 1 0 88 "hintp := convert(subs(w1 = rest+1, w2 = res
-t, w3 = 1-rest, w4 = 2-rest, intp), horner); " }}}{EXCHG {PARA 0 "> " 
+t, w3 = 1-rest, w4 = 2-rest, intp), horner); " }}}{EXCHG {PARA 0 "> "
 0 "" {MPLTEXT 1 0 67 "C([ w1 = hintp[1], w2 = hintp[2], w3 = hintp[3],
  w4 = hintp[4] ] );" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 0 "" }}}
-}{MARK "14" 0 }{VIEWOPTS 1 1 0 1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2 
+}{MARK "14" 0 }{VIEWOPTS 1 1 0 1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2
 33 1 1 }
 */
 

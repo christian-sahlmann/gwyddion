@@ -27,6 +27,8 @@
 #include "dataline.h"
 #include "interpolation.h"
 #include "simplefft.h"
+/* FIXME: for gwy_data_field_get_fft_res(), to be renamed, moved, etc. */
+#include "inttrans.h"
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
 
@@ -255,7 +257,7 @@ gwy_data_line_data_changed(GwyDataLine *data_line)
  *
  * Resamples a data line.
  *
- * In otwhe words changes the size of one dimensional field related with data
+ * In other words changes the size of one dimensional field related with data
  * line. The original values are used for resampling using a requested
  * interpolation alorithm.
  **/
@@ -265,7 +267,7 @@ gwy_data_line_resample(GwyDataLine *data_line,
                        GwyInterpolationType interpolation)
 {
     gdouble *bdata;
-    gdouble ratio, pos;
+    gdouble ratio;
     gint i;
 
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
@@ -280,14 +282,10 @@ gwy_data_line_resample(GwyDataLine *data_line,
     }
 
     bdata = g_new(gdouble, res);
-    ratio = (data_line->res - 1.0)/(res - 1.0);
-
-    for (i = 0; i < res; i++) {
-        pos = i*ratio;
-        if (G_UNLIKELY(pos > data_line->res-1))
-            pos = data_line->res-1;
-        bdata[i] = gwy_data_line_get_dval(data_line, pos, interpolation);
-    }
+    ratio = data_line->res/(gdouble)res;
+    for (i = 0; i < res; i++)
+        bdata[i] = gwy_data_line_get_dval(data_line, (i + 0.5)*ratio,
+                                          interpolation);
     g_free(data_line->data);
     data_line->data = bdata;
     data_line->res = res;
@@ -337,11 +335,16 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 /**
  * gwy_data_line_get_dval:
  * @data_line: A data line.
- * @x: position requested (0 - resolution)
- * @interpolation: interpolation used
+ * @x: Position in data line in range [0, resolution].
+ * @interpolation: Interpolation method to use.
  *
  * Gets interpolated value at arbitrary data line point indexed by pixel
  * coordinates.
+ *
+ * Note pixel values are centered in intervals [@j, @j+1], so to get the same
+ * value as gwy_data_line_get_val(@data_line, @j) returns,
+ * it's necessary to add 0.5:
+ * gwy_data_line_get_dval_real(@data_line, @j+0.5, @interpolation).
  *
  * See also gwy_data_line_get_dval_real() that does the same, but takes
  * real coordinates.
@@ -351,38 +354,42 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 gdouble
 gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 {
-    gint l = floor(x);
-    gdouble rest = x - (gdouble)l;
+    gint l = floor(x - 0.5);
+    gdouble rest;
     gdouble intline[4];
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0.0);
-    g_return_val_if_fail(x >= 0 && x < a->res, 0.0);
+    g_return_val_if_fail(x >= 0 && x <= a->res, 0.0);
 
-    if (rest == 0) return a->data[l];
+    if (G_UNLIKELY(l < 0))
+        return a->data[0];
+    if (G_UNLIKELY(l >= a->res - 1))
+        return a->data[a->res - 1];
 
+    rest = x - l;
     /*simple (and fast) methods*/
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         return 0.0;
 
         case GWY_INTERPOLATION_ROUND:
-        return a->data[(gint)(x + 0.5)];
+        return a->data[l];
 
         case GWY_INTERPOLATION_BILINEAR:
-        return
-            (1 - rest)*a->data[l] + rest*a->data[l+1];
+        return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
     }
 
-    /*other 4point methods are very similar:*/
+    /* use linear in border intervals */
     if (l < 1 || l >= (a->res - 2))
-        return gwy_data_line_get_dval(a, x, GWY_INTERPOLATION_BILINEAR);
+        return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
 
+    /* other 4point methods are very similar: */
     intline[0] = a->data[l-1];
     intline[1] = a->data[l];
     intline[2] = a->data[l+1];
     intline[3] = a->data[l+2];
-
-    return gwy_interpolation_get_dval_of_equidists(rest, intline, interpolation);
+    return gwy_interpolation_get_dval_of_equidists(rest, intline,
+                                                   interpolation);
 }
 
 /**
@@ -475,31 +482,37 @@ gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
 /**
  * gwy_data_line_itor:
  * @data_line: A data line.
- * @pixval: value in pixel coordinates
+ * @pixpos: value in pixel coordinates
  *
  * Transforms pixel coordinate to real (physical) coordinate.
  *
- * Returns: @pixval in real coordinates.
+ * That is it maps range [0..resolution] to range [0..real_size].  It is not
+ * suitable for conversion of matrix indices to physical coordinates, you
+ * have to use gwy_data_line_itor(@data_line, @pixpos + 0.5) for that.
+ *
+ * Returns: @pixpos in real coordinates.
  **/
 gdouble
-gwy_data_line_itor(GwyDataLine *data_line, gdouble pixval)
+gwy_data_line_itor(GwyDataLine *data_line, gdouble pixpos)
 {
-    return pixval*data_line->real/data_line->res;
+    return pixpos * data_line->real/data_line->res;
 }
 
 /**
  * gwy_data_line_rtoi:
  * @data_line: A data line.
- * @realval: value in real coordinates
+ * @realpos: value in real coordinates
  *
  * Transforms real (physical) coordinate to pixel coordinate.
  *
- * Returns: @realval in pixel coordinates.
+ * That is it maps range [0..real_size] to range [0..resolution].
+ *
+ * Returns: @realpos in pixel coordinates.
  **/
 gdouble
-gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realval)
+gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realpos)
 {
-    return realval*data_line->res/data_line->real;
+    return realpos * data_line->res/data_line->real;
 }
 
 /**
@@ -548,8 +561,7 @@ gwy_data_line_set_val(GwyDataLine *data_line,
  * Gets interpolated value at arbitrary data line point indexed by real
  * coordinates.
  *
- * See also gwy_data_line_get_dval() that does the same, but takes
- * pixel coordinates.
+ * See also gwy_data_line_get_dval() for interpolation explanation.
  *
  * Returns: Value interpolated in the data line.
  **/
@@ -1047,16 +1059,18 @@ gwy_data_line_part_threshold(GwyDataLine *a,
 }
 
 /**
- * gwy_data_line_line_coeffs:
+ * gwy_data_line_get_line_coeffs:
  * @data_line: A data line.
- * @av: height coefficient
- * @bv: slope coeficient
+ * @av: Height coefficient.
+ * @bv: Slope coeficient.
  *
- * Finds coefficients that can be used for line
- * leveling using relation data[i] -= av + bv*real_index;
+ * Finds line leveling coefficients.
+ *
+ * The coefficients can be used for line leveling using relation
+ * data[i] := data[i] - (av + bv*i);
  **/
 void
-gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
+gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 {
     gdouble sumxi, sumxixi;
     gdouble sumsixi = 0.0;
@@ -1079,10 +1093,8 @@ gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     sumsi /= n;
     sumsixi /= n;
 
-    if (bv) {
+    if (bv)
         *bv = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
-        *bv *= n/a->real;
-    }
     if (av)
         *av = (sumsi*sumxixi - sumxi*sumsixi) / (sumxixi - sumxi*sumxi);
 }
@@ -1090,33 +1102,34 @@ gwy_data_line_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 /**
  * gwy_data_line_line_level:
  * @data_line: A data line.
- * @av: height coefficient
- * @bv: slope coefficient
+ * @av: Height coefficient.
+ * @bv: Slope coefficient.
  *
- * Performs line leveling using relation data[i] -= av + bv*real_index.
+ * Performs line leveling.
+ *
+ * See gwy_data_line_get_line_coeffs() for deails.
  **/
 void
 gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
 {
     gint i;
-    gdouble bpix;
 
     g_return_if_fail(GWY_IS_DATA_LINE(a));
 
-    bpix = bv/a->res*a->real;
     for (i = 0; i < a->res; i++)
-        a->data[i] -= av + bpix*i;
+        a->data[i] -= av + bv*i;
 }
 
 /**
  * gwy_data_line_line_rotate:
  * @data_line: A data line.
- * @angle: angle of rotation (in radians)
- * @interpolation: interpolation mode used
+ * @angle: Angle of rotation (in radians).
+ * @interpolation: Interpolation method to use (can be only of two-point type).
  *
- * Performs line rotation. This is operation similar
- * to leveling, but not changing the angles between
- * line segments.
+ * Performs line rotation.
+ *
+ * This is operation similar to leveling, but it does not change the angles
+ * between line segments.
  **/
 void
 gwy_data_line_line_rotate(GwyDataLine *a,
@@ -1131,6 +1144,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
     if (angle == 0)
         return;
 
+    /* XXX: INTERPOLATION style not checked */
     res = a->res;
     dx = g_new(gdouble, a->res);
     dy = g_new(gdouble, a->res);
@@ -1207,11 +1221,11 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
 
 /**
  * gwy_data_line_fft_hum:
- * @direction: FFT direction (1 or -1)
- * @ra: real input
- * @ia: imaginary input
- * @rb: real output
- * @ib: imaginary output
+ * @direction: FFT direction (1 or -1).
+ * @rsrc: Real input.
+ * @isrc: Imaginary input.
+ * @rdest: Real output.
+ * @idest: Imaginary output.
  * @interpolation: interpolation used
  *
  * Performs 1D FFT using the alogrithm ffthum (see simplefft.h).
@@ -1221,58 +1235,58 @@ gwy_data_line_get_der(GwyDataLine *a, gint i)
  **/
 void
 gwy_data_line_fft_hum(GwyTransformDirection direction,
-                      GwyDataLine *ra, GwyDataLine *ia,
-                      GwyDataLine *rb, GwyDataLine *ib,
+                      GwyDataLine *rsrc, GwyDataLine *isrc,
+                      GwyDataLine *rdest, GwyDataLine *idest,
                       GwyInterpolationType interpolation)
 {
-    gint order, newres, oldres;
+    gint newres, oldres;
 
     /* neither should not normally happen - the function should be called from
      * gwy_data_line_fft() */
-    g_return_if_fail(GWY_IS_DATA_LINE(ra));
-    g_return_if_fail(GWY_IS_DATA_LINE(rb));
-    g_return_if_fail(GWY_IS_DATA_LINE(ia));
-    g_return_if_fail(GWY_IS_DATA_LINE(ib));
-    if (ia->res != ra->res)
-        gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
-    if (rb->res != ra->res)
-        gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
-    if (ib->res != ra->res)
-        gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
+    g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(rdest));
+    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(idest));
+    if (isrc->res != rsrc->res)
+        gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
+    if (rdest->res != rsrc->res)
+        gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
+    if (idest->res != rsrc->res)
+        gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
 
     /*find the next power of two*/
-    order = (gint) floor(log ((gdouble)ra->res)/log (2.0)+0.5);
-    newres = (gint) pow(2,order);
-    oldres = ra->res;
+    newres = gwy_data_field_get_fft_res(rsrc->res);
+    oldres = rsrc->res;
 
     /*resample if this is not the resolution*/
     if (newres != oldres) {
-        gwy_data_line_resample(ra, newres, interpolation);
-        gwy_data_line_resample(ia, newres, interpolation);
-        gwy_data_line_resample(rb, newres, GWY_INTERPOLATION_NONE);
-        gwy_data_line_resample(ib, newres, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(rsrc, newres, interpolation);
+        gwy_data_line_resample(isrc, newres, interpolation);
+        gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
     }
-    gwy_data_line_fill(rb, 0);
-    gwy_data_line_fill(ib, 0);
+    gwy_data_line_fill(rdest, 0);
+    gwy_data_line_fill(idest, 0);
 
-    gwy_fft_hum(direction, ra->data, ia->data, rb->data, ib->data, newres);
+    gwy_fft_hum(direction, rsrc->data, isrc->data, rdest->data, idest->data,
+                newres);
 
     /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
      after all the processings*/
     if (newres != oldres) {
-        gwy_data_line_resample(ra, oldres, interpolation);
-        gwy_data_line_resample(ia, oldres, interpolation);
-        gwy_data_line_resample(rb, oldres, interpolation);
-        gwy_data_line_resample(ib, oldres, interpolation);
+        gwy_data_line_resample(rsrc, oldres, interpolation);
+        gwy_data_line_resample(isrc, oldres, interpolation);
+        gwy_data_line_resample(rdest, oldres, interpolation);
+        gwy_data_line_resample(idest, oldres, interpolation);
     }
 }
 
 /**
  * gwy_data_line_fft:
- * @ra: Real input data line.
- * @ia: Imaginary input data line.
- * @rb: Real output data line.
- * @ib: Imaginary output data line.
+ * @rsrc: Real input data line.
+ * @isrc: Imaginary input data line.
+ * @rdest: Real output data line.
+ * @idest: Imaginary output data line.
  * @fft: FFT alorithm to use.
  * @windowing: Windowing mode.
  * @direction: FFT direction.
@@ -1285,8 +1299,8 @@ gwy_data_line_fft_hum(GwyTransformDirection direction,
  * A windowing or data leveling can be applied if requested.
  **/
 void
-gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
-                  GwyDataLine *rb, GwyDataLine *ib,
+gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
+                  GwyDataLine *rdest, GwyDataLine *idest,
                   GwyFFTFunc fft,
                   GwyWindowingType windowing,
                   GwyTransformDirection direction,
@@ -1299,60 +1313,61 @@ gwy_data_line_fft(GwyDataLine *ra, GwyDataLine *ia,
     GwyDataLine *multra, *multia;
     gdouble coefs[4];
 
-    g_return_if_fail(GWY_IS_DATA_LINE(ra));
-    g_return_if_fail(GWY_IS_DATA_LINE(ia));
-    g_return_if_fail(GWY_IS_DATA_LINE(rb));
-    g_return_if_fail(GWY_IS_DATA_LINE(ib));
+    g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(rdest));
+    g_return_if_fail(GWY_IS_DATA_LINE(idest));
 
     gwy_debug("");
-    if (ia->res != ra->res) {
-        gwy_data_line_resample(ia, ra->res, GWY_INTERPOLATION_NONE);
-        gwy_data_line_fill(ia, 0);
+    if (isrc->res != rsrc->res) {
+        gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
+        gwy_data_line_fill(isrc, 0);
     }
-    if (rb->res != ra->res)
-        gwy_data_line_resample(rb, ra->res, GWY_INTERPOLATION_NONE);
-    if (ib->res != ra->res)
-        gwy_data_line_resample(ib, ra->res, GWY_INTERPOLATION_NONE);
+    if (rdest->res != rsrc->res)
+        gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
+    if (idest->res != rsrc->res)
+        gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
 
     if (level == TRUE) {
         n = 1;
-        gwy_data_line_fit_polynom(ra, n, coefs);
-        gwy_data_line_subtract_polynom(ra, n, coefs);
-        gwy_data_line_fit_polynom(ia, n, coefs);
-        gwy_data_line_subtract_polynom(ia, n, coefs);
+        gwy_data_line_fit_polynom(rsrc, n, coefs);
+        gwy_data_line_subtract_polynom(rsrc, n, coefs);
+        gwy_data_line_fit_polynom(isrc, n, coefs);
+        gwy_data_line_subtract_polynom(isrc, n, coefs);
     }
 
-    gwy_data_line_fill(rb, 0);
-    gwy_data_line_fill(ib, 0);
+    gwy_data_line_fill(rdest, 0);
+    gwy_data_line_fill(idest, 0);
 
 
     if (preserverms == TRUE) {
-        multra = gwy_data_line_duplicate(ra);
-        multia = gwy_data_line_duplicate(ia);
+        multra = gwy_data_line_duplicate(rsrc);
+        multia = gwy_data_line_duplicate(isrc);
 
         rmsa = gwy_data_line_get_rms(multra);
 
         gwy_fft_window(multra->data, multra->res, windowing);
         gwy_fft_window(multia->data, multia->res, windowing);
 
-        fft(direction, multra, multia, rb, ib, interpolation);
+        fft(direction, multra, multia, rdest, idest, interpolation);
 
         rmsb = 0;
         for (i = 0; i < multra->res/2; i++)
-            rmsb += (rb->data[i]*rb->data[i] + ib->data[i]*ib->data[i])*2
-                    /(ra->res*ra->res);
+            rmsb += 2*(rdest->data[i]*rdest->data[i]
+                       + idest->data[i]*idest->data[i])
+                    /(rsrc->res*rsrc->res);
         rmsb = sqrt(rmsb);
 
-        gwy_data_line_multiply(rb, rmsa/rmsb);
-        gwy_data_line_multiply(ib, rmsa/rmsb);
+        gwy_data_line_multiply(rdest, rmsa/rmsb);
+        gwy_data_line_multiply(idest, rmsa/rmsb);
         g_object_unref(multra);
         g_object_unref(multia);
     }
     else {
-        gwy_fft_window(ra->data, ra->res, windowing);
-        gwy_fft_window(ia->data, ra->res, windowing);
+        gwy_fft_window(rsrc->data, rsrc->res, windowing);
+        gwy_fft_window(isrc->data, rsrc->res, windowing);
 
-        fft(direction, ra, ia, rb, ib, interpolation);
+        fft(direction, rsrc, isrc, rdest, idest, interpolation);
     }
 }
 
