@@ -32,8 +32,9 @@ cat >make_dists.ignore <<':'
 ^+
 ^cp: cannot stat `\./html/\*\.css': No such file or directory
 ^make\[3\]: \[dist-hook\] Error 1 (ignored)
-^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib'
-^libtool: install: warning: remember to run `libtool --finish /usr/lib'
+^libtool: install: warning: relinking `.*.la'
+^libtool: install: warning: `.*\.la' has not been installed in `/usr/lib
+^libtool: install: warning: remember to run `libtool --finish /usr/lib
 \.\{6,\}
 ^[0-9]\+ blocks
 ':'
@@ -42,6 +43,11 @@ cat >make_dists.ignore <<':'
 cat >gnains_index.ignore <<':'
 *** gnains-mkindex-Warning: Cannot decide what to do with <.*>
 *** gnains-mkindex-Warning: Duplicit key <.*>
+':'
+:
+
+cat >install_to_tmp.ignore <<':'
+^libtool: install: warning: relinking `.*.la'
 ':'
 :
 
