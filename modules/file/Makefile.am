@@ -47,7 +47,8 @@ endif
 
 AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
-
+if MODULE_DEPENDENCIES
+MODULE_LIBTIFF = $(LIBTIFF)
 module_libadd = \
 	$(top_builddir)/app/libgwyapp.la		\
 	$(top_builddir)/libdraw/libgwydraw.la		\
@@ -56,6 +57,9 @@ module_libadd = \
 	$(top_builddir)/libgwymodule/libgwymodule.la	\
 	$(top_builddir)/libprocess/libgwyprocess.la	\
 	@GTK_LIBS@
+else
+MODULE_LIBTIFF =
+endif
 
 
 asciiexport_la_SOURCES = asciiexport.c
@@ -81,7 +85,7 @@ gwyfile_la_LIBADD = $(module_libadd)
 
 if HAVE_TIFF
 jpkscan_la_SOURCES = jpk.h jpkscan.c
-jpkscan_la_LIBADD = $(module_libadd) $(LIBTIFF)
+jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 endif
 
 nanoscope_la_SOURCES = nanoscope.c
@@ -91,7 +95,7 @@ nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
 
 pixmap_la_SOURCES = pixmap.c
-pixmap_la_LIBADD = $(module_libadd) $(LIBTIFF)
+pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
 rawfile_la_SOURCES = rawfile.c
 rawfile_la_LIBADD = $(module_libadd)

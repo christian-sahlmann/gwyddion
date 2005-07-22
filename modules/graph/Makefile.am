@@ -22,6 +22,7 @@ endif
 
 AM_LDFLAGS = -avoid-version -module $(no_undefined)
 
+if MODULE_DEPENDENCIES
 module_libadd = \
 	$(top_builddir)/app/libgwyapp.la		\
 	$(top_builddir)/libdraw/libgwydraw.la		\
@@ -30,6 +31,7 @@ module_libadd = \
 	$(top_builddir)/libgwymodule/libgwymodule.la	\
 	$(top_builddir)/libprocess/libgwyprocess.la	\
 	@GTK_LIBS@
+endif
 
 
 #graph_export_ascii_la_SOURCES = graph_export_ascii.c

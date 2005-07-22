@@ -45,8 +45,8 @@ MAINTAINERCLEANFILES = authors.h
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ -version-info 6:2:3
-libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ -release @LIBRARY_RELEASE@
+#libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 6:2:3
+libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
@@ -69,7 +69,7 @@ gwyddion_SOURCES = \
 	toolbox.c
 
 gwyddion_CFLAGS = -DLOCALEDIR=\"$(localedir)\"
-gwyddion_LDADD = @GTKGLEXT_LIBS@ \
+gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 	libgwyapp.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

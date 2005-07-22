@@ -39,8 +39,8 @@ noinst_HEADERS = gwytestser.h
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-#libgwyddion_la_LDFLAGS = -version-info 8:0:5
-libgwyddion_la_LDFLAGS = -release @LIBRARY_RELEASE@
+#libgwyddion_la_LDFLAGS = @BASIC_LIBS@ -version-info 8:0:5
+libgwyddion_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
 	gwyddion.c \

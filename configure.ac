@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050720, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050722, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -54,8 +54,10 @@ dnl F***ing automake requires the silly ABOUT-NLS file.  Use `foreign'
 dnl strictness level.
 AM_INIT_AUTOMAKE([1.7 foreign check-news dist-bzip2])
 AM_MAINTAINER_MODE
+AC_SUBST(LIBRARY_RELEASE)
 
-dnl Checks for programs and systems.
+#############################################################################
+# Checks for programs and systems.
 AC_DISABLE_STATIC
 AC_PROG_AWK
 AC_PROG_CC
@@ -73,7 +75,19 @@ AC_CHECK_PROGS([STRIP],[strip])
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
 gtk_CHECK_GTK_DOC
 
-# Win32
+#############################################################################
+# Target sytstem.
+AC_MSG_CHECKING([for target architecture])
+case x"$target" in
+  xNONE | x)
+    target_or_host="$host" ;;
+  *)
+    target_or_host="$target" ;;
+esac
+AC_MSG_RESULT([$target_or_host])
+
+#############################################################################
+# Win32.
 AC_MSG_CHECKING([for native Win32])
 case "$target_or_host" in
   *-*-mingw*)
@@ -88,6 +102,44 @@ esac
 AC_MSG_RESULT([$os_win32])
 AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
 
+#############################################################################
+# Module symbol resolution
+# FIXME: we just use a static table of systems known to support symbol
+# resolution in dlopen()ed modules through app that dlopen()ed them.
+# A libtool mage of level 5+ could test this run-time.
+AC_MSG_CHECKING([wheter modules must be linked with libraries])
+AC_ARG_ENABLE([module-dependencies],
+  AS_HELP_STRING([--enable-module-dependencies],
+                 [Link modules with libraries (auto)]),
+  [case "${enableval}" in
+     yes|no) enable_module_dependencies="$enableval" ;;
+     *) AC_MSG_ERROR(bad value ${enableval} for --enable-$1) ;;
+   esac],
+  [case "$host_os" in
+    *-gnu | linux*)
+      enable_module_dependencies=no
+      ;;
+    freebsd* | openbsd* | netbsd*)
+      enable_module_dependencies=no
+      ;;
+    solaris*)
+      enable_module_dependencies=no
+      ;;
+    darwin* | rhapsody* | machten*)
+      enable_module_dependencies=yes
+      ;;
+    mingw* | cygwin*)
+      enable_module_dependencies=yes
+      ;;
+    *)
+      AC_MSG_WARN([Modules will be linked with all libraries.  Please report an enhancement request to add your system.])
+      enable_module_dependencies=yes
+      ;;
+   esac])
+AC_MSG_RESULT([$enable_module_dependencies])
+AM_CONDITIONAL([MODULE_DEPENDENCIES],[test "$enable_module_dependencies" = "yes"])
+
+#############################################################################
 # XDG stuff
 AC_CHECK_PROGS([UPDATE_DESKTOP_DATABASE],[update-desktop-database],:)
 AC_CHECK_PROGS([UPDATE_MIME_DATABASE],[update-mime-database],:)
@@ -96,11 +148,13 @@ GWY_ENABLE([desktop-file-update],
            [Update Freedesktop databases])
 AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
 
+#############################################################################
 # Python
 GWY_ENABLE([python],,[Install Python modules and plug-ins])
 AM_PATH_PYTHON(2.2,,:)
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
 
+#############################################################################
 # Check for Perl
 GWY_ENABLE([perl],,[Install Perl modules and plug-ins])
 AC_PATH_PROGS(PERL,perl5 perl,:)
@@ -109,6 +163,7 @@ if test "$PERL" != :; then
 fi
 AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != : -a "$enable_perl" != no])
 
+#############################################################################
 # Check for Ruby
 # The outer [] are necessary to quote the inner [] inside Ruby
 GWY_ENABLE([ruby],,[Install Ruby modules and plug-ins])
@@ -131,6 +186,7 @@ exit 1"]; then
 fi
 AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != : -a "$enable_ruby" != no])
 
+#############################################################################
 # Check for Ruby narray module
 ruby_has_narray=no
 if test "$RUBY" != :; then
@@ -144,6 +200,7 @@ if test "$RUBY" != :; then
 fi
 AM_CONDITIONAL([HAVE_RUBY_NARRAY], [test "$ruby_has_narray" = yes])
 
+#############################################################################
 # Check for Pascal compiler
 # The outer [] are necessary to quote the inner [] inside sed expressions
 GWY_ENABLE([pascal],,[Build sample Pascal plug-ins])
@@ -167,7 +224,8 @@ if test "$PASCAL" != :; then
 fi
 AM_CONDITIONAL([HAVE_PASCAL], [test "$PASCAL" != : -a "$enable_pascal" != no])
 
-dnl With GCC, be paranoiac.  It should compile really cleanly.
+#############################################################################
+# With GCC, be paranoiac.  It should compile really cleanly.
 if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WNO_EMPTY_FMT],[-Wno-format-zero-length],,)
   GWY_PROG_CC_OPTION([WNO_SIGN_COMPARE],[-Wno-sign-compare],,)
@@ -185,7 +243,8 @@ if test "$GCC" = yes; then
   MATH_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO"
 fi
 
-dnl Dirty path hack.  Helps some people with badly set up search paths.
+#############################################################################
+# Dirty path hack.  Helps some people with badly set up search paths.
 if test "$prefix" = "NONE"; then
   LDFLAGS="$LDFLAGS -L$ac_default_prefix/lib"
   CPPFLAGS="$CPPFLAGS -I$ac_default_prefix/include"
@@ -202,6 +261,9 @@ PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.6.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
+AC_CHECK_LIB([m],[sqrt],[LIBM='-lm'],[])
+
+#############################################################################
 # GtkGlExt
 # FIXME: Doesn't work, must wait for 2.0
 GWY_WITH([gl],,[OpenGL 3D view widgets])
@@ -213,8 +275,7 @@ if test "x$enable_gl" != "xno"; then
                     [AC_MSG_WARN(GtkGLExt not found, 3D will not be built)])
 fi
 
-AC_CHECK_LIB([m],[sqrt])
-
+#############################################################################
 # TIFF
 # TODO: Add some message to end of configure what is supported and what isn't
 # Missing libtiff is not fatal.
@@ -239,11 +300,8 @@ fi
 AM_CONDITIONAL([HAVE_TIFF],[test x$enable_libtiff != xno && test -n "$LIBTIFF"])
 AC_SUBST(LIBTIFF)
 
-PACKAGE_LIBS="$PACKAGE_LIBS $GOBJECT_LIBS $LIBS"
-# XXX: need Gtk+ headers.
-PACKAGE_CFLAGS="$PACKAGE_CFLAGS $GTK_CFLAGS $GTKGLEXT_CFLAGS"
-
-dnl Checks for header files.
+#############################################################################
+# Check for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
@@ -257,14 +315,16 @@ AC_CHECK_HEADERS( \
   unistd.h \
   time.h)
 
-dnl Checks for typedefs, structures, and compiler characteristics.
+#############################################################################
+# Check for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
 AC_STRUCT_TM
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
 
-dnl Checks for library functions.
+#############################################################################
+# Check for library functions.
 AC_FUNC_MMAP
 AC_CHECK_FUNC([getline])
 AC_CHECK_FUNC([cbrt], [gwy_have_cbrt=yes], [gwy_have_cbrt=no])
@@ -274,27 +334,35 @@ AC_CHECK_FUNC([acosh], [gwy_have_acosh=yes], [gwy_have_acosh=no])
 AC_CHECK_FUNC([asinh], [gwy_have_asinh=yes], [gwy_have_asinh=no])
 AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
 
-dnl I18n stuff
+#############################################################################
+# I18n
 GETTEXT_PACKAGE=$PACKAGE_TARNAME
 AM_GNU_GETTEXT([external])
-LIBS="$LIBS $INTLLIBS"
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)
 
-dnl RPM
+#############################################################################
+# Libs
+BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBM $LIBS $LDFLAGS"
+AC_SUBST(BASIC_LIBS)
+BASIC_CFLAGS="$GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $CFLAGS"
+
+CFLAGS="$TARGET_CFLAGS $WARNING_CFLAGS $MATH_CFLAGS $BASIC_CFLAGS"
+LDFLAGS="$TARGET_LDFLAGS"
+
+#############################################################################
+# RPM
 RPM_RELEASE=1
 RPM_VERSION=`echo AC_PACKAGE_VERSION`
-
-CFLAGS="$TARGET_CFLAGS $WARNING_CFLAGS $MATH_CFLAGS $PACKAGE_CFLAGS $CFLAGS"
-LDFLAGS="$TARGET_LDFLAGS $PACKAGE_LIBS $LDFLAGS"
 
 AC_SUBST(RPM_RELEASE)
 AC_SUBST(RPM_VERSION)
 AC_SUBST(PACKAGE_URL)
-AC_SUBST(LIBRARY_RELEASE)
 AC_DEFINE_UNQUOTED(PACKAGE_URL,"$PACKAGE_URL",
                    [Define to package home page, as a string.])
 
+#############################################################################
+# Generate gwyconfig
 AC_CONFIG_COMMANDS([gwyconfig.h],
 [
   outfile=gwyconfig.h-tmp
