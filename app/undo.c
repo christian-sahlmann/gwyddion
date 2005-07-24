@@ -58,7 +58,7 @@ static GList*      gwy_list_split                   (GList *list,
 static void        gwy_app_undo_container_finalized (gpointer userdata,
                                                      GObject *deceased_data);
 static void        gwy_app_undo_list_free           (GList *list);
-static gboolean    gwy_app_undo_compare_data        (gconstpointer a,
+static gint        gwy_app_undo_compare_data        (gconstpointer a,
                                                      gconstpointer b);
 static GwyAppUndo* gwy_app_undo_get_for_data        (GwyContainer *data,
                                                      gboolean do_create);
@@ -518,7 +518,7 @@ gwy_app_undo_list_free(GList *list)
     g_list_free(list);
 }
 
-static gboolean
+static gint
 gwy_app_undo_compare_data(gconstpointer a,
                           gconstpointer b)
 {
