@@ -19,10 +19,11 @@
  */
 
 #include "config.h"
-#include <math.h>
-
 #include <libgwyddion/gwymacros.h>
-#include "interpolation.h"
+#include <libgwyddion/gwymath.h>
+#include <libprocess/interpolation.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 /**
  * gwy_interpolation_get_dval:
@@ -50,33 +51,43 @@ gwy_interpolation_get_dval(gdouble x,
         GWY_SWAP(gdouble, y1_, y2_);
     }
 
-    if (interpolation == GWY_INTERPOLATION_ROUND) {
+    switch (interpolation) {
+        case GWY_INTERPOLATION_ROUND:
         if ((x - x1_) < (x2_ - x))
             return y1_;
         else
             return y2_;
-    }
-    else if (interpolation == GWY_INTERPOLATION_BILINEAR) {
+        break;
+
+
+        case GWY_INTERPOLATION_BILINEAR:
         return y1_ + (x - x1_)/(x2_ - x1_)*(y2_ - y1_);
-    }
-    else {
+        break;
+
+        default:
         g_warning("Interpolation not implemented yet.\n");
+        break;
     }
-    return 0;
+    return 0.0;
 }
 
 /**
  * gwy_interpolation_get_dval_of_equidists:
- * @x: noninteger part of requested x
- * @data: array of 4 gdoubles (see below)
- * @interpolation: interpolation type
+ * @x: Noninteger part of requested x, that is a number from interval [0,1).
+ * @data: Array of 4 values to interpolate between (see below).
+ * @interpolation: Interpolation type to use.
  *
- * Function computes interpolateed value bettween 2 or 4
- * equidistant values. For using %GWY_INTERPOLATION_NONE,
- * %GWY_INTERPOLATION_ROUND or %GWY_INTERPOLATION_BILINEAR
- * it is enough to use @data in format {0, data[i], data[i+1], 0}
- * and function computes value at data[i+x]. For four value
- * interpolations you have to prepare @data as
+ * Computes interpolated value from 2 or 4 equidistant values.
+ *
+ * For %GWY_INTERPOLATION_NONE no @data value is actually used, and zero is
+ * returned.
+ *
+ * For %GWY_INTERPOLATION_ROUND or %GWY_INTERPOLATION_BILINEAR
+ * it is enough to set middle two @data values, that to use @data in format
+ * {0, data[i], data[i+1], 0} and function computes value at data[i+x]
+ * (the outer values are not used).
+ *
+ * For four value interpolations you have to prepare @data as
  * {data[i-1], data[i], data[i+1], data[i+2]} and function again
  * returns value at data[i+x].
  *
@@ -99,7 +110,8 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
     g_return_val_if_fail(x >= 1 && x < 2, 0.0);
 
-    if (rest == 0) return data[l];
+    if (rest == 0)
+        return data[l];
 
     /*simple (and fast) methods*/
     switch (interpolation) {
@@ -111,7 +123,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
         case GWY_INTERPOLATION_BILINEAR:
         return
-            (1 - rest)*data[l] + rest*data[l+1];
+            (1.0 - rest)*data[l] + rest*data[l+1];
 
         default:
         break;

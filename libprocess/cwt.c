@@ -20,7 +20,9 @@
 
 #include "config.h"
 #include <libgwyddion/gwymath.h>
-#include "cwt.h"
+#include <libprocess/cwt.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 gdouble
 gwy_cwt_wfunc_2d(gdouble scale,
@@ -35,15 +37,22 @@ gwy_cwt_wfunc_2d(gdouble scale,
     cur2 = cur*cur;
     scale2 = scale*scale;
 
-    if (wtype == GWY_2DCWT_GAUSS)
-/*        return exp(-(scale2*cur2)/2)*2*G_PI*scale2*2*G_PI*scale; changed only for reasonable normalization*/
+    switch (wtype) {
+        case GWY_2DCWT_GAUSS:
+        /* return exp(-(scale2*cur2)/2)*2*G_PI*scale2*2*G_PI*scale;
+         * changed only for reasonable normalization*/
         return exp(-(scale2*cur2)/2);
-    else if (wtype == GWY_2DCWT_HAT)
+        break;
+
+        case GWY_2DCWT_HAT:
         return (scale2*cur2)*exp(-(scale2*cur2)/2)*2*G_PI*scale2;
-    else
-        return 1;
+        break;
 
-
+        default:
+        g_return_val_if_reached(1.0);
+        break;
+    }
+    return 1.0;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

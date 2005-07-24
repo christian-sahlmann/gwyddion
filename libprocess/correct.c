@@ -21,9 +21,11 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "stats.h"
-#include "correct.h"
+#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
+#include <libprocess/correct.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,

@@ -32,20 +32,20 @@ GwyDataLine*  gwy_dwt_set_coefficients(GwyDataLine *dline,
 
 GwyDataLine*  gwy_data_line_dwt(GwyDataLine *dline,
                                 GwyDataLine *wt_coefs,
-                                gint isign,
+                                GwyTransformDirection direction,
                                 gint minsize);
 
 GwyDataField* gwy_data_field_xdwt(GwyDataField *dfield,
                                   GwyDataLine *wt_coefs,
-                                  gint isign,
+                                  GwyTransformDirection direction,
                                   gint minsize);
 GwyDataField* gwy_data_field_ydwt(GwyDataField *dfield,
                                   GwyDataLine *wt_coefs,
-                                  gint isign,
+                                  GwyTransformDirection direction,
                                   gint minsize);
 GwyDataField* gwy_data_field_dwt(GwyDataField *dfield,
                                  GwyDataLine *wt_coefs,
-                                 gint isign,
+                                 GwyTransformDirection direction,
                                  gint minsize);
 
 GwyDataField* gwy_data_field_dwt_denoise(GwyDataField *dfield,
@@ -67,5 +67,6 @@ GwyDataField* gwy_data_field_dwt_correction(GwyDataField *dfield,
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_DWT__*/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

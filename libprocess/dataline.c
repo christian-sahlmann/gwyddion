@@ -24,13 +24,15 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "dataline.h"
-#include "interpolation.h"
-#include "simplefft.h"
+#include <libprocess/dataline.h>
+#include <libprocess/interpolation.h>
+#include <libprocess/simplefft.h>
 /* FIXME: for gwy_data_field_get_fft_res(), to be renamed, moved, etc. */
-#include "inttrans.h"
+#include <libprocess/inttrans.h>
 
 #define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
+
+/* INTERPOLATION: New, except gwy_data_line_rotate() which does `something'. */
 
 enum {
     DATA_CHANGED,
@@ -354,13 +356,15 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 gdouble
 gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
 {
-    gint l = floor(x - 0.5);
+    gint l;
     gdouble rest;
     gdouble intline[4];
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0.0);
     g_return_val_if_fail(x >= 0 && x <= a->res, 0.0);
 
+    x -= 0.5;    /* To centered pixel value */
+    l = floor(x);
     if (G_UNLIKELY(l < 0))
         return a->data[0];
     if (G_UNLIKELY(l >= a->res - 1))

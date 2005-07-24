@@ -22,11 +22,10 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "dataline.h"
-#include "cdline.h"
+#include <libprocess/dataline.h>
+#include <libprocess/cdline.h>
 
-#define GWY_DATA_LINE_TYPE_NAME "GwyDataLine"
-
+/* INTERPOLATION: New (not applicable). */
 
 /* Preset */
 struct _GwyCDLineParam {

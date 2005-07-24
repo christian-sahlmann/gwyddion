@@ -21,8 +21,10 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "stats.h"
+#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 /**
  * gwy_data_field_get_correlation_score:
@@ -58,6 +60,7 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
     gint xres, yres, kxres, kyres, i, j;
     gint kwidth, kheight;
     gdouble rms1, rms2, avg1, avg2, sumpoints, score;
+    gdouble *data, *kdata;
 
     g_return_val_if_fail(data_field != NULL && kernel_field != NULL, -1);
 
@@ -104,12 +107,13 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
 
     score = 0;
     sumpoints = kwidth * kheight;
-    for (i = 0; i < kwidth; i++) {      /*col */
-        for (j = 0; j < kheight; j++) { /*row */
-            score += (data_field->data[(i + ulcol) + xres * (j + ulrow)] - avg1)
-                *
-                (kernel_field->
-                 data[(i + kernel_ulcol) + kxres * (j + kernel_ulrow)] - avg2);
+    data = data_field->data;
+    kdata = kernel_field->data;
+    for (j = 0; j < kheight; j++) {   /* row */
+        for (i = 0; i < kwidth; i++) {   /* col */
+            score += (data[(i + ulcol) + xres*(j + ulrow)] - avg1)
+                      * (kdata[(i + kernel_ulcol) + kxres*(j + kernel_ulrow)]
+                         - avg2);
         }
     }
     score /= rms1 * rms2 * sumpoints;
@@ -196,7 +200,7 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
         g_warning("Correlation kernel has nonpositive size.");
         return;
     }
-    /*correlation request outside kernel */
+    /* correlation request outside kernel */
     if (kxres > xres || kyres > yres) {
         return;
     }
@@ -225,50 +229,6 @@ gwy_data_field_correlate_iteration(GwyDataField *data_field,
 
     gwy_data_field_invalidate(score);
 }
-
-#if 0
-/*iterate over search area in the second datafield */
-static void
-gwy_data_field_crosscorrelate_iter(GwyDataField *data_field1,
-                                   GwyDataField *data_field2,
-                                   gint search_width,
-                                   gint search_height,
-                                   gint i, gint j,
-                                   gint *imax, gint *jmax,
-                                   gdouble *cormax)
-{
-    gint m, n;
-    gdouble lscore;
-
-    *imax = i;
-    *jmax = j;
-    *cormax = -1;
-    for (m = (i - search_width); m < i; m++) {
-        for (n = (j - search_height); n < j; n++) {
-            lscore =
-                gwy_data_field_get_correlation_score(data_field1,
-                                                     data_field2,
-                                                     i-search_width/2,
-                                                     j-search_height/2,
-                                                     m, n,
-                                                     m + search_width,
-                                                     n + search_height);
-
-            /* add a little to score at exactly same point
-             * to prevent problems on flat data */
-            if (m == (i - search_width/2)
-                && n == (j - search_height/2))
-                lscore *= 1.0001;
-
-            if (*cormax < lscore) {
-                *cormax = lscore;
-                *imax = m + search_width/2;
-                *jmax = n + search_height/2;
-            }
-        }
-    }
-}
-#endif
 
 /**
  * gwy_data_field_crosscorrelate:
@@ -346,8 +306,10 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                 }
             }
             score->data[i + xres * j] = cormax;
-            x_dist->data[i + xres * j] = (gdouble)(imax - i)*data_field1->xreal/(gdouble)data_field1->xres;
-            y_dist->data[i + xres * j] = (gdouble)(jmax - j)*data_field1->yreal/(gdouble)data_field1->yres;
+            x_dist->data[i + xres * j]
+                = (gdouble)(imax - i)*data_field1->xreal/data_field1->xres;
+            y_dist->data[i + xres * j]
+                = (gdouble)(jmax - j)*data_field1->yreal/data_field1->yres;
         }
     }
 
@@ -368,9 +330,10 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
  * @window_width: Correlation window width.
  * @window_height: Correlation window height.
  * @state: State of iteration.  It is updated to new state.
- * @iteration: Iteration of computation loop (within GWY_COMPUTATION_STATE_ITERATE state).
+ * @iteration: Iteration of computation loop (within
+ *             %GWY_COMPUTATION_STATE_ITERATE state).
  *
- * Algorithm for matching two different images of the same object under changes.
+ * Matches two different images of the same object under changes.
  *
  * It does not use any special features
  * for matching. It simply searches for all points (with their neighbourhood)

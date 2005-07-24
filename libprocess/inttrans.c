@@ -38,9 +38,9 @@ static gdouble  edist                            (gint xc1, gint yc1,
  * @rb: Real output data field
  * @ib: Imaginary output data field
  * @fft: 1D FFT algorithm
- * @windowing: windowing type
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation type
+ * @windowing: Windowing type.
+ * @direction: FFT direction (1 or -1).
+ * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
@@ -82,9 +82,9 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @rb: Real output data field
  * @ib: Imaginary output data field
  * @fft: 1D FFT algorithm
- * @windowing: windowing type
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation type
+ * @windowing: Windowing type.
+ * @direction: FFT direction (1 or -1).
+ * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
@@ -168,9 +168,9 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
  * @rb: Real output data field
  * @ib: Imaginary output data field
  * @fft: 1D FFT algorithm
- * @windowing: windowing type
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation type
+ * @windowing: Windowing type.
+ * @direction: FFT direction (1 or -1).
+ * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
@@ -225,9 +225,9 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * @rb: Real output data field
  * @ib: Imaginary output data field
  * @fft: 1D FFT algorithm
- * @windowing: windowing type
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation type
+ * @windowing: Windowing type.
+ * @direction: FFT direction (1 or -1).
+ * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
@@ -280,9 +280,9 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * @rb: Real output data field
  * @ib: Imaginary output data field
  * @fft: 1D FFT algorithm
- * @windowing: windowing type
- * @direction: FFT direction (1 or -1)
- * @interpolation: interpolation type
+ * @windowing: Windowing type.
+ * @direction: FFT direction (1 or -1).
+ * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
@@ -542,8 +542,8 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 
 /**
  * GwyTransformDirection:
- * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward transform.
- * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward transform.
+ * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward (inverse) transform.
+ * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.
  *
  * Transform (namely integral transform) direction.
  **/

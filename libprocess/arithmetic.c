@@ -19,7 +19,9 @@
  */
 
 #include "config.h"
-#include "arithmetic.h"
+#include <libprocess/arithmetic.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
