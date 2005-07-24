@@ -23,8 +23,8 @@
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/datafield.h>
-#include "menu.h"
-#include "undo.h"
+#include <app/menu.h>
+#include <app/undo.h>
 
 enum {
     UNDO_LEVELS = 3
@@ -475,10 +475,10 @@ gwy_app_undo_container_set_unmodified(GwyContainer *data)
 }
 
 /**
- * gwy_app_undo_clear:
- * @data_window: A data window.
+ * gwy_app_undo_container_finalized:
+ * @deceased_data: A #GwyContainer pointer (the object may not longer exits).
  *
- * Removes all undo and redo information for a data window.
+ * Removes all undo and redo information for a container.
  **/
 static void
 gwy_app_undo_container_finalized(G_GNUC_UNUSED gpointer userdata,
@@ -490,6 +490,9 @@ gwy_app_undo_container_finalized(G_GNUC_UNUSED gpointer userdata,
     /* must not typecast with GWY_CONTAINER(), it doesn't exist any more */
     appundo = gwy_app_undo_get_for_data((GwyContainer*)deceased_data, FALSE);
     g_return_if_fail(appundo);
+    /* gwy_app_undo_get_for_data() moves the item to list head */
+    g_assert(appundo == container_list->data);
+    container_list = g_list_delete_link(container_list, container_list);
     gwy_app_undo_list_free(appundo->redo);
     gwy_app_undo_list_free(appundo->undo);
     g_free(appundo);
