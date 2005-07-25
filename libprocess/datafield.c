@@ -25,11 +25,13 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "datafield.h"
-#include "interpolation.h"
-#include "stats.h"
+#include <libprocess/datafield.h>
+#include <libprocess/interpolation.h>
+#include <libprocess/stats.h>
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
+
+/* INTERPOLATION: New */
 
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
@@ -492,8 +494,8 @@ gwy_data_field_resample(GwyDataField *data_field,
                         gint xres, gint yres,
                         GwyInterpolationType interpolation)
 {
-    gdouble *bdata;
-    gdouble xratio, yratio, xpos, ypos;
+    gdouble *bdata, *p;
+    gdouble xratio, yratio;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -513,22 +515,15 @@ gwy_data_field_resample(GwyDataField *data_field,
 
     bdata = g_new(gdouble, xres*yres);
 
-    xratio = (data_field->xres - 1.0)/(xres - 1.0);
-    yratio = (data_field->yres - 1.0)/(yres - 1.0);
+    xratio = data_field->xres/(gdouble)xres;
+    yratio = data_field->yres/(gdouble)yres;
 
+    p = bdata;
     for (i = 0; i < yres; i++) {
-        gdouble *row = bdata + i*xres;
-
-        ypos = i*yratio;
-        if (G_UNLIKELY(ypos > data_field->yres-1))
-            ypos = data_field->yres-1;
-
-        for (j = 0; j < xres; j++, row++) {
-            xpos = j*xratio;
-            if (G_UNLIKELY(xpos > data_field->xres-1))
-                xpos = data_field->xres-1;
-            *row = gwy_data_field_get_dval(data_field, xpos, ypos,
-                                           interpolation);
+        for (j = 0; j < xres; j++, p++) {
+            *p = gwy_data_field_get_dval(data_field,
+                                         (j + 0.5)*xratio, (i + 0.5)*yratio,
+                                         interpolation);
         }
     }
     g_free(data_field->data);
@@ -596,97 +591,103 @@ gwy_data_field_resize(GwyDataField *data_field,
 /**
  * gwy_data_field_get_dval:
  * @data_field: A data field
- * @x: X position in pixel units.
- * @y: Y postition in pixel units.
+ * @x: Horizontal position in pixel units, in range [0, x-resolution].
+ * @y: Vertical postition in pixel units, in range [0, y-resolution].
  * @interpolation: Interpolation method to be used.
  *
  * Gets interpolated value at arbitrary data field point indexed by pixel
  * coordinates.
  *
+ * Note pixel values are centered in pixels, so to get the same
+ * value as gwy_data_field_get_val(@data_field, @j, @i) returns,
+ * it's necessary to add 0.5:
+ * gwy_data_field_get_dval(@data_field, @j+0.5, @i+0.5, @interpolation).
+ *
  * See also gwy_data_field_get_dval_real() that does the same, but takes
  * real coordinates.
  *
- * Returns: Value at position (@x,@y).
+ * Returns: Interpolated value at position (@x,@y).
  **/
 gdouble
-gwy_data_field_get_dval(GwyDataField *a, gdouble x, gdouble y,
+gwy_data_field_get_dval(GwyDataField *a,
+                        gdouble x, gdouble y,
                         GwyInterpolationType interpolation)
 {
-    gint ix, iy, i;
+    gint ix, iy, ixp, iyp;
     gint floorx, floory;
-    gdouble restx, resty, valpx, valxp, valpp, va, vb, vc, vd;
+    gdouble restx, resty, valxy, valpy, valxp, valpp, va, vb, vc, vd;
+    gdouble *data;
     gdouble intline[4];
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(a), 0.0);
-    if (x < 0 && x > -0.01)
-        x = 0;
-    if (y < 0 && x > -0.01)
-        y = 0;
-    g_return_val_if_fail(x >= 0 && y >= 0 && y < a->yres && x < a->xres, 0.0);
 
-    switch (interpolation) {
-        case GWY_INTERPOLATION_NONE:
+    if (G_UNLIKELY(interpolation == GWY_INTERPOLATION_NONE))
         return 0.0;
 
+    switch (interpolation) {
         case GWY_INTERPOLATION_ROUND:
-        ix = (gint)(x + 0.5);
-        iy = (gint)(y + 0.5);
+        /* floor() centers pixel value */
+        floorx = floor(x);
+        floory = floor(y);
+        ix = CLAMP(floorx, 0, a->xres - 1);
+        iy = CLAMP(floory, 0, a->yres - 1);
         return a->data[ix + a->xres*iy];
 
         case GWY_INTERPOLATION_BILINEAR:
-        floorx = (gint)floor(x);
-        floory = (gint)floor(y);
-        restx = x - (gdouble)floorx;
-        resty = y - (gdouble)floory;
+        /* To centered pixel value */
+        x -= 0.5;
+        y -= 0.5;
+        floorx = floor(x);
+        floory = floor(y);
+        restx = x - floorx;
+        resty = y - floory;
+        ix = CLAMP(floorx, 0, a->xres - 1);
+        iy = CLAMP(floory, 0, a->yres - 1);
+        ixp = CLAMP(floorx + 1, 0, a->xres - 1);
+        iyp = CLAMP(floory + 1, 0, a->yres - 1);
 
-        if (restx != 0)
-            valpx = restx*(1 - resty)*a->data[floorx + 1 + a->xres*floory];
-        else
-            valpx = 0;
-
-        if (resty != 0)
-            valxp = resty*(1 - restx)*a->data[floorx + a->xres*(floory + 1)];
-        else
-            valxp = 0;
-
-        if (restx != 0 && resty != 0)
-            valpp = restx*resty*a->data[floorx + 1 + a->xres*(floory + 1)];
-        else
-            valpp = 0;
-
-        return valpx + valxp + valpp
-               + (1 - restx)*(1 - resty)*a->data[floorx + a->xres*floory];
-
+        valxy = (1.0 - restx)*(1.0 - resty)*a->data[ix + a->xres*iy];
+        valxp = (1.0 - restx)*resty*a->data[ix + a->xres*iyp];
+        valpy = restx*(1.0 - resty)*a->data[ixp + a->xres*iy];
+        valpp = restx*resty*a->data[ixp + a->xres*iyp];
+        return valxy + valpy + valxp + valpp;
 
         default:
-        floorx = (gint)floor(x);
-        floory = (gint)floor(y);
-        restx = x - (gdouble)floorx;
-        resty = y - (gdouble)floory;
+        /* To centered pixel value */
+        x -= 0.5;
+        y -= 0.5;
+        floorx = floor(x);
+        floory = floor(y);
+        restx = x - floorx;
+        resty = y - floory;
 
-        /*return ROUND result if we have no space for interpolations*/
+        /* fall back to bilinear for border pixels. */
         if (floorx < 1 || floory < 1
-            || floorx >= (a->xres-2) || floory >= (a->yres-2)) {
-            ix = (gint)(x + 0.5);
-            iy = (gint)(y + 0.5);
-            return a->data[ix + a->xres*iy];
+            || floorx >= a->xres-2 || floory >= a->yres-2) {
+            ix = CLAMP(floorx, 0, a->xres - 1);
+            iy = CLAMP(floory, 0, a->yres - 1);
+            ixp = CLAMP(floorx + 1, 0, a->xres - 1);
+            iyp = CLAMP(floory + 1, 0, a->yres - 1);
+
+            valxy = (1.0 - restx)*(1.0 - resty)*a->data[ix + a->xres*iy];
+            valxp = (1.0 - restx)*resty*a->data[ix + a->xres*iyp];
+            valpy = restx*(1.0 - resty)*a->data[ixp + a->xres*iy];
+            valpp = restx*resty*a->data[ixp + a->xres*iyp];
+            return valxy + valpy + valxp + valpp;
         }
 
-        /*interpolation in x direction*/
-        for (i = 0; i < 4; i++)
-            intline[i] = a->data[floorx - 1 + i + a->xres * (floory - 1)];
+        /* interpolation in x direction */
+        data = a->data + floorx-1 + a->xres*(floory-1);
+        memcpy(intline, data, 4*sizeof(gdouble));
         va = gwy_interpolation_get_dval_of_equidists(restx, intline,
                                                      interpolation);
-        for (i = 0; i < 4; i++)
-            intline[i] = a->data[floorx - 1 + i + a->xres * (floory)];
+        memcpy(intline, data + a->xres, 4*sizeof(gdouble));
         vb = gwy_interpolation_get_dval_of_equidists(restx, intline,
                                                      interpolation);
-        for (i = 0; i < 4; i++)
-            intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 1)];
+        memcpy(intline, data + 2*a->xres, 4*sizeof(gdouble));
         vc = gwy_interpolation_get_dval_of_equidists(restx, intline,
                                                      interpolation);
-        for (i = 0; i < 4; i++)
-            intline[i] = a->data[floorx - 1 + i + a->xres * (floory + 2)];
+        memcpy(intline, data + 3*a->xres, 4*sizeof(gdouble));
         vd = gwy_interpolation_get_dval_of_equidists(restx, intline,
                                                      interpolation);
 
@@ -992,9 +993,13 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
 /**
  * gwy_data_field_itor:
  * @data_field: A data field.
- * @row: Row (pixel) coordinate.
+ * @row: Vertical pixel coordinate.
  *
- * Transforms row pixel coordinate to real (physical) Y coordinate.
+ * Transforms vertical pixel coordinate to real (physical) Y coordinate.
+ *
+ * That is it maps range [0..y-resolution] to range [0..real-y-size].
+ * It is not suitable for conversion of matrix indices to physical coordinates,
+ * you have to use gwy_data_field_itor(@data_field, @row + 0.5) for that.
  *
  * Returns: Real Y coordinate.
  **/
@@ -1007,9 +1012,13 @@ gwy_data_field_itor(GwyDataField *data_field, gdouble row)
 /**
  * gwy_data_field_jtor:
  * @data_field: A data field.
- * @col: Column (pixel) coordinate.
+ * @col: Horizontal pixel coordinate.
  *
- * Transforms column pixel coordinate to real (physical) X coordinate.
+ * Transforms horizontal pixel coordinate to real (physical) X coordinate.
+ *
+ * That is it maps range [0..x-resolution] to range [0..real-x-size].
+ * It is not suitable for conversion of matrix indices to physical coordinates,
+ * you have to use gwy_data_field_jtor(@data_field, @col + 0.5) for that.
  *
  * Returns: Real X coordinate.
  **/
@@ -1027,7 +1036,9 @@ gwy_data_field_jtor(GwyDataField *data_field, gdouble col)
  *
  * Transforms real (physical) Y coordinate to row.
  *
- * Returns: Row pixel coodinate.
+ * That is it maps range [0..real-y-size] to range [0..y-resolution].
+ *
+ * Returns: Vertical pixel coodinate.
  **/
 gdouble
 gwy_data_field_rtoi(GwyDataField *data_field, gdouble realy)
@@ -1043,7 +1054,9 @@ gwy_data_field_rtoi(GwyDataField *data_field, gdouble realy)
  *
  * Transforms real (physical) X coordinate to column.
  *
- * Returns: Column pixel coordinate.
+ * That is it maps range [0..real-x-size] to range [0..x-resolution].
+ *
+ * Returns: Horizontal pixel coordinate.
  **/
 gdouble
 gwy_data_field_rtoj(GwyDataField *data_field, gdouble realx)
@@ -1132,7 +1145,7 @@ gwy_data_field_get_dval_real(GwyDataField *data_field, gdouble x, gdouble y,
 /**
  * gwy_data_field_rotate:
  * @data_field: A data field.
- * @angle: Angle (in radians).
+ * @angle: Rotation angle (in radians).
  * @interpolation: Interpolation method to use.
  *
  * Rotates a data field by a given angle.
@@ -1171,36 +1184,32 @@ gwy_data_field_rotate(GwyDataField *a,
         sn = 0.0;
         cs = -1.0;
         icor = 1.0;
-        jcor = a->xres-1;
+        jcor = a->xres;
     }
     if (fabs(angle - 3*G_PI/4) < 3e-15) {
         sn = -1.0;
         cs = 0.0;
         icor = a->yres;
-        jcor = a->xres-1;
+        jcor = a->xres;
     }
     else {
         sn = sin(angle);
         cs = cos(angle);
-        icor = (gdouble)a->yres/2
-                + G_SQRT2*(gdouble)a->yres/2*sin(ang)
-                - sn*(a->xres-a->yres)/2;
-        jcor = (gdouble)a->xres/2
-               + G_SQRT2*(gdouble)a->xres/2*cos(ang)
-               + sn*(a->xres-a->yres)/2;
+        icor = a->yres*(1.0 + cs)/2.0 - sn*a->xres/2.0;
+        jcor = a->xres*(1.0 - cs)/2.0 - sn*a->yres/2.0;
     }
 
     for (i = 0; i < a->yres; i++) { /*row*/
         for (j = 0; j < a->xres; j++) { /*column*/
-            ir = a->yres-i-icor;
-            jr = j-jcor;
+            ir = a->yres - (i + 0.5) - icor;
+            jr = (j + 0.5) - jcor;
             inew = -ir*cs + jr*sn;
             jnew = ir*sn + jr*cs;
-            if (inew > a->yres || jnew > a->xres || inew < -1 || jnew < -1)
+            if (inew > a->yres+1 || jnew > a->xres+1 || inew < -1 || jnew < -1)
                 a->data[j + a->xres*i] = val;
             else {
-                inew = CLAMP(inew, 0, a->yres - 1);
-                jnew = CLAMP(jnew, 0, a->xres - 1);
+                inew = CLAMP(inew, 0, a->yres);
+                jnew = CLAMP(jnew, 0, a->xres);
                 a->data[j + a->xres*i] = gwy_data_field_get_dval(b, jnew, inew,
                                                                  interpolation);
             }
@@ -1994,7 +2003,8 @@ gwy_data_field_set_column(GwyDataField *data_field,
  * @ulrow: Upper-left row coordinate.
  * @brcol: Bottom-right column coordinate + 1.
  * @brrow: Bottom-right row coordinate + 1.
- * @res: Requested resolution of data line.
+ * @res: Requested resolution of data line.  If nonpositive, data line
+ *       resolution is chosen to match @data_field's.
  * @interpolation: Interpolation type to use.
  *
  * Extracts a profile from a data field to a data line.
@@ -2017,10 +2027,9 @@ gwy_data_field_get_data_line(GwyDataField *data_field,
                      && ulrow <= data_field->yres && ulcol <= data_field->xres
                      && brrow <= data_field->yres && brcol <= data_field->xres);
 
-    size = sqrt((ulcol - brcol)*(ulcol - brcol)
-                + (ulrow - brrow)*(ulrow - brrow));
+    size = hypot(ulcol - brcol, ulrow - brrow);
     if (res <= 0)
-        res = (gint)size;
+        res = ROUND(size);
 
     cosa = (brcol - ulcol)/(res - 1.0);
     sina = (brrow - ulrow)/(res - 1.0);
@@ -2028,8 +2037,8 @@ gwy_data_field_get_data_line(GwyDataField *data_field,
     gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
     for (k = 0; k < res; k++)
         data_line->data[k] = gwy_data_field_get_dval(data_field,
-                                                     ulcol + k*cosa,
-                                                     ulrow + k*sina,
+                                                     ulcol + 0.5 + k*cosa,
+                                                     ulrow + 0.5 + k*sina,
                                                      interpolation);
 
     data_line->real = size*data_field->xreal/data_field->xres;
@@ -2043,7 +2052,8 @@ gwy_data_field_get_data_line(GwyDataField *data_field,
  * @ulrow: Upper-left row coordinate.
  * @brcol: Bottom-right column coordinate + 1.
  * @brrow: Bottom-right row coordinate + 1.
- * @res: Requested resolution of data line.
+ * @res: Requested resolution of data line.  If nonpositive, data line
+ *       resolution is chosen to match @data_field's.
  * @thickness: Thickness of line to be averaged.
  * @interpolation: Interpolation type to use.
  *
@@ -2068,20 +2078,19 @@ gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
                      && ulrow <= data_field->yres && ulcol <= data_field->xres
                      && brrow <= data_field->yres && brcol <= data_field->xres);
 
-    size = sqrt((ulcol - brcol)*(ulcol - brcol)
-                + (ulrow - brrow)*(ulrow - brrow));
+    size = hypot(ulcol - brcol, ulrow - brrow);
     if (res <= 0)
-        res = (gint)size;
+        res = ROUND(size);
 
-    cosa = (gdouble)(brcol - ulcol)/(res - 1);
-    sina = (gdouble)(brrow - ulrow)/(res - 1);
+    cosa = (brcol - ulcol)/(res - 1.0);
+    sina = (brrow - ulrow)/(res - 1.0);
 
     /*extract regular one-pixel line*/
     gwy_data_line_resample(data_line, res, GWY_INTERPOLATION_NONE);
     for (k = 0; k < res; k++)
         data_line->data[k] = gwy_data_field_get_dval(data_field,
-                                                     ulcol + k*cosa,
-                                                     ulrow + k*sina,
+                                                     ulcol + 0.5 + k*cosa,
+                                                     ulrow + 0.5 + k*sina,
                                                      interpolation);
     data_line->real = size*data_field->xreal/data_field->xres;
 
@@ -2093,8 +2102,8 @@ gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
         mid = data_line->data[k];
         sum = 0;
         for (j = -thickness/2; j < thickness - thickness/2; j++) {
-            srcol = ulcol + k*cosa;
-            srrow = ulrow + k*sina;
+            srcol = ulcol + 0.5 + k*cosa;
+            srrow = ulrow + 0.5 + k*sina;
             col = (srcol + j*sina);
             row = (srrow + j*cosa);
             if (col >= 0 && col < (data_field->xres-1)

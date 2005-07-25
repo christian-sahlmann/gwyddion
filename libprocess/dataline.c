@@ -337,7 +337,8 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
 /**
  * gwy_data_line_get_dval:
  * @data_line: A data line.
- * @x: Position in data line in range [0, resolution].
+ * @x: Position in data line in range [0, resolution].  If the value is outside
+ *     this range, the nearest border value is returned.
  * @interpolation: Interpolation method to use.
  *
  * Gets interpolated value at arbitrary data line point indexed by pixel
@@ -346,12 +347,12 @@ gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
  * Note pixel values are centered in intervals [@j, @j+1], so to get the same
  * value as gwy_data_line_get_val(@data_line, @j) returns,
  * it's necessary to add 0.5:
- * gwy_data_line_get_dval_real(@data_line, @j+0.5, @interpolation).
+ * gwy_data_line_get_dval(@data_line, @j+0.5, @interpolation).
  *
  * See also gwy_data_line_get_dval_real() that does the same, but takes
  * real coordinates.
  *
- * Returns: value interpolated in the data line.
+ * Returns: Value interpolated in the data line.
  **/
 gdouble
 gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
@@ -361,7 +362,9 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     gdouble intline[4];
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(a), 0.0);
-    g_return_val_if_fail(x >= 0 && x <= a->res, 0.0);
+
+    if (G_UNLIKELY(interpolation == GWY_INTERPOLATION_NONE))
+        return 0.0;
 
     x -= 0.5;    /* To centered pixel value */
     l = floor(x);
@@ -373,27 +376,26 @@ gwy_data_line_get_dval(GwyDataLine *a, gdouble x, gint interpolation)
     rest = x - l;
     /*simple (and fast) methods*/
     switch (interpolation) {
-        case GWY_INTERPOLATION_NONE:
-        return 0.0;
-
         case GWY_INTERPOLATION_ROUND:
         return a->data[l];
 
         case GWY_INTERPOLATION_BILINEAR:
         return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
+
+        default:
+        /* use linear in border intervals */
+        if (l < 1 || l >= (a->res - 2))
+            return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
+
+        /* other 4point methods are very similar: */
+        intline[0] = a->data[l-1];
+        intline[1] = a->data[l];
+        intline[2] = a->data[l+1];
+        intline[3] = a->data[l+2];
+        return gwy_interpolation_get_dval_of_equidists(rest, intline,
+                                                       interpolation);
+        break;
     }
-
-    /* use linear in border intervals */
-    if (l < 1 || l >= (a->res - 2))
-        return (1.0 - rest)*a->data[l] + rest*a->data[l+1];
-
-    /* other 4point methods are very similar: */
-    intline[0] = a->data[l-1];
-    intline[1] = a->data[l];
-    intline[2] = a->data[l+1];
-    intline[3] = a->data[l+2];
-    return gwy_interpolation_get_dval_of_equidists(rest, intline,
-                                                   interpolation);
 }
 
 /**
@@ -486,11 +488,11 @@ gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
 /**
  * gwy_data_line_itor:
  * @data_line: A data line.
- * @pixpos: value in pixel coordinates
+ * @pixpos: Pixel coordinate.
  *
  * Transforms pixel coordinate to real (physical) coordinate.
  *
- * That is it maps range [0..resolution] to range [0..real_size].  It is not
+ * That is it maps range [0..resolution] to range [0..real-size].  It is not
  * suitable for conversion of matrix indices to physical coordinates, you
  * have to use gwy_data_line_itor(@data_line, @pixpos + 0.5) for that.
  *
@@ -505,11 +507,11 @@ gwy_data_line_itor(GwyDataLine *data_line, gdouble pixpos)
 /**
  * gwy_data_line_rtoi:
  * @data_line: A data line.
- * @realpos: value in real coordinates
+ * @realpos: Real coordinate.
  *
  * Transforms real (physical) coordinate to pixel coordinate.
  *
- * That is it maps range [0..real_size] to range [0..resolution].
+ * That is it maps range [0..real-size] to range [0..resolution].
  *
  * Returns: @realpos in pixel coordinates.
  **/
@@ -522,11 +524,15 @@ gwy_data_line_rtoi(GwyDataLine *data_line, gdouble realpos)
 /**
  * gwy_data_line_get_val:
  * @data_line: A data line.
- * @i: index (pixel coordinates)
+ * @i: Position in the line (index).
  *
  * Gets value at given position in a data line.
  *
- * Returns: value at given index.
+ * Do not access data with this function inside inner loops, it's slow.
+ * Get raw data buffer with gwy_data_line_get_data_const() and access it
+ * directly instead.
+ *
+ * Returns: Value at given index.
  **/
 gdouble
 gwy_data_line_get_val(GwyDataLine *data_line,
@@ -539,11 +545,14 @@ gwy_data_line_get_val(GwyDataLine *data_line,
 
 /**
  * gwy_data_line_set_val:
- * @data_line:  data line
- * @i: pixel coordinates
- * @value: value to be set
+ * @data_line: A data line.
+ * @i: Position in the line (index).
+ * @value: Value to set.
  *
  * Sets the value at given position in a data line.
+ *
+ * Do not set data with this function inside inner loops, it's slow.  Get raw
+ * data buffer with gwy_data_line_get_data() and write to it directly instead.
  **/
 void
 gwy_data_line_set_val(GwyDataLine *data_line,
