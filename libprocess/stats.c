@@ -23,10 +23,10 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "level.h"
-#include "stats.h"
-#include "linestats.h"
+#include <libprocess/datafield.h>
+#include <libprocess/level.h>
+#include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])

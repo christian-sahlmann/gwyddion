@@ -34,7 +34,7 @@ void gwy_data_field_area_fit_plane        (GwyDataField *data_field,
                                            gdouble *pbx,
                                            gdouble *pby);
 
-void gwy_data_field_plane_coeffs          (GwyDataField *data_field,
+void gwy_data_field_fit_plane             (GwyDataField *data_field,
                                            gdouble *pa,
                                            gdouble *pbx,
                                            gdouble *pby);

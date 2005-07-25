@@ -221,6 +221,8 @@ entropy_do(GwyDataField *dfield)
     }
     bx = (i % grid.res)/(grid.res - 1.0)*grid.bxrange + grid.bx0;
     by = (i/grid.res)/(grid.res - 1.0)*grid.byrange + grid.by0;
+    bx = gwy_data_field_jtor(dfield, bx);
+    by = gwy_data_field_itor(dfield, by);
 
     gwy_data_field_plane_level(dfield, 0, -bx, -by);
 
@@ -243,11 +245,13 @@ fill_scan_grid(GwyDataField *dfield,
 
     for (i = 0; i < grid->res; i++) {
         by = i/(grid->res - 1.0)*grid->byrange + grid->by0;
+        by = gwy_data_field_itor(dfield, by);
         for (j = 0; j < grid->res; j++) {
             if (grid->known[i*grid->res + j])
                 continue;
 
             bx = j/(grid->res - 1.0)*grid->bxrange + grid->bx0;
+            bx = gwy_data_field_jtor(dfield, bx);
             gwy_data_field_copy(dfield, tmp, FALSE);
             gwy_data_field_plane_level(tmp, 0, -bx, -by);
             grid->data[i*grid->res + j]

@@ -296,7 +296,7 @@ apply(GwyUnitoolState *state)
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
+    radius = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->radius));
 
     /* find the plane levelling coeffs so that values in the three points
      * will be all zeroes
@@ -320,8 +320,10 @@ apply(GwyUnitoolState *state)
     /* to keep mean value intact, the mean value of the plane we add to the
      * data has to be zero, i.e., in the center of the data the value must
      * be zero */
-    coeffs[2] = -0.5*(coeffs[0]*gwy_data_field_get_xreal(dfield)
-                      + coeffs[1]*gwy_data_field_get_yreal(dfield));
+    coeffs[0] = gwy_data_field_jtor(dfield, coeffs[0]);
+    coeffs[1] = gwy_data_field_itor(dfield, coeffs[1]);
+    coeffs[2] = -0.5*(coeffs[0]*gwy_data_field_get_xres(dfield)
+                      + coeffs[1]*gwy_data_field_get_yres(dfield));
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_plane_level(dfield, coeffs[2], coeffs[0], coeffs[1]);
 

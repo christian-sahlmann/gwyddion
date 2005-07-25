@@ -19,13 +19,14 @@
  */
 
 #include "config.h"
-#include <glib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "filters.h"
-#include "arithmetic.h"
-#include "stats.h"
-#include "grains.h"
+#include <libprocess/filters.h>
+#include <libprocess/arithmetic.h>
+#include <libprocess/stats.h>
+#include <libprocess/grains.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 /*local functions*/
 static gint step_by_one                   (GwyDataField *data_field,

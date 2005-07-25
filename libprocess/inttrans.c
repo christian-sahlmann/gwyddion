@@ -21,8 +21,10 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "inttrans.h"
-#include "cwt.h"
+#include <libprocess/inttrans.h>
+#include <libprocess/cwt.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
@@ -44,8 +46,9 @@ static gdouble  edist                            (gint xc1, gint yc1,
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
- * Computes 2D FFT using a specified 1D alogrithm. This can
- * be for example "gwy_data_line_fft_hum", which is the
+ * Computes 2D FFT using a specified 1D alogrithm.
+ *
+ * This can be for example "gwy_data_line_fft_hum", which is the
  * simplest algoritm avalilable. If requested a windowing
  * and/or leveling is applied to preprocess data to obtain
  * reasonable results.
@@ -53,8 +56,9 @@ static gdouble  edist                            (gint xc1, gint yc1,
 void
 gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
                      GwyDataField *rb, GwyDataField *ib,
-                     void (*fft)(),
-                     GwyWindowingType windowing, gint direction,
+                     GwyFFTFunc fft,
+                     GwyWindowingType windowing,
+                     GwyTransformDirection direction,
                      GwyInterpolationType interpolation,
                      gboolean preserverms, gboolean level)
 {
@@ -88,14 +92,17 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
  *
- * Computes 2D FFT using a specified 1D algorithm. As
- * the input is only real, the computation can be a little bit
+ * Computes 2D FFT using a specified 1D algorithm.
+ *
+ * As the input is only real, the computation can be a little bit
  * faster.
  **/
 void
 gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
-                          GwyDataField *ib, void (*fft)(),
-                          GwyWindowingType windowing, gint direction,
+                          GwyDataField *ib,
+                          GwyFFTFunc fft,
+                          GwyWindowingType windowing,
+                          GwyTransformDirection direction,
                           GwyInterpolationType interpolation,
                           gboolean preserverms, gboolean level)
 {
@@ -181,8 +188,10 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
 void
 gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
-                    void (*fft)(), GwyWindowingType windowing,
-                    gint direction, GwyInterpolationType interpolation,
+                    GwyFFTFunc fft,
+                    GwyWindowingType windowing,
+                    GwyTransformDirection direction,
+                    GwyInterpolationType interpolation,
                     gboolean preserverms, gboolean level)
 {
     gint k;
@@ -238,8 +247,10 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 void
 gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
-                    void (*fft)(), GwyWindowingType windowing,
-                    gint direction, GwyInterpolationType interpolation,
+                    GwyFFTFunc fft,
+                    GwyWindowingType windowing,
+                    GwyTransformDirection direction,
+                    GwyInterpolationType interpolation,
                     gboolean preserverms, gboolean level)
 {
     gint k;
@@ -293,8 +304,10 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  **/
 void
 gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
-                         GwyDataField *ib, void (*fft)(),
-                         GwyWindowingType windowing, gint direction,
+                         GwyDataField *ib,
+                         GwyFFTFunc fft,
+                         GwyWindowingType windowing,
+                         GwyTransformDirection direction,
                          GwyInterpolationType interpolation,
                          gboolean preserverms, gboolean level)
 {
@@ -422,12 +435,12 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
 
 /**
  * gwy_data_field_cwt:
- * @data_field: A data field
- * @interpolation: interpolation type
- * @scale: wavelet scale
- * @wtype: wavelet type
+ * @data_field: A data field.
+ * @interpolation: Interpolation type.
+ * @scale: Wavelet scale.
+ * @wtype: Wavelet type.
  *
- * Compute a continuous wavelet transform at given
+ * Computes a continuous wavelet transform (CWT) at given
  * scale and using given wavelet.
  **/
 void
@@ -497,10 +510,10 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
         gwy_data_field_rotate(data_field, G_PI/2, interpolation);
 
     gwy_data_field_xfft(data_field, result_field,
-                    hlp_dfield, hlp_idfield,
-                    gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
-                    1, interpolation,
-                    FALSE, FALSE);
+                        hlp_dfield, hlp_idfield,
+                        gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
+                        1, interpolation,
+                        FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(data_field, -G_PI/2, interpolation);
@@ -523,10 +536,10 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     }
 
     gwy_data_field_xfft(hlp_dfield, hlp_idfield,
-                    result_field, iresult_field,
-                    gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
-                    -1, interpolation,
-                    FALSE, FALSE);
+                        result_field, iresult_field,
+                        gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
+                        -1, interpolation,
+                        FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(result_field, -G_PI/2, interpolation);

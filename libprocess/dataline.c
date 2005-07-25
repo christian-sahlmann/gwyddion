@@ -1133,6 +1133,7 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
         a->data[i] -= av + bv*i;
 }
 
+/* FIXME: broken again */
 /**
  * gwy_data_line_line_rotate:
  * @data_line: A data line.
@@ -1162,15 +1163,14 @@ gwy_data_line_line_rotate(GwyDataLine *a,
     dx = g_new(gdouble, a->res);
     dy = g_new(gdouble, a->res);
 
-    ratio = a->real/(double)a->res;
+    ratio = a->real/a->res;
     dx[0] = 0;
     dy[0] = a->data[0];
     for (i = 1; i < a->res; i++) {
-        as = atan(a->data[i]/((double)i*ratio));
-        radius = sqrt(((double)i*ratio)*((double)i*ratio)
-                      + a->data[i]*a->data[i]);
-        dx[i] = radius*cos((as + angle));
-        dy[i] = radius*sin((as + angle));
+        as = atan2(a->data[i], i*ratio);
+        radius = hypot(i*ratio, a->data[i]);
+        dx[i] = radius*cos(as + angle);
+        dy[i] = radius*sin(as + angle);
     }
 
     k = 0;
@@ -1182,7 +1182,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
             k++;
         } while (dx[k] < x && k < a->res);
 
-        if (k >= (a->res-1)) {
+        if (k >= a->res-1) {
             maxi = i;
             break;
         }
@@ -1300,7 +1300,7 @@ gwy_data_line_fft_hum(GwyTransformDirection direction,
  * @isrc: Imaginary input data line.
  * @rdest: Real output data line.
  * @idest: Imaginary output data line.
- * @fft: FFT alorithm to use.
+ * @fft: FFT algorithm to use.
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.

@@ -22,8 +22,10 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "level.h"
+#include <libprocess/datafield.h>
+#include <libprocess/level.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 /**
  * gwy_data_field_plane_coeffs:
@@ -34,11 +36,12 @@
  *
  * Fits a plane through a data field.
  *
- * Returned coefficients are in real (physical) units.
+ * The coefficients can be used for plane leveling using relation
+ * data[i] := data[i] - (pa + pby*i + pbx*j);
  **/
 void
-gwy_data_field_plane_coeffs(GwyDataField *data_field,
-                            gdouble *pa, gdouble *pbx, gdouble *pby)
+gwy_data_field_fit_plane(GwyDataField *data_field,
+                         gdouble *pa, gdouble *pbx, gdouble *pby)
 {
     gdouble sumxi, sumxixi, sumyi, sumyiyi;
     gdouble sumsi = 0.0;
@@ -71,9 +74,9 @@ gwy_data_field_plane_coeffs(GwyDataField *data_field,
     bx = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
     by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
     if (pbx)
-        *pbx = bx*nx/data_field->xreal;
+        *pbx = bx;
     if (pby)
-        *pby = by*ny/data_field->yreal;
+        *pby = by;
     if (pa)
         *pa = sumsi - bx*sumxi - by*sumyi;
 }
@@ -91,7 +94,9 @@ gwy_data_field_plane_coeffs(GwyDataField *data_field,
  *
  * Fits a plane through a rectangular part of a data field.
  *
- * Returned coefficients are in real (physical) units.
+ * The coefficients can be used for plane leveling using the same relation
+ * as in gwy_data_field_area_fit_plane(), counting indices from area top left
+ * corner.
  **/
 void
 gwy_data_field_area_fit_plane(GwyDataField *data_field,
@@ -150,8 +155,6 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
             by = (sumsiyi - sumsi*sumyi) / (sumyiyi - sumyi*sumyi);
 
         a = sumsi - bx*sumxi - by*sumyi;
-        bx *= width/data_field->xreal;
-        by *= height/data_field->yreal;
     }
 
     if (pa)
@@ -166,27 +169,25 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
  * gwy_data_field_plane_level:
  * @data_field: A data field.
  * @a: Constant coefficient.
- * @bx: X coefficient.
- * @by: Y coefficient.
+ * @bx: X plane coefficient.
+ * @by: Y plane coefficient.
  *
- * Subtracts plane from a data field..
+ * Subtracts plane from a data field.
  *
- * Coefficients should be in real (physical) units.
+ * See gwy_data_field_fit_plane() for details.
  **/
 void
 gwy_data_field_plane_level(GwyDataField *data_field,
                            gdouble a, gdouble bx, gdouble by)
 {
     gint i, j;
-    gdouble bpix = bx/data_field->xres*data_field->xreal;
-    gdouble cpix = by/data_field->yres*data_field->yreal;
 
     for (i = 0; i < data_field->yres; i++) {
         gdouble *row = data_field->data + i*data_field->xres;
-        gdouble rb = a + cpix*i;
+        gdouble rb = a + by*i;
 
         for (j = 0; j < data_field->xres; j++, row++)
-            *row -= rb + bpix*j;
+            *row -= rb + bx*j;
     }
 
     gwy_data_field_invalidate(data_field);
@@ -210,25 +211,25 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
     int k;
     GwyDataLine *l;
 
-    l = gwy_data_line_new(data_field->xres, data_field->xreal, FALSE);
     if (xangle != 0) {
+        l = gwy_data_line_new(data_field->xres, data_field->xreal, FALSE);
         for (k = 0; k < data_field->yres; k++) {
             gwy_data_field_get_row(data_field, l, k);
             gwy_data_line_line_rotate(l, -xangle, interpolation);
             gwy_data_field_set_row(data_field, l, k);
         }
+        g_object_unref(l);
     }
-    g_object_unref(l);
 
-    l = gwy_data_line_new(data_field->yres, data_field->yreal, FALSE);
     if (yangle != 0) {
+        l = gwy_data_line_new(data_field->yres, data_field->yreal, FALSE);
         for (k = 0; k < data_field->xres; k++) {
             gwy_data_field_get_column(data_field, l, k);
             gwy_data_line_line_rotate(l, -yangle, interpolation);
             gwy_data_field_set_column(data_field, l, k);
         }
+        g_object_unref(l);
     }
-    g_object_unref(l);
 
     gwy_data_field_invalidate(data_field);
 }

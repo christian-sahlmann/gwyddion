@@ -23,9 +23,11 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "datafield.h"
-#include "filters.h"
-#include "stats.h"
+#include <libprocess/datafield.h>
+#include <libprocess/filters.h>
+#include <libprocess/stats.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 static gint thin_data_field(GwyDataField *data_field);
 
@@ -414,12 +416,12 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
                                  gint col, gint row,
                                  gint width, gint height)
 {
-    const gdouble hsobel[] = {
+    static const gdouble hsobel[] = {
         0.25, 0, -0.25,
         0.5,  0, -0.5,
         0.25, 0, -0.25,
     };
-    const gdouble vsobel[] = {
+    static const gdouble vsobel[] = {
          0.25,  0.5,  0.25,
          0,     0,    0,
         -0.25, -0.5, -0.25,
@@ -463,12 +465,12 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
                                    gint col, gint row,
                                    gint width, gint height)
 {
-    const gdouble hprewitt[] = {
+    static const gdouble hprewitt[] = {
         1.0/3.0, 0, -1.0/3.0,
         1.0/3.0, 0, -1.0/3.0,
         1.0/3.0, 0, -1.0/3.0,
     };
-    const gdouble vprewitt[] = {
+    static const gdouble vprewitt[] = {
          1.0/3.0,  1.0/3.0,  1.0/3.0,
          0,        0,        0,
         -1.0/3.0, -1.0/3.0, -1.0/3.0,
@@ -1104,10 +1106,10 @@ gwy_data_field_filter_maximum(GwyDataField *data_field,
 static gdouble
 kuwahara_block(const gdouble *a)
 {
-   gint r1[] = { 0, 1, 2, 5, 6, 7, 10, 11, 12 };
-   gint r2[] = { 2, 3, 4, 7, 8, 9, 12, 13, 14 };
-   gint r3[] = { 12, 13, 14, 17, 18, 19, 22, 23, 24 };
-   gint r4[] = { 10, 11, 12, 15, 16, 17, 20, 21, 22 };
+   static const gint r1[] = { 0, 1, 2, 5, 6, 7, 10, 11, 12 };
+   static const gint r2[] = { 2, 3, 4, 7, 8, 9, 12, 13, 14 };
+   static const gint r3[] = { 12, 13, 14, 17, 18, 19, 22, 23, 24 };
+   static const gint r4[] = { 10, 11, 12, 15, 16, 17, 20, 21, 22 };
    gdouble mean1 = 0.0, mean2 = 0.0, mean3 = 0.0, mean4 = 0.0;
    gdouble var1 = 0.0, var2 = 0.0, var3 = 0.0, var4 = 0.0;
    gint i;

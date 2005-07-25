@@ -91,8 +91,8 @@ facet_level(GwyContainer *data, GwyRunType run)
         b2 = bx*bx + by*by;
         if (!i)
             maxb2 = MAX(b2, eps);
-        c = -0.5*(bx*gwy_data_field_get_xreal(dfield)
-                  + by*gwy_data_field_get_yreal(dfield));
+        c = -0.5*(bx*gwy_data_field_get_xres(dfield)
+                  + by*gwy_data_field_get_yres(dfield));
         gwy_data_field_plane_level(dfield, c, bx, by);
         if (b2 < eps)
             break;
@@ -155,8 +155,8 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
         }
     }
     q = sumvz/-1.0;
-    *bx = sumvx/q;
-    *by = sumvy/q;
+    *bx = sumvx/q*xr;
+    *by = sumvy/q*yr;
     gwy_debug("(%g, %g, %g) %g (%g, %g)", sumvx, sumvy, sumvz, q, *bx, *by);
 }
 
