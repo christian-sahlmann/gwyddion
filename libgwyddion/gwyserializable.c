@@ -1905,7 +1905,12 @@ gwy_serialize_check_string(const guchar *buffer,
  *
  * Specialization of G_IMPLEMENT_INTERFACE() for #GwySerializableIface.
  *
- * To be used in last G_DEFINE_TYPE_EXTENDED() argument.
+ * To be used in last G_DEFINE_TYPE_EXTENDED() argument:
+ * <informalexample><programlisting>
+ * G_DEFINE_TYPE_EXTENDED
+ *    (GwyFoo, gwy_foo, G_TYPE_OBJECT, 0,
+ *     GWY_IMPLEMENT_SERIALIZABLE(gwy_foo_serializable_init))
+ * </programlisting></informalexample>
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
