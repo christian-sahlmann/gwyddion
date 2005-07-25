@@ -1774,6 +1774,7 @@ gwy_data_field_get_row(GwyDataField *data_field,
     g_return_if_fail(row >= 0 && row < data_field->yres);
 
     gwy_data_line_resample(data_line, data_field->xres, GWY_INTERPOLATION_NONE);
+    data_line->real = data_field->xreal;
     memcpy(data_line->data,
            data_field->data + row*data_field->xres,
            data_field->xres*sizeof(gdouble));
@@ -1801,6 +1802,7 @@ gwy_data_field_get_column(GwyDataField *data_field,
     g_return_if_fail(col >= 0 && col < data_field->xres);
 
     gwy_data_line_resample(data_line, data_field->yres, GWY_INTERPOLATION_NONE);
+    data_line->real = data_field->yreal;
     p = data_field->data + col;
     for (k = 0; k < data_field->yres; k++)
         data_line->data[k] = p[k*data_field->xres];

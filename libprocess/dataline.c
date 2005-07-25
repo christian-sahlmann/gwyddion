@@ -1133,11 +1133,10 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
         a->data[i] -= av + bv*i;
 }
 
-/* FIXME: broken again */
 /**
  * gwy_data_line_line_rotate:
  * @data_line: A data line.
- * @angle: Angle of rotation (in radians).
+ * @angle: Angle of rotation (in radians), counterclockwise.
  * @interpolation: Interpolation method to use (can be only of two-point type).
  *
  * Performs line rotation.
@@ -1158,7 +1157,8 @@ gwy_data_line_line_rotate(GwyDataLine *a,
     if (angle == 0)
         return;
 
-    /* XXX: INTERPOLATION style not checked */
+    /* INTERPOLATION: not checked, I'm not sure how this all relates to
+     * interpolation */
     res = a->res;
     dx = g_new(gdouble, a->res);
     dy = g_new(gdouble, a->res);
@@ -1191,7 +1191,6 @@ gwy_data_line_line_rotate(GwyDataLine *a,
         xl2 = dx[k];
         yl1 = dy[k-1];
         yl2 = dy[k];
-
 
         if (interpolation == GWY_INTERPOLATION_ROUND
             || interpolation == GWY_INTERPOLATION_BILINEAR)
