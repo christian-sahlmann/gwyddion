@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -28,7 +27,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwygraphwindow.h>
-#include "gwyapp.h"
+#include <app/gwyapp.h>
 #include "gwyappinternal.h"
 
 static GtkWidget *gwy_app_main_window = NULL;
@@ -367,6 +366,8 @@ gwy_app_data_window_remove(GwyDataWindow *window)
         return;
     }
     current_data = g_list_delete_link(current_data, item);
+    gwy_debug("Removed window, %p is new head\n",
+              current_data ? current_data->data : "NULL");
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
         gwy_app_data_window_list_updated();
@@ -516,6 +517,7 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
 
     has_dfield = gwy_container_contains_by_name(data, key);
     has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
+    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
 
     if (has_dfield && !has_layer) {
         gwy_app_container_setup_mask(data);
@@ -556,6 +558,7 @@ gwy_app_data_view_show_changed(GwyContainer *data,
     layer = gwy_data_view_get_base_layer(data_view);
     data_key = gwy_pixmap_layer_get_data_key(layer);
     has_layer = gwy_strequal(data_key, key);
+    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
 
     if (has_dfield && !has_layer)
         gwy_pixmap_layer_set_data_key(layer, key);
