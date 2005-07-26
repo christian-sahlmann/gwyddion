@@ -1035,9 +1035,9 @@ gwy_data_view_coords_xy_to_real(GwyDataView *data_view,
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     if (xreal)
-        *xreal = (xscr - data_view->xoff) * data_view->xmeasure;
+        *xreal = (xscr + 0.5 - data_view->xoff) * data_view->xmeasure;
     if (yreal)
-        *yreal = (yscr - data_view->yoff) * data_view->ymeasure;
+        *yreal = (yscr + 0.5 - data_view->yoff) * data_view->ymeasure;
 }
 
 /**
@@ -1061,9 +1061,9 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
     if (xscr)
-        *xscr = floor(xreal/data_view->xmeasure + 0.5) + data_view->xoff;
+        *xscr = floor(xreal/data_view->xmeasure) + data_view->xoff;
     if (yscr)
-        *yscr = floor(yreal/data_view->ymeasure + 0.5) + data_view->yoff;
+        *yscr = floor(yreal/data_view->ymeasure) + data_view->yoff;
 }
 
 /**
