@@ -401,6 +401,9 @@ gwy_data_field_dwt(GwyDataField *dfield,
  * It is based on threshold obtained from noise variance
  * (obtained from high scale wvelet coefficients). This threshold can
  * be multiplied by user defined value.
+ *
+ * Returns: Denoised data field (that is @dfield itself).
+ *          XXX Why? XXX
  **/
 GwyDataField*
 gwy_data_field_dwt_denoise(GwyDataField *dfield,
