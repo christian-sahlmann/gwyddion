@@ -28,7 +28,7 @@
 /* INTERPOLATION: New (not applicable). */
 
 /**
- * gwy_data_field_plane_coeffs:
+ * gwy_data_field_fit_plane:
  * @data_field: A data field.
  * @pa: Where constant coefficient should be stored (or %NULL).
  * @pbx: Where x plane coefficient should be stored (or %NULL).
@@ -47,13 +47,15 @@ gwy_data_field_fit_plane(GwyDataField *data_field,
     gdouble sumsi = 0.0;
     gdouble sumsixi = 0.0;
     gdouble sumsiyi = 0.0;
-    gdouble nx = data_field->xres;
-    gdouble ny = data_field->yres;
+    gdouble nx, ny;
     gdouble bx, by;
     gdouble *pdata;
     gint i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    nx = data_field->xres;
+    ny = data_field->yres;
 
     sumxi = (nx-1)/2;
     sumxixi = (2*nx-1)*(nx-1)/6;
@@ -182,6 +184,8 @@ gwy_data_field_plane_level(GwyDataField *data_field,
 {
     gint i, j;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
     for (i = 0; i < data_field->yres; i++) {
         gdouble *row = data_field->data + i*data_field->xres;
         gdouble rb = a + by*i;
@@ -210,6 +214,8 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
 {
     int k;
     GwyDataLine *l;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
     if (xangle != 0) {
         l = gwy_data_line_new(data_field->xres, data_field->xreal, FALSE);
