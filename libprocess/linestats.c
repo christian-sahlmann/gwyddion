@@ -26,20 +26,7 @@
 
 /* INTERPOLATION: New (not applicable). */
 
-static void
-gwy_data_line_cummulate(GwyDataLine *data_line)
-{
-    gdouble sum;
-    gdouble *data;
-    gint i;
-
-    data = data_line->data;
-    sum = 0.0;
-    for (i = 0; i < data_line->res; i++) {
-        sum += data[i];
-        data[i] = sum;
-    }
-}
+static void gwy_data_line_cummulate(GwyDataLine *data_line);
 
 /**
  * gwy_data_line_acf:
@@ -325,6 +312,57 @@ gwy_data_line_cda(GwyDataLine *data_line,
 
     gwy_data_line_da(data_line, target_line, ymin, ymax, nsteps);
     gwy_data_line_cummulate(target_line);
+}
+
+static void
+gwy_data_line_cummulate(GwyDataLine *data_line)
+{
+    gdouble sum;
+    gdouble *data;
+    gint i;
+
+    data = data_line->data;
+    sum = 0.0;
+    for (i = 0; i < data_line->res; i++) {
+        sum += data[i];
+        data[i] = sum;
+    }
+}
+
+/**
+ * gwy_data_line_get_length:
+ * @data_line: A data line to compute length of.
+ *
+ * Calculates physical length of a data line.
+ *
+ * The length is calculated from approximation by straight segments between
+ * values.
+ *
+ * Returns: The line length.
+ **/
+gdouble
+gwy_data_line_get_length(GwyDataLine *data_line)
+{
+    gdouble sum, q;
+    gint i, n;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
+
+    n = data_line->res;
+    q = data_line->real/n;
+    if (G_UNLIKELY(data_line->res == 1))
+        return q;
+
+    sum = 0.0;
+    for (i = 1; i < n; i++)
+        sum += hypot(q, data_line->data[i] - data_line->data[i-1]);
+
+    /* We calculate length of inner part of a segment.  If we assume the
+     * average properties of border are the same as of the inner part,
+     * we can simply multiply the sum with the total/inner length ratio */
+    sum *= n/(n - 1.0);
+
+    return sum;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -44,21 +44,23 @@ void gwy_data_line_da(GwyDataLine *data_line,
                       gint nsteps);
 
 void gwy_data_line_cda(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
+                       GwyDataLine *target_line,
+                       gdouble ymin,
+                       gdouble ymax,
+                       gint nsteps);
 
 void gwy_data_line_acf(GwyDataLine *data_line,
-                      GwyDataLine *target_line);
+                       GwyDataLine *target_line);
 
 void gwy_data_line_hhcf(GwyDataLine *data_line,
-                      GwyDataLine *target_line);
+                        GwyDataLine *target_line);
 
 void gwy_data_line_psdf(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gint windowing,
-                      gint interpolation);
+                        GwyDataLine *target_line,
+                        gint windowing,
+                        gint interpolation);
+
+gdouble gwy_data_line_get_length(GwyDataLine *data_line);
 
 G_END_DECLS
 

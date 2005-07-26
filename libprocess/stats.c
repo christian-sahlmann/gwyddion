@@ -938,6 +938,7 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                                      gint col, gint row,
                                      gint width, gint height)
 {
+    GwyDataLine *line;
     gint i, j, xres;
     gdouble x, y, q, sum = 0.0;
 
@@ -947,16 +948,37 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                          && col + width <= dfield->xres
                          && row + height <= dfield->yres,
                          sum);
+
+    /* special cases */
     if (!width || !height)
         return sum;
 
+    x = dfield->xreal/dfield->xres;
+    y = dfield->yreal/dfield->yres;
+    if (width == 1) {
+        if (height == 1)
+            return x*y;
+
+        line = gwy_data_line_new(height, height*y, FALSE);
+        gwy_data_field_get_column_part(dfield, line, col, row, row+height+1);
+        sum = gwy_data_line_get_length(line);
+        g_object_unref(line);
+
+        return sum*x;
+    }
+    else if (height == 1) {
+        line = gwy_data_line_new(width, width*x, FALSE);
+        gwy_data_field_get_row_part(dfield, line, row, col, col+width+1);
+        sum = gwy_data_line_get_length(line);
+        g_object_unref(line);
+
+        return sum*y;
+    }
     if (col == 0 && width == dfield->xres
         && row == 0 && height == dfield->yres)
         return gwy_data_field_get_surface_area(dfield);
 
     xres = dfield->xres;
-    x = dfield->xreal/dfield->xres;
-    y = dfield->yreal/dfield->yres;
     q = x*y;
     x = x*x;
     y = y*y;
