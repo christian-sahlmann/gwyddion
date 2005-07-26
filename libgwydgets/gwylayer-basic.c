@@ -19,13 +19,16 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
+#include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwylayer-basic.h>
 
-#include "gwydgetenums.h"
-#include "gwylayer-basic.h"
+#define connect_swapped_after(obj, signal, cb, data) \
+    g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
     PROP_0,
@@ -620,14 +623,12 @@ gwy_layer_basic_connect_fixed(GwyLayerBasic *basic_layer)
 
     g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), prefix),
              "/min");
-    basic_layer->min_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_basic_changed), layer);
+    basic_layer->min_id = connect_swapped_after(layer->data, detailed_signal,
+                                                gwy_layer_basic_changed, layer);
 
     strcpy(detailed_signal + len, "max");
-    basic_layer->max_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_basic_changed), layer);
+    basic_layer->max_id = connect_swapped_after(layer->data, detailed_signal,
+                                                gwy_layer_basic_changed, layer);
 }
 
 static void
@@ -663,9 +664,7 @@ gwy_layer_basic_container_connect(GwyLayerBasic *basic_layer,
     detailed_signal = g_newa(gchar, sizeof("item-changed::")
                                     + strlen(data_key_string));
     g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), data_key_string);
-
-    *id = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(callback), layer);
+    *id = connect_swapped_after(layer->data, detailed_signal, callback, layer);
 }
 
 static void

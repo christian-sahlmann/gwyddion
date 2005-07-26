@@ -19,11 +19,14 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include <libdraw/gwypixfield.h>
+#include <libgwydgets/gwylayer-mask.h>
 
-#include "gwylayer-mask.h"
+#define connect_swapped_after(obj, signal, cb, data) \
+    g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
     PROP_0,
@@ -280,24 +283,20 @@ gwy_layer_mask_connect_color(GwyLayerMask *mask_layer)
 
     g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), prefix),
              "/red");
-    mask_layer->red_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+    mask_layer->red_id = connect_swapped_after(layer->data, detailed_signal,
+                                               gwy_layer_mask_changed, layer);
 
     strcpy(detailed_signal + len, "green");
-    mask_layer->red_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+    mask_layer->green_id = connect_swapped_after(layer->data, detailed_signal,
+                                                 gwy_layer_mask_changed, layer);
 
     strcpy(detailed_signal + len, "blue");
-    mask_layer->red_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+    mask_layer->blue_id = connect_swapped_after(layer->data, detailed_signal,
+                                                gwy_layer_mask_changed, layer);
 
     strcpy(detailed_signal + len, "alpha");
-    mask_layer->red_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_layer_mask_changed), layer);
+    mask_layer->alpha_id = connect_swapped_after(layer->data, detailed_signal,
+                                                 gwy_layer_mask_changed, layer);
 }
 
 static void

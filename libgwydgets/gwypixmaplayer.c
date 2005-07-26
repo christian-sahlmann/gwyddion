@@ -19,17 +19,17 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
-
-#include <string.h>
-#include <gtk/gtksignal.h>
-#include <glib-object.h>
 #include <libprocess/datafield.h>
-
-#include "gwypixmaplayer.h"
+#include <libgwydgets/gwypixmaplayer.h>
 
 #define BITS_PER_SAMPLE 8
+
+#define connect_swapped_after(obj, signal, cb, data) \
+    g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
     PROP_0,
@@ -349,9 +349,8 @@ gwy_pixmap_layer_container_connect(GwyPixmapLayer *pixmap_layer,
     g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), data_key_string);
 
     pixmap_layer->item_changed_id
-        = g_signal_connect_swapped(layer->data, detailed_signal,
-                                   G_CALLBACK(gwy_pixmap_layer_item_changed),
-                                   layer);
+        = connect_swapped_after(layer->data, detailed_signal,
+                                gwy_pixmap_layer_item_changed, layer);
 }
 
 /**
