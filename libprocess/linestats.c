@@ -22,12 +22,30 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "linestats.h"
+#include <libprocess/linestats.h>
+
+/* INTERPOLATION: New (not applicable). */
+
+static void
+gwy_data_line_cummulate(GwyDataLine *data_line)
+{
+    gdouble sum;
+    gdouble *data;
+    gint i;
+
+    data = data_line->data;
+    sum = 0.0;
+    for (i = 0; i < data_line->res; i++) {
+        sum += data[i];
+        data[i] = sum;
+    }
+}
 
 /**
  * gwy_data_line_acf:
- * @data_line: data line
- * @target_line: result data line
+ * @data_line: A data line.
+ * @target_line: Data line to store autocorrelation function to.  It will be
+ *               resized to @data_line size.
  *
  * Coputes autocorrelation function and stores the values in
  * @target_line
@@ -35,30 +53,33 @@
 void
 gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
 {
-    gint i, j;
-    gint n = data_line->res;
+    gint i, j, n;
     gdouble val, avg;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+
+    n = data_line->res;
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
     avg = gwy_data_line_get_avg(data_line);
 
-
     for (i = 0; i < n; i++) {
         for (j = 0; j < (n-i); j++) {
-            val = (data_line->data[i+j]-avg)*(data_line->data[i]-avg);
-            target_line->data[j] += val; /*printf("val=%f\n", val);*/
+            val = (data_line->data[i+j] - avg)*(data_line->data[i] - avg);
+            target_line->data[j] += val;
 
         }
     }
     for (i = 0; i < n; i++)
-        target_line->data[i]/=(n-i);
+        target_line->data[i] /= n-i;
 }
 
 /**
  * gwy_data_line_hhcf:
- * @data_line: data line
- * @target_line: result data line
+ * @data_line: A data line.
+ * @target_line: Data line to store height-height function to.  It will be
+ *               resized to @data_line size.
  *
  * Computes height-height correlation function and stores results in
  * @target_line.
@@ -66,10 +87,13 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
 void
 gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 {
-    gint i, j;
-    gint n = data_line->res;
+    gint i, j, n;
     gdouble val;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+
+    n = data_line->res;
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
 
@@ -80,15 +104,16 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
         }
     }
     for (i = 0; i < n; i++)
-        target_line->data[i] /= (n-i);
+        target_line->data[i] /= n-i;
 }
 
 /**
  * gwy_data_line_psdf:
- * @data_line: data line
- * @target_line: result data line
- * @windowing: windowing method
- * @interpolation: interpolation method
+ * @data_line: A data line.
+ * @target_line: Data line to store power spectral density function to.
+ *               It will be resized to @data_line size.
+ * @windowing: Windowing method to use.
+ * @interpolation: Interpolation method to use.
  *
  * Copmutes power spectral density function and stores the values in
  * @target_line.
@@ -103,28 +128,31 @@ gwy_data_line_psdf(GwyDataLine *data_line,
     gint i, order, newres, oldres;
 
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
     oldres = data_line->res;
-    order = (gint) floor(log ((gdouble)data_line->res)/log (2.0)+0.5);
-    newres = (gint) pow(2,order);
+    order = ROUND(log(data_line->res)/G_LN2);
+    newres = (gint)pow(2, order);
 
     iin = gwy_data_line_new(newres, data_line->real, TRUE);
     rout = gwy_data_line_new(newres, data_line->real, TRUE);
     iout = gwy_data_line_new(newres, data_line->real, TRUE);
 
-    /*resample to 2^N (this could be done within FFT, but with loss of precision)*/
+    /* resample to 2^N (this could be done within FFT, but with loss of
+     * precision)*/
     gwy_data_line_resample(data_line, newres, interpolation);
 
     gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
-                   windowing, 1, interpolation,
-                   TRUE, TRUE);
+                      windowing, 1, interpolation,
+                      TRUE, TRUE);
 
     gwy_data_line_resample(target_line, newres/2.0, GWY_INTERPOLATION_NONE);
 
     /*compute module*/
-    for (i = 0; i < (newres/2); i++) {
-        target_line->data[i] = (rout->data[i]*rout->data[i] + iout->data[i]*iout->data[i])
-            *data_line->real/(newres*newres*2*G_PI);
+    for (i = 0; i < newres/2; i++) {
+        target_line->data[i] = (rout->data[i]*rout->data[i]
+                                + iout->data[i]*iout->data[i])
+                               *data_line->real/(newres*newres*2*G_PI);
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
 
@@ -140,105 +168,114 @@ gwy_data_line_psdf(GwyDataLine *data_line,
 
 /**
  * gwy_data_line_dh:
- * @data_line: data line
- * @target_line: result data line
- * @ymin: minimum value
- * @ymax: maimum value
- * @nsteps: number of histogram steps
+ * @data_line: A data line.
+ * @target_line: Data line to store height distribution function to.
+ *               It will be resized to @nsteps.
+ * @ymin: Height distribution minimum value.
+ * @ymax: Height distribution maximum value.
+ * @nsteps: Number of histogram steps.
  *
- * Computes distribution of heights in interval (@ymin - @ymax).
+ * Computes distribution of heights in interval [@ymin, @ymax).
+ *
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum value.
  **/
 void
-gwy_data_line_dh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
+gwy_data_line_dh(GwyDataLine *data_line,
+                 GwyDataLine *target_line,
+                 gdouble ymin, gdouble ymax,
+                 gint nsteps)
 {
     gint i, n, val;
     gdouble step, nstep, imin;
-    n = data_line->res;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+
+    n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
 
-    /*if ymin==ymax==0 we want to set up histogram area*/
-    if ((ymin == ymax) && (ymin == 0))
-    {
+    /* if ymin == ymax == 0 we want to set up histogram area */
+    if (!ymin && !ymax) {
         ymin = gwy_data_line_get_min(data_line);
         ymax = gwy_data_line_get_max(data_line);
     }
-    step = (ymax - ymin)/(nsteps-1);
-    imin = (ymin/step);
+    step = (ymax - ymin)/(nsteps - 1.0);
+    imin = ymin/step;
 
-    for (i=0; i<n; i++)
-    {
+    for (i = 0; i < n; i++) {
         val = (gint)((data_line->data[i]/step) - imin);
-        if (val<0 || val>= nsteps)
-        {
+        if (G_UNLIKELY(val < 0 || val >= nsteps)) {
             /*this should never happened*/
             val = 0;
         }
         target_line->data[val] += 1.0;
     }
     nstep = n*step;
+    gwy_data_line_multiply(target_line, 1.0/nstep);
 
-    for (i=0; i<nsteps; i++) {target_line->data[i]/=nstep;}
     target_line->real = ymax - ymin;
 }
 
 /**
  * gwy_data_line_cdh:
- * @data_line:  data line
- * @target_line: result data line
- * @ymin: minimum value
- * @ymax: maximum value
- * @nsteps: number of histogram steps
+ * @data_line: A data line.
+ * @target_line: Data line to store height distribution function to.
+ *               It will be resized to @nsteps.
+ * @ymin: Height distribution minimum value.
+ * @ymax: Height distribution maximum value.
+ * @nsteps: Number of histogram steps.
  *
- * Computes cumulative distribution of heighs in interval (@ymin - @ymax).
+ * Computes cumulative distribution of heighs in interval [@ymin, @ymax).
+ *
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum value.
- *
  **/
 void
-gwy_data_line_cdh(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
+gwy_data_line_cdh(GwyDataLine *data_line,
+                  GwyDataLine *target_line,
+                  gdouble ymin, gdouble ymax,
+                  gint nsteps)
 {
-    gint i;
-    gdouble sum = 0;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
     gwy_data_line_dh(data_line, target_line, ymin, ymax, nsteps);
-
-    for (i = 0; i < nsteps; i++) {
-        sum += target_line->data[i];
-        target_line->data[i] = sum;
-    }
+    gwy_data_line_cummulate(target_line);
 }
 
 /**
  * gwy_data_line_da:
- * @data_line: data line
- * @target_line: result data line
- * @ymin: minimum value
- * @ymax: maimum value
- * @nsteps: number of angular histogram steps
+ * @data_line: A data line.
+ * @target_line: Data line to store angle distribution function to.
+ * @ymin: Angle distribution minimum value.
+ * @ymax: Angle distribution maximum value.
+ * @nsteps: Mumber of angular histogram steps.
  *
- * Computes distribution of angles in interval (@ymin - @ymax).
+ * Computes distribution of angles in interval [@ymin, @ymax).
+ *
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum angle value.
  **/
 void
-gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
+gwy_data_line_da(GwyDataLine *data_line,
+                 GwyDataLine *target_line,
+                 gdouble ymin, gdouble ymax,
+                 gint nsteps)
 {
-    /*not yet...*/
     gint i, n, val;
     gdouble step, angle, imin;
+
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
     n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
     gwy_data_line_fill(target_line, 0);
 
-
-    /*if ymin==ymax==0 we want to set up histogram area*/
-    if ((ymin == ymax) && (ymin == 0))
-    {
+    /* if ymin == ymax == 0 we want to set up histogram area */
+    if (!ymin && !ymax) {
         ymin = G_MAXDOUBLE;
         ymax = -G_MAXDOUBLE;
         for (i = 0; i < n; i++) {
@@ -249,43 +286,45 @@ gwy_data_line_da(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin,
                 ymax = angle;
         }
     }
-    step = (ymax - ymin)/(nsteps-1);
-    imin = (ymin/step);
+    step = (ymax - ymin)/(nsteps - 1.0);
+    imin = ymin/step;
 
     for (i = 0; i < n; i++) {
         val = (gint)(gwy_data_line_get_der(data_line, i)/step - imin);
-        if (val < 0)
-            val = 0; /*this should never happened*/
-        if (val >= nsteps)
-            val = nsteps-1; /*this should never happened*/
-        target_line->data[val] += 1.0;/*/n/step;*/
+        if (G_UNLIKELY(val < 0))
+            val = 0; /* this should never happened */
+        if (G_UNLIKELY(val >= nsteps))
+            val = nsteps-1; /* this should never happened */
+        target_line->data[val] += 1.0;
     }
     target_line->real = ymax - ymin;
 }
 
 /**
  * gwy_data_line_cda:
- * @data_line: data line
- * @target_line: result data line
- * @ymin: minimum value
- * @ymax: maimum value
- * @nsteps: number of angular histogram steps
+ * @data_line: A data line.
+ * @target_line: Data line to store angle distribution function to.
+ *               It will be resized to @nsteps.
+ * @ymin: Angle distribution minimum value.
+ * @ymax: Angle distribution maximum value.
+ * @nsteps: Number of angular histogram steps.
  *
- * Computes cumulative distribution of angles in interval (@ymin - @ymax).
+ * Computes cumulative distribution of angles in interval [@ymin, @ymax).
+ *
  * If the interval is (0, 0) it computes the distribution from
  * real data minimum and maximum angle value.
  **/
 void
-gwy_data_line_cda(GwyDataLine *data_line, GwyDataLine *target_line, gdouble ymin, gdouble ymax, gint nsteps)
+gwy_data_line_cda(GwyDataLine *data_line,
+                  GwyDataLine *target_line,
+                  gdouble ymin, gdouble ymax,
+                  gint nsteps)
 {
-    gint i;
-    gdouble sum=0;
-    gwy_data_line_da(data_line, target_line, ymin, ymax, nsteps);
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
-    for (i = 0; i < nsteps; i++) {
-        sum += target_line->data[i];
-        target_line->data[i] = sum;
-    }
+    gwy_data_line_da(data_line, target_line, ymin, ymax, nsteps);
+    gwy_data_line_cummulate(target_line);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
