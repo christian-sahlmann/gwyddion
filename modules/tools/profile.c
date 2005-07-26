@@ -33,6 +33,8 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
+#define MAX_WIDTH 100
+
 enum {
     NPROFILE = 4
 };
@@ -252,7 +254,8 @@ dialog_create(GwyUnitoolState *state)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->linesize = gtk_adjustment_new(controls->size, 1, 20, 1, 5, 0);
+    controls->linesize = gtk_adjustment_new(controls->size,
+                                            1, MAX_WIDTH, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Thickness:"), _("px"),
                                 controls->linesize);
     g_signal_connect_swapped(controls->linesize, "value-changed",
@@ -501,7 +504,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->separate = !!controls->separate;
     controls->interp = CLAMP(controls->interp,
                              GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    controls->size = CLAMP(controls->size, 1, 20);
+    controls->size = CLAMP(controls->size, 1, MAX_WIDTH);
 
 }
 
