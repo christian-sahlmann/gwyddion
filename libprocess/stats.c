@@ -28,6 +28,8 @@
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
 
+/* INTERPOLATION: New (not applicable). */
+
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)

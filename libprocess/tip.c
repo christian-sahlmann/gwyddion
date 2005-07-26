@@ -22,9 +22,11 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "filters.h"
-#include "stats.h"
-#include "morph_lib.h"
+#include <libprocess/filters.h>
+#include <libprocess/stats.h>
+#include <libprocess/morph_lib.h>
+
+/* INTERPOLATION: New (not applicable). */
 
 static void
 pyramide_guess(GwyDataField *data,

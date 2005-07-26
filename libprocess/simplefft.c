@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <math.h>
-#include "simplefft.h"
+#include <libprocess/simplefft.h>
 
 typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
 
