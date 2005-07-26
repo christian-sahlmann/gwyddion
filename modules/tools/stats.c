@@ -281,9 +281,6 @@ dialog_update(GwyUnitoolState *state,
     if (controls->same_units) {
         area = gwy_data_field_area_get_surface_area(dfield, isel[0], isel[1],
                                                     w, h);
-        /* prevent rounding errors to produce nonreal results on very flat
-         * surfaces */
-        area = MAX(area, projarea);
         gwy_data_field_area_get_inclination(dfield, isel[0], isel[1], w, h,
                                             &theta, &phi);
     }

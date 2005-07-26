@@ -496,6 +496,8 @@ gwy_data_field_get_stats(GwyDataField *data_field,
     gdouble nn = data_field->xres * data_field->yres;
     gdouble dif, myavg, myrms;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
     c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
 
     myavg = gwy_data_field_get_avg(data_field);
@@ -617,6 +619,7 @@ gwy_data_field_area_get_stats(GwyDataField *dfield,
  * Returns: Normally %FALSE; %TRUE when @data_field is too small.  The return
  *          value should be ignored.
  **/
+/* FIXME: what about the return value? */
 gboolean
 gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                                       GwyDataLine *target_line,
@@ -633,6 +636,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     gdouble min = G_MAXDOUBLE, max = -G_MAXDOUBLE, val, realsize;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), FALSE);
+    g_return_val_if_fail(GWY_IS_DATA_LINE(target_line), FALSE);
     if (ulcol > brcol)
         GWY_SWAP(gint, ulcol, brcol);
     if (ulrow > brrow)
@@ -903,6 +907,12 @@ gwy_data_field_get_surface_area(GwyDataField *data_field)
     }
 
     sum *= q/4;
+    /* We calculate area of inner part of an area.  If we assume the average
+     * properties of border are the same as of the inner part, we can simply
+     * multiply the sum with the total/inner area ratio */
+    sum *= data_field->xres/(data_field->xres - 1.0);
+    sum *= data_field->yres/(data_field->yres - 1.0);
+
     CVAL(data_field, ARE) = sum;
     data_field->cached |= CBIT(ARE);
 
@@ -965,6 +975,11 @@ gwy_data_field_area_get_surface_area(GwyDataField *dfield,
                 sum += square_area2(r[j], r[j-1], r[j-xres], r[j-xres-1], x, y);
         }
     }
+    /* We calculate area of inner part of an area.  If we assume the average
+     * properties of border are the same as of the inner part, we can simply
+     * multiply the sum with the total/inner area ratio */
+    sum *= width/(width - 1.0);
+    sum *= height/(height - 1.0);
 
     return sum*q/4;
 }
@@ -989,6 +1004,9 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
     gdouble bx, by, phi;
     gint xres, yres, nder;
     gint col, row, iphi;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(GWY_IS_DATA_LINE(derdist));
 
     nder = gwy_data_line_get_res(derdist);
     der = gwy_data_line_get_data(derdist);
