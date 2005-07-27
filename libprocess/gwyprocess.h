@@ -37,6 +37,9 @@
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
 #include <libprocess/linestats.h>
+#include <libprocess/inttrans.h>
+#include <libprocess/stats.h>
+#include <libprocess/level.h>
 
 G_BEGIN_DECLS
 
