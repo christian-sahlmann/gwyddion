@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050722, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050727, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -261,7 +261,9 @@ PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.6.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
+ORIG_LIBS="$LIBS"
 AC_CHECK_LIB([m],[sqrt],[LIBM='-lm'],[])
+LIBS="$LIBM $ORIG_LIBS"
 
 #############################################################################
 # GtkGlExt
@@ -343,6 +345,7 @@ AC_SUBST(GETTEXT_PACKAGE)
 
 #############################################################################
 # Libs
+LIBS="$ORIG_LIBS"
 BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBM $LIBS $LDFLAGS"
 AC_SUBST(BASIC_LIBS)
 BASIC_CFLAGS="$GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $CFLAGS"
