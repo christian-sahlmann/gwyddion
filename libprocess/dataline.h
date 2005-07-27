@@ -104,12 +104,16 @@ gdouble        gwy_data_line_get_dval_real         (GwyDataLine *data_line,
 void           gwy_data_line_invert                (GwyDataLine *data_line,
                                                     gboolean x,
                                                     gboolean z);
+void           gwy_data_line_clear                 (GwyDataLine *data_line);
 void           gwy_data_line_fill                  (GwyDataLine *data_line,
                                                     gdouble value);
 void           gwy_data_line_multiply              (GwyDataLine *data_line,
                                                     gdouble value);
 void           gwy_data_line_add                   (GwyDataLine *data_line,
                                                     gdouble value);
+void           gwy_data_line_part_clear            (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint to);
 void           gwy_data_line_part_fill             (GwyDataLine *data_line,
                                                     gint from,
                                                     gint to,

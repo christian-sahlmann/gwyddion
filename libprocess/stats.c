@@ -711,7 +711,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         else {
             gwy_data_line_resample(target_line, size, interpolation);
         }
-        gwy_data_line_fill(target_line, 0.0);
+        gwy_data_line_clear(target_line);
 
         for (k = ulrow; k < brrow; k++) {
             gwy_data_field_get_row_part(data_field, hlp_line, k, ulcol, brcol);
@@ -777,7 +777,7 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
         else {
             gwy_data_line_resample(target_line, size, interpolation);
         }
-        gwy_data_line_fill(target_line, 0.0);
+        gwy_data_line_clear(target_line);
 
         for (k = ulcol; k < brcol; k++) {
             gwy_data_field_get_column_part(data_field,

@@ -329,11 +329,11 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     /*we compute allways two FFTs simultaneously*/
     for (k = 0; k < ra->yres; k++) {
         gwy_data_field_get_row(ra, rin, k);
-        if (k < (ra->yres-1))
+        if (k < ra->yres-1)
             gwy_data_field_get_row(ra, iin, k+1);
         else {
             gwy_data_field_get_row(ra, iin, k);
-            gwy_data_line_fill(iin, 0);
+            gwy_data_line_clear(iin);
         }
 
         gwy_data_line_fft(rin, iin, rout, iout, fft,
@@ -342,9 +342,9 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
 
         /*extract back the two profiles FFTs*/
         rft1->data[0] = rout->data[0];
-        ift1->data[0] = iout->data[0];
+        ift1->data[0] = 0;
         rft2->data[0] = iout->data[0];
-        ift2->data[0] = -rout->data[0];
+        ift2->data[0] = 0;
         for (j = 1; j < ra->xres; j++) {
             rft1->data[j] = (rout->data[j] + rout->data[ra->xres - j])/2;
             ift1->data[j] = (iout->data[j] - iout->data[ra->xres - j])/2;
@@ -355,7 +355,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
         gwy_data_field_set_row(rb, rft1, k);
         gwy_data_field_set_row(ib, ift1, k);
 
-        if (k < (ra->yres-1)) {
+        if (k < ra->yres-1) {
             gwy_data_field_set_row(rb, rft2, k+1);
             gwy_data_field_set_row(ib, ift2, k+1);
             k++;

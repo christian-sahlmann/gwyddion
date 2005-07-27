@@ -557,7 +557,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     ngrains = number_grains(grain_field, grains);
     if (!ngrains) {
         gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
-        gwy_data_line_fill(distribution, 0);
+        gwy_data_line_clear(distribution);
         gwy_data_line_set_real(distribution, xres);
         return;
     }
@@ -581,7 +581,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     nhist = sqrt(maxpnt)/s + 1;
 
     gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(distribution, 0);
+    gwy_data_line_clear(distribution);
     for (i = 1; i <= ngrains; i++)
         distribution->data[(gint)(sqrt(grain_size[i])/s)] += 1;
     g_free(grain_size);

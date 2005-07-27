@@ -48,7 +48,7 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
 
     n = data_line->res;
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(target_line, 0);
+    gwy_data_line_clear(target_line);
     avg = gwy_data_line_get_avg(data_line);
 
     for (i = 0; i < n; i++) {
@@ -82,7 +82,7 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 
     n = data_line->res;
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(target_line, 0);
+    gwy_data_line_clear(target_line);
 
     for (i = 0; i < n; i++) {
         for (j = 0; j < (n-i); j++) {
@@ -181,7 +181,7 @@ gwy_data_line_dh(GwyDataLine *data_line,
 
     n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(target_line, 0);
+    gwy_data_line_clear(target_line);
 
     /* if ymin == ymax == 0 we want to set up histogram area */
     if (!ymin && !ymax) {
@@ -259,7 +259,7 @@ gwy_data_line_da(GwyDataLine *data_line,
 
     n = data_line->res;
     gwy_data_line_resample(target_line, nsteps, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(target_line, 0);
+    gwy_data_line_clear(target_line);
 
     /* if ymin == ymax == 0 we want to set up histogram area */
     if (!ymin && !ymax) {

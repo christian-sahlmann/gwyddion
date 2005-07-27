@@ -622,7 +622,7 @@ gwy_data_line_invert(GwyDataLine *data_line,
  * @data_line: A data line.
  * @value: Value to fill data line with.
  *
- * Fills data line with specified value.
+ * Fills a data line with specified value.
  **/
 void
 gwy_data_line_fill(GwyDataLine *data_line,
@@ -633,6 +633,19 @@ gwy_data_line_fill(GwyDataLine *data_line,
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     for (i = 0; i < data_line->res; i++)
         data_line->data[i] = value;
+}
+
+/**
+ * gwy_data_line_clear:
+ * @data_line: A data line.
+ *
+ * Fills a data line with zeroes.
+ **/
+void
+gwy_data_line_clear(GwyDataLine *data_line)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    memset(data_line->data, 0, data_line->res*sizeof(gdouble));
 }
 
 /**
@@ -695,6 +708,27 @@ gwy_data_line_part_fill(GwyDataLine *data_line,
 
     for (i = from; i < to; i++)
         data_line->data[i] = value;
+}
+
+/**
+ * gwy_data_line_part_clear:
+ * @data_line: A data line.
+ * @from: Index the line part starts at.
+ * @to: Index the line part ends at + 1.
+ *
+ * Fills a data line part with zeroes.
+ **/
+void
+gwy_data_line_part_clear(GwyDataLine *data_line,
+                         gint from, gint to)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    g_return_if_fail(from >= 0 && to <= data_line->res);
+
+    memset(data_line->data + from, 0, (to - from)*sizeof(gdouble));
 }
 
 /**
@@ -1259,38 +1293,25 @@ gwy_data_line_fft_hum(GwyTransformDirection direction,
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
-    if (isrc->res != rsrc->res)
-        gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
-    if (rdest->res != rsrc->res)
-        gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
-    if (idest->res != rsrc->res)
-        gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
 
     /*find the next power of two*/
     newres = gwy_data_field_get_fft_res(rsrc->res);
     oldres = rsrc->res;
 
-    /*resample if this is not the resolution*/
-    if (newres != oldres) {
-        gwy_data_line_resample(rsrc, newres, interpolation);
-        gwy_data_line_resample(isrc, newres, interpolation);
-        gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-        gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
-    }
-    gwy_data_line_fill(rdest, 0);
-    gwy_data_line_fill(idest, 0);
+    gwy_data_line_resample(rsrc, newres, interpolation);
+    gwy_data_line_resample(isrc, newres, interpolation);
+    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
 
     gwy_fft_hum(direction, rsrc->data, isrc->data, rdest->data, idest->data,
                 newres);
 
     /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
      after all the processings*/
-    if (newres != oldres) {
-        gwy_data_line_resample(rsrc, oldres, interpolation);
-        gwy_data_line_resample(isrc, oldres, interpolation);
-        gwy_data_line_resample(rdest, oldres, interpolation);
-        gwy_data_line_resample(idest, oldres, interpolation);
-    }
+    gwy_data_line_resample(rsrc, oldres, interpolation);
+    gwy_data_line_resample(isrc, oldres, interpolation);
+    gwy_data_line_resample(rdest, oldres, interpolation);
+    gwy_data_line_resample(idest, oldres, interpolation);
 }
 
 /**
@@ -1333,7 +1354,7 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     gwy_debug("");
     if (isrc->res != rsrc->res) {
         gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
-        gwy_data_line_fill(isrc, 0);
+        gwy_data_line_clear(isrc);
     }
     if (rdest->res != rsrc->res)
         gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
@@ -1348,8 +1369,8 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
         gwy_data_line_subtract_polynom(isrc, n, coefs);
     }
 
-    gwy_data_line_fill(rdest, 0);
-    gwy_data_line_fill(idest, 0);
+    gwy_data_line_clear(rdest);
+    gwy_data_line_clear(idest);
 
 
     if (preserverms == TRUE) {

@@ -53,7 +53,7 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(yresult, 0);
+    gwy_data_line_clear(yresult);
 
     for (l = 0; l < dimexp; l++) {
         rp = ROUND(pow(2, l));
@@ -136,7 +136,7 @@ fractal_partitioning_nomask(GwyDataField *data_field,
                             GWY_INTERPOLATION_ROUND);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(yresult, 0);
+    gwy_data_line_clear(yresult);
 
     for (l = 0; l < dimexp; l++) {
         rp = ROUND(pow(2, l));
@@ -191,7 +191,7 @@ gwy_data_field_fractal_cubecounting(GwyDataField *data_field,
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_line_resample(xresult, dimexp, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(yresult, 0);
+    gwy_data_line_clear(yresult);
 
     imin = gwy_data_field_get_min(buffer);
     height = gwy_data_field_get_max(buffer) - imin;
@@ -256,8 +256,7 @@ gwy_data_field_fractal_triangulation(GwyDataField *data_field,
     gwy_data_field_resample(buffer, xnewres, xnewres, interpolation);
     gwy_data_line_resample(xresult, dimexp + 1, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(yresult, dimexp + 1, GWY_INTERPOLATION_NONE);
-    gwy_data_line_fill(yresult, 0);
-
+    gwy_data_line_clear(yresult);
 
     height = gwy_data_field_get_max(buffer) - gwy_data_field_get_min(buffer);
     dil = pow(2, dimexp) * pow(2, dimexp)/height/height;
