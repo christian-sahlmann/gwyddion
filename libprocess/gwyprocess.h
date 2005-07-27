@@ -36,6 +36,7 @@
 #include <libprocess/grains.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
+#include <libprocess/linestats.h>
 
 G_BEGIN_DECLS
 
