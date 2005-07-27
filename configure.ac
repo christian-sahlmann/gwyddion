@@ -266,6 +266,27 @@ AC_CHECK_LIB([m],[sqrt],[LIBM='-lm'],[])
 LIBS="$LIBM $ORIG_LIBS"
 
 #############################################################################
+# FFTW
+GWY_WITH([fftw],,[build with FFTW support])
+if test x$enable_fftw != xno && test -z "$LIBFFTW"; then
+  AC_CHECK_LIB(dfftw, fftw_create_plan, LIBFFTW="-ldfftw -ldrfftw",
+    [AC_CHECK_LIB(fftw, fftw_create_plan, LIBFFTW="-lfftw -lrfftw",
+      enable_fftw=no)])
+fi
+if test x$enable_fftw != xno && test -n "$LIBFFTW"; then
+  have_some_fftw_header=no
+  AC_CHECK_HEADERS([dfftw.h fftw.h],[have_some_fftw_header=yes])
+  if test "x$have_some_fftw_header" = xno; then
+    enable_fftw=no
+  fi
+fi
+if test x$enable_fftw != xno && test -n "$LIBFFTW"; then
+  AC_DEFINE(HAVE_FFTW,1,[Define if we have the FFTW library.])
+fi
+AM_CONDITIONAL([HAVE_FFTW],[test x$enable_fftw != xno && test -n "$LIBFFTW"])
+AC_SUBST(LIBFFTW)
+
+#############################################################################
 # GtkGlExt
 # FIXME: Doesn't work, must wait for 2.0
 GWY_WITH([gl],,[OpenGL 3D view widgets])
