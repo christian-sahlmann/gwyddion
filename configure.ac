@@ -265,29 +265,25 @@ ORIG_LIBS="$LIBS"
 AC_CHECK_LIB(m,sqrt,,[])
 
 #############################################################################
-# FFTW
-GWY_WITH([fftw3],,[build with FFTW3 support])
-if test x$enable_fftw3 != xno && test -z "$LIBFFTW3"; then
-  AC_CHECK_LIB(fftw3, fftw_plan_dft_1d,
-     [AC_CHECK_HEADER(fftw3.h,LIBFFTW3="-lfftw3",enable_fftw3=no)],
-     enable_fftw3=no)
+# FFTW3
+GWY_WITH([fftw3],,[FFTW3 library])
+if test "x$enable_fftw3" != "xno"; then
+  PKG_CHECK_MODULES(FFTW3, [fftw3],
+                    [AC_DEFINE(HAVE_FFTW3,1,
+                               [Define if we have the FFTW3 package.])],
+                    enable_fftw3=no)
 fi
-if test x$enable_fftw3 != xno && test -n "$LIBFFTW3"; then
-  AC_DEFINE(HAVE_FFTW3,1,[Define if we have the FFTW3 library.])
-fi
-AM_CONDITIONAL([HAVE_FFTW3],[test x$enable_fftw3 != xno && test -n "$LIBFFTW3"])
-AC_SUBST(LIBFFTW3)
 
 #############################################################################
 # GtkGlExt
-# FIXME: Doesn't work, must wait for 2.0
+# FIXME: Doesn't work.  Should we ever build without?
 GWY_WITH([gl],,[OpenGL 3D view widgets])
 if test "x$enable_gl" != "xno"; then
   # Repeat pangoft2 here to maintain assertion GTK flags are subset of GTKGLEXT
   PKG_CHECK_MODULES(GTKGLEXT,[pangoft2 gtkglext-1.0],
-                   [AC_DEFINE(HAVE_GTKGLEXT,1,
-                              [Define if we have the GtkGLExt package.])],
-                    [AC_MSG_WARN(GtkGLExt not found, 3D will not be built)])
+                    [AC_DEFINE(HAVE_GTKGLEXT,1,
+                               [Define if we have the GtkGLExt package.])],
+                    enable_gl=no)
 fi
 
 #############################################################################
@@ -446,3 +442,11 @@ _______EOF
 ])
 
 AC_OUTPUT
+
+echo "================================================================="
+echo "Configuration:"
+echo "  TIFF support (including JPK files):  $enable_libtiff"
+echo "  With FFTW3:                          $enable_fftw3"
+echo "  With OpenGL 3D widgets:              $enable_gl"
+echo "================================================================="
+
