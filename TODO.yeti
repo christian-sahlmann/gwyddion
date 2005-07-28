@@ -1,6 +1,5 @@
 GWYDDION-1
 - Fix Indentor analysis
-- Add Wenzels' BCR file features
 
 SF CVS cleanup:
 - modules/tools -> modules/tool
@@ -8,14 +7,16 @@ SF CVS cleanup:
 - libgwydgets/gwyglmaterial.*,v -> libdraw/gwyglmaterial.*,v
 
 HEAD
-- Check what of gwywin32unistd.h is actually used now and where.  Eventually
-  get rid of it.
+- Why DWT methods have return values?
+- Should GwyDataLine have units, offsets?
 - Graphs:
+  infinite, memory allocating loop in gwy_axis_scale
   datawindow graph list broken
   graph titles don't work
   still uses GwyWatchable
   silly public signal emitors, mouse-moved
   property get/set not implemented
+  export dialogs say ,Open` instead of ,Save` (not that export works...)
   too large value warning on ACF
   old graph saving code, various crap and nonsense comments
   kill global last_status in gwygraphwindow
@@ -26,7 +27,6 @@ HEAD
   stray "layout-updated" signal in GwyGraphModel
   old graph modules are still present
   layout issues
-- Merge Facet Analysis improvements
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix enum documentation after rename, write missing
   libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
