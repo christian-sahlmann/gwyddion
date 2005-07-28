@@ -178,6 +178,8 @@ gwy_data_field_new_alike(GwyDataField *model,
     data_field->yreal = model->yreal;
     data_field->xres = model->xres;
     data_field->yres = model->yres;
+    data_field->xoff = model->xoff;
+    data_field->yoff = model->yoff;
     if (nullme) {
         data_field->data = g_new0(gdouble, data_field->xres*data_field->yres);
         /* We can precompute stats */
@@ -202,6 +204,7 @@ gwy_data_field_serialize(GObject *obj,
 {
     GwyDataField *data_field;
     guint32 datasize, cachesize;
+    gdouble *pxoff, *pyoff;
     gdouble *cache;
 
     gwy_debug("");
@@ -215,12 +218,16 @@ gwy_data_field_serialize(GObject *obj,
     datasize = data_field->xres*data_field->yres;
     cachesize = GWY_DATA_FIELD_CACHE_SIZE;
     cache = data_field->cache;
+    pxoff = data_field->xoff ? &data_field->xoff : NULL;
+    pyoff = data_field->yoff ? &data_field->yoff : NULL;
     {
         GwySerializeSpec spec[] = {
             { 'i', "xres", &data_field->xres, NULL, },
             { 'i', "yres", &data_field->yres, NULL, },
             { 'd', "xreal", &data_field->xreal, NULL, },
             { 'd', "yreal", &data_field->yreal, NULL, },
+            { 'd', "xoff", pxoff, NULL, },
+            { 'd', "yoff", pyoff, NULL, },
             { 'o', "si_unit_xy", &data_field->si_unit_xy, NULL, },
             { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
@@ -240,7 +247,7 @@ gwy_data_field_deserialize(const guchar *buffer,
 {
     guint32 datasize, cachesize = 0, cachebits = 0;
     gint xres, yres;
-    gdouble xreal, yreal, *data = NULL, *cache = NULL;
+    gdouble xreal, yreal, xoff = 0.0, yoff = 0.0, *data = NULL, *cache = NULL;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;
     GwyDataField *data_field;
     GwySerializeSpec spec[] = {
@@ -248,6 +255,8 @@ gwy_data_field_deserialize(const guchar *buffer,
         { 'i', "yres", &yres, NULL, },
         { 'd', "xreal", &xreal, NULL, },
         { 'd', "yreal", &yreal, NULL, },
+        { 'd', "xoff", &xoff, NULL, },
+        { 'd', "yoff", &yoff, NULL, },
         { 'o', "si_unit_xy", &si_unit_xy, NULL, },
         { 'o', "si_unit_z", &si_unit_z, NULL, },
         { 'D', "data", &data, &datasize, },
@@ -287,6 +296,8 @@ gwy_data_field_deserialize(const guchar *buffer,
     data_field->data = data;
     data_field->xres = xres;
     data_field->yres = yres;
+    data_field->xoff = xoff;
+    data_field->yoff = yoff;
     if (si_unit_z) {
         if (data_field->si_unit_z != NULL)
             gwy_object_unref(data_field->si_unit_z);
@@ -843,6 +854,69 @@ gwy_data_field_set_yreal(GwyDataField *data_field, gdouble yreal)
     data_field->yreal = yreal;
 }
 
+/**
+ * gwy_data_field_get_xoffset:
+ * @data_field: A data field.
+ *
+ * Gets the X offset of data field origin.
+ *
+ * Returns: X offset value.
+ **/
+gdouble
+gwy_data_field_get_xoffset(GwyDataField *data_field)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+    return data_field->xoff;
+}
+
+/**
+ * gwy_data_field_get_yoffset:
+ * @data_field: A data field
+ *
+ * Gets the Y offset of data field origin.
+ *
+ * Returns: Y offset value.
+ **/
+gdouble
+gwy_data_field_get_yoffset(GwyDataField *data_field)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
+    return data_field->yoff;
+}
+
+/**
+ * gwy_data_field_set_xoffset:
+ * @data_field: A data field.
+ * @xoff: New X offset value.
+ *
+ * Sets the X offset of a data field origin.
+ *
+ * Note offsets don't affect any calculation, nor functions like
+ * gwy_data_field_rotj().
+ **/
+void
+gwy_data_field_set_xoffset(GwyDataField *data_field, gdouble xoff)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    data_field->xoff = xoff;
+}
+
+/**
+ * gwy_data_field_set_yoffset:
+ * @data_field: A data field.
+ * @yoff: New Y offset value.
+ *
+ * Sets the Y offset of a data field origin.
+ *
+ * Note offsets don't affect any calculation, nor functions like
+ * gwy_data_field_roti().
+ **/
+void
+gwy_data_field_set_yoffset(GwyDataField *data_field, gdouble yoff)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    data_field->yoff = yoff;
+}
 
 /**
  * gwy_data_field_get_si_unit_xy:

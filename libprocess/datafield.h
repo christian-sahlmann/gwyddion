@@ -45,6 +45,8 @@ struct _GwyDataField {
     gint yres;
     gdouble xreal;
     gdouble yreal;
+    gdouble xoff;
+    gdouble yoff;
     gdouble *data;
 
     GwySIUnit *si_unit_xy;
@@ -105,6 +107,12 @@ void              gwy_data_field_set_xreal           (GwyDataField *data_field,
                                                       gdouble xreal);
 void              gwy_data_field_set_yreal           (GwyDataField *data_field,
                                                       gdouble yreal);
+gdouble           gwy_data_field_get_xoffset         (GwyDataField *data_field);
+gdouble           gwy_data_field_get_yoffset         (GwyDataField *data_field);
+void              gwy_data_field_set_xoffset         (GwyDataField *data_field,
+                                                      gdouble xoff);
+void              gwy_data_field_set_yoffset         (GwyDataField *data_field,
+                                                      gdouble yoff);
 GwySIUnit*        gwy_data_field_get_si_unit_xy      (GwyDataField *data_field);
 GwySIUnit*        gwy_data_field_get_si_unit_z       (GwyDataField *data_field);
 void              gwy_data_field_set_si_unit_xy      (GwyDataField *data_field,
