@@ -644,7 +644,6 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     if (ulrow > brrow)
         GWY_SWAP(gint, ulrow, brrow);
 
-    /* FIXME: shouldn't size be difference + 1 ? */
     if (orientation == GWY_ORIENTATION_HORIZONTAL)
         size = brcol - ulcol;
     else
@@ -751,12 +750,11 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 g_assert_not_reached();
                 break;
             }
-            for (j = 0; j < size; j++) { /*size*/
-                target_line->data[j] += hlp_tarline->data[j]
-                                        /((gdouble)(brrow-ulrow));
-            }
+            for (j = 0; j < size; j++)
+                target_line->data[j] += hlp_tarline->data[j];
             target_line->real = hlp_tarline->real;
         }
+        gwy_data_line_multiply(target_line, 1.0/(brrow-ulrow));
         g_object_unref(hlp_line);
         g_object_unref(hlp_tarline);
 
@@ -818,12 +816,11 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
                 g_assert_not_reached();
                 break;
             }
-            for (j = 0; j < size; j++) {
-                target_line->data[j] += hlp_tarline->data[j]
-                                        /((gdouble)(brcol-ulcol));
-            }
+            for (j = 0; j < size; j++)
+                target_line->data[j] += hlp_tarline->data[j];
             target_line->real = hlp_tarline->real;
         }
+        gwy_data_line_multiply(target_line, 1.0/(brcol-ulcol));
         g_object_unref(hlp_line);
         g_object_unref(hlp_tarline);
 
