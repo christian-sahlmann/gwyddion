@@ -262,29 +262,21 @@ PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 ORIG_LIBS="$LIBS"
-AC_CHECK_LIB([m],[sqrt],[LIBM='-lm'],[])
-LIBS="$LIBM $ORIG_LIBS"
+AC_CHECK_LIB(m,sqrt,,[])
 
 #############################################################################
 # FFTW
-GWY_WITH([fftw],,[build with FFTW support])
-if test x$enable_fftw != xno && test -z "$LIBFFTW"; then
-  AC_CHECK_LIB(dfftw, fftw_create_plan, LIBFFTW="-ldfftw -ldrfftw",
-    [AC_CHECK_LIB(fftw, fftw_create_plan, LIBFFTW="-lfftw -lrfftw",
-      enable_fftw=no)])
+GWY_WITH([fftw3],,[build with FFTW3 support])
+if test x$enable_fftw3 != xno && test -z "$LIBFFTW3"; then
+  AC_CHECK_LIB(fftw3, fftw_plan_dft_1d,
+     [AC_CHECK_HEADER(fftw3.h,LIBFFTW3="-lfftw3",enable_fftw3=no)],
+     enable_fftw3=no)
 fi
-if test x$enable_fftw != xno && test -n "$LIBFFTW"; then
-  have_some_fftw_header=no
-  AC_CHECK_HEADERS([dfftw.h fftw.h],[have_some_fftw_header=yes])
-  if test "x$have_some_fftw_header" = xno; then
-    enable_fftw=no
-  fi
+if test x$enable_fftw3 != xno && test -n "$LIBFFTW3"; then
+  AC_DEFINE(HAVE_FFTW3,1,[Define if we have the FFTW3 library.])
 fi
-if test x$enable_fftw != xno && test -n "$LIBFFTW"; then
-  AC_DEFINE(HAVE_FFTW,1,[Define if we have the FFTW library.])
-fi
-AM_CONDITIONAL([HAVE_FFTW],[test x$enable_fftw != xno && test -n "$LIBFFTW"])
-AC_SUBST(LIBFFTW)
+AM_CONDITIONAL([HAVE_FFTW3],[test x$enable_fftw3 != xno && test -n "$LIBFFTW3"])
+AC_SUBST(LIBFFTW3)
 
 #############################################################################
 # GtkGlExt
@@ -366,8 +358,8 @@ AC_SUBST(GETTEXT_PACKAGE)
 
 #############################################################################
 # Libs
+BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBS $LDFLAGS"
 LIBS="$ORIG_LIBS"
-BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBM $LIBS $LDFLAGS"
 AC_SUBST(BASIC_LIBS)
 BASIC_CFLAGS="$GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $CFLAGS"
 
