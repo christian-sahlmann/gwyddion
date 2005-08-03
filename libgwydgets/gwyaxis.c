@@ -918,7 +918,7 @@ gwy_axis_normalscale(GwyAxis *a)
         g_array_append_val(a->mjticks, mjt);
         majorbase += tickstep;
         i++;
-    } while ((majorbase - tickstep) < a->reqmax /*&& i< a->par.major_maxticks*/);
+    } while ((majorbase - tickstep) < a->reqmax && i< a->par.major_maxticks);
     a->max = majorbase - tickstep;
     
     
@@ -930,7 +930,7 @@ gwy_axis_normalscale(GwyAxis *a)
         g_array_append_val(a->miticks, mit);
         minorbase += minortickstep;
         i++;
-    } while (minorbase <= a->max);
+    } while (minorbase <= a->max && i < 10*a->par.major_maxticks);
 
     return 0;
 }

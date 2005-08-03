@@ -71,48 +71,6 @@ gwy_data_field_fractal_partitioning(GwyDataField *data_field,
     g_object_unref(buffer);
 }
 
-static gdouble
-get_area_rms_nomask(GwyDataField *dfield,
-                    GwyDataField *mask,
-                    gint col,
-                    gint row,
-                    gint width,
-                    gint height)
-{
-    gint i, j, n;
-    gdouble rms = 0.0, sum2 = 0.0;
-    gdouble sum = 0.0;
-    gdouble *datapos;
-
-    if (width == 0 || height == 0)
-        return rms;
-
-     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
-     g_return_val_if_fail(col >= 0 && row >= 0
-                          && width >= 0 && height >= 0
-                          && col + width <= dfield->xres
-                          && row + height <= dfield->yres,
-                          rms);
-     if (!width || !height)
-         return rms;
-
-     n = 0;
-     datapos = dfield->data + row*dfield->xres + col;
-     for (i = 0; i < height; i++) {
-          gdouble *drow = datapos + i*dfield->xres;
-          for (j = 0; j < width; j++) {
-              if (mask->data[j + i*mask->xres] != 0) {
-                  sum2 += (*drow) * (*drow);
-                  sum += *drow;
-                  n++;
-              }
-              *drow++;
-          }
-     }
-     rms = sqrt(fabs(sum2 - sum*sum/n)/n);
-
-     return rms;
-}
 
 static void
 fractal_partitioning_nomask(GwyDataField *data_field,

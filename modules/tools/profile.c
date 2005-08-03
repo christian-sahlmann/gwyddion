@@ -49,9 +49,13 @@ typedef struct {
     GPtrArray *dtl;
     GPtrArray *str;
     GtkObject *linesize;
+    GtkObject *nofpoints;
+    GtkWidget *isnofpoints;
     gint size;
     gint interp;
+    gint npoints;
     gboolean separate;
+    gboolean isnpoints;
 } ToolControls;
 
 static gboolean   module_register     (const gchar *name);
@@ -68,9 +72,12 @@ static void       interp_changed_cb   (GObject *item,
 static void       separate_changed_cb (GtkToggleButton *button,
                                        ToolControls *controls);
 static void       size_changed_cb     (ToolControls *controls);
+static void       npoints_changed_cb  (ToolControls *controls);
 static void       load_args           (GwyContainer *container,
                                        ToolControls *controls);
 static void       save_args           (GwyContainer *container,
+                                       ToolControls *controls);
+static void       isnofpoints_changed_cb (GtkToggleButton *button,
                                        ToolControls *controls);
 
 
@@ -167,7 +174,7 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     load_args(settings, controls);
-
+    
     dialog = gtk_dialog_new_with_buttons(_("Extract Profile"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -260,6 +267,20 @@ dialog_create(GwyUnitoolState *state)
                                 controls->linesize);
     g_signal_connect_swapped(controls->linesize, "value-changed",
                              G_CALLBACK(size_changed_cb), controls);
+    row++;
+
+    controls->nofpoints = gtk_adjustment_new(controls->npoints, 10, 100, 1, 5, 0);
+    gwy_table_attach_hscale(table, row, _("fix res.:"), _(""),
+                                controls->nofpoints, GWY_HSCALE_CHECK);
+    g_signal_connect_swapped(controls->nofpoints, "value-changed",
+                             G_CALLBACK(npoints_changed_cb), controls);
+    controls->isnofpoints = g_object_get_data(G_OBJECT(controls->nofpoints), "check");
+    g_signal_connect(controls->isnofpoints, "toggled",
+                            G_CALLBACK(isnofpoints_changed_cb), controls);
+    
+    gwy_table_hscale_set_sensitive(controls->nofpoints,
+                                         controls->isnpoints);
+    
     row++;
 
     controls->separation
@@ -360,9 +381,17 @@ dialog_update(GwyUnitoolState *state,
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
+    g_object_set(G_OBJECT(controls->nofpoints), 
+                 "upper", 
+                 (gdouble)(MAX(5*gwy_data_field_get_xres(dfield),
+                     5*gwy_data_field_get_yres(dfield))), 
+                 NULL);
+    
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
     gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
+
+    controls->isnpoints = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->isnofpoints));
     
     if (nselected) {
         j = 0;
@@ -372,9 +401,15 @@ dialog_update(GwyUnitoolState *state,
             xl1 = gwy_data_field_rtoj(dfield, lines[j++]);
             yl1 = gwy_data_field_rtoi(dfield, lines[j++]);
 
-            lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
+            if (!controls->isnpoints)
+            {
+                lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
                                  + (yl1 - yl2)*(yl1 - yl2)));
-            lineres = MAX(lineres, 10);
+                lineres = MAX(lineres, 10);
+            }
+            else
+                lineres = controls->npoints;
+
             gwy_data_field_get_data_line_averaged(dfield, controls->dtl->pdata[i],
                                                   xl1, yl1, xl2, yl2, lineres, controls->size,
                                                   controls->interp);
@@ -485,9 +520,27 @@ size_changed_cb(ToolControls *controls)
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
+static void
+npoints_changed_cb(ToolControls *controls)
+{
+    controls->npoints
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->nofpoints));
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
+
+static void       
+isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
+{
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
+
+
 static const gchar *separate_key = "/tool/profile/separate";
 static const gchar *interp_key = "/tool/profile/interp";
 static const gchar *size_key = "/tool/profile/size";
+static const gchar *npoints_key = "/tool/profile/npoints";
+static const gchar *isnpoints_key = "/tool/profile/isnpoints";
+
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
@@ -495,11 +548,16 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->separate = FALSE;
     controls->interp = GWY_INTERPOLATION_BILINEAR;
     controls->size = 1;
+    controls->npoints = 500;
+    controls->isnpoints = FALSE;
 
     gwy_container_gis_boolean_by_name(container, separate_key,
                                       &controls->separate);
+    gwy_container_gis_boolean_by_name(container, isnpoints_key,
+                                      &controls->isnpoints);
     gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
     gwy_container_gis_int32_by_name(container, size_key, &controls->size);
+    gwy_container_gis_int32_by_name(container, npoints_key, &controls->npoints);
     /* sanitize */
     controls->separate = !!controls->separate;
     controls->interp = CLAMP(controls->interp,
@@ -513,8 +571,13 @@ save_args(GwyContainer *container, ToolControls *controls)
 {
     gwy_container_set_boolean_by_name(container, separate_key,
                                       controls->separate);
+    gwy_container_set_boolean_by_name(container, isnpoints_key,
+                                      controls->isnpoints);
     gwy_container_set_enum_by_name(container, interp_key, controls->interp);
     gwy_container_set_int32_by_name(container, size_key, controls->size);
+    gwy_container_set_int32_by_name(container, npoints_key, controls->npoints);
+
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
