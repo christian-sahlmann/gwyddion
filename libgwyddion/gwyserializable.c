@@ -1168,6 +1168,12 @@ gwy_deserialize_hash_items(const guchar *buffer,
     GwySerializeItem it, *pit;
     GwySerializeSpec sp;
 
+    if (!size) {
+        *nitems = 0;
+        /* Return something non-NULL since we didn't fail. */
+        return g_new(GwySerializeItem, 1);
+    }
+
     items = g_array_new(FALSE, FALSE, sizeof(GwySerializeItem));
     position = 0;
     sp.array_size = &it.array_size;
