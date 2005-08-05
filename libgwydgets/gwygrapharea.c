@@ -685,7 +685,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->mouse_present = TRUE;
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
-    gwy_graph_area_signal_mouse_moved(area);
+    g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
     
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
@@ -948,17 +948,6 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[ZOOMED_SIGNAL], 0);
 }
 
-/**
- * gwy_graph_area_signal_mouse_moved:
- * @area: grapher area
- *
- * emit signal that user moved mouse over graph area.
- **/
-void
-gwy_graph_area_signal_mouse_moved(GwyGraphArea *area)
-{
-    g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
-}
 
 /**
  * gwy_graph_area_signal_refresh:

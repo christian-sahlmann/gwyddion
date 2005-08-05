@@ -164,8 +164,6 @@ void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
 
-void gwy_graph_area_signal_mouse_moved(GwyGraphArea *area);
-
 void gwy_graph_area_refresh(GwyGraphArea *area);
 
 void gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, gdouble* selection, gint n_of_selections);
