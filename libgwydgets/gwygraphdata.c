@@ -84,7 +84,7 @@ gwy_graph_data_new(GwyGraphModel *gmodel)
     {
        gwy_graph_data_change_model(GWY_GRAPH_DATA(graph_data), gmodel);    
     
-       g_signal_connect_swapped(gmodel, "value-changed",
+       g_signal_connect_swapped(gmodel, "notify",
                      G_CALLBACK(gwy_graph_data_refresh), graph_data);
 
        gwy_graph_data_refresh(GWY_GRAPH_DATA(graph_data));

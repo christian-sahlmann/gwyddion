@@ -35,7 +35,6 @@ static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
 static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
 static void   gwy_graph_model_finalize          (GObject *object);
 static void   gwy_graph_model_serializable_init (GwySerializableIface *iface);
-static void   gwy_graph_model_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_graph_model_serialize    (GObject *obj,
                                                  GByteArray*buffer);
 static GObject* gwy_graph_model_deserialize     (const guchar *buffer,
@@ -92,9 +91,6 @@ gwy_graph_model_get_type(void)
         GInterfaceInfo gwy_serializable_info = {
             (GInterfaceInitFunc)gwy_graph_model_serializable_init, NULL, 0
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_graph_model_watchable_init, NULL, 0
-        };
 
         gwy_debug("");
         gwy_graph_model_type
@@ -105,9 +101,6 @@ gwy_graph_model_get_type(void)
         g_type_add_interface_static(gwy_graph_model_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_graph_model_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_graph_model_type;
@@ -123,13 +116,6 @@ gwy_graph_model_serializable_init(GwySerializableIface *iface)
     iface->duplicate = gwy_graph_model_duplicate_real;
 }
 
-static void
-gwy_graph_model_watchable_init(GwyWatchableIface *iface)
-{
-    gwy_debug("");
-    /* initialize stuff */
-    iface->value_changed = NULL;
-}
 
 static void
 gwy_graph_model_class_init(GwyGraphModelClass *klass)
@@ -538,9 +524,6 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
     gmodel->curves[gmodel->ncurves] = G_OBJECT(curve);
     g_object_ref(curve);
     gmodel->ncurves++;
-
-    g_signal_connect_swapped(curve, "value-changed",
-                      G_CALLBACK(gwy_watchable_value_changed), gmodel);
 
     g_object_notify(G_OBJECT(gmodel), "n");
 }

@@ -31,7 +31,6 @@ static void   gwy_graph_curve_model_class_init        (GwyGraphCurveModelClass *
 static void   gwy_graph_curve_model_init              (GwyGraphCurveModel *gcmodel);
 static void   gwy_graph_curve_model_finalize          (GObject *object);
 static void   gwy_graph_curve_model_serializable_init (GwySerializableIface *iface);
-static void   gwy_graph_curve_model_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_graph_curve_model_serialize    (GObject *object,
                                                        GByteArray*buffer);
 static GObject* gwy_graph_curve_model_deserialize     (const guchar *buffer,
@@ -65,9 +64,6 @@ gwy_graph_curve_model_get_type(void)
         GInterfaceInfo gwy_serializable_info = {
             (GInterfaceInitFunc)gwy_graph_curve_model_serializable_init, NULL, 0
         };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_graph_curve_model_watchable_init, NULL, 0
-        };
 
         gwy_debug("");
         gwy_graph_curve_model_type
@@ -78,9 +74,6 @@ gwy_graph_curve_model_get_type(void)
         g_type_add_interface_static(gwy_graph_curve_model_type,
                                     GWY_TYPE_SERIALIZABLE,
                                     &gwy_serializable_info);
-        g_type_add_interface_static(gwy_graph_curve_model_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
     }
 
     return gwy_graph_curve_model_type;
@@ -96,13 +89,6 @@ gwy_graph_curve_model_serializable_init(GwySerializableIface *iface)
     iface->duplicate = gwy_graph_curve_model_duplicate_real;
 }
 
-static void
-gwy_graph_curve_model_watchable_init(GwyWatchableIface *iface)
-{
-    gwy_debug("");
-    /* initialize stuff */
-    iface->value_changed = NULL;
-}
 
 static void
 gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
@@ -384,7 +370,6 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
     gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
     gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
     gcmodel->n = n;
-//    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
 
 /**
@@ -399,7 +384,6 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       gchar *description)
 {
     g_string_assign(gcmodel->description, description);
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                         
 /**
@@ -414,7 +398,6 @@ gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphCurveType type)
 {
     gcmodel->type = type;
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
 
 /**
@@ -430,7 +413,6 @@ gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
                                            GwyGraphPointType point_type)
 {
     gcmodel->point_type = point_type;
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -446,7 +428,6 @@ gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
                                            gint point_size)
 {
     gcmodel->point_size = point_size;
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -462,7 +443,6 @@ gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
                                            GdkLineStyle line_style)
 {
     gcmodel->line_style = line_style;
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
@@ -478,7 +458,6 @@ gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
                                           gint line_size)
 {
     gcmodel->line_size = line_size;
-    gwy_watchable_value_changed(G_OBJECT(gcmodel));
 }
                                                                                                                                                              
 /**
