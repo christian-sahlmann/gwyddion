@@ -122,7 +122,7 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
 
     entities = gwy_entities_get_entities();
 
-    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
+    store = gtk_list_store_new(NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
     for (i = 0; entities[i].entity; i++) {
         GtkTreeIter  iter;
         gtk_list_store_append(store, &iter);
@@ -132,7 +132,7 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
                            -1);
     }
 
-    model = GTK_TREE_MODEL (store);
+    model = GTK_TREE_MODEL(store);
 }
 
 static GtkWidget*
@@ -174,7 +174,7 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_combo_box_set_active(sci_text->entities, 0);
 
     /*  a compact cell layout for the popup (in table mode)  */
-    gtk_combo_box_set_wrap_width (sci_text->entities, 10);
+    gtk_combo_box_set_wrap_width(sci_text->entities, 10);
     layout = GTK_CELL_LAYOUT(sci_text->entities);
 
     cell = gtk_cell_renderer_text_new();
@@ -182,12 +182,12 @@ gwy_sci_text_init(GwySciText *sci_text)
     gtk_cell_layout_set_attributes(layout, cell, "text", COLUMN_UTF8, NULL);
 
     /*  use a more descriptive cell layout for the box itself  */
-    layout = GTK_CELL_LAYOUT (GTK_BIN (sci_text->entities)->child);
-    gtk_cell_layout_clear (layout);
+    layout = GTK_CELL_LAYOUT(GTK_BIN(sci_text->entities)->child);
+    gtk_cell_layout_clear(layout);
 
-    cell = gtk_cell_renderer_text_new ();
-    gtk_cell_layout_pack_start (layout, cell, FALSE);
-    gtk_cell_layout_set_attributes (layout, cell, "text", COLUMN_UTF8, NULL);
+    cell = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(layout, cell, FALSE);
+    gtk_cell_layout_set_attributes(layout, cell, "text", COLUMN_UTF8, NULL);
 
     cell = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(layout, cell, TRUE);
@@ -249,7 +249,7 @@ gwy_sci_text_new()
 
     gwy_debug("");
 
-    sci_text = (GwySciText*)gtk_object_new(gwy_sci_text_get_type (), NULL);
+    sci_text = (GwySciText*)gtk_object_new(gwy_sci_text_get_type(), NULL);
 
     sci_text->par.label_font = pango_font_description_new();
     pango_font_description_set_family(sci_text->par.label_font,
