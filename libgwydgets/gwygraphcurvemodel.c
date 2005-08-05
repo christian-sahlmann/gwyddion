@@ -162,58 +162,6 @@ gwy_graph_curve_model_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-/*
-gboolean
-gwy_graph_curve_model_save_curve(GwyGraphCurveModel *gcmodel,
-                                 GwyGraph *graph,
-                                 gint index_)
-{
-    GwyGraphAreaCurve *curve;
-    GwyGraphAreaCurveParams *params;
-    GString *str;
-    gint n;
-
-    gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
-    g_return_val_if_fail(GWY_IS_GRAPH(graph), FALSE);
-
-    n = gwy_graph_get_number_of_curves(graph);
-    if (index_ < 0 || index_ >= n)
-        return FALSE;
-
-     data */
-/*    n = gwy_graph_get_data_size(graph, index_);
-    if (n != gcmodel->n) {
-        gcmodel->n = n;
-        gcmodel->xdata = g_renew(gdouble, gcmodel->xdata, n);
-        gcmodel->ydata = g_renew(gdouble, gcmodel->ydata, n);
-    }
-    gwy_graph_get_data(graph, gcmodel->xdata, gcmodel->ydata, index_);
-
-     properties */
-/*    str = gwy_graph_get_label(graph, index_);
-    g_string_assign(gcmodel->description, str->str);
-     FIXME: direct access */
-/*    curve = (GwyGraphAreaCurve*)g_ptr_array_index(graph->area->curves, index_);
-    params = &curve->params;
-     XXX FIXME: this now uses some random unitialized memory as the color.
-     * Fix the graph! */
-/*    gwy_rgba_from_gdk_color(&gcmodel->color, &params->color);
-
-    gcmodel->type = GWY_GRAPH_CURVE_HIDDEN;
-    if (params->is_point)
-        gcmodel->type |= GWY_GRAPH_CURVE_POINTS;
-    if (params->is_line)
-        gcmodel->type |= GWY_GRAPH_CURVE_LINE;
-
-    gcmodel->point_type = params->point_type;
-    gcmodel->point_size = params->point_size;
-
-    gcmodel->line_style = params->line_style;
-    gcmodel->line_size = params->line_size;
-
-    return TRUE;
-}
 
 void
 gwy_graph_add_curve_from_model(GwyGraph *graph,
