@@ -163,30 +163,6 @@ gwy_graph_curve_model_finalize(GObject *object)
 }
 
 
-void
-gwy_graph_add_curve_from_model(GwyGraph *graph,
-                               GwyGraphCurveModel *gcmodel)
-{
-    GwyGraphAreaCurveParams params;
-
-    g_return_if_fail(GWY_IS_GRAPH(graph));
-    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
-
-    gwy_rgba_to_gdk_color(&gcmodel->color, &params.color);
-
-    params.is_point = (gcmodel->type & GWY_GRAPH_CURVE_POINTS) != 0;
-    params.point_type = gcmodel->point_type;
-    params.point_size = gcmodel->point_size;
-
-    params.is_line = (gcmodel->type & GWY_GRAPH_CURVE_LINE) != 0;
-    params.line_style = gcmodel->line_style;
-    params.line_size = gcmodel->line_size;
-
-    gwy_graph_add_datavalues(graph, gcmodel->xdata, gcmodel->ydata,
-                             gcmodel->n, gcmodel->description,
-                             &params);
-}
-*/
 
 static GByteArray*
 gwy_graph_curve_model_serialize(GObject *object,

@@ -406,7 +406,7 @@ gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
                                               GTK_WINDOW(graphwindow),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
                                               NULL));
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
@@ -442,7 +442,7 @@ gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
                                                  GTK_WINDOW(graphwindow),
                                                  GTK_FILE_CHOOSER_ACTION_SAVE,
                                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                                 GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
                                                  NULL));
        if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
        {
@@ -475,7 +475,7 @@ gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)
                                               GTK_WINDOW(graphwindow),
                                               GTK_FILE_CHOOSER_ACTION_SAVE,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
                                               NULL));
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
