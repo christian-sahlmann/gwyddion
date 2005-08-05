@@ -390,7 +390,8 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
     gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
-
+    gwy_graph_model_set_title(controls->graphmodel, _("Profiles"));
+    
     controls->isnpoints = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->isnofpoints));
     
     if (nselected) {
@@ -456,21 +457,20 @@ apply(GwyUnitoolState *state)
             model = gwy_graph_model_new_alike(controls->graphmodel);
             
             model->ncurves = 1;
+            gwy_graph_model_set_title(model, ((GString*)controls->str->pdata[i])->str);
             model->curves = g_new(GObject*, model->ncurves);
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
             graph = gwy_graph_new(model);
             gtk_widget_set_size_request(graph, 400, 300);
             gwy_app_graph_window_create_for_window
-                                    (GWY_GRAPH(graph), state->data_window,
-                                     ((GString*)controls->str->pdata[i])->str);
+                                    (GWY_GRAPH(graph), state->data_window);
         }
     }
     else {
         graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
         gtk_widget_set_size_request(graph, 400, 300);
         gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
-                                               state->data_window,
-                                               _("Profiles"));
+                                               state->data_window);
     }
 }
 

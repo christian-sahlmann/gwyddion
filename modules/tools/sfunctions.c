@@ -315,6 +315,8 @@ dialog_update(GwyUnitoolState *state,
                                                      0, 0);
         gwy_graph_curve_model_set_description(gcmodel, lab->str);
         gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
+        gwy_graph_model_set_title(controls->graphmodel, 
+                                  _(sf_types[controls->out].name));
     }
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
@@ -334,8 +336,7 @@ apply(GwyUnitoolState *state)
 
     
     gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
-                                           state->data_window,
-                                           _(sf_types[controls->out].name));
+                                           state->data_window);
 
 }
 

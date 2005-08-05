@@ -812,7 +812,7 @@ GtkWidget*
 gwy_app_graph_window_create(GtkWidget *graph)
 {
     return gwy_app_graph_window_create_for_window
-                   (GWY_GRAPH(graph), gwy_app_data_window_get_current(), NULL);
+                   (GWY_GRAPH(graph), gwy_app_data_window_get_current());
 }
 
 /**
@@ -830,8 +830,7 @@ gwy_app_graph_window_create(GtkWidget *graph)
  **/
 GtkWidget*
 gwy_app_graph_window_create_for_window(GwyGraph *grapher,
-                                       GwyDataWindow *data_window,
-                                       const gchar *title)
+                                       GwyDataWindow *data_window)
 {
     GtkWidget *window;
 
@@ -839,8 +838,6 @@ gwy_app_graph_window_create_for_window(GwyGraph *grapher,
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
 
     window = gwy_graph_window_new(grapher);
-    gtk_window_set_title(GTK_WINDOW(window),
-                         title ? title : _("Untitled Graph"));
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
     gtk_window_add_accel_group
         (GTK_WINDOW(window),

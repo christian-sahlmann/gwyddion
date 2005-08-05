@@ -130,7 +130,10 @@ gwy_graph_window_new(GwyGraph *graph)
 
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
-
+    if (graph->graph_model->title->str)
+        gtk_window_set_title(GTK_WINDOW(graphwindow), graph->graph_model->title->str);        
+    else
+        gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
 
     label = gtk_label_new("Graph");
     gtk_notebook_append_page(GTK_NOTEBOOK(graphwindow->notebook),

@@ -52,8 +52,7 @@ GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 GtkWidget*     gwy_app_graph_window_create         (GtkWidget *graph);
 #endif
 GtkWidget*  gwy_app_graph_window_create_for_window (GwyGraph *grapher,
-                                                    GwyDataWindow *data_window,
-                                                    const gchar *title);
+                                                    GwyDataWindow *data_window);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
 gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);

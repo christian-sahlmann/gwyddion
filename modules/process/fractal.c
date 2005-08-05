@@ -423,8 +423,7 @@ ok_cb(FractalArgs *args,
     graph = gwy_graph_new(controls->graph_model);
     update_graph(args, controls, data);
     data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
-                                           _(methods[args->out].name));
+    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window);
 }
 static gboolean
 update_graph(FractalArgs *args,
@@ -457,6 +456,7 @@ update_graph(FractalArgs *args,
     gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_POINTS);
     gwy_graph_curve_model_set_data(gcmodel, xline->data, yline->data, xline->res);
     gwy_graph_curve_model_set_description(gcmodel, _(methods[args->out].name));                                                 
+    gwy_graph_model_set_title(controls->graph_model, _(methods[args->out].name));
     gwy_graph_model_add_curve(controls->graph_model, gcmodel);
     
     res = gwy_data_line_get_res(xnline);

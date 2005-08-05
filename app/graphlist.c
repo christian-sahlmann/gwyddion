@@ -392,7 +392,7 @@ gwy_app_graph_list_show_graph(GtkTreeModel *store,
     g_signal_connect_swapped(graph, "destroy",
                              G_CALLBACK(gtk_widget_queue_draw), list);
     window = gwy_app_graph_window_create(graph);
-    gtk_window_set_title(GTK_WINDOW(window), gmodel->title->str);
+    /*gtk_window_set_title(GTK_WINDOW(window), gmodel->title->str);*/
     g_object_unref(gmodel);
 
     return FALSE;
