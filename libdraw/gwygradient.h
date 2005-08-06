@@ -21,16 +21,14 @@
 #ifndef __GWY_GRADIENT_H__
 #define __GWY_GRADIENT_H__
 
-#include <libgwyddion/gwyserializable.h>
-#include <libgwyddion/gwywatchable.h>
-#include <libdraw/gwyrgba.h>
 #include <glib-object.h>
+#include <libdraw/gwyrgba.h>
 
 G_BEGIN_DECLS
 
 #define GWY_TYPE_GRADIENT                  (gwy_gradient_get_type())
 #define GWY_GRADIENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRADIENT, GwyGradient))
-#define GWY_GRADIENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT, GwyGradient))
+#define GWY_GRADIENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT, GwyGradientClass))
 #define GWY_IS_GRADIENT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRADIENT))
 #define GWY_IS_GRADIENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRADIENT))
 #define GWY_GRADIENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRADIENT, GwyGradientClass))
