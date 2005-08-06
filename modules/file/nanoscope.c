@@ -21,10 +21,8 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 
-#include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 
 #ifdef HAVE_UNISTD_H
@@ -176,6 +174,7 @@ nanoscope_load(const gchar *filename)
     GError *err = NULL;
     gchar *buffer = NULL;
     gchar *p;
+    const gchar *self;
     gsize size = 0;
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
@@ -216,15 +215,21 @@ nanoscope_load(const gchar *filename)
     for (l = list; ok && l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
-        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Scanner list")) {
+        self = g_hash_table_lookup(hash, "#self");
+        /* The alternate names were found in files written by some beast
+         * called Nanoscope E software */
+        if (gwy_strequal(self, "Scanner list")
+            || gwy_strequal(self, "Microscope list")) {
             scannerlist = hash;
             continue;
         }
-        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Ciao scan list")) {
+        if (gwy_strequal(self, "Ciao scan list")
+            || gwy_strequal(self, "Afm list")) {
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
-        if (gwy_strequal(g_hash_table_lookup(hash, "#self"), "Ciao image list"))
+        if (!gwy_strequal(self, "Ciao image list")
+            && !gwy_strequal(self, "AFM image list"))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
@@ -335,7 +340,6 @@ fill_metadata(GwyContainer *data,
     g_hash_table_foreach(hash, add_metadata, data);
 }
 
-
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    GHashTable *scannerlist,
@@ -357,7 +361,7 @@ hash_to_data_field(GHashTable *hash,
     gdouble xreal, yreal, q;
     gdouble *data;
 
-    if (!require_keys(hash, "Samps/line", "Number of lines", "Bytes/pixel",
+    if (!require_keys(hash, "Samps/line", "Number of lines",
                       "Scan size", "Data offset", "Data length", NULL))
         return NULL;
 
@@ -368,7 +372,7 @@ hash_to_data_field(GHashTable *hash,
     yres = ROUND(val->hard_value);
 
     val = g_hash_table_lookup(hash, "Bytes/pixel");
-    bpp = ROUND(val->hard_value);
+    bpp = val ? ROUND(val->hard_value) : 2;
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Scan size");
@@ -380,8 +384,11 @@ hash_to_data_field(GHashTable *hash,
     s = end+1;
     yreal = g_ascii_strtod(s, &end);
     if (errno || *end != ' ') {
-        g_warning("Cannot parse <Scan size>: <%s>", s);
-        return NULL;
+        /* Nanoscope E files don't have two numbers here */
+        yreal = xreal;
+        end = s;
+        /*g_warning("Cannot parse <Scan size>: <%s>", s);
+        return NULL;*/
     }
     if (sscanf(end+1, "%4s", un) != 1) {
         g_warning("Cannot parse <Scan size>: <%s>", s);
@@ -757,8 +764,11 @@ read_hash(gchar **buffer)
             g_warning("Truncated line <%s>", line ? line : "(null)");
             goto fail;
         }
-        colon = strchr(line + 3, ':');
-        if (!colon || !isspace(colon[1])) {
+        colon = line;
+        if (line[0] == '@' && g_ascii_isdigit(line[1]) && line[2] == ':')
+            colon = line+3;
+        colon = strchr(colon, ':');
+        if (!colon || !g_ascii_isspace(colon[1])) {
             g_warning("No colon in line <%s>", line);
             goto fail;
         }
@@ -769,6 +779,19 @@ read_hash(gchar **buffer)
         value = parse_value(line, colon);
         if (value)
             g_hash_table_insert(hash, line, value);
+    }
+
+    /* Fix random stuff in Nanoscope E files */
+    if ((value = g_hash_table_lookup(hash, "Samps/line"))
+        && !g_hash_table_lookup(hash, "Number of lines")
+        && value->hard_value_units
+        && g_ascii_isdigit(value->hard_value_units[0])) {
+        NanoscopeValue *val;
+
+        val = g_new0(NanoscopeValue, 1);
+        val->hard_value = g_ascii_strtod(value->hard_value_units, NULL);
+        val->hard_value_str = value->hard_value_units;
+        g_hash_table_insert(hash, "Number of lines", val);
     }
 
     return hash;
