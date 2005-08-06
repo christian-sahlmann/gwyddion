@@ -14,15 +14,16 @@ Ordered item inventory, indexed by both name and position.
 
 </para>
 
-<!-- ##### STRUCT GwyItemType ##### -->
+<!-- ##### STRUCT GwyInventoryItemType ##### -->
 <para>
 
 </para>
 
 @type: 
+@watchable_signal: 
+@is_fixed: 
 @get_name: 
 @get_text: 
-@get_image: 
 @compare: 
 @rename: 
 
@@ -31,8 +32,10 @@ Ordered item inventory, indexed by both name and position.
 
 </para>
 
-@item_type: 
+@itype: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@item_type: 
 
 
 <!-- ##### FUNCTION gwy_inventory_new_filled ##### -->
@@ -40,9 +43,33 @@ Ordered item inventory, indexed by both name and position.
 
 </para>
 
-@item_type: 
+@itype: 
 @nitems: 
 @items: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@item_type: 
+
+
+<!-- ##### FUNCTION gwy_inventory_new_from_array ##### -->
+<para>
+
+</para>
+
+@itype: 
+@item_size: 
+@nitems: 
+@items: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_inventory_new_from_enum ##### -->
+<para>
+
+</para>
+
+@enum_table: 
+@n: 
 @Returns: 
 
 
@@ -64,7 +91,7 @@ Ordered item inventory, indexed by both name and position.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_inventory_get_item_type ##### -->
+<!-- ##### FUNCTION gwy_inventory_is_const ##### -->
 <para>
 
 </para>
@@ -73,13 +100,12 @@ Ordered item inventory, indexed by both name and position.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_inventory_item_exists ##### -->
+<!-- ##### FUNCTION gwy_inventory_get_item_type ##### -->
 <para>
 
 </para>
 
 @inventory: 
-@name: 
 @Returns: 
 
 
@@ -257,6 +283,7 @@ Ordered item inventory, indexed by both name and position.
 </para>
 
 @inventory: 
+@name: 
 @newname: 
 @Returns: 
 

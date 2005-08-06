@@ -78,6 +78,15 @@ Utility macros.
 @spectype: 
 
 
+<!-- ##### MACRO gwy_strequal ##### -->
+<para>
+
+</para>
+
+@a: 
+@b: 
+
+
 <!-- ##### MACRO gwy_debug ##### -->
 <para>
 

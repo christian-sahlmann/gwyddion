@@ -229,6 +229,42 @@ as they are connected with GwyDataField.
 @a: 
 
 
+<!-- ##### FUNCTION gwy_data_field_get_xoffset ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_get_yoffset ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_xoffset ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@xoff: 
+
+
+<!-- ##### FUNCTION gwy_data_field_set_yoffset ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@yoff: 
+
+
 <!-- ##### FUNCTION gwy_data_field_get_si_unit_xy ##### -->
 <para>
 

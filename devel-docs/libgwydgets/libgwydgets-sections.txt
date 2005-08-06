@@ -133,6 +133,8 @@ GwyGraphWindow
 GwyGraphWindowClass
 gwy_graph_window_new
 gwy_graph_window_get_graph
+gwy_graph_window_class_set_tooltips
+gwy_graph_window_class_get_tooltips
 <SUBSECTION Standard>
 GWY_GRAPH_WINDOW
 GWY_IS_GRAPH_WINDOW
@@ -476,6 +478,8 @@ gwy_data_window_update_title
 gwy_data_window_get_base_name
 gwy_data_window_get_ul_corner_widget
 gwy_data_window_set_ul_corner_widget
+gwy_data_window_class_set_tooltips
+gwy_data_window_class_get_tooltips
 <SUBSECTION Standard>
 GWY_DATA_WINDOW
 GWY_IS_DATA_WINDOW
@@ -641,9 +645,10 @@ GwyGraphAreaClass
 gwy_graph_area_new
 gwy_graph_area_signal_selected
 gwy_graph_area_signal_zoomed
-gwy_graph_area_signal_mouse_moved
 gwy_graph_area_refresh
 gwy_graph_area_set_selection
+gwy_graph_area_set_selection_limit
+gwy_graph_area_get_selection_limit
 gwy_graph_area_change_model
 gwy_graph_area_draw_area_on_drawable
 gwy_graph_area_export_vector
@@ -690,6 +695,8 @@ gwy_3d_window_new
 gwy_3d_window_get_3d_view
 gwy_3d_window_add_action_widget
 gwy_3d_window_add_small_toolbar_button
+gwy_3d_window_class_set_tooltips
+gwy_3d_window_class_get_tooltips
 <SUBSECTION Standard>
 GWY_3D_WINDOW
 GWY_IS_3D_WINDOW
@@ -792,6 +799,8 @@ gwy_graph_signal_zoomed
 gwy_graph_get_selection_number
 gwy_graph_get_selection
 gwy_graph_clear_selection
+gwy_graph_set_selection_limit
+gwy_graph_get_selection_limit
 gwy_graph_get_cursor
 gwy_graph_request_x_range
 gwy_graph_request_y_range

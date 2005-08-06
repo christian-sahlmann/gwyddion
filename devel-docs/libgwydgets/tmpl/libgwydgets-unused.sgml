@@ -1763,6 +1763,13 @@ are saved here.
 @area: 
 @style: 
 
+<!-- ##### FUNCTION gwy_graph_area_signal_mouse_moved ##### -->
+<para>
+
+</para>
+
+@area: 
+
 <!-- ##### FUNCTION gwy_graph_area_signal_mousemoved ##### -->
 <para>
 

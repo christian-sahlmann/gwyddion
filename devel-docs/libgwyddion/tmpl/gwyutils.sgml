@@ -23,6 +23,13 @@ path manipulation
 
 </para>
 
+<!-- ##### MACRO GWY_TYPE_ENUM ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### STRUCT GwyEnum ##### -->
 <para>
 
@@ -49,6 +56,14 @@ path manipulation
 @unused_key: 
 @value: 
 @user_data: 
+
+
+<!-- ##### FUNCTION gwy_enum_get_type ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_string_to_enum ##### -->
@@ -202,17 +217,6 @@ path manipulation
 </para>
 
 @msgid: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_setenv ##### -->
-<para>
-
-</para>
-
-@variable: 
-@value: 
-@overwrite: 
 @Returns: 
 
 

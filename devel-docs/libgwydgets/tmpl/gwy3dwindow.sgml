@@ -74,3 +74,19 @@ can be packed with gwy_3d_window_add_action_widget().
 @cbdata: 
 
 
+<!-- ##### FUNCTION gwy_3d_window_class_set_tooltips ##### -->
+<para>
+
+</para>
+
+@tips: 
+
+
+<!-- ##### FUNCTION gwy_3d_window_class_get_tooltips ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

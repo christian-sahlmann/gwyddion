@@ -1,0 +1,93 @@
+<!-- ##### SECTION Title ##### -->
+GwyResource
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_resource_get_name ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_get_is_modifiable ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_ref ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_unref ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_ref_pixbuf ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_unref_pixbuf ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_data_changed ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_dump ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
+

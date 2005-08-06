@@ -31,6 +31,8 @@ gwy_app_data_view_update
 gwy_app_main_window_get
 gwy_app_quit
 gwy_app_clean_up_data
+gwy_app_get_current_directory
+gwy_app_set_current_directory
 </SECTION>
 
 <SECTION>
@@ -94,6 +96,7 @@ gwy_app_menu_set_flags_recursive
 gwy_app_menu_set_sensitive_array
 gwy_app_menu_set_sensitive_both
 gwy_app_toolbox_update_state
+gwy_app_tooltips_get
 </SECTION>
 
 <SECTION>

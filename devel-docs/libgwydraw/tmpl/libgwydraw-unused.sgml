@@ -310,3 +310,19 @@ GwyPaletteDef
 @data_field: 
 @color: 
 
+<!-- ##### FUNCTION gwy_resource_get_modifiable ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_get_pixbuf ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+

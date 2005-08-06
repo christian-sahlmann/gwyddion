@@ -31,9 +31,11 @@ Discrete Wavelet Transform
 
 @dline: 
 @wt_coefs: 
-@isign: 
+@direction: 
 @minsize: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@isign: 
 
 
 <!-- ##### FUNCTION gwy_data_field_xdwt ##### -->
@@ -43,9 +45,11 @@ Discrete Wavelet Transform
 
 @dfield: 
 @wt_coefs: 
-@isign: 
+@direction: 
 @minsize: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@isign: 
 
 
 <!-- ##### FUNCTION gwy_data_field_ydwt ##### -->
@@ -55,9 +59,11 @@ Discrete Wavelet Transform
 
 @dfield: 
 @wt_coefs: 
-@isign: 
+@direction: 
 @minsize: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@isign: 
 
 
 <!-- ##### FUNCTION gwy_data_field_dwt ##### -->
@@ -67,9 +73,11 @@ Discrete Wavelet Transform
 
 @dfield: 
 @wt_coefs: 
-@isign: 
+@direction: 
 @minsize: 
 @Returns: 
+<!-- # Unused Parameters # -->
+@isign: 
 
 
 <!-- ##### FUNCTION gwy_data_field_dwt_denoise ##### -->

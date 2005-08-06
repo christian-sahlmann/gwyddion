@@ -1,4 +1,25 @@
 <SECTION>
+<FILE>gwyresource</FILE>
+<TITLE>GwyResource</TITLE>
+gwy_resource_get_name
+gwy_resource_get_is_modifiable
+gwy_resource_ref
+gwy_resource_unref
+gwy_resource_ref_pixbuf
+gwy_resource_unref_pixbuf
+gwy_resource_data_changed
+gwy_resource_dump
+gwy_resource_parse
+<SUBSECTION Standard>
+GWY_RESOURCE
+GWY_IS_RESOURCE
+GWY_TYPE_RESOURCE
+gwy_resource_get_type
+GWY_RESOURCE_CLASS
+GWY_IS_RESOURCE_CLASS
+GWY_RESOURCE_GET_CLASS
+</SECTION>
+<SECTION>
 <FILE>gwygradient</FILE>
 GWY_GRADIENT_DEFAULT
 GwyGradientPoint

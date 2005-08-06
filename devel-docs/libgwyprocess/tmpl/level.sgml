@@ -31,7 +31,7 @@ Plane and rotation leveling
 @dfield: 
 
 
-<!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
+<!-- ##### FUNCTION gwy_data_field_fit_plane ##### -->
 <para>
 
 </para>
@@ -40,11 +40,6 @@ Plane and rotation leveling
 @pa: 
 @pbx: 
 @pby: 
-<!-- # Unused Parameters # -->
-@a: 
-@ap: 
-@bp: 
-@cp: 
 
 
 <!-- ##### FUNCTION gwy_data_field_plane_level ##### -->

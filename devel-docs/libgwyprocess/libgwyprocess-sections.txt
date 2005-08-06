@@ -20,6 +20,10 @@ gwy_data_field_get_xreal
 gwy_data_field_get_yreal
 gwy_data_field_set_xreal
 gwy_data_field_set_yreal
+gwy_data_field_get_xoffset
+gwy_data_field_get_yoffset
+gwy_data_field_set_xoffset
+gwy_data_field_set_yoffset
 gwy_data_field_get_si_unit_xy
 gwy_data_field_get_si_unit_z
 gwy_data_field_set_si_unit_xy
@@ -98,9 +102,11 @@ gwy_data_line_set_val
 gwy_data_line_get_dval
 gwy_data_line_get_dval_real
 gwy_data_line_invert
+gwy_data_line_clear
 gwy_data_line_fill
 gwy_data_line_multiply
 gwy_data_line_add
+gwy_data_line_part_clear
 gwy_data_line_part_fill
 gwy_data_line_part_multiply
 gwy_data_line_part_add
@@ -273,7 +279,7 @@ gwy_data_field_fft_filter_1d
 <SECTION>
 <FILE>level</FILE>
 gwy_data_field_area_fit_plane
-gwy_data_field_plane_coeffs
+gwy_data_field_fit_plane
 gwy_data_field_plane_level
 gwy_data_field_plane_rotate
 gwy_data_field_fit_polynom
@@ -386,6 +392,7 @@ gwy_data_line_cda
 gwy_data_line_acf
 gwy_data_line_hhcf
 gwy_data_line_psdf
+gwy_data_line_get_length
 </SECTION>
 
 <SECTION>

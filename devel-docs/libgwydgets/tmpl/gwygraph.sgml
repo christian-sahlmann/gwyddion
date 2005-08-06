@@ -185,6 +185,24 @@ be introduced probably.
 @grapher: 
 
 
+<!-- ##### FUNCTION gwy_graph_set_selection_limit ##### -->
+<para>
+
+</para>
+
+@graph: 
+@limit: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_selection_limit ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_graph_get_cursor ##### -->
 <para>
 

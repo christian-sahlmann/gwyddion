@@ -123,9 +123,9 @@ Core application interface.
 
 @grapher: 
 @data_window: 
-@title: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@title: 
 @graph: 
 
 
@@ -239,5 +239,21 @@ Core application interface.
 </para>
 
 @data: 
+
+
+<!-- ##### FUNCTION gwy_app_get_current_directory ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_set_current_directory ##### -->
+<para>
+
+</para>
+
+@directory: 
 
 

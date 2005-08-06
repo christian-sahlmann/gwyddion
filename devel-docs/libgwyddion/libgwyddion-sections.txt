@@ -44,14 +44,16 @@ GWY_WATCHABLE_GET_IFACE
 
 <SECTION>
 <FILE>gwyinventory</FILE>
-GwyItemType
+GwyInventoryItemType
 <TITLE>GwyInventory</TITLE>
 gwy_inventory_new
 gwy_inventory_new_filled
+gwy_inventory_new_from_array
+gwy_inventory_new_from_enum
 gwy_inventory_get_n_items
 gwy_inventory_can_make_copies
+gwy_inventory_is_const
 gwy_inventory_get_item_type
-gwy_inventory_item_exists
 gwy_inventory_get_item
 gwy_inventory_get_item_or_default
 gwy_inventory_get_nth_item
@@ -218,9 +220,11 @@ gwy_math_sort
 
 <SECTION>
 <FILE>gwyutils</FILE>
+GWY_TYPE_ENUM
 GwyEnum
 gwy_hash_table_to_slist_cb
 gwy_hash_table_to_list_cb
+gwy_enum_get_type
 gwy_string_to_enum
 gwy_enum_to_string
 gwy_string_to_flags
@@ -236,22 +240,7 @@ gwy_get_user_dir
 gwy_get_home_dir
 gwy_canonicalize_path
 gwy_sgettext
-gwy_setenv
 gwy_str_next_line
-</SECTION>
-
-<SECTION>
-<FILE>gwywin32unistd</FILE>
-chmod
-getpid
-mkdir
-unlink
-S_ISREG
-S_ISDIR
-S_IRUSR
-S_IWUSR
-S_IXUSR
-W_OK
 </SECTION>
 
 <SECTION>
@@ -343,6 +332,7 @@ N_
 gwy_object_unref
 GWY_SWAP
 GWY_FIND_PSPEC
+gwy_strequal
 gwy_debug
 gwy_debug_gnu
 </SECTION>

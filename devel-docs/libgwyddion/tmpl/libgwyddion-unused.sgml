@@ -18,6 +18,26 @@
 choleski
 
 
+<!-- ##### SECTION ./tmpl/gwywin32unistd.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwywin32unistd.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwywin32unistd.sgml:Short_Description ##### -->
+Unistd functions on Win32
+
+
+<!-- ##### SECTION ./tmpl/gwywin32unistd.sgml:Title ##### -->
+gwywin32unistd
+
+
 <!-- ##### SECTION ./tmpl/marquardt.sgml:Long_Description ##### -->
 <para>
 
@@ -198,6 +218,19 @@ types
 
 @object: 
 @Returns: 
+
+<!-- ##### STRUCT GwyItemType ##### -->
+<para>
+
+</para>
+
+@type: 
+@watchable_signal: 
+@get_name: 
+@get_text: 
+@get_image: 
+@compare: 
+@rename: 
 
 <!-- ##### STRUCT GwyKeyVal ##### -->
 <para>
@@ -388,12 +421,50 @@ Emitted when value changes.
 
 @x: 
 
+<!-- ##### MACRO S_IRUSR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO S_ISDIR ##### -->
+<para>
+
+</para>
+
+@m: 
+
+<!-- ##### MACRO S_ISREG ##### -->
+<para>
+
+</para>
+
+@m: 
+
+<!-- ##### MACRO S_IWUSR ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO S_IXUSR ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### USER_FUNCTION VYSTUP ##### -->
 <para>
 
 </para>
 
 @b: 
+
+<!-- ##### MACRO W_OK ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### VARIABLE bOutParamErrors ##### -->
 <para>
@@ -412,6 +483,14 @@ Emitted when value changes.
 
 </para>
 
+
+<!-- ##### MACRO chmod ##### -->
+<para>
+
+</para>
+
+@file: 
+@mode: 
 
 <!-- ##### FUNCTION chodec ##### -->
 <para>
@@ -528,6 +607,12 @@ Emitted when value changes.
 @Par: 
 @Returns: 
 
+<!-- ##### MACRO getpid ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_container_freeze_watch ##### -->
 <para>
 
@@ -561,6 +646,15 @@ Emitted when value changes.
 @inventory: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_inventory_item_exists ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_inventory_item_is_modifable ##### -->
 <para>
 
@@ -568,6 +662,17 @@ Emitted when value changes.
 
 @inventory: 
 @name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_inventory_new_const ##### -->
+<para>
+
+</para>
+
+@item_type: 
+@item_size: 
+@nitems: 
+@items: 
 @Returns: 
 
 <!-- ##### FUNCTION gwy_inventory_nth_item_is_modifable ##### -->
@@ -856,6 +961,16 @@ Emitted when value changes.
 @spec: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_setenv ##### -->
+<para>
+
+</para>
+
+@variable: 
+@value: 
+@overwrite: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_si_unit_copy ##### -->
 <para>
 
@@ -941,6 +1056,14 @@ Emitted when value changes.
 
 </para>
 
+
+<!-- ##### MACRO mkdir ##### -->
+<para>
+
+</para>
+
+@dir: 
+@mode: 
 
 <!-- ##### VARIABLE mlambda ##### -->
 <para>
@@ -1028,6 +1151,13 @@ Emitted when value changes.
 
 </para>
 
+
+<!-- ##### MACRO unlink ##### -->
+<para>
+
+</para>
+
+@file: 
 
 <!-- ##### VARIABLE vystup ##### -->
 <para>

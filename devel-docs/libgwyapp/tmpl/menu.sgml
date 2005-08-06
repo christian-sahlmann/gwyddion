@@ -104,3 +104,11 @@ If there are no conditions defined, the widget is sensitive always.
 @sens_data: 
 
 
+<!-- ##### FUNCTION gwy_app_tooltips_get ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

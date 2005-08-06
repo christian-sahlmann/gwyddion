@@ -112,3 +112,19 @@ Data display window
 @corner: 
 
 
+<!-- ##### FUNCTION gwy_data_window_class_set_tooltips ##### -->
+<para>
+
+</para>
+
+@tips: 
+
+
+<!-- ##### FUNCTION gwy_data_window_class_get_tooltips ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

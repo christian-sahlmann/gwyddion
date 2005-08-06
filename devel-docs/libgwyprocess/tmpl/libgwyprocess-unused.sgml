@@ -404,6 +404,20 @@ Fit polynomial degree selection.
 @min_scar_len: 
 @max_scar_width: 
 
+<!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@pa: 
+@pbx: 
+@pby: 
+@a: 
+@ap: 
+@bp: 
+@cp: 
+
 <!-- ##### FUNCTION gwy_data_field_plane_coefs ##### -->
 <para>
 

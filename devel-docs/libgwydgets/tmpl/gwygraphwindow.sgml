@@ -49,3 +49,19 @@ GwyGraphWindow
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_window_class_set_tooltips ##### -->
+<para>
+
+</para>
+
+@tips: 
+
+
+<!-- ##### FUNCTION gwy_graph_window_class_get_tooltips ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

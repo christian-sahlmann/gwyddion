@@ -141,14 +141,6 @@ a set of data curves with a given plot properties.
 @area: 
 
 
-<!-- ##### FUNCTION gwy_graph_area_signal_mouse_moved ##### -->
-<para>
-
-</para>
-
-@area: 
-
-
 <!-- ##### FUNCTION gwy_graph_area_refresh ##### -->
 <para>
 
@@ -166,6 +158,24 @@ a set of data curves with a given plot properties.
 @status: 
 @selection: 
 @n_of_selections: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_set_selection_limit ##### -->
+<para>
+
+</para>
+
+@area: 
+@limit: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_get_selection_limit ##### -->
+<para>
+
+</para>
+
+@area: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_graph_area_change_model ##### -->

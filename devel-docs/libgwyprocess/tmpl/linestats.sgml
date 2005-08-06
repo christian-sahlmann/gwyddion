@@ -91,3 +91,12 @@ linestats
 @interpolation: 
 
 
+<!-- ##### FUNCTION gwy_data_line_get_length ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+
+

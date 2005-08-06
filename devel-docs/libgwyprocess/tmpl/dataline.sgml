@@ -183,9 +183,10 @@ connected with 1D data, graphs, etc.
 </para>
 
 @data_line: 
-@pixval: 
+@pixpos: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@pixval: 
 @a: 
 
 
@@ -195,9 +196,10 @@ connected with 1D data, graphs, etc.
 </para>
 
 @data_line: 
-@realval: 
+@realpos: 
 @Returns: 
 <!-- # Unused Parameters # -->
+@realval: 
 @a: 
 
 
@@ -264,6 +266,14 @@ connected with 1D data, graphs, etc.
 @a: 
 
 
+<!-- ##### FUNCTION gwy_data_line_clear ##### -->
+<para>
+
+</para>
+
+@data_line: 
+
+
 <!-- ##### FUNCTION gwy_data_line_fill ##### -->
 <para>
 
@@ -295,6 +305,16 @@ connected with 1D data, graphs, etc.
 @value: 
 <!-- # Unused Parameters # -->
 @a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_clear ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
 
 
 <!-- ##### FUNCTION gwy_data_line_part_fill ##### -->
@@ -553,16 +573,21 @@ connected with 1D data, graphs, etc.
 
 </para>
 
-@ra: 
-@ia: 
-@rb: 
-@ib: 
+@rsrc: 
+@isrc: 
+@rdest: 
+@idest: 
 @fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
+<!-- # Unused Parameters # -->
+@ra: 
+@ia: 
+@rb: 
+@ib: 
 
 
 <!-- ##### FUNCTION gwy_data_line_fft_hum ##### -->
@@ -571,11 +596,16 @@ connected with 1D data, graphs, etc.
 </para>
 
 @direction: 
+@rsrc: 
+@isrc: 
+@rdest: 
+@idest: 
+@interpolation: 
+<!-- # Unused Parameters # -->
 @ra: 
 @ia: 
 @rb: 
 @ib: 
-@interpolation: 
 
 
 <!-- ##### FUNCTION gwy_data_line_part_fit_polynom ##### -->
