@@ -33,7 +33,7 @@ gwy_rgba_get_type(void)
 {
     static GType rgba_type = 0;
 
-    if (rgba_type == 0)
+    if (G_UNLIKELY(!rgba_type))
         rgba_type = g_boxed_type_register_static("GwyRGBA",
                                                  (GBoxedCopyFunc)gwy_rgba_copy,
                                                  (GBoxedFreeFunc)gwy_rgba_free);
