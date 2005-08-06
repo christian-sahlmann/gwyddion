@@ -366,11 +366,12 @@ gwy_data_field_clone_real(GObject *source, GObject *copy)
  * gwy_data_field_data_changed:
  * @data_field: A data field.
  *
- * Emits signal "data_changed" on a data field.
+ * Emits signal "data-changed" on a data field.
  **/
 void
 gwy_data_field_data_changed(GwyDataField *data_field)
 {
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_signal_emit(data_field, data_field_signals[DATA_CHANGED], 0);
 }
 
