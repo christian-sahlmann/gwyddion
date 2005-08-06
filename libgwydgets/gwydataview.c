@@ -265,7 +265,6 @@ gwy_data_view_set_property(GObject *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-    g_assert(G_IS_VALUE(value));
 }
 
 static void
@@ -285,7 +284,6 @@ gwy_data_view_get_property(GObject *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
-    g_assert(G_IS_VALUE(value));
 }
 
 static void

@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_SCI_TEXT            (gwy_sci_text_get_type())
 #define GWY_SCI_TEXT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SCI_TEXT, GwySciText))
-#define GWY_SCI_TEXT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SCI_TEXT, GwySciText))
+#define GWY_SCI_TEXT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SCI_TEXT, GwySciTextClass))
 #define GWY_IS_SCI_TEXT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SCI_TEXT))
 #define GWY_IS_SCI_TEXT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SCI_TEXT))
 #define GWY_SCI_TEXT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SCI_TEXT, GwySciTextClass))

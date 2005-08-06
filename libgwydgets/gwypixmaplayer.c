@@ -150,7 +150,7 @@ gwy_pixmap_layer_get_property(GObject*object,
  *
  * This method does not enforce repaint.  If the layer doesn't think it needs
  * to repaint the pixbuf, it simply returns the current one.  To enforce
- * update, emit "data_changed" signal on corresponding data field.
+ * update, emit "data-changed" signal on corresponding data field.
  *
  * Returns: The pixbuf.  It should not be modified or freed.
  **/
@@ -196,7 +196,7 @@ gwy_pixmap_layer_wants_repaint(GwyPixmapLayer *pixmap_layer)
  * gwy_pixmap_layer_data_field_connect:
  * @pixmap_layer: A pixmap layer.
  *
- * Eventually connects to new data field's "data_changed" signal.
+ * Eventually connects to new data field's "data-changed" signal.
  **/
 static void
 gwy_pixmap_layer_data_field_connect(GwyPixmapLayer *pixmap_layer)

@@ -25,17 +25,12 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_GL_MATERIAL                (gwy_gl_material_get_type())
-#define GWY_GL_MATERIAL(obj)  \
-             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))
-#define GWY_GL_MATERIAL_CLASS(klass) \
-             (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))
-#define GWY_IS_GL_MATERIAL(obj) \
-             (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GL_MATERIAL))
-#define GWY_IS_GL_MATERIAL_CLASS(klass) \
-             (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GL_MATERIAL))
-#define GWY_GL_MATERIAL_GET_CLASS(obj)\
-             (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterialClass))
+#define GWY_TYPE_GL_MATERIAL            (gwy_gl_material_get_type())
+#define GWY_GL_MATERIAL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))
+#define GWY_GL_MATERIAL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GL_MATERIAL, GwyGLMaterialClass))
+#define GWY_IS_GL_MATERIAL(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GL_MATERIAL))
+#define GWY_IS_GL_MATERIAL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GL_MATERIAL))
+#define GWY_GL_MATERIAL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterialClass))
 
 #define GWY_GL_MATERIAL_NONE                 "None"
 #define GWY_GL_MATERIAL_EMERALD              "Emerald"

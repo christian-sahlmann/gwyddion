@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_VAL_UNIT            (gwy_val_unit_get_type())
 #define GWY_VAL_UNIT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VAL_UNIT, GwyValUnit))
-#define GWY_VAL_UNIT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_VAL_UNIT, GwyValUnit))
+#define GWY_VAL_UNIT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_VAL_UNIT, GwyValUnitClass))
 #define GWY_IS_VAL_UNIT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_VAL_UNIT))
 #define GWY_IS_VAL_UNIT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_VAL_UNIT))
 #define GWY_VAL_UNIT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_VAL_UNIT, GwyValUnitClass))

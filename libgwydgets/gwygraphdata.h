@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_GRAPH_DATA            (gwy_graph_data_get_type())
 #define GWY_GRAPH_DATA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRAPH_DATA, GwyGraphData))
-#define GWY_GRAPH_DATA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_DATA, GwyGraphData))
+#define GWY_GRAPH_DATA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRAPH_DATA, GwyGraphDataClass))
 #define GWY_IS_GRAPH_DATA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GRAPH_DATA))
 #define GWY_IS_GRAPH_DATA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_DATA))
 #define GWY_GRAPH_DATA_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_DATA, GwyGraphDataClass))
