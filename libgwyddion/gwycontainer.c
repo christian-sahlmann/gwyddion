@@ -26,7 +26,6 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwycontainer.h"
 #include "gwyserializable.h"
-#include "gwywatchable.h"
 
 #define GWY_CONTAINER_TYPE_NAME "GwyContainer"
 

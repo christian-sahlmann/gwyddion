@@ -122,25 +122,6 @@ foo_callback(gpointer obj, gpointer data __attribute__((unused)))
     g_message("FOO! %s", g_type_name(G_TYPE_FROM_INSTANCE(obj)));
 }
 
-static void
-test_watchable_iface(void)
-{
-    GObject *ser;
-    gulong id;
-
-    g_message("===== WATCHABLE INTERFACE ===========================");
-    ser = gwy_test_ser_new(1.618, 0.33333333);
-
-    id = g_signal_connect(ser, "value_changed", G_CALLBACK(foo_callback), NULL);
-    gwy_watchable_value_changed(ser);
-    gwy_test_ser_set_theta(GWY_TEST_SER(ser), 0.1111);
-    gwy_test_ser_set_radius(GWY_TEST_SER(ser), 33.4455);
-    gwy_watchable_value_changed(ser);
-    g_signal_handler_disconnect(ser, id);
-
-    g_object_unref(ser);
-}
-
 void
 bar_callback(gpointer hkey, GValue *value, gchar *user_data)
 {
@@ -201,6 +182,7 @@ test_container(void)
 
 }
 
+/* FIXME: this causes warnings because `ser' contains now-invalid SI units */
 static const gchar *serialized_text =
     "\"foobar\" int32 -100\n"
     "\"pdf\" double 0.52270000000000005\n"
@@ -1125,7 +1107,7 @@ test_expr_speed(void)
     gwy_expr_compile(expr, "1.0", NULL);
     g_timer_start(timer);
     for (i = 0; i < n; i++)
-        gwy_expr_vector_execute(expr, len, buffers, buf3);
+        gwy_expr_vector_execute(expr, len, (const gdouble**)buffers, buf3);
     g_timer_stop(timer);
     fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
 
@@ -1159,7 +1141,7 @@ test_expr_speed(void)
     gwy_expr_compile(expr, "a+b", NULL);
     g_timer_start(timer);
     for (i = 0; i < n; i++)
-        gwy_expr_vector_execute(expr, len, buffers, buf3);
+        gwy_expr_vector_execute(expr, len, (const gdouble**)buffers, buf3);
     g_timer_stop(timer);
     fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
 
@@ -1197,7 +1179,7 @@ test_expr_speed(void)
     gwy_expr_compile(expr, "(a+b)(a+b)/(1+2*a*b)", NULL);
     g_timer_start(timer);
     for (i = 0; i < n; i++)
-        gwy_expr_vector_execute(expr, len, buffers, buf3);
+        gwy_expr_vector_execute(expr, len, (const gdouble**)buffers, buf3);
     g_timer_stop(timer);
     fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
 
@@ -1288,7 +1270,7 @@ test_expr_speed(void)
     gwy_expr_compile(expr, "max a,b", NULL);
     g_timer_start(timer);
     for (i = 0; i < n; i++)
-        gwy_expr_vector_execute(expr, len, buffers, buf3);
+        gwy_expr_vector_execute(expr, len, (const gdouble**)buffers, buf3);
     g_timer_stop(timer);
     fprintf(stderr, " vector=%f", 100*g_timer_elapsed(timer, NULL)/n);
 
@@ -1363,11 +1345,250 @@ test_sort(void)
     g_timer_destroy(timer);
 }
 
+typedef struct {
+    const gchar *p;
+    const gchar *q;
+} FooType;
+
+static void
+gwyenum_print(gpointer idx, gpointer item, G_GNUC_UNUSED gpointer data)
+{
+    guint i = GPOINTER_TO_UINT(idx);
+    const GwyEnum *e = (const GwyEnum*)item;
+
+    fprintf(stderr, "[%d] <%s> = <%d>\n", i, e->name, e->value);
+}
+
+static void
+gwyenum_changed(GwyInventory *inventory, gint i, G_GNUC_UNUSED gpointer data)
+{
+    const GwyEnum *e;
+
+    e = gwy_inventory_get_nth_item(inventory, i);
+    fprintf(stderr, "[changed:%d] <%s> = <%d>\n", i, e->name, e->value);
+}
+
+static const gchar*
+foo_get_name(gconstpointer item)
+{
+    return ((FooType*)item)->q;
+}
+
+static const gchar*
+foo_get_text(gconstpointer item)
+{
+    return ((FooType*)item)->p;
+}
+
+gint
+foo_compare(gconstpointer item1,
+            gconstpointer item2)
+{
+    gint i;
+
+    if ((i = strcmp(((FooType*)item1)->q, ((FooType*)item2)->q)))
+        return i;
+    return strcmp(((FooType*)item1)->p, ((FooType*)item2)->p);
+}
+
+static void
+foo_changed(GwyInventory *inventory, gint i)
+{
+    const FooType *fp;
+
+    fp = gwy_inventory_get_nth_item(inventory, i);
+    fprintf(stderr, "[changed:%d] <%s> <%s>\n", i, fp->p, fp->q);
+}
+
+static void
+foo_inserted(GwyInventory *inventory, gint i)
+{
+    const FooType *fp;
+
+    fp = gwy_inventory_get_nth_item(inventory, i);
+    fprintf(stderr, "[inserted:%d] <%s> <%s>\n", i, fp->p, fp->q);
+}
+
+static void
+foo_deleted(G_GNUC_UNUSED GwyInventory *inventory, gint i)
+{
+    fprintf(stderr, "[deleted:%d]\n", i);
+}
+
+static void
+foo_reordered(GwyInventory *inventory, gpointer p)
+{
+    gint *new_order = (gint*)p;
+    const FooType *fp;
+    gint i, n;
+
+    n = gwy_inventory_get_n_items(inventory);
+    fprintf(stderr, "new_order:\n");
+    for (i = 0; i < n; i++) {
+        fp = gwy_inventory_get_nth_item(inventory, i);
+        fprintf(stderr, "%d -> %d <%s>\n", new_order[i], i, fp->q);
+    }
+}
+
+static void
+foo_print(gpointer idx, gpointer item, gpointer inv)
+{
+    guint i = GPOINTER_TO_UINT(idx);
+    GwyInventory *inventory = (GwyInventory*)inv;
+    const GwyInventoryItemType *item_type;
+
+    item_type = gwy_inventory_get_item_type(inventory);
+    fprintf(stderr, "[%d]", i);
+    if (item_type->get_name)
+        fprintf(stderr, " name:<%s>", item_type->get_name(item));
+    if (item_type->get_text)
+        fprintf(stderr, " text:<%s>", item_type->get_text(item));
+    fprintf(stderr, "\n");
+}
+
+static void
+test_inventory(void)
+{
+    static const GwyEnum table[] = {
+        { "Goldfish", 1 },
+        { "Daffodil", 4 },
+        { "Convolvulus", 3 },
+        { "Reeve", 0 },
+        { "Carabid", 16 },
+    };
+    GwyInventoryItemType foo_item_type = {
+        0,
+        NULL,
+        NULL,
+        foo_get_name,
+        foo_get_text,
+        foo_compare,
+        NULL,
+    };
+    FooType *pf;
+    FooType some_foos[] = {
+        { "Terry", "Gilliam" },
+        { "Terry", "Jones" },
+        { "Graham", "Chapman" },
+    };
+    gpointer foo_items[] = { some_foos, some_foos+1, some_foos+2 };
+    GwyInventory *inventory;
+    const GwyEnum *e;
+
+    g_message("====== INVENTORY ======================");
+    /* Constant */
+    inventory = gwy_inventory_new_from_enum(table, G_N_ELEMENTS(table));
+    g_signal_connect(inventory, "item-updated",
+                     G_CALLBACK(gwyenum_changed), NULL);
+
+    e = gwy_inventory_get_item(inventory, "Daffodil");
+    if (!e)
+        g_warning("<Daffodil> not found");
+    else
+        fprintf(stderr, "<%s> = <%d>\n", e->name, e->value);
+
+    e = gwy_inventory_get_item_or_default(inventory, "Grannom");
+    if (!e)
+        g_warning("<Grannom> neither default not found");
+    else
+        fprintf(stderr, "default: <%s> = <%d>\n", e->name, e->value);
+
+    gwy_inventory_set_default_item(inventory, "Carabid");
+    e = gwy_inventory_get_item_or_default(inventory, "Grannom");
+    if (!e)
+        g_warning("<Grannom> neither default not found");
+    else
+        fprintf(stderr, "default: <%s> = <%d>\n", e->name, e->value);
+
+    gwy_inventory_foreach(inventory, gwyenum_print, NULL);
+    gwy_inventory_item_updated(inventory, "Reeve");
+    gwy_inventory_nth_item_updated(inventory, 2);
+    gwy_inventory_item_updated(inventory, "Grannom");
+    gwy_inventory_insert_item(inventory, (gpointer)(table + 2));
+    g_object_unref(inventory);
+
+    /* Foo struct */
+    inventory = gwy_inventory_new_filled(&foo_item_type,
+                                         G_N_ELEMENTS(some_foos), foo_items);
+    g_signal_connect(inventory, "item-updated",
+                     G_CALLBACK(foo_changed), NULL);
+    g_signal_connect(inventory, "item-inserted",
+                     G_CALLBACK(foo_inserted), NULL);
+    g_signal_connect(inventory, "item-deleted",
+                     G_CALLBACK(foo_deleted), NULL);
+    g_signal_connect(inventory, "items-reordered",
+                     G_CALLBACK(foo_reordered), NULL);
+
+    pf = gwy_inventory_get_item(inventory, "Gilliam");
+    if (!pf)
+        g_warning("<Gilliam> not found");
+    else
+        fprintf(stderr, "<%s>: <%s>\n", pf->q, pf->p);
+
+    pf = gwy_inventory_get_item_or_default(inventory, "Smith");
+    if (!pf)
+        g_warning("<Smith> neither default not found");
+    else
+        fprintf(stderr, "default: <%s>: <%s>\n", pf->q, pf->p);
+
+    gwy_inventory_set_default_item(inventory, "Idle");
+    pf = gwy_inventory_get_item_or_default(inventory, "Smith");
+    if (!pf)
+        g_warning("<Smith> neither default not found");
+    else
+        fprintf(stderr, "default: <%s>: <%s>\n", pf->q, pf->p);
+
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+
+    pf = g_new(FooType, 1);
+    pf->p = "Eric";
+    pf->q = "Idle";
+    gwy_inventory_insert_item(inventory, pf);
+    pf = g_new(FooType, 1);
+    pf->p = "John";
+    pf->q = "Cleese";
+    gwy_inventory_insert_item(inventory, pf);
+    pf = g_new(FooType, 1);
+    pf->p = "Michael";
+    pf->q = "Palin";
+    gwy_inventory_insert_item(inventory, pf);
+
+    pf = gwy_inventory_get_item_or_default(inventory, "Smith");
+    if (!pf)
+        g_warning("<Smith> neither default not found");
+    else
+        fprintf(stderr, "default: <%s>: <%s>\n", pf->q, pf->p);
+
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+    gwy_inventory_item_updated(inventory, "Palin");
+    gwy_inventory_nth_item_updated(inventory, 2);
+    gwy_inventory_item_updated(inventory, "Smith");
+
+    gwy_inventory_restore_order(inventory);
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+
+    gwy_inventory_delete_item(inventory, "Chapman");
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+    gwy_inventory_delete_item(inventory, "Palin");
+    gwy_inventory_delete_item(inventory, "Smith");
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+
+    gwy_inventory_nth_item_updated(inventory, 2);
+    gwy_inventory_rename_item(inventory, "Idle", "Clapton");
+
+    pf = g_new(FooType, 1);
+    pf->p = "Graham";
+    pf->q = "Chapman";
+    gwy_inventory_insert_item(inventory, pf);
+    gwy_inventory_foreach(inventory, foo_print, inventory);
+
+    g_object_unref(inventory);
+}
+
 G_GNUC_UNUSED static void
 test_all(void)
 {
     test_serializable_iface();
-    test_watchable_iface();
     test_container();
     test_container_serialization();
     test_duplication();
@@ -1383,7 +1604,9 @@ test_all(void)
     test_si_unit_err();
     test_expr();
     test_expr_err();
+    test_expr_speed();
     test_sort();
+    test_inventory();
 }
 
 int
@@ -1391,7 +1614,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_expr_speed();
+    test_all();
 
     return 0;
 }

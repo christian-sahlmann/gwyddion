@@ -40,6 +40,7 @@ gwy_type_init(void)
 
     types_initialized += gwy_si_unit_get_type();
     types_initialized += gwy_container_get_type();
+    types_initialized += gwy_enum_get_type();
     types_initialized |= 1;
 }
 

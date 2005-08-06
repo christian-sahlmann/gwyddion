@@ -22,6 +22,7 @@
 #define __GWY_INVENTORY_H__
 
 #include <glib-object.h>
+#include <libgwyddion/gwyutils.h>
 
 G_BEGIN_DECLS
 
@@ -42,19 +43,17 @@ G_BEGIN_DECLS
  *    much pain, too little gain.  The basic trouble is we want to derive
  *    interfaces, but don't want instantiable types.
  */
-typedef struct _GwyItemType GwyItemType;
+typedef struct _GwyInventoryItemType GwyInventoryItemType;
 
-struct _GwyItemType {
+struct _GwyInventoryItemType {
     GType         type;
-    const gchar* (*get_name) (gconstpointer item);
-    const gchar* (*get_text) (gconstpointer item);
-    /* this is going to be a GdkPixbuf down the road, but we can't declare
-     * it here; XXX: may move to GwyResource -- anything containing a Pixbuf
-     * can be object itself */
-    gpointer     (*get_image)(gconstpointer item);
+    const gchar  *watchable_signal;
+    gboolean     (*is_fixed) (gconstpointer item);
+    const gchar* (*get_name) (gpointer item);
+    const gchar* (*get_text) (gpointer item);
     gint         (*compare)  (gconstpointer item1,
                               gconstpointer item2);
-    void         (*rename)   (gconstpointer item,
+    void         (*rename)   (gpointer item,
                               const gchar *newname);
 };
 
@@ -64,18 +63,26 @@ typedef struct _GwyInventoryClass GwyInventoryClass;
 struct _GwyInventory {
     GObject parent_instance;
 
-    GwyItemType item_type;
+    GwyInventoryItemType item_type;
     gboolean needs_reindex : 1;
     gboolean is_sorted : 1;
     gboolean is_object : 1;
+    gboolean is_const: 1;
     gboolean is_watchable : 1;
     gboolean can_make_copies : 1;
     gboolean has_default : 1;
 
     GString *default_key;
 
-    GArray *items;
+    /* Item pointers (called storage). */
+    GPtrArray *items;
+    /* Index.  A map from storage position to sort position. May be %NULL
+     * if @items is %NULL. */
     GArray *idx;
+    /* Reverse index.  A map from sort position to storage position. May be
+     * %NULL if @items is %NULL. */
+    GArray *ridx;
+    /* Name hash.  A map from name to storage position. */
     GHashTable *hash;
 };
 
@@ -92,20 +99,27 @@ struct _GwyInventoryClass {
                             const gint *new_order);
 };
 
-GType         gwy_inventory_get_type             (void) G_GNUC_CONST;
-GwyInventory* gwy_inventory_new                  (const GwyItemType *item_type);
-GwyInventory* gwy_inventory_new_filled           (const GwyItemType *item_type,
-                                                  guint nitems,
-                                                  gpointer *items);
+GType         gwy_inventory_get_type       (void) G_GNUC_CONST;
+
+/* Constructors */
+GwyInventory* gwy_inventory_new            (const GwyInventoryItemType *itype);
+GwyInventory* gwy_inventory_new_filled     (const GwyInventoryItemType *itype,
+                                            guint nitems,
+                                            gpointer *items);
+GwyInventory* gwy_inventory_new_from_array (const GwyInventoryItemType *itype,
+                                            guint item_size,
+                                            guint nitems,
+                                            gconstpointer items);
+GwyInventory* gwy_inventory_new_from_enum  (const GwyEnum *enum_table,
+                                            gint n);
 
 /* Information */
 guint         gwy_inventory_get_n_items          (GwyInventory *inventory);
 gboolean      gwy_inventory_can_make_copies      (GwyInventory *inventory);
-const GwyItemType* gwy_inventory_get_item_type   (GwyInventory *inventory);
+gboolean      gwy_inventory_is_const             (GwyInventory *inventory);
+const GwyInventoryItemType* gwy_inventory_get_item_type(GwyInventory *inventory);
 
 /* Retrieving items */
-gboolean      gwy_inventory_item_exists          (GwyInventory *inventory,
-                                                  const gchar *name);
 gpointer      gwy_inventory_get_item             (GwyInventory *inventory,
                                                   const gchar *name);
 gpointer      gwy_inventory_get_item_or_default  (GwyInventory *inventory,
@@ -146,6 +160,7 @@ gpointer      gwy_inventory_rename_item          (GwyInventory *inventory,
 gpointer      gwy_inventory_new_item             (GwyInventory *inventory,
                                                   const gchar *newname);
 gpointer      gwy_inventory_new_item_as_copy     (GwyInventory *inventory,
+                                                  const gchar *name,
                                                   const gchar *newname);
 /* FIXME: more stuff could be here: loading and saving from directories,
  * setting default fallback item, and whatnot */

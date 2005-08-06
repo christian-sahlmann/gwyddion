@@ -24,7 +24,6 @@
 #include <glib-object.h>
 
 #include "gwyserializable.h"
-#include "gwywatchable.h"
 
 G_BEGIN_DECLS
 
@@ -50,6 +49,8 @@ struct _GwyTestSer {
 
 struct _GwyTestSerClass {
     GObjectClass parent_class;
+
+    void (*value_changed)(GwyTestSer *test_ser);
 };
 
 

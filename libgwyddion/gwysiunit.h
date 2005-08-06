@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_SI_UNIT                  (gwy_si_unit_get_type())
 #define GWY_SI_UNIT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SI_UNIT, GwySIUnit))
-#define GWY_SI_UNIT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SI_UNIT, GwySIUnit))
+#define GWY_SI_UNIT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SI_UNIT, GwySIUnitClass))
 #define GWY_IS_SI_UNIT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SI_UNIT))
 #define GWY_IS_SI_UNIT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SI_UNIT))
 #define GWY_SI_UNIT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SI_UNIT, GwySIUnitClass))

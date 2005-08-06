@@ -10,6 +10,7 @@ libgwyddioninclude_HEADERS = \
 	gwydebugobjects.h \
 	gwyentities.h \
 	gwyexpr.h \
+	gwyinventory.h \
 	gwymacros.h \
 	gwymath.h \
 	gwymd5.h \
@@ -47,6 +48,7 @@ libgwyddion_la_SOURCES = \
 	gwydebugobjects.c \
 	gwyentities.c \
 	gwyexpr.c \
+	gwyinventory.c \
 	gwymath.c \
 	gwymd5.c \
 	gwynlfit.c \

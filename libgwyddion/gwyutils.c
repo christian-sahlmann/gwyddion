@@ -90,6 +90,17 @@ gwy_hash_table_to_list_cb(G_GNUC_UNUSED gpointer unused_key,
  * However the GLib stuff requires enum class registration and thus is
  * hardly usable for more-or-less random, or even dynamic stuff. */
 
+GType
+gwy_enum_get_type(void)
+{
+    static GType enum_type = 0;
+
+    if (G_UNLIKELY(!enum_type))
+        enum_type = g_pointer_type_register_static("GwyEnum");
+
+    return enum_type;
+}
+
 /**
  * gwy_string_to_enum:
  * @str: A string containing one of @enum_table string values.

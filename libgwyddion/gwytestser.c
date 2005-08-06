@@ -24,16 +24,19 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwysiunit.h>
 #include "gwytestser.h"
 
 #define GWY_TEST_SER_TYPE_NAME "GwyTestSer"
 
-static void        gwy_test_ser_class_init        (GwyTestSerClass *klass);
-static void        gwy_test_ser_init              (GwyTestSer *test_ser);
+enum {
+    VALUE_CHANGED,
+    LAST_SIGNAL
+};
+
 static void        gwy_test_ser_finalize          (GObject *object);
 static void        gwy_test_ser_serializable_init (GwySerializableIface *iface);
-static void        gwy_test_ser_watchable_init    (GwyWatchableIface *iface);
 static GByteArray* gwy_test_ser_serialize         (GObject *obj,
                                                    GByteArray *buffer);
 static GObject*    gwy_test_ser_deserialize       (const guchar *buffer,
@@ -41,50 +44,11 @@ static GObject*    gwy_test_ser_deserialize       (const guchar *buffer,
                                                    gsize *position);
 static void        gwy_test_ser_value_changed     (GObject *test_ser);
 
-static GObjectClass *parent_class = NULL;
+static guint test_ser_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gwy_test_ser_get_type(void)
-{
-    static GType gwy_test_ser_type = 0;
-
-    if (!gwy_test_ser_type) {
-        static const GTypeInfo gwy_test_ser_info = {
-            sizeof(GwyTestSerClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_test_ser_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyTestSer),
-            0,
-            (GInstanceInitFunc)gwy_test_ser_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_test_ser_serializable_init, NULL, 0
-        };
-        GInterfaceInfo gwy_watchable_info = {
-            (GInterfaceInitFunc)gwy_test_ser_watchable_init, NULL, 0
-        };
-
-        gwy_debug("");
-        gwy_test_ser_type = g_type_register_static(G_TYPE_OBJECT,
-                                                   GWY_TEST_SER_TYPE_NAME,
-                                                   &gwy_test_ser_info,
-                                                   0);
-        g_type_add_interface_static(gwy_test_ser_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-        g_type_add_interface_static(gwy_test_ser_type,
-                                    GWY_TYPE_WATCHABLE,
-                                    &gwy_watchable_info);
-    }
-
-    gwy_debug("%lu", gwy_test_ser_type);
-    return gwy_test_ser_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwyTestSer, gwy_test_ser, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_test_ser_serializable_init))
 
 static void
 gwy_test_ser_serializable_init(GwySerializableIface *iface)
@@ -97,30 +61,28 @@ gwy_test_ser_serializable_init(GwySerializableIface *iface)
 }
 
 static void
-gwy_test_ser_watchable_init(GwyWatchableIface *iface)
-{
-    gwy_debug("");
-    /* initialize stuff */
-    iface->value_changed = NULL;
-}
-
-static void
 gwy_test_ser_class_init(GwyTestSerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gwy_debug("");
 
-    parent_class = g_type_class_peek_parent(klass);
-
     gobject_class->finalize = gwy_test_ser_finalize;
+
+    test_ser_signals[VALUE_CHANGED]
+        = g_signal_new("value-changed",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyTestSerClass, value_changed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
 gwy_test_ser_init(GwyTestSer *test_ser)
 {
     gwy_debug("");
-    test_ser->theta = 0.0;
 }
 
 static void
@@ -136,7 +98,7 @@ gwy_test_ser_finalize(GObject *object)
     if (test_ser->unit)
         g_array_free(test_ser->unit, TRUE);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_test_ser_parent_class)->finalize(object);
 }
 
 GObject*
@@ -239,7 +201,8 @@ gwy_test_ser_set_radius(GwyTestSer *test_ser,
     }
 
     s = g_strdup_printf("%g", radius);
-    u = gwy_si_unit_new(s);   /* that's silly, get over it */
+    /* that's silly, get over it */
+    u = gwy_si_unit_new("m");
     g_array_append_val(test_ser->radius, radius);
     g_array_append_val(test_ser->string, s);
     g_array_append_val(test_ser->unit, u);
