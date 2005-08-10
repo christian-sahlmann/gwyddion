@@ -44,12 +44,6 @@ static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
 static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
-/*
-static gchar*       gwy_resource_invent_name      (GHashTable *resources,
-                                                   const gchar *prefix,
-                                                   gboolean warn);
-                                                   */
-
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -58,9 +52,12 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     "data-changed",
     &gwy_resource_get_is_const,
     &gwy_resource_get_item_name,
-    NULL,
     &gwy_resource_compare,
     &gwy_resource_rename,
+    /* TODO */
+    NULL,
+    NULL,
+    NULL
 };
 
 G_DEFINE_TYPE_EXTENDED
@@ -176,6 +173,41 @@ gwy_resource_get_is_modifiable(GwyResource *resource)
 }
 
 /**
+ * gwy_resource_class_get_traits:
+ * @klass: Resource class.
+ * @ntraits: Location to store the number of traits.
+ *
+ * Gets the traits of a resource class.
+ *
+ * Returns: An array of trait types of length *@ntraits.  It is owned by class
+ *          and must not be modified.
+ **/
+const GType*
+gwy_resource_class_get_traits(GwyResourceClass *klass,
+                              gint *ntraits)
+{
+    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), NULL);
+    *ntraits = klass->n_traits;
+    return klass->traits;
+}
+
+void
+gwy_resource_get_trait(GwyResource *resource,
+                       gint n,
+                       GValue *value)
+{
+    GwyResourceClass *klass;
+    void (*method)(GwyResource*, gint, GValue*);
+
+    g_return_if_fail(GWY_IS_RESOURCE(resource));
+    klass = GWY_RESOURCE_GET_CLASS(resource);
+    g_return_if_fail(n < 0 || n >= klass->n_traits);
+    method = klass->get_trait;
+    g_return_if_fail(method);
+    method(resource, n, value);
+}
+
+/**
  * gwy_resource_ref:
  * @resource: A resource.
  *
@@ -250,11 +282,11 @@ gwy_resource_ref_pixbuf(GwyResource *resource)
     g_return_val_if_fail(GWY_IS_RESOURCE(resource), NULL);
 
     if (!resource->pixbuf_use_count++) {
-        void (*method)(GwyResource*);
+        GdkPixbuf* (*method)(GwyResource*);
 
         method = GWY_RESOURCE_GET_CLASS(resource)->make_pixbuf;
-        if (method)
-            method(resource);
+        g_return_val_if_fail(method, NULL);
+        resource->pixbuf = method(resource);
     }
 
     return resource->pixbuf;

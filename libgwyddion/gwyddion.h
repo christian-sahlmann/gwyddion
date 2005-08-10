@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyddionenums.h>
 #include <libgwyddion/gwyddiontypes.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>

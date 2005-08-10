@@ -39,11 +39,12 @@ typedef struct _GwyResourceClass GwyResourceClass;
 struct _GwyResource {
     GObject parent_instance;
 
-    gchar *name;
-    GdkPixbuf *pixbuf;
-
     gint use_count;
+    gchar *name;
+
+    GdkPixbuf *pixbuf;
     gint pixbuf_use_count;
+
     gboolean is_const : 1;
     gboolean boolean1 : 1;
 
@@ -54,13 +55,20 @@ struct _GwyResource {
 struct _GwyResourceClass {
     GObjectClass parent_class;
 
+    /* Traits */
+    gint n_traits;
+    GType *traits;
+
     /* Signals */
     void (*data_changed)(GwyResource *resource);
 
     /* Virtual table */
     void (*use)(GwyResource *resource);
     void (*unuse)(GwyResource *resource);
-    void (*make_pixbuf)(GwyResource *resource);
+    void (*get_trait)(GwyResource *resource,
+                      gint i,
+                      GValue *value);
+    GdkPixbuf* (*make_pixbuf)(GwyResource *resource);
     GString* (*dump)(GwyResource *resource);
     GwyResource* (*parse)(const gchar *text);
 
@@ -71,6 +79,11 @@ struct _GwyResourceClass {
 GType             gwy_resource_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_resource_get_name              (GwyResource *resource);
 gboolean          gwy_resource_get_is_modifiable     (GwyResource *resource);
+const GType*      gwy_resource_class_get_traits      (GwyResourceClass *klass,
+                                                      gint *ntraits);
+void              gwy_resource_get_trait             (GwyResource *resource,
+                                                      gint n,
+                                                      GValue *value);
 void              gwy_resource_ref                   (GwyResource *resource);
 void              gwy_resource_unref                 (GwyResource *resource);
 GdkPixbuf*        gwy_resource_ref_pixbuf            (GwyResource *resource);

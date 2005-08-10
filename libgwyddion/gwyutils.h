@@ -27,32 +27,12 @@ G_BEGIN_DECLS
 
 #define GWY_TYPE_ENUM                  (gwy_enum_get_type())
 
-typedef struct {
-    const gchar *name;
-    gint value;
-} GwyEnum;
-
 void         gwy_hash_table_to_slist_cb(gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);
 void         gwy_hash_table_to_list_cb (gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);
-GType        gwy_enum_get_type         (void) G_GNUC_CONST;
-gint         gwy_string_to_enum        (const gchar *str,
-                                        const GwyEnum *enum_table,
-                                        gint n);
-const gchar* gwy_enum_to_string        (gint enumval,
-                                        const GwyEnum *enum_table,
-                                        gint n);
-gint         gwy_string_to_flags       (const gchar *str,
-                                        const GwyEnum *enum_table,
-                                        gint n,
-                                        const gchar *delimiter);
-gchar*       gwy_flags_to_string       (gint enumval,
-                                        const GwyEnum *enum_table,
-                                        gint n,
-                                        const gchar *glue);
 gchar*       gwy_strkill               (gchar *s,
                                         const gchar *killchars);
 gchar*       gwy_strreplace            (const gchar *haystack,

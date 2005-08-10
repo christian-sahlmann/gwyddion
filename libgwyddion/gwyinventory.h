@@ -50,11 +50,15 @@ struct _GwyInventoryItemType {
     const gchar  *watchable_signal;
     gboolean     (*is_fixed) (gconstpointer item);
     const gchar* (*get_name) (gpointer item);
-    const gchar* (*get_text) (gpointer item);
     gint         (*compare)  (gconstpointer item1,
                               gconstpointer item2);
     void         (*rename)   (gpointer item,
                               const gchar *newname);
+    const GType* (*get_traits)(gint *ntraits);
+    const gchar* (*get_trait_name)(gint i);
+    void         (*get_trait_value)(gpointer item,
+                                    gint i,
+                                    GValue *value);
 };
 
 typedef struct _GwyInventory GwyInventory;
@@ -110,8 +114,6 @@ GwyInventory* gwy_inventory_new_from_array (const GwyInventoryItemType *itype,
                                             guint item_size,
                                             guint nitems,
                                             gconstpointer items);
-GwyInventory* gwy_inventory_new_from_enum  (const GwyEnum *enum_table,
-                                            gint n);
 
 /* Information */
 guint         gwy_inventory_get_n_items          (GwyInventory *inventory);

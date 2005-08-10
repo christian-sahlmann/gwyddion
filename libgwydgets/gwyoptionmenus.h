@@ -23,7 +23,7 @@
 
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
-#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwynlfit.h>
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/gwyprocessenums.h>

@@ -24,8 +24,8 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "gwyinventory.h"
-#include "gwyserializable.h"
+#include <libgwyddion/gwyinventory.h>
+#include <libgwyddion/gwyserializable.h>
 
 #define GWY_INVENTORY_TYPE_NAME "GwyInventory"
 
@@ -249,51 +249,6 @@ gwy_inventory_new_from_array(const GwyInventoryItemType *itype,
         pitems[i] = (gpointer)((const guchar*)items + i*item_size);
 
     return gwy_inventory_new_real(itype, nitems, pitems, TRUE);
-}
-
-static const gchar*
-gwy_enum_get_name(gpointer item)
-{
-    return ((const GwyEnum*)item)->name;
-}
-
-static gboolean
-gwy_enum_is_const(G_GNUC_UNUSED gconstpointer item)
-{
-    return TRUE;
-}
-
-/**
- * gwy_inventory_new_from_enum:
- * @enum_table: A table of corresponding string-integer pairs.
- * @n: The number of elements in @enum_table, may be -1 when @enum_table is
- *     terminated by a NULL name.
- *
- * Convenience function to create a constant inventory from a #GwyEnum.
- *
- * Returns: The newly created constant inventory.
- **/
-GwyInventory*
-gwy_inventory_new_from_enum(const GwyEnum *enum_table,
-                            gint n)
-{
-    GwyInventoryItemType gwy_enum_item_type = {
-        GWY_TYPE_ENUM,
-        NULL,
-        gwy_enum_is_const,
-        gwy_enum_get_name,
-        NULL,
-        NULL,
-        NULL,
-    };
-
-    gwy_enum_item_type.type = GWY_TYPE_ENUM;
-    if (n == -1) {
-        for (n = 0; enum_table[n].name; n++)
-            ;
-    }
-    return gwy_inventory_new_from_array(&gwy_enum_item_type, sizeof(GwyEnum),
-                                        n, enum_table);
 }
 
 static GwyInventory*

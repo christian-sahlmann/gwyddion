@@ -22,7 +22,7 @@
 #define __GWY_RADIO_BUTTONS_H__
 
 #include <gtk/gtkwidget.h>
-#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
 

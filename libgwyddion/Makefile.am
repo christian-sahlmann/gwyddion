@@ -9,6 +9,7 @@ libgwyddioninclude_HEADERS = \
 	gwyddiontypes.h \
 	gwydebugobjects.h \
 	gwyentities.h \
+	gwyenum.h \
 	gwyexpr.h \
 	gwyinventory.h \
 	gwymacros.h \
@@ -47,6 +48,7 @@ libgwyddion_la_SOURCES = \
 	gwyddion.c \
 	gwydebugobjects.c \
 	gwyentities.c \
+	gwyenum.c \
 	gwyexpr.c \
 	gwyinventory.c \
 	gwymath.c \
