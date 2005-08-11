@@ -21,6 +21,10 @@
 #include "config.h"
 #include <string.h>
 
+#ifdef HAVE_FFTW3
+#include <fftw3.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
@@ -34,6 +38,80 @@
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
 #define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
+#ifdef HAVE_FFTW3
+/* Good FFTW array sizes for extended and resampled arrays.
+ *
+ * Since extending and resampling always involves an O(N) part -- N being the
+ * extended array size -- that may even be dominant, it isn't wise to use the
+ * fastest possible FFT if it requires considerably larger array.  Following
+ * numbers represent a reasonable compromise tested on a few platforms */
+static const guint16 nice_fftw_num[] = {
+       18,    20,    22,    24,    25,    27,    28,    30,    32,    33,
+       35,    36,    40,    42,    44,    72,    75,    77,    81,    84,
+       88,    90,    96,    98,    99,   100,   105,   108,   110,   112,
+      120,   126,   128,   132,   135,   140,   144,   150,   154,   160,
+      165,   168,   175,   176,   180,   189,   196,   198,   200,   210,
+      216,   220,   224,   225,   231,   240,   243,   250,   252,   256,
+      264,   270,   275,   280,   288,   294,   297,   300,   308,   315,
+      320,   324,   330,   336,   343,   350,   352,   360,   375,   384,
+      385,   396,   400,   405,   420,   432,   441,   448,   450,   462,
+      480,   486,   490,   495,   500,   504,   512,   528,   540,   550,
+      576,   588,   594,   600,   616,   630,   640,   648,   672,   675,
+      686,   700,   704,   720,   729,   735,   750,   768,   770,   784,
+      792,   800,   810,   825,   840,   864,   896,   900,   924,   960,
+      972,   980,   990,  1000,  1008,  1024,  1050,  1056,  1080,  1100,
+     1120,  1152,  1155,  1176,  1200,  1215,  1232,  1280,  1296,  1320,
+     1344,  1350,  1400,  1408,  1440,  1470,  1536,  1568,  1575,  1584,
+     1620,  1680,  1728,  1760,  1792,  1800,  1920,  2048,  2058,  2100,
+     2112,  2160,  2240,  2250,  2304,  2310,  2352,  2400,  2430,  2464,
+     2520,  2560,  2592,  2688,  2700,  2744,  2800,  2816,  2880,  3072,
+     3136,  3200,  3240,  3360,  3456,  3520,  3584,  3600,  3645,  3840,
+     4096,  4116,  4200,  4224,  4320,  4480,  4608,  4704,  4800,  4860,
+     5120,  5184,  5376,  5400,  5488,  5632,  5760,  6144,  6272,  6400,
+     6480,  6720,  6750,  6912,  7168,  7200,  7680,  7776,  7840,  8000,
+     8064,  8192,  8232,  8400,  8448,  8640,  8960,  9216,  9408,  9600,
+     9720,  9800, 10080, 10240, 10368, 10560, 10752, 10800, 10976, 11088,
+    11520, 11760, 12288, 12544, 12600, 12800, 12960, 13200, 13440, 13824,
+    14080, 14112, 14336, 14400, 15360, 15552, 15680, 16000, 16128, 16200,
+    16384, 16464, 16632, 16800, 16875, 17280, 17600, 17920, 18432, 18480,
+    19200, 19440, 19600, 19712, 19800, 20160, 20250, 20480, 20736, 21120,
+    21504, 21600, 21870, 22050, 22176, 22400, 23040, 23100, 23328, 23520,
+    23760, 24000, 24192, 24300, 24576, 24640, 24696, 24750, 25088, 25200,
+    25344, 25600, 25920, 26400, 26880, 27000, 27648, 27720, 28160, 28672,
+    28800, 29160, 29400, 29568, 30000, 30720, 31104, 31680, 32000, 32256,
+    32400, 33000, 33264, 33600, 33792, 34560, 34992, 35000, 35200, 35280,
+    35640, 35840, 36000, 36450, 36864, 36960, 37632, 37800, 38016, 38400,
+    38880, 39424, 39600, 40000, 40320, 40500, 40960, 41472, 42000, 42240,
+    42336, 42525, 43008, 43200, 43218, 43740, 43904, 44000, 44352, 44550,
+    44800, 45000, 45056, 45360, 46080, 46656, 47520, 48000, 48384, 48600,
+    49152, 49280, 49392, 49500, 50176, 50400, 50625, 50688, 51840, 52800,
+    52920, 53760, 54000, 54432, 54675, 55296, 55440, 56250, 57600, 58320,
+    58800, 59400, 60000, 60480, 60750, 61440, 61740, 62208, 63000, 63360,
+    64800,
+};
+
+/* Indices of powers of 2 in nice_fftw_numbers[], starting from 2^4 */
+static const guint nice_fftw_num_2n[] = {
+    0, 8, 15, 32, 59, 96, 135, 167, 200, 231, 270, 331
+};
+
+static inline gint
+find_next_nice_fftw_number(gint size)
+{
+    gint x, p2;
+
+    if (size <= 1 << 4)
+        return size;
+    g_return_val_if_fail(size <= nice_fftw_num[G_N_ELEMENTS(nice_fftw_num)-1],
+                         size);
+    for (x = size >> 4, p2 = 0; x; p2++, x = x >> 1)
+        ;
+    for (x = nice_fftw_num_2n[p2-1]; nice_fftw_num[x] < size; x++)
+        ;
+    return nice_fftw_num[x];
+}
+#endif  /* HAVE_FFTW3 */
 
 /**
  * gwy_data_field_get_max:
@@ -829,6 +907,682 @@ gwy_data_field_get_line_stat_function(GwyDataField *data_field,
     return TRUE;
 }
 
+/**
+ * gwy_data_field_area_dh:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates distribution of heights in a rectangular part of data field.
+ **/
+void
+gwy_data_field_area_dh(GwyDataField *data_field,
+                       GwyDataLine *target_line,
+                       gint col, gint row,
+                       gint width, gint height,
+                       gint nstats)
+{
+    gdouble min, max;
+    gdouble *drow;
+    gint i, j, k;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(target_line));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 1 && height >= 1
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (nstats < 1) {
+        nstats = floor(3.49*pow(width*height, 1.0/3.0) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+    min = gwy_data_field_area_get_min(data_field, col, row, width, height);
+    max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+
+    /* Handle border cases */
+    if (min == max) {
+        gwy_data_line_set_real(target_line, min ? max : 1.0);
+        target_line->data[0] = width*height;
+        return;
+    }
+
+    /* Calculate height distribution */
+    gwy_data_line_set_real(target_line, max - min);
+    for (i = 0; i < height; i++) {
+        drow = data_field->data + (i + row)*data_field->xres + col;
+
+        for (j = 0; j < width; j++) {
+            k = floor((drow[j] - min)/(max - min)*nstats);
+            /* Fix rounding errors */
+            if (G_UNLIKELY(k >= nstats))
+                k = nstats;
+
+            target_line->data[k] += 1;
+        }
+    }
+}
+
+/**
+ * gwy_data_field_dh:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates distribution of heights in a data field.
+ **/
+void
+gwy_data_field_dh(GwyDataField *data_field,
+                  GwyDataLine *target_line,
+                  gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_dh(data_field, target_line,
+                           0, 0, data_field->xres, data_field->yres,
+                           nstats);
+}
+
+/**
+ * gwy_data_field_area_cdh:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates cumulative distribution of heights in a rectangular part of data
+ * field.
+ **/
+void
+gwy_data_field_area_cdh(GwyDataField *data_field,
+                        GwyDataLine *target_line,
+                        gint col, gint row,
+                        gint width, gint height,
+                        gint nstats)
+{
+    gwy_data_field_area_dh(data_field, target_line,
+                           col, row, width, height,
+                           nstats);
+    gwy_data_line_cumulate(target_line);
+}
+
+/**
+ * gwy_data_field_cdh:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates cumulative distribution of heights in a data field.
+ **/
+void
+gwy_data_field_cdh(GwyDataField *data_field,
+                   GwyDataLine *target_line,
+                   gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_dh(data_field, target_line,
+                           0, 0, data_field->xres, data_field->yres,
+                           nstats);
+    gwy_data_line_cumulate(target_line);
+}
+
+/**
+ * gwy_data_field_area_da:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Orientation to compute the slope distribution in.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates distribution of slopes in a rectangular part of data field.
+ **/
+void
+gwy_data_field_area_da(GwyDataField *data_field,
+                       GwyDataLine *target_line,
+                       gint col, gint row,
+                       gint width, gint height,
+                       GwyOrientation orientation,
+                       gint nstats)
+{
+    GwyDataField *der;
+    gdouble *drow, *derrow;
+    gdouble q;
+    gint xres, yres, i, j;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 2 && height >= 2
+                     && col + width <= xres
+                     && row + height <= yres);
+
+    /* Create a temporary data field from horizontal/vertical derivations
+     * and then simply use gwy_data_field_dh().
+     * XXX: Should not such a thing exist as a public method? */
+    der = gwy_data_field_new(width, height,
+                             data_field->xreal*width/xres,
+                             data_field->yreal*height/yres,
+                             FALSE);
+
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        q = xres/data_field->xreal;
+        /* Instead of testing border columns in each gwy_data_field_get_xder()
+         * call, special-case them explicitely */
+        for (i = 0; i < height; i++) {
+            drow = data_field->data + (i + row)*xres + col;
+            derrow = der->data + i*der->xres;
+
+            derrow[0] = q*(drow[1] - drow[0]);
+            for (j = 1; j < width-1; j++)
+                derrow[j] = q*(drow[j+1] - drow[j-1])/2.0;
+            if (width > 1)
+                derrow[j] = q*(drow[width-1] - drow[width-2]);
+        }
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        q = yres/data_field->yreal;
+        /* Instead of testing border rows in each gwy_data_field_get_yder()
+         * call, special-case them explicitely */
+        drow = data_field->data + row*xres + col;
+        derrow = der->data;
+        for (j = 0; j < width; j++)
+            derrow[j] = q*(drow[j+xres] - drow[j]);
+
+        for (i = 1; i < height-1; i++) {
+            drow = data_field->data + (i + row)*xres + col;
+            derrow = der->data + i*der->xres;
+
+            for (j = 0; j < width; j++)
+                derrow[j] = q*(drow[j+xres] - drow[j-xres])/2.0;
+        }
+
+        if (height > 1) {
+            drow = data_field->data + (row + height-1)*xres + col;
+            derrow = der->data + (height-1)*der->xres;
+            for (j = 0; j < width; j++)
+                derrow[j] = q*(drow[j] - drow[j-xres]);
+        }
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    gwy_data_field_dh(der, target_line, nstats);
+    g_object_unref(der);
+}
+
+/**
+ * gwy_data_field_da:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @orientation: Orientation to compute the slope distribution in.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates distribution of slopes in a data field.
+ **/
+void
+gwy_data_field_da(GwyDataField *data_field,
+                  GwyDataLine *target_line,
+                  GwyOrientation orientation,
+                  gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_da(data_field, target_line,
+                           0, 0, data_field->xres, data_field->yres,
+                           orientation, nstats);
+}
+
+/**
+ * gwy_data_field_area_cda:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Orientation to compute the slope distribution in.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates cumulative distribution of slopes in a rectangular part of data
+ * field.
+ **/
+void
+gwy_data_field_area_cda(GwyDataField *data_field,
+                        GwyDataLine *target_line,
+                        gint col, gint row,
+                        gint width, gint height,
+                        GwyOrientation orientation,
+                        gint nstats)
+{
+    gwy_data_field_area_da(data_field, target_line,
+                           col, row, width, height,
+                           orientation, nstats);
+    gwy_data_line_cumulate(target_line);
+}
+
+/**
+ * gwy_data_field_cda:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @orientation: Orientation to compute the slope distribution in.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates cumulative distribution of slopes in a data field.
+ **/
+void
+gwy_data_field_cda(GwyDataField *data_field,
+                   GwyDataLine *target_line,
+                   GwyOrientation orientation,
+                   gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_da(data_field, target_line,
+                           0, 0, data_field->xres, data_field->yres,
+                           orientation, nstats);
+    gwy_data_line_cumulate(target_line);
+}
+
+#ifdef HAVE_FFTW3
+typedef void (*GwyFFTAreaFunc)(fftw_plan plan,
+                               GwyDataLine *din,
+                               GwyDataLine *dout,
+                               GwyDataLine *target_line);
+
+static inline void
+do_fft_acf(fftw_plan plan,
+           GwyDataLine *din,
+           GwyDataLine *dout,
+           GwyDataLine *target_line)
+{
+    gdouble *in, *out;
+    gint j, width, res;
+
+    width = target_line->res;
+    res = din->res;
+    in = din->data;
+    out = dout->data;
+
+    memset(in + width, 0, (res - width)*sizeof(gdouble));
+
+    fftw_execute(plan);
+    in[0] = out[0]*out[0];
+    for (j = 1; j < res/2; j++)
+        in[j] = in[res-j] = out[j]*out[j] + out[res-j]*out[res-j];
+    if (!(res % 2))
+        in[res/2] = out[res/2]*out[res/2];
+
+    fftw_execute(plan);
+    for (j = 0; j < width; j++)
+        target_line->data[j] += out[j]/(width - j);
+}
+
+static inline void
+do_fft_hhcf(fftw_plan plan,
+            GwyDataLine *din,
+            GwyDataLine *dout,
+            GwyDataLine *target_line)
+{
+    gdouble *in, *out;
+    gdouble sum;
+    gint j, width, res;
+
+    width = target_line->res;
+    res = din->res;
+    in = din->data;
+    out = dout->data;
+
+    sum = 0.0;
+    for (j = 0; j < width; j++) {
+        sum += in[j]*in[j] + in[width-1-j]*in[width-1-j];
+        target_line->data[width-1-j] += sum;
+    }
+
+    memset(in + width, 0, (res - width)*sizeof(gdouble));
+
+    fftw_execute(plan);
+    in[0] = out[0]*out[0];
+    for (j = 1; j < res/2; j++)
+        in[j] = in[res-j] = out[j]*out[j] + out[res-j]*out[res-j];
+    if (!(res % 2))
+        in[res/2] = out[res/2]*out[res/2];
+
+    fftw_execute(plan);
+    for (j = 0; j < width; j++)
+        target_line->data[j] -= out[j]/(width - j);
+}
+
+static void
+gwy_data_field_area_func_fft(GwyDataField *data_field,
+                             GwyDataLine *target_line,
+                             GwyFFTAreaFunc func,
+                             gint col, gint row,
+                             gint width, gint height,
+                             GwyOrientation orientation,
+                             GwyInterpolationType interpolation,
+                             gint nstats)
+{
+    GwyDataLine *din, *dout;
+    fftw_plan plan;
+    gdouble *in, *out, *drow, *dcol;
+    gint i, j, xres, yres, res = 0;
+    gdouble avg;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(target_line));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 1 && height >= 1
+                     && col + width <= xres
+                     && row + height <= yres);
+    g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
+                     || orientation == GWY_ORIENTATION_VERTICAL);
+
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        res = find_next_nice_fftw_number(2*xres);
+        gwy_data_line_resample(target_line, width, GWY_INTERPOLATION_NONE);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        res = find_next_nice_fftw_number(2*yres);
+        gwy_data_line_resample(target_line, height, GWY_INTERPOLATION_NONE);
+        break;
+    }
+    gwy_data_line_clear(target_line);
+
+    din = gwy_data_line_new(res, 1.0, FALSE);
+    dout = gwy_data_line_new(res, 1.0, FALSE);
+    in = gwy_data_line_get_data(din);
+    out = gwy_data_line_get_data(dout);
+    plan = fftw_plan_r2r_1d(res, in, out, FFTW_R2HC, FFTW_MEASURE);
+
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        for (i = 0; i < height; i++) {
+            drow = data_field->data + (i + row)*xres + col;
+            avg = gwy_data_field_area_get_avg(data_field,
+                                              col, row+i, width, 1);
+            for (j = 0; j < width; j++)
+                in[j] = drow[j] - avg;
+            func(plan, din, dout, target_line);
+        }
+        gwy_data_line_multiply(target_line, 1.0/(res*height));
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        for (i = 0; i < width; i++) {
+            dcol = data_field->data + row*xres + (i + col);
+            avg = gwy_data_field_area_get_avg(data_field,
+                                              col+i, row, 1, height);
+            for (j = 0; j < height; j++)
+                in[j] = dcol[j*xres] - avg;
+            func(plan, din, dout, target_line);
+        }
+        gwy_data_line_multiply(target_line, 1.0/(res*width));
+        break;
+    }
+
+    fftw_destroy_plan(plan);
+    g_object_unref(din);
+    g_object_unref(dout);
+
+    if (nstats > 0)
+        gwy_data_line_resample(target_line, nstats, interpolation);
+}
+#else  /* HAVE_FFTW3 */
+typedef void (*GwyLameAreaFunc)(GwyDataLine *source,
+                                GwyDataLine *target);
+
+static void
+gwy_data_field_area_func_lame(GwyDataField *data_field,
+                              GwyDataLine *target_line,
+                              GwyLameAreaFunc func,
+                              gint col, gint row,
+                              gint width, gint height,
+                              GwyOrientation orientation,
+                              GwyInterpolationType interpolation,
+                              gint nstats)
+{
+    GwyDataLine *data_line, *tmp_line;
+    gint i, j, xres, yres, size;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(target_line));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 1 && height >= 1
+                     && col + width <= xres
+                     && row + height <= yres);
+    g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
+                     || orientation == GWY_ORIENTATION_VERTICAL);
+
+    size = (orientation == GWY_ORIENTATION_HORIZONTAL) ? width : height;
+    data_line = gwy_data_line_new(size, 1.0, FALSE);
+    tmp_line = gwy_data_line_new(size, 1.0, FALSE);
+    gwy_data_line_resample(target_line, size, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        for (i = 0; i < height; i++) {
+            gwy_data_field_get_row_part(data_field, data_line, i,
+                                        col, col+width+1);
+            func(data_line, tmp_line);
+            for (j = 0; j < width; j++)
+                target_line->data[j] += tmp_line->data[j];
+        }
+        gwy_data_line_multiply(target_line, 1.0/height);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        for (i = 0; i < width; i++) {
+            gwy_data_field_get_column_part(data_field, data_line, i,
+                                           row, row+height+1);
+            func(data_line, tmp_line);
+            for (j = 0; j < height; j++)
+                target_line->data[j] += tmp_line->data[j];
+        }
+        gwy_data_line_multiply(target_line, 1.0/width);
+        break;
+    }
+
+    g_object_unref(data_line);
+    g_object_unref(tmp_line);
+
+    if (nstats > 0)
+        gwy_data_line_resample(target_line, nstats, interpolation);
+}
+#endif  /* HAVE_FFTW3 */
+
+/**
+ * gwy_data_field_area_acf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Orientation of lines (ACF is simply averaged over the
+ *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, @width (@height) is used.
+ *
+ * Calculates one-dimensional autocorrelation function of a rectangular part of
+ * a data field.
+ **/
+void
+gwy_data_field_area_acf(GwyDataField *data_field,
+                        GwyDataLine *target_line,
+                        gint col, gint row,
+                        gint width, gint height,
+                        GwyOrientation orientation,
+                        GwyInterpolationType interpolation,
+                        gint nstats)
+#ifdef HAVE_FFTW3
+{
+    gwy_data_field_area_func_fft(data_field, target_line,
+                                 &do_fft_acf,
+                                 col, row, width, height,
+                                 orientation, interpolation, nstats);
+}
+#else
+{
+    gwy_data_field_area_func_lame(data_field, target_line,
+                                  &gwy_data_line_acf,
+                                  col, row, width, height,
+                                  orientation, interpolation, nstats);
+}
+#endif  /* HAVE_FFTW3 */
+
+/**
+ * gwy_data_field_acf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @orientation: Orientation of lines (ACF is simply averaged over the
+ *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates one-dimensional autocorrelation function of a rectangular part of
+ * a data field.
+ **/
+void
+gwy_data_field_acf(GwyDataField *data_field,
+                   GwyDataLine *target_line,
+                   GwyOrientation orientation,
+                   GwyInterpolationType interpolation,
+                   gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_acf(data_field, target_line,
+                            0, 0, data_field->xres, data_field->yres,
+                            orientation, interpolation, nstats);
+}
+
+/**
+ * gwy_data_field_area_hhcf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Orientation of lines (ACF is simply averaged over the
+ *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, @width (@height) is used.
+ *
+ * Calculates one-dimensional autocorrelation function of a rectangular part of
+ * a data field.
+ **/
+void
+gwy_data_field_area_hhcf(GwyDataField *data_field,
+                         GwyDataLine *target_line,
+                         gint col, gint row,
+                         gint width, gint height,
+                         GwyOrientation orientation,
+                         GwyInterpolationType interpolation,
+                         gint nstats)
+#ifdef HAVE_FFTW3
+{
+    gwy_data_field_area_func_fft(data_field, target_line, &do_fft_hhcf,
+                                 col, row, width, height,
+                                 orientation, interpolation, nstats);
+}
+#else
+{
+    gwy_data_field_area_func_lame(data_field, target_line,
+                                  &gwy_data_line_hhcf,
+                                  col, row, width, height,
+                                  orientation, interpolation, nstats);
+}
+#endif  /* HAVE_FFTW3 */
+
+/**
+ * gwy_data_field_hhcf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @orientation: Orientation of lines (ACF is simply averaged over the
+ *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates one-dimensional autocorrelation function of a rectangular part of
+ * a data field.
+ **/
+void
+gwy_data_field_hhcf(GwyDataField *data_field,
+                    GwyDataLine *target_line,
+                    GwyOrientation orientation,
+                    GwyInterpolationType interpolation,
+                    gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_hhcf(data_field, target_line,
+                            0, 0, data_field->xres, data_field->yres,
+                            orientation, interpolation, nstats);
+}
+
+/**
+ * square_area2:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @x: One fourth of square of rectangle width (x-size).
+ * @y: One fourth of square of rectangle height (y-size).
+ *
+ * Calculates approximate area of a one general rectangular pixel.
+ *
+ * Returns: The area.
+ **/
 static inline gdouble
 square_area2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
              gdouble x, gdouble y)
@@ -843,6 +1597,18 @@ square_area2(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
             + sqrt(1 + (z1 - z4)*(z1 - z4)/y + (z1 + z4 - c)*(z1 + z4 - c)/x));
 }
 
+/**
+ * square_area1:
+ * @z1: Z-value in first corner.
+ * @z2: Z-value in second corner.
+ * @z3: Z-value in third corner.
+ * @z4: Z-value in fourth corner.
+ * @q: One fourth of rectangle projected area (x-size * ysize).
+ *
+ * Calculates approximate area of a one square pixel.
+ *
+ * Returns: The area.
+ **/
 static inline gdouble
 square_area1(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
              gdouble q)

@@ -1323,6 +1323,8 @@ gwy_data_line_cumulate(GwyDataLine *data_line)
     gdouble *data;
     gint i;
 
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+
     data = data_line->data;
     sum = 0.0;
     for (i = 0; i < data_line->res; i++) {
