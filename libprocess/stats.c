@@ -1484,8 +1484,7 @@ gwy_data_field_area_acf(GwyDataField *data_field,
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
  *
- * Calculates one-dimensional autocorrelation function of a rectangular part of
- * a data field.
+ * Calculates one-dimensional autocorrelation function of a data field.
  **/
 void
 gwy_data_field_acf(GwyDataField *data_field,
@@ -1509,7 +1508,7 @@ gwy_data_field_acf(GwyDataField *data_field,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @orientation: Orientation of lines (ACF is simply averaged over the
+ * @orientation: Orientation of lines (HHCF is simply averaged over the
  *               other orientation).
  * @interpolation: Interpolation to use when @nstats is given and requires
  *                 resampling.
@@ -1547,15 +1546,14 @@ gwy_data_field_area_hhcf(GwyDataField *data_field,
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
- * @orientation: Orientation of lines (ACF is simply averaged over the
+ * @orientation: Orientation of lines (HHCF is simply averaged over the
  *               other orientation).
  * @interpolation: Interpolation to use when @nstats is given and requires
  *                 resampling.
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
  *
- * Calculates one-dimensional autocorrelation function of a rectangular part of
- * a data field.
+ * Calculates one-dimensional autocorrelation function of a data field.
  **/
 void
 gwy_data_field_hhcf(GwyDataField *data_field,
@@ -1566,8 +1564,118 @@ gwy_data_field_hhcf(GwyDataField *data_field,
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_hhcf(data_field, target_line,
-                            0, 0, data_field->xres, data_field->yres,
-                            orientation, interpolation, nstats);
+                             0, 0, data_field->xres, data_field->yres,
+                             orientation, interpolation, nstats);
+}
+
+/**
+ * gwy_data_field_area_psdf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Orientation of lines (PSDF is simply averaged over the
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling (and possibly in FFT too).
+ * @windowing: Windowing type to use.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates one-dimensional power spectrum density function of a rectangular
+ * part of a data field.
+ **/
+void
+gwy_data_field_area_psdf(GwyDataField *data_field,
+                         GwyDataLine *target_line,
+                         gint col, gint row,
+                         gint width, gint height,
+                         GwyOrientation orientation,
+                         GwyInterpolationType interpolation,
+                         GwyWindowingType windowing,
+                         gint nstats)
+{
+    GwyDataLine *data_line, *tmp_line;
+    gint i, j, xres, yres, size;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(target_line));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    size = (orientation == GWY_ORIENTATION_HORIZONTAL) ? width : height;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 1 && height >= 1
+                     && size >= 8
+                     && col + width <= xres
+                     && row + height <= yres);
+    g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
+                     || orientation == GWY_ORIENTATION_VERTICAL);
+
+    data_line = gwy_data_line_new(size, 1.0, FALSE);
+    tmp_line = gwy_data_line_new(size, 1.0, FALSE);
+    gwy_data_line_resample(target_line, size, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        for (i = 0; i < height; i++) {
+            gwy_data_field_get_row_part(data_field, data_line, i,
+                                        col, col+width+1);
+            gwy_data_line_psdf(data_line, tmp_line, windowing, interpolation);
+            for (j = 0; j < width; j++)
+                target_line->data[j] += tmp_line->data[j];
+        }
+        gwy_data_line_multiply(target_line, 1.0/height);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        for (i = 0; i < width; i++) {
+            gwy_data_field_get_column_part(data_field, data_line, i,
+                                           row, row+height+1);
+            gwy_data_line_psdf(data_line, tmp_line, windowing, interpolation);
+            for (j = 0; j < height; j++)
+                target_line->data[j] += tmp_line->data[j];
+        }
+        gwy_data_line_multiply(target_line, 1.0/width);
+        break;
+    }
+
+    g_object_unref(data_line);
+    g_object_unref(tmp_line);
+
+    if (nstats > 0)
+        gwy_data_line_resample(target_line, nstats, interpolation);
+}
+
+/**
+ * gwy_data_field_psdf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @orientation: Orientation of lines (PSDF is simply averaged over the
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling (and possibly in FFT too).
+ * @windowing: Windowing type to use.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, data field width (height) is used.
+ *
+ * Calculates one-dimensional power spectrum density function of a rectangular
+ * part of a data field.
+ **/
+void
+gwy_data_field_psdf(GwyDataField *data_field,
+                    GwyDataLine *target_line,
+                    GwyOrientation orientation,
+                    GwyInterpolationType interpolation,
+                    GwyWindowingType windowing,
+                    gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_psdf(data_field, target_line,
+                             0, 0, data_field->xres, data_field->yres,
+                             orientation, interpolation, windowing, nstats);
 }
 
 /**
