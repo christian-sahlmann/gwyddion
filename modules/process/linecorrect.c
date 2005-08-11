@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libprocess/linestats.h>
 #include <app/gwyapp.h>
 
 #define LINECORR_RUN_MODES \

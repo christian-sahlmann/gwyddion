@@ -126,26 +126,6 @@ void           gwy_data_line_part_add              (GwyDataLine *data_line,
                                                     gint from,
                                                     gint to,
                                                     gdouble value);
-gdouble        gwy_data_line_get_max               (GwyDataLine *data_line);
-gdouble        gwy_data_line_get_min               (GwyDataLine *data_line);
-gdouble        gwy_data_line_get_avg               (GwyDataLine *data_line);
-gdouble        gwy_data_line_get_rms               (GwyDataLine *data_line);
-gdouble        gwy_data_line_get_sum               (GwyDataLine *data_line);
-gdouble        gwy_data_line_part_get_max          (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to);
-gdouble        gwy_data_line_part_get_min          (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to);
-gdouble        gwy_data_line_part_get_avg          (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to);
-gdouble        gwy_data_line_part_get_rms          (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to);
-gdouble        gwy_data_line_part_get_sum          (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to);
 gint           gwy_data_line_threshold             (GwyDataLine *data_line,
                                                     gdouble threshval,
                                                     gdouble bottom,
@@ -204,12 +184,8 @@ void           gwy_data_line_part_subtract_polynom (GwyDataLine *data_line,
 void           gwy_data_line_subtract_polynom      (GwyDataLine *data_line,
                                                     gint n,
                                                     gdouble *coeffs);
-gdouble        gwy_data_line_get_modus             (GwyDataLine *data_line,
-                                                    gint histogram_steps);
-gdouble        gwy_data_line_part_get_modus        (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to,
-                                                    gint histogram_steps);
+void           gwy_data_line_cumulate      (GwyDataLine *data_line);
+
 
 G_END_DECLS
 

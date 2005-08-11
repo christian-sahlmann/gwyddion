@@ -27,6 +27,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 #include <libprocess/arithmetic.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwygraph.h>

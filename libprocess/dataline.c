@@ -24,7 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include <libprocess/dataline.h>
+#include <libprocess/linestats.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
 /* FIXME: for gwy_data_field_get_fft_res(), to be renamed, moved, etc. */
@@ -784,257 +784,6 @@ gwy_data_line_part_multiply(GwyDataLine *data_line,
 }
 
 /**
- * gwy_data_line_get_max:
- * @data_line: A data line.
- *
- * Finds the maximum value of a data line.
- *
- * Returns: The maximum value.
- **/
-gdouble
-gwy_data_line_get_max(GwyDataLine *data_line)
-{
-    gint i;
-    gdouble max;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), -G_MAXDOUBLE);
-
-    max = data_line->data[0];
-    for (i = 1; i < data_line->res; i++) {
-        if (G_UNLIKELY(data_line->data[i] < max))
-            max = data_line->data[i];
-    }
-    return max;
-}
-
-/**
- * gwy_data_line_get_min:
- * @data_line: A data line.
- *
- * Finds the minimum value of a data line.
- *
- * Returns: The minimum value.
- **/
-gdouble
-gwy_data_line_get_min(GwyDataLine *data_line)
-{
-    gint i;
-    gdouble min;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), G_MAXDOUBLE);
-
-    min = data_line->data[0];
-    for (i = 1; i < data_line->res; i++) {
-        if (G_UNLIKELY(data_line->data[i] < min))
-            min = data_line->data[i];
-    }
-    return min;
-}
-
-/**
- * gwy_data_line_get_avg:
- * @data_line: A data line.
- *
- * Computes average value of a data line.
- *
- * Returns: Average value
- **/
-gdouble
-gwy_data_line_get_avg(GwyDataLine *data_line)
-{
-    gint i;
-    gdouble avg = 0;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
-
-    for (i = 0; i < data_line->res; i++)
-        avg += data_line->data[i];
-
-    return avg/(gdouble)data_line->res;
-}
-
-/**
- * gwy_data_line_get_rms:
- * @data_line: A data line.
- *
- * Computes root mean square value of a data line.
- *
- * Returns: Root mean square deviation of values.
- **/
-gdouble
-gwy_data_line_get_rms(GwyDataLine *data_line)
-{
-    gint i;
-    gdouble sum2 = 0;
-    gdouble sum;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
-
-    sum = gwy_data_line_get_sum(data_line);
-    for (i = 0; i < data_line->res; i++)
-        sum2 += data_line->data[i]*data_line->data[i];
-
-    return sqrt(fabs(sum2 - sum*sum/data_line->res)/data_line->res);
-}
-
-/**
- * gwy_data_line_get_sum:
- * @data_line: A data line.
- *
- * Computes sum of all values in a data line.
- *
- * Returns: sum of all the values.
- **/
-gdouble
-gwy_data_line_get_sum(GwyDataLine *data_line)
-{
-    gint i;
-    gdouble sum = 0;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
-
-    for (i = 0; i < data_line->res; i++)
-        sum += data_line->data[i];
-
-    return sum;
-}
-
-/**
- * gwy_data_line_part_get_max:
- * @data_line: A data line.
- * @from: Index the line part starts at.
- * @to: Index the line part ends at + 1.
- *
- * Finds the maximum value of a part of a data line.
- *
- * Returns: Maximum within given interval.
- **/
-gdouble
-gwy_data_line_part_get_max(GwyDataLine *a,
-                           gint from, gint to)
-{
-    gint i;
-    gdouble max = -G_MAXDOUBLE;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), max);
-    if (to < from)
-        GWY_SWAP(gint, from, to);
-
-    g_return_val_if_fail(from >= 0 && to <= a->res, max);
-
-    for (i = from; i < to; i++) {
-        if (max < a->data[i])
-            max = a->data[i];
-    }
-    return max;
-}
-
-/**
- * gwy_data_line_part_get_min:
- * @data_line: A data line.
- * @from: Index the line part starts at.
- * @to: Index the line part ends at + 1.
- *
- * Finds the minimum value of a part of a data line.
- *
- * Returns: Minimum within given interval.
- **/
-gdouble
-gwy_data_line_part_get_min(GwyDataLine *a,
-                           gint from, gint to)
-{
-    gint i;
-    gdouble min = G_MAXDOUBLE;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), min);
-    if (to < from)
-        GWY_SWAP(gint, from, to);
-
-    g_return_val_if_fail(from >= 0 && to <= a->res, min);
-
-    for (i = from; i < to; i++) {
-        if (min > a->data[i])
-            min = a->data[i];
-    }
-
-    return min;
-}
-
-/**
- * gwy_data_line_part_get_avg:
- * @data_line: A data line.
- * @from: Index the line part starts at.
- * @to: Index the line part ends at + 1.
- *
- * Computes mean value of all values in a part of a data line.
- *
- * Returns: Average value within given interval.
- **/
-gdouble
-gwy_data_line_part_get_avg(GwyDataLine *a, gint from, gint to)
-{
-    return gwy_data_line_part_get_sum(a, from, to)/(gdouble)(to-from);
-}
-
-/**
- * gwy_data_line_part_get_rms:
- * @data_line: A data line.
- * @from: Index the line part starts at.
- * @to: Index the line part ends at + 1.
- *
- * Computes root mean square value of a part of a data line.
- *
- * Returns: Root mean square deviation of heights within a given interval
- **/
-gdouble
-gwy_data_line_part_get_rms(GwyDataLine *a, gint from, gint to)
-{
-    gint i;
-    gdouble rms = 0;
-    gdouble avg;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), rms);
-    if (to < from)
-        GWY_SWAP(gint, from, to);
-
-    g_return_val_if_fail(from >= 0 && to <= a->res, rms);
-
-    avg = gwy_data_line_part_get_avg(a, from, to);
-    for (i = from; i < to; i++)
-        rms += (avg - a->data[i])*(avg - a->data[i]);
-
-    return sqrt(rms)/(gdouble)(to-from);
-}
-
-/**
- * gwy_data_line_part_get_sum:
- * @data_line: A data line.
- * @from: Index the line part starts at.
- * @to: Index the line part ends at + 1.
- *
- * Computes sum of all values in a part of a data line.
- *
- * Returns: Sum of all values within the interval.
- **/
-gdouble
-gwy_data_line_part_get_sum(GwyDataLine *a, gint from, gint to)
-{
-    gint i;
-    gdouble sum = 0;
-
-    g_return_val_if_fail(GWY_IS_DATA_LINE(a), sum);
-    if (to < from)
-        GWY_SWAP(gint, from, to);
-
-    g_return_val_if_fail(from >= 0 && to <= a->res, sum);
-
-    for (i = from; i < to; i++)
-        sum += a->data[i];
-
-    return sum;
-}
-
-/**
  * gwy_data_line_threshold:
  * @data_line: A data line.
  * @threshval: Threshold value.
@@ -1542,6 +1291,14 @@ gwy_data_line_part_subtract_polynom(GwyDataLine *data_line,
 
 }
 
+/**
+ * gwy_data_line_subtract_polynom:
+ * @data_line: A data line.
+ * @n: Polynom degree.
+ * @coeffs: An array of size @n+1 with polynom coefficients to.
+ *
+ * Subtracts polynom from a data line;
+ **/
 void
 gwy_data_line_subtract_polynom(GwyDataLine *data_line,
                                gint n, gdouble *coeffs)
@@ -1551,103 +1308,29 @@ gwy_data_line_subtract_polynom(GwyDataLine *data_line,
 }
 
 /**
- * gwy_data_line_part_get_modus:
+ * gwy_data_line_cumulate:
  * @data_line: A data line.
- * @from: The index in @data_line to start from (inclusive).
- * @to: The index in @data_line to stop (noninclusive).
- * @histogram_steps: Number of histogram steps used for modus searching,
- *                   pass a nonpositive number to autosize.
  *
- * Finds approximate modus of a data line part.
+ * Transforms a distribution in a data line to cummulative distribution.
  *
- * Returns: The modus.
+ * Each element becomes sum of all previous elements in the line, including
+ * self.
  **/
-gdouble
-gwy_data_line_part_get_modus(GwyDataLine *data_line,
-                             gint from, gint to,
-                             gint histogram_steps)
+void
+gwy_data_line_cumulate(GwyDataLine *data_line)
 {
-    gint *histogram;
-    gint n, i, j, m;
-    gdouble min, max, sum;
+    gdouble sum;
+    gdouble *data;
+    gint i;
 
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
-    g_return_val_if_fail(from >= 0 && to <= data_line->res, 0);
-    g_return_val_if_fail(from != to, 0);
-
-    if (from > to)
-        GWY_SWAP(gint, from, to);
-    n = to - from;
-
-    if (n == 1)
-        return data_line->data[from];
-
-    if (histogram_steps < 1) {
-        /*
-        gdouble sigma = gwy_data_line_part_get_rms(data_line, from, to);
-        histogram_steps = floor(0.49*sigma*pow(n, 1.0/3.0) + 0.5);
-        */
-        histogram_steps = floor(3.49*pow(n, 1.0/3.0) + 0.5);
-        gwy_debug("histogram_steps = %d", histogram_steps);
-    }
-
-    min = gwy_data_line_part_get_min(data_line, from, to);
-    max = gwy_data_line_part_get_max(data_line, from, to);
-    if (min == max)
-        return min;
-
-    histogram = g_new0(gint, histogram_steps);
-    for (i = from; i < to; i++) {
-        j = (data_line->data[i] - min)/(max - min)*histogram_steps;
-        j = CLAMP(j, 0, histogram_steps-1);
-        histogram[j]++;
-    }
-
-    m = 0;
-    for (i = 1; i < histogram_steps; i++) {
-        if (histogram[i] > histogram[m])
-            m = i;
-    }
-
-    n = 0;
+    data = data_line->data;
     sum = 0.0;
-    for (i = from; i < to; i++) {
-        j = (data_line->data[i] - min)/(max - min)*histogram_steps;
-        j = CLAMP(j, 0, histogram_steps-1);
-        if (j == m) {
-            sum += data_line->data[i];
-            n++;
-        }
+    for (i = 0; i < data_line->res; i++) {
+        sum += data[i];
+        data[i] = sum;
     }
-
-    g_free(histogram);
-    gwy_debug("modus = %g", sum/n);
-
-    return sum/n;
 }
 
-/**
- * gwy_data_line_get_modus:
- * @data_line: A data line.
- * @histogram_steps: Number of histogram steps used for modus searching,
- *                   pass a nonpositive number to autosize.
- *
- * Finds approximate modus of a data line.
- *
- * As each number in the data line is usually unique, this function does not
- * return modus of the data itself, but modus of a histogram.
- *
- * Returns: The modus.
- **/
-gdouble
-gwy_data_line_get_modus(GwyDataLine *data_line,
-                        gint histogram_steps)
-{
-    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
-
-    return gwy_data_line_part_get_modus(data_line, 0, data_line->res,
-                                        histogram_steps);
-}
 
 /************************** Documentation ****************************/
 

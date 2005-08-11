@@ -25,42 +25,61 @@
 
 G_BEGIN_DECLS
 
-void gwy_data_line_dh(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-void gwy_data_line_cdh(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-void gwy_data_line_da(GwyDataLine *data_line,
-                      GwyDataLine *target_line,
-                      gdouble ymin,
-                      gdouble ymax,
-                      gint nsteps);
-
-void gwy_data_line_cda(GwyDataLine *data_line,
-                       GwyDataLine *target_line,
-                       gdouble ymin,
-                       gdouble ymax,
-                       gint nsteps);
-
-void gwy_data_line_acf(GwyDataLine *data_line,
-                       GwyDataLine *target_line);
-
-void gwy_data_line_hhcf(GwyDataLine *data_line,
-                        GwyDataLine *target_line);
-
-void gwy_data_line_psdf(GwyDataLine *data_line,
-                        GwyDataLine *target_line,
-                        gint windowing,
-                        gint interpolation);
-
-gdouble gwy_data_line_get_length(GwyDataLine *data_line);
+gdouble gwy_data_line_get_max       (GwyDataLine *data_line);
+gdouble gwy_data_line_get_min       (GwyDataLine *data_line);
+gdouble gwy_data_line_get_avg       (GwyDataLine *data_line);
+gdouble gwy_data_line_get_rms       (GwyDataLine *data_line);
+gdouble gwy_data_line_get_sum       (GwyDataLine *data_line);
+gdouble gwy_data_line_part_get_max  (GwyDataLine *data_line,
+                                     gint from,
+                                     gint to);
+gdouble gwy_data_line_part_get_min  (GwyDataLine *data_line,
+                                     gint from,
+                                     gint to);
+gdouble gwy_data_line_part_get_avg  (GwyDataLine *data_line,
+                                     gint from,
+                                     gint to);
+gdouble gwy_data_line_part_get_rms  (GwyDataLine *data_line,
+                                     gint from,
+                                     gint to);
+gdouble gwy_data_line_part_get_sum  (GwyDataLine *data_line,
+                                     gint from,
+                                     gint to);
+gdouble gwy_data_line_get_modus     (GwyDataLine *data_line,
+                                     gint histogram_steps);
+gdouble gwy_data_line_part_get_modus(GwyDataLine *data_line,
+                                     gint from,
+                                     gint to,
+                                     gint histogram_steps);
+gdouble gwy_data_line_get_length    (GwyDataLine *data_line);
+void    gwy_data_line_dh            (GwyDataLine *data_line,
+                                     GwyDataLine *target_line,
+                                     gdouble ymin,
+                                     gdouble ymax,
+                                     gint nsteps);
+void    gwy_data_line_cdh           (GwyDataLine *data_line,
+                                     GwyDataLine *target_line,
+                                     gdouble ymin,
+                                     gdouble ymax,
+                                     gint nsteps);
+void    gwy_data_line_da            (GwyDataLine *data_line,
+                                     GwyDataLine *target_line,
+                                     gdouble ymin,
+                                     gdouble ymax,
+                                     gint nsteps);
+void    gwy_data_line_cda           (GwyDataLine *data_line,
+                                     GwyDataLine *target_line,
+                                     gdouble ymin,
+                                     gdouble ymax,
+                                     gint nsteps);
+void    gwy_data_line_acf           (GwyDataLine *data_line,
+                                     GwyDataLine *target_line);
+void    gwy_data_line_hhcf          (GwyDataLine *data_line,
+                                     GwyDataLine *target_line);
+void    gwy_data_line_psdf          (GwyDataLine *data_line,
+                                     GwyDataLine *target_line,
+                                     gint windowing,
+                                     gint interpolation);
 
 G_END_DECLS
 

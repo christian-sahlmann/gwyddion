@@ -22,6 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <libprocess/linestats.h>
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
 
