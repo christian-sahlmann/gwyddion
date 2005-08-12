@@ -1171,7 +1171,8 @@ gwy_container_values_equal(GValue *value1,
         return g_value_get_double(value1) == g_value_get_double(value2);
 
         case G_TYPE_STRING:
-        return gwy_strequal(g_value_get_string(value1), g_value_get_string(value2));
+        return gwy_strequal(g_value_get_string(value1),
+                            g_value_get_string(value2));
 
         /* objects must be identical, so compare addresses */
         case G_TYPE_OBJECT:
