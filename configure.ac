@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050727, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050812, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -103,41 +103,11 @@ AC_MSG_RESULT([$os_win32])
 AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
 
 #############################################################################
-# Module symbol resolution
-# FIXME: we just use a static table of systems known to support symbol
-# resolution in dlopen()ed modules through app that dlopen()ed them.
-# A libtool mage of level 5+ could test this run-time.
-AC_MSG_CHECKING([wheter modules must be linked with libraries])
-AC_ARG_ENABLE([module-dependencies],
-  AS_HELP_STRING([--enable-module-dependencies],
-                 [Link modules with libraries (auto)]),
-  [case "${enableval}" in
-     yes|no) enable_module_dependencies="$enableval" ;;
-     *) AC_MSG_ERROR(bad value ${enableval} for --enable-$1) ;;
-   esac],
-  [case "$host_os" in
-    *-gnu | linux*)
-      enable_module_dependencies=no
-      ;;
-    freebsd* | openbsd* | netbsd*)
-      enable_module_dependencies=no
-      ;;
-    solaris*)
-      enable_module_dependencies=no
-      ;;
-    darwin* | rhapsody* | machten*)
-      enable_module_dependencies=yes
-      ;;
-    mingw* | cygwin*)
-      enable_module_dependencies=yes
-      ;;
-    *)
-      AC_MSG_WARN([Modules will be linked with all libraries.  Please report an enhancement request to add your system.])
-      enable_module_dependencies=yes
-      ;;
-   esac])
-AC_MSG_RESULT([$enable_module_dependencies])
-AM_CONDITIONAL([MODULE_DEPENDENCIES],[test "$enable_module_dependencies" = "yes"])
+# Module symbol resolution.
+# We try not to link modules with libraries and let symbols resolve through
+# app, because it means faster app startup and much faster compilation.  But
+# on some systems that isn't possible.
+AM_CONDITIONAL([MODULE_DEPENDENCIES],[test "x$allow_undefined_flag" = xunsupported])
 
 #############################################################################
 # XDG stuff
