@@ -80,7 +80,7 @@ gwy_test_ser_class_init(GwyTestSerClass *klass)
 }
 
 static void
-gwy_test_ser_init(GwyTestSer *test_ser)
+gwy_test_ser_init(G_GNUC_UNUSED GwyTestSer *test_ser)
 {
     gwy_debug("");
 }

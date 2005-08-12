@@ -1369,15 +1369,9 @@ gwyenum_changed(GwyInventory *inventory, gint i, G_GNUC_UNUSED gpointer data)
 }
 
 static const gchar*
-foo_get_name(gconstpointer item)
+foo_get_name(gpointer item)
 {
     return ((FooType*)item)->q;
-}
-
-static const gchar*
-foo_get_text(gconstpointer item)
-{
-    return ((FooType*)item)->p;
 }
 
 gint
@@ -1415,6 +1409,33 @@ foo_deleted(G_GNUC_UNUSED GwyInventory *inventory, gint i)
     fprintf(stderr, "[deleted:%d]\n", i);
 }
 
+static const GType foo_traits[] = { G_TYPE_STRING };
+static const gchar* foo_trait_names[] = { "first-name" };
+
+static const GType*
+foo_get_traits(gint *n)
+{
+    *n = G_N_ELEMENTS(foo_traits);
+    return foo_traits;
+}
+
+static const gchar*
+foo_get_trait_name(gint n)
+{
+    g_assert(n == 0);
+    return foo_trait_names[n];
+}
+
+static void
+foo_get_trait_value(gpointer item,
+                    gint n,
+                    GValue *value)
+{
+    g_assert(n == 0);
+    g_value_init(value, foo_traits[n]);
+    g_value_set_static_string(value, ((FooType*)item)->p);
+}
+
 static void
 foo_reordered(GwyInventory *inventory, gpointer p)
 {
@@ -1436,13 +1457,17 @@ foo_print(gpointer idx, gpointer item, gpointer inv)
     guint i = GPOINTER_TO_UINT(idx);
     GwyInventory *inventory = (GwyInventory*)inv;
     const GwyInventoryItemType *item_type;
+    GValue value;
 
     item_type = gwy_inventory_get_item_type(inventory);
     fprintf(stderr, "[%d]", i);
     if (item_type->get_name)
         fprintf(stderr, " name:<%s>", item_type->get_name(item));
-    if (item_type->get_text)
-        fprintf(stderr, " text:<%s>", item_type->get_text(item));
+    memset(&value, 0, sizeof(value));
+    item_type->get_trait_value(item, 0, &value);
+    fprintf(stderr, " <%s>:<%s>",
+            item_type->get_trait_name(0), g_value_get_string(&value));
+    g_value_unset(&value);
     fprintf(stderr, "\n");
 }
 
@@ -1461,9 +1486,11 @@ test_inventory(void)
         NULL,
         NULL,
         foo_get_name,
-        foo_get_text,
         foo_compare,
         NULL,
+        foo_get_traits,
+        foo_get_trait_name,
+        foo_get_trait_value,
     };
     FooType *pf;
     FooType some_foos[] = {
@@ -1477,7 +1504,7 @@ test_inventory(void)
 
     g_message("====== INVENTORY ======================");
     /* Constant */
-    inventory = gwy_inventory_new_from_enum(table, G_N_ELEMENTS(table));
+    inventory = gwy_enum_inventory_new(table, G_N_ELEMENTS(table));
     g_signal_connect(inventory, "item-updated",
                      G_CALLBACK(gwyenum_changed), NULL);
 
@@ -1614,7 +1641,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_all();
+    test_inventory();
 
     return 0;
 }
