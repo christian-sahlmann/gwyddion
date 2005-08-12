@@ -23,9 +23,8 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwyinventory.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include <libdraw/gwyresource.h>
+#include <libgwyddion/gwyresource.h>
 
 #define MAGIC_HEADER "Gwyddion Resource "
 
@@ -54,10 +53,9 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     &gwy_resource_get_item_name,
     &gwy_resource_compare,
     &gwy_resource_rename,
-    /* TODO */
-    NULL,
-    NULL,
-    NULL
+    NULL,  /* needs particular class */
+    NULL,  /* needs particular class */
+    NULL,  /* needs particular class */
 };
 
 G_DEFINE_TYPE_EXTENDED
@@ -75,6 +73,8 @@ gwy_resource_class_init(GwyResourceClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_resource_finalize;
+
+    klass->item_type = gwy_resource_item_type;
 
     resource_signals[DATA_CHANGED]
         = g_signal_new("data-changed",
@@ -98,8 +98,8 @@ gwy_resource_finalize(GObject *object)
     GwyResource *resource = (GwyResource*)object;
 
     gwy_debug("%s", resource->name);
-
-    gwy_object_unref(resource->pixbuf);
+    if (resource->use_count)
+        g_critical("Resource %p with nonzero use_count is finalized.", object);
     g_free(resource->name);
 
     G_OBJECT_CLASS(gwy_resource_parent_class)->finalize(object);
@@ -173,6 +173,24 @@ gwy_resource_get_is_modifiable(GwyResource *resource)
 }
 
 /**
+ * gwy_resource_class_get_name:
+ * @klass: Resource class.
+ *
+ * Gets the name of resource class.
+ *
+ * This is an simple identifier usable for example as directory name.
+ *
+ * Returns: Resource class name, as a constant string that must not be modified
+ *          nor freed.
+ **/
+const gchar*
+gwy_resource_class_get_name(GwyResourceClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), NULL);
+    return klass->name;
+}
+
+/**
  * gwy_resource_class_get_traits:
  * @klass: Resource class.
  * @ntraits: Location to store the number of traits.
@@ -191,18 +209,25 @@ gwy_resource_class_get_traits(GwyResourceClass *klass,
     return klass->traits;
 }
 
+const GwyInventoryItemType*
+gwy_resource_class_get_item_type(GwyResourceClass *klass)
+{
+    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), NULL);
+    return &klass->item_type;
+}
+
 void
 gwy_resource_get_trait(GwyResource *resource,
                        gint n,
                        GValue *value)
 {
     GwyResourceClass *klass;
-    void (*method)(GwyResource*, gint, GValue*);
+    void (*method)(gpointer, gint, GValue*);
 
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     klass = GWY_RESOURCE_GET_CLASS(resource);
     g_return_if_fail(n < 0 || n >= klass->n_traits);
-    method = klass->get_trait;
+    method = klass->item_type.get_trait_value;
     g_return_if_fail(method);
     method(resource, n, value);
 }
@@ -262,56 +287,6 @@ gwy_resource_unref(GwyResource *resource)
         if (method)
             method(resource);
     }
-}
-
-/**
- * gwy_resource_ref_pixbuf:
- * @resource: A resource.
- *
- * Returns pixbuf with graphical resource representation (if any).
- *
- * Use gwy_resource_unref_pixbuf() to release it.
- *
- * Returns: A pixbuf, its #GObject reference count is not increased, so it
- *          may cease to exist when @resource is finalized if called does not
- *          add its own reference.
- **/
-GdkPixbuf*
-gwy_resource_ref_pixbuf(GwyResource *resource)
-{
-    g_return_val_if_fail(GWY_IS_RESOURCE(resource), NULL);
-
-    if (!resource->pixbuf_use_count++) {
-        GdkPixbuf* (*method)(GwyResource*);
-
-        method = GWY_RESOURCE_GET_CLASS(resource)->make_pixbuf;
-        g_return_val_if_fail(method, NULL);
-        resource->pixbuf = method(resource);
-    }
-
-    return resource->pixbuf;
-}
-
-/**
- * gwy_resource_unref_pixbuf:
- * @resource: A resource.
- *
- * Releases pixbuf with grapical resource representation.
- *
- * You have always call this method to release the pixbuf.  If you added
- * your own #GObject reference when you obtained it with
- * gwy_resource_ref_pixbuf(), you have to normally call g_object_unref()
- * in addition.
- **/
-void
-gwy_resource_unref_pixbuf(GwyResource *resource)
-{
-    g_return_if_fail(GWY_IS_RESOURCE(resource));
-    g_return_if_fail(resource->pixbuf_use_count);
-
-    resource->pixbuf_use_count--;
-    if (!resource->pixbuf_use_count)
-        gwy_object_unref(resource->pixbuf);
 }
 
 /**

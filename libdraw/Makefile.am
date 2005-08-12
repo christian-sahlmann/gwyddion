@@ -9,7 +9,6 @@ libgwydrawinclude_HEADERS = \
 	gwydraw.h \
 	gwygradient.h \
 	gwypixfield.h \
-	gwyresource.h \
 	gwyrgba.h
 
 lib_LTLIBRARIES = libgwydraw.la
@@ -31,7 +30,6 @@ libgwydraw_la_SOURCES = \
 	gwydraw.c \
 	gwygradient.c \
 	gwypixfield.c \
-	gwyresource.c \
 	gwyrgba.c
 
 #test_SOURCES = \

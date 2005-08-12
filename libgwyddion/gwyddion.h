@@ -32,6 +32,7 @@
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwyinventory.h>
+#include <libgwyddion/gwyresource.h>
 #include <libgwyddion/gwyentities.h>
 #include <libgwyddion/gwysiunit.h>
 #include <libgwyddion/gwymd5.h>

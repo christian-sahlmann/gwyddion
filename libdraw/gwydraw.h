@@ -23,7 +23,6 @@
 
 #include <libdraw/gwygradient.h>
 #include <libdraw/gwypixfield.h>
-#include <libdraw/gwyresource.h>
 #include <libdraw/gwyrgba.h>
 
 G_BEGIN_DECLS

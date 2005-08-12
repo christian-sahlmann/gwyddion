@@ -22,7 +22,7 @@
 #define __GWY_RESOURCE_H__
 
 #include <glib-object.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <libgwyddion/gwyinventory.h>
 
 G_BEGIN_DECLS
 
@@ -42,9 +42,6 @@ struct _GwyResource {
     gint use_count;
     gchar *name;
 
-    GdkPixbuf *pixbuf;
-    gint pixbuf_use_count;
-
     gboolean is_const : 1;
     gboolean boolean1 : 1;
 
@@ -55,9 +52,13 @@ struct _GwyResource {
 struct _GwyResourceClass {
     GObjectClass parent_class;
 
+    const gchar *name;
+
     /* Traits */
+    GwyInventoryItemType item_type;
     gint n_traits;
     GType *traits;
+    const gchar **trait_names;
 
     /* Signals */
     void (*data_changed)(GwyResource *resource);
@@ -65,10 +66,6 @@ struct _GwyResourceClass {
     /* Virtual table */
     void (*use)(GwyResource *resource);
     void (*unuse)(GwyResource *resource);
-    void (*get_trait)(GwyResource *resource,
-                      gint i,
-                      GValue *value);
-    GdkPixbuf* (*make_pixbuf)(GwyResource *resource);
     GString* (*dump)(GwyResource *resource);
     GwyResource* (*parse)(const gchar *text);
 
@@ -79,6 +76,8 @@ struct _GwyResourceClass {
 GType             gwy_resource_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_resource_get_name              (GwyResource *resource);
 gboolean          gwy_resource_get_is_modifiable     (GwyResource *resource);
+const gchar*      gwy_resource_class_get_name        (GwyResourceClass *klass);
+const GwyInventoryItemType* gwy_resource_class_get_item_type(GwyResourceClass *klass);
 const GType*      gwy_resource_class_get_traits      (GwyResourceClass *klass,
                                                       gint *ntraits);
 void              gwy_resource_get_trait             (GwyResource *resource,
@@ -86,11 +85,12 @@ void              gwy_resource_get_trait             (GwyResource *resource,
                                                       GValue *value);
 void              gwy_resource_ref                   (GwyResource *resource);
 void              gwy_resource_unref                 (GwyResource *resource);
-GdkPixbuf*        gwy_resource_ref_pixbuf            (GwyResource *resource);
-void              gwy_resource_unref_pixbuf          (GwyResource *resource);
 void              gwy_resource_data_changed          (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
 GwyResource*      gwy_resource_parse                 (const gchar *text);
+
+/* TODO: some methods to (re)load, save complete resource inventory to some
+ * directory */
 
 G_END_DECLS
 
