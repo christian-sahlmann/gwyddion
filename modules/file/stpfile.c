@@ -95,15 +95,15 @@ static void          selection_changed     (GtkWidget *button,
                                             STPControls *controls);
 
 static const GwyEnum channels[] = {
-    { N_("Topography"),                  1  },
-    { N_("Current or Deflection"),       2  },
-    { N_("Electrochemical voltage"),     8  },
-    { N_("Topography and SPS"),          9  },
-    { N_("Topography and SPS scripted"), 10 },
-    { N_("Electrochemical current"),     12 },
-    { N_("Friction"),                    13 },
-    { N_("AUX in BNC"),                  14 },
-    { N_("External"),                    99 },
+    { N_("Topography"),                           1  },
+    { N_("Current or Deflection or Amplitude"),   2  },
+    { N_("Electrochemical voltage"),              8  },
+    { N_("Topography and SPS"),                   9  },
+    { N_("Topography and SPS scripted"),          10 },
+    { N_("Electrochemical current"),              12 },
+    { N_("Friction or Phase"),                    13 },
+    { N_("AUX in BNC"),                           14 },
+    { N_("External"),                             99 },
 };
 
 /* The module info. */
