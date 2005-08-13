@@ -95,9 +95,6 @@ static void       set_range_type            (GwyUnitoolState *state,
                                              GwyLayerBasicRangeType range_type);
 static void       range_mode_changed          (GtkWidget *button,
                                                GwyUnitoolState *state);
-static void       gwy_data_field_dh           (GwyDataField *dfield,
-                                               GwyDataLine *dh,
-                                               gint nsteps);
 static void       load_args                   (GwyContainer *container,
                                                ToolControls *controls);
 static void       save_args                   (GwyContainer *container,
@@ -693,22 +690,6 @@ range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
 
     controls->update_caused_by_mode = TRUE;
     controls->in_update = FALSE;
-}
-
-static void
-gwy_data_field_dh(GwyDataField *dfield,
-                  GwyDataLine *dh,
-                  gint nsteps)
-{
-    gwy_data_field_get_line_stat_function(dfield, dh,
-                                          0, 0,
-                                          gwy_data_field_get_xres(dfield),
-                                          gwy_data_field_get_yres(dfield),
-                                          GWY_SF_OUTPUT_DH,
-                                          GWY_ORIENTATION_HORIZONTAL,
-                                          GWY_INTERPOLATION_ROUND,
-                                          GWY_WINDOWING_NONE,
-                                          nsteps);
 }
 
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
