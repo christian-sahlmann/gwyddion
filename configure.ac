@@ -1,7 +1,7 @@
 # @(#) $Id$
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050812, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050813, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -243,6 +243,12 @@ if test "x$enable_fftw3" != "xno"; then
                                [Define if we have the FFTW3 package.])],
                     enable_fftw3=no)
 fi
+if test "x$enable_fftw3" != "xno"; then
+  FFTW3_DEPENDENCY=fftw3
+else
+  FFTW3_DEPENDENCY=
+fi
+AC_SUBST([FFTW3_DEPENDENCY])
 
 #############################################################################
 # GtkGlExt
@@ -255,6 +261,12 @@ if test "x$enable_gl" != "xno"; then
                                [Define if we have the GtkGLExt package.])],
                     enable_gl=no)
 fi
+if test "x$enable_gl" != "xno"; then
+  GTKGLEXT_DEPENDENCY=gtkglext-1.0
+else
+  GTKGLEXT_DEPENDENCY=
+fi
+AC_SUBST([GTKGLEXT_DEPENDENCY])
 
 #############################################################################
 # TIFF
