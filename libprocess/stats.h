@@ -174,17 +174,6 @@ void    gwy_data_field_psdf                 (GwyDataField *data_field,
                                              GwyInterpolationType interpolation,
                                              GwyWindowingType windowing,
                                              gint nstats);
-gboolean gwy_data_field_get_line_stat_function(GwyDataField *data_field,
-                                             GwyDataLine *target_line,
-                                             gint ulcol,
-                                             gint ulrow,
-                                             gint brcol,
-                                             gint brrow,
-                                             GwySFOutputType type,
-                                             GwyOrientation orientation,
-                                             GwyInterpolationType interpolation,
-                                             GwyWindowingType windowing,
-                                             gint nstats);
 void   gwy_data_field_slope_distribution    (GwyDataField *data_field,
                                              GwyDataLine *derdist,
                                              gint kernel_size);

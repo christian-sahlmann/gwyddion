@@ -34,7 +34,6 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
-/* TODO
 typedef enum {
     GWY_SF_OUTPUT_DH    = 0,
     GWY_SF_OUTPUT_CDH   = 1,
@@ -44,7 +43,6 @@ typedef enum {
     GWY_SF_OUTPUT_HHCF  = 5,
     GWY_SF_OUTPUT_PSDF  = 6
 } GwySFOutputType;
-*/
 
 typedef struct {
     GwyUnitoolState *state;
@@ -223,8 +221,10 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->output
-        = gwy_option_menu_sfunctions_output(G_CALLBACK(output_changed_cb),
-                                            controls, controls->out);
+        = gwy_option_menu_create(sf_types, G_N_ELEMENTS(sf_types),
+                                 "sf-output-type",
+                                 G_CALLBACK(output_changed_cb), controls,
+                                 controls->out);
     gtk_table_attach(GTK_TABLE(table), controls->output, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);

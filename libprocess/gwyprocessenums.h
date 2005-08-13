@@ -26,16 +26,6 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    GWY_SF_OUTPUT_DH    = 0,
-    GWY_SF_OUTPUT_CDH   = 1,
-    GWY_SF_OUTPUT_DA    = 2,
-    GWY_SF_OUTPUT_CDA   = 3,
-    GWY_SF_OUTPUT_ACF   = 4,
-    GWY_SF_OUTPUT_HHCF  = 5,
-    GWY_SF_OUTPUT_PSDF  = 6
-} GwySFOutputType;
-
-typedef enum {
     GWY_MERGE_UNION,
     GWY_MERGE_INTERSECTION
 } GwyMergeType;

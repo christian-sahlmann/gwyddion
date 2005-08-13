@@ -1344,19 +1344,6 @@ gwy_data_line_cumulate(GwyDataLine *data_line)
  **/
 
 /**
- * GwySFOutputType:
- * @GWY_SF_OUTPUT_DH: Distribution of heights.
- * @GWY_SF_OUTPUT_CDH: Cumulative distribution of heights.
- * @GWY_SF_OUTPUT_DA: Distribution of angles (slopes).
- * @GWY_SF_OUTPUT_CDA: Cumulative distribution of angles (slopes).
- * @GWY_SF_OUTPUT_ACF: Autocorrelation fucntions.
- * @GWY_SF_OUTPUT_HHCF: Height-height correlation function.
- * @GWY_SF_OUTPUT_PSDF: Power spectral density fucntion.
- *
- * Statistical function type.
- **/
-
-/**
  * gwy_data_line_duplicate:
  * @data_line: A data line to duplicate.
  *

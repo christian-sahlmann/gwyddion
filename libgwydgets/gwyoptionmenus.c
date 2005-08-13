@@ -679,42 +679,6 @@ gwy_option_menu_dwt(GCallback callback,
 }
 
 /**
- * gwy_option_menu_sfunctions_output:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- * @current: Statistical function output type to be shown as currently selected
- *           (or -1 to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of available one-dimensional statistical functions.
- *
- * It sets object data "sf-output-type" to statistical functions output type
- * for each
- * menu item (use GPOINTER_TO_INT() when retrieving it).
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_sfunctions_output(GCallback callback,
-                                  gpointer cbdata,
-                                  GwySFOutputType current)
-{
-    static const GwyEnum entries[] = {
-        { N_("Dist. of heights"),       GWY_SF_OUTPUT_DH,   },
-        { N_("Cum. dist. of heights"),  GWY_SF_OUTPUT_CDH,  },
-        { N_("Dist. of angles"),        GWY_SF_OUTPUT_DA,   },
-        { N_("Cum. dist. of angles"),   GWY_SF_OUTPUT_CDA,  },
-        { N_("Autocorrelation"),        GWY_SF_OUTPUT_ACF,  },
-        { N_("Height-height cor."),     GWY_SF_OUTPUT_HHCF, },
-        { N_("Power spectral density"), GWY_SF_OUTPUT_PSDF, },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "sf-output-type", callback, cbdata,
-                                  current);
-}
-
-/**
  * gwy_option_menu_orientation:
  * @callback: A callback called when a menu item is activated (or %NULL for
  * @cbdata: User data passed to the callback.
