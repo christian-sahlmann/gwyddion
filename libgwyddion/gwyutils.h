@@ -25,8 +25,6 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_ENUM                  (gwy_enum_get_type())
-
 void         gwy_hash_table_to_slist_cb(gpointer unused_key,
                                         gpointer value,
                                         gpointer user_data);
