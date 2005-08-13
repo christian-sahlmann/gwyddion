@@ -52,6 +52,7 @@
 #include <libgwydgets/gwygraphwindowasciidialog.h>
 #include <libgwydgets/gwygraphwindowmeasuredialog.h>
 #include <libgwydgets/gwyhruler.h>
+#include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwyoptionmenus.h>
