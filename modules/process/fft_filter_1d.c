@@ -19,8 +19,6 @@
  */
 
 #include "config.h"
-#include <math.h>
-#include <errno.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -446,14 +444,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
                                                              "/0/data"));
 
-    gwy_data_field_get_line_stat_function(dfield, dline,
-                                          0, 0, dfield->xres, dfield->yres,
-                                          GWY_SF_OUTPUT_PSDF,
-                                          args->direction,
-                                          args->interpolation,
-                                          GWY_WINDOWING_RECT,
-                                          MAX_PREV);
-
+    gwy_data_field_psdf(dfield, dline, args->direction, args->interpolation,
+                        GWY_WINDOWING_RECT, MAX_PREV);
     if (!args->weights)
         args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
     gwy_data_line_fill(args->weights, 1);

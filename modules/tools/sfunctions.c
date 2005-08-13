@@ -34,6 +34,18 @@
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
+/* TODO
+typedef enum {
+    GWY_SF_OUTPUT_DH    = 0,
+    GWY_SF_OUTPUT_CDH   = 1,
+    GWY_SF_OUTPUT_DA    = 2,
+    GWY_SF_OUTPUT_CDA   = 3,
+    GWY_SF_OUTPUT_ACF   = 4,
+    GWY_SF_OUTPUT_HHCF  = 5,
+    GWY_SF_OUTPUT_PSDF  = 6
+} GwySFOutputType;
+*/
+
 typedef struct {
     GwyUnitoolState *state;
     GwyUnitoolRectLabels labels;
@@ -101,13 +113,13 @@ static GwyUnitoolSlots func_slots = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { N_("Height distribution"),      GWY_SF_OUTPUT_DH },
-    { N_("Cum. height distribution"), GWY_SF_OUTPUT_CDH },
-    { N_("Distribution of angles"),       GWY_SF_OUTPUT_DA },
-    { N_("Cum. distribution of angles"),  GWY_SF_OUTPUT_CDA },
-    { N_("ACF"),                      GWY_SF_OUTPUT_ACF },
-    { N_("HHCF"),                     GWY_SF_OUTPUT_HHCF },
-    { N_("PSDF"),                     GWY_SF_OUTPUT_PSDF },
+    { N_("Height distribution"),         GWY_SF_OUTPUT_DH   },
+    { N_("Cum. height distribution"),    GWY_SF_OUTPUT_CDH  },
+    { N_("Distribution of angles"),      GWY_SF_OUTPUT_DA   },
+    { N_("Cum. distribution of angles"), GWY_SF_OUTPUT_CDA  },
+    { N_("ACF"),                         GWY_SF_OUTPUT_ACF  },
+    { N_("HHCF"),                        GWY_SF_OUTPUT_HHCF },
+    { N_("PSDF"),                        GWY_SF_OUTPUT_PSDF },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -232,18 +244,17 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
     row++;
 
-    controls->size
-        = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
+    controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
 
     spin = gwy_table_attach_hscale(table, row, "size:", "", controls->size,
                                                       GWY_HSCALE_DEFAULT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0); 
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls->size, "value_changed",
                                 G_CALLBACK(size_changed_cb), controls);
-     
-    
+
+
     row++;
-    
+
     label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
@@ -276,7 +287,7 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *dfield;
     GwyDataLine *dataline;
     GwyDataViewLayer *layer;
-    gint isel[4];
+    gint isel[4], w, h;
     GString *lab;
 
     gwy_debug("");
@@ -295,29 +306,68 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
-    
-    
+
+
     dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new(gwy_enum_to_string(controls->out,
                                           sf_types, G_N_ELEMENTS(sf_types)));
 
-    if (gwy_data_field_get_line_stat_function(dfield, dataline,
-                                              isel[0], isel[1],
-                                              isel[2], isel[3],
-                                              controls->out,
-                                              controls->dir,
-                                              controls->interp,
-                                              GWY_WINDOWING_HANN,
-                                              controls->siz))
-    {
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel,
-                                                     dataline,
-                                                     0, 0);
+    w = isel[2] - isel[0];
+    h = isel[3] - isel[1];
+    if (w >= 4 && h >= 4) {
+        switch (controls->out) {
+            case GWY_SF_OUTPUT_DH:
+            gwy_data_field_area_dh(dfield, dataline, isel[0], isel[1], w, h,
+                                   controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_CDH:
+            gwy_data_field_area_cdh(dfield, dataline, isel[0], isel[1], w, h,
+                                    controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_DA:
+            gwy_data_field_area_da(dfield, dataline, isel[0], isel[1], w, h,
+                                   controls->dir,
+                                   controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_CDA:
+            gwy_data_field_area_cda(dfield, dataline, isel[0], isel[1], w, h,
+                                    controls->dir,
+                                    controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_ACF:
+            gwy_data_field_area_acf(dfield, dataline, isel[0], isel[1], w, h,
+                                    controls->dir,
+                                    controls->interp,
+                                    controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_HHCF:
+            gwy_data_field_area_hhcf(dfield, dataline, isel[0], isel[1], w, h,
+                                     controls->dir,
+                                     controls->interp,
+                                     controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_PSDF:
+            gwy_data_field_area_psdf(dfield, dataline, isel[0], isel[1], w, h,
+                                     controls->dir,
+                                     controls->interp,
+                                     GWY_WINDOWING_HANN,
+                                     controls->siz);
+            break;
+        }
+
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, dataline, 0, 0);
         gwy_graph_curve_model_set_description(gcmodel, lab->str);
         gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
-        gwy_graph_model_set_title(controls->graphmodel, 
-                                  _(sf_types[controls->out].name));
+        gwy_graph_model_set_title(controls->graphmodel,
+                                  gettext(sf_types[controls->out].name));
     }
+
     g_string_free(lab, TRUE);
     g_object_unref(dataline);
 }
@@ -325,7 +375,7 @@ dialog_update(GwyUnitoolState *state,
 static void
 apply(GwyUnitoolState *state)
 {
-    
+
     ToolControls *controls;
     GtkWidget *graph;
 
@@ -334,7 +384,7 @@ apply(GwyUnitoolState *state)
     graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
     gtk_widget_set_size_request(graph, 400, 300);
 
-    
+
     gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
                                            state->data_window);
 
@@ -379,7 +429,7 @@ direction_changed_cb(GObject *item, ToolControls *controls)
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
-static void       
+static void
 size_changed_cb(GObject *adjustment, ToolControls *controls)
 {
     controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
@@ -398,7 +448,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     gwy_container_gis_enum_by_name(container, out_key, &controls->out);
     gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
     gwy_container_gis_int32_by_name(container, siz_key, &controls->siz);
-     
+
 
     /* sanitize */
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
@@ -414,7 +464,7 @@ save_args(GwyContainer *container, ToolControls *controls)
     gwy_container_set_enum_by_name(container, dir_key, controls->dir);
     gwy_container_set_enum_by_name(container, out_key, controls->out);
     gwy_container_set_int32_by_name(container, siz_key, controls->siz);
-     
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
