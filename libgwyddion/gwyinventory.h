@@ -80,11 +80,10 @@ struct _GwyInventory {
 
     /* Item pointers (called storage). */
     GPtrArray *items;
-    /* Index.  A map from storage position to sort position. May be %NULL
-     * if @items is %NULL. */
+    /* Index.  A map from storage position to sort position. May be %NULL. */
     GArray *idx;
     /* Reverse index.  A map from sort position to storage position. May be
-     * %NULL if @items is %NULL. */
+     * %NULL */
     GArray *ridx;
     /* Name hash.  A map from name to storage position. */
     GHashTable *hash;
@@ -134,6 +133,8 @@ guint         gwy_inventory_get_item_position    (GwyInventory *inventory,
 void          gwy_inventory_foreach              (GwyInventory *inventory,
                                                   GHFunc function,
                                                   gpointer user_data);
+gpointer      gwy_inventory_get_next_item        (GwyInventory *inventory,
+                                                  gpointer item);
 void          gwy_inventory_set_default_item     (GwyInventory *inventory,
                                                   const gchar *name);
 gpointer      gwy_inventory_get_default_item     (GwyInventory *inventory);

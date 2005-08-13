@@ -1499,6 +1499,7 @@ test_inventory(void)
         { "Graham", "Chapman" },
     };
     gpointer foo_items[] = { some_foos, some_foos+1, some_foos+2 };
+    guint i;
     GwyInventory *inventory;
     const GwyEnum *e;
 
@@ -1608,6 +1609,10 @@ test_inventory(void)
     pf->q = "Chapman";
     gwy_inventory_insert_item(inventory, pf);
     gwy_inventory_foreach(inventory, foo_print, inventory);
+
+    fprintf(stderr, "Iterating with get_next_item():\n");
+    for (pf = NULL, i = 0; pf = gwy_inventory_get_next_item(inventory, pf); i++)
+        foo_print(GUINT_TO_POINTER(i), pf, inventory);
 
     g_object_unref(inventory);
 }
