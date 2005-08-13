@@ -1909,6 +1909,7 @@ gwy_data_field_get_row_part(GwyDataField *data_field,
     if (data_line->res != (to - from))
         gwy_data_line_resample(data_line, to - from, GWY_INTERPOLATION_NONE);
 
+    data_line->real = data_field->xreal*(to - from)/data_field->xres;
     memcpy(data_line->data,
            data_field->data + row*data_field->xres + from,
            (to - from)*sizeof(gdouble));
@@ -1942,6 +1943,7 @@ gwy_data_field_get_column_part(GwyDataField *data_field,
     if (data_line->res != (to - from))
         gwy_data_line_resample(data_line, to-from, GWY_INTERPOLATION_NONE);
 
+    data_line->real = data_field->yreal*(to - from)/data_field->yres;
     for (k = 0; k < to - from; k++)
         data_line->data[k] = data_field->data[(k+from)*data_field->xres + col];
 }

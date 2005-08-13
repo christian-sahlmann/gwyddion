@@ -345,7 +345,8 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 
 /**
  * gwy_data_line_psdf:
- * @data_line: A data line.
+ * @data_line: A data line.  Its contents is destroyes and even its size
+ *             may change.
  * @target_line: Data line to store power spectral density function to.
  *               It will be resized to @data_line size.
  * @windowing: Windowing method to use.
@@ -399,7 +400,6 @@ gwy_data_line_psdf(GwyDataLine *data_line,
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
-
 }
 
 /**
