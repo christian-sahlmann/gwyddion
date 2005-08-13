@@ -205,7 +205,8 @@ gwy_resource_class_get_traits(GwyResourceClass *klass,
                               gint *ntraits)
 {
     g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), NULL);
-    *ntraits = klass->n_traits;
+    if (ntraits)
+        *ntraits = klass->n_traits;
     return klass->traits;
 }
 
