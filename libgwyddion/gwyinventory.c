@@ -29,6 +29,9 @@
 
 #define GWY_INVENTORY_TYPE_NAME "GwyInventory"
 
+#define gwy_inventory_lookup(i,n) \
+    GPOINTER_TO_UINT(g_hash_table_lookup(i->hash, n))
+
 enum {
     ITEM_INSERTED,
     ITEM_DELETED,
@@ -47,9 +50,6 @@ static GwyInventory* gwy_inventory_new_real  (const GwyInventoryItemType *itype,
                                               guint nitems,
                                               gpointer *items,
                                               gboolean is_const);
-static void     gwy_inventory_make_hash_table      (GwyInventory *inventory);
-static inline gint gwy_inventory_lookup            (GwyInventory *inventory,
-                                                    const gchar *name);
 static void     gwy_inventory_connect_to_item      (gpointer item,
                                                     GwyInventory *inventory);
 static void     gwy_inventory_disconnect_from_item (gpointer item,
@@ -254,34 +254,6 @@ gwy_inventory_new_from_array(const GwyInventoryItemType *itype,
     return gwy_inventory_new_real(itype, nitems, pitems, TRUE);
 }
 
-static void
-gwy_inventory_make_hash_table(GwyInventory *inventory)
-{
-    guint i;
-
-    gwy_debug("");
-    g_return_if_fail(!inventory->hash);
-
-    inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
-    for (i = 0; i < inventory->items->len; i++) {
-        gpointer p;
-
-        p = g_ptr_array_index(inventory->items, i);
-        p = (gpointer)(inventory->item_type.get_name(p));
-        g_hash_table_insert(inventory->hash, p, GUINT_TO_POINTER(i+1));
-    }
-}
-
-static inline gint
-gwy_inventory_lookup(GwyInventory *inventory,
-                     const gchar *name)
-{
-    if (G_UNLIKELY(!inventory->hash))
-        gwy_inventory_make_hash_table(inventory);
-
-    return GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name));
-}
-
 static GwyInventory*
 gwy_inventory_new_real(const GwyInventoryItemType *itype,
                        guint nitems,
@@ -308,9 +280,13 @@ gwy_inventory_new_real(const GwyInventoryItemType *itype,
     inventory->is_sorted = (itype->compare != NULL);
     inventory->is_const = is_const;
     inventory->items = g_ptr_array_sized_new(nitems);
+    inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < nitems; i++) {
         g_ptr_array_add(inventory->items, items[i]);
+        g_hash_table_insert(inventory->hash,
+                            (gpointer)itype->get_name(items[i]),
+                            GUINT_TO_POINTER(i+1));
         if (inventory->is_sorted && i)
             inventory->is_sorted = (itype->compare(items[i-1], items[i]) < 0);
     }
@@ -1137,8 +1113,6 @@ gwy_inventory_new_item(GwyInventory *inventory,
     g_return_val_if_fail(inventory->is_object, NULL);
     g_return_val_if_fail(inventory->item_type.rename, NULL);
 
-    if (G_UNLIKELY(!inventory->hash))
-        gwy_inventory_make_hash_table(inventory);
     if (!newname || gwy_inventory_lookup(inventory, newname))
         newname = gwy_inventory_invent_name(inventory, newname);
 
