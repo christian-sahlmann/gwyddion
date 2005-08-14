@@ -97,17 +97,11 @@ static void       fftf_1d_do              (Fftf1dControls *controls,
                                            Fftf1dArgs *args);
 static void       fftf_1d_dialog_abandon  (Fftf1dControls *controls,
                                            Fftf1dArgs *args);
-static GtkWidget* menu_suppress           (GCallback callback,
-                                           gpointer cbdata,
-                                           GwyFftf1dSuppressType current);
-static GtkWidget* menu_view_type          (GCallback callback,
-                                           gpointer cbdata,
-                                           GwyFftf1dViewType current);
-static void       suppress_changed_cb     (GObject *item,
+static void       suppress_changed_cb     (GtkWidget *combo,
                                            Fftf1dArgs *args);
-static void       view_type_changed_cb    (GObject *item,
+static void       view_type_changed_cb    (GtkWidget *combo,
                                            Fftf1dArgs *args);
-static void       direction_changed_cb    (GObject *item,
+static void       direction_changed_cb    (GtkWidget *combo,
                                            Fftf1dArgs *args);
 static void       interpolation_changed_cb(GtkWidget *combo,
                                            Fftf1dArgs *args);
@@ -179,6 +173,14 @@ fftf_1d(GwyContainer *data, GwyRunType run)
 static gboolean
 fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 {
+    static const GwyEnum view_types[] = {
+        { N_("Marked"),    GWY_FFTF_1D_VIEW_MARKED,    },
+        { N_("Unmarked"),  GWY_FFTF_1D_VIEW_UNMARKED,  },
+    };
+    static const GwyEnum suppress_types[] = {
+        { N_("Null"),      GWY_FFTF_1D_SUPPRESS_NULL,         },
+        { N_("Suppress"),  GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD, },
+    };
     GtkWidget *dialog, *table, *hbox, *vbox;
     Fftf1dControls controls;
     enum {
@@ -312,9 +314,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    controls.menu_suppress = menu_suppress(G_CALLBACK(suppress_changed_cb),
-                                           args,
-                                           args->suppress);
+    controls.menu_suppress
+        = gwy_enum_combo_box_new(suppress_types, G_N_ELEMENTS(suppress_types),
+                                 G_CALLBACK(suppress_changed_cb), args,
+                                 args->suppress, TRUE);
 
     gtk_table_attach(GTK_TABLE(table), controls.menu_suppress, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -326,10 +329,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    controls.menu_view_type = menu_view_type(G_CALLBACK(view_type_changed_cb),
-                                             args,
-                                             args->view_type);
-
+    controls.menu_view_type
+        = gwy_enum_combo_box_new(view_types, G_N_ELEMENTS(view_types),
+                                 G_CALLBACK(view_type_changed_cb), args,
+                                 args->view_type, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.menu_view_type, 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
@@ -344,8 +347,9 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 
 
     controls.menu_direction
-        = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
-                                      args, args->direction);
+        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
+                                 G_CALLBACK(direction_changed_cb), args,
+                                 args->direction, TRUE);
     gwy_table_attach_row(table, 5, _("_Direction:"), "",
                          controls.menu_direction);
 
@@ -400,7 +404,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
 }
 
 static void
-fftf_1d_dialog_abandon(Fftf1dControls *controls, Fftf1dArgs *args)
+fftf_1d_dialog_abandon(G_GNUC_UNUSED Fftf1dControls *controls,
+                       Fftf1dArgs *args)
 {
     g_object_unref(args->original_vdata);
     g_object_unref(args->result_vdata);
@@ -408,7 +413,8 @@ fftf_1d_dialog_abandon(Fftf1dControls *controls, Fftf1dArgs *args)
 
 /*update preview depending on user's wishes*/
 static void
-update_view(Fftf1dControls *controls, Fftf1dArgs *args)
+update_view(G_GNUC_UNUSED Fftf1dControls *controls,
+            Fftf1dArgs *args)
 {
     GwyDataField *dfield, *rfield, *rvfield;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
@@ -471,7 +477,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 }
 
 static void
-graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
+graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
+               Fftf1dArgs *args)
 {
     gint i, nofselection;
     gdouble beg, end;
@@ -479,55 +486,54 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
 
     /*get graph selection*/
     nofselection = gwy_graph_get_selection_number(GWY_GRAPH(pcontrols->graph));
-    if (nofselection == 0)
-    {
+    if (nofselection == 0) {
         restore_ps(pcontrols, args);
     }
-    else
-    {
+    else {
         selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
         gwy_graph_get_selection(GWY_GRAPH(pcontrols->graph), selection);
 
         /*setup weights for inverse FFT computation*/
-        if (args->weights == NULL) args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
+        if (args->weights == NULL)
+            args->weights = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
 
-        if (args->view_type == GWY_FFTF_1D_VIEW_UNMARKED)
-        {
+        if (args->view_type == GWY_FFTF_1D_VIEW_UNMARKED) {
             gwy_data_line_fill(args->weights, 1);
 
-            for (i = 0; i < nofselection; i++)
-            {
+            for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
                 end = selection[2*i+1];
                 if (args->suppress == GWY_FFTF_1D_SUPPRESS_NULL)
                     gwy_data_line_part_fill(args->weights,
-                                    MAX(0, args->weights->res*beg),
-                                    MIN(args->weights->res, args->weights->res*end),
-                                    0);
+                                            MAX(0, args->weights->res*beg),
+                                            MIN(args->weights->res,
+                                                args->weights->res*end),
+                                            0);
                 else /*TODO put there at least some linear interpolation*/
                     gwy_data_line_part_fill(args->weights,
                                             MAX(0, args->weights->res*beg),
-                                            MIN(args->weights->res, args->weights->res*end),
+                                            MIN(args->weights->res,
+                                                args->weights->res*end),
                                             0.3);
 
             }
             if (args->update) update_view(pcontrols, args);
         }
-        if (args->view_type == GWY_FFTF_1D_VIEW_MARKED)
-        {
+        if (args->view_type == GWY_FFTF_1D_VIEW_MARKED) {
             gwy_data_line_fill(args->weights, 0);
 
-            for (i = 0; i < nofselection; i++)
-            {
+            for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
                 end = selection[2*i+1];
 
                 gwy_data_line_part_fill(args->weights,
                                         MAX(0, args->weights->res*beg),
-                                        MIN(args->weights->res, args->weights->res*end),
+                                        MIN(args->weights->res,
+                                            args->weights->res*end),
                                         1);
             }
-            if (args->update) update_view(pcontrols, args);
+            if (args->update)
+                update_view(pcontrols, args);
         }
 
     }
@@ -537,15 +543,15 @@ graph_selected(GwyGraphArea *area, Fftf1dArgs *args)
 /*fit data*/
 static void
 fftf_1d_run(Fftf1dControls *controls,
-              Fftf1dArgs *args)
+            Fftf1dArgs *args)
 {
     update_view(controls, args);
 }
 
 /*dialog finished, export result data*/
 static void
-fftf_1d_do(Fftf1dControls *controls,
-             Fftf1dArgs *args)
+fftf_1d_do(G_GNUC_UNUSED Fftf1dControls *controls,
+           Fftf1dArgs *args)
 {
     GtkWidget *data_window;
     GwyDataField *rfield;
@@ -561,35 +567,6 @@ fftf_1d_do(Fftf1dControls *controls,
 
 }
 
-
-/*display mode menu*/
-static GtkWidget*
-menu_suppress(GCallback callback, gpointer cbdata, GwyFftf1dSuppressType current)
-{
-    static const GwyEnum entries[] = {
-        { N_("Null"),  GWY_FFTF_1D_SUPPRESS_NULL,  },
-        { N_("Suppress"),  GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD,  },
-    };
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "suppress-type", callback, cbdata,
-                                  current);
-}
-
-/*function type menu*/
-static GtkWidget*
-menu_view_type(GCallback callback, gpointer cbdata, GwyFftf1dViewType current)
-{
-    static const GwyEnum entries[] = {
-        { N_("Marked"),  GWY_FFTF_1D_VIEW_MARKED,  },
-        { N_("Unmarked"),  GWY_FFTF_1D_VIEW_UNMARKED,  },
-    };
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "view-type", callback, cbdata,
-                                  current);
-
-}
-
-
 static void
 update_changed_cb(GtkToggleButton *button, Fftf1dArgs *args)
 {
@@ -597,15 +574,14 @@ update_changed_cb(GtkToggleButton *button, Fftf1dArgs *args)
 }
 
 static void
-suppress_changed_cb(GObject *item, Fftf1dArgs *args)
+suppress_changed_cb(GtkWidget *combo,
+                    Fftf1dArgs *args)
 {
-    args->suppress = GPOINTER_TO_INT(g_object_get_data(item, "suppress-type"));
-    if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD)
-    {
+    args->suppress = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    if (args->suppress == GWY_FFTF_1D_SUPPRESS_NEIGBOURHOOD) {
         args->view_type = GWY_FFTF_1D_VIEW_UNMARKED;
-        gwy_option_menu_set_history(pcontrols->menu_view_type,
-                                    "view-type",
-                                    args->view_type);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(pcontrols->menu_view_type),
+                                      args->view_type);
         gtk_widget_set_sensitive(pcontrols->menu_view_type, FALSE);
     }
     else
@@ -615,20 +591,19 @@ suppress_changed_cb(GObject *item, Fftf1dArgs *args)
 }
 
 static void
-view_type_changed_cb(GObject *item,
+view_type_changed_cb(GtkWidget *combo,
                      Fftf1dArgs *args)
 {
-    args->view_type = GPOINTER_TO_INT(g_object_get_data(item, "view-type"));
+    args->view_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     graph_selected(GWY_GRAPH_AREA(GWY_GRAPH(pcontrols->graph)->area), args);
     update_view(pcontrols, args);
 }
 
 static void
-direction_changed_cb(GObject *item,
+direction_changed_cb(GtkWidget *combo,
                      Fftf1dArgs *args)
 {
-    args->direction = GPOINTER_TO_INT(g_object_get_data(item,
-                                                        "orientation-type"));
+    args->direction = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     restore_ps(pcontrols, args);
 }
 
@@ -662,7 +637,7 @@ fftf_1d_sanitize_args(Fftf1dArgs *args)
 
 static void
 fftf_1d_load_args(GwyContainer *container,
-                    Fftf1dArgs *args)
+                  Fftf1dArgs *args)
 {
     gwy_container_gis_enum_by_name(container, suppress_key, &args->suppress);
     gwy_container_gis_enum_by_name(container, view_key, &args->view_type);

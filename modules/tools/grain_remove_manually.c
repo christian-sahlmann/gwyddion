@@ -66,7 +66,7 @@ static void       laplace_interpolation (GwyDataField *dfield,
                                          GwyDataField *grain);
 static void       mode_changed_cb       (GObject *item,
                                          GwyUnitoolState *state);
-static void       algorithm_changed_cb  (GObject *item,
+static void       algorithm_changed_cb  (GtkWidget *combo,
                                          GwyUnitoolState *state);
 static void       load_args             (GwyContainer *container,
                                          ToolControls *controls);
@@ -170,7 +170,7 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    GtkWidget *dialog, *table, *label, *frame, *omenu;
+    GtkWidget *dialog, *table, *label, *frame, *combo;
     ToolControls *controls;
     GwyContainer *settings;
     gboolean sensitive;
@@ -218,14 +218,13 @@ dialog_create(GwyUnitoolState *state)
     controls->algorithm_label = label;
     row++;
 
-    omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
-                                   "algorithm",
+    combo = gwy_enum_combo_box_new(algorithms, G_N_ELEMENTS(algorithms),
                                    G_CALLBACK(algorithm_changed_cb), state,
-                                   controls->algorithm);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_attach(GTK_TABLE(table), omenu, 0, 2, row, row+1,
+                                   controls->algorithm, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
+    gtk_table_attach(GTK_TABLE(table), combo, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    controls->algorithm_menu = omenu;
+    controls->algorithm_menu = combo;
     row++;
 
     sensitive = (controls->mode == GRAIN_REMOVE_DATA
@@ -268,12 +267,12 @@ mode_changed_cb(GObject *item, GwyUnitoolState *state)
 }
 
 static void
-algorithm_changed_cb(GObject *item, GwyUnitoolState *state)
+algorithm_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
     controls = (ToolControls*)state->user_data;
-    controls->algorithm = GPOINTER_TO_INT(g_object_get_data(item, "algorithm"));
+    controls->algorithm = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void

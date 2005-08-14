@@ -66,12 +66,6 @@ static void       maskcor_save_args        (GwyContainer *settings,
                                             MaskcorArgs *args);
 static void       maskcor_sanitize_args    (MaskcorArgs *args);
 
-static const GwyEnum results[] = {
-    { N_("Objects marked"),     GWY_MASKCOR_OBJECTS },
-    { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
-    { N_("Correlation score"),  GWY_MASKCOR_SCORE },
-};
-
 static const MaskcorArgs maskcor_defaults = {
     GWY_MASKCOR_OBJECTS, 0.95, NULL, NULL
 };
@@ -154,7 +148,12 @@ maskcor(GwyContainer *data, GwyRunType run)
 static GtkWidget*
 maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *spin;
+    static const GwyEnum results[] = {
+        { N_("Objects marked"),     GWY_MASKCOR_OBJECTS },
+        { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
+        { N_("Correlation score"),  GWY_MASKCOR_SCORE },
+    };
+    GtkWidget *dialog, *table, *omenu, *spin, *combo;
     GtkObject *adj;
 
     controls->args = args;
@@ -181,11 +180,9 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
                             GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
 
     /***** Result *****/
-    omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
-                                   "operation",
-                                   G_CALLBACK(maskcor_operation_cb),
-                                   controls,
-                                   args->result);
+    combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
+                                   G_CALLBACK(maskcor_operation_cb), controls,
+                                   args->result, TRUE);
     gwy_table_attach_hscale(table, 2, _("_Output type:"), NULL,
                             GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
 
@@ -218,10 +215,10 @@ maskcor_data_option_menu(GwyDataWindow **operand)
 }
 
 static void
-maskcor_operation_cb(GtkWidget *item, MaskcorControls *controls)
+maskcor_operation_cb(GtkWidget *combo, MaskcorControls *controls)
 {
     controls->args->result
-        = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     gwy_table_hscale_set_sensitive(controls->threshold,
                                    controls->args->result != GWY_MASKCOR_SCORE);
 }

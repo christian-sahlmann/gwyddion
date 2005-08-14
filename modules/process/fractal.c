@@ -82,7 +82,7 @@ static GtkWidget*  attach_value_row           (GtkWidget *table,
                                                const gchar *value);
 static void        interp_changed_cb          (GtkWidget *combo,
                                                FractalArgs *args);
-static void        out_changed_cb             (GObject *item,
+static void        out_changed_cb             (GtkWidget *combo,
                                                FractalControls *controls);
 static void        fractal_dialog_update      (FractalControls *controls,
                                                FractalArgs *args,
@@ -250,10 +250,9 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls.out = gwy_option_menu_create(methods, G_N_ELEMENTS(methods),
-                                          "fractal-type",
+    controls.out = gwy_enum_combo_box_new(methods, G_N_ELEMENTS(methods),
                                           G_CALLBACK(out_changed_cb), &controls,
-                                          args->out);
+                                          args->out, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.out);
     gtk_table_attach(GTK_TABLE(table), controls.out, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -375,14 +374,14 @@ interp_changed_cb(GtkWidget *combo,
 
 /*callback after changed output type*/
 static void
-out_changed_cb(GObject *item,
+out_changed_cb(GtkWidget *combo,
                FractalControls *controls)
 {
     FractalArgs *args;
 
     g_assert(controls->args && controls->data);
     args = controls->args;
-    args->out = GPOINTER_TO_INT(g_object_get_data(item, "fractal-type"));
+    args->out = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     gwy_graph_set_status(GWY_GRAPH(controls->graph), GWY_GRAPH_STATUS_XSEL);
     gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
@@ -491,9 +490,8 @@ fractal_dialog_recompute(FractalControls *controls,
 {
     GwyDataField *dfield;
 
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     fractal_dialog_update(controls, args, data);
 }
@@ -510,7 +508,8 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
     gwy_graph_get_selection(GWY_GRAPH(controls->graph), selection);
 
     args = controls->args;
-    if (gwy_graph_get_selection_number(GWY_GRAPH(controls->graph))==0 || selection[0] == selection[1]) {
+    if (gwy_graph_get_selection_number(GWY_GRAPH(controls->graph)) == 0
+        || selection[0] == selection[1]) {
         gtk_label_set_text(GTK_LABEL(controls->from), _("minimum"));
         gtk_label_set_text(GTK_LABEL(controls->to), _("maximum"));
         args->from[args->out] = 0;

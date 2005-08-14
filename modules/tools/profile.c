@@ -67,7 +67,7 @@ static void       dialog_update       (GwyUnitoolState *state,
                                        GwyUnitoolUpdateType reason);
 static void       dialog_abandon      (GwyUnitoolState *state);
 static void       apply               (GwyUnitoolState *state);
-static void       interp_changed_cb   (GObject *item,
+static void       interp_changed_cb   (GtkWidget *combo,
                                        ToolControls *controls);
 static void       separate_changed_cb (GtkToggleButton *button,
                                        ToolControls *controls);
@@ -174,7 +174,7 @@ dialog_create(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     load_args(settings, controls);
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Extract Profile"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_clear(dialog);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -274,13 +274,14 @@ dialog_create(GwyUnitoolState *state)
                                 controls->nofpoints, GWY_HSCALE_CHECK);
     g_signal_connect_swapped(controls->nofpoints, "value-changed",
                              G_CALLBACK(npoints_changed_cb), controls);
-    controls->isnofpoints = g_object_get_data(G_OBJECT(controls->nofpoints), "check");
+    controls->isnofpoints = g_object_get_data(G_OBJECT(controls->nofpoints),
+                                              "check");
     g_signal_connect(controls->isnofpoints, "toggled",
                             G_CALLBACK(isnofpoints_changed_cb), controls);
-    
+
     gwy_table_hscale_set_sensitive(controls->nofpoints,
                                          controls->isnpoints);
-    
+
     row++;
 
     controls->separation
@@ -301,8 +302,9 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->interpolation
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        controls, controls->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), controls,
+                                 controls->interp, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->interpolation,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
@@ -368,7 +370,7 @@ dialog_update(GwyUnitoolState *state,
     gint xl1, xl2, yl1, yl2;
     GwyGraphCurveModel *gcmodel;
     GwyRGBA color;
-    
+
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
@@ -381,19 +383,19 @@ dialog_update(GwyUnitoolState *state,
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    g_object_set(G_OBJECT(controls->nofpoints), 
-                 "upper", 
+    g_object_set(G_OBJECT(controls->nofpoints),
+                 "upper",
                  (gdouble)(MAX(5*gwy_data_field_get_xres(dfield),
-                     5*gwy_data_field_get_yres(dfield))), 
+                     5*gwy_data_field_get_yres(dfield))),
                  NULL);
-    
+
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
     gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
     gwy_graph_model_set_title(controls->graphmodel, _("Profiles"));
-    
+
     controls->isnpoints = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->isnofpoints));
-    
+
     if (nselected) {
         j = 0;
         for (i = 0; i < nselected; i++) {
@@ -425,11 +427,11 @@ dialog_update(GwyUnitoolState *state,
             color.g = 0;
             color.b = 0;
             color.a = 1;
-            
+
             if (i==1) color.r = 1;
             else if (i==2) color.g = 1;
             else if (i==3) color.b = 1;
-               
+
             gwy_graph_curve_model_set_curve_color(gcmodel, color);
             gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
         }
@@ -455,7 +457,7 @@ apply(GwyUnitoolState *state)
     if (controls->separate) {
         for (i = 0; i < nselected; i++) {
             model = gwy_graph_model_new_alike(controls->graphmodel);
-            
+
             model->ncurves = 1;
             gwy_graph_model_set_title(model, ((GString*)controls->str->pdata[i])->str);
             model->curves = g_new(GObject*, model->ncurves);
@@ -496,10 +498,10 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-interp_changed_cb(GObject *item, ToolControls *controls)
+interp_changed_cb(GtkWidget *combo,
+                  ToolControls *controls)
 {
-    controls->interp
-        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    controls->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     gwy_debug("Interpolation set to %d\n", controls->interp);
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
@@ -528,7 +530,7 @@ npoints_changed_cb(ToolControls *controls)
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
-static void       
+static void
 isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
 {
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);

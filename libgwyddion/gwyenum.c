@@ -182,6 +182,46 @@ gwy_flags_to_string(gint enumval,
     return result;
 }
 
+/**
+ * gwy_enum_sanitize_value:
+ * @enumval: An enum value.
+ * @enum_type: #GType of a registered enum type.
+ *
+ * Makes sure an enum value is valid.
+ *
+ * Returns: Either @enumval itself if it's valid, or some valid enum value.
+ *          When @enumval is invalid and larger than all valid values the
+ *          largest valid value is returned. Likewise if it's smaller the
+ *          smallest valid value is returned.  If it's in range but invalid,
+ *          the first enum value is returned.
+ **/
+gint
+gwy_enum_sanitize_value(gint enumval,
+                        GType enum_type)
+{
+    GEnumClass *klass;
+
+    klass = G_ENUM_CLASS(g_type_class_ref(enum_type));
+    g_return_val_if_fail(klass, enumval);
+    if (enumval <= klass->minimum)
+        enumval = klass->minimum;
+    else if (enumval >= klass->maximum)
+        enumval = klass->maximum;
+    else {
+        guint i;
+
+        for (i = 0; i < klass->n_values; i++) {
+            if (enumval == klass->values[i].value)
+                break;
+        }
+        if (i == klass->n_values)
+            enumval = klass->values[0].value;
+    }
+    g_type_class_unref(klass);
+
+    return enumval;
+}
+
 static const gchar*
 gwy_enum_get_name(gpointer item)
 {

@@ -18,9 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-
-
-
 /* TO DO
 controls_changed => computed = FALSE
 
@@ -50,8 +47,44 @@ controls_changed => computed = FALSE
 
 
 #define INDENT_ANALYZE_RUN_MODES \
-(GWY_RUN_MODAL)
-/*    (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS) */
+    (GWY_RUN_MODAL)
+
+enum {
+    GWY_PLANE_NONE = 0,
+    GWY_PLANE_LEVEL,
+    GWY_PLANE_ROTATE
+};
+
+enum {
+    GWY_HOW_MARK_NEW = 0,
+    GWY_HOW_MARK_AND,
+    GWY_HOW_MARK_OR,
+    GWY_HOW_MARK_NOT,
+    GWY_HOW_MARK_XOR,
+};
+
+enum {
+    GWY_WHAT_MARK_NOTHING = 0,
+    GWY_WHAT_MARK_ABOVE,
+    GWY_WHAT_MARK_BELOW,
+    GWY_WHAT_MARK_PLANE,
+    GWY_WHAT_MARK_INDENTATION,
+    GWY_WHAT_MARK_INNERPILEUP,
+    GWY_WHAT_MARK_OUTERPILEUP,
+
+    GWY_WHAT_MARK_POINTS,
+    GWY_WHAT_MARK_FACESBORDER,
+};
+
+typedef enum {
+    GWY_INDENTOR_VICKERS     = 0,
+    GWY_INDENTOR_BERKOVICH   = 1,
+    GWY_INDENTOR_BERKOVICH_M = 2,
+    GWY_INDENTOR_KNOOP       = 3,
+    GWY_INDENTOR_BRINELL     = 4,
+    GWY_INDENTOR_ROCKWELL    = 5,
+    GWY_INDENTOR_CUBECORNER  = 6
+} GwyIndentorType;
 
 
 /* Data for this function. */
@@ -183,11 +216,6 @@ static gboolean         indent_analyze_dialog(GwyContainer *data, IndentAnalyzeA
 static void             dialog_update   (IndentAnalyzeControls *controls,
                                                   IndentAnalyzeArgs *args);
 
-static void             plane_correct_cb(GtkWidget *item, IndentAnalyzeControls *controls);
-static void             how_mark_cb(GtkWidget *item, IndentAnalyzeControls *controls);
-static void             what_mark_cb(GtkWidget *item, IndentAnalyzeControls *controls);
-static void             indentor_changed_cb(GtkWidget *item, IndentAnalyzeControls *controls);
-
 static void     set_mask_at (GwyDataField *mask, gint x, gint y, gdouble  m,  gint how );
 static void     level_data (IndentAnalyzeControls *c);
 static void     get_field_xymin(GwyDataField *dfield, gdouble *min, gint *posx, gint *posy);
@@ -217,67 +245,48 @@ static GwyVec gwy_vec_cross (GwyVec v1, GwyVec v2);
 static gdouble gwy_vec_dot (GwyVec v1, GwyVec v2);
 static GwyVec gwy_vec_times (GwyVec v, gdouble c);
 static gdouble gwy_vec_abs (GwyVec v);
+/*
 static gdouble gwy_vec_arg_phi (GwyVec v);
 static gdouble gwy_vec_arg_theta (GwyVec v);
+*/
 static gdouble gwy_vec_cos (GwyVec v1, GwyVec v2);
 static void  gwy_vec_normalize (GwyVec *v);
 
-enum {
- GWY_PLANE_NONE = 0,
- GWY_PLANE_LEVEL,
- GWY_PLANE_ROTATE
-};
-
 GwyEnum plane_correct_enum[] = {
-    { N_("Do nothing"),    GWY_PLANE_NONE},
-    { N_("Plane level"),   GWY_PLANE_LEVEL},
-    { N_("Plane rotate"),  GWY_PLANE_ROTATE},
-};
-
-
-enum {
- GWY_HOW_MARK_NEW = 0,
- GWY_HOW_MARK_AND,
- GWY_HOW_MARK_OR,
- GWY_HOW_MARK_NOT,
- GWY_HOW_MARK_XOR,
+    { N_("Do nothing"),   GWY_PLANE_NONE,   },
+    { N_("Plane level"),  GWY_PLANE_LEVEL,  },
+    { N_("Plane rotate"), GWY_PLANE_ROTATE, },
 };
 
 GwyEnum how_mark_enum[] = {
-    { N_("New"), GWY_HOW_MARK_NEW},
-    { N_("AND"),   GWY_HOW_MARK_AND},
-    { N_("OR"),  GWY_HOW_MARK_OR},
-    { N_("NOT"),  GWY_HOW_MARK_NOT},
-    { N_("XOR"),   GWY_HOW_MARK_XOR}
-};
-
-enum {
- GWY_WHAT_MARK_NOTHING = 0,
- GWY_WHAT_MARK_ABOVE,
- GWY_WHAT_MARK_BELOW,
- GWY_WHAT_MARK_PLANE,
- GWY_WHAT_MARK_INDENTATION,
- GWY_WHAT_MARK_INNERPILEUP,
- GWY_WHAT_MARK_OUTERPILEUP,
-
- GWY_WHAT_MARK_POINTS,
- GWY_WHAT_MARK_FACESBORDER,
+    { N_("New"), GWY_HOW_MARK_NEW, },
+    { N_("AND"), GWY_HOW_MARK_AND, },
+    { N_("OR"),  GWY_HOW_MARK_OR,  },
+    { N_("NOT"), GWY_HOW_MARK_NOT, },
+    { N_("XOR"), GWY_HOW_MARK_XOR, },
 };
 
 GwyEnum what_mark_enum[] = {
-    { N_("Nothing"),  GWY_WHAT_MARK_NOTHING},
-    { N_("Above"), GWY_WHAT_MARK_ABOVE},
-    { N_("Bellow"),   GWY_WHAT_MARK_BELOW},
-    { N_("Plane"),   GWY_WHAT_MARK_PLANE},
-    { N_("Impression"),   GWY_WHAT_MARK_INDENTATION},
-    { N_("Inner Pile-up"),   GWY_WHAT_MARK_INNERPILEUP},
-    { N_("Outer Pile-up"),   GWY_WHAT_MARK_OUTERPILEUP},
-    { N_("Special points"),   GWY_WHAT_MARK_POINTS},
-    { N_("Faces border"),   GWY_WHAT_MARK_FACESBORDER},
+    { N_("Nothing"),        GWY_WHAT_MARK_NOTHING,     },
+    { N_("Above"),          GWY_WHAT_MARK_ABOVE,       },
+    { N_("Bellow"),         GWY_WHAT_MARK_BELOW,       },
+    { N_("Plane"),          GWY_WHAT_MARK_PLANE,       },
+    { N_("Impression"),     GWY_WHAT_MARK_INDENTATION, },
+    { N_("Inner Pile-up"),  GWY_WHAT_MARK_INNERPILEUP, },
+    { N_("Outer Pile-up"),  GWY_WHAT_MARK_OUTERPILEUP, },
+    { N_("Special points"), GWY_WHAT_MARK_POINTS,      },
+    { N_("Faces border"),   GWY_WHAT_MARK_FACESBORDER, },
 };
 
-
-
+static const GwyEnum indentors[] = {
+    { N_("Vickers"),              GWY_INDENTOR_VICKERS,     },
+    { N_("Berkovich"),            GWY_INDENTOR_BERKOVICH,   },
+    { N_("Berkovich (modified)"), GWY_INDENTOR_BERKOVICH_M, },
+    { N_("Knoop"),                GWY_INDENTOR_KNOOP,       },
+    { N_("Brinell"),              GWY_INDENTOR_BRINELL,     },
+    { N_("Cube corner"),          GWY_INDENTOR_CUBECORNER,  },
+    { N_("Rockwell"),             GWY_INDENTOR_ROCKWELL,    },
+};
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -397,35 +406,36 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs *args)
     row = 0;
 
     controls.w_plane_correct
-        = gwy_option_menu_create(plane_correct_enum,
-                                 G_N_ELEMENTS(plane_correct_enum), "menu_plane_correct",
-                                 G_CALLBACK(plane_correct_cb), &controls,
-                                 args->plane_correct);
+        = gwy_enum_combo_box_new(plane_correct_enum,
+                                 G_N_ELEMENTS(plane_correct_enum),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->plane_correct, args->plane_correct,
+                                 TRUE);
     gwy_table_attach_row(table, row, _("Data field leveling:"), "",
                          controls.w_plane_correct);
     row++;
 
     controls.w_what_mark
-        = gwy_option_menu_create(what_mark_enum,
-                                 G_N_ELEMENTS(what_mark_enum), "menu_what_mark",
-                                 G_CALLBACK(what_mark_cb), &controls,
-                                 args->what_mark);
+        = gwy_enum_combo_box_new(what_mark_enum, G_N_ELEMENTS(what_mark_enum),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->what_mark, args->what_mark, TRUE);
     gwy_table_attach_row(table, row, _("Marked areas:"), "",
                          controls.w_what_mark);
     row++;
 
-
-    controls.w_indentor = gwy_option_menu_indentor (G_CALLBACK(indentor_changed_cb),
-                                     &controls, args->indentor);
+    controls.w_indentor
+        = gwy_enum_combo_box_new(indentors, G_N_ELEMENTS(indentors),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->indentor, args->indentor, TRUE);
     gwy_table_attach_row(table, row, _("Indentor type:"), "",controls.w_indentor);
     row++;
 
     controls.w_how_mark
-        = gwy_option_menu_create(how_mark_enum,
-                                 G_N_ELEMENTS(how_mark_enum), "menu_how_mark",
-                                 G_CALLBACK(how_mark_cb), &controls,
-                                 args->how_mark);
-    gwy_table_attach_row(table, row, _("Mask creation type:"), "",controls.w_how_mark);
+        = gwy_enum_combo_box_new(how_mark_enum, G_N_ELEMENTS(how_mark_enum),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->how_mark, args->how_mark, TRUE);
+    gwy_table_attach_row(table, row, _("Mask creation type:"),
+                         "",controls.w_how_mark);
     row++;
 
     controls.w_plane_tol = gtk_adjustment_new (args->plane_tol, 0, 100, 0.1, 1, 10);
@@ -1216,54 +1226,15 @@ static void
 dialog_update(IndentAnalyzeControls *controls,
                        IndentAnalyzeArgs *args)
 {
-
-    gwy_option_menu_set_history(controls->w_plane_correct, "menu_plane_correct",
-                                args->plane_correct);
-    gwy_option_menu_set_history(controls->w_how_mark, "menu_how_mark",
-                                args->how_mark);
-    gwy_option_menu_set_history(controls->w_what_mark, "menu_what_mark",
-                                args->what_mark);
-
-
-
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_plane_correct),
+                                  args->plane_correct);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_how_mark),
+                                  args->how_mark);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_what_mark),
+                                  args->what_mark);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->w_indentor),
+                                  args->indentor);
 }
-
-static void
-plane_correct_cb(GtkWidget *item, IndentAnalyzeControls *controls)
-{
-    controls->args->plane_correct
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "menu_plane_correct"));
-   dialog_update(controls, controls->args);
-}
-
-static void
-what_mark_cb(GtkWidget *item, IndentAnalyzeControls *controls)
-{
-    controls->args->what_mark
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item),
-                                             "menu_what_mark"));
-    dialog_update(controls, controls->args);
-}
-
-static void
-how_mark_cb(GtkWidget *item, IndentAnalyzeControls *controls)
-{
-    controls->args->how_mark
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item),
-                                             "menu_how_mark"));
-    dialog_update(controls, controls->args);
-}
-
-static void
-indentor_changed_cb(GtkWidget *item, IndentAnalyzeControls *controls)
-{
-    controls->args->indentor
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item),"indentor-type"));
-
-
-    dialog_update(controls, controls->args);
-}
-
 
 static const gchar *what_mark_key = "/module/nanoindent/what_mark";
 static const gchar *how_mark_key = "/module/nanoindent/how_mark";
@@ -1570,6 +1541,7 @@ gdouble gwy_vec_abs (GwyVec v)
    return sqrt (gwy_vec_dot (v,v));
 }
 
+/*
 gdouble gwy_vec_arg_phi (GwyVec v)
 {
    return atan2(v.z, v.x);
@@ -1581,6 +1553,7 @@ gdouble gwy_vec_arg_theta (GwyVec v)
    return atan2(v.y, v.x);
 
 }
+*/
 
 gdouble gwy_vec_cos (GwyVec v1, GwyVec v2)
 {

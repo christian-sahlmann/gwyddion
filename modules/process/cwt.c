@@ -32,9 +32,7 @@
 #define CWT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
     gboolean preserve;
     gdouble scale;
@@ -53,10 +51,6 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    cwt                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    cwt_dialog                 (CWTArgs *args);
-static void        interp_changed_cb          (GtkWidget *combo,
-                                               CWTArgs *args);
-static void        wavelet_changed_cb         (GObject *item,
-                                               CWTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                CWTArgs *args);
 static void        cwt_load_args              (GwyContainer *container,
@@ -66,9 +60,7 @@ static void        cwt_save_args              (GwyContainer *container,
 static void        cwt_dialog_update          (CWTControls *controls,
                                                CWTArgs *args);
 
-
-
-CWTArgs cwt_defaults = {
+static const CWTArgs cwt_defaults = {
     1,
     10,
     GWY_INTERPOLATION_BILINEAR,
@@ -207,13 +199,14 @@ cwt_dialog(CWTArgs *args)
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_row(table, 2, _("_Interpolation type:"), "",
                          controls.interp);
     controls.wavelet
-        = gwy_option_menu_2dcwt(G_CALLBACK(wavelet_changed_cb),
-                                args, args->wavelet);
+        = gwy_enum_combo_box_new(gwy_2d_cwt_wavelet_type_get_enum(), -1,
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->wavelet, args->wavelet, TRUE);
     gwy_table_attach_row(table, 3, _("_Wavelet type:"), "",
                          controls.wavelet);
 
@@ -251,21 +244,6 @@ cwt_dialog(CWTArgs *args)
 }
 
 static void
-interp_changed_cb(GtkWidget *combo,
-                  CWTArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-wavelet_changed_cb(GObject *item,
-                  CWTArgs *args)
-{
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "2dcwt-wavelet-type"));
-}
-
-static void
 preserve_changed_cb(GtkToggleButton *button, CWTArgs *args)
 {
     args->preserve = gtk_toggle_button_get_active(button);
@@ -275,13 +253,12 @@ static void
 cwt_dialog_update(CWTControls *controls,
                   CWTArgs *args)
 {
-
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
                              args->scale);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "2dcwt_wavelet-type",
-                                args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
+                                  args->wavelet);
 }
 
 static const gchar *preserve_key = "/module/cwt/preserve";

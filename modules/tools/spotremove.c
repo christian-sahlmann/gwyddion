@@ -55,54 +55,54 @@ typedef void (*AverageFunc)(GwyDataField *dfield,
                             gint ximax,
                             gint yimax);
 
-static gboolean   module_register      (const gchar *name);
-static gboolean   use                  (GwyDataWindow *data_window,
-                                        GwyToolSwitchEvent reason);
-static void       layer_setup          (GwyUnitoolState *state);
-static GtkWidget* dialog_create        (GwyUnitoolState *state);
-static void       dialog_update        (GwyUnitoolState *state,
-                                        GwyUnitoolUpdateType reason);
-static void       dialog_abandon       (GwyUnitoolState *state);
-static void       apply                (GwyUnitoolState *state);
-static void       load_args            (GwyContainer *container,
-                                        ToolControls *controls);
-static void       save_args            (GwyContainer *container,
-                                        ToolControls *controls);
-static void       draw_zoom            (ToolControls *controls,
-                                        GwyDataField *dfield,
-                                        gint ximin,
-                                        gint yimin,
-                                        gint ximax,
-                                        gint yimax);
-static gboolean   find_subrange        (gint min,
-                                        gint max,
-                                        gint res,
-                                        gint size,
-                                        gint *from,
-                                        gint *to,
-                                        gint *dest);
-static void       crisscross_average   (GwyDataField *dfield,
-                                        gint ximin,
-                                        gint yimin,
-                                        gint ximax,
-                                        gint yimax);
-static void       laplace_average      (GwyDataField *dfield,
-                                        gint ximin,
-                                        gint yimin,
-                                        gint ximax,
-                                        gint yimax);
-static void       fractal_average      (GwyDataField *dfield,
-                                        gint ximin,
-                                        gint yimin,
-                                        gint ximax,
-                                        gint yimax);
+static gboolean   module_register       (const gchar *name);
+static gboolean   use                   (GwyDataWindow *data_window,
+                                         GwyToolSwitchEvent reason);
+static void       layer_setup           (GwyUnitoolState *state);
+static GtkWidget* dialog_create         (GwyUnitoolState *state);
+static void       dialog_update         (GwyUnitoolState *state,
+                                         GwyUnitoolUpdateType reason);
+static void       dialog_abandon        (GwyUnitoolState *state);
+static void       apply                 (GwyUnitoolState *state);
+static void       load_args             (GwyContainer *container,
+                                         ToolControls *controls);
+static void       save_args             (GwyContainer *container,
+                                         ToolControls *controls);
+static void       draw_zoom             (ToolControls *controls,
+                                         GwyDataField *dfield,
+                                         gint ximin,
+                                         gint yimin,
+                                         gint ximax,
+                                         gint yimax);
+static gboolean   find_subrange         (gint min,
+                                         gint max,
+                                         gint res,
+                                         gint size,
+                                         gint *from,
+                                         gint *to,
+                                         gint *dest);
+static void       crisscross_average    (GwyDataField *dfield,
+                                         gint ximin,
+                                         gint yimin,
+                                         gint ximax,
+                                         gint yimax);
+static void       laplace_average       (GwyDataField *dfield,
+                                         gint ximin,
+                                         gint yimin,
+                                         gint ximax,
+                                         gint yimax);
+static void       fractal_average       (GwyDataField *dfield,
+                                         gint ximin,
+                                         gint yimin,
+                                         gint ximax,
+                                         gint yimax);
 static void       pseudo_laplace_average(GwyDataField *dfield,
                                          gint ximin,
                                          gint yimin,
                                          gint ximax,
                                          gint yimax);
-static void       algorithm_changed_cb (GObject *item,
-                                        GwyUnitoolState *state);
+static void       algorithm_changed_cb  (GtkWidget *combo,
+                                         GwyUnitoolState *state);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -272,10 +272,9 @@ dialog_create(GwyUnitoolState *state)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    omenu = gwy_option_menu_create(algorithms, G_N_ELEMENTS(algorithms),
-                                   "algorithm",
+    omenu = gwy_enum_combo_box_new(algorithms, G_N_ELEMENTS(algorithms),
                                    G_CALLBACK(algorithm_changed_cb), state,
-                                   controls->algorithm);
+                                   controls->algorithm, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
     gtk_table_attach(GTK_TABLE(table), omenu, 0, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -598,12 +597,12 @@ find_subrange(gint min, gint max, gint res, gint size,
 }
 
 static void
-algorithm_changed_cb(GObject *item, GwyUnitoolState *state)
+algorithm_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
     controls = (ToolControls*)state->user_data;
-    controls->algorithm = GPOINTER_TO_INT(g_object_get_data(item, "algorithm"));
+    controls->algorithm = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static const gchar *algorithm_key = "/tool/spotremove/algorithm";

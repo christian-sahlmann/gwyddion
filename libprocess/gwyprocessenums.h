@@ -59,6 +59,8 @@ typedef enum { /*< lowercase_name=gwy_2dcwt_wavelet_type >*/
     GWY_2DCWT_HAT
 } Gwy2DCWTWaveletType;
 
+const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;
+
 typedef enum {
     GWY_ORIENTATION_HORIZONTAL,
     GWY_ORIENTATION_VERTICAL
@@ -106,6 +108,8 @@ typedef enum {
     GWY_DWT_DENOISE_SPACE_ADAPTIVE
 } GwyDWTDenoiseType;
 
+const GwyEnum* gwy_dwt_denoise_type_get_enum(void) G_GNUC_CONST;
+
 typedef enum {
     GWY_INTERPOLATION_NONE      = 0,
     GWY_INTERPOLATION_ROUND     = 1,
@@ -146,17 +150,6 @@ typedef enum {
     GWY_TIP_NONCONTACT     = 2,
     GWY_TIP_DELTA          = 3
 } GwyTipType;
-
-typedef enum {
-    GWY_INDENTOR_VICKERS     = 0,
-    GWY_INDENTOR_BERKOVICH   = 1,
-    GWY_INDENTOR_BERKOVICH_M = 2,
-    GWY_INDENTOR_KNOOP       = 3,
-    GWY_INDENTOR_BRINELL     = 4,
-    GWY_INDENTOR_ROCKWELL    = 5,
-    GWY_INDENTOR_CUBECORNER  = 6
-} GwyIndentorType;
-
 
 G_END_DECLS
 

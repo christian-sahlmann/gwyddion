@@ -22,10 +22,12 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/dwt.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -33,8 +35,7 @@
 #define DWT_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
+/* Data for this function. */
 typedef struct {
     gboolean preserve;
     GwyInterpolationType interp;
@@ -51,10 +52,6 @@ static gboolean module_register    (const gchar *name);
 static gboolean dwt                (GwyContainer *data,
                                     GwyRunType run);
 static gboolean dwt_dialog         (DWTArgs *args);
-static void     interp_changed_cb  (GtkWidget *combo,
-                                    DWTArgs *args);
-static void     wavelet_changed_cb (GtkWidget *combo,
-                                    DWTArgs *args);
 static void     preserve_changed_cb(GtkToggleButton *button,
                                     DWTArgs *args);
 static void     dwt_dialog_update  (DWTControls *controls,
@@ -199,18 +196,17 @@ dwt_dialog(DWTArgs *args)
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
         = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
-                                 G_CALLBACK(wavelet_changed_cb), args,
-                                 args->wavelet, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->wavelet, args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
-
 
     gtk_widget_show_all(dialog);
     do {
@@ -243,20 +239,6 @@ dwt_dialog(DWTArgs *args)
 }
 
 static void
-interp_changed_cb(GtkWidget *combo,
-                  DWTArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-wavelet_changed_cb(GtkWidget *combo,
-                   DWTArgs *args)
-{
-    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
 preserve_changed_cb(GtkToggleButton *button, DWTArgs *args)
 {
     args->preserve = gtk_toggle_button_get_active(button);
@@ -270,6 +252,8 @@ dwt_dialog_update(DWTControls *controls,
                                   args->interp);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
                                   args->wavelet);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->preserve),
+                                 args->preserve);
 }
 
 
@@ -283,7 +267,7 @@ dwt_sanitize_args(DWTArgs *args)
     args->preserve = !!args->preserve;
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
+    args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
 }
 
 static void

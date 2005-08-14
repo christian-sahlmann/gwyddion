@@ -25,6 +25,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/filters.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
@@ -74,9 +75,9 @@ static void       do_apply             (GwyDataField *dfield,
                                         gint direction,
                                         gint *isel);
 
-static void       direction_changed_cb (GObject *item,
+static void       direction_changed_cb (GtkWidget *combo,
                                         GwyUnitoolState *state);
-static void       filter_changed_cb    (GObject *item,
+static void       filter_changed_cb    (GtkWidget *combo,
                                         GwyUnitoolState *state);
 static void       update_changed_cb    (GtkToggleButton *button,
                                         GwyUnitoolState *state);
@@ -184,13 +185,13 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    static const GwyEnum entries[] = {
-        { N_("Mean value"),            GWY_FILTER_MEAN,  },
-        { N_("Median value"),          GWY_FILTER_MEDIAN, },
-        { N_("Conservative denoise"),  GWY_FILTER_CONSERVATIVE, },
-        { N_("Minimum"),               GWY_FILTER_MINIMUM, },
-        { N_("Maximum"),               GWY_FILTER_MAXIMUM, },
-        { N_("Kuwahara"),              GWY_FILTER_KUWAHARA, },
+    static const GwyEnum filters[] = {
+        { N_("Mean value"),           GWY_FILTER_MEAN,         },
+        { N_("Median value"),         GWY_FILTER_MEDIAN,       },
+        { N_("Conservative denoise"), GWY_FILTER_CONSERVATIVE, },
+        { N_("Minimum"),              GWY_FILTER_MINIMUM,      },
+        { N_("Maximum"),              GWY_FILTER_MAXIMUM,      },
+        { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
     };
     ToolControls *controls;
     GwyContainer *settings;
@@ -228,15 +229,16 @@ dialog_create(GwyUnitoolState *state)
     gtk_table_attach(GTK_TABLE(table2), label, 0, 1, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->filter
-        = gwy_option_menu_create(entries, G_N_ELEMENTS(entries), "filter-type",
+        = gwy_enum_combo_box_new(filters, G_N_ELEMENTS(filters),
                                  G_CALLBACK(filter_changed_cb), state,
-                                 controls->fil);
+                                 controls->fil, TRUE);
     gwy_table_attach_hscale(table2, 1, _("_Type:"), NULL,
                             GTK_OBJECT(controls->filter), GWY_HSCALE_WIDGET);
 
     controls->direction
-        = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
-                                      state, controls->dir);
+        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
+                                 G_CALLBACK(direction_changed_cb), state,
+                                 controls->dir, TRUE);
     gwy_table_attach_hscale(table2, 2, _("_Direction:"), NULL,
                             GTK_OBJECT(controls->direction), GWY_HSCALE_WIDGET);
     label = gwy_table_get_child_widget(table2, 2, 0);
@@ -453,22 +455,21 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-direction_changed_cb(GObject *item,
+direction_changed_cb(GtkWidget *combo,
                      GwyUnitoolState *state)
 {
     ToolControls *controls;
 
     gwy_debug(" ");
-
     controls = (ToolControls*)state->user_data;
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item,
-                                                      "orientation-type"));
+    controls->dir = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     controls->state_changed = TRUE;
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-filter_changed_cb(GObject *item, GwyUnitoolState *state)
+filter_changed_cb(GtkWidget *combo,
+                  GwyUnitoolState *state)
 {
     ToolControls *controls;
     gboolean direction_sensitive = FALSE;
@@ -476,7 +477,7 @@ filter_changed_cb(GObject *item, GwyUnitoolState *state)
 
     gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
-    controls->fil = GPOINTER_TO_INT(g_object_get_data(item, "filter-type"));
+    controls->fil = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     controls->state_changed = TRUE;
 
     switch (controls->fil) {
@@ -572,7 +573,8 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->old_upd = controls->upd;
     controls->siz = CLAMP(controls->siz, 2, 20);
     controls->fil = MIN(controls->fil, GWY_FILTER_KUWAHARA);
-    controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
+    controls->dir = gwy_enum_sanitize_value(controls->dir,
+                                            GWY_TYPE_ORIENTATION);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

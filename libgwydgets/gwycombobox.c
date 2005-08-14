@@ -37,6 +37,24 @@ static gboolean gwy_enum_combo_box_find_value    (gpointer key,
                                                   const GwyEnum *item,
                                                   gint *i);
 
+/**
+ * gwy_enum_combo_box_new:
+ * @entries: An enum with choices.
+ * @nentries: The number of items in @entries, may be -1 when @entries is
+ *            terminated with %NULL enum name.
+ * @callback: A callback called when a new choice is selected (may be %NULL).
+ *            If you want to just update an integer, you can use
+ *            gwy_enum_combo_box_update_int() here.
+ * @cbdata: User data passed to the callback.
+ * @active: The enum value to show as currently selected.  If it isn't equal to
+ *          any @entries value, first item is selected.
+ * @translate: Whether to apply translation function (gwy_sgettext()) to item
+ *             names.
+ *
+ * Creates a combo box with choices from a enum.
+ *
+ * Returns: A newly created combo box as #GtkWidget.
+ **/
 GtkWidget*
 gwy_enum_combo_box_new(const GwyEnum *entries,
                        gint nentries,
@@ -80,6 +98,13 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
     return combo;
 }
 
+/**
+ * gwy_enum_combo_box_set_active:
+ * @combo: A combo box which was created with gwy_enum_combo_box_new().
+ * @active: The enum value to show as currently selected.
+ *
+ * Sets the active combo box item by corresponding enum value.
+ **/
 void
 gwy_enum_combo_box_set_active(GtkComboBox *combo,
                               gint active)
@@ -88,6 +113,14 @@ gwy_enum_combo_box_set_active(GtkComboBox *combo,
         g_warning("Enum value not between inventory enums");
 }
 
+/**
+ * gwy_enum_combo_box_get_active:
+ * @combo: A combo box which was created with gwy_enum_combo_box_new().
+ *
+ * Gets the enum value corresponding to currently active combo box item.
+ *
+ * Returns: The selected enum value.
+ **/
 gint
 gwy_enum_combo_box_get_active(GtkComboBox *combo)
 {
@@ -97,11 +130,37 @@ gwy_enum_combo_box_get_active(GtkComboBox *combo)
 
     i = gtk_combo_box_get_active(combo);
     store = GWY_INVENTORY_STORE(gtk_combo_box_get_model(combo));
+    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), -1);
     item = gwy_inventory_get_nth_item(gwy_inventory_store_get_inventory(store),
                                       i);
     g_return_val_if_fail(item, -1);
 
     return item->value;
+}
+
+/**
+ * gwy_enum_combo_box_update_int:
+ * @combo: A combo box which was created with gwy_enum_combo_box_new().
+ * @integer: Pointer to an integer to update to selected enum value.
+ *
+ * Convenience callback keeping an integer synchronized with selected enum
+ * combo box value.
+ **/
+void
+gwy_enum_combo_box_update_int(GtkComboBox *combo,
+                              gint *integer)
+{
+    GwyInventoryStore *store;
+    const GwyEnum *item;
+    gint i;
+
+    i = gtk_combo_box_get_active(combo);
+    store = GWY_INVENTORY_STORE(gtk_combo_box_get_model(combo));
+    g_return_if_fail(GWY_IS_INVENTORY_STORE(store));
+    item = gwy_inventory_get_nth_item(gwy_inventory_store_get_inventory(store),
+                                      i);
+    g_return_if_fail(item);
+    *integer = item->value;
 }
 
 static gboolean
@@ -111,6 +170,7 @@ gwy_enum_combo_box_try_set_active(GtkComboBox *combo,
     GwyInventoryStore *store;
 
     store = GWY_INVENTORY_STORE(gtk_combo_box_get_model(combo));
+    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), FALSE);
     if (!gwy_inventory_find(gwy_inventory_store_get_inventory(store),
                             (GHRFunc)&gwy_enum_combo_box_find_value,
                             &active))

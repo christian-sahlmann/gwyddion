@@ -22,10 +22,12 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/dwt.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -54,10 +56,6 @@ static gboolean module_register             (const gchar *name);
 static gboolean dwt_anisotropy              (GwyContainer *data,
                                              GwyRunType run);
 static gboolean dwt_anisotropy_dialog       (DWTAnisotropyArgs *args);
-static void     interp_changed_cb           (GtkWidget *combo,
-                                             DWTAnisotropyArgs *args);
-static void     wavelet_changed_cb          (GtkWidget *combo,
-                                             DWTAnisotropyArgs *args);
 static void     ratio_changed_cb            (GtkAdjustment *adj,
                                              DWTAnisotropyArgs *args);
 static void     lowlimit_changed_cb         (GtkAdjustment *adj,
@@ -204,18 +202,17 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
         = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
-                                 G_CALLBACK(wavelet_changed_cb), args,
-                                 args->wavelet, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->wavelet, args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
@@ -236,8 +233,6 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls.lowlimit, "value-changed",
              G_CALLBACK(lowlimit_changed_cb), args);
-
-
 
     gtk_widget_show_all(dialog);
     do {
@@ -270,20 +265,6 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 }
 
 static void
-interp_changed_cb(GtkWidget *combo,
-                  DWTAnisotropyArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-wavelet_changed_cb(GtkWidget *combo,
-                   DWTAnisotropyArgs *args)
-{
-    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
 ratio_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 {
     args->ratio = gtk_adjustment_get_value(adj);
@@ -294,14 +275,19 @@ lowlimit_changed_cb(GtkAdjustment *adj, DWTAnisotropyArgs *args)
 {
     args->lowlimit = gtk_adjustment_get_value(adj);
 }
+
 static void
 dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
-                     DWTAnisotropyArgs *args)
+                             DWTAnisotropyArgs *args)
 {
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
                                   args->wavelet);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ratio),
+                             args->ratio);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->lowlimit),
+                             args->lowlimit);
 }
 
 
@@ -315,7 +301,7 @@ dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)
 {
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
+    args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
     args->lowlimit = CLAMP(args->lowlimit, 1, 20);
 }
 

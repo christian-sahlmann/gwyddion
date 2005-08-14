@@ -58,6 +58,8 @@ GtkWidget* gwy_enum_combo_box_new        (const GwyEnum *entries,
 void       gwy_enum_combo_box_set_active (GtkComboBox *combo,
                                           gint current);
 gint       gwy_enum_combo_box_get_active (GtkComboBox *combo);
+void       gwy_enum_combo_box_update_int (GtkComboBox *combo,
+                                          gint *integer);
 
 G_END_DECLS
 

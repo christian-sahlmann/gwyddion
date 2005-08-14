@@ -65,6 +65,17 @@ gwy_plane_symmetry_get_enum(void)
     return entries;
 };
 
+const GwyEnum*
+gwy_2d_cwt_wavelet_type_get_enum(void)
+{
+    static const GwyEnum entries[] = {
+        { N_("Gaussian"),          GWY_2DCWT_GAUSS      },
+        { N_("Hat"),               GWY_2DCWT_HAT        },
+        { NULL,                    0,                   },
+    };
+    return entries;
+}
+
 /**
  * GwyOrientation:
  * @GWY_ORIENTATION_HORIZONTAL: Horizontal orientation.
@@ -95,6 +106,18 @@ gwy_dwt_type_get_enum(void)
         { N_("Daubechies 20"), GWY_DWT_DAUB20  },
         { NULL,                0,              },
      };
+    return entries;
+}
+
+const GwyEnum*
+gwy_dwt_denoise_type_get_enum(void)
+{
+    static const GwyEnum entries[] = {
+        { N_("Universal"),                 GWY_DWT_DENOISE_UNIVERSAL,       },
+        { N_("Scale adaptive"),            GWY_DWT_DENOISE_SCALE_ADAPTIVE,  },
+        { N_("Scale and space adaptive"),  GWY_DWT_DENOISE_SPACE_ADAPTIVE,  },
+        { NULL,                            0,                               },
+    };
     return entries;
 }
 
@@ -132,14 +155,14 @@ const GwyEnum*
 gwy_windowing_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
-        { N_("None"),     GWY_WINDOWING_NONE      },
-        { N_("Hann"),     GWY_WINDOWING_HANN      },
-        { N_("Hamming"),  GWY_WINDOWING_HAMMING   },
-        { N_("Blackman"), GWY_WINDOWING_BLACKMANN },
-        { N_("Lanzcos"),  GWY_WINDOWING_LANCZOS   },
-        { N_("Welch"),    GWY_WINDOWING_WELCH     },
-        { N_("Rect"),     GWY_WINDOWING_RECT      },
-        { NULL,           0,                      },
+        { N_("None"),     GWY_WINDOWING_NONE,      },
+        { N_("Hann"),     GWY_WINDOWING_HANN,      },
+        { N_("Hamming"),  GWY_WINDOWING_HAMMING,   },
+        { N_("Blackman"), GWY_WINDOWING_BLACKMANN, },
+        { N_("Lanzcos"),  GWY_WINDOWING_LANCZOS,   },
+        { N_("Welch"),    GWY_WINDOWING_WELCH,     },
+        { N_("Rect"),     GWY_WINDOWING_RECT,      },
+        { NULL,           0,                       },
     };
     return entries;
 }

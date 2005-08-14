@@ -33,12 +33,12 @@
     (GWY_RUN_MODAL | GWY_RUN_NONINTERACTIVE | GWY_RUN_WITH_DEFAULTS)
 
 typedef enum {
-  GWY_FFT_OUTPUT_REAL_IMG   = 0,
-  GWY_FFT_OUTPUT_MOD_PHASE  = 1,
-  GWY_FFT_OUTPUT_REAL       = 2,
-  GWY_FFT_OUTPUT_IMG        = 3,
-  GWY_FFT_OUTPUT_MOD        = 4,
-  GWY_FFT_OUTPUT_PHASE      = 5
+    GWY_FFT_OUTPUT_REAL_IMG   = 0,
+    GWY_FFT_OUTPUT_MOD_PHASE  = 1,
+    GWY_FFT_OUTPUT_REAL       = 2,
+    GWY_FFT_OUTPUT_IMG        = 3,
+    GWY_FFT_OUTPUT_MOD        = 4,
+    GWY_FFT_OUTPUT_PHASE      = 5
 } GwyFFTOutputType;
 
 /* Data for this function.
@@ -61,19 +61,10 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    fft                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    fft_dialog                 (FFTArgs *args);
-static void        interp_changed_cb          (GtkWidget *combo,
-                                               FFTArgs *args);
-static void        window_changed_cb          (GtkWidget *combo,
-                                               FFTArgs *args);
-static void        out_changed_cb             (GObject *item,
-                                               FFTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FFTArgs *args);
 static void        fft_dialog_update          (FFTControls *controls,
                                                FFTArgs *args);
-static GtkWidget*  gwy_option_menu_fft_output (GCallback callback,
-                                               gpointer cbdata,
-                                               GwyFFTOutputType current);
 static void        set_dfield_module          (GwyDataField *re,
                                                GwyDataField *im,
                                                GwyDataField *target);
@@ -305,6 +296,14 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
 static gboolean
 fft_dialog(FFTArgs *args)
 {
+    static const GwyEnum fft_outputs[] = {
+        { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
+        { N_("Module + Phase"),    GWY_FFT_OUTPUT_MOD_PHASE, },
+        { N_("Real"),              GWY_FFT_OUTPUT_REAL,      },
+        { N_("Imaginary"),         GWY_FFT_OUTPUT_IMG,       },
+        { N_("Module"),            GWY_FFT_OUTPUT_MOD,       },
+        { N_("Phase"),             GWY_FFT_OUTPUT_PHASE,     },
+    };
     GtkWidget *dialog, *table;
     FFTControls controls;
     enum { RESPONSE_RESET = 1 };
@@ -336,20 +335,21 @@ fft_dialog(FFTArgs *args)
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
     controls.window
         = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
-                                 G_CALLBACK(window_changed_cb), args,
-                                 args->window, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->window, args->window, TRUE);
     gwy_table_attach_row(table, 2, _("_Windowing type:"), "",
                          controls.window);
 
     controls.out
-        = gwy_option_menu_fft_output(G_CALLBACK(out_changed_cb),
-                                     args, args->out);
+        = gwy_enum_combo_box_new(fft_outputs, G_N_ELEMENTS(fft_outputs),
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->out, args->out, TRUE);
     gwy_table_attach_row(table, 3, _("_Output type:"), "",
                          controls.out);
 
@@ -384,27 +384,6 @@ fft_dialog(FFTArgs *args)
 }
 
 static void
-interp_changed_cb(GtkWidget *combo,
-                  FFTArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-out_changed_cb(GObject *item,
-               FFTArgs *args)
-{
-    args->out = GPOINTER_TO_INT(g_object_get_data(item, "fft-output-type"));
-}
-
-static void
-window_changed_cb(GtkWidget *combo,
-                  FFTArgs *args)
-{
-    args->window = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
 preserve_changed_cb(GtkToggleButton *button, FFTArgs *args)
 {
     args->preserve = gtk_toggle_button_get_active(button);
@@ -414,33 +393,14 @@ static void
 fft_dialog_update(FFTControls *controls,
                      FFTArgs *args)
 {
-    /*
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-     */
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->out),
+                                  args->out);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->window),
                                   args->window);
-}
-
-static GtkWidget*
-gwy_option_menu_fft_output(GCallback callback,
-                           gpointer cbdata,
-                           GwyFFTOutputType current)
-{
-    static const GwyEnum entries[] = {
-        { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
-        { N_("Module + Phase"),    GWY_FFT_OUTPUT_MOD_PHASE, },
-        { N_("Real"),              GWY_FFT_OUTPUT_REAL,      },
-        { N_("Imaginary"),         GWY_FFT_OUTPUT_IMG,       },
-        { N_("Module"),            GWY_FFT_OUTPUT_MOD,       },
-        { N_("Phase"),             GWY_FFT_OUTPUT_PHASE,     },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                                  "fft-output-type", callback, cbdata,
-                                  current);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->preserve),
+                                 args->preserve);
 }
 
 static const gchar *preserve_key = "/module/fft/preserve";

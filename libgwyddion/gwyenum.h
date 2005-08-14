@@ -33,23 +33,25 @@ typedef struct {
     gint value;
 } GwyEnum;
 
-GType         gwy_enum_get_type     (void) G_GNUC_CONST;
-gint          gwy_string_to_enum    (const gchar *str,
-                                     const GwyEnum *enum_table,
-                                     gint n);
-const gchar*  gwy_enum_to_string    (gint enumval,
-                                     const GwyEnum *enum_table,
-                                     gint n);
-gint          gwy_string_to_flags   (const gchar *str,
-                                     const GwyEnum *enum_table,
-                                     gint n,
-                                     const gchar *delimiter);
-gchar*        gwy_flags_to_string   (gint enumval,
-                                     const GwyEnum *enum_table,
-                                     gint n,
-                                     const gchar *glue);
-GwyInventory* gwy_enum_inventory_new(const GwyEnum *enum_table,
-                                     gint n);
+GType         gwy_enum_get_type      (void) G_GNUC_CONST;
+gint          gwy_string_to_enum     (const gchar *str,
+                                      const GwyEnum *enum_table,
+                                      gint n);
+const gchar*  gwy_enum_to_string     (gint enumval,
+                                      const GwyEnum *enum_table,
+                                      gint n);
+gint          gwy_string_to_flags    (const gchar *str,
+                                      const GwyEnum *enum_table,
+                                      gint n,
+                                      const gchar *delimiter);
+gchar*        gwy_flags_to_string    (gint enumval,
+                                      const GwyEnum *enum_table,
+                                      gint n,
+                                      const gchar *glue);
+gint          gwy_enum_sanitize_value(gint enumval,
+                                      GType enum_type);
+GwyInventory* gwy_enum_inventory_new (const GwyEnum *enum_table,
+                                      gint n);
 
 G_END_DECLS
 

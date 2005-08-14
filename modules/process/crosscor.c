@@ -73,7 +73,7 @@ static gboolean   crosscor                    (GwyContainer *data,
 static GtkWidget* crosscor_window_construct   (CrosscorArgs *args,
                                                CrosscorControls *controls);
 static GtkWidget* crosscor_data_option_menu   (GwyDataWindow **operand);
-static void       crosscor_operation_cb       (GtkWidget *item,
+static void       crosscor_operation_cb       (GtkWidget *combo,
                                                CrosscorArgs *args);
 static void       crosscor_data_cb            (GtkWidget *item);
 static void       crosscor_update_values      (CrosscorControls *controls,
@@ -186,7 +186,7 @@ static GtkWidget*
 crosscor_window_construct(CrosscorArgs *args,
                           CrosscorControls *controls)
 {
-    GtkWidget *dialog, *table, *omenu, *label, *spin;
+    GtkWidget *dialog, *table, *omenu, *label, *spin, *combo;
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Cross-Correlation"), NULL, 0,
@@ -257,13 +257,11 @@ crosscor_window_construct(CrosscorArgs *args,
     row++;
 
     /*Result*/
-    omenu = gwy_option_menu_create(results, G_N_ELEMENTS(results),
-                                   "operation",
-                                   G_CALLBACK(crosscor_operation_cb),
-                                   args,
-                                   args->result);
+    combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
+                                   G_CALLBACK(crosscor_operation_cb), args,
+                                   args->result, TRUE);
     gwy_table_attach_hscale(table, row, _("_Output type:"), NULL,
-                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+                            GTK_OBJECT(combo), GWY_HSCALE_WIDGET);
     row++;
 
     /*do mask of thresholds*/
@@ -304,10 +302,10 @@ crosscor_data_option_menu(GwyDataWindow **operand)
 }
 
 static void
-crosscor_operation_cb(GtkWidget *item, CrosscorArgs *args)
+crosscor_operation_cb(GtkWidget *combo,
+                      CrosscorArgs *args)
 {
-    args->result
-        = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "operation"));
+    args->result = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void

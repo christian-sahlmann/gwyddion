@@ -354,8 +354,7 @@ hash_to_data_field(GHashTable *hash,
     NanoscopeValue *val;
     GwyDataField *dfield;
     GwySIUnit *unitz, *unitxy;
-    const gchar *s;
-    gchar *end;
+    gchar *s, *end;
     gchar un[5];
     gint xres, yres, bpp, offset, size, power10;
     gdouble xreal, yreal, q;

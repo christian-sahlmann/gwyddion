@@ -53,7 +53,7 @@ static void       apply               (GwyUnitoolState *state);
 
 static void       direction_changed_cb(GObject *item,
                                        GwyUnitoolState *state);
-static void       fitting_changed_cb  (GObject *item,
+static void       fitting_changed_cb  (GtkWidget *combo,
                                        GwyUnitoolState *state);
 static void       exclude_changed_cb  (GtkToggleButton *button,
                                        GwyUnitoolState *state);
@@ -137,13 +137,13 @@ layer_setup(GwyUnitoolState *state)
 static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
-    const GwyEnum degrees[] = {
+    static const GwyEnum degrees[] = {
         { N_("Fit height"),    0, },
         { N_("Fit linear"),    1, },
         { N_("Fit quadratic"), 2, },
         { N_("Fit cubic"),     3, },
     };
-    const GwyEnum directions[] = {
+    static const GwyEnum directions[] = {
         { N_("_Horizontal direction"), GWY_ORIENTATION_HORIZONTAL, },
         { N_("_Vertical direction"),   GWY_ORIENTATION_VERTICAL,   },
     };
@@ -190,10 +190,10 @@ dialog_create(GwyUnitoolState *state)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls->fitting = gwy_option_menu_create(degrees, G_N_ELEMENTS(degrees),
-                                               "fit-type",
-                                               G_CALLBACK(fitting_changed_cb),
-                                               state, controls->fit);
+    controls->fitting
+        = gwy_enum_combo_box_new(degrees, G_N_ELEMENTS(degrees),
+                                 G_CALLBACK(fitting_changed_cb), state,
+                                 controls->fit, TRUE);
     gwy_table_attach_row(table2, row, _("_Type:"), NULL, controls->fitting);
     row++;
 
@@ -315,13 +315,13 @@ direction_changed_cb(GObject *item, GwyUnitoolState *state)
 }
 
 static void
-fitting_changed_cb(GObject *item, GwyUnitoolState *state)
+fitting_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
 {
     ToolControls *controls;
 
     gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
-    controls->fit = GPOINTER_TO_INT(g_object_get_data(item, "fit-type"));
+    controls->fit = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     dialog_update(state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 

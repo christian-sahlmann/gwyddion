@@ -68,11 +68,11 @@ static void       dialog_update        (GwyUnitoolState *state,
                                         GwyUnitoolUpdateType reason);
 static void       dialog_abandon       (GwyUnitoolState *state);
 static void       apply                (GwyUnitoolState *state);
-static void       interp_changed_cb    (GObject *item,
+static void       interp_changed_cb    (GtkWidget *combo,
                                         ToolControls *controls);
-static void       output_changed_cb    (GObject *item,
+static void       output_changed_cb    (GtkWidget *combo,
                                         ToolControls *controls);
-static void       direction_changed_cb (GObject *item,
+static void       direction_changed_cb (GtkWidget *combo,
                                         ToolControls *controls);
 static void       size_changed_cb      (GObject *adjustment,
                                         ToolControls *controls);
@@ -221,10 +221,9 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->output
-        = gwy_option_menu_create(sf_types, G_N_ELEMENTS(sf_types),
-                                 "sf-output-type",
+        = gwy_enum_combo_box_new(sf_types, G_N_ELEMENTS(sf_types),
                                  G_CALLBACK(output_changed_cb), controls,
-                                 controls->out);
+                                 controls->out, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->output, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
@@ -237,8 +236,9 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->direction
-        = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
-                                      controls, controls->dir);
+        = gwy_enum_combo_box_new(gwy_orientation_get_enum(), -1,
+                                 G_CALLBACK(direction_changed_cb), controls,
+                                 controls->dir, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->direction, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 4);
@@ -247,7 +247,7 @@ dialog_create(GwyUnitoolState *state)
     controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
 
     spin = gwy_table_attach_hscale(table, row, "size:", "", controls->size,
-                                                      GWY_HSCALE_DEFAULT);
+                                   GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls->size, "value_changed",
                                 G_CALLBACK(size_changed_cb), controls);
@@ -262,8 +262,9 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->interpolation
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        controls, controls->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), controls,
+                                 controls->interp, TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->interpolation,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
@@ -404,28 +405,26 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-interp_changed_cb(GObject *item, ToolControls *controls)
+interp_changed_cb(GtkWidget *combo, ToolControls *controls)
 {
     gwy_debug("");
-    controls->interp
-        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    controls->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-output_changed_cb(GObject *item, ToolControls *controls)
+output_changed_cb(GtkWidget *combo, ToolControls *controls)
 {
     gwy_debug("");
-    controls->out = GPOINTER_TO_INT(g_object_get_data(item, "sf-output-type"));
+    controls->out = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
 static void
-direction_changed_cb(GObject *item, ToolControls *controls)
+direction_changed_cb(GtkWidget *combo, ToolControls *controls)
 {
     gwy_debug("");
-    controls->dir = GPOINTER_TO_INT(g_object_get_data(item,
-                                                      "orientation-type"));
+    controls->dir = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 

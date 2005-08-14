@@ -40,27 +40,6 @@ GtkWidget* gwy_option_menu_gradient          (GCallback callback,
 GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
-GtkWidget* gwy_option_menu_interpolation     (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyInterpolationType current);
-GtkWidget* gwy_option_menu_windowing         (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyWindowingType current);
-GtkWidget* gwy_option_menu_2dcwt             (GCallback callback,
-                                              gpointer cbdata,
-                                              Gwy2DCWTWaveletType current);
-GtkWidget* gwy_option_menu_dwt                (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyDWTType current);
-GtkWidget* gwy_option_menu_orientation       (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyOrientation current);
-GtkWidget* gwy_option_menu_merge_type        (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyMergeType current);
-GtkWidget* gwy_option_menu_indentor          (GCallback callback,
-                                              gpointer cbdata,
-                                              GwyIndentorType current);
 GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
                                               gpointer cbdata,
                                               gint from,

@@ -22,10 +22,12 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/dwt.h>
+#include <libprocess/gwyprocesstypes.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -53,12 +55,6 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    dwt_denoise                (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    dwt_denoise_dialog         (DWTDenoiseArgs *args);
-static void        interp_changed_cb          (GtkWidget *combo,
-                                               DWTDenoiseArgs *args);
-static void        wavelet_changed_cb         (GtkWidget *combo,
-                                               DWTDenoiseArgs *args);
-static void        method_changed_cb          (GObject *item,
-                                               DWTDenoiseArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                DWTDenoiseArgs *args);
 static void        dwt_denoise_dialog_update  (DWTDenoiseControls *controls,
@@ -68,10 +64,6 @@ static void        dwt_denoise_load_args      (GwyContainer *container,
 static void        dwt_denoise_save_args      (GwyContainer *container,
                                                DWTDenoiseArgs *args);
 static void        dwt_denoise_sanitize_args  (DWTDenoiseArgs *args);
-
-static GtkWidget*  menu_method                (GCallback callback,
-                                               gpointer cbdata,
-                                               GwyDWTDenoiseType current);
 
 DWTDenoiseArgs dwt_denoise_defaults = {
     0,
@@ -209,21 +201,22 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
         = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
-                                 G_CALLBACK(wavelet_changed_cb), args,
-                                 args->wavelet, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->wavelet, args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
     controls.method
-        = menu_method(G_CALLBACK(method_changed_cb),
-                      args, args->method);
+        = gwy_enum_combo_box_new(gwy_dwt_denoise_type_get_enum(), -1,
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->method, args->method, TRUE);
     gwy_table_attach_row(table, 3, _("_Threshold:"), "",
              controls.method);
 
@@ -257,44 +250,6 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
     return TRUE;
 }
 
-static GtkWidget*
-menu_method(GCallback callback,
-        gpointer cbdata,
-        GwyDWTDenoiseType current)
-{
-    static const GwyEnum entries[] = {
-    { N_("Universal"),  GWY_DWT_DENOISE_UNIVERSAL,  },
-    { N_("Scale adaptive"),  GWY_DWT_DENOISE_SCALE_ADAPTIVE,  },
-    { N_("Scale and space adaptive"),  GWY_DWT_DENOISE_SPACE_ADAPTIVE,  },
-    };
-
-    return gwy_option_menu_create(entries, G_N_ELEMENTS(entries),
-                  "denoise-type", callback, cbdata,
-                  current);
-}
-
-static void
-interp_changed_cb(GtkWidget *combo,
-                  DWTDenoiseArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-wavelet_changed_cb(GtkWidget *combo,
-                   DWTDenoiseArgs *args)
-{
-    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-}
-
-static void
-method_changed_cb(GObject *item,
-                  DWTDenoiseArgs *args)
-{
-    args->method = GPOINTER_TO_INT(g_object_get_data(item, "denoise-type"));
-}
-
-
 static void
 preserve_changed_cb(GtkToggleButton *button, DWTDenoiseArgs *args)
 {
@@ -303,12 +258,14 @@ preserve_changed_cb(GtkToggleButton *button, DWTDenoiseArgs *args)
 
 static void
 dwt_denoise_dialog_update(DWTDenoiseControls *controls,
-                     DWTDenoiseArgs *args)
+                          DWTDenoiseArgs *args)
 {
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
                                   args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->method),
+                                  args->method);
 }
 
 
@@ -323,10 +280,9 @@ dwt_denoise_sanitize_args(DWTDenoiseArgs *args)
     args->preserve = !!args->preserve;
     args->interp = CLAMP(args->interp,
                          GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-    args->wavelet = CLAMP(args->wavelet, GWY_DWT_HAAR, GWY_DWT_DAUB20);
-    args->method = CLAMP(args->wavelet,
-                         GWY_DWT_DENOISE_UNIVERSAL,
-                         GWY_DWT_DENOISE_SPACE_ADAPTIVE);
+    args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
+    args->method = gwy_enum_sanitize_value(args->method,
+                                           GWY_TYPE_DWT_DENOISE_TYPE);
 }
 
 static void

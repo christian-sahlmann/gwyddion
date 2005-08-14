@@ -31,13 +31,6 @@
 #define TIP_MODEL_RUN_MODES \
     (GWY_RUN_MODAL | GWY_RUN_WITH_DEFAULTS)
 
-GwyEnum tip_type[] = {
-    { N_("Pyramide (general)"),   GWY_TIP_PYRAMIDE    },
-    { N_("Contact etched"),       GWY_TIP_CONTACT     },
-    { N_("Noncontact etched"),    GWY_TIP_NONCONTACT  },
-    { N_("Delta function"),       GWY_TIP_DELTA       },
-};
-
 /* Data for this function. */
 typedef struct {
     gint nsides;
@@ -86,7 +79,7 @@ static void        tip_model_load_args             (GwyContainer *container,
 static void        tip_model_save_args             (GwyContainer *container,
                                                     TipModelArgs *args);
 static void        tip_model_sanitize_args         (TipModelArgs *args);
-static void        tip_type_cb                     (GtkWidget *item,
+static void        tip_type_cb                     (GtkWidget *combo,
                                                     TipModelArgs *args);
 static void        data_window_cb                  (GtkWidget *item,
                                                     TipModelControls *controls);
@@ -165,6 +158,12 @@ tip_model(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
+    static const GwyEnum tip_type[] = {
+        { N_("Pyramide (general)"),   GWY_TIP_PYRAMIDE    },
+        { N_("Contact etched"),       GWY_TIP_CONTACT     },
+        { N_("Noncontact etched"),    GWY_TIP_NONCONTACT  },
+        { N_("Delta function"),       GWY_TIP_DELTA       },
+    };
     GtkWidget *dialog, *table, *hbox, *spin;
     TipModelControls controls;
     enum {
@@ -324,10 +323,9 @@ tip_model_dialog_abandon(TipModelControls *controls)
 }
 
 static void
-tip_type_cb(GtkWidget *item, TipModelArgs *args)
+tip_type_cb(GtkWidget *combo, TipModelArgs *args)
 {
-    args->type
-        = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "tip-preset"));
+    args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     tip_model_dialog_update_controls(pcontrols, args);
 }
 
@@ -359,9 +357,9 @@ create_preset_menu(GCallback callback,
         }
     }
 
-    return gwy_option_menu_create(entries, nentries,
-                                  "tip-preset", callback, cbdata,
-                                  current);
+    /* XXX: presets currently not translatable? */
+    return gwy_enum_combo_box_new(entries, nentries,
+                                  callback, cbdata, current, FALSE);
 }
 
 static void

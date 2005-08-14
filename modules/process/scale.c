@@ -53,8 +53,6 @@ static gboolean    module_register           (const gchar *name);
 static gboolean    scale                     (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    scale_dialog              (ScaleArgs *args);
-static void        interp_changed_cb         (GtkWidget *combo,
-                                              ScaleArgs *args);
 static void        scale_changed_cb          (GtkAdjustment *adj,
                                               ScaleArgs *args);
 static void        width_changed_cb          (GtkAdjustment *adj,
@@ -203,8 +201,8 @@ scale_dialog(ScaleArgs *args)
 
     controls.interp
         = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(interp_changed_cb), args,
-                                 args->interp, TRUE);
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
     gwy_table_attach_hscale(table, 3, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
 
@@ -243,13 +241,6 @@ scale_dialog(ScaleArgs *args)
     gtk_widget_destroy(dialog);
 
     return TRUE;
-}
-
-static void
-interp_changed_cb(GtkWidget *combo,
-                  ScaleArgs *args)
-{
-    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
