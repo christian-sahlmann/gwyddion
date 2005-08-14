@@ -19,9 +19,7 @@
  */
 
 #include "config.h"
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
-#include <glib-object.h>
+#include <string.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwyinventorystore.h>
@@ -152,7 +150,7 @@ gwy_inventory_store_get_column_type(GtkTreeModel *model,
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     store = GWY_INVENTORY_STORE(model);
-    g_return_val_if_fail(column < 0 || column >= store->n_columns, 0);
+    g_return_val_if_fail(column >= 0 && column < store->n_columns, 0);
 
     /* Zeroth is item itself */
     if (!column)
@@ -216,7 +214,7 @@ gwy_inventory_store_get_value(GtkTreeModel *model,
     g_return_if_fail(GWY_IS_INVENTORY_STORE(model));
     store = GWY_INVENTORY_STORE(model);
     g_return_if_fail(iter->stamp == store->stamp);
-    g_return_if_fail(column < 0 || column >= store->n_columns);
+    g_return_if_fail(column >= 0 && column < store->n_columns);
 
     if (!column) {
         g_value_init(value, G_TYPE_POINTER);
@@ -282,7 +280,6 @@ gwy_inventory_store_iter_n_children(GtkTreeModel *model,
     if (iter)
         return 0;
 
-    g_return_val_if_fail(iter->stamp == store->stamp, -1);
     return gwy_inventory_get_n_items(store->inventory);
 }
 
@@ -393,8 +390,11 @@ gwy_inventory_store_new(GwyInventory *inventory)
 
     g_object_ref(inventory);
     store = g_object_new(GWY_TYPE_INVENTORY_STORE, NULL);
+    store->inventory = inventory;
     store->item_type = item_type;
     item_type->get_traits(&store->n_columns);
+    /* +1 for "Item" column */
+    store->n_columns++;
 
     g_signal_connect(inventory, "item-updated",
                      G_CALLBACK(gwy_inventory_store_row_changed), store);
@@ -421,6 +421,39 @@ gwy_inventory_store_get_inventory(GwyInventoryStore *store)
 {
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), NULL);
     return store->inventory;
+}
+
+/**
+ * gwy_inventory_store_get_column_by_name:
+ * @store: An inventory store.
+ * @name: Trait (column) name.
+ *
+ * Gets tree model column corresponding to a trait name.
+ *
+ * The underlying inventory must support trait names, except for @name
+ * <literal>"Item"</literal> which always works (and always maps to 0).
+ *
+ * Returns: The underlying inventory (its reference count is not increased).
+ **/
+gint
+gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
+                                       const gchar *name)
+{
+    const gchar* (*method)(gint);
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), -1);
+    if (gwy_strequal(name, "Item"))
+        return 0;
+
+    g_return_val_if_fail(store->item_type->get_trait_name, -1);
+    method = store->item_type->get_trait_name;
+
+    for (i = 1; i < store->n_columns; i++) {
+        if (gwy_strequal(name, method(i-1)))
+            return i;
+    }
+    return -1;
 }
 
 /**

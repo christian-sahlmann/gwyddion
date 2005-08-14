@@ -33,6 +33,7 @@
 #include <libgwydgets/gwyaxisdialog.h>
 #include <libgwydgets/gwycoloraxis.h>
 #include <libgwydgets/gwycolorbutton.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>

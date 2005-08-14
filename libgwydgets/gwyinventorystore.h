@@ -57,6 +57,8 @@ struct _GwyInventoryStoreClass
 GType              gwy_inventory_store_get_type     (void) G_GNUC_CONST;
 GwyInventoryStore* gwy_inventory_store_new          (GwyInventory *inventory);
 GwyInventory*      gwy_inventory_store_get_inventory(GwyInventoryStore *store);
+gint          gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
+                                                     const gchar *name);
 gboolean           gwy_inventory_store_iter_is_valid(GwyInventoryStore *store,
                                                      GtkTreeIter *iter);
 
