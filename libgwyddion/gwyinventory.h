@@ -133,6 +133,9 @@ guint         gwy_inventory_get_item_position    (GwyInventory *inventory,
 void          gwy_inventory_foreach              (GwyInventory *inventory,
                                                   GHFunc function,
                                                   gpointer user_data);
+gpointer      gwy_inventory_find                 (GwyInventory *inventory,
+                                                  GHRFunc predicate,
+                                                  gpointer user_data);
 gpointer      gwy_inventory_get_next_item        (GwyInventory *inventory,
                                                   gpointer item);
 void          gwy_inventory_set_default_item     (GwyInventory *inventory,

@@ -536,7 +536,8 @@ gwy_inventory_foreach(GwyInventory *inventory,
                       GHFunc function,
                       gpointer user_data)
 {
-    guint i, n;
+    gpointer item;
+    guint i, j, n;
 
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
     g_return_if_fail(function);
@@ -544,19 +545,63 @@ gwy_inventory_foreach(GwyInventory *inventory,
     n = inventory->items->len;
     if (inventory->ridx) {
         for (i = 0; i < n; i++) {
-            guint j;
-
             j = g_array_index(inventory->ridx, guint, i);
-            function(GUINT_TO_POINTER(i),
-                     g_ptr_array_index(inventory->items, j), user_data);
+            item = g_ptr_array_index(inventory->items, j);
+            function(GUINT_TO_POINTER(i), item, user_data);
         }
     }
     else {
         for (i = 0; i < n; i++) {
-            function(GUINT_TO_POINTER(i),
-                     g_ptr_array_index(inventory->items, i), user_data);
+            item = g_ptr_array_index(inventory->items, i);
+            function(GUINT_TO_POINTER(i), item, user_data);
         }
     }
+}
+
+/**
+ * gwy_inventory_find:
+ * @inventory: An inventory.
+ * @predicate: A function testing some item property.  It must not modify
+ *             @inventory.
+ * @user_data: Data passed to @predicate.
+ *
+ * Finds an inventory item using user-specified predicate function.
+ *
+ * @predicate is called for each item in @inventory (in order) until it returns
+ * %TRUE.  Its arguments are the same as in gwy_inventory_foreach().
+ *
+ * Returns: The item for which @predicate returned %TRUE.  If there is no
+ *          such item in the inventory, %NULL is returned.
+ **/
+gpointer
+gwy_inventory_find(GwyInventory *inventory,
+                   GHRFunc predicate,
+                   gpointer user_data)
+{
+    gpointer item;
+    guint i, j, n;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
+    g_return_val_if_fail(predicate, NULL);
+
+    n = inventory->items->len;
+    if (inventory->ridx) {
+        for (i = 0; i < n; i++) {
+            j = g_array_index(inventory->ridx, guint, i);
+            item = g_ptr_array_index(inventory->items, j);
+            if (predicate(GUINT_TO_POINTER(i), item, user_data))
+                return item;
+        }
+    }
+    else {
+        for (i = 0; i < n; i++) {
+            item = g_ptr_array_index(inventory->items, i);
+            if (predicate(GUINT_TO_POINTER(i), item, user_data))
+                return item;
+        }
+    }
+
+    return NULL;
 }
 
 /**
@@ -568,7 +613,8 @@ gwy_inventory_foreach(GwyInventory *inventory,
  * Finds next item to a inventory item.
  *
  * This method exists to accommodate tree-model wrappers,
- * gwy_inventory_foreach() is usually the best method to iterate over items.
+ * gwy_inventory_foreach() and gwy_inventory_find() are usually better
+ * methods to iterate over items.
  *
  * Returns: The item after @item, %NULL if @item is the last item.
  **/

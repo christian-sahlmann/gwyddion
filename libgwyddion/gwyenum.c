@@ -197,7 +197,7 @@ gwy_enum_is_const(G_GNUC_UNUSED gconstpointer item)
 static const GType*
 gwy_enum_get_traits(gint *ntraits)
 {
-    static const GType traits[] = { G_TYPE_STRING };
+    static const GType traits[] = { G_TYPE_STRING, G_TYPE_INT };
 
     if (ntraits)
         *ntraits = G_N_ELEMENTS(traits);
@@ -205,16 +205,35 @@ gwy_enum_get_traits(gint *ntraits)
     return traits;
 }
 
+static const gchar*
+gwy_enum_get_trait_name(gint i)
+{
+    static const gchar *trait_names[] = { "Name", "Value" };
+
+    g_return_val_if_fail(i < 0 || i >= G_N_ELEMENTS(trait_names), NULL);
+    return trait_names[i];
+}
+
 static void
 gwy_enum_get_trait_value(gpointer item,
                          gint i,
                          GValue *value)
 {
-    g_return_if_fail(i != 0);
+    switch (i) {
+        case 0:
+        g_value_init(value, G_TYPE_STRING);
+        g_value_set_static_string(value, ((const GwyEnum*)item)->name);
+        break;
 
-    g_value_init(value, G_TYPE_STRING);
-    g_value_set_static_string(value,
-                              gwy_sgettext(((const GwyEnum*)item)->name));
+        case 1:
+        g_value_init(value, G_TYPE_INT);
+        g_value_set_int(value,  ((const GwyEnum*)item)->value);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 /**
@@ -239,7 +258,7 @@ gwy_enum_inventory_new(const GwyEnum *enum_table,
         NULL,
         NULL,
         gwy_enum_get_traits,
-        NULL,
+        gwy_enum_get_trait_name,
         gwy_enum_get_trait_value,
     };
 
