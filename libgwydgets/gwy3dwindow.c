@@ -55,7 +55,7 @@ static void     gwy_3d_window_set_material        (GtkWidget *item,
                                                    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_select_controls     (gpointer data,
                                                    GtkWidget *button);
-static void     gwy_3d_window_set_labels          (GtkWidget *item,
+static void     gwy_3d_window_set_labels          (GtkWidget *combo,
                                                    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_projection_changed  (GtkToggleButton *check,
                                                    Gwy3DWindow *window);
@@ -218,7 +218,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     GwyGLMaterial *material;
     GtkRequisition size_req;
     const gchar *name;
-    GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu,
+    GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu, *combo,
               *label, *check, *entry;
     GSList *display_mode_group;
     Gwy3DLabel *gwy3dlabel;
@@ -426,12 +426,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    omenu = gwy_option_menu_create(label_entries, G_N_ELEMENTS(label_entries),
-                                   "labels-type",
+    combo = gwy_enum_combo_box_new(label_entries, G_N_ELEMENTS(label_entries),
                                    G_CALLBACK(gwy_3d_window_set_labels),
-                                   gwy3dwindow, -1);
-    gwy_table_attach_row(table, row, _("_Label:"), NULL, omenu);
-    gwy3dwindow->labels_menu = omenu;
+                                   gwy3dwindow, -1, TRUE);
+    gwy_table_attach_row(table, row, _("_Label:"), NULL, combo);
+    gwy3dwindow->labels_menu = combo;
     row++;
 
 
@@ -693,13 +692,13 @@ gwy_3d_window_select_controls(gpointer data, GtkWidget *button)
 }
 
 static void
-gwy_3d_window_set_labels(G_GNUC_UNUSED GtkWidget *item,
+gwy_3d_window_set_labels(GtkWidget *combo,
                          Gwy3DWindow *gwy3dwindow)
 {
     gint id;
     Gwy3DLabel *label;
 
-    id = gtk_option_menu_get_history(GTK_OPTION_MENU(gwy3dwindow->labels_menu));
+    id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(gwy3dwindow->gwy3dview), id);
     g_return_if_fail(label);
 

@@ -55,28 +55,28 @@ static void     gwy_graph_area_dialog_finalize         (GObject *object);
 static gboolean gwy_graph_area_dialog_delete           (GtkWidget *widget,
                                                           GdkEventAny *event);
 
-static GtkWidget* gwy_point_menu_create                  (const GwyGraphPointType current, 
+static GtkWidget* gwy_point_menu_create                  (const GwyGraphPointType current,
                                                           gint *current_idx);
-GtkWidget*      gwy_option_menu_point                    (GCallback callback, 
+GtkWidget*      gwy_option_menu_point                    (GCallback callback,
                                                           gpointer cbdata,
                                                           const GwyGraphPointType current);
 static GtkWidget* gwy_sample_point_to_gtkimage           (GwyGraphPointType type);
-static void     pointtype_cb                             (GObject *item, 
+static void     pointtype_cb                             (GObject *item,
                                                           GwyGraphAreaDialog *dialog);
-static GtkWidget* gwy_line_menu_create                   (const GdkLineStyle current, 
+static GtkWidget* gwy_line_menu_create                   (const GdkLineStyle current,
                                                           gint *current_idx);
-GtkWidget*      gwy_option_menu_line                     (GCallback callback, 
+GtkWidget*      gwy_option_menu_line                     (GCallback callback,
                                                           gpointer cbdata,
                                                           const GdkLineStyle current);
 static GtkWidget* gwy_sample_line_to_gtkimage            (GdkLineStyle type);
-static void     linetype_cb                              (GObject *item, 
+static void     linetype_cb                              (GObject *item,
                                                           GwyGraphAreaDialog *dialog);
 static void     color_change_cb                          (GtkWidget *color_button,
                                                           GwyGraphAreaDialog *dialog);
 static void     label_change_cb                          (GtkWidget *button,
                                                           GwyGraphAreaDialog *dialog);
 static void     refresh                                  (GwyGraphAreaDialog *dialog);
-static void     curvetype_changed_cb                     (GObject *item, 
+static void     curvetype_changed_cb                     (GtkWidget *combo,
                                                           GwyGraphAreaDialog *dialog);
 static void     linesize_changed_cb                      (GtkObject *adj,
                                                           GwyGraphAreaDialog *dialog);
@@ -148,7 +148,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gwy_debug("");
 
     table = gtk_table_new(2, 8, FALSE);
-   
+
     label = gtk_label_new_with_mnemonic(_("_Curve label:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -162,23 +162,22 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(button, "clicked",
                      G_CALLBACK(label_change_cb), dialog);
-    
-    row++; 
-    
+
+    row++;
+
     label = gtk_label_new_with_mnemonic(_("_Plot style:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    dialog->curvetype_menu = gwy_option_menu_create(curve_type, G_N_ELEMENTS(curve_type),
-                                                    "curve-type",
-                                                    G_CALLBACK(curvetype_changed_cb), 
-                                                    dialog,
-                                                    0);
+    dialog->curvetype_menu
+        = gwy_enum_combo_box_new(curve_type, G_N_ELEMENTS(curve_type),
+                                 G_CALLBACK(curvetype_changed_cb), dialog,
+                                 0, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), dialog->curvetype_menu);
     gtk_table_attach(GTK_TABLE(table), dialog->curvetype_menu,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
-    
+
     label = gtk_label_new_with_mnemonic(_("P_lot color:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -192,35 +191,35 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     g_signal_connect(dialog->color_button, "clicked",
                      G_CALLBACK(color_change_cb), dialog);
     row++;
-    
-        
-    dialog->pointtype_menu = gwy_option_menu_point(G_CALLBACK(pointtype_cb), 
+
+
+    dialog->pointtype_menu = gwy_option_menu_point(G_CALLBACK(pointtype_cb),
                                                    dialog, 0);
 
     gwy_table_attach_row(table, row, _("Point type:"), "",
                          dialog->pointtype_menu);
     row++;
-   
+
     dialog->pointsize = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Point size:"), NULL,
                                 dialog->pointsize);
     g_signal_connect(dialog->pointsize, "value-changed",
                      G_CALLBACK(pointsize_changed_cb), dialog);
     row++;
-    
-    dialog->linetype_menu = gwy_option_menu_line(G_CALLBACK(linetype_cb), 
+
+    dialog->linetype_menu = gwy_option_menu_line(G_CALLBACK(linetype_cb),
                                                    dialog, 0);
 
     gwy_table_attach_row(table, row, _("Line type:"), "",
                          dialog->linetype_menu);
     row++;
-     
+
     dialog->linesize = gtk_adjustment_new(6, 1, 50, 1, 5, 0);
     gwy_table_attach_spinbutton(table, row, _("Line thickness:"), NULL,
                                 dialog->linesize);
     g_signal_connect(dialog->linesize, "value-changed",
                      G_CALLBACK(linesize_changed_cb), dialog);
-     
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -237,7 +236,7 @@ pointtype_cb(GObject *item, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     if (dialog->curve_model == NULL) return;
-    
+
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     cmodel->point_type = GPOINTER_TO_INT(g_object_get_data(item, "point-type"));
 }
@@ -247,7 +246,7 @@ linetype_cb(GObject *item, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     if (dialog->curve_model == NULL) return;
-    
+
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
     cmodel->line_style = GPOINTER_TO_INT(g_object_get_data(item, "line-type"));
 }
@@ -276,11 +275,11 @@ gwy_point_menu_create(const GwyGraphPointType current,
                       gint *current_idx)
 {
     GtkWidget *menu, *image, *item, *hbox;
-    guint l; 
+    guint l;
     gint idx;
                                                                                                                                                                  menu = gtk_menu_new();
                                                                                                                                                                  idx = -1;
-                                                                                                  
+
     for (l = 0; l<=GWY_GRAPH_POINT_DIAMOND; l++) {
         image = gwy_sample_point_to_gtkimage(l);
         item = gtk_menu_item_new();
@@ -298,7 +297,7 @@ gwy_point_menu_create(const GwyGraphPointType current,
 
     if (current_idx && idx != -1)
         *current_idx = idx;
-    return menu;        
+    return menu;
 }
 
 GtkWidget*
@@ -341,17 +340,17 @@ gwy_sample_point_to_gtkimage(GwyGraphPointType type)
     gc = gdk_gc_new(pixmap);
     gcl.pixel = 0x0ffffff;
     gdk_gc_set_foreground(gc, &gcl);
-    
+
     color.r = color.b = color.g = 0;
     color.a = 1;
-    
+
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, POINT_SAMPLE_WIDTH, POINT_SAMPLE_HEIGHT);
-    
+
     gwy_graph_draw_point(pixmap, NULL,
                            POINT_SAMPLE_WIDTH/2, POINT_SAMPLE_HEIGHT/2,
                            type,
                            10, &color, FALSE);
-       
+
     image = gtk_image_new_from_pixmap(pixmap, NULL);
     g_object_unref(pixmap);
     g_object_unref(gc);
@@ -363,11 +362,11 @@ gwy_line_menu_create(const GdkLineStyle current,
                       gint *current_idx)
 {
     GtkWidget *menu, *image, *item, *hbox;
-    guint l; 
+    guint l;
     gint idx;
                                                                                                                                                                  menu = gtk_menu_new();
                                                                                                                                                                  idx = -1;
-                                                                                                  
+
     for (l = 0; l<=GDK_LINE_DOUBLE_DASH; l++) {
         image = gwy_sample_line_to_gtkimage(l);
         item = gtk_menu_item_new();
@@ -382,7 +381,7 @@ gwy_line_menu_create(const GdkLineStyle current,
 
     if (current_idx && idx != -1)
         *current_idx = idx;
-    return menu;        
+    return menu;
 }
 
 GtkWidget*
@@ -425,18 +424,18 @@ gwy_sample_line_to_gtkimage(GdkLineStyle type)
     gc = gdk_gc_new(pixmap);
     gcl.pixel = 0x0ffffff;
     gdk_gc_set_foreground(gc, &gcl);
-    
+
     color.r = color.b = color.g = 0;
     color.a = 1;
-    
+
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, LINE_SAMPLE_WIDTH, LINE_SAMPLE_HEIGHT);
-    
+
     gwy_graph_draw_line(pixmap, NULL,
                            1, LINE_SAMPLE_HEIGHT/2,
                            LINE_SAMPLE_WIDTH - 1, LINE_SAMPLE_HEIGHT/2,
                            type,
                            3, &color);
-       
+
     image = gtk_image_new_from_pixmap(pixmap, NULL);
     g_object_unref(pixmap);
     g_object_unref(gc);
@@ -453,13 +452,13 @@ color_changed_cb(GtkColorSelectionDialog *selector, gint arg1, gpointer user_dat
     dialog = GWY_GRAPH_AREA_DIALOG(user_data);
     if (dialog->curve_model == NULL) return;
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-     
+
 
     if (arg1 == GTK_RESPONSE_OK) {
         gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector->colorsel), &gcl);
-        gwy_rgba_from_gdk_color(&cmodel->color, &gcl);  
+        gwy_rgba_from_gdk_color(&cmodel->color, &gcl);
         refresh(dialog);
-        
+
     }
     gtk_widget_destroy(GTK_WIDGET(selector));
 }
@@ -470,7 +469,7 @@ refresh(GwyGraphAreaDialog *dialog)
     GwyGraphCurveModel *cmodel;
     if (dialog->curve_model == NULL) return;
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    
+
     gwy_color_button_set_color(GWY_COLOR_BUTTON(dialog->color_button), &cmodel->color);
     gtk_label_set_markup(GTK_LABEL(dialog->curve_label), cmodel->description->str);
 
@@ -482,58 +481,58 @@ refresh(GwyGraphAreaDialog *dialog)
                                 cmodel->line_style);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize), cmodel->point_size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize), cmodel->line_size);
-     
+
 }
 
-static void     
+static void
 color_change_cb(G_GNUC_UNUSED GtkWidget *color_button, GwyGraphAreaDialog *dialog)
 {
     GdkColor gcl;
     GwyGraphCurveModel *cmodel;
     GtkColorSelectionDialog* selector;
-                                                                  
+
     if (dialog->curve_model == NULL) return;
-    
+
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    
+
     selector = GTK_COLOR_SELECTION_DIALOG(
                                         gtk_color_selection_dialog_new("Select curve color"));
     g_signal_connect(GTK_WIDGET(selector), "response",
                      G_CALLBACK(color_changed_cb), dialog);
-                     
-    
-    gwy_rgba_to_gdk_color(&cmodel->color, &gcl);  
+
+
+    gwy_rgba_to_gdk_color(&cmodel->color, &gcl);
     gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector->colorsel), &gcl);
     gtk_widget_show(GTK_WIDGET(selector));
-    
+
 }
 
-static void     
+static void
 label_change_cb(G_GNUC_UNUSED GtkWidget *button, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
     GwyAxisDialog* selector;
     gint response;
-                                                                  
+
     if (dialog->curve_model == NULL) return;
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-   
+
     selector = GWY_AXIS_DIALOG(gwy_axis_dialog_new());
     gwy_sci_text_set_text(GWY_SCI_TEXT(selector->sci_text), cmodel->description->str);
-    
+
     response = gtk_dialog_run(GTK_DIALOG(selector));
     if (response == GTK_RESPONSE_APPLY)
     {
        /*g_string_assign(cmodel->description, gwy_sci_text_get_text(GWY_SCI_TEXT(selector->sci_text)));*/
         gwy_graph_curve_model_set_description(cmodel, gwy_sci_text_get_text(GWY_SCI_TEXT(selector->sci_text)));
        /*refresh(dialog);*/
-    }    
-    
+    }
+
     gtk_widget_destroy(GTK_WIDGET(selector));
 }
 
 
-void        
+void
 gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
 {
     GwyGraphAreaDialog *gadialog = GWY_GRAPH_AREA_DIALOG(dialog);
@@ -542,17 +541,21 @@ gwy_graph_area_dialog_set_curve_data(GtkWidget *dialog, GObject *cmodel)
     refresh(GWY_GRAPH_AREA_DIALOG(dialog));
 }
 
-static void     
-curvetype_changed_cb(GObject *item, GwyGraphAreaDialog *dialog)
+static void
+curvetype_changed_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
-    if (dialog->curve_model == NULL) return;
-    
+    GwyGraphCurveType ctype;
+
+    if (dialog->curve_model == NULL)
+        return;
+
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    gwy_graph_curve_model_set_curve_type(cmodel,GPOINTER_TO_INT(g_object_get_data(item, "curve-type")));
+    ctype = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    gwy_graph_curve_model_set_curve_type(cmodel, ctype);
 }
- 
-static void     
+
+static void
 linesize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
@@ -562,7 +565,7 @@ linesize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
     gwy_graph_curve_model_set_curve_line_size(cmodel, gtk_adjustment_get_value(GTK_ADJUSTMENT(adj)));
 }
 
-static void     
+static void
 pointsize_changed_cb(GtkObject *adj, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;

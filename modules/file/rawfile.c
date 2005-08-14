@@ -185,9 +185,9 @@ static void          rawfile_warn_too_short_file   (GtkWidget *parent,
 static void          rawfile_warn_parse_error      (GtkWidget *parent,
                                                     RawFileFile *file,
                                                     GError *err);
-static void          builtin_changed_cb            (GtkWidget *item,
+static void          builtin_changed_cb            (GtkWidget *combo,
                                                     RawFileControls *controls);
-static void          delimiter_changed_cb          (GtkWidget *item,
+static void          delimiter_changed_cb          (GtkWidget *combo,
                                                     RawFileControls *controls);
 static void          xyres_changed_cb              (GtkAdjustment *adj,
                                                     RawFileControls *controls);
@@ -782,7 +782,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
         { N_("TAB character"),        RAW_DELIM_TAB             },
         { N_("Ohter character"),      RAW_DELIM_OTHER           },
     };
-    GtkWidget *vbox, *label, *table, *button, *entry, *omenu;
+    GtkWidget *vbox, *label, *table, *button, *entry, *omenu, *combo;
     GtkObject *adj;
     gint row;
 
@@ -823,13 +823,12 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    omenu = gwy_option_menu_create(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
-                                   "delimiter",
+    combo = gwy_enum_combo_box_new(delimiter_menu, G_N_ELEMENTS(delimiter_menu),
                                    G_CALLBACK(delimiter_changed_cb), controls,
-                                   -1);
-    controls->delimmenu = omenu;
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), omenu);
-    gtk_table_attach(GTK_TABLE(table), omenu, 1, 2, row, row+1,
+                                   -1, TRUE);
+    controls->delimmenu = combo;
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
+    gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
@@ -856,10 +855,9 @@ rawfile_dialog_format_page(RawFileArgs *args,
                               GTK_WIDGET(controls->format->next->data),
                               0, 1, row, row+1);
 
-    omenu = gwy_option_menu_create(builtin_menu, G_N_ELEMENTS(builtin_menu),
-                                   "builtin",
+    omenu = gwy_enum_combo_box_new(builtin_menu, G_N_ELEMENTS(builtin_menu),
                                    G_CALLBACK(builtin_changed_cb), controls,
-                                   args->builtin);
+                                   args->builtin, TRUE);
     gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, row, row+1);
     controls->builtin = omenu;
     row++;
@@ -1224,13 +1222,13 @@ rawfile_warn_parse_error(GtkWidget *parent,
 }
 
 static void
-builtin_changed_cb(GtkWidget *item,
+builtin_changed_cb(GtkWidget *combo,
                    RawFileControls *controls)
 {
     gint builtin;
     GtkAdjustment *adj;
 
-    builtin = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "builtin"));
+    builtin = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     update_dialog_values(controls);
     if (builtin) {
         rawfile_sanitize_args(controls->args);
@@ -1264,12 +1262,12 @@ builtin_changed_cb(GtkWidget *item,
 }
 
 static void
-delimiter_changed_cb(GtkWidget *item,
+delimiter_changed_cb(GtkWidget *combo,
                      RawFileControls *controls)
 {
     gint delim;
 
-    delim = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "delimiter"));
+    delim = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
     if (delim != RAW_DELIM_OTHER)
         g_free(controls->args->delimiter);
@@ -1601,7 +1599,7 @@ update_dialog_controls(RawFileControls *controls)
     GtkAdjustment *adj;
     gchar buf[16];
     RawFileBuiltin builtin;
-    gboolean delim_other = FALSE;
+    int delim;
 
     args = controls->args;
 
@@ -1644,16 +1642,12 @@ update_dialog_controls(RawFileControls *controls)
 
     gtk_entry_set_text(GTK_ENTRY(controls->delimiter), args->delimiter);
     if (!args->delimiter || !*args->delimiter)
-        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
-                                    RAW_DELIM_ANY_WHITESPACE);
+        delim = RAW_DELIM_ANY_WHITESPACE;
     else if (args->delimiter[0] == '\t' && args->delimiter[1] == '\0')
-        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
-                                    RAW_DELIM_TAB);
-    else {
-        gwy_option_menu_set_history(controls->delimmenu, "delimiter",
-                                    RAW_DELIM_OTHER);
-        delim_other = TRUE;
-    }
+        delim = RAW_DELIM_TAB;
+    else
+        delim = RAW_DELIM_OTHER;
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->delimmenu), delim);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->sign),
                                  args->sign);
@@ -1665,7 +1659,8 @@ update_dialog_controls(RawFileControls *controls)
     g_snprintf(buf, sizeof(buf), "%u", args->byteswap);
     gtk_entry_set_text(GTK_ENTRY(controls->byteswap), buf);
 
-    gwy_option_menu_set_history(controls->builtin, "builtin", args->builtin);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->builtin),
+                                  args->builtin);
     gwy_radio_buttons_set_current(controls->format, "format", args->format);
 
     /* TODO: set selected preset */
@@ -1697,7 +1692,7 @@ update_dialog_controls(RawFileControls *controls)
 
         case RAW_TEXT:
         gtk_widget_set_sensitive(controls->lineoffset, TRUE);
-        gtk_widget_set_sensitive(controls->delimiter, delim_other);
+        gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
         gtk_widget_set_sensitive(controls->delimmenu, TRUE);
         gtk_widget_set_sensitive(controls->skipfields, TRUE);
         gtk_widget_set_sensitive(controls->decomma, TRUE);
@@ -1777,7 +1772,8 @@ update_dialog_values(RawFileControls *controls)
     args->byteswap = atoi(gtk_entry_get_text(GTK_ENTRY(controls->byteswap)));
     gwy_debug("byteswap = %u", args->byteswap);
 
-    args->builtin = gwy_option_menu_get_history(controls->builtin, "builtin");
+    args->builtin
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->builtin));
     args->format = gwy_radio_buttons_get_current(controls->format, "format");
 
     rawfile_sanitize_args(args);

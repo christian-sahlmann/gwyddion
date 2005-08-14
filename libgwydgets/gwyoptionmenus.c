@@ -387,37 +387,6 @@ gl_material_compare(GwyGLMaterial *a,
 
 /************************** Enum option menu ****************************/
 
-/**
- * gwy_option_menu_create:
- * @entries: Option menu items.
- * @nentries: The number of items.
- * @key: Value object data key.
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            no callback).
- * @cbdata: User data passed to the callback.
- * @current: Value to be shown as currently selected (-1 to use what happens
- *           to be first).
- *
- * Creates an option menu for an enum.
- *
- * It sets object data identified by @key for each menu item to its value.
- * Try to avoid -1 as an enum value.
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_option_menu_create(const GwyEnum *entries,
-                       gint nentries,
-                       const gchar *key,
-                       GCallback callback,
-                       gpointer cbdata,
-                       gint current)
-{
-    return gwy_option_menu_create_real(entries, nentries, key,
-                                       callback, cbdata,
-                                       current, TRUE);
-}
-
 static GtkWidget*
 gwy_option_menu_create_real(const GwyEnum *entries,
                             gint nentries,

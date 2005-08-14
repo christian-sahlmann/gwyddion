@@ -131,7 +131,7 @@ static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     const gboolean mapknown);
 static void              pixmap_load_create_preview(PixmapLoadArgs *args,
                                                     PixmapLoadControls *controls);
-static void              pixmap_load_map_type_update(GtkWidget *button,
+static void              pixmap_load_map_type_update(GtkWidget *combo,
                                                      PixmapLoadControls *controls);
 static void              xyreal_changed_cb         (GtkAdjustment *adj,
                                                     PixmapLoadControls *controls);
@@ -778,12 +778,11 @@ pixmap_load_dialog(PixmapLoadArgs *args,
         row++;
 
         controls.maptype
-            = gwy_option_menu_create(value_map_types,
+            = gwy_enum_combo_box_new(value_map_types,
                                      G_N_ELEMENTS(value_map_types),
-                                     "map-type",
                                      G_CALLBACK(pixmap_load_map_type_update),
                                      &controls,
-                                     args->maptype);
+                                     args->maptype, TRUE);
         gwy_table_attach_row(table, row++, _("Use"), _("as data"),
                              controls.maptype);
     }
@@ -890,12 +889,12 @@ pixmap_load_create_preview(PixmapLoadArgs *args,
 }
 
 static void
-pixmap_load_map_type_update(G_GNUC_UNUSED GtkWidget *item,
+pixmap_load_map_type_update(GtkWidget *combo,
                             PixmapLoadControls *controls)
 {
 
-    controls->args->maptype = gwy_option_menu_get_history(controls->maptype,
-                                                          "map-type");
+    controls->args->maptype
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     pixmap_load_create_preview(controls->args, controls);
 }
 
@@ -918,8 +917,8 @@ pixmap_load_update_controls(PixmapLoadControls *controls,
     gwy_option_menu_set_history(controls->zexponent, "metric-unit",
                                 args->zexponent);
     if (controls->maptype)
-        gwy_option_menu_set_history(controls->maptype, "map-type",
-                                    args->maptype);
+        gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->maptype),
+                                      args->maptype);
 }
 
 static void
@@ -939,8 +938,8 @@ pixmap_load_update_values(PixmapLoadControls *controls,
     args->zexponent = gwy_option_menu_get_history(controls->zexponent,
                                                   "metric-unit");
     if (controls->maptype)
-        args->maptype = gwy_option_menu_get_history(controls->maptype,
-                                                    "map-type");
+        args->maptype
+            = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->maptype));
 }
 
 static void

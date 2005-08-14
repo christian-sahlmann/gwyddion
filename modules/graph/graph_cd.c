@@ -81,7 +81,7 @@ static void        reset                     (FitArgs *args,
                                               FitControls *controls);
 static void        plot_inits                (FitArgs *args,
                                               FitControls *controls);
-static void        type_changed_cb           (GObject *item,
+static void        type_changed_cb           (GtkWidget *combo,
                                               FitArgs *args);
 static void        from_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
@@ -628,17 +628,16 @@ reset(FitArgs *args, FitControls *controls)
 
 
 static void
-type_changed_cb(GObject *item, FitArgs *args)
+type_changed_cb(GtkWidget *combo, FitArgs *args)
 {
     char *p, *filename;
 
-    args->function_type =
-        GPOINTER_TO_INT(g_object_get_data(item, "cdline-preset"));
-
+    args->function_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
 
     p = gwy_find_self_dir("pixmaps");
-    filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc), NULL);
+    filename = g_build_filename(p, gwy_cdline_get_preset_formula(args->fitfunc),
+                                NULL);
     g_free(p);
 
     gtk_image_set_from_file(GTK_IMAGE(pcontrols->image), filename);
@@ -769,9 +768,9 @@ create_preset_menu(GCallback callback,
         }
     }
 
-    return gwy_option_menu_create(entries, nentries,
-                                  "cdline-preset", callback, cbdata,
-                                  current);
+    /* FIXME: presets not translatable? */
+    return gwy_enum_combo_box_new(entries, nentries,
+                                  callback, cbdata, current, FALSE);
 }
 
 static const gchar *preset_key = "/module/graph_cd/preset";

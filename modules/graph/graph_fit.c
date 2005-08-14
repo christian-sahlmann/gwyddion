@@ -81,7 +81,7 @@ static void        reset                     (FitArgs *args,
                                               FitControls *controls);
 static void        plot_inits                (FitArgs *args,
                                               FitControls *controls);
-static void        type_changed_cb           (GObject *item,
+static void        type_changed_cb           (GtkWidget *combo,
                                               FitArgs *args);
 static void        from_changed_cb           (GtkWidget *entry,
                                               FitArgs *args);
@@ -685,12 +685,9 @@ reset(FitArgs *args, FitControls *controls)
 
 
 static void
-type_changed_cb(GObject *item, FitArgs *args)
+type_changed_cb(GtkWidget *combo, FitArgs *args)
 {
-
-    args->function_type =
-        GPOINTER_TO_INT(g_object_get_data(item, "fit-preset"));
-
+    args->function_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
     dialog_update(pcontrols, args);
 }
@@ -858,9 +855,9 @@ create_preset_menu(GCallback callback,
         }
     }
 
-    return gwy_option_menu_create(entries, nentries,
-                                  "fit-preset", callback, cbdata,
-                                  current);
+    /* FIXME: presets not translatable? */
+    return gwy_enum_combo_box_new(entries, nentries,
+                                  callback, cbdata, current, FALSE);
 }
 
 static const gchar *preset_key = "/module/graph_fit/preset";

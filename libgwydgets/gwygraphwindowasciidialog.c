@@ -34,7 +34,7 @@ GwyEnum style_type[] = {
     {N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV     },
     {N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN  },
 };
-               
+
 
 static void     gwy_graph_window_ascii_dialog_class_init       (GwyGraphWindowAsciiDialogClass *klass);
 static void     gwy_graph_window_ascii_dialog_init             (GwyGraphWindowAsciiDialog *dialog);
@@ -45,7 +45,7 @@ static gboolean gwy_graph_window_ascii_dialog_delete           (GtkWidget *widge
 static void     units_changed_cb                                 (GwyGraphWindowAsciiDialog *dialog);
 static void     metadata_changed_cb                              (GwyGraphWindowAsciiDialog *dialog);
 static void     labels_changed_cb                                (GwyGraphWindowAsciiDialog *dialog);
-static void     style_cb                                         (GtkWidget *item, 
+static void     style_cb                                         (GtkWidget *combo,
                                                                   GwyGraphWindowAsciiDialog *dialog);
 
 
@@ -109,39 +109,39 @@ static void
 gwy_graph_window_ascii_dialog_init(GwyGraphWindowAsciiDialog *dialog)
 {
     dialog->style = GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN;
-    dialog->preference =  gwy_option_menu_create(style_type,
-                          G_N_ELEMENTS(style_type), "style",
-                          G_CALLBACK(style_cb), dialog,
-                          dialog->style);
+    dialog->preference
+        = gwy_enum_combo_box_new(style_type, G_N_ELEMENTS(style_type),
+                                 G_CALLBACK(style_cb), dialog,
+                                 dialog->style, TRUE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                     dialog->preference);
-    
-   
+
+
     dialog->units = TRUE;
     dialog->metadata = TRUE;
     dialog->labels = TRUE;
-    
+
     dialog->check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_labels), dialog->labels);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_labels);
     g_signal_connect_swapped(dialog->check_labels, "clicked",
                              G_CALLBACK(labels_changed_cb), dialog);
-    
+
     dialog->check_units = gtk_check_button_new_with_mnemonic(_("Export _units"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_units), dialog->units);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_units);
     g_signal_connect_swapped(dialog->check_units, "clicked",
                              G_CALLBACK(units_changed_cb), dialog);
-     
+
     dialog->check_metadata = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dialog->check_metadata), dialog->metadata);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                             dialog->check_metadata);
     g_signal_connect_swapped(dialog->check_metadata, "clicked",
                              G_CALLBACK(metadata_changed_cb), dialog);
-       
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -171,28 +171,28 @@ gwy_graph_window_ascii_dialog_finalize(GObject *object)
 }
 
 
-static void     
+static void
 units_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
     dialog->units = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_units));
 }
 
-static void     
+static void
 labels_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
     dialog->labels = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_labels));
 }
 
-static void     
+static void
 metadata_changed_cb(GwyGraphWindowAsciiDialog *dialog)
 {
     dialog->metadata = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dialog->check_metadata));
 }
 
-static void     
-style_cb(GtkWidget *item, GwyGraphWindowAsciiDialog *dialog)
+static void
+style_cb(GtkWidget *combo, GwyGraphWindowAsciiDialog *dialog)
 {
-    dialog->style = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "style"));
+    dialog->style = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 void  gwy_graph_window_ascii_dialog_get_data(GwyGraphWindowAsciiDialog *dialog,
