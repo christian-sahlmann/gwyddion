@@ -44,6 +44,7 @@ struct _GwyDataLine {
 
     gint res;
     gdouble real;
+    gdouble off;
     gdouble *data;
     /* XXX: Why the fscking GwyDataLine contain no units? */
 };
@@ -86,6 +87,9 @@ gint           gwy_data_line_get_res               (GwyDataLine *data_line);
 gdouble        gwy_data_line_get_real              (GwyDataLine *data_line);
 void           gwy_data_line_set_real              (GwyDataLine *data_line,
                                                     gdouble real);
+gdouble        gwy_data_line_get_offset            (GwyDataLine *data_line);
+void           gwy_data_line_set_offset            (GwyDataLine *data_line,
+                                                    gdouble offset);
 gdouble        gwy_data_line_itor                  (GwyDataLine *data_line,
                                                     gdouble pixpos);
 gdouble        gwy_data_line_rtoi                  (GwyDataLine *data_line,

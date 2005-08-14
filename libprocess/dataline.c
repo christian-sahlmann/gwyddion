@@ -149,15 +149,18 @@ gwy_data_line_serialize(GObject *obj,
                         GByteArray *buffer)
 {
     GwyDataLine *data_line;
+    gdouble *poff;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
 
     data_line = GWY_DATA_LINE(obj);
+    poff = data_line->off ? &data_line->off : NULL;
     {
         GwySerializeSpec spec[] = {
             { 'i', "res", &data_line->res, NULL, },
             { 'd', "real", &data_line->real, NULL, },
+            { 'd', "off", poff, NULL, },
             { 'D', "data", &data_line->data, &data_line->res, },
         };
 
@@ -174,11 +177,12 @@ gwy_data_line_deserialize(const guchar *buffer,
 {
     guint32 fsize;
     gint res;
-    gdouble real, *data = NULL;
+    gdouble real, off = 0.0, *data = NULL;
     GwyDataLine *data_line;
     GwySerializeSpec spec[] = {
       { 'i', "res", &res, NULL, },
       { 'd', "real", &real, NULL, },
+      { 'd', "off", &off, NULL, },
       { 'D', "data", &data, &fsize, },
     };
 
@@ -202,6 +206,7 @@ gwy_data_line_deserialize(const guchar *buffer,
     data_line = gwy_data_line_new(1, real, 0);
     g_free(data_line->data);
     data_line->res = res;
+    data_line->off = off;
     data_line->data = data;
 
     return (GObject*)data_line;
@@ -483,6 +488,39 @@ gwy_data_line_set_real(GwyDataLine *data_line, gdouble real)
 {
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     data_line->real = real;
+}
+
+/**
+ * gwy_data_line_get_offset:
+ * @data_line: A data line.
+ *
+ * Gets the offset of data line origin.
+ *
+ * Returns: Offset value.
+ **/
+gdouble
+gwy_data_line_get_offset(GwyDataLine *data_line)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0.0);
+    return data_line->off;
+}
+
+/**
+ * gwy_data_line_set_offset:
+ * @data_line: A data line.
+ * @offset: New offset value.
+ *
+ * Sets the offset of a data line origin.
+ *
+ * Note offsets don't affect any calculation, nor functions like
+ * gwy_data_line_roti().
+ **/
+void
+gwy_data_line_set_offset(GwyDataLine *data_line,
+                         gdouble offset)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    data_line->off = offset;
 }
 
 /**
