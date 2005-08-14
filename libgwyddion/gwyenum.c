@@ -210,7 +210,7 @@ gwy_enum_get_trait_name(gint i)
 {
     static const gchar *trait_names[] = { "Name", "Value" };
 
-    g_return_val_if_fail(i < 0 || i >= G_N_ELEMENTS(trait_names), NULL);
+    g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
     return trait_names[i];
 }
 
