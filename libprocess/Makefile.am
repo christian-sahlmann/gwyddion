@@ -63,6 +63,7 @@ libgwyprocess_la_SOURCES = \
 	fractals.c \
 	grains.c \
 	gwyprocess.c \
+	gwyprocessenums.c \
 	gwyprocesstypes.c \
 	interpolation.c \
 	inttrans.c \

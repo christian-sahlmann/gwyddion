@@ -22,6 +22,7 @@
 #define __GWY_PROCESS_ENUMS_H__
 
 #include <glib/gmacros.h>
+#include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
 
@@ -29,6 +30,8 @@ typedef enum {
     GWY_MERGE_UNION,
     GWY_MERGE_INTERSECTION
 } GwyMergeType;
+
+const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_WATERSHED_STATE_INIT,
@@ -49,6 +52,8 @@ typedef enum {
     GWY_SYMMETRY_LAST
 } GwyPlaneSymmetry;
 
+const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
+
 typedef enum { /*< lowercase_name=gwy_2dcwt_wavelet_type >*/
     GWY_2DCWT_GAUSS,
     GWY_2DCWT_HAT
@@ -58,6 +63,8 @@ typedef enum {
     GWY_ORIENTATION_HORIZONTAL,
     GWY_ORIENTATION_VERTICAL
 } GwyOrientation;
+
+const GwyEnum* gwy_orientation_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_TRANSFORM_DIRECTION_BACKWARD = -1,
@@ -91,6 +98,8 @@ typedef enum {
     GWY_DWT_DAUB20
 } GwyDWTType;
 
+const GwyEnum* gwy_dwt_type_get_enum(void) G_GNUC_CONST;
+
 typedef enum {
     GWY_DWT_DENOISE_UNIVERSAL,
     GWY_DWT_DENOISE_SCALE_ADAPTIVE,
@@ -106,6 +115,8 @@ typedef enum {
     GWY_INTERPOLATION_OMOMS     = 5,
     GWY_INTERPOLATION_NNA       = 6
 } GwyInterpolationType;
+
+const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_PLANE_FIT_A = 1,
@@ -126,6 +137,8 @@ typedef enum {
     GWY_WINDOWING_WELCH      = 5,
     GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
+
+const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_TIP_PYRAMIDE       = 0,
@@ -149,3 +162,4 @@ G_END_DECLS
 
 #endif /*__GWY_PROCESS_ENUMS_H__ */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
