@@ -57,7 +57,7 @@ static gboolean    rotate                     (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_dialog              (RotateArgs *args,
                                                GwyContainer *data);
-static void        interp_changed_cb          (GObject *item,
+static void        interp_changed_cb          (GtkWidget *combo,
                                                RotateControls *controls);
 static void        expand_changed_cb          (GtkWidget *toggle,
                                                RotateControls *controls);
@@ -244,8 +244,9 @@ rotate_dialog(RotateArgs *args,
                      G_CALLBACK(angle_changed_cb), &controls);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        &controls, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), &controls,
+                                 args->interp, TRUE);
     gwy_table_attach_hscale(table, 1, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
 
@@ -302,11 +303,11 @@ rotate_dialog(RotateArgs *args,
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   RotateControls *controls)
 {
     controls->args->interp
-        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -370,8 +371,8 @@ rotate_dialog_update(RotateControls *controls,
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
                              args->angle*180.0/G_PI);
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->expand),
                                  args->expand);
 }

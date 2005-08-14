@@ -79,44 +79,44 @@ typedef struct {
     GwyGraphModel *gmodel;
 } Fftf1dControls;
 
-static gboolean    module_register          (const gchar *name);
-static gboolean    fftf_1d                   (GwyContainer *data,
-                                             GwyRunType run);
-static gboolean    fftf_1d_dialog            (Fftf1dArgs *args,
-                                             GwyContainer *data);
-static void        restore_ps               (Fftf1dControls *controls,
-                                             Fftf1dArgs *args);
-static void        fftf_1d_load_args         (GwyContainer *container,
-                                             Fftf1dArgs *args);
-static void        fftf_1d_save_args         (GwyContainer *container,
-                                             Fftf1dArgs *args);
-static void        fftf_1d_sanitize_args     (Fftf1dArgs *args);
-static void        fftf_1d_run               (Fftf1dControls *controls,
-                        	                 Fftf1dArgs *args);
-static void        fftf_1d_do                (Fftf1dControls *controls,
-                        	                 Fftf1dArgs *args);
-static void        fftf_1d_dialog_abandon    (Fftf1dControls *controls,
-                                             Fftf1dArgs *args);
-static GtkWidget*  menu_suppress             (GCallback callback,
-                                             gpointer cbdata,
-                                             GwyFftf1dSuppressType current);
-static GtkWidget*  menu_view_type            (GCallback callback,
-                                             gpointer cbdata,
-                                             GwyFftf1dViewType current);
-static void        suppress_changed_cb       (GObject *item,
-                                             Fftf1dArgs *args);
-static void        view_type_changed_cb      (GObject *item,
-                                             Fftf1dArgs *args);
-static void        direction_changed_cb      (GObject *item,
-                                             Fftf1dArgs *args);
-static void        interpolation_changed_cb  (GObject *item,
-                                             Fftf1dArgs *args);
-static void        update_changed_cb         (GtkToggleButton *button,
-					                         Fftf1dArgs *args);
-static void        update_view               (Fftf1dControls *controls,
-                                             Fftf1dArgs *args);
-static void        graph_selected            (GwyGraphArea *area,
-                                             Fftf1dArgs *args);
+static gboolean   module_register         (const gchar *name);
+static gboolean   fftf_1d                 (GwyContainer *data,
+                                           GwyRunType run);
+static gboolean   fftf_1d_dialog          (Fftf1dArgs *args,
+                                           GwyContainer *data);
+static void       restore_ps              (Fftf1dControls *controls,
+                                           Fftf1dArgs *args);
+static void       fftf_1d_load_args       (GwyContainer *container,
+                                           Fftf1dArgs *args);
+static void       fftf_1d_save_args       (GwyContainer *container,
+                                           Fftf1dArgs *args);
+static void       fftf_1d_sanitize_args   (Fftf1dArgs *args);
+static void       fftf_1d_run             (Fftf1dControls *controls,
+                                           Fftf1dArgs *args);
+static void       fftf_1d_do              (Fftf1dControls *controls,
+                                           Fftf1dArgs *args);
+static void       fftf_1d_dialog_abandon  (Fftf1dControls *controls,
+                                           Fftf1dArgs *args);
+static GtkWidget* menu_suppress           (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyFftf1dSuppressType current);
+static GtkWidget* menu_view_type          (GCallback callback,
+                                           gpointer cbdata,
+                                           GwyFftf1dViewType current);
+static void       suppress_changed_cb     (GObject *item,
+                                           Fftf1dArgs *args);
+static void       view_type_changed_cb    (GObject *item,
+                                           Fftf1dArgs *args);
+static void       direction_changed_cb    (GObject *item,
+                                           Fftf1dArgs *args);
+static void       interpolation_changed_cb(GtkWidget *combo,
+                                           Fftf1dArgs *args);
+static void       update_changed_cb       (GtkToggleButton *button,
+                                           Fftf1dArgs *args);
+static void       update_view             (Fftf1dControls *controls,
+                                           Fftf1dArgs *args);
+static void       graph_selected          (GwyGraphArea *area,
+                                           Fftf1dArgs *args);
 
 
 /* The module info. */
@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     "2004",
 };
 
-
+/* XXX XXX XXX */
 Fftf1dControls *pcontrols;
 const gint MAX_PREV = 200;
 
@@ -279,7 +279,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), _("<b>Power spectrum (select areas by mouse):</b>"));
+    gtk_label_set_markup(GTK_LABEL(label),
+                         _("<b>Power spectrum (select areas by mouse):</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
@@ -312,8 +313,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls.menu_suppress = menu_suppress(G_CALLBACK(suppress_changed_cb),
-                                        args,
-                                        args->suppress);
+                                           args,
+                                           args->suppress);
 
     gtk_table_attach(GTK_TABLE(table), controls.menu_suppress, 1, 2, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -326,8 +327,8 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
     controls.menu_view_type = menu_view_type(G_CALLBACK(view_type_changed_cb),
-                                        args,
-                                        args->view_type);
+                                             args,
+                                             args->view_type);
 
     gtk_table_attach(GTK_TABLE(table), controls.menu_view_type, 1, 2, 1, 2,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -335,17 +336,18 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
     controls.menu_interpolation
-                = gwy_option_menu_interpolation(G_CALLBACK(interpolation_changed_cb),
-                                                          args, args->interpolation);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interpolation_changed_cb), args,
+                                 args->interpolation, TRUE);
     gwy_table_attach_row(table, 4, _("_Interpolation type:"), "",
-                                                      controls.menu_interpolation);
+                         controls.menu_interpolation);
 
 
     controls.menu_direction
         = gwy_option_menu_orientation(G_CALLBACK(direction_changed_cb),
                                       args, args->direction);
     gwy_table_attach_row(table, 5, _("_Direction:"), "",
-                                                      controls.menu_direction);
+                         controls.menu_direction);
 
     controls.update
                = gtk_check_button_new_with_mnemonic(_("_Update dynamically"));
@@ -354,12 +356,10 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                       GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
-                                           args->update);
+                                 args->update);
 
     g_signal_connect(controls.update, "toggled",
-                                      G_CALLBACK(update_changed_cb), args);
-
-
+                     G_CALLBACK(update_changed_cb), args);
 
     restore_ps(&controls, args);
     update_view(&controls, args);
@@ -615,7 +615,8 @@ suppress_changed_cb(GObject *item, Fftf1dArgs *args)
 }
 
 static void
-view_type_changed_cb(GObject *item, Fftf1dArgs *args)
+view_type_changed_cb(GObject *item,
+                     Fftf1dArgs *args)
 {
     args->view_type = GPOINTER_TO_INT(g_object_get_data(item, "view-type"));
     graph_selected(GWY_GRAPH_AREA(GWY_GRAPH(pcontrols->graph)->area), args);
@@ -623,7 +624,8 @@ view_type_changed_cb(GObject *item, Fftf1dArgs *args)
 }
 
 static void
-direction_changed_cb(GObject *item, Fftf1dArgs *args)
+direction_changed_cb(GObject *item,
+                     Fftf1dArgs *args)
 {
     args->direction = GPOINTER_TO_INT(g_object_get_data(item,
                                                         "orientation-type"));
@@ -631,13 +633,12 @@ direction_changed_cb(GObject *item, Fftf1dArgs *args)
 }
 
 static void
-interpolation_changed_cb(GObject *item, Fftf1dArgs *args)
+interpolation_changed_cb(GtkWidget *combo,
+                         Fftf1dArgs *args)
 {
-    args->interpolation = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    args->interpolation = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     update_view(pcontrols, args);
 }
-
-
 
 static const gchar *suppress_key = "/module/fftf_1d/suppress";
 static const gchar *update_key = "/module/fftf_1d/update";

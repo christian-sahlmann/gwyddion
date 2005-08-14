@@ -53,9 +53,9 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    dwt_denoise                (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    dwt_denoise_dialog         (DWTDenoiseArgs *args);
-static void        interp_changed_cb          (GObject *item,
+static void        interp_changed_cb          (GtkWidget *combo,
                                                DWTDenoiseArgs *args);
-static void        wavelet_changed_cb         (GObject *item,
+static void        wavelet_changed_cb         (GtkWidget *combo,
                                                DWTDenoiseArgs *args);
 static void        method_changed_cb          (GObject *item,
                                                DWTDenoiseArgs *args);
@@ -208,20 +208,22 @@ dwt_denoise_dialog(DWTDenoiseArgs *args)
                      G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
-        = gwy_option_menu_dwt(G_CALLBACK(wavelet_changed_cb),
-                                    args, args->wavelet);
+        = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
+                                 G_CALLBACK(wavelet_changed_cb), args,
+                                 args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
     controls.method
-    = menu_method(G_CALLBACK(method_changed_cb),
-              args, args->method);
+        = menu_method(G_CALLBACK(method_changed_cb),
+                      args, args->method);
     gwy_table_attach_row(table, 3, _("_Threshold:"), "",
              controls.method);
 
@@ -272,18 +274,17 @@ menu_method(GCallback callback,
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   DWTDenoiseArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-wavelet_changed_cb(GObject *item,
-                  DWTDenoiseArgs *args)
+wavelet_changed_cb(GtkWidget *combo,
+                   DWTDenoiseArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -304,14 +305,10 @@ static void
 dwt_denoise_dialog_update(DWTDenoiseControls *controls,
                      DWTDenoiseArgs *args)
 {
-    /*
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-     */
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
-                                args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
+                                  args->wavelet);
 }
 
 

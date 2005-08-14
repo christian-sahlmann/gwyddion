@@ -53,7 +53,7 @@ static gboolean    module_register           (const gchar *name);
 static gboolean    scale                     (GwyContainer *data,
                                               GwyRunType run);
 static gboolean    scale_dialog              (ScaleArgs *args);
-static void        interp_changed_cb         (GObject *item,
+static void        interp_changed_cb         (GtkWidget *combo,
                                               ScaleArgs *args);
 static void        scale_changed_cb          (GtkAdjustment *adj,
                                               ScaleArgs *args);
@@ -202,8 +202,9 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(height_changed_cb), args);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_hscale(table, 3, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
 
@@ -245,11 +246,10 @@ scale_dialog(ScaleArgs *args)
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   ScaleArgs *args)
 {
-    args->interp
-        = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -310,8 +310,8 @@ scale_dialog_update(ScaleControls *controls,
                              args->ratio*args->xres);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yres),
                              args->ratio*args->yres);
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
 }
 
 static const gchar *ratio_key = "/module/scale/ratio";

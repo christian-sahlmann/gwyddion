@@ -61,9 +61,9 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    fft                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    fft_dialog                 (FFTArgs *args);
-static void        interp_changed_cb          (GObject *item,
+static void        interp_changed_cb          (GtkWidget *combo,
                                                FFTArgs *args);
-static void        window_changed_cb          (GObject *item,
+static void        window_changed_cb          (GtkWidget *combo,
                                                FFTArgs *args);
 static void        out_changed_cb             (GObject *item,
                                                FFTArgs *args);
@@ -335,13 +335,15 @@ fft_dialog(FFTArgs *args)
                      G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
     controls.window
-        = gwy_option_menu_windowing(G_CALLBACK(window_changed_cb),
-                                    args, args->interp);
+        = gwy_enum_combo_box_new(gwy_windowing_type_get_enum(), -1,
+                                 G_CALLBACK(window_changed_cb), args,
+                                 args->window, TRUE);
     gwy_table_attach_row(table, 2, _("_Windowing type:"), "",
                          controls.window);
 
@@ -382,11 +384,10 @@ fft_dialog(FFTArgs *args)
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   FFTArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -397,10 +398,10 @@ out_changed_cb(GObject *item,
 }
 
 static void
-window_changed_cb(GObject *item,
+window_changed_cb(GtkWidget *combo,
                   FFTArgs *args)
 {
-    args->window = GPOINTER_TO_INT(g_object_get_data(item, "windowing-type"));
+    args->window = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -417,10 +418,10 @@ fft_dialog_update(FFTControls *controls,
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
                              args->angle);
      */
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->window, "windowing-type",
-                                args->window);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->window),
+                                  args->window);
 }
 
 static GtkWidget*

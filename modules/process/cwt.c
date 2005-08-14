@@ -53,7 +53,7 @@ static gboolean    module_register            (const gchar *name);
 static gboolean    cwt                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    cwt_dialog                 (CWTArgs *args);
-static void        interp_changed_cb          (GObject *item,
+static void        interp_changed_cb          (GtkWidget *combo,
                                                CWTArgs *args);
 static void        wavelet_changed_cb         (GObject *item,
                                                CWTArgs *args);
@@ -206,8 +206,9 @@ cwt_dialog(CWTArgs *args)
                      G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 2, _("_Interpolation type:"), "",
                          controls.interp);
     controls.wavelet
@@ -250,11 +251,10 @@ cwt_dialog(CWTArgs *args)
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   CWTArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -278,8 +278,8 @@ cwt_dialog_update(CWTControls *controls,
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
                              args->scale);
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
     gwy_option_menu_set_history(controls->wavelet, "2dcwt_wavelet-type",
                                 args->wavelet);
 }

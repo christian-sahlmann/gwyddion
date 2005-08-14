@@ -50,25 +50,25 @@ typedef struct {
     GtkObject *lowlimit;
 } DWTAnisotropyControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    dwt_anisotropy                        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    dwt_anisotropy_dialog                 (DWTAnisotropyArgs *args);
-static void        interp_changed_cb          (GObject *item,
-                                               DWTAnisotropyArgs *args);
-static void        wavelet_changed_cb          (GObject *item,
-                                               DWTAnisotropyArgs *args);
-static void        ratio_changed_cb            (GtkAdjustment *adj,
-                                               DWTAnisotropyArgs *args);
-static void        lowlimit_changed_cb         (GtkAdjustment *adj,
-                                               DWTAnisotropyArgs *args);
-static void        dwt_anisotropy_dialog_update          (DWTAnisotropyControls *controls,
-                                               DWTAnisotropyArgs *args);
-static void        dwt_anisotropy_load_args              (GwyContainer *container,
-                                               DWTAnisotropyArgs *args);
-static void        dwt_anisotropy_save_args              (GwyContainer *container,
-                                               DWTAnisotropyArgs *args);
-static void        dwt_anisotropy_sanitize_args          (DWTAnisotropyArgs *args);
+static gboolean module_register             (const gchar *name);
+static gboolean dwt_anisotropy              (GwyContainer *data,
+                                             GwyRunType run);
+static gboolean dwt_anisotropy_dialog       (DWTAnisotropyArgs *args);
+static void     interp_changed_cb           (GtkWidget *combo,
+                                             DWTAnisotropyArgs *args);
+static void     wavelet_changed_cb          (GtkWidget *combo,
+                                             DWTAnisotropyArgs *args);
+static void     ratio_changed_cb            (GtkAdjustment *adj,
+                                             DWTAnisotropyArgs *args);
+static void     lowlimit_changed_cb         (GtkAdjustment *adj,
+                                             DWTAnisotropyArgs *args);
+static void     dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
+                                             DWTAnisotropyArgs *args);
+static void     dwt_anisotropy_load_args    (GwyContainer *container,
+                                             DWTAnisotropyArgs *args);
+static void     dwt_anisotropy_save_args    (GwyContainer *container,
+                                             DWTAnisotropyArgs *args);
+static void     dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args);
 
 
 DWTAnisotropyArgs dwt_anisotropy_defaults = {
@@ -206,14 +206,16 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
-        = gwy_option_menu_dwt(G_CALLBACK(wavelet_changed_cb),
-                                    args, args->wavelet);
+        = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
+                                 G_CALLBACK(wavelet_changed_cb), args,
+                                 args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
@@ -267,20 +269,18 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
     return TRUE;
 }
 
-
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   DWTAnisotropyArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-wavelet_changed_cb(GObject *item,
-                  DWTAnisotropyArgs *args)
+wavelet_changed_cb(GtkWidget *combo,
+                   DWTAnisotropyArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -298,10 +298,10 @@ static void
 dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
                      DWTAnisotropyArgs *args)
 {
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
-                                args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
+                                  args->wavelet);
 }
 
 

@@ -63,24 +63,15 @@ static gboolean         unrotate_dialog          (UnrotateArgs *args,
                                                   GwyPlaneSymmetry guess);
 static void             unrotate_dialog_update   (UnrotateControls *controls,
                                                   UnrotateArgs *args);
-static void             unrotate_symmetry_cb     (GtkWidget *item,
+static void             unrotate_symmetry_cb     (GtkWidget *combo,
                                                   UnrotateControls *controls);
-static void             unrotate_interp_cb       (GtkWidget *item,
+static void             unrotate_interp_cb       (GtkWidget *combo,
                                                   UnrotateControls *controls);
 static void             load_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
 static void             save_args                (GwyContainer *container,
                                                   UnrotateArgs *args);
 static void             sanitize_args            (UnrotateArgs *args);
-
-GwyEnum unrotate_symmetry[] = {
-    { N_("Detected"),   GWY_SYMMETRY_AUTO       },
-    { N_("Parallel"),   GWY_SYMMETRY_PARALLEL   },
-    { N_("Triangular"), GWY_SYMMETRY_TRIANGULAR },
-    { N_("Square"),     GWY_SYMMETRY_SQUARE     },
-    { N_("Rhombic"),    GWY_SYMMETRY_RHOMBIC    },
-    { N_("Hexagonal"),  GWY_SYMMETRY_HEXAGONAL  },
-};
 
 UnrotateArgs unrotate_defaults = {
     GWY_INTERPOLATION_BILINEAR,
@@ -242,8 +233,7 @@ unrotate_dialog(UnrotateArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    s = gwy_enum_to_string(guess,
-                           unrotate_symmetry, G_N_ELEMENTS(unrotate_symmetry));
+    s = gwy_enum_to_string(guess, gwy_plane_symmetry_get_enum(), -1);
     label = gtk_label_new(_(s));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -251,10 +241,9 @@ unrotate_dialog(UnrotateArgs *args,
     row++;
 
     controls.symmetry
-        = gwy_option_menu_create(unrotate_symmetry,
-                                 G_N_ELEMENTS(unrotate_symmetry), "symmetry",
+        = gwy_enum_combo_box_new(gwy_plane_symmetry_get_enum(), -1,
                                  G_CALLBACK(unrotate_symmetry_cb), &controls,
-                                 args->symmetry);
+                                 args->symmetry, TRUE);
     gwy_table_attach_row(table, row, _("_Assume:"), NULL, controls.symmetry);
     row++;
 
@@ -270,8 +259,9 @@ unrotate_dialog(UnrotateArgs *args,
     row++;
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(unrotate_interp_cb),
-                                        &controls, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(unrotate_interp_cb), &controls,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, row, _("_Interpolation type:"), "",
                          controls.interp);
 
@@ -326,10 +316,10 @@ unrotate_dialog_update(UnrotateControls *controls,
     GwyContainer *data;
     gdouble phi;
 
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->symmetry, "symmetry",
-                                args->symmetry);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->symmetry),
+                                  args->symmetry);
 
     symm = args->symmetry ? args->symmetry : controls->guess;
     phi = controls->correction[symm];
@@ -346,20 +336,21 @@ unrotate_dialog_update(UnrotateControls *controls,
 }
 
 static void
-unrotate_symmetry_cb(GtkWidget *item, UnrotateControls *controls)
+unrotate_symmetry_cb(GtkWidget *combo,
+                     UnrotateControls *controls)
 {
     controls->args->symmetry
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "symmetry"));
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     unrotate_dialog_update(controls, controls->args);
 
 }
 
 static void
-unrotate_interp_cb(GtkWidget *item, UnrotateControls *controls)
+unrotate_interp_cb(GtkWidget *combo,
+                   UnrotateControls *controls)
 {
     controls->args->interp
-        = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item),
-                                             "interpolation-type"));
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     unrotate_dialog_update(controls, controls->args);
 }
 

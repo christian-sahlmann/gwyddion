@@ -44,21 +44,21 @@ typedef struct {
     GtkWidget *interp;
 } DWTCorrectionControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    dwt_correction                        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    dwt_correction_dialog                 (DWTCorrectionArgs *args);
-static void        interp_changed_cb          (GObject *item,
-                                               DWTCorrectionArgs *args);
-static void        wavelet_changed_cb          (GObject *item,
-                                               DWTCorrectionArgs *args);
-static void        dwt_correction_dialog_update          (DWTCorrectionControls *controls,
-                                               DWTCorrectionArgs *args);
-static void        dwt_correction_load_args              (GwyContainer *container,
-                                               DWTCorrectionArgs *args);
-static void        dwt_correction_save_args              (GwyContainer *container,
-                                               DWTCorrectionArgs *args);
-static void        dwt_correction_sanitize_args          (DWTCorrectionArgs *args);
+static gboolean module_register             (const gchar *name);
+static gboolean dwt_correction              (GwyContainer *data,
+                                             GwyRunType run);
+static gboolean dwt_correction_dialog       (DWTCorrectionArgs *args);
+static void     interp_changed_cb           (GtkWidget *combo,
+                                             DWTCorrectionArgs *args);
+static void     wavelet_changed_cb          (GtkWidget *combo,
+                                             DWTCorrectionArgs *args);
+static void     dwt_correction_dialog_update(DWTCorrectionControls *controls,
+                                             DWTCorrectionArgs *args);
+static void     dwt_correction_load_args    (GwyContainer *container,
+                                             DWTCorrectionArgs *args);
+static void     dwt_correction_save_args    (GwyContainer *container,
+                                             DWTCorrectionArgs *args);
+static void     dwt_correction_sanitize_args(DWTCorrectionArgs *args);
 
 
 DWTCorrectionArgs dwt_correction_defaults = {
@@ -185,17 +185,18 @@ dwt_correction_dialog(DWTCorrectionArgs *args)
 
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
-        = gwy_option_menu_dwt(G_CALLBACK(wavelet_changed_cb),
-                                    args, args->wavelet);
+        = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
+                                 G_CALLBACK(wavelet_changed_cb), args,
+                                 args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
-
 
     gtk_widget_show_all(dialog);
     do {
@@ -229,33 +230,27 @@ dwt_correction_dialog(DWTCorrectionArgs *args)
 
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   DWTCorrectionArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-wavelet_changed_cb(GObject *item,
-                  DWTCorrectionArgs *args)
+wavelet_changed_cb(GtkWidget *combo,
+                   DWTCorrectionArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
-
 
 static void
 dwt_correction_dialog_update(DWTCorrectionControls *controls,
                      DWTCorrectionArgs *args)
 {
-    /*
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-     */
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
-                                args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
+                                  args->wavelet);
 }
 
 

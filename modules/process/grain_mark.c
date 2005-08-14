@@ -268,8 +268,10 @@ mark_dialog(MarkArgs *args, GwyContainer *data)
                      G_CALLBACK(mark_invalidate), &controls);
     row++;
 
-    controls.merge = gwy_option_menu_merge_type(G_CALLBACK(mark_invalidate),
-                                                &controls, args->merge_type);
+    controls.merge
+        = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                 G_CALLBACK(mark_invalidate), &controls,
+                                 args->merge_type, TRUE);
     gwy_table_attach_hscale(table, row, _("Mer_ge mode:"), NULL,
                             GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
@@ -360,8 +362,8 @@ mark_dialog_update_controls(MarkControls *controls,
                                  args->is_slope);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_lap),
                                  args->is_lap);
-    gwy_option_menu_set_history(controls->merge, "merge-type",
-                                args->merge_type);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->merge),
+                                  args->merge_type);
 }
 
 static void
@@ -383,7 +385,7 @@ mark_dialog_update_values(MarkControls *controls,
     args->is_lap
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->is_lap));
     args->merge_type
-        = gwy_option_menu_get_history(controls->merge, "merge-type");
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
 }
 
 static void

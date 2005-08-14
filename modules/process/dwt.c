@@ -47,24 +47,23 @@ typedef struct {
     GtkWidget *interp;
 } DWTControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    dwt                        (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean    dwt_dialog                 (DWTArgs *args);
-static void        interp_changed_cb          (GObject *item,
-                                               DWTArgs *args);
-static void        wavelet_changed_cb          (GObject *item,
-                                               DWTArgs *args);
-static void        preserve_changed_cb        (GtkToggleButton *button,
-                                               DWTArgs *args);
-static void        dwt_dialog_update          (DWTControls *controls,
-                                               DWTArgs *args);
-static void        dwt_load_args              (GwyContainer *container,
-                                               DWTArgs *args);
-static void        dwt_save_args              (GwyContainer *container,
-                                               DWTArgs *args);
-static void        dwt_sanitize_args          (DWTArgs *args);
-
+static gboolean module_register    (const gchar *name);
+static gboolean dwt                (GwyContainer *data,
+                                    GwyRunType run);
+static gboolean dwt_dialog         (DWTArgs *args);
+static void     interp_changed_cb  (GtkWidget *combo,
+                                    DWTArgs *args);
+static void     wavelet_changed_cb (GtkWidget *combo,
+                                    DWTArgs *args);
+static void     preserve_changed_cb(GtkToggleButton *button,
+                                    DWTArgs *args);
+static void     dwt_dialog_update  (DWTControls *controls,
+                                    DWTArgs *args);
+static void     dwt_load_args      (GwyContainer *container,
+                                    DWTArgs *args);
+static void     dwt_save_args      (GwyContainer *container,
+                                    DWTArgs *args);
+static void     dwt_sanitize_args  (DWTArgs *args);
 
 
 DWTArgs dwt_defaults = {
@@ -199,14 +198,16 @@ dwt_dialog(DWTArgs *args)
                      G_CALLBACK(preserve_changed_cb), args);
 
     controls.interp
-        = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                        args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
                          controls.interp);
 
     controls.wavelet
-        = gwy_option_menu_dwt(G_CALLBACK(wavelet_changed_cb),
-                                    args, args->wavelet);
+        = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
+                                 G_CALLBACK(wavelet_changed_cb), args,
+                                 args->wavelet, TRUE);
     gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
                          controls.wavelet);
 
@@ -242,18 +243,17 @@ dwt_dialog(DWTArgs *args)
 }
 
 static void
-interp_changed_cb(GObject *item,
+interp_changed_cb(GtkWidget *combo,
                   DWTArgs *args)
 {
-    args->interp = GPOINTER_TO_INT(g_object_get_data(item,
-                                                     "interpolation-type"));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
-wavelet_changed_cb(GObject *item,
-                  DWTArgs *args)
+wavelet_changed_cb(GtkWidget *combo,
+                   DWTArgs *args)
 {
-    args->wavelet = GPOINTER_TO_INT(g_object_get_data(item, "dwt-wavelet-type"));
+    args->wavelet = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 static void
@@ -266,14 +266,10 @@ static void
 dwt_dialog_update(DWTControls *controls,
                      DWTArgs *args)
 {
-    /*
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
-                             args->angle);
-     */
-    gwy_option_menu_set_history(controls->interp, "interpolation-type",
-                                args->interp);
-    gwy_option_menu_set_history(controls->wavelet, "dwt-wavelet-type",
-                                args->wavelet);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
+                                  args->interp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
+                                  args->wavelet);
 }
 
 

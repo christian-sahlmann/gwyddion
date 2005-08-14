@@ -245,7 +245,10 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
-    controls.merge = gwy_option_menu_merge_type(NULL, NULL, args->merge_type);
+    controls.merge
+        = gwy_enum_combo_box_new(gwy_merge_type_get_enum(), -1,
+                                 NULL, NULL,
+                                 args->merge_type, TRUE);
     gwy_table_attach_hscale(table, row, _("_Selection mode:"), NULL,
                             GTK_OBJECT(controls.merge), GWY_HSCALE_WIDGET);
     row++;
@@ -323,8 +326,8 @@ remove_dialog_update_controls(RemoveControls *controls,
                                  args->is_height);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area),
                                  args->is_area);
-    gwy_option_menu_set_history(controls->merge, "merge-type",
-                                args->merge_type);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->merge),
+                                  args->merge_type);
 }
 
 static void
@@ -341,8 +344,8 @@ remove_dialog_update_args(RemoveControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
     args->area
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
-    args->merge_type = gwy_option_menu_get_history(controls->merge,
-                                                   "merge-type");
+    args->merge_type
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
 }
 
 static void

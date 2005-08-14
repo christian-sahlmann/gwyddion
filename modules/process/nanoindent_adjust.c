@@ -68,12 +68,12 @@ static void        move_changed_cb            (GtkWidget *toggle,
 static void        rotate_changed_cb          (GtkWidget *toggle,
                                                NanoindentAdjustArgs *args);
 
-static void        interp_changed_cb          (GObject *item,
+static void        interp_changed_cb          (GtkWidget *combo,
                                                NanoindentAdjustArgs *args);
 
 
-static GwyDataField *gwy_nanoindent_adjust           (GwyDataField *model, 
-                                                      GwyDataField *sample, 
+static GwyDataField *gwy_nanoindent_adjust           (GwyDataField *model,
+                                                      GwyDataField *sample,
                                                       GwySetFractionFunc set_fraction,
                                                       GwySetMessageFunc set_message,
                                                       NanoindentAdjustArgs *args);
@@ -132,8 +132,8 @@ nanoindent_adjust(GwyContainer *data, GwyRunType run)
             args = nanoindent_adjust_defaults;
     else
             nanoindent_adjust_load_args(gwy_app_settings_get(), &args);
-        
-    
+
+
     g_return_val_if_fail(run & NANOINDENT_ADJUST_RUN_MODES, FALSE);
     args.win1 = args.win2 = gwy_app_data_window_get_current();
     g_assert(gwy_data_window_get_data(args.win1) == data);
@@ -174,7 +174,7 @@ nanoindent_adjust_window_construct(NanoindentAdjustArgs *args)
     gint row;
 
     NanoindentAdjustControls controls;
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Imprints adjustment"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -219,7 +219,7 @@ nanoindent_adjust_window_construct(NanoindentAdjustArgs *args)
                      G_CALLBACK(move_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.move, 0, 4, 2, 3,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    
+
     controls.rotate
              = gtk_check_button_new_with_mnemonic(_("_Rotate data"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.rotate),
@@ -228,7 +228,7 @@ nanoindent_adjust_window_construct(NanoindentAdjustArgs *args)
                      G_CALLBACK(rotate_changed_cb), args);
     gtk_table_attach(GTK_TABLE(table), controls.rotate, 0, 4, 3, 4,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-     
+
     controls.expand
              = gtk_check_button_new_with_mnemonic(_("E_xtrapolate result data out of measured range"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.expand),
@@ -239,14 +239,15 @@ nanoindent_adjust_window_construct(NanoindentAdjustArgs *args)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     gtk_widget_set_sensitive(controls.expand, FALSE);
-   
+
     controls.interp
-             = gwy_option_menu_interpolation(G_CALLBACK(interp_changed_cb),
-                                                   args, args->interp);
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(interp_changed_cb), args,
+                                 args->interp, TRUE);
     gwy_table_attach_hscale(table, 5, _("_Interpolation type:"), NULL,
                             GTK_OBJECT(controls.interp), GWY_HSCALE_WIDGET);
-         
-     
+
+
     gtk_widget_show_all(dialog);
 
     return dialog;
@@ -361,37 +362,31 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
     return TRUE;
 }
 
-static void        
+static void
 expand_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
 {
      args->expand = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
-static void        
-move_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
+static void
+move_changed_cb(GtkWidget *toggle,
+                NanoindentAdjustArgs *args)
 {
      args->move = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
-static void        
-rotate_changed_cb(GtkWidget *toggle, NanoindentAdjustArgs *args)
+static void
+rotate_changed_cb(GtkWidget *toggle,
+                  NanoindentAdjustArgs *args)
 {
      args->rotate = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 }
 
-static void        
-interp_changed_cb(GObject *item, NanoindentAdjustArgs *args)
+static void
+interp_changed_cb(GtkWidget *combo,
+                  NanoindentAdjustArgs *args)
 {
-    args->interp
-                = GPOINTER_TO_INT(g_object_get_data(item, "interpolation-type"));
-    
-}
-
-static gdouble
-dist(gint px1, gint py1, gint px2, gint py2)
-{
-    return sqrt(((gdouble)px2 - (gdouble)px1)*((gdouble)px2 - (gdouble)px1) 
-                + ((gdouble)py2 - (gdouble)py1)*((gdouble)py2 - (gdouble)py1));
+    args->interp = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
 /*compute weighted minimum*/
@@ -402,27 +397,27 @@ get_weighted_minimum(GwyDataField *dfield, gint *x, gint *y)
     gdouble xc, yc, wc, weight;
     gdouble min, max;
     gdouble mmin = G_MAXDOUBLE;
-    
+
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
 
     for (i = 0; i < dfield->yres; i++) { /*row*/
          for (j = 0; j < dfield->xres; j++) { /*column*/
-             if (mmin > dfield->data[j + dfield->xres*i]){ 
-                 mmin = dfield->data[j + dfield->xres*i]; 
-                 *x = j; 
+             if (mmin > dfield->data[j + dfield->xres*i]){
+                 mmin = dfield->data[j + dfield->xres*i];
+                 *x = j;
                  *y = i;
              }
          }
     }
-    
+
     xc = 0;
     yc = 0;
     wc = 0;
     for (i = 0; i < dfield->yres; i++) { /*row*/
          for (j = 0; j < dfield->xres; j++) { /*column*/
              weight = min/(dfield->data[j + dfield->xres*i]
-                           *MAX(dist(*x, *y, j, i), 1.0));
+                           *MAX(hypot(*x - j, *y - i), 1.0));
              weight *= weight;
              xc += weight*(gdouble)j;
              yc += weight*(gdouble)i;
@@ -431,7 +426,7 @@ get_weighted_minimum(GwyDataField *dfield, gint *x, gint *y)
     }
     *x = (gint)floor(xc/wc + 0.5);
     *y = (gint)floor(yc/wc + 0.5);
-    
+
 }
 
 static gdouble
@@ -450,7 +445,7 @@ get_rotation_angle(GwyDataField *model, GwyDataField *sample)
     gwy_data_field_slope_distribution(sample, derdist, 5);
     gwy_data_field_unrotate_find_corrections(derdist, correction);
     sample_phi = correction[symm];
-    
+
     g_object_unref(derdist);
     return sample_phi - model_phi;
 }
@@ -464,14 +459,14 @@ data_field_move(GwyDataField *sample, gint xoff, gint yoff)
     buffer = gwy_data_field_new_alike(sample, FALSE);
     gwy_data_field_copy(sample, buffer, TRUE);
 
-   
+
     dest_ulcol = MAX(0, xoff);
     dest_ulrow = MAX(0, yoff);
     ulcol = MAX(0, -xoff);
     ulrow = MAX(0, -yoff);
     brcol = MIN(sample->xres, sample->xres - xoff);
     brrow = MIN(sample->yres, sample->xres - yoff);
-   
+
     gwy_data_field_area_copy(buffer, sample,
                              ulcol, ulrow, brcol, brrow,
                              dest_ulcol, dest_ulrow);
@@ -487,23 +482,23 @@ gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample,
 {
     gint mod_xmin, mod_ymin, sam_xmin, sam_ymin;
     gdouble angle;
-    
+
     /*rotate if requested*/
     if (args->rotate) {
         angle = get_rotation_angle(model, sample);
 
         gwy_data_field_rotate(sample, angle, args->interp);
     }
-        
+
     /*move if requested*/
     if (args->move) {
         get_weighted_minimum(model, &mod_xmin, &mod_ymin);
         get_weighted_minimum(sample, &sam_xmin, &sam_ymin);
 
-    
-        data_field_move(sample, mod_xmin - sam_xmin, mod_ymin - sam_ymin);    
+
+        data_field_move(sample, mod_xmin - sam_xmin, mod_ymin - sam_ymin);
     }
-    
+
     return sample;
 }
 
@@ -514,19 +509,19 @@ static const gchar *rotate_key = "/module/nanoindent_adjust/rotate";
 static const gchar *move_key = "/module/nanoindent_adjust/move";
 
 
-static void        
+static void
 nanoindent_adjust_sanitize_args(NanoindentAdjustArgs *args)
 {
     args->interp = CLAMP(args->interp,
                        GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
-   
+
     args->expand = !!args->expand;
     args->rotate = !!args->rotate;
     args->move = !!args->move;
-        
+
 }
 
-static void        
+static void
 nanoindent_adjust_load_args(GwyContainer *container, NanoindentAdjustArgs *args)
 {
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
@@ -537,14 +532,14 @@ nanoindent_adjust_load_args(GwyContainer *container, NanoindentAdjustArgs *args)
     nanoindent_adjust_sanitize_args(args);
 }
 
-static void        
+static void
 nanoindent_adjust_save_args(GwyContainer *container, NanoindentAdjustArgs *args)
 {
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_boolean_by_name(container, expand_key, args->expand);
     gwy_container_set_boolean_by_name(container, rotate_key, args->rotate);
     gwy_container_set_boolean_by_name(container, move_key, args->move);
-    
+
 }
 
 
