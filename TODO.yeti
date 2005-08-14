@@ -8,9 +8,13 @@ SF CVS cleanup:
 
 HEAD
 - Why DWT methods have return values?
-- Should GwyDataLine have units, offsets?
+- Should GwyDataLine have units?  Set data line offsets in stat functions.
 - Graphs:
   infinite, memory allocating loop in gwy_axis_scale
+  sfunctions never frees anything, leaks awful lots of GwyGraphCurveModels
+  and GwySIUnits
+  CDH and CDA y axis ends at 0.8 while it should go to 1.0
+  Parts of GwyAxis still called GwyAxiser
   datawindow graph list broken
   graph titles don't work
   still uses GwyWatchable
@@ -42,7 +46,6 @@ HEAD
   number of lines should be increased)
 - Make things actually compile with --disable-gl, also improve GL/gl.h,
   GL/glu.h checking
-- Check or rework filename handling to work with Gtk+ 2.6
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Write a Postscript export module based on JP's work
