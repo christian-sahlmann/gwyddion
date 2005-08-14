@@ -11,6 +11,7 @@ HEAD
 - Should GwyDataLine have units?  Set data line offsets in stat functions.
 - Graphs:
   infinite, memory allocating loop in gwy_axis_scale
+  infinite graph-related loop in 1D FFT filter
   sfunctions never frees anything, leaks awful lots of GwyGraphCurveModels
   and GwySIUnits
   CDH and CDA y axis ends at 0.8 while it should go to 1.0
