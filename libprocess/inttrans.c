@@ -554,14 +554,6 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 /************************** Documentation ****************************/
 
 /**
- * GwyTransformDirection:
- * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward (inverse) transform.
- * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.
- *
- * Transform (namely integral transform) direction.
- **/
-
-/**
  * GwyFFTFunc:
  * @dir: Transform direction (forward or backward).
  * @re_in: Data line with real part of input data.

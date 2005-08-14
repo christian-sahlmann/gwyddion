@@ -698,20 +698,4 @@ gwy_data_field_local_plane_quantity(GwyDataField *data_field,
     return result;
 }
 
-/************************** Documentation ****************************/
-
-/**
- * GwyPlaneFitQuantity:
- * @GWY_PLANE_FIT_A: Constant coefficient (mean value).
- * @GWY_PLANE_FIT_BX: Linear coefficient in x, if x in in pixel coordinates.
- * @GWY_PLANE_FIT_BY: Linear coefficient in y, if y is in pixel coordinates.
- * @GWY_PLANE_FIT_ANGLE: Slope orientation in (x,y) plane (in radians).
- * @GWY_PLANE_FIT_SLOPE: Absolute slope value (that is sqrt(bx*bx + by*by)).
- * @GWY_PLANE_FIT_S0: Residual sum of squares.
- * @GWY_PLANE_FIT_S0_REDUCED: Slope-reduced residual sum of squares.
- *
- * Quantity that can be requested from gwy_data_field_area_fit_local_planes()
- * et al.
- **/
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -208,22 +208,6 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
 /***** Documentation *******************************************************/
 
-/**
- * GwyInterpolationType:
- * @GWY_INTERPOLATION_NONE: No interpolation at all, resulting values are not
- *                          meaningful and should not be used (use for
- *                          resize operations discarding original data).
- * @GWY_INTERPOLATION_ROUND: Round interpolation (nearest neighbour
- *                           interpolation).
- * @GWY_INTERPOLATION_BILINEAR: Bilinear interpolation.
- * @GWY_INTERPOLATION_KEY: Key interpolation.
- * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation.
- * @GWY_INTERPOLATION_OMOMS: Omoms interpolation
- * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
- *
- * Interpolation types.
- **/
-
 /* Maple source of Hornerization.
 
 {VERSION 5 0 "IBM INTEL LINUX" "5.0" }
