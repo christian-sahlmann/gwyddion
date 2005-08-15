@@ -605,57 +605,6 @@ gwy_inventory_find(GwyInventory *inventory,
 }
 
 /**
- * gwy_inventory_get_next_item:
- * @inventory: An inventory.
- * @item: An inventory item to find next of.  May be %NULL, the first inventory
- *        item is returned then (if any).
- *
- * Finds next item to a inventory item.
- *
- * This method exists to accommodate tree-model wrappers,
- * gwy_inventory_foreach() and gwy_inventory_find() are usually better
- * methods to iterate over items.
- *
- * Returns: The item after @item, %NULL if @item is the last item.
- **/
-gpointer
-gwy_inventory_get_next_item(GwyInventory *inventory,
-                            gpointer item)
-{
-    const gchar *name;
-    guint i;
-
-    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    if (!item) {
-        if (inventory->items->len) {
-            i = inventory->ridx ? g_array_index(inventory->ridx, guint, 0) : 0;
-            return g_ptr_array_index(inventory->items, i);
-        }
-        else
-            return NULL;
-    }
-
-    name = inventory->item_type.get_name(item);
-    if (!(i = gwy_inventory_lookup(inventory, name))) {
-        g_warning("Item `%s' not present in inventory", name);
-        return NULL;
-    }
-    i--;
-
-    if (inventory->idx) {
-        if (inventory->needs_reindex)
-            gwy_inventory_reindex(inventory);
-        i = g_array_index(inventory->idx, guint, i);
-    }
-    i++;
-    if (i >= inventory->items->len)
-        return NULL;
-    if (inventory->ridx)
-        i = g_array_index(inventory->ridx, guint, i);
-    return g_ptr_array_index(inventory->items, i);
-}
-
-/**
  * gwy_inventory_get_default_item:
  * @inventory: An inventory.
  *

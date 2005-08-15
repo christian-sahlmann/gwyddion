@@ -40,6 +40,8 @@ static GtkTreeModelFlags gwy_inventory_store_get_flags (GtkTreeModel *model);
 static gint      gwy_inventory_store_get_n_columns  (GtkTreeModel *model);
 static GType     gwy_inventory_store_get_column_type(GtkTreeModel *model,
                                                      gint column);
+static inline void gwy_inventory_store_update_iter  (GwyInventoryStore *store,
+                                                     GtkTreeIter *iter);
 static gboolean  gwy_inventory_store_get_iter       (GtkTreeModel *model,
                                                      GtkTreeIter *iter,
                                                      GtkTreePath *path);
@@ -77,7 +79,7 @@ static void      gwy_inventory_store_row_deleted    (GwyInventory *inventory,
 static void      gwy_inventory_store_rows_reordered (GwyInventory *inventory,
                                                      gint *new_order,
                                                      GwyInventoryStore *store);
-static void      gwy_inventory_store_check_item     (gpointer key,
+static gboolean  gwy_inventory_store_check_item     (gpointer key,
                                                      gpointer item,
                                                      gpointer user_data);
 
@@ -138,8 +140,14 @@ gwy_inventory_store_get_flags(GtkTreeModel *model)
 static gint
 gwy_inventory_store_get_n_columns(GtkTreeModel *model)
 {
+    GwyInventoryStore *store;
+    gint n;
+
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
-    return GWY_INVENTORY_STORE(model)->n_columns;
+    store = GWY_INVENTORY_STORE(model);
+    store->item_type->get_traits(&n);
+    /* +1 for "Item" column */
+    return n+1;
 }
 
 static GType
@@ -150,13 +158,28 @@ gwy_inventory_store_get_column_type(GtkTreeModel *model,
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     store = GWY_INVENTORY_STORE(model);
-    g_return_val_if_fail(column >= 0 && column < store->n_columns, 0);
 
     /* Zeroth is item itself */
     if (!column)
         return G_TYPE_POINTER;
 
     return store->item_type->get_traits(NULL)[column-1];
+}
+
+static inline void
+gwy_inventory_store_update_iter(GwyInventoryStore *store,
+                                GtkTreeIter *iter)
+{
+    if (iter->stamp != store->stamp) {
+        const gchar *name;
+        gint i;
+
+        name = store->item_type->get_name(iter->user_data);
+        i = gwy_inventory_get_item_position(store->inventory, name);
+
+        iter->stamp = store->stamp;
+        iter->user_data2 = GUINT_TO_POINTER(i);
+    }
 }
 
 static gboolean
@@ -176,8 +199,23 @@ gwy_inventory_store_get_iter(GtkTreeModel *model,
     if (i >= gwy_inventory_get_n_items(store->inventory))
         return FALSE;
 
+    /* GwyInventoryStore has presistent iters, because it uses item pointers
+     * themselves as @user_data and an item pointer is valid as long as the
+     * item exists.
+     *
+     * This always works but needs a round trip item -> name -> position ->
+     * position+1 -> item to get next iter.  So we also store item position
+     * in @user_data2 and use that directly if inventory has not changed.
+     * If it has changed, we can update it using the slower method.
+     *
+     * To sum it up:
+     * @stamp: Corresponds to store's @stamp, but does not have to match.
+     * @user_data: Pointer to item.
+     * @user_data2: Position in inventory.
+     */
     iter->stamp = store->stamp;
     iter->user_data = gwy_inventory_get_nth_item(store->inventory, i);
+    iter->user_data2 = GUINT_TO_POINTER(i);
 
     return TRUE;
 }
@@ -188,17 +226,13 @@ gwy_inventory_store_get_path(GtkTreeModel *model,
 {
     GwyInventoryStore *store;
     GtkTreePath *path;
-    const gchar *name;
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), NULL);
-    store = GWY_INVENTORY_STORE(model);
-    g_return_val_if_fail(iter->stamp == store->stamp, NULL);
 
+    store = GWY_INVENTORY_STORE(model);
+    gwy_inventory_store_update_iter(store, iter);
     path = gtk_tree_path_new();
-    name = store->item_type->get_name(iter->user_data);
-    gtk_tree_path_append_index(path,
-                               gwy_inventory_get_item_position(store->inventory,
-                                                               name));
+    gtk_tree_path_append_index(path, GPOINTER_TO_UINT(iter->user_data2));
 
     return path;
 }
@@ -213,8 +247,6 @@ gwy_inventory_store_get_value(GtkTreeModel *model,
 
     g_return_if_fail(GWY_IS_INVENTORY_STORE(model));
     store = GWY_INVENTORY_STORE(model);
-    g_return_if_fail(iter->stamp == store->stamp);
-    g_return_if_fail(column >= 0 && column < store->n_columns);
 
     if (!column) {
         g_value_init(value, G_TYPE_POINTER);
@@ -230,14 +262,22 @@ gwy_inventory_store_iter_next(GtkTreeModel *model,
                               GtkTreeIter *iter)
 {
     GwyInventoryStore *store;
+    gint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), FALSE);
     store = GWY_INVENTORY_STORE(model);
-    g_return_val_if_fail(iter->stamp == store->stamp, FALSE);
+    gwy_inventory_store_update_iter(store, iter);
 
-    iter->user_data = gwy_inventory_get_next_item(store->inventory,
-                                                  iter->user_data);
-    return iter->user_data != NULL;
+    i = GPOINTER_TO_UINT(iter->user_data2) + 1;
+    iter->user_data2 = GUINT_TO_POINTER(i);
+    if (i < gwy_inventory_get_n_items(store->inventory)) {
+        iter->user_data = gwy_inventory_get_nth_item(store->inventory, i);
+        return TRUE;
+    }
+    else {
+        iter->user_data = NULL;
+        return FALSE;
+    }
 }
 
 static gboolean
@@ -256,6 +296,7 @@ gwy_inventory_store_iter_children(GtkTreeModel *model,
     if (gwy_inventory_get_n_items(store->inventory)) {
         iter->stamp = store->stamp;
         iter->user_data = gwy_inventory_get_nth_item(store->inventory, 0);
+        iter->user_data2 = GUINT_TO_POINTER(0);
         return TRUE;
     }
     return FALSE;
@@ -300,6 +341,7 @@ gwy_inventory_store_iter_nth_child(GtkTreeModel *model,
     if (n < gwy_inventory_get_n_items(store->inventory)) {
         iter->stamp = store->stamp;
         iter->user_data = gwy_inventory_get_nth_item(store->inventory, n);
+        iter->user_data2 = GUINT_TO_POINTER(n);
         return TRUE;
     }
     return FALSE;
@@ -336,7 +378,9 @@ gwy_inventory_store_row_inserted(GwyInventory *inventory,
     GtkTreePath *path;
     GtkTreeIter iter;
 
+    store->stamp++;
     iter.user_data = gwy_inventory_get_nth_item(inventory, i);
+    iter.user_data2 = GUINT_TO_POINTER(i);
     path = gtk_tree_path_new();
     gtk_tree_path_append_index(path, i);
     gtk_tree_model_row_inserted(GTK_TREE_MODEL(store), path, &iter);
@@ -350,6 +394,7 @@ gwy_inventory_store_row_deleted(G_GNUC_UNUSED GwyInventory *inventory,
 {
     GtkTreePath *path;
 
+    store->stamp++;
     path = gtk_tree_path_new();
     gtk_tree_path_append_index(path, i);
     gtk_tree_model_row_deleted(GTK_TREE_MODEL(store), path);
@@ -363,6 +408,7 @@ gwy_inventory_store_rows_reordered(G_GNUC_UNUSED GwyInventory *inventory,
 {
     GtkTreePath *path;
 
+    store->stamp++;
     path = gtk_tree_path_new();
     gtk_tree_model_rows_reordered(GTK_TREE_MODEL(store), path, NULL, new_order);
     gtk_tree_path_free(path);
@@ -379,8 +425,8 @@ gwy_inventory_store_rows_reordered(G_GNUC_UNUSED GwyInventory *inventory,
 GwyInventoryStore*
 gwy_inventory_store_new(GwyInventory *inventory)
 {
-    GwyInventoryStore *store;
     const GwyInventoryItemType *item_type;
+    GwyInventoryStore *store;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
     item_type = gwy_inventory_get_item_type(inventory);
@@ -392,9 +438,6 @@ gwy_inventory_store_new(GwyInventory *inventory)
     store = g_object_new(GWY_TYPE_INVENTORY_STORE, NULL);
     store->inventory = inventory;
     store->item_type = item_type;
-    item_type->get_traits(&store->n_columns);
-    /* +1 for "Item" column */
-    store->n_columns++;
 
     g_signal_connect(inventory, "item-updated",
                      G_CALLBACK(gwy_inventory_store_row_changed), store);
@@ -440,18 +483,19 @@ gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
                                        const gchar *name)
 {
     const gchar* (*method)(gint);
-    gint i;
+    gint i, n;
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), -1);
     if (gwy_strequal(name, "Item"))
         return 0;
 
     g_return_val_if_fail(store->item_type->get_trait_name, -1);
+    store->item_type->get_traits(&n);
     method = store->item_type->get_trait_name;
 
-    for (i = 1; i < store->n_columns; i++) {
-        if (gwy_strequal(name, method(i-1)))
-            return i;
+    for (i = 0; i < n; i++) {
+        if (gwy_strequal(name, method(i)))
+            return i+1;
     }
     return -1;
 }
@@ -472,30 +516,36 @@ gboolean
 gwy_inventory_store_iter_is_valid(GwyInventoryStore *store,
                                   GtkTreeIter *iter)
 {
+    GtkTreeIter copy;
+
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), FALSE);
 
-    if (!iter || !iter->user_data || iter->stamp != store->stamp)
+    if (!iter || !iter->user_data)
         return FALSE;
 
-    iter->user_data2 = NULL;
-    gwy_inventory_foreach(store->inventory, gwy_inventory_store_check_item,
-                          &iter);
+    /* Make a copy because we use the iter as a scratch pad */
+    copy = *iter;
+    if (!gwy_inventory_find(store->inventory, gwy_inventory_store_check_item,
+                            &copy))
+        return FALSE;
 
-    return iter->user_data == iter->user_data2;
+    /* Iters with different stamps are valid if just @user_data matches item
+     * pointer.  But if stamps match, @user_data2 must match item position */
+    return iter->stamp != store->stamp || iter->user_data2 == copy.user_data2;
 }
 
-static void
-gwy_inventory_store_check_item(G_GNUC_UNUSED gpointer key,
+static gboolean
+gwy_inventory_store_check_item(gpointer key,
                                gpointer item,
                                gpointer user_data)
 {
     GtkTreeIter *iter = (GtkTreeIter*)user_data;
 
-    if (iter->user_data == item) {
-        if (iter->user_data2)
-            g_warning("Item found multiple times");
-        iter->user_data2 = item;
-    }
+    if (iter->user_data != item)
+        return FALSE;
+
+    iter->user_data2 = key;
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

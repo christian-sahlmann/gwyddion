@@ -44,7 +44,6 @@ struct _GwyInventoryStore
     GwyInventory *inventory;
 
     /* Cached inventory properties */
-    gint n_columns;
     const GwyInventoryItemType *item_type;
 };
 
