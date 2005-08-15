@@ -178,11 +178,11 @@ gwy_shader_new(const gchar *gradient)
     gwy_debug("");
     shader = (GwyShader*)g_object_new(GWY_TYPE_SHADER, NULL);
 
-    if (gradient)
-        shader->gradient = gwy_gradients_get_gradient(gradient);
-    if (!shader->gradient)
-        shader->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
-    g_assert(shader->gradient);
+    if (!gradient)
+        shader->gradient = gwy_inventory_get_default_item(gwy_gradients());
+    else
+        shader->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
+                                                             gradient);
     g_object_ref(shader->gradient);
 
     shader->gradient_change_id
@@ -260,7 +260,8 @@ gwy_shader_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_GRADIENT:
-        g_value_set_string(value, gwy_gradient_get_name(shader->gradient));
+        g_value_set_string(value,
+                           gwy_resource_get_name(GWY_RESOURCE(shader->gradient)));
         break;
 
         case PROP_UPDATE_POLICY:
@@ -339,7 +340,7 @@ gwy_shader_get_gradient(GwyShader *shader)
 {
     g_return_val_if_fail(GWY_IS_SHADER(shader), NULL);
 
-    return gwy_gradient_get_name(shader->gradient);
+    return gwy_resource_get_name(GWY_RESOURCE(shader->gradient));
 }
 
 /**
@@ -459,8 +460,8 @@ gwy_shader_set_gradient(GwyShader *shader,
 
     g_return_if_fail(GWY_IS_SHADER(shader));
 
-    grad = gwy_gradients_get_gradient(gradient);
-    if (!grad || grad == shader->gradient)
+    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    if (grad == shader->gradient)
         return;
 
     old = shader->gradient;

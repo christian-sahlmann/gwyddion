@@ -22,7 +22,9 @@
 #define __GWY_GRADIENT_H__
 
 #include <glib-object.h>
+#include <libgwyddion/gwyresource.h>
 #include <libdraw/gwyrgba.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
 
@@ -33,8 +35,6 @@ G_BEGIN_DECLS
 #define GWY_IS_GRADIENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRADIENT))
 #define GWY_GRADIENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRADIENT, GwyGradientClass))
 
-#define GWY_GRADIENT_DEFAULT "Gray"
-
 typedef struct _GwyGradient      GwyGradient;
 typedef struct _GwyGradientClass GwyGradientClass;
 
@@ -43,26 +43,21 @@ typedef struct {
     GwyRGBA color;
 } GwyGradientPoint;
 
-typedef void (*GwyGradientFunc)(const gchar *name,
-                                GwyGradient *gradient,
-                                gpointer user_data);
-
 struct _GwyGradient {
-    GObject parent_instance;
+    GwyResource parent_instance;
 
-    gchar *name;
-    gboolean modifiable;
     gboolean favourite;
     gboolean boolean1;
     GArray *points;
     guchar *pixels;
+    GdkPixbuf *pixbuf;
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
 struct _GwyGradientClass {
-    GObjectClass parent_class;
+    GwyResourceClass parent_class;
 
     GHashTable *gradients;
 
@@ -73,8 +68,6 @@ struct _GwyGradientClass {
 };
 
 GType             gwy_gradient_get_type              (void) G_GNUC_CONST;
-const gchar*      gwy_gradient_get_name              (GwyGradient *gradient);
-gboolean          gwy_gradient_get_modifiable        (GwyGradient *gradient);
 void              gwy_gradient_get_color             (GwyGradient *gradient,
                                                       gdouble x,
                                                       GwyRGBA *color);
@@ -109,27 +102,15 @@ void              gwy_gradient_set_points            (GwyGradient *gradient,
 void              gwy_gradient_set_from_samples      (GwyGradient *gradient,
                                                       gint nsamples,
                                                       guchar *samples);
-GString*          gwy_gradient_dump                  (GwyGradient *gradient);
-GwyGradient*      gwy_gradient_parse                 (const gchar *text);
 
-gboolean          gwy_gradients_gradient_exists      (const gchar *name);
-GwyGradient*      gwy_gradients_get_gradient         (const gchar *name);
-/*
-GwyGradient*      gwy_gradients_new_gradient         (const gchar *newname);
-GwyGradient*      gwy_gradients_rename_gradient      (const gchar *name,
-                                                      const gchar *newname);
-GwyGradient*      gwy_gradients_new_gradient_as_copy (const gchar *name,
-                                                      const gchar *newname);
-gboolean          gwy_gradients_delete_gradient      (const gchar *name);
-*/
-void              gwy_gradients_foreach              (GwyGradientFunc function,
-                                                      gpointer user_data);
-/*
-void              gwy_gradients_setup_presets        (void);
-*/
+GwyInventory*     gwy_gradients                      (void);
+
+/* XXX XXX XXX */
+#define gwy_gradients_get_gradient(name) \
+    gwy_inventory_get_item_or_default(gwy_gradients(), name)
+#define GWY_GRADIENT_DEFAULT "Gray"
 
 G_END_DECLS
-
 
 #endif /*__GWY_GRADIENT_H__*/
 

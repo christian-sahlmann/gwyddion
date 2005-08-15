@@ -273,10 +273,9 @@ gwy_inventory_new_real(const GwyInventoryItemType *itype,
     if (itype->type) {
         inventory->is_object = g_type_is_a(itype->type, G_TYPE_OBJECT);
         inventory->is_watchable = (itype->watchable_signal != NULL);
-        inventory->can_make_copies = itype->rename
-                                     && GWY_IS_SERIALIZABLE(itype->type);
     }
 
+    inventory->can_make_copies = itype->rename && itype->copy;
     inventory->is_sorted = (itype->compare != NULL);
     inventory->is_const = is_const;
     inventory->items = g_ptr_array_sized_new(nitems);
@@ -435,7 +434,7 @@ gwy_inventory_get_item_or_default(GwyInventory *inventory,
     guint i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    if ((i = gwy_inventory_lookup(inventory, name)))
+    if (name && (i = gwy_inventory_lookup(inventory, name)))
         return g_ptr_array_index(inventory->items, i-1);
     if (inventory->has_default
         && (i = gwy_inventory_lookup(inventory, inventory->default_key->str)))
@@ -625,11 +624,29 @@ gwy_inventory_get_default_item(GwyInventory *inventory)
         return g_ptr_array_index(inventory->items, i-1);
     else
         return NULL;
-
 }
 
 /**
- * gwy_inventory_set_default_item:
+ * gwy_inventory_get_default_item_name:
+ * @inventory: An inventory.
+ *
+ * Returns the name of the default item of an inventory.
+ *
+ * Returns: The default item name.  Item of this name may or may not exist in
+ *          the inventory.
+ **/
+const gchar*
+gwy_inventory_get_default_item_name(GwyInventory *inventory)
+{
+    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
+    if (!inventory->has_default)
+        return NULL;
+
+    return inventory->default_key->str;
+}
+
+/**
+ * gwy_inventory_set_default_item_name:
  * @inventory: An inventory.
  * @name: Item name, pass %NULL to unset default item.
  *
@@ -638,8 +655,8 @@ gwy_inventory_get_default_item(GwyInventory *inventory)
  * Item @name must already exist in the inventory.
  **/
 void
-gwy_inventory_set_default_item(GwyInventory *inventory,
-                               const gchar *name)
+gwy_inventory_set_default_item_name(GwyInventory *inventory,
+                                    const gchar *name)
 {
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
     if (!name) {
@@ -1137,40 +1154,6 @@ gwy_inventory_rename_item(GwyInventory *inventory,
 /**
  * gwy_inventory_new_item:
  * @inventory: An inventory.
- * @newname: Name of new item, it must not exist yet.  It may be %NULL, a
- *           name like `Untitled 1' is invented then.
- *
- * Creates a new item and adds it to inentory.
- *
- * The newly created item can be called differently than @newname if that
- * already exists.
- *
- * Returns: The newly added item.
- **/
-gpointer
-gwy_inventory_new_item(GwyInventory *inventory,
-                       const gchar *newname)
-{
-    gpointer item;
-
-    g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    g_return_val_if_fail(!inventory->is_const, NULL);
-    g_return_val_if_fail(inventory->is_object, NULL);
-    g_return_val_if_fail(inventory->item_type.rename, NULL);
-
-    if (!newname || gwy_inventory_lookup(inventory, newname))
-        newname = gwy_inventory_invent_name(inventory, newname);
-
-    item = g_object_new(inventory->item_type.type, NULL);
-    inventory->item_type.rename(item, newname);
-    gwy_inventory_insert_item(inventory, item);
-
-    return item;
-}
-
-/**
- * gwy_inventory_new_item_as_copy:
- * @inventory: An inventory.
  * @name: Name of item to duplicate, may be %NULL to use default item (the
  *        same happens when @name does not exist).
  * @newname: Name of new item, it must not exist yet.  It may be %NULL, the
@@ -1184,9 +1167,9 @@ gwy_inventory_new_item(GwyInventory *inventory,
  * Returns: The newly added item.
  **/
 gpointer
-gwy_inventory_new_item_as_copy(GwyInventory *inventory,
-                               const gchar *name,
-                               const gchar *newname)
+gwy_inventory_new_item(GwyInventory *inventory,
+                       const gchar *name,
+                       const gchar *newname)
 {
     guint i = 0;
     gpointer item = NULL;
@@ -1219,7 +1202,7 @@ gwy_inventory_new_item_as_copy(GwyInventory *inventory,
         newname = gwy_inventory_invent_name(inventory, newname);
 
     /* Create new item */
-    item = gwy_serializable_duplicate(G_OBJECT(item));
+    item = inventory->item_type.copy(item);
     inventory->item_type.rename(item, newname);
     gwy_inventory_insert_item(inventory, item);
 

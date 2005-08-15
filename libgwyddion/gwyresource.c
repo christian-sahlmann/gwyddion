@@ -21,19 +21,17 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwyinventory.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyresource.h>
 
-#define MAGIC_HEADER "Gwyddion Resource "
+#define MAGIC_HEADER "Gwyddion resource "
 
 enum {
     DATA_CHANGED,
     LAST_SIGNAL
 };
 
-static void         gwy_resource_serializable_init(GwySerializableIface *iface);
 static void         gwy_resource_finalize         (GObject *object);
 static gboolean     gwy_resource_get_is_const     (gconstpointer item);
 static const gchar* gwy_resource_get_item_name    (gpointer item);
@@ -56,16 +54,10 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     NULL,  /* needs particular class */
     NULL,  /* needs particular class */
     NULL,  /* needs particular class */
+    NULL,  /* needs particular class */
 };
 
-G_DEFINE_TYPE_EXTENDED
-    (GwyResource, gwy_resource, G_TYPE_OBJECT, G_TYPE_FLAG_ABSTRACT,
-     GWY_IMPLEMENT_SERIALIZABLE(gwy_resource_serializable_init))
-
-static void
-gwy_resource_serializable_init(G_GNUC_UNUSED GwySerializableIface *iface)
-{
-}
+G_DEFINE_ABSTRACT_TYPE(GwyResource, gwy_resource, G_TYPE_OBJECT)
 
 static void
 gwy_resource_class_init(GwyResourceClass *klass)
@@ -75,7 +67,14 @@ gwy_resource_class_init(GwyResourceClass *klass)
     gobject_class->finalize = gwy_resource_finalize;
 
     klass->item_type = gwy_resource_item_type;
+    klass->item_type.type = G_TYPE_FROM_CLASS(klass);
 
+    /**
+    * GwyResource::data-changed:
+    * @gwyresource: The #GwyResource which received the signal.
+    *
+    * The ::data-changed signal is emitted when resource data changes.
+    */
     resource_signals[DATA_CHANGED]
         = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
@@ -87,9 +86,8 @@ gwy_resource_class_init(GwyResourceClass *klass)
 }
 
 static void
-gwy_resource_init(GwyResource *resource)
+gwy_resource_init(G_GNUC_UNUSED GwyResource *resource)
 {
-    gwy_debug_objects_creation(G_OBJECT(resource));
 }
 
 static void
@@ -190,24 +188,11 @@ gwy_resource_class_get_name(GwyResourceClass *klass)
     return klass->name;
 }
 
-/**
- * gwy_resource_class_get_traits:
- * @klass: Resource class.
- * @ntraits: Location to store the number of traits.
- *
- * Gets the traits of a resource class.
- *
- * Returns: An array of trait types of length *@ntraits.  It is owned by class
- *          and must not be modified.
- **/
-const GType*
-gwy_resource_class_get_traits(GwyResourceClass *klass,
-                              gint *ntraits)
+GwyInventory*
+gwy_resource_class_get_inventory(GwyResourceClass *klass)
 {
     g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), NULL);
-    if (ntraits)
-        *ntraits = klass->n_traits;
-    return klass->traits;
+    return klass->inventory;
 }
 
 const GwyInventoryItemType*
@@ -217,24 +202,8 @@ gwy_resource_class_get_item_type(GwyResourceClass *klass)
     return &klass->item_type;
 }
 
-void
-gwy_resource_get_trait(GwyResource *resource,
-                       gint n,
-                       GValue *value)
-{
-    GwyResourceClass *klass;
-    void (*method)(gpointer, gint, GValue*);
-
-    g_return_if_fail(GWY_IS_RESOURCE(resource));
-    klass = GWY_RESOURCE_GET_CLASS(resource);
-    g_return_if_fail(n < 0 || n >= klass->n_traits);
-    method = klass->item_type.get_trait_value;
-    g_return_if_fail(method);
-    method(resource, n, value);
-}
-
 /**
- * gwy_resource_ref:
+ * gwy_resource_use:
  * @resource: A resource.
  *
  * References a resource, indicating intent to use it.
@@ -246,13 +215,13 @@ gwy_resource_get_trait(GwyResource *resource,
  *
  * Resources usually exist through almose whole program lifetime from
  * #GObject perspective, but from usage perspective this method is the
- * constructor and gwy_resource_unref() is the destructor.
+ * constructor and gwy_resource_release() is the destructor.
  *
  * When a resource is no longer used, it should be released with
- * gwy_resource_unref().
+ * gwy_resource_release().
  **/
 void
-gwy_resource_ref(GwyResource *resource)
+gwy_resource_use(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
 
@@ -266,17 +235,17 @@ gwy_resource_ref(GwyResource *resource)
 }
 
 /**
- * gwy_resource_unref:
+ * gwy_resource_release:
  * @resource: A resource.
  *
  * Unreferences a resource, indicating intent to release it.
  *
  * When the number of resource references drops to zero, it frees all
- * auxiliary data and returns back to `latent' form.  See gwy_resource_ref()
+ * auxiliary data and returns back to `latent' form.  See gwy_resource_use()
  * for more.
  **/
 void
-gwy_resource_unref(GwyResource *resource)
+gwy_resource_release(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     g_return_if_fail(resource->use_count);
@@ -284,7 +253,7 @@ gwy_resource_unref(GwyResource *resource)
     if (!--resource->use_count) {
         void (*method)(GwyResource*);
 
-        method = GWY_RESOURCE_GET_CLASS(resource)->unuse;
+        method = GWY_RESOURCE_GET_CLASS(resource)->release;
         if (method)
             method(resource);
     }
@@ -301,22 +270,18 @@ gwy_resource_unref(GwyResource *resource)
 GString*
 gwy_resource_dump(GwyResource *resource)
 {
-    GString* (*method)(GwyResource*);
+    void (*method)(GwyResource*, GString*);
     GString *str;
-    gchar *s;
 
     g_return_val_if_fail(GWY_IS_RESOURCE(resource), NULL);
     method = GWY_RESOURCE_GET_CLASS(resource)->dump;
     g_return_val_if_fail(method, NULL);
 
-    str = method(resource);
-    g_return_val_if_fail(str, NULL);
-    s = g_strconcat(MAGIC_HEADER,
-                    g_type_name(G_TYPE_FROM_INSTANCE(resource)),
-                    "\n",
-                    NULL);
-    g_string_prepend(str, s);
-    g_free(s);
+    str = g_string_new("");
+    g_string_printf(str, "%s %s\n",
+                    MAGIC_HEADER,
+                    g_type_name(G_TYPE_FROM_INSTANCE(resource)));
+    method(resource, str);
 
     return str;
 }
@@ -366,10 +331,12 @@ gwy_resource_parse(const gchar *text)
 }
 
 /**
- * gwy_data_field_data_changed:
+ * gwy_resource_data_changed:
  * @resource: A resource.
  *
  * Emits signal "data-changed" on a resource.
+ *
+ * Mostly useful in resource implementation.
  **/
 void
 gwy_resource_data_changed(GwyResource *resource)

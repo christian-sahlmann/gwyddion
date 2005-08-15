@@ -52,21 +52,20 @@ struct _GwyResource {
 struct _GwyResourceClass {
     GObjectClass parent_class;
 
+    GwyInventory *inventory;
     const gchar *name;
 
     /* Traits */
     GwyInventoryItemType item_type;
-    gint n_traits;
-    GType *traits;
-    const gchar **trait_names;
 
     /* Signals */
     void (*data_changed)(GwyResource *resource);
 
     /* Virtual table */
     void (*use)(GwyResource *resource);
-    void (*unuse)(GwyResource *resource);
-    GString* (*dump)(GwyResource *resource);
+    void (*release)(GwyResource *resource);
+    void (*dump)(GwyResource *resource,
+                 GString *string);
     GwyResource* (*parse)(const gchar *text);
 
     gpointer reserved1;
@@ -77,14 +76,10 @@ GType             gwy_resource_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_resource_get_name              (GwyResource *resource);
 gboolean          gwy_resource_get_is_modifiable     (GwyResource *resource);
 const gchar*      gwy_resource_class_get_name        (GwyResourceClass *klass);
+GwyInventory*     gwy_resource_class_get_inventory   (GwyResourceClass *klass);
 const GwyInventoryItemType* gwy_resource_class_get_item_type(GwyResourceClass *klass);
-const GType*      gwy_resource_class_get_traits      (GwyResourceClass *klass,
-                                                      gint *ntraits);
-void              gwy_resource_get_trait             (GwyResource *resource,
-                                                      gint n,
-                                                      GValue *value);
-void              gwy_resource_ref                   (GwyResource *resource);
-void              gwy_resource_unref                 (GwyResource *resource);
+void              gwy_resource_use                   (GwyResource *resource);
+void              gwy_resource_release               (GwyResource *resource);
 void              gwy_resource_data_changed          (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
 GwyResource*      gwy_resource_parse                 (const gchar *text);

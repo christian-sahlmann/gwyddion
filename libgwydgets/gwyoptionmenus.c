@@ -50,8 +50,6 @@ enum {
 static GtkWidget* gwy_gradient_menu_create       (const gchar *current,
                                                   gint *current_idx);
 static GtkWidget* gwy_sample_gradient_to_gtkimage(GwyGradient *gradient);
-static gint       gradient_compare               (GwyGradient *a,
-                                                  GwyGradient *b);
 static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
 static gint       gl_material_compare            (GwyGLMaterial *a,
                                                   GwyGLMaterial *b);
@@ -75,9 +73,9 @@ gwy_gradient_menu_create(const gchar *current,
     GtkWidget *menu, *image, *item, *hbox, *label;
     gint i, idx;
 
-    gwy_gradients_foreach((GwyGradientFunc)gwy_hash_table_to_slist_cb,
-                          &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)gradient_compare);
+    gwy_inventory_foreach(gwy_gradients(),
+                          gwy_hash_table_to_slist_cb, &entries);
+    entries = g_slist_reverse(entries);
 
     menu = gtk_menu_new();
 
@@ -85,7 +83,7 @@ gwy_gradient_menu_create(const gchar *current,
     i = 0;
     for (l = entries; l; l = g_slist_next(l)) {
         GwyGradient *gradient = (GwyGradient*)l->data;
-        const gchar *name = gwy_gradient_get_name(gradient);
+        const gchar *name = gwy_resource_get_name(GWY_RESOURCE(gradient));
 
         image = gwy_sample_gradient_to_gtkimage(gradient);
         item = gtk_menu_item_new();
@@ -220,14 +218,6 @@ gwy_sample_gradient_to_gtkimage(GwyGradient *gradient)
 
     return image;
 }
-
-static gint
-gradient_compare(GwyGradient *a,
-                 GwyGradient *b)
-{
-    return strcmp(gwy_gradient_get_name(a), gwy_gradient_get_name(b));
-}
-
 
 /************************** Material menu ****************************/
 

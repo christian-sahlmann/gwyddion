@@ -98,7 +98,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
 
     /* XXX */
     axis->font = pango_font_description_from_string("Helvetica 10");
-    axis->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
+    axis->gradient = gwy_inventory_get_default_item(gwy_gradients());
     axis->gradient_id
         = g_signal_connect_swapped(axis->gradient, "data-changed",
                                    G_CALLBACK(gwy_color_axis_update), axis);
@@ -467,8 +467,8 @@ gwy_color_axis_set_gradient(GwyColorAxis *axis,
 
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
 
-    grad = gwy_gradients_get_gradient(gradient);
-    if (!grad || grad == axis->gradient)
+    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    if (grad == axis->gradient)
         return;
 
     old = axis->gradient;
@@ -496,7 +496,7 @@ gwy_color_axis_get_gradient(GwyColorAxis *axis)
 {
     g_return_val_if_fail(GWY_IS_COLOR_AXIS(axis), NULL);
 
-    return gwy_gradient_get_name(axis->gradient);
+    return gwy_resource_get_name(GWY_RESOURCE(axis->gradient));
 }
 
 static void

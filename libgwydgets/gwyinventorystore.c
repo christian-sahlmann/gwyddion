@@ -146,7 +146,7 @@ gwy_inventory_store_get_n_columns(GtkTreeModel *model)
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(model), 0);
     store = GWY_INVENTORY_STORE(model);
     store->item_type->get_traits(&n);
-    /* +1 for "Item" column */
+    /* +1 for "item" column */
     return n+1;
 }
 
@@ -474,7 +474,7 @@ gwy_inventory_store_get_inventory(GwyInventoryStore *store)
  * Gets tree model column corresponding to a trait name.
  *
  * The underlying inventory must support trait names, except for @name
- * <literal>"Item"</literal> which always works (and always maps to 0).
+ * <literal>"item"</literal> which always works (and always maps to 0).
  *
  * Returns: The underlying inventory (its reference count is not increased).
  **/
@@ -486,7 +486,7 @@ gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
     gint i, n;
 
     g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), -1);
-    if (gwy_strequal(name, "Item"))
+    if (gwy_strequal(name, "item"))
         return 0;
 
     g_return_val_if_fail(store->item_type->get_trait_name, -1);

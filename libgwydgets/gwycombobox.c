@@ -78,8 +78,8 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
     g_object_unref(store);
     layout = GTK_CELL_LAYOUT(combo);
 
-    g_assert(gwy_inventory_store_get_column_by_name(store, "Name") == 1);
-    g_assert(gwy_inventory_store_get_column_by_name(store, "Value") == 2);
+    g_assert(gwy_inventory_store_get_column_by_name(store, "name") == 1);
+    g_assert(gwy_inventory_store_get_column_by_name(store, "value") == 2);
 
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(layout, renderer, FALSE);

@@ -265,22 +265,17 @@ static void
 gwy_layer_basic_gradient_connect(GwyLayerBasic *basic_layer)
 {
     GwyDataViewLayer *layer;
-    GwyGradient *gradient;
     const guchar *s;
 
     g_return_if_fail(!basic_layer->gradient);
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
     /* FIXME: original implementation set /0/base/palette to default value
      * if unset. */
-    if (basic_layer->gradient_key
-        && gwy_container_gis_string(layer->data, basic_layer->gradient_key, &s)
-        && (gradient = gwy_gradients_get_gradient(s))) {
-        basic_layer->gradient = gradient;
-    }
-    else
-        basic_layer->gradient
-            = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
-
+    s = "";
+    if (basic_layer->gradient_key)
+        gwy_container_gis_string(layer->data, basic_layer->gradient_key, &s);
+    basic_layer->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
+                                                              s);
     g_object_ref(basic_layer->gradient);
     basic_layer->gradient_id
         = g_signal_connect_swapped(basic_layer->gradient, "data-changed",

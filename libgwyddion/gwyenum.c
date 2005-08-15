@@ -248,7 +248,7 @@ gwy_enum_get_traits(gint *ntraits)
 static const gchar*
 gwy_enum_get_trait_name(gint i)
 {
-    static const gchar *trait_names[] = { "Name", "Value" };
+    static const gchar *trait_names[] = { "name", "value" };
 
     g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
     return trait_names[i];
@@ -295,6 +295,7 @@ gwy_enum_inventory_new(const GwyEnum *enum_table,
         NULL,
         gwy_enum_is_const,
         gwy_enum_get_name,
+        NULL,
         NULL,
         NULL,
         gwy_enum_get_traits,

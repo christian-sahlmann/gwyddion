@@ -35,9 +35,11 @@
 
 #define GWY_GRADIENT_TYPE_NAME "GwyGradient"
 
+#define GWY_GRADIENT_DEFAULT "Gray"
+
 /* Standard sample size, returned by gwy_gradient_get_samples() */
 enum {
-    GWY_GRADIENT_DEFAULT_SIZE = 512
+    GWY_GRADIENT_DEFAULT_SIZE = 1024
 };
 
 #define BITS_PER_SAMPLE 8
@@ -49,29 +51,26 @@ enum {
 };
 
 static void         gwy_gradient_finalize         (GObject *object);
-static void         gwy_gradient_serializable_init(GwySerializableIface *iface);
+static gpointer     gwy_gradient_copy             (gpointer);
+static const GType* gwy_gradient_get_traits       (gint *ntraits);
+static const gchar* gwy_gradient_get_trait_name   (gint i);
+static void         gwy_gradient_get_trait_value  (gpointer item,
+                                                   gint i,
+                                                   GValue *value);
+static void         gwy_gradient_use              (GwyResource *resource);
+static void         gwy_gradient_release          (GwyResource *resource);
 static void         gwy_gradient_sanitize         (GwyGradient *gradient);
 static void         gwy_gradient_changed          (GwyGradient *gradient);
-/*
-static gchar*       gwy_gradient_invent_name      (GHashTable *gradients,
-                                                   const gchar *prefix,
-                                                   gboolean warn);
-                                                   */
-static GwyGradient* gwy_gradient_new_internal   (gchar *name,
-                                                 gint npoints,
-                                                 const GwyGradientPoint *points,
-                                                 gboolean modifiable,
-                                                 gboolean do_sample);
+static void         gwy_gradient_preset           (const gchar *name,
+                                                   gint npoints,
+                                                   const GwyGradientPoint *points);
+static GwyGradient* gwy_gradient_new_internal     (const gchar *name,
+                                                   gint npoints,
+                                                   const GwyGradientPoint *points);
+static void         gwy_gradient_dump             (GwyResource *resource,
+                                                   GString *str);
+static GwyResource* gwy_gradient_parse            (const gchar *text);
 
-/* TODO */
-static GByteArray* gwy_gradient_serialize          (GObject *obj,
-                                                   GByteArray *buffer);
-static GObject* gwy_gradient_deserialize           (const guchar *buffer,
-                                                   gsize size,
-                                                   gsize *position);
-static GObject* gwy_gradient_duplicate_real        (GObject *object);
-
-static const gchar *magic_header = "Gwyddion Gradient 1.0";
 
 static const GwyRGBA null_color = { 0, 0, 0, 0 };
 static const GwyRGBA black_color = { 0, 0, 0, 1 };
@@ -84,100 +83,126 @@ static const GwyRGBA violet_color = { 1, 0, 1, 1 };
 static const GwyRGBA yellow_color = { 1, 1, 0, 1 };
 static const GwyGradientPoint null_point = { 0, { 0, 0, 0, 0 } };
 
-static guint gradient_signals[LAST_SIGNAL] = { 0 };
-
-G_DEFINE_TYPE_EXTENDED
-    (GwyGradient, gwy_gradient, G_TYPE_OBJECT, 0,
-     GWY_IMPLEMENT_SERIALIZABLE(gwy_gradient_serializable_init))
-
-static void
-gwy_gradient_serializable_init(GwySerializableIface *iface)
-{
-    iface->serialize = gwy_gradient_serialize;
-    iface->deserialize = gwy_gradient_deserialize;
-    iface->duplicate = gwy_gradient_duplicate_real;
-}
+G_DEFINE_TYPE(GwyGradient, gwy_gradient, GWY_TYPE_RESOURCE)
 
 static void
 gwy_gradient_class_init(GwyGradientClass *klass)
 {
+    GwyResourceClass *parent_class, *res_class = GWY_RESOURCE_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_gradient_finalize;
-    klass->gradients = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                             NULL, g_object_unref);
 
-    gradient_signals[DATA_CHANGED]
-        = g_signal_new("data-changed",
-                       G_OBJECT_CLASS_TYPE(gobject_class),
-                       G_SIGNAL_RUN_FIRST,
-                       G_STRUCT_OFFSET(GwyGradientClass, data_changed),
-                       NULL, NULL,
-                       g_cclosure_marshal_VOID__VOID,
-                       G_TYPE_NONE, 0);
+    parent_class = GWY_RESOURCE_CLASS(gwy_gradient_parent_class);
+    res_class->item_type = *gwy_resource_class_get_item_type(parent_class);
+
+    res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
+    res_class->item_type.copy = gwy_gradient_copy;
+    res_class->item_type.get_traits = gwy_gradient_get_traits;
+    res_class->item_type.get_trait_name = gwy_gradient_get_trait_name;
+    res_class->item_type.get_trait_value = gwy_gradient_get_trait_value;
+
+    res_class->name = "gradient";
+    res_class->inventory = gwy_inventory_new(&res_class->item_type);
+    gwy_inventory_set_default_item_name(res_class->inventory,
+                                        GWY_GRADIENT_DEFAULT);
+    res_class->use = gwy_gradient_use;
+    res_class->release = gwy_gradient_release;
+    res_class->dump = gwy_gradient_dump;
+    res_class->parse = gwy_gradient_parse;
 }
 
 static void
 gwy_gradient_init(GwyGradient *gradient)
 {
-    gradient->modifiable = TRUE;
+    GwyGradientPoint pt;
+
     gwy_debug_objects_creation(G_OBJECT(gradient));
+
+    gradient->points = g_array_sized_new(FALSE, FALSE,
+                                         sizeof(GwyGradientPoint), 2);
+    pt.x = 0.0;
+    pt.color = black_color;
+    g_array_index(gradient->points, GwyGradientPoint, 0) = pt;
+    pt.x = 1.0;
+    pt.color = white_color;
+    g_array_index(gradient->points, GwyGradientPoint, 1) = pt;
 }
 
 static void
 gwy_gradient_finalize(GObject *object)
 {
     GwyGradient *gradient = (GwyGradient*)object;
-    GwyGradientClass *klass;
 
-    gwy_debug("%s", gradient->name);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_if_fail(klass);
-    if (g_hash_table_lookup(klass->gradients, gradient->name) == object) {
-        g_critical("Trying to finalize a gradient still present in database");
-        g_hash_table_steal(klass->gradients, gradient->name);
-    }
-
+    gwy_object_unref(gradient->pixbuf);
     g_array_free(gradient->points, TRUE);
-    g_free(gradient->pixels);
-    g_free(gradient->name);
-
     G_OBJECT_CLASS(gwy_gradient_parent_class)->finalize(object);
 }
 
-/**
- * gwy_gradient_get_name:
- * @gradient: A color gradient.
- *
- * Returns color gradient name.
- *
- * Returns: Name of @gradient.  The string is owned by @gradient and must not
- *          be modfied or freed.
- **/
-const gchar*
-gwy_gradient_get_name(GwyGradient *gradient)
+static const GType*
+gwy_gradient_get_traits(gint *ntraits)
 {
-    g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
-    return gradient->name;
+    static GType tratis[] = { G_TYPE_STRING, 0 };
+
+    if (!tratis[1])
+        tratis[1] = GDK_TYPE_PIXBUF;
+
+    if (ntraits)
+        *ntraits = G_N_ELEMENTS(tratis);
+
+    return tratis;
 }
 
-/**
- * gwy_gradient_get_modifiable:
- * @gradient: A color gradient.
- *
- * Returns whether a color gradient is modifiable.
- *
- * It is an error to try to insert, delete, or set points in fixed (system)
- * gradients, or to try to delete them.
- *
- * Returns: %TRUE if gradient is modifiable, %FALSE if it's system gradient.
- **/
-gboolean
-gwy_gradient_get_modifiable(GwyGradient *gradient)
+static const gchar*
+gwy_gradient_get_trait_name(gint i)
 {
-    g_return_val_if_fail(GWY_IS_GRADIENT(gradient), FALSE);
-    return gradient->modifiable;
+    static const gchar *trait_names[] = { "name", "pixbuf" };
+
+    g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
+    return trait_names[i];
+}
+
+static void
+gwy_gradient_get_trait_value(gpointer item,
+                             gint i,
+                             GValue *value)
+{
+    switch (i) {
+        case 0:
+        g_value_init(value, G_TYPE_STRING);
+        g_value_set_object(value, GWY_RESOURCE(item)->name);
+        break;
+
+        case 1:
+        g_value_init(value, GDK_TYPE_PIXBUF);
+        g_value_set_object(value, GWY_GRADIENT(item)->pixbuf);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+static void
+gwy_gradient_use(GwyResource *resource)
+{
+    GwyGradient *gradient;
+
+    gradient = GWY_GRADIENT(resource);
+    g_assert(gradient->pixels == NULL);
+    gradient->pixels = gwy_gradient_sample(gradient, GWY_GRADIENT_DEFAULT_SIZE,
+                                           NULL);
+}
+
+static void
+gwy_gradient_release(GwyResource *resource)
+{
+    GwyGradient *gradient;
+
+    gradient = GWY_GRADIENT(resource);
+    g_free(gradient->pixels);
+    gradient->pixels = NULL;
 }
 
 /**
@@ -228,10 +253,9 @@ gwy_gradient_get_color(GwyGradient *gradient,
  * Returns color gradient sampled to integers in #GdkPixbuf-like scheme.
  *
  * The returned samples are owned by @gradient and must not be modified or
- * freed.  Their contents changes when the gradient changes, although their
- * number never changes.  The returned pointer is valid only during
- * @gradient lifetime, for system gradient it means practically always, but
- * user-defined gradients may be destroyed.
+ * freed.  They are automatically updated when the gradient changes, although
+ * their number never changes.  The returned pointer is valid only as long
+ * as the gradient used, indicated by gwy_resource_use().
  *
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
@@ -241,8 +265,14 @@ gwy_gradient_get_samples(GwyGradient *gradient,
                          gint *nsamples)
 {
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
+    if (!GWY_RESOURCE(gradient)->use_count) {
+        g_warning("You have to call gwy_resource_use() first.");
+        /* Better leak than segfault... */
+        gwy_resource_use(GWY_RESOURCE(gradient));
+    }
     if (nsamples)
         *nsamples = GWY_GRADIENT_DEFAULT_SIZE;
+
     return gradient->pixels;
 }
 
@@ -415,7 +445,7 @@ gwy_gradient_set_point(GwyGradient *gradient,
     GwyGradientPoint pt;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(point);
     g_return_if_fail(index_ >= 0 && index_ < gradient->points->len);
 
@@ -440,7 +470,7 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
                              const GwyRGBA *color)
 {
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(color);
     g_return_if_fail(index_ >= 0 && index_ < gradient->points->len);
 
@@ -469,7 +499,7 @@ gwy_gradient_insert_point(GwyGradient *gradient,
     GwyGradientPoint pt;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(point);
     g_return_if_fail(index_ >= 0 && index_ <= gradient->points->len);
 
@@ -518,7 +548,7 @@ gwy_gradient_insert_point_sorted(GwyGradient *gradient,
     gint i;
 
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), -1);
-    g_return_val_if_fail(gradient->modifiable, -1);
+    g_return_val_if_fail(!GWY_RESOURCE(gradient)->is_const, -1);
     g_return_val_if_fail(point, -1);
     g_return_val_if_fail(point->x >= 0.0 && point->x <= 1.0, -1);
 
@@ -558,7 +588,7 @@ gwy_gradient_delete_point(GwyGradient *gradient,
     GwyGradientPoint *pt;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(gradient->points->len > 2);
     g_return_if_fail(index_ >= 0 && index_ < gradient->points->len);
 
@@ -593,7 +623,7 @@ gwy_gradient_reset(GwyGradient *gradient)
     GwyGradientPoint pt;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
 
     g_array_set_size(gradient->points, 2);
     pt.x = 0.0;
@@ -636,7 +666,7 @@ gwy_gradient_sanitize(GwyGradient *gradient)
     gint i;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
 
     points = gradient->points;
     /* first make points ordered, in 0..1, starting with 0, ending with 1,
@@ -697,7 +727,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
                         const GwyGradientPoint *points)
 {
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(npoints > 1);
     g_return_if_fail(points);
 
@@ -723,7 +753,7 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
                               guchar *samples)
 {
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(gradient->modifiable);
+    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(samples);
     g_return_if_fail(nsamples > 0);
 
@@ -736,257 +766,28 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
 static void
 gwy_gradient_changed(GwyGradient *gradient)
 {
-    /* TODO */
     gwy_debug("%s", gradient->name);
-    gradient->pixels = gwy_gradient_sample(gradient,
-                                           GWY_GRADIENT_DEFAULT_SIZE,
-                                           gradient->pixels);
-    g_signal_emit(gradient, gradient_signals[DATA_CHANGED], 0);
+    if (gradient->pixels)
+        gwy_gradient_sample(gradient, GWY_GRADIENT_DEFAULT_SIZE,
+                            gradient->pixels);
+    /* TODO pixbuf */
+    gwy_resource_data_changed(GWY_RESOURCE(gradient));
 }
 
-/**
- * gwy_gradients_gradient_exists:
- * @name: Color gradient name.
- *
- * Checks whether a color gradient exists.
- *
- * Returns: %TRUE if gradient @name exists, %FALSE if there's no such gradient.
- **/
-gboolean
-gwy_gradients_gradient_exists(const gchar *name)
-{
-    GwyGradientClass *klass;
-
-    g_return_val_if_fail(name, FALSE);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, FALSE);
-    return g_hash_table_lookup(klass->gradients, name) != NULL;
-}
-
-/**
- * gwy_gradients_get_gradient:
- * @name: Color gradient name.
- *
- * Returns gradient of given name.
- *
- * Its reference count is not increased, if you want the gradient object to
- * survive gwy_gradients_delete_gradient(), you have to add a reference
- * yourself.
- *
- * Returns: Color gradient @name if it exists, %NULL if there's no such
- *          gradient.
- **/
-GwyGradient*
-gwy_gradients_get_gradient(const gchar *name)
-{
-    GwyGradientClass *klass;
-
-    g_return_val_if_fail(name, FALSE);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    return g_hash_table_lookup(klass->gradients, name);
-}
-
-/* FIXME:
- * 1. the API will be probably different in 2.0
- * 2. it would be very unwise to use these function in 1.x
- */
-#if 0
-/**
- * gwy_gradients_new_gradient:
- * @newname: Name of the new gradient to create.  May be %NULL, something like
- *           `Untitled N' is used then.
- *
- * Creates a new color gradient.
- *
- * The gradient is created as a two-point gray scale.
- *
- * Its initial reference is owned by the gradient database, you should add
- * your own if you want it to survive gwy_gradients_delete_gradient().
- *
- * Returns: The newly created gradient.  Its name is guaranteed to be unique
- *          and thus may differ from @newname in the case of name clash.
- **/
-GwyGradient*
-gwy_gradients_new_gradient(const gchar *newname)
-{
-    GwyGradientClass *klass;
-    gchar *realname;
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    realname = gwy_gradient_invent_name(klass->gradients,
-                                        newname, newname != NULL);
-    return gwy_gradient_new_internal(realname, 0, NULL, TRUE, TRUE);
-}
-
-/**
- * gwy_gradients_new_gradient_as_copy:
- * @name: Color gradient name.
- * @newname: Name of the new gradient to create.  May be %NULL to base the
- *           new name on @name algoritmically.
- *
- * Creates a new color gradient as a copy of an existing one.
- *
- * Its initial reference is owned by the gradient database, you should add
- * your own if you want it to survive gwy_gradients_delete_gradient().
- *
- * Returns: The newly created gradient.  Its name is guaranteed to be unique
- *          and thus may differ from @newname in the case of name clash.
- **/
-GwyGradient*
-gwy_gradients_new_gradient_as_copy(const gchar *name,
-                                   const gchar *newname)
-{
-    GwyGradientClass *klass;
-    GwyGradient *gradient;
-    gchar *realname;
-
-    g_return_val_if_fail(name, FALSE);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    gradient = (GwyGradient*)g_hash_table_lookup(klass->gradients, name);
-    g_return_val_if_fail(gradient, NULL);
-
-    realname = gwy_gradient_invent_name(klass->gradients,
-                                        newname ? newname : name,
-                                        newname != NULL);
-    return gwy_gradient_new_internal(realname, gradient->points->len,
-                                     (GwyGradientPoint*)gradient->points,
-                                     TRUE, TRUE);
-}
-
-static gchar*
-gwy_gradient_invent_name(GHashTable *gradients,
-                         const gchar *prefix,
-                         gboolean warn)
-{
-    gchar *str, *p;
-    gint n, i;
-
-    if (!prefix)
-        prefix = _("Untitled");
-    if (!g_hash_table_lookup(gradients, prefix))
-        return g_strdup(prefix);
-    if (warn)
-        g_warning("Gradient name clash");
-
-    /* remove eventual trailing digits before appending new */
-    p = strrchr(prefix, ' ');
-    n = strlen(prefix);
-    if (p && strspn(p+1, "0123456789") == strlen(p+1)) {
-        n = p - prefix;
-    }
-
-    str = g_new(gchar, n + 10);
-    strncpy(str, prefix, n);
-    str[n] = ' ';
-    for (i = 1; i < 1000000; i++) {
-        g_snprintf(str + n + 1, 9, "%d", i);
-        if (!g_hash_table_lookup(gradients, str))
-            return str;
-    }
-    g_return_val_if_reached(NULL);
-}
-
-/**
- * gwy_gradients_delete_gradient:
- * @name: Color gradient name.
- *
- * Deletes a color gradient.
- *
- * Gradient objects of deleted gradients that are referenced elsewhere will
- * continue to exist until all references to them are dropped, but they can
- * be no longer obtained with gwy_gradients_get() and their name can be
- * reused.  In other words, gradient deletion works like file deletion on Unix.
- *
- * Returns: %TRUE if there was such a gradient and was deleted.
- **/
-gboolean
-gwy_gradients_delete_gradient(const gchar *name)
-{
-    GwyGradientClass *klass;
-    GwyGradient *gradient;
-
-    g_return_val_if_fail(name, FALSE);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, FALSE);
-    gradient = (GwyGradient*)g_hash_table_lookup(klass->gradients, name);
-    if (!gradient)
-        return FALSE;
-
-    g_return_val_if_fail(gradient->modifiable, FALSE);
-    return g_hash_table_remove(klass->gradients, name);
-}
-
-/**
- * gwy_gradients_rename_gradient:
- * @name: Color gradient name.
- * @newname: Name to rename gradient to.
- *
- * Renames a color gradient.
- *
- * It is an error to try to rename a non-modifiable (system) gradient or to
- * rename a gradient to an already existing name.
- *
- * Returns: The renamed gradient, for convenience.
- **/
-GwyGradient*
-gwy_gradients_rename_gradient(const gchar *name,
-                              const gchar *newname)
-{
-    GwyGradientClass *klass;
-    GwyGradient *gradient, *newgradient;
-
-    g_return_val_if_fail(name, NULL);
-    g_return_val_if_fail(newname, NULL);
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    gradient = (GwyGradient*)g_hash_table_lookup(klass->gradients, name);
-    g_return_val_if_fail(gradient, NULL);
-    g_return_val_if_fail(gradient->modifiable, NULL);
-    newgradient = (GwyGradient*)g_hash_table_lookup(klass->gradients, newname);
-    g_return_val_if_fail(!newgradient, NULL);
-
-    g_free(gradient->name);
-    gradient->name = g_strdup(newname);
-    /* FIXME: should emit some signal(?) */
-
-    return gradient;
-}
-#endif
-
-/**
- * gwy_gradients_foreach:
- * @function: Function to call on each color gradient.
- * @user_data: Data to pass as @user_data to @function.
- *
- * Calls a function for each color gradient.
- *
- * Note the function must not delete or create gradients.
- **/
-void
-gwy_gradients_foreach(GwyGradientFunc function,
-                      gpointer user_data)
-{
-    GwyGradientClass *klass;
-
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_if_fail(klass);
-    g_hash_table_foreach(klass->gradients, (GHFunc)function, user_data);
-}
-
-static inline void
+static void
 gwy_gradient_preset(const gchar *name,
                     gint npoints,
                     const GwyGradientPoint *points)
 {
-    gwy_gradient_new_internal(g_strdup(name), npoints, points, FALSE, TRUE);
+    static GwyInventory *inventory = NULL;
+    GwyGradient *gradient;
+
+    gradient = gwy_gradient_new_internal(name, npoints, points);
+    if (!inventory)
+        inventory = GWY_RESOURCE_GET_CLASS(gradient)->inventory;
+    GWY_RESOURCE(gradient)->is_const = TRUE;
+    gwy_inventory_insert_item(inventory, gradient);
+    g_object_unref(gradient);
 }
 
 /**
@@ -1156,6 +957,9 @@ _gwy_gradients_setup_presets(void)
     GwyGradientPoint *pd2;
     guint i;
 
+    g_type_class_ref(GWY_TYPE_GRADIENT);
+    gwy_inventory_forget_order(gwy_gradients());
+
     gwy_gradient_preset(GWY_GRADIENT_DEFAULT, G_N_ELEMENTS(gray), gray);
     gwy_gradient_preset("Rainbow1", G_N_ELEMENTS(rainbow1), rainbow1),
     gwy_gradient_preset("Rainbow2", G_N_ELEMENTS(rainbow2), rainbow2);
@@ -1229,229 +1033,60 @@ _gwy_gradients_setup_presets(void)
     pd2[19].color = white_color;
     gwy_gradient_preset("BW2", 20, pd2);
     g_free(pd2);
+
+    gwy_inventory_restore_order(gwy_gradients());
+    g_type_class_unref(GWY_TYPE_GRADIENT);
 }
 
 /* Eats @name */
 static GwyGradient*
-gwy_gradient_new_internal(gchar *name,
+gwy_gradient_new_internal(const gchar *name,
                           gint npoints,
-                          const GwyGradientPoint *points,
-                          gboolean modifiable,
-                          gboolean do_sample)
+                          const GwyGradientPoint *points)
 {
-    GwyGradientClass *klass;
     GwyGradient *gradient;
 
     g_return_val_if_fail(name, NULL);
 
     gradient = g_object_new(GWY_TYPE_GRADIENT, NULL);
-    klass = (GwyGradientClass*)g_type_class_peek(GWY_TYPE_GRADIENT);
-    g_return_val_if_fail(klass, NULL);
-    if (g_hash_table_lookup(klass->gradients, name)) {
-        g_critical("Gradient <%s> already exists", name);
-        g_object_unref(gradient);
-        gradient = (GwyGradient*)g_hash_table_lookup(klass->gradients, name);
-        g_object_ref(gradient);
-
-        return gradient;
-    }
-
-    gradient->name = name;
-    gradient->modifiable = modifiable;
-    gradient->favourite = TRUE;
     if (npoints && points) {
         gradient->points = g_array_sized_new(FALSE, FALSE,
                                              sizeof(GwyGradientPoint), npoints);
         g_array_append_vals(gradient->points, points, npoints);
     }
-    else {
-        GwyGradientPoint pt;
-
-        gradient->points = g_array_sized_new(FALSE, FALSE,
-                                             sizeof(GwyGradientPoint), 2);
-        pt.x = 0.0;
-        pt.color = black_color;
-        g_array_append_val(gradient->points, pt);
-        pt.x = 1.0;
-        pt.color = white_color;
-        g_array_append_val(gradient->points, pt);
-    }
-
-    g_hash_table_insert(klass->gradients, gradient->name, gradient);
-    if (do_sample)
-       gradient->pixels = gwy_gradient_sample(gradient,
-                                              GWY_GRADIENT_DEFAULT_SIZE, NULL);
+    GWY_RESOURCE(gradient)->name = g_strdup(name);
 
     return gradient;
 }
 
-static GByteArray*
-gwy_gradient_serialize(GObject *obj,
-                       GByteArray *buffer)
+gpointer
+gwy_gradient_copy(gpointer item)
+{
+    GwyGradient *gradient, *copy;
+
+    g_return_val_if_fail(GWY_IS_GRADIENT(item), NULL);
+
+    gradient = GWY_GRADIENT(item);
+    copy = gwy_gradient_new_internal(GWY_RESOURCE(item)->name,
+                                     gradient->points->len,
+                                     (GwyGradientPoint*)gradient->points->data);
+
+    return copy;
+}
+
+static void
+gwy_gradient_dump(GwyResource *resource,
+                  GString *str)
 {
     GwyGradient *gradient;
     GwyGradientPoint *pt;
-    GArray *points;
-    gdouble *data, *rdata, *gdata, *bdata, *adata, *xdata;
-    guint32 ndata, i;
-
-    g_return_val_if_fail(GWY_IS_GRADIENT(obj), NULL);
-
-    gradient = GWY_GRADIENT(obj);
-    points = gradient->points;
-    ndata = points->len;
-    data = g_new(gdouble, 5*ndata);
-    xdata = data;
-    rdata = data + ndata;
-    gdata = data + 2*ndata;
-    bdata = data + 3*ndata;
-    adata = data + 4*ndata;
-
-    for (i = 0; i < ndata; i++) {
-        pt = &g_array_index(points, GwyGradientPoint, i);
-        xdata[i] = pt->x;
-        rdata[i] = pt->color.r;
-        gdata[i] = pt->color.g;
-        bdata[i] = pt->color.b;
-        adata[i] = pt->color.a;
-    }
-
-    {
-        GwySerializeSpec specs[] = {
-            { 's', "name",  &gradient->name, NULL,  },
-            { 'D', "x",     &xdata,          &ndata, },
-            { 'D', "red",   &rdata,          &ndata, },
-            { 'D', "green", &gdata,          &ndata, },
-            { 'D', "blue",  &bdata,          &ndata, },
-            { 'D', "alpha", &adata,          &ndata, },
-        };
-        buffer = gwy_serialize_pack_object_struct(buffer,
-                                                  GWY_GRADIENT_TYPE_NAME,
-                                                  G_N_ELEMENTS(specs), specs);
-    }
-    g_free(data);
-
-    return buffer;
-}
-
-static GObject*
-gwy_gradient_deserialize(const guchar *buffer,
-                         gsize size,
-                         gsize *position)
-{
-    gint nrdata, ngdata, nbdata, nadata, nxdata, i;
-    GArray *points;
-    GwyGradient *gradient;
-    GwyGradientPoint pt;
-    gdouble *rdata = NULL, *gdata = NULL, *bdata = NULL,
-            *adata = NULL, *xdata = NULL;
-    gchar *name = NULL;
-    GwySerializeSpec specs[] = {
-        { 's', "name",  &name,  NULL,    },
-        { 'D', "x",     &xdata, &nxdata, },
-        { 'D', "red",   &rdata, &nrdata, },
-        { 'D', "green", &gdata, &ngdata, },
-        { 'D', "blue",  &bdata, &nbdata, },
-        { 'D', "alpha", &adata, &nadata, },
-    };
-
-    g_return_val_if_fail(buffer, NULL);
-
-    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
-                                            GWY_GRADIENT_TYPE_NAME,
-                                            G_N_ELEMENTS(specs), specs))
-        goto fail;
-    if (!name) {
-        g_critical("Gradient has no name");
-        goto fail;
-    }
-    if (nxdata != nrdata
-        || nxdata != ngdata
-        || nxdata != nbdata
-        || nxdata != nadata) {
-        g_critical("Gradient %s array component lengths differ", name);
-        goto fail;
-    }
-    if (nxdata < 2) {
-        g_critical("Gradient %s has too few points", name);
-        goto fail;
-    }
-
-    gradient = gwy_gradients_get_gradient(name);
-    if (gradient) {
-        if (!gradient->modifiable) {
-            g_critical("Cannot overwrite system gradient %s", name);
-            goto fail;
-        }
-        g_warning("Deserializing existing gradient %s", name);
-        g_free(name);
-    }
-    else
-        gradient = gwy_gradient_new_internal(name, 0, NULL, TRUE, FALSE);
-
-    points = gradient->points;
-    g_array_set_size(points, 0);
-    for (i = 0; i < nxdata; i++) {
-        pt.x = xdata[i];
-        pt.color.r = rdata[i];
-        pt.color.g = gdata[i];
-        pt.color.b = bdata[i];
-        pt.color.a = adata[i];
-        g_array_append_val(points, pt);
-    }
-    g_free(rdata);
-    g_free(gdata);
-    g_free(bdata);
-    g_free(adata);
-    g_free(xdata);
-
-    gwy_gradient_sanitize(gradient);
-    gwy_gradient_changed(gradient);
-
-    return (GObject*)gradient;
-
-fail:
-    g_free(rdata);
-    g_free(gdata);
-    g_free(bdata);
-    g_free(adata);
-    g_free(xdata);
-    g_free(name);
-    return NULL;
-}
-
-static GObject*
-gwy_gradient_duplicate_real(GObject *object)
-{
-    g_return_val_if_fail(GWY_IS_GRADIENT(object), NULL);
-    g_object_ref(object);
-    return object;
-}
-
-/**
- * gwy_gradient_dump:
- * @gradient: A color gradient.
- *
- * Dumps text a color gradient definition.
- *
- * Returns: A #GString with gradient text representation.
- **/
-GString*
-gwy_gradient_dump(GwyGradient *gradient)
-{
-    GwyGradientPoint *pt;
-    GString *str;
     gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
     guint i;
 
-    g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
-    g_return_val_if_fail(gradient->points->len > 0, NULL);
+    g_return_if_fail(GWY_IS_GRADIENT(resource));
+    gradient = GWY_GRADIENT(resource);
+    g_return_if_fail(gradient->points->len > 0);
 
-    str = g_string_sized_new(64*gradient->points->len);
-    g_string_append(str, magic_header);
-    g_string_append_c(str, '\n');
-    g_string_append_printf(str, "name=%s\n", gradient->name);
-    g_string_append(str, "data\n");
     for (i = 0; i < gradient->points->len; i++) {
         pt = &g_array_index(gradient->points, GwyGradientPoint, i);
         /* this is ugly.  I hate locales */
@@ -1471,22 +1106,9 @@ gwy_gradient_dump(GwyGradient *gradient)
         g_string_append(str, buffer);
         g_string_append_c(str, '\n');
     }
-
-    return str;
 }
 
-/**
- * gwy_gradient_parse:
- * @text: A color gradient definition dump, as created with
- *        gwy_gradient_dump().
- *
- * Creates a color gradient from a text dump.
- *
- * This function fails if the gradient already exists.
- *
- * Returns: The reconstructed gradient.
- **/
-GwyGradient*
+static GwyResource*
 gwy_gradient_parse(const gchar *text)
 {
     GwyGradient *gradient = NULL;
@@ -1501,35 +1123,13 @@ gwy_gradient_parse(const gchar *text)
     g_return_val_if_fail(klass, NULL);
 
     p = str = g_strdup(text);
-
-    if (!(line = gwy_str_next_line(&p)) || !gwy_strequal(line, magic_header)) {
-        g_warning("Wrong magic header");
-        goto fail;
-    }
-
-    if (!(line = gwy_str_next_line(&p)) || !g_str_has_prefix(line, "name=")) {
-        g_warning("Expected gradient name");
-        goto fail;
-    }
-    name = g_strdup(g_strstrip(line + sizeof("name=")));
-    if (!*name) {
-        g_warning("Bad gradient name");
-        goto fail;
-    }
-    if (g_hash_table_lookup(klass->gradients, name)) {
-        g_warning("Gradient `%s' already exists", name);
-        goto fail;
-    }
-
-    if (!(line = gwy_str_next_line(&p)) || !gwy_strequal(line, "data")) {
-        g_warning("Expected gradient `%s' data", name);
-        goto fail;
-    }
-
     points = g_array_new(FALSE, FALSE, sizeof(GwyGradientPoint));
     while (TRUE) {
         if (!(line = gwy_str_next_line(&p)))
             break;
+        g_strstrip(line);
+        if (!line[0] || line[0] == '#')
+            continue;
         /* this is ugly.  I hate locales */
         pt.x = g_ascii_strtod(line, &end);
         if (end == line)
@@ -1558,17 +1158,23 @@ gwy_gradient_parse(const gchar *text)
         goto fail;
     }
 
-    gradient = gwy_gradient_new_internal(name, 0, NULL, TRUE, FALSE);
+    gradient = gwy_gradient_new_internal(name, 0, NULL);
     gwy_gradient_set_points(gradient,
                             points->len, (GwyGradientPoint*)points->data);
-    name = NULL;
 
 fail:
     if (points)
         g_array_free(points, TRUE);
     g_free(name);
     g_free(str);
-    return gradient;
+    return (GwyResource*)gradient;
+}
+
+/* FIXME */
+GwyInventory*
+gwy_gradients(void)
+{
+    return GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GRADIENT))->inventory;
 }
 
 /************************** Documentation ****************************/
@@ -1586,27 +1192,6 @@ fail:
  * @color: The color at position @x.
  *
  * Gradient color point struct.
- **/
-
-/**
- * GwyGradientFunc:
- * @name: Gradient name.
- * @gradient: Gradient.
- * @user_data: User data passed to gwy_gradients_foreach().
- *
- * The type of function passed to gwy_gradients_foreach().
- *
- * It is called for each gradient in sequence and must not delete or create
- * gradients.
- **/
-
-/**
- * GWY_GRADIENT_DEFAULT:
- *
- * Default gradient name.
- *
- * The default grayscale gradient is guaranteed to always exist (once
- * libgwydraw was initialized with gwy_draw_type_init(), that is).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

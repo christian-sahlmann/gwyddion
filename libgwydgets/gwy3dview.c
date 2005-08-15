@@ -486,15 +486,14 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    name = GWY_GRADIENT_DEFAULT;
+    name = "";
     if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name))
         gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
 
-    gwy3dview->gradient = gwy_gradients_get_gradient(name);
-    if (!gwy3dview->gradient)
-        gwy3dview->gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
-    gwy_container_set_string_by_name(data, "/0/3d/palette",
-                                     g_strdup(name));
+    gwy3dview->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
+                                                            name);
+    name = gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient));
+    gwy_container_set_string_by_name(data, "/0/3d/palette", g_strdup(name));
     g_object_ref(gwy3dview->gradient);
     g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
@@ -692,11 +691,12 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
         if (!gwy_container_gis_string_by_name(gwy3dview->container,
                                               "/0/base/palette",
                                               &grad_name))
-            grad_name = GWY_GRADIENT_DEFAULT;
+            grad_name = gwy_inventory_get_default_item_name(gwy_gradients());
         gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                          g_strdup(grad_name));
     }
-    if (strcmp(grad_name, gwy_gradient_get_name(gwy3dview->gradient))) {
+    if (strcmp(grad_name,
+               gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient)))) {
         update_due_to_gradient = TRUE;
         gwy_3d_view_set_gradient(gwy3dview, grad_name);
     }
@@ -749,8 +749,8 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
     gwy_debug("%s", gradient);
 
-    grad = gwy_gradients_get_gradient(gradient);
-    if (!grad || grad == gwy3dview->gradient)
+    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    if (grad == gwy3dview->gradient)
         return;
 
     /* the string we've got as argument can be owned by somethin we are
@@ -803,7 +803,7 @@ const gchar*
 gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy_gradient_get_name(gwy3dview->gradient);
+    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient));
 }
 
 /**

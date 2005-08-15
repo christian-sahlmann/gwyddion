@@ -46,16 +46,17 @@ G_BEGIN_DECLS
 typedef struct _GwyInventoryItemType GwyInventoryItemType;
 
 struct _GwyInventoryItemType {
-    GType         type;
+    GType         type;            /* Useless? */
     const gchar  *watchable_signal;
-    gboolean     (*is_fixed) (gconstpointer item);
-    const gchar* (*get_name) (gpointer item);
-    gint         (*compare)  (gconstpointer item1,
-                              gconstpointer item2);
-    void         (*rename)   (gpointer item,
-                              const gchar *newname);
-    const GType* (*get_traits)(gint *ntraits);
-    const gchar* (*get_trait_name)(gint i);
+    gboolean     (*is_fixed)       (gconstpointer item);
+    const gchar* (*get_name)       (gpointer item);
+    gint         (*compare)        (gconstpointer item1,
+                                    gconstpointer item2);
+    void         (*rename)         (gpointer item,
+                                    const gchar *newname);
+    gpointer     (*copy)           (gpointer item);
+    const GType* (*get_traits)     (gint *ntraits);
+    const gchar* (*get_trait_name) (gint i);
     void         (*get_trait_value)(gpointer item,
                                     gint i,
                                     GValue *value);
@@ -70,8 +71,8 @@ struct _GwyInventory {
     GwyInventoryItemType item_type;
     gboolean needs_reindex : 1;
     gboolean is_sorted : 1;
-    gboolean is_object : 1;
     gboolean is_const: 1;
+    gboolean is_object: 1;
     gboolean is_watchable : 1;
     gboolean can_make_copies : 1;
     gboolean has_default : 1;
@@ -136,8 +137,9 @@ void          gwy_inventory_foreach              (GwyInventory *inventory,
 gpointer      gwy_inventory_find                 (GwyInventory *inventory,
                                                   GHRFunc predicate,
                                                   gpointer user_data);
-void          gwy_inventory_set_default_item     (GwyInventory *inventory,
+void          gwy_inventory_set_default_item_name(GwyInventory *inventory,
                                                   const gchar *name);
+const gchar*  gwy_inventory_get_default_item_name(GwyInventory *inventory);
 gpointer      gwy_inventory_get_default_item     (GwyInventory *inventory);
 
 /* Modifiable inventories */
@@ -159,15 +161,9 @@ gboolean      gwy_inventory_delete_nth_item      (GwyInventory *inventory,
 gpointer      gwy_inventory_rename_item          (GwyInventory *inventory,
                                                   const gchar *name,
                                                   const gchar *newname);
-
-/* Serializable object inventories */
 gpointer      gwy_inventory_new_item             (GwyInventory *inventory,
-                                                  const gchar *newname);
-gpointer      gwy_inventory_new_item_as_copy     (GwyInventory *inventory,
                                                   const gchar *name,
                                                   const gchar *newname);
-/* FIXME: more stuff could be here: loading and saving from directories,
- * setting default fallback item, and whatnot */
 
 G_END_DECLS
 
