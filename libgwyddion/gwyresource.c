@@ -41,6 +41,7 @@ static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
 static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
+static void         gwy_resource_modified         (GwyResource *resource);
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -68,6 +69,7 @@ gwy_resource_class_init(GwyResourceClass *klass)
 
     klass->item_type = gwy_resource_item_type;
     klass->item_type.type = G_TYPE_FROM_CLASS(klass);
+    klass->data_changed = gwy_resource_modified;
 
     /**
     * GwyResource::data-changed:
@@ -136,6 +138,7 @@ gwy_resource_rename(gpointer item,
     g_return_if_fail(!resource->is_const);
     g_free(resource->name);
     resource->name = g_strdup(new_name);
+    resource->is_modified = TRUE;
 }
 
 /**
@@ -260,6 +263,23 @@ gwy_resource_release(GwyResource *resource)
 }
 
 /**
+ * gwy_resource_is_used:
+ * @resource: A resource.
+ *
+ * Tells whether a resource is currently in use.
+ *
+ * See gwy_resource_use() for details.
+ *
+ * Returns: %TRUE if resource is in use, %FALSE otherwise.
+ **/
+gboolean
+gwy_resource_is_used(GwyResource *resource)
+{
+    g_return_val_if_fail(GWY_IS_RESOURCE(resource), FALSE);
+    return resource->use_count > 0;
+}
+
+/**
  * gwy_resource_dump:
  * @resource: A resource.
  *
@@ -343,6 +363,12 @@ gwy_resource_data_changed(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     g_signal_emit(resource, resource_signals[DATA_CHANGED], 0);
+}
+
+static void
+gwy_resource_modified(GwyResource *resource)
+{
+    resource->is_modified = TRUE;
 }
 
 /************************** Documentation ****************************/

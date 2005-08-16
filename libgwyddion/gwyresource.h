@@ -43,6 +43,7 @@ struct _GwyResource {
     gchar *name;
 
     gboolean is_const : 1;
+    gboolean is_modified : 1;
     gboolean boolean1 : 1;
 
     gpointer reserved1;
@@ -80,6 +81,7 @@ GwyInventory*     gwy_resource_class_get_inventory   (GwyResourceClass *klass);
 const GwyInventoryItemType* gwy_resource_class_get_item_type(GwyResourceClass *klass);
 void              gwy_resource_use                   (GwyResource *resource);
 void              gwy_resource_release               (GwyResource *resource);
+gboolean          gwy_resource_is_used               (GwyResource *resource);
 void              gwy_resource_data_changed          (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
 GwyResource*      gwy_resource_parse                 (const gchar *text);
