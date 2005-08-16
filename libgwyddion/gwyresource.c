@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -209,25 +209,31 @@ gwy_resource_class_get_item_type(GwyResourceClass *klass)
  * gwy_resource_use:
  * @resource: A resource.
  *
- * References a resource, indicating intent to use it.
+ * Starts using a resource.
  *
  * Call to this function is necessary to use a resource properly.
  * It makes the resource to create any auxiliary structures that consume
  * considerable amount of memory and perform other initialization to
  * ready-to-use form.
  *
- * Resources usually exist through almose whole program lifetime from
- * #GObject perspective, but from usage perspective this method is the
- * constructor and gwy_resource_release() is the destructor.
- *
  * When a resource is no longer used, it should be released with
  * gwy_resource_release().
+ *
+ * In addition, it calls g_object_ref() on the resource.
+ *
+ * Resources usually exist through almost whole program lifetime from
+ * #GObject perspective, but from the viewpoint of use this method is the
+ * constructor and gwy_resource_release() is the destructor.
  **/
 void
 gwy_resource_use(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
+    gwy_debug("%s %p<%s> %d",
+              g_type_name(G_TYPE_FROM_INSTANCE(resource)),
+              resource, resource->name, resource->use_count);
 
+    g_object_ref(resource);
     if (!resource->use_count++) {
         void (*method)(GwyResource*);
 
@@ -241,16 +247,19 @@ gwy_resource_use(GwyResource *resource)
  * gwy_resource_release:
  * @resource: A resource.
  *
- * Unreferences a resource, indicating intent to release it.
+ * Releases a resource.
  *
- * When the number of resource references drops to zero, it frees all
- * auxiliary data and returns back to `latent' form.  See gwy_resource_use()
- * for more.
+ * When the number of resource uses drops to zero, it frees all auxiliary data
+ * and returns back to `latent' form.  In addition, it calls g_object_unref()
+ * on it.  See gwy_resource_use() for more.
  **/
 void
 gwy_resource_release(GwyResource *resource)
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
+    gwy_debug("%s %p<%s> %d",
+              g_type_name(G_TYPE_FROM_INSTANCE(resource)),
+              resource, resource->name, resource->use_count);
     g_return_if_fail(resource->use_count);
 
     if (!--resource->use_count) {
@@ -260,6 +269,7 @@ gwy_resource_release(GwyResource *resource)
         if (method)
             method(resource);
     }
+    g_object_unref(resource);
 }
 
 /**
