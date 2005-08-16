@@ -105,10 +105,8 @@ void              gwy_gradient_set_from_samples      (GwyGradient *gradient,
 
 GwyInventory*     gwy_gradients                      (void);
 
-/* XXX XXX XXX */
 #define gwy_gradients_get_gradient(name) \
     gwy_inventory_get_item_or_default(gwy_gradients(), name)
-#define GWY_GRADIENT_DEFAULT "Gray"
 
 G_END_DECLS
 

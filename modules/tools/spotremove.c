@@ -222,7 +222,7 @@ dialog_create(GwyUnitoolState *state)
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    pal = GWY_GRADIENT_DEFAULT;
+    pal = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
     controls->pal = g_strdup(pal);
     min = gwy_data_field_get_min(dfield);
@@ -237,8 +237,9 @@ dialog_create(GwyUnitoolState *state)
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     gwy_container_set_double_by_name(data, "/0/base/min", min);
     gwy_container_set_double_by_name(data, "/0/base/max", max);
-    gwy_container_set_string_by_name(data, "/0/base/palette",
-                                     g_strdup(controls->pal));
+    if (controls->pal)
+        gwy_container_set_string_by_name(data, "/0/base/palette",
+                                         g_strdup(controls->pal));
     g_object_unref(dfield);
     controls->view = gwy_data_view_new(data);
     g_object_unref(data);
@@ -304,9 +305,9 @@ dialog_update(GwyUnitoolState *state,
     mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
     mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
                                                                "/0/data"));
-    pal = GWY_GRADIENT_DEFAULT;
+    pal = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    if (strcmp(pal, controls->pal)) {
+    if (pal && !gwy_strequal(pal, controls->pal)) {
         gwy_container_set_string_by_name(mydata, "/0/base/palette",
                                          g_strdup(pal));
         g_free(controls->pal);

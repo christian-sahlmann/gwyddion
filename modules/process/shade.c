@@ -209,7 +209,7 @@ shade_dialog(ShadeArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
     row = 0;
 
-    palette = GWY_GRADIENT_DEFAULT;
+    palette = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &palette);
     controls.shader = gwy_shader_new(palette);
     gwy_shader_set_angle(GWY_SHADER(controls.shader), args->theta, args->phi);

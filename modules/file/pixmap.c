@@ -1353,11 +1353,13 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
 
     layer = gwy_data_view_get_base_layer(data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
-    name = GWY_GRADIENT_DEFAULT;
+    name = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
     gradient = gwy_gradients_get_gradient(name);
+    gwy_resource_use(GWY_RESOURCE(gradient));
     samples = gwy_gradient_get_samples(gradient, &nsamp);
     datapixbuf = gdk_pixbuf_copy(gwy_pixmap_layer_paint(layer));
+    gwy_resource_release(GWY_RESOURCE(gradient));
     width = gdk_pixbuf_get_width(datapixbuf);
     height = gdk_pixbuf_get_height(datapixbuf);
 

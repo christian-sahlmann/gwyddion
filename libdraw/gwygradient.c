@@ -266,8 +266,8 @@ gwy_gradient_get_samples(GwyGradient *gradient,
 {
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
     if (!GWY_RESOURCE(gradient)->use_count) {
-        g_warning("You have to call gwy_resource_use() first.");
-        /* Better leak than segfault... */
+        g_warning("You have to call gwy_resource_use() first. "
+                  "I'll try to be nice and do that for this once.");
         gwy_resource_use(GWY_RESOURCE(gradient));
     }
     if (nsamples)
@@ -955,9 +955,12 @@ _gwy_gradients_setup_presets(void)
         { 1.0,  { 1,   1,   1,   1 } },
     };
     GwyGradientPoint *pd2;
+    gpointer klass;
     guint i;
 
-    g_type_class_ref(GWY_TYPE_GRADIENT);
+    /* Force class instantiation, this function is called before it's first
+     * referenced. */
+    klass = g_type_class_ref(GWY_TYPE_GRADIENT);
     gwy_inventory_forget_order(gwy_gradients());
 
     gwy_gradient_preset(GWY_GRADIENT_DEFAULT, G_N_ELEMENTS(gray), gray);
@@ -1035,7 +1038,7 @@ _gwy_gradients_setup_presets(void)
     g_free(pd2);
 
     gwy_inventory_restore_order(gwy_gradients());
-    g_type_class_unref(GWY_TYPE_GRADIENT);
+    g_type_class_unref(klass);
 }
 
 /* Eats @name */
@@ -1170,7 +1173,13 @@ fail:
     return (GwyResource*)gradient;
 }
 
-/* FIXME */
+/**
+ * gwy_gradients:
+ *
+ * Gets the inventory with all gradients.
+ *
+ * Returns: Gradient inventory.
+ **/
 GwyInventory*
 gwy_gradients(void)
 {
@@ -1192,6 +1201,13 @@ gwy_gradients(void)
  * @color: The color at position @x.
  *
  * Gradient color point struct.
+ **/
+
+/**
+ * gwy_gradients_get_gradient:
+ * @name: Gradient name.  May be %NULL to get default gradient.
+ *
+ * Convenience macro to get a gradient from gwy_gradients() by name.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

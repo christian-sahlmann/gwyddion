@@ -488,8 +488,8 @@ rawfile_dialog(RawFileArgs *args,
     controls.dialog = dialog;
     controls.args = args;
     controls.file = file;
-    controls.gradient = gwy_gradients_get_gradient(GWY_GRADIENT_DEFAULT);
-    g_object_ref(controls.gradient);
+    controls.gradient = gwy_gradients_get_gradient(NULL);
+    gwy_resource_use(GWY_RESOURCE(controls.gradient));
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -563,7 +563,7 @@ rawfile_dialog(RawFileArgs *args,
             rawfile_save_list_of_presets
                 (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
             gtk_widget_destroy(dialog);
-            g_object_unref(controls.gradient);
+            gwy_resource_release(GWY_RESOURCE(controls.gradient));
             case GTK_RESPONSE_NONE:
             return FALSE;
             break;
@@ -597,7 +597,7 @@ rawfile_dialog(RawFileArgs *args,
     } while (response != GTK_RESPONSE_OK);
     rawfile_save_list_of_presets
         (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
-    g_object_unref(controls.gradient);
+    gwy_resource_release(GWY_RESOURCE(controls.gradient));
     gtk_widget_destroy(dialog);
 
     return dfield;
