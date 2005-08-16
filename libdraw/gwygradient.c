@@ -20,9 +20,7 @@
 
 /* TODO:
  * - reduce the number of system palettes -- in 2.0
- * - replace get_samples with samples_ref, add samples_unref
  * - set from samples
- * - changes, signal emission
  * - test
  */
 
@@ -59,6 +57,9 @@ static void         gwy_gradient_get_trait_value  (gpointer item,
                                                    GValue *value);
 static void         gwy_gradient_use              (GwyResource *resource);
 static void         gwy_gradient_release          (GwyResource *resource);
+static void         gwy_gradient_sample_real      (GwyGradient *gradient,
+                                                   gint nsamples,
+                                                   guchar *samples);
 static void         gwy_gradient_sanitize         (GwyGradient *gradient);
 static void         gwy_gradient_changed          (GwyGradient *gradient);
 static void         gwy_gradient_preset           (const gchar *name,
@@ -134,18 +135,16 @@ gwy_gradient_finalize(GObject *object)
 {
     GwyGradient *gradient = (GwyGradient*)object;
 
-    gwy_object_unref(gradient->pixbuf);
     g_array_free(gradient->points, TRUE);
     G_OBJECT_CLASS(gwy_gradient_parent_class)->finalize(object);
 }
 
+/* FIXME: This looks too much like GObject properties.
+ * Define them as properties and use a generic property -> trait mapping? */
 static const GType*
 gwy_gradient_get_traits(gint *ntraits)
 {
-    static GType tratis[] = { G_TYPE_STRING, 0 };
-
-    if (!tratis[1])
-        tratis[1] = GDK_TYPE_PIXBUF;
+    static GType tratis[] = { G_TYPE_STRING, G_TYPE_BOOLEAN };
 
     if (ntraits)
         *ntraits = G_N_ELEMENTS(tratis);
@@ -156,7 +155,7 @@ gwy_gradient_get_traits(gint *ntraits)
 static const gchar*
 gwy_gradient_get_trait_name(gint i)
 {
-    static const gchar *trait_names[] = { "name", "pixbuf" };
+    static const gchar *trait_names[] = { "name", "is-const" };
 
     g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
     return trait_names[i];
@@ -174,8 +173,8 @@ gwy_gradient_get_trait_value(gpointer item,
         break;
 
         case 1:
-        g_value_init(value, GDK_TYPE_PIXBUF);
-        g_value_set_object(value, GWY_GRADIENT(item)->pixbuf);
+        g_value_init(value, G_TYPE_BOOLEAN);
+        g_value_set_boolean(value, GWY_RESOURCE(item)->is_const);
         break;
 
         default:
@@ -290,6 +289,7 @@ gwy_gradient_get_samples(GwyGradient *gradient,
  * If you don't have a reason for specific sample size (and are not going
  * to modify the samples or otherwise dislike the automatic resampling on
  * gradient definition change), use gwy_gradient_get_samples() instead.
+ * This function does not need the gradient to be in use, though.
  *
  * Returns: Sampled @gradient as a sequence of #GdkPixbuf-like RRGGBBAA
  *          quadruplets.
@@ -299,15 +299,24 @@ gwy_gradient_sample(GwyGradient *gradient,
                     gint nsamples,
                     guchar *samples)
 {
-    GwyGradientPoint *pt, *pt2 = NULL;
-    gint i, j, k;
-    gdouble q, x;
-    GwyRGBA color;
-
     g_return_val_if_fail(GWY_IS_GRADIENT(gradient), NULL);
     g_return_val_if_fail(nsamples > 1, NULL);
 
     samples = g_renew(guchar, samples, 4*nsamples);
+    gwy_gradient_sample_real(gradient, nsamples, samples);
+
+    return samples;
+}
+
+static void
+gwy_gradient_sample_real(GwyGradient *gradient,
+                         gint nsamples,
+                         guchar *samples)
+{
+    GwyGradientPoint *pt, *pt2 = NULL;
+    gint i, j, k;
+    gdouble q, x;
+    GwyRGBA color;
 
     q = 1.0/(nsamples - 1.0);
     pt = &g_array_index(gradient->points, GwyGradientPoint, 0);
@@ -330,8 +339,74 @@ gwy_gradient_sample(GwyGradient *gradient,
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.b);
         samples[k++] = (guchar)(gint32)(MAX_CVAL*color.a);
     }
+}
 
-    return samples;
+/**
+ * gwy_gradient_sample_to_pixbuf:
+ * @gradient: A color gradient to sample.
+ * @pixbuf: A pixbuf to sample gradient to (in horizontal direction).
+ *
+ * Samples gradient to a provided pixbuf.
+ *
+ * Unlike gwy_gradient_sample() which simply takes samples at equidistant
+ * points this method uses supersampling and thus gives a bit better looking
+ * gradient presentation.
+ **/
+void
+gwy_gradient_sample_to_pixbuf(GwyGradient *gradient,
+                              GdkPixbuf *pixbuf)
+{
+    /* Supersample to capture abrupt changes and peaks more faithfully.
+     * Note an even number would lead to biased integer averaging. */
+    enum { SUPERSAMPLE = 3 };
+    gint width, height, rowstride, i, j;
+    gboolean has_alpha, must_free_data;
+    guchar *data, *pdata;
+
+    g_return_if_fail(GWY_IS_GRADIENT(gradient));
+    g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
+
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    has_alpha = gdk_pixbuf_get_has_alpha(pixbuf);
+    pdata = gdk_pixbuf_get_pixels(pixbuf);
+
+    /* Usually the pixbuf is large enough to be used as a scratch space,
+     * there is no need to allocate extra memory then. */
+    if ((must_free_data = (SUPERSAMPLE*width*4 > rowstride*height)))
+        data = g_new(guchar, SUPERSAMPLE*width*4);
+    else
+        data = pdata;
+
+    gwy_gradient_sample_real(gradient, SUPERSAMPLE*width, data);
+
+    /* Scale down to original size */
+    for (i = 0; i < width; i++) {
+        guchar *row = data + 4*SUPERSAMPLE*i;
+        guint r, g, b, a;
+
+        r = g = b = a = SUPERSAMPLE/2;
+        for (j = 0; j < SUPERSAMPLE; j++) {
+            r += *(row++);
+            g += *(row++);
+            b += *(row++);
+            a += *(row++);
+        }
+        *(pdata++) = r/SUPERSAMPLE;
+        *(pdata++) = g/SUPERSAMPLE;
+        *(pdata++) = b/SUPERSAMPLE;
+        if (has_alpha)
+            *(pdata++) = a/SUPERSAMPLE;
+    }
+
+    /* Duplicate rows */
+    pdata = gdk_pixbuf_get_pixels(pixbuf);
+    for (i = 0; i < height; i++)
+        memcpy(pdata + i*rowstride, pdata, rowstride);
+
+    if (must_free_data)
+        g_free(data);
 }
 
 /**
@@ -770,7 +845,6 @@ gwy_gradient_changed(GwyGradient *gradient)
     if (gradient->pixels)
         gwy_gradient_sample(gradient, GWY_GRADIENT_DEFAULT_SIZE,
                             gradient->pixels);
-    /* TODO pixbuf */
     gwy_resource_data_changed(GWY_RESOURCE(gradient));
 }
 
@@ -1176,7 +1250,7 @@ fail:
 /**
  * gwy_gradients:
  *
- * Gets the inventory with all gradients.
+ * Gets inventory with all the gradients.
  *
  * Returns: Gradient inventory.
  **/

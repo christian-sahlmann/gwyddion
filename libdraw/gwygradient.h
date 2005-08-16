@@ -46,11 +46,11 @@ typedef struct {
 struct _GwyGradient {
     GwyResource parent_instance;
 
-    gboolean favourite;
-    gboolean boolean1;
     GArray *points;
     guchar *pixels;
-    GdkPixbuf *pixbuf;
+
+    gboolean favourite : 1;
+    gboolean boolean1 : 1;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -76,6 +76,8 @@ const guchar*     gwy_gradient_get_samples           (GwyGradient *gradient,
 guchar*           gwy_gradient_sample                (GwyGradient *gradient,
                                                       gint nsamples,
                                                       guchar *samples);
+void              gwy_gradient_sample_to_pixbuf      (GwyGradient *gradient,
+                                                      GdkPixbuf *pixbuf);
 gint              gwy_gradient_get_npoints           (GwyGradient *gradient);
 GwyGradientPoint  gwy_gradient_get_point             (GwyGradient *gradient,
                                                       gint index_);

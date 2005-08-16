@@ -189,30 +189,7 @@ gwy_sample_gradient_to_gtkimage(GwyGradient *gradient)
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             SAMPLE_WIDTH, SAMPLE_HEIGHT);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    data = gdk_pixbuf_get_pixels(pixbuf);
-
-    samples = gwy_gradient_get_samples(gradient, &n);
-    g_assert(n >= SAMPLE_WIDTH);
-
-    /* average pixels, but don't bother with subpixel interpolation */
-    for (i = 0; i < SAMPLE_WIDTH; i++) {
-        memset(tmp, 0, 4*sizeof(guint));
-        k = (i + 1)*n/SAMPLE_WIDTH - i*n/SAMPLE_WIDTH;
-        for (j = i*n/SAMPLE_WIDTH; j < (i + 1)*n/SAMPLE_WIDTH; j++) {
-            const guchar *sam = samples + 4*j;
-
-            tmp[0] += sam[0];
-            tmp[1] += sam[1];
-            tmp[2] += sam[2];
-        }
-        data[3*i    ] = (tmp[0] + k/2)/k;
-        data[3*i + 1] = (tmp[1] + k/2)/k;
-        data[3*i + 2] = (tmp[2] + k/2)/k;
-    }
-    for (i = 1; i < SAMPLE_HEIGHT; i++)
-        memcpy(data + i*rowstride, data, 3*SAMPLE_WIDTH);
-
+    gwy_gradient_sample_to_pixbuf(gradient, pixbuf);
     image = gtk_image_new_from_pixbuf(pixbuf);
     g_object_unref(pixbuf);
 
