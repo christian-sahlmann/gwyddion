@@ -387,7 +387,9 @@ gwy_graph_get_selection_number(GwyGraph *graph)
         return graph->area->areasdata->data_areas->len;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_POINTS)
         return graph->area->pointsdata->data_points->len;
-    else return 0;
+    else if (graph->area->status ==  GWY_GRAPH_STATUS_XLINES || graph->area->status ==  GWY_GRAPH_STATUS_YLINES)
+        return graph->area->linesdata->data_lines->len;
+     else return 0;
 }
 
 /**

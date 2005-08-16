@@ -146,13 +146,19 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     GString *str;
     gint i, n;
     gdouble *spoints = NULL;
+    gdouble x, y, xp, yp;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
-    if (gwy_graph_get_status(graph) != GWY_GRAPH_STATUS_POINTS) return;
+    if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS || 
+        gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
 
     if ((n = gwy_graph_get_selection_number(graph))>0)
-        spoints = (gdouble *) g_malloc(2*gwy_graph_get_selection_number(graph)*sizeof(gdouble));
- 
+    {
+        if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
+            spoints = (gdouble *) g_malloc(2*gwy_graph_get_selection_number(graph)*sizeof(gdouble));
+        else
+            spoints = (gdouble *) g_malloc(gwy_graph_get_selection_number(graph)*sizeof(gdouble));
+    }
     
     gwy_graph_get_selection(graph, spoints);
     
@@ -160,25 +166,42 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     str = g_string_new("");
     for (i = 0; i < NMAX; i++) {
         if (i < n) {
+            if (i)
+            {
+                xp = x;
+                yp = y;
+            }
+            
+            if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
+            {
+                x = spoints[2*i];
+                y = spoints[2*i + 1];
+            }
+            else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
+            {
+                x = spoints[i];
+                y = 0;
+            }
+            
             label = g_ptr_array_index(dialog->pointx, i);
-            value_label(label, spoints[2*i]/dialog->x_mag, str);
+            value_label(label, x/dialog->x_mag, str);
 
             label = g_ptr_array_index(dialog->pointy, i);
-            value_label(label, spoints[2*i + 1]/dialog->y_mag, str);
+            value_label(label, y/dialog->y_mag, str);
 
             if (!i)
                 continue;
 
             label = g_ptr_array_index(dialog->distx, i);
-            value_label(label, (spoints[2*i] - spoints[2*(i-1)])/dialog->x_mag, str);
+            value_label(label, (x - xp)/dialog->x_mag, str);
 
             label = g_ptr_array_index(dialog->disty, i);
-            value_label(label, (spoints[2*i + 1] - spoints[2*(i-1) + 1])/dialog->y_mag, str);
+            value_label(label, (y - yp)/dialog->y_mag, str);
 
             label = g_ptr_array_index(dialog->slope, i);
             value_label(label,
-                        180.0/G_PI*atan2((spoints[2*i + 1] - spoints[2*(i-1) + 1]),
-                                         (spoints[2*i] - spoints[2*(i-1)])),
+                        180.0/G_PI*atan2((y - yp),
+                                         (x - xp)),
                         str);
         }
         else {
