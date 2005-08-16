@@ -56,7 +56,8 @@ typedef struct {
 typedef struct {
   GwyGraphDataPoint data_point;
 } GwyGraphStatus_CursorData;
-                                                                                                                                                               typedef struct {
+    
+typedef struct {
   GArray *data_points;
 } GwyGraphStatus_PointsData;
                                                                                                                                                              
@@ -67,6 +68,10 @@ typedef struct {
 typedef struct {
   GArray *data_areas;
 } GwyGraphStatus_AreasData;
+
+typedef struct {
+  GArray *data_lines;
+} GwyGraphStatus_LinesData;
 
 typedef struct {
   gdouble xmin;
@@ -97,6 +102,7 @@ struct _GwyGraphArea {
     GwyGraphStatus_PointsData *pointsdata;
     GwyGraphStatus_AreaData *areadata;
     GwyGraphStatus_AreasData *areasdata;
+    GwyGraphStatus_LinesData *linesdata;
     GwyGraphStatus_CursorData *cursordata;
     GwyGraphStatus_ZoomData *zoomdata;
 

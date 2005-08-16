@@ -120,6 +120,14 @@ void gwy_graph_draw_selection_areas(GdkDrawable *drawable,
                                     GwyGraphDataArea *data_areas,
                                     gint n_of_areas);
 
+void gwy_graph_draw_selection_lines(GdkDrawable *drawable,
+                                    GdkGC *gc,
+                                    GwyGraphActiveAreaSpecs *specs,
+                                    double *data_lines,
+                                    gint n_of_lines,
+                                    GtkOrientation orientation);
+
+
 
 #endif /*__GWY_GRAPH_BASIC_H__*/
 

@@ -80,6 +80,8 @@ typedef enum {
     GWY_GRAPH_STATUS_POINTS,
     GWY_GRAPH_STATUS_ZOOM,
     GWY_GRAPH_STATUS_CURSOR,
+    GWY_GRAPH_STATUS_XLINE,
+    GWY_GRAPH_STATUS_YLINE
 } GwyGraphStatusType;
 
 typedef enum {
