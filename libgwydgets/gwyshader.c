@@ -48,6 +48,7 @@ enum {
 /* Forward declarations */
 
 static void     gwy_shader_finalize          (GObject *object);
+static void     gwy_shader_destroy           (GtkObject *object);
 static void     gwy_shader_set_property      (GObject *object,
                                               guint prop_id,
                                               const GValue *value,
@@ -102,6 +103,8 @@ gwy_shader_class_init(GwyShaderClass *klass)
     gobject_class->finalize = gwy_shader_finalize;
     gobject_class->set_property = gwy_shader_set_property;
     gobject_class->get_property = gwy_shader_get_property;
+
+    object_class->destroy = gwy_shader_destroy;
 
     widget_class->realize = gwy_shader_realize;
     widget_class->expose_event = gwy_shader_expose;
@@ -162,7 +165,7 @@ gwy_shader_init(GwyShader *shader)
 /**
  * gwy_shader_new:
  * @gradient: Name of gradient to color the spehere with.  Can be %NULL to
- *            use the default gray gradient.
+ *            use the default gradient.
  *
  * Creates a new spherical shader.
  *
@@ -178,13 +181,8 @@ gwy_shader_new(const gchar *gradient)
     gwy_debug("");
     shader = (GwyShader*)g_object_new(GWY_TYPE_SHADER, NULL);
 
-    if (!gradient)
-        shader->gradient = gwy_inventory_get_default_item(gwy_gradients());
-    else
-        shader->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
-                                                             gradient);
-    g_object_ref(shader->gradient);
-
+    shader->gradient = gwy_gradients_get_gradient(gradient);
+    gwy_resource_use(GWY_RESOURCE(shader->gradient));
     shader->gradient_change_id
         = g_signal_connect_swapped(shader->gradient, "data-changed",
                                    G_CALLBACK(gwy_shader_update), shader);
@@ -195,15 +193,23 @@ gwy_shader_new(const gchar *gradient)
 static void
 gwy_shader_finalize(GObject *object)
 {
+    G_OBJECT_CLASS(gwy_shader_parent_class)->finalize(object);
+}
+
+static void
+gwy_shader_destroy(GtkObject *object)
+{
     GwyShader *shader;
 
-    gwy_debug(" ");
     shader = GWY_SHADER(object);
+    if (shader->gradient) {
+        g_signal_handler_disconnect(shader->gradient,
+                                    shader->gradient_change_id);
+        gwy_resource_release(GWY_RESOURCE(shader->gradient));
+        shader->gradient = NULL;
+    }
 
-    g_signal_handler_disconnect(shader->gradient, shader->gradient_change_id);
-    gwy_object_unref(shader->gradient);
-
-    G_OBJECT_CLASS(gwy_shader_parent_class)->finalize(object);
+    GTK_OBJECT_CLASS(gwy_shader_parent_class)->destroy(object);
 }
 
 static void
@@ -456,22 +462,21 @@ void
 gwy_shader_set_gradient(GwyShader *shader,
                         const gchar *gradient)
 {
-    GwyGradient *grad, *old;
+    GwyGradient *grad;
 
     g_return_if_fail(GWY_IS_SHADER(shader));
 
-    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    grad = gwy_gradients_get_gradient(gradient);
     if (grad == shader->gradient)
         return;
 
-    old = shader->gradient;
-    g_signal_handler_disconnect(old, shader->gradient_change_id);
-    g_object_ref(grad);
+    g_signal_handler_disconnect(shader->gradient, shader->gradient_change_id);
+    gwy_resource_release(GWY_RESOURCE(shader->gradient));
     shader->gradient = grad;
+    gwy_resource_use(GWY_RESOURCE(shader->gradient));
     shader->gradient_change_id
         = g_signal_connect_swapped(shader->gradient, "data-changed",
                                    G_CALLBACK(gwy_shader_update), shader);
-    g_object_unref(old);
 
     gwy_shader_update(shader);
 }

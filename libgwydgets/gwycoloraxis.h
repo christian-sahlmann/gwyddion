@@ -55,7 +55,6 @@ struct _GwyColorAxis {
     GwySIUnit *siunit;
 
     gint tick_length;
-    PangoFontDescription *font;
 
     gboolean has_labels : 1;
 

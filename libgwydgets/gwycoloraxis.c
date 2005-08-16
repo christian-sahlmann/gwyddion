@@ -96,13 +96,11 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
     axis->min = MIN(min, max);
     axis->max = MAX(min, max);
 
-    /* XXX */
-    axis->font = pango_font_description_from_string("Helvetica 10");
-    axis->gradient = gwy_inventory_get_default_item(gwy_gradients());
+    axis->gradient = gwy_gradients_get_gradient(NULL);
     axis->gradient_id
         = g_signal_connect_swapped(axis->gradient, "data-changed",
                                    G_CALLBACK(gwy_color_axis_update), axis);
-    g_object_ref(axis->gradient);
+    gwy_resource_use(GWY_RESOURCE(axis->gradient));
 
     axis->siunit = gwy_si_unit_new("");
 
@@ -134,7 +132,10 @@ gwy_color_axis_destroy(GtkObject *object)
         axis->gradient_id = 0;
     }
     gwy_object_unref(axis->siunit);
-    gwy_object_unref(axis->gradient);
+    if (axis->gradient) {
+        gwy_resource_release(GWY_RESOURCE(axis->gradient));
+        axis->gradient = NULL;
+    }
     gwy_object_unref(axis->stripe);
 
     GTK_OBJECT_CLASS(gwy_color_axis_parent_class)->destroy(object);
@@ -358,7 +359,6 @@ gwy_color_axis_draw_label(GtkWidget *widget)
     }
 
     layout = gtk_widget_create_pango_layout(widget, "");
-    pango_layout_set_font_description(layout, axis->font);
 
     /* Draw frame around false color scale */
     gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
@@ -463,22 +463,21 @@ void
 gwy_color_axis_set_gradient(GwyColorAxis *axis,
                             const gchar *gradient)
 {
-    GwyGradient *grad, *old;
+    GwyGradient *grad;
 
     g_return_if_fail(GWY_IS_COLOR_AXIS(axis));
 
-    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    grad = gwy_gradients_get_gradient(gradient);
     if (grad == axis->gradient)
         return;
 
-    old = axis->gradient;
     g_signal_handler_disconnect(axis->gradient, axis->gradient_id);
-    g_object_ref(grad);
+    gwy_resource_release(GWY_RESOURCE(axis->gradient));
     axis->gradient = grad;
+    gwy_resource_use(GWY_RESOURCE(axis->gradient));
     axis->gradient_id
         = g_signal_connect_swapped(axis->gradient, "data-changed",
                                    G_CALLBACK(gwy_color_axis_update), axis);
-    g_object_unref(old);
 
     gwy_color_axis_update(axis);
 }

@@ -142,7 +142,10 @@ gwy_layer_basic_destroy(GtkObject *object)
     GwyLayerBasic *layer;
 
     layer = GWY_LAYER_BASIC(object);
-    gwy_object_unref(layer->gradient);
+    if (layer->gradient) {
+        gwy_resource_release(GWY_RESOURCE(layer->gradient));
+        layer->gradient = NULL;
+    }
 
     GTK_OBJECT_CLASS(gwy_layer_basic_parent_class)->destroy(object);
 }
@@ -271,12 +274,11 @@ gwy_layer_basic_gradient_connect(GwyLayerBasic *basic_layer)
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
     /* FIXME: original implementation set /0/base/palette to default value
      * if unset. */
-    s = "";
+    s = NULL;
     if (basic_layer->gradient_key)
         gwy_container_gis_string(layer->data, basic_layer->gradient_key, &s);
-    basic_layer->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
-                                                              s);
-    g_object_ref(basic_layer->gradient);
+    basic_layer->gradient = gwy_gradients_get_gradient(s);
+    gwy_resource_use(GWY_RESOURCE(basic_layer->gradient));
     basic_layer->gradient_id
         = g_signal_connect_swapped(basic_layer->gradient, "data-changed",
                                    G_CALLBACK(gwy_layer_basic_changed), layer);
@@ -290,7 +292,8 @@ gwy_layer_basic_gradient_disconnect(GwyLayerBasic *layer)
 
     g_signal_handler_disconnect(layer->gradient, layer->gradient_id);
     layer->gradient_id = 0;
-    gwy_object_unref(layer->gradient);
+    gwy_resource_release(GWY_RESOURCE(layer->gradient));
+    layer->gradient = NULL;
 }
 
 static void

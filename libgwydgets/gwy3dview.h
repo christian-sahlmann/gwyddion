@@ -119,7 +119,9 @@ struct _Gwy3DViewClass {
 GtkWidget*        gwy_3d_view_new               (GwyContainer * data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
+#ifndef GWY_DISABLE_DEPRECATED
 void              gwy_3d_view_update            (Gwy3DView *gwy3dview);
+#endif
 
 const gchar*      gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,

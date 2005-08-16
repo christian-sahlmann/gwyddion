@@ -290,7 +290,10 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->light_z);
     gwy_object_unref(gwy3dview->light_y);
 
-    gwy_object_unref(gwy3dview->gradient);
+    if (gwy3dview->gradient) {
+        gwy_resource_release(GWY_RESOURCE(gwy3dview->gradient));
+        gwy3dview->gradient = NULL;
+    }
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -486,15 +489,11 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->mat_current
              = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
 
-    name = "";
+    name = NULL;
     if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name))
         gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
-
-    gwy3dview->gradient = gwy_inventory_get_item_or_default(gwy_gradients(),
-                                                            name);
-    name = gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient));
-    gwy_container_set_string_by_name(data, "/0/3d/palette", g_strdup(name));
-    g_object_ref(gwy3dview->gradient);
+    gwy3dview->gradient = gwy_gradients_get_gradient(name);
+    gwy_resource_use(GWY_RESOURCE(gwy3dview->gradient));
     g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
@@ -686,6 +685,7 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
     /* FIXME: we should watch data changes */
     update_data = TRUE;
 
+    /* FIXME: we should watch gradient changes */
     if (!gwy_container_gis_string_by_name(gwy3dview->container, "/0/3d/palette",
                                           &grad_name)) {
         if (!gwy_container_gis_string_by_name(gwy3dview->container,
@@ -749,7 +749,7 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
     gwy_debug("%s", gradient);
 
-    grad = gwy_inventory_get_item_or_default(gwy_gradients(), gradient);
+    grad = gwy_gradients_get_gradient(gradient);
     if (grad == gwy3dview->gradient)
         return;
 
@@ -760,14 +760,14 @@ gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
     g_signal_handlers_disconnect_matched(gwy3dview->gradient,
                                          G_SIGNAL_MATCH_DATA,
                                          0, 0, NULL, NULL, gwy3dview);
-    g_object_ref(grad);
+    gwy_resource_use(GWY_RESOURCE(grad));
     gwy3dview->gradient = grad;
     g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
                              G_CALLBACK(gwy_3d_view_gradient_changed),
                              gwy3dview);
     gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
                                      gradstr);
-    g_object_unref(old);
+    gwy_resource_release(GWY_RESOURCE(old));
 
     if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);

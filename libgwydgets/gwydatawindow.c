@@ -231,8 +231,8 @@ gwy_data_window_new(GwyDataView *data_view)
     layer = gwy_data_view_get_base_layer(data_view);
     g_assert(GWY_IS_LAYER_BASIC(layer));
     data_window->coloraxis = gwy_color_axis_new(GTK_ORIENTATION_VERTICAL);
+    gradient = NULL;
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
-    gradient = gwy_inventory_get_default_item_name(gwy_gradients());
     gwy_container_gis_string_by_name(data, key, &gradient);
     gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
                                 gradient);
