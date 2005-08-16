@@ -437,6 +437,7 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
     gint i;
     GwyGraphDataArea *data_area;
     GwyGraphDataPoint *data_point;
+    gdouble data_value;
     
     if (selection == NULL) return;
 
@@ -457,6 +458,15 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
             data_area = &g_array_index(graph->area->areasdata->data_areas, GwyGraphDataArea, i);
             selection[2*i] = data_area->ymin;
             selection[2*i + 1] = data_area->ymax;
+        }
+        break;
+
+        case GWY_GRAPH_STATUS_XLINES:
+        case GWY_GRAPH_STATUS_YLINES:
+        for (i = 0; i < graph->area->linesdata->data_lines->len; i++)
+        {
+            data_value = g_array_index(graph->area->linesdata->data_lines, gdouble, i);
+            selection[i] = data_value;
         }
         break;
 

@@ -296,7 +296,44 @@ void gwy_graph_draw_selection_lines(GdkDrawable *drawable,
                                     gint n_of_lines,
                                     GtkOrientation orientation)
 {
+    gint i;
+    GwyRGBA color;
+    GdkColor gcl;
+    GdkColormap *colormap;
+
+    if (n_of_lines == 0 || data_lines==NULL) return;
+    color.r = 0.8;
+    color.g = 0.3;
+    color.b = 0.6;
+    color.a = 1;
+   
+    if (gc==NULL) gc = gdk_gc_new(drawable);
+
+    colormap = gdk_colormap_get_system();
+    gwy_rgba_to_gdk_color(&color, &gcl);
+    gdk_colormap_alloc_color(colormap, &gcl, TRUE, TRUE);
     
+    gdk_gc_set_foreground(gc, &gcl);
+
+    for (i = 0; i<n_of_lines; i++)
+    {
+        if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        gwy_graph_draw_line(drawable, gc,
+                                  specs->xmin, 
+                                  y_data_to_pixel(specs, data_lines[i]), 
+                                  specs->xmin + specs->width, 
+                                  y_data_to_pixel(specs, data_lines[i]),
+                                  GDK_LINE_SOLID,
+                                  1, &gcl);    
+        else
+        gwy_graph_draw_line(drawable, gc,
+                                  x_data_to_pixel(specs, data_lines[i]), 
+                                  specs->ymin, 
+                                  x_data_to_pixel(specs, data_lines[i]),
+                                  specs->ymin + specs->height,
+                                  GDK_LINE_SOLID,
+                                  1, &gcl);
+     } 
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
