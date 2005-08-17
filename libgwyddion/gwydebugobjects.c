@@ -28,6 +28,7 @@ typedef struct {
     gdouble destroy_time;
     GType type;
     gpointer address;
+    const gchar *details;
 } DebugObjectInfo;
 
 static gboolean debug_objects_enabled = FALSE;
@@ -60,8 +61,10 @@ debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
 }
 
 /**
- * gwy_debug_objects_creation:
+ * gwy_debug_objects_creation_detailed:
  * @object: An object to watch.
+ * @details: Detailed information printed in debug output.  No copy is made,
+ *           it must exist permanently.
  *
  * Notes down @object and sets up watch for its destruction.
  *
@@ -77,7 +80,8 @@ debug_objects_set_time(gpointer data, G_GNUC_UNUSED GObject *exobject)
  * rules of a particular object, he then calls it just after object creation.
  **/
 void
-gwy_debug_objects_creation(GObject *object)
+gwy_debug_objects_creation_detailed(GObject *object,
+                                    const gchar *details)
 {
     DebugObjectInfo *info;
 
@@ -96,6 +100,7 @@ gwy_debug_objects_creation(GObject *object)
     info->id = ++id;
     info->type = G_TYPE_FROM_INSTANCE(object);
     info->address = object;
+    info->details = details;
     info->create_time = g_timer_elapsed(debug_objects_timer, NULL);
     info->destroy_time = -1;
     g_object_weak_ref(info->address, &debug_objects_set_time,
@@ -130,8 +135,10 @@ gwy_debug_objects_dump_to_file(FILE *filehandle,
             && info->destroy_time >= 0.0)
             continue;
 
-        fprintf(filehandle, "%s %p %.3f ",
-                g_type_name(info->type), info->address, info->create_time);
+        fprintf(filehandle, "%s %p ", g_type_name(info->type), info->address);
+        if (info->details)
+            fprintf(filehandle, "(%s) ", info->details);
+        fprintf(filehandle, "%.3f ", info->create_time);
         if (info->destroy_time > 0)
             fprintf(filehandle, "%.3f\n", info->destroy_time);
         else

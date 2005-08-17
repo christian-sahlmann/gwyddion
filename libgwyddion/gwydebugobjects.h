@@ -31,7 +31,11 @@ typedef enum {
     GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE = 1 << 0
 } GwyDebugObjectsDumpFlags;
 
-void gwy_debug_objects_creation          (GObject *object);
+#define gwy_debug_objects_creation(o) \
+    gwy_debug_objects_creation_detailed((o), __FILE__ ":" G_STRINGIFY(__LINE__))
+
+void gwy_debug_objects_creation_detailed (GObject *object,
+                                          const gchar *details);
 void gwy_debug_objects_enable            (gboolean enable);
 void gwy_debug_objects_dump_to_file      (FILE *filehandle,
                                           GwyDebugObjectsDumpFlags flags);
