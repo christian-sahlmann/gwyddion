@@ -49,9 +49,6 @@ struct _GwyGradient {
     GArray *points;
     guchar *pixels;
 
-    gboolean favourite : 1;
-    gboolean boolean1 : 1;
-
     gpointer reserved1;
     gpointer reserved2;
 };

@@ -174,6 +174,37 @@ gwy_resource_get_is_modifiable(GwyResource *resource)
 }
 
 /**
+ * gwy_resource_get_is_preferred:
+ * @resource: A resource.
+ *
+ * Returns whether a resource is preferred.
+ *
+ * Returns: %TRUE if resource is preferred, %FALSE otherwise.
+ **/
+gboolean
+gwy_resource_get_is_preferred(GwyResource *resource)
+{
+    g_return_val_if_fail(GWY_IS_RESOURCE(resource), FALSE);
+    return resource->is_preferred;
+}
+
+/**
+ * gwy_resource_set_is_preferred:
+ * @resource: A resource.
+ * @is_preferred: %TRUE to make @resource preferred, %FALSE to make it not
+ *                preferred.
+ *
+ * Sets preferability of a resource.
+ **/
+void
+gwy_resource_set_is_preferred(GwyResource *resource,
+                              gboolean is_preferred)
+{
+    g_return_if_fail(GWY_IS_RESOURCE(resource));
+    resource->is_preferred = !!is_preferred;
+}
+
+/**
  * gwy_resource_class_get_name:
  * @klass: Resource class.
  *

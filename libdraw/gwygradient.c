@@ -860,6 +860,8 @@ gwy_gradient_preset(const gchar *name,
     if (!inventory)
         inventory = GWY_RESOURCE_GET_CLASS(gradient)->inventory;
     GWY_RESOURCE(gradient)->is_const = TRUE;
+    /* FIXME */
+    gwy_resource_set_is_preferred(GWY_RESOURCE(gradient), TRUE);
     gwy_inventory_insert_item(inventory, gradient);
     g_object_unref(gradient);
 }

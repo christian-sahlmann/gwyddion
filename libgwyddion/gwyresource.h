@@ -44,6 +44,7 @@ struct _GwyResource {
 
     gboolean is_const : 1;
     gboolean is_modified : 1;
+    gboolean is_preferred : 1;
     gboolean boolean1 : 1;
 
     gpointer reserved1;
@@ -76,6 +77,9 @@ struct _GwyResourceClass {
 GType             gwy_resource_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_resource_get_name              (GwyResource *resource);
 gboolean          gwy_resource_get_is_modifiable     (GwyResource *resource);
+gboolean          gwy_resource_get_is_preferred      (GwyResource *resource);
+void              gwy_resource_set_is_preferred      (GwyResource *resource,
+                                                      gboolean is_preferred);
 const gchar*      gwy_resource_class_get_name        (GwyResourceClass *klass);
 GwyInventory*     gwy_resource_class_get_inventory   (GwyResourceClass *klass);
 const GwyInventoryItemType* gwy_resource_class_get_item_type(GwyResourceClass *klass);
