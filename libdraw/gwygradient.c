@@ -65,7 +65,7 @@ static void         gwy_gradient_changed          (GwyGradient *gradient);
 static void         gwy_gradient_preset           (const gchar *name,
                                                    gint npoints,
                                                    const GwyGradientPoint *points);
-static GwyGradient* gwy_gradient_new_internal     (const gchar *name,
+static GwyGradient* gwy_gradient_new              (const gchar *name,
                                                    gint npoints,
                                                    const GwyGradientPoint *points);
 static void         gwy_gradient_dump             (GwyResource *resource,
@@ -856,10 +856,11 @@ gwy_gradient_preset(const gchar *name,
     static GwyInventory *inventory = NULL;
     GwyGradient *gradient;
 
-    gradient = gwy_gradient_new_internal(name, npoints, points);
+    gradient = gwy_gradient_new(name, npoints, points);
     if (!inventory)
         inventory = GWY_RESOURCE_GET_CLASS(gradient)->inventory;
     GWY_RESOURCE(gradient)->is_const = TRUE;
+    GWY_RESOURCE(gradient)->is_modified = FALSE;
     /* FIXME */
     gwy_resource_set_is_preferred(GWY_RESOURCE(gradient), TRUE);
     gwy_inventory_insert_item(inventory, gradient);
@@ -1119,9 +1120,9 @@ _gwy_gradients_setup_presets(void)
 
 /* Eats @name */
 static GwyGradient*
-gwy_gradient_new_internal(const gchar *name,
-                          gint npoints,
-                          const GwyGradientPoint *points)
+gwy_gradient_new(const gchar *name,
+                 gint npoints,
+                 const GwyGradientPoint *points)
 {
     GwyGradient *gradient;
 
@@ -1129,11 +1130,13 @@ gwy_gradient_new_internal(const gchar *name,
 
     gradient = g_object_new(GWY_TYPE_GRADIENT, NULL);
     if (npoints && points) {
-        gradient->points = g_array_sized_new(FALSE, FALSE,
-                                             sizeof(GwyGradientPoint), npoints);
+        g_array_set_size(gradient->points, 0);
         g_array_append_vals(gradient->points, points, npoints);
     }
     GWY_RESOURCE(gradient)->name = g_strdup(name);
+    /* A new resource is modified by default, fixed resources set it back to
+     * FALSE */
+    GWY_RESOURCE(gradient)->is_modified = TRUE;
 
     return gradient;
 }
@@ -1146,9 +1149,9 @@ gwy_gradient_copy(gpointer item)
     g_return_val_if_fail(GWY_IS_GRADIENT(item), NULL);
 
     gradient = GWY_GRADIENT(item);
-    copy = gwy_gradient_new_internal(GWY_RESOURCE(item)->name,
-                                     gradient->points->len,
-                                     (GwyGradientPoint*)gradient->points->data);
+    copy = gwy_gradient_new(GWY_RESOURCE(item)->name,
+                            gradient->points->len,
+                            (GwyGradientPoint*)gradient->points->data);
 
     return copy;
 }
@@ -1237,9 +1240,8 @@ gwy_gradient_parse(const gchar *text)
         goto fail;
     }
 
-    gradient = gwy_gradient_new_internal(name, 0, NULL);
-    gwy_gradient_set_points(gradient,
-                            points->len, (GwyGradientPoint*)points->data);
+    gradient = gwy_gradient_new(name,
+                                points->len, (GwyGradientPoint*)points->data);
 
 fail:
     if (points)
