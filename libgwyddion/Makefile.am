@@ -62,7 +62,7 @@ libgwyddion_la_SOURCES = \
 	gwywatchable.c
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_PIXMAP_DIR=\"$(pkgdatadir)/pixmaps\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_DATA_DIR=\"$(pkgdatadir)\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
 
 clean-local:
 	rm -f core.* *~ testser.object *.xgen

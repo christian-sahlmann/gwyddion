@@ -345,13 +345,16 @@ gwy_sgettext(const gchar *msgid)
 
 /**
  * gwy_find_self_dir:
- * @dirname: A gwyddion directory name like "pixmaps" or "modules".
+ * @dirname: A gwyddion directory name: "modules", "plugins", "pixmaps", or
+ *           "data".
  *
- * Finds some [system] gwyddion directory.
+ * Finds some system gwyddion directory.
  *
  * This function exists only because of insane Win32 instalation manners
  * where user can decide to put precompiled binaries anywhere.
- * On sane systems it just returns a copy of GWY_PIXMAP_DIR, etc. instead.
+ * On sane systems it just returns build-time defined directory, unless
+ * gwy_find_self_set_argv0() has been called, in which case it behaves like
+ * like on Win32 (accommodating running uninstalled).
  *
  * The returned value is not actually tested for existence, it's up to caller.
  *
@@ -365,9 +368,12 @@ gwy_find_self_dir(const gchar *dirname)
 {
 #ifdef G_OS_UNIX
     static const struct { gchar *id; gchar *path; } paths[] = {
-        { "modules",   GWY_MODULE_DIR },
-        { "pixmaps",   GWY_PIXMAP_DIR },
-        { "plugins",   GWY_PLUGIN_DIR },
+        { "modules", GWY_MODULE_DIR,          },
+        { "plugins", GWY_PLUGIN_DIR,          },
+        /* Pixmaps should be in data/pixmaps in source tree too, but it does
+         * not worth changing. */
+        { "pixmaps", GWY_DATA_DIR "/pixmaps", },
+        { "data",    GWY_DATA_DIR,            },
     };
     gsize i;
 #endif /* G_OS_UNIX */
