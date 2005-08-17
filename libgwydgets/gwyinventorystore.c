@@ -269,15 +269,9 @@ gwy_inventory_store_iter_next(GtkTreeModel *model,
     gwy_inventory_store_update_iter(store, iter);
 
     i = GPOINTER_TO_UINT(iter->user_data2) + 1;
+    iter->user_data = gwy_inventory_get_nth_item(store->inventory, i);
     iter->user_data2 = GUINT_TO_POINTER(i);
-    if (i < gwy_inventory_get_n_items(store->inventory)) {
-        iter->user_data = gwy_inventory_get_nth_item(store->inventory, i);
-        return TRUE;
-    }
-    else {
-        iter->user_data = NULL;
-        return FALSE;
-    }
+    return iter->user_data != NULL;
 }
 
 static gboolean
