@@ -732,6 +732,9 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
+    g_signal_connect(menu, "selection-done",
+                     G_CALLBACK(gtk_widget_destroy), NULL);
+
     return FALSE;
 }
 

@@ -105,6 +105,7 @@ gwy_gradient_menu_create(const gchar *current,
             *current_idx = imenu;
         imenu++;
     }
+    gwy_debug_objects_creation(G_OBJECT(menu));
 
     return menu;
 }
