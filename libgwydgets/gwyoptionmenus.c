@@ -49,7 +49,6 @@ enum {
 
 static GtkWidget* gwy_gradient_menu_create       (const gchar *current,
                                                   gint *current_idx);
-static GtkWidget* gwy_sample_gradient_to_gtkimage(GwyGradient *gradient);
 static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
 static gint       gl_material_compare            (GwyGLMaterial *a,
                                                   GwyGLMaterial *b);
@@ -63,29 +62,36 @@ static GtkWidget* gwy_option_menu_create_real    (const GwyEnum *entries,
 static void       gwy_option_menu_metric_unit_destroyed (GwyEnum *entries);
 
 /************************** Gradient menu ****************************/
-/* XXX: deprecated */
 
 static GtkWidget*
 gwy_gradient_menu_create(const gchar *current,
                          gint *current_idx)
 {
-    GSList *l, *entries = NULL;
+    GwyInventory *gradients;
+    GwyGradient *gradient;
+    GdkPixbuf *pixbuf;
     GtkWidget *menu, *image, *item, *hbox, *label;
-    gint i, idx;
+    const gchar *name;
+    gint i, imenu, width, height;
 
-    gwy_inventory_foreach(gwy_gradients(),
-                          gwy_hash_table_to_slist_cb, &entries);
-    entries = g_slist_reverse(entries);
-
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
+    gradients = gwy_gradients();
     menu = gtk_menu_new();
+    if (current && current_idx)
+        *current_idx = -1;
+    imenu = 0;
+    for (i = 0; (gradient = gwy_inventory_get_nth_item(gradients, i)); i++) {
+        if (!gwy_resource_get_is_preferred(GWY_RESOURCE(gradient)))
+            continue;
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                                width, height);
+        gwy_debug_objects_creation(G_OBJECT(pixbuf));
+        gwy_gradient_sample_to_pixbuf(gradient, pixbuf);
+        image = gtk_image_new_from_pixbuf(pixbuf);
+        g_object_unref(pixbuf);
 
-    idx = -1;
-    i = 0;
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyGradient *gradient = (GwyGradient*)l->data;
-        const gchar *name = gwy_resource_get_name(GWY_RESOURCE(gradient));
-
-        image = gwy_sample_gradient_to_gtkimage(gradient);
+        name = gwy_resource_get_name(GWY_RESOURCE(gradient));
         item = gtk_menu_item_new();
         hbox = gtk_hbox_new(FALSE, 6);
         label = gtk_label_new(name);
@@ -95,14 +101,10 @@ gwy_gradient_menu_create(const gchar *current,
         gtk_container_add(GTK_CONTAINER(item), hbox);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         g_object_set_data(G_OBJECT(item), "gradient-name", (gpointer)name);
-        if (current && gwy_strequal(current, name))
-            idx = i;
-        i++;
+        if (current && current_idx && gwy_strequal(current, name))
+            *current_idx = imenu;
+        imenu++;
     }
-    g_slist_free(entries);
-
-    if (current_idx && idx != -1)
-        *current_idx = idx;
 
     return menu;
 }
@@ -173,27 +175,6 @@ gwy_option_menu_gradient(GCallback callback,
     }
 
     return omenu;
-}
-
-static GtkWidget*
-gwy_sample_gradient_to_gtkimage(GwyGradient *gradient)
-{
-    GdkPixbuf *pixbuf;
-    const guchar *samples;
-    GtkWidget *image;
-    guint rowstride;
-    guchar *data;
-    guint tmp[4];
-    gint i, j, k, n;
-
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gwy_gradient_sample_to_pixbuf(gradient, pixbuf);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
-
-    return image;
 }
 
 /************************** Material menu ****************************/
