@@ -29,9 +29,6 @@
 
 #define GWY_INVENTORY_TYPE_NAME "GwyInventory"
 
-#define gwy_inventory_lookup(i,n) \
-    GPOINTER_TO_UINT(g_hash_table_lookup(i->hash, n))
-
 enum {
     ITEM_INSERTED,
     ITEM_DELETED,
@@ -46,6 +43,9 @@ typedef struct {
 } ArrayItem;
 
 static void     gwy_inventory_finalize             (GObject *object);
+static inline guint gwy_inventory_lookup           (GwyInventory *inventory,
+                                                    const gchar *name);
+static void     gwy_inventory_make_hash            (GwyInventory *inventory);
 static GwyInventory* gwy_inventory_new_real  (const GwyInventoryItemType *itype,
                                               guint nitems,
                                               gpointer *items,
@@ -187,6 +187,35 @@ gwy_inventory_finalize(GObject *object)
     G_OBJECT_CLASS(gwy_inventory_parent_class)->finalize(object);
 }
 
+static inline guint
+gwy_inventory_lookup(GwyInventory *inventory,
+                     const gchar *name)
+{
+    if (G_UNLIKELY(!inventory->hash))
+        gwy_inventory_make_hash(inventory);
+
+    return GPOINTER_TO_UINT(g_hash_table_lookup(inventory->hash, name));
+}
+
+static void
+gwy_inventory_make_hash(GwyInventory *inventory)
+{
+    const gchar* (*get_name)(gpointer);
+    gint i;
+
+    g_assert(!inventory->hash);
+    inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
+
+    get_name = inventory->item_type.get_name;
+    for (i = 0; i < inventory->items->len; i++) {
+        gpointer item;
+
+        item = g_ptr_array_index(inventory->items, i);
+        g_hash_table_insert(inventory->hash, (gpointer)get_name(item),
+                            GUINT_TO_POINTER(i+1));
+    }
+}
+
 /**
  * gwy_inventory_new:
  * @itype: Type of items the inventory will contain.
@@ -279,13 +308,9 @@ gwy_inventory_new_real(const GwyInventoryItemType *itype,
     inventory->is_sorted = (itype->compare != NULL);
     inventory->is_const = is_const;
     inventory->items = g_ptr_array_sized_new(nitems);
-    inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < nitems; i++) {
         g_ptr_array_add(inventory->items, items[i]);
-        g_hash_table_insert(inventory->hash,
-                            (gpointer)itype->get_name(items[i]),
-                            GUINT_TO_POINTER(i+1));
         if (inventory->is_sorted && i)
             inventory->is_sorted = (itype->compare(items[i-1], items[i]) < 0);
     }
@@ -1189,7 +1214,7 @@ gwy_inventory_new_item(GwyInventory *inventory,
         name = inventory->default_key->str;
 
     if ((!name || !(i = gwy_inventory_lookup(inventory, name)))
-        && (inventory->items->len))
+        && inventory->items->len)
         i = 1;
     if (i) {
         item = g_ptr_array_index(inventory->items, 0);
