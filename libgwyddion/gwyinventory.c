@@ -448,7 +448,11 @@ gwy_inventory_get_item_or_default(GwyInventory *inventory,
 /**
  * gwy_inventory_get_nth_item:
  * @inventory: An inventory.
- * @n: Item position.
+ * @n: Item position.  It must be between zero and the number of items in
+ *     inventory, inclusive.  If it is equal to the number of items, %NULL
+ *     is returned.  In other words, inventory behaves like a %NULL-terminated
+ *     array, you can simply iterate over it until gwy_inventory_get_nth_item()
+ *     returns %NULL.
  *
  * Returns item on given position in an inventory.
  *
@@ -459,7 +463,9 @@ gwy_inventory_get_nth_item(GwyInventory *inventory,
                            guint n)
 {
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
-    g_return_val_if_fail(n < inventory->items->len, NULL);
+    g_return_val_if_fail(n <= inventory->items->len, NULL);
+    if (G_UNLIKELY(n == inventory->items->len))
+        return NULL;
     if (inventory->ridx)
         n = g_array_index(inventory->ridx, guint, n);
 
