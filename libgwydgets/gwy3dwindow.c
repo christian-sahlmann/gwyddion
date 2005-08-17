@@ -553,7 +553,9 @@ gwy_3d_window_add_action_widget(Gwy3DWindow *gwy3dwindow,
  * @gwy3dwindow: A 3D data view window.
  * @stock_id: Button pixmap stock id, like #GTK_STOCK_SAVE.
  * @tooltip: Button tooltip.
- * @callback: Callback action.
+ * @callback: Callback action for "clicked" signal.  It is connected swapped,
+ *            that is it gets @cbdata as its first argument, the clicked button
+ *            as the last.
  * @cbdata: Data to pass to @callback.
  *
  * Adds a button to small @gwy3dwindow toolbar.
@@ -580,7 +582,7 @@ gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
                       gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON));
     gwy_3d_window_set_tooltip(button, tooltip);
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-    g_signal_connect(button, "clicked", G_CALLBACK(callback), cbdata);
+    g_signal_connect_swapped(button, "clicked", G_CALLBACK(callback), cbdata);
 }
 
 /**
