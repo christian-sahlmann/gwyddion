@@ -1488,6 +1488,7 @@ test_inventory(void)
         foo_get_name,
         foo_compare,
         NULL,
+        NULL,
         foo_get_traits,
         foo_get_trait_name,
         foo_get_trait_value,
@@ -1521,7 +1522,7 @@ test_inventory(void)
     else
         fprintf(stderr, "default: <%s> = <%d>\n", e->name, e->value);
 
-    gwy_inventory_set_default_item(inventory, "Carabid");
+    gwy_inventory_set_default_item_name(inventory, "Carabid");
     e = gwy_inventory_get_item_or_default(inventory, "Grannom");
     if (!e)
         g_warning("<Grannom> neither default not found");
@@ -1559,7 +1560,7 @@ test_inventory(void)
     else
         fprintf(stderr, "default: <%s>: <%s>\n", pf->q, pf->p);
 
-    gwy_inventory_set_default_item(inventory, "Idle");
+    gwy_inventory_set_default_item_name(inventory, "Idle");
     pf = gwy_inventory_get_item_or_default(inventory, "Smith");
     if (!pf)
         g_warning("<Smith> neither default not found");
@@ -1610,8 +1611,8 @@ test_inventory(void)
     gwy_inventory_insert_item(inventory, pf);
     gwy_inventory_foreach(inventory, foo_print, inventory);
 
-    fprintf(stderr, "Iterating with get_next_item():\n");
-    for (pf = NULL, i = 0; pf = gwy_inventory_get_next_item(inventory, pf); i++)
+    fprintf(stderr, "Iterating manually:\n");
+    for (i = 0; (pf = gwy_inventory_get_nth_item(inventory, i)); i++)
         foo_print(GUINT_TO_POINTER(i), pf, inventory);
 
     g_object_unref(inventory);

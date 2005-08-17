@@ -27,10 +27,9 @@
 #include <glib/gstdio.h>
 #include <gtk/gtkglinit.h>
 
-#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
-#include <libgwyddion/gwydebugobjects.h>
-#include <libgwyddion/gwyutils.h>
+#include <libdraw/gwydraw.h>
 #include <libgwydgets/gwystock.h>
 #include "gwyapp.h"
 #include "gwyappinternal.h"
@@ -102,6 +101,9 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
 
+    gwy_app_splash_set_message(_("gradients"));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
+
     gwy_app_splash_set_message(_("modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
@@ -120,13 +122,17 @@ main(int argc, char *argv[])
     if (settings_ok || !has_settings)
         gwy_app_settings_save(settings_file);
     gwy_app_recent_file_list_save(recent_file_file);
+    gwy_resource_class_save(g_type_class_peek(GWY_TYPE_GRADIENT), NULL);
+    /* XXX: Finalize all gradients.  Useless, but makes --debug-objects happy.
+     * Remove in production version. */
+    g_object_unref(gwy_gradients());
     gwy_app_settings_free();
+    gwy_debug_objects_dump_to_file(stderr, 0);
+    gwy_debug_objects_clear();
+    gwy_app_recent_file_list_free();
     g_free(recent_file_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
-    gwy_app_recent_file_list_free();
-    gwy_debug_objects_dump_to_file(stderr, 0);
-    gwy_debug_objects_clear();
 
     return 0;
 }

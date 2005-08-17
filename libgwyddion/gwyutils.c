@@ -439,7 +439,7 @@ gwy_find_self_set_argv0(const gchar *argv0)
  *
  * Returns: The directory as a string that should not be freed.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_get_user_dir(void)
 {
     const gchar *gwydir =
@@ -469,7 +469,7 @@ gwy_get_user_dir(void)
  * Returns: Something usable as user home directory.  It may be silly, but
  *          never %NULL or empty.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_get_home_dir(void)
 {
     const gchar *homedir = NULL;

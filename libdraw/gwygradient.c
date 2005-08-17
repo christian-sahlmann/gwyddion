@@ -103,7 +103,7 @@ gwy_gradient_class_init(GwyGradientClass *klass)
     res_class->item_type.get_trait_name = gwy_gradient_get_trait_name;
     res_class->item_type.get_trait_value = gwy_gradient_get_trait_value;
 
-    res_class->name = "gradient";
+    res_class->name = "gradients";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     gwy_inventory_set_default_item_name(res_class->inventory,
                                         GWY_GRADIENT_DEFAULT);
@@ -169,7 +169,7 @@ gwy_gradient_get_trait_value(gpointer item,
     switch (i) {
         case 0:
         g_value_init(value, G_TYPE_STRING);
-        g_value_set_object(value, GWY_RESOURCE(item)->name);
+        g_value_set_string(value, gwy_resource_get_name(GWY_RESOURCE(item)));
         break;
 
         case 1:
@@ -841,7 +841,7 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
 static void
 gwy_gradient_changed(GwyGradient *gradient)
 {
-    gwy_debug("%s", gradient->name);
+    gwy_debug("%s", GWY_RESOURCE(gradient)->name->str);
     if (gradient->pixels)
         gwy_gradient_sample(gradient, GWY_GRADIENT_DEFAULT_SIZE,
                             gradient->pixels);
@@ -1133,7 +1133,7 @@ gwy_gradient_new(const gchar *name,
         g_array_set_size(gradient->points, 0);
         g_array_append_vals(gradient->points, points, npoints);
     }
-    GWY_RESOURCE(gradient)->name = g_strdup(name);
+    GWY_RESOURCE(gradient)->name = g_string_new(name);
     /* A new resource is modified by default, fixed resources set it back to
      * FALSE */
     GWY_RESOURCE(gradient)->is_modified = TRUE;
@@ -1149,7 +1149,7 @@ gwy_gradient_copy(gpointer item)
     g_return_val_if_fail(GWY_IS_GRADIENT(item), NULL);
 
     gradient = GWY_GRADIENT(item);
-    copy = gwy_gradient_new(GWY_RESOURCE(item)->name,
+    copy = gwy_gradient_new(gwy_resource_get_name(GWY_RESOURCE(item)),
                             gradient->points->len,
                             (GwyGradientPoint*)gradient->points->data);
 
@@ -1197,7 +1197,6 @@ gwy_gradient_parse(const gchar *text)
     GwyGradientClass *klass;
     GArray *points = NULL;
     GwyGradientPoint pt;
-    gchar *name = NULL;
     gchar *str, *p, *line, *end;
 
     g_return_val_if_fail(text, NULL);
@@ -1236,17 +1235,16 @@ gwy_gradient_parse(const gchar *text)
         g_array_append_val(points, pt);
     }
     if (line) {
-        g_warning("Cannot parse color point in `%s'", name);
+        g_warning("Cannot parse color points.");
         goto fail;
     }
 
-    gradient = gwy_gradient_new(name,
+    gradient = gwy_gradient_new("",
                                 points->len, (GwyGradientPoint*)points->data);
 
 fail:
     if (points)
         g_array_free(points, TRUE);
-    g_free(name);
     g_free(str);
     return (GwyResource*)gradient;
 }

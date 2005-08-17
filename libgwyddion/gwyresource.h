@@ -40,7 +40,7 @@ struct _GwyResource {
     GObject parent_instance;
 
     gint use_count;
-    gchar *name;
+    GString *name;
 
     gboolean is_const : 1;
     gboolean is_modified : 1;
@@ -88,7 +88,11 @@ void              gwy_resource_release               (GwyResource *resource);
 gboolean          gwy_resource_is_used               (GwyResource *resource);
 void              gwy_resource_data_changed          (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
-GwyResource*      gwy_resource_parse                 (const gchar *text);
+GwyResource*      gwy_resource_parse                 (const gchar *text,
+                                                      GType expected_type);
+gboolean          gwy_resource_class_save            (GwyResourceClass *klass,
+                                                      GError **err);
+void              gwy_resource_class_load            (GwyResourceClass *klass);
 
 /* TODO: some methods to (re)load, save complete resource inventory to some
  * directory */

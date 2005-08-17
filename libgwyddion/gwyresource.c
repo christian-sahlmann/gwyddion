@@ -20,7 +20,11 @@
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyenum.h>
 #include <libgwyddion/gwyinventory.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwyresource.h>
@@ -32,6 +36,13 @@ enum {
     LAST_SIGNAL
 };
 
+/* Data used in load and save functions.  Some fields are used only one of
+ * them */
+typedef struct {
+    const gchar *path;
+    GError *err;
+} GwyResourceIOData;
+
 static void         gwy_resource_finalize         (GObject *object);
 static gboolean     gwy_resource_get_is_const     (gconstpointer item);
 static const gchar* gwy_resource_get_item_name    (gpointer item);
@@ -42,6 +53,12 @@ static void         gwy_resource_rename           (gpointer item,
 static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
 static void         gwy_resource_modified         (GwyResource *resource);
+static gboolean     gwy_resource_save             (gpointer key,
+                                                   gpointer item,
+                                                   gpointer user_data);
+static void         gwy_resource_class_load_dir   (const gchar *path,
+                                                   GwyResourceClass *klass,
+                                                   gboolean system);
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -97,10 +114,10 @@ gwy_resource_finalize(GObject *object)
 {
     GwyResource *resource = (GwyResource*)object;
 
-    gwy_debug("%s", resource->name);
+    gwy_debug("%s", resource->name->str);
     if (resource->use_count)
         g_critical("Resource %p with nonzero use_count is finalized.", object);
-    g_free(resource->name);
+    g_string_free(resource->name, TRUE);
 
     G_OBJECT_CLASS(gwy_resource_parent_class)->finalize(object);
 }
@@ -109,7 +126,7 @@ static const gchar*
 gwy_resource_get_item_name(gpointer item)
 {
     GwyResource *resource = (GwyResource*)item;
-    return resource->name;
+    return resource->name->str;
 }
 
 static gboolean
@@ -126,7 +143,7 @@ gwy_resource_compare(gconstpointer item1,
     GwyResource *resource1 = (GwyResource*)item1;
     GwyResource *resource2 = (GwyResource*)item2;
 
-    return strcmp(resource1->name, resource2->name);
+    return strcmp(resource1->name->str, resource2->name->str);
 }
 
 static void
@@ -136,8 +153,7 @@ gwy_resource_rename(gpointer item,
     GwyResource *resource = (GwyResource*)item;
 
     g_return_if_fail(!resource->is_const);
-    g_free(resource->name);
-    resource->name = g_strdup(new_name);
+    g_string_assign(resource->name, new_name);
     resource->is_modified = TRUE;
 }
 
@@ -154,7 +170,7 @@ const gchar*
 gwy_resource_get_name(GwyResource *resource)
 {
     g_return_val_if_fail(GWY_IS_RESOURCE(resource), NULL);
-    return resource->name;
+    return resource->name->str;
 }
 
 /**
@@ -262,7 +278,7 @@ gwy_resource_use(GwyResource *resource)
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     gwy_debug("%s %p<%s> %d",
               g_type_name(G_TYPE_FROM_INSTANCE(resource)),
-              resource, resource->name, resource->use_count);
+              resource, resource->name->str, resource->use_count);
 
     g_object_ref(resource);
     if (!resource->use_count++) {
@@ -290,7 +306,7 @@ gwy_resource_release(GwyResource *resource)
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     gwy_debug("%s %p<%s> %d",
               g_type_name(G_TYPE_FROM_INSTANCE(resource)),
-              resource, resource->name, resource->use_count);
+              resource, resource->name->str, resource->use_count);
     g_return_if_fail(resource->use_count);
 
     if (!--resource->use_count) {
@@ -338,10 +354,9 @@ gwy_resource_dump(GwyResource *resource)
     method = GWY_RESOURCE_GET_CLASS(resource)->dump;
     g_return_val_if_fail(method, NULL);
 
-    str = g_string_new("");
-    g_string_printf(str, "%s %s\n",
-                    MAGIC_HEADER,
-                    g_type_name(G_TYPE_FROM_INSTANCE(resource)));
+    str = g_string_new(MAGIC_HEADER);
+    g_string_append(str, g_type_name(G_TYPE_FROM_INSTANCE(resource)));
+    g_string_append_c(str, '\n');
     method(resource, str);
 
     return str;
@@ -350,15 +365,19 @@ gwy_resource_dump(GwyResource *resource)
 /**
  * gwy_resource_parse:
  * @text: Textual resource representation.
+ * @expected_type: Resource object type.  If not 0, only resources of give type
+ *                 are allowed.  Zero value means any #GwyResource is allowed.
  *
  * Reconstructs a resource from human readable form.
  *
  * Returns: Newly created resource (or %NULL).
  **/
 GwyResource*
-gwy_resource_parse(const gchar *text)
+gwy_resource_parse(const gchar *text,
+                   GType expected_type)
 {
     GwyResourceClass *klass;
+    GwyResource *resource;
     GType type;
     gchar *name;
     guint len;
@@ -373,22 +392,31 @@ gwy_resource_parse(const gchar *text)
     name = g_strndup(text, len);
     text = strchr(text + len, '\n');
     if (!text) {
-        g_warning("Empty resource body");
+        g_warning("Truncated resource header");
         return NULL;
     }
+    text++;
     type = g_type_from_name(name);
     if (!type
+        || (expected_type && type != expected_type)
         || !g_type_is_a(type, GWY_TYPE_RESOURCE)
         || !G_TYPE_IS_INSTANTIATABLE(type)) {
         g_warning("Wrong resource type `%s'", name);
         g_free(name);
         return NULL;
     }
-    g_free(name);
     klass = GWY_RESOURCE_CLASS(g_type_class_peek_static(type));
     g_return_val_if_fail(klass && klass->parse, NULL);
 
-    return klass->parse(text);
+    resource = klass->parse(text);
+    if (resource) {
+        g_string_assign(resource->name, name);
+        /* TODO: change once we have GUI for that */
+        resource->is_preferred = TRUE;
+    }
+    g_free(name);
+
+    return resource;
 }
 
 /**
@@ -410,6 +438,146 @@ static void
 gwy_resource_modified(GwyResource *resource)
 {
     resource->is_modified = TRUE;
+}
+
+gboolean
+gwy_resource_class_save(GwyResourceClass *klass,
+                        GError **err)
+{
+    gchar *path;
+    GwyResourceIOData iodata;
+    gboolean ok;
+
+    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), FALSE);
+    g_return_val_if_fail(klass->inventory, FALSE);
+
+    path = g_build_filename(gwy_get_user_dir(), klass->name, NULL);
+    if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+        if (g_mkdir(path, 0700) != 0) {
+            g_set_error(err,
+                        G_FILE_ERROR,
+                        g_file_error_from_errno(errno),
+                        "Cannot create directory `%s': %s",
+                        path, g_strerror(errno));
+            g_free(path);
+            return FALSE;
+        }
+    }
+
+    iodata.path = path;
+    iodata.err = NULL;
+    ok = (gwy_inventory_find(klass->inventory, &gwy_resource_save,
+                             &iodata) == NULL);
+    g_free(path);
+    if (!ok)
+        g_propagate_error(err, iodata.err);
+
+    return ok;
+}
+
+static gboolean
+gwy_resource_save(G_GNUC_UNUSED gpointer key,
+                  gpointer item,
+                  gpointer user_data)
+{
+    GwyResource *resource = GWY_RESOURCE(item);
+    GwyResourceIOData *iodata = (GwyResourceIOData*)user_data;
+    GString *str;
+    FILE *fh;
+    gchar *filename;
+
+    /* Only attempt to save modified user resourced */
+    if (resource->is_const || !resource->is_modified)
+        return FALSE;
+
+    filename = g_build_filename(iodata->path, resource->name->str, NULL);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_set_error(&iodata->err,
+                    G_FILE_ERROR,
+                    g_file_error_from_errno(errno),
+                    "Cannot save file `%s': %s",
+                    filename, g_strerror(errno));
+        g_free(filename);
+        return TRUE;
+    }
+    g_free(filename);
+    str = gwy_resource_dump(resource);
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    return FALSE;
+}
+
+void
+gwy_resource_class_load(GwyResourceClass *klass)
+{
+    gchar *path;
+
+    g_return_if_fail(GWY_IS_RESOURCE_CLASS(klass));
+    g_return_if_fail(klass->inventory);
+
+    gwy_inventory_forget_order(klass->inventory);
+
+    path = g_build_filename(gwy_find_self_dir("data"), klass->name, NULL);
+    gwy_resource_class_load_dir(path, klass, TRUE);
+    g_free(path);
+
+    path = g_build_filename(gwy_get_user_dir(), klass->name, NULL);
+    gwy_resource_class_load_dir(path, klass, FALSE);
+    g_free(path);
+
+    gwy_inventory_restore_order(klass->inventory);
+}
+
+static void
+gwy_resource_class_load_dir(const gchar *path,
+                            GwyResourceClass *klass,
+                            gboolean system)
+{
+    GDir *dir;
+    GwyResource *resource;
+    GError *err = NULL;
+    const gchar *name;
+    gchar *filename, *text;
+
+    if (!(dir = g_dir_open(path, 0, NULL)))
+        return;
+
+    while ((name = g_dir_read_name(dir))) {
+        if (name[0] == '.'
+            || g_str_has_suffix(name, "~")
+            || g_str_has_suffix(name, ".bak")
+            || g_str_has_suffix(name, ".BAK"))
+            continue;
+
+        if (gwy_inventory_get_item(klass->inventory, name)) {
+            g_warning("Ignoring duplicite %s `%s'", klass->name, name);
+            continue;
+        }
+        /* FIXME */
+        filename = g_build_filename(path, name, NULL);
+        if (!g_file_get_contents(filename, &text, NULL, &err)) {
+            g_warning("Cannot read `%s': %s", filename, err->message);
+            g_clear_error(&err);
+            g_free(filename);
+            continue;
+        }
+        g_free(filename);
+
+        resource = gwy_resource_parse(text, G_TYPE_FROM_CLASS(klass));
+        if (resource) {
+            resource->name = g_string_new(name);
+            resource->is_const = system;
+            resource->is_modified = FALSE;
+            gwy_inventory_insert_item(klass->inventory, resource);
+            g_object_unref(resource);
+        }
+        g_free(text);
+    }
+
+    g_dir_close(dir);
 }
 
 /************************** Documentation ****************************/
