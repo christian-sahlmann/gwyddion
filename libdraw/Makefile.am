@@ -32,12 +32,6 @@ libgwydraw_la_SOURCES = \
 	gwypixfield.c \
 	gwyrgba.c
 
-#test_SOURCES = \
-#	test.c
-#test_LDADD = libgwydraw.la \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
-
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
 
