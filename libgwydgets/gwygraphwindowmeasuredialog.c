@@ -44,7 +44,8 @@ static gboolean gwy_graph_window_measure_dialog_delete           (GtkWidget *wid
 
 static void     selection_updated_cb                               (GwyGraph *graph, 
                                                                     GwyGraphWindowMeasureDialog *dialog);
-    
+static void     index_changed_cb                                 (GwyGraphWindowMeasureDialog *dialog);
+ 
 static gint NMAX = 10;
 static gulong selection_id = 0;
 static GtkDialogClass *parent_class = NULL;
@@ -174,7 +175,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     GString *str;
     gint i, n;
     gdouble *spoints = NULL;
-    gdouble x, y, xp, yp;
+    gdouble x=0, y=0, xp=0, yp=0;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS || 
@@ -208,7 +209,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
             {
                 x = spoints[i];
-                y = get_y_for_x(graph, x, 0);
+                y = get_y_for_x(graph, x, dialog->curve_index - 1);
             }
             
             label = g_ptr_array_index(dialog->pointx, i);
@@ -254,8 +255,9 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
 GtkWidget *
 gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 {
-    GtkWidget *label, *table;
+    GtkWidget *label, *table, *spin;
     GwyGraphWindowMeasureDialog *dialog;
+    GwyGraphModel *gmodel;
     gint i;
     GString *str;
     
@@ -263,7 +265,7 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG (g_object_new (gwy_graph_window_measure_dialog_get_type (), NULL));
 
     dialog->graph = GTK_WIDGET(graph);
-
+    gmodel = gwy_graph_get_model(GWY_GRAPH(dialog->graph));
 
     dialog->labpoint = g_ptr_array_new();
     dialog->pointx = g_ptr_array_new();
@@ -271,6 +273,7 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     dialog->distx = g_ptr_array_new();
     dialog->disty = g_ptr_array_new();
     dialog->slope = g_ptr_array_new();
+    dialog->curve_index = 1;
     str = g_string_new("");
 
     table = gtk_table_new(1, 3, FALSE);
@@ -278,6 +281,12 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
+    dialog->index = GTK_OBJECT(gtk_adjustment_new(dialog->curve_index, 1, gmodel->ncurves, 1, 5, 0));
+    gwy_table_attach_spinbutton(table, 0, "Curve:", "", dialog->index);
+    g_signal_connect_swapped(dialog->index, "value-changed",
+                             G_CALLBACK(index_changed_cb), dialog);
+
+    
     /* big table */
     table = gtk_table_new(6, 11, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -361,6 +370,12 @@ gwy_graph_window_measure_dialog_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-
+static void     
+index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
+{
+   dialog->curve_index = 
+        gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->index));
+   selection_updated_cb(GWY_GRAPH(dialog->graph), dialog);    
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

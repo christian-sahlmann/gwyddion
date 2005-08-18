@@ -48,6 +48,7 @@ struct _GwyGraphWindowMeasureDialog {
     
     GtkWidget *xlabel;
     GtkWidget *ylabel;
+    GtkObject *index;
     GPtrArray *pointx;
     GPtrArray *pointy;
     GPtrArray *distx;
@@ -55,6 +56,7 @@ struct _GwyGraphWindowMeasureDialog {
     GPtrArray *slope;
     GPtrArray *labpoint;
     gint n;
+    gint curve_index;
     gdouble x_mag;
     gdouble y_mag;
                                               
