@@ -857,8 +857,6 @@ _gwy_gradient_class_setup_presets(void)
     gradient = gwy_gradient_new(GWY_GRADIENT_DEFAULT, 0, NULL);
     GWY_RESOURCE(gradient)->is_const = TRUE;
     GWY_RESOURCE(gradient)->is_modified = FALSE;
-    /* FIXME */
-    gwy_resource_set_is_preferred(GWY_RESOURCE(gradient), TRUE);
     gwy_inventory_insert_item(klass->inventory, gradient);
     g_object_unref(gradient);
 

@@ -431,11 +431,8 @@ gwy_resource_parse(const gchar *text,
     g_return_val_if_fail(klass && klass->parse, NULL);
 
     resource = klass->parse(text);
-    if (resource) {
+    if (resource)
         g_string_assign(resource->name, name);
-        /* TODO: change once we have GUI for that */
-        resource->is_preferred = TRUE;
-    }
     g_free(name);
 
     return resource;
