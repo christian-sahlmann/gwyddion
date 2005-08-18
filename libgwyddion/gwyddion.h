@@ -28,7 +28,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwynlfit.h>
-#include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwyddion/gwyinventory.h>

@@ -19,8 +19,7 @@ libgwyddioninclude_HEADERS = \
 	gwyresource.h \
 	gwyserializable.h \
 	gwyutils.h \
-	gwysiunit.h \
-	gwywatchable.h
+	gwysiunit.h
 
 built_sources = \
 	gwyddiontypes.h \
@@ -58,8 +57,7 @@ libgwyddion_la_SOURCES = \
 	gwyresource.c \
 	gwyserializable.c \
 	gwyutils.c \
-	gwysiunit.c \
-	gwywatchable.c
+	gwysiunit.c
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_DATA_DIR=\"$(pkgdatadir)\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
