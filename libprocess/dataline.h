@@ -23,7 +23,6 @@
 
 #include <glib-object.h>
 
-#include <libgwyddion/gwywatchable.h>
 #include <libgwyddion/gwyserializable.h>
 #include <libprocess/gwyprocessenums.h>
 
