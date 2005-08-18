@@ -638,6 +638,15 @@ Emitted when value changes.
 @user_data: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_inventory_get_next_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@item: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_inventory_is_constant ##### -->
 <para>
 
@@ -675,6 +684,25 @@ Emitted when value changes.
 @items: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_inventory_new_from_enum ##### -->
+<para>
+
+</para>
+
+@enum_table: 
+@n: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_inventory_new_item_as_copy ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+@newname: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_inventory_nth_item_is_modifable ##### -->
 <para>
 
@@ -699,6 +727,15 @@ Emitted when value changes.
 
 @inventory: 
 @n: 
+
+<!-- ##### FUNCTION gwy_inventory_set_default_item ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@name: 
+@Returns: 
 
 <!-- ##### FUNCTION gwy_inventory_unref_item ##### -->
 <para>
@@ -791,6 +828,38 @@ Emitted when value changes.
 @params: 
 @x: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_resource_class_get_traits ##### -->
+<para>
+
+</para>
+
+@klass: 
+@ntraits: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_get_trait ##### -->
+<para>
+
+</para>
+
+@resource: 
+@n: 
+@value: 
+
+<!-- ##### FUNCTION gwy_resource_ref ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+<!-- ##### FUNCTION gwy_resource_unref ##### -->
+<para>
+
+</para>
+
+@resource: 
 
 <!-- ##### FUNCTION gwy_serialize_check_string ##### -->
 <para>

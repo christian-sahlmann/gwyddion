@@ -32,6 +32,26 @@ GwyResource
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_resource_class_get_traits ##### -->
+<para>
+
+</para>
+
+@klass: 
+@ntraits: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_get_trait ##### -->
+<para>
+
+</para>
+
+@resource: 
+@n: 
+@value: 
+
+
 <!-- ##### FUNCTION gwy_resource_ref ##### -->
 <para>
 

@@ -38,6 +38,32 @@ GwyPalette
 GwyPaletteDef
 
 
+<!-- ##### SECTION ./tmpl/gwyresource.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyresource.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyresource.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwyresource.sgml:Title ##### -->
+GwyResource
+
+
+<!-- ##### MACRO GWY_GRADIENT_DEFAULT ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_PALETTE_BLUE ##### -->
 <para>
 
@@ -194,6 +220,46 @@ GwyPaletteDef
 </para>
 
 
+<!-- ##### SIGNAL GwyGradient::data-changed ##### -->
+<para>
+
+</para>
+
+@gwygradient: the object which received the signal.
+
+<!-- ##### USER_FUNCTION GwyGradientFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@gradient: 
+@user_data: 
+
+<!-- ##### FUNCTION gwy_gradient_dump ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradient_get_modifiable ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradient_get_name ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_gradient_is_modifiable ##### -->
 <para>
 
@@ -202,7 +268,31 @@ GwyPaletteDef
 @gradient: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_gradient_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_gradients_delete_gradient ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gradients_foreach ##### -->
+<para>
+
+</para>
+
+@function: 
+@user_data: 
+
+<!-- ##### FUNCTION gwy_gradients_gradient_exists ##### -->
 <para>
 
 </para>
@@ -310,7 +400,47 @@ GwyPaletteDef
 @data_field: 
 @color: 
 
+<!-- ##### FUNCTION gwy_resource_class_get_traits ##### -->
+<para>
+
+</para>
+
+@klass: 
+@ntraits: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_data_changed ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+<!-- ##### FUNCTION gwy_resource_dump ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_get_is_modifiable ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_resource_get_modifiable ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_get_name ##### -->
 <para>
 
 </para>
@@ -325,4 +455,50 @@ GwyPaletteDef
 
 @resource: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_resource_get_trait ##### -->
+<para>
+
+</para>
+
+@resource: 
+@n: 
+@value: 
+
+<!-- ##### FUNCTION gwy_resource_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_ref ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+<!-- ##### FUNCTION gwy_resource_ref_pixbuf ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_resource_unref ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+<!-- ##### FUNCTION gwy_resource_unref_pixbuf ##### -->
+<para>
+
+</para>
+
+@resource: 
 

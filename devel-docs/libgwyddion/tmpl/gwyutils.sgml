@@ -23,21 +23,6 @@ path manipulation
 
 </para>
 
-<!-- ##### MACRO GWY_TYPE_ENUM ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### STRUCT GwyEnum ##### -->
-<para>
-
-</para>
-
-@name: 
-@value: 
-
 <!-- ##### FUNCTION gwy_hash_table_to_slist_cb ##### -->
 <para>
 
@@ -56,62 +41,6 @@ path manipulation
 @unused_key: 
 @value: 
 @user_data: 
-
-
-<!-- ##### FUNCTION gwy_enum_get_type ##### -->
-<para>
-
-</para>
-
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_string_to_enum ##### -->
-<para>
-
-</para>
-
-@str: 
-@enum_table: 
-@n: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_enum_to_string ##### -->
-<para>
-
-</para>
-
-@enumval: 
-@enum_table: 
-@n: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_string_to_flags ##### -->
-<para>
-
-</para>
-
-@str: 
-@enum_table: 
-@n: 
-@delimiter: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_flags_to_string ##### -->
-<para>
-
-</para>
-
-@enumval: 
-@enum_table: 
-@n: 
-@glue: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@delimiter: 
 
 
 <!-- ##### FUNCTION gwy_strkill ##### -->

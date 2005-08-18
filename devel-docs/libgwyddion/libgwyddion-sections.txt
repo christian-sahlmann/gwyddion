@@ -1,4 +1,34 @@
 <SECTION>
+<FILE>gwyresource</FILE>
+<TITLE>GwyResource</TITLE>
+GwyResource
+GwyResourceClass
+gwy_resource_get_name
+gwy_resource_get_is_modifiable
+gwy_resource_get_is_preferred
+gwy_resource_set_is_preferred
+gwy_resource_class_get_name
+gwy_resource_class_get_inventory
+gwy_resource_class_get_item_type
+gwy_resource_use
+gwy_resource_release
+gwy_resource_is_used
+gwy_resource_data_changed
+gwy_resource_dump
+gwy_resource_parse
+gwy_resource_class_save
+gwy_resource_class_load
+<SUBSECTION Standard>
+GWY_RESOURCE
+GWY_IS_RESOURCE
+GWY_TYPE_RESOURCE
+gwy_resource_get_type
+GWY_RESOURCE_CLASS
+GWY_IS_RESOURCE_CLASS
+GWY_RESOURCE_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwysiunit</FILE>
 GwySIValueFormat
 <TITLE>GwySIUnit</TITLE>
@@ -46,10 +76,11 @@ GWY_WATCHABLE_GET_IFACE
 <FILE>gwyinventory</FILE>
 GwyInventoryItemType
 <TITLE>GwyInventory</TITLE>
+GwyInventory
+GwyInventoryClass
 gwy_inventory_new
 gwy_inventory_new_filled
 gwy_inventory_new_from_array
-gwy_inventory_new_from_enum
 gwy_inventory_get_n_items
 gwy_inventory_can_make_copies
 gwy_inventory_is_const
@@ -59,7 +90,9 @@ gwy_inventory_get_item_or_default
 gwy_inventory_get_nth_item
 gwy_inventory_get_item_position
 gwy_inventory_foreach
-gwy_inventory_set_default_item
+gwy_inventory_find
+gwy_inventory_set_default_item_name
+gwy_inventory_get_default_item_name
 gwy_inventory_get_default_item
 gwy_inventory_item_updated
 gwy_inventory_nth_item_updated
@@ -71,7 +104,6 @@ gwy_inventory_delete_item
 gwy_inventory_delete_nth_item
 gwy_inventory_rename_item
 gwy_inventory_new_item
-gwy_inventory_new_item_as_copy
 <SUBSECTION Standard>
 GWY_INVENTORY
 GWY_IS_INVENTORY
@@ -81,6 +113,7 @@ GWY_INVENTORY_CLASS
 GWY_IS_INVENTORY_CLASS
 GWY_INVENTORY_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyserializable</FILE>
 GWY_IMPLEMENT_SERIALIZABLE
@@ -105,6 +138,7 @@ GWY_TYPE_SERIALIZABLE
 gwy_serializable_get_type
 GWY_SERIALIZABLE_GET_IFACE
 </SECTION>
+
 <SECTION>
 <FILE>gwycontainer</FILE>
 GWY_CONTAINER_PATHSEP
@@ -198,6 +232,7 @@ GwySIUnitFormatStyle
 <FILE>gwydebugobjects</FILE>
 GwyDebugObjectsDumpFlags
 gwy_debug_objects_creation
+gwy_debug_objects_creation_detailed
 gwy_debug_objects_enable
 gwy_debug_objects_dump_to_file
 gwy_debug_objects_clear
@@ -220,15 +255,8 @@ gwy_math_sort
 
 <SECTION>
 <FILE>gwyutils</FILE>
-GWY_TYPE_ENUM
-GwyEnum
 gwy_hash_table_to_slist_cb
 gwy_hash_table_to_list_cb
-gwy_enum_get_type
-gwy_string_to_enum
-gwy_enum_to_string
-gwy_string_to_flags
-gwy_flags_to_string
 gwy_strkill
 gwy_strreplace
 gwy_strdiffpos
@@ -302,6 +330,19 @@ gwy_math_nlfit_get_preset_param_name
 gwy_math_nlfit_get_preset_param_default
 gwy_math_nlfit_get_preset_nparams
 gwy_math_nlfit_fit_preset
+</SECTION>
+
+<SECTION>
+<FILE>gwyenum</FILE>
+GWY_TYPE_ENUM
+GwyEnum
+gwy_enum_get_type
+gwy_string_to_enum
+gwy_enum_to_string
+gwy_string_to_flags
+gwy_flags_to_string
+gwy_enum_sanitize_value
+gwy_enum_inventory_new
 </SECTION>
 
 <SECTION>

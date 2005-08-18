@@ -52,6 +52,13 @@ a set of data curves with a given plot properties.
 
 @data_areas: 
 
+<!-- ##### STRUCT GwyGraphStatus_LinesData ##### -->
+<para>
+
+</para>
+
+@data_lines: 
+
 <!-- ##### STRUCT GwyGraphStatus_ZoomData ##### -->
 <para>
 

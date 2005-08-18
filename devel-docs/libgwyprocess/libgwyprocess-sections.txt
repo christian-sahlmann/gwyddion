@@ -95,6 +95,8 @@ gwy_data_line_get_data_const
 gwy_data_line_get_res
 gwy_data_line_get_real
 gwy_data_line_set_real
+gwy_data_line_get_offset
+gwy_data_line_set_offset
 gwy_data_line_itor
 gwy_data_line_rtoi
 gwy_data_line_get_val
@@ -110,16 +112,6 @@ gwy_data_line_part_clear
 gwy_data_line_part_fill
 gwy_data_line_part_multiply
 gwy_data_line_part_add
-gwy_data_line_get_max
-gwy_data_line_get_min
-gwy_data_line_get_avg
-gwy_data_line_get_rms
-gwy_data_line_get_sum
-gwy_data_line_part_get_max
-gwy_data_line_part_get_min
-gwy_data_line_part_get_avg
-gwy_data_line_part_get_rms
-gwy_data_line_part_get_sum
 gwy_data_line_threshold
 gwy_data_line_part_threshold
 gwy_data_line_line_coeffs
@@ -133,8 +125,7 @@ gwy_data_line_part_fit_polynom
 gwy_data_line_fit_polynom
 gwy_data_line_part_subtract_polynom
 gwy_data_line_subtract_polynom
-gwy_data_line_get_modus
-gwy_data_line_part_get_modus
+gwy_data_line_cumulate
 <SUBSECTION Standard>
 GWY_DATA_LINE
 GWY_IS_DATA_LINE
@@ -163,8 +154,6 @@ gwy_interpolation_get_dval_of_equidists
 
 <SECTION>
 <FILE>gwyprocesstypes</FILE>
-gwy_sf_output_type_get_type
-GWY_TYPE_SF_OUTPUT_TYPE
 gwy_merge_type_get_type
 GWY_TYPE_MERGE_TYPE
 gwy_watershed_state_type_get_type
@@ -193,8 +182,6 @@ gwy_windowing_type_get_type
 GWY_TYPE_WINDOWING_TYPE
 gwy_tip_type_get_type
 GWY_TYPE_TIP_TYPE
-gwy_indentor_type_get_type
-GWY_TYPE_INDENTOR_TYPE
 </SECTION>
 
 <SECTION>
@@ -343,7 +330,20 @@ gwy_data_field_area_get_surface_area
 gwy_data_field_get_autorange
 gwy_data_field_get_stats
 gwy_data_field_area_get_stats
-gwy_data_field_get_line_stat_function
+gwy_data_field_area_dh
+gwy_data_field_dh
+gwy_data_field_area_cdh
+gwy_data_field_cdh
+gwy_data_field_area_da
+gwy_data_field_da
+gwy_data_field_area_cda
+gwy_data_field_cda
+gwy_data_field_area_acf
+gwy_data_field_acf
+gwy_data_field_area_hhcf
+gwy_data_field_hhcf
+gwy_data_field_area_psdf
+gwy_data_field_psdf
 gwy_data_field_slope_distribution
 gwy_data_field_get_normal_coeffs
 gwy_data_field_area_get_normal_coeffs
@@ -365,26 +365,45 @@ gwy_fft_window
 
 <SECTION>
 <FILE>gwyprocessenums</FILE>
-GwySFOutputType
 GwyMergeType
+gwy_merge_type_get_enum
 GwyWatershedStateType
 GwyPlaneSymmetry
+gwy_plane_symmetry_get_enum
 Gwy2DCWTWaveletType
+gwy_2d_cwt_wavelet_type_get_enum
 GwyOrientation
+gwy_orientation_get_enum
 GwyTransformDirection
 GwyDataFieldCached
 GwyComputationStateType
 GwyDWTType
+gwy_dwt_type_get_enum
 GwyDWTDenoiseType
+gwy_dwt_denoise_type_get_enum
 GwyInterpolationType
+gwy_interpolation_type_get_enum
 GwyPlaneFitQuantity
 GwyWindowingType
+gwy_windowing_type_get_enum
 GwyTipType
-GwyIndentorType
 </SECTION>
 
 <SECTION>
 <FILE>linestats</FILE>
+gwy_data_line_get_max
+gwy_data_line_get_min
+gwy_data_line_get_avg
+gwy_data_line_get_rms
+gwy_data_line_get_sum
+gwy_data_line_part_get_max
+gwy_data_line_part_get_min
+gwy_data_line_part_get_avg
+gwy_data_line_part_get_rms
+gwy_data_line_part_get_sum
+gwy_data_line_get_modus
+gwy_data_line_part_get_modus
+gwy_data_line_get_length
 gwy_data_line_dh
 gwy_data_line_cdh
 gwy_data_line_da
@@ -392,7 +411,6 @@ gwy_data_line_cda
 gwy_data_line_acf
 gwy_data_line_hhcf
 gwy_data_line_psdf
-gwy_data_line_get_length
 </SECTION>
 
 <SECTION>

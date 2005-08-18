@@ -23,9 +23,61 @@ Ordered item inventory, indexed by both name and position.
 @watchable_signal: 
 @is_fixed: 
 @get_name: 
-@get_text: 
 @compare: 
 @rename: 
+@copy: 
+@get_traits: 
+@get_trait_name: 
+@get_trait_value: 
+
+<!-- ##### STRUCT GwyInventory ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyInventory::item-deleted ##### -->
+<para>
+
+</para>
+
+@gwyinventory: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GwyInventory::item-inserted ##### -->
+<para>
+
+</para>
+
+@gwyinventory: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GwyInventory::item-updated ##### -->
+<para>
+
+</para>
+
+@gwyinventory: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GwyInventory::items-reordered ##### -->
+<para>
+
+</para>
+
+@gwyinventory: the object which received the signal.
+@arg1: 
+
+<!-- ##### STRUCT GwyInventoryClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@item_inserted: 
+@item_deleted: 
+@item_updated: 
+@items_reordered: 
 
 <!-- ##### FUNCTION gwy_inventory_new ##### -->
 <para>
@@ -60,16 +112,6 @@ Ordered item inventory, indexed by both name and position.
 @item_size: 
 @nitems: 
 @items: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_inventory_new_from_enum ##### -->
-<para>
-
-</para>
-
-@enum_table: 
-@n: 
 @Returns: 
 
 
@@ -161,14 +203,32 @@ Ordered item inventory, indexed by both name and position.
 @funcition: 
 
 
-<!-- ##### FUNCTION gwy_inventory_set_default_item ##### -->
+<!-- ##### FUNCTION gwy_inventory_find ##### -->
+<para>
+
+</para>
+
+@inventory: 
+@predicate: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_inventory_set_default_item_name ##### -->
 <para>
 
 </para>
 
 @inventory: 
 @name: 
-<!-- # Unused Parameters # -->
+
+
+<!-- ##### FUNCTION gwy_inventory_get_default_item_name ##### -->
+<para>
+
+</para>
+
+@inventory: 
 @Returns: 
 
 
@@ -268,16 +328,6 @@ Ordered item inventory, indexed by both name and position.
 
 
 <!-- ##### FUNCTION gwy_inventory_new_item ##### -->
-<para>
-
-</para>
-
-@inventory: 
-@newname: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_inventory_new_item_as_copy ##### -->
 <para>
 
 </para>

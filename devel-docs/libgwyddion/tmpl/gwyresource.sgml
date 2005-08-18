@@ -1,0 +1,179 @@
+<!-- ##### SECTION Title ##### -->
+GwyResource
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyResource ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyResource::data-changed ##### -->
+<para>
+
+</para>
+
+@gwyresource: the object which received the signal.
+
+<!-- ##### STRUCT GwyResourceClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@inventory: 
+@name: 
+@item_type: 
+@data_changed: 
+@use: 
+@release: 
+@dump: 
+@parse: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_resource_get_name ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_get_is_modifiable ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_get_is_preferred ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_set_is_preferred ##### -->
+<para>
+
+</para>
+
+@resource: 
+@is_preferred: 
+
+
+<!-- ##### FUNCTION gwy_resource_class_get_name ##### -->
+<para>
+
+</para>
+
+@klass: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_class_get_inventory ##### -->
+<para>
+
+</para>
+
+@klass: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_class_get_item_type ##### -->
+<para>
+
+</para>
+
+@klass: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_use ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_release ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_is_used ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_data_changed ##### -->
+<para>
+
+</para>
+
+@resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_dump ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_parse ##### -->
+<para>
+
+</para>
+
+@text: 
+@expected_type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_class_save ##### -->
+<para>
+
+</para>
+
+@klass: 
+@err: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_resource_class_load ##### -->
+<para>
+
+</para>
+
+@klass: 
+
+

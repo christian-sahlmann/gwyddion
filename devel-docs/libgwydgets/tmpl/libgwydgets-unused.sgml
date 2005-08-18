@@ -1103,6 +1103,189 @@ are saved here.
 </para>
 
 
+<!-- ##### FUNCTION gtk_inventory_store_append ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@parent: 
+
+<!-- ##### FUNCTION gtk_inventory_store_clear ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+
+<!-- ##### FUNCTION gtk_inventory_store_insert ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@parent: 
+@position: 
+
+<!-- ##### FUNCTION gtk_inventory_store_insert_after ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@parent: 
+@sibling: 
+
+<!-- ##### FUNCTION gtk_inventory_store_insert_before ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@parent: 
+@sibling: 
+
+<!-- ##### FUNCTION gtk_inventory_store_is_ancestor ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@descendant: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_iter_depth ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_iter_is_valid ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_move_after ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@position: 
+
+<!-- ##### FUNCTION gtk_inventory_store_move_before ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@position: 
+
+<!-- ##### FUNCTION gtk_inventory_store_new ##### -->
+<para>
+
+</para>
+
+@n_columns: 
+@Varargs: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_newv ##### -->
+<para>
+
+</para>
+
+@n_columns: 
+@types: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_prepend ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@parent: 
+
+<!-- ##### FUNCTION gtk_inventory_store_remove ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@Returns: 
+
+<!-- ##### FUNCTION gtk_inventory_store_reorder ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@parent: 
+@new_order: 
+
+<!-- ##### FUNCTION gtk_inventory_store_set ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@Varargs: 
+
+<!-- ##### FUNCTION gtk_inventory_store_set_column_types ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@n_columns: 
+@types: 
+
+<!-- ##### FUNCTION gtk_inventory_store_set_valist ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@var_args: 
+
+<!-- ##### FUNCTION gtk_inventory_store_set_value ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@iter: 
+@column: 
+@value: 
+
+<!-- ##### FUNCTION gtk_inventory_store_swap ##### -->
+<para>
+
+</para>
+
+@inventory_store: 
+@a: 
+@b: 
+
 <!-- ##### VARIABLE gwyGL_mat_none ##### -->
 <para>
 
@@ -2780,7 +2963,40 @@ are saved here.
 @cbdata: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_2dcwt ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_create ##### -->
+<para>
+
+</para>
+
+@entries: 
+@nentries: 
+@key: 
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_direction ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_dwt ##### -->
 <para>
 
 </para>
@@ -2830,6 +3046,36 @@ are saved here.
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_indentor ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_interpolation ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_merge_type ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_mergegrain ##### -->
 <para>
 
@@ -2850,7 +3096,37 @@ are saved here.
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_orientation ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_palette ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_sfunctions_output ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_windowing ##### -->
 <para>
 
 </para>

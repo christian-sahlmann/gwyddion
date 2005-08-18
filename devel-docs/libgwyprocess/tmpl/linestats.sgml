@@ -14,6 +14,157 @@ linestats
 
 </para>
 
+<!-- ##### FUNCTION gwy_data_line_get_max ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_min ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_avg ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_rms ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_sum ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_max ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_min ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_avg ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_rms ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_sum ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@a: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_modus ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@histogram_steps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_part_get_modus ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@histogram_steps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_line_get_length ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_data_line_dh ##### -->
 <para>
 
@@ -89,14 +240,5 @@ linestats
 @target_line: 
 @windowing: 
 @interpolation: 
-
-
-<!-- ##### FUNCTION gwy_data_line_get_length ##### -->
-<para>
-
-</para>
-
-@data_line: 
-@Returns: 
 
 

@@ -21,7 +21,9 @@
   <xi:include href="xml/gwyexpr.xml"/>
   <xi:include href="xml/gwysiunit.xml"/>
   <xi:include href="xml/gwyutils.xml"/>
+  <xi:include href="xml/gwyenum.xml"/>
   <xi:include href="xml/gwyinventory.xml"/>
+  <xi:include href="xml/gwyresource.xml"/>
   <xi:include href="xml/gwymd5.xml"/>
   <xi:include href="xml/gwydebugobjects.xml"/>
 </book>

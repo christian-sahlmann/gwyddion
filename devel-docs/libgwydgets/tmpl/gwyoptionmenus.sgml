@@ -102,94 +102,6 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_option_menu_interpolation ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_windowing ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_2dcwt ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_dwt ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_sfunctions_output ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_orientation ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_merge_type ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_indentor ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@current: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gwy_option_menu_metric_unit ##### -->
 <para>
 
@@ -200,20 +112,6 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @from: 
 @to: 
 @unit: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_create ##### -->
-<para>
-
-</para>
-
-@entries: 
-@nentries: 
-@key: 
-@callback: 
-@cbdata: 
 @current: 
 @Returns: 
 

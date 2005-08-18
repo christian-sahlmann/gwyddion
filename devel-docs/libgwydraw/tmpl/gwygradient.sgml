@@ -38,13 +38,6 @@ queried with gwy_gradient_is_modifiable().
 
 </para>
 
-<!-- ##### MACRO GWY_GRADIENT_DEFAULT ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### STRUCT GwyGradientPoint ##### -->
 <para>
 
@@ -53,28 +46,11 @@ queried with gwy_gradient_is_modifiable().
 @x: 
 @color: 
 
-<!-- ##### USER_FUNCTION GwyGradientFunc ##### -->
-<para>
-
-</para>
-
-@name: 
-@gradient: 
-@user_data: 
-
-
 <!-- ##### STRUCT GwyGradient ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### SIGNAL GwyGradient::data-changed ##### -->
-<para>
-
-</para>
-
-@gwygradient: the object which received the signal.
 
 <!-- ##### STRUCT GwyGradientClass ##### -->
 <para>
@@ -86,24 +62,6 @@ queried with gwy_gradient_is_modifiable().
 @data_changed: 
 @reserved1: 
 @reserved2: 
-
-<!-- ##### FUNCTION gwy_gradient_get_name ##### -->
-<para>
-
-</para>
-
-@gradient: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_gradient_get_modifiable ##### -->
-<para>
-
-</para>
-
-@gradient: 
-@Returns: 
-
 
 <!-- ##### FUNCTION gwy_gradient_get_color ##### -->
 <para>
@@ -136,6 +94,15 @@ queried with gwy_gradient_is_modifiable().
 @nsamples: 
 @samples: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_sample_to_pixbuf ##### -->
+<para>
+
+</para>
+
+@gradient: 
+@pixbuf: 
 
 
 <!-- ##### FUNCTION gwy_gradient_get_npoints ##### -->
@@ -244,48 +211,20 @@ queried with gwy_gradient_is_modifiable().
 @samples: 
 
 
-<!-- ##### FUNCTION gwy_gradient_dump ##### -->
+<!-- ##### FUNCTION gwy_gradients ##### -->
 <para>
 
 </para>
 
-@gradient: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_gradient_parse ##### -->
-<para>
-
-</para>
-
-@text: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_gradients_gradient_exists ##### -->
+<!-- ##### MACRO gwy_gradients_get_gradient ##### -->
 <para>
 
 </para>
 
 @name: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_gradients_get_gradient ##### -->
-<para>
-
-</para>
-
-@name: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_gradients_foreach ##### -->
-<para>
-
-</para>
-
-@function: 
-@user_data: 
 
 

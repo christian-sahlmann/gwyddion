@@ -631,12 +631,32 @@ GWY_GRAPH_MODEL_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gwyinventorystore</FILE>
+<TITLE>GwyInventoryStore</TITLE>
+GwyInventoryStore
+GwyInventoryStoreClass
+gwy_inventory_store_new
+gwy_inventory_store_get_inventory
+gwy_inventory_store_get_column_by_name
+gwy_inventory_store_iter_is_valid
+<SUBSECTION Standard>
+GWY_INVENTORY_STORE
+GWY_IS_INVENTORY_STORE
+GWY_TYPE_INVENTORY_STORE
+gwy_inventory_store_get_type
+GWY_INVENTORY_STORE_CLASS
+GWY_IS_INVENTORY_STORE_CLASS
+GWY_INVENTORY_STORE_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gwygrapharea</FILE>
 GwyGraphStatus_PointData
 GwyGraphStatus_CursorData
 GwyGraphStatus_PointsData
 GwyGraphStatus_AreaData
 GwyGraphStatus_AreasData
+GwyGraphStatus_LinesData
 GwyGraphStatus_ZoomData
 GwyGraphAreaCurve
 <TITLE>GwyGraphArea</TITLE>
@@ -839,6 +859,14 @@ GwyLayerBasicRangeType
 </SECTION>
 
 <SECTION>
+<FILE>gwycombobox</FILE>
+gwy_enum_combo_box_new
+gwy_enum_combo_box_set_active
+gwy_enum_combo_box_get_active
+gwy_enum_combo_box_update_int
+</SECTION>
+
+<SECTION>
 <FILE>gwygraphbasics</FILE>
 GwyGraphDataPoint
 GwyGraphDataArea
@@ -848,6 +876,7 @@ gwy_graph_draw_line
 gwy_graph_draw_curve
 gwy_graph_draw_selection_points
 gwy_graph_draw_selection_areas
+gwy_graph_draw_selection_lines
 </SECTION>
 
 <SECTION>
@@ -992,16 +1021,7 @@ gwy_menu_gradient
 gwy_menu_gl_material
 gwy_option_menu_gradient
 gwy_option_menu_gl_material
-gwy_option_menu_interpolation
-gwy_option_menu_windowing
-gwy_option_menu_2dcwt
-gwy_option_menu_dwt
-gwy_option_menu_sfunctions_output
-gwy_option_menu_orientation
-gwy_option_menu_merge_type
-gwy_option_menu_indentor
 gwy_option_menu_metric_unit
-gwy_option_menu_create
 gwy_option_menu_set_history
 gwy_option_menu_get_history
 </SECTION>

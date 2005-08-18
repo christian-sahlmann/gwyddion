@@ -1,0 +1,59 @@
+<!-- ##### SECTION Title ##### -->
+gwycombobox
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### FUNCTION gwy_enum_combo_box_new ##### -->
+<para>
+
+</para>
+
+@entries: 
+@nentries: 
+@callback: 
+@cbdata: 
+@active: 
+@translate: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_enum_combo_box_set_active ##### -->
+<para>
+
+</para>
+
+@combo: 
+@active: 
+<!-- # Unused Parameters # -->
+@current: 
+
+
+<!-- ##### FUNCTION gwy_enum_combo_box_get_active ##### -->
+<para>
+
+</para>
+
+@combo: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_enum_combo_box_update_int ##### -->
+<para>
+
+</para>
+
+@combo: 
+@integer: 
+
+

@@ -93,6 +93,8 @@ gwydgetenums
 @GWY_GRAPH_STATUS_POINTS: 
 @GWY_GRAPH_STATUS_ZOOM: 
 @GWY_GRAPH_STATUS_CURSOR: 
+@GWY_GRAPH_STATUS_XLINES: 
+@GWY_GRAPH_STATUS_YLINES: 
 
 <!-- ##### ENUM GwyGraphPointType ##### -->
 <para>

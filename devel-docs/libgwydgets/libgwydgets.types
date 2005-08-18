@@ -22,6 +22,7 @@ gwy_graph_window_get_type
 gwy_graph_window_measure_dialog_get_type
 gwy_graph_window_ascii_dialog_get_type
 gwy_hruler_get_type
+gwy_inventory_store_get_type
 gwy_layer_basic_get_type
 gwy_layer_mask_get_type
 gwy_pixmap_layer_get_type

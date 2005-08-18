@@ -14,19 +14,6 @@ gwyprocessenums
 
 </para>
 
-<!-- ##### ENUM GwySFOutputType ##### -->
-<para>
-
-</para>
-
-@GWY_SF_OUTPUT_DH: 
-@GWY_SF_OUTPUT_CDH: 
-@GWY_SF_OUTPUT_DA: 
-@GWY_SF_OUTPUT_CDA: 
-@GWY_SF_OUTPUT_ACF: 
-@GWY_SF_OUTPUT_HHCF: 
-@GWY_SF_OUTPUT_PSDF: 
-
 <!-- ##### ENUM GwyMergeType ##### -->
 <para>
 Mask processing merging (namely used in grain processing).
@@ -34,6 +21,14 @@ Mask processing merging (namely used in grain processing).
 
 @GWY_MERGE_UNION: 
 @GWY_MERGE_INTERSECTION: 
+
+<!-- ##### FUNCTION gwy_merge_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### ENUM GwyWatershedStateType ##### -->
 <para>
@@ -60,6 +55,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_SYMMETRY_HEXAGONAL: 
 @GWY_SYMMETRY_LAST: 
 
+<!-- ##### FUNCTION gwy_plane_symmetry_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### ENUM Gwy2DCWTWaveletType ##### -->
 <para>
 
@@ -68,6 +71,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_2DCWT_GAUSS: 
 @GWY_2DCWT_HAT: 
 
+<!-- ##### FUNCTION gwy_2d_cwt_wavelet_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### ENUM GwyOrientation ##### -->
 <para>
 
@@ -75,6 +86,14 @@ Mask processing merging (namely used in grain processing).
 
 @GWY_ORIENTATION_HORIZONTAL: 
 @GWY_ORIENTATION_VERTICAL: 
+
+<!-- ##### FUNCTION gwy_orientation_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### ENUM GwyTransformDirection ##### -->
 <para>
@@ -120,6 +139,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_DWT_DAUB12: 
 @GWY_DWT_DAUB20: 
 
+<!-- ##### FUNCTION gwy_dwt_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### ENUM GwyDWTDenoiseType ##### -->
 <para>
 
@@ -128,6 +155,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_DWT_DENOISE_UNIVERSAL: 
 @GWY_DWT_DENOISE_SCALE_ADAPTIVE: 
 @GWY_DWT_DENOISE_SPACE_ADAPTIVE: 
+
+<!-- ##### FUNCTION gwy_dwt_denoise_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### ENUM GwyInterpolationType ##### -->
 <para>
@@ -141,6 +176,14 @@ Mask processing merging (namely used in grain processing).
 @GWY_INTERPOLATION_BSPLINE: 
 @GWY_INTERPOLATION_OMOMS: 
 @GWY_INTERPOLATION_NNA: 
+
+<!-- ##### FUNCTION gwy_interpolation_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### ENUM GwyPlaneFitQuantity ##### -->
 <para>
@@ -168,6 +211,14 @@ Selection of windowing applied before FFT (if requested).
 @GWY_WINDOWING_WELCH: Welch windowing
 @GWY_WINDOWING_RECT: Rectangular windowing
 
+<!-- ##### FUNCTION gwy_windowing_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
 <!-- ##### ENUM GwyTipType ##### -->
 <para>
 
@@ -177,17 +228,4 @@ Selection of windowing applied before FFT (if requested).
 @GWY_TIP_CONTACT: 
 @GWY_TIP_NONCONTACT: 
 @GWY_TIP_DELTA: 
-
-<!-- ##### ENUM GwyIndentorType ##### -->
-<para>
-
-</para>
-
-@GWY_INDENTOR_VICKERS: 
-@GWY_INDENTOR_BERKOVICH: 
-@GWY_INDENTOR_BERKOVICH_M: 
-@GWY_INDENTOR_KNOOP: 
-@GWY_INDENTOR_BRINELL: 
-@GWY_INDENTOR_ROCKWELL: 
-@GWY_INDENTOR_CUBECORNER: 
 
