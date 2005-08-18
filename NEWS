@@ -1,12 +1,30 @@
-1.99.3cvs20050726
+1.99.3cvs20050818
 
 1.99.4
 Application:
 - GLib and Gtk+ 2.6 is required now.
+- Can optionally use FFTW v3 library (currently only for a few operations).
+- System chdir() is no longer used, so that e.g. core is always dumped to the
+  directory where app was started, otherwise directory behaviour has not
+  changed.
 
 Library:
+- libprocess: All interpolation is pixel-like instead of function-like now.
+- libgwyddion: New GwyInventory uniform hash-and-array-like container class.
+- libgwyddion: New GwyResource abstract base class for gradients, materials,
+  and other goodies.  Resources can be loaded from and saved to external
+  files.
+- libdraw: GwyGradient is based on GwyResource, API reworked.  Gradients were
+  un-hardcoded and are distributed as standalone text files now.
 - libgwydgets: GwySciText uses table-like layout for symbol combo box
   (bug #60).
+- libprocess: GwyEnum tables of standard enumerations are available in
+  public API.
+- libgwyddion: GwyEnum was split from gwyutils, a some functions added,
+  GwyInventory support was added.
+- libgwydgets: New class GwyInventoryStore wraps GwyInventory in GtkTreeModel
+  interface.
+- libgwydgets: Option menus were replaced with combo boxes.
 - libgwyapp: Undo bug that might cause crashes was fixed.
 - libprocess: Memory leaks in DWT were fixes and it was sped up.
 - libgwyddion: gwywin32unistd.h was removed, use gstdio wrappers.
@@ -17,10 +35,17 @@ Library:
   centered data value style.
 - libprocess: Real line length calculation method was added, too small
   calculated area was fixed.
+- libgwyddion, libgwydgets: GwyWatchable was finally removed.
+- libgwydgets: 3D Window crash on Export from small toolbar was fixed.
+- libprocess: overloaded gwy_data_line_get_stat_function() was replaced with
+  individual statistical functions, several of them are faster now
+- libprocess: GwyDataField and GwyDataLine support offsets of coordinates
+  origin.
 
 Modules:
 - BCR file: Unit support was improved, support for zmin added.
 - Profile: Maximum profile width was increased to 100.
+- Statistical functions, Profile: Allow to select number of sampling points.
 - Facet analysis: Improvements were merged from 1.12.
 
 Other:
