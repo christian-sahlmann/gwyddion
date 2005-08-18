@@ -204,6 +204,7 @@ gwy_inventory_make_hash(GwyInventory *inventory)
     gint i;
 
     g_assert(!inventory->hash);
+    gwy_debug("");
     inventory->hash = g_hash_table_new(g_str_hash, g_str_equal);
 
     get_name = inventory->item_type.get_name;
@@ -823,7 +824,7 @@ gwy_inventory_insert_item(GwyInventory *inventory,
         g_object_ref(item);
 
     /* Insert into index array */
-    if (inventory->is_sorted) {
+    if (inventory->is_sorted && inventory->items->len) {
         gpointer mp;
         guint j0, j1;
 
@@ -1036,6 +1037,9 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
 
     if (inventory->needs_reindex)
         gwy_inventory_reindex(inventory);
+
+    if (inventory->item_type.dismantle)
+        inventory->item_type.dismantle(mp);
 
     n = g_array_index(inventory->idx, guint, i);
     last = inventory->items->len - 1;

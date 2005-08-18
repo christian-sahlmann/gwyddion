@@ -149,6 +149,7 @@ clean::
 	-@mkdir "$(DEST_DIR)\include\libprocess"
 	-@mkdir "$(DEST_DIR)\lib"
 	-@mkdir "$(DEST_DIR)\pixmaps"
+	-@mkdir "$(DEST_DIR)\gradients"
 	-@mkdir "$(DEST_DIR)\modules"
 	-@mkdir "$(DEST_DIR)\modules\file"
 	-@mkdir "$(DEST_DIR)\modules\graph"

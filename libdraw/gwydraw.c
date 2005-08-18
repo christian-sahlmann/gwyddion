@@ -22,7 +22,7 @@
 #include <libprocess/gwyprocess.h>
 #include "gwydraw.h"
 
-void _gwy_gradients_setup_presets(void);
+void _gwy_gradient_class_setup_presets(void);
 
 static guint types_initialized = 0;
 
@@ -45,7 +45,7 @@ gwy_draw_type_init(void)
     types_initialized += gwy_gradient_get_type();
     types_initialized |= 1;
 
-    _gwy_gradients_setup_presets();
+    _gwy_gradient_class_setup_presets();
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

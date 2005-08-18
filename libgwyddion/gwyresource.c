@@ -22,6 +22,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyenum.h>
@@ -36,13 +41,6 @@ enum {
     LAST_SIGNAL
 };
 
-/* Data used in load and save functions.  Some fields are used only one of
- * them */
-typedef struct {
-    const gchar *path;
-    GError *err;
-} GwyResourceIOData;
-
 static void         gwy_resource_finalize         (GObject *object);
 static gboolean     gwy_resource_get_is_const     (gconstpointer item);
 static const gchar* gwy_resource_get_item_name    (gpointer item);
@@ -50,8 +48,7 @@ static gboolean     gwy_resource_compare          (gconstpointer item1,
                                                    gconstpointer item2);
 static void         gwy_resource_rename           (gpointer item,
                                                    const gchar *new_name);
-static void         gwy_resource_rename           (gpointer item,
-                                                   const gchar *new_name);
+static void         gwy_resource_dismantle        (gpointer item);
 static void         gwy_resource_modified         (GwyResource *resource);
 static gboolean     gwy_resource_save             (gpointer key,
                                                    gpointer item,
@@ -59,6 +56,7 @@ static gboolean     gwy_resource_save             (gpointer key,
 static void         gwy_resource_class_load_dir   (const gchar *path,
                                                    GwyResourceClass *klass,
                                                    gboolean system);
+static gchar*       gwy_resource_get_filename     (GwyResource *resource);
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -69,6 +67,7 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     &gwy_resource_get_item_name,
     &gwy_resource_compare,
     &gwy_resource_rename,
+    &gwy_resource_dismantle,
     NULL,  /* needs particular class */
     NULL,  /* needs particular class */
     NULL,  /* needs particular class */
@@ -151,10 +150,33 @@ gwy_resource_rename(gpointer item,
                     const gchar *new_name)
 {
     GwyResource *resource = (GwyResource*)item;
+    gchar *filename, *new_filename;
+    gint err;
 
     g_return_if_fail(!resource->is_const);
+    filename = gwy_resource_get_filename(resource);
     g_string_assign(resource->name, new_name);
-    resource->is_modified = TRUE;
+    new_filename = gwy_resource_get_filename(resource);
+    /* XXX: Rename it in the filesystem and hope it will work... */
+    err = g_rename(filename, new_filename);
+    gwy_debug("Renamed <%s> to <%s>: %d", filename, new_filename, err);
+    g_free(filename);
+    g_free(new_filename);
+}
+
+static void
+gwy_resource_dismantle(gpointer item)
+{
+    GwyResource *resource = (GwyResource*)item;
+    gchar *filename;
+    gint err;
+
+    g_return_if_fail(!resource->is_const);
+    filename = gwy_resource_get_filename(resource);
+    /* XXX: Remove it from the filesystem and hope it will work... */
+    err = g_unlink(filename);
+    gwy_debug("Deleted <%s>: %d", filename, err);
+    g_free(filename);
 }
 
 /**
@@ -445,7 +467,7 @@ gwy_resource_class_save(GwyResourceClass *klass,
                         GError **err)
 {
     gchar *path;
-    GwyResourceIOData iodata;
+    GError *serr = NULL;
     gboolean ok;
 
     g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), FALSE);
@@ -463,14 +485,11 @@ gwy_resource_class_save(GwyResourceClass *klass,
             return FALSE;
         }
     }
-
-    iodata.path = path;
-    iodata.err = NULL;
-    ok = (gwy_inventory_find(klass->inventory, &gwy_resource_save,
-                             &iodata) == NULL);
     g_free(path);
+
+    ok = !gwy_inventory_find(klass->inventory, &gwy_resource_save, &serr);
     if (!ok)
-        g_propagate_error(err, iodata.err);
+        g_propagate_error(err, serr);
 
     return ok;
 }
@@ -481,7 +500,7 @@ gwy_resource_save(G_GNUC_UNUSED gpointer key,
                   gpointer user_data)
 {
     GwyResource *resource = GWY_RESOURCE(item);
-    GwyResourceIOData *iodata = (GwyResourceIOData*)user_data;
+    GError **err = (GError**)user_data;
     GString *str;
     FILE *fh;
     gchar *filename;
@@ -490,10 +509,10 @@ gwy_resource_save(G_GNUC_UNUSED gpointer key,
     if (resource->is_const || !resource->is_modified)
         return FALSE;
 
-    filename = g_build_filename(iodata->path, resource->name->str, NULL);
+    filename = gwy_resource_get_filename(resource);
     fh = g_fopen(filename, "w");
     if (!fh) {
-        g_set_error(&iodata->err,
+        g_set_error(err,
                     G_FILE_ERROR,
                     g_file_error_from_errno(errno),
                     "Cannot save file `%s': %s",
@@ -578,6 +597,16 @@ gwy_resource_class_load_dir(const gchar *path,
     }
 
     g_dir_close(dir);
+}
+
+static gchar*
+gwy_resource_get_filename(GwyResource *resource)
+{
+    GwyResourceClass *klass;
+
+    klass = GWY_RESOURCE_GET_CLASS(resource);
+    return g_build_filename(gwy_get_user_dir(),
+                            klass->name, resource->name->str, NULL);
 }
 
 /************************** Documentation ****************************/

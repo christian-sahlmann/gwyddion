@@ -1,6 +1,6 @@
 
-TOP_SRCDIR = ..
-DATA_TYPE = pixmaps
+TOP_SRCDIR = ..\..
+DATA_TYPE = gradients
 
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
@@ -16,3 +16,4 @@ install: install-data
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 # vim: ft=make
+

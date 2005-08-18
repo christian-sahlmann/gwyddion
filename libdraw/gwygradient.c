@@ -19,11 +19,10 @@
  */
 
 /* TODO:
- * - reduce the number of system palettes -- in 2.0
  * - set from samples
  * - test
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
@@ -48,29 +47,26 @@ enum {
     LAST_SIGNAL
 };
 
-static void         gwy_gradient_finalize         (GObject *object);
-static gpointer     gwy_gradient_copy             (gpointer);
-static const GType* gwy_gradient_get_traits       (gint *ntraits);
-static const gchar* gwy_gradient_get_trait_name   (gint i);
-static void         gwy_gradient_get_trait_value  (gpointer item,
-                                                   gint i,
-                                                   GValue *value);
-static void         gwy_gradient_use              (GwyResource *resource);
-static void         gwy_gradient_release          (GwyResource *resource);
-static void         gwy_gradient_sample_real      (GwyGradient *gradient,
-                                                   gint nsamples,
-                                                   guchar *samples);
-static void         gwy_gradient_sanitize         (GwyGradient *gradient);
-static void         gwy_gradient_changed          (GwyGradient *gradient);
-static void         gwy_gradient_preset           (const gchar *name,
-                                                   gint npoints,
-                                                   const GwyGradientPoint *points);
-static GwyGradient* gwy_gradient_new              (const gchar *name,
-                                                   gint npoints,
-                                                   const GwyGradientPoint *points);
-static void         gwy_gradient_dump             (GwyResource *resource,
-                                                   GString *str);
-static GwyResource* gwy_gradient_parse            (const gchar *text);
+static void         gwy_gradient_finalize       (GObject *object);
+static gpointer     gwy_gradient_copy           (gpointer);
+static const GType* gwy_gradient_get_traits     (gint *ntraits);
+static const gchar* gwy_gradient_get_trait_name (gint i);
+static void         gwy_gradient_get_trait_value(gpointer item,
+                                                 gint i,
+                                                 GValue *value);
+static void         gwy_gradient_use            (GwyResource *resource);
+static void         gwy_gradient_release        (GwyResource *resource);
+static void         gwy_gradient_sample_real    (GwyGradient *gradient,
+                                                 gint nsamples,
+                                                 guchar *samples);
+static void         gwy_gradient_sanitize       (GwyGradient *gradient);
+static void         gwy_gradient_changed        (GwyGradient *gradient);
+static GwyGradient* gwy_gradient_new            (const gchar *name,
+                                                 gint npoints,
+                                                 const GwyGradientPoint *points);
+static void         gwy_gradient_dump           (GwyResource *resource,
+                                                 GString *str);
+static GwyResource* gwy_gradient_parse          (const gchar *text);
 
 
 static const GwyRGBA null_color = { 0, 0, 0, 0 };
@@ -848,273 +844,24 @@ gwy_gradient_changed(GwyGradient *gradient)
     gwy_resource_data_changed(GWY_RESOURCE(gradient));
 }
 
-static void
-gwy_gradient_preset(const gchar *name,
-                    gint npoints,
-                    const GwyGradientPoint *points)
-{
-    static GwyInventory *inventory = NULL;
-    GwyGradient *gradient;
-
-    gradient = gwy_gradient_new(name, npoints, points);
-    if (!inventory)
-        inventory = GWY_RESOURCE_GET_CLASS(gradient)->inventory;
-    GWY_RESOURCE(gradient)->is_const = TRUE;
-    GWY_RESOURCE(gradient)->is_modified = FALSE;
-    /* FIXME */
-    gwy_resource_set_is_preferred(GWY_RESOURCE(gradient), TRUE);
-    gwy_inventory_insert_item(inventory, gradient);
-    g_object_unref(gradient);
-}
-
-/**
- * gwy_gradients_setup_presets:
- *
- * Sets up built-in color gradients.
- *
- * Should be done during program initialization if built-in gradients are to
- * be used, before user gradients are loaded.
- *
- * Preset (system) gradients are not modifiable.
- **/
 void
-_gwy_gradients_setup_presets(void)
+_gwy_gradient_class_setup_presets(void)
 {
-    static const GwyRGBA xyellow = { 0.8314, 0.71765, 0.16471, 1 };
-    static const GwyRGBA pink = { 1, 0.07843, 0.62745, 1 };
-    static const GwyRGBA olive = { 0.36863, 0.69020, 0.45882, 1 };
-    static const GwyGradientPoint gray[] = {
-        { 0.0, { 0, 0, 0, 1 } },
-        { 1.0, { 1, 1, 1, 1 } },
-    };
-    static const GwyGradientPoint rainbow1[] = {
-        { 0.0,   { 0, 0, 0, 1 } },
-        { 0.125, { 1, 0, 0, 1 } },
-        { 0.25,  { 1, 1, 0, 1 } },
-        { 0.375, { 0, 1, 1, 1 } },
-        { 0.5,   { 1, 0, 1, 1 } },
-        { 0.625, { 0, 1, 0, 1 } },
-        { 0.75,  { 0, 0, 1, 1 } },
-        { 0.875, { 0.5, 0.5, 0.5, 1 } },
-        { 1.0,   { 1, 1, 1, 1 } },
-    };
-    static const GwyGradientPoint rainbow2[] = {
-        { 0.0,  { 0, 0, 0, 1 } },
-        { 0.25, { 1, 0, 0, 1 } },
-        { 0.5,  { 0, 1, 0, 1 } },
-        { 0.75, { 0, 0, 1, 1 } },
-        { 1.0,  { 1, 1, 1, 1 } },
-    };
-    static const GwyGradientPoint gold[] = {
-        { 0,        { 0, 0, 0, 1 } },
-        { 0.333333, { 0.345098, 0.109804, 0, 1 } },
-        { 0.666667, { 0.737255, 0.501961, 0, 1 } },
-        { 1,        { 0.988235, 0.988235, 0.501961, 1 } },
-    };
-    static const GwyGradientPoint pm3d[] = {
-        { 0,        { 0,        0,        0,        1 } },
-        { 0.166667, { 0.265412, 0,        0.564000, 1 } },
-        { 0.333333, { 0.391234, 0,        0.831373, 1 } },
-        { 0.666667, { 0.764706, 0,        0.000000, 1 } },
-        { 1,        { 1.000000, 0.894118, 0.000000, 1 } },
-    };
-    static const GwyGradientPoint spectral[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-        { 0.090909, { 0.885000, 0.024681, 0.017629, 1 } },
-        { 0.181818, { 1.000000, 0.541833, 0.015936, 1 } },
-        { 0.272727, { 0.992157, 0.952941, 0.015686, 1 } },
-        { 0.363636, { 0.511640, 0.833000, 0.173365, 1 } },
-        { 0.454545, { 0.243246, 0.705000, 0.251491, 1 } },
-        { 0.545455, { 0.332048, 0.775843, 0.795000, 1 } },
-        { 0.636364, { 0.019608, 0.529412, 0.819608, 1 } },
-        { 0.727273, { 0.015686, 0.047059, 0.619608, 1 } },
-        { 0.818182, { 0.388235, 0.007843, 0.678431, 1 } },
-        { 0.909091, { 0.533279, 0.008162, 0.536000, 1 } },
-        { 1.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-    };
-    static const GwyGradientPoint warm[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-        { 0.250000, { 0.484848, 0.188417, 0.266572, 1 } },
-        { 0.450000, { 0.760000, 0.182400, 0.182400, 1 } },
-        { 0.600000, { 0.870000, 0.495587, 0.113100, 1 } },
-        { 0.750000, { 0.890000, 0.751788, 0.106800, 1 } },
-        { 0.900000, { 0.909090, 0.909091, 0.909090, 1 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
-    };
-    static const GwyGradientPoint cold[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-        { 0.300000, { 0.168223, 0.273350, 0.488636, 1 } },
-        { 0.500000, { 0.196294, 0.404327, 0.606061, 1 } },
-        { 0.700000, { 0.338800, 0.673882, 0.770000, 1 } },
-        { 0.900000, { 0.909090, 0.909091, 0.909090, 1 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
-    };
-    static const GwyGradientPoint dfit[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1 } },
-        { 0.076923, { 0.435640, 0.135294, 0.500000, 1 } },
-        { 0.153846, { 0.871280, 0.270588, 1.000000, 1 } },
-        { 0.230769, { 0.935640, 0.270588, 0.729688, 1 } },
-        { 0.307692, { 1.000000, 0.270588, 0.459377, 1 } },
-        { 0.384615, { 1.000000, 0.570934, 0.364982, 1 } },
-        { 0.461538, { 1.000000, 0.871280, 0.270588, 1 } },
-        { 0.538461, { 0.601604, 0.906715, 0.341219, 1 } },
-        { 0.615384, { 0.203209, 0.942149, 0.411850, 1 } },
-        { 0.692307, { 0.207756, 0.695298, 0.698082, 1 } },
-        { 0.769230, { 0.212303, 0.448447, 0.984314, 1 } },
-        { 0.846153, { 0.561152, 0.679224, 0.947157, 1 } },
-        { 0.923076, { 0.909090, 0.909091, 0.909090, 1 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1 } },
-    };
-    static const GwyGradientPoint spring[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1.000000 } },
-        { 0.250000, { 0.059669, 0.380392, 0.293608, 1.000000 } },
-        { 0.500000, { 0.084395, 0.650980, 0.025529, 1.000000 } },
-        { 0.750000, { 0.758756, 0.850980, 0.560646, 1.000000 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1.000000 } },
-    };
-    static const GwyGradientPoint body[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1.000000 } },
-        { 0.200000, { 0.492424, 0.303700, 0.136994, 1.000000 } },
-        { 0.400000, { 0.749020, 0.280947, 0.117493, 1.000000 } },
-        { 0.600000, { 0.880909, 0.563001, 0.482738, 1.000000 } },
-        { 0.800000, { 1.000000, 0.855548, 0.603922, 1.000000 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1.000000 } },
-    };
-    static const GwyGradientPoint sky[] = {
-        { 0.000000, { 0.000000, 0.000000, 0.000000, 1.000000 } },
-        { 0.200000, { 0.149112, 0.160734, 0.396078, 1.000000 } },
-        { 0.400000, { 0.294641, 0.391785, 0.466667, 1.000000 } },
-        { 0.600000, { 0.792157, 0.476975, 0.245413, 1.000000 } },
-        { 0.800000, { 0.988235, 0.826425, 0.333287, 1.000000 } },
-        { 1.000000, { 1.000000, 1.000000, 1.000000, 1.000000 } },
-    };
-    static const GwyGradientPoint lines[] = {
-        { 0.000, { 1.0, 1.0, 0.0, 1 } },
-        { 0.006, { 1.0, 1.0, 0.0, 1 } },
-        { 0.007, { 0.0, 0.0, 0.0, 1 } },
-        { 0.195, { 0.2, 0.2, 0.2, 1 } },
-        { 0.196, { 0.0, 1.0, 1.0, 1 } },
-        { 0.204, { 0.0, 1.0, 1.0, 1 } },
-        { 0.205, { 0.2, 0.2, 0.2, 1 } },
-        { 0.395, { 0.4, 0.4, 0.4, 1 } },
-        { 0.396, { 0.0, 1.0, 0.0, 1 } },
-        { 0.404, { 0.0, 1.0, 0.0, 1 } },
-        { 0.405, { 0.4, 0.4, 0.4, 1 } },
-        { 0.595, { 0.6, 0.6, 0.6, 1 } },
-        { 0.596, { 1.0, 0.0, 1.0, 1 } },
-        { 0.604, { 1.0, 0.0, 1.0, 1 } },
-        { 0.605, { 0.6, 0.6, 0.6, 1 } },
-        { 0.795, { 0.8, 0.8, 0.8, 1 } },
-        { 0.796, { 1.0, 0.0, 0.0, 1 } },
-        { 0.804, { 1.0, 0.0, 0.0, 1 } },
-        { 0.805, { 0.8, 0.8, 0.8, 1 } },
-        { 0.993, { 1.0, 1.0, 1.0, 1 } },
-        { 0.994, { 0.0, 0.0, 1.0, 1 } },
-        { 1.000, { 0.0, 0.0, 1.0, 1 } },
-    };
-
-    static GwyGradientPoint pd[] = {
-        { 0.0, { 0, 0, 0, 1 } },
-        { 0.5, { 0, 0, 0, 0 } },
-        { 1.0, { 1, 1, 1, 1 } },
-    };
-    static GwyGradientPoint pd3[] = {
-        { 0.0,  { 0, 0, 0, 1 } },
-        { 0.33, { 0, 0, 0, 0 } },
-        { 0.67, { 0, 0, 0, 0 } },
-        { 1.0,  { 1, 1, 1, 1 } },
-    };
-    static GwyGradientPoint pd4[] = {
-        { 0.0,  { 0,   0,   0,   1 } },
-        { 0.33, { 0,   0,   0,   0 } },
-        { 0.5,  { .67, .67, .67, 1 } },
-        { 0.67, { 0,   0,   0,   0 } },
-        { 1.0,  { 1,   1,   1,   1 } },
-    };
-    GwyGradientPoint *pd2;
-    gpointer klass;
-    guint i;
+    GwyResourceClass *klass;
+    GwyGradient *gradient;
 
     /* Force class instantiation, this function is called before it's first
      * referenced. */
     klass = g_type_class_ref(GWY_TYPE_GRADIENT);
-    gwy_inventory_forget_order(gwy_gradients());
 
-    gwy_gradient_preset(GWY_GRADIENT_DEFAULT, G_N_ELEMENTS(gray), gray);
-    gwy_gradient_preset("Rainbow1", G_N_ELEMENTS(rainbow1), rainbow1),
-    gwy_gradient_preset("Rainbow2", G_N_ELEMENTS(rainbow2), rainbow2);
-    gwy_gradient_preset("Gold", G_N_ELEMENTS(gold), gold);
-    gwy_gradient_preset("Pm3d", G_N_ELEMENTS(pm3d), pm3d);
-    gwy_gradient_preset("Spectral", G_N_ELEMENTS(spectral), spectral);
-    gwy_gradient_preset("Warm", G_N_ELEMENTS(warm), warm);
-    gwy_gradient_preset("Cold", G_N_ELEMENTS(cold), cold);
-    gwy_gradient_preset("DFit", G_N_ELEMENTS(dfit), dfit);
+    gradient = gwy_gradient_new(GWY_GRADIENT_DEFAULT, 0, NULL);
+    GWY_RESOURCE(gradient)->is_const = TRUE;
+    GWY_RESOURCE(gradient)->is_modified = FALSE;
+    /* FIXME */
+    gwy_resource_set_is_preferred(GWY_RESOURCE(gradient), TRUE);
+    gwy_inventory_insert_item(klass->inventory, gradient);
+    g_object_unref(gradient);
 
-    gwy_gradient_preset("Spring", G_N_ELEMENTS(spring), spring);
-    gwy_gradient_preset("Body", G_N_ELEMENTS(body), body);
-    gwy_gradient_preset("Sky", G_N_ELEMENTS(sky), sky);
-    gwy_gradient_preset("Lines", G_N_ELEMENTS(lines), lines);
-
-    pd[1].color = red_color;
-    gwy_gradient_preset("Red", G_N_ELEMENTS(pd), pd);
-    pd[1].color = green_color;
-    gwy_gradient_preset("Green", G_N_ELEMENTS(pd), pd);
-    pd[1].color = blue_color;
-    gwy_gradient_preset("Blue", G_N_ELEMENTS(pd), pd);
-    pd[1].color = xyellow;
-    gwy_gradient_preset("Yellow", G_N_ELEMENTS(pd), pd);
-    pd[1].color = pink;
-    gwy_gradient_preset("Pink", G_N_ELEMENTS(pd), pd);
-    pd[1].color = olive;
-    gwy_gradient_preset("Olive", G_N_ELEMENTS(pd), pd);
-
-    pd3[1].color = red_color;
-    pd3[2].color = yellow_color;
-    gwy_gradient_preset("Red-Yellow", G_N_ELEMENTS(pd3), pd3);
-    pd3[2].color = violet_color;
-    gwy_gradient_preset("Red-Violet", G_N_ELEMENTS(pd3), pd3);
-
-    pd3[1].color = blue_color;
-    pd3[2].color = cyan_color;
-    gwy_gradient_preset("Blue-Cyan", G_N_ELEMENTS(pd3), pd3);
-    pd3[2].color = violet_color;
-    gwy_gradient_preset("Blue-Violet", G_N_ELEMENTS(pd3), pd3);
-
-    pd3[1].color = green_color;
-    pd3[2].color = yellow_color;
-    gwy_gradient_preset("Green-Yellow", G_N_ELEMENTS(pd3), pd3);
-    pd3[2].color = cyan_color;
-    gwy_gradient_preset("Green-Cyan", G_N_ELEMENTS(pd3), pd3);
-
-    pd4[1].color = red_color;
-    pd4[3].color = cyan_color;
-    gwy_gradient_preset("Red-Cyan", G_N_ELEMENTS(pd4), pd4);
-    pd4[1].color = blue_color;
-    pd4[3].color = yellow_color;
-    gwy_gradient_preset("Blue-Yellow", G_N_ELEMENTS(pd4), pd4);
-    pd4[1].color = green_color;
-    pd4[3].color = violet_color;
-    gwy_gradient_preset("Green-Violet", G_N_ELEMENTS(pd4), pd4);
-
-    pd2 = g_new(GwyGradientPoint, 20);
-    for (i = 0; i < 10; i++) {
-        pd2[i].x = i/9.0;
-        pd2[i].color = i%2 ? black_color : white_color;
-    }
-    gwy_gradient_preset("BW1", 10, pd2);
-
-    pd2[0].x = 0.0;
-    pd2[0].color = black_color;
-    for (i = 1; i < 19; i++) {
-        pd2[i].x = (i/2 + i%2)/10.0 + (i%2 ? -0.01 : 0.01);
-        pd2[i].color = i/2%2 ? white_color : black_color;
-    }
-    pd2[19].x = 1.0;
-    pd2[19].color = white_color;
-    gwy_gradient_preset("BW2", 20, pd2);
-    g_free(pd2);
-
-    gwy_inventory_restore_order(gwy_gradients());
     g_type_class_unref(klass);
 }
 
@@ -1172,19 +919,19 @@ gwy_gradient_dump(GwyResource *resource,
     for (i = 0; i < gradient->points->len; i++) {
         pt = &g_array_index(gradient->points, GwyGradientPoint, i);
         /* this is ugly.  I hate locales */
-        g_ascii_dtostr(buffer, sizeof(buffer), pt->x);
+        g_ascii_formatd(buffer, sizeof(buffer), "%.6g", pt->x);
         g_string_append(str, buffer);
         g_string_append_c(str, ' ');
-        g_ascii_dtostr(buffer, sizeof(buffer), pt->color.r);
+        g_ascii_formatd(buffer, sizeof(buffer), "%.6g", pt->color.r);
         g_string_append(str, buffer);
         g_string_append_c(str, ' ');
-        g_ascii_dtostr(buffer, sizeof(buffer), pt->color.g);
+        g_ascii_formatd(buffer, sizeof(buffer), "%.6g", pt->color.g);
         g_string_append(str, buffer);
         g_string_append_c(str, ' ');
-        g_ascii_dtostr(buffer, sizeof(buffer), pt->color.b);
+        g_ascii_formatd(buffer, sizeof(buffer), "%.6g", pt->color.b);
         g_string_append(str, buffer);
         g_string_append_c(str, ' ');
-        g_ascii_dtostr(buffer, sizeof(buffer), pt->color.a);
+        g_ascii_formatd(buffer, sizeof(buffer), "%g", pt->color.a);
         g_string_append(str, buffer);
         g_string_append_c(str, '\n');
     }

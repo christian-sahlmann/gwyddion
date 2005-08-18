@@ -1,5 +1,8 @@
 # @(#) $Id$
 
+SUBDIRS = \
+	gradients
+
 pkgconfigdatadir = $(libdir)/pkgconfig
 gwyddionappdir = $(datadir)/applications
 gwyddionmimedir = $(datadir)/mime/packages

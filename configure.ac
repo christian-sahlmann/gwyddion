@@ -33,6 +33,7 @@ AC_CONFIG_FILES(\
   python/Makefile \
   ruby/Makefile \
   data/Makefile \
+  data/gradients/Makefile \
   utils/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \

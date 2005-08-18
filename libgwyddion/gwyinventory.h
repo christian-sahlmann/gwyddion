@@ -54,6 +54,7 @@ struct _GwyInventoryItemType {
                                     gconstpointer item2);
     void         (*rename)         (gpointer item,
                                     const gchar *newname);
+    void         (*dismantle)      (gpointer item);
     gpointer     (*copy)           (gpointer item);
     const GType* (*get_traits)     (gint *ntraits);
     const gchar* (*get_trait_name) (gint i);

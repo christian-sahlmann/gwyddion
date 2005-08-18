@@ -45,10 +45,6 @@ install-mod: mod
 install-plugin: plugin
 	for %p in ($(PLUGINS)) do $(INSTALL) %p "$(DEST_DIR)\plugins\$(PLUGIN_TYPE)"
 
-install-pixmap: pixmap
-	$(INSTALL) *.png "$(DEST_DIR)\pixmaps"
-	$(INSTALL) *.ico "$(DEST_DIR)\pixmaps"
-
 install-dev-doc: all
 	$(INSTALL) html\*.* "$(DEST_DIR)\devel-docs\$(LIBRARY)"
 
