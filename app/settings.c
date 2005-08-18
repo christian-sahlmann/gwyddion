@@ -27,11 +27,13 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
-#include <libdraw/gwyrgba.h>
-#include "settings.h"
+#include <libdraw/gwydraw.h>
+#include <app/settings.h>
 
 static gboolean create_config_dir_real         (const gchar *cfgdir);
 static void     gwy_app_settings_set_defaults  (GwyContainer *settings);
+static void     gwy_app_settings_gather        (GwyContainer *settings);
+static void     gwy_app_settings_apply         (GwyContainer *settings);
 
 static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 
@@ -52,7 +54,6 @@ GwyContainer*
 gwy_app_settings_get(void)
 {
     if (!gwy_settings) {
-        g_warning("No settings loaded, creating empty");
         gwy_settings = GWY_CONTAINER(gwy_container_new());
         gwy_app_settings_set_defaults(gwy_settings);
     }
@@ -103,6 +104,7 @@ gwy_app_settings_save(const gchar *filename)
 
     gwy_debug("Saving text settings to `%s'", filename);
     settings = gwy_app_settings_get();
+    gwy_app_settings_gather(settings);
     g_return_val_if_fail(GWY_IS_CONTAINER(settings), FALSE);
     fh = g_fopen(filename, "w");
     if (!fh) {
@@ -182,6 +184,7 @@ gwy_app_settings_load(const gchar *filename)
     gwy_app_settings_free();
     gwy_settings = new_settings;
     gwy_app_settings_set_defaults(gwy_settings);
+    gwy_app_settings_apply(gwy_settings);
 
     return TRUE;
 }
@@ -245,6 +248,24 @@ static void
 gwy_app_settings_set_defaults(GwyContainer *settings)
 {
     static const GwyRGBA default_mask_color = { 1.0, 0.0, 0.0, 0.5 };
+    static const gchar *default_preferred_gradients =
+        "BW1\n"
+        "Blue-Violet\n"
+        "Blue-Yellow\n"
+        "Body\n"
+        "Cold\n"
+        "DFit\n"
+        "Gray\n"
+        "Green-Violet\n"
+        "Lines\n"
+        "Olive\n"
+        "Pink\n"
+        "Rainbow2\n"
+        "Red\n"
+        "Sky\n"
+        "Spectral\n"
+        "Spring\n"
+        "Warm";
 
     if (!gwy_container_contains_by_name(settings, "/mask/alpha")) {
         gwy_container_set_double_by_name(settings, "/mask/red",
@@ -255,6 +276,68 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
                                          default_mask_color.b);
         gwy_container_set_double_by_name(settings, "/mask/alpha",
                                          default_mask_color.a);
+    }
+    if (!gwy_container_contains_by_name(settings, "/app/graph/preferred"))
+        gwy_container_set_string_by_name(settings, "/app/gradients/preferred",
+                                         g_strdup(default_preferred_gradients));
+}
+
+static void
+add_preferred_resource_name(G_GNUC_UNUSED gpointer key,
+                            gpointer item,
+                            gpointer user_data)
+{
+    GwyResource *resource = GWY_RESOURCE(item);
+    GPtrArray *array = (GPtrArray*)user_data;
+
+    if (gwy_resource_get_is_preferred(resource))
+        g_ptr_array_add(array, (gpointer)gwy_resource_get_name(resource));
+}
+
+/**
+ * gwy_app_settings_gather:
+ * @settings: App settings.
+ *
+ * Perform settings update that needs to be done only once at shutdown.
+ **/
+static void
+gwy_app_settings_gather(GwyContainer *settings)
+{
+    GPtrArray *preferred;
+
+    preferred= g_ptr_array_new();
+    gwy_inventory_foreach(gwy_gradients(),
+                          &add_preferred_resource_name, preferred);
+    g_ptr_array_add(preferred, NULL);
+    gwy_container_set_string_by_name(settings, "/app/gradients/preferred",
+                                     g_strjoinv("\n",
+                                                (gchar**)preferred->pdata));
+    g_ptr_array_free(preferred, TRUE);
+}
+
+/**
+ * gwy_app_settings_apply:
+ * @settings: App settings.
+ *
+ * Applies initial settings to things that need it.
+ **/
+static void
+gwy_app_settings_apply(GwyContainer *settings)
+{
+    GwyInventory *inventory;
+    GwyResource *resource;
+    const gchar *s;
+    gchar **preferred, **p;
+
+    if ((s = gwy_container_get_string_by_name(settings,
+                                              "/app/gradients/preferred"))) {
+        inventory = gwy_gradients();
+        preferred = g_strsplit(s, "\n", 0);
+        for (p = preferred; *p; p++) {
+            if ((resource = gwy_inventory_get_item(inventory, *p)))
+                gwy_resource_set_is_preferred(resource, TRUE);
+        }
+        g_strfreev(preferred);
     }
 }
 

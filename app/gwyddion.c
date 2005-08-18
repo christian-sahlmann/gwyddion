@@ -86,14 +86,8 @@ main(int argc, char *argv[])
     gwy_app_init();
 
     gwy_app_splash_create();
-    gwy_app_splash_set_message(_("Loading settings"));
-    if (has_settings)
-        settings_ok = gwy_app_settings_load(settings_file);
-    gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
 
-    /* TODO: remove sometime, but keep the gwy_app_settings_get(); */
     gwy_app_splash_set_message(_("Loading document history"));
-    gwy_container_remove_by_prefix(gwy_app_settings_get(), "/app/recent");
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
     gwy_app_recent_file_list_load(recent_file_file);
 
@@ -103,11 +97,17 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message(_("gradients"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
+    gwy_app_splash_set_message_prefix(NULL);
 
-    gwy_app_splash_set_message(_("modules"));
+    gwy_app_splash_set_message(_("Loading settings"));
+    if (has_settings)
+        settings_ok = gwy_app_settings_load(settings_file);
+    gwy_debug("Loading settings was: %s", settings_ok ? "OK" : "Not OK");
+    gwy_app_settings_get();
+
+    gwy_app_splash_set_message(_("Registering modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
-    gwy_app_splash_set_message_prefix(NULL);
 
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
