@@ -398,7 +398,7 @@ gwy_gradient_sample_to_pixbuf(GwyGradient *gradient,
 
     /* Duplicate rows */
     pdata = gdk_pixbuf_get_pixels(pixbuf);
-    for (i = 0; i < height; i++)
+    for (i = 1; i < height; i++)
         memcpy(pdata + i*rowstride, pdata, rowstride);
 
     if (must_free_data)
