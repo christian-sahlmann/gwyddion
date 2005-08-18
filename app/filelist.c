@@ -886,6 +886,7 @@ recent_file_try_load_thumbnail(GwyRecentFile *rf)
     height = CLAMP((gint)(scale*height), 1, THUMB_SIZE);
     rf->pixbuf = gdk_pixbuf_scale_simple(pixbuf, width, height,
                                          GDK_INTERP_TILES);
+    gwy_debug_objects_creation(G_OBJECT(rf->pixbuf));
 
     option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_URI);
     gwy_debug("uri = <%s>", rf->file_uri);
