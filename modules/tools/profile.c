@@ -270,7 +270,7 @@ dialog_create(GwyUnitoolState *state)
     row++;
 
     controls->nofpoints = gtk_adjustment_new(controls->npoints, 10, 100, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("fix res.:"), _(""),
+    gwy_table_attach_hscale(table, row, _("fix res.:"), "",
                                 controls->nofpoints, GWY_HSCALE_CHECK);
     g_signal_connect_swapped(controls->nofpoints, "value-changed",
                              G_CALLBACK(npoints_changed_cb), controls);
