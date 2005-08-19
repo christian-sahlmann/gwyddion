@@ -35,7 +35,6 @@
 
 #define TEST_VECTOR_SHADE 0
 #define TEST_DATA_VIEW 1
-#define TEST_OPTION_MENUS 2
 #define TEST_GTKDOC_INFO 3
 #define TEST_GWY3DVIEW 4
 
@@ -172,98 +171,6 @@ test(void)
 }
 #endif
 /***** ]]] DATA VIEW ********************************************************/
-
-/***** MENUS [[[ ************************************************************/
-#if (TEST_WHAT == TEST_OPTION_MENUS)
-static void
-menu_callback(GObject *menu_item, const gchar *which_menu)
-{
-    if (gwy_strequal(which_menu, "palette")) {
-        g_message("Palette: %s",
-                  (gchar*)g_object_get_data(menu_item, "palette-name"));
-        return;
-    }
-    if (gwy_strequal(which_menu, "interpolation")) {
-        g_message("Interpolation: %d",
-                  GPOINTER_TO_INT(g_object_get_data(menu_item,
-                                                    "interpolation-type")));
-        return;
-    }
-    if (gwy_strequal(which_menu, "windowing")) {
-        g_message("Windowing: %d",
-                  GPOINTER_TO_INT(g_object_get_data(menu_item,
-                                                    "windowing-type")));
-        return;
-    }
-    if (gwy_strequal(which_menu, "zoom_mode")) {
-        g_message("Zoom mode: %d",
-                  GPOINTER_TO_INT(g_object_get_data(menu_item,
-                                                    "zoom-mode")));
-        return;
-    }
-    if (gwy_strequal(which_menu, "metric_unit")) {
-        g_message("Metric unit: %d",
-                  GPOINTER_TO_INT(g_object_get_data(menu_item,
-                                                    "metric-unit")));
-        return;
-    }
-    g_assert_not_reached();
-}
-
-static void
-test(void)
-{
-    GtkWidget *window, *table, *omenu, *widget;
-    GwySIUnit *unit;
-
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_border_width(GTK_CONTAINER(window), 4);
-    table = gtk_table_new(5, 2, FALSE);
-    gtk_container_add(GTK_CONTAINER(window), table);
-
-    widget = gtk_label_new("Palettes: ");
-    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
-    omenu = gwy_option_menu_palette(G_CALLBACK(menu_callback),
-                                    "palette",
-                                    GWY_PALETTE_OLIVE);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 0, 1);
-
-    widget = gtk_label_new("Interpolation types: ");
-    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
-    omenu = gwy_option_menu_interpolation(G_CALLBACK(menu_callback),
-                                          "interpolation",
-                                          GWY_INTERPOLATION_BILINEAR);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 1, 2);
-
-    widget = gtk_label_new("Windowing types: ");
-    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 2, 3);
-    omenu = gwy_option_menu_windowing(G_CALLBACK(menu_callback),
-                                      "windowing",
-                                      GWY_WINDOWING_HAMMING);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 2, 3);
-
-    widget = gtk_label_new("Zoom modes: ");
-    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
-    omenu = gwy_option_menu_zoom_mode(G_CALLBACK(menu_callback),
-                                      "zoom_mode",
-                                      GWY_ZOOM_MODE_CBRT2);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 3, 4);
-
-    unit = gwy_si_unit_new("Hz");
-    widget = gtk_label_new("Metric units: ");
-    gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 4, 5);
-    omenu = gwy_option_menu_metric_unit(G_CALLBACK(menu_callback),
-                                        "metric_unit",
-                                        -12, 3, unit, -6);
-    gtk_table_attach_defaults(GTK_TABLE(table), omenu, 1, 2, 4, 5);
-    g_object_unref(unit);
-
-    gtk_widget_show_all(window);
-    g_signal_connect(window, "destroy",
-                     G_CALLBACK(gtk_main_quit), NULL);
-}
-#endif
-/***** ]]] MENUS ************************************************************/
 
 /***** GTKDOC INFO [[[ ******************************************************/
 #if (TEST_WHAT == TEST_GTKDOC_INFO)

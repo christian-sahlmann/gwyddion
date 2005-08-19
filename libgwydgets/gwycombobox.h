@@ -24,6 +24,7 @@
 #include <gtk/gtkwidget.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwyddion/gwyenum.h>
+#include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
 
@@ -55,6 +56,12 @@ GtkWidget* gwy_enum_combo_box_new        (const GwyEnum *entries,
                                           gpointer cbdata,
                                           gint active,
                                           gboolean translate);
+GtkWidget* gwy_combo_box_metric_unit_new (GCallback callback,
+                                          gpointer cbdata,
+                                          gint from,
+                                          gint to,
+                                          GwySIUnit *unit,
+                                          gint active);
 void       gwy_enum_combo_box_set_active (GtkComboBox *combo,
                                           gint active);
 gint       gwy_enum_combo_box_get_active (GtkComboBox *combo);

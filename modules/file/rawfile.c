@@ -717,9 +717,9 @@ rawfile_dialog_info_page(RawFileArgs *args,
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     gwy_si_unit_set_unit_string(unit, "m");
-    controls->xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                       -12, 3, unit,
-                                                       args->xyexponent);
+    controls->xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                         -12, 3, unit,
+                                                         args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -757,9 +757,9 @@ rawfile_dialog_info_page(RawFileArgs *args,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
-    controls->zexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                      -12, 3, unit,
-                                                      args->zexponent);
+    controls->zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                        -12, 3, unit,
+                                                        args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls->zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -1615,13 +1615,13 @@ update_dialog_controls(RawFileControls *controls)
     gtk_adjustment_set_value(adj, args->yreal);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
                                  args->xymeasureeq);
-    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
-                                args->xyexponent);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
+                                  args->xyexponent);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zscale));
     gtk_adjustment_set_value(adj, args->zscale);
-    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
-                                args->zexponent);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
+                                  args->zexponent);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->offset);
@@ -1737,12 +1737,12 @@ update_dialog_values(RawFileControls *controls)
     args->xymeasureeq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq));
     args->xyexponent
-        = gwy_option_menu_get_history(controls->xyexponent, "metric-unit");
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->xyexponent));
 
     args->zscale
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->zscale));
     args->zexponent
-        = gwy_option_menu_get_history(controls->zexponent, "metric-unit");
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->zexponent));
 
     args->offset
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->offset));

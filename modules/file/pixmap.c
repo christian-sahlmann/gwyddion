@@ -719,9 +719,9 @@ pixmap_load_dialog(PixmapLoadArgs *args,
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
     unit = gwy_si_unit_new("m");
-    controls.xyexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                      -12, 3, unit,
-                                                      args->xyexponent);
+    controls.xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                        -12, 3, unit,
+                                                        args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -759,9 +759,9 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
     align = gtk_alignment_new(0.0, 0.5, 0.2, 0.0);
-    controls.zexponent = gwy_option_menu_metric_unit(NULL, NULL,
-                                                     -12, 3, unit,
-                                                     args->zexponent);
+    controls.zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                       -12, 3, unit,
+                                                       args->zexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.zexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -910,12 +910,12 @@ pixmap_load_update_controls(PixmapLoadControls *controls,
     gtk_adjustment_set_value(adj, args->yreal);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
                                  args->xymeasureeq);
-    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
-                                args->xyexponent);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
+                                   args->xyexponent);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
     gtk_adjustment_set_value(adj, args->zreal);
-    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
-                                args->zexponent);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
+                                  args->zexponent);
     if (controls->maptype)
         gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->maptype),
                                       args->maptype);
@@ -931,12 +931,12 @@ pixmap_load_update_values(PixmapLoadControls *controls,
     args->xreal = gtk_adjustment_get_value(adj);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
     args->yreal = gtk_adjustment_get_value(adj);
-    args->xyexponent = gwy_option_menu_get_history(controls->xyexponent,
-                                                   "metric-unit");
+    args->xyexponent
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->xyexponent));
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
     args->zreal = gtk_adjustment_get_value(adj);
-    args->zexponent = gwy_option_menu_get_history(controls->zexponent,
-                                                  "metric-unit");
+    args->zexponent
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->zexponent));
     if (controls->maptype)
         args->maptype
             = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->maptype));

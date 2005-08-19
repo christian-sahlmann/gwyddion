@@ -27,8 +27,8 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwysiunit.h>
-#include "gwyoptionmenus.h"
-#include "gwyvalunit.h"
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyvalunit.h>
 
 #define GWY_VAL_UNIT_TYPE_NAME "GwyValUnit"
 
@@ -44,7 +44,7 @@ static void     gwy_val_unit_size_allocate        (GtkWidget *widget,
                                                    GtkAllocation *allocation);
 static void     gwy_val_unit_value_changed        (GtkSpinButton *spinbutton,
                                                    GwyValUnit *val_unit);
-static void     gwy_val_unit_unit_changed         (GObject *item,
+static void     gwy_val_unit_unit_changed         (GtkWidget *combo,
                                                    GwyValUnit *val_unit);
 
 /* Local data */
@@ -158,10 +158,10 @@ gwy_val_unit_new(gchar *label_text, GwySIUnit *si_unit)
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->spin, FALSE, FALSE, 2);
 
     val_unit->selection
-        = gwy_option_menu_metric_unit(G_CALLBACK(gwy_val_unit_unit_changed),
-                                      val_unit,
-                                      -12, 6, si_unit,
-                                      val_unit->unit);
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(gwy_val_unit_unit_changed),
+                                        val_unit,
+                                        -12, 6, si_unit,
+                                        val_unit->unit);
     gtk_box_pack_start(GTK_BOX(val_unit), val_unit->selection, FALSE, FALSE, 2);
 
     g_signal_connect(val_unit->spin, "value-changed",
@@ -231,10 +231,9 @@ gwy_val_unit_value_changed(GtkSpinButton *spinbutton, GwyValUnit *val_unit)
 }
 
 static void
-gwy_val_unit_unit_changed(GObject *item, GwyValUnit *val_unit)
+gwy_val_unit_unit_changed(GtkWidget *combo, GwyValUnit *val_unit)
 {
-    val_unit->unit = GPOINTER_TO_INT(g_object_get_data(item,
-                                                      "metric-unit"));
+    val_unit->unit = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     gwy_val_unit_signal_value_changed(val_unit);
 }
 
@@ -258,8 +257,8 @@ gwy_val_unit_set_value(GwyValUnit *val_unit, gdouble value)
 
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(val_unit->spin), val_unit->dival);
 
-    gtk_option_menu_set_history(GTK_OPTION_MENU(val_unit->selection),
-                                floor(val_unit->unit/3) + 4);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(val_unit->selection),
+                                  floor(val_unit->unit/3) + 4);
 }
 
 /**

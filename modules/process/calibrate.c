@@ -89,9 +89,9 @@ static void        zreal_changed_cb          (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        square_changed_cb         (GtkWidget *check,
                                               CalibrateControls *controls);
-static void        xyexponent_changed_cb     (GObject *item,
+static void        xyexponent_changed_cb     (GtkWidget *combo,
                                               CalibrateControls *controls);
-static void        zexponent_changed_cb      (GObject *item,
+static void        zexponent_changed_cb      (GtkWidget *combo,
                                               CalibrateControls *controls);
 static void        calibrate_dialog_update   (CalibrateControls *controls,
                                               CalibrateArgs *args);
@@ -251,9 +251,9 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
     unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.xyexponent
-        = gwy_option_menu_metric_unit(G_CALLBACK(xyexponent_changed_cb),
-                                      &controls, -15, 6, unit,
-                                      args->xyexponent);
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(xyexponent_changed_cb),
+                                        &controls, -15, 6, unit,
+                                        args->xyexponent);
     gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
@@ -292,9 +292,9 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
 
     unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.zexponent
-        = gwy_option_menu_metric_unit(G_CALLBACK(zexponent_changed_cb),
-                                      &controls, -15, 6, unit,
-                                      args->zexponent);
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(zexponent_changed_cb),
+                                        &controls, -15, 6, unit,
+                                        args->zexponent);
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
 
@@ -387,15 +387,15 @@ dialog_reset(CalibrateControls *controls,
 {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->square),
                                  calibrate_defaults.square);
-    gwy_option_menu_set_history(controls->xyexponent, "metric-unit",
-                                args->xyorigexp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
+                                  args->xyorigexp);
     args->xyexponent = args->xyorigexp;
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yratio),
                              calibrate_defaults.yratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
                              calibrate_defaults.xratio);
-    gwy_option_menu_set_history(controls->zexponent, "metric-unit",
-                                args->zorigexp);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
+                                  args->zorigexp);
     args->zexponent = args->zorigexp;
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zratio),
                              calibrate_defaults.zratio);
@@ -542,7 +542,7 @@ square_changed_cb(GtkWidget *check,
 }
 
 static void
-xyexponent_changed_cb(GObject *item,
+xyexponent_changed_cb(GtkWidget *combo,
                       CalibrateControls *controls)
 {
     CalibrateArgs *args = controls->args;
@@ -551,7 +551,7 @@ xyexponent_changed_cb(GObject *item,
         return;
 
     controls->in_update = TRUE;
-    args->xyexponent = GPOINTER_TO_INT(g_object_get_data(item, "metric-unit"));
+    args->xyexponent = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     args->xreal = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xreal))
                   * pow10(args->xyexponent);
     args->xratio = args->xreal/args->xorig;
@@ -563,7 +563,7 @@ xyexponent_changed_cb(GObject *item,
 }
 
 static void
-zexponent_changed_cb(GObject *item,
+zexponent_changed_cb(GtkWidget *combo,
                      CalibrateControls *controls)
 {
     CalibrateArgs *args = controls->args;
@@ -573,7 +573,7 @@ zexponent_changed_cb(GObject *item,
 
     controls->in_update = TRUE;
 
-    args->zexponent = GPOINTER_TO_INT(g_object_get_data(item, "metric-unit"));
+    args->zexponent = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     args->zreal = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zreal))
                   * pow10(args->zexponent);
     args->zratio = args->zreal/args->zorig;

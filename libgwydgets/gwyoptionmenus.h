@@ -40,18 +40,6 @@ GtkWidget* gwy_option_menu_gradient          (GCallback callback,
 GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
-GtkWidget* gwy_option_menu_metric_unit       (GCallback callback,
-                                              gpointer cbdata,
-                                              gint from,
-                                              gint to,
-                                              GwySIUnit *unit,
-                                              gint current);
-gboolean   gwy_option_menu_set_history       (GtkWidget *option_menu,
-                                              const gchar *key,
-                                              gint current);
-gint       gwy_option_menu_get_history       (GtkWidget *option_menu,
-                                              const gchar *key);
-
 G_END_DECLS
 
 #endif /* __GWY_OPTION_MENUS_H__ */

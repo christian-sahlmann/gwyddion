@@ -207,4 +207,59 @@ cell_translate_func(G_GNUC_UNUSED GtkCellLayout *cell_layout,
     g_object_set(renderer, "text", method(enum_item->name), NULL);
 }
 
+/**
+ * gwy_combo_box_metric_unit_new:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ * @cbdata: User data passed to the callback.
+ * @from: The exponent of 10 the menu should start at (a multiple of 3, will
+ *        be rounded towards zero if isn't).
+ * @to: The exponent of 10 the menu should end at (a multiple of 3, will be
+ *      rounded towards zero if isn't).
+ * @unit: The unit to be prefixed.
+ * @active: The power of 10 to show as currently selected (a multiple of 3).
+ *
+ * Creates an enum combo box with SI power of 10 multiplies.
+ *
+ * The integer value is the power of 10.
+ *
+ * Returns: The newly created combo box as #GtkWidget.
+ **/
+GtkWidget*
+gwy_combo_box_metric_unit_new(GCallback callback,
+                              gpointer cbdata,
+                              gint from,
+                              gint to,
+                              GwySIUnit *unit,
+                              gint active)
+{
+    enum { min = -18, max = 18 };
+    GtkWidget *combo;
+    GwyEnum *entries;
+    GwySIValueFormat *format = NULL;
+    gint i, n;
+
+    from = CLAMP(from/3, min, max);
+    to = CLAMP(to/3, min, max);
+    if (to < from)
+        GWY_SWAP(gint, from, to);
+
+    n = (to - from) + 1;
+    entries = g_new(GwyEnum, n + 1);
+    for (i = from; i <= to; i++) {
+        format = gwy_si_unit_get_format_for_power10(unit,
+                                                    GWY_SI_UNIT_FORMAT_MARKUP,
+                                                    3*i, format);
+        entries[i - from].name = g_strdup(format->units);
+        entries[i - from].value = 3*i;
+    }
+    entries[n].name = NULL;
+    gwy_si_unit_value_format_free(format);
+
+    combo = gwy_enum_combo_box_new(entries, n, callback, cbdata, active, FALSE);
+    g_signal_connect_swapped(combo, "destroy",
+                             G_CALLBACK(gwy_enum_freev), entries);
+
+    return combo;
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
