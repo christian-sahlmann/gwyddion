@@ -22,6 +22,20 @@
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/gwyprocessenums.h>
 
+/**
+ * GwyMergeType:
+ * @GWY_MERGE_UNION: Union (logical or) merging.
+ * @GWY_MERGE_INTERSECTION: Intersection (logical and) merging.
+ *
+ * Mask merge type (namely used in grain processing).
+ **/
+/**
+ * gwy_merge_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyMergeType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_merge_type_get_enum(void)
 {
@@ -50,6 +64,13 @@ gwy_merge_type_get_enum(void)
  *
  * Plane symmetry types for rotation correction.
  **/
+/**
+ * gwy_plane_symmetry_get_enum:
+ *
+ * Returns #GwyEnum for #GwyPlaneSymmetry enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_plane_symmetry_get_enum(void)
 {
@@ -65,6 +86,13 @@ gwy_plane_symmetry_get_enum(void)
     return entries;
 };
 
+/**
+ * gwy_2d_cwt_wavelet_type_get_enum:
+ *
+ * Returns #GwyEnum for #Gwy2DCWTWaveletType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_2d_cwt_wavelet_type_get_enum(void)
 {
@@ -83,6 +111,13 @@ gwy_2d_cwt_wavelet_type_get_enum(void)
  *
  * Orientation type.
  **/
+/**
+ * gwy_orientation_get_enum:
+ *
+ * Returns #GwyEnum for #GwyOrientation enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_orientation_get_enum(void)
 {
@@ -94,6 +129,13 @@ gwy_orientation_get_enum(void)
     return entries;
 }
 
+/**
+ * gwy_dwt_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyDWTType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_dwt_type_get_enum(void)
 {
@@ -109,6 +151,13 @@ gwy_dwt_type_get_enum(void)
     return entries;
 }
 
+/**
+ * gwy_dwt_denoise_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyDWTDenoiseType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_dwt_denoise_type_get_enum(void)
 {
@@ -136,6 +185,13 @@ gwy_dwt_denoise_type_get_enum(void)
  *
  * Interpolation types.
  **/
+/**
+ * gwy_interpolation_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyInterpolationType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_interpolation_type_get_enum(void)
 {
@@ -151,6 +207,25 @@ gwy_interpolation_type_get_enum(void)
     return entries;
 }
 
+/**
+ * GwyWindowingType:
+ * @GWY_WINDOWING_NONE: No windowing is applied.
+ * @GWY_WINDOWING_HANN: Hann window.
+ * @GWY_WINDOWING_HAMMING: Hamming window.
+ * @GWY_WINDOWING_BLACKMANN: Blackmann window.
+ * @GWY_WINDOWING_LANCZOS: Lanczos window.
+ * @GWY_WINDOWING_WELCH: Welch window.
+ * @GWY_WINDOWING_RECT: Rectangular window.
+ *
+ * Frequency windowing type.
+ **/
+/**
+ * gwy_windowing_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyWindowingType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ **/
 const GwyEnum*
 gwy_windowing_type_get_enum(void)
 {

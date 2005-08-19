@@ -31,8 +31,6 @@ typedef enum {
     GWY_MERGE_INTERSECTION
 } GwyMergeType;
 
-const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
-
 typedef enum {
     GWY_WATERSHED_STATE_INIT,
     GWY_WATERSHED_STATE_LOCATE,
@@ -52,21 +50,15 @@ typedef enum {
     GWY_SYMMETRY_LAST
 } GwyPlaneSymmetry;
 
-const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
-
 typedef enum { /*< lowercase_name=gwy_2dcwt_wavelet_type >*/
     GWY_2DCWT_GAUSS,
     GWY_2DCWT_HAT
 } Gwy2DCWTWaveletType;
 
-const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;
-
 typedef enum {
     GWY_ORIENTATION_HORIZONTAL,
     GWY_ORIENTATION_VERTICAL
 } GwyOrientation;
-
-const GwyEnum* gwy_orientation_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_TRANSFORM_DIRECTION_BACKWARD = -1,
@@ -100,15 +92,11 @@ typedef enum {
     GWY_DWT_DAUB20
 } GwyDWTType;
 
-const GwyEnum* gwy_dwt_type_get_enum(void) G_GNUC_CONST;
-
 typedef enum {
     GWY_DWT_DENOISE_UNIVERSAL,
     GWY_DWT_DENOISE_SCALE_ADAPTIVE,
     GWY_DWT_DENOISE_SPACE_ADAPTIVE
 } GwyDWTDenoiseType;
-
-const GwyEnum* gwy_dwt_denoise_type_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_INTERPOLATION_NONE      = 0,
@@ -119,8 +107,6 @@ typedef enum {
     GWY_INTERPOLATION_OMOMS     = 5,
     GWY_INTERPOLATION_NNA       = 6
 } GwyInterpolationType;
-
-const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
 
 typedef enum {
     GWY_PLANE_FIT_A = 1,
@@ -142,14 +128,21 @@ typedef enum {
     GWY_WINDOWING_RECT       = 6
 } GwyWindowingType;
 
-const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
-
 typedef enum {
     GWY_TIP_PYRAMIDE       = 0,
     GWY_TIP_CONTACT        = 1,
     GWY_TIP_NONCONTACT     = 2,
     GWY_TIP_DELTA          = 3
 } GwyTipType;
+
+const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_orientation_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_dwt_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_dwt_denoise_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
 
 G_END_DECLS
 
