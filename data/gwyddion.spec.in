@@ -84,12 +84,14 @@ update-mime-database %{_datadir}/mime
 %defattr(755,root,root)
 %{_bindir}/%{name}
 %defattr(-,root,root)
-%doc AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS
+%doc AUTHORS COPYING ChangeLog INSTALL.gwyddion NEWS README THANKS
 %{_datadir}/%{name}/pixmaps/*.png
 %{_datadir}/%{name}/pixmaps/*.ico
-%{_mandir}/man1/%{name}.*
 %dir %{_datadir}/%{name}/pixmaps
+%{_datadir}/%{name}/gradients/*
+%dir %{_datadir}/%{name}/gradients
 %dir %{_datadir}/%{name}
+%{_mandir}/man1/%{name}.*
 %dir %{_datadir}/pixmaps/%{name}.png
 %{_libdir}/%{name}/modules/file/*.so
 %{_libdir}/%{name}/modules/graph/*.so
