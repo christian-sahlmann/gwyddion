@@ -50,6 +50,7 @@ gchar*        gwy_flags_to_string    (gint enumval,
                                       const gchar *glue);
 gint          gwy_enum_sanitize_value(gint enumval,
                                       GType enum_type);
+void          gwy_enum_freev         (GwyEnum *enum_table);
 GwyInventory* gwy_enum_inventory_new (const GwyEnum *enum_table,
                                       gint n);
 

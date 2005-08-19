@@ -222,6 +222,27 @@ gwy_enum_sanitize_value(gint enumval,
     return enumval;
 }
 
+/**
+ * gwy_enum_freev:
+ * @enum_table: A %NULL-name-terminated, dynamically allocated enum table.
+ *
+ * Frees a dynamically allocated enum.
+ *
+ * More precisely, it frees all names of a #GwyEnum and then frees the enum
+ * itself.
+ **/
+void
+gwy_enum_freev(GwyEnum *enum_table)
+{
+    gsize i = 0;
+
+    while (enum_table[i].name) {
+        g_free((gpointer)enum_table[i].name);
+        i++;
+    }
+    g_free(enum_table);
+}
+
 static const gchar*
 gwy_enum_get_name(gpointer item)
 {
