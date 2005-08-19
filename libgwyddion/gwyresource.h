@@ -68,7 +68,8 @@ struct _GwyResourceClass {
     void (*release)(GwyResource *resource);
     void (*dump)(GwyResource *resource,
                  GString *string);
-    GwyResource* (*parse)(const gchar *text);
+    GwyResource* (*parse)(const gchar *text,
+                          gboolean is_const);
 
     gpointer reserved1;
     gpointer reserved2;
@@ -94,11 +95,7 @@ gboolean          gwy_resource_class_save            (GwyResourceClass *klass,
                                                       GError **err);
 void              gwy_resource_class_load            (GwyResourceClass *klass);
 
-/* TODO: some methods to (re)load, save complete resource inventory to some
- * directory */
-
 G_END_DECLS
-
 
 #endif /*__GWY_RESOURCE_H__*/
 

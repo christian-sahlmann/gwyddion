@@ -63,21 +63,17 @@ static void         gwy_gradient_sanitize       (GwyGradient *gradient);
 static void         gwy_gradient_changed        (GwyGradient *gradient);
 static GwyGradient* gwy_gradient_new            (const gchar *name,
                                                  gint npoints,
-                                                 const GwyGradientPoint *points);
+                                                 const GwyGradientPoint *points,
+                                                 gboolean is_const);
 static void         gwy_gradient_dump           (GwyResource *resource,
                                                  GString *str);
-static GwyResource* gwy_gradient_parse          (const gchar *text);
+static GwyResource* gwy_gradient_parse          (const gchar *text,
+                                                 gboolean is_const);
 
 
 static const GwyRGBA null_color = { 0, 0, 0, 0 };
 static const GwyRGBA black_color = { 0, 0, 0, 1 };
 static const GwyRGBA white_color = { 1, 1, 1, 1 };
-static const GwyRGBA red_color = { 1, 0, 0, 1 };
-static const GwyRGBA green_color = { 0, 1, 0, 1 };
-static const GwyRGBA blue_color = { 0, 0, 1, 1 };
-static const GwyRGBA cyan_color = { 0, 1, 1, 1 };
-static const GwyRGBA violet_color = { 1, 0, 1, 1 };
-static const GwyRGBA yellow_color = { 1, 1, 0, 1 };
 static const GwyGradientPoint null_point = { 0, { 0, 0, 0, 0 } };
 
 G_DEFINE_TYPE(GwyGradient, gwy_gradient, GWY_TYPE_RESOURCE)
@@ -854,7 +850,7 @@ _gwy_gradient_class_setup_presets(void)
      * referenced. */
     klass = g_type_class_ref(GWY_TYPE_GRADIENT);
 
-    gradient = gwy_gradient_new(GWY_GRADIENT_DEFAULT, 0, NULL);
+    gradient = gwy_gradient_new(GWY_GRADIENT_DEFAULT, 0, NULL, TRUE);
     GWY_RESOURCE(gradient)->is_const = TRUE;
     GWY_RESOURCE(gradient)->is_modified = FALSE;
     gwy_inventory_insert_item(klass->inventory, gradient);
@@ -863,22 +859,22 @@ _gwy_gradient_class_setup_presets(void)
     g_type_class_unref(klass);
 }
 
-/* Eats @name */
 static GwyGradient*
 gwy_gradient_new(const gchar *name,
                  gint npoints,
-                 const GwyGradientPoint *points)
+                 const GwyGradientPoint *points,
+                 gboolean is_const)
 {
     GwyGradient *gradient;
 
     g_return_val_if_fail(name, NULL);
 
-    gradient = g_object_new(GWY_TYPE_GRADIENT, NULL);
+    gradient = g_object_new(GWY_TYPE_GRADIENT, "is-const", is_const, NULL);
     if (npoints && points) {
         g_array_set_size(gradient->points, 0);
         g_array_append_vals(gradient->points, points, npoints);
     }
-    GWY_RESOURCE(gradient)->name = g_string_new(name);
+    g_string_assign(GWY_RESOURCE(gradient)->name, name);
     /* A new resource is modified by default, fixed resources set it back to
      * FALSE */
     GWY_RESOURCE(gradient)->is_modified = TRUE;
@@ -896,7 +892,8 @@ gwy_gradient_copy(gpointer item)
     gradient = GWY_GRADIENT(item);
     copy = gwy_gradient_new(gwy_resource_get_name(GWY_RESOURCE(item)),
                             gradient->points->len,
-                            (GwyGradientPoint*)gradient->points->data);
+                            (GwyGradientPoint*)gradient->points->data,
+                            FALSE);
 
     return copy;
 }
@@ -936,7 +933,8 @@ gwy_gradient_dump(GwyResource *resource,
 }
 
 static GwyResource*
-gwy_gradient_parse(const gchar *text)
+gwy_gradient_parse(const gchar *text,
+                   gboolean is_const)
 {
     GwyGradient *gradient = NULL;
     GwyGradientClass *klass;
@@ -985,7 +983,8 @@ gwy_gradient_parse(const gchar *text)
     }
 
     gradient = gwy_gradient_new("",
-                                points->len, (GwyGradientPoint*)points->data);
+                                points->len, (GwyGradientPoint*)points->data,
+                                is_const);
 
 fail:
     if (points)

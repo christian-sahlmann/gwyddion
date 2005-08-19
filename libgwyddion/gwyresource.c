@@ -41,22 +41,41 @@ enum {
     LAST_SIGNAL
 };
 
-static void         gwy_resource_finalize         (GObject *object);
-static gboolean     gwy_resource_get_is_const     (gconstpointer item);
-static const gchar* gwy_resource_get_item_name    (gpointer item);
-static gboolean     gwy_resource_compare          (gconstpointer item1,
-                                                   gconstpointer item2);
-static void         gwy_resource_rename           (gpointer item,
-                                                   const gchar *new_name);
-static void         gwy_resource_dismantle        (gpointer item);
-static void         gwy_resource_modified         (GwyResource *resource);
-static gboolean     gwy_resource_save             (gpointer key,
-                                                   gpointer item,
-                                                   gpointer user_data);
-static void         gwy_resource_class_load_dir   (const gchar *path,
-                                                   GwyResourceClass *klass,
-                                                   gboolean system);
-static gchar*       gwy_resource_get_filename     (GwyResource *resource);
+enum {
+    PROP_0,
+    PROP_NAME,
+    PROP_IS_CONST,
+    PROP_IS_PREFERRED,
+    PROP_LAST
+};
+
+static void         gwy_resource_finalize      (GObject *object);
+static void         gwy_resource_set_property  (GObject *object,
+                                                guint prop_id,
+                                                const GValue *value,
+                                                GParamSpec *pspec);
+static void         gwy_resource_get_property  (GObject *object,
+                                                guint prop_id,
+                                                GValue *value,
+                                                GParamSpec *pspec);
+static gboolean     gwy_resource_get_is_const  (gconstpointer item);
+static const gchar* gwy_resource_get_item_name (gpointer item);
+static gboolean     gwy_resource_compare       (gconstpointer item1,
+                                                gconstpointer item2);
+static void         gwy_resource_rename        (gpointer item,
+                                                const gchar *new_name);
+static void         gwy_resource_dismantle     (gpointer item);
+static GwyResource* gwy_resource_parse_real    (const gchar *text,
+                                                GType expected_type,
+                                                gboolean is_const);
+static void         gwy_resource_modified      (GwyResource *resource);
+static gboolean     gwy_resource_save          (gpointer key,
+                                                gpointer item,
+                                                gpointer user_data);
+static void         gwy_resource_class_load_dir(const gchar *path,
+                                                GwyResourceClass *klass,
+                                                gboolean is_system);
+static gchar*       gwy_resource_get_filename  (GwyResource *resource);
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -82,10 +101,39 @@ gwy_resource_class_init(GwyResourceClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_resource_finalize;
+    gobject_class->get_property = gwy_resource_get_property;
+    gobject_class->set_property = gwy_resource_set_property;
 
     klass->item_type = gwy_resource_item_type;
     klass->item_type.type = G_TYPE_FROM_CLASS(klass);
     klass->data_changed = gwy_resource_modified;
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_NAME,
+         g_param_spec_string("name",
+                             "Name",
+                             "Resource name",
+                             NULL,    /* What is the default value good for? */
+                             G_PARAM_READABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_IS_PREFERRED,
+         g_param_spec_boolean("is-preferred",
+                              "Is preferred",
+                              "Whether a resource is preferred",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_IS_CONST,
+         g_param_spec_boolean("is-const",
+                              "Is constant",
+                              "Whether a resource is constant (system)",
+                              FALSE,
+                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
     /**
     * GwyResource::data-changed:
@@ -104,8 +152,9 @@ gwy_resource_class_init(GwyResourceClass *klass)
 }
 
 static void
-gwy_resource_init(G_GNUC_UNUSED GwyResource *resource)
+gwy_resource_init(GwyResource *resource)
 {
+    resource->name = g_string_new("");
 }
 
 static void
@@ -119,6 +168,56 @@ gwy_resource_finalize(GObject *object)
     g_string_free(resource->name, TRUE);
 
     G_OBJECT_CLASS(gwy_resource_parent_class)->finalize(object);
+}
+
+static void
+gwy_resource_set_property(GObject *object,
+                          guint prop_id,
+                          const GValue *value,
+                          GParamSpec *pspec)
+{
+    GwyResource *resource = GWY_RESOURCE(object);
+
+    switch (prop_id) {
+        case PROP_IS_CONST:
+        resource->is_const = g_value_get_boolean(value);
+        break;
+
+        case PROP_IS_PREFERRED:
+        gwy_resource_set_is_preferred(resource, g_value_get_boolean(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_resource_get_property(GObject *object,
+                          guint prop_id,
+                          GValue *value,
+                          GParamSpec *pspec)
+{
+    GwyResource *resource = GWY_RESOURCE(object);
+
+    switch (prop_id) {
+        case PROP_NAME:
+        g_value_set_string(value, resource->name->str);
+        break;
+
+        case PROP_IS_CONST:
+        g_value_set_boolean(value, resource->is_const);
+        break;
+
+        case PROP_IS_PREFERRED:
+        g_value_set_boolean(value, resource->is_preferred);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 static const gchar*
@@ -162,6 +261,7 @@ gwy_resource_rename(gpointer item,
     gwy_debug("Renamed <%s> to <%s>: %d", filename, new_filename, err);
     g_free(filename);
     g_free(new_filename);
+    g_object_notify(G_OBJECT(item), "name");
 }
 
 static void
@@ -240,6 +340,7 @@ gwy_resource_set_is_preferred(GwyResource *resource,
 {
     g_return_if_fail(GWY_IS_RESOURCE(resource));
     resource->is_preferred = !!is_preferred;
+    g_object_notify(G_OBJECT(resource), "is-preferred");
 }
 
 /**
@@ -398,6 +499,14 @@ GwyResource*
 gwy_resource_parse(const gchar *text,
                    GType expected_type)
 {
+    return gwy_resource_parse_real(text, expected_type, FALSE);
+}
+
+static GwyResource*
+gwy_resource_parse_real(const gchar *text,
+                        GType expected_type,
+                        gboolean is_const)
+{
     GwyResourceClass *klass;
     GwyResource *resource;
     GType type;
@@ -430,7 +539,7 @@ gwy_resource_parse(const gchar *text,
     klass = GWY_RESOURCE_CLASS(g_type_class_peek_static(type));
     g_return_val_if_fail(klass && klass->parse, NULL);
 
-    resource = klass->parse(text);
+    resource = klass->parse(text, is_const);
     if (resource)
         g_string_assign(resource->name, name);
     g_free(name);
@@ -550,7 +659,7 @@ gwy_resource_class_load(GwyResourceClass *klass)
 static void
 gwy_resource_class_load_dir(const gchar *path,
                             GwyResourceClass *klass,
-                            gboolean system)
+                            gboolean is_system)
 {
     GDir *dir;
     GwyResource *resource;
@@ -582,10 +691,10 @@ gwy_resource_class_load_dir(const gchar *path,
         }
         g_free(filename);
 
-        resource = gwy_resource_parse(text, G_TYPE_FROM_CLASS(klass));
+        resource = gwy_resource_parse_real(text, G_TYPE_FROM_CLASS(klass),
+                                           is_system);
         if (resource) {
-            resource->name = g_string_new(name);
-            resource->is_const = system;
+            g_string_assign(resource->name, name);
             resource->is_modified = FALSE;
             gwy_inventory_insert_item(klass->inventory, resource);
             g_object_unref(resource);
