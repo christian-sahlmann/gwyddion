@@ -799,7 +799,7 @@ gwy_3d_window_auto_scale_changed(GtkToggleButton *check,
     active = gtk_toggle_button_get_active(check);
     gtk_widget_set_sensitive(window->labels_size, !active);
 
-    id = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);
     gwy_3d_label_set_fixed_size(label, !active);
 }
@@ -811,7 +811,7 @@ gwy_3d_window_labels_entry_activate(GtkEntry *entry,
     Gwy3DLabel *label;
     gint id;
 
-    id = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);
     gwy_3d_label_set_text(label, gtk_entry_get_text(entry));
 }
@@ -822,7 +822,7 @@ gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window)
     Gwy3DLabel *label;
     gint id;
 
-    id = gtk_option_menu_get_history(GTK_OPTION_MENU(window->labels_menu));
+    id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(window->labels_menu));
     label = gwy_3d_view_get_label(GWY_3D_VIEW(window->gwy3dview), id);
     gwy_3d_label_reset(label);
 
