@@ -15,6 +15,7 @@ lib_LTLIBRARIES = libgwydraw.la
 
 EXTRA_DIST = \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwydraw.def
 
 #noinst_PROGRAMS = test

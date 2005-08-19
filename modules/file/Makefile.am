@@ -33,7 +33,8 @@ noinst_HEADERS = \
 	stmprg.h
 
 EXTRA_DIST = \
-	makefile.msc
+	makefile.msc \
+	makefile.msc.gwt
 
 
 INCLUDES = -I$(top_srcdir)

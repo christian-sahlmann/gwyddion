@@ -35,4 +35,5 @@ gradientdata_DATA = \
 
 EXTRA_DIST = \
 	makefile.msc \
+	makefile.msc.gwt \
 	$(gradientdata_DATA)

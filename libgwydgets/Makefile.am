@@ -63,6 +63,7 @@ EXTRA_DIST = \
 	gwydgettypes.c.template \
 	gwydgettypes.h.template \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwydgets.def
 
 # In following order do:

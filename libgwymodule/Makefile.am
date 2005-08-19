@@ -19,6 +19,7 @@ lib_LTLIBRARIES = libgwymodule.la
 
 EXTRA_DIST = \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwymodule.def
 
 noinst_HEADERS = \

@@ -52,7 +52,8 @@ process_LTLIBRARIES = \
 
 
 EXTRA_DIST = \
-	makefile.msc
+	makefile.msc \
+	makefile.msc.gwt
 
 INCLUDES = -I$(top_srcdir)
 

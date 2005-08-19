@@ -92,5 +92,6 @@ icondata_DATA = \
 
 EXTRA_DIST = \
 	makefile.msc \
+	makefile.msc.gwt \
 	$(icondata_DATA) \
 	$(pixmapdata_DATA)

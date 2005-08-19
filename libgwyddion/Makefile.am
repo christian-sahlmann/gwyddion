@@ -32,6 +32,7 @@ EXTRA_DIST = \
 	gwyddiontypes.c.template \
 	gwyddiontypes.h.template \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwyddion.def
 
 noinst_HEADERS = gwytestser.h

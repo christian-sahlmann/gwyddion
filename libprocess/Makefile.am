@@ -41,6 +41,7 @@ EXTRA_DIST = \
 	gwyprocesstypes.c.template \
 	gwyprocesstypes.h.template \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwyprocess.def
 
 # In following order do:

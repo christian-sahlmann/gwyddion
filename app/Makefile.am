@@ -32,6 +32,7 @@ lib_LTLIBRARIES = libgwyapp.la
 
 EXTRA_DIST = \
 	makefile.msc \
+	makefile.msc.gwt \
 	libgwyapp.def \
 	README.objdata
 
