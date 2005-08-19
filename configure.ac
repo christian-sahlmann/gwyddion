@@ -1,12 +1,11 @@
 # @(#) $Id$
-
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050813, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050819, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
 PACKAGE_URL="http://gwyddion.net/"
-AC_PREREQ(2.52)
+AC_PREREQ(2.59)
 AC_CONFIG_SRCDIR(app/app.c)
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_FILES(\
