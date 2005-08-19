@@ -24,8 +24,8 @@
  */
 #define DEBUG 1
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
+#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwygradient.h"
@@ -108,10 +108,10 @@ gwy_gradient_init(GwyGradient *gradient)
                                          sizeof(GwyGradientPoint), 2);
     pt.x = 0.0;
     pt.color = black_color;
-    g_array_index(gradient->points, GwyGradientPoint, 0) = pt;
+    g_array_append_val(gradient->points, pt);
     pt.x = 1.0;
     pt.color = white_color;
-    g_array_index(gradient->points, GwyGradientPoint, 1) = pt;
+    g_array_append_val(gradient->points, pt);
 }
 
 static void
@@ -799,11 +799,10 @@ _gwy_gradient_class_setup_presets(void)
     klass = g_type_class_ref(GWY_TYPE_GRADIENT);
 
     gradient = gwy_gradient_new(GWY_GRADIENT_DEFAULT, 0, NULL, TRUE);
-    GWY_RESOURCE(gradient)->is_const = TRUE;
-    GWY_RESOURCE(gradient)->is_modified = FALSE;
     gwy_inventory_insert_item(klass->inventory, gradient);
     g_object_unref(gradient);
 
+    /* The gradient added a reference so we can safely unref it again */
     g_type_class_unref(klass);
 }
 
