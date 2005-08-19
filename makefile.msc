@@ -2,7 +2,7 @@
 
 TOP_SRCDIR = .
 
-!include make.msc
+!INCLUDE make.msc
 
 SUBDIRS = \
 	libgwyddion \
@@ -14,6 +14,7 @@ SUBDIRS = \
 	modules \
 	plugins \
 	pixmaps \
+	data \
 	devel-docs \
 	po
 
@@ -25,7 +26,7 @@ all: gwyconfig.h config.h sub-all $(DOCUMENTS)
 
 clean:: sub-clean
 
-!include rules.msc
+!INCLUDE rules.msc
 
 install: all "$(TOP_SRCDIR)\inst.stamp" sub-install
 	for %d in ($(DOCUMENTS)) do $(INSTALL) %d "$(DEST_DIR)"

@@ -29,6 +29,7 @@ EXTRA_DIST = \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
+	makefile.msc \
 	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)
 
