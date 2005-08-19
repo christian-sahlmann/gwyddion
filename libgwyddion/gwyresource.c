@@ -49,33 +49,46 @@ enum {
     PROP_LAST
 };
 
-static void         gwy_resource_finalize      (GObject *object);
-static void         gwy_resource_set_property  (GObject *object,
-                                                guint prop_id,
-                                                const GValue *value,
-                                                GParamSpec *pspec);
-static void         gwy_resource_get_property  (GObject *object,
-                                                guint prop_id,
-                                                GValue *value,
-                                                GParamSpec *pspec);
-static gboolean     gwy_resource_get_is_const  (gconstpointer item);
-static const gchar* gwy_resource_get_item_name (gpointer item);
-static gboolean     gwy_resource_compare       (gconstpointer item1,
-                                                gconstpointer item2);
-static void         gwy_resource_rename        (gpointer item,
-                                                const gchar *new_name);
-static void         gwy_resource_dismantle     (gpointer item);
-static GwyResource* gwy_resource_parse_real    (const gchar *text,
-                                                GType expected_type,
-                                                gboolean is_const);
-static void         gwy_resource_modified      (GwyResource *resource);
-static gboolean     gwy_resource_save          (gpointer key,
-                                                gpointer item,
-                                                gpointer user_data);
-static void         gwy_resource_class_load_dir(const gchar *path,
-                                                GwyResourceClass *klass,
-                                                gboolean is_system);
-static gchar*       gwy_resource_get_filename  (GwyResource *resource);
+/* Use a static propery -> trait map.  We could do it generically, too.
+ * g_param_spec_pool_list() is ugly and slow is the minor problem, the major
+ * is that it does g_hash_table_foreach() so we would get different orders
+ * on different invocations and have to sort it. */
+static GType gwy_resource_trait_types[PROP_LAST-1];
+static const gchar *gwy_resource_trait_names[PROP_LAST-1];
+static guint gwy_resource_ntraits = 0;
+
+static void         gwy_resource_finalize       (GObject *object);
+static void         gwy_resource_set_property   (GObject *object,
+                                                 guint prop_id,
+                                                 const GValue *value,
+                                                 GParamSpec *pspec);
+static void         gwy_resource_get_property   (GObject *object,
+                                                 guint prop_id,
+                                                 GValue *value,
+                                                 GParamSpec *pspec);
+static gboolean     gwy_resource_get_is_const   (gconstpointer item);
+static const gchar* gwy_resource_get_item_name  (gpointer item);
+static gboolean     gwy_resource_compare        (gconstpointer item1,
+                                                 gconstpointer item2);
+static void         gwy_resource_rename         (gpointer item,
+                                                 const gchar *new_name);
+static void         gwy_resource_dismantle      (gpointer item);
+static const GType* gwy_resource_get_traits     (gint *ntraits);
+static const gchar* gwy_resource_get_trait_name (gint i);
+static void         gwy_resource_get_trait_value(gpointer item,
+                                                 gint i,
+                                                 GValue *value);
+static GwyResource* gwy_resource_parse_real     (const gchar *text,
+                                                 GType expected_type,
+                                                 gboolean is_const);
+static void         gwy_resource_modified       (GwyResource *resource);
+static gboolean     gwy_resource_save           (gpointer key,
+                                                 gpointer item,
+                                                 gpointer user_data);
+static void         gwy_resource_class_load_dir (const gchar *path,
+                                                 GwyResourceClass *klass,
+                                                 gboolean is_system);
+static gchar*       gwy_resource_get_filename   (GwyResource *resource);
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
@@ -88,9 +101,9 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     &gwy_resource_rename,
     &gwy_resource_dismantle,
     NULL,  /* needs particular class */
-    NULL,  /* needs particular class */
-    NULL,  /* needs particular class */
-    NULL,  /* needs particular class */
+    &gwy_resource_get_traits,
+    &gwy_resource_get_trait_name,
+    &gwy_resource_get_trait_value,
 };
 
 G_DEFINE_ABSTRACT_TYPE(GwyResource, gwy_resource, G_TYPE_OBJECT)
@@ -99,6 +112,7 @@ static void
 gwy_resource_class_init(GwyResourceClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GParamSpec *pspec;
 
     gobject_class->finalize = gwy_resource_finalize;
     gobject_class->get_property = gwy_resource_get_property;
@@ -108,32 +122,35 @@ gwy_resource_class_init(GwyResourceClass *klass)
     klass->item_type.type = G_TYPE_FROM_CLASS(klass);
     klass->data_changed = gwy_resource_modified;
 
-    g_object_class_install_property
-        (gobject_class,
-         PROP_NAME,
-         g_param_spec_string("name",
-                             "Name",
-                             "Resource name",
-                             NULL,    /* What is the default value good for? */
-                             G_PARAM_READABLE));
+    pspec = g_param_spec_string("name",
+                                "Name",
+                                "Resource name",
+                                NULL, /* What is the default value good for? */
+                                G_PARAM_READABLE);
+    g_object_class_install_property(gobject_class, PROP_NAME, pspec);
+    gwy_resource_trait_types[gwy_resource_ntraits] = pspec->value_type;
+    gwy_resource_trait_names[gwy_resource_ntraits] = pspec->name;
+    gwy_resource_ntraits++;
 
-    g_object_class_install_property
-        (gobject_class,
-         PROP_IS_PREFERRED,
-         g_param_spec_boolean("is-preferred",
-                              "Is preferred",
-                              "Whether a resource is preferred",
-                              FALSE,
-                              G_PARAM_READWRITE));
+    pspec = g_param_spec_boolean("is-preferred",
+                                 "Is preferred",
+                                 "Whether a resource is preferred",
+                                 FALSE,
+                                 G_PARAM_READWRITE);
+    g_object_class_install_property(gobject_class, PROP_IS_PREFERRED, pspec);
+    gwy_resource_trait_types[gwy_resource_ntraits] = pspec->value_type;
+    gwy_resource_trait_names[gwy_resource_ntraits] = pspec->name;
+    gwy_resource_ntraits++;
 
-    g_object_class_install_property
-        (gobject_class,
-         PROP_IS_CONST,
-         g_param_spec_boolean("is-const",
-                              "Is constant",
-                              "Whether a resource is constant (system)",
-                              FALSE,
-                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    pspec = g_param_spec_boolean("is-const",
+                                 "Is constant",
+                                 "Whether a resource is constant (system)",
+                                 FALSE,
+                                 G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property(gobject_class, PROP_IS_CONST, pspec);
+    gwy_resource_trait_types[gwy_resource_ntraits] = pspec->value_type;
+    gwy_resource_trait_names[gwy_resource_ntraits] = pspec->name;
+    gwy_resource_ntraits++;
 
     /**
     * GwyResource::data-changed:
@@ -277,6 +294,31 @@ gwy_resource_dismantle(gpointer item)
     err = g_unlink(filename);
     gwy_debug("Deleted <%s>: %d", filename, err);
     g_free(filename);
+}
+
+static const GType*
+gwy_resource_get_traits(gint *ntraits)
+{
+    if (ntraits)
+        *ntraits = gwy_resource_ntraits;
+
+    return gwy_resource_trait_types;
+}
+
+static const gchar*
+gwy_resource_get_trait_name(gint i)
+{
+    g_return_val_if_fail(i >= 0 && i < gwy_resource_ntraits, NULL);
+    return gwy_resource_trait_names[i];
+}
+
+static void
+gwy_resource_get_trait_value(gpointer item,
+                             gint i,
+                             GValue *value)
+{
+    g_return_if_fail(i >= 0 && i < gwy_resource_ntraits);
+    g_object_get_property(G_OBJECT(item), gwy_resource_trait_names[i], value);
 }
 
 /**

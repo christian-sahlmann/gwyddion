@@ -49,11 +49,6 @@ enum {
 
 static void         gwy_gradient_finalize       (GObject *object);
 static gpointer     gwy_gradient_copy           (gpointer);
-static const GType* gwy_gradient_get_traits     (gint *ntraits);
-static const gchar* gwy_gradient_get_trait_name (gint i);
-static void         gwy_gradient_get_trait_value(gpointer item,
-                                                 gint i,
-                                                 GValue *value);
 static void         gwy_gradient_use            (GwyResource *resource);
 static void         gwy_gradient_release        (GwyResource *resource);
 static void         gwy_gradient_sample_real    (GwyGradient *gradient,
@@ -91,9 +86,6 @@ gwy_gradient_class_init(GwyGradientClass *klass)
 
     res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
     res_class->item_type.copy = gwy_gradient_copy;
-    res_class->item_type.get_traits = gwy_gradient_get_traits;
-    res_class->item_type.get_trait_name = gwy_gradient_get_trait_name;
-    res_class->item_type.get_trait_value = gwy_gradient_get_trait_value;
 
     res_class->name = "gradients";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
@@ -129,50 +121,6 @@ gwy_gradient_finalize(GObject *object)
 
     g_array_free(gradient->points, TRUE);
     G_OBJECT_CLASS(gwy_gradient_parent_class)->finalize(object);
-}
-
-/* FIXME: This looks too much like GObject properties.
- * Define them as properties and use a generic property -> trait mapping? */
-static const GType*
-gwy_gradient_get_traits(gint *ntraits)
-{
-    static GType tratis[] = { G_TYPE_STRING, G_TYPE_BOOLEAN };
-
-    if (ntraits)
-        *ntraits = G_N_ELEMENTS(tratis);
-
-    return tratis;
-}
-
-static const gchar*
-gwy_gradient_get_trait_name(gint i)
-{
-    static const gchar *trait_names[] = { "name", "is-const" };
-
-    g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
-    return trait_names[i];
-}
-
-static void
-gwy_gradient_get_trait_value(gpointer item,
-                             gint i,
-                             GValue *value)
-{
-    switch (i) {
-        case 0:
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, gwy_resource_get_name(GWY_RESOURCE(item)));
-        break;
-
-        case 1:
-        g_value_init(value, G_TYPE_BOOLEAN);
-        g_value_set_boolean(value, GWY_RESOURCE(item)->is_const);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
 }
 
 static void
@@ -875,9 +823,8 @@ gwy_gradient_new(const gchar *name,
         g_array_append_vals(gradient->points, points, npoints);
     }
     g_string_assign(GWY_RESOURCE(gradient)->name, name);
-    /* A new resource is modified by default, fixed resources set it back to
-     * FALSE */
-    GWY_RESOURCE(gradient)->is_modified = TRUE;
+    /* New non-const resources start as modified */
+    GWY_RESOURCE(gradient)->is_modified = !is_const;
 
     return gradient;
 }
