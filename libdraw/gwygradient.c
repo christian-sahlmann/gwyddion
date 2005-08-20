@@ -26,6 +26,7 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwygradient.h"
@@ -767,13 +768,142 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
                               gint nsamples,
                               guchar *samples)
 {
+    GArray *points;
+    GwyGradientPoint point;
+    GwyGradientPoint *pt, *ptp, *ptm;
+    gdouble v;
+    gint i, k;
+
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
     g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(samples);
     g_return_if_fail(nsamples > 0);
 
-    /* TODO */
-    g_warning("Implement me!");
+    k = 0;
+    /* Handle special one-point case */
+    if (nsamples == 1) {
+        g_array_set_size(gradient->points, 0);
+        point.x = 0.0;
+        point.color.r = samples[k++]/255.0;
+        point.color.g = samples[k++]/255.0;
+        point.color.b = samples[k++]/255.0;
+        point.color.a = samples[k++]/255.0;
+        g_array_append_val(gradient->points, point);
+        point.x = 1.0;
+        g_array_append_val(gradient->points, point);
+
+        return;
+    }
+
+    /* Start with full representation */
+    points = g_array_sized_new(FALSE, FALSE,
+                               sizeof(GwyGradientPoint), nsamples);
+    for (i = 0; i < nsamples; i++) {
+        point.x = i/(nsamples - 1.0);
+        point.color.r = samples[k++]/255.0;
+        point.color.g = samples[k++]/255.0;
+        point.color.b = samples[k++]/255.0;
+        point.color.a = samples[k++]/255.0;
+        g_array_append_val(points, point);
+    }
+
+    /* Don't bother with anything sophisticated for really small number
+     * of samples */
+    if (nsamples <= 6) {
+        g_array_set_size(gradient->points, 0);
+        g_array_append_vals(gradient->points, points->data, nsamples);
+        g_array_free(points, TRUE);
+
+        return;
+    }
+
+    /* Denoise/smooth */
+    for (k = 0; k < 1; k++) {
+        pt = &g_array_index(points, GwyGradientPoint, 0);
+        point = *pt;
+        ptp = &g_array_index(points, GwyGradientPoint, 1);
+        pt->color.r = (2*pt->color.r + ptp->color.r)/3.0;
+        pt->color.g = (2*pt->color.g + ptp->color.g)/3.0;
+        pt->color.b = (2*pt->color.b + ptp->color.b)/3.0;
+        pt->color.a = (2*pt->color.a + ptp->color.a)/3.0;
+
+        for (i = 1; i+1 < points->len; i++) {
+            pt = &g_array_index(points, GwyGradientPoint, i);
+            ptp = &g_array_index(points, GwyGradientPoint, i+1);
+
+            v = pt->color.r;
+            pt->color.r = (point.color.r + 2*pt->color.r + ptp->color.r)/4.0;
+            point.color.r = v;
+
+            v = pt->color.g;
+            pt->color.g = (point.color.g + 2*pt->color.g + ptp->color.g)/4.0;
+            point.color.g = v;
+
+            v = pt->color.b;
+            pt->color.b = (point.color.b + 2*pt->color.b + ptp->color.b)/4.0;
+            point.color.b = v;
+
+            v = pt->color.a;
+            pt->color.a = (point.color.a + 2*pt->color.a + ptp->color.a)/4.0;
+            point.color.a = v;
+        }
+
+        pt = &g_array_index(points, GwyGradientPoint, points->len-1);
+        pt->color.r = (point.color.r + 2*pt->color.r)/3.0;
+        pt->color.g = (point.color.g + 2*pt->color.g)/3.0;
+        pt->color.b = (point.color.b + 2*pt->color.b)/3.0;
+        pt->color.a = (point.color.a + 2*pt->color.a)/3.0;
+    }
+
+    /* Find points of breakage, using x data as scratch space */
+    pt = &g_array_index(points, GwyGradientPoint, 0);
+    pt->x = 1.0;
+    for (i = 1; i+1 < points->len; i++) {
+        ptm = &g_array_index(points, GwyGradientPoint, i-1);
+        pt = &g_array_index(points, GwyGradientPoint, i);
+        ptp = &g_array_index(points, GwyGradientPoint, i+1);
+
+        /* Second derivation */
+        pt->x = fabs(ptm->color.r + ptp->color.r - 2*pt->color.r);
+        v = fabs(ptm->color.g + ptp->color.g - 2*pt->color.g);
+        pt->x = MAX(pt->x, v);
+        v = fabs(ptm->color.b + ptp->color.b - 2*pt->color.b);
+        pt->x = MAX(pt->x, v);
+        v = fabs(ptm->color.a + ptp->color.a - 2*pt->color.a);
+        pt->x = MAX(pt->x, v);
+        pt->x *= nsamples*nsamples/64.0;
+        g_printerr("%d %g\n", i, pt->x);
+        pt->x = CLAMP(pt->x, 0.0, 1.0);
+
+        /* Plain extreme */
+        if (pt->x < 1.0) {
+            if ((pt->color.r - ptm->color.r)*(ptp->color.r - pt->color.r) < 0
+                || (pt->color.g - ptm->color.g)*(ptp->color.g - pt->color.g) < 0
+                || (pt->color.b - ptm->color.b)*(ptp->color.b - pt->color.b) < 0
+                || (pt->color.a - ptm->color.a)*(ptp->color.a - pt->color.a) < 0
+                )
+                pt->x = 1.0;
+        }
+    }
+    pt = &g_array_index(points, GwyGradientPoint, points->len-1);
+    pt->x = 1.0;
+
+    g_array_set_size(gradient->points, 0);
+    k = 0;
+    for (i = 0; i < nsamples; i++) {
+        pt = &g_array_index(points, GwyGradientPoint, i);
+        if (pt->x == 1.0) {
+            point.x = i/(nsamples - 1.0);
+            point.color.r = samples[k++]/255.0;
+            point.color.g = samples[k++]/255.0;
+            point.color.b = samples[k++]/255.0;
+            point.color.a = samples[k++]/255.0;
+            g_array_append_val(gradient->points, point);
+        }
+        else
+            k += 4;
+    }
+    g_array_free(points, TRUE);
 
     gwy_gradient_changed(gradient);
 }
