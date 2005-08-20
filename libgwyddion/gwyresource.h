@@ -42,10 +42,10 @@ struct _GwyResource {
     gint use_count;
     GString *name;
 
-    gboolean is_const : 1;
-    gboolean is_modified : 1;
-    gboolean is_preferred : 1;
-    gboolean boolean1 : 1;
+    gboolean is_const;
+    gboolean is_modified;
+    gboolean is_preferred;
+    gboolean boolean1;
 
     gpointer reserved1;
     gpointer reserved2;

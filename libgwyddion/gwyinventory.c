@@ -348,8 +348,7 @@ gwy_inventory_connect_to_item(gpointer item,
                               GwyInventory *inventory)
 {
     g_signal_connect_swapped(item, inventory->item_type.watchable_signal,
-                             G_CALLBACK(gwy_inventory_item_changed),
-                             inventory);
+                             G_CALLBACK(gwy_inventory_item_changed), inventory);
 }
 
 /**

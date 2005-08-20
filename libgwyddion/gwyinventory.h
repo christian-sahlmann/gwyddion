@@ -70,13 +70,13 @@ struct _GwyInventory {
     GObject parent_instance;
 
     GwyInventoryItemType item_type;
-    gboolean needs_reindex : 1;
-    gboolean is_sorted : 1;
-    gboolean is_const: 1;
-    gboolean is_object: 1;
-    gboolean is_watchable : 1;
-    gboolean can_make_copies : 1;
-    gboolean has_default : 1;
+    gboolean needs_reindex;
+    gboolean is_sorted;
+    gboolean is_const;
+    gboolean is_object;
+    gboolean is_watchable;
+    gboolean can_make_copies;
+    gboolean has_default;
 
     GString *default_key;
 

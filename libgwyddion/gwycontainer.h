@@ -43,7 +43,7 @@ struct _GwyContainer {
     GObject parent_instance;
 
     GHashTable *values;
-    gboolean in_construction : 1;
+    gboolean in_construction;
 };
 
 struct _GwyContainerClass {
