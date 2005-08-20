@@ -294,6 +294,7 @@ gwy_resource_get_trait_value(gpointer item,
                              GValue *value)
 {
     g_return_if_fail(i >= 0 && i < gwy_resource_ntraits);
+    g_value_init(value, gwy_resource_trait_types[i]);
     g_object_get_property(G_OBJECT(item), gwy_resource_trait_names[i], value);
 }
 
