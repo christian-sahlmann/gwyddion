@@ -277,7 +277,7 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
         gwy_container_set_double_by_name(settings, "/mask/alpha",
                                          default_mask_color.a);
     }
-    if (!gwy_container_contains_by_name(settings, "/app/graph/preferred"))
+    if (!gwy_container_contains_by_name(settings, "/app/gradients/preferred"))
         gwy_container_set_string_by_name(settings, "/app/gradients/preferred",
                                          g_strdup(default_preferred_gradients));
 }
