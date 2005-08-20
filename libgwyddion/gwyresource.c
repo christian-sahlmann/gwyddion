@@ -72,7 +72,6 @@ static gboolean     gwy_resource_compare        (gconstpointer item1,
                                                  gconstpointer item2);
 static void         gwy_resource_rename         (gpointer item,
                                                  const gchar *new_name);
-static void         gwy_resource_dismantle      (gpointer item);
 static const GType* gwy_resource_get_traits     (gint *ntraits);
 static const gchar* gwy_resource_get_trait_name (gint i);
 static void         gwy_resource_get_trait_value(gpointer item,
@@ -99,8 +98,8 @@ static const GwyInventoryItemType gwy_resource_item_type = {
     &gwy_resource_get_item_name,
     &gwy_resource_compare,
     &gwy_resource_rename,
-    &gwy_resource_dismantle,
-    NULL,  /* needs particular class */
+    NULL,
+    NULL,  /* copy needs particular class */
     &gwy_resource_get_traits,
     &gwy_resource_get_trait_name,
     &gwy_resource_get_trait_value,
@@ -266,34 +265,11 @@ gwy_resource_rename(gpointer item,
                     const gchar *new_name)
 {
     GwyResource *resource = (GwyResource*)item;
-    gchar *filename, *new_filename;
-    gint err;
 
     g_return_if_fail(!resource->is_const);
-    filename = gwy_resource_get_filename(resource);
+
     g_string_assign(resource->name, new_name);
-    new_filename = gwy_resource_get_filename(resource);
-    /* XXX: Rename it in the filesystem and hope it will work... */
-    err = g_rename(filename, new_filename);
-    gwy_debug("Renamed <%s> to <%s>: %d", filename, new_filename, err);
-    g_free(filename);
-    g_free(new_filename);
     g_object_notify(G_OBJECT(item), "name");
-}
-
-static void
-gwy_resource_dismantle(gpointer item)
-{
-    GwyResource *resource = (GwyResource*)item;
-    gchar *filename;
-    gint err;
-
-    g_return_if_fail(!resource->is_const);
-    filename = gwy_resource_get_filename(resource);
-    /* XXX: Remove it from the filesystem and hope it will work... */
-    err = g_unlink(filename);
-    gwy_debug("Deleted <%s>: %d", filename, err);
-    g_free(filename);
 }
 
 static const GType*
