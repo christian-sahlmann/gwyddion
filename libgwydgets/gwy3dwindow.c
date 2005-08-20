@@ -49,7 +49,7 @@ static void     gwy_3d_window_pack_buttons        (Gwy3DWindow *gwy3dwindow,
                                                    GtkBox *box);
 static void     gwy_3d_window_set_mode            (gpointer userdata,
                                                    GtkWidget *button);
-static void     gwy_3d_window_set_gradient        (GtkWidget *item,
+static void     gwy_3d_window_set_gradient        (GtkTreeSelection *selection,
                                                    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_set_material        (GtkWidget *item,
                                                    Gwy3DWindow *gwy3dwindow);
@@ -407,8 +407,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row++;
 
     name = gwy_3d_view_get_gradient(gwy3dview);
-    omenu = gwy_option_menu_gradient(G_CALLBACK(gwy_3d_window_set_gradient),
-                                     gwy3dwindow, name);
+    omenu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
+                                       gwy3dwindow, name);
     gtk_widget_set_sensitive(omenu, !visual);
     gwy3dwindow->gradient_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
@@ -655,12 +655,17 @@ gwy_3d_window_set_mode(gpointer userdata, GtkWidget *button)
 }
 
 static void
-gwy_3d_window_set_gradient(GtkWidget *item,
+gwy_3d_window_set_gradient(GtkTreeSelection *selection,
                            Gwy3DWindow *gwy3dwindow)
 {
+    GwyResource *resource;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    gtk_tree_selection_get_selected(selection, &model, &iter);
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
     gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                             (gchar*)g_object_get_data(G_OBJECT(item),
-                                                       "gradient-name"));
+                             gwy_resource_get_name(resource));
 }
 
 static void

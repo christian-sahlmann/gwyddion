@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwyinventorystore.h>
 
 #define GWY_IMPLEMENT_TREE_MODEL(iface_init) \
@@ -115,6 +116,7 @@ gwy_inventory_store_tree_model_init(GtkTreeModelIface *iface)
 static void
 gwy_inventory_store_init(GwyInventoryStore *store)
 {
+    gwy_debug_objects_creation(G_OBJECT(store));
     store->stamp = g_random_int();
 }
 
