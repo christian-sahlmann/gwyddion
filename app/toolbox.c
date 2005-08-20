@@ -572,8 +572,8 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             NULL,
             gwy_app_about,
             0,
-            "<Item>",
-            NULL
+            "<StockItem>",
+            GTK_STOCK_ABOUT
         },
     };
     static const gchar *items_need_data[] = {
