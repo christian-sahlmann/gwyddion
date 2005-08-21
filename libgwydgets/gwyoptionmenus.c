@@ -288,8 +288,9 @@ gwy_gradient_selection_prefer_toggled(GtkTreeModel *model,
 
 static void
 gwy_gradient_selection_default_changed(GwyInventory *inventory,
-                                       GtkTreeModel *model)
+                                       GwyInventoryStore *store)
 {
+    GtkTreeModel *model;
     GwyResource *resource;
     GtkTreePath *path;
     GtkTreeIter iter;
@@ -300,6 +301,7 @@ gwy_gradient_selection_default_changed(GwyInventory *inventory,
         return;
 
     /* FIXME: This is somewhat crude */
+    model = GTK_TREE_MODEL(store);
     i = gwy_inventory_get_item_position(inventory,
                                         gwy_resource_get_name(resource));
     gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
