@@ -36,7 +36,7 @@ GtkWidget* gwy_menu_gl_material              (GCallback callback,
                                               gpointer cbdata);
 GtkWidget* gwy_gradient_selection_new        (GCallback callback,
                                               gpointer cbdata,
-                                              const gchar *current);
+                                              const gchar *active);
 GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
                                               gpointer cbdata,
                                               const gchar *current);
