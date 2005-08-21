@@ -249,12 +249,6 @@ gwy_enum_get_name(gpointer item)
     return ((const GwyEnum*)item)->name;
 }
 
-static gboolean
-gwy_enum_is_const(G_GNUC_UNUSED gconstpointer item)
-{
-    return TRUE;
-}
-
 static const GType*
 gwy_enum_get_traits(gint *ntraits)
 {
@@ -311,10 +305,10 @@ GwyInventory*
 gwy_enum_inventory_new(const GwyEnum *enum_table,
                        gint n)
 {
-    GwyInventoryItemType gwy_enum_item_type = {
-        GWY_TYPE_ENUM,
+    static GwyInventoryItemType gwy_enum_item_type = {
+        0,    /* type must be initialized run-time */
         NULL,
-        gwy_enum_is_const,
+        NULL,
         gwy_enum_get_name,
         NULL,
         NULL,
@@ -325,7 +319,6 @@ gwy_enum_inventory_new(const GwyEnum *enum_table,
         gwy_enum_get_trait_value,
     };
 
-    gwy_enum_item_type.type = GWY_TYPE_ENUM;
     if (n == -1) {
         for (n = 0; enum_table[n].name; n++)
             ;

@@ -265,7 +265,8 @@ gwy_inventory_new_filled(const GwyInventoryItemType *itype,
 
 /**
  * gwy_inventory_new_from_array:
- * @itype: Type of items the inventory will contain.
+ * @itype: Type of items the inventory will contain.  Inventory keeps a copy
+ *         of it, so it can be an automatic variable.
  * @item_size: Item size in bytes.
  * @nitems: The number of items in @items.
  * @items: An array with items.  It will be directly used as thus must

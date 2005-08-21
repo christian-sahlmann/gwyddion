@@ -21,6 +21,8 @@
 #ifndef __GWY_ENTITIES_H__
 #define __GWY_ENTITIES_H__
 
+#include <libgwyddion/gwyinventory.h>
+
 G_BEGIN_DECLS
 
 typedef struct {
@@ -28,11 +30,9 @@ typedef struct {
     const gchar *utf8;
 } GwyTextEntity;
 
-G_CONST_RETURN
-gchar*         gwy_entities_entity_to_utf8       (const gchar *entity);
-gchar*         gwy_entities_text_to_utf8         (const gchar *text);
-G_CONST_RETURN
-GwyTextEntity* gwy_entities_get_entities         (void);
+GwyInventory* gwy_entities               (void);
+const gchar*  gwy_entities_entity_to_utf8(const gchar *entity);
+gchar*        gwy_entities_text_to_utf8  (const gchar *text);
 
 G_END_DECLS
 

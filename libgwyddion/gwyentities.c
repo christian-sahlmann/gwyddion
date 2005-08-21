@@ -25,70 +25,82 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyentities.h>
 
-static const GwyTextEntity ENTITIES[] = {
+static const GwyTextEntity entities[] = {
+    /* Uppercase Greek letters */
     { "Alpha", "\xce\x91" },
     { "Beta", "\xce\x92" },
-    { "Chi", "\xce\xa7" },
-    { "Dagger", "\xe2\x80\xa1" },
+    { "Gamma", "\xce\x93" },
     { "Delta", "\xce\x94" },
     { "Epsilon", "\xce\x95" },
+    { "Zeta", "\xce\x96" },
     { "Eta", "\xce\x97" },
-    { "Gamma", "\xce\x93" },
+    { "Theta", "\xce\x98" },
     { "Iota", "\xce\x99" },
     { "Kappa", "\xce\x9a" },
     { "Lambda", "\xce\x9b" },
     { "Mu", "\xce\x9c" },
     { "Nu", "\xce\x9d" },
-    { "Omega", "\xce\xa9" },
+    { "Xi", "\xce\x9e" },
     { "Omicron", "\xce\x9f" },
-    { "Phi", "\xce\xa6" },
     { "Pi", "\xce\xa0" },
-    { "Psi", "\xce\xa8" },
     { "Rho", "\xce\xa1" },
     { "Sigma", "\xce\xa3" },
     { "Tau", "\xce\xa4" },
-    { "Theta", "\xce\x98" },
     { "Upsilon", "\xce\xa5" },
-    { "Xi", "\xce\x9e" },
-    { "Zeta", "\xce\x96" },
-    { "alefsym", "\xe2\x84\xb5" },
+    { "Phi", "\xce\xa6" },
+    { "Chi", "\xce\xa7" },
+    { "Psi", "\xce\xa8" },
+    { "Omega", "\xce\xa9" },
+    /* Lowercase Greek letters */
     { "alpha", "\xce\xb1" },
+    { "beta", "\xce\xb2" },
+    { "gamma", "\xce\xb3" },
+    { "delta", "\xce\xb4" },
+    { "epsilon", "\xce\xb5" },
+    { "zeta", "\xce\xb6" },
+    { "eta", "\xce\xb7" },
+    { "theta", "\xce\xb8" },
+    { "thetasym", "\xcf\x91" },
+    { "iota", "\xce\xb9" },
+    { "kappa", "\xce\xba" },
+    { "varkappa", "\xcf\xb0" },
+    { "lambda", "\xce\xbb" },
+    { "mu", "\xce\xbc" },
+    { "nu", "\xce\xbd" },
+    { "xi", "\xce\xbe" },
+    { "omicron", "\xce\xbf" },
+    { "pi", "\xcf\x80" },
+    { "rho", "\xcf\x81" },
+    { "varrho", "\xcf\xb1" },
+    { "sigma", "\xcf\x83" },
+    { "sigmaf", "\xcf\x82" },
+    { "tau", "\xcf\x84" },
+    { "upsilon", "\xcf\x85" },
+    { "phi", "\xcf\x86" },
+    { "chi", "\xcf\x87" },
+    { "psi", "\xcf\x88" },
+    { "omega", "\xcf\x89" },
+    /* Math symbols */
+    { "alefsym", "\xe2\x84\xb5" },
     { "and", "\xe2\x88\xa7" },
     { "ang", "\xe2\x88\xa0" },
     { "asymp", "\xe2\x89\x88" },
-    { "beta", "\xce\xb2" },
-    { "bull", "\xe2\x80\xa2" },
     { "cap", "\xe2\x88\xa9" },
-    { "cent", "\xc2\xa2" },
-    { "chi", "\xcf\x87" },
-    { "circ", "\xcb\x86" },
     { "cong", "\xe2\x89\x85" },
-    { "copy", "\xc2\xa9" },
     { "cup", "\xe2\x88\xaa" },
-    { "curren", "\xc2\xa4" },
-    { "dagger", "\xe2\x80\xa0" },
     { "deg", "\xc2\xb0" },
-    { "delta", "\xce\xb4" },
     { "divide", "\xc3\xb7" },
     { "empty", "\xe2\x88\x85" },
-    { "epsilon", "\xce\xb5" },
     { "equiv", "\xe2\x89\xa1" },
-    { "eta", "\xce\xb7" },
-    { "euro", "\xe2\x82\xac" },
     { "exist", "\xe2\x88\x83" },
     { "fnof", "\xc6\x92" },
     { "forall", "\xe2\x88\x80" },
-    { "gamma", "\xce\xb3" },
     { "ge", "\xe2\x89\xa5" },
-    { "hellip", "\xe2\x80\xa6" },
     { "image", "\xe2\x84\x91" },
     { "infin", "\xe2\x88\x9e" },
     { "int", "\xe2\x88\xab" },
-    { "iota", "\xce\xb9" },
     { "isin", "\xe2\x88\x88" },
-    { "kappa", "\xce\xba" },
     { "lArr", "\xe2\x87\x90" },
-    { "lambda", "\xce\xbb" },
     { "lang", "\xe2\x8c\xa9" },
     { "larr", "\xe2\x86\x90" },
     { "le", "\xe2\x89\xa4" },
@@ -96,62 +108,136 @@ static const GwyTextEntity ENTITIES[] = {
     { "micro", "\xc2\xb5" },
     { "middot", "\xc2\xb7" },
     { "minus", "\xe2\x88\x92" },
-    { "mu", "\xce\xbc" },
     { "nabla", "\xe2\x88\x87" },
     { "ne", "\xe2\x89\xa0" },
     { "ni", "\xe2\x88\x8b" },
     { "not", "\xc2\xac" },
     { "notin", "\xe2\x88\x89" },
     { "nsub", "\xe2\x8a\x84" },
-    { "nu", "\xce\xbd" },
-    { "omega", "\xcf\x89" },
-    { "omicron", "\xce\xbf" },
     { "oplus", "\xe2\x8a\x95" },
     { "or", "\xe2\x88\xa8" },
     { "otimes", "\xe2\x8a\x97" },
     { "part", "\xe2\x88\x82" },
     { "permil", "\xe2\x80\xb0" },
     { "perp", "\xe2\x8a\xa5" },
-    { "phi", "\xcf\x86" },
-    { "pi", "\xcf\x80" },
     { "piv", "\xcf\x96" },
     { "plusmn", "\xc2\xb1" },
-    { "pound", "\xc2\xa3" },
     { "prod", "\xe2\x88\x8f" },
     { "prop", "\xe2\x88\x9d" },
-    { "psi", "\xcf\x88" },
     { "rArr", "\xe2\x87\x92" },
     { "radic", "\xe2\x88\x9a" },
     { "rang", "\xe2\x8c\xaa" },
     { "rarr", "\xe2\x86\x92" },
     { "rceil", "\xe2\x8c\x89" },
     { "real", "\xe2\x84\x9c" },
-    { "reg", "\xc2\xae" },
     { "rfloor", "\xe2\x8c\x8b" },
-    { "rho", "\xcf\x81" },
     { "sdot", "\xe2\x8b\x85" },
-    { "sect", "\xc2\xa7" },
-    { "sigma", "\xcf\x83" },
-    { "sigmaf", "\xcf\x82" },
     { "sim", "\xe2\x88\xbc" },
     { "sub", "\xe2\x8a\x82" },
     { "sube", "\xe2\x8a\x86" },
     { "sum", "\xe2\x88\x91" },
     { "sup", "\xe2\x8a\x83" },
-    { "tau", "\xcf\x84" },
     { "there4", "\xe2\x88\xb4" },
-    { "theta", "\xce\xb8" },
-    { "thetasym", "\xcf\x91" },
     { "times", "\xc3\x97" },
-    { "trade", "\xe2\x84\xa2" },
-    { "upsih", "\xcf\x92" },
-    { "upsilon", "\xcf\x85" },
     { "weierp", "\xe2\x84\x98" },
-    { "xi", "\xce\xbe" },
+    /* Text stuff */
+    { "bull", "\xe2\x80\xa2" },
+    { "cent", "\xc2\xa2" },
+    { "circ", "\xcb\x86" },
+    { "copy", "\xc2\xa9" },
+    { "curren", "\xc2\xa4" },
+    { "Dagger", "\xe2\x80\xa1" },
+    { "dagger", "\xe2\x80\xa0" },
+    { "euro", "\xe2\x82\xac" },
+    { "hellip", "\xe2\x80\xa6" },
+    { "pound", "\xc2\xa3" },
+    { "reg", "\xc2\xae" },
+    { "sect", "\xc2\xa7" },
+    { "trade", "\xe2\x84\xa2" },
     { "yen", "\xc2\xa5" },
-    { "zeta", "\xce\xb6" },
-    { NULL, NULL }
 };
+
+static GwyInventory *entity_inventory = NULL;
+
+static const gchar*
+gwy_entity_get_name(gpointer item)
+{
+    return ((const GwyTextEntity*)item)->entity;
+}
+
+static const GType*
+gwy_entity_get_traits(gint *ntraits)
+{
+    static const GType traits[] = { G_TYPE_STRING, G_TYPE_STRING };
+
+    if (ntraits)
+        *ntraits = G_N_ELEMENTS(traits);
+
+    return traits;
+}
+
+static const gchar*
+gwy_entity_get_trait_name(gint i)
+{
+    static const gchar *trait_names[] = { "entity", "utf8" };
+
+    g_return_val_if_fail(i >= 0 && i < G_N_ELEMENTS(trait_names), NULL);
+    return trait_names[i];
+}
+
+static void
+gwy_entity_get_trait_value(gpointer item,
+                           gint i,
+                           GValue *value)
+{
+    switch (i) {
+        case 0:
+        g_value_init(value, G_TYPE_STRING);
+        g_value_set_static_string(value, ((const GwyTextEntity*)item)->entity);
+        break;
+
+        case 1:
+        g_value_init(value, G_TYPE_STRING);
+        g_value_set_static_string(value, ((const GwyTextEntity*)item)->utf8);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+/**
+ * gwy_entities:
+ *
+ * Returns a constant inventory with all available entities.
+ *
+ * Returns: The entities as a #GwyInventory.
+ **/
+GwyInventory*
+gwy_entities(void)
+{
+    static const GwyInventoryItemType gwy_entity_item_type = {
+        0,
+        NULL,
+        NULL,
+        gwy_entity_get_name,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        gwy_entity_get_traits,
+        gwy_entity_get_trait_name,
+        gwy_entity_get_trait_value,
+    };
+
+    if (!entity_inventory)
+        entity_inventory = gwy_inventory_new_from_array(&gwy_entity_item_type,
+                                                        sizeof(GwyTextEntity),
+                                                        G_N_ELEMENTS(entities),
+                                                        entities);
+    return entity_inventory;
+}
 
 /**
  * gwy_entities_entity_to_utf8:
@@ -163,43 +249,16 @@ static const GwyTextEntity ENTITIES[] = {
  * should not contain the ampersand and semicolon.
  *
  * Returns: @entity if the name was not recognized, or a valid UTF-8 string.
- *          The returned string should be considered constant and never
- *          freed or modified (except when it's @entity again).
+ *          If the returned string is not equal to @entities, it's owned by
+ *          entities and must not be freed nor modified.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_entities_entity_to_utf8(const gchar *entity)
 {
-    gint min, max, i, j;
+    const GwyTextEntity *ent;
 
-    g_return_val_if_fail(entity, entity);
-
-    min = 0;
-    max = G_N_ELEMENTS(ENTITIES) - 2;
-
-    j = strcmp(entity, ENTITIES[min].entity);
-    if (j < 0)
-        return entity;
-    if (!j)
-        return ENTITIES[min].utf8;
-
-    j = strcmp(entity, ENTITIES[max].entity);
-    if (j > 0)
-        return entity;
-    if (!j)
-        return ENTITIES[max].utf8;
-
-    while (1) {
-        i = (min + max)/2;
-        if (i == min)
-            return entity;
-        j = strcmp(entity, ENTITIES[i].entity);
-        if (!j)
-            return ENTITIES[i].utf8;
-        if (j > 0)
-            min = i;
-        else
-            max = i;
-    }
+    ent = gwy_inventory_get_item(gwy_entities(), entity);
+    return ent ? ent->utf8 : entity;
 }
 
 /**
@@ -209,7 +268,7 @@ gwy_entities_entity_to_utf8(const gchar *entity)
  * Converts entities in a text to UTF-8.
  *
  * Returns: A newly allocated nul-delimited string containing the converted
- * text.
+ *          text.
  **/
 gchar*
 gwy_entities_text_to_utf8(const gchar *text)
@@ -262,22 +321,6 @@ gwy_entities_text_to_utf8(const gchar *text)
     return result;
 }
 
-/**
- * gwy_entities_get_entities:
- *
- * Returns an array of all available entities.
- *
- * The array is terminated by { %NULL, %NULL } item.  It must be treated as
- * constant and never modified or freed.
- *
- * Returns: The entities as a #GwyTextEntity array.
- **/
-G_CONST_RETURN GwyTextEntity*
-gwy_entities_get_entities(void)
-{
-    return ENTITIES;
-}
-
 /************************** Documentation ****************************/
 
 /**
@@ -288,6 +331,5 @@ gwy_entities_get_entities(void)
  *
  * The type of text entity data.
  **/
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
