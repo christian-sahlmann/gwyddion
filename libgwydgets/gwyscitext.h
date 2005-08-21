@@ -21,10 +21,8 @@
 #ifndef __GWY_SCI_TEXT_H__
 #define __GWY_SCI_TEXT_H__
 
-#include <gdk/gdk.h>
-#include <gtk/gtkadjustment.h>
 #include <gtk/gtkwidget.h>
-
+#include <gtk/gtkvbox.h>
 
 G_BEGIN_DECLS
 
@@ -38,22 +36,12 @@ G_BEGIN_DECLS
 typedef struct _GwySciText      GwySciText;
 typedef struct _GwySciTextClass GwySciTextClass;
 
-typedef struct {
-    GString *ent_text;
-    GString *utf_text;
-
-    PangoFontDescription *label_font;
-} GwySciTextParams;
-
 struct _GwySciText {
     GtkVBox vbox;
 
-    GdkGC *gc;
-    GtkEntry *entry;
-    GtkLabel *label;
-    GtkComboBox *entities;
-
-    GwySciTextParams par;
+    GtkWidget *entry;
+    GtkWidget *preview;
+    GtkWidget *symbols;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -67,11 +55,12 @@ struct _GwySciTextClass {
 };
 
 
-GtkWidget* gwy_sci_text_new       ();
+GtkWidget* gwy_sci_text_new       (void);
 GType      gwy_sci_text_get_type  (void) G_GNUC_CONST;
 gchar*     gwy_sci_text_get_text  (GwySciText *sci_text);
 void       gwy_sci_text_set_text  (GwySciText *sci_text,
                                    const gchar *new_text);
+GtkWidget* gwy_sci_text_get_entry (GwySciText *sci_text);
 
 G_END_DECLS
 
