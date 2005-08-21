@@ -127,6 +127,13 @@ gwy_inventory_store_finalize(GObject *object)
 
     store = GWY_INVENTORY_STORE(object);
 
+    if (store->inventory) {
+        g_signal_handler_disconnect(store->inventory, store->item_updated_id);
+        g_signal_handler_disconnect(store->inventory, store->item_inserted_id);
+        g_signal_handler_disconnect(store->inventory, store->item_deleted_id);
+        g_signal_handler_disconnect(store->inventory,
+                                    store->items_reordered_id);
+    }
     gwy_object_unref(store->inventory);
 
     G_OBJECT_CLASS(gwy_inventory_store_parent_class)->finalize(object);
@@ -423,6 +430,7 @@ gwy_inventory_store_new(GwyInventory *inventory)
 {
     const GwyInventoryItemType *item_type;
     GwyInventoryStore *store;
+    gulong i;
 
     g_return_val_if_fail(GWY_IS_INVENTORY(inventory), NULL);
     item_type = gwy_inventory_get_item_type(inventory);
@@ -435,14 +443,18 @@ gwy_inventory_store_new(GwyInventory *inventory)
     store->inventory = inventory;
     store->item_type = item_type;
 
-    g_signal_connect(inventory, "item-updated",
-                     G_CALLBACK(gwy_inventory_store_row_changed), store);
-    g_signal_connect(inventory, "item-inserted",
-                     G_CALLBACK(gwy_inventory_store_row_inserted), store);
-    g_signal_connect(inventory, "item-deleted",
-                     G_CALLBACK(gwy_inventory_store_row_deleted), store);
-    g_signal_connect(inventory, "items-reordered",
-                     G_CALLBACK(gwy_inventory_store_rows_reordered), store);
+    i = g_signal_connect(inventory, "item-updated",
+                         G_CALLBACK(gwy_inventory_store_row_changed), store);
+    store->item_updated_id = i;
+    i = g_signal_connect(inventory, "item-inserted",
+                         G_CALLBACK(gwy_inventory_store_row_inserted), store);
+    store->item_inserted_id = i;
+    i = g_signal_connect(inventory, "item-deleted",
+                         G_CALLBACK(gwy_inventory_store_row_deleted), store);
+    store->item_deleted_id = i;
+    i = g_signal_connect(inventory, "items-reordered",
+                         G_CALLBACK(gwy_inventory_store_rows_reordered), store);
+    store->items_reordered_id = i;
 
     return store;
 }
