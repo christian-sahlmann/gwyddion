@@ -27,13 +27,14 @@
 
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
-#include "gwydatawindow.h"
-#include "gwystatusbar.h"
-#include "gwylayer-basic.h"
-#include "gwyhruler.h"
-#include "gwyvruler.h"
-#include "gwycoloraxis.h"
-#include "gwyoptionmenus.h"
+#include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwystatusbar.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwyhruler.h>
+#include <libgwydgets/gwyvruler.h>
+#include <libgwydgets/gwycoloraxis.h>
+#include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwyinventorystore.h>
 
 enum {
     TITLE_CHANGED,
@@ -43,6 +44,7 @@ enum {
 /* Forward declarations */
 
 static void     gwy_data_window_finalize          (GObject *object);
+static void     gwy_data_window_destroy           (GtkObject *object);
 static void     gwy_data_window_measure_changed   (GwyDataWindow *data_window);
 static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
 static void     gwy_data_window_fit_to_screen     (GwyDataWindow *data_window,
@@ -56,8 +58,13 @@ static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
                                                    GdkEventKey *event);
 static gboolean gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                                    GdkEventButton *event);
+static void     gwy_data_window_show_more_gradients(GwyDataWindow *data_window);
 static void     gwy_data_window_gradient_selected (GtkWidget *item,
                                                    GwyDataWindow *data_window);
+static void     gwy_data_window_gradient_changed  (GtkTreeSelection *selection,
+                                                   GwyDataWindow *data_window);
+static void     gwy_data_window_gradient_update   (GwyDataWindow *data_window,
+                                                   const gchar *gradient);
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
 static void     gwy_data_window_set_tooltip       (GtkWidget *widget,
                                                    const gchar *tip_text);
@@ -82,6 +89,8 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
     object_class = (GtkObjectClass*)klass;
 
     gobject_class->finalize = gwy_data_window_finalize;
+
+    object_class->destroy = gwy_data_window_destroy;
 
     klass->title_changed = NULL;
 
@@ -117,11 +126,6 @@ gwy_data_window_finalize(GObject *object)
 {
     GwyDataWindow *data_window;
 
-    gwy_debug("finalizing a GwyDataWindow %p (refcount = %u)",
-              object, object->ref_count);
-
-    g_return_if_fail(GWY_IS_DATA_WINDOW(object));
-
     data_window = GWY_DATA_WINDOW(object);
     if (data_window->coord_format)
         gwy_si_unit_value_format_free(data_window->coord_format);
@@ -129,6 +133,20 @@ gwy_data_window_finalize(GObject *object)
         gwy_si_unit_value_format_free(data_window->value_format);
 
     G_OBJECT_CLASS(gwy_data_window_parent_class)->finalize(object);
+}
+
+static void
+gwy_data_window_destroy(GtkObject *object)
+{
+    GwyDataWindow *data_window;
+
+    data_window = GWY_DATA_WINDOW(object);
+    if (data_window->grad_selector) {
+        gtk_widget_destroy(gtk_widget_get_toplevel(data_window->grad_selector));
+        data_window->grad_selector = NULL;
+    }
+
+    GTK_OBJECT_CLASS(gwy_data_window_parent_class)->destroy(object);
 }
 
 #define class_motion_notify_callback(x) \
@@ -722,13 +740,19 @@ static gboolean
 gwy_data_window_color_axis_clicked(GtkWidget *data_window,
                                    GdkEventButton *event)
 {
-    GtkWidget *menu;
+    GtkWidget *menu, *item;
 
     if (event->button != 3)
         return FALSE;
 
     menu = gwy_menu_gradient(G_CALLBACK(gwy_data_window_gradient_selected),
                              data_window);
+    item = gtk_menu_item_new_with_label(_("More..."));
+    g_signal_connect_swapped(item, "activate",
+                             G_CALLBACK(gwy_data_window_show_more_gradients),
+                             data_window);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
@@ -739,23 +763,113 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
 }
 
 static void
+gwy_data_window_show_more_gradients(GwyDataWindow *data_window)
+{
+    GtkWidget *window, *treeview, *scwin;
+    const gchar *active;
+
+    if (data_window->grad_selector) {
+        window = gtk_widget_get_toplevel(data_window->grad_selector);
+        gtk_window_present(GTK_WINDOW(window));
+        return;
+    }
+
+    /* Pop up */
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), _("Choose Gradient"));
+    gtk_window_set_default_size(GTK_WINDOW(window), -1, 400);
+    gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(data_window));
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(window), scwin);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+
+    active
+        = gwy_color_axis_get_gradient(GWY_COLOR_AXIS(data_window->coloraxis));
+    treeview = gwy_gradient_tree_view_new(G_CALLBACK(gwy_data_window_gradient_changed),
+                                          data_window, active);
+    data_window->grad_selector = treeview;
+    g_object_add_weak_pointer(G_OBJECT(treeview),
+                              (gpointer*)&data_window->grad_selector);
+    gtk_container_add(GTK_CONTAINER(scwin), treeview);
+
+    gtk_widget_show_all(scwin);
+    gtk_window_present(GTK_WINDOW(window));
+}
+
+static void
 gwy_data_window_gradient_selected(GtkWidget *item,
                                   GwyDataWindow *data_window)
+{
+    GwyInventory *inventory;
+    GtkTreePath *path;
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GwyResource *resource;
+    const gchar *gradient;
+    gint i;
+
+    gradient = g_object_get_data(G_OBJECT(item), "gradient-name");
+    if (!data_window->grad_selector) {
+        gwy_data_window_gradient_update(data_window, gradient);
+        return;
+    }
+
+    treeview = GTK_TREE_VIEW(data_window->grad_selector);
+    selection = gtk_tree_view_get_selection(treeview);
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &resource, -1);
+        if (gwy_strequal(gradient, gwy_resource_get_name(resource)))
+            return;
+    }
+
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+    i = gwy_inventory_get_item_position(inventory, gradient);
+    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    /* This leads to gwy_data_window_gradient_changed() which actually
+     * updates the gradient */
+    path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_selection_select_iter(selection, &iter);
+    gtk_tree_view_scroll_to_cell(treeview, path, NULL, TRUE, 0.5, 0.0);
+    gtk_tree_path_free(path);
+}
+
+static void
+gwy_data_window_gradient_changed(GtkTreeSelection *selection,
+                                 GwyDataWindow *data_window)
+{
+    GwyResource *resource;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &resource, -1);
+        gwy_data_window_gradient_update(data_window,
+                                        gwy_resource_get_name(resource));
+    }
+}
+
+static void
+gwy_data_window_gradient_update(GwyDataWindow *data_window,
+                                const gchar *gradient)
 {
     GwyContainer *data;
     GwyDataView *view;
     GwyPixmapLayer *layer;
-    const gchar *name, *key;
+    const gchar *key;
 
-    name = g_object_get_data(G_OBJECT(item), "gradient-name");
-    gwy_debug("%s", name);
+    gwy_debug("%s", gradient);
 
     view = GWY_DATA_VIEW(data_window->data_view);
     data = gwy_data_view_get_data(view);
     layer = gwy_data_view_get_base_layer(view);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
-    gwy_container_set_string_by_name(data, key, g_strdup(name));
-    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis), name);
+    gwy_container_set_string_by_name(data, key, g_strdup(gradient));
+    gwy_color_axis_set_gradient(GWY_COLOR_AXIS(data_window->coloraxis),
+                                gradient);
 }
 
 static void

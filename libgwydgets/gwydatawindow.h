@@ -52,6 +52,7 @@ struct _GwyDataWindow {
     GtkWidget *vruler;
     GtkWidget *statusbar;
     GtkWidget *coloraxis;
+    GtkWidget *grad_selector;
 
     guint statusbar_context_id;
     guint statusbar_message_id;
