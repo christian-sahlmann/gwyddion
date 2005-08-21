@@ -141,7 +141,7 @@ gwy_graph_window_measure_dialog_init(G_GNUC_UNUSED GwyGraphWindowMeasureDialog *
 }
 
 static gdouble
-get_y_for_x(GwyGraph *graph, gdouble x, gint curve)
+get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
 {
     GwyGraphModel *model;
     GwyGraphCurveModel *cmodel;
@@ -149,7 +149,10 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve)
     gint ndata, i, pos;
     
     model = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
-    if (model->ncurves <= curve) return 0;
+    if (model->ncurves <= curve) {
+        *ret = FALSE;
+        return 0;
+    }
     
     cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[curve]);
     xdata = gwy_graph_curve_model_get_xdata(cmodel);
@@ -164,8 +167,12 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve)
             break;
         }
     }
-    if (pos == -1) return 0;
-    else return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1]-xdata[pos]);
+    if (pos == -1) {
+        *ret = FALSE;
+        return 0;
+    }
+    *ret = TRUE;
+    return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1]-xdata[pos]);
 }
 
 static void
@@ -176,6 +183,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     gint i, n;
     gdouble *spoints = NULL;
     gdouble x=0, y=0, xp=0, yp=0;
+    gboolean ret = TRUE,  prevret = TRUE;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS || 
@@ -199,6 +207,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             {
                 xp = x;
                 yp = y;
+                prevret = ret;
             }
             
             if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
@@ -209,14 +218,17 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)
             {
                 x = spoints[i];
-                y = get_y_for_x(graph, x, dialog->curve_index - 1);
+                y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
             }
             
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/dialog->x_mag, str);
 
             label = g_ptr_array_index(dialog->pointy, i);
-            value_label(label, y/dialog->y_mag, str);
+            if (ret)
+                value_label(label, y/dialog->y_mag, str);
+            else
+                gtk_label_set_text(label, "");                
 
             if (!i)
                 continue;
@@ -224,14 +236,21 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             label = g_ptr_array_index(dialog->distx, i);
             value_label(label, (x - xp)/dialog->x_mag, str);
 
+            
             label = g_ptr_array_index(dialog->disty, i);
-            value_label(label, (y - yp)/dialog->y_mag, str);
-
+            if (ret && prevret)
+                value_label(label, (y - yp)/dialog->y_mag, str);
+            else
+                gtk_label_set_text(label, "");
+            
             label = g_ptr_array_index(dialog->slope, i);
-            value_label(label,
+            if (ret && prevret)
+                value_label(label,
                         180.0/G_PI*atan2((y - yp),
                                          (x - xp)),
                         str);
+            else
+                gtk_label_set_text(label, "");
         }
         else {
             gtk_label_set_text(GTK_LABEL(g_ptr_array_index(dialog->pointx, i)),
