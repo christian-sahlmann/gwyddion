@@ -789,6 +789,8 @@ gwy_data_window_show_more_gradients(GwyDataWindow *data_window)
         = gwy_color_axis_get_gradient(GWY_COLOR_AXIS(data_window->coloraxis));
     treeview = gwy_gradient_tree_view_new(G_CALLBACK(gwy_data_window_gradient_changed),
                                           data_window, active);
+    g_signal_connect_swapped(treeview, "row-activated",
+                             G_CALLBACK(gtk_widget_destroy), window);
     data_window->grad_selector = treeview;
     g_object_add_weak_pointer(G_OBJECT(treeview),
                               (gpointer*)&data_window->grad_selector);

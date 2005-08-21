@@ -174,6 +174,8 @@ gwy_gradient_button_toggled(GtkWidget *button,
     gtk_container_add(GTK_CONTAINER(scwin), treeview);
     g_signal_connect(treeview, "destroy",
                      G_CALLBACK(gwy_gradient_button_treeview_destroy), button);
+    g_signal_connect_swapped(treeview, "row-activated",
+                             G_CALLBACK(gtk_widget_destroy), window);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     g_signal_connect(selection, "changed",
