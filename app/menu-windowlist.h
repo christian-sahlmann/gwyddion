@@ -25,6 +25,7 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
 typedef gboolean (*GwyDataWindowMenuFilterFunc)(GwyDataWindow *data_window,
                                                 gpointer user_data);
 
@@ -41,6 +42,7 @@ GtkWidget* gwy_option_menu_data_window_filtered    (GCallback callback,
 gboolean   gwy_option_menu_data_window_set_history (GtkWidget *option_menu,
                                                     GtkWidget *current);
 GtkWidget* gwy_option_menu_data_window_get_history (GtkWidget *option_menu);
+#endif
 
 G_END_DECLS
 
