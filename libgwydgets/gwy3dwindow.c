@@ -662,10 +662,11 @@ gwy_3d_window_set_gradient(GtkTreeSelection *selection,
     GtkTreeModel *model;
     GtkTreeIter iter;
 
-    gtk_tree_selection_get_selected(selection, &model, &iter);
-    gtk_tree_model_get(model, &iter, 0, &resource, -1);
-    gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                             gwy_resource_get_name(resource));
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &resource, -1);
+        gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                                 gwy_resource_get_name(resource));
+    }
 }
 
 static void

@@ -41,7 +41,8 @@ enum {
     SAMPLE_WIDTH = 80
 };
 
-/* FIXME: use GClosure */
+/* FIXME: It would be cleaner to use GClosures, but then all involved funcs
+ * would have to use closures instead of callback/cbdata arguments. */
 typedef struct {
     GCallback callback;
     gpointer cbdata;
@@ -49,9 +50,6 @@ typedef struct {
 
 static void gwy_gradient_button_toggled(GtkWidget *button,
                                         CallbackInfo *cbinfo);
-static GtkWidget* gwy_gradient_tree_view_new(GCallback callback,
-                                             gpointer cbdata,
-                                             const gchar *active);
 static void gwy_resource_selection_changed(GtkTreeSelection *selection,
                                GtkWidget *button);
 
@@ -135,6 +133,7 @@ static void
 gwy_gradient_button_treeview_destroy(G_GNUC_UNUSED GtkWidget *treeview,
                                      GtkWidget *button)
 {
+    gwy_debug(" ");
     g_object_set_data(G_OBJECT(button), "treeview", NULL);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
 }
@@ -157,6 +156,7 @@ gwy_gradient_button_toggled(GtkWidget *button,
 
     /* Pop up */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), _("Choose Gradient"));
     gtk_window_set_default_size(GTK_WINDOW(window), -1, 400);
     gtk_window_set_transient_for(GTK_WINDOW(window),
                                  GTK_WINDOW(gtk_widget_get_toplevel(button)));
@@ -190,6 +190,7 @@ gwy_gradient_button_destroy(GtkWidget *button,
     GtkWidget *widget;
 
     widget = g_object_get_data(G_OBJECT(button), "treeview");
+    gwy_debug("widget: %p", widget);
     if (widget) {
         g_object_set_data(G_OBJECT(button), "treeview", NULL);
         gtk_widget_destroy(gtk_widget_get_toplevel(widget));
@@ -225,7 +226,8 @@ gwy_resource_selection_changed(GtkTreeSelection *selection,
     GtkTreeIter iter;
     GdkPixbuf *pixbuf;
 
-    gtk_tree_selection_get_selected(selection, &model, &iter);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return;
     gtk_tree_model_get(model, &iter, 0, &resource, -1);
 
     image = g_object_get_data(G_OBJECT(button), "image");
@@ -264,7 +266,20 @@ gwy_gradient_selection_prefer_toggled(GtkTreeModel *model,
     gwy_inventory_nth_item_updated(inventory, i);
 }
 
-static GtkWidget*
+/**
+ * gwy_gradient_tree_view_new:
+ * @callback: A callback called when tree view selection changes (or %NULL for
+ *            none), that is to connect to "changed" signal of corresponding
+ *            #GtkTreeSelection.
+ * @cbdata: User data passed to the callback.
+ * @active: Gradient name to be shown as currently selected
+ *          (or %NULL to use what happens to appear first).
+ *
+ * Creates a tree view with gradient list.
+ *
+ * Returns: The newly created gradient tree view as #GtkWidget.
+ **/
+GtkWidget*
 gwy_gradient_tree_view_new(GCallback callback,
                            gpointer cbdata,
                            const gchar *active)
@@ -328,6 +343,9 @@ gwy_gradient_tree_view_new(GCallback callback,
                                                       NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(treeview), i);
+    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(treeview), TRUE);
+
     /* selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
@@ -344,7 +362,8 @@ gwy_gradient_tree_view_new(GCallback callback,
 /**
  * gwy_gradient_selection_new:
  * @callback: A callback called when tree view selection changes (or %NULL for
- *            none).
+ *            none), that is to connect to "changed" signal of corresponding
+ *            #GtkTreeSelection.
  * @cbdata: User data passed to the callback.
  * @active: Gradient name to be shown as currently selected
  *          (or %NULL to use what happens to appear first).
