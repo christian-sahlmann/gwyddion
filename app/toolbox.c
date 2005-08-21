@@ -24,7 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule.h>
-#include "gwyapp.h"
+#include <app/gwyapp.h>
 
 #include "gwyappinternal.h"
 #include "gwyddion.h"
@@ -771,7 +771,15 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
         {
-            N_("/Mask _Color"),
+            "/---",
+            NULL,
+            NULL,
+            0,
+            "<Separator>",
+            NULL 
+        },
+        {
+            N_("/Mask _Color..."),
             NULL,
             gwy_app_change_mask_color_cb,
             0,
@@ -779,9 +787,17 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
         {
-            N_("/Default Mask _Color"),
+            N_("/Default Mask _Color..."),
             NULL,
             gwy_app_change_mask_color_cb,
+            1,
+            NULL,
+            NULL 
+        },
+        {
+            N_("/_Gradients..."),
+            NULL,
+            gwy_app_gradient_editor,
             1,
             NULL,
             NULL 
@@ -791,7 +807,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
         "/Duplicate", NULL
     };
     static const gchar *items_need_data_mask[] = {
-        "/Remove Mask", "/Mask Color", NULL
+        "/Remove Mask", "/Mask Color...", NULL
     };
     static const gchar *items_need_data_show[] = {
         "/Remove Presentation", NULL
