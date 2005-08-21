@@ -217,6 +217,24 @@ gwy_gradient_selection_cell_pixbuf(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
+gwy_gradient_selection_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                 GtkCellRenderer *renderer,
+                                 GtkTreeModel *model,
+                                 GtkTreeIter *iter,
+                                 gpointer user_data)
+{
+    GwyInventory *inventory = (GwyInventory*)user_data;
+    gpointer item, defitem;
+
+    gtk_tree_model_get(model, iter, 0, &item, -1);
+    defitem = gwy_inventory_get_default_item(inventory);
+    g_object_set(renderer,
+                 "weight",
+                 (item == defitem) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
+                 NULL);
+}
+
+static void
 gwy_resource_selection_changed(GtkTreeSelection *selection,
                                GtkWidget *button)
 {
@@ -266,6 +284,28 @@ gwy_gradient_selection_prefer_toggled(GtkTreeModel *model,
     gwy_inventory_nth_item_updated(inventory, i);
 }
 
+static void
+gwy_gradient_selection_default_changed(GwyInventory *inventory,
+                                       GtkTreeModel *model)
+{
+    GwyResource *resource;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    gint i;
+
+    resource = gwy_inventory_get_default_item(inventory);
+    if (!resource)
+        return;
+
+    /* FIXME: This is somewhat crude */
+    i = gwy_inventory_get_item_position(inventory,
+                                        gwy_resource_get_name(resource));
+    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_model_row_changed(model, path, &iter);
+    gtk_tree_path_free(path);
+}
+
 /**
  * gwy_gradient_tree_view_new:
  * @callback: A callback called when tree view selection changes (or %NULL for
@@ -284,6 +324,7 @@ gwy_gradient_tree_view_new(GCallback callback,
                            gpointer cbdata,
                            const gchar *active)
 {
+    GwyInventory *inventory;
     GdkPixbuf *pixbuf;
     GwyInventoryStore *store;
     GtkTreeViewColumn *column;
@@ -298,14 +339,17 @@ gwy_gradient_tree_view_new(GCallback callback,
     gradient = gwy_gradients_get_gradient(active);
     active = gwy_resource_get_name(GWY_RESOURCE(gradient));
 
-    store = gwy_inventory_store_new(gwy_gradients());
+    inventory = gwy_gradients();
+    store = gwy_inventory_store_new(inventory);
     treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(store);
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    g_signal_connect(inventory, "default-changed",
+                     G_CALLBACK(gwy_gradient_selection_default_changed), store);
 
     /* pixbuf */
     gtk_icon_size_lookup(GTK_ICON_SIZE_SMALL_TOOLBAR, &width, &height);
-    width = 5*height;
+    width = 6*height;
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             width, height);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
@@ -341,6 +385,10 @@ gwy_gradient_tree_view_new(GCallback callback,
     column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
                                                       "text", i,
                                                       NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            gwy_gradient_selection_cell_name,
+                                            inventory, NULL);
+    g_object_set(renderer, "weight-set", TRUE, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
     gtk_tree_view_set_search_column(GTK_TREE_VIEW(treeview), i);
@@ -349,7 +397,7 @@ gwy_gradient_tree_view_new(GCallback callback,
     /* selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-    i = gwy_inventory_get_item_position(gwy_gradients(), active);
+    i = gwy_inventory_get_item_position(inventory, active);
     gwy_debug("active resource position: %d", i);
     gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(store), &iter, NULL, i);
     gtk_tree_selection_select_iter(selection, &iter);
