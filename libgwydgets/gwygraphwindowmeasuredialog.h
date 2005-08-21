@@ -38,6 +38,12 @@ G_BEGIN_DECLS
 #define GWY_IS_GRAPH_MEASURE_DIALOG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GRAPH_MEASURE_DIALOG))
 #define GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GRAPH_MEASURE_DIALOG, GwyGraphWindowMeasureDialogClass))
 
+typedef enum {
+    METHOD_INTERSECTIONS = 0,
+    METHOD_CROSSES = 1
+} MeasureMethodType;
+
+
 typedef struct _GwyGraphWindowMeasureDialog      GwyGraphWindowMeasureDialog;
 typedef struct _GwyGraphWindowMeasureDialogClass GwyGraphWindowMeasureDialogClass;
 
@@ -45,7 +51,8 @@ struct _GwyGraphWindowMeasureDialog {
     GtkDialog dialog;
 
     GtkWidget *graph;
-    
+
+    GtkWidget *method; 
     GtkWidget *xlabel;
     GtkWidget *ylabel;
     GtkObject *index;
@@ -55,6 +62,7 @@ struct _GwyGraphWindowMeasureDialog {
     GPtrArray *disty;
     GPtrArray *slope;
     GPtrArray *labpoint;
+    MeasureMethodType mmethod;    
     gint n;
     gint curve_index;
     gdouble x_mag;
