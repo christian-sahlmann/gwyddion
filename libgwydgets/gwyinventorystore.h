@@ -45,6 +45,11 @@ struct _GwyInventoryStore
 
     /* Cached inventory properties */
     const GwyInventoryItemType *item_type;
+
+    gulong item_updated_id;
+    gulong item_inserted_id;
+    gulong item_deleted_id;
+    gulong items_reordered_id;
 };
 
 struct _GwyInventoryStoreClass
