@@ -94,6 +94,7 @@ struct _GwyInventory {
 struct _GwyInventoryClass {
     GObjectClass parent_class;
 
+    /* Signals */
     void (*item_inserted)(GwyInventory *inventory,
                           guint position);
     void (*item_deleted)(GwyInventory *inventory,
@@ -102,6 +103,7 @@ struct _GwyInventoryClass {
                          guint position);
     void (*items_reordered)(GwyInventory *inventory,
                             const gint *new_order);
+    void (*default_changed)(GwyInventory *inventory);
 };
 
 GType         gwy_inventory_get_type       (void) G_GNUC_CONST;

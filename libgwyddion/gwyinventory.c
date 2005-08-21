@@ -34,6 +34,7 @@ enum {
     ITEM_DELETED,
     ITEM_UPDATED,
     ITEMS_REORDERED,
+    DEFAULT_CHANGED,
     LAST_SIGNAL
 };
 
@@ -83,7 +84,6 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
      * GwyInventory::item-inserted:
      * @gwyinventory: The #GwyInventory which received the signal.
      * @arg1: Position an item was inserted at.
-     * @user_data: User data set when the signal handler was connected.
      *
      * The ::item-inserted signal is emitted when an item is inserted into
      * an inventory.
@@ -102,7 +102,6 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
      * GwyInventory::item-deleted:
      * @gwyinventory: The #GwyInventory which received the signal.
      * @arg1: Position an item was deleted from.
-     * @user_data: User data set when the signal handler was connected.
      *
      * The ::item-deleted signal is emitted when an item is deleted from
      * an inventory.
@@ -121,7 +120,6 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
      * GwyInventory::item-updated:
      * @gwyinventory: The #GwyInventory which received the signal.
      * @arg1: Position of updated item.
-     * @user_data: User data set when the signal handler was connected.
      *
      * The ::item-updated signal is emitted when an item in an inventory
      * is updated.
@@ -141,7 +139,6 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
      * @gwyinventory: The #GwyInventory which received the signal.
      * @arg1: New item order map as in #GtkTreeModel,
      *        @arg1[new_position] = old_position.
-     * @user_data: User data set when the signal handler was connected.
      *
      * The ::items-reordered signal is emitted when item in an inventory
      * are reordered.
@@ -155,6 +152,23 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      g_cclosure_marshal_VOID__POINTER,
                      G_TYPE_NONE, 1,
                      G_TYPE_POINTER);
+
+    /**
+     * GwyInventory::default-changed:
+     * @gwyinventory: The #GwyInventory which received the signal.
+     *
+     * The ::default-changed signal is emitted when either
+     * default inventory item name changes or the presence of such an item
+     * in the inventory changes.
+     **/
+    gwy_inventory_signals[DEFAULT_CHANGED] =
+        g_signal_new("default-changed",
+                     GWY_TYPE_INVENTORY,
+                     G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE,
+                     G_STRUCT_OFFSET(GwyInventoryClass, default_changed),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -663,8 +677,8 @@ gwy_inventory_get_default_item(GwyInventory *inventory)
  *
  * Returns the name of the default item of an inventory.
  *
- * Returns: The default item name.  Item of this name may or may not exist in
- *          the inventory.
+ * Returns: The default item name, %NULL if no default name is set.
+ *          Item of this name may or may not exist in the inventory.
  **/
 const gchar*
 gwy_inventory_get_default_item_name(GwyInventory *inventory)
@@ -689,17 +703,32 @@ void
 gwy_inventory_set_default_item_name(GwyInventory *inventory,
                                     const gchar *name)
 {
+    gboolean emit_change = FALSE;
+
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
     if (!name) {
+        emit_change = inventory->has_default;
         inventory->has_default = FALSE;
-        return;
+    }
+    else {
+        if (!inventory->has_default) {
+            emit_change = TRUE;
+            inventory->has_default = TRUE;
+        }
+
+        if (!inventory->default_key) {
+            inventory->default_key = g_string_new(name);
+            emit_change = TRUE;
+        }
+        else {
+            if (!gwy_strequal(inventory->default_key->str, name))
+                emit_change = TRUE;
+            g_string_assign(inventory->default_key, name);
+        }
     }
 
-    inventory->has_default = TRUE;
-    if (!inventory->default_key)
-        inventory->default_key = g_string_new(name);
-    else
-        g_string_assign(inventory->default_key, name);
+    if (emit_change)
+        g_signal_emit(inventory, gwy_inventory_signals[DEFAULT_CHANGED], 0);
 }
 
 /**
@@ -869,6 +898,9 @@ gwy_inventory_insert_item(GwyInventory *inventory,
         gwy_inventory_connect_to_item(item, inventory);
 
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, m);
+    if (inventory->has_default
+        && gwy_strequal(name, inventory->default_key->str))
+        g_signal_emit(inventory, gwy_inventory_signals[DEFAULT_CHANGED], 0);
 
     return item;
 }
@@ -936,6 +968,9 @@ gwy_inventory_insert_nth_item(GwyInventory *inventory,
         gwy_inventory_connect_to_item(item, inventory);
 
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_INSERTED], 0, n);
+    if (inventory->has_default
+        && gwy_strequal(name, inventory->default_key->str))
+        g_signal_emit(inventory, gwy_inventory_signals[DEFAULT_CHANGED], 0);
 
     return item;
 }
@@ -1024,6 +1059,7 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
 {
     gpointer mp, lp;
     guint n, last;
+    gboolean emit_change = FALSE;
 
     mp = g_ptr_array_index(inventory->items, i);
     if (inventory->item_type.is_fixed
@@ -1031,6 +1067,10 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
         g_warning("Cannot delete fixed item `%s'", name);
         return;
     }
+    if (inventory->has_default
+        && gwy_strequal(name, inventory->default_key->str))
+        emit_change = TRUE;
+
     if (inventory->is_watchable)
         gwy_inventory_disconnect_from_item(mp, inventory);
 
@@ -1065,6 +1105,8 @@ gwy_inventory_delete_nth_item_real(GwyInventory *inventory,
         g_object_unref(mp);
 
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_DELETED], 0, n);
+    if (emit_change)
+        g_signal_emit(inventory, gwy_inventory_signals[DEFAULT_CHANGED], 0);
 }
 
 /**
@@ -1181,6 +1223,10 @@ gwy_inventory_rename_item(GwyInventory *inventory,
 
     g_signal_emit(inventory, gwy_inventory_signals[ITEM_UPDATED], 0,
                   g_array_index(inventory->idx, guint, i-1));
+    if (inventory->has_default
+        && (gwy_strequal(name, inventory->default_key->str)
+            || gwy_strequal(newname, inventory->default_key->str)))
+        g_signal_emit(inventory, gwy_inventory_signals[DEFAULT_CHANGED], 0);
 
     return mp;
 }
