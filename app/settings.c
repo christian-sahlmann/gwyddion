@@ -304,8 +304,10 @@ static void
 gwy_app_settings_gather(GwyContainer *settings)
 {
     GPtrArray *preferred;
+    const gchar *name;
 
-    preferred= g_ptr_array_new();
+    /* Preferred resources */
+    preferred = g_ptr_array_new();
     gwy_inventory_foreach(gwy_gradients(),
                           &add_preferred_resource_name, preferred);
     g_ptr_array_add(preferred, NULL);
@@ -313,6 +315,12 @@ gwy_app_settings_gather(GwyContainer *settings)
                                      g_strjoinv("\n",
                                                 (gchar**)preferred->pdata));
     g_ptr_array_free(preferred, TRUE);
+
+    /* Default resources */
+    name = gwy_inventory_get_default_item_name(gwy_gradients());
+    if (name)
+        gwy_container_set_string_by_name(settings, "/app/gradients/default",
+                                         g_strdup(name));
 }
 
 /**
@@ -326,11 +334,12 @@ gwy_app_settings_apply(GwyContainer *settings)
 {
     GwyInventory *inventory;
     GwyResource *resource;
-    const gchar *s;
+    const guchar *s;
     gchar **preferred, **p;
 
-    if ((s = gwy_container_get_string_by_name(settings,
-                                              "/app/gradients/preferred"))) {
+    /* Preferred resources */
+    if (gwy_container_gis_string_by_name(settings, "/app/gradients/preferred",
+                                         &s)) {
         inventory = gwy_gradients();
         preferred = g_strsplit(s, "\n", 0);
         for (p = preferred; *p; p++) {
@@ -339,6 +348,11 @@ gwy_app_settings_apply(GwyContainer *settings)
         }
         g_strfreev(preferred);
     }
+
+    /* Default resources */
+    if (gwy_container_gis_string_by_name(settings, "/app/gradients/default",
+                                         &s))
+        gwy_inventory_set_default_item_name(gwy_gradients(), s);
 }
 
 /**
