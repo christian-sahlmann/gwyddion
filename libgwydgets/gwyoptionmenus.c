@@ -354,7 +354,8 @@ gwy_gradient_tree_view_new(GCallback callback,
     gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(store), &iter, NULL, i);
     gtk_tree_selection_select_iter(selection, &iter);
 
-    g_signal_connect(selection, "changed", callback, cbdata);
+    if (callback)
+        g_signal_connect(selection, "changed", callback, cbdata);
 
     return treeview;
 }
