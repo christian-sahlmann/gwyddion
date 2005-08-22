@@ -22,14 +22,14 @@
  * - set from samples
  * - test
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
-#include "gwygradient.h"
+#include <libdraw/gwygradient.h>
 
 #define GWY_GRADIENT_TYPE_NAME "GwyGradient"
 
@@ -56,6 +56,10 @@ static void         gwy_gradient_sample_real    (GwyGradient *gradient,
                                                  gint nsamples,
                                                  guchar *samples);
 static void         gwy_gradient_sanitize       (GwyGradient *gradient);
+static void         gwy_gradient_refine_interval(GList *points,
+                                                 gint n,
+                                                 const GwyGradientPoint *samples,
+                                                 gdouble threshold);
 static void         gwy_gradient_changed        (GwyGradient *gradient);
 static GwyGradient* gwy_gradient_new            (const gchar *name,
                                                  gint npoints,
@@ -756,7 +760,7 @@ gwy_gradient_set_points(GwyGradient *gradient,
 /**
  * gwy_gradient_set_from_samples:
  * @gradient: A color gradient.
- * @nsamples: Number of samples.
+ * @nsamples: Number of samples, it must be at least one.
  * @samples: Sampled color gradient in #GdkPixbuf-like RRGGBBAA form.
  *
  * Reconstructs color gradient definition from sampled colors.
@@ -766,12 +770,10 @@ gwy_gradient_set_points(GwyGradient *gradient,
 void
 gwy_gradient_set_from_samples(GwyGradient *gradient,
                               gint nsamples,
-                              guchar *samples)
+                              const guchar *samples)
 {
-    GArray *points;
-    GwyGradientPoint point;
-    GwyGradientPoint *pt, *ptp, *ptm;
-    gdouble v;
+    GwyGradientPoint *spoints;
+    GList *l, *list = NULL;
     gint i, k;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
@@ -779,133 +781,110 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
     g_return_if_fail(samples);
     g_return_if_fail(nsamples > 0);
 
-    k = 0;
-    /* Handle special one-point case */
+    /* Preprocess guchar data to doubles */
+    spoints = g_new(GwyGradientPoint, MAX(nsamples, 2));
+    for (k = i = 0; i < nsamples; i++) {
+        spoints[i].x = i/(nsamples - 1.0);
+        spoints[i].color.r = samples[k++]/255.0;
+        spoints[i].color.g = samples[k++]/255.0;
+        spoints[i].color.b = samples[k++]/255.0;
+        spoints[i].color.a = samples[k++]/255.0;
+    }
+
+    /* Handle special silly case */
     if (nsamples == 1) {
-        g_array_set_size(gradient->points, 0);
-        point.x = 0.0;
-        point.color.r = samples[k++]/255.0;
-        point.color.g = samples[k++]/255.0;
-        point.color.b = samples[k++]/255.0;
-        point.color.a = samples[k++]/255.0;
-        g_array_append_val(gradient->points, point);
-        point.x = 1.0;
-        g_array_append_val(gradient->points, point);
-
-        return;
+        spoints[0].x = 0.0;
+        spoints[1].x = 1.0;
+        spoints[1].color = spoints[0].color;
+        nsamples = 2;
     }
 
-    /* Start with full representation */
-    points = g_array_sized_new(FALSE, FALSE,
-                               sizeof(GwyGradientPoint), nsamples);
-    for (i = 0; i < nsamples; i++) {
-        point.x = i/(nsamples - 1.0);
-        point.color.r = samples[k++]/255.0;
-        point.color.g = samples[k++]/255.0;
-        point.color.b = samples[k++]/255.0;
-        point.color.a = samples[k++]/255.0;
-        g_array_append_val(points, point);
-    }
+    /* Start with first and last point and recurse */
+    list = g_list_append(list, spoints + nsamples-1);
+    list = g_list_prepend(list, spoints);
+    gwy_gradient_refine_interval(list, nsamples, spoints, 1/80.0);
 
-    /* Don't bother with anything sophisticated for really small number
-     * of samples */
-    if (nsamples <= 6) {
-        g_array_set_size(gradient->points, 0);
-        g_array_append_vals(gradient->points, points->data, nsamples);
-        g_array_free(points, TRUE);
-
-        return;
-    }
-
-    /* Denoise/smooth */
-    for (k = 0; k < 1; k++) {
-        pt = &g_array_index(points, GwyGradientPoint, 0);
-        point = *pt;
-        ptp = &g_array_index(points, GwyGradientPoint, 1);
-        pt->color.r = (2*pt->color.r + ptp->color.r)/3.0;
-        pt->color.g = (2*pt->color.g + ptp->color.g)/3.0;
-        pt->color.b = (2*pt->color.b + ptp->color.b)/3.0;
-        pt->color.a = (2*pt->color.a + ptp->color.a)/3.0;
-
-        for (i = 1; i+1 < points->len; i++) {
-            pt = &g_array_index(points, GwyGradientPoint, i);
-            ptp = &g_array_index(points, GwyGradientPoint, i+1);
-
-            v = pt->color.r;
-            pt->color.r = (point.color.r + 2*pt->color.r + ptp->color.r)/4.0;
-            point.color.r = v;
-
-            v = pt->color.g;
-            pt->color.g = (point.color.g + 2*pt->color.g + ptp->color.g)/4.0;
-            point.color.g = v;
-
-            v = pt->color.b;
-            pt->color.b = (point.color.b + 2*pt->color.b + ptp->color.b)/4.0;
-            point.color.b = v;
-
-            v = pt->color.a;
-            pt->color.a = (point.color.a + 2*pt->color.a + ptp->color.a)/4.0;
-            point.color.a = v;
-        }
-
-        pt = &g_array_index(points, GwyGradientPoint, points->len-1);
-        pt->color.r = (point.color.r + 2*pt->color.r)/3.0;
-        pt->color.g = (point.color.g + 2*pt->color.g)/3.0;
-        pt->color.b = (point.color.b + 2*pt->color.b)/3.0;
-        pt->color.a = (point.color.a + 2*pt->color.a)/3.0;
-    }
-
-    /* Find points of breakage, using x data as scratch space */
-    pt = &g_array_index(points, GwyGradientPoint, 0);
-    pt->x = 1.0;
-    for (i = 1; i+1 < points->len; i++) {
-        ptm = &g_array_index(points, GwyGradientPoint, i-1);
-        pt = &g_array_index(points, GwyGradientPoint, i);
-        ptp = &g_array_index(points, GwyGradientPoint, i+1);
-
-        /* Second derivation */
-        pt->x = fabs(ptm->color.r + ptp->color.r - 2*pt->color.r);
-        v = fabs(ptm->color.g + ptp->color.g - 2*pt->color.g);
-        pt->x = MAX(pt->x, v);
-        v = fabs(ptm->color.b + ptp->color.b - 2*pt->color.b);
-        pt->x = MAX(pt->x, v);
-        v = fabs(ptm->color.a + ptp->color.a - 2*pt->color.a);
-        pt->x = MAX(pt->x, v);
-        pt->x *= nsamples*nsamples/64.0;
-        g_printerr("%d %g\n", i, pt->x);
-        pt->x = CLAMP(pt->x, 0.0, 1.0);
-
-        /* Plain extreme */
-        if (pt->x < 1.0) {
-            if ((pt->color.r - ptm->color.r)*(ptp->color.r - pt->color.r) < 0
-                || (pt->color.g - ptm->color.g)*(ptp->color.g - pt->color.g) < 0
-                || (pt->color.b - ptm->color.b)*(ptp->color.b - pt->color.b) < 0
-                || (pt->color.a - ptm->color.a)*(ptp->color.a - pt->color.a) < 0
-                )
-                pt->x = 1.0;
-        }
-    }
-    pt = &g_array_index(points, GwyGradientPoint, points->len-1);
-    pt->x = 1.0;
-
+    /* Set the new points */
     g_array_set_size(gradient->points, 0);
-    k = 0;
-    for (i = 0; i < nsamples; i++) {
-        pt = &g_array_index(points, GwyGradientPoint, i);
-        if (pt->x == 1.0) {
-            point.x = i/(nsamples - 1.0);
-            point.color.r = samples[k++]/255.0;
-            point.color.g = samples[k++]/255.0;
-            point.color.b = samples[k++]/255.0;
-            point.color.a = samples[k++]/255.0;
-            g_array_append_val(gradient->points, point);
-        }
-        else
-            k += 4;
-    }
-    g_array_free(points, TRUE);
+    for (l = list; l; l = g_list_next(l)) {
+        GwyGradientPoint pt;
 
+        pt = *(GwyGradientPoint*)l->data;
+        g_array_append_val(gradient->points, pt);
+    }
+    g_list_free(list);
+    g_free(spoints);
     gwy_gradient_changed(gradient);
+}
+
+static void
+gwy_gradient_refine_interval(GList *points,
+                             gint n,
+                             const GwyGradientPoint *samples,
+                             gdouble threshold)
+{
+    GList *item;
+    const GwyRGBA *first, *last;
+    GwyRGBA color;
+    gint i, mi;
+    gdouble max, s, d;
+
+    if (n <= 2)
+        return;
+
+    first = &samples[0].color;
+    last = &samples[n-1].color;
+    gwy_debug("Working on %d samples from {%f: %f, %f, %f, %f} "
+              "to {%f: %f, %f, %f, %f}",
+              n,
+              samples[0].x, first->r, first->g, first->b, first->a,
+              samples[n-1].x, last->r, last->g, last->b, last->a);
+
+    max = 0.0;
+    mi = 0;
+    for (i = 1; i < n-1; i++) {
+        gwy_rgba_interpolate(first, last, i/(n - 1.0), &color);
+        /* Maximum distance is the crucial metric */
+        s = ABS(color.r - samples[i].color.r);
+        d = ABS(color.g - samples[i].color.g);
+        s = MAX(s, d);
+        d = ABS(color.b - samples[i].color.b);
+        s = MAX(s, d);
+        d = ABS(color.a - samples[i].color.a);
+        s = MAX(s, d);
+
+        if (s > max) {
+            max = s;
+            mi = i;
+        }
+    }
+    gwy_debug("Max. difference %f located at %d, {%f: %f, %f, %f, %f}",
+              max, mi,
+              samples[mi].x,
+              samples[mi].color.r,
+              samples[mi].color.g,
+              samples[mi].color.b,
+              samples[mi].color.a);
+
+    if (max < threshold) {
+        gwy_debug("Max. difference small enough, stopping recursion");
+        return;
+    }
+    gwy_debug("Inserting new point at %f", samples[mi].x);
+
+    /* Use g_list_alloc() manually, GList functions care too much about list
+     * head which is something we don't want here, because we always work
+     * in the middle of some list. */
+    item = g_list_alloc();
+    item->data = (gpointer)(samples + mi);
+    item->prev = points;
+    item->next = points->next;
+    item->prev->next = item;
+    item->next->prev = item;
+
+    /* Recurse. */
+    gwy_gradient_refine_interval(points, mi + 1, samples, threshold);
+    gwy_gradient_refine_interval(item, n - mi, samples + mi, threshold);
 }
 
 static void
