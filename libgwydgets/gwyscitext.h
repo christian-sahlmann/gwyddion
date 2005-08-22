@@ -39,7 +39,10 @@ typedef struct _GwySciTextClass GwySciTextClass;
 struct _GwySciText {
     GtkVBox vbox;
 
+    gboolean has_preview;
+
     GtkWidget *entry;
+    GtkWidget *frame;
     GtkWidget *preview;
     GtkWidget *symbols;
 
@@ -50,17 +53,23 @@ struct _GwySciText {
 struct _GwySciTextClass {
     GtkVBoxClass parent_class;
 
+    /* Signals */
+    void (*edited)(GwySciText *sci_text);
+
     gpointer reserved1;
     gpointer reserved2;
 };
 
 
-GtkWidget* gwy_sci_text_new       (void);
-GType      gwy_sci_text_get_type  (void) G_GNUC_CONST;
-gchar*     gwy_sci_text_get_text  (GwySciText *sci_text);
-void       gwy_sci_text_set_text  (GwySciText *sci_text,
-                                   const gchar *new_text);
-GtkWidget* gwy_sci_text_get_entry (GwySciText *sci_text);
+GType      gwy_sci_text_get_type       (void) G_GNUC_CONST;
+GtkWidget* gwy_sci_text_new            (void);
+gchar*     gwy_sci_text_get_text       (GwySciText *sci_text);
+void       gwy_sci_text_set_text       (GwySciText *sci_text,
+                                        const gchar *new_text);
+gboolean   gwy_sci_text_get_has_preview(GwySciText *sci_text);
+void       gwy_sci_text_set_has_preview(GwySciText *sci_text,
+                                        gboolean has_preview);
+GtkWidget* gwy_sci_text_get_entry      (GwySciText *sci_text);
 
 G_END_DECLS
 

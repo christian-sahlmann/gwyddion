@@ -29,6 +29,7 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwydgetutils.h>
 
 #define GWY_SCI_TEXT_TYPE_NAME "GwySciText"
 
@@ -39,33 +40,155 @@ enum {
     GWY_SCI_TEXT_SUPERSCRIPT = 4
 };
 
-static GtkWidget* gwy_image_button_new_from_stock (const gchar *stock_id);
+enum {
+    EDITED,
+    LAST_SIGNAL
+};
+
+enum {
+    PROP_0,
+    PROP_HAS_PREVIEW
+};
+
+static void       gwy_sci_text_set_property       (GObject *object,
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec);
+static void       gwy_sci_text_get_property       (GObject*object,
+                                                   guint prop_id,
+                                                   GValue *value,
+                                                   GParamSpec *pspec);
 static void       gwy_sci_text_edited             (GwySciText *sci_text);
 static void       gwy_sci_text_entity_selected    (GwySciText *sci_text);
 static void       gwy_sci_text_button_some_pressed(GwySciText *sci_text,
                                                    GtkWidget *button);
 
+static guint sci_text_signals[LAST_SIGNAL] = { 0 };
+
+static struct {
+    gint tag;
+    const gchar *stock_id;
+    const gchar *start;
+    const gchar *end;
+    gsize len;
+    const gchar *label;
+}
+const tags[] = {
+    {
+        GWY_SCI_TEXT_BOLD,
+        GWY_STOCK_BOLD,
+        "<b>", "</b>", sizeof("<b>")-1,
+        N_("_Bold"),
+    },
+    {
+        GWY_SCI_TEXT_ITALIC,
+        GWY_STOCK_ITALIC,
+        "<i>", "</i>", sizeof("<i>")-1,
+        N_("_Italic"),
+    },
+    {
+        GWY_SCI_TEXT_SUBSCRIPT,
+        GWY_STOCK_SUBSCRIPT,
+        "<sub>", "</sub>", sizeof("<sub>")-1,
+        N_("_Subscript"),
+    },
+    {
+        GWY_SCI_TEXT_SUPERSCRIPT,
+        GWY_STOCK_SUPERSCRIPT,
+        "<sup>", "</sup>", sizeof("<sup>")-1,
+        N_("Su_perscript"),
+    },
+};
+
 G_DEFINE_TYPE(GwySciText, gwy_sci_text, GTK_TYPE_VBOX)
 
 static void
-gwy_sci_text_class_init(G_GNUC_UNUSED GwySciTextClass *klass)
+gwy_sci_text_class_init(GwySciTextClass *klass)
 {
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+
+    gobject_class->set_property = gwy_sci_text_set_property;
+    gobject_class->get_property = gwy_sci_text_get_property;
+
+    /**
+     * GwySciText:has-preview:
+     *
+     * The :has-preview property controls whether a #GwySciText has a preview.
+     */
+    g_object_class_install_property
+        (gobject_class,
+         PROP_HAS_PREVIEW,
+         g_param_spec_boolean("has-preview",
+                              "Has preview",
+                              "Whether sci text has a preview",
+                              TRUE, G_PARAM_READWRITE));
+
+    /**
+     * GwySciText::edited:
+     * @gwyscitext: The #GwySciText which received the signal.
+     *
+     * The ::edited signal is emitted when the text in its entry changes
+     * to a valid markup.  If you need to react to all changes in entry
+     * contents, you can use gwy_sci_text_get_entry() to get the entry and
+     * connect to its signal.
+     */
+    sci_text_signals[EDITED]
+        = g_signal_new("edited",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwySciTextClass, edited),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
-gwy_sci_text_init(G_GNUC_UNUSED GwySciText *sci_text)
+gwy_sci_text_init(GwySciText *sci_text)
 {
+    sci_text->has_preview = TRUE;
+}
+
+static void
+gwy_sci_text_set_property(GObject *object,
+                          guint prop_id,
+                          const GValue *value,
+                          GParamSpec *pspec)
+{
+    GwySciText *sci_text = GWY_SCI_TEXT(object);
+
+    switch (prop_id) {
+        case PROP_HAS_PREVIEW:
+        gwy_sci_text_set_has_preview(sci_text, g_value_get_boolean(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_sci_text_get_property(GObject *object,
+                          guint prop_id,
+                          GValue *value,
+                          GParamSpec *pspec)
+{
+    GwySciText *sci_text = GWY_SCI_TEXT(object);
+
+    switch (prop_id) {
+        case PROP_HAS_PREVIEW:
+        g_value_set_boolean(value, sci_text->preview != NULL);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 GtkWidget*
 gwy_sci_text_new(void)
 {
-    static const GwyEnum buttons[] = {
-        { GWY_STOCK_BOLD,        GWY_SCI_TEXT_BOLD,        },
-        { GWY_STOCK_ITALIC,      GWY_SCI_TEXT_ITALIC,      },
-        { GWY_STOCK_SUBSCRIPT,   GWY_SCI_TEXT_SUBSCRIPT,   },
-        { GWY_STOCK_SUPERSCRIPT, GWY_SCI_TEXT_SUPERSCRIPT, },
-    };
     GtkWidget *label, *button, *hbox;
     GtkTreeModel *model;
     GtkCellLayout *layout;
@@ -89,11 +212,10 @@ gwy_sci_text_new(void)
                              G_CALLBACK(gwy_sci_text_edited), sci_text);
     gtk_widget_show(sci_text->entry);
 
-    /* Controls */
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 4);
-
     /* Symbols */
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 2);
+
     model = GTK_TREE_MODEL(gwy_inventory_store_new(gwy_entities()));
     sci_text->symbols = gtk_combo_box_new_with_model(model);
     g_object_unref(model);
@@ -126,48 +248,37 @@ gwy_sci_text_new(void)
     gtk_cell_layout_pack_start(layout, cell, TRUE);
     gtk_cell_layout_set_attributes(layout, cell, "text", i, NULL);
 
-    /* Add */
     button = gtk_button_new_with_mnemonic("A_dd symbol");
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_sci_text_entity_selected),
                              sci_text);
-    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 4);
 
-    /* Other buttons */
-    for (i = 0; i < G_N_ELEMENTS(buttons); i++) {
-        button = gwy_image_button_new_from_stock(buttons[i].name);
-        gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    /* Tag buttons */
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 2);
+
+    for (i = 0; i < G_N_ELEMENTS(tags); i++) {
+        button = gwy_stock_like_button_new(_(tags[i].label),
+                                           tags[i].stock_id);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_sci_text_button_some_pressed),
                                  sci_text);
         g_object_set_data(G_OBJECT(button), "type",
-                          GINT_TO_POINTER(buttons[i].value));
+                          GINT_TO_POINTER(tags[i].tag));
     }
     gtk_widget_show_all(hbox);
 
     /* Preview */
-    label = gtk_label_new_with_mnemonic("Preview");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(sci_text), label, FALSE, FALSE, 0);
-    gtk_widget_show(label);
-
-    sci_text->preview = gtk_label_new(NULL);
-    gtk_box_pack_start(GTK_BOX(sci_text), sci_text->preview, FALSE, FALSE, 4);
-    gtk_widget_show(label);
+    sci_text->frame = gtk_frame_new(_("Preview"));
+    gtk_box_pack_start(GTK_BOX(sci_text), sci_text->frame, FALSE, FALSE, 0);
+    if (sci_text->has_preview) {
+        sci_text->has_preview = FALSE;
+        gwy_sci_text_set_has_preview(sci_text, TRUE);
+    }
 
     return (GtkWidget*)sci_text;
-}
-
-static GtkWidget*
-gwy_image_button_new_from_stock(const gchar *stock_id)
-{
-    GtkWidget *image, *button;
-
-    image = gtk_image_new_from_stock(stock_id, GTK_ICON_SIZE_BUTTON);
-    button = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(button), image);
-
-    return button;
 }
 
 static void
@@ -178,18 +289,25 @@ gwy_sci_text_edited(GwySciText *sci_text)
     gchar *text = NULL;
     gchar *utf8;
     const gchar *input;
+    gboolean emit_edited = FALSE;
 
     gwy_debug(" ");
 
     input = gtk_entry_get_text(GTK_ENTRY(sci_text->entry));
     utf8 = gwy_entities_text_to_utf8(input);
-    if (pango_parse_markup(utf8, -1, 0, &attr_list, &text, NULL, &err))
-        gtk_label_set_markup(GTK_LABEL(sci_text->preview), utf8);
+    if (pango_parse_markup(utf8, -1, 0, &attr_list, &text, NULL, &err)) {
+        if (sci_text->has_preview)
+            gtk_label_set_markup(GTK_LABEL(sci_text->preview), utf8);
+        emit_edited = TRUE;
+    }
     g_free(utf8);
     g_free(text);
     if (attr_list)
         pango_attr_list_unref(attr_list);
     g_clear_error(&err);
+
+    if (emit_edited)
+        g_signal_emit(sci_text, sci_text_signals[EDITED], 0);
 }
 
 static void
@@ -217,27 +335,12 @@ gwy_sci_text_entity_selected(GwySciText *sci_text)
     gtk_editable_insert_text(editable, p, strlen(p), &pos);
     gtk_editable_set_position(editable, pos);
     g_free(p);
-
-    gwy_sci_text_edited(sci_text);
 }
-
 
 static void
 gwy_sci_text_button_some_pressed(GwySciText *sci_text,
                                  GtkWidget *button)
 {
-    static struct {
-        gint markup;
-        const gchar *start;
-        const gchar *end;
-        gsize len;
-    }
-    const tags[] = {
-        { GWY_SCI_TEXT_BOLD, "<b>", "</b>", sizeof("<b>")-1 },
-        { GWY_SCI_TEXT_ITALIC, "<i>", "</i>", sizeof("<i>")-1 },
-        { GWY_SCI_TEXT_SUBSCRIPT, "<sub>", "</sub>", sizeof("<sub>")-1 },
-        { GWY_SCI_TEXT_SUPERSCRIPT, "<sup>", "</sup>", sizeof("<sup>")-1 },
-    };
     GtkEditable *editable;
     gboolean selected;
     gint i, start, end;
@@ -251,7 +354,7 @@ gwy_sci_text_button_some_pressed(GwySciText *sci_text,
         end = start;
     }
     for (j = 0; j < G_N_ELEMENTS(tags); j++) {
-        if (tags[j].markup == i) {
+        if (tags[j].tag == i) {
             gtk_editable_insert_text(editable,
                                      tags[j].start, tags[j].len, &start);
             end += tags[j].len;
@@ -265,7 +368,6 @@ gwy_sci_text_button_some_pressed(GwySciText *sci_text,
             break;
         }
     }
-    gwy_sci_text_edited(sci_text);
 }
 
 /**
@@ -314,6 +416,47 @@ gwy_sci_text_get_entry(GwySciText *sci_text)
 {
     g_return_val_if_fail(GWY_IS_SCI_TEXT(sci_text), NULL);
     return sci_text->entry;
+}
+
+gboolean
+gwy_sci_text_get_has_preview(GwySciText *sci_text)
+{
+    g_return_val_if_fail(GWY_IS_SCI_TEXT(sci_text), FALSE);
+    return sci_text->has_preview;
+}
+
+void
+gwy_sci_text_set_has_preview(GwySciText *sci_text,
+                             gboolean has_preview)
+{
+    GtkWidget *hbox;
+
+    g_return_if_fail(GWY_IS_SCI_TEXT(sci_text));
+
+    if (!sci_text->frame) {
+        sci_text->has_preview = has_preview;
+        return;
+    }
+
+    if (sci_text->has_preview && !has_preview) {
+        gtk_widget_hide(sci_text->frame);
+        hbox = gtk_bin_get_child(GTK_BIN(sci_text->frame));
+        sci_text->preview = NULL;
+        gtk_widget_destroy(hbox);
+        sci_text->has_preview = FALSE;
+    }
+    else if (!sci_text->has_preview && has_preview) {
+        hbox = gtk_hbox_new(FALSE, 0);
+        gtk_container_add(GTK_CONTAINER(sci_text->frame), hbox);
+        gtk_container_set_border_width(GTK_CONTAINER(hbox), 8);
+
+        sci_text->preview = gtk_label_new(NULL);
+        gtk_box_pack_start(GTK_BOX(hbox), sci_text->preview, TRUE, TRUE, 0);
+        sci_text->has_preview = TRUE;
+
+        gwy_sci_text_edited(sci_text);
+        gtk_widget_show_all(sci_text->frame);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
