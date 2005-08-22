@@ -100,7 +100,8 @@ void              gwy_gradient_set_points            (GwyGradient *gradient,
                                                       const GwyGradientPoint *points);
 void              gwy_gradient_set_from_samples      (GwyGradient *gradient,
                                                       gint nsamples,
-                                                      const guchar *samples);
+                                                      const guchar *samples,
+                                                      gdouble threshold);
 
 GwyInventory*     gwy_gradients                      (void);
 

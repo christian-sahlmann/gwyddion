@@ -762,6 +762,9 @@ gwy_gradient_set_points(GwyGradient *gradient,
  * @gradient: A color gradient.
  * @nsamples: Number of samples, it must be at least one.
  * @samples: Sampled color gradient in #GdkPixbuf-like RRGGBBAA form.
+ * @threshold: Maximum allowed difference (for color components in range 0..1).
+ *             When negative, default value 1/80 suitable for most purposes
+ *             is used.
  *
  * Reconstructs color gradient definition from sampled colors.
  *
@@ -770,7 +773,8 @@ gwy_gradient_set_points(GwyGradient *gradient,
 void
 gwy_gradient_set_from_samples(GwyGradient *gradient,
                               gint nsamples,
-                              const guchar *samples)
+                              const guchar *samples,
+                              gdouble threshold)
 {
     GwyGradientPoint *spoints;
     GList *l, *list = NULL;
@@ -780,6 +784,9 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
     g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(samples);
     g_return_if_fail(nsamples > 0);
+
+    if (threshold < 0)
+        threshold = 1.0/80.0;
 
     /* Preprocess guchar data to doubles */
     spoints = g_new(GwyGradientPoint, MAX(nsamples, 2));
@@ -802,7 +809,7 @@ gwy_gradient_set_from_samples(GwyGradient *gradient,
     /* Start with first and last point and recurse */
     list = g_list_append(list, spoints + nsamples-1);
     list = g_list_prepend(list, spoints);
-    gwy_gradient_refine_interval(list, nsamples, spoints, 1/80.0);
+    gwy_gradient_refine_interval(list, nsamples, spoints, threshold);
 
     /* Set the new points */
     g_array_set_size(gradient->points, 0);
