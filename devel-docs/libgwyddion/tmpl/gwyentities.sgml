@@ -2,7 +2,7 @@
 gwyentities
 
 <!-- ##### SECTION Short_Description ##### -->
-Transform SGML-like symbol entities to UTF-8 and back.
+Transform SGML-like symbol entities to UTF-8 and back
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -12,12 +12,10 @@ to be used namely in <link linkend="GwySciText">GwySciText</link>.
 </para>
 
 <para>
-Function <link linkend="gwy-entities-entity-to-utf8">gwy_entities_entity_to_utf8()</link>
-converts a signle entity to UTF-8, function
-Function <link linkend="gwy-entities-text-to-utf8">gwy_entities_text_to_utf8()</link>
-converts a text containing entities to UTF-8. A list of all available
-entities can be obtained with
-<link linkend="gwy-entities-get-entities">gwy_entities_get_entities()</link>.
+Function gwy_entities_entity_to_utf8() converts a signle entity to UTF-8.
+Function gwy_entities_text_to_utf8() converts a text containing entities to
+UTF-8. An #GwyInventory with all available entities can be obtained with
+gwy_entities().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -32,6 +30,14 @@ entities can be obtained with
 
 @entity: 
 @utf8: 
+
+<!-- ##### FUNCTION gwy_entities ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 
 <!-- ##### FUNCTION gwy_entities_entity_to_utf8 ##### -->
 <para>
@@ -48,14 +54,6 @@ entities can be obtained with
 </para>
 
 @text: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_entities_get_entities ##### -->
-<para>
-
-</para>
-
 @Returns: 
 
 

@@ -51,7 +51,7 @@ gwy_container_set_double_by_name().
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GwyInventory
 </para>
 
 <!-- ##### MACRO GWY_CONTAINER_PATHSEP ##### -->

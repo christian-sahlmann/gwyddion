@@ -2,16 +2,19 @@
 GwyResource
 
 <!-- ##### SECTION Short_Description ##### -->
-
+Built-in and/or user supplied application resources
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+#GwyResource is a base class for various application resources.  It defines
+common interface: questioning resource name (gwy_resource_get_name()),
+modifiability (gwy_resource_get_is_modifiable()), loading resources from
+files and saving them.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+#GwyInventory
 </para>
 
 <!-- ##### STRUCT GwyResource ##### -->
@@ -26,6 +29,21 @@ GwyResource
 </para>
 
 @gwyresource: the object which received the signal.
+
+<!-- ##### ARG GwyResource:is-const ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyResource:is-preferred ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyResource:name ##### -->
+<para>
+
+</para>
 
 <!-- ##### STRUCT GwyResourceClass ##### -->
 <para>

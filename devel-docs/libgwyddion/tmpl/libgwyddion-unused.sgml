@@ -18,6 +18,38 @@
 choleski
 
 
+<!-- ##### SECTION ./tmpl/gwywatchable.sgml:Long_Description ##### -->
+<para>
+GwyWatchable is an abstract interface for a value-like objects whose changes
+can be watched, i.e., they cause emission of a
+<link linkend="GwyWatchable-value-changed">"value_changed"</link> signal. You
+can use
+<link linkend="gwy-watchable-value-changed">gwy_watchable_value_changed()</link>
+to programatically emit the signal.
+</para>
+
+<para>
+Note this interface may be formally required on objects in some situations
+(namely to store them to <link linkend="GwyContainer">GwyContainer</link>),
+although in current stage it does not have to be meaningfully implemented.
+In Gwyddion 2.0 this interface may either become actually used, or be removed.
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwywatchable.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwywatchable.sgml:Short_Description ##### -->
+Abstract interface for a value-like object whose changes can be watched
+
+
+<!-- ##### SECTION ./tmpl/gwywatchable.sgml:Title ##### -->
+GwyWatchable
+
+
 <!-- ##### SECTION ./tmpl/gwywin32unistd.sgml:Long_Description ##### -->
 <para>
 
@@ -171,6 +203,18 @@ types
 </para>
 
 
+<!-- ##### MACRO GWY_BENCHMARK_END ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_BENCHMARK_START ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO G_GINT64_MODIFIER ##### -->
 <para>
 
@@ -313,6 +357,12 @@ types
 @spec: 
 @Returns: 
 
+<!-- ##### STRUCT GwyWatchable ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### SIGNAL GwyWatchable::value-changed ##### -->
 <para>
 Emitted when value changes.
@@ -321,6 +371,14 @@ Emitted when value changes.
 @gwywatchable: the object which received the signal.
 
 <!-- ##### STRUCT GwyWatchableClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@value_changed: 
+
+<!-- ##### STRUCT GwyWatchableIface ##### -->
 <para>
 
 </para>
@@ -636,6 +694,13 @@ Emitted when value changes.
 @path: 
 @callback: 
 @user_data: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_entities_get_entities ##### -->
+<para>
+
+</para>
+
 @Returns: 
 
 <!-- ##### FUNCTION gwy_inventory_get_next_item ##### -->
@@ -1094,6 +1159,13 @@ Emitted when value changes.
 @s: 
 @suffix: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_watchable_value_changed ##### -->
+<para>
+
+</para>
+
+@watchable: 
 
 <!-- ##### FUNCTION machine_zero ##### -->
 <para>

@@ -60,19 +60,6 @@ GWY_SI_UNIT_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gwywatchable</FILE>
-GwyWatchableIface
-GwyWatchable
-gwy_watchable_value_changed
-<SUBSECTION Standard>
-GWY_WATCHABLE
-GWY_IS_WATCHABLE
-GWY_TYPE_WATCHABLE
-gwy_watchable_get_type
-GWY_WATCHABLE_GET_IFACE
-</SECTION>
-
-<SECTION>
 <FILE>gwyinventory</FILE>
 GwyInventoryItemType
 <TITLE>GwyInventory</TITLE>
@@ -290,9 +277,9 @@ gwy_type_init
 <SECTION>
 <FILE>gwyentities</FILE>
 GwyTextEntity
+gwy_entities
 gwy_entities_entity_to_utf8
 gwy_entities_text_to_utf8
-gwy_entities_get_entities
 </SECTION>
 
 <SECTION>
@@ -342,6 +329,7 @@ gwy_enum_to_string
 gwy_string_to_flags
 gwy_flags_to_string
 gwy_enum_sanitize_value
+gwy_enum_freev
 gwy_enum_inventory_new
 </SECTION>
 

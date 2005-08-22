@@ -2,11 +2,13 @@
 gwyenum
 
 <!-- ##### SECTION Short_Description ##### -->
-
+String-integer value pair.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+#GwyEnum is a simple association of a string and integer enum value used in
+various places in Gwyddion.  An enum table can be easily used as a constant
+#GwyInventory base with gwy_enum_inventory_new().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -93,6 +95,14 @@ gwyenum
 @enumval: 
 @enum_type: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_enum_freev ##### -->
+<para>
+
+</para>
+
+@enum_table: 
 
 
 <!-- ##### FUNCTION gwy_enum_inventory_new ##### -->

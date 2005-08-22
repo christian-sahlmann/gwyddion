@@ -2,7 +2,7 @@
 gwyexpr
 
 <!-- ##### SECTION Short_Description ##### -->
-Arithmetic expression parser and evaluator.
+Arithmetic expression parser and evaluator
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -19,7 +19,7 @@ gwy_expr_evaluate().
 
 <para>
 Expression with variables have to be compiled first with gwy_expr_compile().
-The either gwy_expr_resolve_variables() or gwy_expr_get_variables() can be
+Then either gwy_expr_resolve_variables() or gwy_expr_get_variables() can be
 used to obtain information what variables are present in the expression
 and at which positions (variables are references by position, not name during
 final evaluation because of effieiency reasons). Subsequent evaluation with
