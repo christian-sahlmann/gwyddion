@@ -85,8 +85,8 @@ struct _GwyGraphClass {
 GtkWidget *gwy_graph_new(GwyGraphModel *gmodel);
 GType      gwy_graph_get_type(void) G_GNUC_CONST;
 
-GtkWidget *gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type);
-GtkWidget *gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gboolean is_visible);
+GwyAxis*   gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type);
+void       gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gboolean is_visible);
 
 GtkWidget *gwy_graph_get_area(GwyGraph *graph);
 
