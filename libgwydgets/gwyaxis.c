@@ -1178,6 +1178,7 @@ void
 gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 {
     axis->is_visible = is_visible;
+    gtk_widget_queue_resize(GTK_WIDGET(axis));
 }
 
 /**

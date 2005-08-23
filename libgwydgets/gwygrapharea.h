@@ -39,15 +39,6 @@ G_BEGIN_DECLS
 typedef struct _GwyGraphArea      GwyGraphArea;
 typedef struct _GwyGraphAreaClass GwyGraphAreaClass;
 
-/*
-typedef enum {
-    GWY_GRAPH_STATUS_PLAIN  = 0,
-    GWY_GRAPH_STATUS_XSEL   = 1,
-    GWY_GRAPH_STATUS_YSEL   = 2,
-    GWY_GRAPH_STATUS_POINTS = 3,
-    GWY_GRAPH_STATUS_ZOOM   = 4
-} GwyGraphStatusType;
-*/
 
 typedef struct {
   GwyGraphDataPoint data_point;

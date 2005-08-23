@@ -349,6 +349,13 @@ dialog_update(GwyUnitoolState *state,
 
     /* XXX */
     if (controls->initial_use) {
+        gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
+        gwy_graph_set_axis_visible(graph, GTK_POS_BOTTOM, FALSE);
+        gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
+        gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
+        gwy_graph_model_set_label_visible(controls->histogram_model, FALSE);
+        
+        /*
         gtk_widget_hide(GTK_WIDGET(graph->axis_top));
         gtk_widget_hide(GTK_WIDGET(graph->axis_bottom));
         gtk_widget_hide(GTK_WIDGET(graph->axis_left));
@@ -358,6 +365,7 @@ dialog_update(GwyUnitoolState *state,
         gtk_widget_hide(GTK_WIDGET(graph->corner_tr));
         gtk_widget_hide(GTK_WIDGET(graph->corner_br));
         gtk_widget_hide(GTK_WIDGET(graph->area->lab));
+        */
     }
 
     if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
