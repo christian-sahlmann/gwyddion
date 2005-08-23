@@ -24,7 +24,6 @@
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydatawindow.h>
-/*#include <libgwydgets/gwygraph.h>*/
 #include <libgwydgets/gwygraph.h>
 
 G_BEGIN_DECLS
@@ -48,11 +47,8 @@ gulong         gwy_app_data_window_list_add_hook   (gpointer func,
 gboolean       gwy_app_data_window_list_remove_hook(gulong hook_id);
 GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 
-#ifndef GWY_DISALBE_DEPRECATED
-GtkWidget*     gwy_app_graph_window_create         (GtkWidget *graph);
-#endif
-GtkWidget*  gwy_app_graph_window_create_for_window (GwyGraph *grapher,
-                                                    GwyDataWindow *data_window);
+GtkWidget*     gwy_app_graph_window_create         (GwyGraph *graph,
+                                                    GwyContainer *data);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
 gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);
@@ -65,8 +61,6 @@ gboolean       gwy_app_3d_window_set_current       (GtkWidget *window);
 GtkWidget*     gwy_app_get_current_window          (GwyAppWindowType type);
 gint           gwy_app_data_window_set_untitled    (GwyDataWindow *window,
                                                     const gchar *templ);
-G_GNUC_DEPRECATED 
-void           gwy_app_data_view_update            (GwyDataView *data_view);
 GtkWidget*     gwy_app_main_window_get             (void);
 
 gboolean       gwy_app_quit                        (void);

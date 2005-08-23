@@ -385,10 +385,8 @@ apply(GwyUnitoolState *state)
     graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
     gtk_widget_set_size_request(graph, 400, 300);
 
-
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
-                                           state->data_window);
-
+    gwy_app_graph_window_create(GWY_GRAPH(graph),
+                                gwy_data_window_get_data(state->data_window));
 }
 
 static void

@@ -22,13 +22,14 @@
 #define __GWY_APP_GRAPH_LIST_H__
 
 #include <libgwydgets/gwydatawindow.h>
-#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphwindow.h>
 
 G_BEGIN_DECLS
 
 GtkWidget* gwy_app_graph_list_new     (GwyDataWindow *data_window);
-void       gwy_app_graph_list_add     (GwyDataWindow *data_window,
-                                       GwyGraph *graph);
+void       gwy_app_graph_list_add     (GwyContainer *data,
+                                       GwyGraphModel *gmodel,
+                                       GwyGraphWindow *graph);
 
 G_END_DECLS
 

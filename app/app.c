@@ -799,27 +799,9 @@ gwy_app_graph_window_remove(GtkWidget *window)
 }
 
 /**
- * gwy_app_graph_window_create:
- * @graph: A graph widget.
- *
- * Creates a new graph window showing @graph and does some basic setup.
- *
- * Use gwy_app_graph_window_create_for_window().
- *
- * Returns: The newly created graph window.
- **/
-GtkWidget*
-gwy_app_graph_window_create(GtkWidget *graph)
-{
-    return gwy_app_graph_window_create_for_window
-                   (GWY_GRAPH(graph), gwy_app_data_window_get_current());
-}
-
-/**
  * gwy_app_graph_window_create_for_window:
- * @grapher: A graph widget.
- * @data_window: A data window to associate @graph with.
- * @title: Title of the new graph window.
+ * @graph: A graph widget.
+ * @data: A data container to put the graph model to.
  *
  * Creates a new graph window showing a graph and does some basic setup.
  *
@@ -829,27 +811,22 @@ gwy_app_graph_window_create(GtkWidget *graph)
  * Returns: The newly created graph window.
  **/
 GtkWidget*
-gwy_app_graph_window_create_for_window(GwyGraph *grapher,
-                                       GwyDataWindow *data_window)
+gwy_app_graph_window_create(GwyGraph *graph,
+                            GwyContainer *data)
 {
     GtkWidget *window;
 
-    g_return_val_if_fail(GWY_IS_GRAPH(grapher), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+    g_return_val_if_fail(GWY_IS_GRAPH(graph), NULL);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
-    window = gwy_graph_window_new(grapher);
+    window = gwy_graph_window_new(graph);
     gtk_container_set_border_width(GTK_CONTAINER (window), 0);
     gtk_window_add_accel_group
         (GTK_WINDOW(window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
-    /* TODO: this is broken because we do not actually know which data window
-     * is the right one, but for GraphModel testing it doesn't matter much. */
-    if (!g_object_get_data(G_OBJECT(grapher), "graph-model"))
-        /* FIXME: this is convoluted. We try to fix adding a graph just
-         * created from a model for a second time. Also, a GwyGraph should
-         * obviously know its model... */
-        gwy_app_graph_list_add(data_window, grapher);
+    gwy_app_graph_list_add(data, gwy_graph_get_model(graph),
+                           GWY_GRAPH_WINDOW(window));
 
     g_signal_connect(window, "focus-in-event",
                      G_CALLBACK(gwy_app_graph_window_set_current), NULL);
@@ -858,60 +835,6 @@ gwy_app_graph_window_create_for_window(GwyGraph *grapher,
 
     current_graph = g_list_append(current_graph, window);
 
-    gtk_widget_show_all(window);
-    gtk_window_present(GTK_WINDOW(window));
-
-    return window;
-}
-
-/**
- * gwy_app_grapher_window_create_for_window:
- * @graph: A grapher widget.
- * @data_window: A data window to associate @graph with.
- * @title: Title of the new graph window.
- *
- * Creates a new graph window showing a graph and does some basic setup.
- *
- * Also calls gtk_window_present() on the newly created window, associates
- * it with a data window, and sets its title.
- *
- * Returns: The newly created graph window.
- **/
-GtkWidget*
-gwy_app_grapher_window_create_for_window(GwyGraph *grapher,
-                                       GwyDataWindow *data_window,
-                                       const gchar *title)
-{
-    GtkWidget *window;
-
-    g_return_val_if_fail(GWY_IS_GRAPH(grapher), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
-
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(grapher));
-    gtk_window_set_title(GTK_WINDOW(window),
-                         title ? title : _("Untitled Graph"));
-    gtk_container_set_border_width(GTK_CONTAINER (window), 0);
-    gtk_window_add_accel_group
-        (GTK_WINDOW(window),
-         g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
-
-    /* TODO: this is broken because we do not actually know which data window
-     * is the right one, but for GraphModel testing it doesn't matter much. */
-    if (!g_object_get_data(G_OBJECT(grapher), "graph-model"))
-        /* FIXME: this is convoluted. We try to fix adding a graph just
-         * created from a model for a second time. Also, a GwyGraph should
-         * obviously know its model... */
-        gwy_app_graph_list_add(data_window, grapher);
-
-    g_signal_connect(window, "focus-in-event",
-                     G_CALLBACK(gwy_app_graph_window_set_current), NULL);
-    g_signal_connect(window, "destroy",
-                     G_CALLBACK(gwy_app_graph_window_remove), NULL);
-
-    current_graph = g_list_append(current_graph, window);
-
-    gtk_widget_show(GTK_WIDGET(grapher));
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 
@@ -925,18 +848,16 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
     GtkWidget *graph_view;
     gint x, y;
 
-    graph_view = g_object_get_data(G_OBJECT(data_window),
-                                   "gwy-app-graph-list-window");
-
+    graph_view = g_object_get_data(G_OBJECT(data_window), "graph-list-window");
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle))) {
         gtk_window_get_position(GTK_WINDOW(graph_view), &x, &y);
         /* to store zero reliably */
         x += 10000;
         y += 10000;
         g_object_set_data(G_OBJECT(graph_view), "window-position-x",
-                        GINT_TO_POINTER(x));
+                          GINT_TO_POINTER(x));
         g_object_set_data(G_OBJECT(graph_view), "window-position-y",
-                        GINT_TO_POINTER(y));
+                          GINT_TO_POINTER(y));
         gtk_widget_hide(graph_view);
         return;
     }
@@ -957,6 +878,7 @@ gwy_app_graph_list_toggle_cb(GtkWidget *toggle,
     }
 
     graph_view = gwy_app_graph_list_new(data_window);
+    g_object_set_data(G_OBJECT(data_window), "graph-list-window", graph_view);
     g_signal_connect_swapped(graph_view, "delete-event",
                              G_CALLBACK(gwy_app_graph_list_delete_cb), toggle);
     gtk_window_set_transient_for(GTK_WINDOW(graph_view),

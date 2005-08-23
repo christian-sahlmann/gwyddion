@@ -418,7 +418,7 @@ ok_cb(FractalArgs *args,
     graph = gwy_graph_new(controls->graph_model);
     update_graph(args, controls, data);
     data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window);
+    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
 }
 static gboolean
 update_graph(FractalArgs *args,

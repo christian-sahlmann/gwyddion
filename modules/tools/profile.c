@@ -444,6 +444,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwyContainer *data;
     GtkWidget *graph;
     GwyGraphModel *model;
     gint i, j, nselected;
@@ -454,6 +455,7 @@ apply(GwyUnitoolState *state)
         return;
 
     j = 0;
+    data = gwy_data_window_get_data(state->data_window);
     if (controls->separate) {
         for (i = 0; i < nselected; i++) {
             model = gwy_graph_model_new_alike(controls->graphmodel);
@@ -464,15 +466,13 @@ apply(GwyUnitoolState *state)
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
             graph = gwy_graph_new(model);
             gtk_widget_set_size_request(graph, 400, 300);
-            gwy_app_graph_window_create_for_window
-                                    (GWY_GRAPH(graph), state->data_window);
+            gwy_app_graph_window_create(GWY_GRAPH(graph), data);
         }
     }
     else {
         graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
         gtk_widget_set_size_request(graph, 400, 300);
-        gwy_app_graph_window_create_for_window(GWY_GRAPH(graph),
-                                               state->data_window);
+        gwy_app_graph_window_create(GWY_GRAPH(graph), data);
     }
 }
 
