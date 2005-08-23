@@ -343,6 +343,72 @@ GwyGraphModel *gwy_graph_get_model(GwyGraph *graph)
 }
 
 /**
+ * gwy_graph_get_axis:
+ * @graph: A graph widget.
+ * @type: Axis orientation
+ *
+ * Returns: Graph axis of given orientation.
+ **/
+GtkWidget*
+gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
+{
+    switch (type)
+    {
+        case GTK_POS_TOP: 
+        return graph->axis_top;
+
+        case GTK_POS_BOTTOM: 
+        return graph->axis_bottom;
+
+        case GTK_POS_LEFT: 
+        return graph->axis_left;
+
+        case GTK_POS_RIGHT: 
+        return graph->axis_right;
+    } 
+}
+/**
+ * gwy_graph_get_axis:
+ * @graph: A graph widget.
+ * @type: Axis orientation
+ * @is_visible: set/unset axis visibility within graph widget
+ *
+ * Returns: Sets the visibility of graph axis of given orientation.
+ **/
+GtkWidget*
+gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gboolean is_visible)
+{
+    switch (type)
+    {
+        case GTK_POS_TOP: 
+        gwy_axis_set_visible(graph->axis_top, is_visible);
+
+        case GTK_POS_BOTTOM: 
+        gwy_axis_set_visible(graph->axis_bottom, is_visible);
+
+        case GTK_POS_LEFT: 
+        gwy_axis_set_visible(graph->axis_left, is_visible);
+
+        case GTK_POS_RIGHT: 
+        gwy_axis_set_visible(graph->axis_right, is_visible);
+    } 
+}
+
+/**
+ * gwy_graph_get_area:
+ * @graph: A graph widget.
+ *
+ * Returns: Graph area.
+ **/
+GtkWidget*
+gwy_graph_get_area(GwyGraph *graph)
+{
+    return graph->area;
+}
+
+
+
+/**
  * gwy_graph_set_status:
  * @graph: A graph widget.
  * @status: new graph model 
