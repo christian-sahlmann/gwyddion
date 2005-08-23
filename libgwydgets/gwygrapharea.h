@@ -166,6 +166,8 @@ GtkWidget* gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjust
 
 GType gwy_graph_area_get_type(void) G_GNUC_CONST;
 
+GtkWidget *gwy_graph_area_get_label(GwyGraphArea *area);
+
 void gwy_graph_area_signal_selected(GwyGraphArea *area);
 
 void gwy_graph_area_signal_zoomed(GwyGraphArea *area);
