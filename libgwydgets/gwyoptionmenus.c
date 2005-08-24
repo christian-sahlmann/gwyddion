@@ -35,10 +35,8 @@
 
 #define BITS_PER_SAMPLE 8
 
-enum {
-    SAMPLE_HEIGHT = 16,
-    SAMPLE_WIDTH = 80
-};
+typedef void (*SamplerFunc)(GwyResource *resource,
+                            GdkPixbuf *pixbuf);
 
 /* FIXME: It would be cleaner to use GClosures, but then all involved funcs
  * would have to use closures instead of callback/cbdata arguments. */
@@ -47,43 +45,24 @@ typedef struct {
     gpointer cbdata;
 } CallbackInfo;
 
-static void gwy_gradient_button_toggled(GtkWidget *button,
-                                        CallbackInfo *cbinfo);
-static void gwy_resource_selection_changed(GtkTreeSelection *selection,
-                               GtkWidget *button);
+static GtkWidget* gwy_menu_resource             (GwyInventory *inventory,
+                                                 SamplerFunc sampler,
+                                                 const gchar *key,
+                                                 GCallback callback,
+                                                 gpointer cbdata);
+static void       pack_resource_box             (GtkContainer *container,
+                                                 GwyInventory *inventory,
+                                                 SamplerFunc sampler,
+                                                 const gchar *name,
+                                                 gint width,
+                                                 gint height);
+static void       gwy_gradient_button_toggled   (GtkWidget *button,
+                                                 CallbackInfo *cbinfo);
+static void       gwy_resource_selection_changed(GtkTreeSelection *selection,
+                                                 GtkWidget *button);
 
 
-/************************** Gradient menu ****************************/
-
-static void
-pack_gradient_box(GtkContainer *container,
-                  const gchar *name,
-                  gint width,
-                  gint height)
-{
-    GwyGradient *gradient;
-    GtkWidget *hbox, *image, *label;
-    GdkPixbuf *pixbuf;
-
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            width, height);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    gradient = gwy_gradients_get_gradient(name);
-    gwy_gradient_sample_to_pixbuf(gradient, pixbuf);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
-
-    name = gwy_resource_get_name(GWY_RESOURCE(gradient));
-    hbox = gtk_hbox_new(FALSE, 6);
-    label = gtk_label_new(name);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-    gtk_container_add(container, hbox);
-
-    g_object_set_data(G_OBJECT(container), "image", image);
-    g_object_set_data(G_OBJECT(container), "label", label);
-}
+/************************** Pop-up menus ****************************/
 
 /**
  * gwy_menu_gradient:
@@ -93,30 +72,70 @@ pack_gradient_box(GtkContainer *container,
  *
  * Creates a pop-up gradient menu.
  *
+ * Object data <literal>"gradient-name"</literal> is set to gradient name for
+ * each menu item.
+ *
  * Returns: The newly created pop-up menu as #GtkWidget.
  **/
 GtkWidget*
 gwy_menu_gradient(GCallback callback,
                   gpointer cbdata)
 {
+    return gwy_menu_resource(gwy_gradients(),
+                             (SamplerFunc)&gwy_gradient_sample_to_pixbuf,
+                             "gradient-name",
+                             callback, cbdata);
+}
+
+/**
+ * gwy_menu_gl_material:
+ * @callback: A callback called when a menu item is activated (or %NULL for
+ *            none).
+ * @cbdata: User data passed to the callback.
+ *
+ * Creates a pop-up GL material menu.
+ *
+ * Object data <literal>"gl-material-name"</literal> is set to GL material
+ * name for each menu item.
+ *
+ * Returns: The newly created pop-up menu as #GtkWidget.
+ **/
+GtkWidget*
+gwy_menu_gl_material(GCallback callback,
+                     gpointer cbdata)
+{
+    return gwy_menu_resource(gwy_gl_materials(),
+                             (SamplerFunc)&gwy_gl_material_sample_to_pixbuf,
+                             "gl-material-name",
+                             callback, cbdata);
+}
+
+static GtkWidget*
+gwy_menu_resource(GwyInventory *inventory,
+                  SamplerFunc sampler,
+                  const gchar *key,
+                  GCallback callback,
+                  gpointer cbdata)
+{
     GtkWidget *menu, *item;
-    GwyInventory *gradients;
-    GwyGradient *gradient;
+    GwyResource *resource;
     const gchar *name;
     gint i, width, height;
 
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
     width = 5*height;
-    gradients = gwy_gradients();
     menu = gtk_menu_new();
-    for (i = 0; (gradient = gwy_inventory_get_nth_item(gradients, i)); i++) {
-        if (!gwy_resource_get_is_preferred(GWY_RESOURCE(gradient)))
+    for (i = 0; (resource = gwy_inventory_get_nth_item(inventory, i)); i++) {
+        if (!gwy_resource_get_is_preferred(resource))
             continue;
         item = gtk_menu_item_new();
-        name = gwy_resource_get_name(GWY_RESOURCE(gradient));
+        /* FIXME: can we assume resources cannot be renamed during pop-up
+         * menu selection? */
+        name = gwy_resource_get_name(resource);
         gwy_debug("<%s>", name);
-        pack_gradient_box(GTK_CONTAINER(item), name, width, height);
-        g_object_set_data(G_OBJECT(item), "gradient-name", (gpointer)name);
+        pack_resource_box(GTK_CONTAINER(item), inventory, sampler,
+                          name, width, height);
+        g_object_set_data(G_OBJECT(item), key, (gpointer)name);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         if (callback)
             g_signal_connect(item, "activate", callback, cbdata);
@@ -124,6 +143,8 @@ gwy_menu_gradient(GCallback callback,
 
     return menu;
 }
+
+/************************** Tree views ****************************/
 
 static void
 gwy_gradient_button_treeview_destroy(G_GNUC_UNUSED GtkWidget *treeview,
@@ -439,7 +460,9 @@ gwy_gradient_selection_new(GCallback callback,
     width = 5*height;
 
     button = gtk_toggle_button_new();
-    pack_gradient_box(GTK_CONTAINER(button), active, width, height);
+    pack_resource_box(GTK_CONTAINER(button), gwy_gradients(),
+                      (SamplerFunc)&gwy_gradient_sample_to_pixbuf,
+                      active, width, height);
     g_object_set_data(G_OBJECT(button), "active-resource", gradient);
 
     cbinfo = g_new(CallbackInfo, 1);
@@ -454,76 +477,6 @@ gwy_gradient_selection_new(GCallback callback,
 }
 
 /************************** Material menu ****************************/
-
-static void
-pack_gl_material_box(GtkContainer *container,
-                  const gchar *name,
-                  gint width,
-                  gint height)
-{
-    GwyGLMaterial *material;
-    GtkWidget *hbox, *image, *label;
-    GdkPixbuf *pixbuf;
-
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            width, height);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    material = gwy_gl_materials_get_gl_material(name);
-    gwy_gl_material_sample_to_pixbuf(material, pixbuf);
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
-
-    name = gwy_resource_get_name(GWY_RESOURCE(material));
-    hbox = gtk_hbox_new(FALSE, 6);
-    label = gtk_label_new(name);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-    gtk_container_add(container, hbox);
-
-    g_object_set_data(G_OBJECT(container), "image", image);
-    g_object_set_data(G_OBJECT(container), "label", label);
-}
-
-/**
- * gwy_menu_gl_material:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- *
- * Creates a pop-up GL material menu.
- *
- * Returns: The newly created pop-up menu as #GtkWidget.
- **/
-GtkWidget*
-gwy_menu_gl_material(GCallback callback,
-                     gpointer cbdata)
-{
-    GtkWidget *menu, *item;
-    GwyInventory *gl_materials;
-    GwyGLMaterial *material;
-    const gchar *name;
-    gint i, width, height;
-
-    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width = 5*height;
-    gl_materials = gwy_gl_materials();
-    menu = gtk_menu_new();
-    for (i = 0; (material = gwy_inventory_get_nth_item(gl_materials, i)); i++) {
-        if (!gwy_resource_get_is_preferred(GWY_RESOURCE(material)))
-            continue;
-        item = gtk_menu_item_new();
-        name = gwy_resource_get_name(GWY_RESOURCE(material));
-        gwy_debug("<%s>", name);
-        pack_gl_material_box(GTK_CONTAINER(item), name, width, height);
-        g_object_set_data(G_OBJECT(item), "gl-material-name", (gpointer)name);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        if (callback)
-            g_signal_connect(item, "activate", callback, cbdata);
-    }
-
-    return menu;
-}
 
 /* FIXME: fake. */
 GtkWidget*
@@ -544,7 +497,9 @@ gwy_gl_material_selection_new(GCallback callback,
     width = 5*height;
 
     button = gtk_toggle_button_new();
-    pack_gl_material_box(GTK_CONTAINER(button), active, width, height);
+    pack_resource_box(GTK_CONTAINER(button), gwy_gl_materials(),
+                      (SamplerFunc)&gwy_gl_material_sample_to_pixbuf,
+                      active, width, height);
     g_object_set_data(G_OBJECT(button), "active-resource", material);
 
     cbinfo = g_new(CallbackInfo, 1);
@@ -558,6 +513,40 @@ gwy_gl_material_selection_new(GCallback callback,
                      */
 
     return button;
+}
+
+/************************** Common subroutines ****************************/
+
+static void
+pack_resource_box(GtkContainer *container,
+                  GwyInventory *inventory,
+                  SamplerFunc sampler,
+                  const gchar *name,
+                  gint width,
+                  gint height)
+{
+    GwyResource *resource;
+    GtkWidget *hbox, *image, *label;
+    GdkPixbuf *pixbuf;
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    resource = gwy_inventory_get_item_or_default(inventory, name);
+    sampler(resource, pixbuf);
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
+
+    name = gwy_resource_get_name(resource);
+    hbox = gtk_hbox_new(FALSE, 6);
+    label = gtk_label_new(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+    gtk_container_add(container, hbox);
+
+    g_object_set_data(G_OBJECT(container), "image", image);
+    g_object_set_data(G_OBJECT(container), "label", label);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
