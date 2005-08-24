@@ -34,6 +34,11 @@
 static gpointer       gwy_gl_material_copy       (gpointer);
 static void           gwy_gl_material_changed    (GwyGLMaterial *gl_material);
 static GwyGLMaterial* gwy_gl_material_new        (const gchar *name,
+                                                  const GwyRGBA *ambient,
+                                                  const GwyRGBA *diffuse,
+                                                  const GwyRGBA *specular,
+                                                  const GwyRGBA *emission,
+                                                  gdouble shininess,
                                                   gboolean is_const);
 static void           gwy_gl_material_dump       (GwyResource *resource,
                                                   GString *str);
@@ -85,7 +90,7 @@ gwy_gl_material_init(GwyGLMaterial *gl_material)
  * gwy_gl_material_fix_rgba:
  * @color: A color.
  *
- * Fixes color components to range 0..1.
+ * Fixes color components to range -1..1.
  *
  * Returns: The fixed color.
  **/
@@ -94,15 +99,15 @@ gwy_gl_material_fix_rgba(const GwyRGBA *color)
 {
     GwyRGBA rgba;
 
-    rgba.r = CLAMP(color->r, 0.0, 1.0);
-    rgba.g = CLAMP(color->g, 0.0, 1.0);
-    rgba.b = CLAMP(color->b, 0.0, 1.0);
-    rgba.a = CLAMP(color->a, 0.0, 1.0);
+    rgba.r = CLAMP(color->r, -1.0, 1.0);
+    rgba.g = CLAMP(color->g, -1.0, 1.0);
+    rgba.b = CLAMP(color->b, -1.0, 1.0);
+    rgba.a = CLAMP(color->a, -1.0, 1.0);
     if (rgba.r != color->r
         || rgba.g != color->g
         || rgba.b != color->b
         || rgba.a != color->a)
-        g_warning("Color component outside 0..1 range");
+        g_warning("Color component outside -1..1 range");
 
     return rgba;
 }
@@ -241,7 +246,7 @@ gwy_gl_material_set_emission(GwyGLMaterial *gl_material,
  *
  * Gets the shininess value of a GL material.
  *
- * Returns: The shininess value (in range 0..128).
+ * Returns: The shininess value (in range 0..1, not 0..128).
  **/
 gdouble
 gwy_gl_material_get_shininess(GwyGLMaterial *gl_material)
@@ -253,7 +258,7 @@ gwy_gl_material_get_shininess(GwyGLMaterial *gl_material)
 /**
  * gwy_gl_material_set_shininess:
  * @gl_material: A GL material.
- * @shininess: Shinniness value (in range 0..128).
+ * @shininess: Shinniness value (in range 0..1, not 0..128).
  *
  * Sets the shininess value of a GL material.
  **/
@@ -262,7 +267,7 @@ gwy_gl_material_set_shininess(GwyGLMaterial *gl_material,
                               gdouble shininess)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->shininess = CLAMP(shininess, 0.0, 128.0);
+    gl_material->shininess = CLAMP(shininess, 0.0, 1.0);
     gwy_gl_material_changed(gl_material);
 }
 
@@ -300,7 +305,7 @@ gwy_gl_material_sample_to_pixbuf(GwyGLMaterial *gl_material,
 
     for (j = 0; j < width; j++) {
         gdouble VRp = j*q;
-        gdouble s = pow(VRp, glm->shininess);
+        gdouble s = pow(VRp, 128.0*glm->shininess);
         GwyRGBA s0;
 
         s0.r = glm->emission.r + 0.2*glm->ambient.r + glm->specular.r*s;
@@ -346,16 +351,17 @@ _gwy_gl_material_class_setup_presets(void)
     klass = g_type_class_ref(GWY_TYPE_GL_MATERIAL);
 
     /* Default */
-    gl_material = gwy_gl_material_new(GWY_GL_MATERIAL_DEFAULT, TRUE);
+    gl_material = gwy_gl_material_new(GWY_GL_MATERIAL_DEFAULT,
+                                      NULL, NULL, NULL, NULL, 0.0,
+                                      TRUE);
     gwy_inventory_insert_item(klass->inventory, gl_material);
     g_object_unref(gl_material);
 
     /* None */
-    gl_material = gwy_gl_material_new(GWY_GL_MATERIAL_NONE, TRUE);
-    gwy_gl_material_set_ambient(gl_material, &null_color);
-    gwy_gl_material_set_diffuse(gl_material, &null_color);
-    gwy_gl_material_set_specular(gl_material, &null_color);
-    gwy_gl_material_set_emission(gl_material, &null_color);
+    gl_material = gwy_gl_material_new(GWY_GL_MATERIAL_NONE,
+                                      &null_color, &null_color,
+                                      &null_color, &null_color, 0.0,
+                                      TRUE);
     gwy_inventory_insert_item(klass->inventory, gl_material);
     g_object_unref(gl_material);
 
@@ -365,6 +371,11 @@ _gwy_gl_material_class_setup_presets(void)
 
 static GwyGLMaterial*
 gwy_gl_material_new(const gchar *name,
+                    const GwyRGBA *ambient,
+                    const GwyRGBA *diffuse,
+                    const GwyRGBA *specular,
+                    const GwyRGBA *emission,
+                    gdouble shininess,
                     gboolean is_const)
 {
     GwyGLMaterial *gl_material;
@@ -374,6 +385,17 @@ gwy_gl_material_new(const gchar *name,
     gl_material = g_object_new(GWY_TYPE_GL_MATERIAL,
                                "is-const", is_const,
                                NULL);
+    if (ambient)
+        gl_material->ambient = *ambient;
+    if (diffuse)
+        gl_material->diffuse = *diffuse;
+    if (specular)
+        gl_material->specular = *specular;
+    if (emission)
+        gl_material->emission = *emission;
+    if (shininess >= 0)
+        gl_material->shininess = shininess;
+
     g_string_assign(GWY_RESOURCE(gl_material)->name, name);
     /* New non-const resources start as modified */
     GWY_RESOURCE(gl_material)->is_modified = !is_const;
@@ -390,14 +412,35 @@ gwy_gl_material_copy(gpointer item)
 
     gl_material = GWY_GL_MATERIAL(item);
     copy = gwy_gl_material_new(gwy_resource_get_name(GWY_RESOURCE(item)),
+                               &gl_material->ambient,
+                               &gl_material->diffuse,
+                               &gl_material->specular,
+                               &gl_material->emission,
+                               gl_material->shininess,
                                FALSE);
-    copy->ambient = gl_material->ambient;
-    copy->diffuse = gl_material->diffuse;
-    copy->specular = gl_material->specular;
-    copy->emission = gl_material->emission;
-    copy->shininess = gl_material->shininess;
 
     return copy;
+}
+
+static void
+gwy_gl_material_dump_component(GString *str,
+                               const GwyRGBA *rgba)
+{
+    gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+    /* this is ugly.  I hate locales */
+    g_ascii_formatd(buffer, sizeof(buffer), "%.6g", rgba->r);
+    g_string_append(str, buffer);
+    g_string_append_c(str, ' ');
+    g_ascii_formatd(buffer, sizeof(buffer), "%.6g", rgba->g);
+    g_string_append(str, buffer);
+    g_string_append_c(str, ' ');
+    g_ascii_formatd(buffer, sizeof(buffer), "%.6g", rgba->b);
+    g_string_append(str, buffer);
+    g_string_append_c(str, ' ');
+    g_ascii_formatd(buffer, sizeof(buffer), "%g", rgba->a);
+    g_string_append(str, buffer);
+    g_string_append_c(str, '\n');
 }
 
 static void
@@ -406,10 +449,43 @@ gwy_gl_material_dump(GwyResource *resource,
 {
     GwyGLMaterial *gl_material;
     gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
-    guint i;
 
     g_return_if_fail(GWY_IS_GL_MATERIAL(resource));
     gl_material = GWY_GL_MATERIAL(resource);
+
+    gwy_gl_material_dump_component(str, &gl_material->ambient);
+    gwy_gl_material_dump_component(str, &gl_material->diffuse);
+    gwy_gl_material_dump_component(str, &gl_material->specular);
+    gwy_gl_material_dump_component(str, &gl_material->emission);
+
+    g_ascii_formatd(buffer, sizeof(buffer), "%g", gl_material->shininess);
+    g_string_append(str, buffer);
+    g_string_append_c(str, '\n');
+}
+
+static gboolean
+gwy_gl_material_parse_component(gchar *line,
+                                GwyRGBA *rgba)
+{
+    gchar *end;
+
+    rgba->r = g_ascii_strtod(line, &end);
+    if (end == line)
+        return FALSE;
+    line = end;
+    rgba->g = g_ascii_strtod(line, &end);
+    if (end == line)
+        return FALSE;
+    line = end;
+    rgba->b = g_ascii_strtod(line, &end);
+    if (end == line)
+        return FALSE;
+    line = end;
+    rgba->a = g_ascii_strtod(line, &end);
+    if (end == line)
+        return FALSE;
+
+    return TRUE;
 }
 
 static GwyResource*
@@ -417,6 +493,8 @@ gwy_gl_material_parse(const gchar *text,
                       gboolean is_const)
 {
     GwyGLMaterial *gl_material = NULL;
+    GwyRGBA ambient, diffuse, specular, emission;
+    gdouble shininess;
     GwyGLMaterialClass *klass;
     gchar *str, *p, *line, *end;
 
@@ -426,7 +504,40 @@ gwy_gl_material_parse(const gchar *text,
 
     p = str = g_strdup(text);
 
+    if (!(line = gwy_str_next_line(&p))
+        || !gwy_gl_material_parse_component(line, &ambient))
+        goto fail;
+    if (!(line = gwy_str_next_line(&p))
+        || !gwy_gl_material_parse_component(line, &diffuse))
+        goto fail;
+    if (!(line = gwy_str_next_line(&p))
+        || !gwy_gl_material_parse_component(line, &specular))
+        goto fail;
+    if (!(line = gwy_str_next_line(&p))
+        || !gwy_gl_material_parse_component(line, &emission))
+        goto fail;
+    if (!(line = gwy_str_next_line(&p)))
+        goto fail;
+    shininess = g_ascii_strtod(line, &end);
+    if (end == line) {
+        line = NULL;
+        goto fail;
+    }
+
+    gwy_gl_material_fix_rgba(&ambient);
+    gwy_gl_material_fix_rgba(&diffuse);
+    gwy_gl_material_fix_rgba(&specular);
+    gwy_gl_material_fix_rgba(&emission);
+    shininess = CLAMP(shininess, 0.0, 1.0);
+
+    gl_material = gwy_gl_material_new("",
+                                      &ambient, &diffuse, &specular, &emission,
+                                      shininess,
+                                      is_const);
+
 fail:
+    if (!line)
+        g_warning("Cannot parse GL material.");
     g_free(str);
     return (GwyResource*)gl_material;
 }
