@@ -207,7 +207,6 @@ gwy_sci_text_new(void)
     sci_text->entry = gtk_entry_new();
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), sci_text->entry);
     gtk_box_pack_start(GTK_BOX(sci_text), sci_text->entry, FALSE, FALSE, 0);
-    /*gtk_widget_add_events(GTK_WIDGET(sci_text->entry), GDK_KEY_RELEASE_MASK);*/
     g_signal_connect_swapped(sci_text->entry, "changed",
                              G_CALLBACK(gwy_sci_text_edited), sci_text);
     gtk_widget_show(sci_text->entry);
@@ -217,15 +216,15 @@ gwy_sci_text_new(void)
     gtk_box_pack_start(GTK_BOX(sci_text), hbox, FALSE, FALSE, 2);
 
     model = GTK_TREE_MODEL(gwy_inventory_store_new(gwy_entities()));
-    sci_text->symbols = gtk_combo_box_new_with_model(model);
+    sci_text->symbols = gtk_combo_box_new();
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(sci_text->symbols), 10);
+    gtk_combo_box_set_model(GTK_COMBO_BOX(sci_text->symbols), model);
     g_object_unref(model);
     gtk_combo_box_set_active(GTK_COMBO_BOX(sci_text->symbols), 0);
     gtk_box_pack_start(GTK_BOX(hbox), sci_text->symbols, FALSE, FALSE, 0);
 
     /*  a compact cell layout for the popup (in table mode)  */
-    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(sci_text->symbols), 10);
     layout = GTK_CELL_LAYOUT(sci_text->symbols);
-
     i = gwy_inventory_store_get_column_by_name(GWY_INVENTORY_STORE(model),
                                                "utf8");
     cell = gtk_cell_renderer_text_new();
