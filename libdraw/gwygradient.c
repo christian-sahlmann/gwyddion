@@ -673,7 +673,6 @@ gwy_gradient_sanitize(GwyGradient *gradient)
     gint i;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
-    g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
 
     points = gradient->points;
     /* first make points ordered, in 0..1, starting with 0, ending with 1,
@@ -1034,6 +1033,7 @@ gwy_gradient_parse(const gchar *text,
     gradient = gwy_gradient_new("",
                                 points->len, (GwyGradientPoint*)points->data,
                                 is_const);
+    gwy_gradient_sanitize(gradient);
 
 fail:
     if (points)
