@@ -31,15 +31,7 @@
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
-enum {
-    DATA_CHANGED,
-    LAST_SIGNAL
-};
-
 static gpointer       gwy_gl_material_copy       (gpointer);
-static void           gwy_gl_material_sample_real(GwyGLMaterial *gl_material,
-                                                  gint nsamples,
-                                                  guchar *samples);
 static void           gwy_gl_material_changed    (GwyGLMaterial *gl_material);
 static GwyGLMaterial* gwy_gl_material_new        (const gchar *name,
                                                   gboolean is_const);
@@ -54,7 +46,7 @@ static const GwyRGBA opengl_default_ambient  = { 0.2, 0.2, 0.2, 1.0 };
 static const GwyRGBA opengl_default_diffuse  = { 0.8, 0.8, 0.8, 1.0 };
 static const GwyRGBA opengl_default_specular = { 0.0, 0.0, 0.0, 1.0 };
 static const GwyRGBA opengl_default_emission = { 0.0, 0.0, 0.0, 1.0 };
-static const gdouble opengl_default_shininess = 1.0;
+static const gdouble opengl_default_shininess = 0.0;
 
 G_DEFINE_TYPE(GwyGLMaterial, gwy_gl_material, GWY_TYPE_RESOURCE)
 
@@ -115,6 +107,15 @@ gwy_gl_material_fix_rgba(const GwyRGBA *color)
     return rgba;
 }
 
+/**
+ * gwy_gl_material_get_ambient:
+ * @gl_material: A GL material.
+ *
+ * Gets the ambient reflectance of a GL material.
+ *
+ * Returns: Ambient reflectance (owned by GL material, must not be modified
+ *          nor freed).
+ **/
 const GwyRGBA*
 gwy_gl_material_get_ambient(GwyGLMaterial *gl_material)
 {
@@ -122,6 +123,13 @@ gwy_gl_material_get_ambient(GwyGLMaterial *gl_material)
     return &gl_material->ambient;
 }
 
+/**
+ * gwy_gl_material_set_ambient:
+ * @gl_material: A GL material.
+ * @ambient: Ambient reflectance.
+ *
+ * Sets the ambient reflectance of a GL material.
+ **/
 void
 gwy_gl_material_set_ambient(GwyGLMaterial *gl_material,
                             const GwyRGBA *ambient)
@@ -131,6 +139,15 @@ gwy_gl_material_set_ambient(GwyGLMaterial *gl_material,
     gwy_gl_material_changed(gl_material);
 }
 
+/**
+ * gwy_gl_material_get_diffuse:
+ * @gl_material: A GL material.
+ *
+ * Gets the diffuse reflectance of a GL material.
+ *
+ * Returns: Diffuse reflectance (owned by GL material, must not be modified
+ *          nor freed).
+ **/
 const GwyRGBA*
 gwy_gl_material_get_diffuse(GwyGLMaterial *gl_material)
 {
@@ -138,6 +155,13 @@ gwy_gl_material_get_diffuse(GwyGLMaterial *gl_material)
     return &gl_material->diffuse;
 }
 
+/**
+ * gwy_gl_material_set_diffuse:
+ * @gl_material: A GL material.
+ * @diffuse: Diffuse reflectance.
+ *
+ * Sets the diffuse reflectance of a GL material.
+ **/
 void
 gwy_gl_material_set_diffuse(GwyGLMaterial *gl_material,
                             const GwyRGBA *diffuse)
@@ -147,6 +171,15 @@ gwy_gl_material_set_diffuse(GwyGLMaterial *gl_material,
     gwy_gl_material_changed(gl_material);
 }
 
+/**
+ * gwy_gl_material_get_specular:
+ * @gl_material: A GL material.
+ *
+ * Gets the specular reflectance of a GL material.
+ *
+ * Returns: Specular reflectance (owned by GL material, must not be modified
+ *          nor freed).
+ **/
 const GwyRGBA*
 gwy_gl_material_get_specular(GwyGLMaterial *gl_material)
 {
@@ -154,6 +187,13 @@ gwy_gl_material_get_specular(GwyGLMaterial *gl_material)
     return &gl_material->specular;
 }
 
+/**
+ * gwy_gl_material_set_specular:
+ * @gl_material: A GL material.
+ * @specular: Specular reflectance.
+ *
+ * Sets the specular reflectance of a GL material.
+ **/
 void
 gwy_gl_material_set_specular(GwyGLMaterial *gl_material,
                              const GwyRGBA *specular)
@@ -163,6 +203,15 @@ gwy_gl_material_set_specular(GwyGLMaterial *gl_material,
     gwy_gl_material_changed(gl_material);
 }
 
+/**
+ * gwy_gl_material_get_emission:
+ * @gl_material: A GL material.
+ *
+ * Gets the emission component of a GL material.
+ *
+ * Returns: Emission component (owned by GL material, must not be modified
+ *          nor freed).
+ **/
 const GwyRGBA*
 gwy_gl_material_get_emission(GwyGLMaterial *gl_material)
 {
@@ -170,6 +219,13 @@ gwy_gl_material_get_emission(GwyGLMaterial *gl_material)
     return &gl_material->emission;
 }
 
+/**
+ * gwy_gl_material_set_emission:
+ * @gl_material: A GL material.
+ * @emission: Emission component.
+ *
+ * Sets the emission component of a GL material.
+ **/
 void
 gwy_gl_material_set_emission(GwyGLMaterial *gl_material,
                              const GwyRGBA *emission)
@@ -179,6 +235,14 @@ gwy_gl_material_set_emission(GwyGLMaterial *gl_material,
     gwy_gl_material_changed(gl_material);
 }
 
+/**
+ * gwy_gl_material_get_shininess:
+ * @gl_material: A GL material.
+ *
+ * Gets the shininess value of a GL material.
+ *
+ * Returns: The shininess value (in range 0..128).
+ **/
 gdouble
 gwy_gl_material_get_shininess(GwyGLMaterial *gl_material)
 {
@@ -186,56 +250,20 @@ gwy_gl_material_get_shininess(GwyGLMaterial *gl_material)
     return gl_material->shininess;
 }
 
+/**
+ * gwy_gl_material_set_shininess:
+ * @gl_material: A GL material.
+ * @shininess: Shinniness value (in range 0..128).
+ *
+ * Sets the shininess value of a GL material.
+ **/
 void
 gwy_gl_material_set_shininess(GwyGLMaterial *gl_material,
                               gdouble shininess)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->shininess = shininess;
+    gl_material->shininess = CLAMP(shininess, 0.0, 128.0);
     gwy_gl_material_changed(gl_material);
-}
-
-static void
-gwy_gl_material_sample_real(GwyGLMaterial *gl_material,
-                            gint nsamples,
-                            guchar *samples)
-{
-    gint i;
-    guchar alpha;
-    gdouble q;
-
-    q = 1.0/(nsamples - 1.0);
-    /* FIXME */
-    if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(gl_material)),
-                     GWY_GL_MATERIAL_NONE))
-        alpha = 0;
-    else
-        alpha = 255;
-
-    for (i = 0; i < nsamples; i++) {
-        gdouble NL = i*q;
-        gdouble VR = 2.0*NL*NL - 1.0;
-        gdouble s = VR > 0.0 ? exp(log(VR)*128.0*gl_material->shininess) : 0.0;
-        gdouble v;
-
-        v = gl_material->ambient.r
-            + gl_material->diffuse.r*NL
-            + gl_material->specular.r*s;
-        samples[4*i + 0] = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
-
-        v = gl_material->ambient.g
-            + gl_material->diffuse.g*NL
-            + gl_material->specular.g*s;
-        samples[4*i + 0] = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
-
-        v = gl_material->ambient.b
-            + gl_material->diffuse.b*NL
-            + gl_material->specular.b*s;
-        samples[4*i + 0] = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
-
-        /* FIXME */
-        samples[4*i + 3] = alpha;
-    }
 }
 
 /**
@@ -244,21 +272,17 @@ gwy_gl_material_sample_real(GwyGLMaterial *gl_material,
  * @pixbuf: A pixbuf to sample gl_material to (in horizontal direction).
  *
  * Samples GL material to a provided pixbuf.
- *
- * Unlike gwy_gl_material_sample() which simply takes samples at equidistant
- * points this method uses supersampling and thus gives a bit better looking
- * GL Material presentation.
  **/
 void
 gwy_gl_material_sample_to_pixbuf(GwyGLMaterial *gl_material,
                                  GdkPixbuf *pixbuf)
 {
-    /* Supersample to capture abrupt changes and peaks more faithfully.
-     * Note an even number would lead to biased integer averaging. */
-    enum { SUPERSAMPLE = 3 };
-    gint width, height, rowstride, i, j;
-    gboolean has_alpha, must_free_data;
-    guchar *data, *pdata;
+    GwyGLMaterial *glm = gl_material;
+    gint width, height, rowstride, i, j, bpp;
+    gboolean has_alpha;
+    guchar *row, *pdata;
+    guchar alpha;
+    gdouble p, q;
 
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
     g_return_if_fail(GDK_IS_PIXBUF(pixbuf));
@@ -268,42 +292,40 @@ gwy_gl_material_sample_to_pixbuf(GwyGLMaterial *gl_material,
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     has_alpha = gdk_pixbuf_get_has_alpha(pixbuf);
     pdata = gdk_pixbuf_get_pixels(pixbuf);
+    bpp = 3 + (has_alpha ? 1 : 0);
 
-    /* Usually the pixbuf is large enough to be used as a scratch space,
-     * there is no need to allocate extra memory then. */
-    if ((must_free_data = (SUPERSAMPLE*width*4 > rowstride*height)))
-        data = g_new(guchar, SUPERSAMPLE*width*4);
-    else
-        data = pdata;
+    q = (width == 1) ? 0.0 : 1.0/(width - 1.0);
+    p = (height == 1) ? 0.0 : 1.0/(height - 1.0);
+    alpha = (guchar)CLAMP(MAX_CVAL*glm->ambient.a, 0.0, 255.0);
 
-    gwy_gl_material_sample_real(gl_material, SUPERSAMPLE*width, data);
+    for (j = 0; j < width; j++) {
+        gdouble VRp = j*q;
+        gdouble s = pow(VRp, glm->shininess);
+        GwyRGBA s0;
 
-    /* Scale down to original size */
-    for (i = 0; i < width; i++) {
-        guchar *row = data + 4*SUPERSAMPLE*i;
-        guint r, g, b, a;
+        s0.r = glm->emission.r + 0.2*glm->ambient.r + glm->specular.r*s;
+        s0.g = glm->emission.g + 0.2*glm->ambient.g + glm->specular.g*s;
+        s0.b = glm->emission.b + 0.2*glm->ambient.b + glm->specular.b*s;
 
-        r = g = b = a = SUPERSAMPLE/2;
-        for (j = 0; j < SUPERSAMPLE; j++) {
-            r += *(row++);
-            g += *(row++);
-            b += *(row++);
-            a += *(row++);
+        for (i = 0; i < height; i++) {
+            gdouble LNp = i*p;
+            gdouble v;
+
+            row = pdata + i*rowstride + j*bpp;
+
+            v = s0.r + glm->diffuse.r*LNp;
+            *(row++) = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
+
+            v = s0.g + glm->diffuse.g*LNp;
+            *(row++) = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
+
+            v = s0.b + glm->diffuse.b*LNp;
+            *(row++) = (guchar)CLAMP(MAX_CVAL*v, 0.0, 255.0);
+
+            if (has_alpha)
+                *(row++) = alpha;
         }
-        *(pdata++) = r/SUPERSAMPLE;
-        *(pdata++) = g/SUPERSAMPLE;
-        *(pdata++) = b/SUPERSAMPLE;
-        if (has_alpha)
-            *(pdata++) = a/SUPERSAMPLE;
     }
-
-    /* Duplicate rows */
-    pdata = gdk_pixbuf_get_pixels(pixbuf);
-    for (i = 1; i < height; i++)
-        memcpy(pdata + i*rowstride, pdata, rowstride);
-
-    if (must_free_data)
-        g_free(data);
 }
 
 static void
@@ -419,7 +441,8 @@ fail:
 GwyInventory*
 gwy_gl_materials(void)
 {
-    return GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GL_MATERIAL))->inventory;
+    return
+        GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GL_MATERIAL))->inventory;
 }
 
 /************************** Documentation ****************************/
