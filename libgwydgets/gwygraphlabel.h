@@ -70,7 +70,7 @@ GType gwy_graph_label_get_type(void) G_GNUC_CONST;
 
 void gwy_graph_label_refresh(GwyGraphLabel *label);
 
-void gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel);
+void gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel);
 
 void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
                                               gint x, gint y, gint width, gint height,

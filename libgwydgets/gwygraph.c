@@ -48,6 +48,7 @@ static void replot_cb              (GObject *gobject,
 static void zoomed_cb              (GwyGraph *graph);
 static void label_updated_cb       (GwyAxis *axis,
                                     GwyGraph *graph);
+static void gwy_graph_finalize     (GObject *object);
 
 static guint gwygraph_signals[LAST_SIGNAL] = { 0 };
 
@@ -57,12 +58,14 @@ static void
 gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
-
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    
     widget_class = (GtkWidgetClass*)klass;
 
     widget_class->size_request = gwy_graph_size_request;
     widget_class->size_allocate = gwy_graph_size_allocate;
-
+    gobject_class->finalize = gwy_graph_finalize;
+    
     klass->selected = NULL;
     klass->mouse_moved = NULL;
     klass->zoomed = NULL;
@@ -125,6 +128,13 @@ gwy_graph_init(G_GNUC_UNUSED GwyGraph *graph)
 
 }
 
+static void 
+gwy_graph_finalize(GObject *object)
+{
+    GwyGraph *graph = GWY_GRAPH(object);
+    if (graph->graph_model) gwy_object_unref(graph->graph_model);
+}
+
 
 /**
  * gwy_graph_new:
@@ -140,10 +150,12 @@ gwy_graph_new(GwyGraphModel *gmodel)
     GwyGraph *graph = GWY_GRAPH(g_object_new(gwy_graph_get_type(), NULL));
     gwy_debug("");
 
-
-    if (gmodel != NULL)
+    if (gmodel != NULL) 
+    {
        graph->graph_model = gmodel;
-
+       g_object_ref(gmodel);
+    }
+    
     gtk_table_resize(GTK_TABLE(graph), 3, 3);
     gtk_table_set_homogeneous(GTK_TABLE(graph), FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(graph), 0);
@@ -237,7 +249,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show_all(GTK_WIDGET(graph->area));
 
     if (gmodel != NULL) {
-       gwy_graph_change_model(GWY_GRAPH(graph), gmodel);
+       gwy_graph_set_model(GWY_GRAPH(graph), gmodel);
 
        g_signal_connect_swapped(gmodel, "notify",
                                 G_CALLBACK(gwy_graph_refresh), graph);
@@ -320,7 +332,7 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
 }
 
 /**
- * gwy_graph_change_model:
+ * gwy_graph_set_model:
  * @graph: A graph widget.
  * @gmodel: new graph model
  *
@@ -329,12 +341,12 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
  *
  **/
 void
-gwy_graph_change_model(GwyGraph *graph, GwyGraphModel *gmodel)
+gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
     graph->graph_model = gmodel;
 
     g_signal_connect(gmodel, "notify", G_CALLBACK(replot_cb), graph);
-    gwy_graph_area_change_model(graph->area, gmodel);
+    gwy_graph_area_set_model(graph->area, gmodel);
 }
 
 static void

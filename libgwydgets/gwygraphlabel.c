@@ -421,7 +421,7 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
 
 /*set model*/
 void
-gwy_graph_label_change_model(GwyGraphLabel *label, gpointer gmodel)
+gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
 {
     label->graph_model = gmodel;
 }

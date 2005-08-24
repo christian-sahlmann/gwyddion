@@ -1058,17 +1058,17 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 }
 
 /**
- * gwy_graph_area_change_model:
+ * gwy_graph_area_set_model:
  * @area: graph area 
  * @gmodel: new graph model
  *
  * Changes the graph model. Calls refresh afterwards.
  **/
 void
-gwy_graph_area_change_model(GwyGraphArea *area, gpointer gmodel)
+gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
 {
     area->graph_model = gmodel;
-    gwy_graph_label_change_model(area->lab, gmodel);
+    gwy_graph_label_set_model(area->lab, gmodel);
     gwy_graph_area_refresh(area);
 }
 

@@ -92,7 +92,7 @@ GtkWidget *gwy_graph_get_area(GwyGraph *graph);
 
 void       gwy_graph_refresh(GwyGraph *graph);
 
-void       gwy_graph_change_model(GwyGraph *graph, 
+void       gwy_graph_set_model(GwyGraph *graph, 
                                     GwyGraphModel *gmodel);
 void       gwy_graph_set_status(GwyGraph *graph,
                                   GwyGraphStatusType status);
