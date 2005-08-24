@@ -300,6 +300,7 @@ add_preferred_resource_name(G_GNUC_UNUSED gpointer key,
  *
  * Perform settings update that needs to be done only once at shutdown.
  **/
+/* TODO: refactor common resource code */
 static void
 gwy_app_settings_gather(GwyContainer *settings)
 {
@@ -314,12 +315,23 @@ gwy_app_settings_gather(GwyContainer *settings)
     gwy_container_set_string_by_name(settings, "/app/gradients/preferred",
                                      g_strjoinv("\n",
                                                 (gchar**)preferred->pdata));
+    g_ptr_array_set_size(preferred, 0);
+    gwy_inventory_foreach(gwy_gl_materials(),
+                          &add_preferred_resource_name, preferred);
+    g_ptr_array_add(preferred, NULL);
+    gwy_container_set_string_by_name(settings, "/app/glmaterials/preferred",
+                                     g_strjoinv("\n",
+                                                (gchar**)preferred->pdata));
     g_ptr_array_free(preferred, TRUE);
 
     /* Default resources */
     name = gwy_inventory_get_default_item_name(gwy_gradients());
     if (name)
         gwy_container_set_string_by_name(settings, "/app/gradients/default",
+                                         g_strdup(name));
+    name = gwy_inventory_get_default_item_name(gwy_gl_materials());
+    if (name)
+        gwy_container_set_string_by_name(settings, "/app/glmaterials/default",
                                          g_strdup(name));
 }
 
@@ -329,6 +341,7 @@ gwy_app_settings_gather(GwyContainer *settings)
  *
  * Applies initial settings to things that need it.
  **/
+/* TODO: refactor common resource code */
 static void
 gwy_app_settings_apply(GwyContainer *settings)
 {
@@ -348,11 +361,24 @@ gwy_app_settings_apply(GwyContainer *settings)
         }
         g_strfreev(preferred);
     }
+    if (gwy_container_gis_string_by_name(settings, "/app/glmaterials/preferred",
+                                         &s)) {
+        inventory = gwy_gl_materials();
+        preferred = g_strsplit(s, "\n", 0);
+        for (p = preferred; *p; p++) {
+            if ((resource = gwy_inventory_get_item(inventory, *p)))
+                gwy_resource_set_is_preferred(resource, TRUE);
+        }
+        g_strfreev(preferred);
+    }
 
     /* Default resources */
     if (gwy_container_gis_string_by_name(settings, "/app/gradients/default",
                                          &s))
         gwy_inventory_set_default_item_name(gwy_gradients(), s);
+    if (gwy_container_gis_string_by_name(settings, "/app/glmaterials/default",
+                                         &s))
+        gwy_inventory_set_default_item_name(gwy_gl_materials(), s);
 }
 
 /**

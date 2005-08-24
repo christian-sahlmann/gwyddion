@@ -97,6 +97,8 @@ main(int argc, char *argv[])
 
     gwy_app_splash_set_message(_("gradients"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
+    gwy_app_splash_set_message(_("GL materials"));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
     gwy_app_splash_set_message_prefix(NULL);
 
     gwy_app_splash_set_message(_("Loading settings"));
@@ -123,9 +125,11 @@ main(int argc, char *argv[])
         gwy_app_settings_save(settings_file);
     gwy_app_recent_file_list_save(recent_file_file);
     gwy_resource_class_save(g_type_class_peek(GWY_TYPE_GRADIENT), NULL);
+    gwy_resource_class_save(g_type_class_peek(GWY_TYPE_GL_MATERIAL), NULL);
     /* XXX: Finalize all gradients.  Useless, but makes --debug-objects happy.
      * Remove in production version. */
     g_object_unref(gwy_gradients());
+    g_object_unref(gwy_gl_materials());
     gwy_app_settings_free();
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
