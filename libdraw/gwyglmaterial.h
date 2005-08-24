@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -82,9 +82,7 @@ void           gwy_gl_material_sample_to_pixbuf(GwyGLMaterial *gl_material,
 void           gwy_gl_material_reset           (GwyGLMaterial *gl_material);
 
 GwyInventory*  gwy_gl_materials                (void);
-
-#define gwy_gl_materials_get_gl_material(name) \
-    gwy_inventory_get_item_or_default(gwy_gl_materials(), name)
+GwyGLMaterial* gwy_gl_materials_get_gl_material(const gchar *name);
 
 G_END_DECLS
 

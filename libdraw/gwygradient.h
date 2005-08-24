@@ -100,9 +100,7 @@ void              gwy_gradient_set_from_samples      (GwyGradient *gradient,
                                                       gdouble threshold);
 
 GwyInventory*     gwy_gradients                      (void);
-
-#define gwy_gradients_get_gradient(name) \
-    gwy_inventory_get_item_or_default(gwy_gradients(), name)
+GwyGradient*      gwy_gradients_get_gradient         (const gchar *name);
 
 G_END_DECLS
 

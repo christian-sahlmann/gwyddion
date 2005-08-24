@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -556,6 +556,24 @@ gwy_gl_materials(void)
         GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GL_MATERIAL))->inventory;
 }
 
+/**
+ * gwy_gl_materials_get_gl_material:
+ * @name: GL material name.  May be %NULL to get default GL material.
+ *
+ * Convenience function to get a GL material from gwy_gl_materials() by name.
+ *
+ * Returns: GL material identified by @name or default GL material if it does
+ *          not exist.
+ **/
+GwyGLMaterial*
+gwy_gl_materials_get_gl_material(const gchar *name)
+{
+    GwyInventory *i;
+
+    i = GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GL_MATERIAL))->inventory;
+    return (GwyGLMaterial*)gwy_inventory_get_item_or_default(i, name);
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -563,16 +581,6 @@ gwy_gl_materials(void)
  *
  * The #GwyGLMaterial struct contains private data only and should be accessed
  * using the functions below.
- **/
-
-/**
- * gwy_gl_materials_get_gl_material:
- * @name: GLMaterial name.  May be %NULL to get default gl_material.
- *
- * Convenience macro to get a gl_material from gwy_gl_materials() by name.
- *
- * Returns: GLMaterial identified by @name or default gl_material if it does
- *          not exist.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
