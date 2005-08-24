@@ -56,8 +56,7 @@ struct _GwyGradient {
 struct _GwyGradientClass {
     GwyResourceClass parent_class;
 
-    GHashTable *gradients;
-
+    /* signals */
     void (*data_changed)(GwyGradient *gradient);
 
     gpointer reserved1;
