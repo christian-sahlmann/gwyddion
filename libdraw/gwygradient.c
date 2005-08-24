@@ -18,11 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TODO:
- * - set from samples
- * - test
- */
-
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -30,8 +25,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwygradient.h>
-
-#define GWY_GRADIENT_TYPE_NAME "GwyGradient"
 
 #define GWY_GRADIENT_DEFAULT "Gray"
 
@@ -42,11 +35,6 @@ enum {
 
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
-
-enum {
-    DATA_CHANGED,
-    LAST_SIGNAL
-};
 
 static void         gwy_gradient_finalize       (GObject *object);
 static gpointer     gwy_gradient_copy           (gpointer);
@@ -71,7 +59,6 @@ static GwyResource* gwy_gradient_parse          (const gchar *text,
                                                  gboolean is_const);
 
 
-static const GwyRGBA null_color = { 0, 0, 0, 0 };
 static const GwyRGBA black_color = { 0, 0, 0, 1 };
 static const GwyRGBA white_color = { 1, 1, 1, 1 };
 static const GwyGradientPoint null_point = { 0, { 0, 0, 0, 0 } };

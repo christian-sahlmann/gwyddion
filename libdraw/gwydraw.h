@@ -21,6 +21,7 @@
 #ifndef __GWY_GWYDRAW_H__
 #define __GWY_GWYDRAW_H__
 
+#include <libdraw/gwyglmaterial.h>
 #include <libdraw/gwygradient.h>
 #include <libdraw/gwypixfield.h>
 #include <libdraw/gwyrgba.h>

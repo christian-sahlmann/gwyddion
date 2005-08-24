@@ -51,7 +51,7 @@ static void     gwy_3d_window_set_mode            (gpointer userdata,
                                                    GtkWidget *button);
 static void     gwy_3d_window_set_gradient        (GtkTreeSelection *selection,
                                                    Gwy3DWindow *gwy3dwindow);
-static void     gwy_3d_window_set_material        (GtkWidget *item,
+static void     gwy_3d_window_set_material        (GtkTreeSelection *selection,
                                                    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_select_controls     (gpointer data,
                                                    GtkWidget *button);
@@ -215,7 +215,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
         { N_("P_alette"),     GWY_3D_VISUALIZATION_GRADIENT },
     };
     Gwy3DWindow *gwy3dwindow;
-    GwyGLMaterial *material;
     GtkRequisition size_req;
     const gchar *name;
     GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu, *combo,
@@ -372,12 +371,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    material = gwy_3d_view_get_material(gwy3dview);
-    name = gwy_gl_material_get_name(material);
-    omenu = gwy_option_menu_gl_material(G_CALLBACK(gwy_3d_window_set_material),
-                                        gwy3dwindow, name);
+    name = gwy_3d_view_get_material(gwy3dview);
+    omenu = gwy_gl_material_selection_new(G_CALLBACK(gwy_3d_window_set_material),
+                                          gwy3dwindow, name);
     gwy3dwindow->material_menu = omenu;
-    gtk_widget_set_sensitive(omenu, visual);
+    gtk_widget_set_sensitive(omenu, visual == GWY_3D_VISUALIZATION_LIGHTING);
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
@@ -409,7 +407,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     name = gwy_3d_view_get_gradient(gwy3dview);
     omenu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
                                        gwy3dwindow, name);
-    gtk_widget_set_sensitive(omenu, !visual);
+    gtk_widget_set_sensitive(omenu, visual == GWY_3D_VISUALIZATION_GRADIENT);
     gwy3dwindow->gradient_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
@@ -670,15 +668,18 @@ gwy_3d_window_set_gradient(GtkTreeSelection *selection,
 }
 
 static void
-gwy_3d_window_set_material(GtkWidget *item,
+gwy_3d_window_set_material(GtkTreeSelection *selection,
                            Gwy3DWindow *gwy3dwindow)
 {
-    gchar *material_name;
-    GwyGLMaterial *material;
+    GwyResource *resource;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
 
-    material_name = g_object_get_data(G_OBJECT(item), "material-name");
-    material = gwy_gl_material_get_by_name(material_name);
-    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), material);
+    if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        gtk_tree_model_get(model, &iter, 0, &resource, -1);
+        gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                                 gwy_resource_get_name(resource));
+    }
 }
 
 static void
@@ -762,8 +763,6 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
                                    Gwy3DWindow *window)
 {
     Gwy3DVisualization visual;
-    GwyGLMaterial *material;
-    GtkWidget *menu, *item;
 
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
         return;
@@ -780,18 +779,21 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], visual);
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
                              visual);
+        /*
     if (visual) {
         material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
-        /* FIXME: A hack. Maybe should GLMaterial set default different from
-         * None? */
-        if (strcmp(gwy_gl_material_get_name(material), GWY_GL_MATERIAL_NONE)
-            == 0) {
+         * FIXME: A hack. Maybe should GLMaterial set default different from
+         * None?
+         * FIXME FIXME No longer needed?
+        if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(material)),
+                         GWY_GL_MATERIAL_NONE)) {
             menu = gtk_option_menu_get_menu
                                  (GTK_OPTION_MENU(window->material_menu));
             item = gtk_menu_get_active(GTK_MENU(menu));
             gwy_3d_window_set_material(item, window);
         }
     }
+         */
 }
 
 static void

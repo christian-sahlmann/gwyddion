@@ -38,13 +38,13 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <pango/pangoft2.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/stats.h>
-#include <pango/pangoft2.h>
-#include "gwydgets.h"
+#include <libgwydgets/gwydgets.h>
 
 #define DEG_2_RAD (G_PI / 180.0)
 #define RAD_2_DEG (180.0 / G_PI)
@@ -295,6 +295,11 @@ gwy_3d_view_destroy(GtkObject *object)
         gwy3dview->gradient = NULL;
     }
 
+    if (gwy3dview->material) {
+        gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
+        gwy3dview->material = NULL;
+    }
+
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
         gwy3dview->shape_list_base = -1;
@@ -486,9 +491,6 @@ gwy_3d_view_new(GwyContainer *data)
                                         0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
                                         1.0, 15.0);
 
-    gwy3dview->mat_current
-             = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
-
     name = NULL;
     if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name))
         gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
@@ -512,8 +514,10 @@ gwy_3d_view_new(GwyContainer *data)
                                       &gwy3dview->show_axes);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
                                       &gwy3dview->show_labels);
-    if (gwy_container_gis_string_by_name(data, "/0/3d/material", &name))
-        gwy3dview->mat_current = gwy_gl_material_get_by_name(name);
+
+    gwy_container_gis_string_by_name(data, "/0/3d/material", &name);
+    gwy3dview->material = gwy_gl_materials_get_gl_material(name);
+    gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
 
     /* should be always true */
     if (gwy3dview->data != NULL) {
@@ -692,11 +696,9 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
                                               "/0/base/palette",
                                               &grad_name))
             grad_name = gwy_inventory_get_default_item_name(gwy_gradients());
-        gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                         g_strdup(grad_name));
     }
-    if (strcmp(grad_name,
-               gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient)))) {
+    if (!gwy_strequal(grad_name,
+                      gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient)))) {
         update_due_to_gradient = TRUE;
         gwy_3d_view_set_gradient(gwy3dview, grad_name);
     }
@@ -1067,44 +1069,40 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
  * gwy_3d_view_get_material:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns a #GwyGLMaterial used to draw data with lights on.
+ * Returns a name of GL material used to draw data with lights on.
  *
- * Returns: A #GwyGLMaterial used to draw data with lights on.
+ * Returns: A GL material name as a string owned by the material.
  **/
-GwyGLMaterial*
+const gchar*
 gwy_3d_view_get_material(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->mat_current;
+    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material));
 }
 
 /**
  * gwy_3d_view_set_material:
  * @gwy3dview: A 3D data view widget.
- * @material: A #GwyGLMaterial used to draw data with lights on.
+ * @material: A #GwyGLMaterial name to render data with lights on.
  *
- * Sets the material of the surface. If the material is #GWY_GL_MATERIAL_NONE
- * the surface is drawn using the colors obtained from the #palette.
- * If any other material is the the lights are turned on and the surface
- * is rendered using this material.
- *
- * This function does NOT take reference on material.
+ * Sets the material of the surface.
  **/
 void
 gwy_3d_view_set_material(Gwy3DView *gwy3dview,
-                         GwyGLMaterial *material)
+                         const gchar *material)
 {
-    const gchar *name;
-
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
-    if (material == gwy3dview->mat_current)
+    if (gwy_strequal(material,
+                     gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material))))
         return;
-    gwy3dview->mat_current = material;
-    name = gwy_gl_material_get_name(material);
+
+    gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
+    gwy3dview->material = gwy_gl_materials_get_gl_material(material);
+    gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
     gwy_container_set_string_by_name(gwy3dview->container,
                                       "/0/3d/material",
-                                      g_strdup(name));
+                                      g_strdup(material));
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
@@ -1577,17 +1575,18 @@ gwy_3d_view_size_allocate(GtkWidget *widget,
     }
 }
 
-/* Convert gdouble array[4] to GLfloat[4] array */
+/* Convert GwyRGBA to GLfloat[4] array */
 static void
-gwy_3d_view_glMaterialdv(GLenum face,
-                         GLenum pname,
-                         gdouble params[4])
+gwy_3d_view_rgba_dv(GLenum face,
+                    GLenum pname,
+                    const GwyRGBA *rgba)
 {
     gfloat fparams[4];
-    guint i;
 
-    for (i = 0; i < 4; i++)
-        fparams[i] = params[i];
+    fparams[0] = rgba->r;
+    fparams[1] = rgba->g;
+    fparams[2] = rgba->b;
+    fparams[3] = rgba->a;
     glMaterialfv(face, pname, fparams);
 }
 
@@ -1595,6 +1594,7 @@ static gboolean
 gwy_3d_view_expose(GtkWidget *widget,
                    G_GNUC_UNUSED GdkEventExpose *event)
 {
+    GwyGLMaterial *material;
     GdkGLContext  *glcontext;
     GdkGLDrawable *gldrawable;
     Gwy3DView * gwy3D;
@@ -1630,15 +1630,17 @@ gwy_3d_view_expose(GtkWidget *widget,
 
     /* Render shape */
     if (gwy3D->visual == GWY_3D_VISUALIZATION_LIGHTING) {
+        material = gwy3D->material;
+
         glEnable(GL_LIGHTING);
-        gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT,
-                                 gwy3D->mat_current->ambient);
-        gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE,
-                                 gwy3D->mat_current->diffuse);
-        gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR,
-                                 gwy3D->mat_current->specular);
+        gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
+                            gwy_gl_material_get_ambient(material));
+        gwy_3d_view_rgba_dv(GL_FRONT, GL_DIFFUSE,
+                            gwy_gl_material_get_diffuse(material));
+        gwy_3d_view_rgba_dv(GL_FRONT, GL_SPECULAR,
+                            gwy_gl_material_get_specular(material));
         glMaterialf(GL_FRONT, GL_SHININESS,
-                    (GLfloat)gwy3D->mat_current->shininess * 128.0f);
+                    (GLfloat)gwy_gl_material_get_shininess(material)*128.0f);
         glPushMatrix();
         glRotatef(gwy3D->light_z->value, 0.0f, 0.0f, 1.0f);
         glRotatef(gwy3D->light_y->value, 0.0f, 1.0f, 0.0f);
@@ -1991,7 +1993,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     if (rx < 0.0)
         rx += 360.0;
 
-    mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    mat_none = gwy_gl_materials_get_gl_material(GWY_GL_MATERIAL_NONE);
 
     glPushMatrix();
     glTranslatef(-(xres/(double)res), -(yres/(double)res),
@@ -1999,10 +2001,14 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glScalef(2.0/res,
              2.0/res,
              GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT, mat_none->ambient);
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE, mat_none->diffuse);
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR, mat_none->specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, (GLfloat)mat_none->shininess * 128.0f);
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
+                        gwy_gl_material_get_ambient(mat_none));
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_DIFFUSE,
+                        gwy_gl_material_get_diffuse(mat_none));
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_SPECULAR,
+                        gwy_gl_material_get_specular(mat_none));
+    glMaterialf(GL_FRONT, GL_SHININESS,
+                (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
 
     if (widget->show_axes) {
         rx = 0.1;
@@ -2110,14 +2116,19 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
 {
     int i;
     GLfloat plane_z;
-    GwyGLMaterial *mat_none = gwy_gl_material_get_by_name(GWY_GL_MATERIAL_NONE);
+    GwyGLMaterial *mat_none;
 
     gwy_debug(" ");
 
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_AMBIENT, mat_none->ambient);
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_DIFFUSE,  mat_none->diffuse);
-    gwy_3d_view_glMaterialdv(GL_FRONT, GL_SPECULAR, mat_none->specular);
-    glMaterialf(GL_FRONT, GL_SHININESS, (GLfloat)mat_none->shininess * 128.0f);
+    mat_none = gwy_gl_materials_get_gl_material(GWY_GL_MATERIAL_NONE);
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
+                        gwy_gl_material_get_ambient(mat_none));
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_DIFFUSE,
+                        gwy_gl_material_get_diffuse(mat_none));
+    gwy_3d_view_rgba_dv(GL_FRONT, GL_SPECULAR,
+                        gwy_gl_material_get_specular(mat_none));
+    glMaterialf(GL_FRONT, GL_SHININESS,
+                (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
     glPushMatrix();
     plane_z = GWY_3D_Z_TRANSFORMATION
               * (widget->data_mean - widget->data_min)

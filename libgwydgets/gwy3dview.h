@@ -29,9 +29,9 @@
 
 #include <libprocess/datafield.h>
 #include <libdraw/gwygradient.h>
+#include <libdraw/gwyglmaterial.h>
 
 #include <libgwydgets/gwydgetenums.h>
-#include <libgwydgets/gwyglmaterial.h>
 #include <libgwydgets/gwy3dlabel.h>
 
 G_BEGIN_DECLS
@@ -80,7 +80,8 @@ struct _Gwy3DView {
     gboolean show_axes;             /* Whether show axes wihin the scene */
     gboolean show_labels;           /* Whwther show axes labels, only if axes are shown */
 
-    GwyGLMaterial * mat_current;    /* Current material (influences the color of the object, lights must be on) */
+    GwyGLMaterial *material;        /* Current material (influences the color
+                                       of the object, lights must be on) */
 
     gdouble mouse_begin_x;          /* Start x-coordinate of mouse */
     gdouble mouse_begin_y;          /* Start y-coordinate of mouse */
@@ -136,7 +137,7 @@ void              gwy_3d_view_set_projection    (Gwy3DView *gwy3dview,
                                                  Gwy3DProjection projection);
 gboolean          gwy_3d_view_get_show_axes     (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_show_axes     (Gwy3DView *gwy3dview,
-                                                gboolean show_axes);
+                                                 gboolean show_axes);
 gboolean          gwy_3d_view_get_show_labels   (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_show_labels   (Gwy3DView *gwy3dview,
                                                  gboolean show_labels);
@@ -149,9 +150,9 @@ guint             gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
                                                  guint reduced_size);
 
-GwyGLMaterial*    gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
+const gchar*      gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
-                                                 GwyGLMaterial *material);
+                                                 const gchar *material);
 
 GdkPixbuf*        gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
 Gwy3DLabel*       gwy_3d_view_get_label         (Gwy3DView *gwy3dview,

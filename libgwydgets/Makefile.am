@@ -22,7 +22,6 @@ libgwydgetsinclude_HEADERS = \
 	gwydgetenums.h \
 	gwydgettypes.h \
 	gwydgetutils.h \
-	gwyglmaterial.h \
 	gwygraphcurvemodel.h \
 	gwygraphdata.h \
 	gwygraphmodel.h \
@@ -88,7 +87,6 @@ libgwydgets_la_SOURCES = \
 	gwydgets.c \
 	gwydgettypes.c \
 	gwydgetutils.c \
-	gwyglmaterial.c \
 	gwygraphcurvemodel.c \
 	gwygraphdata.c \
 	gwygraphmodel.c \

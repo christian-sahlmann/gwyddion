@@ -23,26 +23,27 @@
 
 #include <gtk/gtkwidget.h>
 #include <gtk/gtk.h>
-#include <libgwyddion/gwyenum.h>
-#include <libgwyddion/gwynlfit.h>
-#include <libgwyddion/gwysiunit.h>
-#include <libprocess/gwyprocessenums.h>
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_menu_gradient                 (GCallback callback,
-                                              gpointer cbdata);
-GtkWidget* gwy_menu_gl_material              (GCallback callback,
-                                              gpointer cbdata);
-GtkWidget* gwy_gradient_selection_new        (GCallback callback,
-                                              gpointer cbdata,
-                                              const gchar *active);
-GtkWidget* gwy_gradient_tree_view_new        (GCallback callback,
-                                              gpointer cbdata,
-                                              const gchar *active);
-GtkWidget* gwy_option_menu_gl_material       (GCallback callback,
-                                              gpointer cbdata,
-                                              const gchar *current);
+GtkWidget* gwy_menu_gradient         (GCallback callback,
+                                      gpointer cbdata);
+GtkWidget* gwy_gradient_selection_new(GCallback callback,
+                                      gpointer cbdata,
+                                      const gchar *active);
+GtkWidget* gwy_gradient_tree_view_new(GCallback callback,
+                                      gpointer cbdata,
+                                      const gchar *active);
+
+GtkWidget* gwy_menu_gl_material         (GCallback callback,
+                                         gpointer cbdata);
+GtkWidget* gwy_gl_material_selection_new(GCallback callback,
+                                         gpointer cbdata,
+                                         const gchar *active);
+GtkWidget* gwy_gl_material_tree_view_new(GCallback callback,
+                                         gpointer cbdata,
+                                         const gchar *active);
+
 G_END_DECLS
 
 #endif /* __GWY_OPTION_MENUS_H__ */

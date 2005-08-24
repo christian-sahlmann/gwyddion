@@ -38,7 +38,6 @@
 #include <libgwydgets/gwydataviewlayer.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
-#include <libgwydgets/gwyglmaterial.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwygrapharea.h>
 #include <libgwydgets/gwygraphcorner.h>

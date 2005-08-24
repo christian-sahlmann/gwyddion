@@ -19,9 +19,8 @@
  */
 #define DEBUG 1
 #include "config.h"
-#include <libgwyddion/gwymacros.h>
-
 #include <string.h>
+
 #include <gtk/gtkimage.h>
 #include <gtk/gtkmenu.h>
 #include <gtk/gtkmenuitem.h>
@@ -30,7 +29,7 @@
 
 #include <libgwyddion/gwyddion.h>
 #include <libdraw/gwygradient.h>
-#include <libgwydgets/gwyglmaterial.h>
+#include <libdraw/gwyglmaterial.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwyinventorystore.h>
 
@@ -53,9 +52,6 @@ static void gwy_gradient_button_toggled(GtkWidget *button,
 static void gwy_resource_selection_changed(GtkTreeSelection *selection,
                                GtkWidget *button);
 
-static GtkWidget* gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material);
-static gint       gl_material_compare            (GwyGLMaterial *a,
-                                                  GwyGLMaterial *b);
 
 /************************** Gradient menu ****************************/
 
@@ -459,49 +455,34 @@ gwy_gradient_selection_new(GCallback callback,
 
 /************************** Material menu ****************************/
 
-static GtkWidget*
-gwy_gl_material_menu_create(const gchar *current,
-                            gint *current_idx)
+static void
+pack_gl_material_box(GtkContainer *container,
+                  const gchar *name,
+                  gint width,
+                  gint height)
 {
-    GSList *l, *entries = NULL;
-    GtkWidget *menu, *image, *item, *hbox, *label;
-    gint i, idx;
+    GwyGLMaterial *material;
+    GtkWidget *hbox, *image, *label;
+    GdkPixbuf *pixbuf;
 
-    gwy_gl_material_foreach((GwyGLMaterialFunc)gwy_hash_table_to_slist_cb,
-                            &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)gl_material_compare);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+    material = gwy_gl_materials_get_gl_material(name);
+    gwy_gl_material_sample_to_pixbuf(material, pixbuf);
+    image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
 
-    menu = gtk_menu_new();
+    name = gwy_resource_get_name(GWY_RESOURCE(material));
+    hbox = gtk_hbox_new(FALSE, 6);
+    label = gtk_label_new(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+    gtk_container_add(container, hbox);
 
-    idx = -1;
-    i = 0;
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyGLMaterial *gl_material = (GwyGLMaterial*)l->data;
-        const gchar *name = gwy_gl_material_get_name(gl_material);
-
-        if (gwy_strequal(name, GWY_GL_MATERIAL_NONE))
-            continue;
-
-        image = gwy_sample_gl_material_to_gtkimage(gl_material);
-        item = gtk_menu_item_new();
-        hbox = gtk_hbox_new(FALSE, 6);
-        label = gtk_label_new(name);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-        gtk_container_add(GTK_CONTAINER(item), hbox);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "material-name", (gpointer)name);
-        if (current && gwy_strequal(current, name))
-            idx = i;
-        i++;
-    }
-    g_slist_free(entries);
-
-    if (current_idx && idx != -1)
-        *current_idx = idx;
-
-    return menu;
+    g_object_set_data(G_OBJECT(container), "image", image);
+    g_object_set_data(G_OBJECT(container), "label", label);
 }
 
 /**
@@ -510,7 +491,7 @@ gwy_gl_material_menu_create(const gchar *current,
  *            none).
  * @cbdata: User data passed to the callback.
  *
- * Creates a pop-up OpenGL material menu.
+ * Creates a pop-up GL material menu.
  *
  * Returns: The newly created pop-up menu as #GtkWidget.
  **/
@@ -518,98 +499,65 @@ GtkWidget*
 gwy_menu_gl_material(GCallback callback,
                      gpointer cbdata)
 {
-    GtkWidget *menu;
-    GList *c;
+    GtkWidget *menu, *item;
+    GwyInventory *gl_materials;
+    GwyGLMaterial *material;
+    const gchar *name;
+    gint i, width, height;
 
-    menu = gwy_gl_material_menu_create(NULL, NULL);
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
+    gl_materials = gwy_gl_materials();
+    menu = gtk_menu_new();
+    for (i = 0; (material = gwy_inventory_get_nth_item(gl_materials, i)); i++) {
+        if (!gwy_resource_get_is_preferred(GWY_RESOURCE(material)))
+            continue;
+        item = gtk_menu_item_new();
+        name = gwy_resource_get_name(GWY_RESOURCE(material));
+        gwy_debug("<%s>", name);
+        pack_gl_material_box(GTK_CONTAINER(item), name, width, height);
+        g_object_set_data(G_OBJECT(item), "gl-material-name", (gpointer)name);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        if (callback)
+            g_signal_connect(item, "activate", callback, cbdata);
     }
 
     return menu;
 }
 
-/**
- * gwy_option_menu_gl_material:
- * @callback: A callback called when a menu item is activated (or %NULL for
- *            none).
- * @cbdata: User data passed to the callback.
- * @current: Palette definition name to be shown as currently selected
- *           (or %NULL to use what happens to appear first).
- *
- * Creates a #GtkOptionMenu of OpenGL materials.
- *
- * It sets object data "material-name" to material definition name for each
- * menu item.
- *
- * Returns: The newly created option menu as #GtkWidget.
- **/
+/* FIXME: fake. */
 GtkWidget*
-gwy_option_menu_gl_material(GCallback callback,
-                            gpointer cbdata,
-                            const gchar *current)
+gwy_gl_material_selection_new(GCallback callback,
+                              gpointer cbdata,
+                              const gchar *active)
 {
-    GtkWidget *omenu, *menu;
-    GList *c;
-    gint idx;
+    GtkWidget *button;
+    CallbackInfo *cbinfo;
+    GwyGLMaterial *material;
+    gint width, height;
 
-    idx = -1;
-    omenu = gtk_option_menu_new();
-    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
-                      GINT_TO_POINTER(TRUE));
-    menu = gwy_gl_material_menu_create(current, &idx);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (idx != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
+    /* Assure active exists */
+    material = gwy_gl_materials_get_gl_material(active);
+    active = gwy_resource_get_name(GWY_RESOURCE(material));
 
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
-    }
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
 
-    return omenu;
-}
+    button = gtk_toggle_button_new();
+    pack_gl_material_box(GTK_CONTAINER(button), active, width, height);
+    g_object_set_data(G_OBJECT(button), "active-resource", material);
 
-/* XXX: magic static variables */
-static GtkWidget*
-gwy_sample_gl_material_to_gtkimage(GwyGLMaterial *material)
-{
-    static guchar *samples = NULL;
-    GdkPixbuf *pixbuf;
-    GtkWidget *image;
-    guint rowstride;
-    guchar *data;
-    gint i;
+    cbinfo = g_new(CallbackInfo, 1);
+    cbinfo->callback = callback;
+    cbinfo->cbdata = cbdata;
+    /*
+    g_signal_connect(button, "toggled",
+                     G_CALLBACK(gwy_gl_material_button_toggled), cbinfo);
+    g_signal_connect(button, "destroy",
+                     G_CALLBACK(gwy_gl_material_button_destroy), cbinfo);
+                     */
 
-    /* clean up when called with NULL */
-    if (!material) {
-        g_free(samples);
-        samples = NULL;
-        return NULL;
-    }
-
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, BITS_PER_SAMPLE,
-                            SAMPLE_WIDTH, SAMPLE_HEIGHT);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    data = gdk_pixbuf_get_pixels(pixbuf);
-
-    samples = gwy_gl_material_sample(material, SAMPLE_WIDTH, samples);
-    for (i = 0; i < SAMPLE_HEIGHT; i++)
-        memcpy(data + i*rowstride, samples, 4*SAMPLE_WIDTH);
-
-    image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
-
-    return image;
-}
-
-static gint
-gl_material_compare(GwyGLMaterial *a,
-                    GwyGLMaterial *b)
-{
-    return strcmp(gwy_gl_material_get_name(a), gwy_gl_material_get_name(b));
+    return button;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

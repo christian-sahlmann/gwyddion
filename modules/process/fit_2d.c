@@ -30,6 +30,7 @@
 #include <gtk/gtk.h>
 
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwynlfit.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/arithmetic.h>

@@ -38,8 +38,8 @@ static void gwy_app_init_set_window_icon (void);
  * serialized data. GObject has to know about them when g_type_from_name()
  * is called.
  *
- * XXX: This function does much more. It registeres stock items, setups
- * palette presets, and similar things.
+ * XXX: This function does much more. It registeres stock items, initializes
+ * various class resources, etc.
  **/
 void
 gwy_app_init(void)
@@ -51,7 +51,6 @@ gwy_app_init(void)
         gwy_gl_ok = gwy_widgets_gl_init();
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
-    gwy_gl_material_setup_presets();
     /* XXX: These reference are never released. */
     gwy_data_window_class_set_tooltips(gwy_app_tooltips_get());
     gwy_3d_window_class_set_tooltips(gwy_app_tooltips_get());

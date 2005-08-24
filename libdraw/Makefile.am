@@ -7,6 +7,7 @@ libgwydrawincludedir = $(pkgincludedir)/libdraw
 
 libgwydrawinclude_HEADERS = \
 	gwydraw.h \
+	gwyglmaterial.h \
 	gwygradient.h \
 	gwypixfield.h \
 	gwyrgba.h
@@ -29,6 +30,7 @@ EXTRA_DIST = \
 libgwydraw_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwydraw_la_SOURCES = \
 	gwydraw.c \
+	gwyglmaterial.c \
 	gwygradient.c \
 	gwypixfield.c \
 	gwyrgba.c
