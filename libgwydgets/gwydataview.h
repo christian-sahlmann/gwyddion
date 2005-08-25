@@ -95,6 +95,7 @@ gdouble           gwy_data_view_get_vexcess       (GwyDataView* data_view);
 void              gwy_data_view_set_zoom          (GwyDataView *data_view,
                                                    gdouble zoom);
 gdouble           gwy_data_view_get_zoom          (GwyDataView *data_view);
+gdouble           gwy_data_view_get_real_zoom     (GwyDataView *data_view);
 GwyContainer*     gwy_data_view_get_data          (GwyDataView *data_view);
 void              gwy_data_view_coords_xy_clamp   (GwyDataView *data_view,
                                                    gint *xscr,

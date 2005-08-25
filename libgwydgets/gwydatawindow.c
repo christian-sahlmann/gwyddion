@@ -560,7 +560,7 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
 
     filename = gwy_data_window_get_base_name(data_window);
 
-    zoom = gwy_data_view_get_zoom(data_view);
+    zoom = gwy_data_view_get_real_zoom(data_view);
     gwy_debug("%g", zoom);
     prec = (zoom == floor(zoom)) ? 0 : 1;
     g_snprintf(zoomstr, sizeof(zoomstr), "%.*f",

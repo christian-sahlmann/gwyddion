@@ -919,7 +919,7 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
  * gwy_data_view_get_zoom:
  * @data_view: A data view.
  *
- * Returns current zoom of a data view.
+ * Returns current ideal zoom of a data view.
  *
  * More precisely the zoom value requested by gwy_data_view_set_zoom(), if
  * it's in use (real zoom may differ a bit due to pixel rounding).  If zoom
@@ -928,14 +928,39 @@ gwy_data_view_set_zoom(GwyDataView *data_view,
  *
  * When a resize is queued, the new zoom value is returned.
  *
- * Returns: The zoom as a ratio between displayed size and base data field
- *          size.
+ * In other words, this is the zoom @data_view would like to have.  Use
+ * gwy_data_view_get_real_zoom() to get the real zoom.
+ *
+ * Returns: The zoom as a ratio between ideal displayed size and base data
+ *          field size.
  **/
 gdouble
 gwy_data_view_get_zoom(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
     return data_view->newzoom;
+}
+
+/**
+ * gwy_data_view_get_real_zoom:
+ * @data_view: A data view.
+ *
+ * Returns current real zoom of a data view.
+ *
+ * This is the zoom value a data view may not wish to have, but was imposed
+ * by window manager or other constraints.  Unlike ideal zoom set by
+ * gwy_data_view_set_zoom(), this value cannot be set.
+ *
+ * When a resize is queued, the current (old) value is returned.
+ *
+ * Returns: The zoom as a ratio between real displayed size and base data
+ *          field size.
+ **/
+gdouble
+gwy_data_view_get_real_zoom(GwyDataView *data_view)
+{
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), 1.0);
+    return data_view->zoom;
 }
 
 /**
