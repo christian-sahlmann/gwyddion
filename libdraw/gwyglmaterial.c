@@ -304,16 +304,16 @@ gwy_gl_material_sample_to_pixbuf(GwyGLMaterial *gl_material,
     alpha = (guchar)CLAMP(MAX_CVAL*glm->ambient.a, 0.0, 255.0);
 
     for (j = 0; j < width; j++) {
-        gdouble VRp = j*q;
+        gdouble VRp = j*q*(2.0 - j*q);
         gdouble s = pow(VRp, 128.0*glm->shininess);
         GwyRGBA s0;
 
-        s0.r = glm->emission.r + 0.2*glm->ambient.r + glm->specular.r*s;
-        s0.g = glm->emission.g + 0.2*glm->ambient.g + glm->specular.g*s;
-        s0.b = glm->emission.b + 0.2*glm->ambient.b + glm->specular.b*s;
+        s0.r = glm->emission.r + 0.3*glm->ambient.r + glm->specular.r*s;
+        s0.g = glm->emission.g + 0.3*glm->ambient.g + glm->specular.g*s;
+        s0.b = glm->emission.b + 0.3*glm->ambient.b + glm->specular.b*s;
 
         for (i = 0; i < height; i++) {
-            gdouble LNp = i*p;
+            gdouble LNp = 1.0 - i*p;
             gdouble v;
 
             row = pdata + i*rowstride + j*bpp;
