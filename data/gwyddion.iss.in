@@ -23,6 +23,8 @@ ChangesAssociations=yes
 Source: "*.dll"; DestDir: "{app}"
 Source: "*.wri"; DestDir: "{app}"
 Source: "@PACKAGE_TARNAME@.exe"; DestDir: "{app}"
+Source: "glmaterials\*.*"; DestDir: "{app}\glmaterials"
+Source: "gradients\*.*"; DestDir: "{app}\gradients"
 Source: "pixmaps\*.*"; DestDir: "{app}\pixmaps"
 Source: "modules\*.*"; DestDir: "{app}\modules"
 Source: "modules\file\*.*"; DestDir: "{app}\modules\file"
