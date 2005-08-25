@@ -1337,4 +1337,64 @@ gwy_inventory_invent_name(GwyInventory *inventory,
  * using the functions below.
  **/
 
+/**
+ * GwyInventoryItemType:
+ * @type: Object type, if item is object or other type with registered GType.
+ *        May be zero to indicate an unregistered item type.
+ *        If items are objects, inventory takes a reference on them.
+ * @watchable_signal: Item signal name to watch, used only for objects.
+ *                    When item emits this signal, inventory emits
+ *                    "item-updated" signal for it.
+ *                    May be %NULL to indicate no signal should be watched,
+ *                    you can still emit "item-updated" with
+ *                    gwy_inventory_item_updated() or
+ *                    gwy_inventory_nth_item_updated().
+ * @is_fixed: If not %NULL and returns %TRUE for some item, such an item
+ *            cannot be removed from inventory, fixed items can be only
+ *            added.  This is checked each time an attempt is made to remove
+ *            an item.
+ * @get_name: Returns item name (the string is owned by item and it is assumed
+ *            to exist until item ceases to exist or is renamed).  This
+ *            function is obligatory.
+ * @compare: Item comparation function for sorting.
+ *           If %NULL, inventory never attempts to keep any item order
+ *           and gwy_inventory_restore_order() is not allowed.
+ *           Otherwise inventory is sorted unless sorting is (temporarily)
+ *           disabled with gwy_inventory_forget_order() or it was created
+ *           with gwy_inventory_new_filled() and the initial array was
+ *           not sorted according to @compare.
+ * @rename: Function to rename an item.  If not %NULL, calls to
+ *          gwy_inventory_rename_item() are possible.  Note items must not
+ *          be renamed by any other means than this method, because when
+ *          an item is renamed and inventory does not know it, very bad
+ *          things will happen and you will lose all your good karma.
+ * @dismantle: Called on item before it's removed from inventory.  May be
+ *             %NULL.
+ * @copy: Method to create a copy of an item.  If this function and @rename are
+ *        defined, calls to gwy_inventory_new_item() are possible.  Inventory
+ *        sets the copy's name immediately after creation, so it normally
+ *        does not matter which name @copy gives it.
+ * @get_traits: Function to get item traits.  It returns array of item trait
+ *              #GTypes (keeping its ownership) and if @nitems is not %NULL,
+ *              it stores the length of returned array there.
+ * @get_trait_name: Returns name of @i-th trait (keeping ownership of the
+ *                  returned string).  It is not obligatory, but advisable to
+ *                  give traits names.
+ * @get_trait_value: Sets @value to value of @i-th trait of item.
+ *
+ * Infromation about a #GwyInventory item type.
+ *
+ * Note only one of the fields must be always defined: @get_name.  All the
+ * others give inventory (and thus inventory users) some additional powers over
+ * items.  They may be set to %NULL or 0 if particular item type does not
+ * (want to) support this operation.
+ *
+ * The three trait methods are not used by #GwyInventory itself, but allows
+ * #GwyInventoryStore to generically map item properties to virtual columns
+ * of a #GtkTreeModel.  If items are objects, you will usually want to
+ * directly map some or all #GObject properties to item traits.  If they are
+ * plain C structs or something else, you can easily export their data members
+ * as virtual #GtkTreeModel columns by defining traits for them.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

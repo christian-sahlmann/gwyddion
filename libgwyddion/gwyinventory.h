@@ -46,7 +46,7 @@ G_BEGIN_DECLS
 typedef struct _GwyInventoryItemType GwyInventoryItemType;
 
 struct _GwyInventoryItemType {
-    GType         type;            /* Useless? */
+    GType         type;
     const gchar  *watchable_signal;
     gboolean     (*is_fixed)       (gconstpointer item);
     const gchar* (*get_name)       (gpointer item);
