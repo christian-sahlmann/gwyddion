@@ -1,6 +1,7 @@
 # @(#) $Id$
 
 SUBDIRS = \
+	glmaterials \
 	gradients
 
 pkgconfigdatadir = $(libdir)/pkgconfig

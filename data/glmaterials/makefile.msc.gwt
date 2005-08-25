@@ -1,0 +1,19 @@
+
+TOP_SRCDIR = ..\..
+DATA_TYPE = glmaterials
+
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
+<[[:DATA:]]>
+
+## targets
+all: data
+
+data: $(DATA)
+
+install: install-data
+
+!INCLUDE $(TOP_SRCDIR)\rules.msc
+
+# vim: ft=make
+

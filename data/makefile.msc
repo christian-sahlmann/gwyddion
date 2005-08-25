@@ -5,6 +5,7 @@ TOP_SRCDIR = ..
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
 SUBDIRS = \
+	glmaterials \
 	gradients
 
 ## targets

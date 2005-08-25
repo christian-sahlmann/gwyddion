@@ -88,6 +88,8 @@ update-mime-database %{_datadir}/mime
 %{_datadir}/%{name}/pixmaps/*.png
 %{_datadir}/%{name}/pixmaps/*.ico
 %dir %{_datadir}/%{name}/pixmaps
+%{_datadir}/%{name}/glmaterials/*
+%dir %{_datadir}/%{name}/glmaterials
 %{_datadir}/%{name}/gradients/*
 %dir %{_datadir}/%{name}/gradients
 %dir %{_datadir}/%{name}

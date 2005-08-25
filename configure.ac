@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.3cvs20050819, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.3cvs20050825, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.4
@@ -32,6 +32,7 @@ AC_CONFIG_FILES(\
   python/Makefile \
   ruby/Makefile \
   data/Makefile \
+  data/glmaterials/Makefile \
   data/gradients/Makefile \
   utils/Makefile \
   devel-docs/Makefile \
@@ -225,7 +226,7 @@ fi
 
 AC_PATH_X
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
-test "x$x_libraries" = "x" || CPPFLAGS="$CPPFLAGS -L$x_libraries"
+test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 
 PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.6.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
