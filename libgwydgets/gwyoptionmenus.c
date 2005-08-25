@@ -35,8 +35,16 @@
 
 #define BITS_PER_SAMPLE 8
 
-typedef void (*SamplerFunc)(GwyResource *resource,
-                            GdkPixbuf *pixbuf);
+typedef void (*ResourceSamplerFunc)(GwyResource *resource,
+                                    GdkPixbuf *pixbuf);
+
+typedef struct {
+    GwyInventory *inventory;
+    ResourceSamplerFunc sampler;
+    const gchar *human_name;
+    const gchar *window_title;
+    const gchar *key;
+} ResourceInfo;
 
 /* FIXME: It would be cleaner to use GClosures, but then all involved funcs
  * would have to use closures instead of callback/cbdata arguments. */
@@ -45,22 +53,49 @@ typedef struct {
     gpointer cbdata;
 } CallbackInfo;
 
-static GtkWidget* gwy_menu_resource             (GwyInventory *inventory,
-                                                 SamplerFunc sampler,
-                                                 const gchar *key,
-                                                 GCallback callback,
-                                                 gpointer cbdata);
-static void       pack_resource_box             (GtkContainer *container,
-                                                 GwyInventory *inventory,
-                                                 SamplerFunc sampler,
-                                                 const gchar *name,
-                                                 gint width,
-                                                 gint height);
-static void       gwy_gradient_button_toggled   (GtkWidget *button,
-                                                 CallbackInfo *cbinfo);
-static void       gwy_resource_selection_changed(GtkTreeSelection *selection,
-                                                 GtkWidget *button);
+static const ResourceInfo* gl_material_resource_info(void);
+static const ResourceInfo* gradient_resource_info   (void);
 
+static GtkWidget* gwy_menu_resource               (const ResourceInfo *rinfo,
+                                                   GCallback callback,
+                                                   gpointer cbdata);
+static void pack_resource_box                     (GtkContainer *container,
+                                                   const ResourceInfo *rinfo,
+                                                   const gchar *name,
+                                                   gint width,
+                                                   gint height);
+GtkWidget*  gwy_resource_tree_view_new            (const ResourceInfo *rinfo,
+                                                   GCallback callback,
+                                                   gpointer cbdata,
+                                                   const gchar *active);
+GtkWidget*  gwy_resource_selection_new            (const ResourceInfo *rinfo,
+                                                   GCallback callback,
+                                                   gpointer cbdata,
+                                                   const gchar *active);
+static void gwy_resource_selection_cell_pixbuf    (GtkTreeViewColumn *column,
+                                                   GtkCellRenderer *renderer,
+                                                   GtkTreeModel *model,
+                                                   GtkTreeIter *iter,
+                                                   gpointer user_data);
+static void gwy_resource_selection_cell_name      (GtkTreeViewColumn *column,
+                                                   GtkCellRenderer *renderer,
+                                                   GtkTreeModel *model,
+                                                   GtkTreeIter *iter,
+                                                   gpointer user_data);
+static void gwy_resource_selection_prefer_toggled (GtkTreeModel *model,
+                                                   const gchar *spath);
+static void gwy_resource_button_toggled           (GtkWidget *button,
+                                                   CallbackInfo *cbinfo);
+static void gwy_resource_selection_changed        (GtkTreeSelection *selection,
+                                                   GtkWidget *button);
+static void gwy_resource_selection_default_changed(GwyInventory *inventory,
+                                                   GwyInventoryStore *store);
+static void gwy_resource_button_treeview_destroy  (GtkWidget *treeview,
+                                                   GtkWidget *button);
+static void gwy_resource_button_destroy           (GtkWidget *button,
+                                                   CallbackInfo *cbinfo);
+static void gwy_resource_store_finalized          (gpointer data,
+                                                   GObject *exobject);
 
 /************************** Pop-up menus ****************************/
 
@@ -81,10 +116,7 @@ GtkWidget*
 gwy_menu_gradient(GCallback callback,
                   gpointer cbdata)
 {
-    return gwy_menu_resource(gwy_gradients(),
-                             (SamplerFunc)&gwy_gradient_sample_to_pixbuf,
-                             "gradient-name",
-                             callback, cbdata);
+    return gwy_menu_resource(gradient_resource_info(), callback, cbdata);
 }
 
 /**
@@ -104,16 +136,11 @@ GtkWidget*
 gwy_menu_gl_material(GCallback callback,
                      gpointer cbdata)
 {
-    return gwy_menu_resource(gwy_gl_materials(),
-                             (SamplerFunc)&gwy_gl_material_sample_to_pixbuf,
-                             "gl-material-name",
-                             callback, cbdata);
+    return gwy_menu_resource(gl_material_resource_info(), callback, cbdata);
 }
 
 static GtkWidget*
-gwy_menu_resource(GwyInventory *inventory,
-                  SamplerFunc sampler,
-                  const gchar *key,
+gwy_menu_resource(const ResourceInfo *rinfo,
                   GCallback callback,
                   gpointer cbdata)
 {
@@ -125,17 +152,16 @@ gwy_menu_resource(GwyInventory *inventory,
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
     width = 5*height;
     menu = gtk_menu_new();
-    for (i = 0; (resource = gwy_inventory_get_nth_item(inventory, i)); i++) {
+    for (i = 0;
+         (resource = gwy_inventory_get_nth_item(rinfo->inventory, i));
+         i++) {
         if (!gwy_resource_get_is_preferred(resource))
             continue;
         item = gtk_menu_item_new();
-        /* FIXME: can we assume resources cannot be renamed during pop-up
-         * menu selection? */
         name = gwy_resource_get_name(resource);
         gwy_debug("<%s>", name);
-        pack_resource_box(GTK_CONTAINER(item), inventory, sampler,
-                          name, width, height);
-        g_object_set_data(G_OBJECT(item), key, (gpointer)name);
+        pack_resource_box(GTK_CONTAINER(item), rinfo, name, width, height);
+        g_object_set_data(G_OBJECT(item), rinfo->key, (gpointer)name);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         if (callback)
             g_signal_connect(item, "activate", callback, cbdata);
@@ -146,19 +172,180 @@ gwy_menu_resource(GwyInventory *inventory,
 
 /************************** Tree views ****************************/
 
-static void
-gwy_gradient_button_treeview_destroy(G_GNUC_UNUSED GtkWidget *treeview,
-                                     GtkWidget *button)
+/**
+ * gwy_gradient_tree_view_new:
+ * @callback: A callback called when tree view selection changes (or %NULL for
+ *            none), that is to connect to "changed" signal of corresponding
+ *            #GtkTreeSelection.
+ * @cbdata: User data passed to the callback.
+ * @active: Gradient name to be shown as currently selected
+ *          (or %NULL to use what happens to appear first).
+ *
+ * Creates a tree view with gradient list.
+ *
+ * Returns: The newly created gradient tree view as #GtkWidget.
+ **/
+GtkWidget*
+gwy_gradient_tree_view_new(GCallback callback,
+                           gpointer cbdata,
+                           const gchar *active)
 {
-    gwy_debug(" ");
-    g_object_set_data(G_OBJECT(button), "treeview", NULL);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
+    return gwy_resource_tree_view_new(gradient_resource_info(),
+                                      callback, cbdata, active);
+}
+
+GtkWidget*
+gwy_resource_tree_view_new(const ResourceInfo *rinfo,
+                           GCallback callback,
+                           gpointer cbdata,
+                           const gchar *active)
+{
+    GdkPixbuf *pixbuf;
+    GwyInventoryStore *store;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GtkWidget *treeview;
+    GwyResource *resource;
+    gint width, height, i;
+
+    /* Assure active exists */
+    resource = gwy_inventory_get_item_or_default(rinfo->inventory, active);
+    active = gwy_resource_get_name(resource);
+
+    store = gwy_inventory_store_new(rinfo->inventory);
+    g_object_set_data(G_OBJECT(store), "resource-info", (gpointer)rinfo);
+    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    g_signal_connect(rinfo->inventory, "default-changed",
+                     G_CALLBACK(gwy_resource_selection_default_changed), store);
+    g_object_weak_ref(G_OBJECT(store), gwy_resource_store_finalized,
+                      rinfo->inventory);
+
+    /* pixbuf */
+    gtk_icon_size_lookup(GTK_ICON_SIZE_SMALL_TOOLBAR, &width, &height);
+    width = 6*height;
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_renderer_set_fixed_size(renderer, width, height);
+    column = gtk_tree_view_column_new_with_attributes(rinfo->human_name,
+                                                      renderer, NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            gwy_resource_selection_cell_pixbuf,
+                                            pixbuf, g_object_unref);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    /* preferred */
+    renderer = gtk_cell_renderer_toggle_new();
+    gtk_cell_renderer_set_fixed_size(renderer, -1, height);
+    i = gwy_inventory_store_get_column_by_name(store, "is-preferred");
+    g_assert(i > 0);
+    column = gtk_tree_view_column_new_with_attributes(_("Preferred"), renderer,
+                                                      "active", i,
+                                                      NULL);
+    g_object_set(renderer, "activatable", TRUE, NULL);
+    g_signal_connect_swapped(renderer, "toggled",
+                             G_CALLBACK(gwy_resource_selection_prefer_toggled),
+                             store);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    /* name */
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_renderer_set_fixed_size(renderer, -1, height);
+    i = gwy_inventory_store_get_column_by_name(store, "name");
+    g_assert(i > 0);
+    column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
+                                                      "text", i,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            gwy_resource_selection_cell_name,
+                                            rinfo->inventory, NULL);
+    g_object_set(renderer, "weight-set", TRUE, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(treeview), i);
+    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(treeview), TRUE);
+
+    /* selection */
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    i = gwy_inventory_get_item_position(rinfo->inventory, active);
+    gwy_debug("active resource position: %d", i);
+    gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(store), &iter, NULL, i);
+    gtk_tree_selection_select_iter(selection, &iter);
+
+    if (callback)
+        g_signal_connect(selection, "changed", callback, cbdata);
+
+    return treeview;
+}
+
+/**
+ * gwy_resource_selection_new:
+ * @callback: A callback called when tree view selection changes (or %NULL for
+ *            none), that is to connect to "changed" signal of corresponding
+ *            #GtkTreeSelection.
+ * @cbdata: User data passed to the callback.
+ * @active: Gradient name to be shown as currently selected
+ *          (or %NULL to use what happens to appear first).
+ *
+ * Creates a gradient selection button.
+ *
+ * Returns: The newly created gradient selection button as #GtkWidget.
+ **/
+GtkWidget*
+gwy_gradient_selection_new(GCallback callback,
+                           gpointer cbdata,
+                           const gchar *active)
+{
+    return gwy_resource_selection_new(gradient_resource_info(),
+                                      callback, cbdata, active);
+}
+
+GtkWidget*
+gwy_resource_selection_new(const ResourceInfo *rinfo,
+                           GCallback callback,
+                           gpointer cbdata,
+                           const gchar *active)
+{
+    GtkWidget *button;
+    CallbackInfo *cbinfo;
+    GwyResource *resource;
+    gint width, height;
+
+    /* Assure active exists */
+    resource = gwy_inventory_get_item_or_default(rinfo->inventory, active);
+    active = gwy_resource_get_name(resource);
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
+
+    button = gtk_toggle_button_new();
+    pack_resource_box(GTK_CONTAINER(button), rinfo, active, width, height);
+    g_object_set_data(G_OBJECT(button), "active-resource", resource);
+    g_object_set_data(G_OBJECT(button), "resource-info", (gpointer)rinfo);
+
+    cbinfo = g_new(CallbackInfo, 1);
+    cbinfo->callback = callback;
+    cbinfo->cbdata = cbdata;
+    g_signal_connect(button, "toggled",
+                     G_CALLBACK(gwy_resource_button_toggled), cbinfo);
+    g_signal_connect(button, "destroy",
+                     G_CALLBACK(gwy_resource_button_destroy), cbinfo);
+
+    return button;
 }
 
 static void
-gwy_gradient_button_toggled(GtkWidget *button,
+gwy_resource_button_toggled(GtkWidget *button,
                             CallbackInfo *cbinfo)
 {
+    ResourceInfo *rinfo;
     GwyResource *resource;
     GtkTreeSelection *selection;
     GtkWidget *window, *scwin, *treeview;
@@ -171,9 +358,11 @@ gwy_gradient_button_toggled(GtkWidget *button,
         return;
     }
 
+    rinfo = g_object_get_data(G_OBJECT(button), "resource-info");
+
     /* Pop up */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), _("Choose Gradient"));
+    gtk_window_set_title(GTK_WINDOW(window), rinfo->window_title);
     gtk_window_set_default_size(GTK_WINDOW(window), -1, 400);
     gtk_window_set_transient_for(GTK_WINDOW(window),
                                  GTK_WINDOW(gtk_widget_get_toplevel(button)));
@@ -185,12 +374,13 @@ gwy_gradient_button_toggled(GtkWidget *button,
 
     resource = g_object_get_data(G_OBJECT(button), "active-resource");
     gwy_debug("active-resource = <%s>", gwy_resource_get_name(resource));
-    treeview = gwy_gradient_tree_view_new(cbinfo->callback, cbinfo->cbdata,
+    treeview = gwy_resource_tree_view_new(rinfo,
+                                          cbinfo->callback, cbinfo->cbdata,
                                           gwy_resource_get_name(resource));
     g_object_set_data(G_OBJECT(button), "treeview", treeview);
     gtk_container_add(GTK_CONTAINER(scwin), treeview);
     g_signal_connect(treeview, "destroy",
-                     G_CALLBACK(gwy_gradient_button_treeview_destroy), button);
+                     G_CALLBACK(gwy_resource_button_treeview_destroy), button);
     g_signal_connect_swapped(treeview, "row-activated",
                              G_CALLBACK(gtk_widget_destroy), window);
 
@@ -203,40 +393,26 @@ gwy_gradient_button_toggled(GtkWidget *button,
 }
 
 static void
-gwy_gradient_button_destroy(GtkWidget *button,
-                            CallbackInfo *cbinfo)
-{
-    GtkWidget *widget;
-
-    widget = g_object_get_data(G_OBJECT(button), "treeview");
-    gwy_debug("widget: %p", widget);
-    if (widget) {
-        g_object_set_data(G_OBJECT(button), "treeview", NULL);
-        gtk_widget_destroy(gtk_widget_get_toplevel(widget));
-    }
-
-    g_free(cbinfo);
-}
-
-static void
-gwy_gradient_selection_cell_pixbuf(G_GNUC_UNUSED GtkTreeViewColumn *column,
+gwy_resource_selection_cell_pixbuf(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                    GtkCellRenderer *renderer,
                                    GtkTreeModel *model,
                                    GtkTreeIter *iter,
                                    gpointer user_data)
 {
-    GwyGradient *gradient;
+    const ResourceInfo *rinfo;
+    GwyResource *resource;
     GdkPixbuf *pixbuf = (GdkPixbuf*)user_data;
 
-    gtk_tree_model_get(model, iter, 0, &gradient, -1);
-    gwy_gradient_sample_to_pixbuf(gradient, pixbuf);
+    gtk_tree_model_get(model, iter, 0, &resource, -1);
+    rinfo = g_object_get_data(G_OBJECT(model), "resource-info");
+    rinfo->sampler(resource, pixbuf);
     /* This looks like noop because we use one pixbuf all the time, but it
      * apparently makes the cell rendered to really render it */
     g_object_set(renderer, "pixbuf", pixbuf, NULL);
 }
 
 static void
-gwy_gradient_selection_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+gwy_resource_selection_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                  GtkCellRenderer *renderer,
                                  GtkTreeModel *model,
                                  GtkTreeIter *iter,
@@ -257,6 +433,7 @@ static void
 gwy_resource_selection_changed(GtkTreeSelection *selection,
                                GtkWidget *button)
 {
+    const ResourceInfo *rinfo;
     GtkWidget *image, *label;
     GwyResource *resource;
     GtkTreeModel *model;
@@ -269,7 +446,8 @@ gwy_resource_selection_changed(GtkTreeSelection *selection,
 
     image = g_object_get_data(G_OBJECT(button), "image");
     pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
-    gwy_gradient_sample_to_pixbuf(GWY_GRADIENT(resource), pixbuf);
+    rinfo = g_object_get_data(G_OBJECT(model), "resource-info");
+    rinfo->sampler(resource, pixbuf);
     gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
 
     label = g_object_get_data(G_OBJECT(button), "label");
@@ -279,7 +457,7 @@ gwy_resource_selection_changed(GtkTreeSelection *selection,
 }
 
 static void
-gwy_gradient_selection_prefer_toggled(GtkTreeModel *model,
+gwy_resource_selection_prefer_toggled(GtkTreeModel *model,
                                       const gchar *spath)
 {
     GwyInventory *inventory;
@@ -304,7 +482,7 @@ gwy_gradient_selection_prefer_toggled(GtkTreeModel *model,
 }
 
 static void
-gwy_gradient_selection_default_changed(GwyInventory *inventory,
+gwy_resource_selection_default_changed(GwyInventory *inventory,
                                        GwyInventoryStore *store)
 {
     GtkTreeModel *model;
@@ -327,153 +505,38 @@ gwy_gradient_selection_default_changed(GwyInventory *inventory,
     gtk_tree_path_free(path);
 }
 
-/**
- * gwy_gradient_tree_view_new:
- * @callback: A callback called when tree view selection changes (or %NULL for
- *            none), that is to connect to "changed" signal of corresponding
- *            #GtkTreeSelection.
- * @cbdata: User data passed to the callback.
- * @active: Gradient name to be shown as currently selected
- *          (or %NULL to use what happens to appear first).
- *
- * Creates a tree view with gradient list.
- *
- * Returns: The newly created gradient tree view as #GtkWidget.
- **/
-GtkWidget*
-gwy_gradient_tree_view_new(GCallback callback,
-                           gpointer cbdata,
-                           const gchar *active)
+static void
+gwy_resource_button_treeview_destroy(G_GNUC_UNUSED GtkWidget *treeview,
+                                     GtkWidget *button)
 {
-    GwyInventory *inventory;
-    GdkPixbuf *pixbuf;
-    GwyInventoryStore *store;
-    GtkTreeViewColumn *column;
-    GtkCellRenderer *renderer;
-    GtkTreeSelection *selection;
-    GtkTreeIter iter;
-    GtkWidget *treeview;
-    GwyGradient *gradient;
-    gint width, height, i;
-
-    /* Assure active exists */
-    gradient = gwy_gradients_get_gradient(active);
-    active = gwy_resource_get_name(GWY_RESOURCE(gradient));
-
-    inventory = gwy_gradients();
-    store = gwy_inventory_store_new(inventory);
-    treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
-    g_object_unref(store);
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
-    g_signal_connect(inventory, "default-changed",
-                     G_CALLBACK(gwy_gradient_selection_default_changed), store);
-
-    /* pixbuf */
-    gtk_icon_size_lookup(GTK_ICON_SIZE_SMALL_TOOLBAR, &width, &height);
-    width = 6*height;
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
-                            width, height);
-    gwy_debug_objects_creation(G_OBJECT(pixbuf));
-
-    renderer = gtk_cell_renderer_pixbuf_new();
-    gtk_cell_renderer_set_fixed_size(renderer, width, height);
-    column = gtk_tree_view_column_new_with_attributes(_("Gradient"), renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            gwy_gradient_selection_cell_pixbuf,
-                                            pixbuf, g_object_unref);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    /* preferred */
-    renderer = gtk_cell_renderer_toggle_new();
-    gtk_cell_renderer_set_fixed_size(renderer, -1, height);
-    i = gwy_inventory_store_get_column_by_name(store, "is-preferred");
-    g_assert(i > 0);
-    column = gtk_tree_view_column_new_with_attributes(_("Preferred"), renderer,
-                                                      "active", i,
-                                                      NULL);
-    g_object_set(renderer, "activatable", TRUE, NULL);
-    g_signal_connect_swapped(renderer, "toggled",
-                             G_CALLBACK(gwy_gradient_selection_prefer_toggled),
-                             store);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    /* name */
-    renderer = gtk_cell_renderer_text_new();
-    gtk_cell_renderer_set_fixed_size(renderer, -1, height);
-    i = gwy_inventory_store_get_column_by_name(store, "name");
-    g_assert(i > 0);
-    column = gtk_tree_view_column_new_with_attributes(_("Name"), renderer,
-                                                      "text", i,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            gwy_gradient_selection_cell_name,
-                                            inventory, NULL);
-    g_object_set(renderer, "weight-set", TRUE, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(treeview), i);
-    gtk_tree_view_set_enable_search(GTK_TREE_VIEW(treeview), TRUE);
-
-    /* selection */
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-    i = gwy_inventory_get_item_position(inventory, active);
-    gwy_debug("active resource position: %d", i);
-    gtk_tree_model_iter_nth_child(GTK_TREE_MODEL(store), &iter, NULL, i);
-    gtk_tree_selection_select_iter(selection, &iter);
-
-    if (callback)
-        g_signal_connect(selection, "changed", callback, cbdata);
-
-    return treeview;
+    gwy_debug(" ");
+    g_object_set_data(G_OBJECT(button), "treeview", NULL);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
 }
 
-/**
- * gwy_gradient_selection_new:
- * @callback: A callback called when tree view selection changes (or %NULL for
- *            none), that is to connect to "changed" signal of corresponding
- *            #GtkTreeSelection.
- * @cbdata: User data passed to the callback.
- * @active: Gradient name to be shown as currently selected
- *          (or %NULL to use what happens to appear first).
- *
- * Creates a gradient selection button.
- *
- * Returns: The newly created gradient selection button as #GtkWidget.
- **/
-GtkWidget*
-gwy_gradient_selection_new(GCallback callback,
-                           gpointer cbdata,
-                           const gchar *active)
+static void
+gwy_resource_button_destroy(GtkWidget *button,
+                            CallbackInfo *cbinfo)
 {
-    GtkWidget *button;
-    CallbackInfo *cbinfo;
-    GwyGradient *gradient;
-    gint width, height;
+    GtkWidget *widget;
 
-    /* Assure active exists */
-    gradient = gwy_gradients_get_gradient(active);
-    active = gwy_resource_get_name(GWY_RESOURCE(gradient));
+    widget = g_object_get_data(G_OBJECT(button), "treeview");
+    gwy_debug("widget: %p", widget);
+    if (widget) {
+        g_object_set_data(G_OBJECT(button), "treeview", NULL);
+        gtk_widget_destroy(gtk_widget_get_toplevel(widget));
+    }
 
-    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width = 5*height;
+    g_free(cbinfo);
+}
 
-    button = gtk_toggle_button_new();
-    pack_resource_box(GTK_CONTAINER(button), gwy_gradients(),
-                      (SamplerFunc)&gwy_gradient_sample_to_pixbuf,
-                      active, width, height);
-    g_object_set_data(G_OBJECT(button), "active-resource", gradient);
-
-    cbinfo = g_new(CallbackInfo, 1);
-    cbinfo->callback = callback;
-    cbinfo->cbdata = cbdata;
-    g_signal_connect(button, "toggled",
-                     G_CALLBACK(gwy_gradient_button_toggled), cbinfo);
-    g_signal_connect(button, "destroy",
-                     G_CALLBACK(gwy_gradient_button_destroy), cbinfo);
-
-    return button;
+static void
+gwy_resource_store_finalized(gpointer data,
+                             GObject *exobject)
+{
+    g_signal_handlers_disconnect_by_func(data,
+                                         gwy_resource_selection_default_changed,
+                                         exobject);
 }
 
 /************************** Material menu ****************************/
@@ -497,8 +560,7 @@ gwy_gl_material_selection_new(GCallback callback,
     width = 5*height;
 
     button = gtk_toggle_button_new();
-    pack_resource_box(GTK_CONTAINER(button), gwy_gl_materials(),
-                      (SamplerFunc)&gwy_gl_material_sample_to_pixbuf,
+    pack_resource_box(GTK_CONTAINER(button), gl_material_resource_info(),
                       active, width, height);
     g_object_set_data(G_OBJECT(button), "active-resource", material);
 
@@ -519,8 +581,7 @@ gwy_gl_material_selection_new(GCallback callback,
 
 static void
 pack_resource_box(GtkContainer *container,
-                  GwyInventory *inventory,
-                  SamplerFunc sampler,
+                  const ResourceInfo *rinfo,
                   const gchar *name,
                   gint width,
                   gint height)
@@ -532,8 +593,8 @@ pack_resource_box(GtkContainer *container,
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
                             width, height);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    resource = gwy_inventory_get_item_or_default(inventory, name);
-    sampler(resource, pixbuf);
+    resource = gwy_inventory_get_item_or_default(rinfo->inventory, name);
+    rinfo->sampler(resource, pixbuf);
     image = gtk_image_new_from_pixbuf(pixbuf);
     g_object_unref(pixbuf);
 
@@ -547,6 +608,36 @@ pack_resource_box(GtkContainer *container,
 
     g_object_set_data(G_OBJECT(container), "image", image);
     g_object_set_data(G_OBJECT(container), "label", label);
+}
+
+static const ResourceInfo*
+gradient_resource_info(void)
+{
+    static ResourceInfo rinfo = { NULL, NULL, NULL, NULL, NULL };
+
+    if (!rinfo.inventory) {
+        rinfo.inventory = gwy_gradients();
+        rinfo.sampler = (ResourceSamplerFunc)&gwy_gradient_sample_to_pixbuf;
+        rinfo.human_name = _("Gradient");
+        rinfo.window_title = _("Choose Gradient");
+        rinfo.key = "gradient-name";
+    }
+    return &rinfo;
+}
+
+static const ResourceInfo*
+gl_material_resource_info(void)
+{
+    static ResourceInfo rinfo = { NULL, NULL, NULL, NULL, NULL };
+
+    if (!rinfo.inventory) {
+        rinfo.inventory = gwy_gl_materials();
+        rinfo.sampler = (ResourceSamplerFunc)&gwy_gl_material_sample_to_pixbuf;
+        rinfo.human_name = _("GL Material");
+        rinfo.window_title = _("Choose GL Material");
+        rinfo.key = "gl-material-name";
+    }
+    return &rinfo;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
