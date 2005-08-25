@@ -1,4 +1,4 @@
-1.99.3cvs20050822
+1.99.3cvs20050825
 
 1.99.4
 Application:
@@ -7,7 +7,8 @@ Application:
 - System chdir() is no longer used, so that e.g. core is always dumped to the
   directory where app was started, otherwise directory behaviour has not
   changed.
-- Color gradient ,editor`, currently can only set default gradient.
+- Color gradient and GL material ,editors`, currently can only set default
+  gradient/GL material.
 
 Library:
 - libprocess: All interpolation is pixel-like instead of function-like now.
@@ -17,8 +18,11 @@ Library:
   files.
 - libdraw: GwyGradient is based on GwyResource, API reworked.  Gradients were
   un-hardcoded and are distributed as standalone text files now.
-- libgwydgets: New gradient selection widgets, gradient tree view
-  constructor.  It's possible to set which gradients are directly displayed
+- libdraw, libwydgets: GwyGLMaterial was moved from libwydgets to libdraw,
+  based on GwyResource, and more or less reimplemented.  GL materials were
+  unhardcoded.  Material pixbuf samples are nicer.
+- libgwydgets: New gradient and GL material selection and tree view
+  constructors.  It's possible to set which gradients are directly displayed
   in data window color axis right-click menu.
 - libgwydgets: GwySciText uses table-like layout for symbol combo box
   (bug #60) and was otherwise improved.
@@ -46,6 +50,8 @@ Library:
 - libprocess: GwyDataField and GwyDataLine support offsets of coordinates
   origin.
 - libgwyddion: Text entities are in a GwyInventory instead of a raw array.
+- libgwydgets: It's possible to get real GwyDataView zoom, GwyDataWindow
+  displays that in window title instead of requested zoom.
 
 Modules:
 - BCR file: Unit support was improved, support for zmin added.
@@ -59,7 +65,7 @@ Other:
 - Missing Italic stock icon was added.
 - MSVC makefile templates (.gwt) are distributed in source code tarball,
   allowing to re-generate makefile.msc files.
-- A few new color gradients was added.
+- A few new color gradients and GL materials were added.
 
 
 1.99.3 (2005-07-11)

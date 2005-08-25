@@ -4,11 +4,15 @@ GWYDDION-1
 SF CVS cleanup:
 - modules/tools -> modules/tool
 - modules/layer/*.c,v -> modules/layer/layer-*.c,v
-- libgwydgets/gwyglmaterial.*,v -> libdraw/gwyglmaterial.*,v
 
 HEAD
 - Why DWT methods have return values?
 - Should GwyDataLine have units?  Set data line offsets in stat functions.
+- 3D View still not MVCized
+- 3D:
+  light source grid not visible on some machines?
+  must watch GL materials, they are editable now
+- GwyColorAxis needs overhaul
 - Graphs:
   infinite, memory allocating loop in gwy_axis_scale
   infinite graph-related loop in 1D FFT filter
@@ -16,14 +20,11 @@ HEAD
   and GwySIUnits
   CDH and CDA y axis ends at 0.8 while it should go to 1.0
   Parts of GwyAxis still called GwyAxiser
-  datawindow graph list broken
   graph titles don't work
-  still uses GwyWatchable
   silly public signal emitors, mouse-moved
   property get/set not implemented
   export dialogs say ,Open` instead of ,Save` (not that export works...)
   too large value warning on ACF
-  old graph saving code, various crap and nonsense comments
   kill global last_status in gwygraphwindow
   gwy_graph_model_get_*_siunit return copies -- why? (set() also sets copies)
   selection API is strange and partially duplicated between Graph and GraphArea
@@ -34,9 +35,8 @@ HEAD
   layout issues
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack
 - Fix enum documentation after rename, write missing
-  libprocess: GwyMergeType, GwyWatershedStateType, Gwy2DCWTWaveletType,
-              GwyComputationStateType, GwyDWTType,
-              GwyDWTDenoiseType, GwyWindowingType, GwyTipType
+  libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType,
+              GwyComputationStateType, GwyDWTDenoiseType, GwyTipType
   libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
@@ -56,7 +56,6 @@ HEAD
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
 - Swap undo levels to disk
-- Add SPMlab-inspired palettes, need better palette selector first
 - Fix creating temporary data by duplicating whole container!
 - Do nightly CVS build from a clean checkout, this will also stop the silly
   configure and NEWS modifications; should be done as a part of move to sf
