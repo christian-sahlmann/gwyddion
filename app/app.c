@@ -1179,26 +1179,6 @@ gwy_app_get_current_window(GwyAppWindowType type)
  *                                                                           *
  *****************************************************************************/
 
-
-/**
- * gwy_app_data_view_update:
- * @data_view: A #GwyDataView.
- *
- * Deprecated.  No longer does anything.
- **/
-G_GNUC_DEPRECATED void
-gwy_app_data_view_update(G_GNUC_UNUSED GwyDataView *data_view)
-{
-    /*
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_DATA,
-        GWY_MENU_FLAG_DATA
-    };
-
-    gwy_app_toolbox_update_state(&sens_data);
-    */
-}
-
 /**
  * gwy_app_data_window_set_untitled:
  * @window: A data window.
