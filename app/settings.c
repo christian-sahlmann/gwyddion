@@ -250,22 +250,32 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
     static const GwyRGBA default_mask_color = { 1.0, 0.0, 0.0, 0.5 };
     static const gchar *default_preferred_gradients =
         "BW1\n"
-        "Blue-Violet\n"
-        "Blue-Yellow\n"
-        "Body\n"
+        "Blend2\n"
+        "Caribbean\n"
         "Cold\n"
         "DFit\n"
         "Gray\n"
         "Green-Violet\n"
         "Lines\n"
         "Olive\n"
-        "Pink\n"
         "Rainbow2\n"
         "Red\n"
+        "Rust\n"
         "Sky\n"
         "Spectral\n"
         "Spring\n"
         "Warm";
+    static const gchar *default_preferred_gl_materials =
+        "Brass\n"
+        "Cyan-Plastic\n"
+        "OpenGL-Default\n"
+        "Emerald\n"
+        "Obsidian\n"
+        "Pewter\n"
+        "Polished-Gold\n"
+        "Red-Rubber\n"
+        "Silver\n"
+        "Warmish-White";
 
     if (!gwy_container_contains_by_name(settings, "/mask/alpha")) {
         gwy_container_set_double_by_name(settings, "/mask/red",
@@ -280,6 +290,9 @@ gwy_app_settings_set_defaults(GwyContainer *settings)
     if (!gwy_container_contains_by_name(settings, "/app/gradients/preferred"))
         gwy_container_set_string_by_name(settings, "/app/gradients/preferred",
                                          g_strdup(default_preferred_gradients));
+    if (!gwy_container_contains_by_name(settings, "/app/glmaterials/preferred"))
+        gwy_container_set_string_by_name(settings, "/app/glmaterials/preferred",
+                                         g_strdup(default_preferred_gl_materials));
 }
 
 static void
