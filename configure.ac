@@ -252,8 +252,7 @@ fi
 AC_SUBST([FFTW3_DEPENDENCY])
 
 #############################################################################
-# GtkGlExt
-# FIXME: Doesn't work.  Should we ever build without?
+# GtkGLExt
 GWY_WITH([gl],,[OpenGL 3D view widgets])
 if test "x$enable_gl" != "xno"; then
   # Repeat pangoft2 here to maintain assertion GTK flags are subset of GTKGLEXT
@@ -266,6 +265,8 @@ if test "x$enable_gl" != "xno"; then
   GTKGLEXT_DEPENDENCY=gtkglext-1.0
 else
   GTKGLEXT_DEPENDENCY=
+  GTKGLEXT_CFLAGS="$GTK_CFLAGS"
+  GTKGLEXT_LIBS="$GTK_LIBS"
 fi
 AC_SUBST([GTKGLEXT_DEPENDENCY])
 
@@ -372,6 +373,13 @@ AC_CONFIG_COMMANDS([gwyconfig.h],
 #define __GWY_CONFIG_H__
 
 _______EOF
+
+  if test x$GTKGLEXT_DEPENDENCY = x; then
+    echo '#undef GWYDDION_HAS_OPENGL' >>$outfile
+  else
+    echo '#define GWYDDION_HAS_OPENGL 1' >>$outfile
+  fi
+  echo >>$outfile
 
   if test x$gwy_have_pow10 = xno; then
     echo '#define pow10(x) exp(G_LN10*(x))' >>$outfile

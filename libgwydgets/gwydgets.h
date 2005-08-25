@@ -21,7 +21,7 @@
 #ifndef __GWY_GWYDGETS_H__
 #define __GWY_GWYDGETS_H__
 
-#include <gdk/gdkgl.h>
+#include <gwyconfig.h>
 
 #include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwydgettypes.h>
@@ -68,6 +68,10 @@
 #include <libgwydgets/gwyvalunit.h>
 
 G_BEGIN_DECLS
+
+#ifndef GWYDDION_HAS_OPENGL
+typedef void GdkGLConfig;
+#endif
 
 void         gwy_widgets_type_init          (void);
 gboolean     gwy_widgets_gl_init            (void);

@@ -7,6 +7,8 @@
 #ifndef __GWY_CONFIG_H__
 #define __GWY_CONFIG_H__
 
+#define GWYDDION_HAS_OPENGL 1
+
 #define pow10(x) exp(G_LN10*(x))
 /* hypot() is defined */
 #define cbrt(x) pow((x), 1.0/3.0)

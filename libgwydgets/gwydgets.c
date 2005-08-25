@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <libdraw/gwydraw.h>
-#include "gwydgets.h"
+#include <libgwydgets/gwydgets.h>
 
 static GdkGLConfig *glconfig = NULL;
 static guint types_initialized = 0;
@@ -45,8 +45,6 @@ gwy_widgets_type_init(void)
     types_initialized += gwy_graph_curve_model_get_type();
     types_initialized += gwy_graph_model_get_type();
     types_initialized += gwy_3d_label_get_type();
-    /* not serializable (yet) */
-    types_initialized += gwy_gl_material_get_type();
     types_initialized |= 1;
 }
 
