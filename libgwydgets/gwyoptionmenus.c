@@ -21,11 +21,7 @@
 #include "config.h"
 #include <string.h>
 
-#include <gtk/gtkimage.h>
-#include <gtk/gtkmenu.h>
-#include <gtk/gtkmenuitem.h>
-#include <gtk/gtkoptionmenu.h>
-#include <gtk/gtkimagemenuitem.h>
+#include <gtk/gtk.h>
 
 #include <libgwyddion/gwyddion.h>
 #include <libdraw/gwygradient.h>
@@ -174,12 +170,11 @@ gwy_menu_resource(const ResourceInfo *rinfo,
 
 /**
  * gwy_gradient_tree_view_new:
- * @callback: A callback called when tree view selection changes (or %NULL for
- *            none), that is to connect to "changed" signal of corresponding
- *            #GtkTreeSelection.
- * @cbdata: User data passed to the callback.
+ * @callback: Callback to connect to "changed" signal of tree view selection
+ *            (or %NULL for none).
+ * @cbdata: User data passed to @callback.
  * @active: Gradient name to be shown as currently selected
- *          (or %NULL to use what happens to appear first).
+ *          (or %NULL for default).
  *
  * Creates a tree view with gradient list.
  *
@@ -193,6 +188,71 @@ gwy_gradient_tree_view_new(GCallback callback,
     return gwy_resource_tree_view_new(gradient_resource_info(),
                                       callback, cbdata, active);
 }
+
+/**
+ * gwy_gl_material_tree_view_new:
+ * @callback: Callback to connect to "changed" signal of tree view selection
+ *            (or %NULL for none).
+ * @cbdata: User data passed to @callback.
+ * @active: GL material name to be shown as currently selected
+ *          (or %NULL for default).
+ *
+ * Creates a tree view with GL material list.
+ *
+ * Returns: The newly created GL material tree view as #GtkWidget.
+ **/
+GtkWidget*
+gwy_gl_material_tree_view_new(GCallback callback,
+                              gpointer cbdata,
+                              const gchar *active)
+{
+    return gwy_resource_tree_view_new(gl_material_resource_info(),
+                                      callback, cbdata, active);
+}
+
+/**
+ * gwy_gradient_selection_new:
+ * @callback: Callback to connect to "changed" signal of tree view selection
+ *            (or %NULL for none).
+ * @cbdata: User data passed to @callback.
+ * @active: Gradient name to be shown as currently selected
+ *          (or %NULL for default).
+ *
+ * Creates a gradient selection button.
+ *
+ * Returns: The newly created gradient selection button as #GtkWidget.
+ **/
+GtkWidget*
+gwy_gradient_selection_new(GCallback callback,
+                           gpointer cbdata,
+                           const gchar *active)
+{
+    return gwy_resource_selection_new(gradient_resource_info(),
+                                      callback, cbdata, active);
+}
+
+/**
+ * gwy_gl_material_selection_new:
+ * @callback: Callback to connect to "changed" signal of tree view selection
+ *            (or %NULL for none).
+ * @cbdata: User data passed to @callback.
+ * @active: GL material name to be shown as currently selected
+ *          (or %NULL for default).
+ *
+ * Creates a GL material selection button.
+ *
+ * Returns: The newly created GL material selection button as #GtkWidget.
+ **/
+GtkWidget*
+gwy_gl_material_selection_new(GCallback callback,
+                              gpointer cbdata,
+                              const gchar *active)
+{
+    return gwy_resource_selection_new(gl_material_resource_info(),
+                                      callback, cbdata, active);
+}
+
+/************************** Private methods ****************************/
 
 GtkWidget*
 gwy_resource_tree_view_new(const ResourceInfo *rinfo,
@@ -283,28 +343,6 @@ gwy_resource_tree_view_new(const ResourceInfo *rinfo,
         g_signal_connect(selection, "changed", callback, cbdata);
 
     return treeview;
-}
-
-/**
- * gwy_resource_selection_new:
- * @callback: A callback called when tree view selection changes (or %NULL for
- *            none), that is to connect to "changed" signal of corresponding
- *            #GtkTreeSelection.
- * @cbdata: User data passed to the callback.
- * @active: Gradient name to be shown as currently selected
- *          (or %NULL to use what happens to appear first).
- *
- * Creates a gradient selection button.
- *
- * Returns: The newly created gradient selection button as #GtkWidget.
- **/
-GtkWidget*
-gwy_gradient_selection_new(GCallback callback,
-                           gpointer cbdata,
-                           const gchar *active)
-{
-    return gwy_resource_selection_new(gradient_resource_info(),
-                                      callback, cbdata, active);
 }
 
 GtkWidget*
@@ -537,44 +575,6 @@ gwy_resource_store_finalized(gpointer data,
     g_signal_handlers_disconnect_by_func(data,
                                          gwy_resource_selection_default_changed,
                                          exobject);
-}
-
-/************************** Material menu ****************************/
-
-/* FIXME: fake. */
-GtkWidget*
-gwy_gl_material_selection_new(GCallback callback,
-                              gpointer cbdata,
-                              const gchar *active)
-{
-    GtkWidget *button;
-    CallbackInfo *cbinfo;
-    GwyGLMaterial *material;
-    gint width, height;
-
-    /* Assure active exists */
-    material = gwy_gl_materials_get_gl_material(active);
-    active = gwy_resource_get_name(GWY_RESOURCE(material));
-
-    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width = 5*height;
-
-    button = gtk_toggle_button_new();
-    pack_resource_box(GTK_CONTAINER(button), gl_material_resource_info(),
-                      active, width, height);
-    g_object_set_data(G_OBJECT(button), "active-resource", material);
-
-    cbinfo = g_new(CallbackInfo, 1);
-    cbinfo->callback = callback;
-    cbinfo->cbdata = cbdata;
-    /*
-    g_signal_connect(button, "toggled",
-                     G_CALLBACK(gwy_gl_material_button_toggled), cbinfo);
-    g_signal_connect(button, "destroy",
-                     G_CALLBACK(gwy_gl_material_button_destroy), cbinfo);
-                     */
-
-    return button;
 }
 
 /************************** Common subroutines ****************************/

@@ -22,7 +22,6 @@
 #define __GWY_OPTION_MENUS_H__
 
 #include <gtk/gtkwidget.h>
-#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
