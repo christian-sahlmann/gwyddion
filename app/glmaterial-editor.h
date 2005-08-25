@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,22 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_APP_GWYAPP_H__
-#define __GWY_APP_GWYAPP_H__
+#ifndef __GWY_APP_GL_MATERIAL_EDITOR_H__
+#define __GWY_APP_GL_MATERIAL_EDITOR_H__
 
-#include <app/app.h>
-#include <app/filelist.h>
-#include <app/glmaterial-editor.h>
-#include <app/gradient-editor.h>
-#include <app/graphlist.h>
-#include <app/menu.h>
-#include <app/menu-windowlist.h>
-#include <app/settings.h>
-#include <app/unitool.h>
-#include <app/undo.h>
-#include <app/wait.h>
+#include <gtk/gtkwidget.h>
 
-#endif /* __GWY_APP_GWYAPP_H__ */
+G_BEGIN_DECLS
+
+void gwy_app_gl_material_editor(void);
+
+G_END_DECLS
+
+#endif /* __GWY_APP_GL_MATERIAL_EDITOR_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

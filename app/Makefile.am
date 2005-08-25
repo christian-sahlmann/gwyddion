@@ -13,6 +13,7 @@ libgwyappincludedir = $(pkgincludedir)/app
 libgwyappinclude_HEADERS = \
 	app.h \
 	filelist.h \
+	glmaterial-editor.h \
 	gradient-editor.h \
 	graphlist.h \
 	gwyapp.h \
@@ -54,6 +55,7 @@ libgwyapp_la_SOURCES = \
 	app.c \
 	file.c \
 	filelist.c \
+	glmaterial-editor.c \
 	gradient-editor.c \
 	graphlist.c \
 	menu.c \
