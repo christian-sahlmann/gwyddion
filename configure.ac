@@ -374,10 +374,10 @@ AC_CONFIG_COMMANDS([gwyconfig.h],
 
 _______EOF
 
-  if test x$GTKGLEXT_DEPENDENCY = x; then
-    echo '#undef GWYDDION_HAS_OPENGL' >>$outfile
-  else
+  if test x$enable_gl != xno; then
     echo '#define GWYDDION_HAS_OPENGL 1' >>$outfile
+  else
+    echo '#undef GWYDDION_HAS_OPENGL' >>$outfile
   fi
   echo >>$outfile
 

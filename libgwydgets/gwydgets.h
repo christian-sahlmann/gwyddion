@@ -67,6 +67,10 @@
 #include <libgwydgets/gwyvruler.h>
 #include <libgwydgets/gwyvalunit.h>
 
+#ifdef GWYDDION_HAS_OPENGL
+#include <gdk/gdkgl.h>
+#endif
+
 G_BEGIN_DECLS
 
 #ifndef GWYDDION_HAS_OPENGL
