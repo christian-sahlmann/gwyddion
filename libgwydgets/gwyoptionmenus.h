@@ -25,23 +25,29 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_menu_gradient         (GCallback callback,
-                                      gpointer cbdata);
-GtkWidget* gwy_gradient_selection_new(GCallback callback,
-                                      gpointer cbdata,
-                                      const gchar *active);
-GtkWidget* gwy_gradient_tree_view_new(GCallback callback,
-                                      gpointer cbdata,
-                                      const gchar *active);
+GtkWidget*   gwy_menu_gradient                (GCallback callback,
+                                               gpointer cbdata);
+GtkWidget*   gwy_gradient_selection_new       (GCallback callback,
+                                               gpointer cbdata,
+                                               const gchar *active);
+GtkWidget*   gwy_gradient_tree_view_new       (GCallback callback,
+                                               gpointer cbdata,
+                                               const gchar *active);
+const gchar* gwy_gradient_selection_get_active(GtkWidget *selection);
+void         gwy_gradient_selection_set_active(GtkWidget *selection,
+                                               const gchar *active);
 
-GtkWidget* gwy_menu_gl_material         (GCallback callback,
-                                         gpointer cbdata);
-GtkWidget* gwy_gl_material_selection_new(GCallback callback,
-                                         gpointer cbdata,
-                                         const gchar *active);
-GtkWidget* gwy_gl_material_tree_view_new(GCallback callback,
-                                         gpointer cbdata,
-                                         const gchar *active);
+GtkWidget*   gwy_menu_gl_material                (GCallback callback,
+                                                  gpointer cbdata);
+GtkWidget*   gwy_gl_material_selection_new       (GCallback callback,
+                                                  gpointer cbdata,
+                                                  const gchar *active);
+const gchar* gwy_gl_material_selection_get_active(GtkWidget *selection);
+void         gwy_gl_material_selection_set_active(GtkWidget *selection,
+                                                  const gchar *active);
+GtkWidget*   gwy_gl_material_tree_view_new       (GCallback callback,
+                                                  gpointer cbdata,
+                                                  const gchar *active);
 
 G_END_DECLS
 

@@ -31,6 +31,21 @@
 
 #define BITS_PER_SAMPLE 8
 
+/**
+ * Stuff set on objects:
+ * selection button:
+ *     "active-resource": name of active resource
+ *     "treeview": corresponding treeview (if exists)
+ *     "resource-info": ResourceInfo for this resource type
+ *
+ * tree model:
+ *     "resource-info": ResourceInfo for this resource type
+ *
+ * packed item:
+ *     "image": image with resource sample
+ *     "label": label with resource name
+ **/
+
 typedef void (*ResourceSamplerFunc)(GwyResource *resource,
                                     GdkPixbuf *pixbuf);
 
@@ -60,13 +75,15 @@ static void pack_resource_box                     (GtkContainer *container,
                                                    const gchar *name,
                                                    gint width,
                                                    gint height);
-GtkWidget*  gwy_resource_tree_view_new            (const ResourceInfo *rinfo,
+static GtkWidget* gwy_resource_tree_view_new      (const ResourceInfo *rinfo,
                                                    GCallback callback,
                                                    gpointer cbdata,
                                                    const gchar *active);
-GtkWidget*  gwy_resource_selection_new            (const ResourceInfo *rinfo,
+static GtkWidget* gwy_resource_selection_new      (const ResourceInfo *rinfo,
                                                    GCallback callback,
                                                    gpointer cbdata,
+                                                   const gchar *active);
+static void gwy_resource_selection_set_active     (GtkWidget *widget,
                                                    const gchar *active);
 static void gwy_resource_selection_cell_pixbuf    (GtkTreeViewColumn *column,
                                                    GtkCellRenderer *renderer,
@@ -84,6 +101,8 @@ static void gwy_resource_button_toggled           (GtkWidget *button,
                                                    CallbackInfo *cbinfo);
 static void gwy_resource_selection_changed        (GtkTreeSelection *selection,
                                                    GtkWidget *button);
+static void gwy_resource_button_update            (GtkWidget *button,
+                                                   GwyResource *resource);
 static void gwy_resource_selection_default_changed(GwyInventory *inventory,
                                                    GwyInventoryStore *store);
 static void gwy_resource_button_treeview_destroy  (GtkWidget *treeview,
@@ -232,6 +251,34 @@ gwy_gradient_selection_new(GCallback callback,
 }
 
 /**
+ * gwy_gradient_selection_get_active:
+ * @selection: Gradient selection button.
+ *
+ * Gets the name of currently selected gradient of a selection button.
+ *
+ * Returns: Name as a string owned by the selected gradient.
+ **/
+const gchar*
+gwy_gradient_selection_get_active(GtkWidget *selection)
+{
+    return g_object_get_data(G_OBJECT(selection), "active-resource");
+}
+
+/**
+ * gwy_gradient_selection_set_active:
+ * @selection: Gradient selection button.
+ * @active: Gradient name to be shown as currently selected.
+ *
+ * Sets the currently selected gradient of a selection button.
+ **/
+void
+gwy_gradient_selection_set_active(GtkWidget *selection,
+                                  const gchar *active)
+{
+    gwy_resource_selection_set_active(selection, active);
+}
+
+/**
  * gwy_gl_material_selection_new:
  * @callback: Callback to connect to "changed" signal of tree view selection
  *            (or %NULL for none).
@@ -252,9 +299,37 @@ gwy_gl_material_selection_new(GCallback callback,
                                       callback, cbdata, active);
 }
 
+/**
+ * gwy_gl_material_selection_get_active:
+ * @selection: GL material selection button.
+ *
+ * Gets the name of currently selected GL material of a selection button.
+ *
+ * Returns: Name as a string owned by the selected GL material.
+ **/
+const gchar*
+gwy_gl_material_selection_get_active(GtkWidget *selection)
+{
+    return g_object_get_data(G_OBJECT(selection), "active-resource");
+}
+
+/**
+ * gwy_gl_material_selection_set_active:
+ * @selection: GL material selection button.
+ * @active: GL material name to be shown as currently selected.
+ *
+ * Sets the currently selected GL material of a selection button.
+ **/
+void
+gwy_gl_material_selection_set_active(GtkWidget *selection,
+                                     const gchar *active)
+{
+    gwy_resource_selection_set_active(selection, active);
+}
+
 /************************** Private methods ****************************/
 
-GtkWidget*
+static GtkWidget*
 gwy_resource_tree_view_new(const ResourceInfo *rinfo,
                            GCallback callback,
                            gpointer cbdata,
@@ -380,6 +455,43 @@ gwy_resource_selection_new(const ResourceInfo *rinfo,
 }
 
 static void
+gwy_resource_selection_set_active(GtkWidget *widget,
+                                  const gchar *active)
+{
+    const ResourceInfo *rinfo;
+    GtkTreeModel *model;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+    GtkWidget *treeview;
+    const gchar *current;
+    gint i;
+
+    rinfo = g_object_get_data(G_OBJECT(widget), "resource-info");
+    g_return_if_fail(rinfo);
+
+    current = g_object_get_data(G_OBJECT(widget), "active-resource");
+    if (current && active && gwy_strequal(active, current))
+        return;
+
+    treeview = g_object_get_data(G_OBJECT(widget), "treeview");
+    if (!treeview) {
+        GwyResource *resource;
+
+        resource = gwy_inventory_get_item_or_default(rinfo->inventory,
+                                                     active);
+        gwy_resource_button_update(widget, resource);
+        return;
+    }
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
+    i = gwy_inventory_get_item_position(rinfo->inventory, active);
+    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    gtk_tree_selection_select_iter(selection, &iter);
+}
+
+static void
 gwy_resource_button_toggled(GtkWidget *button,
                             CallbackInfo *cbinfo)
 {
@@ -471,20 +583,27 @@ static void
 gwy_resource_selection_changed(GtkTreeSelection *selection,
                                GtkWidget *button)
 {
-    const ResourceInfo *rinfo;
-    GtkWidget *image, *label;
     GwyResource *resource;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    GdkPixbuf *pixbuf;
 
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
         return;
     gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    gwy_resource_button_update(button, resource);
+}
+
+static void
+gwy_resource_button_update(GtkWidget *button,
+                           GwyResource *resource)
+{
+    const ResourceInfo *rinfo;
+    GtkWidget *image, *label;
+    GdkPixbuf *pixbuf;
 
     image = g_object_get_data(G_OBJECT(button), "image");
     pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
-    rinfo = g_object_get_data(G_OBJECT(model), "resource-info");
+    rinfo = g_object_get_data(G_OBJECT(button), "resource-info");
     rinfo->sampler(resource, pixbuf);
     gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
 
