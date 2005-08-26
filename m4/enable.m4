@@ -10,7 +10,6 @@ AC_ARG_ENABLE([$1],
      *) AC_MSG_ERROR(bad value ${enableval} for --enable-$1) ;;
    esac],
   [ifelse([$2],,[enable_$1=yes],[enable_$2=yes])])
-  export ifelse([$2],,[enable_$1],[enable_$2])
 ])
 
 dnl Create simple --with option $1, creating enable_$2 with help text $3,
@@ -25,5 +24,4 @@ AC_ARG_WITH([$1],
      *) AC_MSG_ERROR(bad value ${withval} for --with-$1) ;;
    esac],
   [ifelse([$2],,[enable_$1=yes],[enable_$2=yes])])
-  export ifelse([$2],,[enable_$1],[enable_$2])
 ])
