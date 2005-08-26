@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
+#include <gwyconfig.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule.h>
@@ -64,6 +65,7 @@ static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
+static void       gwy_app_gl_view_maybe_cb     (void);
 
 static GtkTargetEntry dnd_target_table[] = {
   { "STRING",     0, DND_TARGET_STRING },
@@ -145,7 +147,7 @@ gwy_app_toolbox_create(void)
         {
             GWY_STOCK_3D_BASE,
             N_("Display a 3D view of data"),
-            G_CALLBACK(gwy_app_3d_view_cb),
+            G_CALLBACK(gwy_app_gl_view_maybe_cb),
             NULL,
         },
     };
@@ -353,9 +355,6 @@ gwy_app_toolbox_create(void)
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
-    gwy_app_menu_set_sensitive_both(button,
-                                    GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_GL_OK,
-                                    gwy_gl_ok ? GWY_MENU_FLAG_GL_OK : 0);
 
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
@@ -1050,6 +1049,42 @@ gwy_app_redo_cb(void)
 
     if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
         gwy_app_undo_redo_container(data);
+}
+
+static void
+gwy_app_gl_view_maybe_cb(void)
+{
+    static GtkWidget *dialog = NULL;
+
+    if (gwy_gl_ok) {
+        gwy_app_3d_view_cb();
+        return;
+    }
+
+    if (dialog) {
+        gtk_window_present(GTK_WINDOW(dialog));
+        return;
+    }
+
+    dialog = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    _("OpenGL 3D graphics not available"));
+    gtk_message_dialog_format_secondary_markup
+        (GTK_MESSAGE_DIALOG(dialog),
+#ifdef GWYDDION_HAS_OPENGL
+         /* FIXME: Makes sense only on Unix */
+         /* FIXME: It would be nice to give a more helpful message, but the
+          * trouble is we don't know why the silly thing failed either. */
+         _("Initialization of OpenGL failed.  Check output of "
+           "<tt>glxinfo</tt> and warning messages printed to console during "
+           "Gwyddion startup.")
+#else
+         _("This version of Gwyddion was built without OpenGL support.")
+#endif
+        );
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    g_object_add_weak_pointer(G_OBJECT(dialog), (gpointer*)&dialog);
+    gtk_widget_show(dialog);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

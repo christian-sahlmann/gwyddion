@@ -903,7 +903,11 @@ gwy_app_graph_list_delete_cb(GtkWidget *toggle)
 void
 gwy_app_3d_view_cb(void)
 {
-    gwy_app_3d_window_create(gwy_app_data_window_get_current());
+    GwyDataWindow *data_window;
+
+    data_window = gwy_app_data_window_get_current();
+    g_return_if_fail(data_window);
+    gwy_app_3d_window_create(data_window);
 }
 
 /**
