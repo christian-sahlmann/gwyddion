@@ -42,36 +42,47 @@ enum {
 
 /* Forward declarations */
 
-static void     gwy_3d_window_destroy             (GtkObject *object);
-static void     gwy_3d_window_finalize            (GObject *object);
-static void     gwy_3d_window_pack_buttons        (Gwy3DWindow *gwy3dwindow,
-                                                   guint offset,
-                                                   GtkBox *box);
-static void     gwy_3d_window_set_mode            (gpointer userdata,
-                                                   GtkWidget *button);
-static void     gwy_3d_window_set_gradient        (GtkTreeSelection *selection,
-                                                   Gwy3DWindow *gwy3dwindow);
-static void     gwy_3d_window_set_material        (GtkTreeSelection *selection,
-                                                   Gwy3DWindow *gwy3dwindow);
-static void     gwy_3d_window_select_controls     (gpointer data,
-                                                   GtkWidget *button);
-static void     gwy_3d_window_set_labels          (GtkWidget *combo,
-                                                   Gwy3DWindow *gwy3dwindow);
-static void     gwy_3d_window_projection_changed  (GtkToggleButton *check,
-                                                   Gwy3DWindow *window);
-static void     gwy_3d_window_show_axes_changed   (GtkToggleButton *check,
-                                                   Gwy3DWindow *window);
-static void     gwy_3d_window_show_labels_changed (GtkToggleButton *check,
-                                                   Gwy3DWindow *window);
-static void     gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
-                                                   Gwy3DWindow *window);
-static void     gwy_3d_window_auto_scale_changed  (GtkToggleButton *check,
-                                                   Gwy3DWindow *window);
+static void     gwy_3d_window_destroy              (GtkObject *object);
+static void     gwy_3d_window_finalize             (GObject *object);
+static void     gwy_3d_window_pack_buttons         (Gwy3DWindow *gwy3dwindow,
+                                                    guint offset,
+                                                    GtkBox *box);
+static void     gwy_3d_window_set_mode             (gpointer userdata,
+                                                    GtkWidget *button);
+static void     gwy_3d_window_set_gradient         (GtkTreeSelection *selection,
+                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_set_material         (GtkTreeSelection *selection,
+                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_select_controls      (gpointer data,
+                                                    GtkWidget *button);
+static void     gwy_3d_window_set_labels           (GtkWidget *combo,
+                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_projection_changed   (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_show_axes_changed    (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_show_labels_changed  (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_display_mode_changed (GtkWidget *item,
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_set_visualization    (Gwy3DWindow *window,
+                                                    Gwy3DVisualization visual);
+static void     gwy_3d_window_auto_scale_changed   (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
 static void     gwy_3d_window_labels_entry_activate(GtkEntry *entry,
-                                                   Gwy3DWindow *window);
-static void     gwy_3d_window_labels_reset_clicked(Gwy3DWindow *window);
-static void     gwy_3d_window_set_tooltip         (GtkWidget *widget,
-                                                   const gchar *tip_text);
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_labels_reset_clicked (Gwy3DWindow *window);
+static void     gwy_3d_window_set_tooltip          (GtkWidget *widget,
+                                                    const gchar *tip_text);
+static gboolean gwy_3d_window_view_clicked         (GtkWidget *gwy3dwindow,
+                                                    GdkEventButton *event,
+                                                    GtkWidget *gwy3dview);
+static void     gwy_3d_window_visual_selected      (GtkWidget *item,
+                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_gradient_selected    (GtkWidget *item,
+                                                    Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_material_selected    (GtkWidget *item,
+                                                    Gwy3DWindow *gwy3dwindow);
 
 /* Local data */
 
@@ -240,6 +251,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     gwy3dwindow->gwy3dview = (GtkWidget*)gwy3dview;
     gtk_box_pack_start(GTK_BOX(hbox), gwy3dwindow->gwy3dview, TRUE, TRUE, 0);
+    g_signal_connect_swapped(gwy3dwindow->gwy3dview, "button-press-event",
+                             G_CALLBACK(gwy_3d_window_view_clicked),
+                             gwy3dwindow);
 
     /* Small toolbar */
     gwy3dwindow->vbox_small = gtk_vbox_new(FALSE, 0);
@@ -759,17 +773,24 @@ gwy_3d_window_show_labels_changed(GtkToggleButton *check,
 }
 
 static void
-gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
+gwy_3d_window_display_mode_changed(GtkWidget *item,
                                    Gwy3DWindow *window)
 {
     Gwy3DVisualization visual;
+    GSList *list;
 
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(radio)))
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(item)))
         return;
 
-    visual
-        = gwy_radio_buttons_get_current(gtk_radio_button_get_group(radio),
-                                        "display-mode");
+    list = gtk_radio_button_get_group(GTK_RADIO_BUTTON(item));
+    visual = gwy_radio_buttons_get_current(list, "display-mode");
+    gwy_3d_window_set_visualization(window, visual);
+}
+
+static void
+gwy_3d_window_set_visualization(Gwy3DWindow *window,
+                                Gwy3DVisualization visual)
+{
     gwy_3d_view_set_visualization(GWY_3D_VIEW(window->gwy3dview), visual);
     gtk_widget_set_sensitive(window->material_menu, visual);
     gtk_widget_set_sensitive(window->material_label, visual);
@@ -779,21 +800,6 @@ gwy_3d_window_display_mode_changed(GtkRadioButton *radio,
     gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], visual);
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
                              visual);
-        /*
-    if (visual) {
-        material = gwy_3d_view_get_material(GWY_3D_VIEW(window->gwy3dview));
-         * FIXME: A hack. Maybe should GLMaterial set default different from
-         * None?
-         * FIXME FIXME No longer needed?
-        if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(material)),
-                         GWY_GL_MATERIAL_NONE)) {
-            menu = gtk_option_menu_get_menu
-                                 (GTK_OPTION_MENU(window->material_menu));
-            item = gtk_menu_get_active(GTK_MENU(menu));
-            gwy_3d_window_set_material(item, window);
-        }
-    }
-         */
 }
 
 static void
@@ -844,6 +850,83 @@ gwy_3d_window_set_tooltip(GtkWidget *widget,
 {
     if (tooltips)
         gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
+}
+
+static gboolean
+gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
+                           GdkEventButton *event,
+                           GtkWidget *gwy3dview)
+{
+    Gwy3DVisualization visual;
+    GtkWidget *menu, *item;
+
+    if (event->button != 3)
+        return FALSE;
+
+    switch (gwy_3d_view_get_visualization(GWY_3D_VIEW(gwy3dview))) {
+        case GWY_3D_VISUALIZATION_GRADIENT:
+        menu = gwy_menu_gradient(G_CALLBACK(gwy_3d_window_gradient_selected),
+                                 gwy3dwindow);
+        item = gtk_menu_item_new_with_mnemonic(_("S_witch to Lighting Mode"));
+        visual = GWY_3D_VISUALIZATION_LIGHTING;
+        break;
+
+
+        case GWY_3D_VISUALIZATION_LIGHTING:
+        menu = gwy_menu_gl_material(G_CALLBACK(gwy_3d_window_material_selected),
+                                    gwy3dwindow);
+        item = gtk_menu_item_new_with_mnemonic(_("S_witch to Gradient Mode"));
+        visual = GWY_3D_VISUALIZATION_GRADIENT;
+        break;
+
+        default:
+        g_return_val_if_reached(FALSE);
+        break;
+    }
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+
+    gtk_widget_show_all(menu);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+    g_signal_connect(menu, "selection-done",
+                     G_CALLBACK(gtk_widget_destroy), NULL);
+
+    return FALSE;
+}
+
+static void
+gwy_3d_window_visual_selected(GtkWidget *item,
+                              Gwy3DWindow *gwy3dwindow)
+{
+    Gwy3DVisualization visual;
+
+    visual = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "display-mode"));
+    gwy_3d_window_set_visualization(gwy3dwindow, visual);
+}
+
+static void
+gwy_3d_window_gradient_selected(GtkWidget *item,
+                                Gwy3DWindow *gwy3dwindow)
+{
+    const gchar *name;
+
+    name = g_object_get_data(G_OBJECT(item), "gradient-name");
+    gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
+    /* TODO: Button selectors must have some `set' method. */
+}
+
+static void
+gwy_3d_window_material_selected(GtkWidget *item,
+                                Gwy3DWindow *gwy3dwindow)
+{
+    const gchar *name;
+
+    name = g_object_get_data(G_OBJECT(item), "gl-material-name");
+    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
+    /* TODO: Button selectors must have some `set' method. */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
