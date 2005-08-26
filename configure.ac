@@ -302,7 +302,6 @@ AC_HEADER_SYS_WAIT
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
-  GL/gl.h \
   fcntl.h \
   stdbool.h \
   sys/stat.h \
@@ -328,6 +327,8 @@ AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
 AC_CHECK_FUNC([acosh], [gwy_have_acosh=yes], [gwy_have_acosh=no])
 AC_CHECK_FUNC([asinh], [gwy_have_asinh=yes], [gwy_have_asinh=no])
 AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
+export gwy_have_cbrt gwy_have_hypot gwy_have_pow10
+export gwy_have_acosh gwy_have_asinh gwy_have_atanh
 
 #############################################################################
 # I18n
