@@ -57,7 +57,8 @@ gwy_widgets_type_init(void)
  *
  * This function must be called before OpenGL widgets can be used.
  *
- * Returns: %TRUE if an appropriate visual was found.
+ * Returns: %TRUE if an appropriate visual was found.  If Gwyddion was compiled
+ *          without OpenGL support, it always returns %FALSE.
  **/
 gboolean
 gwy_widgets_gl_init(void)
@@ -65,6 +66,7 @@ gwy_widgets_gl_init(void)
     /* when called twice, fail but successfully :o) */
     g_return_val_if_fail(glconfig == NULL, TRUE);
 
+#ifdef HAVE_GTKGLEXT
     glconfig = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB
                                          | GDK_GL_MODE_DEPTH
                                          | GDK_GL_MODE_DOUBLE);
@@ -80,6 +82,7 @@ gwy_widgets_gl_init(void)
             g_warning("No appropriate OpenGL-capable visual found.");
         }
     }
+#endif
 
     return glconfig != NULL;
 }
@@ -91,7 +94,8 @@ gwy_widgets_gl_init(void)
  *
  * Call gwy_widgets_gl_init() first.
  *
- * Returns: The OpenGL framebuffer configuration.
+ * Returns: The OpenGL framebuffer configuration, %NULL if OpenGL
+ *          initialization was not successfull.
  **/
 GdkGLConfig*
 gwy_widgets_get_gl_config(void)

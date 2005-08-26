@@ -4,6 +4,7 @@
 Application:
 - GLib and Gtk+ 2.6 is required now.
 - Can optionally use FFTW v3 library (currently only for a few operations).
+- It's possible to build Gwyddion without OpenGL support.
 - System chdir() is no longer used, so that e.g. core is always dumped to the
   directory where app was started, otherwise directory behaviour has not
   changed.

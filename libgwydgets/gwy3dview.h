@@ -117,7 +117,7 @@ struct _Gwy3DViewClass {
     gpointer reserved4;
 };
 
-GtkWidget*        gwy_3d_view_new               (GwyContainer * data);
+GtkWidget*        gwy_3d_view_new               (GwyContainer *data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
 #ifndef GWY_DISABLE_DEPRECATED

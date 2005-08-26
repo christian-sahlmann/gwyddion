@@ -25,7 +25,10 @@
 #include <string.h>
 
 #include <glib/gstdio.h>
+
+#ifdef HAVE_GTKGLEXT
 #include <gtk/gtkglinit.h>
+#endif
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
@@ -77,7 +80,9 @@ main(int argc, char *argv[])
 #endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
+#ifdef HAVE_GTKGLEXT
     gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
+#endif  /* HAVE_GTKGLEXT */
 
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);

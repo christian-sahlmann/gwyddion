@@ -29,15 +29,20 @@
 #include <gtk/gtksignal.h>
 #include <gdk/gdkevents.h>
 #include <glib-object.h>
+
+#ifdef HAVE_GTKGLEXT
 #include <gtk/gtkgl.h>
+#endif
 
 #ifdef G_OS_WIN32
 #define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 #endif
 
+#ifdef HAVE_GTKGLEXT
 #include <GL/gl.h>
-#include <GL/glu.h>
+#endif
+
 #include <pango/pangoft2.h>
 
 #include <libgwyddion/gwymacros.h>
@@ -72,6 +77,7 @@ enum {
     PROP_REDUCED_SIZE
 };
 
+#ifdef HAVE_GTKGLEXT
 typedef struct {
     GLfloat x, y, z;
 } Gwy3DVector;
@@ -124,10 +130,10 @@ static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
                                                      gdouble upper,
                                                      gdouble step,
                                                      gdouble page);
-static void          gwy_3d_adjustment_value_changed (GtkAdjustment* adjustment,
+static void          gwy_3d_adjustment_value_changed (GtkAdjustment *adjustment,
                                                       Gwy3DView *gwy3dview);
 static void          gwy_3d_label_changed       (Gwy3DView *gwy3dview);
-static void          gwy_3d_timeout_start       (Gwy3DView * gwy3dview,
+static void          gwy_3d_timeout_start       (Gwy3DView *gwy3dview,
                                                  gboolean immediate,
                                                  gboolean invalidate_now);
 static gboolean      gwy_3d_timeout_func        (gpointer user_data);
@@ -156,9 +162,11 @@ labels[] = {
     { "/0/3d/label/min",  "$min"  },
     { "/0/3d/label/max",  "$max"  },
 };
+#endif /* HAVE_GTKGLEXT */
 
 G_DEFINE_TYPE(Gwy3DView, gwy_3d_view, GTK_TYPE_WIDGET)
 
+#ifdef HAVE_GTKGLEXT
 static void
 gwy_3d_view_class_init(Gwy3DViewClass *klass)
 {
@@ -1150,7 +1158,7 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
 
-    glReadPixels(0, 0, width, height , GL_RGB, GL_UNSIGNED_BYTE,  pixels);
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     a = pixels;
     b = pixels + (height -1)  * rowstride;
@@ -1430,7 +1438,7 @@ gwy_3d_timeout_func(gpointer user_data)
 }
 
 static void
-gwy_3d_adjustment_value_changed(GtkAdjustment* adjustment,
+gwy_3d_adjustment_value_changed(GtkAdjustment *adjustment,
                                 Gwy3DView *gwy3dview)
 {
     GQuark quark;
@@ -2432,6 +2440,247 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
 
     return ;
 }
+#else /* HAVE_GTKGLEXT */
+/* Export the same set of symbols if we don't have OpenGL support.  But let
+ * them all fail. */
+static void
+gwy_3d_view_init(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+}
+
+static void
+gwy_3d_view_class_init(G_GNUC_UNUSED Gwy3DViewClass *klass)
+{
+}
+
+GtkWidget*
+gwy_3d_view_new(G_GNUC_UNUSED GwyContainer *data)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_update(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+const gchar*
+gwy_3d_view_get_gradient(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_gradient(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                         G_GNUC_UNUSED const gchar *gradient)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+Gwy3DMovement
+gwy_3d_view_get_movement_type(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0;
+}
+
+void
+gwy_3d_view_set_movement_type(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                              G_GNUC_UNUSED Gwy3DMovement movement)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+Gwy3DProjection
+gwy_3d_view_get_projection(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0;
+}
+
+void
+gwy_3d_view_set_projection(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                           G_GNUC_UNUSED Gwy3DProjection projection)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+gboolean
+gwy_3d_view_get_show_axes(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return FALSE;
+}
+
+void
+gwy_3d_view_set_show_axes(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                          G_GNUC_UNUSED gboolean show_axes)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+gboolean
+gwy_3d_view_get_show_labels(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return FALSE;
+}
+
+void
+gwy_3d_view_set_show_labels(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                            G_GNUC_UNUSED gboolean show_labels)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+
+Gwy3DVisualization
+gwy_3d_view_get_visualization(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0;
+}
+
+void
+gwy_3d_view_set_visualization(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                              G_GNUC_UNUSED Gwy3DVisualization visual)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+guint
+gwy_3d_view_get_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0;
+}
+
+void
+gwy_3d_view_set_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED guint reduced_size)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+
+const gchar*
+gwy_3d_view_get_material(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_material(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                         G_GNUC_UNUSED const gchar *material)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+
+GdkPixbuf*
+gwy_3d_view_get_pixbuf(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+Gwy3DLabel*
+gwy_3d_view_get_label(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                      G_GNUC_UNUSED Gwy3DViewLabel label)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GwyContainer*
+gwy_3d_view_get_data(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_reset_view(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+
+GtkAdjustment*
+gwy_3d_view_get_rot_x_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GtkAdjustment*
+gwy_3d_view_get_rot_y_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GtkAdjustment*
+gwy_3d_view_get_view_scale_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GtkAdjustment*
+gwy_3d_view_get_z_deformation_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GtkAdjustment*
+gwy_3d_view_get_light_z_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+GtkAdjustment*
+gwy_3d_view_get_light_y_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+
+gdouble
+gwy_3d_view_get_max_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0.0;
+}
+
+gdouble
+gwy_3d_view_get_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return 0.0;
+}
+
+void
+gwy_3d_view_set_max_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                               G_GNUC_UNUSED gdouble new_max_scale)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+void
+gwy_3d_view_set_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                               G_GNUC_UNUSED gdouble new_min_scale)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+#endif /* HAVE_GTKGLEXT */
 
 /************************** Documentation ****************************/
 
