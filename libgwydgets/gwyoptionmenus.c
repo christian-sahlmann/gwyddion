@@ -454,6 +454,8 @@ gwy_resource_selection_new(const ResourceInfo *rinfo,
     return button;
 }
 
+/* FIXME: If there is no treeview, no signal is emitted.  Must define a proper
+ * class for the buttons. */
 static void
 gwy_resource_selection_set_active(GtkWidget *widget,
                                   const gchar *active)
@@ -461,6 +463,7 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     const ResourceInfo *rinfo;
     GtkTreeModel *model;
     GtkTreeSelection *selection;
+    GtkTreePath *path;
     GtkTreeIter iter;
     GtkWidget *treeview;
     const gchar *current;
@@ -488,7 +491,11 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
     i = gwy_inventory_get_item_position(rinfo->inventory, active);
     gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    path = gtk_tree_model_get_path(model, &iter);
     gtk_tree_selection_select_iter(selection, &iter);
+    gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(treeview), path, NULL,
+                                 TRUE, 0.5, 0.0);
+    gtk_tree_path_free(path);
 }
 
 static void
@@ -601,6 +608,7 @@ gwy_resource_button_update(GtkWidget *button,
     GtkWidget *image, *label;
     GdkPixbuf *pixbuf;
 
+    gwy_debug("updating button to: %s", gwy_resource_get_name(resource));
     image = g_object_get_data(G_OBJECT(button), "image");
     pixbuf = gtk_image_get_pixbuf(GTK_IMAGE(image));
     rinfo = g_object_get_data(G_OBJECT(button), "resource-info");

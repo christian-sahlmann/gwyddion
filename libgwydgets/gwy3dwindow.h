@@ -51,6 +51,7 @@ struct _Gwy3DWindow {
     GtkWidget *lights_spin1;
     GtkWidget *lights_spin2;
     GtkWidget **buttons;
+    GSList    *visual_mode_group;
 
     GtkWidget *labels_menu;
     GtkWidget *labels_text;

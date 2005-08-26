@@ -230,7 +230,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     const gchar *name;
     GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu, *combo,
               *label, *check, *entry;
-    GSList *display_mode_group;
     Gwy3DLabel *gwy3dlabel;
     Gwy3DVisualization visual;
     guint row;
@@ -367,13 +366,14 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row = 0;
 
     visual = gwy_3d_view_get_visualization(gwy3dview);
-    display_mode_group
+    gwy3dwindow->visual_mode_group
         = gwy_radio_buttons_create(display_modes, G_N_ELEMENTS(display_modes),
                                    "display-mode",
                                    G_CALLBACK(gwy_3d_window_display_mode_changed),
                                    gwy3dwindow,
                                    visual);
-    gtk_table_attach(GTK_TABLE(table), GTK_WIDGET(display_mode_group->data),
+    gtk_table_attach(GTK_TABLE(table),
+                     GTK_WIDGET(gwy3dwindow->visual_mode_group->data),
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
@@ -414,7 +414,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     row++;
 
     gtk_table_attach(GTK_TABLE(table),
-                     GTK_WIDGET(display_mode_group->next->data),
+                     GTK_WIDGET(gwy3dwindow->visual_mode_group->next->data),
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
@@ -904,7 +904,8 @@ gwy_3d_window_visual_selected(GtkWidget *item,
     Gwy3DVisualization visual;
 
     visual = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(item), "display-mode"));
-    gwy_3d_window_set_visualization(gwy3dwindow, visual);
+    gwy_radio_buttons_set_current(gwy3dwindow->visual_mode_group,
+                                  "display-mode", visual);
 }
 
 static void
@@ -914,8 +915,10 @@ gwy_3d_window_gradient_selected(GtkWidget *item,
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "gradient-name");
+    gwy_gradient_selection_set_active(gwy3dwindow->gradient_menu, name);
+    /* FIXME: Double update if tree view is visible. Remove once selection
+     * buttons can emit signals. */
     gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
-    /* TODO: Button selectors must have some `set' method. */
 }
 
 static void
@@ -925,8 +928,10 @@ gwy_3d_window_material_selected(GtkWidget *item,
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "gl-material-name");
+    gwy_gl_material_selection_set_active(gwy3dwindow->material_menu, name);
+    /* FIXME: Double update if tree view is visible. Remove once selection
+     * buttons can emit signals. */
     gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
-    /* TODO: Button selectors must have some `set' method. */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
