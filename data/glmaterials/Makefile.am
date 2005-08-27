@@ -3,6 +3,7 @@
 glmaterialdatadir = $(pkgdatadir)/glmaterials
 
 glmaterialdata_DATA = \
+	Alien-Alloy \
 	Black-Plastic \
 	Black-Rubber \
 	Brass \
