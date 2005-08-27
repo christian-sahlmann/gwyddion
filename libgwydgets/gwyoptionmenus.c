@@ -31,7 +31,7 @@
 
 #define BITS_PER_SAMPLE 8
 
-/**
+/*
  * Stuff set on objects:
  * selection button:
  *     "active-resource": name of active resource
@@ -44,7 +44,7 @@
  * packed item:
  *     "image": image with resource sample
  *     "label": label with resource name
- **/
+ */
 
 typedef void (*ResourceSamplerFunc)(GwyResource *resource,
                                     GdkPixbuf *pixbuf);
