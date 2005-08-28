@@ -212,6 +212,9 @@ scars_la_LIBADD = $(module_libadd)
 shade_la_SOURCES = shade.c
 shade_la_LIBADD = $(module_libadd)
 
+#stary_extract_la_SOURCES = stary_extract.c
+#stary_extract_la_LIBADD = $(module_libadd)
+
 #slope_dist_la_SOURCES = slope_dist.c
 #slope_dist_la_LIBADD = $(module_libadd)
 

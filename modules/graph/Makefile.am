@@ -4,7 +4,9 @@ graphdir = $(pkglibdir)/modules/graph
 
 graph_LTLIBRARIES = \
 	graph_fit.la	\
-	graph_cd.la
+	graph_cd.la \
+	graph_level.la \
+	graph_stats.la
 
 
 EXTRA_DIST = \
@@ -43,6 +45,12 @@ graph_fit_la_LIBADD = $(module_libadd)
 
 graph_cd_la_SOURCES = graph_cd.c
 graph_cd_la_LIBADD = $(module_libadd)
+
+graph_level_la_SOURCES = graph_level.c
+graph_level_la_LIBADD = $(module_libadd)
+
+graph_stats_la_SOURCES = graph_stats.c
+graph_stats_la_LIBADD = $(module_libadd)
 
 
 clean-local:
