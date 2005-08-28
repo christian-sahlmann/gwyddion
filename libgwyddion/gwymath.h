@@ -51,14 +51,14 @@ gdouble*     gwy_math_lin_solve_rewrite  (gint n,
                                           gdouble *rhs,
                                           gdouble *result);
 gdouble*     gwy_math_fit_polynom        (gint ndata,
-                                          gdouble *xdata,
-                                          gdouble *ydata,
+                                          const gdouble *xdata,
+                                          const gdouble *ydata,
                                           gint n,
                                           gdouble *coeffs);
 gboolean     gwy_math_choleski_decompose (gint n,
                                           gdouble *matrix);
 void         gwy_math_choleski_solve     (gint n,
-                                          gdouble *decomp,
+                                          const gdouble *decomp,
                                           gdouble *rhs);
 gdouble      gwy_math_median             (gsize n,
                                           gdouble *array);

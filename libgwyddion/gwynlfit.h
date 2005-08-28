@@ -32,18 +32,17 @@ typedef  gdouble (*GwyNLFitFunc)(gdouble x,
                                  gpointer user_data,
                                  gboolean *fres);
 
-typedef  void (*GwyNLFitDerFunc)(gint i,
-                                 const gdouble *x,
+typedef  void (*GwyNLFitDerFunc)(gdouble x,
                                  gint n_param,
-                                 gdouble *param,
+                                 const gdouble *param,
                                  const gboolean *fixed_param,
                                  GwyNLFitFunc fmarq,
                                  gpointer user_data,
                                  gdouble *deriv,
                                  gboolean *dres);
 
-typedef void (*GwyNLFitGuessFunc)(gdouble *x,
-                                  gdouble *y,
+typedef void (*GwyNLFitGuessFunc)(const gdouble *x,
+                                  const gdouble *y,
                                   gint n_dat,
                                   gdouble *param,
                                   gpointer user_data,
@@ -54,8 +53,8 @@ typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
                                        gdouble yscale,
                                        gint dir);
 
-typedef void (*GwyNLFitWeightFunc)(gdouble *x,
-                                   gdouble *y,
+typedef void (*GwyNLFitWeightFunc)(const gdouble *x,
+                                   const gdouble *y,
                                    gint n_dat,
                                    gdouble *weight,
                                    gpointer user_data);
@@ -122,10 +121,9 @@ gdouble         gwy_math_nlfit_get_correlations  (GwyNLFitter *nlfit,
 gdouble         gwy_math_nlfit_get_sigma         (GwyNLFitter *nlfit,
                                                   gint par);
 
-void            gwy_math_nlfit_derive            (gint i,
-                                                  const gdouble *x,
+void            gwy_math_nlfit_derive            (gdouble x,
                                                   gint n_param,
-                                                  gdouble *param,
+                                                  const gdouble *param,
                                                   const gboolean *fixed_param,
                                                   GwyNLFitFunc ff,
                                                   gpointer user_data,

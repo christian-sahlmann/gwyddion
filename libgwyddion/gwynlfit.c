@@ -295,7 +295,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
 
             /* J'J and J'r computation */
             for (i = 0; i < n_dat; i++) {
-                nlfit->dmarq(i, x, n_param, param, fixed, nlfit->fmarq,
+                nlfit->dmarq(x[i], n_param, param, fixed, nlfit->fmarq,
                              user_data, der, &nlfit->eval);
                 if (!nlfit->eval)
                     break;
@@ -441,8 +441,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
 
 /**
  * gwy_math_nlfit_derive:
- * @i: Index in @data_x where to compute the derivation.
- * @x: x-data as passed to gwy_math_nlfit_fit().
+ * @x: The value to compute the derivation at.
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).
  * @fixed_param: Which parameters should be treated as fixed (corresponding
@@ -455,42 +454,39 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
  * Numerically computes the partial derivations of @ff
  **/
 void
-gwy_math_nlfit_derive(gint i,
-                      const gdouble *x,
+gwy_math_nlfit_derive(gdouble x,
                       gint n_param,
-                      gdouble *param,
+                      const gdouble *param,
                       const gboolean *fixed_param,
                       GwyNLFitFunc ff,
                       gpointer user_data,
                       gdouble *deriv,
                       gboolean *dres)
 {
-    gdouble save_par_j, hj;
-    gdouble left, right;
+    gdouble *param_tmp;
+    gdouble hj, left, right;
     gint j;
+
+    param_tmp = g_newa(gdouble, n_param);
+    memcpy(param_tmp, param, n_param*sizeof(gdouble));
 
     for (j = 0; j < n_param; j++) {
         if (fixed_param && fixed_param[j])
             continue;
 
-        hj = (fabs(param[j]) + FitSqrtMachEps) * FitSqrtMachEps;
-        save_par_j = param[j];
-        param[j] -= hj;
-        left = ff(x[i], n_param, param, user_data, dres);
-        if (!dres) {
-            param[j] = save_par_j;
+        hj = (fabs(param_tmp[j]) + FitSqrtMachEps) * FitSqrtMachEps;
+        param_tmp[j] -= hj;
+        left = ff(x, n_param, param_tmp, user_data, dres);
+        if (!dres)
             return;
-        }
 
-        param[j] += 2 * hj;
-        right = ff(x[i], n_param, param, user_data, dres);
-        if (!dres) {
-            param[j] = save_par_j;
+        param_tmp[j] += 2 * hj;
+        right = ff(x, n_param, param_tmp, user_data, dres);
+        if (!dres)
             return;
-        }
 
         deriv[j] = (right - left)/2/hj;
-        param[j] = save_par_j;
+        param_tmp[j] = param[j];
     }
 }
 
@@ -679,8 +675,8 @@ fit_gauss(gdouble x,
 }
 
 static void
-guess_gauss(gdouble *x,
-            gdouble *y,
+guess_gauss(const gdouble *x,
+            const gdouble *y,
             gint n_dat,
             gdouble *param,
             G_GNUC_UNUSED gpointer user_data,
@@ -766,8 +762,8 @@ scale_gauss_psdf(gdouble *param,
 }
 
 static void
-guess_gauss_psdf(gdouble *x,
-                 gdouble *y,
+guess_gauss_psdf(const gdouble *x,
+                 const gdouble *y,
                  gint n_dat,
                  gdouble *param,
                  G_GNUC_UNUSED gpointer user_data,
@@ -807,8 +803,8 @@ fit_gauss_hhcf(gdouble x,
 }
 
 static void
-guess_gauss_hhcf(gdouble *x,
-                 gdouble *y,
+guess_gauss_hhcf(const gdouble *x,
+                 const gdouble *y,
                  gint n_dat,
                  gdouble *param,
                  G_GNUC_UNUSED gpointer user_data,
@@ -864,8 +860,8 @@ fit_gauss_acf(gdouble x,
 }
 
 static void
-guess_gauss_acf(gdouble *x,
-                gdouble *y,
+guess_gauss_acf(const gdouble *x,
+                const gdouble *y,
                 gint n_dat,
                 gdouble *param,
                 G_GNUC_UNUSED gpointer user_data,
@@ -915,8 +911,8 @@ fit_exp(gdouble x,
 }
 
 static void
-guess_exp(gdouble *x,
-          gdouble *y,
+guess_exp(const gdouble *x,
+          const gdouble *y,
           gint n_dat,
           gdouble *param,
           G_GNUC_UNUSED gpointer user_data,
@@ -1000,8 +996,8 @@ scale_exp_psdf(gdouble *param,
 }
 
 static void
-guess_exp_psdf(gdouble *x,
-               gdouble *y,
+guess_exp_psdf(const gdouble *x,
+               const gdouble *y,
                gint n_dat,
                gdouble *param,
                G_GNUC_UNUSED gpointer user_data,
@@ -1040,8 +1036,8 @@ fit_exp_hhcf(gdouble x,
 }
 
 static void
-guess_exp_hhcf(gdouble *x,
-               gdouble *y,
+guess_exp_hhcf(const gdouble *x,
+               const gdouble *y,
                gint n_dat,
                gdouble *param,
                G_GNUC_UNUSED gpointer user_data,
@@ -1096,8 +1092,8 @@ fit_exp_acf(gdouble x,
 }
 
 static void
-guess_exp_acf(gdouble *x,
-              gdouble *y,
+guess_exp_acf(const gdouble *x,
+              const gdouble *y,
               gint n_dat,
               gdouble *param,
               G_GNUC_UNUSED gpointer user_data,
@@ -1140,8 +1136,8 @@ fit_poly_0(G_GNUC_UNUSED gdouble x,
 }
 
 static void
-guess_poly_0(gdouble *x,
-             gdouble *y,
+guess_poly_0(const gdouble *x,
+             const gdouble *y,
              gint n_dat,
              gdouble *param,
              G_GNUC_UNUSED gpointer user_data,
@@ -1178,8 +1174,8 @@ fit_poly_1(gdouble x,
 }
 
 static void
-guess_poly_1(gdouble *x,
-             gdouble *y,
+guess_poly_1(const gdouble *x,
+             const gdouble *y,
              gint n_dat,
              gdouble *param,
              G_GNUC_UNUSED gpointer user_data,
@@ -1219,8 +1215,8 @@ fit_poly_2(gdouble x,
 }
 
 static void
-guess_poly_2(gdouble *x,
-             gdouble *y,
+guess_poly_2(const gdouble *x,
+             const gdouble *y,
              gint n_dat,
              gdouble *param,
              G_GNUC_UNUSED gpointer user_data,
@@ -1262,8 +1258,8 @@ fit_poly_3(gdouble x,
 }
 
 static void
-guess_poly_3(gdouble *x,
-             gdouble *y,
+guess_poly_3(const gdouble *x,
+             const gdouble *y,
              gint n_dat,
              gdouble *param,
              G_GNUC_UNUSED gpointer user_data,
@@ -1301,24 +1297,32 @@ fit_square(gdouble x,
            G_GNUC_UNUSED gpointer user_data,
            G_GNUC_UNUSED gboolean *fres)
 {
-    gint i;
+    /* XXX: WTF?
+
+    gint j;
     gdouble val, amplitude, shift;
 
     amplitude = (b[3] - b[2])/1.6;
     shift = b[2];
     val = 0;
-    for (i = 1; i < 20;) {
+    for (j = 1; j < 20; ) {
 
-        val += (1.0/i) * sin(2.0 * i * G_PI * (x - b[1])/b[0]);
-        i += 2;
+        val += (1.0/j) * sin(2.0 * j * G_PI * (x - b[1])/b[0]);
+        j += 2;
     }
 
     return amplitude * val + (b[3] - b[2])/2 + shift;
+    */
+    gdouble v;
+
+    v = (x - b[1])/b[0];
+    v -= floor(v);
+    return (b[3] - b[2])*v + b[2];
 }
 
 static void
-guess_square(gdouble *x,
-             gdouble *y,
+guess_square(const gdouble *x,
+             const gdouble *y,
              gint n_dat,
              gdouble *param,
              G_GNUC_UNUSED gpointer user_data,
@@ -1346,9 +1350,9 @@ guess_square(gdouble *x,
 
 static void
 scale_square(gdouble *param,
-                 gdouble xscale,
-                 gdouble yscale,
-                 gint dir)
+             gdouble xscale,
+             gdouble yscale,
+             gint dir)
 {
     if (dir == 1) {
         param[0] /= xscale;
@@ -1369,8 +1373,8 @@ scale_square(gdouble *param,
 /******************** preset default weights *************************/
 
 static void
-weights_constant(G_GNUC_UNUSED gdouble *x,
-                 G_GNUC_UNUSED gdouble *y,
+weights_constant(G_GNUC_UNUSED const gdouble *x,
+                 G_GNUC_UNUSED const gdouble *y,
                  gint n_dat,
                  gdouble *weight,
                  G_GNUC_UNUSED gpointer user_data)
@@ -1382,8 +1386,8 @@ weights_constant(G_GNUC_UNUSED gdouble *x,
 }
 
 static void
-weights_linear_decrease(G_GNUC_UNUSED gdouble *x,
-                        G_GNUC_UNUSED gdouble *y,
+weights_linear_decrease(G_GNUC_UNUSED const gdouble *x,
+                        G_GNUC_UNUSED const gdouble *y,
                         gint n_dat,
                         gdouble *weight,
                         G_GNUC_UNUSED gpointer user_data)

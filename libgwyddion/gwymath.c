@@ -300,8 +300,11 @@ gwy_math_lin_solve_rewrite(gint n, gdouble *matrix,
  *          otherwise a newly allocated array).
  **/
 gdouble*
-gwy_math_fit_polynom(gint ndata, gdouble *xdata, gdouble *ydata,
-                     gint n, gdouble *coeffs)
+gwy_math_fit_polynom(gint ndata,
+                     const gdouble *xdata,
+                     const gdouble *ydata,
+                     gint n,
+                     gdouble *coeffs)
 {
     gdouble *sumx, *m;
     gint i, j;
@@ -402,7 +405,7 @@ gwy_math_choleski_decompose(gint dim, gdouble *a)
  * definite matrix @a and right hand side @b.
  **/
 void
-gwy_math_choleski_solve(gint dim, gdouble *a, gdouble *b)
+gwy_math_choleski_solve(gint dim, const gdouble *a, gdouble *b)
 {
     gint i, j;
 
