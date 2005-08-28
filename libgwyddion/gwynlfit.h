@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
  *  Copyright (C) 2000-2003 Martin Siler.
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,41 +41,7 @@ typedef  void (*GwyNLFitDerFunc)(gdouble x,
                                  gdouble *deriv,
                                  gboolean *dres);
 
-typedef void (*GwyNLFitGuessFunc)(const gdouble *x,
-                                  const gdouble *y,
-                                  gint n_dat,
-                                  gdouble *param,
-                                  gpointer user_data,
-                                  gboolean *fres);
-
-typedef void (*GwyNLFitParamScaleFunc)(gdouble *param,
-                                       gdouble xscale,
-                                       gdouble yscale,
-                                       gint dir);
-
-typedef void (*GwyNLFitWeightFunc)(const gdouble *x,
-                                   const gdouble *y,
-                                   gint n_dat,
-                                   gdouble *weight,
-                                   gpointer user_data);
-
 typedef struct _GwyNLFitter GwyNLFitter;
-typedef struct _GwyNLFitPreset GwyNLFitPreset;
-typedef struct _GwyNLFitParam GwyNLFitParam;
-
-struct _GwyNLFitPreset {
-    const gchar *function_name;
-    const gchar *group_name;
-    const gchar *function_formula;
-    GwyNLFitFunc function;
-    GwyNLFitDerFunc function_derivation;
-    GwyNLFitGuessFunc function_guess;
-    GwyNLFitParamScaleFunc parameter_scale;
-    GwyNLFitWeightFunc set_default_weights;
-    gint nparams;
-    const GwyNLFitParam *param;
-    gpointer _reserved1;
-};
 
 struct _GwyNLFitter {
     GwyNLFitFunc fmarq;  /* fitting function */
@@ -129,37 +95,6 @@ void            gwy_math_nlfit_derive            (gdouble x,
                                                   gpointer user_data,
                                                   gdouble *deriv,
                                                   gboolean *dres);
-
-gint            gwy_math_nlfit_get_npresets      (void)
-                                                 G_GNUC_CONST;
-G_CONST_RETURN
-GwyNLFitPreset* gwy_math_nlfit_get_preset        (gint preset_id)
-                                                 G_GNUC_CONST;
-G_CONST_RETURN
-GwyNLFitPreset* gwy_math_nlfit_get_preset_by_name(const gchar *name);
-gint            gwy_math_nlfit_get_preset_id     (const GwyNLFitPreset* preset);
-gdouble         gwy_math_nlfit_get_preset_value  (const GwyNLFitPreset* preset,
-                                                  gdouble *params,
-                                                  gdouble x);
-G_CONST_RETURN
-gchar*          gwy_math_nlfit_get_preset_name   (const GwyNLFitPreset* preset);
-G_CONST_RETURN
-gchar*          gwy_math_nlfit_get_preset_formula(const GwyNLFitPreset* preset);
-G_CONST_RETURN
-gchar*          gwy_math_nlfit_get_preset_param_name(const GwyNLFitPreset* preset,
-                                                     gint param);
-gdouble         gwy_math_nlfit_get_preset_param_default(const GwyNLFitPreset* preset,
-                                                        gint param);
-gint            gwy_math_nlfit_get_preset_nparams(const GwyNLFitPreset* preset);
-GwyNLFitter*    gwy_math_nlfit_fit_preset        (const GwyNLFitPreset* preset,
-                                                  gint n_dat,
-                                                  const gdouble *x,
-                                                  const gdouble *y,
-                                                  gint n_param,
-                                                  gdouble *param,
-                                                  gdouble *err,
-                                                  const gboolean *fixed_param,
-                                                  gpointer user_data);
 
 G_END_DECLS
 

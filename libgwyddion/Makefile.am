@@ -16,6 +16,7 @@ libgwyddioninclude_HEADERS = \
 	gwymath.h \
 	gwymd5.h \
 	gwynlfit.h \
+	gwynlfitpreset.h \
 	gwyresource.h \
 	gwyserializable.h \
 	gwyutils.h \
@@ -55,6 +56,7 @@ libgwyddion_la_SOURCES = \
 	gwymath.c \
 	gwymd5.c \
 	gwynlfit.c \
+	gwynlfitpreset.c \
 	gwyresource.c \
 	gwyserializable.c \
 	gwyutils.c \

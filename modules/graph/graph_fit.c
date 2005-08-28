@@ -64,7 +64,7 @@ typedef struct {
     gdouble par_res[MAX_PARAMS];
     gdouble err[MAX_PARAMS];
     gdouble crit;
-    const GwyNLFitPreset *fitfunc;
+    GwyNLFitPreset *fitfunc;
     GwyGraph *parent_graph;
     GwyNLFitter *fitter;
     gboolean is_fitted;
@@ -179,7 +179,10 @@ fit(GwyGraph *graph)
 
 /*extract relevant part of data and normalize it to be fitable*/
 static gint
-normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
+normalize_data(FitArgs *args,
+               GwyDataLine *xdata,
+               GwyDataLine *ydata,
+               gint curve)
 {
     gint i, j, ns;
     gboolean skip_first_point = FALSE;
@@ -189,18 +192,18 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
 
     if (curve >= gwy_graph_model_get_n_curves(args->graph_model))
         return 0;
-        
+
     cmodel = gwy_graph_model_get_curve_by_index(args->graph_model, curve);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
-    
+
     gwy_data_line_resample(xdata, ns,
                            GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, ns,
                            GWY_INTERPOLATION_NONE);
 
-    func_name = gwy_math_nlfit_get_preset_name(args->fitfunc);
+    func_name = gwy_nlfit_preset_get_name(args->fitfunc);
     if (gwy_strequal(func_name, "Gaussian (PSDF)"))  /* || something */
         skip_first_point = TRUE;
 
@@ -464,7 +467,8 @@ fit_dialog(FitArgs *args)
                      G_CALLBACK(graph_selected), args);
 
 
-    args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
+    args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                               args->function_type);
 
     reset(args, &controls);
     dialog_update(&controls, args);
@@ -546,9 +550,9 @@ plot_inits(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPreset *function;
-    gboolean ok;
+    GwyNLFitPreset *function;
     gint i;
+    gboolean ok;
     GwyGraphCurveModel *cmodel;
 
     xdata = gwy_data_line_new(10, 10, FALSE);
@@ -563,11 +567,12 @@ plot_inits(FitArgs *args, FitControls *controls)
         return;
     }
 
-    function = gwy_math_nlfit_get_preset(args->function_type);
+    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                          args->function_type);
 
     for (i = 0; i < xdata->res; i++)
-        ydata->data[i] = function->function(xdata->data[i], function->nparams,
-                                            args->par_init, NULL, &ok);
+        ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
+                                                    args->par_init, &ok);
 
     graph_update(controls, args);
 
@@ -590,11 +595,11 @@ recompute(FitArgs *args, FitControls *controls)
 {
     GwyDataLine *xdata;
     GwyDataLine *ydata;
-    const GwyNLFitPreset *function;
+    GwyNLFitPreset *function;
     gboolean fixed[4];
     gchar buffer[64];
-    gboolean ok;
     gint i, j, nparams;
+    gboolean ok;
     GwyGraphCurveModel *cmodel;
 
     xdata = gwy_data_line_new(10, 10, FALSE);
@@ -609,20 +614,20 @@ recompute(FitArgs *args, FitControls *controls)
         return;
     }
 
-    function = gwy_math_nlfit_get_preset(args->function_type);
-    nparams = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
+    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                          args->function_type);
+    nparams = gwy_nlfit_preset_get_nparams(function);
 
-    for (i=0; i<MAX_PARAMS; i++)
-    {
+    for (i = 0; i < MAX_PARAMS; i++) {
         fixed[i] = args->par_fix[i];
         args->par_res[i] = args->par_init[i];
     }
 
-    if (args->fitter) gwy_math_nlfit_free(args->fitter);
-    args->fitter = gwy_math_nlfit_fit_preset(function,
-                                  xdata->res, xdata->data, ydata->data,
-                                  function->nparams,
-                                  args->par_res, args->err, fixed, NULL);
+    if (args->fitter)
+        gwy_math_nlfit_free(args->fitter);
+    args->fitter = gwy_nlfit_preset_fit(function, NULL,
+                                        xdata->res, xdata->data, ydata->data,
+                                        args->par_res, args->err, fixed);
 
     for (i = 0; i < nparams; i++) {
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[i]);
@@ -632,7 +637,7 @@ recompute(FitArgs *args, FitControls *controls)
 
     if (args->fitter->covar)
     {
-        /* FIXME: this is probably _scaled_ dispersion */
+        /* FIXME: this is _scaled_ dispersion */
         g_snprintf(buffer, sizeof(buffer), "%2.3g",
                    gwy_math_nlfit_get_dispersion(args->fitter));
         gtk_label_set_markup(GTK_LABEL(controls->chisq), buffer);
@@ -655,8 +660,8 @@ recompute(FitArgs *args, FitControls *controls)
         gtk_label_set_markup(GTK_LABEL(controls->covar[0]), _("N.A."));
 
     for (i = 0; i < xdata->res; i++)
-        ydata->data[i] = function->function(xdata->data[i], function->nparams,
-                                            args->par_res, NULL, &ok);
+        ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
+                                                    args->par_res, &ok);
 
     graph_update(controls, args);
 
@@ -665,12 +670,12 @@ recompute(FitArgs *args, FitControls *controls)
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
 
     gwy_graph_curve_model_set_data(cmodel,
-                                 xdata->data,
-                                 ydata->data,
-                                 xdata->res);
+                                   xdata->data,
+                                   ydata->data,
+                                   xdata->res);
     gwy_graph_curve_model_set_description(cmodel, "fit");
     gwy_graph_model_add_curve(args->graph_model, cmodel);
-    
+
     args->is_fitted = TRUE;
     g_object_unref(xdata);
     g_object_unref(ydata);
@@ -687,8 +692,9 @@ reset(FitArgs *args, FitControls *controls)
 static void
 type_changed_cb(GtkWidget *combo, FitArgs *args)
 {
-    args->function_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    args->fitfunc = gwy_math_nlfit_get_preset(args->function_type);
+    args->function_type = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
+    args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                               args->function_type);
     dialog_update(pcontrols, args);
 }
 
@@ -702,14 +708,15 @@ dialog_update(FitControls *controls, FitArgs *args)
     guess(controls, args);
 
     gtk_label_set_markup(GTK_LABEL(controls->equation),
-                         gwy_math_nlfit_get_preset_formula(args->fitfunc));
+                         gwy_nlfit_preset_get_formula(args->fitfunc));
 
 
     for (i = 0; i < MAX_PARAMS; i++) {
-        if (i < gwy_math_nlfit_get_preset_nparams(args->fitfunc)) {
+        if (i < gwy_nlfit_preset_get_nparams(args->fitfunc)) {
             gtk_widget_set_sensitive(controls->param_des[i], TRUE);
             gtk_label_set_markup(GTK_LABEL(controls->param_des[i]),
-                      gwy_math_nlfit_get_preset_param_name(args->fitfunc, i));
+                                 gwy_nlfit_preset_get_param_name(args->fitfunc,
+                                                                 i));
 
             gtk_widget_set_sensitive(controls->param_init[i], TRUE);
             gtk_widget_set_sensitive(controls->param_fit[i], TRUE);
@@ -727,45 +734,42 @@ dialog_update(FitControls *controls, FitArgs *args)
 }
 
 static void
-guess(FitControls *controls, FitArgs *args)
+guess(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
 {
-    GwyDataLine *xdata;
-    GwyDataLine *ydata;
-    const GwyNLFitPreset *function;
-    gdouble param[4];
+    GwyDataLine *xdata, *ydata;
+    GwyNLFitPreset *function;
     gboolean ok;
-    gint i;
 
-    function = gwy_math_nlfit_get_preset(args->function_type);
-    if (function->function_guess == NULL) return;
+    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                          args->function_type);
 
     xdata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
     ydata = GWY_DATA_LINE(gwy_data_line_new(10, 10, FALSE));
 
-    args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
-    if (!normalize_data(args, xdata, ydata, args->curve - 1))
-    {
+    args->curve = gwy_adjustment_get_int(GTK_ADJUSTMENT(controls->data));
+    if (!normalize_data(args, xdata, ydata, args->curve - 1)) {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
     }
-    function->function_guess(xdata->data, ydata->data, xdata->res,
-                             param, NULL, &ok);
-
-    for (i=0; i<MAX_PARAMS; i++) args->par_init[i] = param[i];
+    gwy_nlfit_preset_guess(function,
+                           gwy_data_line_get_res(xdata),
+                           gwy_data_line_get_data_const(xdata),
+                           gwy_data_line_get_data_const(ydata),
+                           args->par_init, &ok);
 
     g_object_unref(xdata);
     g_object_unref(ydata);
 }
 
 static void
-graph_update(FitControls *controls, FitArgs *args)
+graph_update(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
 {
     gint i;
 
     /*clear graph*/
     gwy_graph_model_remove_all_curves(args->graph_model);
-    
+
     for (i=0; i<gwy_graph_model_get_n_curves(GWY_GRAPH(args->parent_graph)->graph_model); i++)
         gwy_graph_model_add_curve(args->graph_model,
                                   gwy_graph_model_get_curve_by_index(
@@ -839,25 +843,22 @@ create_preset_menu(GCallback callback,
                    gpointer cbdata,
                    gint current)
 {
-    static GwyEnum *entries = NULL;
-    static gint nentries = 0;
+    GtkCellRenderer *renderer;
+    GtkWidget *combo;
+    GwyInventoryStore *store;
+    gint i;
 
-    if (!entries) {
-        const GwyNLFitPreset *func;
-        gint i;
+    store = gwy_inventory_store_new(gwy_nlfit_presets());
 
-        nentries = gwy_math_nlfit_get_npresets();
-        entries = g_new(GwyEnum, nentries);
-        for (i = 0; i < nentries; i++) {
-            entries[i].value = i;
-            func = gwy_math_nlfit_get_preset(i);
-            entries[i].name = gwy_math_nlfit_get_preset_name(func);
-        }
-    }
+    combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, TRUE);
+    i = gwy_inventory_store_get_column_by_name(store, "name");
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), renderer, "text", i);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(combo), current);
+    g_signal_connect(combo, "changed", callback, cbdata);
 
-    /* FIXME: presets not translatable? */
-    return gwy_enum_combo_box_new(entries, nentries,
-                                  callback, cbdata, current, FALSE);
+    return combo;
 }
 
 static const gchar *preset_key = "/module/graph_fit/preset";
@@ -866,25 +867,24 @@ static void
 load_args(GwyContainer *container,
           FitArgs *args)
 {
-    const GwyNLFitPreset *func;
     static const guchar *preset;
 
-    if (gwy_container_gis_string_by_name(container, preset_key, &preset)) {
-        func = gwy_math_nlfit_get_preset_by_name((const gchar*)preset);
-        args->function_type = gwy_math_nlfit_get_preset_id(func);
-    }
+    if (gwy_container_gis_string_by_name(container, preset_key, &preset))
+        args->function_type
+            = gwy_inventory_get_item_position(gwy_nlfit_presets(),
+                                              (const gchar*)preset);
 }
 
 static void
 save_args(GwyContainer *container,
           FitArgs *args)
 {
-    const GwyNLFitPreset *func;
+    GwyNLFitPreset *func;
+    const gchar *name;
 
-    func = gwy_math_nlfit_get_preset(args->function_type);
-    gwy_container_set_string_by_name
-        (container, preset_key,
-         g_strdup(gwy_math_nlfit_get_preset_name(func)));
+    func = gwy_inventory_get_nth_item(gwy_nlfit_presets(), args->function_type);
+    name = gwy_nlfit_preset_get_name(func);
+    gwy_container_set_string_by_name(container, preset_key, g_strdup(name));
 }
 
 
@@ -993,7 +993,7 @@ count_really_fitted_points(FitArgs *args)
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
- 
+
     for (i = 0; i < ns; i++) {
         if ((xs[i] >= args->from
              && xs[i] <= args->to)
@@ -1060,13 +1060,12 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_math_nlfit_get_preset_name(args->fitfunc),
-                 row, 1, 0.0);
+    attach_label(table, gwy_nlfit_preset_get_name(args->fitfunc), row, 1, 0.0);
     row++;
 
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label),
-                         gwy_math_nlfit_get_preset_formula(args->fitfunc));
+                         gwy_nlfit_preset_get_formula(args->fitfunc));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
@@ -1074,14 +1073,14 @@ create_results_window(FitArgs *args)
     attach_label(table, _("<b>Results</b>"), row, 0, 0.0);
     row++;
 
-    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
+    n = gwy_nlfit_preset_get_nparams(args->fitfunc);
     tab = gtk_table_new(n, 6, FALSE);
     gtk_table_attach(GTK_TABLE(table), tab, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     for (i = 0; i < n; i++) {
         attach_label(tab, "=", i, 1, 0.5);
         attach_label(tab, "±", i, 3, 0.5);
-        s = gwy_math_nlfit_get_preset_param_name(args->fitfunc, i);
+        s = gwy_nlfit_preset_get_param_name(args->fitfunc, i);
         attach_label(tab, s, i, 0, 0.0);
         value = args->par_res[i];
         sigma = args->err[i];
@@ -1151,13 +1150,12 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);
     g_string_append_printf(report, _("Fitted function:  %s\n"),
-                           gwy_math_nlfit_get_preset_name(args->fitfunc));
+                           gwy_nlfit_preset_get_name(args->fitfunc));
     g_string_append_printf(report, _("\nResults\n"));
-    n = gwy_math_nlfit_get_preset_nparams(args->fitfunc);
+    n = gwy_nlfit_preset_get_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {
         /* FIXME: how to do this better? use pango_parse_markup()? */
-        s = gwy_strreplace(gwy_math_nlfit_get_preset_param_name(args->fitfunc,
-                                                                i),
+        s = gwy_strreplace(gwy_nlfit_preset_get_param_name(args->fitfunc, i),
                            "<sub>", "", (gsize)-1);
         s2 = gwy_strreplace(s, "</sub>", "", (gsize)-1);
         g_string_append_printf(report, "%s = %g ± %g\n",
