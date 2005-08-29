@@ -203,7 +203,7 @@ normalize_data(FitArgs *args,
     gwy_data_line_resample(ydata, ns,
                            GWY_INTERPOLATION_NONE);
 
-    func_name = gwy_nlfit_preset_get_name(args->fitfunc);
+    func_name = gwy_resource_get_name(GWY_RESOURCE(args->fitfunc));
     if (gwy_strequal(func_name, "Gaussian (PSDF)"))  /* || something */
         skip_first_point = TRUE;
 
@@ -883,7 +883,7 @@ save_args(GwyContainer *container,
     const gchar *name;
 
     func = gwy_inventory_get_nth_item(gwy_nlfit_presets(), args->function_type);
-    name = gwy_nlfit_preset_get_name(func);
+    name = gwy_resource_get_name(GWY_RESOURCE(func));
     gwy_container_set_string_by_name(container, preset_key, g_strdup(name));
 }
 
@@ -1060,7 +1060,8 @@ create_results_window(FitArgs *args)
     row++;
 
     attach_label(table, _("<b>Function:</b>"), row, 0, 0.0);
-    attach_label(table, gwy_nlfit_preset_get_name(args->fitfunc), row, 1, 0.0);
+    attach_label(table, gwy_resource_get_name(GWY_RESOURCE(args->fitfunc)),
+                 row, 1, 0.0);
     row++;
 
     label = gtk_label_new(NULL);
@@ -1150,7 +1151,7 @@ create_fit_report(FitArgs *args)
     g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);
     g_string_append_printf(report, _("Fitted function:  %s\n"),
-                           gwy_nlfit_preset_get_name(args->fitfunc));
+                           gwy_resource_get_name(GWY_RESOURCE(args->fitfunc)));
     g_string_append_printf(report, _("\nResults\n"));
     n = gwy_nlfit_preset_get_nparams(args->fitfunc);
     for (i = 0; i < n; i++) {

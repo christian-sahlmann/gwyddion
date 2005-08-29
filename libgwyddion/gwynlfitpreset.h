@@ -23,44 +23,66 @@
 #define __GWY_NLFIT_PRESET_H__
 
 #include <libgwyddion/gwynlfit.h>
-#include <libgwyddion/gwyinventory.h>
+#include <libgwyddion/gwyresource.h>
 
 G_BEGIN_DECLS
 
-/* TODO: Resourcify someday.  But first we need clean API. */
-typedef struct _GwyNLFitPreset GwyNLFitPreset;
+#define GWY_TYPE_NLFIT_PRESET             (gwy_nlfit_preset_get_type())
+#define GWY_NLFIT_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_NLFIT_PRESET, GwyNLFitPreset))
+#define GWY_NLFIT_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_NLFIT_PRESET, GwyNLFitPresetClass))
+#define GWY_IS_NLFIT_PRESET(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_NLFIT_PRESET))
+#define GWY_IS_NLFIT_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_NLFIT_PRESET))
+#define GWY_NLFIT_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_NLFIT_PRESET, GwyNLFitPresetClass))
 
-/* XXX: Remove from API because it will be a GwyResource method */
-#define gwy_nlfit_preset_get_name(f) _gwy_nlfit_preset_get_name(f)
-const gchar* _gwy_nlfit_preset_get_name     (GwyNLFitPreset *preset);
+/* XXX: Keep it secret for now, it will change a lot. */
+typedef struct _GwyNLFitPresetBuiltin  GwyNLFitPresetBuiltin;
 
-gdouble      gwy_nlfit_preset_get_value     (GwyNLFitPreset *preset,
-                                             gdouble x,
-                                             const gdouble *params,
-                                             gboolean *fres);
-const gchar* gwy_nlfit_preset_get_formula   (GwyNLFitPreset *preset);
-gint         gwy_nlfit_preset_get_nparams   (GwyNLFitPreset *preset);
-const gchar* gwy_nlfit_preset_get_param_name(GwyNLFitPreset *preset,
-                                             gint param);
-void         gwy_nlfit_preset_guess         (GwyNLFitPreset *preset,
-                                             gint n_dat,
-                                             const gdouble *x,
-                                             const gdouble *y,
-                                             gdouble *params,
-                                             gboolean *fres);
-GwyNLFitter* gwy_nlfit_preset_fit           (GwyNLFitPreset *preset,
-                                             GwyNLFitter *fitter,
-                                             gint n_dat,
-                                             const gdouble *x,
-                                             const gdouble *y,
-                                             gdouble *param,
-                                             gdouble *err,
-                                             const gboolean *fixed_param);
+typedef struct _GwyNLFitPreset      GwyNLFitPreset;
+typedef struct _GwyNLFitPresetClass GwyNLFitPresetClass;
 
-GwyInventory* gwy_nlfit_presets             (void);
+struct _GwyNLFitPreset {
+    GwyResource parent_instance;
+
+    const GwyNLFitPresetBuiltin *builtin;
+
+    gpointer reserved1;
+    gpointer reserved2;
+};
+
+struct _GwyNLFitPresetClass {
+    GwyResourceClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
+};
+
+GType         gwy_nlfit_preset_get_type      (void) G_GNUC_CONST;
+gdouble       gwy_nlfit_preset_get_value     (GwyNLFitPreset *preset,
+                                              gdouble x,
+                                              const gdouble *params,
+                                              gboolean *fres);
+const gchar*  gwy_nlfit_preset_get_formula   (GwyNLFitPreset *preset);
+gint          gwy_nlfit_preset_get_nparams   (GwyNLFitPreset *preset);
+const gchar*  gwy_nlfit_preset_get_param_name(GwyNLFitPreset *preset,
+                                              gint param);
+void          gwy_nlfit_preset_guess         (GwyNLFitPreset *preset,
+                                              gint n_dat,
+                                              const gdouble *x,
+                                              const gdouble *y,
+                                              gdouble *params,
+                                              gboolean *fres);
+GwyNLFitter*  gwy_nlfit_preset_fit           (GwyNLFitPreset *preset,
+                                              GwyNLFitter *fitter,
+                                              gint n_dat,
+                                              const gdouble *x,
+                                              const gdouble *y,
+                                              gdouble *param,
+                                              gdouble *err,
+                                              const gboolean *fixed_param);
+GwyInventory* gwy_nlfit_presets              (void);
 
 G_END_DECLS
 
-#endif /* __GWY_NFLIT_H__ */
+#endif /* __GWY_NLFIT_PRESET_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
