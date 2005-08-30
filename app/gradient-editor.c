@@ -27,6 +27,7 @@
 #include <libgwydgets/gwyoptionmenus.h>
 #include <app/settings.h>
 #include <app/gradient-editor.h>
+#include <libgwydgets/gwycurve.h>
 
 /* For late objectzation... */
 typedef struct {
@@ -37,6 +38,8 @@ typedef struct {
     GtkWidget *button_delete;
     GtkWidget *button_default;
     GString *active;
+
+    GtkWidget *edit_window;
 } GwyGradientEditor;
 
 static void
@@ -94,6 +97,52 @@ gwy_gradient_editor_set_default(GwyGradientEditor *editor)
                                         gwy_resource_get_name(resource));
 }
 
+static void
+gwy_gradient_editor_new(GwyGradientEditor *editor)
+{
+    GtkWidget *curve, *vbox;
+//    gfloat pts[10];
+//    int i;
+
+    editor->edit_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(editor->edit_window),
+                         _("New Gradient"));
+    gtk_window_set_default_size(GTK_WINDOW(editor->edit_window), 420, 420);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(editor->edit_window), vbox);
+
+    curve = gwy_curve_new();
+    gwy_curve_set_range(GWY_CURVE(curve), 0, 1, 0, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), curve, TRUE, TRUE, 0);
+
+
+
+    gtk_widget_show_all(vbox);
+    gtk_window_present(GTK_WINDOW(editor->edit_window));
+
+    //g_signal_connect_swapped(editor->window, "destroy",
+    //                         G_CALLBACK(gwy_gradient_editor_destroy), editor);
+    /*
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    GwyResource *resource;
+    GwyInventory *inventory;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        g_warning("Something should be selected for `Set Default'");
+        return;
+    }
+
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+    gwy_inventory_set_default_item_name(inventory,
+                                        gwy_resource_get_name(resource));
+    */
+}
+
 void
 gwy_app_gradient_editor(void)
 {
@@ -144,6 +193,9 @@ gwy_app_gradient_editor(void)
     button = gtk_button_new_from_stock(GTK_STOCK_NEW);
     editor->button_new = button;
     gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gradient_editor_new),
+                             editor);
 
     button = gtk_button_new_from_stock(GTK_STOCK_DELETE);
     editor->button_delete = button;

@@ -123,6 +123,13 @@ typedef enum {
     GWY_LAYER_BASIC_RANGE_AUTO
 } GwyLayerBasicRangeType;
 
+typedef enum
+{
+    GWY_CURVE_TYPE_LINEAR,       /* linear interpolation */
+    GWY_CURVE_TYPE_SPLINE,       /* spline interpolation */
+    GWY_CURVE_TYPE_FREE          /* free form curve */
+} GwyCurveType;
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_ENUMS_H__ */
