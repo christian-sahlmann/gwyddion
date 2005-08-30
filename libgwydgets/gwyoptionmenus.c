@@ -660,7 +660,9 @@ gwy_resource_selection_default_changed(GwyInventory *inventory,
     if (!resource)
         return;
 
-    /* FIXME: This is somewhat crude */
+    /* FIXME: This is somewhat crude.  In fact it does not work, but the
+     * tree view is redrawn anyway so no one notices it.  Must emit
+     * "row-changed" on old default in InventoryStore.  */
     model = GTK_TREE_MODEL(store);
     i = gwy_inventory_get_item_position(inventory,
                                         gwy_resource_get_name(resource));
@@ -745,8 +747,8 @@ gradient_resource_info(void)
     if (!rinfo.inventory) {
         rinfo.inventory = gwy_gradients();
         rinfo.sampler = (ResourceSamplerFunc)&gwy_gradient_sample_to_pixbuf;
-        rinfo.human_name = _("Gradient");
-        rinfo.window_title = _("Choose Gradient");
+        rinfo.human_name = _("Color Gradient");
+        rinfo.window_title = _("Choose Color Gradient");
         rinfo.key = "gradient-name";
     }
     return &rinfo;

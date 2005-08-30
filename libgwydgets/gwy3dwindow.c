@@ -875,7 +875,7 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
         case GWY_3D_VISUALIZATION_LIGHTING:
         menu = gwy_menu_gl_material(G_CALLBACK(gwy_3d_window_material_selected),
                                     gwy3dwindow);
-        item = gtk_menu_item_new_with_mnemonic(_("S_witch to Gradient Mode"));
+        item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
         visual = GWY_3D_VISUALIZATION_GRADIENT;
         break;
 

@@ -111,7 +111,8 @@ gwy_app_gradient_editor(void)
 
     /* Pop up */
     editor->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(editor->window), _("Gradient Editor"));
+    gtk_window_set_title(GTK_WINDOW(editor->window),
+                         _("Color Gradient Editor"));
     gtk_window_set_default_size(GTK_WINDOW(editor->window), -1, 420);
     g_signal_connect_swapped(editor->window, "destroy",
                              G_CALLBACK(gwy_gradient_editor_destroy), editor);

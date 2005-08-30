@@ -802,7 +802,7 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
         {
-            N_("/_Gradients..."),
+            N_("/Color _Gradients..."),
             NULL,
             gwy_app_gradient_editor,
             1,
