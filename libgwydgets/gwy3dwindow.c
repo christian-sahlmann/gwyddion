@@ -223,7 +223,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     };
     static const GwyEnum display_modes[] = {
         { N_("_Lighting"),    GWY_3D_VISUALIZATION_LIGHTING },
-        { N_("P_alette"),     GWY_3D_VISUALIZATION_GRADIENT },
+        { N_("_Gradient"),    GWY_3D_VISUALIZATION_GRADIENT },
     };
     Gwy3DWindow *gwy3dwindow;
     GtkRequisition size_req;
