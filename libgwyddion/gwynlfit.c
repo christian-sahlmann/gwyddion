@@ -667,7 +667,6 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
 
 /**
  * GwyNLFitDerFunc:
- * @i: The index of the value in @x to compute the derivation at.
  * @x: x-data as passed to gwy_math_nlfit_fit().
  * @n_param: The number of parameters (size of @param).
  * @param: Parameters.
