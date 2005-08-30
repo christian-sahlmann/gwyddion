@@ -465,13 +465,11 @@ apply(GwyUnitoolState *state)
             model->curves = g_new(GObject*, model->ncurves);
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
             graph = gwy_graph_new(model);
-            gtk_widget_set_size_request(graph, 400, 300);
             gwy_app_graph_window_create(GWY_GRAPH(graph), data);
         }
     }
     else {
         graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
-        gtk_widget_set_size_request(graph, 400, 300);
         gwy_app_graph_window_create(GWY_GRAPH(graph), data);
     }
 }
