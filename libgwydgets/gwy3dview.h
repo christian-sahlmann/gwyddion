@@ -49,61 +49,67 @@ typedef struct _Gwy3DViewClass Gwy3DViewClass;
 struct _Gwy3DView {
     GtkWidget parent_instance;
 
-    GwyContainer *container;        /* Container with data */
-    GwyDataField *data;             /* Data to be shown */
-    GwyDataField *downsampled;      /* Downsampled data for faster rendering */
+    GwyContainer *container;      /* Container with data */
+    GwyDataField *data;           /* Data to be shown */
+    GwyDataField *downsampled;    /* Downsampled data for faster rendering */
     GwyGradient  *gradient;
 
-    gdouble data_min;               /* minimal z-value of the heights */
-    gdouble data_max;               /* maximal z-value od the heights */
-    gdouble data_mean;              /* mean z-value od the heights */
+    gdouble data_min;             /* minimal z-value of the heights */
+    gdouble data_max;             /* maximal z-value od the heights */
+    gdouble data_mean;            /* mean z-value od the heights */
 
-    Gwy3DMovement movement;         /* What to do, if mouse is moving */
+    Gwy3DMovement movement;       /* What to do, if mouse is moving */
 
-    gint shape_list_base;           /* Base index of scene display lists */
-    guint shape_current;            /* Actually shown shape in the scene (full or reduced data) */
+    gint shape_list_base;         /* Base index of scene display lists */
+    guint shape_current;          /* Actually shown shape in the scene
+                                     (full or reduced data) */
 
 
-    guint reduced_size;             /* Resolution of the surface while rotations etc. */
+    guint reduced_size;           /* Resolution of the surface while rotations
+                                     etc. */
 
-    GtkAdjustment *rot_x;           /* First angle of ratation of the scene */
-    GtkAdjustment *rot_y;           /* Second angle of ratation of the scene */
-    GtkAdjustment *view_scale;      /* Actual zoom*/
-    GtkAdjustment *deformation_z;   /* Deformation of the z axis within the scene */
-    GtkAdjustment *light_z;         /* First angle describing position of light */
-    GtkAdjustment *light_y;         /* Second angle describing position of light */
-    gdouble view_scale_max;         /* Maximum zoom of the scene */
-    gdouble view_scale_min;         /* Minimum zoom of the scene */
+    GtkAdjustment *rot_x;         /* First angle of ratation of the scene */
+    GtkAdjustment *rot_y;         /* Second angle of ratation of the scene */
+    GtkAdjustment *view_scale;    /* Actual zoom*/
+    GtkAdjustment *deformation_z; /* Deformation of the z axis within the
+                                     scene */
+    GtkAdjustment *light_z;       /* First angle describing position of light */
+    GtkAdjustment *light_y;       /* Second angle describing position of
+                                     light */
+    gdouble view_scale_max;       /* Maximum zoom of the scene */
+    gdouble view_scale_min;       /* Minimum zoom of the scene */
 
-    Gwy3DProjection projection;     /* Orthographic or perspectine projection */
-    Gwy3DVisualization visual;      /* Visualization type */
-    gboolean show_axes;             /* Whether show axes wihin the scene */
-    gboolean show_labels;           /* Whwther show axes labels, only if axes are shown */
+    Gwy3DProjection projection;   /* Orthographic or perspectine projection */
+    Gwy3DVisualization visual;    /* Visualization type */
+    gboolean show_axes;           /* Whether show axes wihin the scene */
+    gboolean show_labels;         /* Whether show axes labels, only if axes
+                                     are shown */
 
-    GwyGLMaterial *material;        /* Current material (influences the color
-                                       of the object, lights must be on) */
+    GwyGLMaterial *material;      /* Current material (influences the color
+                                     of the object, lights must be on) */
 
-    gdouble mouse_begin_x;          /* Start x-coordinate of mouse */
-    gdouble mouse_begin_y;          /* Start y-coordinate of mouse */
+    gdouble mouse_begin_x;        /* Start x-coordinate of mouse */
+    gdouble mouse_begin_y;        /* Start y-coordinate of mouse */
 
-    gboolean timeout;               /* Is running timeot for redrawing in full scale */
-    guint timeout_id;               /* Timeout id */
+    gboolean timeout;             /* Is running timeout for redrawing in full
+                                     scale */
+    guint timeout_id;             /* Timeout id */
 
-    PangoContext *ft2_context;      /* For text rendering */
-    PangoFontMap *ft2_font_map;     /* Font map for text rendering */
-    Gwy3DLabel **labels;            /* labels text, displacement etc */
+    PangoContext *ft2_context;    /* For text rendering */
+    PangoFontMap *ft2_font_map;   /* Font map for text rendering */
+    Gwy3DLabel **labels;          /* labels text, displacement etc */
     gulong      *label_signal_ids;
-    GHashTable *variables;          /* Label substitution variables */
+    GHashTable *variables;        /* Label substitution variables */
 
-    gboolean b_reserved1;           /* resreved for thread creating of display-lists */
+    gboolean b_reserved1;
     gboolean b_reserved2;
     gboolean b_reserved3;
     gboolean b_reserved4;
 
-    gint     i_reserved1;           /* reserved for axis-labels display-list base  */
+    gint     i_reserved1;
     gint     i_reserved2;
 
-    gpointer p_reserved2;           /* reserved for future use   */
+    gpointer p_reserved2;
     gpointer p_reserved3;
     gpointer p_reserved4;
 };
