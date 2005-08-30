@@ -690,20 +690,8 @@ square_func(gdouble x,
             G_GNUC_UNUSED gpointer user_data,
             G_GNUC_UNUSED gboolean *fres)
 {
-    /* FIXME: fix this to the square wave the sum converges to */
-    gint i;
-    gdouble val, amplitude, shift;
-
-    amplitude = (b[3] - b[2])/1.6;
-    shift = b[2];
-    val = 0;
-    for (i = 1; i < 20;) {
-
-        val += (1.0/i) * sin(2.0 * i * G_PI * (x - b[1])/b[0]);
-        i += 2;
-    }
-
-    return amplitude * val + (b[3] - b[2])/2 + shift;
+    x = (x - b[1])/b[0];
+    return (x - floor(x)) > 0.5 ? b[2] : b[3];
 }
 
 static void
@@ -813,7 +801,7 @@ static const GwyNLFitParam square_params[] = {
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian",
-        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>))<sup>2</sup>)",
+        "f(x) = y<sub>0</sub> + a*exp(-((x-x<sub>0</sub>)/b)<sup>2</sup>)",
         &gauss_func,
         NULL,
         &gauss_guess,
@@ -945,7 +933,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     },
     {
         "Square wave",
-        "f(x) = sum{(1/i) * sin(2*Pi*(i+s)*/T)}",
+        "f(x) = sum{(1/i) * sin(2π*i*(x-s)/T)}",
         &square_func,
         NULL,
         &square_guess,
