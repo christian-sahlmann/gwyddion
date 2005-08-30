@@ -388,13 +388,11 @@ gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
 * gwy_graph_curve_model_get_xdata:
 * @gcmodel: A #GwyGraphCurveModel.
 *
-* Gets pointer to x data points. The data might be used somewhere within the
-* curve or graph model or graph widget, so do no free them until you don't know what
-* are you doing.
+* Gets pointer to x data points. Data are used within the graph and cannot be freed.
 *
 * Returns: x data points
 **/
-gdouble*   
+const gdouble*   
 gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
 {
     return gcmodel->xdata;
@@ -404,13 +402,11 @@ gwy_graph_curve_model_get_xdata(GwyGraphCurveModel *gcmodel)
 * gwy_graph_curve_model_get_ydata:
 * @gcmodel: A #GwyGraphCurveModel.
 *
-* Gets pointer to y data points. The data might be used somewhere within the
-* curve or graph model or graph widget, so do no free them until you don't know what
-* are you doing.
+* Gets pointer to y data points. Data are used within the graph and cannot be freed.
 *
 * Returns: y data points
 **/
-gdouble*   
+const gdouble*   
 gwy_graph_curve_model_get_ydata(GwyGraphCurveModel *gcmodel)
 {
     return gcmodel->ydata;
