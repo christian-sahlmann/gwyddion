@@ -866,7 +866,7 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     gint i;
     gdouble selection;
     GwyGraphModel *model;
-    gdouble min, max, xoff, yoff;
+    gdouble min = 0, max = 0, xoff, yoff;
 
     model = GWY_GRAPH_MODEL(area->graph_model);
     xoff = (model->x_max - model->x_min)/100;
@@ -1353,7 +1353,7 @@ gwy_graph_area_get_selection_limit(GwyGraphArea *area)
 GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
-    return area->lab;
+    return GTK_WIDGET(area->lab);
 }
 
 

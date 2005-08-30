@@ -434,18 +434,6 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
 }
 
 
-static gchar *symbols[] = 
-{
-    "Box",
-    "Cross",
-    "Circle",
-    "Star",
-    "Times",
-    "TriU",
-    "TriD",
-    "Dia",
-};
-
 GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
                                       gint x, gint y,
                                       gint width, gint height,

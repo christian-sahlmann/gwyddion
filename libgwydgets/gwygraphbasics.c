@@ -324,7 +324,7 @@ void gwy_graph_draw_selection_lines(GdkDrawable *drawable,
                                   specs->xmin + specs->width, 
                                   y_data_to_pixel(specs, data_lines[i]),
                                   GDK_LINE_SOLID,
-                                  1, &gcl);    
+                                  1, &color);    
         else
         gwy_graph_draw_line(drawable, gc,
                                   x_data_to_pixel(specs, data_lines[i]), 
@@ -332,7 +332,7 @@ void gwy_graph_draw_selection_lines(GdkDrawable *drawable,
                                   x_data_to_pixel(specs, data_lines[i]),
                                   specs->ymin + specs->height,
                                   GDK_LINE_SOLID,
-                                  1, &gcl);
+                                  1, &color);
      } 
 }
 

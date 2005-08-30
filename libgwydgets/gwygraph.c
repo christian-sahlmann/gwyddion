@@ -446,7 +446,7 @@ gwy_graph_set_axis_visible(GwyGraph *graph,
 GtkWidget*
 gwy_graph_get_area(GwyGraph *graph)
 {
-    return graph->area;
+    return GTK_WIDGET(graph->area);
 }
 
 

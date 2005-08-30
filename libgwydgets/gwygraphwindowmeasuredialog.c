@@ -282,7 +282,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
 GtkWidget *
 gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 {
-    GtkWidget *label, *table, *spin;
+    GtkWidget *label, *table;
     GwyGraphWindowMeasureDialog *dialog;
     GwyGraphModel *gmodel;
     gint i;
