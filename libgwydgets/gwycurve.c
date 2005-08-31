@@ -1,5 +1,5 @@
 /*
- *  $Id$
+ *  @(#) $Id$
  *  Copyright (C) 2005 Chris Anderson.
  *  E-mail: sidewinder.asu@gmail.com.
  *
@@ -50,9 +50,6 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
-/* TODO: Kill giant "event" callback, split into expose_event,
-         button_press_event, etc. */
-
 #include <config.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,21 +91,29 @@ static guint curve_type_changed_signal = 0;
 
 
 /* forward declarations: */
-static void gwy_curve_class_init   (GwyCurveClass *class);
-static void gwy_curve_init         (GwyCurve      *curve);
-static void gwy_curve_get_property  (GObject              *object,
-                     guint                 param_id,
-                     GValue               *value,
-                     GParamSpec           *pspec);
-static void gwy_curve_set_property  (GObject              *object,
-                     guint                 param_id,
-                     const GValue         *value,
-                     GParamSpec           *pspec);
-static void gwy_curve_finalize     (GObject       *object);
-static gint gwy_curve_graph_events (GtkWidget     *widget,
-                    GdkEvent      *event,
-                    GwyCurve      *c);
-static void gwy_curve_size_graph   (GwyCurve      *curve);
+static void gwy_curve_class_init    (GwyCurveClass *class);
+static void gwy_curve_init          (GwyCurve *curve);
+static void gwy_curve_get_property  (GObject *object,
+                                     guint param_id,
+                                     GValue *value,
+                                     GParamSpec *pspec);
+static void gwy_curve_set_property  (GObject *object,
+                                     guint param_id,
+                                     const GValue *value,
+                                     GParamSpec *pspec);
+static void gwy_curve_finalize      (GObject *object);
+static void gwy_curve_size_graph    (GwyCurve *curve);
+
+static gboolean gwy_curve_configure      (GwyCurve *c);
+static gboolean gwy_curve_expose         (GwyCurve *c);
+static gboolean gwy_curve_button_press   (GtkWidget *widget,
+                                          GdkEventButton *event,
+                                          GwyCurve *c);
+static gboolean gwy_curve_button_release (GtkWidget *widget,
+                                          GdkEventButton *event,
+                                          GwyCurve *c);
+static gboolean gwy_curve_motion_notify  (GwyCurve *c,
+                                          GdkEventMotion *event);
 
 GType
 gwy_curve_get_type (void)
@@ -128,6 +133,7 @@ gwy_curve_get_type (void)
     sizeof (GwyCurve),
     0,      /* n_preallocs */
     (GInstanceInitFunc) gwy_curve_init,
+    NULL        /* value_table */
       };
 
       curve_type = g_type_register_static (GTK_TYPE_DRAWING_AREA, "GwyCurve",
@@ -211,30 +217,40 @@ gwy_curve_class_init (GwyCurveClass *class)
 static void
 gwy_curve_init (GwyCurve *curve)
 {
-  gint old_mask;
+    gint old_mask;
 
-  curve->cursor_type = GDK_TOP_LEFT_ARROW;
-  curve->pixmap = NULL;
-  curve->curve_type = GWY_CURVE_TYPE_SPLINE;
-  curve->height = 0;
-  curve->grab_point = -1;
+    curve->cursor_type = GDK_TOP_LEFT_ARROW;
+    curve->pixmap = NULL;
+    curve->curve_type = GWY_CURVE_TYPE_SPLINE;
+    curve->height = 0;
+    curve->grab_point = -1;
 
-  curve->num_points = 0;
-  curve->point = NULL;
+    curve->num_points = 0;
+    curve->point = NULL;
 
-  curve->num_ctlpoints = 0;
-  curve->ctlpoint = NULL;
+    curve->num_ctlpoints = 0;
+    curve->ctlpoint = NULL;
 
-  curve->min_x = 0.0;
-  curve->max_x = 1.0;
-  curve->min_y = 0.0;
-  curve->max_y = 1.0;
+    curve->min_x = 0.0;
+    curve->max_x = 1.0;
+    curve->min_y = 0.0;
+    curve->max_y = 1.0;
 
-  old_mask = gtk_widget_get_events (GTK_WIDGET (curve));
-  gtk_widget_set_events (GTK_WIDGET (curve), old_mask | GRAPH_MASK);
-  g_signal_connect (curve, "event",
-            G_CALLBACK (gwy_curve_graph_events), curve);
-  gwy_curve_size_graph (curve);
+    old_mask = gtk_widget_get_events(GTK_WIDGET (curve));
+    gtk_widget_set_events(GTK_WIDGET(curve), old_mask | GRAPH_MASK);
+
+    g_signal_connect_swapped(curve, "configure-event",
+                             G_CALLBACK(gwy_curve_configure), curve);
+    g_signal_connect_swapped(curve, "expose-event",
+                             G_CALLBACK(gwy_curve_expose), curve);
+    g_signal_connect(curve, "button-press-event",
+                     G_CALLBACK(gwy_curve_button_press), curve);
+    g_signal_connect(curve, "button-release-event",
+                     G_CALLBACK(gwy_curve_button_release), curve);
+    g_signal_connect_swapped(curve, "motion-notify-event",
+                             G_CALLBACK(gwy_curve_motion_notify), curve);
+
+    gwy_curve_size_graph (curve);
 }
 
 static void
@@ -457,251 +473,273 @@ gwy_curve_draw (GwyCurve *c, gint width, gint height)
              0, 0, 0, 0, width + RADIUS * 2, height + RADIUS * 2);
 }
 
-static gint
-gwy_curve_graph_events (GtkWidget *widget, GdkEvent *event, GwyCurve *c)
+static gboolean
+gwy_curve_configure(GwyCurve *c)
 {
-  GdkCursorType new_type = c->cursor_type;
-  gint i, src, dst, leftbound, rightbound;
-  GdkEventButton *bevent;
-  GdkEventMotion *mevent;
-  GtkWidget *w;
-  gint tx, ty;
-  gint cx, x, y, width, height;
-  gint closest_point = 0;
-  gfloat rx, ry, min_x;
-  guint distance;
-  gint x1, x2, y1, y2;
-  gint retval = FALSE;
+    GtkWidget *w;
+    gint width, height;
 
-  w = GTK_WIDGET (c);
-  width = w->allocation.width - RADIUS * 2;
-  height = w->allocation.height - RADIUS * 2;
+    w = GTK_WIDGET(c);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
 
-  if ((width < 0) || (height < 0))
-    return FALSE;
+    if (c->pixmap)
+        g_object_unref(c->pixmap);
+    c->pixmap = NULL;
 
-  /*  get the pointer position  */
-  gdk_window_get_pointer (w->window, &tx, &ty, NULL);
-  x = CLAMP ((tx - RADIUS), 0, width-1);
-  y = CLAMP ((ty - RADIUS), 0, height-1);
+    gwy_curve_expose(c);
 
-  min_x = c->min_x;
+    return TRUE;
+}
 
-  distance = ~0U;
-  for (i = 0; i < c->num_ctlpoints; ++i)
-    {
-      cx = project (c->ctlpoint[i][0], min_x, c->max_x, width);
-      if ((guint) abs (x - cx) < distance)
-    {
-      distance = abs (x - cx);
-      closest_point = i;
-    }
-    }
+static gboolean
+gwy_curve_expose(GwyCurve *c)
+{
+    GtkWidget *w;
+    gint width, height;
 
-  switch (event->type)
-    {
-    case GDK_CONFIGURE:
-      if (c->pixmap)
-    g_object_unref (c->pixmap);
-      c->pixmap = NULL;
-      /* fall through */
-    case GDK_EXPOSE:
-      if (!c->pixmap)
-    c->pixmap = gdk_pixmap_new (w->window,
-                    w->allocation.width,
-                    w->allocation.height, -1);
-      gwy_curve_draw (c, width, height);
-      break;
+    w = GTK_WIDGET(c);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
 
-    case GDK_BUTTON_PRESS:
-      gtk_grab_add (widget);
+    if (!c->pixmap)
+        c->pixmap = gdk_pixmap_new(w->window,
+                                   w->allocation.width,
+                                   w->allocation.height, -1);
+    gwy_curve_draw (c, width, height);
+    return TRUE;
+}
 
-      bevent = (GdkEventButton *) event;
-      new_type = GDK_TCROSS;
+static gboolean
+gwy_curve_button_press(GtkWidget *widget,
+                       G_GNUC_UNUSED GdkEventButton *event,
+                       GwyCurve *c)
+{
+    GdkCursorType new_type = c->cursor_type;
+    gint tx, ty, x, y, cx, width, height;
+    gint i;
+    guint distance = ~0U;
+    gint closest_point = 0;
+    GtkWidget *w;
 
-      switch (c->curve_type)
-    {
-    case GWY_CURVE_TYPE_LINEAR:
-    case GWY_CURVE_TYPE_SPLINE:
-      if (distance > MIN_DISTANCE)
+    /* get the widget size */
+    w = GTK_WIDGET(c);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
+
+    /*  get the pointer position  */
+    gdk_window_get_pointer(w->window, &tx, &ty, NULL);
+    x = CLAMP((tx - RADIUS), 0, width-1);
+    y = CLAMP((ty - RADIUS), 0, height-1);
+
+    /* determine closest point to pointer */
+    for (i=0; i<c->num_ctlpoints; ++i) {
+        cx = project(c->ctlpoint[i][0], c->min_x, c->max_x, width);
+        if ((guint) abs (x - cx) < distance)
         {
-          /* insert a new control point */
-          if (c->num_ctlpoints > 0)
-        {
-          cx = project (c->ctlpoint[closest_point][0], min_x,
-                c->max_x, width);
-          if (x > cx)
-            ++closest_point;
-        }
-          ++c->num_ctlpoints;
-          c->ctlpoint =
-        g_realloc (c->ctlpoint,
-               c->num_ctlpoints * sizeof (*c->ctlpoint));
-          for (i = c->num_ctlpoints - 1; i > closest_point; --i)
-        memcpy (c->ctlpoint + i, c->ctlpoint + i - 1,
-            sizeof (*c->ctlpoint));
-        }
-      c->grab_point = closest_point;
-      c->ctlpoint[c->grab_point][0] =
-        unproject (x, min_x, c->max_x, width);
-      c->ctlpoint[c->grab_point][1] =
-        unproject (height - y, c->min_y, c->max_y, height);
-
-      gwy_curve_interpolate (c, width, height);
-      break;
-
-    case GWY_CURVE_TYPE_FREE:
-      c->point[x].x = RADIUS + x;
-      c->point[x].y = RADIUS + y;
-      c->grab_point = x;
-      c->last = y;
-      break;
-    }
-      gwy_curve_draw (c, width, height);
-      retval = TRUE;
-      break;
-
-    case GDK_BUTTON_RELEASE:
-      gtk_grab_remove (widget);
-
-      /* delete inactive points: */
-      if (c->curve_type != GWY_CURVE_TYPE_FREE)
-    {
-      for (src = dst = 0; src < c->num_ctlpoints; ++src)
-        {
-          if (c->ctlpoint[src][0] >= min_x)
-        {
-          memcpy (c->ctlpoint + dst, c->ctlpoint + src,
-              sizeof (*c->ctlpoint));
-          ++dst;
-        }
-        }
-      if (dst < src)
-        {
-          c->num_ctlpoints -= (src - dst);
-          if (c->num_ctlpoints <= 0)
-        {
-          c->num_ctlpoints = 1;
-          c->ctlpoint[0][0] = min_x;
-          c->ctlpoint[0][1] = c->min_y;
-          gwy_curve_interpolate (c, width, height);
-          gwy_curve_draw (c, width, height);
-        }
-          c->ctlpoint =
-        g_realloc (c->ctlpoint,
-               c->num_ctlpoints * sizeof (*c->ctlpoint));
+            distance = abs (x - cx);
+            closest_point = i;
         }
     }
-      new_type = GDK_FLEUR;
-      c->grab_point = -1;
-      retval = TRUE;
-      break;
 
-    case GDK_MOTION_NOTIFY:
-      mevent = (GdkEventMotion *) event;
+    /* either add new point, or grab closest one */
+    gtk_grab_add (widget);
+    new_type = GDK_TCROSS;
+    switch (c->curve_type) {
+        case GWY_CURVE_TYPE_LINEAR:
+        case GWY_CURVE_TYPE_SPLINE:
+        if (distance > MIN_DISTANCE) {
+            /* insert a new control point */
+            if (c->num_ctlpoints > 0) {
+                cx = project(c->ctlpoint[closest_point][0],
+                             c->min_x, c->max_x, width);
+                if (x > cx)
+                    ++closest_point;
+            }
+            ++c->num_ctlpoints;
+            c->ctlpoint = g_realloc(c->ctlpoint,
+                                    c->num_ctlpoints * sizeof (*c->ctlpoint));
+            for (i=c->num_ctlpoints - 1; i>closest_point; --i)
+                memcpy (c->ctlpoint + i, c->ctlpoint + i - 1,
+                        sizeof(*c->ctlpoint));
+        }
+        c->grab_point = closest_point;
+        c->ctlpoint[c->grab_point][0] = unproject(x, c->min_x, c->max_x, width);
+        c->ctlpoint[c->grab_point][1] = unproject(height - y,
+                                                  c->min_y, c->max_y, height);
+        gwy_curve_interpolate (c, width, height);
+        break;
 
-      switch (c->curve_type)
-    {
-    case GWY_CURVE_TYPE_LINEAR:
-    case GWY_CURVE_TYPE_SPLINE:
-      if (c->grab_point == -1)
-        {
-          /* if no point is grabbed...  */
-          if (distance <= MIN_DISTANCE)
-        new_type = GDK_FLEUR;
-          else
-        new_type = GDK_TCROSS;
-        }
-      else
-        {
-          /* drag the grabbed point  */
-          new_type = GDK_TCROSS;
-
-          leftbound = -MIN_DISTANCE;
-          if (c->grab_point > 0)
-        leftbound = project (c->ctlpoint[c->grab_point - 1][0],
-                     min_x, c->max_x, width);
-
-          rightbound = width + RADIUS * 2 + MIN_DISTANCE;
-          if (c->grab_point + 1 < c->num_ctlpoints)
-        rightbound = project (c->ctlpoint[c->grab_point + 1][0],
-                      min_x, c->max_x, width);
-
-          if (tx <= leftbound || tx >= rightbound
-          || ty > height + RADIUS * 2 + MIN_DISTANCE
-          || ty < -MIN_DISTANCE)
-        c->ctlpoint[c->grab_point][0] = min_x - 1.0;
-          else
-        {
-          rx = unproject (x, min_x, c->max_x, width);
-          ry = unproject (height - y, c->min_y, c->max_y, height);
-          c->ctlpoint[c->grab_point][0] = rx;
-          c->ctlpoint[c->grab_point][1] = ry;
-        }
-          gwy_curve_interpolate (c, width, height);
-          gwy_curve_draw (c, width, height);
-        }
-      break;
-
-    case GWY_CURVE_TYPE_FREE:
-      if (c->grab_point != -1)
-        {
-          if (c->grab_point > x)
-        {
-          x1 = x;
-          x2 = c->grab_point;
-          y1 = y;
-          y2 = c->last;
-        }
-          else
-        {
-          x1 = c->grab_point;
-          x2 = x;
-          y1 = c->last;
-          y2 = y;
-        }
-
-          if (x2 != x1)
-        for (i = x1; i <= x2; i++)
-          {
-            c->point[i].x = RADIUS + i;
-            c->point[i].y = RADIUS +
-              (y1 + ((y2 - y1) * (i - x1)) / (x2 - x1));
-          }
-          else
-        {
-          c->point[x].x = RADIUS + x;
-          c->point[x].y = RADIUS + y;
-        }
-          c->grab_point = x;
-          c->last = y;
-          gwy_curve_draw (c, width, height);
-        }
-      if (mevent->state & GDK_BUTTON1_MASK)
-        new_type = GDK_TCROSS;
-      else
-        new_type = GDK_PENCIL;
-      break;
+        case GWY_CURVE_TYPE_FREE:
+        c->point[x].x = RADIUS + x;
+        c->point[x].y = RADIUS + y;
+        c->grab_point = x;
+        c->last = y;
+        break;
     }
-      if (new_type != (GdkCursorType) c->cursor_type)
-    {
-      GdkCursor *cursor;
+    gwy_curve_draw(c, width, height);
+    return TRUE;
+}
 
-      c->cursor_type = new_type;
+static gboolean
+gwy_curve_button_release(GtkWidget *widget,
+                         G_GNUC_UNUSED GdkEventButton *event,
+                         GwyCurve *c)
+{
+    GdkCursorType new_type = c->cursor_type;
+    gint src, dst;
+    gint width, height;
+    GtkWidget *w;
 
-      cursor = gdk_cursor_new_for_display (gtk_widget_get_display (w),
-                          c->cursor_type);
-      gdk_window_set_cursor (w->window, cursor);
-      gdk_cursor_unref (cursor);
+    w = GTK_WIDGET(c);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
+
+    gtk_grab_remove (widget);
+
+    /* delete inactive points: */
+    if (c->curve_type != GWY_CURVE_TYPE_FREE) {
+        for (src = dst = 0; src < c->num_ctlpoints; ++src) {
+            if (c->ctlpoint[src][0] >= c->min_x) {
+                memcpy(c->ctlpoint + dst, c->ctlpoint + src,
+                       sizeof (*c->ctlpoint));
+                ++dst;
+            }
+        }
+        if (dst < src) {
+            c->num_ctlpoints -= (src - dst);
+            if (c->num_ctlpoints <= 0) {
+                c->num_ctlpoints = 1;
+                c->ctlpoint[0][0] = c->min_x;
+                c->ctlpoint[0][1] = c->min_y;
+                gwy_curve_interpolate(c, width, height);
+                gwy_curve_draw(c, width, height);
+            }
+            c->ctlpoint = g_realloc(c->ctlpoint,
+                                    c->num_ctlpoints * sizeof(*c->ctlpoint));
+        }
     }
-      retval = TRUE;
-      break;
+    new_type = GDK_FLEUR;
+    c->grab_point = -1;
+    return TRUE;
+}
 
-    default:
-      break;
+static gboolean
+gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
+{
+    GdkCursorType new_type = c->cursor_type;
+    gint tx, ty, x, y, cx, width, height;
+    gint i, leftbound, rightbound;
+    gint x_1, x_2, y_1, y_2;
+    gfloat rx, ry;
+    guint distance = ~0U;
+    gint closest_point = 0;
+    GtkWidget *w;
+
+    /* get the widget size */
+    w = GTK_WIDGET(c);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
+
+    /*  get the pointer position  */
+    gdk_window_get_pointer(w->window, &tx, &ty, NULL);
+    x = CLAMP((tx - RADIUS), 0, width-1);
+    y = CLAMP((ty - RADIUS), 0, height-1);
+
+    /* determine closest point to pointer */
+    for (i=0; i<c->num_ctlpoints; ++i) {
+        cx = project(c->ctlpoint[i][0], c->min_x, c->max_x, width);
+        if ((guint) abs (x - cx) < distance)
+        {
+            distance = abs (x - cx);
+            closest_point = i;
+        }
     }
 
-  return retval;
+    switch (c->curve_type) {
+        case GWY_CURVE_TYPE_LINEAR:
+        case GWY_CURVE_TYPE_SPLINE:
+        if (c->grab_point == -1) {
+            /* if no point is grabbed...  */
+            if (distance <= MIN_DISTANCE)
+                new_type = GDK_FLEUR;
+            else
+                new_type = GDK_TCROSS;
+        } else {
+            /* drag the grabbed point  */
+            new_type = GDK_TCROSS;
+
+            leftbound = -MIN_DISTANCE;
+            if (c->grab_point > 0)
+                leftbound = project(c->ctlpoint[c->grab_point - 1][0],
+                                    c->min_x, c->max_x, width);
+
+            rightbound = width + RADIUS * 2 + MIN_DISTANCE;
+            if (c->grab_point + 1 < c->num_ctlpoints)
+                rightbound = project(c->ctlpoint[c->grab_point + 1][0],
+                                     c->min_x, c->max_x, width);
+
+            if (tx <= leftbound || tx >= rightbound
+                || ty > height + RADIUS * 2 + MIN_DISTANCE
+                || ty < -MIN_DISTANCE)
+                c->ctlpoint[c->grab_point][0] = c->min_x - 1.0;
+            else {
+                rx = unproject(x, c->min_x, c->max_x, width);
+                ry = unproject(height - y, c->min_y, c->max_y, height);
+                c->ctlpoint[c->grab_point][0] = rx;
+                c->ctlpoint[c->grab_point][1] = ry;
+            }
+            gwy_curve_interpolate(c, width, height);
+            gwy_curve_draw(c, width, height);
+        }
+        break;
+
+        case GWY_CURVE_TYPE_FREE:
+        if(c->grab_point != -1) {
+            if (c->grab_point > x) {
+                x_1 = x;
+                x_2 = c->grab_point;
+                y_1 = y;
+                y_2 = c->last;
+            } else {
+                x_1 = c->grab_point;
+                x_2 = x;
+                y_1 = c->last;
+                y_2 = y;
+            }
+
+            if (x_2 != x_1)
+                for (i = x_1; i <= x_2; i++) {
+                    c->point[i].x = RADIUS + i;
+                    c->point[i].y = RADIUS +
+                                    (y_1 + ((y_2 - y_1) *
+                                    (i - x_1)) / (x_2 - x_1));
+                }
+            else {
+                c->point[x].x = RADIUS + x;
+                c->point[x].y = RADIUS + y;
+            }
+            c->grab_point = x;
+            c->last = y;
+            gwy_curve_draw(c, width, height);
+        }
+        if (event->state & GDK_BUTTON1_MASK)
+            new_type = GDK_TCROSS;
+        else
+            new_type = GDK_PENCIL;
+        break;
+    }
+    if (new_type != (GdkCursorType)c->cursor_type) {
+        GdkCursor *cursor;
+
+        c->cursor_type = new_type;
+
+        cursor = gdk_cursor_new_for_display(gtk_widget_get_display(w),
+                                            c->cursor_type);
+        gdk_window_set_cursor(w->window, cursor);
+        gdk_cursor_unref(cursor);
+    }
+    return TRUE;
 }
 
 void
@@ -829,7 +867,7 @@ gwy_curve_reset (GwyCurve *c)
 }
 
 void
-gwy_curve_set_gamma (GwyCurve *c, gfloat gamma)
+gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
 {
   gfloat x, one_over_gamma, height, one_over_width;
   GwyCurveType old_type;
@@ -841,10 +879,10 @@ gwy_curve_set_gamma (GwyCurve *c, gfloat gamma)
   old_type = c->curve_type;
   c->curve_type = GWY_CURVE_TYPE_FREE;
 
-  if (gamma <= 0)
+  if (gamma_val <= 0)
     one_over_gamma = 1.0;
   else
-    one_over_gamma = 1.0 / gamma;
+    one_over_gamma = 1.0 / gamma_val;
   one_over_width = 1.0 / (c->num_points - 1);
   height = c->height;
   for (i = 0; i < c->num_points; ++i)

@@ -1,5 +1,5 @@
 /*
- *  $Id$
+ *  @(#) $Id$
  *  Copyright (C) 2005 Chris Anderson, Molecular Imaging, Corp.
  *  E-mail: sidewinder.asu@gmail.com.
  *
