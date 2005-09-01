@@ -37,10 +37,6 @@ static GObject*    gwy_serializable_duplicate_hard_way (GObject *object);
 
 static GByteArray* gwy_serialize_spec              (GByteArray *buffer,
                                                     const GwySerializeSpec *sp);
-static gsize       gwy_serialize_check_string      (const guchar *buffer,
-                                                    gsize size,
-                                                    gsize position,
-                                                    const guchar *compare_to);
 static gboolean    gwy_deserialize_spec_value      (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
@@ -1789,7 +1785,7 @@ gwy_deserialize_spec_value(const guchar *buffer,
  * Returns: The length of the nul-terminated string including the nul
  * character; zero otherwise.
  **/
-static gsize
+gsize
 gwy_serialize_check_string(const guchar *buffer,
                            gsize size,
                            gsize position,

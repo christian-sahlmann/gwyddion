@@ -109,6 +109,10 @@ gboolean    gwy_serialize_unpack_object_struct   (const guchar *buffer,
                                                   const guchar *object_name,
                                                   gsize nspec,
                                                   GwySerializeSpec *spec);
+gsize       gwy_serialize_check_string           (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize position,
+                                                  const guchar *compare_to);
 
 GByteArray*       gwy_serialize_object_items    (GByteArray *buffer,
                                                  const guchar *object_name,
@@ -119,6 +123,7 @@ GwySerializeItem* gwy_deserialize_object_hash   (const guchar *buffer,
                                                  gsize *position,
                                                  const guchar *object_name,
                                                  gsize *nitems);
+
 
 G_END_DECLS
 

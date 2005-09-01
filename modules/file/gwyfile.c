@@ -320,28 +320,6 @@ gwy_serialize_unpack_string(const guchar *buffer,
     return value;
 }
 
-static inline gsize
-gwy_serialize_check_string(const guchar *buffer,
-                           gsize size,
-                           gsize position,
-                           const guchar *compare_to)
-{
-    const guchar *p;
-
-    gwy_debug("<%s> buf = %p, size = %" G_GSIZE_FORMAT ", pos = %"
-              G_GSIZE_FORMAT,
-              compare_to ? compare_to : (const guchar*)"(null)",
-              buffer, size, position);
-    g_assert(buffer);
-    g_assert(size > 0);
-    g_return_val_if_fail(position < size, 0);
-    p = (guchar*)memchr(buffer + position, 0, size - position);
-    if (!p || (compare_to && strcmp(buffer + position, compare_to)))
-        return 0;
-
-    return (p - buffer) + 1 - position;
-}
-
 static GObject*
 gwy_container_deserialize_old(const guchar *buffer,
                               gsize size,
