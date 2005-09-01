@@ -25,6 +25,9 @@
 #include <libgwyddion/gwymath.h>
 #include "gwyrgba.h"
 
+#define float_to_gdk(c) ((guint16)((c)*65535.999999))
+#define float_from_gdk(c) ((c)/65535.0)
+
 static void gwy_rgba_compute_color_quarks (const gchar *prefix,
                                            GQuark quarks[4]);
 
@@ -85,9 +88,9 @@ void
 gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
                       GdkColor *gdkcolor)
 {
-    gdkcolor->red   = (guint16)(rgba->r*65535.999999);
-    gdkcolor->green = (guint16)(rgba->g*65535.999999);
-    gdkcolor->blue  = (guint16)(rgba->b*65535.999999);
+    gdkcolor->red   = float_to_gdk(rgba->r);
+    gdkcolor->green = float_to_gdk(rgba->g);
+    gdkcolor->blue  = float_to_gdk(rgba->b);
     gdkcolor->pixel = (guint32)-1;
 }
 
@@ -102,7 +105,7 @@ gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
 guint16
 gwy_rgba_to_gdk_alpha(const GwyRGBA *rgba)
 {
-    return (guint16)(rgba->a*65535.999999);
+    return float_to_gdk(rgba->a);
 }
 
 /**
@@ -118,9 +121,9 @@ void
 gwy_rgba_from_gdk_color(GwyRGBA *rgba,
                         const GdkColor *gdkcolor)
 {
-    rgba->r = gdkcolor->red/65535.0;
-    rgba->g = gdkcolor->green/65535.0;
-    rgba->b = gdkcolor->blue/65535.0;
+    rgba->r = float_from_gdk(gdkcolor->red);
+    rgba->g = float_from_gdk(gdkcolor->green);
+    rgba->b = float_from_gdk(gdkcolor->blue);
 }
 
 /**
@@ -136,10 +139,10 @@ gwy_rgba_from_gdk_color_and_alpha(GwyRGBA *rgba,
                                   const GdkColor *gdkcolor,
                                   guint16 gdkalpha)
 {
-    rgba->r = gdkcolor->red/65535.0;
-    rgba->g = gdkcolor->green/65535.0;
-    rgba->b = gdkcolor->blue/65535.0;
-    rgba->a = gdkalpha/65535.0;
+    rgba->r = float_from_gdk(gdkcolor->red);
+    rgba->g = float_from_gdk(gdkcolor->green);
+    rgba->b = float_from_gdk(gdkcolor->blue);
+    rgba->a = float_from_gdk(gdkalpha);
 }
 
 /**
@@ -264,9 +267,9 @@ gwy_rgba_set_gdk_gc_fg(const GwyRGBA *rgba,
 {
     GdkColor gdkcolor;
 
-    gdkcolor.red   = (guint16)(rgba->r*65535.999999);
-    gdkcolor.green = (guint16)(rgba->g*65535.999999);
-    gdkcolor.blue  = (guint16)(rgba->b*65535.999999);
+    gdkcolor.red   = float_to_gdk(rgba->r);
+    gdkcolor.green = float_to_gdk(rgba->g);
+    gdkcolor.blue  = float_to_gdk(rgba->b);
     gdk_gc_set_rgb_fg_color(gc, &gdkcolor);
 }
 
@@ -286,9 +289,9 @@ gwy_rgba_set_gdk_gc_bg(const GwyRGBA *rgba,
 {
     GdkColor gdkcolor;
 
-    gdkcolor.red   = (guint16)(rgba->r*65535.999999);
-    gdkcolor.green = (guint16)(rgba->g*65535.999999);
-    gdkcolor.blue  = (guint16)(rgba->b*65535.999999);
+    gdkcolor.red   = float_to_gdk(rgba->r);
+    gdkcolor.green = float_to_gdk(rgba->g);
+    gdkcolor.blue  = float_to_gdk(rgba->b);
     gdk_gc_set_rgb_bg_color(gc, &gdkcolor);
 }
 
