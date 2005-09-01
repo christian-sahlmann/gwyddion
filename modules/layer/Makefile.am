@@ -17,7 +17,7 @@ EXTRA_DIST = \
 
 INCLUDES = -I$(top_srcdir)
 
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\" -fPIC
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Module\"
 
 
 if OS_WIN32
