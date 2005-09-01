@@ -85,9 +85,9 @@ void
 gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
                       GdkColor *gdkcolor)
 {
-    gdkcolor->red   = (guint16)floor(rgba->r*65535.999999);
-    gdkcolor->green = (guint16)floor(rgba->g*65535.999999);
-    gdkcolor->blue  = (guint16)floor(rgba->b*65535.999999);
+    gdkcolor->red   = (guint16)(rgba->r*65535.999999);
+    gdkcolor->green = (guint16)(rgba->g*65535.999999);
+    gdkcolor->blue  = (guint16)(rgba->b*65535.999999);
     gdkcolor->pixel = (guint32)-1;
 }
 
@@ -102,7 +102,7 @@ gwy_rgba_to_gdk_color(const GwyRGBA *rgba,
 guint16
 gwy_rgba_to_gdk_alpha(const GwyRGBA *rgba)
 {
-    return (guint16)floor(rgba->a*65535.999999);
+    return (guint16)(rgba->a*65535.999999);
 }
 
 /**
@@ -246,6 +246,50 @@ gwy_rgba_store_to_container(const GwyRGBA *rgba,
     gwy_container_set_double(container, keys[1], rgba->g);
     gwy_container_set_double(container, keys[2], rgba->b);
     gwy_container_set_double(container, keys[3], rgba->a);
+}
+
+/**
+ * gwy_rgba_set_gdk_gc_fg:
+ * @rgba: A #GwyRGBA.  Its alpha component is ignored, only RGB is used.
+ * @gc: A Gdk graphics context to set forgeground color of.
+ *
+ * Sets foreground color of a Gdk graphics context from a RGBA color.
+ *
+ * This is a convenience wrapper around gdk_gc_set_rgb_fg_color(), see its
+ * documentation for details and caveats.
+ **/
+void
+gwy_rgba_set_gdk_gc_fg(const GwyRGBA *rgba,
+                       GdkGC *gc)
+{
+    GdkColor gdkcolor;
+
+    gdkcolor.red   = (guint16)(rgba->r*65535.999999);
+    gdkcolor.green = (guint16)(rgba->g*65535.999999);
+    gdkcolor.blue  = (guint16)(rgba->b*65535.999999);
+    gdk_gc_set_rgb_fg_color(gc, &gdkcolor);
+}
+
+/**
+ * gwy_rgba_set_gdk_gc_bg:
+ * @rgba: A #GwyRGBA.  Its alpha component is ignored, only RGB is used.
+ * @gc: A Gdk graphics context to set forgeground color of.
+ *
+ * Sets foreground color of a Gdk graphics context from a RGBA color.
+ *
+ * This is a convenience wrapper around gdk_gc_set_rgb_bg_color(), see its
+ * documentation for details and caveats.
+ **/
+void
+gwy_rgba_set_gdk_gc_bg(const GwyRGBA *rgba,
+                       GdkGC *gc)
+{
+    GdkColor gdkcolor;
+
+    gdkcolor.red   = (guint16)(rgba->r*65535.999999);
+    gdkcolor.green = (guint16)(rgba->g*65535.999999);
+    gdkcolor.blue  = (guint16)(rgba->b*65535.999999);
+    gdk_gc_set_rgb_bg_color(gc, &gdkcolor);
 }
 
 static void

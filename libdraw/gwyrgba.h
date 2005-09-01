@@ -21,7 +21,7 @@
 #ifndef __GWY_RGBA_H__
 #define __GWY_RGBA_H__
 
-#include <gdk/gdkcolor.h>
+#include <gdk/gdkgc.h>
 #include <libgwyddion/gwycontainer.h>
 
 G_BEGIN_DECLS
@@ -58,6 +58,10 @@ gboolean      gwy_rgba_get_from_container       (GwyRGBA *rgba,
 void          gwy_rgba_store_to_container       (const GwyRGBA *rgba,
                                                  GwyContainer *container,
                                                  const gchar *prefix);
+void          gwy_rgba_set_gdk_gc_fg            (const GwyRGBA *rgba,
+                                                 GdkGC *gc);
+void          gwy_rgba_set_gdk_gc_bg            (const GwyRGBA *rgba,
+                                                 GdkGC *gc);
 
 G_END_DECLS
 
