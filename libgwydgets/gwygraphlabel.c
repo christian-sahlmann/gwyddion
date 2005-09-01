@@ -61,7 +61,7 @@ gwy_graph_label_class_init(GwyGraphLabelClass *klass)
     widget_class->size_request = gwy_graph_label_size_request;
     widget_class->unrealize = gwy_graph_label_unrealize;
     widget_class->size_allocate = gwy_graph_label_size_allocate;
-    
+
 }
 
 static void
@@ -75,10 +75,10 @@ gwy_graph_label_init(GwyGraphLabel *label)
 
 /**
  * gwy_graph_label_new:
- * 
- * creates new graph label. 
  *
- * Returns: new graph label 
+ * creates new graph label.
+ *
+ * Returns: new graph label
  **/
 GtkWidget*
 gwy_graph_label_new()
@@ -249,9 +249,13 @@ gwy_graph_label_expose(GtkWidget *widget,
     return FALSE;
 }
 
-void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, PangoLayout *layout,
-                                              gint x, gint y, gint width, gint height,
-                                              GwyGraphLabel *label)
+void
+gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
+                                       GdkGC *gc,
+                                       PangoLayout *layout,
+                                       gint x, gint y,
+                                       gint width, gint height,
+                                       GwyGraphLabel *label)
 {
     gint ypos, winheight, winwidth, winx, winy, frame_off;
     gint i;
@@ -259,74 +263,79 @@ void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, Pa
     GwyGraphModel *model;
     PangoRectangle rect;
     GdkColor fg;
-    GdkColormap* cmap;
-    
+
     model = GWY_GRAPH_MODEL(label->graph_model);
     pango_layout_set_font_description(layout, label->label_font);
 
     frame_off = model->label_frame_thickness/2;
     ypos = 5 + frame_off;
-    
-    cmap = gdk_colormap_get_system();
-    fg.red = 0;
-    fg.green = 0;
-    fg.blue = 0;
-    gdk_colormap_alloc_color(cmap, &fg, TRUE, TRUE);
+
+    /* FIXME: use Gtk+ theme */
+    fg.red = fg.green = fg.blue = 0;
 
     winx = x;
     winy = y;
     winwidth = x + width;
     winheight = y + height;
-    for (i=0; i<model->ncurves; i++)
-    {
+    for (i = 0; i < model->ncurves; i++) {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
-        
-        pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
+
+        pango_layout_set_text(layout, curvemodel->description->str,
+                              curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
-        
+
         if (model->label_reverse)
-            gdk_draw_layout(drawable, gc, winwidth - rect.width - 25 - frame_off, ypos, layout);
+            gdk_draw_layout(drawable, gc,
+                            winwidth - rect.width - 25 - frame_off, ypos,
+                            layout);
         else
             gdk_draw_layout(drawable, gc, 25 + frame_off, ypos, layout);
-        
+
         label->samplepos[i] = ypos;
 
-        if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
-        {
+        if (curvemodel->type == GWY_GRAPH_CURVE_LINE
+            || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
-                gwy_graph_draw_line(drawable, gc, 
-                                      winwidth - 20 - frame_off, ypos + rect.height/2, winwidth - 5, ypos + rect.height/2,
-                                      curvemodel->line_style, curvemodel->line_size,
-                                      &(curvemodel->color));
+                gwy_graph_draw_line(drawable, gc,
+                                    winwidth - 20 - frame_off,
+                                    ypos + rect.height/2, winwidth - 5,
+                                    ypos + rect.height/2,
+                                    curvemodel->line_style,
+                                    curvemodel->line_size,
+                                    &(curvemodel->color));
             else
-                gwy_graph_draw_line(drawable, gc, 
-                                      5 + frame_off, ypos + rect.height/2, 20 + frame_off, ypos + rect.height/2,
-                                      curvemodel->line_style, curvemodel->line_size,
-                                      &(curvemodel->color));
+                gwy_graph_draw_line(drawable, gc,
+                                    5 + frame_off, ypos + rect.height/2,
+                                    20 + frame_off, ypos + rect.height/2,
+                                    curvemodel->line_style,
+                                    curvemodel->line_size,
+                                    &(curvemodel->color));
         }
-        if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
-        {
+        if (curvemodel->type == GWY_GRAPH_CURVE_POINTS
+            || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
-                gwy_graph_draw_point (drawable, gc, 
-                                     winwidth - 13 - frame_off, ypos + rect.height/2,
-                                   curvemodel->point_type, curvemodel->point_size,
-                                   &(curvemodel->color), FALSE); 
+                gwy_graph_draw_point(drawable, gc,
+                                     winwidth - 13 - frame_off,
+                                     ypos + rect.height/2,
+                                     curvemodel->point_type,
+                                     curvemodel->point_size,
+                                     &(curvemodel->color), FALSE);
             else
-                gwy_graph_draw_point (drawable, gc, 
+                gwy_graph_draw_point(drawable, gc,
                                      12 + frame_off, ypos + rect.height/2,
-                                   curvemodel->point_type, curvemodel->point_size,
-                                   &(curvemodel->color), FALSE);
+                                     curvemodel->point_type,
+                                     curvemodel->point_size,
+                                     &(curvemodel->color), FALSE);
         }
-        
-        gdk_gc_set_foreground(gc, &fg);
-        
-        ypos += rect.height + 5;     
+        gdk_gc_set_rgb_fg_color(gc, &fg);
+
+        ypos += rect.height + 5;
     }
-    
-    if ( model->label_frame_thickness > 0)
-    {
-        gdk_gc_set_line_attributes (gc, model->label_frame_thickness,
-                      GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+
+    if (model->label_frame_thickness > 0) {
+        gdk_gc_set_line_attributes(gc, model->label_frame_thickness,
+                                   GDK_LINE_SOLID, GDK_CAP_ROUND,
+                                   GDK_JOIN_MITER);
 
         gdk_draw_line(drawable, gc,
                       model->label_frame_thickness/2,
@@ -349,10 +358,9 @@ void gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable, GdkGC *gc, Pa
                       winwidth - model->label_frame_thickness/2 - 1,
                       winheight - model->label_frame_thickness/2 - 1);
     }
-  
 }
 
-static void 
+static void
 gwy_graph_label_draw_label(GtkWidget *widget)
 {
     gint winheight, winwidth, windepth, winx, winy;
@@ -365,12 +373,12 @@ gwy_graph_label_draw_label(GtkWidget *widget)
     label = GWY_GRAPH_LABEL(widget);
     layout = gtk_widget_create_pango_layout(widget, "");
 
-    gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);    
+    gdk_window_get_geometry(widget->window, &winx, &winy, &winwidth, &winheight, &windepth);
     gwy_graph_label_draw_label_on_drawable(GDK_DRAWABLE(widget->window), mygc, layout,
                                              0, 0, winwidth, winheight,
                                              label);
     g_object_unref((GObject *)mygc);
-    
+
 }
 
 /*determine requested size of label (will be needed by grapharea to put the label into layout)*/
@@ -382,16 +390,16 @@ set_requised_size(GwyGraphLabel *label)
     PangoRectangle rect;
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
-  
+
     label->reqheight = 0;
     label->reqwidth = 0;
-    
+
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
-        
+
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
-       
+
         pango_layout_set_font_description(layout, label->label_font);
         pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
@@ -404,16 +412,16 @@ set_requised_size(GwyGraphLabel *label)
 }
 
 /*synchronize label with information in graphmodel*/
-void 
+void
 gwy_graph_label_refresh(GwyGraphLabel *label)
 {
     GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
-    
+
     /*repaint label samples and descriptions*/
     if (label->samplepos) g_free(label->samplepos);
     if (model->ncurves > 0) label->samplepos = g_new(gint, model->ncurves);
     else label->samplepos = NULL;
-    
+
     set_requised_size(label);
     gtk_widget_queue_resize(GTK_WIDGET(label));
     gtk_widget_queue_draw(GTK_WIDGET(label));
@@ -447,13 +455,13 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
     GwyRGBA *color;
     gint pointsize;
     gint linesize;
-    
+
     out = g_string_new("%%Label\n");
 
     g_string_append_printf(out, "/Times-Roman findfont\n");
     g_string_append_printf(out, "%d scalefont\n setfont\n", fontsize);
 
-            
+
     model = GWY_GRAPH_MODEL(label->graph_model);
     g_string_append_printf(out, "/box {\n"
                            "newpath\n"
@@ -465,7 +473,7 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
                            "closepath\n"
                            "} def\n",
                            model->label_frame_thickness,
-                           x, y, 
+                           x, y,
                            x + width, y,
                            x + width, y + height,
                            x, y + height);
@@ -478,8 +486,8 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
     g_string_append_printf(out, "clip\n");
     g_string_append_printf(out, "1 setgray\n");
     g_string_append_printf(out, "fill\n");
-    
-    
+
+
     xpos = 5;
     ypos = height - fontsize;
     for (i=0; i<model->ncurves; i++)
@@ -502,8 +510,8 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
         ypos -= fontsize + 5;
     }
     g_string_append_printf(out, "grestore\n");
-    
-    return out;                         
+
+    return out;
 }
 
 

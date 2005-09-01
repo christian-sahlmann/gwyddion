@@ -63,13 +63,13 @@ static gboolean gwy_graph_area_button_release       (GtkWidget *widget,
 static gboolean gwy_graph_area_leave_notify         (GtkWidget *widget,
                                                       GdkEventCrossing *event);
 
-static gint     gwy_graph_area_find_curve           (GwyGraphArea *area, 
+static gint     gwy_graph_area_find_curve           (GwyGraphArea *area,
                                                       gdouble x, gdouble y);
-static gint     gwy_graph_area_find_selection       (GwyGraphArea *area, 
+static gint     gwy_graph_area_find_selection       (GwyGraphArea *area,
                                                       gdouble x, gdouble y);
-static gint     gwy_graph_area_find_point           (GwyGraphArea *area, 
+static gint     gwy_graph_area_find_point           (GwyGraphArea *area,
                                                       gdouble x, gdouble y);
-static gint     gwy_graph_area_find_line            (GwyGraphArea *area, 
+static gint     gwy_graph_area_find_line            (GwyGraphArea *area,
                                                       gdouble position);
 static void     gwy_graph_area_draw_zoom            (GdkDrawable *drawable,
                                                        GdkGC *gc,
@@ -136,7 +136,7 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
     widget_class->button_release_event = gwy_graph_area_button_release;
     widget_class->motion_notify_event = gwy_graph_area_motion_notify;
     widget_class->leave_notify_event = gwy_graph_area_leave_notify;
-    
+
     klass->selected = NULL;
     klass->zoomed = NULL;
     klass->mouse_moved = NULL;
@@ -180,27 +180,29 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     gwy_debug("");
     area->gc = NULL;
-    
+
     area->selecting = FALSE;
     area->mouse_present = FALSE;
 
     area->pointdata = g_new(GwyGraphStatus_PointData, 1);
     area->pointsdata = g_new(GwyGraphStatus_PointsData, 1);
     area->areadata = g_new(GwyGraphStatus_AreaData, 1);
-    area->areasdata = g_new(GwyGraphStatus_AreasData, 1);     
+    area->areasdata = g_new(GwyGraphStatus_AreasData, 1);
     area->linesdata = g_new(GwyGraphStatus_LinesData, 1);
     area->zoomdata = g_new(GwyGraphStatus_ZoomData, 1);
 
-    area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataArea));
-    area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataPoint)); 
+    area->areasdata->data_areas = g_array_new(FALSE, TRUE,
+                                              sizeof(GwyGraphDataArea));
+    area->pointsdata->data_points = g_array_new(FALSE, TRUE,
+                                                sizeof(GwyGraphDataPoint));
     area->linesdata->data_lines = g_array_new(FALSE, TRUE, sizeof(gdouble));
-  
+
     area->actual_cursor_data = g_new(GwyGraphStatus_CursorData, 1);
-    
+
     area->colors = NULL;
     area->enable_user_input = TRUE;
     area->selection_limit = 10;
-    
+
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
     gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
 
@@ -231,11 +233,11 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
     area->area_dialog = GWY_GRAPH_AREA_DIALOG(gwy_graph_area_dialog_new());
     g_signal_connect(area->area_dialog, "response",
                      G_CALLBACK(gwy_graph_area_entry_cb), area);
-    
+
     area->label_dialog = GWY_GRAPH_LABEL_DIALOG(gwy_graph_label_dialog_new());
     g_signal_connect(area->label_dialog, "response",
                      G_CALLBACK(gwy_graph_label_entry_cb), area);
-     
+
     return GTK_WIDGET(area);
 }
 
@@ -254,13 +256,13 @@ gwy_graph_area_finalize(GObject *object)
     klass = GWY_GRAPH_AREA_GET_CLASS(area);
     gwy_gdk_cursor_free_or_unref(&klass->cross_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->arrow_cursor);
-    
+
     gtk_widget_destroy(GTK_WIDGET(area->area_dialog));
     gtk_widget_destroy(GTK_WIDGET(area->label_dialog));
 
     g_array_free(area->areasdata->data_areas, TRUE);
     g_array_free(area->pointsdata->data_points, TRUE);
-        
+
     G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
 
@@ -270,7 +272,7 @@ gwy_graph_area_adjust_label(GwyGraphArea *area)
     /*GtkAllocation *lab_alloc;
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;*/
     gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
-                        GTK_WIDGET(area)->allocation.width - area->lab->reqwidth - 5, 5);
+                    GTK_WIDGET(area)->allocation.width - area->lab->reqwidth - 5, 5);
     area->newline = 0;
 }
 
@@ -284,7 +286,8 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     area = GWY_GRAPH_AREA(widget);
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
-    GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->size_allocate(widget, allocation);
+    GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->size_allocate(widget,
+                                                                 allocation);
     if (((area->old_width != widget->allocation.width
           || area->old_height != widget->allocation.height)
          || area->newline == 1)
@@ -295,7 +298,7 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     }
 
     area->old_width = widget->allocation.width;
-    area->old_height = widget->allocation.height;    
+    area->old_height = widget->allocation.height;
 }
 
 static void
@@ -311,18 +314,20 @@ gwy_graph_area_realize(GtkWidget *widget)
     area = GWY_GRAPH_AREA(widget);
     area->gc = gdk_gc_new(GTK_LAYOUT(widget)->bin_window);
 
-    /* FIXME: what about Gtk+ theme??? */
     cmap = gdk_gc_get_colormap(area->gc);
     area->colors = g_new(GdkColor, COLOR_LAST);
 
+    /* FIXME: use Gtk+ theme */
     area->colors[COLOR_FG].red = 0x0000;
     area->colors[COLOR_FG].green = 0x0000;
     area->colors[COLOR_FG].blue = 0x0000;
 
+    /* FIXME: use Gtk+ theme */
     area->colors[COLOR_BG].red = 0xffff;
     area->colors[COLOR_BG].green = 0xffff;
     area->colors[COLOR_BG].blue = 0xffff;
 
+    /* FIXME: use Gtk+ theme */
     area->colors[COLOR_SELECTION].red = 0xaaaa;
     area->colors[COLOR_SELECTION].green = 0x5555;
     area->colors[COLOR_SELECTION].blue = 0xffff;
@@ -338,20 +343,14 @@ static void
 gwy_graph_area_unrealize(GtkWidget *widget)
 {
     GwyGraphArea *area;
-    GdkColormap *cmap;
 
     area = GWY_GRAPH_AREA(widget);
-
-    cmap = gdk_gc_get_colormap(area->gc);
-    gdk_colormap_free_colors(cmap, area->colors, COLOR_LAST);
 
     gwy_object_unref(area->gc);
 
     if (GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->unrealize(widget);
 }
-
-
 
 static gboolean
 gwy_graph_area_expose(GtkWidget *widget,
@@ -377,9 +376,9 @@ gwy_graph_area_expose(GtkWidget *widget,
                                            area);
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
-                                     && (area->selecting != 0)) 
+                                     && (area->selecting != 0))
                 gwy_graph_area_draw_zoom(GTK_LAYOUT (widget)->bin_window, area->gc, area);
-    
+
     gtk_widget_queue_draw(GTK_WIDGET(area->lab));
 
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->expose_event(widget, event);
@@ -396,10 +395,8 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     GdkColor fg;
-    GdkColormap* cmap;
 
     model = GWY_GRAPH_MODEL(area->graph_model);
-    cmap = gdk_colormap_get_system();
     specs.xmin = x;
     specs.ymin = y;
     specs.height = height;
@@ -413,9 +410,9 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
         gwy_graph_draw_selection_areas(drawable,
                                          gc, &specs,
-                                         (GwyGraphDataArea *)area->areasdata->data_areas->data, 
+                                         (GwyGraphDataArea *)area->areasdata->data_areas->data,
                                          area->areasdata->data_areas->len);
-    
+
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
@@ -427,14 +424,14 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     if (area->status == GWY_GRAPH_STATUS_POINTS || area->status == GWY_GRAPH_STATUS_ZOOM)
         gwy_graph_draw_selection_points(drawable,
                                          gc, &specs,
-                                         (GwyGraphDataPoint *)area->pointsdata->data_points->data, 
+                                         (GwyGraphDataPoint *)area->pointsdata->data_points->data,
                                          area->pointsdata->data_points->len);
-         
+
     /*draw discrete selection (points)*/
     if (area->status == GWY_GRAPH_STATUS_XLINES)
         gwy_graph_draw_selection_lines(drawable,
                                          gc, &specs,
-                                         (gdouble *)area->linesdata->data_lines->data, 
+                                         (gdouble *)area->linesdata->data_lines->data,
                                          area->linesdata->data_lines->len,
                                          GTK_ORIENTATION_VERTICAL);
 
@@ -442,33 +439,31 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     if (area->status == GWY_GRAPH_STATUS_YLINES)
         gwy_graph_draw_selection_lines(drawable,
                                          gc, &specs,
-                                         (gdouble *)area->linesdata->data_lines->data, 
+                                         (gdouble *)area->linesdata->data_lines->data,
                                          area->linesdata->data_lines->len,
                                          GTK_ORIENTATION_HORIZONTAL);
-   
+
     /*draw area boundaries*/
-    fg.red = 0;
-    fg.green = 0;
-    fg.blue = 0;
-    gdk_colormap_alloc_color(cmap, &fg, TRUE, TRUE);
-    gdk_gc_set_foreground(gc, &fg);
+    /* FIXME: use Gtk+ theme */
+    fg.red = fg.green = fg.blue = 0;
+    gdk_gc_set_rgb_fg_color(gc, &fg);
     gdk_gc_set_line_attributes(gc, 1,
                                 GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
     gdk_draw_line(drawable, gc, 0, 0, width-1, 0);
     gdk_draw_line(drawable, gc, width-1, 0, width-1, height-1);
     gdk_draw_line(drawable, gc, width-1, height-1, 0, height-1);
     gdk_draw_line(drawable, gc, 0, height-1, 0, 0);
-                
+
 }
 
-static void 
+static void
 gwy_graph_area_draw_zoom(GdkDrawable *drawable, GdkGC *gc, GwyGraphArea *area)
 {
     gint xmin, ymin, xmax, ymax;
-    
+
     if (area->zoomdata->width == 0 || area->zoomdata->height == 0) return;
     gdk_gc_set_function(gc, GDK_INVERT);
-    
+
     if (area->zoomdata->width < 0)
     {
         xmin = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin + area->zoomdata->width);
@@ -479,7 +474,7 @@ gwy_graph_area_draw_zoom(GdkDrawable *drawable, GdkGC *gc, GwyGraphArea *area)
         xmin = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin);
         xmax = data_to_scr_x(GTK_WIDGET(area), area->zoomdata->xmin + area->zoomdata->width);
     }
-    
+
     if (area->zoomdata->height > 0)
     {
         ymin = data_to_scr_y(GTK_WIDGET(area), area->zoomdata->ymin + area->zoomdata->height);
@@ -542,7 +537,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         return FALSE;
     }
-    
+
     if (area->status == GWY_GRAPH_STATUS_PLAIN && gmodel->ncurves > 0 && area->enable_user_input == TRUE)
     {
         curve = gwy_graph_area_find_curve(area, dx, dy);
@@ -602,7 +597,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
     }
-   
+
     if (area->status == GWY_GRAPH_STATUS_XLINES)
     {
         if (event->button == 1 && area->linesdata->data_lines->len < area->selection_limit) /*add selection*/
@@ -636,7 +631,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     }
 
 
-    
+
     if (area->status == GWY_GRAPH_STATUS_ZOOM)
     {
         area->zoomdata->xmin = dx;
@@ -646,7 +641,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         area->selecting = 1;
     }
 
-    
+
     return TRUE;
 }
 
@@ -671,7 +666,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
-    
+
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGraphDataArea, area->areasdata->data_areas->len - 1);
@@ -692,7 +687,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
          area->selecting = FALSE;
          gwy_graph_area_signal_zoomed(area);
     }
- 
+
     if (area->active) {
         gwy_graph_area_draw_child_rectangle(area);
 
@@ -739,7 +734,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
     g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
-    
+
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGraphDataArea, area->areasdata->data_areas->len - 1);
@@ -755,7 +750,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
          area->zoomdata->width = dx - area->zoomdata->xmin;
          area->zoomdata->height = dy - area->zoomdata->ymin;
          gtk_widget_queue_draw(widget);
-    }    
+    }
 
     /*widget (label) movement*/
     if (area->active) {
@@ -790,7 +785,7 @@ gwy_graph_area_find_curve(GwyGraphArea *area, gdouble x, gdouble y)
     gdouble closestdistance, distance=0;
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
- 
+
     closestdistance = G_MAXDOUBLE;
     model = GWY_GRAPH_MODEL(area->graph_model);
     for (i=0; i<model->ncurves; i++)
@@ -846,7 +841,7 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
     model = GWY_GRAPH_MODEL(area->graph_model);
     xoff = (model->x_max - model->x_min)/100;
     yoff = (model->y_max - model->y_min)/100;
-    
+
     for (i=0; i<area->pointsdata->data_points->len; i++)
     {
         selection = &g_array_index(area->pointsdata->data_points, GwyGraphDataPoint, i);
@@ -871,7 +866,7 @@ gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
     model = GWY_GRAPH_MODEL(area->graph_model);
     xoff = (model->x_max - model->x_min)/100;
     yoff = (model->y_max - model->y_min)/100;
-    
+
     for (i=0; i<area->linesdata->data_lines->len; i++)
     {
         selection = g_array_index(area->linesdata->data_lines, gdouble, i);
@@ -956,7 +951,7 @@ scr_to_data_x(GtkWidget *widget, gint scr)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
- 
+
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
 
@@ -970,7 +965,7 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
- 
+
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
 
@@ -983,7 +978,7 @@ scr_to_data_y(GtkWidget *widget, gint scr)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
- 
+
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
 
@@ -998,7 +993,7 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 {
     GwyGraphArea *area;
     GwyGraphModel *model;
- 
+
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
     return widget->allocation.height
@@ -1034,18 +1029,18 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_signal_refresh:
- * @area: graph area 
+ * @area: graph area
  *
  * Refreshes the area with respect to graph model.
  **/
-void 
+void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
     /*refresh label*/
     if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
     {
         gtk_widget_show(GTK_WIDGET(area->lab));
-    
+
         gwy_graph_label_refresh(area->lab);
         /*re-adjust label position*/
         gwy_graph_area_adjust_label(area);
@@ -1059,7 +1054,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_set_model:
- * @area: graph area 
+ * @area: graph area
  * @gmodel: new graph model
  *
  * Changes the graph model. Calls refresh afterwards.
@@ -1072,7 +1067,7 @@ gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
     gwy_graph_area_refresh(area);
 }
 
-static void     
+static void
 gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog, gint arg1, gpointer user_data)
 {
     if (arg1 == GTK_RESPONSE_APPLY) {
@@ -1083,7 +1078,7 @@ gwy_graph_area_entry_cb(GwyGraphAreaDialog *dialog, gint arg1, gpointer user_dat
     }
 }
 
-static void     
+static void
 gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_data)
 {
     if (arg1 == GTK_RESPONSE_APPLY) {
@@ -1096,31 +1091,31 @@ gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_d
 
 /**
  * gwy_graph_area_clear_selection:
- * @area: graph area 
+ * @area: graph area
  *
  * Clear all the selections. If you use grapher area as a part of
  * #GwyGrapher use the #GwyGrapher clear selection function preferably.
  **/
-void 
+void
 gwy_graph_area_clear_selection(GwyGraphArea *area)
 {
 
     if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
     {
         if (area->areasdata) g_array_free(area->areasdata->data_areas, TRUE);
-        area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataArea));        
+        area->areasdata->data_areas = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataArea));
     }
     else if (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
     {
         if (area->linesdata) g_array_free(area->linesdata->data_lines, TRUE);
-        area->linesdata->data_lines = g_array_new(FALSE, TRUE, sizeof(gdouble));        
+        area->linesdata->data_lines = g_array_new(FALSE, TRUE, sizeof(gdouble));
     }
     else if (area->status == GWY_GRAPH_STATUS_POINTS || area->status == GWY_GRAPH_STATUS_ZOOM)
     {
         if (area->pointsdata) g_array_free(area->pointsdata->data_points, TRUE);
         area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataPoint));
     }
-  
+
 
     gwy_graph_area_signal_selected(area);
     gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -1128,7 +1123,7 @@ gwy_graph_area_clear_selection(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_set_selection:
- * @area: graph area 
+ * @area: graph area
  * @status: status of selection to be set
  * @selection: selection data field
  * @n_of_selections: number of selections to be set
@@ -1136,8 +1131,8 @@ gwy_graph_area_clear_selection(GwyGraphArea *area)
  * Set selection data for given values and status.
  * Refresh graph area after doing this to see any change.
  **/
-void 
-gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status, 
+void
+gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
                              gdouble* selection, gint n_of_selections)
 {
     gint i;
@@ -1163,7 +1158,7 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
                 areadata.ymax = selection[2*i + 1];
             }
         }
-        g_array_append_val(area->areasdata->data_areas, areadata);         
+        g_array_append_val(area->areasdata->data_areas, areadata);
     }
 }
 
@@ -1190,7 +1185,7 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
    *
    * Gets mouse cursor related values withing graph area
    */
-void 
+void
 gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor)
 {
     if (area->mouse_present)
@@ -1206,7 +1201,7 @@ gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_curs
     }
 }
 
-static 
+static
 gboolean gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCrossing *event)
 {
     GwyGraphArea *area = GWY_GRAPH_AREA(widget);
@@ -1217,7 +1212,7 @@ gboolean gwy_graph_area_leave_notify(GtkWidget *widget, G_GNUC_UNUSED GdkEventCr
 }
 
 
-static gchar *symbols[] = 
+static gchar *symbols[] =
 {
     "Box",
     "Cross",
@@ -1241,7 +1236,7 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     GwyRGBA *color;
     gint pointsize;
     gint linesize;
-    
+
     out = g_string_new("%%Area\n");
 
     model = GWY_GRAPH_MODEL(area->graph_model);
@@ -1250,7 +1245,7 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
         g_warning("Graph null range.\n");
         return out;
     }
-    
+
     xmult = width/(model->x_max - model->x_min);
     ymult = height/(model->y_max - model->y_min);
 
@@ -1262,7 +1257,7 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
                            "%d %d L\n"
                            "closepath\n"
                            "} def\n",
-                           x, y, 
+                           x, y,
                            x + width, y,
                            x + width, y + height,
                            x, y + height);
@@ -1270,8 +1265,8 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
     g_string_append_printf(out, "gsave\n");
     g_string_append_printf(out, "box\n");
     g_string_append_printf(out, "clip\n");
-    
-    
+
+
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
@@ -1289,33 +1284,33 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
         {
             if (curvemodel->type == GWY_GRAPH_CURVE_LINE || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
-                if (j==0) g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                if (j==0) g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
                                    (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
-                else 
+                else
                 {
-                    g_string_append_printf(out, "%d %d M\n", 
-                                   (gint)(x + (curvemodel->xdata[j-1] - model->x_min)*xmult), 
-                                   (gint)(y + (curvemodel->ydata[j-1] - model->y_min)*ymult)); 
-                    g_string_append_printf(out, "%d %d L\n", 
-                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                    g_string_append_printf(out, "%d %d M\n",
+                                   (gint)(x + (curvemodel->xdata[j-1] - model->x_min)*xmult),
+                                   (gint)(y + (curvemodel->ydata[j-1] - model->y_min)*ymult));
+                    g_string_append_printf(out, "%d %d L\n",
+                                   (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
                                    (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult));
                 }
             }
             if (curvemodel->type == GWY_GRAPH_CURVE_POINTS || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS)
             {
-                g_string_append_printf(out, "%d %d %s\n", 
-                          (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult), 
+                g_string_append_printf(out, "%d %d %s\n",
+                          (gint)(x + (curvemodel->xdata[j] - model->x_min)*xmult),
                           (gint)(y + (curvemodel->ydata[j] - model->y_min)*ymult),
-                          symbols[curvemodel->point_type]); 
-                 
+                          symbols[curvemodel->point_type]);
+
             }
         }
         g_string_append_printf(out, "stroke\n");
     }
     g_string_append_printf(out, "grestore\n");
-    
-    return out;                         
+
+    return out;
 }
 
 /**
@@ -1325,7 +1320,7 @@ GString* gwy_graph_area_export_vector(GwyGraphArea *area,
    *
    * Set maximum number of selections done by mouse
    */
-void 
+void
 gwy_graph_area_set_selection_limit(GwyGraphArea *area, gint limit)
 {
     area->selection_limit = limit;

@@ -31,15 +31,14 @@
 #include "gwygraphcurvemodel.h"
 #include <libgwyddion/gwymacros.h>
 
-
 #define GWY_GRAPH_AREA_DIALOG_TYPE_NAME "GwyGraphAreaDialog"
-#define POINT_SAMPLE_HEIGHT 20
-#define POINT_SAMPLE_WIDTH 20
-#define LINE_SAMPLE_HEIGHT 20
-#define LINE_SAMPLE_WIDTH 50
 
+enum {
+    COLUMN_VALUE,
+    COLUMN_PIXBUF
+};
 
-GwyEnum curve_type[] = {
+static const GwyEnum curve_type[] = {
     { N_("Points"),          GWY_GRAPH_CURVE_POINTS      },
     { N_("Line"),            GWY_GRAPH_CURVE_LINE        },
     { N_("Line + points"),   GWY_GRAPH_CURVE_LINE_POINTS },
@@ -49,40 +48,36 @@ GwyEnum curve_type[] = {
 
 
 
-static void     gwy_graph_area_dialog_class_init       (GwyGraphAreaDialogClass *klass);
-static void     gwy_graph_area_dialog_init             (GwyGraphAreaDialog *dialog);
-static void     gwy_graph_area_dialog_finalize         (GObject *object);
-static gboolean gwy_graph_area_dialog_delete           (GtkWidget *widget,
-                                                          GdkEventAny *event);
-
-static GtkWidget* gwy_point_menu_create                  (const GwyGraphPointType current,
-                                                          gint *current_idx);
-GtkWidget*      gwy_option_menu_point                    (GCallback callback,
-                                                          gpointer cbdata,
-                                                          const GwyGraphPointType current);
-static GtkWidget* gwy_sample_point_to_gtkimage           (GwyGraphPointType type);
-static void     pointtype_cb                             (GObject *item,
-                                                          GwyGraphAreaDialog *dialog);
-static GtkWidget* gwy_line_menu_create                   (const GdkLineStyle current,
-                                                          gint *current_idx);
-GtkWidget*      gwy_option_menu_line                     (GCallback callback,
-                                                          gpointer cbdata,
-                                                          const GdkLineStyle current);
-static GtkWidget* gwy_sample_line_to_gtkimage            (GdkLineStyle type);
-static void     linetype_cb                              (GObject *item,
-                                                          GwyGraphAreaDialog *dialog);
-static void     color_change_cb                          (GtkWidget *color_button,
-                                                          GwyGraphAreaDialog *dialog);
-static void     label_change_cb                          (GtkWidget *button,
-                                                          GwyGraphAreaDialog *dialog);
-static void     refresh                                  (GwyGraphAreaDialog *dialog);
-static void     curvetype_changed_cb                     (GtkWidget *combo,
-                                                          GwyGraphAreaDialog *dialog);
-static void     linesize_changed_cb                      (GtkObject *adj,
-                                                          GwyGraphAreaDialog *dialog);
-static void     pointsize_changed_cb                      (GtkObject *adj,
-                                                          GwyGraphAreaDialog *dialog);
-
+static void       gwy_graph_area_dialog_class_init (GwyGraphAreaDialogClass *klass);
+static void       gwy_graph_area_dialog_init       (GwyGraphAreaDialog *dialog);
+static void       gwy_graph_area_dialog_finalize   (GObject *object);
+static gboolean   gwy_graph_area_dialog_delete     (GtkWidget *widget,
+                                                    GdkEventAny *event);
+static GtkWidget* gwy_graph_combo_box_new          (GtkWidget *parent,
+                                                    GCallback callback,
+                                                    gpointer cbdata,
+                                                    gint last,
+                                                    GCallback realize_cb,
+                                                    gint current);
+static void       gwy_graph_point_combo_box_realize(GtkWidget *parent,
+                                                    GtkWidget *combo);
+static void       gwy_graph_line_combo_box_realize (GtkWidget *parent,
+                                                    GtkWidget *combo);
+static void       pointtype_cb                     (GtkWidget *combo,
+                                                    GwyGraphAreaDialog *dialog);
+static void       linetype_cb                      (GtkWidget *combo,
+                                                    GwyGraphAreaDialog *dialog);
+static void       color_change_cb                  (GtkWidget *color_button,
+                                                    GwyGraphAreaDialog *dialog);
+static void       label_change_cb                  (GtkWidget *button,
+                                                    GwyGraphAreaDialog *dialog);
+static void       refresh                          (GwyGraphAreaDialog *dialog);
+static void       curvetype_changed_cb             (GtkWidget *combo,
+                                                    GwyGraphAreaDialog *dialog);
+static void       linesize_changed_cb              (GtkObject *adj,
+                                                    GwyGraphAreaDialog *dialog);
+static void       pointsize_changed_cb             (GtkObject *adj,
+                                                    GwyGraphAreaDialog *dialog);
 
 
 static GtkDialogClass *parent_class = NULL;
@@ -193,10 +188,13 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     row++;
 
 
-    dialog->pointtype_menu = gwy_option_menu_point(G_CALLBACK(pointtype_cb),
-                                                   dialog, 0);
-
-    gwy_table_attach_row(table, row, _("Point type:"), "",
+    dialog->pointtype_menu
+        = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
+                                  G_CALLBACK(pointtype_cb), dialog,
+                                  GWY_GRAPH_POINT_DIAMOND,
+                                  G_CALLBACK(gwy_graph_point_combo_box_realize),
+                                  0);
+    gwy_table_attach_row(table, row, _("Point type:"), NULL,
                          dialog->pointtype_menu);
     row++;
 
@@ -207,9 +205,12 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                      G_CALLBACK(pointsize_changed_cb), dialog);
     row++;
 
-    dialog->linetype_menu = gwy_option_menu_line(G_CALLBACK(linetype_cb),
-                                                   dialog, 0);
-
+    dialog->linetype_menu
+        = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
+                                  G_CALLBACK(linetype_cb), dialog,
+                                  GDK_LINE_DOUBLE_DASH,
+                                  G_CALLBACK(gwy_graph_line_combo_box_realize),
+                                  0);
     gwy_table_attach_row(table, row, _("Line type:"), "",
                          dialog->linetype_menu);
     row++;
@@ -232,30 +233,48 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 }
 
 static void
-pointtype_cb(GObject *item, GwyGraphAreaDialog *dialog)
+pointtype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
-    if (dialog->curve_model == NULL) return;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint active;
 
+    if (dialog->curve_model == NULL)
+        return;
+    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter))
+        return;
+
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    cmodel->point_type = GPOINTER_TO_INT(g_object_get_data(item, "point-type"));
+    gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
+    gwy_graph_curve_model_set_curve_point_type(cmodel, active);
 }
 
 static void
-linetype_cb(GObject *item, GwyGraphAreaDialog *dialog)
+linetype_cb(GtkWidget *combo, GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
-    if (dialog->curve_model == NULL) return;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    gint active;
 
+    if (dialog->curve_model == NULL)
+        return;
+    if (!gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter))
+        return;
+
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    cmodel->line_style = GPOINTER_TO_INT(g_object_get_data(item, "line-type"));
+    gtk_tree_model_get(model, &iter, COLUMN_VALUE, &active, -1);
+    gwy_graph_curve_model_set_curve_line_style(cmodel, active);
 }
 
-GtkWidget *
+GtkWidget*
 gwy_graph_area_dialog_new()
 {
     gwy_debug("");
-    return GTK_WIDGET (g_object_new (gwy_graph_area_dialog_get_type (), NULL));
+    return GTK_WIDGET(g_object_new(gwy_graph_area_dialog_get_type(), NULL));
 }
 
 static void
@@ -268,189 +287,134 @@ gwy_graph_area_dialog_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-
-
 static GtkWidget*
-gwy_point_menu_create(const GwyGraphPointType current,
-                      gint *current_idx)
-{
-    GtkWidget *menu, *image, *item, *hbox;
-    guint l;
-    gint idx;
-                                                                                                                                                                 menu = gtk_menu_new();
-                                                                                                                                                                 idx = -1;
-
-    for (l = 0; l<=GWY_GRAPH_POINT_DIAMOND; l++) {
-        image = gwy_sample_point_to_gtkimage(l);
-        item = gtk_menu_item_new();
-        hbox = gtk_hbox_new(FALSE, 6);
-        /*label = gtk_label_new(name);*/
-        /*gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);*/
-        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-        /*gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);*/
-        gtk_container_add(GTK_CONTAINER(item), hbox);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "point-type", GINT_TO_POINTER(l));
-        if (current && (current == l))
-            idx = l;
-    }
-
-    if (current_idx && idx != -1)
-        *current_idx = idx;
-    return menu;
-}
-
-GtkWidget*
-gwy_option_menu_point(GCallback callback,
+gwy_graph_combo_box_new(GtkWidget *parent,
+                        GCallback callback,
                         gpointer cbdata,
-                        const GwyGraphPointType current)
+                        gint last,
+                        GCallback realize_cb,
+                        gint current)
 {
-    GtkWidget *omenu, *menu;
-    GList *c;
-    gint idx;
+    GtkListStore *store;
+    GtkWidget *combo;
+    GtkCellRenderer *renderer;
+    GtkTreeIter iter;
+    gint i;
 
-    idx = -1;
-    omenu = gtk_option_menu_new();
-    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
-                      GINT_TO_POINTER(TRUE));
-    menu = gwy_point_menu_create(current, &idx);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (idx != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
-    }
-    return omenu;
-}
-
-static GtkWidget*
-gwy_sample_point_to_gtkimage(GwyGraphPointType type)
-{
-    GdkPixmap *pixmap;
-    GtkWidget *image;
-    GdkColor gcl;
-    GwyRGBA color;
-    GdkGC *gc;
-
-    pixmap = gdk_pixmap_new(NULL,
-                            POINT_SAMPLE_WIDTH, POINT_SAMPLE_HEIGHT,
-                            gdk_visual_get_best_depth());
-
-    gc = gdk_gc_new(pixmap);
-    gcl.pixel = 0x0ffffff;
-    gdk_gc_set_foreground(gc, &gcl);
-
-    color.r = color.b = color.g = 0;
-    color.a = 1;
-
-    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, POINT_SAMPLE_WIDTH, POINT_SAMPLE_HEIGHT);
-
-    gwy_graph_draw_point(pixmap, NULL,
-                           POINT_SAMPLE_WIDTH/2, POINT_SAMPLE_HEIGHT/2,
-                           type,
-                           10, &color, FALSE);
-
-    image = gtk_image_new_from_pixmap(pixmap, NULL);
-    g_object_unref(pixmap);
-    g_object_unref(gc);
-    return image;
-}
-
-static GtkWidget*
-gwy_line_menu_create(const GdkLineStyle current,
-                      gint *current_idx)
-{
-    GtkWidget *menu, *image, *item, *hbox;
-    guint l;
-    gint idx;
-                                                                                                                                                                 menu = gtk_menu_new();
-                                                                                                                                                                 idx = -1;
-
-    for (l = 0; l<=GDK_LINE_DOUBLE_DASH; l++) {
-        image = gwy_sample_line_to_gtkimage(l);
-        item = gtk_menu_item_new();
-        hbox = gtk_hbox_new(FALSE, 6);
-        gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-        gtk_container_add(GTK_CONTAINER(item), hbox);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_object_set_data(G_OBJECT(item), "line-type", GINT_TO_POINTER(l));
-        if (current && (current == l))
-            idx = l;
+    store = gtk_list_store_new(2, G_TYPE_INT, GDK_TYPE_PIXBUF);
+    for (i = 0; i <= last; i++) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COLUMN_VALUE, i, -1);
     }
 
-    if (current_idx && idx != -1)
-        *current_idx = idx;
-    return menu;
-}
+    combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
 
-GtkWidget*
-gwy_option_menu_line(GCallback callback,
-                        gpointer cbdata,
-                        const GdkLineStyle current)
-{
-    GtkWidget *omenu, *menu;
-    GList *c;
-    gint idx;
+    renderer = gtk_cell_renderer_pixbuf_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), renderer,
+                                  "pixbuf", COLUMN_PIXBUF);
 
-    idx = -1;
-    omenu = gtk_option_menu_new();
-    g_object_set_data(G_OBJECT(omenu), "gwy-option-menu",
-                      GINT_TO_POINTER(TRUE));
-    menu = gwy_line_menu_create(current, &idx);
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(omenu), menu);
-    if (idx != -1)
-        gtk_option_menu_set_history(GTK_OPTION_MENU(omenu), idx);
-    if (callback) {
-        for (c = GTK_MENU_SHELL(menu)->children; c; c = g_list_next(c))
-            g_signal_connect(c->data, "activate", callback, cbdata);
-    }
-    return omenu;
-}
+    if (current <= GWY_GRAPH_POINT_DIAMOND)
+        gtk_combo_box_set_active(GTK_COMBO_BOX(combo), current);
 
-static GtkWidget*
-gwy_sample_line_to_gtkimage(GdkLineStyle type)
-{
-    GdkPixmap *pixmap;
-    GtkWidget *image;
-    GdkColor gcl;
-    GwyRGBA color;
-    GdkGC *gc;
+    if (realize_cb)
+        g_signal_connect(parent, "realize", G_CALLBACK(realize_cb), combo);
+    if (callback)
+        g_signal_connect(combo, "changed", callback, cbdata);
 
-    pixmap = gdk_pixmap_new(NULL,
-                            LINE_SAMPLE_WIDTH, LINE_SAMPLE_HEIGHT,
-                            gdk_visual_get_best_depth());
-
-    gc = gdk_gc_new(pixmap);
-    gcl.pixel = 0x0ffffff;
-    gdk_gc_set_foreground(gc, &gcl);
-
-    color.r = color.b = color.g = 0;
-    color.a = 1;
-
-    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, LINE_SAMPLE_WIDTH, LINE_SAMPLE_HEIGHT);
-
-    gwy_graph_draw_line(pixmap, NULL,
-                           1, LINE_SAMPLE_HEIGHT/2,
-                           LINE_SAMPLE_WIDTH - 1, LINE_SAMPLE_HEIGHT/2,
-                           type,
-                           3, &color);
-
-    image = gtk_image_new_from_pixmap(pixmap, NULL);
-    g_object_unref(pixmap);
-    g_object_unref(gc);
-    return image;
+    return combo;
 }
 
 static void
-color_changed_cb(GtkColorSelectionDialog *selector, gint arg1, gpointer user_data)
+gwy_graph_point_combo_box_realize(GtkWidget *parent,
+                                  GtkWidget *combo)
+{
+    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1 };
+    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
+    GdkPixbuf *pixbuf;
+    GdkPixmap *pixmap;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GdkGC *gc;
+    gint width, height, i;
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    gc = gdk_gc_new(parent->window);
+    pixmap = gdk_pixmap_new(parent->window, width, height, -1);
+
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+    gtk_tree_model_get_iter_first(model, &iter);
+    do {
+        gtk_tree_model_get(model, &iter, COLUMN_VALUE, &i, -1);
+
+        gdk_gc_set_rgb_fg_color(gc, &bg);
+        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
+        gwy_graph_draw_point(pixmap, gc, width/2, height/2, i,
+                             height/2, &fg, FALSE);
+
+        pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
+                                              0, 0, 0, 0, width, height);
+        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                           COLUMN_PIXBUF, pixbuf, -1);
+        g_object_unref(pixbuf);
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    g_object_unref(pixmap);
+    g_object_unref(gc);
+}
+
+static void
+gwy_graph_line_combo_box_realize(GtkWidget *parent,
+                                 GtkWidget *combo)
+{
+    static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1 };
+    GdkColor bg = { -1, 0xffff, 0xffff, 0xffff };
+    GdkPixbuf *pixbuf;
+    GdkPixmap *pixmap;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GdkGC *gc;
+    gint width, height, i;
+
+    gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width = 5*height;
+    gc = gdk_gc_new(parent->window);
+    pixmap = gdk_pixmap_new(parent->window, width, height, -1);
+
+    model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+    gtk_tree_model_get_iter_first(model, &iter);
+    do {
+        gtk_tree_model_get(model, &iter, COLUMN_VALUE, &i, -1);
+
+        gdk_gc_set_rgb_fg_color(gc, &bg);
+        gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
+        gwy_graph_draw_line(pixmap, gc, 1, height/2, width - 1, height/2,
+                            i, /*XXX line width*/ 3, &fg);
+
+        pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
+                                              0, 0, 0, 0, width, height);
+        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                           COLUMN_PIXBUF, pixbuf, -1);
+        g_object_unref(pixbuf);
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    g_object_unref(pixmap);
+    g_object_unref(gc);
+}
+
+static void
+color_changed_cb(GtkColorSelectionDialog *selector,
+                 gint arg1,
+                 gpointer user_data)
 {
     GdkColor gcl;
     GwyGraphAreaDialog *dialog;
     GwyGraphCurveModel *cmodel;
 
     dialog = GWY_GRAPH_AREA_DIALOG(user_data);
-    if (dialog->curve_model == NULL) return;
+    if (dialog->curve_model == NULL)
+        return;
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
 
 
@@ -480,10 +444,10 @@ refresh(GwyGraphAreaDialog *dialog)
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->curvetype_menu),
                                   cmodel->type);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->pointtype_menu),
-                                  cmodel->point_type);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(dialog->linetype_menu),
-                                  cmodel->line_style);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->pointtype_menu),
+                             cmodel->point_type);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(dialog->linetype_menu),
+                             cmodel->line_style);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->pointsize),
                              cmodel->point_size);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(dialog->linesize),
