@@ -44,6 +44,7 @@ gwy_draw_type_init(void)
 
     types_initialized += gwy_rgba_get_type();
     types_initialized += gwy_gradient_get_type();
+    types_initialized += gwy_selection_get_type();
     types_initialized |= 1;
 
     _gwy_gradient_class_setup_presets();

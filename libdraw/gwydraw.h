@@ -25,6 +25,7 @@
 #include <libdraw/gwygradient.h>
 #include <libdraw/gwypixfield.h>
 #include <libdraw/gwyrgba.h>
+#include <libdraw/gwyselection.h>
 
 G_BEGIN_DECLS
 

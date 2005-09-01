@@ -10,7 +10,8 @@ libgwydrawinclude_HEADERS = \
 	gwyglmaterial.h \
 	gwygradient.h \
 	gwypixfield.h \
-	gwyrgba.h
+	gwyrgba.h \
+	gwyselection.h
 
 lib_LTLIBRARIES = libgwydraw.la
 
@@ -33,7 +34,8 @@ libgwydraw_la_SOURCES = \
 	gwyglmaterial.c \
 	gwygradient.c \
 	gwypixfield.c \
-	gwyrgba.c
+	gwyrgba.c \
+	gwyselection.c
 
 INCLUDES = -I$(top_srcdir)
 AM_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyDraw\"
