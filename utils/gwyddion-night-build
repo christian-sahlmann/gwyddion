@@ -66,7 +66,7 @@ function update_version() {
 
 function autostuff() {
   rm -fv config.cache
-  ./autogen.sh --config-cache --disable-desktop-file-update --prefix=$installroot/usr
+  ./autogen.sh --config-cache --disable-desktop-file-update --enable-gtk-doc --prefix=$installroot/usr
   make -C po gwyddion.pot
 }
 
@@ -90,7 +90,7 @@ function check_coding_style() {
   find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
-  find . -path \*.libs/\*.so | grep -v '\..*\..*\..*\.' | while read lib; do
+  find . -path \*.libs/lib\*.so | grep -v '\..*\..*\..*\.' | while read lib; do
     l=$(basename $lib .so)
     nm $lib \
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
@@ -101,16 +101,16 @@ function check_coding_style() {
     sort -m evil-symbols-h.tmp evil-symbols-h.tmp evil-symbols-l.tmp \
       | uniq -u \
       | sed -re 's/(.*)/Evil symbol ('$l'): \1/' 1>&2
-    #sed -e $'/^\tgwy_\|^EXPORTS/d' -e 's/^/Evil symbol ('$l'): /' $lib 1>&2
   done
   rm -f evil-symbols-h.tmp evil-symbols-l.tmp
-  find modules -name \*.so | while read mod; do
+  find modules -path \*.libs/\*.so | while read mod; do
     m=$(basename $mod .so)
     nm $mod \
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
       | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
   done
 }
+
 
 function install_to_tmp() {
   make -k install
