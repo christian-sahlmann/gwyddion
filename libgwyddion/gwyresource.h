@@ -88,6 +88,7 @@ void              gwy_resource_use                   (GwyResource *resource);
 void              gwy_resource_release               (GwyResource *resource);
 gboolean          gwy_resource_is_used               (GwyResource *resource);
 void              gwy_resource_data_changed          (GwyResource *resource);
+gchar*            gwy_resource_build_filename        (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
 GwyResource*      gwy_resource_parse                 (const gchar *text,
                                                       GType expected_type);
