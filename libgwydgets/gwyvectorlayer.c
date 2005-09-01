@@ -42,19 +42,9 @@ enum {
 /* Forward declarations */
 
 static void     gwy_vector_layer_finalize      (GObject *object);
-static void     gwy_vector_layer_set_property  (GObject *object,
-                                                guint prop_id,
-                                                const GValue *value,
-                                                GParamSpec *pspec);
-static void     gwy_vector_layer_get_property  (GObject*object,
-                                                guint prop_id,
-                                                GValue *value,
-                                                GParamSpec *pspec);
 static void     gwy_vector_layer_plugged       (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_unplugged     (GwyDataViewLayer *layer);
 static void     gwy_vector_layer_update_context(GwyVectorLayer *layer);
-static void     gwy_vector_layer_real_updated  (GwyDataViewLayer *layer);
-static gboolean gwy_vector_layer_timer         (GwyVectorLayer *layer);
 
 /* Local data */
 
@@ -70,34 +60,18 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
     gobject_class->finalize = gwy_vector_layer_finalize;
-    gobject_class->set_property = gwy_vector_layer_set_property;
-    gobject_class->get_property = gwy_vector_layer_get_property;
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
-    layer_class->updated = gwy_vector_layer_real_updated;
 
-    klass->draw = NULL;
-
-    klass->button_press = NULL;
-    klass->button_release = NULL;
-    klass->motion_notify = NULL;
-    klass->key_press = NULL;
-    klass->key_release = NULL;
-
-    klass->selection_finished = NULL;
-    klass->get_selection = NULL;
-    klass->set_selection = NULL;
-    klass->unselect = NULL;
-
-/**
- * GwyVectorLayer::selection-finished:
- * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
- *
- * The ::selection-finished signal is emitted when user finishes a selection
- * (stops dragging, selects enough points, etc., the pecise meaning depends
- * on how particular subclasses define it).
- */
+    /**
+     * GwyVectorLayer::selection-finished:
+     * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
+     *
+     * The ::selection-finished signal is emitted when user finishes a selection
+     * (stops dragging, selects enough points, etc., the pecise meaning depends
+     * on how particular subclasses define it).
+     */
     vector_layer_signals[SELECTION_FINISHED] =
         g_signal_new("selection-finished",
                      G_OBJECT_CLASS_TYPE(object_class),
@@ -106,22 +80,11 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_VOID__VOID,
                      G_TYPE_NONE, 0);
-
-    g_object_class_install_property(
-        gobject_class,
-        PROP_UPDATE_POLICY,
-        g_param_spec_enum("update-policy",
-                          "Update Policy",
-                          "When value change causes signal emission",
-                          GTK_TYPE_UPDATE_TYPE,
-                          GTK_UPDATE_CONTINUOUS,
-                          G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 static void
-gwy_vector_layer_init(GwyVectorLayer *layer)
+gwy_vector_layer_init(G_GNUC_UNUSED GwyVectorLayer *layer)
 {
-    layer->update_policy = GTK_UPDATE_CONTINUOUS;
 }
 
 static void
@@ -137,44 +100,6 @@ gwy_vector_layer_finalize(GObject *object)
     gwy_object_unref(layer->layout);
 
     G_OBJECT_CLASS(gwy_vector_layer_parent_class)->finalize(object);
-}
-
-static void
-gwy_vector_layer_set_property(GObject *object,
-                              guint prop_id,
-                              const GValue *value,
-                              GParamSpec *pspec)
-{
-    GwyVectorLayer *layer = GWY_VECTOR_LAYER(object);
-
-    switch (prop_id) {
-        case PROP_UPDATE_POLICY:
-        gwy_vector_layer_set_update_policy(layer, g_value_get_enum(value));
-        break;
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gwy_vector_layer_get_property(GObject*object,
-                              guint prop_id,
-                              GValue *value,
-                              GParamSpec *pspec)
-{
-    GwyVectorLayer *layer = GWY_VECTOR_LAYER(object);
-
-    switch (prop_id) {
-        case PROP_UPDATE_POLICY:
-        g_value_set_enum(value, layer->update_policy);
-        break;
-
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
 }
 
 /**
@@ -396,93 +321,15 @@ gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
 }
 
 /**
- * gwy_vector_layer_set_update_policy:
- * @layer: A vector data view layer.
- * @policy: the update policy the vector layer should use.
- *
- * Sets update policy for a vector layer @layer.
- **/
-void
-gwy_vector_layer_set_update_policy(GwyVectorLayer *layer,
-                                   GtkUpdateType policy)
-{
-    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
-
-    layer->update_policy = policy;
-    g_object_notify(G_OBJECT(layer), "update-policy");
-}
-
-/**
- * gwy_vector_layer_get_update_policy:
- * @layer: A vector data view layer.
- *
- * Returns the update policy of a vector layer @layer.
- *
- * Returns: The update policy.
- **/
-GtkUpdateType
-gwy_vector_layer_get_update_policy(GwyVectorLayer *layer)
-{
-    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), 0);
-
-    return layer->update_policy;
-}
-
-/**
  * gwy_vector_layer_updated:
  * @layer: A vector data view layer.
  *
  * Maybe emit the "updated" signal on @layer.
- *
- * Unlike gwy_data_view_layer_updated(), this function honours vector layer
- * update policy, so the "update" signal may not be actually emited right
- * now.
  **/
 void
 gwy_vector_layer_updated(GwyVectorLayer *layer)
 {
-    switch (layer->update_policy) {
-        case GTK_UPDATE_CONTINUOUS:
-        g_signal_emit_by_name(layer, "updated");
-        break;
-
-        case GTK_UPDATE_DELAYED:
-        if (layer->timer)
-            gtk_timeout_remove(layer->timer);
-        layer->timer = gtk_timeout_add(GWY_SCROLL_DELAY_LENGTH,
-                                       (GtkFunction)gwy_vector_layer_timer,
-                                       layer);
-        break;
-
-        case GTK_UPDATE_DISCONTINUOUS:
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-}
-
-static gboolean
-gwy_vector_layer_timer(GwyVectorLayer *layer)
-{
-    if (layer->update_policy == GTK_UPDATE_DELAYED)
-        g_signal_emit_by_name(layer, "updated");
-
-    layer->timer = 0;
-    return FALSE;
-}
-
-static void
-gwy_vector_layer_real_updated(GwyDataViewLayer *layer)
-{
-    GwyVectorLayer *vector_layer;
-
-    vector_layer = GWY_VECTOR_LAYER(layer);
-    if (vector_layer->timer) {
-        gtk_timeout_remove(vector_layer->timer);
-        vector_layer->timer = 0;
-    }
+    g_signal_emit_by_name(layer, "updated");
 }
 
 static void
@@ -542,7 +389,7 @@ void
 gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
 {
     GtkWidget *parent;
-    GdkColor fg, bg;
+    GdkColor color;
 
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
@@ -552,10 +399,12 @@ gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
     if (!layer->gc)
         layer->gc = gdk_gc_new(parent->window);
     gdk_gc_set_function(layer->gc, GDK_XOR);
-    fg.pixel = 0xFFFFFFFF;  /* FIXME */
-    bg.pixel = 0x00000000;  /* FIXME */
-    gdk_gc_set_foreground(layer->gc, &fg);
-    gdk_gc_set_background(layer->gc, &bg);
+
+    color.red = color.green = color.blue = 0xffff;
+    gdk_gc_set_rgb_fg_color(layer->gc, &color);
+
+    color.red = color.green = color.blue = 0x0000;
+    gdk_gc_set_rgb_bg_color(layer->gc, &color);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

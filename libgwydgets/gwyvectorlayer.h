@@ -94,9 +94,6 @@ void             gwy_vector_layer_set_selection        (GwyVectorLayer *layer,
                                                         gint nselected,
                                                         gdouble *selection);
 void             gwy_vector_layer_unselect             (GwyVectorLayer *layer);
-GtkUpdateType    gwy_vector_layer_get_update_policy    (GwyVectorLayer *layer);
-void             gwy_vector_layer_set_update_policy    (GwyVectorLayer *layer,
-                                                        GtkUpdateType policy);
 void             gwy_vector_layer_updated              (GwyVectorLayer *layer);
 
 /* helpers */
