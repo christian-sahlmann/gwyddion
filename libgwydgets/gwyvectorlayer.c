@@ -19,32 +19,39 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
-#include "gwyvectorlayer.h"
+#include <libgwydgets/gwyvectorlayer.h>
 
 #define GWY_SCROLL_DELAY_LENGTH  300
+
+#define connect_swapped_after(obj, signal, cb, data) \
+    g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
     SELECTION_FINISHED,
     LAST_SIGNAL
 };
 
-enum {
-    PROP_0,
-    PROP_UPDATE_POLICY,
-    PROP_LAST
-};
-
 /* Forward declarations */
 
-static void     gwy_vector_layer_finalize      (GObject *object);
-static void     gwy_vector_layer_plugged       (GwyDataViewLayer *layer);
-static void     gwy_vector_layer_unplugged     (GwyDataViewLayer *layer);
-static void     gwy_vector_layer_update_context(GwyVectorLayer *layer);
+static void gwy_vector_layer_finalize            (GObject *object);
+static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
+static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
+static void gwy_vector_layer_update_context      (GwyVectorLayer *layer);
+static void gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
+                                                  const gchar *selection_key_string);
+static void gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
+static void gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
+static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
+static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
+static void gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
+static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer);
 
 /* Local data */
 
@@ -333,15 +340,153 @@ gwy_vector_layer_updated(GwyVectorLayer *layer)
 }
 
 static void
+gwy_vector_layer_update_context(GwyVectorLayer *layer)
+{
+    gwy_debug(" ");
+
+    if (layer->layout)
+        pango_layout_context_changed(layer->layout);
+}
+
+/**
+ * gwy_vector_layer_set_selection_key:
+ * @layer: A vector layer.
+ * @key: Container string key identifying the selection object.
+ *
+ * Sets the selection object to use by a vector layer.
+ **/
+void
+gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
+                                   const gchar *key)
+{
+    GwyDataViewLayer *view_layer;
+    GQuark quark;
+
+    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
+
+    quark = key ? g_quark_from_string(key) : 0;
+    if (layer->selection_key == quark)
+        return;
+
+    view_layer = GWY_DATA_VIEW_LAYER(layer);
+    if (!view_layer->data) {
+        layer->selection_key = quark;
+        return;
+    }
+
+    if (layer->item_changed_id)
+        g_signal_handler_disconnect(view_layer->data, layer->item_changed_id);
+    layer->item_changed_id = 0;
+    gwy_vector_layer_selection_disconnect(layer);
+    layer->selection_key = quark;
+    gwy_vector_layer_selection_connect(layer);
+    gwy_vector_layer_container_connect(layer, key);
+
+    /* XXX: copied from pixmap layer */
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+}
+
+static void
+gwy_vector_layer_container_connect(GwyVectorLayer *layer,
+                                   const gchar *selection_key_string)
+{
+    GwyDataViewLayer *view_layer;
+    gchar *detailed_signal;
+
+    g_return_if_fail(selection_key_string);
+    view_layer = GWY_DATA_VIEW_LAYER(layer);
+    detailed_signal = g_newa(gchar, sizeof("item-changed::")
+                                    + strlen(selection_key_string));
+    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), selection_key_string);
+
+    layer->item_changed_id
+        = connect_swapped_after(view_layer->data, detailed_signal,
+                                gwy_vector_layer_item_changed, view_layer);
+}
+
+/**
+ * gwy_vector_layer_selection_connect:
+ * @layer: A vector layer.
+ *
+ * Eventually connects to new data field's "data-changed" signal.
+ **/
+static void
+gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
+{
+    GwyDataViewLayer *view_layer;
+
+    g_return_if_fail(!layer->selection);
+    if (!layer->selection_key)
+        return;
+
+    view_layer = GWY_DATA_VIEW_LAYER(layer);
+    if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
+                                  &layer->selection))
+        return;
+
+    g_object_ref(layer->selection);
+    layer->selection_changed_id
+        = g_signal_connect_swapped(layer->selection,
+                                   "changed",
+                                   G_CALLBACK(gwy_vector_layer_selection_changed),
+                                   layer);
+}
+
+/**
+ * gwy_vector_layer_selection_disconnect:
+ * @layer: A vector layer.
+ *
+ * Disconnects from all data field's signals and drops reference to it.
+ **/
+static void
+gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
+{
+    if (!layer->selection)
+        return;
+
+    if (layer->selection_changed_id)
+        g_signal_handler_disconnect(layer->selection,
+                                    layer->selection_changed_id);
+    layer->selection_changed_id = 0;
+    gwy_object_unref(layer->selection);
+}
+
+/**
+ * gwy_vector_layer_get_selection_key:
+ * @layer: A vector layer.
+ *
+ * Gets the key identifying selection this vector layer displays.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
+const gchar*
+gwy_vector_layer_get_selection_key(GwyVectorLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
+    return g_quark_to_string(layer->selection_key);
+}
+
+static void
 gwy_vector_layer_plugged(GwyDataViewLayer *layer)
 {
+    GwyVectorLayer *vector_layer;
+
     g_signal_connect_swapped(layer->parent, "style-set",
                              G_CALLBACK(gwy_vector_layer_update_context),
                              layer);
     g_signal_connect_swapped(layer->parent, "direction-changed",
                              G_CALLBACK(gwy_vector_layer_update_context),
                              layer);
+
     GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->plugged(layer);
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    if (!vector_layer->selection_key)
+        return;
+
+    gwy_vector_layer_container_connect(vector_layer,
+                                       g_quark_to_string
+                                                (vector_layer->selection_key));
+    gwy_vector_layer_selection_connect(vector_layer);
 }
 
 static void
@@ -349,32 +494,54 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
 {
     GwyVectorLayer *vector_layer;
 
-    gwy_debug(" ");
-
     vector_layer = GWY_VECTOR_LAYER(layer);
-    gwy_object_unref(vector_layer->gc);
-    if (vector_layer->timer) {
-        gtk_timeout_remove(vector_layer->timer);
-        vector_layer->timer = 0;
-    }
+
     g_signal_handlers_disconnect_matched(layer->parent,
                                          G_SIGNAL_MATCH_FUNC
                                             | G_SIGNAL_MATCH_DATA,
                                          0, 0, NULL,
                                          gwy_vector_layer_update_context,
                                          layer);
+
+    gwy_vector_layer_selection_disconnect(vector_layer);
+    if (vector_layer->item_changed_id)
+        g_signal_handler_disconnect(layer->data, vector_layer->item_changed_id);
+    vector_layer->item_changed_id = 0;
+
+    gwy_object_unref(vector_layer->gc);
     gwy_object_unref(vector_layer->layout);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
 }
 
+/**
+ * gwy_vector_layer_item_changed:
+ * @layer: A vector data view layer.
+ * @data: Container with the data field this vector layer display.
+ *
+ * Reconnects signals to a new data field when it was replaced in the
+ * container.
+ **/
 static void
-gwy_vector_layer_update_context(GwyVectorLayer *layer)
+gwy_vector_layer_item_changed(GwyVectorLayer *vector_layer)
 {
-    gwy_debug(" ");
+    gwy_vector_layer_selection_disconnect(vector_layer);
+    gwy_vector_layer_selection_connect(vector_layer);
+    /* FIXME */
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(vector_layer));
+}
 
-    if (layer->layout)
-        pango_layout_context_changed(layer->layout);
+static void
+gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
+{
+    /* FIXME: whatever.  Must signal redraw is wanted to parent.  But
+     * parent currently ignores "updated" from vector layers because they
+     * handle normal redraws themselves.  Must not execute when _we_ change
+     * the selection. */
+    if (layer->in_selection)
+        return;
+    /* FIXME */
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
 /**

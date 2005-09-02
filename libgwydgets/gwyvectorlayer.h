@@ -23,7 +23,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
-
+#include <libdraw/gwyselection.h>
 #include <libgwydgets/gwydataviewlayer.h>
 
 G_BEGIN_DECLS
@@ -43,9 +43,13 @@ struct _GwyVectorLayer {
 
     GdkGC *gc;
     PangoLayout *layout;
-    GtkUpdateType update_policy;
-    guint timer;
     gboolean in_selection;
+
+    /* For new-style layers */
+    GwySelection *selection;
+    GQuark selection_key;
+    gulong item_changed_id;
+    gulong selection_changed_id;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -95,6 +99,11 @@ void             gwy_vector_layer_set_selection        (GwyVectorLayer *layer,
                                                         gdouble *selection);
 void             gwy_vector_layer_unselect             (GwyVectorLayer *layer);
 void             gwy_vector_layer_updated              (GwyVectorLayer *layer);
+
+/* For new-style layers */
+void             gwy_vector_layer_set_selection_key    (GwyVectorLayer *layer,
+                                                        const gchar *key);
+const gchar*     gwy_vector_layer_get_selection_key    (GwyVectorLayer *layer);
 
 /* helpers */
 void             gwy_vector_layer_setup_gc             (GwyVectorLayer *layer);
