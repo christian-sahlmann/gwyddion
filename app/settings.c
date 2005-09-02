@@ -56,6 +56,7 @@ gwy_app_settings_get(void)
     if (!gwy_settings) {
         gwy_settings = GWY_CONTAINER(gwy_container_new());
         gwy_app_settings_set_defaults(gwy_settings);
+        gwy_app_settings_apply(gwy_settings);
     }
 
     return gwy_settings;
