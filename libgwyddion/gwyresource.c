@@ -151,11 +151,11 @@ gwy_resource_class_init(GwyResourceClass *klass)
     gwy_resource_ntraits++;
 
     /**
-    * GwyResource::data-changed:
-    * @gwyresource: The #GwyResource which received the signal.
-    *
-    * The ::data-changed signal is emitted when resource data changes.
-    */
+     * GwyResource::data-changed:
+     * @gwyresource: The #GwyResource which received the signal.
+     *
+     * The ::data-changed signal is emitted when resource data changes.
+     */
     resource_signals[DATA_CHANGED]
         = g_signal_new("data-changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
