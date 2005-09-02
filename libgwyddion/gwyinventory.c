@@ -737,7 +737,7 @@ gwy_inventory_set_default_item_name(GwyInventory *inventory,
  * @inventory: An inventory.
  * @i: Storage position of updated item.
  *
- * Emits "item-changed" signal.
+ * Emits "item-updated" signal.
  **/
 static void
 gwy_inventory_item_updated_real(GwyInventory *inventory,
