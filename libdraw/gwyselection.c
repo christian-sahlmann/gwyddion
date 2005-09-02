@@ -33,6 +33,12 @@ enum {
 static void      gwy_selection_finalize           (GObject *object);
 static void      gwy_selection_serializable_init  (GwySerializableIface *iface);
 static void      gwy_selection_clear_default      (GwySelection *selection);
+static gboolean  gwy_selection_get_object_default (GwySelection *selection,
+                                                   gint i,
+                                                   gdouble *data);
+static void      gwy_selection_set_object_default (GwySelection *selection,
+                                                   gint i,
+                                                   const gdouble *data);
 static gint      gwy_selection_get_data_default   (GwySelection *selection,
                                                    gdouble *data);
 static void      gwy_selection_set_data_default   (GwySelection *selection,
@@ -63,6 +69,8 @@ gwy_selection_class_init(GwySelectionClass *klass)
     gobject_class->finalize = gwy_selection_finalize;
 
     klass->clear = gwy_selection_clear_default;
+    klass->get_object = gwy_selection_get_object_default;
+    klass->set_object = gwy_selection_set_object_default;
     klass->get_data = gwy_selection_get_data_default;
     klass->set_data = gwy_selection_set_data_default;
     klass->set_max_objects = gwy_selection_set_max_objects_default;
@@ -73,7 +81,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwySelectionClass, changed),
                        NULL, NULL,
-                       g_cclosure_marshal_VOID__VOID,
+                       g_cclosure_marshal_VOID__INT,
                        G_TYPE_NONE, 0);
 
     selection_signals[FINISHED]
@@ -135,12 +143,52 @@ gwy_selection_clear(GwySelection *selection)
     GWY_SELECTION_GET_CLASS(selection)->clear(selection);
 }
 
+
+/**
+ * gwy_selection_get_object:
+ * @selection: A selection.
+ * @i: Index of object to get.
+ * @data: Array to store selection object data to.  Object data is an
+ *        array of coordinates whose precise meaning is defined by particular
+ *        selection types.
+ *
+ * Gets one selection object.
+ *
+ * Returns: %TRUE if there was such an object and @data was filled.
+ **/
+gboolean
+gwy_selection_get_object(GwySelection *selection,
+                         gint i,
+                         gdouble *data)
+{
+    g_return_val_if_fail(GWY_IS_SELECTION(selection), FALSE);
+    return GWY_SELECTION_GET_CLASS(selection)->get_object(selection, i, data);
+}
+
+/**
+ * gwy_selection_set_object:
+ * @selection: A selection.
+ * @i: Index of object to set.
+ * @data: Object selection data.  It's an array of coordinates whose precise
+ *        meaning is defined by particular selection types.
+ *
+ * Sets one selection object.
+ **/
+void
+gwy_selection_set_object(GwySelection *selection,
+                         gint i,
+                         const gdouble *data)
+{
+    g_return_if_fail(GWY_IS_SELECTION(selection));
+    GWY_SELECTION_GET_CLASS(selection)->set_object(selection, i, data);
+}
+
 /**
  * gwy_selection_get_data:
  * @selection: A selection.
- * @data: Pointer to array to store selection data to.  Selection data is an
+ * @data: Array to store selection data to.  Selection data is an
  *        array of coordinates whose precise meaning is defined by particular
- *        selection types.
+ *        selection types.  It may be %NULL.
  *
  * Gets selection data.
  *
@@ -186,8 +234,11 @@ gwy_selection_set_data(GwySelection *selection,
 gint
 gwy_selection_get_max_objects(GwySelection *selection)
 {
+    guint object_size;
+
     g_return_val_if_fail(GWY_IS_SELECTION(selection), 0);
-    return selection->max_objects;
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    return selection->objects->len/object_size;
 }
 
 /**
@@ -212,14 +263,17 @@ gwy_selection_set_max_objects(GwySelection *selection,
 /**
  * gwy_selection_changed:
  * @selection: A selection.
+ * @i: Index of object that changed.  Use -1 when not applicable, e.g., when
+ *     complete selection was changed, cleared, or truncated.
  *
  * Emits "changed" signal on a selection.
  **/
 void
-gwy_selection_changed(GwySelection *selection)
+gwy_selection_changed(GwySelection *selection,
+                      gint i)
 {
     g_return_if_fail(GWY_IS_SELECTION(selection));
-    g_signal_emit(selection, selection_signals[CHANGED], 0);
+    g_signal_emit(selection, selection_signals[CHANGED], 0, i);
 }
 
 /**
@@ -242,21 +296,60 @@ gwy_selection_clear_default(GwySelection *selection)
         return;
 
     g_array_set_size(selection->objects, 0);
-    g_signal_emit(selection, selection_signals[CHANGED], 0);
+    g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
+}
+
+static gboolean
+gwy_selection_get_object_default(GwySelection *selection,
+                                 gint i,
+                                 gdouble *data)
+{
+    guint object_size;
+
+    if (i < 0 || i >= selection->n)
+        return FALSE;
+    if (!data)
+        return TRUE;
+
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    memcpy(data, selection->objects->data + i*object_size,
+           object_size*sizeof(gdouble));
+    return TRUE;
+}
+
+static void
+gwy_selection_set_object_default(GwySelection *selection,
+                                 gint i,
+                                 const gdouble *data)
+{
+    guint object_size, max_len;
+
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    max_len = selection->objects->len/object_size;
+    g_return_if_fail(i >= 0 && i < max_len);
+    if (i > selection->n) {
+        g_warning("Disontinuous selections are not supported.  "
+                  "Moving object to first feasible position.");
+        i = MIN(selection->n, max_len-1);
+    }
+
+    memcpy(selection->objects->data + i*object_size, data,
+           object_size*sizeof(gdouble));
+
+    g_signal_emit(selection, selection_signals[CHANGED], 0, i);
+    if (i == max_len-1)
+        g_signal_emit(selection, selection_signals[FINISHED], 0);
 }
 
 static gint
 gwy_selection_get_data_default(GwySelection *selection,
                                gdouble *data)
 {
-    gint n, object_size;
+    if (data && selection->n)
+        memcpy(data, selection->objects->data,
+               selection->objects->len*sizeof(gdouble));
 
-    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-    n = selection->objects->len/object_size;
-    if (data && n)
-        memcpy(data, selection->objects->data, n*sizeof(gdouble));
-
-    return n;
+    return selection->n;
 }
 
 static void
@@ -264,25 +357,23 @@ gwy_selection_set_data_default(GwySelection *selection,
                                gint nselected,
                                const gdouble *data)
 {
-    gint object_size;
+    guint object_size, max_len;
 
-    if (nselected > selection->max_objects) {
-        g_warning("nselected larger than max. number of objects");
-        nselected = selection->max_objects;
-    }
-
-    g_array_set_size(selection->objects, 0);
-    if (!nselected) {
-        gwy_selection_changed(selection);
-        return;
-    }
-
-    g_return_if_fail(data);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-    g_array_append_vals(selection->objects, data, nselected*object_size);
+    max_len = selection->objects->len/object_size;
+    if (nselected > max_len) {
+        g_warning("nselected larger than max. number of objects");
+        nselected = max_len;
+    }
 
-    g_signal_emit(selection, selection_signals[CHANGED], 0);
-    if (nselected == selection->max_objects)
+    if (nselected) {
+        g_return_if_fail(data);
+        memcpy(selection->objects->data, data,
+               nselected*object_size*sizeof(gdouble));
+    }
+    selection->n = nselected;
+    g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
+    if (nselected == max_len)
         g_signal_emit(selection, selection_signals[FINISHED], 0);
 }
 
@@ -290,18 +381,18 @@ static void
 gwy_selection_set_max_objects_default(GwySelection *selection,
                                       gint max_objects)
 {
-    gint n, object_size;
+    guint object_size;
 
     g_return_if_fail(max_objects < 1);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
-    n = selection->objects->len/object_size;
-    if (max_objects == n)
+    if (max_objects*object_size == selection->objects->len)
         return;
 
     g_array_set_size(selection->objects, max_objects*object_size);
 
-    if (max_objects < n) {
-        g_signal_emit(selection, selection_signals[CHANGED], 0);
+    if (max_objects < selection->n) {
+        selection->n = max_objects;
+        g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
         g_signal_emit(selection, selection_signals[FINISHED], 0);
     }
 }
@@ -318,9 +409,11 @@ gwy_selection_serialize_default(GObject *obj,
     selection = GWY_SELECTION(obj);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     {
-        guint32 len = selection->objects->len * object_size;
+        guint32 len = selection->n * object_size;
+        gint max = selection->objects->len/object_size;
         const gchar *name = g_type_name(G_TYPE_FROM_INSTANCE(obj));
         GwySerializeSpec spec[] = {
+            { 'i', "max", &max, NULL, },
             { 'D', "data", &selection->objects->data, &len, },
         };
 
@@ -335,8 +428,9 @@ gwy_selection_deserialize_default(const guchar *buffer,
                                   gsize *position)
 {
     gdouble *data = NULL;
-    guint32 len = 0;
+    guint32 len = 0, max = 0;
     GwySerializeSpec spec[] = {
+        { 'd', "max", &max, NULL },
         { 'D', "data", &data, &len, },
     };
     gsize typenamesize;
@@ -369,8 +463,9 @@ gwy_selection_deserialize_default(const guchar *buffer,
                       "Ignoring it.");
         else {
             g_array_append_vals(selection->objects, data, len*object_size);
-            /* Just set some reasonable value, it should be overriden later */
-            selection->max_objects = len;
+            selection->n = len/object_size;
+            if (max > selection->n)
+                g_array_set_size(selection->objects, max*object_size);
         }
         g_free(data);
     }
@@ -382,13 +477,16 @@ static GObject*
 gwy_selection_duplicate_default(GObject *object)
 {
     GwySelection *selection, *duplicate;
+    guint object_size;
 
     g_return_val_if_fail(GWY_IS_SELECTION(object), NULL);
     selection = GWY_SELECTION(object);
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     duplicate = g_object_new(G_TYPE_FROM_INSTANCE(object), NULL);
+    g_array_set_size(duplicate->objects, 0);
     g_array_append_vals(duplicate->objects,
-                        selection->objects->data, selection->objects->len);
-    duplicate->max_objects = selection->max_objects;
+                        selection->objects->data, selection->n*object_size);
+    g_array_set_size(duplicate->objects, selection->objects->len);
 
     return (GObject*)duplicate;
 }
@@ -409,11 +507,11 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
 
     g_array_set_size(clone->objects, 0);
     g_array_append_vals(clone->objects,
-                        selection->objects->data, selection->objects->len);
-    clone->max_objects = selection->max_objects;
+                        selection->objects->data, selection->n*object_size);
+    g_array_set_size(clone->objects, selection->objects->len);
 
-    g_signal_emit(clone, selection_signals[CHANGED], 0);
-    if (clone->max_objects == clone->objects->len/object_size)
+    g_signal_emit(clone, selection_signals[CHANGED], 0, -1);
+    if (clone->objects->len == clone->n*object_size)
         g_signal_emit(clone, selection_signals[FINISHED], 0);
 }
 
@@ -421,9 +519,17 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
 
 /**
  * GwySelection:
+ * @objects: Array of object coordinates whose meaning is defined by each
+ *           selection type (subclass).  Default #GwySelection virtual methods
+ *           assume each selection object is of the same size, stored in
+ *           class @object_size field at selection class init time.  The size
+ *           of array (multiplied with @object_size) determines maximum number
+ *           of selectable objects.
+ * @n: The number of actually selected objects.
  *
- * The #GwySelection struct contains private data only and should be accessed
- * using the functions below.
+ * The #GwySelection struct describes an abstract selection as a collection
+ * of coordinates.  It should not be accessed directly except selection
+ * class implementation.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

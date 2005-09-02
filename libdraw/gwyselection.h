@@ -39,7 +39,7 @@ struct _GwySelection {
     GObject parent_instance;
 
     GArray *objects;
-    guint max_objects;
+    guint n;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -52,6 +52,12 @@ struct _GwySelectionClass {
 
     /* Virtual table */
     void (*clear)(GwySelection *selection);
+    gboolean(*get_object)(GwySelection *selection,
+                          gint i,
+                          gdouble *data);
+    void (*set_object)(GwySelection *selection,
+                       gint i,
+                       const gdouble *data);
     gint (*get_data)(GwySelection *selection,
                      gdouble *data);
     void (*set_data)(GwySelection *selection,
@@ -61,23 +67,31 @@ struct _GwySelectionClass {
                             gint max_objects);
 
     /* Signals */
-    void (*changed)(GwySelection *selection);
+    void (*changed)(GwySelection *selection,
+                    gint i);
     void (*finished)(GwySelection *selection);
 };
 
-GType gwy_selection_get_type       (void) G_GNUC_CONST;
-gint  gwy_selection_get_object_size(GwySelection *selection);
-void  gwy_selection_clear          (GwySelection *selection);
-gint  gwy_selection_get_data       (GwySelection *selection,
-                                    gdouble *data);
-void  gwy_selection_set_data       (GwySelection *selection,
-                                    gint nselected,
-                                    const gdouble *data);
-gint  gwy_selection_get_max_objects(GwySelection *selection);
-void  gwy_selection_set_max_objects(GwySelection *selection,
-                                    gint max_objects);
-void  gwy_selection_changed        (GwySelection *selection);
-void  gwy_selection_finished       (GwySelection *selection);
+GType    gwy_selection_get_type       (void) G_GNUC_CONST;
+gint     gwy_selection_get_object_size(GwySelection *selection);
+void     gwy_selection_clear          (GwySelection *selection);
+gboolean gwy_selection_get_object     (GwySelection *selection,
+                                       gint i,
+                                       gdouble *data);
+void     gwy_selection_set_object     (GwySelection *selection,
+                                       gint i,
+                                       const gdouble *data);
+gint     gwy_selection_get_data       (GwySelection *selection,
+                                       gdouble *data);
+void     gwy_selection_set_data       (GwySelection *selection,
+                                       gint nselected,
+                                       const gdouble *data);
+gint     gwy_selection_get_max_objects(GwySelection *selection);
+void     gwy_selection_set_max_objects(GwySelection *selection,
+                                       gint max_objects);
+void     gwy_selection_changed        (GwySelection *selection,
+                                       gint i);
+void     gwy_selection_finished       (GwySelection *selection);
 
 G_END_DECLS
 
