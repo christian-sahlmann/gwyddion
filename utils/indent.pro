@@ -49,3 +49,13 @@
 -T GwyWatchable
 -T GwyGradient
 -T GwyGLMaterial
+-T GdkGC
+-T GdkDrawable
+-T GwyGraph
+-T GwyGraphArea
+-T GwyAxis
+-T GwyGraphLabel
+-T GwyGraphWindow
+-T GwyGraphCorner
+-T GwyRGBA
+-T GwyResource
