@@ -39,6 +39,8 @@ static gboolean  gwy_selection_get_object_default (GwySelection *selection,
 static void      gwy_selection_set_object_default (GwySelection *selection,
                                                    gint i,
                                                    const gdouble *data);
+static void    gwy_selection_delete_object_default(GwySelection *selection,
+                                                   gint i);
 static gint      gwy_selection_get_data_default   (GwySelection *selection,
                                                    gdouble *data);
 static void      gwy_selection_set_data_default   (GwySelection *selection,
@@ -71,10 +73,20 @@ gwy_selection_class_init(GwySelectionClass *klass)
     klass->clear = gwy_selection_clear_default;
     klass->get_object = gwy_selection_get_object_default;
     klass->set_object = gwy_selection_set_object_default;
+    klass->delete_object = gwy_selection_delete_object_default;
     klass->get_data = gwy_selection_get_data_default;
     klass->set_data = gwy_selection_set_data_default;
     klass->set_max_objects = gwy_selection_set_max_objects_default;
 
+    /**
+     * GwySelection::changed:
+     * @gwyselection: The #GwySelection which received the signal.
+     * @arg1: Changed object position hint.  If the value is positive, only
+     *        this object has changed.  If it's negative, the selection has
+     *        to be treated as completely changed.
+     *
+     * The ::changed signal is emitted whenever selection changes.
+     **/
     selection_signals[CHANGED]
         = g_signal_new("changed",
                        G_OBJECT_CLASS_TYPE(gobject_class),
@@ -173,6 +185,12 @@ gwy_selection_get_object(GwySelection *selection,
  *        meaning is defined by particular selection types.
  *
  * Sets one selection object.
+ *
+ * This method can be also used to append objects (if the maximum number is
+ * not exceeded).
+ *
+ * Since there cannot be holes in the object list, @i must be equal to either
+ * the number of selected objects or special value -1 meaning append to end.
  **/
 void
 gwy_selection_set_object(GwySelection *selection,
@@ -181,6 +199,24 @@ gwy_selection_set_object(GwySelection *selection,
 {
     g_return_if_fail(GWY_IS_SELECTION(selection));
     GWY_SELECTION_GET_CLASS(selection)->set_object(selection, i, data);
+}
+
+/**
+ * gwy_selection_delete_object:
+ * @selection: A selection.
+ * @i: Index of object to delete.
+ *
+ * Deletes a one selection object.
+ *
+ * Since there cannot be holes in the object list, the rest of selection
+ * objects is moved to close the gap.
+ **/
+void
+gwy_selection_delete_object(GwySelection *selection,
+                            gint i)
+{
+    g_return_if_fail(GWY_IS_SELECTION(selection));
+    GWY_SELECTION_GET_CLASS(selection)->delete_object(selection, i);
 }
 
 /**
@@ -324,9 +360,11 @@ gwy_selection_set_object_default(GwySelection *selection,
 {
     guint object_size, max_len;
 
+    if (i < 0)
+        i = selection->n;
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     max_len = selection->objects->len/object_size;
-    g_return_if_fail(i >= 0 && i < max_len);
+    g_return_if_fail(i < max_len);
     if (i > selection->n) {
         g_warning("Disontinuous selections are not supported.  "
                   "Moving object to first feasible position.");
@@ -339,6 +377,19 @@ gwy_selection_set_object_default(GwySelection *selection,
     g_signal_emit(selection, selection_signals[CHANGED], 0, i);
     if (i == max_len-1)
         g_signal_emit(selection, selection_signals[FINISHED], 0);
+}
+
+static void
+gwy_selection_delete_object_default(GwySelection *selection,
+                                    gint i)
+{
+    guint object_size;
+
+    g_return_if_fail(i >= 0 && i < selection->n);
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    g_array_remove_range(selection->objects, i, object_size);
+
+    g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
 }
 
 static gint

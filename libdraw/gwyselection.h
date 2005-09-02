@@ -58,6 +58,8 @@ struct _GwySelectionClass {
     void (*set_object)(GwySelection *selection,
                        gint i,
                        const gdouble *data);
+    void (*delete_object)(GwySelection *selection,
+                          gint i);
     gint (*get_data)(GwySelection *selection,
                      gdouble *data);
     void (*set_data)(GwySelection *selection,
@@ -65,6 +67,7 @@ struct _GwySelectionClass {
                      const gdouble *data);
     void (*set_max_objects)(GwySelection *selection,
                             gint max_objects);
+    /* TODO: maybe geometrical methods: clamp, move, scale */
 
     /* Signals */
     void (*changed)(GwySelection *selection,
@@ -81,6 +84,8 @@ gboolean gwy_selection_get_object     (GwySelection *selection,
 void     gwy_selection_set_object     (GwySelection *selection,
                                        gint i,
                                        const gdouble *data);
+void     gwy_selection_delete_object  (GwySelection *selection,
+                                       gint i);
 gint     gwy_selection_get_data       (GwySelection *selection,
                                        gdouble *data);
 void     gwy_selection_set_data       (GwySelection *selection,
