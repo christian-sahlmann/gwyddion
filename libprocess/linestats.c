@@ -634,9 +634,9 @@ gwy_data_line_part_get_modus(GwyDataLine *data_line,
     if (histogram_steps < 1) {
         /*
         gdouble sigma = gwy_data_line_part_get_rms(data_line, from, to);
-        histogram_steps = floor(0.49*sigma*pow(n, 1.0/3.0) + 0.5);
+        histogram_steps = floor(0.49*sigma*cbrt(n) + 0.5);
         */
-        histogram_steps = floor(3.49*pow(n, 1.0/3.0) + 0.5);
+        histogram_steps = floor(3.49*cbrt(n) + 0.5);
         gwy_debug("histogram_steps = %d", histogram_steps);
     }
 

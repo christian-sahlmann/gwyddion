@@ -577,7 +577,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
         sigma += grain_size[i];
     }
     sigma = sqrt(ngrains*sigma - s*s)/ngrains;
-    s = 2.49/pow((gdouble)ngrains, 1.0/3.0)*sigma;
+    s = 2.49/cbrt(ngrains)*sigma;
     nhist = sqrt(maxpnt)/s + 1;
 
     gwy_data_line_resample(distribution, nhist, GWY_INTERPOLATION_NONE);

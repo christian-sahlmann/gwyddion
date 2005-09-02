@@ -711,7 +711,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
                      && row + height <= data_field->yres);
 
     if (nstats < 1) {
-        nstats = floor(3.49*pow(width*height, 1.0/3.0) + 0.5);
+        nstats = floor(3.49*cbrt(width*height) + 0.5);
         nstats = MAX(nstats, 2);
     }
 
