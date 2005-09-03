@@ -464,10 +464,14 @@ wshed_ok(WshedControls *controls,
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);
-        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield))
+        if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
             gwy_data_field_copy(maskfield, dfield, FALSE);
-        else
+            gwy_data_field_data_changed(dfield);
+        }
+        else {
             gwy_container_set_object_by_name(data, "/0/mask", maskfield);
+            gwy_data_field_data_changed(maskfield);
+        }
         return TRUE;
     }
 
