@@ -1467,6 +1467,102 @@ gwy_data_field_psdf(GwyDataField *data_field,
                              orientation, interpolation, windowing, nstats);
 }
 
+void
+gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
+                                     GwyDataLine *target_line,
+                                     gint col, gint row,
+                                     gint width, gint height,
+                                     gint nstats)
+{
+    gwy_data_field_area_cdh(data_field, target_line, col, row, width, height,
+                            nstats);
+    gwy_data_line_multiply(target_line, -1.0);
+    gwy_data_line_add(target_line, 1.0);
+    /* FIXME: Petr uses a different x-axis scale. */
+}
+
+void
+gwy_data_field_minkowski_volume(GwyDataField *data_field,
+                                GwyDataLine *target_line,
+                                gint nstats)
+{
+    gwy_data_field_cdh(data_field, target_line, nstats);
+    gwy_data_line_multiply(target_line, -1.0);
+    gwy_data_line_add(target_line, 1.0);
+    /* FIXME: Petr uses a different x-axis scale. */
+}
+
+void
+gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
+                                       GwyDataLine *target_line,
+                                       gint col, gint row,
+                                       gint width, gint height,
+                                       gint nstats)
+{
+    const gdouble *data;
+    gdouble *line;
+    gdouble min, max, q;
+    gint xres, i, j, k, k0, kr, kd;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (nstats < 1) {
+        nstats = floor(3.49*cbrt(width*height) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+    min = gwy_data_field_area_get_min(data_field, col, row, width, height);
+    max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+    /* There are no boundaries on a totally flat sufrace */
+    if (min == max || width == 0 || height == 0)
+        return;
+
+    xres = data_field->xres;
+    q = nstats/(max - min);
+    line = target_line->data;
+
+    for (i = 0; i < height-1; i++) {
+        kr = (gint)((data_field->data[i*xres + col] - min)*q);
+        for (j = 0; j < width-1; j++) {
+            data = data_field->data + (i + row)*xres + (col + j);
+
+            k0 = kr;
+            kr = (gint)((data[1] - min)*q);
+            kd = (gint)((data[xres] - min)*q);
+
+            for (k = MIN(kr, kd); k < k0; k++)
+                line[k] += 1;
+
+            for (k = k0; k < MAX(kr, kd); k++)
+                line[k] += 1;
+        }
+    }
+
+    /* Normalize integral to 1 */
+    gwy_data_line_multiply(target_line, nstats/(max - min)/(width*height));
+    /* FIXME: Petr uses a different x-axis scale. */
+    gwy_data_line_set_real(target_line, max - min);
+}
+
+void
+gwy_data_field_minkowski_boundary(GwyDataField *data_field,
+                                  GwyDataLine *target_line,
+                                  gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_minkowski_boundary(data_field, target_line,
+                                           0, 0,
+                                           data_field->xres, data_field->yres,
+                                           nstats);
+}
+
 /**
  * square_area2:
  * @z1: Z-value in first corner.

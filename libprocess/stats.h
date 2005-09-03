@@ -174,6 +174,22 @@ void    gwy_data_field_psdf                 (GwyDataField *data_field,
                                              GwyInterpolationType interpolation,
                                              GwyWindowingType windowing,
                                              gint nstats);
+void   gwy_data_field_area_minkowski_volume (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint col, gint row,
+                                             gint width, gint height,
+                                             gint nstats);
+void   gwy_data_field_minkowski_volume      (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint nstats);
+void  gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint col, gint row,
+                                             gint width, gint height,
+                                             gint nstats);
+void   gwy_data_field_minkowski_boundary    (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint nstats);
 void   gwy_data_field_slope_distribution    (GwyDataField *data_field,
                                              GwyDataLine *derdist,
                                              gint kernel_size);
