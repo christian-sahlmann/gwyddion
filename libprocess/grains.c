@@ -28,38 +28,39 @@
 
 /* INTERPOLATION: New (not applicable). */
 
-/*local functions*/
-static gint step_by_one                   (GwyDataField *data_field,
-                                           gint *rcol,
-                                           gint *rrow);
-static void drop_step                     (GwyDataField *data_field,
-                                           GwyDataField *water_field,
-                                           gdouble dropsize);
-static void drop_minima                   (GwyDataField *water_field,
-                                           GwyDataField *min_field,
-                                           gint threshval);
-static void process_mask                  (GwyDataField *grain_field,
-                                           gint col,
-                                           gint row);
-static void wdrop_step                    (GwyDataField *data_field,
-                                           GwyDataField *min_field,
-                                           GwyDataField *water_field,
-                                           GwyDataField *grain_field,
-                                           gdouble dropsize);
-static void mark_grain_boundaries         (GwyDataField *grain_field);
-static gint number_grains                 (GwyDataField *mask_field,
-                                           gint *grains);
-static gint* gwy_data_field_fill_grain    (GwyDataField *dfield,
-                                           gint col,
-                                           gint row,
-                                           gint *nindices);
-static gint gwy_data_field_fill_one_grain (GwyDataField *dfield,
-                                           gint col,
-                                           gint row,
-                                           gint *visited,
-                                           gint grain_no,
-                                           gint *listv,
-                                           gint *listh);
+static gboolean step_by_one                  (GwyDataField *data_field,
+                                              gint *rcol,
+                                              gint *rrow);
+static void     drop_step                    (GwyDataField *data_field,
+                                              GwyDataField *water_field,
+                                              gdouble dropsize);
+static void     drop_minima                  (GwyDataField *water_field,
+                                              GwyDataField *min_field,
+                                              gint threshval);
+static void     process_mask                 (GwyDataField *grain_field,
+                                              gint col,
+                                              gint row);
+static void     wdrop_step                   (GwyDataField *data_field,
+                                              GwyDataField *min_field,
+                                              GwyDataField *water_field,
+                                              GwyDataField *grain_field,
+                                              gdouble dropsize);
+static void     mark_grain_boundaries        (GwyDataField *grain_field);
+static gint     number_grains                (GwyDataField *mask_field,
+                                              gint *grains);
+static gint*    gwy_data_field_fill_grain    (GwyDataField *data_field,
+                                              gint col,
+                                              gint row,
+                                              gint *nindices);
+static gint     gwy_data_field_fill_one_grain(gint xres,
+                                              gint yres,
+                                              const gint *data,
+                                              gint col,
+                                              gint row,
+                                              gint *visited,
+                                              gint grain_no,
+                                              gint *listv,
+                                              gint *listh);
 
 /**
  * gwy_data_field_grains_mark_height:
@@ -621,8 +622,7 @@ gwy_data_field_grains_intersect(GwyDataField *grain_field,
 /****************************************************************************/
 /*private functions*/
 
-/* FIXME: change to gboolean */
-static gint
+static gboolean
 step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
 {
     gint xres, yres;
@@ -654,40 +654,40 @@ step_by_one(GwyDataField *data_field, gint *rcol, gint *rrow)
     v = data_field->data[(gint)(*rcol + xres*(*rrow))];
 
     if (v >= a && v >= b && v >= c && v >= d) {
-        return 1;
+        return TRUE;
     }
     else if (a >= v && a >= b && a >= c && a >= d) {
         *rcol += 1;
-        return 0;
+        return FALSE;
     }
     else if (b >= v && b >= a && b >= c && b >= d) {
         *rcol -= 1;
-        return 0;
+        return FALSE;
     }
     else if (c >= v && c >= b && c >= a && c >= d) {
         *rrow += 1;
-        return 0;
+        return FALSE;
     }
     else {
         *rrow -= 1;
-        return 0;
+        return FALSE;
     }
 
-    return 0;
+    return FALSE;
 }
 
 
 static void
 drop_step(GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
 {
-    gint xres, yres, i, retval;
+    gint xres, yres, i;
     gint col, row;
+    gboolean retval;
 
     xres = data_field->xres;
     yres = data_field->yres;
 
     for (i = 0; i < xres*yres; i++) {
-        retval = 0;
         row = (gint)floor((gdouble)i/(gdouble)xres);
         col = i - xres*row;
         if (col == 0 || row == 0 || col == (xres - 1) || row == (yres - 1))
@@ -695,7 +695,7 @@ drop_step(GwyDataField *data_field, GwyDataField *water_field, gdouble dropsize)
 
         do {
             retval = step_by_one(data_field, &col, &row);
-        } while (retval == 0);
+        } while (!retval);
 
         water_field->data[col + xres*row] += 1;
         data_field->data[col + xres*row] -= dropsize;
@@ -750,7 +750,8 @@ drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
 static void
 process_mask(GwyDataField *grain_field, gint col, gint row)
 {
-    gint xres, yres, ival[4], val, stat, /* FIXME: change to boolean */ i;
+    gint xres, yres, ival[4], val, i;
+    gboolean stat;
     gdouble *data;
 
     xres = grain_field->xres;
@@ -779,11 +780,11 @@ process_mask(GwyDataField *grain_field, gint col, gint row)
     ival[3] = data[col + xres*(row + 1)];
 
     val = 0;
-    stat = 0;
+    stat = FALSE;
     for (i = 0; i < 4; i++) {
         if (val > 0 && ival[i] > 0 && ival[i] != val) {
             /*if some value already was there and the now one is different */
-            stat = 1;  /* FIXME: change to boolean */
+            stat = TRUE;
             break;
         }
         else {
@@ -795,12 +796,7 @@ process_mask(GwyDataField *grain_field, gint col, gint row)
     }
 
     /*it will be boundary or grain */
-    /* FIXME: don't compare booleans */
-    if (stat == 1)
-        data[col + xres*row] = -1;
-    else
-        data[col + xres*row] = val;
-
+    data[col + xres*row] = stat ? -1 : val;
 }
 
 static void
@@ -808,7 +804,8 @@ wdrop_step(GwyDataField *data_field, GwyDataField *min_field,
            GwyDataField *water_field, GwyDataField *grain_field,
            gdouble dropsize)
 {
-    gint xres, yres, vcol, vrow, col, row, grain, retval;
+    gint xres, yres, vcol, vrow, col, row, grain;
+    gboolean retval;
 
     xres = data_field->xres;
     yres = data_field->yres;
@@ -825,10 +822,9 @@ wdrop_step(GwyDataField *data_field, GwyDataField *min_field,
 
             vcol = col;
             vrow = row;
-            retval = 0;
             do {
                 retval = step_by_one(data_field, &vcol, &vrow);
-            } while (retval == 0);
+            } while (!retval);
 
             /*now, distinguish what to change at point vi, vj */
             process_mask(grain_field, vcol, vrow);
@@ -878,35 +874,39 @@ static gint
 number_grains(GwyDataField *mask_field,
               gint *grains)
 {
-    gint *listv, *listh;
+    gint *data, *listv, *listh;
     gint xres, yres, n, i, grain_no;
 
     xres = mask_field->xres;
     yres = mask_field->yres;
 
     n = xres*yres;
+    data = g_new(gint, n);
     listv = g_new(gint, n/2 + 2);
     listh = g_new(gint, n/2 + 2);
 
-    grain_no = 0;
+    for (i = 0; i < n; i++)
+        data[i] = mask_field->data[i] > 0;
 
+    grain_no = 0;
     for (i = 0; i < n; i++) {
         if (mask_field->data[i] && !grains[i]) {
             grain_no++;
-            gwy_data_field_fill_one_grain(mask_field, i % xres, i/xres,
+            gwy_data_field_fill_one_grain(xres, yres, data, i % xres, i/xres,
                                           grains, grain_no, listv, listh);
         }
     }
 
     g_free(listh);
     g_free(listv);
+    g_free(data);
 
     return grain_no;
 }
 
 /**
  * gwy_data_field_fill_grain:
- * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
+ * @data_field: A data field with zeroes in empty space and nonzeroes in grains.
  * @col: Column inside a grain.
  * @row: Row inside a grain.
  * @nindices: Where the number of points in the grain at (@col, @row) should
@@ -918,27 +918,25 @@ number_grains(GwyDataField *mask_field,
  *          data, the size of the list is returned in @nindices.
  **/
 static gint*
-gwy_data_field_fill_grain(GwyDataField *dfield,
+gwy_data_field_fill_grain(GwyDataField *data_field,
                           gint col, gint row, gint *nindices)
 {
-    gdouble *data;
-    gint *visited, *listv, *listh;
+    gint *data, *visited, *listv, *listh;
     gint *indices;
     gint xres, yres, n, count;
     gint i, j;
     gint initial;
 
-    data = dfield->data;
-    xres = dfield->xres;
-    yres = dfield->yres;
+    xres = data_field->xres;
+    yres = data_field->yres;
     initial = row*xres + col;
-    g_return_val_if_fail(data[initial], NULL);
+    g_return_val_if_fail(data_field->data[initial], NULL);
 
     /* check for a single point */
-    if ((!col || data[initial - 1] <= 0)
-        && (!row || data[initial - xres] <= 0)
-        && (col + 1 == xres || data[initial + 1] <= 0)
-        && (row + 1 == yres || data[initial + xres] <= 0)) {
+    if ((!col || data_field->data[initial - 1] <= 0)
+        && (!row || data_field->data[initial - xres] <= 0)
+        && (col + 1 == xres || data_field->data[initial + 1] <= 0)
+        && (row + 1 == yres || data_field->data[initial + xres] <= 0)) {
         indices = g_new(gint, 1);
 
         indices[0] = initial;
@@ -949,13 +947,19 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
 
     n = xres*yres;
     visited = g_new0(gint, n);
+    data = g_new(gint, n);
     listv = g_new(gint, n/2 + 2);
     listh = g_new(gint, n/2 + 2);
-    count = gwy_data_field_fill_one_grain(dfield, col, row,
+
+    for (i = 0; i < n; i++)
+        data[i] = data_field->data[i] > 0;
+
+    count = gwy_data_field_fill_one_grain(xres, yres, data, col, row,
                                           visited, 1, listv, listh);
 
     g_free(listh);
     g_free(listv);
+    g_free(data);
 
     indices = g_new(gint, count);
 
@@ -972,7 +976,10 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
 
 /**
  * gwy_data_field_fill_one_grain:
- * @dfield: A data field with zeroes in empty space and nonzeroes in grains.
+ * @xres: The number of columns in @data.
+ * @yres: The number of rows in @data.
+ * @data: Arbitrary integer data.  Grain is formed by values equal to the
+ *        value at (@col, @row).
  * @col: Column inside a grain.
  * @row: Row inside a grain.
  * @visited: An array @col x @row that contain zeroes in empty space and yet
@@ -993,33 +1000,32 @@ gwy_data_field_fill_grain(GwyDataField *dfield,
  * Returns: The number of pixels in the grain.
  **/
 static gint
-gwy_data_field_fill_one_grain(GwyDataField *dfield,
+gwy_data_field_fill_one_grain(gint xres,
+                              gint yres,
+                              const gint *data,
                               gint col, gint row,
                               gint *visited,
                               gint grain_no,
                               gint *listv,
                               gint *listh)
 {
-    gdouble *data;
-    gint xres, yres, n, count;
+    gint n, count;
     gint nh, nv;
     gint i, p, j;
     gint initial;
+    gint look_for;
 
     g_return_val_if_fail(grain_no, 0);
-    data = dfield->data;
-    xres = dfield->xres;
-    yres = dfield->yres;
     initial = row*xres + col;
-    g_return_val_if_fail(data[initial], 0);
+    look_for = data[initial];
 
     /* check for a single point */
     visited[initial] = grain_no;
     count = 1;
-    if ((!col || data[initial - 1] <= 0)
-        && (!row || data[initial - xres] <= 0)
-        && (col + 1 == xres || data[initial + 1] <= 0)
-        && (row + 1 == yres || data[initial + xres] <= 0)) {
+    if ((!col || data[initial - 1] != look_for)
+        && (!row || data[initial - xres] != look_for)
+        && (col + 1 == xres || data[initial + 1] != look_for)
+        && (row + 1 == yres || data[initial + xres] != look_for)) {
 
         return count;
     }
@@ -1040,7 +1046,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p - 1;
                 stop = (p/xres)*xres;
                 for (j = start; j >= stop; j--) {
-                    if (visited[j] || data[j] <= 0)
+                    if (visited[j] || data[j] != look_for)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1054,7 +1060,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p + 1;
                 stop = (p/xres + 1)*xres;
                 for (j = start; j < stop; j++) {
-                    if (visited[j] || data[j] <= 0)
+                    if (visited[j] || data[j] != look_for)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1076,7 +1082,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p - xres;
                 stop = p % xres;
                 for (j = start; j >= stop; j -= xres) {
-                    if (visited[j] || data[j] <= 0)
+                    if (visited[j] || data[j] != look_for)
                         break;
                     visited[j] = grain_no;
                     count++;
@@ -1090,7 +1096,7 @@ gwy_data_field_fill_one_grain(GwyDataField *dfield,
                 start = p + xres;
                 stop = p % xres + n;
                 for (j = start; j < stop; j += xres) {
-                    if (visited[j] || data[j] <= 0)
+                    if (visited[j] || data[j] != look_for)
                         break;
                     visited[j] = grain_no;
                     count++;
