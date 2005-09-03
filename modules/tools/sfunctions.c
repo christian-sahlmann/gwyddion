@@ -35,13 +35,15 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef enum {
-    GWY_SF_OUTPUT_DH    = 0,
-    GWY_SF_OUTPUT_CDH   = 1,
-    GWY_SF_OUTPUT_DA    = 2,
-    GWY_SF_OUTPUT_CDA   = 3,
-    GWY_SF_OUTPUT_ACF   = 4,
-    GWY_SF_OUTPUT_HHCF  = 5,
-    GWY_SF_OUTPUT_PSDF  = 6
+    GWY_SF_OUTPUT_DH                 = 0,
+    GWY_SF_OUTPUT_CDH                = 1,
+    GWY_SF_OUTPUT_DA                 = 2,
+    GWY_SF_OUTPUT_CDA                = 3,
+    GWY_SF_OUTPUT_ACF                = 4,
+    GWY_SF_OUTPUT_HHCF               = 5,
+    GWY_SF_OUTPUT_PSDF               = 6,
+    GWY_SF_OUTPUT_MINKOWSKI_VOLUME   = 7,
+    GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY = 8,
 } GwySFOutputType;
 
 typedef struct {
@@ -111,13 +113,15 @@ static GwyUnitoolSlots func_slots = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { N_("Height distribution"),         GWY_SF_OUTPUT_DH   },
-    { N_("Cum. height distribution"),    GWY_SF_OUTPUT_CDH  },
-    { N_("Distribution of angles"),      GWY_SF_OUTPUT_DA   },
-    { N_("Cum. distribution of angles"), GWY_SF_OUTPUT_CDA  },
-    { N_("ACF"),                         GWY_SF_OUTPUT_ACF  },
-    { N_("HHCF"),                        GWY_SF_OUTPUT_HHCF },
-    { N_("PSDF"),                        GWY_SF_OUTPUT_PSDF },
+    { N_("Height distribution"),         GWY_SF_OUTPUT_DH,                 },
+    { N_("Cum. height distribution"),    GWY_SF_OUTPUT_CDH,                },
+    { N_("Distribution of angles"),      GWY_SF_OUTPUT_DA,                 },
+    { N_("Cum. distribution of angles"), GWY_SF_OUTPUT_CDA,                },
+    { N_("ACF"),                         GWY_SF_OUTPUT_ACF,                },
+    { N_("HHCF"),                        GWY_SF_OUTPUT_HHCF,               },
+    { N_("PSDF"),                        GWY_SF_OUTPUT_PSDF,               },
+    { N_("Minkowski volume"),            GWY_SF_OUTPUT_MINKOWSKI_VOLUME,   },
+    { N_("Minkowski boundary"),          GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY, },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -246,7 +250,8 @@ dialog_create(GwyUnitoolState *state)
 
     controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
 
-    spin = gwy_table_attach_hscale(table, row, "size:", "", controls->size,
+    spin = gwy_table_attach_hscale(table, row, "size:", NULL,
+                                   GTK_OBJECT(controls->size),
                                    GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls->size, "value_changed",
@@ -292,11 +297,19 @@ dialog_update(GwyUnitoolState *state,
     GString *lab;
 
     gwy_debug("");
+
     /* XXX */
     if (!state->is_visible)
         return;
 
     controls = (ToolControls*)state->user_data;
+    gtk_widget_set_sensitive(controls->direction,
+                             controls->out == GWY_SF_OUTPUT_DA
+                             || controls->out == GWY_SF_OUTPUT_CDA
+                             || controls->out == GWY_SF_OUTPUT_ACF
+                             || controls->out == GWY_SF_OUTPUT_HHCF
+                             || controls->out == GWY_SF_OUTPUT_PSDF);
+
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -307,7 +320,6 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_model_remove_all_curves(controls->graphmodel);
     gcmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
-
 
     dataline = gwy_data_line_new(10, 10, FALSE);
     lab = g_string_new(gwy_enum_to_string(controls->out,
@@ -359,6 +371,18 @@ dialog_update(GwyUnitoolState *state,
                                      controls->interp,
                                      GWY_WINDOWING_HANN,
                                      controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_MINKOWSKI_VOLUME:
+            gwy_data_field_area_minkowski_volume(dfield, dataline,
+                                                 isel[0], isel[1], w, h,
+                                                 controls->siz);
+            break;
+
+            case GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY:
+            gwy_data_field_area_minkowski_boundary(dfield, dataline,
+                                                   isel[0], isel[1], w, h,
+                                                   controls->siz);
             break;
         }
 

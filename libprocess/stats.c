@@ -1537,10 +1537,10 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
             kr = (gint)((data[1] - min)*q);
             kd = (gint)((data[xres] - min)*q);
 
-            for (k = MIN(kr, kd); k < k0; k++)
+            for (k = MAX(MIN(kr, kd), 0); k < MIN(k0, nstats); k++)
                 line[k] += 1;
 
-            for (k = k0; k < MAX(kr, kd); k++)
+            for (k = MAX(k0, 0); k < MIN(MAX(kr, kd), nstats); k++)
                 line[k] += 1;
         }
     }
