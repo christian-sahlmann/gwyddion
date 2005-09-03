@@ -1534,19 +1534,18 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
             data = data_field->data + (i + row)*xres + (col + j);
 
             k0 = kr;
-            kr = (gint)((data[1] - min)*q);
-            kd = (gint)((data[xres] - min)*q);
 
-            for (k = MAX(MIN(kr, kd), 0); k < MIN(k0, nstats); k++)
+            kr = (gint)((data[1] - min)*q);
+            for (k = MAX(MIN(k0, kr), 0); k < MIN(MAX(k0, kr), nstats); k++)
                 line[k] += 1;
 
-            for (k = MAX(k0, 0); k < MIN(MAX(kr, kd), nstats); k++)
+            kd = (gint)((data[xres] - min)*q);
+            for (k = MAX(MIN(k0, kd), 0); k < MIN(MAX(k0, kd), nstats); k++)
                 line[k] += 1;
         }
     }
 
-    /* Normalize integral to 1 */
-    gwy_data_line_multiply(target_line, nstats/(max - min)/(width*height));
+    gwy_data_line_multiply(target_line, 1.0/(width*height));
     /* FIXME: Petr uses a different x-axis scale. */
     gwy_data_line_set_real(target_line, max - min);
 }
