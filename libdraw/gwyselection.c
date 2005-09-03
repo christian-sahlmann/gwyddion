@@ -134,6 +134,8 @@ gwy_selection_finalize(GObject *object)
  * @selection: A selection.
  *
  * Gets the number of coordinates that make up a one selection object.
+ *
+ * Returns: The number of coordinates in one selection object.
  **/
 gint
 gwy_selection_get_object_size(GwySelection *selection)
