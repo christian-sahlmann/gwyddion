@@ -161,7 +161,7 @@ gwy_flags_to_string(gint enumval,
     gchar *result;
 
     if (!enumval)
-        return "";
+        return g_strdup("");
 
     if (!glue)
         glue = " ";

@@ -48,6 +48,7 @@ libgwyddion_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyddion_la_SOURCES = \
 	gwycontainer.c \
 	gwyddion.c \
+	gwyddiontypes.c \
 	gwydebugobjects.c \
 	gwyentities.c \
 	gwyenum.c \

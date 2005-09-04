@@ -367,7 +367,7 @@ gchar*
 gwy_find_self_dir(const gchar *dirname)
 {
 #ifdef G_OS_UNIX
-    static const struct { gchar *id; gchar *path; } paths[] = {
+    static const struct { const gchar *id; gchar *path; } paths[] = {
         { "modules", GWY_MODULE_DIR,          },
         { "plugins", GWY_PLUGIN_DIR,          },
         /* Pixmaps should be in data/pixmaps in source tree too, but it does
