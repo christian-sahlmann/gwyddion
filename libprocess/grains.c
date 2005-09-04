@@ -905,6 +905,30 @@ number_grains(GwyDataField *mask_field,
     return grain_no;
 }
 
+/* Merge grains i and j in map with full resolution */
+static inline void
+resolve_grain_map(gint *m, gint i, gint j)
+{
+    gint ii, jj, k;
+
+    for (ii = i; m[ii] != ii; ii = m[ii])
+        ;
+    for (jj = j; m[jj] != jj; jj = m[jj])
+        ;
+    k = MIN(ii, jj);
+
+    for (ii = m[i]; m[ii] != ii; ii = m[ii]) {
+        m[i] = k;
+        i = ii;
+    }
+    m[ii] = k;
+    for (jj = m[j]; m[jj] != jj; jj = m[jj]) {
+        m[j] = k;
+        j = jj;
+    }
+    m[jj] = k;
+}
+
 /**
  * gwy_data_field_area_grains_tgnd:
  * @data_field: A data field.
@@ -932,45 +956,59 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                 gboolean below,
                                 gint nstats)
 {
-#ifdef DEBUG
-    GwyDataField *tmp_field, *grainfield;
-    gint *grains_tmp;
-#endif
-    gint *heights, *hindex, *nh, *grains, *listv, *listh;
-    GArray *m, *mm;
-    const gdouble *drow;
-    const gint *irow;
-    gdouble min, max;
-    gint i, j, k, kk, h, n;
+    gint *heights, *hindex, *nh, *grains, *listv, *listh, *m, *mm;
+    gdouble min, max, q;
+    gint i, j, k, h, n;
     gint grain_no, last_grain_no;
+    guint msize;
 
-    if (width < 4 || height < 4)
-        return;
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
 
-#ifdef DEBUG
-    tmp_field = gwy_data_field_duplicate(data_field);
-    gwy_data_field_resize(tmp_field, col, row, col+width, row+height);
-    grainfield = gwy_data_field_new_alike(tmp_field, FALSE);
-#endif
+    if (nstats < 1) {
+        nstats = floor(3.49*cbrt(width*height) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+
     min = gwy_data_field_area_get_min(data_field, col, row, width, height);
     max = gwy_data_field_area_get_max(data_field, col, row, width, height);
 
     n = width*height;
+    if (max == min || n == 0) {
+        gwy_data_line_clear(target_line);
+        return;
+    }
+    gwy_data_line_set_real(target_line, max - min);
 
-    /* Calculate discrete heights */
+    /* Calculate discrete heights.
+     *
+     * The buckets are a bit unusual.  We want the distribution symmetric from
+     * above- and below- viewpoint.  That means if we invert the input data
+     * field, negate @below, and reverse the contents of @nh we want to get
+     * the same distribution (except points that are excatly equal to some
+     * bucked edge value, they get rounded to the other bucker).  This means
+     * if nh[nstats-1] == n, then it must be nh[0] = 0. */
     heights = g_new(gint, n);
+    q = (nstats - 1.0)/(max - min);
     for (i = 0; i < height; i++) {
-        drow = data_field->data + (i + row)*data_field->xres + col;
+        const gdouble *drow = data_field->data
+                              + (i + row)*data_field->xres + col;
 
         if (below) {
             for (j = 0; j < width; j++) {
-                k = (gint)((drow[j] - min)/(max - min)*nstats);
+                k = (gint)((drow[j] - min)*q + 1);
                 heights[i*width + j] = CLAMP(k, 0, nstats-1);
             }
         }
         else {
             for (j = 0; j < width; j++) {
-                k = (gint)((max - drow[j])/(max - min)*nstats);
+                k = (gint)((max - drow[j])*q + 1);
                 heights[i*width + j] = CLAMP(k, 0, nstats-1);
             }
         }
@@ -1004,20 +1042,17 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
     }
     nh[nstats] = n;    /* To avoid special-casing in cycle limits below */
 
-#ifdef DEBUG
-    grains_tmp = g_new(gint, n);
-#endif
     grains = g_new0(gint, n);
     listv = g_new(gint, n/2 + 2);
     listh = g_new(gint, n/2 + 2);
 
-    m = g_array_new(FALSE, FALSE, sizeof(gint));
-    mm = g_array_new(FALSE, FALSE, sizeof(gint));
-
-    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    m = g_new(gint, 1);
+    mm = m;
+    msize = 0;
 
     /* Main iteration */
     last_grain_no = 0;
+    target_line->data[0] = 0;
     for (h = 0; h < nstats; h++) {
         /* Mark new subgrains corresponding just to height h */
         grain_no = last_grain_no;
@@ -1035,109 +1070,84 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
 
         if (grain_no == last_grain_no) {
             gwy_debug("skipping empty height level");
-            g_assert(h > 0);
-            target_line->data[h] = target_line->data[h-1];
+            if (h)
+                target_line->data[h] = target_line->data[h-1];
             continue;
         }
 
-        /* Find grains that touch each other */
-        g_array_set_size(m, grain_no+1);
-        g_array_set_size(mm, grain_no+1);
-        for (i = 0; i < m->len; i++) {
-            g_array_index(m, gint, i) = i;
-            g_array_index(mm, gint, i) = 0;
+        /* Initialize graind number maps for merge scan */
+        if (grain_no+1 > msize) {
+            g_free(m);
+            m = g_new(gint, 2*(grain_no+1));
+            mm = m + grain_no+1;
+        }
+        for (i = 0; i <= grain_no; i++) {
+            m[i] = i;
+            mm[i] = 0;
         }
 
-        for (i = 0; i < height; i++) {
-            irow = grains + i*width;
-            for (j = 0; j < width-1; j++) {
-                if (irow[j] && irow[j+1]) {
-                    /* Find minimum grain number */
-                    k = g_array_index(m, gint, irow[j]);
-                    kk = g_array_index(m, gint, irow[j+1]);
-                    /* And assign it to both */
-                    g_array_index(m, gint, irow[j]) = MIN(k, kk);
-                    g_array_index(m, gint, irow[j+1]) = MIN(k, kk);
-                }
-            }
-        }
-        for (i = 0; i < height-1; i++) {
-            irow = grains + i*width;
-            for (j = 0; j < width; j++) {
-                if (irow[j] && irow[j+width]) {
-                    /* Find minimum grain number */
-                    k = g_array_index(m, gint, irow[j]);
-                    kk = g_array_index(m, gint, irow[j+width]);
-                    /* And assign it to both */
-                    g_array_index(m, gint, irow[j]) = MIN(k, kk);
-                    g_array_index(m, gint, irow[j+width]) = MIN(k, kk);
-                }
-            }
-        }
-#ifdef DEBUG
-        gwy_debug("raw grain number map:");
-        for (i = 0; i < m->len; i++)
-            g_print("[%d]%d ", i, g_array_index(m, gint, i));
-        g_print("\n");
-#endif
+        /* Find grains that touch each other for merge.
+         *
+         * Grains that did not touch before don't touch now.  So we are only
+         * interested in neighbours of pixels of new subgrains. */
+        for (i = nh[h]; i < nh[h+1]; i++) {
+            j = hindex[i];
+            /* Left */
+            if (j % width && grains[j-1]
+                && m[grains[j]] != m[grains[j-1]])
+                resolve_grain_map(m, grains[j], grains[j-1]);
+            /* Right */
+            if ((j+1) % width && grains[j+1]
+                && m[grains[j]] != m[grains[j+1]])
+                resolve_grain_map(m, grains[j], grains[j+1]);
+            /* Up */
+            if (j/width && grains[j-width]
+                && m[grains[j]] != m[grains[j-width]])
+                resolve_grain_map(m, grains[j], grains[j-width]);
 
-        /* Fully resolve grain number links in m */
-        for (i = 1; i < m->len; i++) {
-            g_array_index(m, gint, i)
-                = g_array_index(m, gint, g_array_index(m, gint, i));
+            /* Down */
+            if (j/width < height-1 && grains[j+width]
+                && m[grains[j]] != m[grains[j+width]])
+                resolve_grain_map(m, grains[j], grains[j+width]);
         }
-#ifdef DEBUG
-        gwy_debug("resolved grain number map:");
-        for (i = 0; i < m->len; i++)
-            g_print("[%d]%d ", i, g_array_index(m, gint, i));
-        g_print("\n");
-#endif
+
+        /* Resolve remianing grain number links in m */
+        for (i = 1; i <= grain_no; i++)
+            m[i] = m[m[i]];
 
         /* Compactify grain numbers */
         k = 0;
-        for (i = 1; i < m->len; i++) {
-            kk = g_array_index(m, gint, i);
-            if (!g_array_index(mm, gint, kk)) {
+        for (i = 1; i <= grain_no; i++) {
+            if (!mm[m[i]]) {
                 k++;
-                g_array_index(mm, gint, kk) = k;
+                mm[m[i]] = k;
             }
-            g_array_index(m, gint, i) = g_array_index(mm, gint, kk);
+            m[i] = mm[m[i]];
         }
+
 #ifdef DEBUG
-        gwy_debug("compact grain number map:");
-        for (i = 0; i < m->len; i++)
-            g_print("[%d]%d ", i, g_array_index(m, gint, i));
-        g_print("\n");
+        for (i = 0; i <= grain_no; i++)
+            g_printerr("%d[%d] ", m[i], i);
+        g_printerr("\n");
 #endif
 
-        /* Renumber grains (we make use of the fact m[0] = 0) */
+        /* Renumber grains (we make use of the fact m[0] = 0).
+         *
+         * This is the only place where we have to scan complete data field.
+         * Since grain numbers usually vary wildly and globally, we probably
+         * can't avoid it. */
         for (i = 0; i < n; i++)
-            grains[i] = g_array_index(m, gint, grains[i]);
+            grains[i] = m[grains[i]];
 
-        /* Note down the number of grains for this h */
+        /* The number of grains for this h */
         target_line->data[h] = k;
-        /* TODO: eventually call some user-provided callback here */
-
         last_grain_no = k;
-#ifdef DEBUG
-        gwy_data_field_grains_mark_height(tmp_field, grainfield,
-                                          (h + 1.0)*100.0/nstats, TRUE);
-        memset(grains_tmp, 0, n*sizeof(gint));
-        gwy_debug("grains: our: %d, standard: %d",
-                  k, number_grains(grainfield, grains_tmp));
-#endif
     }
 
-    g_array_free(m, TRUE);
-    g_array_free(mm, TRUE);
+    g_free(m);
     g_free(listv);
     g_free(listh);
     g_free(grains);
-#ifdef DEBUG
-    g_free(grains_tmp);
-    g_object_unref(tmp_field);
-    g_object_unref(grainfield);
-#endif
     g_free(hindex);
     g_free(nh);
     g_free(heights);
