@@ -47,15 +47,15 @@ typedef struct {
 typedef struct {
   GwyGraphDataPoint data_point;
 } GwyGraphStatus_CursorData;
-    
+
 typedef struct {
   GArray *data_points;
 } GwyGraphStatus_PointsData;
-                                                                                                                                                             
+
 typedef struct {
   GwyGraphDataArea data_area;
 } GwyGraphStatus_AreaData;
-                                                                                                                                                             
+
 typedef struct {
   GArray *data_areas;
 } GwyGraphStatus_AreasData;
@@ -75,7 +75,7 @@ typedef struct {
 /*single curve*/
 typedef struct {
     GdkPoint *points;           /*points to be directly plotted*/
-    
+
     gpointer reserved;
 } GwyGraphAreaCurve;
 
@@ -115,11 +115,11 @@ struct _GwyGraphArea {
     gint old_width;
     gint old_height;
     gboolean newline;
-   
+
     /*linestyle dialog*/
     GwyGraphAreaDialog *area_dialog;
     GwyGraphLabelDialog *label_dialog;
-    
+
     /*label movement*/
     GtkWidget *active;
     gint x0;
@@ -130,8 +130,8 @@ struct _GwyGraphArea {
     GdkColor *colors;
 
     gboolean enable_user_input;
-    gint selection_limit; 
-    
+    gint selection_limit;
+
     gpointer reserved3;
     gpointer reserved4;
     gpointer reserved5;
@@ -176,8 +176,8 @@ void gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel);
 void gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
                                             gint x, gint y, gint width, gint height,
                                             GwyGraphArea *area);
-GString* gwy_graph_area_export_vector(GwyGraphArea *area, 
-                                      gint x, gint y, 
+GString* gwy_graph_area_export_vector(GwyGraphArea *area,
+                                      gint x, gint y,
                                       gint width, gint height);
 
 void gwy_graph_area_clear_selection(GwyGraphArea *area);
@@ -189,6 +189,6 @@ void gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y
 
 G_END_DECLS
 
-#endif /*__GWY_AXIS_H__*/
+#endif  /* __GWY_GRAPH_AREA_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

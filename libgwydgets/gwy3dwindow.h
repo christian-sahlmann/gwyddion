@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_3DWINDOW_H__
-#define __GWY_3DWINDOW_H__
+#ifndef __GWY_3D_WINDOW_H__
+#define __GWY_3D_WINDOW_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -104,6 +104,6 @@ GtkTooltips* gwy_3d_window_class_get_tooltips      (void);
 
 G_END_DECLS
 
-#endif /* __GWY_3DWINDOW_H__ */
+#endif /* __GWY_3D_WINDOW_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

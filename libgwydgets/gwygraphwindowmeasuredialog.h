@@ -52,7 +52,7 @@ struct _GwyGraphWindowMeasureDialog {
 
     GtkWidget *graph;
 
-    GtkWidget *method; 
+    GtkWidget *method;
     GtkWidget *xlabel;
     GtkWidget *ylabel;
     GtkObject *index;
@@ -62,12 +62,12 @@ struct _GwyGraphWindowMeasureDialog {
     GPtrArray *disty;
     GPtrArray *slope;
     GPtrArray *labpoint;
-    MeasureMethodType mmethod;    
+    MeasureMethodType mmethod;
     gint n;
     gint curve_index;
     gdouble x_mag;
     gdouble y_mag;
-                                              
+
 
     gpointer reserved1;
     gpointer reserved2;
@@ -87,6 +87,6 @@ void        gwy_graph_window_measure_dialog_set_curve_data(GtkWidget *dialog, GO
 
 G_END_DECLS
 
-#endif /* __GWY_GRADSPHERE_H__ */
+#endif /* __GWY_GRAPH_WINDOW_MEASURE_DIALOG_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

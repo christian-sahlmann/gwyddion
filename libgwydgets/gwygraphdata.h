@@ -18,8 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GRAPHDATA_H__
-#define __GRAPHDATA_H__
+#ifndef __GWY_GRAPH_DATA_H__
+#define __GWY_GRAPH_DATA_H__
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
@@ -44,7 +44,7 @@ struct _GwyGraphData {
     GtkTreeView treeview;
 
     GwyGraphModel *graph_model;
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -53,7 +53,7 @@ struct _GwyGraphDataClass {
     GtkTreeViewClass parent_class;
 
     void (*selected)(GwyGraphData *data);
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -63,7 +63,7 @@ GType      gwy_graph_data_get_type(void) G_GNUC_CONST;
 
 void       gwy_graph_data_refresh(GwyGraphData *graph_data);
 
-void       gwy_graph_data_change_model(GwyGraphData *graph_data, 
+void       gwy_graph_data_change_model(GwyGraphData *graph_data,
                                     GwyGraphModel *gmodel);
 
 GwyGraphModel *gwy_graph_data_get_model(GwyGraphData *graph_data);
@@ -76,6 +76,6 @@ void       gwy_graph_data_clear_selection(GwyGraphData *graph_data);
 
 G_END_DECLS
 
-#endif /* __GWY_GRADSPHERE_H__ */
+#endif /* __GWY_GRAPH_DATA_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
