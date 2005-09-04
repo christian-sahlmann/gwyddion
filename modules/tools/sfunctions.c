@@ -26,6 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/linestats.h>
 #include <libprocess/stats.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -44,6 +45,7 @@ typedef enum {
     GWY_SF_OUTPUT_PSDF               = 6,
     GWY_SF_OUTPUT_MINKOWSKI_VOLUME   = 7,
     GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY = 8,
+    GWY_SF_OUTPUT_MINKOWSKI_CONNECT  = 9,
 } GwySFOutputType;
 
 typedef struct {
@@ -122,6 +124,7 @@ static const GwyEnum sf_types[] =  {
     { N_("PSDF"),                        GWY_SF_OUTPUT_PSDF,               },
     { N_("Minkowski volume"),            GWY_SF_OUTPUT_MINKOWSKI_VOLUME,   },
     { N_("Minkowski boundary"),          GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY, },
+    { N_("Minkowski connectivity"),      GWY_SF_OUTPUT_MINKOWSKI_CONNECT,  },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -384,6 +387,13 @@ dialog_update(GwyUnitoolState *state,
                                                    isel[0], isel[1], w, h,
                                                    controls->siz);
             break;
+
+            case GWY_SF_OUTPUT_MINKOWSKI_CONNECT:
+            gwy_data_field_area_grains_tgnd(dfield, dataline,
+                                            isel[0], isel[1], w, h,
+                                            TRUE,
+                                            controls->siz);
+            break;
         }
 
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dataline, 0, 0);
@@ -472,7 +482,7 @@ load_args(GwyContainer *container, ToolControls *controls)
 
     /* sanitize */
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
-    controls->out = MIN(controls->out, GWY_SF_OUTPUT_PSDF);
+    controls->out = MIN(controls->out, GWY_SF_OUTPUT_MINKOWSKI_CONNECT);
     controls->interp = CLAMP(controls->interp,
                              GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
 }
