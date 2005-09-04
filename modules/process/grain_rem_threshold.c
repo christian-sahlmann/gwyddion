@@ -225,7 +225,8 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     controls.threshold_area = gtk_adjustment_new(args->area,
                                                  0.0, 16384.0, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
-                                   controls.threshold_area, GWY_HSCALE_CHECK);
+                                   controls.threshold_area,
+                                   GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
     controls.is_area = g_object_get_data(G_OBJECT(controls.threshold_area),
                                          "check");
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
@@ -426,7 +427,6 @@ remove_th_do(RemoveArgs *args,
         mask_process(dfield, maskfield, args);
         gwy_data_field_data_changed(maskfield);
     }
-
 }
 
 static void

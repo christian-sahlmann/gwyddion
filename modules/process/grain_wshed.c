@@ -468,10 +468,8 @@ wshed_ok(WshedControls *controls,
             gwy_data_field_copy(maskfield, dfield, FALSE);
             gwy_data_field_data_changed(dfield);
         }
-        else {
+        else
             gwy_container_set_object_by_name(data, "/0/mask", maskfield);
-            gwy_data_field_data_changed(maskfield);
-        }
         return TRUE;
     }
 
