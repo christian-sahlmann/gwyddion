@@ -31,6 +31,7 @@
 #include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/linestats.h>
+#include <libprocess/grains.h>
 
 /* INTERPOLATION: New (not applicable). */
 
@@ -1467,6 +1468,25 @@ gwy_data_field_psdf(GwyDataField *data_field,
                              orientation, interpolation, windowing, nstats);
 }
 
+/**
+ * gwy_data_field_area_minkowski_volume:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski volume functional of a rectangular part of a data
+ * field.
+ *
+ * Volume functional is calculated as the number of values above each
+ * threshold value (,white pixels`) divided by the total number of samples
+ * in the area.  Is it's equivalent to 1-CDH.
+ **/
 void
 gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
                                      GwyDataLine *target_line,
@@ -1481,6 +1501,18 @@ gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
     /* FIXME: Petr uses a different x-axis scale. */
 }
 
+/**
+ * gwy_data_field_minkowski_volume:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski volume functional of a data field.
+ *
+ * See gwy_data_field_area_minkowski_volume() for details.
+ **/
 void
 gwy_data_field_minkowski_volume(GwyDataField *data_field,
                                 GwyDataLine *target_line,
@@ -1492,6 +1524,26 @@ gwy_data_field_minkowski_volume(GwyDataField *data_field,
     /* FIXME: Petr uses a different x-axis scale. */
 }
 
+/**
+ * gwy_data_field_area_minkowski_boundary:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski boundary functional of a rectangular part of a data
+ * field.
+ *
+ * Boundary functional is calculated as the number of boundaries for each
+ * threshold value (the number of pixel sides where of neighouring pixels is
+ * ,white` and the other ,black`) divided by the total number of samples
+ * in the area.
+ **/
 void
 gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
                                        GwyDataLine *target_line,
@@ -1550,6 +1602,18 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
     gwy_data_line_set_real(target_line, max - min);
 }
 
+/**
+ * gwy_data_field_minkowski_boundary:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski boundary functional of a data field.
+ *
+ * See gwy_data_field_area_minkowski_boundary() for details.
+ **/
 void
 gwy_data_field_minkowski_boundary(GwyDataField *data_field,
                                   GwyDataLine *target_line,
@@ -1560,6 +1624,95 @@ gwy_data_field_minkowski_boundary(GwyDataField *data_field,
                                            0, 0,
                                            data_field->xres, data_field->yres,
                                            nstats);
+}
+
+/**
+ * gwy_data_field_area_minkowski_euler:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski connectivity functional (Euler characteristics) of
+ * a rectangular part of a data field.
+ *
+ * Volume functional is calculated as the number connected areas of pixels
+ * above threhsold (,white`) minus the number of connected areas of pixels
+ * below threhsold (,black`) for each threshold value, divided by the total
+ * number of samples in the area.
+ **/
+void
+gwy_data_field_area_minkowski_euler(GwyDataField *data_field,
+                                    GwyDataLine *target_line,
+                                    gint col, gint row,
+                                    gint width, gint height,
+                                    gint nstats)
+{
+    GwyDataLine *tmp_line;
+    gint i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (nstats < 1) {
+        nstats = floor(3.49*cbrt(width*height) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    tmp_line = gwy_data_line_new_alike(target_line, FALSE);
+
+    gwy_data_field_area_grains_tgnd(data_field, target_line,
+                                    col, row, width, height,
+                                    FALSE, nstats);
+    gwy_data_field_area_grains_tgnd(data_field, tmp_line,
+                                    col, row, width, height,
+                                    TRUE, nstats);
+
+    for (i = 0; i < nstats; i++)
+        target_line->data[i] -= tmp_line->data[nstats-1 - i];
+    g_object_unref(tmp_line);
+
+    gwy_data_line_multiply(target_line, 1.0/(width*height));
+    gwy_data_line_invert(target_line, TRUE, FALSE);
+}
+
+/**
+ * gwy_data_field_minkowski_euler:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates Minkowski connectivity functional (Euler characteristics) of
+ * a data field.
+ *
+ * See gwy_data_field_area_minkowski_euler() for details.
+ **/
+void
+gwy_data_field_minkowski_euler(GwyDataField *data_field,
+                               GwyDataLine *target_line,
+                               gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_minkowski_euler(data_field, target_line,
+                                        0, 0,
+                                        data_field->xres, data_field->yres,
+                                        nstats);
 }
 
 /**
