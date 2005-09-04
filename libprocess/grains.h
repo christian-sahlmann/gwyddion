@@ -98,6 +98,14 @@ void gwy_data_field_grains_add(GwyDataField *grain_field,
 void gwy_data_field_grains_intersect(GwyDataField *grain_field,
                                      GwyDataField *intersect_field);
 
+void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
+                                     GwyDataLine *target_line,
+                                     gint col,
+                                     gint row,
+                                     gint width,
+                                     gint height,
+                                     gboolean below,
+                                     gint nstats);
 
 G_END_DECLS
 
