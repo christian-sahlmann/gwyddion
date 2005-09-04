@@ -26,7 +26,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/linestats.h>
 #include <libprocess/stats.h>
-#include <libprocess/grains.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
@@ -36,16 +35,16 @@
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
 typedef enum {
-    GWY_SF_OUTPUT_DH                 = 0,
-    GWY_SF_OUTPUT_CDH                = 1,
-    GWY_SF_OUTPUT_DA                 = 2,
-    GWY_SF_OUTPUT_CDA                = 3,
-    GWY_SF_OUTPUT_ACF                = 4,
-    GWY_SF_OUTPUT_HHCF               = 5,
-    GWY_SF_OUTPUT_PSDF               = 6,
-    GWY_SF_OUTPUT_MINKOWSKI_VOLUME   = 7,
-    GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY = 8,
-    GWY_SF_OUTPUT_MINKOWSKI_CONNECT  = 9,
+    GWY_SF_DH                     = 0,
+    GWY_SF_CDH                    = 1,
+    GWY_SF_DA                     = 2,
+    GWY_SF_CDA                    = 3,
+    GWY_SF_ACF                    = 4,
+    GWY_SF_HHCF                   = 5,
+    GWY_SF_PSDF                   = 6,
+    GWY_SF_MINKOWSKI_VOLUME       = 7,
+    GWY_SF_MINKOWSKI_BOUNDARY     = 8,
+    GWY_SF_MINKOWSKI_CONNECTIVITY = 9,
 } GwySFOutputType;
 
 typedef struct {
@@ -96,10 +95,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Statistical function tool, calculates one-dimensional statistical "
-       "functions (height distribution, correlations, PSDF) of selected part "
-       "of data."),
+       "functions (height distribution, correlations, PSDF, Minkowski
+        functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -115,16 +114,16 @@ static GwyUnitoolSlots func_slots = {
 };
 
 static const GwyEnum sf_types[] =  {
-    { N_("Height distribution"),         GWY_SF_OUTPUT_DH,                 },
-    { N_("Cum. height distribution"),    GWY_SF_OUTPUT_CDH,                },
-    { N_("Distribution of angles"),      GWY_SF_OUTPUT_DA,                 },
-    { N_("Cum. distribution of angles"), GWY_SF_OUTPUT_CDA,                },
-    { N_("ACF"),                         GWY_SF_OUTPUT_ACF,                },
-    { N_("HHCF"),                        GWY_SF_OUTPUT_HHCF,               },
-    { N_("PSDF"),                        GWY_SF_OUTPUT_PSDF,               },
-    { N_("Minkowski volume"),            GWY_SF_OUTPUT_MINKOWSKI_VOLUME,   },
-    { N_("Minkowski boundary"),          GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY, },
-    { N_("Minkowski connectivity"),      GWY_SF_OUTPUT_MINKOWSKI_CONNECT,  },
+    { N_("Height distribution"),         GWY_SF_DH,                     },
+    { N_("Cum. height distribution"),    GWY_SF_CDH,                    },
+    { N_("Distribution of angles"),      GWY_SF_DA,                     },
+    { N_("Cum. distribution of angles"), GWY_SF_CDA,                    },
+    { N_("ACF"),                         GWY_SF_ACF,                    },
+    { N_("HHCF"),                        GWY_SF_HHCF,                   },
+    { N_("PSDF"),                        GWY_SF_PSDF,                   },
+    { N_("Minkowski volume"),            GWY_SF_MINKOWSKI_VOLUME,       },
+    { N_("Minkowski boundary"),          GWY_SF_MINKOWSKI_BOUNDARY,     },
+    { N_("Minkowski connectivity"),      GWY_SF_MINKOWSKI_CONNECTIVITY, },
 };
 
 /* This is the ONLY exported symbol.  The argument is the module info.
@@ -253,7 +252,7 @@ dialog_create(GwyUnitoolState *state)
 
     controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
 
-    spin = gwy_table_attach_hscale(table, row, "size:", NULL,
+    spin = gwy_table_attach_hscale(table, row, _("Size:"), NULL,
                                    GTK_OBJECT(controls->size),
                                    GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
@@ -307,11 +306,11 @@ dialog_update(GwyUnitoolState *state,
 
     controls = (ToolControls*)state->user_data;
     gtk_widget_set_sensitive(controls->direction,
-                             controls->out == GWY_SF_OUTPUT_DA
-                             || controls->out == GWY_SF_OUTPUT_CDA
-                             || controls->out == GWY_SF_OUTPUT_ACF
-                             || controls->out == GWY_SF_OUTPUT_HHCF
-                             || controls->out == GWY_SF_OUTPUT_PSDF);
+                             controls->out == GWY_SF_DA
+                             || controls->out == GWY_SF_CDA
+                             || controls->out == GWY_SF_ACF
+                             || controls->out == GWY_SF_HHCF
+                             || controls->out == GWY_SF_PSDF);
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
@@ -332,43 +331,43 @@ dialog_update(GwyUnitoolState *state,
     h = isel[3] - isel[1];
     if (w >= 4 && h >= 4) {
         switch (controls->out) {
-            case GWY_SF_OUTPUT_DH:
+            case GWY_SF_DH:
             gwy_data_field_area_dh(dfield, dataline, isel[0], isel[1], w, h,
                                    controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_CDH:
+            case GWY_SF_CDH:
             gwy_data_field_area_cdh(dfield, dataline, isel[0], isel[1], w, h,
                                     controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_DA:
+            case GWY_SF_DA:
             gwy_data_field_area_da(dfield, dataline, isel[0], isel[1], w, h,
                                    controls->dir,
                                    controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_CDA:
+            case GWY_SF_CDA:
             gwy_data_field_area_cda(dfield, dataline, isel[0], isel[1], w, h,
                                     controls->dir,
                                     controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_ACF:
+            case GWY_SF_ACF:
             gwy_data_field_area_acf(dfield, dataline, isel[0], isel[1], w, h,
                                     controls->dir,
                                     controls->interp,
                                     controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_HHCF:
+            case GWY_SF_HHCF:
             gwy_data_field_area_hhcf(dfield, dataline, isel[0], isel[1], w, h,
                                      controls->dir,
                                      controls->interp,
                                      controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_PSDF:
+            case GWY_SF_PSDF:
             gwy_data_field_area_psdf(dfield, dataline, isel[0], isel[1], w, h,
                                      controls->dir,
                                      controls->interp,
@@ -376,23 +375,22 @@ dialog_update(GwyUnitoolState *state,
                                      controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_MINKOWSKI_VOLUME:
+            case GWY_SF_MINKOWSKI_VOLUME:
             gwy_data_field_area_minkowski_volume(dfield, dataline,
                                                  isel[0], isel[1], w, h,
                                                  controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_MINKOWSKI_BOUNDARY:
+            case GWY_SF_MINKOWSKI_BOUNDARY:
             gwy_data_field_area_minkowski_boundary(dfield, dataline,
                                                    isel[0], isel[1], w, h,
                                                    controls->siz);
             break;
 
-            case GWY_SF_OUTPUT_MINKOWSKI_CONNECT:
-            gwy_data_field_area_grains_tgnd(dfield, dataline,
-                                            isel[0], isel[1], w, h,
-                                            TRUE,
-                                            controls->siz);
+            case GWY_SF_MINKOWSKI_CONNECTIVITY:
+            gwy_data_field_area_minkowski_euler(dfield, dataline,
+                                                isel[0], isel[1], w, h,
+                                                controls->siz);
             break;
         }
 
@@ -470,7 +468,7 @@ static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
     controls->dir = GTK_ORIENTATION_HORIZONTAL;
-    controls->out = GWY_SF_OUTPUT_DH;
+    controls->out = GWY_SF_DH;
     controls->interp = GWY_INTERPOLATION_BILINEAR;
     controls->siz = 100;
 
@@ -482,7 +480,7 @@ load_args(GwyContainer *container, ToolControls *controls)
 
     /* sanitize */
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
-    controls->out = MIN(controls->out, GWY_SF_OUTPUT_MINKOWSKI_CONNECT);
+    controls->out = MIN(controls->out, GWY_SF_MINKOWSKI_CONNECTIVITY);
     controls->interp = CLAMP(controls->interp,
                              GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
 }
