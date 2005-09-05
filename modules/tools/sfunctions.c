@@ -95,8 +95,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Statistical function tool, calculates one-dimensional statistical "
-       "functions (height distribution, correlations, PSDF, Minkowski
-        functionals) of selected part of data."),
+       "functions (height distribution, correlations, PSDF, Minkowski "
+       "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
     "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
