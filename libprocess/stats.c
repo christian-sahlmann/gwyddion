@@ -1691,10 +1691,6 @@ gwy_data_field_area_minkowski_euler(GwyDataField *data_field,
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
- * @col: Upper-left column coordinate.
- * @row: Upper-left row coordinate.
- * @width: Area width (number of columns).
- * @height: Area height (number of rows).
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, a suitable resolution is determined automatically.
  *
