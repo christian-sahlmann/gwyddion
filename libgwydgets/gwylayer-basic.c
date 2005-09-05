@@ -254,6 +254,9 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     if (range_type == GWY_LAYER_BASIC_RANGE_FULL)
         gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
                                    basic_layer->gradient);
+    else if (range_type == GWY_LAYER_BASIC_RANGE_ADAPT)
+        gwy_pixbuf_draw_data_field_adaptive(layer->pixbuf, data_field,
+                                            basic_layer->gradient);
     else {
         gwy_layer_basic_get_range(basic_layer, &min, &max);
         gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
@@ -524,6 +527,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
 
     switch (range_type) {
         case GWY_LAYER_BASIC_RANGE_FULL:
+        case GWY_LAYER_BASIC_RANGE_ADAPT:
         rmin = gwy_data_field_get_min(data_field);
         rmax = gwy_data_field_get_max(data_field);
         break;

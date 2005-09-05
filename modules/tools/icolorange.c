@@ -207,6 +207,7 @@ dialog_create(GwyUnitoolState *state)
         { N_("Full"), GWY_LAYER_BASIC_RANGE_FULL },
         { N_("Fixed"), GWY_LAYER_BASIC_RANGE_FIXED },
         { N_("Auto"), GWY_LAYER_BASIC_RANGE_AUTO },
+        { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT },
     };
     ToolControls *controls;
     GwyContainer *settings;
@@ -354,7 +355,7 @@ dialog_update(GwyUnitoolState *state,
         gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
         gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
         gwy_graph_model_set_label_visible(controls->histogram_model, FALSE);
-        
+
         /*
         gtk_widget_hide(GTK_WIDGET(graph->axis_top));
         gtk_widget_hide(GTK_WIDGET(graph->axis_bottom));
@@ -370,9 +371,9 @@ dialog_update(GwyUnitoolState *state,
 
     if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
         gwy_graph_model_remove_all_curves(controls->histogram_model);
-        
+
         curvemodel = gwy_graph_curve_model_new();
-        
+
         controls->datamin = gwy_data_field_get_min(dfield);
         controls->datamax = gwy_data_field_get_max(dfield);
         controls->min = controls->datamin;
@@ -467,7 +468,7 @@ dialog_update(GwyUnitoolState *state,
             gwy_graph_get_selection(graph, selection);
             controls->min = selection[0];
             controls->max = selection[1];
-            
+
             update_percentages(controls);
         }
     }
@@ -597,18 +598,18 @@ update_graph_selection(ToolControls *controls)
         graph_min = grel_min*graph_range + graph->area->x_min;
         graph_max = grel_max*graph_range + graph->area->x_min;
         */
-        
+
         graph_range = graph->area->x_max - graph->area->x_min;
         graph_min = controls->rel_min*graph_range + graph->area->x_min;
         graph_max = controls->rel_max*graph_range + graph->area->x_min;
-         
+
         selection[0] = graph_min;
         selection[1] = graph_max;
         gwy_graph_area_set_selection(graph->area,
                                      GWY_GRAPH_STATUS_XSEL,
                                      selection,
                                      1);
-         
+
     }
 }
 
