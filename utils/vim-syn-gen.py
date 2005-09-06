@@ -13,7 +13,7 @@ options = {
 
 if len(sys.argv) != 2:
     print """\
-Usage: %s config-file.py >something.vim'
+Usage: %s config-file.py >something.vim
 Config-file options:
   syntax_name       Vim syntax name (mandatory)
   file_glob         SOMETHING-decl.txt files to scan (mandatory)
@@ -22,6 +22,7 @@ Config-file options:
   mantainer         Syntax file metadata Maintainer field
   filter_regexp     Exclude matching symbols (default: r'^_')
   override          Declaration override map (like {'NULL': 'Constant', ... })
+  supplement        Declarations to insert (like {'GdkPixmap': 'Type', ...})
   types             Type highligting override map (like {'Enum': 'Keyword'})
 
 Gtk-doc types (case doesn't matter):
@@ -118,15 +119,18 @@ def print_decls(decldict, value):
         d.sort()
         print 'syn keyword %s%s %s' % (syntax_name, normalize(t), ' '.join(d))
 
-def override(decldict, overides):
+def override(decldict, overides, create_new):
     for o, v in overides.items():
         v = v.upper()
         has_it = False
         for k, d in decldict.items():
             if d.has_key(o):
-                has_it = True
-                del d[o]
-        if has_it:
+                if create_new:
+                    sys.stderr.write("%s already exists in %s" % (o, k))
+                else:
+                    has_it = True
+                    del d[o]
+        if create_new or has_it:
             decldict[v][o] = 1
 
 decls = dict([(x, {}) for x in types])
@@ -184,8 +188,11 @@ for macro, body in identdefs.items():
             decls['MACRO'][macro] = decls['DEFINE'][macro]
             del decls['DEFINE'][macro]
 
+if options.has_key('supplement'):
+    override(decls, options['supplement'], True)
+
 if options.has_key('overide'):
-    override(decls, options['override'])
+    override(decls, options['override'], False)
 
 print header
 print_decls(decls, None)
