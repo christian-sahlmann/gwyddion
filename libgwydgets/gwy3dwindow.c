@@ -27,7 +27,12 @@
 #include <libprocess/datafield.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include "gwydgets.h"
+#include <libgwydgets/gwy3dwindow.h>
+#include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwystock.h>
 
 #define DEFAULT_SIZE 360
 
@@ -44,6 +49,24 @@ enum {
 
 static void     gwy_3d_window_destroy              (GtkObject *object);
 static void     gwy_3d_window_finalize             (GObject *object);
+static GdkWindowEdge gwy_3d_window_get_grip_edge   (Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_get_grip_rect        (Gwy3DWindow *gwy3dwindow,
+                                                    GdkRectangle *rect);
+static void     gwy_3d_window_set_grip_cursor      (Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_create_resize_grip   (Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_direction_changed    (GtkWidget *widget,
+                                                    GtkTextDirection prev_dir);
+static void     gwy_3d_window_destroy_resize_grip  (Gwy3DWindow *gwy3dwindow);
+static gboolean gwy_3d_window_configure            (GtkWidget *widget,
+                                                    GdkEventConfigure *event);
+static void     gwy_3d_window_realize              (GtkWidget *widget);
+static void     gwy_3d_window_unrealize            (GtkWidget *widget);
+static void     gwy_3d_window_map                  (GtkWidget *widget);
+static void     gwy_3d_window_unmap                (GtkWidget *widget);
+static gboolean gwy_3d_window_button_press         (GtkWidget *widget,
+                                                    GdkEventButton *event);
+static gboolean gwy_3d_window_expose               (GtkWidget *widget,
+                                                    GdkEventExpose *event);
 static void     gwy_3d_window_pack_buttons         (Gwy3DWindow *gwy3dwindow,
                                                     guint offset,
                                                     GtkBox *box);
@@ -99,12 +122,24 @@ static void
 gwy_3d_window_class_init(Gwy3DWindowClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
     GtkObjectClass *object_class;
 
     object_class = (GtkObjectClass*)klass;
 
     gobject_class->finalize = gwy_3d_window_finalize;
     object_class->destroy = gwy_3d_window_destroy;
+
+    widget_class->realize = gwy_3d_window_realize;
+    widget_class->unrealize = gwy_3d_window_unrealize;
+    widget_class->map = gwy_3d_window_map;
+    widget_class->unmap = gwy_3d_window_unmap;
+
+    widget_class->configure_event = gwy_3d_window_configure;
+    widget_class->expose_event = gwy_3d_window_expose;
+    widget_class->button_press_event = gwy_3d_window_button_press;
+
+    widget_class->direction_changed = gwy_3d_window_direction_changed;
 
     /*
     gwy3dwindow_signals[TITLE_CHANGED] =
@@ -148,6 +183,201 @@ gwy_3d_window_destroy(GtkObject *object)
     gwy3dwindow->buttons = NULL;
 
     GTK_OBJECT_CLASS(gwy_3d_window_parent_class)->destroy(object);
+}
+
+static GdkWindowEdge
+gwy_3d_window_get_grip_edge(Gwy3DWindow *gwy3dwindow)
+{
+    GtkWidget *widget = GTK_WIDGET(gwy3dwindow);
+
+    if (gtk_widget_get_direction(widget) == GTK_TEXT_DIR_LTR)
+        return GDK_WINDOW_EDGE_SOUTH_EAST;
+    else
+        return GDK_WINDOW_EDGE_SOUTH_WEST;
+}
+
+static void
+gwy_3d_window_get_grip_rect(Gwy3DWindow *gwy3dwindow,
+                            GdkRectangle *rect)
+{
+    GtkWidget *widget;
+    gint w, h;
+
+    widget = GTK_WIDGET(gwy3dwindow);
+
+    /* These are in effect the max/default size of the grip. */
+    w = 18;
+    h = 18;
+
+    if (w > widget->allocation.width)
+        w = widget->allocation.width;
+
+    if (h > widget->allocation.height - widget->style->ythickness)
+        h = widget->allocation.height - widget->style->ythickness;
+
+    rect->width = w;
+    rect->height = h;
+    rect->y = widget->allocation.y + widget->allocation.height - h;
+
+    if (gtk_widget_get_direction(widget) == GTK_TEXT_DIR_LTR)
+        rect->x = widget->allocation.x + widget->allocation.width - w;
+    else
+        rect->x = widget->allocation.x + widget->style->xthickness;
+}
+
+static void
+gwy_3d_window_set_grip_cursor(Gwy3DWindow *gwy3dwindow)
+{
+    GtkWidget *widget = GTK_WIDGET(gwy3dwindow);
+    GdkDisplay *display = gtk_widget_get_display(widget);
+    GdkCursorType cursor_type;
+    GdkCursor *cursor;
+
+    if (gtk_widget_get_direction(widget) == GTK_TEXT_DIR_LTR)
+        cursor_type = GDK_BOTTOM_RIGHT_CORNER;
+    else
+        cursor_type = GDK_BOTTOM_LEFT_CORNER;
+
+    cursor = gdk_cursor_new_for_display(display, cursor_type);
+    gdk_window_set_cursor(gwy3dwindow->resize_grip, cursor);
+    gdk_cursor_unref(cursor);
+}
+
+static void
+gwy_3d_window_create_resize_grip(Gwy3DWindow *gwy3dwindow)
+{
+    GtkWidget *widget;
+    GdkWindowAttr attributes;
+    gint attributes_mask;
+    GdkRectangle rect;
+
+    g_return_if_fail(GTK_WIDGET_REALIZED(gwy3dwindow));
+
+    widget = GTK_WIDGET(gwy3dwindow);
+    gwy_3d_window_get_grip_rect(gwy3dwindow, &rect);
+
+    attributes.x = rect.x;
+    attributes.y = rect.y;
+    attributes.width = rect.width;
+    attributes.height = rect.height;
+    attributes.window_type = GDK_WINDOW_CHILD;
+    attributes.wclass = GDK_INPUT_ONLY;
+    attributes.event_mask = gtk_widget_get_events(widget)
+                            | GDK_BUTTON_PRESS_MASK;
+    attributes_mask = GDK_WA_X | GDK_WA_Y;
+
+    gwy3dwindow->resize_grip = gdk_window_new(widget->window,
+                                              &attributes, attributes_mask);
+    gdk_window_set_user_data(gwy3dwindow->resize_grip, widget);
+    gwy_3d_window_set_grip_cursor(gwy3dwindow);
+}
+
+static void
+gwy_3d_window_direction_changed(GtkWidget *widget,
+                                G_GNUC_UNUSED GtkTextDirection prev_dir)
+{
+    Gwy3DWindow *gwy3dwindow = GWY_3D_WINDOW(widget);
+
+    gwy_3d_window_set_grip_cursor(gwy3dwindow);
+    /* FIXME: must switch More/Less icons too */
+}
+
+static void
+gwy_3d_window_destroy_resize_grip(Gwy3DWindow *gwy3dwindow)
+{
+    gdk_window_set_user_data(gwy3dwindow->resize_grip, NULL);
+    gdk_window_destroy(gwy3dwindow->resize_grip);
+    gwy3dwindow->resize_grip = NULL;
+}
+
+static gboolean
+gwy_3d_window_configure(GtkWidget *widget,
+                        GdkEventConfigure *event)
+{
+    GdkRectangle rect;
+    Gwy3DWindow *gwy3dwindow = GWY_3D_WINDOW(widget);
+
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->configure_event(widget,
+                                                                  event);
+    gwy_3d_window_get_grip_rect(gwy3dwindow, &rect);
+    gdk_window_move(gwy3dwindow->resize_grip, rect.x, rect.y);
+
+    return FALSE;
+}
+
+static void
+gwy_3d_window_realize(GtkWidget *widget)
+{
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->realize(widget);
+    gwy_3d_window_create_resize_grip(GWY_3D_WINDOW(widget));
+}
+
+static void
+gwy_3d_window_unrealize(GtkWidget *widget)
+{
+    gwy_3d_window_destroy_resize_grip(GWY_3D_WINDOW(widget));
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->unrealize(widget);
+}
+
+static void
+gwy_3d_window_map(GtkWidget *widget)
+{
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->map(widget);
+    gdk_window_show(GWY_3D_WINDOW(widget)->resize_grip);
+}
+
+static void
+gwy_3d_window_unmap(GtkWidget *widget)
+{
+    gdk_window_hide(GWY_3D_WINDOW(widget)->resize_grip);
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->unmap(widget);
+}
+
+static gboolean
+gwy_3d_window_button_press(GtkWidget *widget,
+                           GdkEventButton *event)
+{
+    Gwy3DWindow *gwy3dwindow;
+
+    gwy3dwindow = GWY_3D_WINDOW(widget);
+    if (event->type != GDK_BUTTON_PRESS
+        || event->window != gwy3dwindow->resize_grip)
+        return FALSE;
+
+    if (event->button == 1)
+        gtk_window_begin_resize_drag(GTK_WINDOW(widget),
+                                     gwy_3d_window_get_grip_edge(gwy3dwindow),
+                                     event->button,
+                                     event->x_root, event->y_root, event->time);
+    else if (event->button == 2)
+        gtk_window_begin_move_drag(GTK_WINDOW(widget),
+                                   event->button,
+                                   event->x_root, event->y_root, event->time);
+    else
+        return FALSE;
+
+    return TRUE;
+}
+
+static gboolean
+gwy_3d_window_expose(GtkWidget *widget,
+                     GdkEventExpose *event)
+{
+    Gwy3DWindow *gwy3dwindow;
+    GdkRectangle rect;
+
+    gwy3dwindow = GWY_3D_WINDOW(widget);
+    GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->expose_event(widget, event);
+
+    gwy_3d_window_get_grip_rect(gwy3dwindow, &rect);
+    gtk_paint_resize_grip(widget->style,
+                          widget->window,
+                          GTK_WIDGET_STATE(widget),
+                          NULL, widget, "gwy3dwindow",
+                          gwy_3d_window_get_grip_edge(gwy3dwindow),
+                          rect.x, rect.y, rect.width, rect.height);
+
+    return FALSE;
 }
 
 static void
@@ -232,6 +462,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
               *label, *check, *entry;
     Gwy3DLabel *gwy3dlabel;
     Gwy3DVisualization visual;
+    GtkTextDirection direction;
     guint row;
 
     gwy_debug("");
@@ -241,6 +472,7 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_window_set_wmclass(GTK_WINDOW(gwy3dwindow), "data",
                            g_get_application_name());
     gtk_window_set_resizable(GTK_WINDOW(gwy3dwindow), TRUE);
+    direction = gtk_widget_get_direction(GTK_WIDGET(gwy3dwindow));
 
     gwy3dwindow->buttons = g_new0(GtkWidget*, 2*N_BUTTONS);
     gwy3dwindow->in_update = FALSE;
@@ -263,7 +495,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     gtk_box_pack_start(GTK_BOX(gwy3dwindow->vbox_small), button,
                        FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(GWY_STOCK_LESS,
+                      gtk_image_new_from_stock(direction == GTK_TEXT_DIR_LTR
+                                               ? GWY_STOCK_LESS
+                                               : GWY_STOCK_MORE,
                                                GTK_ICON_SIZE_BUTTON));
     gwy_3d_window_set_tooltip(button, _("Show full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
@@ -286,8 +520,11 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
 
     button = gtk_button_new();
     gtk_box_pack_end(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
+
     gtk_container_add(GTK_CONTAINER(button),
-                      gtk_image_new_from_stock(GWY_STOCK_MORE,
+                      gtk_image_new_from_stock(direction == GTK_TEXT_DIR_LTR
+                                               ? GWY_STOCK_MORE
+                                               : GWY_STOCK_LESS,
                                                GTK_ICON_SIZE_BUTTON));
     gwy_3d_window_set_tooltip(button, _("Hide full controls"));
     g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
@@ -452,7 +689,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 1, row, row+1, GTK_FILL, 0, 2, 2);
 
     gwy3dlabel = gwy_3d_view_get_label(gwy3dview, GWY_3D_VIEW_LABEL_X);
-    entry = gtk_entry_new_with_max_length(100);
+    entry = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(entry), 100);
     g_signal_connect (entry, "activate",
                       G_CALLBACK(gwy_3d_window_labels_entry_activate),
                       (gpointer)gwy3dwindow);

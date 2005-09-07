@@ -66,6 +66,8 @@ struct _Gwy3DWindow {
     GtkWidget *vbox_small;
     GtkWidget *vbox_large;
 
+    GdkWindow *resize_grip;
+
     GtkWidget *widget2;
     GtkWidget *widget3;
     GtkWidget *widget4;

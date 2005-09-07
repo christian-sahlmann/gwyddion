@@ -36,6 +36,8 @@ and GLib Teams, see the AUTHORS file in Gtk+ and GLib for a complete list.
     GtkColorButton.
     GwyRuler, GwyHRuler, GwyVRuler originated as GtkRuler, GtkHRuler, and
     GtkVRuler forks.
+    GtkStatusbar resize grip implementation was used as Gwy3DWindow resize
+    grip code base.
 
 The GIMP by Spencer Kimball and Peter Mattis and other people, see the
 AUTHORS file in The GIMP for complete list.
