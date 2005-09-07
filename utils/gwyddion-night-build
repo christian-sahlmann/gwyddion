@@ -144,9 +144,6 @@ function release_dists() {
 
   archdir=$rpmtopdir/RPMS/$arch
   $HOME/bin/Ftpcp $pkgname $pver.tar.*
-  $HOME/bin/Ftpcp $pkgname \
-    $archdir/$pkgname-{,devel-,plugins-,debuginfo-}$version-1*.$arch.rpm \
-    $rpmtopdir/SRPMS/$pver-1*.src.rpm
   if test -f $phpswroot/$pkgname/main.xhtml; then
     pkgpage=$phpswroot/$pkgname/main.xhtml
   else
