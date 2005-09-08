@@ -50,6 +50,8 @@ GwyDataWindow* gwy_app_data_window_get_for_data    (GwyContainer *data);
 GtkWidget*     gwy_app_graph_window_create         (GwyGraph *graph,
                                                     GwyContainer *data);
 void           gwy_app_graph_window_remove         (GtkWidget *window);
+void           gwy_app_graph_window_foreach        (GFunc func,
+                                                    gpointer user_data);
 GtkWidget*     gwy_app_graph_window_get_current    (void);
 gboolean       gwy_app_graph_window_set_current    (GtkWidget *window);
 

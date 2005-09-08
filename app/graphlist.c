@@ -229,9 +229,6 @@ gwy_app_graph_list_new(GwyDataWindow *data_window)
                              G_CALLBACK(gwy_app_graph_list_hide_all),
                              controls);
 
-    g_object_set_data(G_OBJECT(data), "gwy-app-graph-list-window", window);
-    g_object_set_data(G_OBJECT(window), "gwy-app-graph-list", controls);
-
     g_signal_connect_swapped(data_window, "destroy",
                              G_CALLBACK(gtk_widget_destroy), window);
     gtk_widget_show_all(vbox);
@@ -561,6 +558,8 @@ gwy_app_graph_list_add_line(gpointer hkey,
         g_object_set_data(gmodel, GMODEL_ID_KEY, GINT_TO_POINTER(id));
     }
 
+    /* FIXME: this is broken, because graphs existing when graph list is
+     * created are left out */
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
                        GRAPHLIST_GMODEL, gmodel,
@@ -631,6 +630,11 @@ gwy_app_graph_list_destroy(Controls *controls)
                                -1);
             if (graph && (piter = g_object_get_data(graph, ITER_KEY)))
                 gtk_tree_iter_free(piter);
+            if (graph)
+                g_signal_handlers_disconnect_by_func
+                                             (graph,
+                                              gwy_app_graph_list_graph_destroy,
+                                              controls);
         } while (gtk_tree_model_iter_next(model, &iter));
     }
 

@@ -367,7 +367,7 @@ gwy_app_data_window_remove(GwyDataWindow *window)
     }
     current_data = g_list_delete_link(current_data, item);
     gwy_debug("Removed window, %p is new head\n",
-              current_data ? current_data->data : "NULL");
+              current_data ? current_data->data : NULL);
     if (current_data) {
         gwy_app_data_window_set_current(GWY_DATA_WINDOW(current_data->data));
         gwy_app_data_window_list_updated();
@@ -796,6 +796,25 @@ gwy_app_graph_window_remove(GtkWidget *window)
         gwy_app_graph_window_set_current(current_graph->data);
     else
         gwy_app_toolbox_update_state(&sens_data);
+}
+
+/**
+ * gwy_app_graph_window_foreach:
+ * @func: A function to call on each graph window.
+ * @user_graph: Data to pass to @func.
+ *
+ * Calls @func on each graph window, in no particular order.
+ *
+ * The function should not create or remove graph windows.
+ **/
+void
+gwy_app_graph_window_foreach(GFunc func,
+                             gpointer user_data)
+{
+    GList *l;
+
+    for (l = current_graph; l; l = g_list_next(l))
+        func(l->data, user_data);
 }
 
 /**
