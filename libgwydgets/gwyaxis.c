@@ -881,14 +881,14 @@ gwy_axis_normalscale(GwyAxis *a)
     GwyAxisLabeledTick mjt;
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
-    if (a->reqmax == a->reqmin) {g_warning("Axiser with zero range!"); a->reqmax = a->reqmin+1;}
+    if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
         
-    /*printf("reqmin=%f, reqmax=%f\n", a->reqmin, a->reqmax);*/
+    printf("reqmin=%g, reqmax=%g\n", a->reqmin, a->reqmax);
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
     if (range > 1e40 || range < -1e40)
     {
-        g_warning("Axiser with extreme range (>1e40)!");
+        g_warning("Axis with extreme range (>1e40)!");
         a->reqmax = 100; a->reqmin = 0;
     }
     
@@ -897,8 +897,8 @@ gwy_axis_normalscale(GwyAxis *a)
     minortickstep = tickstep/(gdouble)a->par.minor_division;
     minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
-    /*printf("rng=%f, tst=%f, mjb=%f, mnts=%f, mnb=%f\n",
-       range, tickstep, majorbase, minortickstep, minorbase);*/
+    printf("rng=%g, tst=%g, mjb=%g, mnts=%g, mnb=%g\n",
+       range, tickstep, majorbase, minortickstep, minorbase);
 
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
@@ -918,7 +918,7 @@ gwy_axis_normalscale(GwyAxis *a)
         g_array_append_val(a->mjticks, mjt);
         majorbase += tickstep;
         i++;
-    } while ((majorbase - tickstep) < a->reqmax && i< a->par.major_maxticks);
+    } while ((majorbase - tickstep) < a->reqmax && i<(2*a->par.major_maxticks));
     a->max = majorbase - tickstep;
     
     
@@ -1202,7 +1202,7 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
  * @min: minimum requisistion
  * @max: maximum requisition
  *
- * Set requisition of axis boundaries. Axiser will fix the boundaries
+ * Set requisition of axis boundaries. Axis will fix the boundaries
  * to satisfy requisition but still have reasonable tick values and spacing.
  **/
 void
@@ -1341,7 +1341,7 @@ gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 
 /**
  * gwy_axis_enable_label_edit:
- * @axis: Axiser widget 
+ * @axis: Axis widget 
  * @enable: enable/disable user to change axis label 
  *
  * Enables/disables user to change axis label by clicking on axis widget.
