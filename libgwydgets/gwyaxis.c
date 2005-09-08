@@ -182,7 +182,7 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
 
     gwy_debug("");
 
-    axis = GWY_AXIS(g_object_new(GWY_TYPE_AXISER, NULL));
+    axis = GWY_AXIS(g_object_new(GWY_TYPE_AXIS, NULL));
     axis->reqmin = min;
     axis->reqmax = max;
     axis->orientation = orientation;
@@ -226,7 +226,7 @@ gwy_axis_finalize(GObject *object)
 
     gwy_debug("finalizing a GwyAxis (refcount = %u)", object->ref_count);
 
-    g_return_if_fail(GWY_IS_AXISER(object));
+    g_return_if_fail(GWY_IS_AXIS(object));
 
     axis = GWY_AXIS(object);
 
@@ -264,7 +264,7 @@ gwy_axis_realize(GtkWidget *widget)
               widget->allocation.x, widget->allocation.height);
 
     g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_AXISER(widget));
+    g_return_if_fail(GWY_IS_AXIS(widget));
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     axis = GWY_AXIS(widget);
@@ -348,7 +348,7 @@ gwy_axis_size_allocate(GtkWidget *widget,
     gwy_debug("");
 
     g_return_if_fail(widget != NULL);
-    g_return_if_fail(GWY_IS_AXISER(widget));
+    g_return_if_fail(GWY_IS_AXIS(widget));
     g_return_if_fail(allocation != NULL);
 
     widget->allocation = *allocation;
@@ -447,7 +447,7 @@ gwy_axis_expose(GtkWidget *widget,
     GwyAxis *axis;
 
     g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
+    g_return_val_if_fail(GWY_IS_AXIS(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     if (event->count > 0)
@@ -768,7 +768,7 @@ gwy_axis_button_press(GtkWidget *widget,
 
     gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
+    g_return_val_if_fail(GWY_IS_AXIS(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     axis = GWY_AXIS(widget);
@@ -787,7 +787,7 @@ gwy_axis_button_release(GtkWidget *widget,
 
     gwy_debug("");
     g_return_val_if_fail(widget != NULL, FALSE);
-    g_return_val_if_fail(GWY_IS_AXISER(widget), FALSE);
+    g_return_val_if_fail(GWY_IS_AXIS(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     axis = GWY_AXIS(widget);
@@ -804,7 +804,7 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
     gwy_debug("");
 
     axis = GWY_AXIS(user_data);
-    g_assert(GWY_IS_AXISER(axis));
+    g_assert(GWY_IS_AXIS(axis));
 
     rec.x = GTK_WIDGET(axis)->allocation.x;
     rec.y = GTK_WIDGET(axis)->allocation.y;
