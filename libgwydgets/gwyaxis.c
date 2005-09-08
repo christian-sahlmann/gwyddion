@@ -367,6 +367,7 @@ gwy_axis_size_allocate(GtkWidget *widget,
 static void
 gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
+    gint scaleres, iterations;   
 
     if (axis->orientation == GTK_POS_TOP
         || axis->orientation == GTK_POS_BOTTOM) {
@@ -388,7 +389,19 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
     if (axis->is_auto)
         gwy_axis_autoset(axis, width, height);
-    gwy_axis_scale(axis);
+    
+    iterations = 0;
+    do {
+        scaleres = gwy_axis_scale(axis);
+        /*printf("scale: %d   iterations: %d\n", scaleres, iterations);*/
+        if (scaleres > 0)
+            axis->par.major_maxticks = (gint)(0.5*(gdouble)axis->par.major_maxticks);
+        
+        if (scaleres < 0)
+            axis->par.major_maxticks = (gint)(2*(gdouble)axis->par.major_maxticks);
+       
+        iterations++;
+    } while (scaleres != 0 && iterations < 10);
 
     if (axis->orientation == GTK_POS_TOP
         || axis->orientation == GTK_POS_BOTTOM)
@@ -883,7 +896,7 @@ gwy_axis_normalscale(GwyAxis *a)
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
         
-    printf("reqmin=%g, reqmax=%g\n", a->reqmin, a->reqmax);
+    /*printf("reqmin=%g, reqmax=%g\n", a->reqmin, a->reqmax);*/
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
     if (range > 1e40 || range < -1e40)
@@ -897,8 +910,8 @@ gwy_axis_normalscale(GwyAxis *a)
     minortickstep = tickstep/(gdouble)a->par.minor_division;
     minorbase = ceil(a->reqmin/minortickstep)*minortickstep;
 
-    printf("rng=%g, tst=%g, mjb=%g, mnts=%g, mnb=%g\n",
-       range, tickstep, majorbase, minortickstep, minorbase);
+    /*printf("rng=%g, tst=%g, mjb=%g, mnts=%g, mnb=%g\n",
+       range, tickstep, majorbase, minortickstep, minorbase);*/
 
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
@@ -930,7 +943,7 @@ gwy_axis_normalscale(GwyAxis *a)
         g_array_append_val(a->miticks, mit);
         minorbase += minortickstep;
         i++;
-    } while (minorbase <= a->max && i < 10*a->par.major_maxticks);
+    } while (minorbase <= a->max && i < 20*a->par.major_maxticks);
 
     return 0;
 }
@@ -993,11 +1006,12 @@ gwy_axis_logscale(GwyAxis *a)
 }
 
 
-/* FIXME: return TRUE for success, not 0 */
+/* returns 0 if everything went OK, <0 if there are not enough major ticks, >0 if there area too many ticks */
 static gint
 gwy_axis_scale(GwyAxis *a)
 {
     gsize i;
+    gint ret;
     GwyAxisLabeledTick *mjt;
 
     
@@ -1022,11 +1036,11 @@ gwy_axis_scale(GwyAxis *a)
     else
         gwy_axis_logscale(a);
     /*label ticks*/
-    gwy_axis_formatticks(a);
+    ret = gwy_axis_formatticks(a);
     /*precompute screen coordinates of ticks (must be done after each geometry change)*/
 
     gwy_axis_signal_rescaled(a);
-    return 0;
+    return ret;
 }
 
 static gint
@@ -1071,6 +1085,11 @@ gwy_axis_formatticks(GwyAxis *a)
     gdouble value;
     gdouble range; /*only for automode and precision*/
     gdouble average;
+    PangoLayout *layout;
+    PangoContext *context;
+    PangoRectangle rect;
+    gint totalwidth=0, totalheight=0;
+            
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
     /*determine range*/
@@ -1096,7 +1115,7 @@ gwy_axis_formatticks(GwyAxis *a)
     if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO)
     {
         format = gwy_si_unit_get_format_with_resolution(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                        MAX(average, range), range, format);
+                                        MAX(average, range), range/(double)a->mjticks->len, format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
@@ -1104,13 +1123,15 @@ gwy_axis_formatticks(GwyAxis *a)
     } 
     else
     {
-        format = gwy_si_unit_get_format_with_resolution(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                        MAX(average, range), range, format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = NULL;
         a->magnification = 1;
     }
 
+    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+    layout = pango_layout_new(context);
+    pango_layout_set_font_description(layout, a->par.major_font);
+            
 
     for (i = 0; i< a->mjticks->len; i++)
     {
@@ -1127,13 +1148,10 @@ gwy_axis_formatticks(GwyAxis *a)
 
         /*fill dependent to mode*/
         if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT
-            || (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
-                && (fabs(value) <= 10000 && fabs(value) >= 0.001))) {
+            || a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
         }
-        else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP
-                 || (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
-                     && (fabs(value) > 10000 || fabs(value) < 0.001))) {
+        else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
             g_string_printf(pmjt->ttext,"%.1E", value);
             if (value == 0)
                 g_string_printf(pmjt->ttext,"0");
@@ -1141,10 +1159,27 @@ gwy_axis_formatticks(GwyAxis *a)
         else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_INT) {
             g_string_printf(pmjt->ttext,"%d", (int)(value+0.5));
         }
+
+        pango_layout_set_text(layout,  pmjt->ttext->str, pmjt->ttext->len);
+        pango_layout_get_pixel_extents(layout, NULL, &rect);
+        totalwidth += rect.width;
+        totalheight += rect.height;
     }
     
     if (format) g_free(format->units);
-    
+  
+    /*printf("%d  %d\n", totalwidth, totalheight);*/
+    if (a->orientation == GTK_POS_LEFT
+        || a->orientation == GTK_POS_RIGHT) {
+            if (totalheight > 200) return 1;
+            else if (a->mjticks->len < 3) return -1; 
+     }
+     else {
+            if (totalwidth > 200) return 1;
+            else if (a->mjticks->len < 3) return -1;           
+     }
+            
+ 
     return 0;
 }
 
