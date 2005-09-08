@@ -175,6 +175,10 @@ gwy_graph_new(GwyGraphModel *gmodel)
             = GWY_AXIS(gwy_axis_new(GTK_POS_RIGHT, 100, 500,
                                     graph->graph_model->right_label->str));
     }
+
+    gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
+    
     g_signal_connect(graph->axis_left, "rescaled",
                      G_CALLBACK(rescaled_cb), graph);
     g_signal_connect(graph->axis_bottom, "rescaled",
