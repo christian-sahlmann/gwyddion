@@ -1093,11 +1093,10 @@ gwy_axis_formatticks(GwyAxis *a)
 
     
     /*move exponents to axis label*/
-    if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
-        && (range > 1000 || average > 1000 || range < 0.001 || average < 0.001))
+    if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO)
     {
-        format = gwy_si_unit_get_format(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
-                                        MAX(average, range), format);
+        format = gwy_si_unit_get_format_with_resolution(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                        MAX(average, range), range, format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
@@ -1105,6 +1104,8 @@ gwy_axis_formatticks(GwyAxis *a)
     } 
     else
     {
+        format = gwy_si_unit_get_format_with_resolution(a->unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                        MAX(average, range), range, format);
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = NULL;
         a->magnification = 1;
@@ -1128,25 +1129,7 @@ gwy_axis_formatticks(GwyAxis *a)
         if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT
             || (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
                 && (fabs(value) <= 10000 && fabs(value) >= 0.001))) {
-            if (range < 0.01 && range >= 0.001) {
-                g_string_printf(pmjt->ttext, "%.4f", value);
-            }
-            else if (range < 0.1) {
-                g_string_printf(pmjt->ttext, "%.3f", value);
-            }
-            else if (range < 1) {
-                g_string_printf(pmjt->ttext, "%.2f", value);
-            }
-            else if (range < 100) {
-                g_string_printf(pmjt->ttext, "%.1f", value);
-            }
-            else if (range >= 100) {
-                g_string_printf(pmjt->ttext, "%.0f", value);
-            }
-            else {
-                g_string_printf(pmjt->ttext, "%f", value);
-            }
-            if (value==0) g_string_printf(pmjt->ttext, "0");
+                g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
         }
         else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP
                  || (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO
