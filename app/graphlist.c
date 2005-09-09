@@ -33,6 +33,8 @@
 #define GMODEL_ID_KEY "graph-list-model-id"
 /* Set on GwyGraphWindow to remember its (persistent!) iter in list */
 #define ITER_KEY "graph-list-iter"
+/* Temporary set on GwyGraphModel to graph window showing it */
+#define GMODEL_GRAPH_KEY "graph-list-graph-pointer"
 
 enum {
     GRAPHLIST_GMODEL,
@@ -87,7 +89,7 @@ static void       gwy_app_graph_list_delete_all      (Controls *controls);
 static void       gwy_app_graph_list_delete_one      (Controls *controls);
 static void       gwy_app_graph_list_add_line        (gpointer hkey,
                                                       GValue *value,
-                                                      GtkListStore *store);
+                                                      Controls *controls);
 static gint       gwy_app_graph_list_sort_func       (GtkTreeModel *model,
                                                       GtkTreeIter *a,
                                                       GtkTreeIter *b,
@@ -250,12 +252,11 @@ gwy_app_graph_list_construct(Controls *controls)
     g_assert(gtk_tree_model_get_flags(GTK_TREE_MODEL(store))
              & GTK_TREE_MODEL_ITERS_PERSIST);
     gwy_debug_objects_creation(G_OBJECT(store));
-    gwy_container_foreach(controls->data, "/0/graph/graph",
-                          (GHFunc)(gwy_app_graph_list_add_line), store);
-
     list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     controls->list = list;
     g_object_unref(store);
+    gwy_container_foreach(controls->data, "/0/graph/graph",
+                          (GHFunc)(gwy_app_graph_list_add_line), controls);
 
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
                                     0, gwy_app_graph_list_sort_func,
@@ -392,8 +393,8 @@ gwy_app_graph_list_hide_graph(GtkTreeModel *store,
     GtkWidget *graph;
 
     gtk_tree_model_get(store, iter, GRAPHLIST_GRAPH, &graph, -1);
-    g_assert(GWY_IS_GRAPH_WINDOW(graph));
-    /* This causes the model and toggle to update too */
+    if (!graph)
+        return FALSE;
     gtk_widget_destroy(graph);
 
     /* To be usable as gtk_tree_model_foreach() callback */
@@ -410,7 +411,12 @@ gwy_app_graph_list_show_graph(GtkTreeModel *model,
     GtkWidget *graph, *window;
     GwyGraphModel *gmodel;
 
-    gtk_tree_model_get(model, iter, GRAPHLIST_GMODEL, &gmodel, -1);
+    gtk_tree_model_get(model, iter,
+                       GRAPHLIST_GMODEL, &gmodel,
+                       GRAPHLIST_GRAPH, &graph,
+                       -1);
+    if (graph)
+        return FALSE;
     graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
     window = gwy_app_graph_window_create(GWY_GRAPH(graph), controls->data);
@@ -531,12 +537,23 @@ gwy_app_graph_list_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
+gwy_app_graph_list_check_graph(GwyGraphWindow *graph,
+                               GwyGraphModel *gmodel)
+{
+    if (gwy_graph_get_model(GWY_GRAPH(gwy_graph_window_get_graph(graph)))
+        == gmodel)
+        g_object_set_data(G_OBJECT(gmodel), GMODEL_GRAPH_KEY, graph);
+}
+
+static void
 gwy_app_graph_list_add_line(gpointer hkey,
                             GValue *value,
-                            GtkListStore *store)
+                            Controls *controls)
 {
     GObject *gmodel;
     GtkTreeIter iter;
+    GtkListStore *store;
+    GwyGraphWindow *graph;
 
     g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
     gmodel = g_value_get_object(value);
@@ -558,13 +575,25 @@ gwy_app_graph_list_add_line(gpointer hkey,
         g_object_set_data(gmodel, GMODEL_ID_KEY, GINT_TO_POINTER(id));
     }
 
-    /* FIXME: this is broken, because graphs existing when graph list is
-     * created are left out */
+    /* FIXME: The need to scan graph list means we screwed up ownership logic */
+    gwy_app_graph_window_foreach((GFunc)gwy_app_graph_list_check_graph,
+                                 GWY_GRAPH_MODEL(gmodel));
+    graph = g_object_get_data(gmodel, GMODEL_GRAPH_KEY);
+    gwy_debug("graph found: %p", graph);
+    g_object_set_data(gmodel, GMODEL_GRAPH_KEY, NULL);
+    store = GTK_LIST_STORE(gtk_tree_view_get_model
+                                              (GTK_TREE_VIEW(controls->list)));
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
                        GRAPHLIST_GMODEL, gmodel,
-                       GRAPHLIST_GRAPH, NULL,
+                       GRAPHLIST_GRAPH, graph,
                        -1);
+    if (graph) {
+        g_signal_connect_swapped(graph, "destroy",
+                                 G_CALLBACK(gwy_app_graph_list_graph_destroy),
+                                 controls);
+        g_object_set_data(G_OBJECT(graph), ITER_KEY, gtk_tree_iter_copy(&iter));
+    }
 }
 
 static gint
@@ -602,6 +631,7 @@ gwy_app_graph_list_graph_destroy(Controls *controls,
     GtkTreeModel *model;
 
     iter = g_object_get_data(G_OBJECT(window), ITER_KEY);
+    gwy_debug("iter: %p", iter);
     if (!iter)
         return;
 
