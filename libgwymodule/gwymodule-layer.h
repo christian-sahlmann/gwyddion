@@ -30,7 +30,6 @@ typedef struct _GwyLayerFuncInfo GwyLayerFuncInfo;
 struct _GwyLayerFuncInfo {
     const gchar *name;
     GType type;
-    GType selection_type;
 };
 
 gboolean     gwy_layer_func_register      (const gchar *modname,

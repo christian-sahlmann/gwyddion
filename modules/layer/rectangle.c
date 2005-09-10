@@ -127,11 +127,9 @@ module_register(const gchar *name)
     static GwyLayerFuncInfo func_info = {
         "rectangle",
         0,
-        0,
     };
 
-    func_info.type = gwy_layer_rectangle_get_type();
-    func_info.selection_type = gwy_selection_rectangle_get_type();
+    func_info.type = GWY_TYPE_LAYER_RECTANGLE;
     gwy_layer_func_register(name, &func_info);
 
     return TRUE;
@@ -152,6 +150,7 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
     layer_class->plugged = gwy_layer_rectangle_plugged;
     layer_class->unplugged = gwy_layer_rectangle_unplugged;
 
+    vector_class->selection_type = GWY_TYPE_SELECTION_RECTANGLE;
     vector_class->draw = gwy_layer_rectangle_draw;
     vector_class->motion_notify = gwy_layer_rectangle_motion_notify;
     vector_class->button_press = gwy_layer_rectangle_button_pressed;

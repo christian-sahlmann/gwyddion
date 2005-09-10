@@ -61,6 +61,8 @@ struct _GwyVectorLayer {
 struct _GwyVectorLayerClass {
     GwyDataViewLayerClass parent_class;
 
+    GType selection_type;
+
     /* renderers */
     void (*draw)(GwyVectorLayer *layer, GdkDrawable *drawable);
     /* events */
