@@ -3,10 +3,11 @@
 layerdir = $(pkglibdir)/modules/layer
 
 layer_LTLIBRARIES = \
-	axes.la		\
-	lines.la	\
-	pointer.la	\
-	points.la	\
+	axes.la \
+	lines.la \
+	pointer.la \
+	points.la \
+	rectangle.la \
 	select.la
 
 
@@ -43,6 +44,9 @@ axes_la_LIBADD = $(module_libadd)
 
 lines_la_SOURCES = lines.c
 lines_la_LIBADD = $(module_libadd)
+
+rectangle_la_SOURCES = rectangle.c
+rectangle_la_LIBADD = $(module_libadd)
 
 pointer_la_SOURCES = pointer.c
 pointer_la_LIBADD = $(module_libadd)
