@@ -116,8 +116,9 @@ gwy_selection_serializable_init(GwySerializableIface *iface)
 }
 
 static void
-gwy_selection_init(G_GNUC_UNUSED GwySelection *selection)
+gwy_selection_init(GwySelection *selection)
 {
+    selection->objects = g_array_new(FALSE, FALSE, sizeof(gdouble));
 }
 
 static void
