@@ -51,6 +51,9 @@ struct _GwyVectorLayer {
     gulong item_changed_id;
     gulong selection_changed_id;
 
+    gint button;
+    gint selecting;
+
     gpointer reserved1;
     gpointer reserved2;
 };

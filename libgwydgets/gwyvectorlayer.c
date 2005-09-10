@@ -90,8 +90,9 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 }
 
 static void
-gwy_vector_layer_init(G_GNUC_UNUSED GwyVectorLayer *layer)
+gwy_vector_layer_init(GwyVectorLayer *layer)
 {
+    layer->selecting = -1;
 }
 
 static void
@@ -538,7 +539,7 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
      * parent currently ignores "updated" from vector layers because they
      * handle normal redraws themselves.  Must not execute when _we_ change
      * the selection. */
-    if (layer->in_selection)
+    if (layer->in_selection || layer->selecting < 0)
         return;
     /* FIXME */
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
@@ -560,11 +561,10 @@ gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
 
     g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
     parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    if (!GTK_WIDGET_REALIZED(parent))
+    if (layer->gc || !GTK_WIDGET_REALIZED(parent))
         return;
 
-    if (!layer->gc)
-        layer->gc = gdk_gc_new(parent->window);
+    layer->gc = gdk_gc_new(parent->window);
     gdk_gc_set_function(layer->gc, GDK_XOR);
 
     color.red = color.green = color.blue = 0xffff;
