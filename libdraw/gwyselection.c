@@ -333,7 +333,7 @@ gwy_selection_clear_default(GwySelection *selection)
     if (!selection->objects->len)
         return;
 
-    g_array_set_size(selection->objects, 0);
+    selection->n = 0;
     g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
 }
 
@@ -378,8 +378,11 @@ gwy_selection_set_object_default(GwySelection *selection,
            object_size*sizeof(gdouble));
 
     g_signal_emit(selection, selection_signals[CHANGED], 0, i);
+    /* XXX: Don't do that, we would get "finished" every time last object
+     * has changed.
     if (i == max_len-1)
         g_signal_emit(selection, selection_signals[FINISHED], 0);
+        */
 }
 
 static void

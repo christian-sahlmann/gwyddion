@@ -131,6 +131,7 @@ use(GwyDataWindow *data_window,
         controls = (ToolControls*)state->user_data;
         if (controls->finished_id) {
             selection = gwy_vector_layer_get_selection(state->layer);
+            g_assert(GWY_IS_SELECTION(selection));
             g_signal_handler_disconnect(selection, controls->finished_id);
             controls->finished_id = 0;
         }
@@ -146,15 +147,14 @@ layer_setup(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    selection = gwy_vector_layer_get_selection(state->layer);
-    controls->finished_id
-        = g_signal_connect_swapped(selection, "finished",
-                                   G_CALLBACK(selection_finished_cb), state);
-
     g_object_set(state->layer,
                  "selection-key", "/0/select/rectangle",
                  "is-crop", FALSE,
                  NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    controls->finished_id
+        = g_signal_connect_swapped(selection, "finished",
+                                   G_CALLBACK(selection_finished_cb), state);
 }
 
 static GtkWidget*

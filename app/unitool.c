@@ -106,9 +106,9 @@ gwy_unitool_use(GwyUnitoolState *state,
     else {
         state->layer = GWY_VECTOR_LAYER(g_object_new(slot->layer_type, NULL));
         g_return_val_if_fail(state->layer, FALSE);
+        gwy_data_view_set_top_layer(data_view, state->layer);
         if (slot->layer_setup)
             slot->layer_setup(state);
-        gwy_data_view_set_top_layer(data_view, state->layer);
     }
 
     /* create dialog */
