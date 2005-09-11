@@ -20,12 +20,9 @@
 
 #include "config.h"
 #include <string.h>
-#include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/datafield.h>
-#include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule.h>
@@ -48,8 +45,7 @@ enum {
 
 enum {
     PROP_0,
-    PROP_IS_CROP,
-    PROP_LAST
+    PROP_IS_CROP
 };
 
 typedef struct _GwyLayerRectangle          GwyLayerRectangle;
@@ -395,6 +391,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     GwyLayerRectangle *layer_rectangle;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gboolean outside;
 
     layer_rectangle = GWY_LAYER_RECTANGLE(layer);
     if (!layer->button)
@@ -409,6 +406,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     x = event->x;
     y = event->y;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     xy[2] = xreal;
     xy[3] = yreal;
@@ -430,7 +428,8 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
 
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer_rectangle);
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
-    gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
+    outside = outside || (i == -1);
+    gdk_window_set_cursor(window, outside ? NULL : klass->corner_cursor[i]);
 
     return FALSE;
 }
@@ -474,10 +473,8 @@ gwy_layer_rectangle_plugged(GwyDataViewLayer *layer)
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
 
-    /* XXX: why this was here? layer_rectangle->selected = FALSE; */
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->plugged(layer);
-    /* XXX gwy_layer_rectangle_restore(layer_rectangle); */
-    gwy_data_view_layer_updated(layer);
+    /* gwy_data_view_layer_updated(layer); */
 }
 
 static void

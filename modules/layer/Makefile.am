@@ -3,6 +3,7 @@
 layerdir = $(pkglibdir)/modules/layer
 
 layer_LTLIBRARIES = \
+	axis.la \
 	rectangle.la
 
 
@@ -37,9 +38,9 @@ module_libadd = \
 endif
 
 
-#axes_la_SOURCES = axes.c
-#axes_la_LIBADD = $(module_libadd)
-#
+axis_la_SOURCES = axis.c
+axis_la_LIBADD = $(module_libadd)
+
 #lines_la_SOURCES = lines.c
 #lines_la_LIBADD = $(module_libadd)
 
