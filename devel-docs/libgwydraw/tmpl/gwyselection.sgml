@@ -1,0 +1,121 @@
+<!-- ##### SECTION Title ##### -->
+GwySelection
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION gwy_selection_get_object_size ##### -->
+<para>
+
+</para>
+
+@selection: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_selection_clear ##### -->
+<para>
+
+</para>
+
+@selection: 
+
+
+<!-- ##### FUNCTION gwy_selection_get_object ##### -->
+<para>
+
+</para>
+
+@selection: 
+@i: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_selection_set_object ##### -->
+<para>
+
+</para>
+
+@selection: 
+@i: 
+@data: 
+
+
+<!-- ##### FUNCTION gwy_selection_delete_object ##### -->
+<para>
+
+</para>
+
+@selection: 
+@i: 
+
+
+<!-- ##### FUNCTION gwy_selection_get_data ##### -->
+<para>
+
+</para>
+
+@selection: 
+@data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_selection_set_data ##### -->
+<para>
+
+</para>
+
+@selection: 
+@nselected: 
+@data: 
+
+
+<!-- ##### FUNCTION gwy_selection_get_max_objects ##### -->
+<para>
+
+</para>
+
+@selection: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_selection_set_max_objects ##### -->
+<para>
+
+</para>
+
+@selection: 
+@max_objects: 
+
+
+<!-- ##### FUNCTION gwy_selection_changed ##### -->
+<para>
+
+</para>
+
+@selection: 
+@i: 
+
+
+<!-- ##### FUNCTION gwy_selection_finished ##### -->
+<para>
+
+</para>
+
+@selection: 
+
+
