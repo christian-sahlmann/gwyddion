@@ -239,11 +239,13 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     ToolControls *controls;
     gint isel[4];
 
     gwy_debug(" ");
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    selection = gwy_vector_layer_get_selection(state->layer);
 
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_container_remove_by_name(data, "/0/show");
@@ -259,7 +261,7 @@ apply(GwyUnitoolState *state)
     gwy_data_field_fit_lines(dfield, isel[0], isel[1], isel[2], isel[3],
                              controls->fit, controls->exc, controls->dir);
 
-    gwy_vector_layer_unselect(state->layer);
+    gwy_selection_clear(selection);
     gwy_data_field_data_changed(dfield);
 }
 
@@ -269,6 +271,7 @@ dialog_update(GwyUnitoolState *state,
 {
     ToolControls *controls;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     gboolean is_visible, is_selected;
 
     gwy_debug("");
@@ -276,7 +279,8 @@ dialog_update(GwyUnitoolState *state,
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    is_selected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !is_selected)
         return;
 

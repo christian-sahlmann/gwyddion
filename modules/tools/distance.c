@@ -211,8 +211,8 @@ dialog_create(GwyUnitoolState *state)
 static void
 update_labels(GwyUnitoolState *state)
 {
-
     ToolControls *controls;
+    GwySelection *selection;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
@@ -225,10 +225,11 @@ update_labels(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    selection = gwy_vector_layer_get_selection(state->layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_visible = state->is_visible;
-    nselected = gwy_vector_layer_get_selection(state->layer, lines);
+    nselected = gwy_selection_get_data(selection, lines);
     if (!is_visible && !nselected)
         return;
 
@@ -281,10 +282,7 @@ dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     ToolControls *controls;
-    GwyContainer *data;
-    GwyDataField *dfield;
-    GwyDataViewLayer *layer;
-    gdouble lines[4*NLINES];
+    GwySelection *selection;
     gboolean is_visible;
     gint nselected;
 
@@ -292,13 +290,10 @@ dialog_update(GwyUnitoolState *state,
 
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
-    nselected = gwy_vector_layer_get_selection(state->layer, lines);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    nselected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !nselected)
         return;
-
-    layer = GWY_DATA_VIEW_LAYER(state->layer);
-    data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     update_labels(state);
 }

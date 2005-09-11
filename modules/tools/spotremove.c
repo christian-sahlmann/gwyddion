@@ -292,6 +292,7 @@ dialog_update(GwyUnitoolState *state,
 {
     gboolean is_visible, is_selected, is_ok;
     ToolControls *controls;
+    GwySelection *selection;
     GwyContainer *data;
     GwyDataField *dfield;
     GwyContainer *mydata;
@@ -304,6 +305,7 @@ dialog_update(GwyUnitoolState *state,
     controls = (ToolControls*)state->user_data;
 
     data = gwy_data_window_get_data(state->data_window);
+    selection = gwy_vector_layer_get_selection(state->layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     mydata = gwy_data_view_get_data(GWY_DATA_VIEW(controls->view));
     mydfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(mydata,
@@ -327,7 +329,7 @@ dialog_update(GwyUnitoolState *state,
     }
 
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
+    is_selected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !is_selected)
         return;
 

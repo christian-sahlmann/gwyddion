@@ -193,6 +193,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     GString *str;
     gdouble value, xy[2];
     gboolean is_visible, is_selected;
@@ -203,12 +204,13 @@ dialog_update(GwyUnitoolState *state,
     controls = (ToolControls*)state->user_data;
 
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    selection = gwy_vector_layer_get_selection(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
+    is_selected = gwy_selection_get_object(selection, 0, xy);
     if (!is_visible && !is_selected)
         return;
 

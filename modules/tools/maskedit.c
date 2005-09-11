@@ -126,10 +126,12 @@ use(GwyDataWindow *data_window,
     }
     else {
         ToolControls *controls;
+        GwySelection *selection;
 
         controls = (ToolControls*)state->user_data;
         if (controls->finished_id) {
-            g_signal_handler_disconnect(state->layer, controls->finished_id);
+            selection = gwy_vector_layer_get_selection(state->layer);
+            g_signal_handler_disconnect(selection, controls->finished_id);
             controls->finished_id = 0;
         }
     }
@@ -140,11 +142,13 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
 
     controls = (ToolControls*)state->user_data;
     g_assert(CHECK_LAYER_TYPE(state->layer));
+    selection = gwy_vector_layer_get_selection(state->layer);
     controls->finished_id
-        = g_signal_connect_swapped(state->layer, "selection-finished",
+        = g_signal_connect_swapped(selection, "finished",
                                    G_CALLBACK(selection_finished_cb), state);
 
     g_object_set(state->layer,
@@ -247,13 +251,15 @@ dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
     gboolean is_visible, is_selected;
+    GwySelection *selection;
     ToolControls *controls;
 
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    is_selected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !is_selected)
         return;
 
@@ -275,11 +281,13 @@ selection_finished_cb(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield, *mask = NULL;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     ToolControls *controls;
     gint isel[4];
 
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    selection = gwy_vector_layer_get_selection(state->layer);
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     gwy_container_gis_object_by_name(data, "/0/mask", &mask);
@@ -323,7 +331,7 @@ selection_finished_cb(GwyUnitoolState *state)
         default:
         break;
     }
-    gwy_vector_layer_unselect(GWY_VECTOR_LAYER(layer));
+    gwy_selection_clear(selection);
     gwy_data_field_data_changed(mask);
 }
 
@@ -361,10 +369,13 @@ static void
 dialog_abandon(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
 
     controls = (ToolControls*)state->user_data;
-    if (controls->finished_id)
-        g_signal_handler_disconnect(state->layer, controls->finished_id);
+    if (controls->finished_id) {
+        selection = gwy_vector_layer_get_selection(state->layer);
+        g_signal_handler_disconnect(selection, controls->finished_id);
+    }
     save_args(gwy_app_settings_get(), controls);
     memset(state->user_data, 0, sizeof(ToolControls));
 }

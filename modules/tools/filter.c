@@ -278,6 +278,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     GwyContainer *data;
+    GwySelection *selection;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     ToolControls *controls;
@@ -287,6 +288,7 @@ apply(GwyUnitoolState *state)
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     controls = (ToolControls*)state->user_data;
 
+    selection = gwy_vector_layer_get_selection(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
     gwy_app_clean_up_data(data);
@@ -299,7 +301,7 @@ apply(GwyUnitoolState *state)
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     do_apply(dfield, controls->fil, controls->siz, controls->dir, isel);
 
-    gwy_vector_layer_unselect(state->layer);
+    gwy_selection_clear(selection);
 }
 
 static void

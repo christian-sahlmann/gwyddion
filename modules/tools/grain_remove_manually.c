@@ -145,10 +145,12 @@ use(GwyDataWindow *data_window,
     }
     else {
         ToolControls *controls;
+        GwySelection *selection;
 
         controls = (ToolControls*)state->user_data;
         if (controls->finished_id) {
-            g_signal_handler_disconnect(state->layer, controls->finished_id);
+            selection = gwy_vector_layer_get_selection(state->layer);
+            g_signal_handler_disconnect(selection, controls->finished_id);
             controls->finished_id = 0;
         }
     }
@@ -159,11 +161,13 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
 
     controls = (ToolControls*)state->user_data;
     g_assert(CHECK_LAYER_TYPE(state->layer));
+    selection = gwy_vector_layer_get_selection(state->layer);
     controls->finished_id
-        = g_signal_connect_swapped(state->layer, "selection-finished",
+        = g_signal_connect_swapped(selection, "finished",
                                    G_CALLBACK(selection_finished_cb), state);
 }
 
@@ -239,10 +243,13 @@ static void
 dialog_abandon(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
 
     controls = (ToolControls*)state->user_data;
-    if (controls->finished_id)
-        g_signal_handler_disconnect(state->layer, controls->finished_id);
+    if (controls->finished_id) {
+        selection = gwy_vector_layer_get_selection(state->layer);
+        g_signal_handler_disconnect(selection, controls->finished_id);
+    }
     save_args(gwy_app_settings_get(), controls);
 
     memset(state->user_data, 0, sizeof(ToolControls));
@@ -280,6 +287,7 @@ selection_finished_cb(GwyUnitoolState *state)
 {
     GwyContainer *data;
     GwyDataField *dfield, *tmp, *mask = NULL;
+    GwySelection *selection;
     GwyDataViewLayer *layer;
     ToolControls *controls;
     gdouble xy[2];
@@ -289,6 +297,7 @@ selection_finished_cb(GwyUnitoolState *state)
     gwy_debug(" ");
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    selection = gwy_vector_layer_get_selection(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     if (!gwy_container_gis_object_by_name(data, "/0/mask", &mask)) {
         gwy_debug("No mask");
@@ -296,7 +305,7 @@ selection_finished_cb(GwyUnitoolState *state)
     }
 
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
+    is_selected = gwy_selection_get_object(selection, 0, xy);
 
     if (!is_visible && !is_selected)
         return;
@@ -342,7 +351,7 @@ selection_finished_cb(GwyUnitoolState *state)
             gwy_data_field_data_changed(mask);
         }
     }
-    gwy_vector_layer_unselect(state->layer);
+    gwy_selection_clear(selection);
 }
 
 static void

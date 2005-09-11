@@ -146,6 +146,7 @@ static void
 dialog_update(GwyUnitoolState *state,
               G_GNUC_UNUSED GwyUnitoolUpdateType reason)
 {
+    GwySelection *selection;
     gboolean is_visible, is_selected;
     ToolControls *controls;
 
@@ -153,7 +154,8 @@ dialog_update(GwyUnitoolState *state,
 
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
-    is_selected = gwy_vector_layer_get_selection(state->layer, NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    is_selected = gwy_selection_get_object(selection, 0, NULL);
     if (!is_visible && !is_selected)
         return;
 
@@ -171,6 +173,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     static const gchar *field_names[] = { "/0/data", "/0/mask", "/0/show" };
+    GwySelection *selection;
     GtkWidget *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
@@ -179,7 +182,8 @@ apply(GwyUnitoolState *state)
     gdouble sel[4];
     gsize i;
 
-    if (!gwy_vector_layer_get_selection(state->layer, sel))
+    selection = gwy_vector_layer_get_selection(state->layer);
+    if (!gwy_selection_get_object(selection, 0, sel))
         return;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(state->layer)->parent);
@@ -197,7 +201,7 @@ apply(GwyUnitoolState *state)
     }
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    gwy_vector_layer_unselect(state->layer);
+    gwy_selection_clear(selection);
     gwy_debug("%d %d",
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }

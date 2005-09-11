@@ -212,6 +212,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     GString *str;
     gdouble points[6];
     gboolean is_visible;
@@ -223,11 +224,12 @@ dialog_update(GwyUnitoolState *state,
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
+    selection = gwy_vector_layer_get_selection(state->layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     radius = (gint)gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
 
     is_visible = state->is_visible;
-    nselected = gwy_vector_layer_get_selection(state->layer, points);
+    nselected = gwy_selection_get_data(selection, points);
     if (!is_visible && !nselected)
         return;
 
@@ -286,10 +288,12 @@ apply(GwyUnitoolState *state)
     GwyDataField *dfield;
     ToolControls *controls;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     gdouble points[9], z[3], coeffs[3];
     gint i, radius;
 
-    if (gwy_vector_layer_get_selection(state->layer, points) < 3)
+    selection = gwy_vector_layer_get_selection(state->layer);
+    if (gwy_selection_get_data(selection, points) < 3)
         return;
 
     controls = (ToolControls*)state->user_data;
@@ -327,7 +331,7 @@ apply(GwyUnitoolState *state)
     gwy_app_undo_checkpoint(data, "/0/data", NULL);
     gwy_data_field_plane_level(dfield, coeffs[2], coeffs[0], coeffs[1]);
 
-    gwy_vector_layer_unselect(state->layer);
+    gwy_selection_clear(selection);
     gwy_data_field_data_changed(dfield);
 }
 

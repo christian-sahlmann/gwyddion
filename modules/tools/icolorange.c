@@ -573,7 +573,6 @@ update_graph_selection(ToolControls *controls)
 {
     GwyGraph *graph;
     gdouble graph_min, graph_max, graph_range;
-    gdouble grel_min, grel_max;
     gdouble selection[2];
 
     graph = GWY_GRAPH(controls->histogram);

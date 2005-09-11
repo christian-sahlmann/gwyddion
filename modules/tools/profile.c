@@ -324,6 +324,7 @@ update_labels(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     gdouble lines[4*NPROFILE];
     GPtrArray *positions;
     GString *str;
@@ -333,8 +334,9 @@ update_labels(GwyUnitoolState *state)
     gwy_debug("");
 
     controls = (ToolControls*)state->user_data;
-    nselected = gwy_vector_layer_get_selection(state->layer, lines);
     layer = GWY_DATA_VIEW_LAYER(state->layer);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    nselected = gwy_selection_get_data(selection, lines);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     positions = controls->positions;
@@ -364,6 +366,7 @@ dialog_update(GwyUnitoolState *state,
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
+    GwySelection *selection;
     gdouble lines[4*NPROFILE];
     gboolean is_visible;
     gint nselected, i, j, lineres;
@@ -375,7 +378,8 @@ dialog_update(GwyUnitoolState *state,
 
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
-    nselected = gwy_vector_layer_get_selection(state->layer, lines);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    nselected = gwy_selection_get_data(selection, lines);
     if (!is_visible && !nselected)
         return;
 
@@ -444,13 +448,15 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
     GwyContainer *data;
     GtkWidget *graph;
     GwyGraphModel *model;
     gint i, j, nselected;
 
     controls = (ToolControls*)state->user_data;
-    nselected = gwy_vector_layer_get_selection(state->layer, NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    nselected = gwy_selection_get_data(selection, NULL);
     if (!nselected)
         return;
 

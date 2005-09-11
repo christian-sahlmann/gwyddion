@@ -70,6 +70,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     GwyUnitoolSlots *slot;
     GwyVectorLayer *layer;
     GwyDataView *data_view;
+    GwySelection *selection;
     GwyContainer *data;
 
     gwy_debug("%p", data_window);
@@ -124,9 +125,9 @@ gwy_unitool_use(GwyUnitoolState *state,
     }
 
     /* connect handlers */
-    /* FIXME: */
+    selection = gwy_vector_layer_get_selection(state->layer);
     state->selection_updated_id
-        = g_signal_connect_swapped(state->layer->selection, "changed",
+        = g_signal_connect_swapped(selection, "changed",
                                    G_CALLBACK(gwy_unitool_selection_updated_cb),
                                    state);
     /* FIXME: */
@@ -179,12 +180,13 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
 {
     if (state->layer) {
         GwyDataViewLayer *layer = GWY_DATA_VIEW_LAYER(state->layer);
+        GwySelection *selection;
 
         /* FIXME: */
         gwy_debug("removing \"selection_updated\" handler");
+        selection = gwy_vector_layer_get_selection(state->layer);
         if (state->selection_updated_id)
-            g_signal_handler_disconnect(state->layer->selection,
-                                        state->selection_updated_id);
+            g_signal_handler_disconnect(selection, state->selection_updated_id);
         gwy_debug("removing \"data_updated\" handler");
         if (layer->parent && state->data_updated_id)
             g_signal_handler_disconnect(layer->parent, state->data_updated_id);
@@ -280,8 +282,10 @@ gwy_unitool_selection_updated_real(GwyUnitoolState *state,
                                    gboolean make_visible)
 {
     gint nselected;
+    GwySelection *selection;
 
-    nselected = gwy_vector_layer_get_selection(state->layer, NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    nselected = gwy_selection_get_data(selection, NULL);
     if (state->func_slots->dialog_update)
         state->func_slots->dialog_update(state, GWY_UNITOOL_UPDATED_SELECTION);
     if (make_visible && nselected && !state->is_visible)
@@ -330,7 +334,7 @@ gwy_unitool_dialog_response_cb(GwyUnitoolState *state,
         break;
 
         case GWY_UNITOOL_RESPONSE_UNSELECT:
-        gwy_vector_layer_unselect(state->layer);
+        gwy_selection_clear(gwy_vector_layer_get_selection(state->layer));
         break;
 
         default:
@@ -639,6 +643,7 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
                                  gdouble *xmax, gdouble *ymax)
 {
     static GType select_layer_type = 0;
+    GwySelection *selection;
     gdouble xy[4];
     gboolean is_selected;
 
@@ -650,9 +655,15 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
                                                     select_layer_type),
                          FALSE);
 
-    is_selected = gwy_vector_layer_get_selection(state->layer, xy);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    is_selected = gwy_selection_get_object(selection, 0, xy);
 
     if (is_selected) {
+        if (xy[0] > xy[2])
+            GWY_SWAP(gdouble, xy[0], xy[2]);
+        if (xy[1] > xy[3])
+            GWY_SWAP(gdouble, xy[1], xy[3]);
+
         *xmin = xy[0];
         *ymin = xy[1];
         *xmax = xy[2];

@@ -54,8 +54,6 @@ static void gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
                                                   const gchar *selection_key_string);
 static void gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
 static void gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
-static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
-static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
 static void gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
 static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer);
 
@@ -289,41 +287,19 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/* XXX: legacy interface, use selection directly */
-gint
-gwy_vector_layer_get_selection(GwyVectorLayer *layer,
-                               gdouble *selection)
+/**
+ * gwy_vector_layer_get_selection:
+ * @layer: A vector data view layer.
+ *
+ * Gets the selection objects a vector layer currently uses.
+ *
+ * Returns: A #GwySelection.
+ **/
+GwySelection*
+gwy_vector_layer_get_selection(GwyVectorLayer *layer)
 {
-    g_warning("%s", __FUNCTION__);
-    return gwy_selection_get_data(layer->selection, selection);
-}
-
-/* XXX: legacy interface, use selection directly */
-void
-gwy_vector_layer_set_selection(GwyVectorLayer *layer,
-                               gint nselected,
-                               const gdouble *selection)
-{
-    g_warning("%s", __FUNCTION__);
-    g_return_if_fail(layer->selecting < 0);
-    gwy_selection_set_data(layer->selection, nselected, selection);
-}
-
-/* XXX: legacy interface, use selection directly */;
-void
-gwy_vector_layer_unselect(GwyVectorLayer *layer)
-{
-    g_warning("%s", __FUNCTION__);
-    g_return_if_fail(layer->selecting < 0);
-    gwy_selection_clear(layer->selection);
-}
-
-/* XXX: legacy interface, use selection directly */;
-void
-gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
-{
-    g_warning("%s", __FUNCTION__);
-    gwy_selection_finished(layer->selection);
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), NULL);
+    return layer->selection;
 }
 
 static void
