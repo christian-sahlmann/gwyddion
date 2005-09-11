@@ -94,6 +94,7 @@ void     gwy_selection_set_data       (GwySelection *selection,
 guint    gwy_selection_get_max_objects(GwySelection *selection);
 void     gwy_selection_set_max_objects(GwySelection *selection,
                                        guint max_objects);
+gboolean gwy_selection_is_full        (GwySelection *selection);
 void     gwy_selection_changed        (GwySelection *selection,
                                        gint i);
 void     gwy_selection_finished       (GwySelection *selection);

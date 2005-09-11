@@ -128,6 +128,16 @@ gwy_selection_class_init(GwySelectionClass *klass)
                        g_cclosure_marshal_VOID__INT,
                        G_TYPE_NONE, 1, G_TYPE_INT);
 
+    /**
+     * GwySelection::finished:
+     * @gwyselection: The #GwySelection which received the signal.
+     *
+     * The ::changed signal is emitted when selection is finished.
+     *
+     * What exactly finished means is defined by corresponding
+     * #GwyVectorLayer, but normally it involves user stopped changing
+     * a selection object. Selections never emit this signal itself.
+     **/
     selection_signals[FINISHED]
         = g_signal_new("finished",
                        G_OBJECT_CLASS_TYPE(gobject_class),
@@ -373,6 +383,25 @@ gwy_selection_set_max_objects(GwySelection *selection,
 }
 
 /**
+ * gwy_selection_is_full:
+ * @selection: A selection.
+ *
+ * Checks whether the maximum number of objects is selected.
+ *
+ * Returns: %TRUE when the maximum possible number of objects is selected,
+ *          %FALSE otherwise.
+ **/
+gboolean
+gwy_selection_is_full(GwySelection *selection)
+{
+    guint object_size;
+
+    g_return_val_if_fail(GWY_IS_SELECTION(selection), FALSE);
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    return selection->n == selection->objects->len/object_size;
+}
+
+/**
  * gwy_selection_changed:
  * @selection: A selection.
  * @i: Index of object that changed.  Use -1 when not applicable, e.g., when
@@ -452,11 +481,6 @@ gwy_selection_set_object_default(GwySelection *selection,
            object_size*sizeof(gdouble));
 
     g_signal_emit(selection, selection_signals[CHANGED], 0, i);
-    /* XXX: Don't do that, we would get "finished" every time last object
-     * has changed.
-    if (i == max_len-1)
-        g_signal_emit(selection, selection_signals[FINISHED], 0);
-        */
 }
 
 static void
@@ -507,8 +531,6 @@ gwy_selection_set_data_default(GwySelection *selection,
     }
     selection->n = nselected;
     g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
-    if (nselected == max_len)
-        g_signal_emit(selection, selection_signals[FINISHED], 0);
 }
 
 static void
@@ -528,7 +550,6 @@ gwy_selection_set_max_objects_default(GwySelection *selection,
         selection->n = max_objects;
         g_object_notify(G_OBJECT(selection), "max-objects");
         g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
-        g_signal_emit(selection, selection_signals[FINISHED], 0);
     }
     else
         g_object_notify(G_OBJECT(selection), "max-objects");
@@ -648,8 +669,6 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
     g_array_set_size(clone->objects, selection->objects->len);
 
     g_signal_emit(clone, selection_signals[CHANGED], 0, -1);
-    if (clone->objects->len == clone->n*object_size)
-        g_signal_emit(clone, selection_signals[FINISHED], 0);
 }
 
 /************************** Documentation ****************************/
