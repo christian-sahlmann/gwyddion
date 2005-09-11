@@ -55,7 +55,7 @@ struct _GwySelectionClass {
     gboolean(*get_object)(GwySelection *selection,
                           gint i,
                           gdouble *data);
-    void (*set_object)(GwySelection *selection,
+    gint (*set_object)(GwySelection *selection,
                        gint i,
                        const gdouble *data);
     void (*delete_object)(GwySelection *selection,
@@ -81,7 +81,7 @@ void     gwy_selection_clear          (GwySelection *selection);
 gboolean gwy_selection_get_object     (GwySelection *selection,
                                        gint i,
                                        gdouble *data);
-void     gwy_selection_set_object     (GwySelection *selection,
+gint     gwy_selection_set_object     (GwySelection *selection,
                                        gint i,
                                        const gdouble *data);
 void     gwy_selection_delete_object  (GwySelection *selection,

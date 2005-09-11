@@ -50,7 +50,7 @@ static void      gwy_selection_clear_default      (GwySelection *selection);
 static gboolean  gwy_selection_get_object_default (GwySelection *selection,
                                                    gint i,
                                                    gdouble *data);
-static void      gwy_selection_set_object_default (GwySelection *selection,
+static gint      gwy_selection_set_object_default (GwySelection *selection,
                                                    gint i,
                                                    const gdouble *data);
 static void    gwy_selection_delete_object_default(GwySelection *selection,
@@ -277,14 +277,16 @@ gwy_selection_get_object(GwySelection *selection,
  *
  * Since there cannot be holes in the object list, @i must be equal to either
  * the number of selected objects or special value -1 meaning append to end.
+ *
+ * Returns: The index of actually set object (useful namely when @i is -1).
  **/
-void
+gint
 gwy_selection_set_object(GwySelection *selection,
                          gint i,
                          const gdouble *data)
 {
-    g_return_if_fail(GWY_IS_SELECTION(selection));
-    GWY_SELECTION_GET_CLASS(selection)->set_object(selection, i, data);
+    g_return_val_if_fail(GWY_IS_SELECTION(selection), -1);
+    return GWY_SELECTION_GET_CLASS(selection)->set_object(selection, i, data);
 }
 
 /**
@@ -458,7 +460,7 @@ gwy_selection_get_object_default(GwySelection *selection,
     return TRUE;
 }
 
-static void
+static gint
 gwy_selection_set_object_default(GwySelection *selection,
                                  gint i,
                                  const gdouble *data)
@@ -469,7 +471,7 @@ gwy_selection_set_object_default(GwySelection *selection,
         i = selection->n;
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     max_len = selection->objects->len/object_size;
-    g_return_if_fail(i < max_len);
+    g_return_val_if_fail(i < max_len, -1);
     if (i > selection->n) {
         g_warning("Disontinuous selections are not supported.  "
                   "Moving object to first feasible position.");
@@ -481,6 +483,7 @@ gwy_selection_set_object_default(GwySelection *selection,
            object_size*sizeof(gdouble));
 
     g_signal_emit(selection, selection_signals[CHANGED], 0, i);
+    return i;
 }
 
 static void
