@@ -11,6 +11,9 @@ layer_LTLIBRARIES = \
 	select.la
 
 
+noinst_HEADERS = \
+	layer.h
+
 EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt
