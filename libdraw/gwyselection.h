@@ -66,7 +66,7 @@ struct _GwySelectionClass {
                      gint nselected,
                      const gdouble *data);
     void (*set_max_objects)(GwySelection *selection,
-                            gint max_objects);
+                            guint max_objects);
     /* TODO: maybe geometrical methods: clamp, move, scale */
 
     /* Signals */
@@ -76,7 +76,7 @@ struct _GwySelectionClass {
 };
 
 GType    gwy_selection_get_type       (void) G_GNUC_CONST;
-gint     gwy_selection_get_object_size(GwySelection *selection);
+guint    gwy_selection_get_object_size(GwySelection *selection);
 void     gwy_selection_clear          (GwySelection *selection);
 gboolean gwy_selection_get_object     (GwySelection *selection,
                                        gint i,
@@ -91,9 +91,9 @@ gint     gwy_selection_get_data       (GwySelection *selection,
 void     gwy_selection_set_data       (GwySelection *selection,
                                        gint nselected,
                                        const gdouble *data);
-gint     gwy_selection_get_max_objects(GwySelection *selection);
+guint    gwy_selection_get_max_objects(GwySelection *selection);
 void     gwy_selection_set_max_objects(GwySelection *selection,
-                                       gint max_objects);
+                                       guint max_objects);
 void     gwy_selection_changed        (GwySelection *selection,
                                        gint i);
 void     gwy_selection_finished       (GwySelection *selection);

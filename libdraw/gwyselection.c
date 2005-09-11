@@ -25,12 +25,26 @@
 #include <libdraw/gwyselection.h>
 
 enum {
+    PROP_0,
+    PROP_OBJECT_SIZE,
+    PROP_MAX_OBJECTS
+};
+
+enum {
     CHANGED,
     FINISHED,
     LAST_SIGNAL
 };
 
 static void      gwy_selection_finalize           (GObject *object);
+static void      gwy_selection_set_property       (GObject *object,
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec);
+static void      gwy_selection_get_property       (GObject*object,
+                                                   guint prop_id,
+                                                   GValue *value,
+                                                   GParamSpec *pspec);
 static void      gwy_selection_serializable_init  (GwySerializableIface *iface);
 static void      gwy_selection_clear_default      (GwySelection *selection);
 static gboolean  gwy_selection_get_object_default (GwySelection *selection,
@@ -47,7 +61,7 @@ static void      gwy_selection_set_data_default   (GwySelection *selection,
                                                    gint nselected,
                                                    const gdouble *data);
 static void  gwy_selection_set_max_objects_default(GwySelection *selection,
-                                                   gint max_objects);
+                                                   guint max_objects);
 static GByteArray* gwy_selection_serialize_default(GObject *obj,
                                                    GByteArray *buffer);
 static GObject*  gwy_selection_deserialize_default(const guchar *buffer,
@@ -69,6 +83,8 @@ gwy_selection_class_init(GwySelectionClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_selection_finalize;
+    gobject_class->get_property = gwy_selection_get_property;
+    gobject_class->set_property = gwy_selection_set_property;
 
     klass->clear = gwy_selection_clear_default;
     klass->get_object = gwy_selection_get_object_default;
@@ -77,6 +93,22 @@ gwy_selection_class_init(GwySelectionClass *klass)
     klass->get_data = gwy_selection_get_data_default;
     klass->set_data = gwy_selection_set_data_default;
     klass->set_max_objects = gwy_selection_set_max_objects_default;
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_OBJECT_SIZE,
+         g_param_spec_uint("object-size",
+                           "Object size",
+                           "Number of coordinates in one selection object",
+                           0, 1024, 0, G_PARAM_READABLE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_MAX_OBJECTS,
+         g_param_spec_uint("max-objects",
+                           "Max. objects",
+                           "Maximum number of objects that can be selected",
+                           0, 1024, 1, G_PARAM_READWRITE));
 
     /**
      * GwySelection::changed:
@@ -130,6 +162,48 @@ gwy_selection_finalize(GObject *object)
     G_OBJECT_CLASS(gwy_selection_parent_class)->finalize(object);
 }
 
+static void
+gwy_selection_set_property(GObject *object,
+                           guint prop_id,
+                           const GValue *value,
+                           GParamSpec *pspec)
+{
+    GwySelection *selection = GWY_SELECTION(object);
+
+    switch (prop_id) {
+        case PROP_MAX_OBJECTS:
+        gwy_selection_set_max_objects(selection, g_value_get_uint(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_selection_get_property(GObject *object,
+                           guint prop_id,
+                           GValue *value,
+                           GParamSpec *pspec)
+{
+    GwySelection *selection = GWY_SELECTION(object);
+
+    switch (prop_id) {
+        case PROP_MAX_OBJECTS:
+        g_value_set_uint(value, gwy_selection_get_max_objects(selection));
+        break;
+
+        case PROP_OBJECT_SIZE:
+        g_value_set_uint(value, gwy_selection_get_object_size(selection));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
 /**
  * gwy_selection_get_object_size:
  * @selection: A selection.
@@ -138,7 +212,7 @@ gwy_selection_finalize(GObject *object)
  *
  * Returns: The number of coordinates in one selection object.
  **/
-gint
+guint
 gwy_selection_get_object_size(GwySelection *selection)
 {
     g_return_val_if_fail(GWY_IS_SELECTION(selection), 0);
@@ -269,7 +343,7 @@ gwy_selection_set_data(GwySelection *selection,
  *
  * Returns: The maximum number of selected objects;
  **/
-gint
+guint
 gwy_selection_get_max_objects(GwySelection *selection)
 {
     guint object_size;
@@ -292,7 +366,7 @@ gwy_selection_get_max_objects(GwySelection *selection)
  **/
 void
 gwy_selection_set_max_objects(GwySelection *selection,
-                              gint max_objects)
+                              guint max_objects)
 {
     g_return_if_fail(GWY_IS_SELECTION(selection));
     GWY_SELECTION_GET_CLASS(selection)->set_max_objects(selection, max_objects);
@@ -439,7 +513,7 @@ gwy_selection_set_data_default(GwySelection *selection,
 
 static void
 gwy_selection_set_max_objects_default(GwySelection *selection,
-                                      gint max_objects)
+                                      guint max_objects)
 {
     guint object_size;
 
@@ -452,9 +526,12 @@ gwy_selection_set_max_objects_default(GwySelection *selection,
 
     if (max_objects < selection->n) {
         selection->n = max_objects;
+        g_object_notify(G_OBJECT(selection), "max-objects");
         g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
         g_signal_emit(selection, selection_signals[FINISHED], 0);
     }
+    else
+        g_object_notify(G_OBJECT(selection), "max-objects");
 }
 
 static GByteArray*
