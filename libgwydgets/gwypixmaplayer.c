@@ -320,6 +320,7 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
     layer = GWY_DATA_VIEW_LAYER(pixmap_layer);
     if (!layer->data) {
         pixmap_layer->data_key = quark;
+        g_object_notify(G_OBJECT(pixmap_layer), "data-key");
         return;
     }
 
@@ -332,6 +333,7 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
     gwy_pixmap_layer_container_connect(pixmap_layer, key);
 
     pixmap_layer->wants_repaint = TRUE;
+    g_object_notify(G_OBJECT(pixmap_layer), "data-key");
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
