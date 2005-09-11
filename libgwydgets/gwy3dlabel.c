@@ -383,7 +383,7 @@ gwy_3d_label_set_property(GObject *object,
 }
 
 static void
-gwy_3d_label_get_property(GObject*object,
+gwy_3d_label_get_property(GObject *object,
                           guint prop_id,
                           GValue *value,
                           GParamSpec *pspec)
