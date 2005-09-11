@@ -844,7 +844,9 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
                             GwyVectorLayer *layer)
 {
     g_return_if_fail(!layer || GWY_IS_VECTOR_LAYER(layer));
-    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL,
+    gwy_data_view_set_layer(data_view,
+                            &data_view->top_layer,
+                            &data_view->top_hid,
                             GWY_DATA_VIEW_LAYER(layer));
 }
 

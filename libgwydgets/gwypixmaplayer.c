@@ -54,7 +54,8 @@ static void gwy_pixmap_layer_container_connect  (GwyPixmapLayer *pixmap_layer,
 static void gwy_pixmap_layer_data_field_connect (GwyPixmapLayer *pixmap_layer);
 static void gwy_pixmap_layer_data_field_disconnect(GwyPixmapLayer *pixmap_layer);
 
-G_DEFINE_ABSTRACT_TYPE(GwyPixmapLayer, gwy_pixmap_layer, GWY_TYPE_DATA_VIEW_LAYER)
+G_DEFINE_ABSTRACT_TYPE(GwyPixmapLayer, gwy_pixmap_layer,
+                       GWY_TYPE_DATA_VIEW_LAYER)
 
 static void
 gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)

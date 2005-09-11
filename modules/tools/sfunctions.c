@@ -150,7 +150,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerSelect";
+    static const gchar *layer_name = "GwyLayerRectangle";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -171,7 +171,10 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "is-crop", FALSE, NULL);
+    g_object_set(state->layer,
+                 "selection-key", "/0/select/rectangle",
+                 "is-crop", FALSE,
+                 NULL);
 }
 
 static GtkWidget*

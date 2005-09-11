@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <glib-object.h>
@@ -37,10 +37,14 @@
 #define GWY_IS_LAYER_RECTANGLE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_LAYER_RECTANGLE))
 #define GWY_LAYER_RECTANGLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_LAYER_RECTANGLE, GwyLayerRectangleClass))
 
-#define GWY_TYPE_SELECTION_RECTANGLE            (gwy_layer_rectangle_get_type())
+#define GWY_TYPE_SELECTION_RECTANGLE            (gwy_selection_rectangle_get_type())
 #define GWY_SELECTION_RECTANGLE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_RECTANGLE, GwySelectionRectangle))
 #define GWY_IS_SELECTION_RECTANGLE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_RECTANGLE))
 #define GWY_SELECTION_RECTANGLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_RECTANGLE, GwySelectionRectangleClass))
+
+enum {
+    OBJECT_SIZE = 4
+};
 
 enum {
     PROP_0,
@@ -172,7 +176,7 @@ gwy_selection_rectangle_class_init(GwySelectionRectangleClass *klass)
 {
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
-    sel_class->object_size = 4;
+    sel_class->object_size = OBJECT_SIZE;
 }
 
 static void
@@ -181,8 +185,9 @@ gwy_layer_rectangle_init(G_GNUC_UNUSED GwyLayerRectangle *layer)
 }
 
 static void
-gwy_selection_rectangle_init(G_GNUC_UNUSED GwySelectionRectangle *selection)
+gwy_selection_rectangle_init(GwySelectionRectangle *selection)
 {
+    g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
 static void
@@ -230,7 +235,7 @@ gwy_layer_rectangle_draw(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GwyLayerRectangle *layer_rectangle;
     gint xmin, ymin, xmax, ymax;
-    gdouble xy[4];
+    gdouble xy[OBJECT_SIZE];
 
     g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -275,7 +280,7 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     GwyLayerRectangle *layer_rectangle;
     GdkWindow *window;
     gint x, y, i;
-    gdouble xreal, yreal, xy[4];
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
@@ -321,7 +326,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
     GwyLayerRectangleClass *klass;
     GwyLayerRectangle *layer_rectangle;
     gint x, y;
-    gdouble xreal, yreal, xy[4];
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean keep_old = FALSE;
 
     gwy_debug("");
@@ -344,7 +349,6 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
     /* handle a previous selection:
      * when we are near a corner, resize the existing one
      * otherwise forget it and start from scratch */
-    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer_rectangle);
     if (gwy_selection_get_data(layer->selection, NULL)) {
         gint i;
 
@@ -372,6 +376,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
         xy[1] = yreal;
     }
     gwy_layer_rectangle_draw(layer, window);
+    klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer_rectangle);
     gdk_window_set_cursor(window, klass->resize_cursor);
 
     layer->selecting = 0;    /* TODO */
@@ -389,7 +394,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     GwyLayerRectangleClass *klass;
     GwyLayerRectangle *layer_rectangle;
     gint x, y, i;
-    gdouble xreal, yreal, xy[4];
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
 
     layer_rectangle = GWY_LAYER_RECTANGLE(layer);
     if (!layer->button)
@@ -408,7 +413,8 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     xy[2] = xreal;
     xy[3] = yreal;
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
-    if (x != event->x || y != event->y)
+    gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, x, y);
+    if (x == event->x || y == event->y)
         gwy_selection_delete_object(layer->selection, 0);
     else {
         if (xy[2] < xy[0])
@@ -495,7 +501,7 @@ gwy_layer_rectangle_near_point(GwyVectorLayer *layer,
                                gdouble xreal, gdouble yreal)
 {
     GwyDataView *view;
-    gdouble coords[8], xy[4], d2min;
+    gdouble coords[8], xy[OBJECT_SIZE], d2min;
     gint i;
 
     if (!gwy_selection_get_object(layer->selection, 0, xy))

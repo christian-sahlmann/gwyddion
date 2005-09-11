@@ -59,7 +59,7 @@ typedef struct {
     gboolean apply_doesnt_close;
 
     /*< private >*/
-    gulong layer_updated_id;
+    gulong selection_updated_id;
     gulong data_updated_id;
     gulong response_id;
     gulong windowname_id;

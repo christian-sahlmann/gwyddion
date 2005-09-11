@@ -94,7 +94,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
                        G_STRUCT_OFFSET(GwySelectionClass, changed),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__INT,
-                       G_TYPE_NONE, 0);
+                       G_TYPE_NONE, 1, G_TYPE_INT);
 
     selection_signals[FINISHED]
         = g_signal_new("finished",
@@ -157,7 +157,6 @@ gwy_selection_clear(GwySelection *selection)
     g_return_if_fail(GWY_IS_SELECTION(selection));
     GWY_SELECTION_GET_CLASS(selection)->clear(selection);
 }
-
 
 /**
  * gwy_selection_get_object:
@@ -374,6 +373,7 @@ gwy_selection_set_object_default(GwySelection *selection,
         i = MIN(selection->n, max_len-1);
     }
 
+    selection->n = MAX(selection->n, i+1);
     memcpy(selection->objects->data + i*object_size, data,
            object_size*sizeof(gdouble));
 
@@ -386,11 +386,14 @@ static void
 gwy_selection_delete_object_default(GwySelection *selection,
                                     gint i)
 {
-    guint object_size;
+    guint object_size, len;
 
     g_return_if_fail(i >= 0 && i < selection->n);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    len = selection->objects->len;
     g_array_remove_range(selection->objects, i, object_size);
+    g_array_set_size(selection->objects, len);
+    selection->n--;
 
     g_signal_emit(selection, selection_signals[CHANGED], 0, -1);
 }

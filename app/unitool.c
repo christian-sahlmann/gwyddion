@@ -70,6 +70,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     GwyUnitoolSlots *slot;
     GwyVectorLayer *layer;
     GwyDataView *data_view;
+    GwyContainer *data;
 
     gwy_debug("%p", data_window);
     g_return_val_if_fail(state, FALSE);
@@ -81,6 +82,7 @@ gwy_unitool_use(GwyUnitoolState *state,
     }
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), FALSE);
     data_view = GWY_DATA_VIEW(gwy_data_window_get_data_view(data_window));
+    data = gwy_data_view_get_data(data_view);
     layer = gwy_data_view_get_top_layer(data_view);
     if (layer && layer == state->layer) {
         g_assert(state->data_window == data_window);
@@ -122,8 +124,9 @@ gwy_unitool_use(GwyUnitoolState *state,
     }
 
     /* connect handlers */
-    state->layer_updated_id
-        = g_signal_connect_swapped(state->layer, "updated",
+    /* FIXME: */
+    state->selection_updated_id
+        = g_signal_connect_swapped(state->layer->selection, "changed",
                                    G_CALLBACK(gwy_unitool_selection_updated_cb),
                                    state);
     /* FIXME: */
@@ -177,9 +180,11 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
     if (state->layer) {
         GwyDataViewLayer *layer = GWY_DATA_VIEW_LAYER(state->layer);
 
-        gwy_debug("removing \"layer_updated\" handler");
-        if (state->layer_updated_id)
-            g_signal_handler_disconnect(state->layer, state->layer_updated_id);
+        /* FIXME: */
+        gwy_debug("removing \"selection_updated\" handler");
+        if (state->selection_updated_id)
+            g_signal_handler_disconnect(state->layer->selection,
+                                        state->selection_updated_id);
         gwy_debug("removing \"data_updated\" handler");
         if (layer->parent && state->data_updated_id)
             g_signal_handler_disconnect(layer->parent, state->data_updated_id);
@@ -199,7 +204,7 @@ gwy_unitool_disconnect_handlers(GwyUnitoolState *state)
         g_signal_handler_disconnect(data_view, state->thumbnail_id);
     }
 
-    state->layer_updated_id = 0;
+    state->selection_updated_id = 0;
     state->data_updated_id = 0;
     state->response_id = 0;
     state->windowname_id = 0;
@@ -638,7 +643,7 @@ gwy_unitool_get_selection_or_all(GwyUnitoolState *state,
     gboolean is_selected;
 
     if (!select_layer_type) {
-        select_layer_type = g_type_from_name("GwyLayerSelect");
+        select_layer_type = g_type_from_name("GwyLayerRectangle");
         g_return_val_if_fail(select_layer_type, FALSE);
     }
     g_return_val_if_fail(G_TYPE_CHECK_INSTANCE_TYPE((state->layer),

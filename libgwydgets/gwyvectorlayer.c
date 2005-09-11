@@ -27,20 +27,26 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwyvectorlayer.h>
 
-#define GWY_SCROLL_DELAY_LENGTH  300
-
 #define connect_swapped_after(obj, signal, cb, data) \
     g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
                             G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
-    SELECTION_FINISHED,
-    LAST_SIGNAL
+    PROP_0,
+    PROP_SELECTION_KEY
 };
 
 /* Forward declarations */
 
-static void gwy_vector_layer_finalize            (GObject *object);
+static void gwy_vector_layer_destroy             (GtkObject *object);
+static void gwy_vector_layer_set_property        (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void gwy_vector_layer_get_property        (GObject *object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
 static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
 static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
 static void gwy_vector_layer_update_context      (GwyVectorLayer *layer);
@@ -53,11 +59,8 @@ static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
 static void gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
 static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer);
 
-/* Local data */
-
-static guint vector_layer_signals[LAST_SIGNAL] = { 0 };
-
-G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer, GWY_TYPE_DATA_VIEW_LAYER)
+G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer,
+                       GWY_TYPE_DATA_VIEW_LAYER)
 
 static void
 gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
@@ -66,27 +69,27 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
-    gobject_class->finalize = gwy_vector_layer_finalize;
+    gobject_class->set_property = gwy_vector_layer_set_property;
+    gobject_class->get_property = gwy_vector_layer_get_property;
+
+    object_class->destroy = gwy_vector_layer_destroy;
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
 
     /**
-     * GwyVectorLayer::selection-finished:
-     * @gwyvectorlayer: The #GwyVectorLayer which received the signal.
+     * GwyVectorLayer:selection-key:
      *
-     * The ::selection-finished signal is emitted when user finishes a selection
-     * (stops dragging, selects enough points, etc., the pecise meaning depends
-     * on how particular subclasses define it).
+     * The :selection-key property is the container key used to identify
+     * displayed #GwySelection in container.
      */
-    vector_layer_signals[SELECTION_FINISHED] =
-        g_signal_new("selection-finished",
-                     G_OBJECT_CLASS_TYPE(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(GwyVectorLayerClass, selection_finished),
-                     NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE, 0);
+    g_object_class_install_property
+        (gobject_class,
+         PROP_SELECTION_KEY,
+         g_param_spec_string("selection-key",
+                             "Selection key",
+                             "Key identifying selection object in container",
+                             NULL, G_PARAM_READWRITE));
 }
 
 static void
@@ -96,18 +99,55 @@ gwy_vector_layer_init(GwyVectorLayer *layer)
 }
 
 static void
-gwy_vector_layer_finalize(GObject *object)
+gwy_vector_layer_destroy(GtkObject *object)
 {
     GwyVectorLayer *layer;
 
-    gwy_debug(" ");
-
     layer = GWY_VECTOR_LAYER(object);
-
     gwy_object_unref(layer->gc);
     gwy_object_unref(layer->layout);
 
-    G_OBJECT_CLASS(gwy_vector_layer_parent_class)->finalize(object);
+    GTK_OBJECT_CLASS(gwy_vector_layer_parent_class)->destroy(object);
+}
+
+static void
+gwy_vector_layer_set_property(GObject *object,
+                              guint prop_id,
+                              const GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyVectorLayer *vector_layer = GWY_VECTOR_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_SELECTION_KEY:
+        gwy_vector_layer_set_selection_key(vector_layer,
+                                           g_value_get_string(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_vector_layer_get_property(GObject *object,
+                              guint prop_id,
+                              GValue *value,
+                              GParamSpec *pspec)
+{
+    GwyVectorLayer *vector_layer = GWY_VECTOR_LAYER(object);
+
+    switch (prop_id) {
+        case PROP_SELECTION_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(vector_layer->selection_key));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
 }
 
 /**
@@ -135,6 +175,9 @@ gwy_vector_layer_draw(GwyVectorLayer *layer,
  *
  * Sends a mouse button press event to a layer.
  *
+ * This method primarily exists for #GwyDataView to forward events to
+ * layers.  You should rarely need it.
+ *
  * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
  **/
 gboolean
@@ -157,6 +200,9 @@ gwy_vector_layer_button_press(GwyVectorLayer *layer,
  *
  * Sends a mouse button release event to a layer.
  *
+ * This method primarily exists for #GwyDataView to forward events to
+ * layers.  You should rarely need it.
+ *
  * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
  **/
 gboolean
@@ -174,9 +220,12 @@ gwy_vector_layer_button_release(GwyVectorLayer *layer,
 /**
  * gwy_vector_layer_motion_notify:
  * @layer: A vector data view layer.
- * @event: A Gdk mouse pointer motion notification event.
+ * @event: A Gdk mouse pointer motion notification event.  It can be a hint.
  *
  * Sends a mouse pointer motion notification event to a layer.
+ *
+ * This method primarily exists for #GwyDataView to forward events to
+ * layers.  You should rarely need it.
  *
  * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
  **/
@@ -199,6 +248,9 @@ gwy_vector_layer_motion_notify(GwyVectorLayer *layer,
  *
  * Sends a key press event to a layer.
  *
+ * This method primarily exists for #GwyDataView to forward events to
+ * layers.  You should rarely need it.
+ *
  * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
  **/
 gboolean
@@ -220,6 +272,9 @@ gwy_vector_layer_key_press(GwyVectorLayer *layer,
  *
  * Sends a key release event to a layer.
  *
+ * This method primarily exists for #GwyDataView to forward events to
+ * layers.  You should rarely need it.
+ *
  * Returns: %TRUE if the event was handled.  In practice, it returns %FALSE.
  **/
 gboolean
@@ -234,110 +289,41 @@ gwy_vector_layer_key_release(GwyVectorLayer *layer,
     return FALSE;
 }
 
-/**
- * gwy_vector_layer_get_selection:
- * @layer: A vector data view layer.
- * @selection: An array where the coordinates should be stored in, or %NULL
- *             to get only the number of selected objects. If not %NULL it
- *             must be long enough to hold all the coordinates.
- *
- * Obtains the selection.
- *
- * The selection is a sequence of coordinates whose precise interpretation
- * is layer-dependent.
- *
- * Returns: The number of selected objects. Usually this is NOT
- *          the number of coordinates in @selection (a point takes two
- *          coordinates, a line four)
- **/
+/* XXX: legacy interface, use selection directly */
 gint
 gwy_vector_layer_get_selection(GwyVectorLayer *layer,
                                gdouble *selection)
 {
-    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
-
-    g_assert(layer_class);
-    if (layer_class->get_selection)
-        return layer_class->get_selection(layer, selection);
-    return FALSE;
+    g_warning("%s", __FUNCTION__);
+    return gwy_selection_get_data(layer->selection, selection);
 }
 
-/**
- * gwy_vector_layer_set_selection:
- * @layer: A vector data view layer.
- * @nselected: The number of objects in @selection.
- * @selection: An array with the selection coordinates. The number of objects
- *             (not coordinates) there is @nselected.
- *
- * Sets the selection.
- *
- * Do not use this function while user is drawing a selection.
- *
- * See gwy_vector_layer_get_selection() for some selection format discussion.
- **/
+/* XXX: legacy interface, use selection directly */
 void
 gwy_vector_layer_set_selection(GwyVectorLayer *layer,
                                gint nselected,
-                               gdouble *selection)
+                               const gdouble *selection)
 {
-    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
-
-    g_assert(layer_class);
-    g_return_if_fail(!layer->in_selection);
-
-    if (layer_class->set_selection)
-        layer_class->set_selection(layer, nselected, selection);
-    else
-        g_warning("%s doesn't support set_selection()",
-                  g_type_name(G_TYPE_FROM_INSTANCE(layer)));
+    g_warning("%s", __FUNCTION__);
+    g_return_if_fail(layer->selecting < 0);
+    gwy_selection_set_data(layer->selection, nselected, selection);
 }
 
-/**
- * gwy_vector_layer_unselect:
- * @layer: A vector data view layer.
- *
- * Clears the selection.
- *
- * Do not use this function while user is drawing a selection.
- **/
+/* XXX: legacy interface, use selection directly */;
 void
 gwy_vector_layer_unselect(GwyVectorLayer *layer)
 {
-    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
-
-    g_assert(layer_class);
-    g_return_if_fail(!layer->in_selection);
-
-    if (layer_class->unselect) {
-        layer_class->unselect(layer);
-        gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-    }
+    g_warning("%s", __FUNCTION__);
+    g_return_if_fail(layer->selecting < 0);
+    gwy_selection_clear(layer->selection);
 }
 
-/**
- * gwy_vector_layer_selection_finished:
- * @layer: A vector data view layer.
- *
- * Emits a "selection_finished" singal on a layer.
- **/
+/* XXX: legacy interface, use selection directly */;
 void
 gwy_vector_layer_selection_finished(GwyVectorLayer *layer)
 {
-    gwy_debug(" ");
-    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
-    g_signal_emit(layer, vector_layer_signals[SELECTION_FINISHED], 0);
-}
-
-/**
- * gwy_vector_layer_updated:
- * @layer: A vector data view layer.
- *
- * Maybe emit the "updated" signal on @layer.
- **/
-void
-gwy_vector_layer_updated(GwyVectorLayer *layer)
-{
-    g_signal_emit_by_name(layer, "updated");
+    g_warning("%s", __FUNCTION__);
+    gwy_selection_finished(layer->selection);
 }
 
 static void
@@ -372,6 +358,7 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!view_layer->data) {
         layer->selection_key = quark;
+        g_object_notify(G_OBJECT(layer), "selection-key");
         return;
     }
 
@@ -384,6 +371,7 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
     gwy_vector_layer_container_connect(layer, key);
 
     /* XXX: copied from pixmap layer */
+    g_object_notify(G_OBJECT(layer), "selection-key");
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
@@ -409,7 +397,7 @@ gwy_vector_layer_container_connect(GwyVectorLayer *layer,
  * gwy_vector_layer_selection_connect:
  * @layer: A vector layer.
  *
- * Eventually connects to new data field's "data-changed" signal.
+ * Eventually connects to new selection's "changed" signal.
  **/
 static void
 gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
@@ -422,10 +410,16 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
 
     view_layer = GWY_DATA_VIEW_LAYER(layer);
     if (!gwy_container_gis_object(view_layer->data, layer->selection_key,
-                                  &layer->selection))
-        return;
+                                  &layer->selection)) {
+        GwyVectorLayerClass *klass = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
-    g_object_ref(layer->selection);
+        layer->selection = g_object_new(klass->selection_type, NULL);
+        gwy_container_set_object(view_layer->data, layer->selection_key,
+                                 layer->selection);
+    }
+    else
+        g_object_ref(layer->selection);
+
     layer->selection_changed_id
         = g_signal_connect_swapped(layer->selection,
                                    "changed",
@@ -471,6 +465,7 @@ static void
 gwy_vector_layer_plugged(GwyDataViewLayer *layer)
 {
     GwyVectorLayer *vector_layer;
+    const gchar *key;
 
     g_signal_connect_swapped(layer->parent, "style-set",
                              G_CALLBACK(gwy_vector_layer_update_context),
@@ -484,9 +479,8 @@ gwy_vector_layer_plugged(GwyDataViewLayer *layer)
     if (!vector_layer->selection_key)
         return;
 
-    gwy_vector_layer_container_connect(vector_layer,
-                                       g_quark_to_string
-                                                (vector_layer->selection_key));
+    key = g_quark_to_string(vector_layer->selection_key);
+    gwy_vector_layer_container_connect(vector_layer, key);
     gwy_vector_layer_selection_connect(vector_layer);
 }
 
@@ -539,7 +533,7 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
      * parent currently ignores "updated" from vector layers because they
      * handle normal redraws themselves.  Must not execute when _we_ change
      * the selection. */
-    if (layer->in_selection || layer->selecting < 0)
+    if (layer->selecting < 0)
         return;
     /* FIXME */
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));

@@ -43,7 +43,6 @@ struct _GwyVectorLayer {
 
     GdkGC *gc;
     PangoLayout *layout;
-    gboolean in_selection;
 
     /* For new-style layers */
     GwySelection *selection;
@@ -63,55 +62,47 @@ struct _GwyVectorLayerClass {
 
     GType selection_type;
 
-    /* renderers */
+    /* Virtual table */
     void (*draw)(GwyVectorLayer *layer, GdkDrawable *drawable);
-    /* events */
     gboolean (*button_press)(GwyVectorLayer *layer, GdkEventButton *event);
     gboolean (*button_release)(GwyVectorLayer *layer, GdkEventButton *event);
     gboolean (*motion_notify)(GwyVectorLayer *layer, GdkEventMotion *event);
     gboolean (*key_press)(GwyVectorLayer *layer, GdkEventKey *event);
     gboolean (*key_release)(GwyVectorLayer *layer, GdkEventKey *event);
-    /* signal functions */
-    void (*selection_finished)(GwyVectorLayer *layer);
-    /* selection */
-    gint (*get_selection)(GwyVectorLayer *layer, gdouble *selection);
-    void (*set_selection)(GwyVectorLayer *layer,
-                          gint nselected, gdouble *selection);
-    void (*unselect)(GwyVectorLayer *layer);
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType            gwy_vector_layer_get_type             (void) G_GNUC_CONST;
-void             gwy_vector_layer_draw                 (GwyVectorLayer *layer,
-                                                        GdkDrawable *drawable);
-gboolean         gwy_vector_layer_button_press         (GwyVectorLayer *layer,
-                                                        GdkEventButton *event);
-gboolean         gwy_vector_layer_button_release       (GwyVectorLayer *layer,
-                                                        GdkEventButton *event);
-gboolean         gwy_vector_layer_motion_notify        (GwyVectorLayer *layer,
-                                                        GdkEventMotion *event);
-gboolean         gwy_vector_layer_key_press            (GwyVectorLayer *layer,
-                                                        GdkEventKey *event);
-gboolean         gwy_vector_layer_key_release          (GwyVectorLayer *layer,
-                                                        GdkEventKey *event);
-void             gwy_vector_layer_selection_finished   (GwyVectorLayer *layer);
-gint             gwy_vector_layer_get_selection        (GwyVectorLayer *layer,
-                                                        gdouble *selection);
-void             gwy_vector_layer_set_selection        (GwyVectorLayer *layer,
-                                                        gint nselected,
-                                                        gdouble *selection);
-void             gwy_vector_layer_unselect             (GwyVectorLayer *layer);
-void             gwy_vector_layer_updated              (GwyVectorLayer *layer);
+GType            gwy_vector_layer_get_type           (void) G_GNUC_CONST;
+void             gwy_vector_layer_draw               (GwyVectorLayer *layer,
+                                                      GdkDrawable *drawable);
+gboolean         gwy_vector_layer_button_press       (GwyVectorLayer *layer,
+                                                      GdkEventButton *event);
+gboolean         gwy_vector_layer_button_release     (GwyVectorLayer *layer,
+                                                      GdkEventButton *event);
+gboolean         gwy_vector_layer_motion_notify      (GwyVectorLayer *layer,
+                                                      GdkEventMotion *event);
+gboolean         gwy_vector_layer_key_press          (GwyVectorLayer *layer,
+                                                      GdkEventKey *event);
+gboolean         gwy_vector_layer_key_release        (GwyVectorLayer *layer,
+                                                      GdkEventKey *event);
+/* XXX: Legacy*/
+void             gwy_vector_layer_selection_finished (GwyVectorLayer *layer);
+gint             gwy_vector_layer_get_selection      (GwyVectorLayer *layer,
+                                                      gdouble *selection);
+void             gwy_vector_layer_set_selection      (GwyVectorLayer *layer,
+                                                      gint nselected,
+                                                      const gdouble *selection);
+void             gwy_vector_layer_unselect           (GwyVectorLayer *layer);
 
 /* For new-style layers */
-void             gwy_vector_layer_set_selection_key    (GwyVectorLayer *layer,
-                                                        const gchar *key);
-const gchar*     gwy_vector_layer_get_selection_key    (GwyVectorLayer *layer);
+void             gwy_vector_layer_set_selection_key  (GwyVectorLayer *layer,
+                                                      const gchar *key);
+const gchar*     gwy_vector_layer_get_selection_key  (GwyVectorLayer *layer);
 
 /* helpers */
-void             gwy_vector_layer_setup_gc             (GwyVectorLayer *layer);
+void             gwy_vector_layer_setup_gc           (GwyVectorLayer *layer);
 
 G_END_DECLS
 

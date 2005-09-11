@@ -841,7 +841,7 @@ zoomed_cb(GwyGraph *graph)
 
 /* XXX What the f**k is this? XXX
  *
- * Why it does exactly the this GString attempts to avoid?  Shouldn't it do:
+ * Why it does exactly the thing GString attempts to avoid?  Shouldn't it do:
  * g_string_assign(graph->graph_model->some_label, gwy_axis_set_label(axis));
  * Except that GwyGraphModel should have a *method* for setting axis labels. */
 static void

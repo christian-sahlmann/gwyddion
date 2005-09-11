@@ -3,12 +3,7 @@
 layerdir = $(pkglibdir)/modules/layer
 
 layer_LTLIBRARIES = \
-	axes.la \
-	lines.la \
-	pointer.la \
-	points.la \
-	rectangle.la \
-	select.la
+	rectangle.la
 
 
 noinst_HEADERS = \
@@ -42,23 +37,23 @@ module_libadd = \
 endif
 
 
-axes_la_SOURCES = axes.c
-axes_la_LIBADD = $(module_libadd)
-
-lines_la_SOURCES = lines.c
-lines_la_LIBADD = $(module_libadd)
+#axes_la_SOURCES = axes.c
+#axes_la_LIBADD = $(module_libadd)
+#
+#lines_la_SOURCES = lines.c
+#lines_la_LIBADD = $(module_libadd)
 
 rectangle_la_SOURCES = rectangle.c
 rectangle_la_LIBADD = $(module_libadd)
 
-pointer_la_SOURCES = pointer.c
-pointer_la_LIBADD = $(module_libadd)
-
-points_la_SOURCES = points.c
-points_la_LIBADD = $(module_libadd)
-
-select_la_SOURCES = select.c
-select_la_LIBADD = $(module_libadd)
+#pointer_la_SOURCES = pointer.c
+#pointer_la_LIBADD = $(module_libadd)
+#
+#points_la_SOURCES = points.c
+#points_la_LIBADD = $(module_libadd)
+#
+#select_la_SOURCES = select.c
+#select_la_LIBADD = $(module_libadd)
 
 
 clean-local:
