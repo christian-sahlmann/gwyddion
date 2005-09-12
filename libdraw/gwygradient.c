@@ -1083,6 +1083,12 @@ gwy_gradients_get_gradient(const gchar *name)
  **/
 
 /**
+ * GwyGradientClass:
+ *
+ * #GwyGradientClass does not contain any public members.
+ **/
+
+/**
  * GwyGradientPoint:
  * @x: Color point position (in interval [0,1]).
  * @color: The color at position @x.

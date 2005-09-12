@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-/* FIXME */
 #define GWY_GL_MATERIAL_NONE                 "None"
 
 #define GWY_TYPE_GL_MATERIAL             (gwy_gl_material_get_type())

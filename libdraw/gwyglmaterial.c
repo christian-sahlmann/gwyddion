@@ -596,4 +596,18 @@ gwy_gl_materials_get_gl_material(const gchar *name)
  * using the functions below.
  **/
 
+/**
+ * GwyGLMaterialClass:
+ *
+ * #GwyGLMaterialClass does not contain any public members.
+ **/
+
+/**
+ * GWY_GL_MATERIAL_NONE:
+ *
+ * The name of special void material with all characteristics zero.
+ *
+ * It is guaranteed to exist, but you should rarely actually need it.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
