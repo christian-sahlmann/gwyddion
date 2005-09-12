@@ -35,7 +35,6 @@ HEAD
   libgwydgets: GwyAxisScaleFormat, GwyUnitsPlacement, GwyGraphStatusType,
                GwyGraphPointType, GwyGraphCurveType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
-- Use BUTTON1_MOTION_MASK instead of MOTION_NOTIFY_MASK where appropriate
 - Fix Indentor analysis
 - Add preview to: artithmetic
 - It should be possible to export images with selections drawn

@@ -1,4 +1,4 @@
-1.99.3cvs20050825
+1.99.3cvs20050912
 
 1.99.4
 Application:
@@ -53,12 +53,20 @@ Library:
 - libgwyddion: Text entities are in a GwyInventory instead of a raw array.
 - libgwydgets: It's possible to get real GwyDataView zoom, GwyDataWindow
   displays that in window title instead of requested zoom.
+- libprocess: Minkowski volume, boundary, and connectivity (Euler
+  characteristics) statistical functions were added.
+- libdraw, libgwydgets: Experimental adaptive color mapping mode was added.
+- libdraw, libgwydgets: GwySelection data selection abstract base class,
+  GwyVectorLayer reworked to use it.
 
 Modules:
 - BCR file: Unit support was improved, support for zmin added.
 - Profile: Maximum profile width was increased to 100.
 - Statistical functions, Profile: Allow to select number of sampling points.
+- Profile: Minkowski functionals were added.
 - Facet analysis: Improvements were merged from 1.12.
+- Layer modules: Reworked to use GwySelection, "pointer" and "points" merged,
+  various other changes.
 
 Other:
 - Modules are built with libtool, so it should be possible to build
