@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -98,7 +98,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerPoints";
+    static const gchar *layer_name = "GwyLayerPoint";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -117,8 +117,15 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    GwySelection *selection;
+
     g_assert(CHECK_LAYER_TYPE(state->layer));
-    g_object_set(state->layer, "max-points", 3, NULL);
+    g_object_set(state->layer,
+                 "selection-key", "/0/select/point",
+                 "draw-marker", TRUE,
+                 NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    gwy_selection_set_max_objects(selection, 3);
 }
 
 static GtkWidget*
@@ -230,8 +237,7 @@ dialog_update(GwyUnitoolState *state,
 
     is_visible = state->is_visible;
     nselected = gwy_selection_get_data(selection, points);
-    if (!is_visible && !nselected)
-        return;
+    gwy_debug("nselected: %d", nselected);
 
     str = g_string_new("");
     g_string_printf(str, "<b>X</b> [%s]", state->coord_hformat->units);

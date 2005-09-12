@@ -130,7 +130,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerPointer";
+    static const gchar *layer_name = "GwyLayerPoint";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -165,7 +165,12 @@ layer_setup(GwyUnitoolState *state)
 
     controls = (ToolControls*)state->user_data;
     g_assert(CHECK_LAYER_TYPE(state->layer));
+    g_object_set(state->layer,
+                 "selection-key", "/0/select/pointer",
+                 "draw-marker", FALSE,
+                 NULL);
     selection = gwy_vector_layer_get_selection(state->layer);
+    gwy_selection_set_max_objects(selection, 1);
     controls->finished_id
         = g_signal_connect_swapped(selection, "finished",
                                    G_CALLBACK(selection_finished_cb), state);

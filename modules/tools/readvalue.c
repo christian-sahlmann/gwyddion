@@ -45,6 +45,7 @@ typedef struct {
 static gboolean   module_register  (const gchar *name);
 static gboolean   use              (GwyDataWindow *data_window,
                                     GwyToolSwitchEvent reason);
+static void       layer_setup      (GwyUnitoolState *state);
 static GtkWidget* dialog_create    (GwyUnitoolState *state);
 static void       dialog_update    (GwyUnitoolState *state,
                                     GwyUnitoolUpdateType reason);
@@ -58,14 +59,14 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
 static GwyUnitoolSlots func_slots = {
     0,                             /* layer type, must be set runtime */
-    NULL,                          /* layer setup func */
+    layer_setup,                   /* layer setup func */
     dialog_create,                 /* dialog constructor */
     dialog_update,                 /* update view and controls */
     dialog_abandon,                /* dialog abandon hook */
@@ -97,7 +98,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerPointer";
+    static const gchar *layer_name = "GwyLayerPoint";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -111,6 +112,20 @@ use(GwyDataWindow *data_window,
         state->user_data = g_new0(ToolControls, 1);
     }
     return gwy_unitool_use(state, data_window, reason);
+}
+
+static void
+layer_setup(GwyUnitoolState *state)
+{
+    GwySelection *selection;
+
+    g_assert(CHECK_LAYER_TYPE(state->layer));
+    g_object_set(state->layer,
+                 "selection-key", "/0/select/pointer",
+                 "draw-marker", FALSE,
+                 NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    gwy_selection_set_max_objects(selection, 1);
 }
 
 static GtkWidget*
