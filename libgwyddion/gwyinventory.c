@@ -95,8 +95,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_STRUCT_OFFSET(GwyInventoryClass, item_inserted),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__UINT,
-                     G_TYPE_NONE, 1,
-                     G_TYPE_UINT);
+                     G_TYPE_NONE, 1, G_TYPE_UINT);
 
     /**
      * GwyInventory::item-deleted:
@@ -113,8 +112,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_STRUCT_OFFSET(GwyInventoryClass, item_deleted),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__UINT,
-                     G_TYPE_NONE, 1,
-                     G_TYPE_UINT);
+                     G_TYPE_NONE, 1, G_TYPE_UINT);
 
     /**
      * GwyInventory::item-updated:
@@ -131,8 +129,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_STRUCT_OFFSET(GwyInventoryClass, item_updated),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__UINT,
-                     G_TYPE_NONE, 1,
-                     G_TYPE_UINT);
+                     G_TYPE_NONE, 1, G_TYPE_UINT);
 
     /**
      * GwyInventory::items-reordered:
@@ -150,8 +147,7 @@ gwy_inventory_class_init(GwyInventoryClass *klass)
                      G_STRUCT_OFFSET(GwyInventoryClass, items_reordered),
                      NULL, NULL,
                      g_cclosure_marshal_VOID__POINTER,
-                     G_TYPE_NONE, 1,
-                     G_TYPE_POINTER);
+                     G_TYPE_NONE, 1, G_TYPE_POINTER);
 
     /**
      * GwyInventory::default-changed:

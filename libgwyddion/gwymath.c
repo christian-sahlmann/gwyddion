@@ -571,6 +571,16 @@ typedef struct {
    smaller partition.  This *guarantees* no more than log(n)
    stack size is needed (actually O(1) in this case)!  */
 
+/**
+ * gwy_math_sort:
+ * @n: Number of items in @array.
+ * @array: Array of doubles to sort in place.
+ *
+ * Sorts an array of doubles using a quicksort algorithm.
+ *
+ * This is usually about twice as fast as generic quicksort function thanks to
+ * specialization for doubles.
+ **/
 void
 gwy_math_sort(gsize n,
               gdouble *array)

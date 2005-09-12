@@ -363,7 +363,7 @@ gwy_resource_set_is_preferred(GwyResource *resource,
 
 /**
  * gwy_resource_class_get_name:
- * @klass: Resource class.
+ * @klass: A resource class.
  *
  * Gets the name of resource class.
  *
@@ -379,6 +379,14 @@ gwy_resource_class_get_name(GwyResourceClass *klass)
     return klass->name;
 }
 
+/**
+ * gwy_resource_class_get_inventory:
+ * @klass: A resource class.
+ *
+ * Gets inventory which holds resources of a resource class.
+ *
+ * Returns: Resource class inventory.
+ **/
 GwyInventory*
 gwy_resource_class_get_inventory(GwyResourceClass *klass)
 {
@@ -386,6 +394,14 @@ gwy_resource_class_get_inventory(GwyResourceClass *klass)
     return klass->inventory;
 }
 
+/**
+ * gwy_resource_class_get_item_type:
+ * @klass: A resource class.
+ *
+ * Gets inventory item type for a resource class.
+ *
+ * Returns: Inventory item type.
+ **/
 const GwyInventoryItemType*
 gwy_resource_class_get_item_type(GwyResourceClass *klass)
 {
@@ -586,6 +602,19 @@ gwy_resource_modified(GwyResource *resource)
     resource->is_modified = TRUE;
 }
 
+/**
+ * gwy_resource_class_save:
+ * @klass: A resource class.
+ * @err: Location to store save error to, or %NULL.
+ *
+ * Saves modified user resources of a resource class to user directory.
+ *
+ * <warning>This function will be probably removed, as resources should be
+ * saved on disk immediately.  Namely because it's impossible to handle
+ * renamed resources this way.</warning>
+ *
+ * Returns: %TRUE if save succeeded, %FALSE if it failed.
+ **/
 gboolean
 gwy_resource_class_save(GwyResourceClass *klass,
                         GError **err)
@@ -653,6 +682,15 @@ gwy_resource_save(G_GNUC_UNUSED gpointer key,
     return FALSE;
 }
 
+/**
+ * gwy_resource_class_load:
+ * @klass: A resource class.
+ *
+ * Loads resources of a resources class from disk.
+ *
+ * Resources are loaded from system directory (and marked constant) and from
+ * user directory (marked modifiable).
+ **/
 void
 gwy_resource_class_load(GwyResourceClass *klass)
 {
@@ -757,6 +795,24 @@ gwy_resource_build_filename(GwyResource *resource)
  *
  * The #GwyResource struct contains private data only and should be accessed
  * using the functions below.
+ **/
+
+/**
+ * GwyResourceClass:
+ * @inventory: Inventory with resources.
+ * @name: Resource class name, usable as resource directory name for on-disk
+ *        resources.
+ * @item_type: Inventory item type.  Most fields are pre-filled, but namely
+ *             @type and @copy must be filled by particular resource type.
+ * @data_changed: "data-changed" signal method.
+ * @use: gwy_resource_use() virtual method.
+ * @release: gwy_resource_release() virtual method.
+ * @dump: gwy_resource_dump() virtual method, it only cares about resource
+ *        data itself, the envelope is handled by #GwyResource.
+ * @parse: gwy_resource_parse() virtual method, in only cares about resource
+ *         data itself, the envelope is handled by #GwyResource.
+ *
+ * Resource class.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

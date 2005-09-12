@@ -1027,7 +1027,7 @@ gwy_nlfit_preset_get_value(GwyNLFitPreset *preset,
 }
 
 /**
- * gwy_math_nlfit_get_preset_formula:
+ * gwy_nlfit_preset_get_formula:
  * @preset: A NL fitter function preset.
  *
  * Returns function formula of @preset (with Pango markup).
@@ -1042,7 +1042,7 @@ gwy_nlfit_preset_get_formula(GwyNLFitPreset* preset)
 }
 
 /**
- * gwy_math_nlfit_get_preset_param_name:
+ * gwy_nlfit_preset_get_param_name:
  * @preset: A NL fitter function preset.
  * @param: A parameter number.
  *
@@ -1066,7 +1066,7 @@ gwy_nlfit_preset_get_param_name(GwyNLFitPreset* preset,
 }
 
 /**
- * gwy_math_nlfit_get_preset_nparams:
+ * gwy_nlfit_preset_get_nparams:
  * @preset: A NL fitter function preset.
  *
  * Return the number of parameters of @preset.

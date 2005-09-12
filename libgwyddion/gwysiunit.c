@@ -1198,6 +1198,19 @@ gwy_si_unit_prefix(gint power)
  **/
 
 /**
+ * GwySIUnitFormatStyle:
+ * @GWY_SI_UNIT_FORMAT_PLAIN: Plain style, as one would use on a text terminal.
+ * @GWY_SI_UNIT_FORMAT_MARKUP: Pango markup, for units usable standalone.
+ * @GWY_SI_UNIT_FORMAT_VFMARKUP: Pango markup, for units directly after value.
+ *                               Differs from %GWY_SI_UNIT_FORMAT_MARKUP by
+ *                               multiplication sign at the start of units
+ *                               (where appropriate).
+ * @GWY_SI_UNIT_FORMAT_TEX: Representation that can be typeset by TeX.
+ *
+ * Physical quantity formatting style.
+ **/
+
+/**
  * GwySIValueFormat:
  * @magnitude: Number to divide a quantity by (a power of 1000).
  * @precision: Number of decimal places to format a quantity to.
