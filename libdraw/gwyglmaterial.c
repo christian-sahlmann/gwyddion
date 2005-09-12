@@ -78,12 +78,7 @@ static void
 gwy_gl_material_init(GwyGLMaterial *gl_material)
 {
     gwy_debug_objects_creation(G_OBJECT(gl_material));
-
-    gl_material->ambient = opengl_default_ambient;
-    gl_material->diffuse = opengl_default_diffuse;
-    gl_material->specular = opengl_default_specular;
-    gl_material->emission = opengl_default_emission;
-    gl_material->shininess = opengl_default_shininess;
+    gwy_gl_material_reset(gl_material);
 }
 
 /**
@@ -269,6 +264,24 @@ gwy_gl_material_set_shininess(GwyGLMaterial *gl_material,
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
     gl_material->shininess = CLAMP(shininess, 0.0, 1.0);
     gwy_gl_material_changed(gl_material);
+}
+
+/**
+ * gwy_gl_material_reset:
+ * @gl_material: A GL material.
+ *
+ * Resets a GL material to default values.
+ **/
+void
+gwy_gl_material_reset(GwyGLMaterial *gl_material)
+{
+    g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+
+    gl_material->ambient = opengl_default_ambient;
+    gl_material->diffuse = opengl_default_diffuse;
+    gl_material->specular = opengl_default_specular;
+    gl_material->emission = opengl_default_emission;
+    gl_material->shininess = opengl_default_shininess;
 }
 
 /**
