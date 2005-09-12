@@ -4,6 +4,7 @@ layerdir = $(pkglibdir)/modules/layer
 
 layer_LTLIBRARIES = \
 	axis.la \
+	point.la \
 	rectangle.la
 
 
@@ -49,10 +50,10 @@ rectangle_la_LIBADD = $(module_libadd)
 
 #pointer_la_SOURCES = pointer.c
 #pointer_la_LIBADD = $(module_libadd)
-#
-#points_la_SOURCES = points.c
-#points_la_LIBADD = $(module_libadd)
-#
+
+point_la_SOURCES = point.c
+point_la_LIBADD = $(module_libadd)
+
 #select_la_SOURCES = select.c
 #select_la_LIBADD = $(module_libadd)
 

@@ -128,7 +128,7 @@ G_DEFINE_TYPE(GwyLayerRectangle, gwy_layer_rectangle,
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyLayerFuncInfo func_info = {
+    GwyLayerFuncInfo func_info = {
         "rectangle",
         0,
     };
@@ -137,6 +137,14 @@ module_register(const gchar *name)
     gwy_layer_func_register(name, &func_info);
 
     return TRUE;
+}
+
+static void
+gwy_selection_rectangle_class_init(GwySelectionRectangleClass *klass)
+{
+    GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
+
+    sel_class->object_size = OBJECT_SIZE;
 }
 
 static void
@@ -172,22 +180,14 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
 }
 
 static void
-gwy_selection_rectangle_class_init(GwySelectionRectangleClass *klass)
+gwy_selection_rectangle_init(GwySelectionRectangle *selection)
 {
-    GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
-
-    sel_class->object_size = OBJECT_SIZE;
+    g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
 static void
 gwy_layer_rectangle_init(G_GNUC_UNUSED GwyLayerRectangle *layer)
 {
-}
-
-static void
-gwy_selection_rectangle_init(GwySelectionRectangle *selection)
-{
-    g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
 static void
@@ -248,14 +248,11 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
                                 gint i)
 {
     GwyDataView *data_view;
-    GwyLayerRectangle *layer_rectangle;
     gint xmin, ymin, xmax, ymax;
     gdouble xy[OBJECT_SIZE];
     gboolean has_object;
 
-    g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
-    layer_rectangle = GWY_LAYER_RECTANGLE(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
 
     has_object = gwy_selection_get_object(layer->selection, i, xy);
@@ -269,7 +266,7 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
     if (ymax < ymin)
         GWY_SWAP(gint, ymin, ymax);
 
-    if (layer_rectangle->is_crop) {
+    if (GWY_LAYER_RECTANGLE(layer)->is_crop) {
         gint width, height;
 
         gdk_drawable_get_size(drawable, &width, &height);
@@ -299,8 +296,6 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     window = GTK_WIDGET(data_view)->window;
 
     i = layer->selecting;
-    if (i > -1)
-        gwy_selection_get_object(layer->selection, i, xy);
 
     if (event->is_hint)
         gdk_window_get_pointer(window, &x, &y, NULL);
@@ -311,6 +306,8 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
+    if (i > -1)
+        gwy_selection_get_object(layer->selection, i, xy);
     if (i > -1 && xreal == xy[2] && yreal == xy[3])
         return FALSE;
 
@@ -432,8 +429,10 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     gwy_selection_get_object(layer->selection, i, xy);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
     gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, x, y);
-    if (x == event->x || y == event->y)
+    if (x == event->x || y == event->y) {
         gwy_selection_delete_object(layer->selection, i);
+        gwy_selection_finished(layer->selection);
+    }
     else {
         xy[2] = xreal;
         xy[3] = yreal;
@@ -521,16 +520,20 @@ gwy_layer_rectangle_near_point(GwyVectorLayer *layer,
                                gdouble xreal, gdouble yreal)
 {
     GwyDataView *view;
-    gdouble coords[8], xy[OBJECT_SIZE], d2min;
-    gint i;
+    gdouble *coords, d2min, xy[OBJECT_SIZE];
+    gint i, n;
 
-    if (!gwy_selection_get_object(layer->selection, 0, xy))
+    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    coords[0] = coords[2] = xy[0];
-    coords[1] = coords[5] = xy[1];
-    coords[4] = coords[6] = xy[2];
-    coords[3] = coords[7] = xy[3];
+    coords = g_newa(gdouble, 8*n);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(layer->selection, i, xy);
+        coords[8*i + 0] = coords[8*i + 2] = xy[0];
+        coords[8*i + 1] = coords[8*i + 5] = xy[1];
+        coords[8*i + 4] = coords[8*i + 6] = xy[2];
+        coords[8*i + 3] = coords[8*i + 7] = xy[3];
+    }
     i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords);
 
     view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);

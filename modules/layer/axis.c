@@ -133,7 +133,7 @@ G_DEFINE_TYPE(GwyLayerAxis, gwy_layer_axis, GWY_TYPE_VECTOR_LAYER)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyLayerFuncInfo func_info = {
+    GwyLayerFuncInfo func_info = {
         "axis",
         0,
     };
@@ -186,6 +186,7 @@ static void
 gwy_selection_axis_init(GwySelectionAxis *selection)
 {
     selection->orientation = GWY_ORIENTATION_HORIZONTAL;
+    g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
 static void
