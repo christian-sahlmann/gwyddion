@@ -113,9 +113,10 @@ static gint     gwy_layer_point_near_point     (GwyVectorLayer *layer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Layer allowing selection of several points, displayed as crosses."),
+    N_("Layer allowing selection of several points, displayed as crosses "
+       "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
