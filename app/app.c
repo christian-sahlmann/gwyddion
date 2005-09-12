@@ -801,7 +801,7 @@ gwy_app_graph_window_remove(GtkWidget *window)
 /**
  * gwy_app_graph_window_foreach:
  * @func: A function to call on each graph window.
- * @user_graph: Data to pass to @func.
+ * @user_data: Data to pass to @func.
  *
  * Calls @func on each graph window, in no particular order.
  *
