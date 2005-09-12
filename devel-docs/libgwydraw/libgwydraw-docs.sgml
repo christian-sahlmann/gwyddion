@@ -12,8 +12,8 @@
   </para>
   <xi:include href="xml/gwyrgba.xml"/>
   <xi:include href="xml/gwygradient.xml"/>
+  <xi:include href="xml/gwyglmaterial.xml"/>
   <xi:include href="xml/gwypixfield.xml"/>
-  <xi:include href="xml/gwyresource.xml"/>
   <xi:include href="xml/gwyselection.xml"/>
   <xi:include href="xml/gwydraw.xml"/>
 </book>

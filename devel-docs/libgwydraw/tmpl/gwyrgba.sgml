@@ -28,6 +28,9 @@ are provided.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_TYPE_RGBA ##### -->
 <para>
 
@@ -141,5 +144,23 @@ are provided.
 @rgba: 
 @container: 
 @prefix: 
+
+
+<!-- ##### FUNCTION gwy_rgba_set_gdk_gc_fg ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@gc: 
+
+
+<!-- ##### FUNCTION gwy_rgba_set_gdk_gc_bg ##### -->
+<para>
+
+</para>
+
+@rgba: 
+@gc: 
 
 

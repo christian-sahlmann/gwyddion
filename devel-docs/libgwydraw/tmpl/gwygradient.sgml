@@ -35,8 +35,12 @@ queried with gwy_gradient_is_modifiable().
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<link linkend="libgwydraw-gwypixfield">Pixfield drawing</link>,
+#GwyDataView, #GwyColorAxis
 </para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
 
 <!-- ##### STRUCT GwyGradientPoint ##### -->
 <para>
@@ -58,8 +62,6 @@ queried with gwy_gradient_is_modifiable().
 </para>
 
 @parent_class: 
-@gradients: 
-@data_changed: 
 @reserved1: 
 @reserved2: 
 
@@ -209,6 +211,7 @@ queried with gwy_gradient_is_modifiable().
 @gradient: 
 @nsamples: 
 @samples: 
+@threshold: 
 
 
 <!-- ##### FUNCTION gwy_gradients ##### -->
@@ -219,7 +222,7 @@ queried with gwy_gradient_is_modifiable().
 @Returns: 
 
 
-<!-- ##### MACRO gwy_gradients_get_gradient ##### -->
+<!-- ##### FUNCTION gwy_gradients_get_gradient ##### -->
 <para>
 
 </para>

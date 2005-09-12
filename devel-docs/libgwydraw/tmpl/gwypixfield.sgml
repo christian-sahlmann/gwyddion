@@ -14,6 +14,9 @@ Draw GwyDataFields to GdkPixbufs
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_pixbuf_draw_data_field ##### -->
 <para>
 
@@ -34,6 +37,16 @@ Draw GwyDataFields to GdkPixbufs
 @gradient: 
 @minimum: 
 @maximum: 
+
+
+<!-- ##### FUNCTION gwy_pixbuf_draw_data_field_adaptive ##### -->
+<para>
+
+</para>
+
+@pixbuf: 
+@data_field: 
+@gradient: 
 
 
 <!-- ##### FUNCTION gwy_pixbuf_draw_data_field_as_mask ##### -->
