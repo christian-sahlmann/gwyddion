@@ -542,7 +542,7 @@ gwy_selection_set_max_objects_default(GwySelection *selection,
 {
     guint object_size;
 
-    g_return_if_fail(max_objects < 1);
+    g_return_if_fail(max_objects >= 1);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     if (max_objects*object_size == selection->objects->len)
         return;
