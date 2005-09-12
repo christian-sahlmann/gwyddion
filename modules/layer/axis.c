@@ -96,7 +96,7 @@ static void     gwy_selection_axis_set_orientation(GwySelectionAxis *selection,
                                                    GwyOrientation orientation);
 static void     gwy_layer_axis_draw               (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable);
-static void     gwy_layer_axis_draw_line          (GwyVectorLayer *layer,
+static void     gwy_layer_axis_draw_object        (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable,
                                                    gint i);
 static gboolean gwy_layer_axis_motion_notify      (GwyVectorLayer *layer,
@@ -112,8 +112,8 @@ static gint     gwy_layer_axis_near_point         (GwyVectorLayer *layer,
                                                    gdouble yreal);
 
 /* Allow to express intent. */
-#define gwy_layer_axis_undraw      gwy_layer_axis_draw
-#define gwy_layer_axis_undraw_line gwy_layer_axis_draw_line
+#define gwy_layer_axis_undraw        gwy_layer_axis_draw
+#define gwy_layer_axis_undraw_object gwy_layer_axis_draw_object
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -256,13 +256,13 @@ gwy_layer_axis_draw(GwyVectorLayer *layer,
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_axis_draw_line(layer, drawable, i);
+        gwy_layer_axis_draw_object(layer, drawable, i);
 }
 
 static void
-gwy_layer_axis_draw_line(GwyVectorLayer *layer,
-                         GdkDrawable *drawable,
-                         gint i)
+gwy_layer_axis_draw_object(GwyVectorLayer *layer,
+                           GdkDrawable *drawable,
+                           gint i)
 {
     GwyDataView *data_view;
     gint coord, width, height;
@@ -335,10 +335,10 @@ gwy_layer_axis_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(layer->selecting != -1);
-    gwy_layer_axis_undraw_line(layer, window, i);
+    gwy_layer_axis_undraw_object(layer, window, i);
     xy[0] = rcoord;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_axis_draw_line(layer, window, i);
+    gwy_layer_axis_draw_object(layer, window, i);
 
     return FALSE;
 }
@@ -373,21 +373,25 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
     orientation = GWY_SELECTION_AXIS(layer->selection)->orientation;
     xy[0] = (orientation == GWY_ORIENTATION_VERTICAL) ? xreal : yreal;
 
-    /* handle existing axis */
+    /* handle existing selection */
     i = gwy_layer_axis_near_point(layer, xreal, yreal);
     if (i >= 0) {
-        gwy_layer_axis_undraw_line(layer, window, i);
         layer->selecting = i;
+        gwy_layer_axis_undraw_object(layer, window, layer->selecting);
     }
     else {
-        /* add a point, or do nothing when maximum is reached */
-        if (gwy_selection_is_full(layer->selection))
-            return FALSE;
-
-        layer->selecting = gwy_selection_set_object(layer->selection, -1, xy);
+        /* add an object, or do nothing when maximum is reached */
+        i = -1;
+        if (gwy_selection_is_full(layer->selection)) {
+            if (gwy_selection_get_max_objects(layer->selection) > 1)
+                return FALSE;
+            i = 0;
+            gwy_layer_axis_undraw_object(layer, window, i);
+        }
+        layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     layer->button = event->button;
-    gwy_layer_axis_draw_line(layer, window, i);
+    gwy_layer_axis_draw_object(layer, window, layer->selecting);
 
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->move_cursor);
@@ -420,11 +424,11 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_layer_axis_undraw_line(layer, window, i);
+    gwy_layer_axis_undraw_object(layer, window, i);
     orientation = GWY_SELECTION_AXIS(layer->selection)->orientation;
     xy[0] = (orientation == GWY_ORIENTATION_VERTICAL) ? xreal : yreal;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_axis_draw_line(layer, window, i);
+    gwy_layer_axis_draw_object(layer, window, i);
     gwy_selection_finished(layer->selection);
 
     layer->selecting = -1;
