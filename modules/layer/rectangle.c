@@ -431,9 +431,9 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GdkWindow *window;
     GwyLayerRectangleClass *klass;
-    gint x, y, i;
+    gint x, y, xx, yy, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
-    gboolean outside, square;
+    gboolean outside;
 
     if (!layer->button)
         return FALSE;
@@ -443,7 +443,6 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     layer->button = 0;
     x = event->x;
     y = event->y;
-    square = event->state & GDK_SHIFT_MASK;
     i = layer->selecting;
     gwy_debug("i = %d", i);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
@@ -451,12 +450,12 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
     gwy_layer_rectangle_undraw_object(layer, window, i);
     gwy_selection_get_object(layer->selection, i, xy);
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
-    gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, x, y);
-    if (x == event->x || y == event->y)
+    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xx, &yy);
+    gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, xx, yy);
+    if (xx == event->x || yy == event->y)
         gwy_selection_delete_object(layer->selection, i);
     else {
-        if (square)
+        if (GWY_LAYER_RECTANGLE(layer)->square)
             gwy_layer_rectangle_squarize(data_view, x, y, xy);
         else {
             xy[2] = xreal;
@@ -473,7 +472,6 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     }
 
     layer->selecting = -1;
-    GWY_LAYER_RECTANGLE(layer)->square = square;
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
     if (i > 0)
