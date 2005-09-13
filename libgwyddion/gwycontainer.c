@@ -1741,8 +1741,10 @@ gwy_container_deserialize(const guchar *buffer,
             break;
 
             case 'o':
-            gwy_container_set_object(container, key, it->value.v_object);
-            g_object_unref(it->value.v_object);
+            if (it->value.v_object) {
+                gwy_container_set_object(container, key, it->value.v_object);
+                g_object_unref(it->value.v_object);
+            }
             break;
 
             default:
