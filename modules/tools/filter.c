@@ -291,7 +291,6 @@ apply(GwyUnitoolState *state)
     selection = gwy_vector_layer_get_selection(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
 
-    gwy_app_clean_up_data(data);
     gwy_container_remove_by_name(data, "/0/show");
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 

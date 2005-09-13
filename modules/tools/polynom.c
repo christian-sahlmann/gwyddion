@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     N_("Polynom fit tool, fits polynoms to X or Y profiles and subtracts "
        "them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -250,7 +250,6 @@ apply(GwyUnitoolState *state)
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
     gwy_container_remove_by_name(data, "/0/show");
 
-    gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     controls = (ToolControls*)state->user_data;
