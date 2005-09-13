@@ -17,6 +17,9 @@ manipulation (gwy_canonicalize_path()).
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_hash_table_to_slist_cb ##### -->
 <para>
 

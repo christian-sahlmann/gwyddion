@@ -1,0 +1,117 @@
+<!-- ##### SECTION Title ##### -->
+gwynlfitpreset
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT GwyNLFitPresetBuiltin ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyNLFitPreset ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyNLFitPresetClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### FUNCTION gwy_nlfit_preset_get_value ##### -->
+<para>
+
+</para>
+
+@preset: 
+@x: 
+@params: 
+@fres: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_preset_get_formula ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_preset_get_nparams ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_preset_get_param_name ##### -->
+<para>
+
+</para>
+
+@preset: 
+@param: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_preset_guess ##### -->
+<para>
+
+</para>
+
+@preset: 
+@n_dat: 
+@x: 
+@y: 
+@params: 
+@fres: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_preset_fit ##### -->
+<para>
+
+</para>
+
+@preset: 
+@fitter: 
+@n_dat: 
+@x: 
+@y: 
+@param: 
+@err: 
+@fixed_param: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_nlfit_presets ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+

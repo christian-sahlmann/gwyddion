@@ -43,6 +43,9 @@ define traits for simple structures.
 #GwyContainer
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyInventoryItemType ##### -->
 <para>
 

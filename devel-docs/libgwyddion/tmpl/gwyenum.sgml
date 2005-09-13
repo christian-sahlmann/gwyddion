@@ -16,6 +16,9 @@ various places in Gwyddion.  An enum table can be easily used as a constant
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_TYPE_ENUM ##### -->
 <para>
 

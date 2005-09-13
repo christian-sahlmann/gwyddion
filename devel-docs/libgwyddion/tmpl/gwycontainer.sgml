@@ -54,6 +54,9 @@ gwy_container_set_double_by_name().
 #GwyInventory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_CONTAINER_PATHSEP ##### -->
 <para>
 

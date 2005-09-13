@@ -17,6 +17,9 @@ files and saving them.
 #GwyInventory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyResource ##### -->
 <para>
 
@@ -156,6 +159,15 @@ files and saving them.
 </para>
 
 @resource: 
+
+
+<!-- ##### FUNCTION gwy_resource_build_filename ##### -->
+<para>
+
+</para>
+
+@resource: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_resource_dump ##### -->

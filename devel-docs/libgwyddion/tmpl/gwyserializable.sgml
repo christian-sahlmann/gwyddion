@@ -38,6 +38,9 @@ components of arbitrary name and type.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_IMPLEMENT_SERIALIZABLE ##### -->
 <para>
 
@@ -167,6 +170,18 @@ components of arbitrary name and type.
 @object_name: 
 @nspec: 
 @spec: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_check_string ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@size: 
+@position: 
+@compare_to: 
 @Returns: 
 
 

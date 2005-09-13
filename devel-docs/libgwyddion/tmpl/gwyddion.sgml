@@ -16,6 +16,9 @@ performs this initialization.
 <link linkend="GwySerializable">GwySerializable</link>
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_type_init ##### -->
 <para>
 

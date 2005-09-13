@@ -70,6 +70,10 @@ Unistd functions on Win32
 gwywin32unistd
 
 
+<!-- ##### SECTION ./tmpl/libgwyddion-unused.sgml:Stability_Level ##### -->
+
+
+
 <!-- ##### SECTION ./tmpl/marquardt.sgml:Long_Description ##### -->
 <para>
 
@@ -108,6 +112,30 @@ marquardt
 
 <!-- ##### SECTION ./tmpl/nlfit.sgml:Title ##### -->
 nlfit
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyddiontypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyddiontypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyddiontypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyddiontypes.sgml:Stability_Level ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyddiontypes.sgml:Title ##### -->
+stamp-gwyddiontypes
 
 
 <!-- ##### SECTION ./tmpl/types.sgml:Long_Description ##### -->
@@ -285,6 +313,34 @@ types
 @value: 
 @changed: 
 
+<!-- ##### USER_FUNCTION GwyNLFitGuessFunc ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@n_dat: 
+@param: 
+@user_data: 
+@fres: 
+
+<!-- ##### STRUCT GwyNLFitParam ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### USER_FUNCTION GwyNLFitParamScaleFunc ##### -->
+<para>
+
+</para>
+
+@param: 
+@xscale: 
+@yscale: 
+@dir: 
+
 <!-- ##### TYPEDEF GwyNLFitPresetFunction ##### -->
 <para>
 
@@ -324,6 +380,17 @@ types
 @mdec: 
 @minc: 
 @mtol: 
+
+<!-- ##### USER_FUNCTION GwyNLFitWeightFunc ##### -->
+<para>
+
+</para>
+
+@x: 
+@y: 
+@n_dat: 
+@weight: 
+@user_data: 
 
 <!-- ##### STRUCT GwySerializableClass ##### -->
 <para>
@@ -826,6 +893,24 @@ Emitted when value changes.
 @magnitude: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_math_nlfit_fit_preset ##### -->
+<para>
+
+</para>
+
+@preset: 
+@n_dat: 
+@x: 
+@y: 
+@n_param: 
+@param: 
+@err: 
+@fixed_param: 
+@user_data: 
+@Returns: 
+@function: 
+@weight: 
+
 <!-- ##### FUNCTION gwy_math_nlfit_fit_with_fixed ##### -->
 <para>
 
@@ -894,6 +979,98 @@ Emitted when value changes.
 @x: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_math_nlfit_get_npresets ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset ##### -->
+<para>
+
+</para>
+
+@preset_id: 
+@Returns: 
+@type: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_by_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_formula ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_id ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+@function: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_name ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_nparams ##### -->
+<para>
+
+</para>
+
+@preset: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_param_default ##### -->
+<para>
+
+</para>
+
+@preset: 
+@param: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_param_name ##### -->
+<para>
+
+</para>
+
+@preset: 
+@param: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_math_nlfit_get_preset_value ##### -->
+<para>
+
+</para>
+
+@preset: 
+@params: 
+@x: 
+@Returns: 
+
+<!-- ##### MACRO gwy_nlfit_preset_get_name ##### -->
+<para>
+
+</para>
+
+@f: 
+
 <!-- ##### FUNCTION gwy_resource_class_get_traits ##### -->
 <para>
 
@@ -925,17 +1102,6 @@ Emitted when value changes.
 </para>
 
 @resource: 
-
-<!-- ##### FUNCTION gwy_serialize_check_string ##### -->
-<para>
-
-</para>
-
-@buffer: 
-@size: 
-@position: 
-@compare_to: 
-@Returns: 
 
 <!-- ##### FUNCTION gwy_serialize_pack ##### -->
 <para>
