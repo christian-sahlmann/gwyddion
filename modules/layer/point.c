@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 
@@ -262,6 +262,7 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
     if (!GWY_LAYER_POINT(layer)->draw_marker)
         return;
 
+    gwy_debug("%d", i);
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
@@ -319,7 +320,6 @@ gwy_layer_point_motion_notify(GwyVectorLayer *layer,
     xy[0] = xreal;
     xy[1] = yreal;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_point_draw_object(layer, window, i);
 
     return FALSE;
 }
@@ -368,10 +368,10 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
             i = 0;
             gwy_layer_point_undraw_object(layer, window, i);
         }
+        layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     layer->button = event->button;
-    gwy_layer_point_draw_object(layer, window, layer->selecting);
 
     klass = GWY_LAYER_POINT_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->move_cursor);

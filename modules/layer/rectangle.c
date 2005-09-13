@@ -390,6 +390,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
             i = 0;
             gwy_layer_rectangle_undraw_object(layer, window, i);
         }
+        layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     layer->button = event->button;
