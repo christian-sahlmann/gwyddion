@@ -50,7 +50,7 @@ struct _GwyVectorLayer {
     gulong item_changed_id;
     gulong selection_changed_id;
 
-    gint button;
+    gint button;    /* XXX: duplicates @selecting? */
     gint selecting;
 
     gpointer reserved1;
