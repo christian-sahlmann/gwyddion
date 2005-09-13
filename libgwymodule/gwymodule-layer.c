@@ -71,6 +71,7 @@ gwy_layer_func_register(const gchar *modname,
         g_warning("Duplicate function %s, keeping only first", func_info->name);
         return FALSE;
     }
+    g_type_class_ref(func_info->type);
 
     lfinfo = g_memdup(func_info, sizeof(GwyLayerFuncInfo));
     lfinfo->name = g_strdup(func_info->name);
@@ -102,11 +103,17 @@ gwy_layer_func_info_free(gpointer data)
 gboolean
 _gwy_layer_func_remove(const gchar *name)
 {
+    GwyLayerFuncInfo *lfinfo;
+
     gwy_debug("%s", name);
-    if (!g_hash_table_remove(layer_funcs, name)) {
+    lfinfo = g_hash_table_lookup(layer_funcs, name);
+    if (!lfinfo) {
         g_warning("Cannot remove function %s", name);
         return FALSE;
     }
+
+    g_type_class_unref(g_type_class_peek(lfinfo->type));
+    g_hash_table_remove(layer_funcs, name);
     return TRUE;
 }
 
