@@ -576,7 +576,7 @@ gwy_selection_serialize_default(GObject *obj,
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     {
         guint32 len = selection->n * object_size;
-        gint max = selection->objects->len/object_size;
+        guint32 max = selection->objects->len/object_size;
         const gchar *name = g_type_name(G_TYPE_FROM_INSTANCE(obj));
         GwySerializeSpec spec[] = {
             { 'i', "max", &max, NULL, },
@@ -596,7 +596,7 @@ gwy_selection_deserialize_default(const guchar *buffer,
     gdouble *data = NULL;
     guint32 len = 0, max = 0;
     GwySerializeSpec spec[] = {
-        { 'd', "max", &max, NULL },
+        { 'i', "max", &max, NULL },
         { 'D', "data", &data, &len, },
     };
     gsize typenamesize;
@@ -623,18 +623,19 @@ gwy_selection_deserialize_default(const guchar *buffer,
 
     selection = g_object_new(type, NULL);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    g_array_set_size(selection->objects, 0);
     if (data && len) {
         if (len % object_size)
             g_warning("Selection data size not multiple of object size. "
                       "Ignoring it.");
         else {
-            g_array_append_vals(selection->objects, data, len*object_size);
+            g_array_append_vals(selection->objects, data, len);
             selection->n = len/object_size;
-            if (max > selection->n)
-                g_array_set_size(selection->objects, max*object_size);
         }
         g_free(data);
     }
+    if (max > selection->n)
+        g_array_set_size(selection->objects, max*object_size);
 
     return (GObject*)selection;
 }
