@@ -149,6 +149,17 @@ gwy_unitool_use(GwyUnitoolState *state,
                                    G_CALLBACK(gwy_unitool_update_thumbnail),
                                    state);
 
+    gwy_debug("selection_updated_id: %lu, "
+              "data_updated_id: %lu, "
+              "windowname_id: %lu, "
+              "response_id: %lu,"
+              "thumbnail_id: %lu",
+              state->selection_updated_id,
+              state->data_updated_id,
+              state->windowname_id,
+              state->response_id,
+              state->thumbnail_id);
+
     /* setup based on switch reason */
     if (reason == GWY_TOOL_SWITCH_TOOL)
         gwy_unitool_dialog_set_visible(state, TRUE);
