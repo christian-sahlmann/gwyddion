@@ -509,7 +509,8 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
      * parent currently ignores "updated" from vector layers because they
      * handle normal redraws themselves.  Must not execute when _we_ change
      * the selection. */
-    if (layer->selecting < 0)
+    gwy_debug("selecting: %d", layer->selecting);
+    if (layer->selecting >= 0)
         return;
     /* FIXME */
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
