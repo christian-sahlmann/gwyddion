@@ -79,7 +79,6 @@ static gboolean module_register                (const gchar *name);
 static GType    gwy_layer_point_get_type       (void) G_GNUC_CONST;
 static GType    gwy_selection_point_get_type   (void) G_GNUC_CONST;
 static void     gwy_layer_point_class_init     (GwyLayerPointClass *klass);
-static void     gwy_layer_point_init           (GwyLayerPoint *layer);
 static void     gwy_layer_point_set_property   (GObject *object,
                                                 guint prop_id,
                                                 const GValue *value,
@@ -408,13 +407,13 @@ gwy_layer_point_button_released(GwyVectorLayer *layer,
     xy[1] = yreal;
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_point_draw_object(layer, window, i);
-    gwy_selection_finished(layer->selection);
 
     layer->selecting = -1;
     klass = GWY_LAYER_POINT_GET_CLASS(layer);
     i = gwy_layer_point_near_point(layer, xreal, yreal);
     outside = outside || (i == -1) || !GWY_LAYER_POINT(layer)->draw_marker;
     gdk_window_set_cursor(window, outside ? NULL : klass->near_cursor);
+    gwy_selection_finished(layer->selection);
 
     return FALSE;
 }

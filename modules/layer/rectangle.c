@@ -416,7 +416,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
     }
     GWY_LAYER_RECTANGLE(layer)->square = square;
     layer->button = event->button;
-    gwy_layer_rectangle_draw(layer, window);
+    gwy_layer_rectangle_draw_object(layer, window, layer->selecting);
 
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->resize_cursor);
@@ -453,10 +453,8 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     gwy_selection_get_object(layer->selection, i, xy);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x, &y);
     gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, x, y);
-    if (x == event->x || y == event->y) {
+    if (x == event->x || y == event->y)
         gwy_selection_delete_object(layer->selection, i);
-        gwy_selection_finished(layer->selection);
-    }
     else {
         if (square)
             gwy_layer_rectangle_squarize(data_view, x, y, xy);
@@ -472,7 +470,6 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
 
         gwy_selection_set_object(layer->selection, i, xy);
         gwy_layer_rectangle_draw_object(layer, window, i);
-        gwy_selection_finished(layer->selection);
     }
 
     layer->selecting = -1;
@@ -483,6 +480,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
         i = i % OBJECT_SIZE;
     outside = outside || (i == -1);
     gdk_window_set_cursor(window, outside ? NULL : klass->corner_cursor[i]);
+    gwy_selection_finished(layer->selection);
 
     return FALSE;
 }
@@ -576,17 +574,17 @@ gwy_layer_rectangle_squarize(GwyDataView *data_view,
                              gint x, gint y,
                              gdouble *xy)
 {
-    gint size, x0, y0, xx, yy;
+    gint size, xb, yb, xx, yy;
 
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x0, &y0);
-    size = MAX(ABS(x - x0), ABS(y - y0));
-    x = xx = (x >= x0) ? x0 + size : x0 - size;
-    y = yy = (y >= y0) ? y0 + size : y0 - size;
+    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xb, &yb);
+    size = MAX(ABS(x - xb), ABS(y - yb));
+    x = xx = (x >= xb) ? xb + size : xb - size;
+    y = yy = (y >= yb) ? yb + size : yb - size;
     gwy_data_view_coords_xy_clamp(data_view, &xx, &yy);
     if (xx != x || yy != y) {
-        size = MIN(ABS(xx - x0), ABS(yy - y0));
-        x = (xx >= x0) ? x0 + size : x0 - size;
-        y = (yy >= y0) ? y0 + size : y0 - size;
+        size = MIN(ABS(xx - xb), ABS(yy - yb));
+        x = (xx >= xb) ? xb + size : xb - size;
+        y = (yy >= yb) ? yb + size : yb - size;
     }
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[2], &xy[3]);
 }

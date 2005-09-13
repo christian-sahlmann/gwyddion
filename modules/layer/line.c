@@ -513,7 +513,6 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     /* handle existing selection */
     j = gwy_layer_line_near_line(layer, xreal, yreal);
     i = gwy_layer_line_near_point(layer, xreal, yreal);
-    g_printerr("%d %d\n", i, j);
     if (i == -1 && j >= 0) {
         gwy_selection_get_object(layer->selection, j, xy);
         layer->selecting = i = 2*j;

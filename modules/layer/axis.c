@@ -541,13 +541,13 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
     xy[0] = (orientation == GWY_ORIENTATION_VERTICAL) ? xreal : yreal;
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_axis_draw_object(layer, window, i);
-    gwy_selection_finished(layer->selection);
 
     layer->selecting = -1;
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);
     i = gwy_layer_axis_near_point(layer, xreal, yreal);
     outside = outside || (i == -1);
     gdk_window_set_cursor(window, outside ? NULL : klass->near_cursor);
+    gwy_selection_finished(layer->selection);
 
     return FALSE;
 }
