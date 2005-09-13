@@ -186,6 +186,7 @@ apply(GwyUnitoolState *state)
     if (!gwy_selection_get_object(selection, 0, sel))
         return;
 
+    gwy_selection_clear(selection);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(state->layer)->parent);
     data = gwy_data_view_get_data(data_view);
     data = gwy_container_duplicate(data);
@@ -201,7 +202,6 @@ apply(GwyUnitoolState *state)
     }
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-    gwy_selection_clear(selection);
     gwy_debug("%d %d",
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
