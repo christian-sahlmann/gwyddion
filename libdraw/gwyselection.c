@@ -577,10 +577,11 @@ gwy_selection_serialize_default(GObject *obj,
     {
         guint32 len = selection->n * object_size;
         guint32 max = selection->objects->len/object_size;
+        gpointer pdata = len ? &selection->objects->data : NULL;
         const gchar *name = g_type_name(G_TYPE_FROM_INSTANCE(obj));
         GwySerializeSpec spec[] = {
             { 'i', "max", &max, NULL, },
-            { 'D', "data", &selection->objects->data, &len, },
+            { 'D', "data", pdata, &len, },
         };
 
         return gwy_serialize_pack_object_struct(buffer, name,
