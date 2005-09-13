@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* XXX: Must overrride serialization for orientation storage! */
-
 #include "config.h"
 #include <string.h>
 
@@ -31,6 +29,8 @@
 #include <libgwymodule/gwymodule.h>
 
 #include "layer.h"
+
+#define GWY_SELECTION_AXIS_TYPE_NAME "GwySelectionAxis"
 
 #define GWY_TYPE_LAYER_AXIS            (gwy_layer_axis_get_type())
 #define GWY_LAYER_AXIS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_LAYER_AXIS, GwyLayerAxis))
@@ -77,11 +77,10 @@ struct _GwySelectionAxisClass {
     GwySelectionClass parent_class;
 };
 
-/* Forward declarations */
-
 static gboolean module_register                   (const gchar *name);
 static GType    gwy_layer_axis_get_type           (void) G_GNUC_CONST;
 static GType    gwy_selection_axis_get_type       (void) G_GNUC_CONST;
+static void   gwy_selection_axis_serializable_init(GwySerializableIface *iface);
 static void     gwy_selection_axis_set_property   (GObject *object,
                                                    guint prop_id,
                                                    const GValue *value,
@@ -90,6 +89,14 @@ static void     gwy_selection_axis_get_property   (GObject*object,
                                                    guint prop_id,
                                                    GValue *value,
                                                    GParamSpec *pspec);
+static GByteArray* gwy_selection_axis_serialize   (GObject *serializable,
+                                                   GByteArray *buffer);
+static GObject* gwy_selection_axis_deserialize    (const guchar *buffer,
+                                                   gsize size,
+                                                   gsize *position);
+static GObject* gwy_selection_axis_duplicate      (GObject *object);
+static void     gwy_selection_axis_clone          (GObject *source,
+                                                   GObject *copy);
 static void     gwy_selection_axis_set_orientation(GwySelectionAxis *selection,
                                                    GwyOrientation orientation);
 static void     gwy_layer_axis_draw               (GwyVectorLayer *layer,
@@ -113,6 +120,8 @@ static gint     gwy_layer_axis_near_point         (GwyVectorLayer *layer,
 #define gwy_layer_axis_undraw        gwy_layer_axis_draw
 #define gwy_layer_axis_undraw_object gwy_layer_axis_draw_object
 
+static GwySerializableIface *gwy_selection_axis_serializable_parent_iface;
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -125,7 +134,9 @@ static GwyModuleInfo module_info = {
 
 GWY_MODULE_QUERY(module_info)
 
-G_DEFINE_TYPE(GwySelectionAxis, gwy_selection_axis, GWY_TYPE_SELECTION)
+G_DEFINE_TYPE_EXTENDED
+    (GwySelectionAxis, gwy_selection_axis, GWY_TYPE_SELECTION, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_selection_axis_serializable_init))
 G_DEFINE_TYPE(GwyLayerAxis, gwy_layer_axis, GWY_TYPE_VECTOR_LAYER)
 
 static gboolean
@@ -162,6 +173,18 @@ gwy_selection_axis_class_init(GwySelectionAxisClass *klass)
                           GWY_TYPE_ORIENTATION,
                           GWY_ORIENTATION_HORIZONTAL,
                           G_PARAM_READABLE | G_PARAM_WRITABLE));
+}
+
+static void
+gwy_selection_axis_serializable_init(GwySerializableIface *iface)
+{
+    gwy_selection_axis_serializable_parent_iface
+        = g_type_interface_peek_parent(iface);
+
+    iface->serialize = gwy_selection_axis_serialize;
+    iface->deserialize = gwy_selection_axis_deserialize;
+    iface->duplicate = gwy_selection_axis_duplicate;
+    iface->clone = gwy_selection_axis_clone;
 }
 
 static void
@@ -228,6 +251,95 @@ gwy_selection_axis_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
+}
+
+static GByteArray*
+gwy_selection_axis_serialize(GObject *serializable,
+                             GByteArray *buffer)
+{
+    GwySelection *selection;
+
+    g_return_val_if_fail(GWY_IS_SELECTION_AXIS(serializable), NULL);
+
+    selection = GWY_SELECTION(serializable);
+    {
+        guint32 len = selection->n * OBJECT_SIZE;
+        guint32 max = selection->objects->len/OBJECT_SIZE;
+        guint32 orientation = GWY_SELECTION_AXIS(selection)->orientation;
+        gpointer pdata = len ? &selection->objects->data : NULL;
+        GwySerializeSpec spec[] = {
+            { 'i', "max", &max, NULL, },
+            { 'i', "orientation", &orientation, NULL, },
+            { 'D', "data", pdata, &len, },
+        };
+
+        return gwy_serialize_pack_object_struct(buffer,
+                                                GWY_SELECTION_AXIS_TYPE_NAME,
+                                                G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static GObject*
+gwy_selection_axis_deserialize(const guchar *buffer,
+                               gsize size,
+                               gsize *position)
+{
+    gdouble *data = NULL;
+    guint32 len = 0, max = 0, orientation = GWY_ORIENTATION_HORIZONTAL;
+    GwySerializeSpec spec[] = {
+        { 'i', "max", &max, NULL },
+        { 'i', "orientation", &orientation, NULL, },
+        { 'D', "data", &data, &len, },
+    };
+    GwySelection *selection;
+
+    g_return_val_if_fail(buffer, NULL);
+
+    if (!gwy_serialize_unpack_object_struct(buffer, size, position,
+                                            GWY_SELECTION_AXIS_TYPE_NAME,
+                                            G_N_ELEMENTS(spec), spec)) {
+        g_free(data);
+        return NULL;
+    }
+
+    selection = g_object_new(GWY_TYPE_SELECTION_AXIS, NULL);
+    GWY_SELECTION_AXIS(selection)->orientation = orientation;
+    g_array_set_size(selection->objects, 0);
+    if (data && len) {
+        if (len % OBJECT_SIZE)
+            g_warning("Selection data size not multiple of object size. "
+                      "Ignoring it.");
+        else {
+            g_array_append_vals(selection->objects, data, len);
+            selection->n = len/OBJECT_SIZE;
+        }
+        g_free(data);
+    }
+    if (max > selection->n)
+        g_array_set_size(selection->objects, max*OBJECT_SIZE);
+
+    return (GObject*)selection;
+}
+
+static GObject*
+gwy_selection_axis_duplicate(GObject *object)
+{
+    GObject *copy;
+
+    copy = gwy_selection_axis_serializable_parent_iface->duplicate(object);
+    GWY_SELECTION_AXIS(copy)->orientation
+        = GWY_SELECTION_AXIS(object)->orientation;
+
+    return copy;
+}
+
+static void
+gwy_selection_axis_clone(GObject *source,
+                         GObject *copy)
+{
+    gwy_selection_axis_serializable_parent_iface->clone(source, copy);
+    GWY_SELECTION_AXIS(copy)->orientation
+        = GWY_SELECTION_AXIS(source)->orientation;
 }
 
 static void
