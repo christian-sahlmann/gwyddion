@@ -4,6 +4,7 @@ layerdir = $(pkglibdir)/modules/layer
 
 layer_LTLIBRARIES = \
 	axis.la \
+	line.la \
 	point.la \
 	rectangle.la
 
@@ -42,20 +43,14 @@ endif
 axis_la_SOURCES = axis.c
 axis_la_LIBADD = $(module_libadd)
 
-#lines_la_SOURCES = lines.c
-#lines_la_LIBADD = $(module_libadd)
+line_la_SOURCES = line.c
+line_la_LIBADD = $(module_libadd)
 
 rectangle_la_SOURCES = rectangle.c
 rectangle_la_LIBADD = $(module_libadd)
 
-#pointer_la_SOURCES = pointer.c
-#pointer_la_LIBADD = $(module_libadd)
-
 point_la_SOURCES = point.c
 point_la_LIBADD = $(module_libadd)
-
-#select_la_SOURCES = select.c
-#select_la_LIBADD = $(module_libadd)
 
 
 clean-local:

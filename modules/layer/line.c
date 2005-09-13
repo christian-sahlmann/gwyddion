@@ -18,6 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* XXX: This layer uses @selecting field to index _endpoints_ not objects.
+ * When whole line is moving, @selecting is imply 2*line_number. */
+
 #include "config.h"
 #include <string.h>
 
@@ -66,7 +69,7 @@ struct _GwyLayerLine {
     GPtrArray *line_labels;
 };
 
-struct _GwyLayerLinesClass {
+struct _GwyLayerLineClass {
     GwyVectorLayerClass parent_class;
 
     GdkCursor *near_cursor;
@@ -95,7 +98,7 @@ static void     gwy_layer_line_get_property    (GObject*object,
                                                 GParamSpec *pspec);
 static void     gwy_layer_line_draw            (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable);
-static void     gwy_layer_line_draw_object     (GwyLayerLine *layer,
+static void     gwy_layer_line_draw_object     (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
                                                 gint i);
 static void     gwy_layer_line_setup_label     (GwyLayerLine *layer,
@@ -103,7 +106,7 @@ static void     gwy_layer_line_setup_label     (GwyLayerLine *layer,
                                                 gint i);
 static gboolean gwy_layer_line_motion_notify   (GwyVectorLayer *layer,
                                                 GdkEventMotion *event);
-static gboolean gwy_layer_line_move_line       (GwyLayerLine *layer,
+static gboolean gwy_layer_line_move_line       (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
 static gboolean gwy_layer_line_button_pressed  (GwyVectorLayer *layer,
@@ -114,10 +117,10 @@ static void     gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
                                                 gboolean line_numbers);
 static void     gwy_layer_line_plugged         (GwyDataViewLayer *layer);
 static void     gwy_layer_line_unplugged       (GwyDataViewLayer *layer);
-static gint     gwy_layer_line_near_line       (GwyLayerLine *layer,
+static gint     gwy_layer_line_near_line       (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
-static gint     gwy_layer_line_near_point      (GwyLayerLine *layer,
+static gint     gwy_layer_line_near_point      (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
 
@@ -155,7 +158,7 @@ module_register(const gchar *name)
 }
 
 static void
-gwy_selection_line_class_init(GwySelectionAxisClass *klass)
+gwy_selection_line_class_init(GwySelectionLineClass *klass)
 {
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
@@ -163,7 +166,7 @@ gwy_selection_line_class_init(GwySelectionAxisClass *klass)
 }
 
 static void
-gwy_layer_line_class_init(GwyLayerLinesClass *klass)
+gwy_layer_line_class_init(GwyLayerLineClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
@@ -191,6 +194,12 @@ gwy_layer_line_class_init(GwyLayerLinesClass *klass)
                              "Whether to attach line numbers to the lines.",
                              TRUE,
                              G_PARAM_READWRITE));
+}
+
+static void
+gwy_selection_line_init(GwySelectionLine *selection)
+{
+    g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
 static void
@@ -261,122 +270,122 @@ gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
 
 static void
 gwy_layer_line_draw(GwyVectorLayer *layer,
-                     GdkDrawable *drawable)
+                    GdkDrawable *drawable)
 {
-    GwyLayerLine *lines_layer;
-    gint i;
+    gint i, n;
 
     g_return_if_fail(GWY_IS_LAYER_LINE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
-    lines_layer = GWY_LAYER_LINE(layer);
-    for (i = 0; i < lines_layer->nselected; i++)
-        gwy_layer_line_draw_object(lines_layer, drawable, i);
+    n = gwy_selection_get_data(layer->selection, NULL);
+    for (i = 0; i < n; i++)
+        gwy_layer_line_draw_object(layer, drawable, i);
 }
 
 static void
-gwy_layer_line_draw_object(GwyLayerLine *layer,
-                          GdkDrawable *drawable,
-                          gint i)
+gwy_layer_line_draw_object(GwyVectorLayer *layer,
+                           GdkDrawable *drawable,
+                           gint i)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
+    GwyLayerLine *layer_line;
     gint xi0, yi0, xi1, yi1, xt, yt;
+    gdouble xy[OBJECT_SIZE];
+    gboolean has_object;
 
-    g_return_if_fail(GWY_IS_LAYER_LINE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
-    vector_layer = GWY_VECTOR_LAYER(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-    g_return_if_fail(data_view);
-    g_return_if_fail(i >= 0 && i < layer->nselected);
 
-    if (!vector_layer->gc)
-        gwy_vector_layer_setup_gc(vector_layer);
+    has_object = gwy_selection_get_object(layer->selection, i, xy);
+    g_return_if_fail(has_object);
 
-    gwy_data_view_coords_real_to_xy(data_view,
-                                    layer->lines[4*i],
-                                    layer->lines[4*i + 1],
-                                    &xi0, &yi0);
-    gwy_data_view_coords_real_to_xy(data_view,
-                                    layer->lines[4*i + 2],
-                                    layer->lines[4*i + 3],
-                                    &xi1, &yi1);
+    gwy_vector_layer_setup_gc(layer);
+    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi0, &yi0);
+    gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xi1, &yi1);
     gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
     gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
-    gdk_draw_line(drawable, vector_layer->gc, xi0, yi0, xi1, yi1);
+    gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
 
-    if (!layer->line_numbers)
+    layer_line = GWY_LAYER_LINE(layer);
+    if (!layer_line->line_numbers)
         return;
 
-    gwy_layer_line_setup_label(layer, drawable, i);
+    gwy_layer_line_setup_label(layer_line, drawable, i);
     xt = (xi0 + xi1)/2 + 1;
     yt = (yi0 + yi1)/2;
-    gdk_draw_drawable(drawable, vector_layer->gc, layer->line_labels[i],
+    gdk_draw_drawable(drawable, layer->gc,
+                      g_ptr_array_index(layer_line->line_labels, i),
                       0, 0, xt, yt, -1, -1);
 }
 
 static void
-gwy_layer_line_setup_label(GwyLayerLine *layer,
-                            GdkDrawable *drawable,
-                            gint i)
+gwy_layer_line_setup_label(GwyLayerLine *layer_line,
+                           GdkDrawable *drawable,
+                           gint i)
 {
-    GwyVectorLayer *vector_layer;
+    GwyVectorLayer *layer;
     PangoRectangle rect;
     GdkPixmap *pixmap;
     GdkGC *gc;
     GdkColor color;
     gchar buffer[8];
 
-    if (GDK_IS_DRAWABLE(layer->line_labels[i]))
+    if (!layer_line->line_labels)
+        layer_line->line_labels = g_ptr_array_new();
+
+    if (i < layer_line->line_labels->len
+        && GDK_IS_DRAWABLE(g_ptr_array_index(layer_line->line_labels, i)))
         return;
 
-    vector_layer = GWY_VECTOR_LAYER(layer);
-    if (!vector_layer->layout) {
+    if (i >= layer_line->line_labels->len)
+        g_ptr_array_set_size(layer_line->line_labels, i+1);
+
+    layer = GWY_VECTOR_LAYER(layer_line);
+    if (!layer->layout) {
         PangoFontDescription *fontdesc;
 
-        vector_layer->layout = gtk_widget_create_pango_layout
-                                   (GWY_DATA_VIEW_LAYER(vector_layer)->parent,
+        layer->layout = gtk_widget_create_pango_layout
+                                   (GWY_DATA_VIEW_LAYER(layer)->parent,
                                     "");
+        /* FIXME: just set ,bigger and bold`, not particular font */
         fontdesc = pango_font_description_from_string("Helvetica bold 12");
-        pango_layout_set_font_description(vector_layer->layout, fontdesc);
+        pango_layout_set_font_description(layer->layout, fontdesc);
         pango_font_description_free(fontdesc);
     }
 
     g_snprintf(buffer, sizeof(buffer), "%d", i+1);
-    pango_layout_set_text(vector_layer->layout, buffer, -1);
-    pango_layout_get_pixel_extents(vector_layer->layout, NULL, &rect);
+    pango_layout_set_text(layer->layout, buffer, -1);
+    pango_layout_get_pixel_extents(layer->layout, NULL, &rect);
 
-    layer->line_labels[i] = pixmap = gdk_pixmap_new(drawable,
-                                                    rect.width, rect.height,
-                                                    -1);
+    pixmap = gdk_pixmap_new(drawable, rect.width, rect.height, -1);
+    g_ptr_array_index(layer_line->line_labels, i) = pixmap;
+
     gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
     gdk_gc_set_function(gc, GDK_COPY);
     color.red = 0;
     color.green = 0;
     color.blue = 0;
-    gdk_gc_set_rgb_fg_color (gc, &color);
+    gdk_gc_set_rgb_fg_color(gc, &color);
     gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, rect.width, rect.height);
-    gdk_draw_layout(pixmap, vector_layer->gc, -rect.x, -rect.y,
-                    vector_layer->layout);
+    gdk_draw_layout(pixmap, layer->gc, -rect.x, -rect.y, layer->layout);
     g_object_unref(gc);
 }
 
 static gboolean
 gwy_layer_line_motion_notify(GwyVectorLayer *layer,
-                              GdkEventMotion *event)
+                             GdkEventMotion *event)
 {
     GwyDataView *data_view;
-    GwyLayerLinesClass *klass;
-    GwyLayerLine *lines_layer;
+    GwyLayerLineClass *klass;
     GdkWindow *window;
     gint x, y, i, j;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
-    lines_layer = GWY_LAYER_LINE(layer);
-    i = lines_layer->inear;
+    i = layer->selecting;
+
     if (event->is_hint)
         gdk_window_get_pointer(window, &x, &y, NULL);
     else {
@@ -386,17 +395,21 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    if (lines_layer->button && lines_layer->moving_line)
-        return gwy_layer_line_move_line(lines_layer, xreal, yreal);
-    if (i > -1
-        && xreal == lines_layer->lines[2*i]
-        && yreal == lines_layer->lines[2*i + 1])
-        return FALSE;
+    if (layer->button && GWY_LAYER_LINE(layer)->moving_line)
+        return gwy_layer_line_move_line(layer, xreal, yreal);
 
-    if (!lines_layer->button) {
-        klass = GWY_LAYER_LINE_GET_CLASS(lines_layer);
-        j = gwy_layer_line_near_line(lines_layer, xreal, yreal);
-        i = gwy_layer_line_near_point(lines_layer, xreal, yreal);
+    if (i > -1)
+        gwy_selection_get_object(layer->selection, i/2, xy);
+    /* FIXME: here is normally something like
+    if (i > -1 && xreal == xy[2] && yreal == xy[3])
+        return FALSE;
+       but we need to know which endpoint is moving...
+     */
+
+    if (!layer->button) {
+        j = gwy_layer_line_near_line(layer, xreal, yreal);
+        i = gwy_layer_line_near_point(layer, xreal, yreal);
+        klass = GWY_LAYER_LINE_GET_CLASS(layer);
         if (i == -1 && j >= 0)
             gdk_window_set_cursor(window, klass->nearline_cursor);
         else
@@ -404,38 +417,36 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
         return FALSE;
     }
 
-    g_assert(lines_layer->inear != -1);
-    gwy_layer_line_undraw_object(lines_layer, window, i/2);
-    lines_layer->lines[2*i] = xreal;
-    lines_layer->lines[2*i + 1] = yreal;
-    gwy_layer_line_save(lines_layer, i/2);
-    gwy_layer_line_draw_object(lines_layer, window, i/2);
-    gwy_vector_layer_updated(layer);
+    g_assert(layer->selecting != -1);
+    gwy_layer_line_undraw_object(layer, window, i/2);
+    xy[2*(i % 2) + 0] = xreal;
+    xy[2*(i % 2) + 1] = yreal;
+    gwy_selection_set_object(layer->selection, i/2, xy);
+    gwy_layer_line_draw_object(layer, window, i/2);
 
     return FALSE;
 }
 
 static gboolean
-gwy_layer_line_move_line(GwyLayerLine *layer,
-                             gdouble xreal, gdouble yreal)
+gwy_layer_line_move_line(GwyVectorLayer *layer,
+                         gdouble xreal, gdouble yreal)
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    gdouble coords[4];
-    gdouble *line;
+    gdouble coords[OBJECT_SIZE], xy[OBJECT_SIZE];
     gint x, y, i;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
-    g_return_val_if_fail(layer->inear != -1, FALSE);
+    g_return_val_if_fail(layer->selecting != -1, FALSE);
 
-    i = layer->inear;
-    line = layer->lines + 4*i;
+    i = layer->selecting/2;
+    gwy_selection_get_object(layer->selection, i, xy);
 
-    /* compute wanted new coordinates of the first endpoint */
-    coords[0] = xreal + layer->lmove_x;
-    coords[1] = yreal + layer->lmove_y;
-    if (coords[0] == line[0] && coords[1] == line[1])
+    /* calculate wanted new coordinates of the first endpoint */
+    coords[0] = xreal + GWY_LAYER_LINE(layer)->lmove_x;
+    coords[1] = yreal + GWY_LAYER_LINE(layer)->lmove_y;
+    if (coords[0] == xy[0] && coords[1] == xy[1])
         return FALSE;
 
     /* clamp them to get best possible */
@@ -443,11 +454,11 @@ gwy_layer_line_move_line(GwyLayerLine *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &coords[0], &coords[1]);
 
-    /* compute wanted new coordinates of the second endpoint */
-    coords[2] = (coords[0] - line[0]) + line[2];
-    coords[3] = (coords[1] - line[1]) + line[3];
+    /* calculate wanted new coordinates of the second endpoint */
+    coords[2] = (coords[0] - xy[0]) + xy[2];
+    coords[3] = (coords[1] - xy[1]) + xy[3];
 
-    if (coords[2] == line[2] && coords[3] == line[3])
+    if (coords[2] == xy[2] && coords[3] == xy[3])
         return FALSE;
 
     /* clamp them to get best possible */
@@ -455,39 +466,36 @@ gwy_layer_line_move_line(GwyLayerLine *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &coords[2], &coords[3]);
 
-    /* recompute the first ones */
-    coords[0] = (coords[2] - line[2]) + line[0];
-    coords[1] = (coords[3] - line[3]) + line[1];
+    /* recompute the first point */
+    coords[0] = (coords[2] - xy[2]) + xy[0];
+    coords[1] = (coords[3] - xy[3]) + xy[1];
 
-    if (coords[0] == line[0] && coords[1] == line[1])
+    if (coords[0] == xy[0] && coords[1] == xy[1])
         return FALSE;
 
     gwy_layer_line_undraw_object(layer, window, i);
     gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
-    memcpy(line, coords, 4*sizeof(gdouble));
-    gwy_layer_line_save(layer, i);
+    gwy_selection_set_object(layer->selection, i, coords);
     gwy_layer_line_draw_object(layer, window, i);
-    gwy_vector_layer_updated(GWY_VECTOR_LAYER(layer));
 
     return FALSE;
 }
 
 static gboolean
 gwy_layer_line_button_pressed(GwyVectorLayer *layer,
-                               GdkEventButton *event)
+                              GdkEventButton *event)
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerLinesClass *klass;
-    GwyLayerLine *lines_layer;
+    GwyLayerLineClass *klass;
+    GwyLayerLine *layer_line;
     gint x, y, i, j;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
 
     gwy_debug("");
     if (event->button != 1)
         return FALSE;
 
-    lines_layer = GWY_LAYER_LINE(layer);
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
@@ -500,40 +508,50 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
         return FALSE;
 
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    /* handle existing lines */
-    klass = GWY_LAYER_LINE_GET_CLASS(lines_layer);
-    j = gwy_layer_line_near_line(lines_layer, xreal, yreal);
-    i = gwy_layer_line_near_point(lines_layer, xreal, yreal);
+    layer_line = GWY_LAYER_LINE(layer);
+
+    /* handle existing selection */
+    j = gwy_layer_line_near_line(layer, xreal, yreal);
+    i = gwy_layer_line_near_point(layer, xreal, yreal);
+    g_printerr("%d %d\n", i, j);
     if (i == -1 && j >= 0) {
-        lines_layer->inear = j;
-        lines_layer->moving_line = TRUE;
-        lines_layer->lmove_x = lines_layer->lines[4*j] - xreal;
-        lines_layer->lmove_y = lines_layer->lines[4*j + 1] - yreal;
-        i = 2*j;
+        gwy_selection_get_object(layer->selection, j, xy);
+        layer->selecting = i = 2*j;
+        gwy_layer_line_undraw_object(layer, window, j);
+        layer_line->moving_line = TRUE;
+        layer_line->lmove_x = xy[0] - xreal;
+        layer_line->lmove_y = xy[1] - yreal;
     }
     else {
         if (i >= 0) {
-            lines_layer->inear = i;
-            gwy_layer_line_undraw_object(lines_layer, window, i/2);
+            layer->selecting = i;
+            gwy_layer_line_undraw_object(layer, window, i/2);
+            xy[2*(i % 2) + 0] = xreal;
+            xy[2*(i % 2) + 1] = yreal;
         }
         else {
-            /* add a line, or do nothing when maximum is reached */
-            if (lines_layer->nselected == lines_layer->nlines)
-                return FALSE;
-            i = lines_layer->inear = 2*lines_layer->nselected;
-            lines_layer->nselected++;
-            lines_layer->lines[2*i] = xreal;
-            lines_layer->lines[2*i + 1] = yreal;
-            i++;
-        }
-        lines_layer->moving_line = FALSE;
-        lines_layer->lines[2*i] = xreal;
-        lines_layer->lines[2*i + 1] = yreal;
-        gwy_layer_line_draw_object(lines_layer, window, i/2);
-    }
-    lines_layer->button = event->button;
+            xy[2] = xy[0] = xreal;
+            xy[3] = xy[1] = yreal;
 
-    layer->in_selection = TRUE;
+            /* add an object, or do nothing when maximum is reached */
+            i = -2;
+            if (gwy_selection_is_full(layer->selection)) {
+                if (gwy_selection_get_max_objects(layer->selection) > 1)
+                    return FALSE;
+                i = 0;
+                gwy_layer_line_undraw_object(layer, window, i/2);
+            }
+            layer->selecting = 0;    /* avoid "update" signal emission */
+            layer->selecting = gwy_selection_set_object(layer->selection, i/2,
+                                                        xy);
+            /* When we start a new selection, second endpoint is moving */
+            layer->selecting = 2*layer->selecting + 1;
+        }
+    }
+    layer->button = event->button;
+    gwy_layer_line_draw_object(layer, window, layer->selecting/2);
+
+    klass = GWY_LAYER_LINE_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->move_cursor);
 
     return FALSE;
@@ -541,59 +559,54 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
 
 static gboolean
 gwy_layer_line_button_released(GwyVectorLayer *layer,
-                                GdkEventButton *event)
+                               GdkEventButton *event)
 {
     GwyDataView *data_view;
     GdkWindow *window;
-    GwyLayerLinesClass *klass;
-    GwyLayerLine *lines_layer;
+    GwyLayerLineClass *klass;
     gint x, y, i, j;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
 
-    lines_layer = GWY_LAYER_LINE(layer);
-    if (!lines_layer->button)
+    if (!layer->button)
         return FALSE;
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
 
-    lines_layer->button = 0;
+    layer->button = 0;
     x = event->x;
     y = event->y;
-    i = lines_layer->inear;
+    i = layer->selecting;
     gwy_debug("i = %d", i);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    if (lines_layer->moving_line)
-        gwy_layer_line_move_line(lines_layer, xreal, yreal);
+    if (GWY_LAYER_LINE(layer)->moving_line)
+        gwy_layer_line_move_line(layer, xreal, yreal);
     else {
-        gwy_layer_line_undraw_object(lines_layer, window, i/2);
-        lines_layer->lines[2*i] = xreal;
-        lines_layer->lines[2*i + 1] = yreal;
+        gwy_selection_get_object(layer->selection, i/2, xy);
+        gwy_layer_line_undraw_object(layer, window, i/2);
+        xy[2*(i % 2) + 0] = xreal;
+        xy[2*(i % 2) + 1] = yreal;
         /* XXX this can happen also with rounding errors */
-        if (lines_layer->lines[2*i] == lines_layer->lines[2*i + 2]
-            && lines_layer->lines[2*i + 1] == lines_layer->lines[2*i + 3]) {
-            lines_layer->nselected--;
-        }
-        else {
-            gwy_layer_line_save(lines_layer, i/2);
-            gwy_layer_line_draw_object(lines_layer, window, i/2);
-        }
-        gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
+        if (xy[0] == xy[2] && xy[1] == xy[3])
+            gwy_selection_delete_object(layer->selection, i/2);
+        else
+            gwy_layer_line_draw_object(layer, window, i/2);
     }
 
-    layer->in_selection = FALSE;
-    klass = GWY_LAYER_LINE_GET_CLASS(lines_layer);
-    j = gwy_layer_line_near_line(lines_layer, xreal, yreal);
-    i = gwy_layer_line_near_point(lines_layer, xreal, yreal);
-    if (i == -1 && j >= 0)
+    GWY_LAYER_LINE(layer)->moving_line = FALSE;
+    layer->selecting = -1;
+    klass = GWY_LAYER_LINE_GET_CLASS(layer);
+    j = gwy_layer_line_near_line(layer, xreal, yreal);
+    i = gwy_layer_line_near_point(layer, xreal, yreal);
+    if (outside)
+        gdk_window_set_cursor(window, NULL);
+    else if (i == -1 && j >= 0)
         gdk_window_set_cursor(window, klass->nearline_cursor);
     else
         gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
-
-    if (lines_layer->nselected == lines_layer->nlines)
-        gwy_vector_layer_selection_finished(layer);
+    gwy_selection_finished(layer->selection);
 
     return FALSE;
 }
@@ -622,7 +635,7 @@ gwy_layer_line_unplugged(GwyDataViewLayer *layer)
     gwy_debug("");
     lines_layer = GWY_LAYER_LINE(layer);
 
-    klass = GWY_LAYER_LINE_GET_CLASS(object);
+    klass = GWY_LAYER_LINE_GET_CLASS(layer);
     gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->nearline_cursor);
@@ -638,25 +651,25 @@ gwy_layer_line_unplugged(GwyDataViewLayer *layer)
 }
 
 static gint
-gwy_layer_line_near_line(GwyLayerLine *layer,
-                          gdouble xreal, gdouble yreal)
+gwy_layer_line_near_line(GwyVectorLayer *layer,
+                         gdouble xreal, gdouble yreal)
 {
-    GwyDataViewLayer *dlayer;
-    gdouble d2min;
-    gint i;
+    GwyDataView *view;
+    gdouble d2min, *xy;
+    gint i, n;
 
-    if (!layer->nselected)
+    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    i = gwy_math_find_nearest_line(xreal, yreal, &d2min,
-                                   layer->nselected, layer->lines);
+    xy = g_newa(gdouble, OBJECT_SIZE*n);
+    gwy_selection_get_data(layer->selection, xy);
+    i = gwy_math_find_nearest_line(xreal, yreal, &d2min, n, xy);
     if (i == -1)
         return -1;
 
-    dlayer = (GwyDataViewLayer*)layer;
+    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     /* FIXME: this is simply nonsense when x measure != y measure */
-    d2min /= gwy_data_view_get_xmeasure(GWY_DATA_VIEW(dlayer->parent))
-             *gwy_data_view_get_ymeasure(GWY_DATA_VIEW(dlayer->parent));
+    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
 
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
@@ -664,25 +677,24 @@ gwy_layer_line_near_line(GwyLayerLine *layer,
 }
 
 static gint
-gwy_layer_line_near_point(GwyLayerLine *layer,
-                           gdouble xreal, gdouble yreal)
+gwy_layer_line_near_point(GwyVectorLayer *layer,
+                          gdouble xreal, gdouble yreal)
 {
-    GwyDataViewLayer *dlayer;
-    gdouble d2min;
-    gint i;
+    GwyDataView *view;
+    gdouble d2min, *xy;
+    gint i, n;
 
-    if (!layer->nselected)
+    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    /* note we search for an *endpoint*, not whole line, so divide i by 2
-     * to get line index */
-    i = gwy_math_find_nearest_point(xreal, yreal, &d2min,
-                                    2*layer->nselected, layer->lines);
+    xy = g_newa(gdouble, OBJECT_SIZE*n);
+    gwy_selection_get_data(layer->selection, xy);
+    /* note we search for an endpoint, that is a half of a line */
+    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 2*n, xy);
 
-    dlayer = (GwyDataViewLayer*)layer;
+    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     /* FIXME: this is simply nonsense when x measure != y measure */
-    d2min /= gwy_data_view_get_xmeasure(GWY_DATA_VIEW(dlayer->parent))
-             *gwy_data_view_get_ymeasure(GWY_DATA_VIEW(dlayer->parent));
+    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
 
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
