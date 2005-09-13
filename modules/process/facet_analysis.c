@@ -87,10 +87,12 @@ static void     facet_view_select_angle          (FacetsControls *controls,
                                                   gdouble theta,
                                                   gdouble phi);
 static void     facet_view_selection_updated     (GwySelection *selection,
+                                                  gint id,
                                                   FacetsControls *controls);
 static void     update_average_angle             (FacetsControls *controls,
                                                   FacetsArgs *args);
 static void     preview_selection_updated        (GwySelection *selection,
+                                                  gint id,
                                                   FacetsControls *controls);
 static void     mask_color_change_cb             (GtkWidget *color_button,
                                                   FacetsControls *controls);
@@ -174,7 +176,7 @@ facets_analyse(GwyContainer *data, GwyRunType run)
     gboolean ok = FALSE;
 
     g_return_val_if_fail(run & FACETS_RUN_MODES, FALSE);
-    g_return_val_if_fail(g_type_from_name("GwyLayerPoints"), FALSE);
+    g_return_val_if_fail(g_type_from_name("GwyLayerPoint"), FALSE);
     if (run == GWY_RUN_WITH_DEFAULTS)
         args = facets_defaults;
     else
@@ -284,8 +286,8 @@ facets_dialog(FacetsArgs *args,
                                         gwy_data_field_get_yres(dfield));
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
-    vlayer = g_object_new(g_type_from_name("GwyLayerPoints"), NULL);
-    g_object_set(G_OBJECT(vlayer), "max-points", 1, NULL);
+    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view), vlayer);
     selection = gwy_vector_layer_get_selection(vlayer);
     g_signal_connect(selection, "changed",
@@ -309,8 +311,8 @@ facets_dialog(FacetsArgs *args,
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.fview),
                                  layer);
 
-    vlayer = g_object_new(g_type_from_name("GwyLayerPoints"), NULL);
-    g_object_set(G_OBJECT(vlayer), "max-points", 1, NULL);
+    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.fview),
                                 GWY_VECTOR_LAYER(vlayer));
     selection = gwy_vector_layer_get_selection(vlayer);
@@ -492,6 +494,7 @@ facet_view_select_angle(FacetsControls *controls,
 
 static void
 facet_view_selection_updated(GwySelection *selection,
+                             G_GNUC_UNUSED gint id,
                              FacetsControls *controls)
 {
     GwyVectorLayer *layer;
@@ -545,6 +548,7 @@ update_average_angle(FacetsControls *controls,
 
 static void
 preview_selection_updated(GwySelection *selection,
+                          G_GNUC_UNUSED gint id,
                           FacetsControls *controls)
 {
     GwyDataField *dfield;
