@@ -619,8 +619,10 @@ gwy_selection_deserialize_default(const guchar *buffer,
         return NULL;
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position, typename,
-                                            G_N_ELEMENTS(spec), spec))
+                                            G_N_ELEMENTS(spec), spec)) {
+        g_free(data);
         return NULL;
+    }
 
     selection = g_object_new(type, NULL);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
