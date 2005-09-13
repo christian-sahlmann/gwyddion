@@ -127,7 +127,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerLines";
+    static const gchar *layer_name = "GwyLayerLine";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -147,11 +147,15 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    GwySelection *selection;
+
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer,
-                 "max_lines", NPROFILE,
-                 "line_numbers", TRUE,
+                 "selection-key", "/0/select/line",
+                 "line-numbers", TRUE,
                  NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    gwy_selection_set_max_objects(selection, NPROFILE);
 }
 
 static GtkWidget*
@@ -263,14 +267,14 @@ dialog_create(GwyUnitoolState *state)
 
     controls->linesize = gtk_adjustment_new(controls->size,
                                             1, MAX_WIDTH, 1, 5, 0);
-    gwy_table_attach_spinbutton(table, row, _("Thickness:"), _("px"),
+    gwy_table_attach_spinbutton(table, row, _("Thickness:"), "px",
                                 controls->linesize);
     g_signal_connect_swapped(controls->linesize, "value-changed",
                              G_CALLBACK(size_changed_cb), controls);
     row++;
 
     controls->nofpoints = gtk_adjustment_new(controls->npoints, 10, 100, 1, 5, 0);
-    gwy_table_attach_hscale(table, row, _("fix res.:"), "",
+    gwy_table_attach_hscale(table, row, _("Fix res.:"), NULL,
                                 controls->nofpoints, GWY_HSCALE_CHECK);
     g_signal_connect_swapped(controls->nofpoints, "value-changed",
                              G_CALLBACK(npoints_changed_cb), controls);

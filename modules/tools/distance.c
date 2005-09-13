@@ -59,8 +59,8 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
-    "Nenad Ocelic <ocelic _at_ biochem.mpg.de>",
-    "1.2",
+    "Nenad Ocelic <ocelic@biochem.mpg.de>",
+    "1.3",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -99,7 +99,7 @@ static gboolean
 use(GwyDataWindow *data_window,
     GwyToolSwitchEvent reason)
 {
-    static const gchar *layer_name = "GwyLayerLines";
+    static const gchar *layer_name = "GwyLayerLine";
     static GwyUnitoolState *state = NULL;
 
     if (!state) {
@@ -119,11 +119,15 @@ use(GwyDataWindow *data_window,
 static void
 layer_setup(GwyUnitoolState *state)
 {
+    GwySelection *selection;
+
     g_assert(CHECK_LAYER_TYPE(state->layer));
     g_object_set(state->layer,
-                 "max_lines", NLINES,
-                 "line_numbers", TRUE,
+                 "selection-key", "/0/select/line",
+                 "line-numbers", TRUE,
                  NULL);
+    selection = gwy_vector_layer_get_selection(state->layer);
+    gwy_selection_set_max_objects(selection, NLINES);
 }
 
 static GtkWidget*
