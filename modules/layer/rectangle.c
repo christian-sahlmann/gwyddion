@@ -57,6 +57,7 @@ struct _GwyLayerRectangle {
     GwyVectorLayer parent_instance;
 
     gboolean is_crop;
+    gboolean square;
 };
 
 struct _GwyLayerRectangleClass {
@@ -103,6 +104,9 @@ static void     gwy_layer_rectangle_unplugged      (GwyDataViewLayer *layer);
 static gint     gwy_layer_rectangle_near_point     (GwyVectorLayer *layer,
                                                     gdouble xreal,
                                                     gdouble yreal);
+static void     gwy_layer_rectangle_squarize       (GwyDataView *data_view,
+                                                    gint x, gint y,
+                                                    gdouble *xy);
 
 /* Allow to express intent. */
 #define gwy_layer_rectangle_undraw         gwy_layer_rectangle_draw
@@ -113,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -173,10 +177,11 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
         PROP_IS_CROP,
         g_param_spec_boolean("is-crop",
                              "Crop style",
-                             "Whether the selection is crop-style instead of "
-                             "plain rectangle",
+                             "Whether the selection is drawn crop-style with "
+                             "lines from border to border instead of plain "
+                             "rectangle",
                              FALSE,
-                             G_PARAM_READABLE | G_PARAM_WRITABLE));
+                             G_PARAM_READWRITE));
 }
 
 static void
@@ -291,6 +296,7 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     GdkWindow *window;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gboolean square;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
@@ -303,6 +309,7 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
         x = event->x;
         y = event->y;
     }
+    square = event->state & GDK_SHIFT_MASK;
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
@@ -321,9 +328,14 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(layer->selecting != -1);
+    GWY_LAYER_RECTANGLE(layer)->square = square;
     gwy_layer_rectangle_undraw_object(layer, window, i);
-    xy[2] = xreal;
-    xy[3] = yreal;
+    if (square)
+        gwy_layer_rectangle_squarize(data_view, x, y, xy);
+    else {
+        xy[2] = xreal;
+        xy[3] = yreal;
+    }
     gwy_selection_set_object(layer->selection, i, xy);
     gwy_layer_rectangle_draw_object(layer, window, i);
 
@@ -339,6 +351,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
     GwyLayerRectangleClass *klass;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gboolean square;
 
     gwy_debug("");
     if (event->button != 1)
@@ -349,6 +362,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
 
     x = event->x;
     y = event->y;
+    square = event->state & GDK_SHIFT_MASK;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
@@ -374,8 +388,12 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
         else
             xy[1] = MAX(xy[1], xy[3]);
 
-        xy[2] = xreal;
-        xy[3] = yreal;
+        if (square)
+            gwy_layer_rectangle_squarize(data_view, x, y, xy);
+        else {
+            xy[2] = xreal;
+            xy[3] = yreal;
+        }
         gwy_selection_set_object(layer->selection, layer->selecting, xy);
     }
     else {
@@ -393,6 +411,7 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
+    GWY_LAYER_RECTANGLE(layer)->square = square;
     layer->button = event->button;
     gwy_layer_rectangle_draw(layer, window);
 
@@ -411,7 +430,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     GwyLayerRectangleClass *klass;
     gint x, y, i;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
-    gboolean outside;
+    gboolean outside, square;
 
     if (!layer->button)
         return FALSE;
@@ -421,6 +440,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     layer->button = 0;
     x = event->x;
     y = event->y;
+    square = event->state & GDK_SHIFT_MASK;
     i = layer->selecting;
     gwy_debug("i = %d", i);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
@@ -435,8 +455,12 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
         gwy_selection_finished(layer->selection);
     }
     else {
-        xy[2] = xreal;
-        xy[3] = yreal;
+        if (square)
+            gwy_layer_rectangle_squarize(data_view, x, y, xy);
+        else {
+            xy[2] = xreal;
+            xy[3] = yreal;
+        }
 
         if (xy[2] < xy[0])
             GWY_SWAP(gdouble, xy[0], xy[2]);
@@ -449,6 +473,7 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     }
 
     layer->selecting = -1;
+    GWY_LAYER_RECTANGLE(layer)->square = square;
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
     if (i > 0)
@@ -544,6 +569,26 @@ gwy_layer_rectangle_near_point(GwyVectorLayer *layer,
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
+}
+
+static void
+gwy_layer_rectangle_squarize(GwyDataView *data_view,
+                             gint x, gint y,
+                             gdouble *xy)
+{
+    gint size, x0, y0, xx, yy;
+
+    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &x0, &y0);
+    size = MAX(ABS(x - x0), ABS(y - y0));
+    x = xx = (x >= x0) ? x0 + size : x0 - size;
+    y = yy = (y >= y0) ? y0 + size : y0 - size;
+    gwy_data_view_coords_xy_clamp(data_view, &xx, &yy);
+    if (xx != x || yy != y) {
+        size = MIN(ABS(xx - x0), ABS(yy - y0));
+        x = (xx >= x0) ? x0 + size : x0 - size;
+        y = (yy >= y0) ? y0 + size : y0 - size;
+    }
+    gwy_data_view_coords_xy_to_real(data_view, x, y, &xy[2], &xy[3]);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
