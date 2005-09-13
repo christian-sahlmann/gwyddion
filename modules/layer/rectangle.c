@@ -56,7 +56,10 @@ typedef struct _GwySelectionRectangleClass GwySelectionRectangleClass;
 struct _GwyLayerRectangle {
     GwyVectorLayer parent_instance;
 
+    /* Properties */
     gboolean is_crop;
+
+    /* Dynamic state */
     gboolean square;
 };
 
@@ -512,17 +515,14 @@ gwy_layer_rectangle_plugged(GwyDataViewLayer *layer)
     GwyLayerRectangleClass *klass;
 
     gwy_debug("");
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->plugged(layer);
 
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
-
     gwy_gdk_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
     gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
-
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_rectangle_parent_class)->plugged(layer);
-    /* gwy_data_view_layer_updated(layer); */
 }
 
 static void

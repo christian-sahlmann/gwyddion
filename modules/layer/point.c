@@ -56,6 +56,7 @@ typedef struct _GwySelectionPointClass GwySelectionPointClass;
 struct _GwyLayerPoint {
     GwyVectorLayer parent_instance;
 
+    /* Properties */
     gboolean draw_marker;
 };
 
@@ -446,12 +447,11 @@ gwy_layer_point_plugged(GwyDataViewLayer *layer)
     GwyLayerPointClass *klass;
 
     gwy_debug("");
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->plugged(layer);
 
     klass = GWY_LAYER_POINT_GET_CLASS(layer);
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
     gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
-
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->plugged(layer);
 }
 
 static void

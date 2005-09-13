@@ -58,8 +58,6 @@ typedef struct _GwySelectionAxisClass GwySelectionAxisClass;
 
 struct _GwyLayerAxis {
     GwyVectorLayer parent_instance;
-
-    gint selecting;
 };
 
 struct _GwyLayerAxisClass {
@@ -448,14 +446,11 @@ gwy_layer_axis_plugged(GwyDataViewLayer *layer)
     GwyLayerAxisClass *klass;
 
     gwy_debug("");
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->plugged(layer);
 
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);
-
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
     gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
-
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->plugged(layer);
-    /* gwy_data_view_layer_updated(layer); */
 }
 
 static void
