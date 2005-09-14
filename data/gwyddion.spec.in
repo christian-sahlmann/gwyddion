@@ -25,7 +25,10 @@ Prefix: %{_prefix}
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 Prereq: /sbin/ldconfig
 Prereq: desktop-file-utils >= 0.9
-BuildPrereq: gtk2-devel >= 2.4
+BuildPrereq: xorg-x11-devel
+BuildPrereq: pango-devel >= 1.8
+BuildPrereq: gtk2-devel >= 2.6
+BuildPrereq: glib2-devel >= 2.6
 BuildPrereq: gtkglext-devel >= 1.0
 BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
