@@ -656,7 +656,8 @@ gwy_container_gis_value(GwyContainer *container,
     if (!(p = gwy_container_gis_value_of_type(container, key, 0)))
         return FALSE;
 
-    g_value_unset(value);
+    if (G_VALUE_TYPE(value))
+        g_value_unset(value);
     g_value_init(value, G_VALUE_TYPE(p));
     g_value_copy(p, value);
 
