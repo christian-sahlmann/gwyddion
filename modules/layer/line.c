@@ -64,6 +64,7 @@ struct _GwyLayerLine {
 
     /* Dynamic state */
     gboolean moving_line;
+    gboolean restricted;
     gdouble lmove_x;
     gdouble lmove_y;
     GPtrArray *line_labels;
@@ -123,6 +124,10 @@ static gint     gwy_layer_line_near_line       (GwyVectorLayer *layer,
 static gint     gwy_layer_line_near_point      (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
+static void     gwy_layer_line_restrict_angle  (GwyDataView *data_view,
+                                                gint endpoint,
+                                                gint x, gint y,
+                                                gdouble *xy);
 
 /* Allow to express intent. */
 #define gwy_layer_line_undraw        gwy_layer_line_draw
@@ -133,7 +138,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -380,6 +385,7 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     GdkWindow *window;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gboolean restricted;
 
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     window = GTK_WIDGET(data_view)->window;
@@ -392,6 +398,7 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
         x = event->x;
         y = event->y;
     }
+    restricted = event->state & GDK_SHIFT_MASK;
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
@@ -418,9 +425,15 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(layer->selecting != -1);
+    GWY_LAYER_LINE(layer)->restricted = restricted;
     gwy_layer_line_undraw_object(layer, window, i/2);
-    xy[2*(i % 2) + 0] = xreal;
-    xy[2*(i % 2) + 1] = yreal;
+    if (restricted)
+        gwy_layer_line_restrict_angle(data_view, i % 2,
+                                      event->x, event->y, xy);
+    else {
+        xy[2*(i % 2) + 0] = xreal;
+        xy[2*(i % 2) + 1] = yreal;
+    }
     gwy_selection_set_object(layer->selection, i/2, xy);
     gwy_layer_line_draw_object(layer, window, i/2);
 
@@ -491,6 +504,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     GwyLayerLine *layer_line;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
+    gboolean restricted;
 
     gwy_debug("");
     if (event->button != 1)
@@ -501,6 +515,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
 
     x = event->x;
     y = event->y;
+    restricted = event->state & GDK_SHIFT_MASK;
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_debug("[%d,%d]", x, y);
     /* do nothing when we are outside */
@@ -525,8 +540,13 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
         if (i >= 0) {
             layer->selecting = i;
             gwy_layer_line_undraw_object(layer, window, i/2);
-            xy[2*(i % 2) + 0] = xreal;
-            xy[2*(i % 2) + 1] = yreal;
+            if (restricted)
+                gwy_layer_line_restrict_angle(data_view, i % 2,
+                                              event->x, event->y, xy);
+            else {
+                xy[2*(i % 2) + 0] = xreal;
+                xy[2*(i % 2) + 1] = yreal;
+            }
         }
         else {
             xy[2] = xy[0] = xreal;
@@ -547,6 +567,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
             layer->selecting = 2*layer->selecting + 1;
         }
     }
+    GWY_LAYER_LINE(layer)->restricted = restricted;
     layer->button = event->button;
     gwy_layer_line_draw_object(layer, window, layer->selecting/2);
 
@@ -585,8 +606,13 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
     else {
         gwy_selection_get_object(layer->selection, i/2, xy);
         gwy_layer_line_undraw_object(layer, window, i/2);
-        xy[2*(i % 2) + 0] = xreal;
-        xy[2*(i % 2) + 1] = yreal;
+        if (GWY_LAYER_LINE(layer)->restricted)
+            gwy_layer_line_restrict_angle(data_view, i % 2,
+                                          event->x, event->y, xy);
+        else {
+            xy[2*(i % 2) + 0] = xreal;
+            xy[2*(i % 2) + 1] = yreal;
+        }
         /* XXX this can happen also with rounding errors */
         if (xy[0] == xy[2] && xy[1] == xy[3])
             gwy_selection_delete_object(layer->selection, i/2);
@@ -698,6 +724,60 @@ gwy_layer_line_near_point(GwyVectorLayer *layer,
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
+}
+
+/**
+ * gwy_layer_line_restrict_angle:
+ * @data_view: Data view widget to use for coordinate conversion and
+ *             restriction.
+ * @endpoint: Which endpoint to move (0 for first, 1, for second).
+ * @x: Unrestricted screen endpoint x-coordinate.
+ * @y: Unrestricted screen endpoint y-coordinate.
+ * @xy: Selection object to update.
+ *
+ * Restricts line endpoint to force line angle to be a multiple of 15 degrees.
+ **/
+static void
+gwy_layer_line_restrict_angle(GwyDataView *data_view,
+                              gint endpoint,
+                              gint x, gint y,
+                              gdouble *xy)
+{
+    gint length, phi, xb, yb, xx, yy, ept = endpoint;
+    gdouble c, s;
+
+    gwy_data_view_coords_real_to_xy(data_view,
+                                    xy[2*(1 - ept) + 0], xy[2*(1 - ept) + 1],
+                                    &xb, &yb);
+    phi = ROUND(atan2(y - yb, x - xb)*12.0/G_PI);
+    s = sin(phi*G_PI/12.0);
+    c = cos(phi*G_PI/12.0);
+    length = ROUND(hypot(x - xb, y - yb));
+    if (!length) {
+        xy[2*ept + 0] = xy[2*(1 - ept) + 0];
+        xy[2*ept + 1] = xy[2*(1 - ept) + 1];
+        return;
+    }
+
+    x = xx = xb + length*c;
+    y = yy = yb + length*s;
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    if (x != xx && y != yy) {
+        xx = xb + (y - yb)*c/s;
+        yy = yb + (x - xb)*s/c;
+        if (hypot(xx - xb, y - yb) < hypot(x - xb, yy - yb))
+            x = xx;
+        else
+            y = yy;
+    }
+    else if (x == xx && y != yy)
+        x = xb + (y - yb)*c/s;
+    else if (x != xx && y == yy)
+        y = yb + (x - xb)*s/c;
+    /* Final clamp to fix eventual rounding errors */
+    gwy_data_view_coords_xy_clamp(data_view, &x, &y);
+    gwy_data_view_coords_xy_to_real(data_view, x, y,
+                                    &xy[2*ept + 0], &xy[2*ept + 1]);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
