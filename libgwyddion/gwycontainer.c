@@ -59,12 +59,6 @@ typedef struct {
     gsize *pfxlengths;
 } PrefixListData;
 
-/*
- * XXX: This is ugly. Having hour own all-in-one type saves us from
- * - accessing GValue fields directly when we need _pointers_ to values
- * - special-casing char that is promoted to int in GValue so we can't get
- *   a pointer anyway
- */
 typedef struct {
     GwySerializeItem *items;
     gint i;
@@ -232,7 +226,7 @@ value_destroy_func(gpointer data)
 
 /**
  * gwy_container_value_type_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the type of value in container @c identified by name @n.
@@ -240,7 +234,7 @@ value_destroy_func(gpointer data)
 
 /**
  * gwy_container_value_type:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the type of value in @container identified by @key.
@@ -262,7 +256,7 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_contains_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Expands to %TRUE if container @c contains a value identified by name @n.
@@ -270,7 +264,7 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_contains:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns %TRUE if @container contains a value identified by @key.
@@ -288,7 +282,7 @@ gwy_container_contains(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_remove_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Removes a value identified by name @n from container @c.
@@ -298,10 +292,10 @@ gwy_container_contains(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_remove:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
- * Removes a value identified by @key from @container.
+ * Removes a value identified by @key from a container.
  *
  * Returns: %TRUE if there was such a value and was removed.
  **/
@@ -342,7 +336,7 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_remove_by_prefix:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @prefix: A nul-terminated id prefix.
  *
  * Removes a values whose key start with @prefix from container @container.
@@ -404,7 +398,7 @@ hash_remove_prefix_func(gpointer hkey,
 
 /**
  * gwy_container_foreach:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @prefix: A nul-terminated id prefix.
  * @function: The function called on the items.
  * @user_data: The user data passed to @function.
@@ -464,7 +458,7 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
 /**
  * gwy_container_rename_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @nn: A nul-terminated name (id).
  * @f: Whether to delete existing value at @newkey.
@@ -477,7 +471,7 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
 /**
  * gwy_container_rename:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: The current key.
  * @newkey: A new key for the value.
  * @force: Whether to delete existing value at @newkey.
@@ -518,6 +512,19 @@ gwy_container_rename(GwyContainer *container,
     return TRUE;
 }
 
+/**
+ * gwy_container_get_value_of_type:
+ * @container: A container.
+ * @key: A #GQuark key.
+ * @type: Value type to get.  Can be %NULL to not check value type.
+ *
+ * Low level function to get a value from a container.
+ *
+ * Causes a warning when no such value exists, or it's of a wrong type.
+ * Use gwy_container_gis_value_of_type() to get value that may not exist.
+ *
+ * Returns: The value identified by @key; %NULL on failure.
+ **/
 static GValue*
 gwy_container_get_value_of_type(GwyContainer *container,
                                 GQuark key,
@@ -533,9 +540,10 @@ gwy_container_get_value_of_type(GwyContainer *container,
                   GWY_CONTAINER_TYPE_NAME, key, g_quark_to_string(key));
         return NULL;
     }
-    if (!G_VALUE_HOLDS(p, type)) {
-        g_warning("%s: trying to get %s as boolean, key %u (%s)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p),
+    if (type && !G_VALUE_HOLDS(p, type)) {
+        g_warning("%s: trying to get %s as %s, key %u (%s)",
+                  GWY_CONTAINER_TYPE_NAME,
+                  G_VALUE_TYPE_NAME(p), g_type_name(type),
                   key, g_quark_to_string(key));
         return NULL;
     }
@@ -543,6 +551,18 @@ gwy_container_get_value_of_type(GwyContainer *container,
     return p;
 }
 
+/**
+ * gwy_container_gis_value_of_type:
+ * @container: A container.
+ * @key: A #GQuark key.
+ * @type: Value type to get.  Can be %NULL to not check value type.
+ *
+ * Low level function to get a value from a container.
+ *
+ * Causes a warning when value is of a wrong type.
+ * 
+ * Returns: The value identified by @key, or %NULL.
+ **/
 static GValue*
 gwy_container_gis_value_of_type(GwyContainer *container,
                                 GQuark key,
@@ -557,9 +577,10 @@ gwy_container_gis_value_of_type(GwyContainer *container,
     p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!p)
         return NULL;
-    if (!G_VALUE_HOLDS(p, type)) {
-        g_warning("%s: trying to get %s as boolean, key %u (%s)",
-                  GWY_CONTAINER_TYPE_NAME, G_VALUE_TYPE_NAME(p),
+    if (type && !G_VALUE_HOLDS(p, type)) {
+        g_warning("%s: trying to get %s as %s, key %u (%s)",
+                  GWY_CONTAINER_TYPE_NAME,
+                  G_VALUE_TYPE_NAME(p), g_type_name(type),
                   key, g_quark_to_string(key));
         return NULL;
     }
@@ -569,7 +590,7 @@ gwy_container_gis_value_of_type(GwyContainer *container,
 
 /**
  * gwy_container_get_value_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the value in container @c identified by name @n.
@@ -577,7 +598,7 @@ gwy_container_gis_value_of_type(GwyContainer *container,
 
 /**
  * gwy_container_get_value:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the value in @container identified by @key.
@@ -591,21 +612,60 @@ gwy_container_get_value(GwyContainer *container, GQuark key)
     GValue *p;
 
     memset(&value, 0, sizeof(value));
-    g_return_val_if_fail(key, value);
-    g_return_val_if_fail(GWY_IS_CONTAINER(container), value);
-    p = (GValue*)g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
-    g_return_val_if_fail(p, value);
-
-    g_assert(G_IS_VALUE(p));
-    g_value_init(&value, G_VALUE_TYPE(p));
-    g_value_copy(p, &value);
+    p = gwy_container_get_value_of_type(container, key, 0);
+    if (G_LIKELY(p)) {
+        g_value_init(&value, G_VALUE_TYPE(p));
+        g_value_copy(p, &value);
+    }
 
     return value;
 }
 
 /**
+ * gwy_container_gis_value_by_name:
+ * @c: A container.
+ * @n: A nul-terminated name (id).
+ * @v: Pointer to a #GValue to update. If item does not exist,
+ *     it is left untouched.
+ *
+ * Get-if-set a generic value from a container.
+ *
+ * Expands to %TRUE if @value was actually updated, %FALSE when there is no
+ * such value in the container.
+ **/
+
+/**
+ * gwy_container_gis_value:
+ * @container: A container.
+ * @key: A #GQuark key.
+ * @value: Pointer to a #GValue to update. If item does not exist,
+ *         it is left untouched.
+ *
+ * Get-if-set a generic value from a container.
+ *
+ * Returns: %TRUE if @v was actually updated, %FALSE when there is no
+ *          such value in the container.
+ **/
+gboolean
+gwy_container_gis_value(GwyContainer *container,
+                        GQuark key,
+                        GValue *value)
+{
+    GValue *p;
+
+    if (!(p = gwy_container_gis_value_of_type(container, key, 0)))
+        return FALSE;
+
+    g_value_unset(value);
+    g_value_init(value, G_VALUE_TYPE(p));
+    g_value_copy(p, value);
+
+    return TRUE;
+}
+
+/**
  * gwy_container_get_boolean_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the boolean in container @c identified by name @n.
@@ -613,7 +673,7 @@ gwy_container_get_value(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_get_boolean:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the boolean in @container identified by @key.
@@ -631,11 +691,11 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_boolean_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the boolean to update.
  *
- * Get-if-set a boolean from @c.
+ * Get-if-set a boolean from a container.
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such boolean in the container.
@@ -643,11 +703,11 @@ gwy_container_get_boolean(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_boolean:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the boolean to update.
  *
- * Get-if-set a boolean from @container.
+ * Get-if-set a boolean from a container.
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such boolean in the container.
@@ -668,7 +728,7 @@ gwy_container_gis_boolean(GwyContainer *container,
 
 /**
  * gwy_container_get_uchar_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the unsigned character in container @c identified by name @n.
@@ -676,7 +736,7 @@ gwy_container_gis_boolean(GwyContainer *container,
 
 /**
  * gwy_container_get_uchar:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the unsigned character in @container identified by @key.
@@ -694,11 +754,11 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_uchar_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the unsigned char to update.
  *
- * Get-if-set an unsigned char from @c.
+ * Get-if-set an unsigned char from a container.
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such unsigned char in the container.
@@ -706,11 +766,11 @@ gwy_container_get_uchar(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_uchar:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the unsigned char to update.
  *
- * Get-if-set an unsigned char from @container.
+ * Get-if-set an unsigned char from a container.
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such unsigned char in the container.
@@ -731,7 +791,7 @@ gwy_container_gis_uchar(GwyContainer *container,
 
 /**
  * gwy_container_get_int32_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the 32bit integer in container @c identified by name @n.
@@ -739,7 +799,7 @@ gwy_container_gis_uchar(GwyContainer *container,
 
 /**
  * gwy_container_get_int32:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the 32bit integer in @container identified by @key.
@@ -757,11 +817,11 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_int32_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the 32bit integer to update.
  *
- * Get-if-set a 32bit integer from @c.
+ * Get-if-set a 32bit integer from a container.
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such 32bit integer in the container.
@@ -769,11 +829,11 @@ gwy_container_get_int32(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_int32:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the 32bit integer to update.
  *
- * Get-if-set a 32bit integer from @container.
+ * Get-if-set a 32bit integer from a container.
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such 32bit integer in the container.
@@ -794,7 +854,7 @@ gwy_container_gis_int32(GwyContainer *container,
 
 /**
  * gwy_container_get_enum_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the enum in container @c identified by name @n.
@@ -804,7 +864,7 @@ gwy_container_gis_int32(GwyContainer *container,
 
 /**
  * gwy_container_get_enum:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the enum in @container identified by @key.
@@ -821,11 +881,11 @@ gwy_container_get_enum(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_enum_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the enum to update.
  *
- * Get-if-set an enum from @c.
+ * Get-if-set an enum from a container.
  *
  * Note enums are treated as 32bit integers.
  *
@@ -835,11 +895,11 @@ gwy_container_get_enum(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_enum:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the enum to update.
  *
- * Get-if-set an enum from @container.
+ * Get-if-set an enum from a container.
  *
  * Note enums are treated as 32bit integers.
  *
@@ -864,7 +924,7 @@ gwy_container_gis_enum(GwyContainer *container,
 
 /**
  * gwy_container_get_int64_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the 64bit integer in container @c identified by name @n.
@@ -872,7 +932,7 @@ gwy_container_gis_enum(GwyContainer *container,
 
 /**
  * gwy_container_get_int64:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the 64bit integer in @container identified by @key.
@@ -890,11 +950,11 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_int64_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the 64bit integer to update.
  *
- * Get-if-set a 64bit integer from @c.
+ * Get-if-set a 64bit integer from a container.
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such 64bit integer in the container.
@@ -902,11 +962,11 @@ gwy_container_get_int64(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_int64:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the 64bit integer to update.
  *
- * Get-if-set a 64bit integer from @container.
+ * Get-if-set a 64bit integer from a container.
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such 64bit integer in the container.
@@ -927,7 +987,7 @@ gwy_container_gis_int64(GwyContainer *container,
 
 /**
  * gwy_container_get_double_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the double in container @c identified by name @n.
@@ -935,7 +995,7 @@ gwy_container_gis_int64(GwyContainer *container,
 
 /**
  * gwy_container_get_double:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the double in @container identified by @key.
@@ -953,11 +1013,11 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_double_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the double to update.
  *
- * Get-if-set a double from @c.
+ * Get-if-set a double from a container.
  *
  * Expands to %TRUE if @value was actually updated, %FALSE when there is no
  * such double in the container.
@@ -965,11 +1025,11 @@ gwy_container_get_double(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_double:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the double to update.
  *
- * Get-if-set a double from @container.
+ * Get-if-set a double from a container.
  *
  * Returns: %TRUE if @v was actually updated, %FALSE when there is no
  *          such double in the container.
@@ -990,7 +1050,7 @@ gwy_container_gis_double(GwyContainer *container,
 
 /**
  * gwy_container_get_string_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the string in container @c identified by name @n.
@@ -1000,7 +1060,7 @@ gwy_container_gis_double(GwyContainer *container,
 
 /**
  * gwy_container_get_string:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the string in @container identified by @key.
@@ -1020,11 +1080,11 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_string_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the string pointer to update.
  *
- * Get-if-set a string from @c.
+ * Get-if-set a string from a container.
  *
  * The string eventually stored in @v must be treated as constant and
  * never freed or modified.
@@ -1035,11 +1095,11 @@ gwy_container_get_string(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_string:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the string pointer to update.
  *
- * Get-if-set a string from @container.
+ * Get-if-set a string from a container.
  *
  * The string eventually stored in @value must be treated as constant and
  * never freed or modified.
@@ -1063,7 +1123,7 @@ gwy_container_gis_string(GwyContainer *container,
 
 /**
  * gwy_container_get_object_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  *
  * Gets the object in container @c identified by name @n.
@@ -1075,7 +1135,7 @@ gwy_container_gis_string(GwyContainer *container,
 
 /**
  * gwy_container_get_object:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  *
  * Returns the object in @container identified by @key.
@@ -1097,11 +1157,11 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_object_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: Pointer to the object pointer to update.
  *
- * Get-if-set an object from @c.
+ * Get-if-set an object from a container.
  *
  * The object eventually stored in @value doesn't have its reference count
  * increased, use g_object_ref() if you want to access it even when
@@ -1113,11 +1173,11 @@ gwy_container_get_object(GwyContainer *container, GQuark key)
 
 /**
  * gwy_container_gis_object:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: Pointer to the object pointer to update.
  *
- * Get-if-set an object from @container.
+ * Get-if-set an object from a container.
  *
  * The object eventually stored in @value doesn't have its reference count
  * increased, use g_object_ref() if you want to access it even when
@@ -1290,7 +1350,7 @@ gwy_container_try_set_valist(GwyContainer *container,
 
 /**
  * gwy_container_set_value:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @...: A %NULL-terminated list of #GQuark keys and #GValue values.
  *
  * Inserts or updates several values in @container.
@@ -1339,7 +1399,7 @@ gwy_container_set_by_name_valist(GwyContainer *container,
 
 /**
  * gwy_container_set_value_by_name:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @...: A %NULL-terminated list of string keys and #GValue values.
  *
  * Inserts or updates several values in @container.
@@ -1357,7 +1417,7 @@ gwy_container_set_value_by_name(GwyContainer *container,
 
 /**
  * gwy_container_set_boolean_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: A boolean.
  *
@@ -1366,7 +1426,7 @@ gwy_container_set_value_by_name(GwyContainer *container,
 
 /**
  * gwy_container_set_boolean:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: A boolean.
  *
@@ -1387,7 +1447,7 @@ gwy_container_set_boolean(GwyContainer *container,
 
 /**
  * gwy_container_set_uchar_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: An unsigned character.
  *
@@ -1396,7 +1456,7 @@ gwy_container_set_boolean(GwyContainer *container,
 
 /**
  * gwy_container_set_uchar:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: An unsigned character.
  *
@@ -1417,7 +1477,7 @@ gwy_container_set_uchar(GwyContainer *container,
 
 /**
  * gwy_container_set_int32_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: A 32bit integer.
  *
@@ -1426,7 +1486,7 @@ gwy_container_set_uchar(GwyContainer *container,
 
 /**
  * gwy_container_set_int32:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: A 32bit integer.
  *
@@ -1447,7 +1507,7 @@ gwy_container_set_int32(GwyContainer *container,
 
 /**
  * gwy_container_set_enum_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: An enum.
  *
@@ -1458,7 +1518,7 @@ gwy_container_set_int32(GwyContainer *container,
 
 /**
  * gwy_container_set_enum:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: An enum integer.
  *
@@ -1478,7 +1538,7 @@ gwy_container_set_enum(GwyContainer *container,
 
 /**
  * gwy_container_set_int64_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: A 64bit integer.
  *
@@ -1487,7 +1547,7 @@ gwy_container_set_enum(GwyContainer *container,
 
 /**
  * gwy_container_set_int64:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: A 64bit integer.
  *
@@ -1508,7 +1568,7 @@ gwy_container_set_int64(GwyContainer *container,
 
 /**
  * gwy_container_set_double_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: A double integer.
  *
@@ -1517,7 +1577,7 @@ gwy_container_set_int64(GwyContainer *container,
 
 /**
  * gwy_container_set_double:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: A double.
  *
@@ -1538,7 +1598,7 @@ gwy_container_set_double(GwyContainer *container,
 
 /**
  * gwy_container_set_string_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: A nul-terminated string.
  *
@@ -1550,7 +1610,7 @@ gwy_container_set_double(GwyContainer *container,
 
 /**
  * gwy_container_set_string:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: A nul-terminated string.
  *
@@ -1574,7 +1634,7 @@ gwy_container_set_string(GwyContainer *container,
 
 /**
  * gwy_container_set_object_by_name:
- * @c: A #GwyContainer.
+ * @c: A container.
  * @n: A nul-terminated name (id).
  * @v: An object to store into container.
  *
@@ -1585,7 +1645,7 @@ gwy_container_set_string(GwyContainer *container,
 
 /**
  * gwy_container_set_object:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @key: A #GQuark key.
  * @value: An object to store into container.
  *
@@ -1839,7 +1899,7 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
 /**
  * gwy_container_duplicate_by_prefix:
- * @container: A #GwyContainer.
+ * @container: A container.
  * @...: A %NULL-terminated list of string keys.
  *
  * Duplicates a container keeping only values under given prefixes.
@@ -2054,7 +2114,7 @@ pstring_compare_callback(const void *p, const void *q)
 
 /**
  * gwy_container_serialize_to_text:
- * @container: A #GwyContainer.
+ * @container: A container.
  *
  * Creates a text representation of @container contents.
  *

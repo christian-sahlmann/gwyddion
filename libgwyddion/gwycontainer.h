@@ -63,6 +63,9 @@ gboolean      gwy_container_contains              (GwyContainer *container,
                                                    GQuark key);
 GValue        gwy_container_get_value             (GwyContainer *container,
                                                    GQuark key);
+gboolean      gwy_container_gis_value             (GwyContainer *container,
+                                                   GQuark key,
+                                                   GValue *value);
 void          gwy_container_set_value             (GwyContainer *container,
                                                    ...);
 void          gwy_container_set_value_by_name     (GwyContainer *container,
@@ -149,35 +152,36 @@ gboolean      gwy_container_gis_object            (GwyContainer *container,
 GPtrArray*    gwy_container_serialize_to_text     (GwyContainer *container);
 GwyContainer* gwy_container_deserialize_from_text (const gchar *text);
 
-#define gwy_container_value_type_by_name(c,n) gwy_container_value_type(c,g_quark_try_string(n))
-#define gwy_container_contains_by_name(c,n) gwy_container_contains(c,g_quark_try_string(n))
-#define gwy_container_get_value_by_name(c,n) gwy_container_get_value(c,g_quark_try_string(n))
-#define gwy_container_remove_by_name(c,n) gwy_container_remove(c,g_quark_try_string(n))
-#define gwy_container_rename_by_name(c,n,nn,f) gwy_container_rename(c,g_quark_try_string(n),g_quark_from_string(nn),f)
+#define gwy_container_value_type_by_name(c,n)    gwy_container_value_type(c,g_quark_try_string(n))
+#define gwy_container_contains_by_name(c,n)      gwy_container_contains(c,g_quark_try_string(n))
+#define gwy_container_get_value_by_name(c,n)     gwy_container_get_value(c,g_quark_try_string(n))
+#define gwy_container_gis_value_by_name(c,n,v)   gwy_container_gis_value(c,g_quark_from_string(n),v)
+#define gwy_container_remove_by_name(c,n)        gwy_container_remove(c,g_quark_try_string(n))
+#define gwy_container_rename_by_name(c,n,nn,f)   gwy_container_rename(c,g_quark_try_string(n),g_quark_from_string(nn),f)
 #define gwy_container_set_boolean_by_name(c,n,v) gwy_container_set_boolean(c,g_quark_from_string(n),v)
-#define gwy_container_get_boolean_by_name(c,n) gwy_container_get_boolean(c,g_quark_try_string(n))
+#define gwy_container_get_boolean_by_name(c,n)   gwy_container_get_boolean(c,g_quark_try_string(n))
 #define gwy_container_gis_boolean_by_name(c,n,v) gwy_container_gis_boolean(c,g_quark_from_string(n),v)
-#define gwy_container_set_uchar_by_name(c,n,v) gwy_container_set_uchar(c,g_quark_from_string(n),v)
-#define gwy_container_get_uchar_by_name(c,n) gwy_container_get_uchar(c,g_quark_try_string(n))
-#define gwy_container_gis_uchar_by_name(c,n,v) gwy_container_gis_uchar(c,g_quark_from_string(n),v)
-#define gwy_container_set_int32_by_name(c,n,v) gwy_container_set_int32(c,g_quark_from_string(n),v)
-#define gwy_container_get_int32_by_name(c,n) gwy_container_get_int32(c,g_quark_try_string(n))
-#define gwy_container_gis_int32_by_name(c,n,v) gwy_container_gis_int32(c,g_quark_from_string(n),v)
-#define gwy_container_set_enum_by_name(c,n,v) gwy_container_set_enum(c,g_quark_from_string(n),v)
-#define gwy_container_get_enum_by_name(c,n) gwy_container_get_enum(c,g_quark_try_string(n))
-#define gwy_container_gis_enum_by_name(c,n,v) gwy_container_gis_enum(c,g_quark_from_string(n),v)
-#define gwy_container_set_int64_by_name(c,n,v) gwy_container_set_int64(c,g_quark_from_string(n),v)
-#define gwy_container_get_int64_by_name(c,n) gwy_container_get_int64(c,g_quark_try_string(n))
-#define gwy_container_gis_int64_by_name(c,n,v) gwy_container_gis_int64(c,g_quark_from_string(n),v)
-#define gwy_container_set_double_by_name(c,n,v) gwy_container_set_double(c,g_quark_from_string(n),v)
-#define gwy_container_get_double_by_name(c,n) gwy_container_get_double(c,g_quark_try_string(n))
-#define gwy_container_gis_double_by_name(c,n,v) gwy_container_gis_double(c,g_quark_from_string(n),v)
-#define gwy_container_set_string_by_name(c,n,v) gwy_container_set_string(c,g_quark_from_string(n),v)
-#define gwy_container_get_string_by_name(c,n) gwy_container_get_string(c,g_quark_try_string(n))
-#define gwy_container_gis_string_by_name(c,n,v) gwy_container_gis_string(c,g_quark_from_string(n),v)
-#define gwy_container_set_object_by_name(c,n,v) gwy_container_set_object(c,g_quark_from_string(n),v)
-#define gwy_container_get_object_by_name(c,n) gwy_container_get_object(c,g_quark_try_string(n))
-#define gwy_container_gis_object_by_name(c,n,v) gwy_container_gis_object(c,g_quark_from_string(n),v)
+#define gwy_container_set_uchar_by_name(c,n,v)   gwy_container_set_uchar(c,g_quark_from_string(n),v)
+#define gwy_container_get_uchar_by_name(c,n)     gwy_container_get_uchar(c,g_quark_try_string(n))
+#define gwy_container_gis_uchar_by_name(c,n,v)   gwy_container_gis_uchar(c,g_quark_from_string(n),v)
+#define gwy_container_set_int32_by_name(c,n,v)   gwy_container_set_int32(c,g_quark_from_string(n),v)
+#define gwy_container_get_int32_by_name(c,n)     gwy_container_get_int32(c,g_quark_try_string(n))
+#define gwy_container_gis_int32_by_name(c,n,v)   gwy_container_gis_int32(c,g_quark_from_string(n),v)
+#define gwy_container_set_enum_by_name(c,n,v)    gwy_container_set_enum(c,g_quark_from_string(n),v)
+#define gwy_container_get_enum_by_name(c,n)      gwy_container_get_enum(c,g_quark_try_string(n))
+#define gwy_container_gis_enum_by_name(c,n,v)    gwy_container_gis_enum(c,g_quark_from_string(n),v)
+#define gwy_container_set_int64_by_name(c,n,v)   gwy_container_set_int64(c,g_quark_from_string(n),v)
+#define gwy_container_get_int64_by_name(c,n)     gwy_container_get_int64(c,g_quark_try_string(n))
+#define gwy_container_gis_int64_by_name(c,n,v)   gwy_container_gis_int64(c,g_quark_from_string(n),v)
+#define gwy_container_set_double_by_name(c,n,v)  gwy_container_set_double(c,g_quark_from_string(n),v)
+#define gwy_container_get_double_by_name(c,n)    gwy_container_get_double(c,g_quark_try_string(n))
+#define gwy_container_gis_double_by_name(c,n,v)  gwy_container_gis_double(c,g_quark_from_string(n),v)
+#define gwy_container_set_string_by_name(c,n,v)  gwy_container_set_string(c,g_quark_from_string(n),v)
+#define gwy_container_get_string_by_name(c,n)    gwy_container_get_string(c,g_quark_try_string(n))
+#define gwy_container_gis_string_by_name(c,n,v)  gwy_container_gis_string(c,g_quark_from_string(n),v)
+#define gwy_container_set_object_by_name(c,n,v)  gwy_container_set_object(c,g_quark_from_string(n),v)
+#define gwy_container_get_object_by_name(c,n)    gwy_container_get_object(c,g_quark_try_string(n))
+#define gwy_container_gis_object_by_name(c,n,v)  gwy_container_gis_object(c,g_quark_from_string(n),v)
 
 G_END_DECLS
 
