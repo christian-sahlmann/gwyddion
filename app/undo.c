@@ -48,20 +48,20 @@ typedef struct {
     gint modif;
 } GwyAppUndo;
 
-static void        gwy_app_undo_reuse_levels        (GwyAppUndoLevel *level,
-                                                     GList *available);
-static void        gwy_app_undo_or_redo             (GwyContainer *data,
-                                                     GwyAppUndoLevel *level);
-static GList*      gwy_list_split                   (GList *list,
-                                                     guint n,
-                                                     GList **tail);
-static void        gwy_app_undo_container_finalized (gpointer userdata,
-                                                     GObject *deceased_data);
-static void        gwy_app_undo_list_free           (GList *list);
-static gint        gwy_app_undo_compare_data        (gconstpointer a,
-                                                     gconstpointer b);
-static GwyAppUndo* gwy_app_undo_get_for_data        (GwyContainer *data,
-                                                     gboolean do_create);
+static void        gwy_app_undo_reuse_levels       (GwyAppUndoLevel *level,
+                                                    GList *available);
+static void        gwy_app_undo_or_redo            (GwyContainer *data,
+                                                    GwyAppUndoLevel *level);
+static GList*      gwy_list_split                  (GList *list,
+                                                    guint n,
+                                                    GList **tail);
+static void        gwy_app_undo_container_finalized(gpointer userdata,
+                                                    GObject *deceased_data);
+static void        gwy_app_undo_list_free          (GList *list);
+static gint        gwy_app_undo_compare_data       (gconstpointer a,
+                                                    gconstpointer b);
+static GwyAppUndo* gwy_undo_get_for_data           (GwyContainer *data,
+                                                    gboolean do_create);
 
 static GList *container_list = NULL;
 
@@ -72,7 +72,8 @@ static GList *container_list = NULL;
  *
  * Create a point in the undo history it is possible to return to.
  *
- * XXX: It can only save the state of standard datafields.
+ * In addition to what gwy_undo_checkpoint() does, this function takes care
+ * of updating application controls state.
  *
  * Returns: Undo level id.  Not useful (yet).
  **/
@@ -94,7 +95,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     };
     va_end(ap);
 
-    keys = g_new(const gchar*, n);
+    keys = g_newa(const gchar*, n);
     va_start(ap, data);
     for (i = 0; i < n; i++) {
         keys[i] = va_arg(ap, const gchar*);
@@ -102,7 +103,6 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     va_end(ap);
 
     id = gwy_app_undo_checkpointv(data, n, keys);
-    g_free(keys);
 
     return id;
 }
@@ -115,6 +115,9 @@ gwy_app_undo_checkpoint(GwyContainer *data,
  *
  * Create a point in the undo history is is possible to return to.
  *
+ * In addition to what gwy_undo_checkpointv() does, this function takes care
+ * of updating application controls state.
+ *
  * Returns: Undo level id.  Not useful (yet).
  **/
 gulong
@@ -126,6 +129,124 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
     };
+    gulong id;
+
+
+    id = gwy_undo_checkpointv(data, n, keys);
+    if (id)
+        gwy_app_toolbox_update_state(&sens_data);
+
+    return id;
+}
+
+/**
+ * gwy_app_undo_undo_container:
+ * @data: A data container.
+ *
+ * Performs undo on a data container.
+ *
+ * It must have undo available.
+ *
+ * In addition to what gwy_undo_undo_container() does, this function takes care
+ * of updating application controls state.
+ **/
+void
+gwy_app_undo_undo_container(GwyContainer *data)
+{
+    GwyMenuSensData sens_data = {
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_REDO
+    };
+    GwyAppUndo *appundo;
+
+    gwy_undo_undo_container(data);
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    if (appundo->undo)
+        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
+    gwy_app_toolbox_update_state(&sens_data);
+}
+
+/**
+ * gwy_app_undo_redo_container:
+ * @data: A data container.
+ *
+ * Performs undo on a data container.
+ *
+ * It must have redo available.
+ *
+ * In addition to what gwy_undo_redo_container() does, this function takes care
+ * of updating application controls state.
+ **/
+void
+gwy_app_undo_redo_container(GwyContainer *data)
+{
+    GwyMenuSensData sens_data = {
+        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+        GWY_MENU_FLAG_UNDO
+    };
+    GwyAppUndo *appundo;
+
+    gwy_undo_redo_container(data);
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    if (appundo->redo)
+        sens_data.set_to |= GWY_MENU_FLAG_REDO;
+    gwy_app_toolbox_update_state(&sens_data);
+}
+
+/**
+ * gwy_undo_checkpoint:
+ * @data: A data container.
+ * @...: %NULL-terminated list of container item names to save.
+ *
+ * Create a point in the undo history it is possible to return to.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_undo_checkpoint(GwyContainer *data,
+                    ...)
+{
+    va_list ap;
+    const gchar **keys;
+    guint i, n;
+    gulong id;
+
+    n = 0;
+    va_start(ap, data);
+    while (TRUE) {
+        if (!va_arg(ap, const gchar*))
+            break;
+        n++;
+    };
+    va_end(ap);
+
+    keys = g_newa(const gchar*, n);
+    va_start(ap, data);
+    for (i = 0; i < n; i++) {
+        keys[i] = va_arg(ap, const gchar*);
+    }
+    va_end(ap);
+
+    id = gwy_undo_checkpointv(data, n, keys);
+
+    return id;
+}
+
+/**
+ * gwy_undo_checkpointv:
+ * @data: A data container.
+ * @n: The number of strings in @keys.
+ * @keys: An array of container keys to save data.
+ *
+ * Create a point in the undo history is is possible to return to.
+ *
+ * Returns: Undo level id.  Not useful (yet).
+ **/
+gulong
+gwy_undo_checkpointv(GwyContainer *data,
+                     guint n,
+                     const gchar **keys)
+{
     static gulong undo_level_id = 0;
 
     GwyAppUndo *appundo;
@@ -166,7 +287,7 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     }
 
     /* add to the undo queue */
-    appundo = gwy_app_undo_get_for_data(data, TRUE);
+    appundo = gwy_undo_get_for_data(data, TRUE);
 
     /* gather undo/redo levels we are going to free for potential reuse */
     appundo->undo = gwy_list_split(appundo->undo, UNDO_LEVELS-1, &available);
@@ -176,8 +297,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     gwy_app_undo_reuse_levels(level, available);
     appundo->undo = g_list_prepend(appundo->undo, level);
     appundo->modif++;    /* TODO */
-
-    gwy_app_toolbox_update_state(&sens_data);
 
     return level->id;
 }
@@ -250,9 +369,8 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
     gwy_app_undo_list_free(available);
 }
 
-
 /**
- * gwy_app_undo_undo_container:
+ * gwy_undo_undo_container:
  * @data: A data container.
  *
  * Performs undo on a data container.
@@ -260,17 +378,13 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
  * It must have undo available.
  **/
 void
-gwy_app_undo_undo_container(GwyContainer *data)
+gwy_undo_undo_container(GwyContainer *data)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        GWY_MENU_FLAG_REDO
-    };
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GList *l;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     g_return_if_fail(appundo && appundo->undo);
 
     level = (GwyAppUndoLevel*)appundo->undo->data;
@@ -281,14 +395,10 @@ gwy_app_undo_undo_container(GwyContainer *data)
     appundo->undo = g_list_remove_link(appundo->undo, l);
     appundo->redo = g_list_concat(l, appundo->redo);
     appundo->modif--;    /* TODO */
-
-    if (appundo->undo)
-        sens_data.set_to |= GWY_MENU_FLAG_UNDO;
-    gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**
- * gwy_app_undo_redo_window:
+ * gwy_undo_redo_container:
  * @data: A data container.
  *
  * Performs undo on a data container.
@@ -296,17 +406,13 @@ gwy_app_undo_undo_container(GwyContainer *data)
  * It must have redo available.
  **/
 void
-gwy_app_undo_redo_container(GwyContainer *data)
+gwy_undo_redo_container(GwyContainer *data)
 {
-    GwyMenuSensData sens_data = {
-        GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
-        GWY_MENU_FLAG_UNDO
-    };
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GList *l;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     g_return_if_fail(appundo && appundo->redo);
 
     level = (GwyAppUndoLevel*)appundo->redo->data;
@@ -317,10 +423,6 @@ gwy_app_undo_redo_container(GwyContainer *data)
     appundo->redo = g_list_remove_link(appundo->redo, l);
     appundo->undo = g_list_concat(l, appundo->undo);
     appundo->modif++;    /* TODO */
-
-    if (appundo->redo)
-        sens_data.set_to |= GWY_MENU_FLAG_REDO;
-    gwy_app_toolbox_update_state(&sens_data);
 }
 
 static void
@@ -418,7 +520,7 @@ gwy_list_split(GList *list,
 }
 
 /**
- * gwy_app_undo_container_has_undo:
+ * gwy_undo_container_has_undo:
  * @data: Data container to get undo infomation of.
  *
  * Returns whether there is any undo available for a container.
@@ -426,16 +528,16 @@ gwy_list_split(GList *list,
  * Returns: %TRUE if there is undo, %FALSE otherwise.
  **/
 gboolean
-gwy_app_undo_container_has_undo(GwyContainer *data)
+gwy_undo_container_has_undo(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     return appundo && appundo->undo;
 }
 
 /**
- * gwy_app_undo_container_has_redo:
+ * gwy_undo_container_has_redo:
  * @data: Data container to get redo infomation of.
  *
  * Returns whether there is any redo available for a container.
@@ -443,16 +545,16 @@ gwy_app_undo_container_has_undo(GwyContainer *data)
  * Returns: %TRUE if there is redo, %FALSE otherwise.
  **/
 gboolean
-gwy_app_undo_container_has_redo(GwyContainer *data)
+gwy_undo_container_has_redo(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     return appundo && appundo->redo;
 }
 
 /**
- * gwy_app_undo_container_get_modified:
+ * gwy_undo_container_get_modified:
  * @data: Data container to get modification infomation of.
  *
  * Tests whether a container was modified.
@@ -462,26 +564,26 @@ gwy_app_undo_container_has_redo(GwyContainer *data)
  * Returns: %TRUE if container was modified, %FALSE otherwise.
  **/
 gint
-gwy_app_undo_container_get_modified(GwyContainer *data)
+gwy_undo_container_get_modified(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     return appundo ? appundo->modif : 0;
 }
 
 /**
- * gwy_app_undo_container_set_unmodified:
+ * gwy_undo_container_set_unmodified:
  * @data: Data container to set modification infomation of.
  *
  * Marks a data container as umodified (that is, saved).
  **/
 void
-gwy_app_undo_container_set_unmodified(GwyContainer *data)
+gwy_undo_container_set_unmodified(GwyContainer *data)
 {
     GwyAppUndo *appundo;
 
-    appundo = gwy_app_undo_get_for_data(data, FALSE);
+    appundo = gwy_undo_get_for_data(data, FALSE);
     if (appundo)
         appundo->modif = 0;
 }
@@ -500,9 +602,9 @@ gwy_app_undo_container_finalized(G_GNUC_UNUSED gpointer userdata,
 
     gwy_debug("Freeing undo for Container %p", deceased_data);
     /* must not typecast with GWY_CONTAINER(), it doesn't exist any more */
-    appundo = gwy_app_undo_get_for_data((GwyContainer*)deceased_data, FALSE);
+    appundo = gwy_undo_get_for_data((GwyContainer*)deceased_data, FALSE);
     g_return_if_fail(appundo);
-    /* gwy_app_undo_get_for_data() moves the item to list head */
+    /* gwy_undo_get_for_data() moves the item to list head */
     g_assert(appundo == container_list->data);
     container_list = g_list_delete_link(container_list, container_list);
     gwy_app_undo_list_free(appundo->redo);
@@ -546,8 +648,8 @@ gwy_app_undo_compare_data(gconstpointer a,
 }
 
 static GwyAppUndo*
-gwy_app_undo_get_for_data(GwyContainer *data,
-                          gboolean do_create)
+gwy_undo_get_for_data(GwyContainer *data,
+                      gboolean do_create)
 {
     GwyAppUndo *appundo;
     GList *l;

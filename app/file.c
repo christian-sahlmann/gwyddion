@@ -105,7 +105,7 @@ gwy_app_file_save_cb(void)
     if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
         gwy_app_file_save_as_cb();
     else
-        gwy_app_undo_container_set_unmodified(data);
+        gwy_undo_container_set_unmodified(data);
 }
 
 void
@@ -318,7 +318,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         return;
 
     if (gwy_file_func_get_operations(name) & GWY_FILE_LOAD) {
-        gwy_app_undo_container_set_unmodified(data);
+        gwy_undo_container_set_unmodified(data);
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),

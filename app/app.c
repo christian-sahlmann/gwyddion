@@ -202,7 +202,7 @@ gather_unsaved_cb(GwyDataWindow *data_window,
 {
     GwyContainer *data = gwy_data_window_get_data(data_window);
 
-    if (gwy_app_undo_container_get_modified(data))
+    if (gwy_undo_container_get_modified(data))
         *unsaved = g_slist_prepend(*unsaved, data_window);
 }
 
@@ -320,9 +320,9 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
     data = gwy_data_window_get_data(window);
-    if (gwy_app_undo_container_has_undo(data))
+    if (gwy_undo_container_has_undo(data))
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
-    if (gwy_app_undo_container_has_redo(data))
+    if (gwy_undo_container_has_redo(data))
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
 
     if (gwy_container_contains_by_name(data, "/0/mask"))

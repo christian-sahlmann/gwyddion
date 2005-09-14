@@ -25,17 +25,25 @@
 
 G_BEGIN_DECLS
 
-gulong        gwy_app_undo_checkpoint               (GwyContainer *data,
-                                                     ...);
-gulong        gwy_app_undo_checkpointv              (GwyContainer *data,
-                                                     guint n,
-                                                     const gchar **keys);
-void          gwy_app_undo_undo_container           (GwyContainer *data);
-void          gwy_app_undo_redo_container           (GwyContainer *data);
-gboolean      gwy_app_undo_container_has_undo       (GwyContainer *data);
-gboolean      gwy_app_undo_container_has_redo       (GwyContainer *data);
-gint          gwy_app_undo_container_get_modified   (GwyContainer *data);
-void          gwy_app_undo_container_set_unmodified (GwyContainer *data);
+gulong   gwy_app_undo_checkpoint          (GwyContainer *data,
+                                           ...);
+gulong   gwy_app_undo_checkpointv         (GwyContainer *data,
+                                           guint n,
+                                           const gchar **keys);
+void     gwy_app_undo_undo_container      (GwyContainer *data);
+void     gwy_app_undo_redo_container      (GwyContainer *data);
+
+gulong   gwy_undo_checkpoint              (GwyContainer *data,
+                                           ...);
+gulong   gwy_undo_checkpointv             (GwyContainer *data,
+                                           guint n,
+                                           const gchar **keys);
+void     gwy_undo_undo_container          (GwyContainer *data);
+void     gwy_undo_redo_container          (GwyContainer *data);
+gboolean gwy_undo_container_has_undo      (GwyContainer *data);
+gboolean gwy_undo_container_has_redo      (GwyContainer *data);
+gint     gwy_undo_container_get_modified  (GwyContainer *data);
+void     gwy_undo_container_set_unmodified(GwyContainer *data);
 
 G_END_DECLS
 
