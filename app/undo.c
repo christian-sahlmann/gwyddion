@@ -18,6 +18,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* FIXME: non-object code paths are untested and may leak memory or even
+ * crash */
+
 #include "config.h"
 #include <stdarg.h>
 #include <string.h>
@@ -330,7 +333,7 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
         iobject = g_value_get_object(&item->value);
         type = G_TYPE_FROM_INSTANCE(iobject);
         /* scan through all available levels and all objects inside */
-        for (l = available; l && FALSE /* XXX: don't reuse */; l = g_list_next(l)) {
+        for (l = available; l; l = g_list_next(l)) {
             lvl = (GwyAppUndoLevel*)l->data;
             for (j = 0; j < lvl->nitems; j++) {
                 jtem = lvl->items + j;
