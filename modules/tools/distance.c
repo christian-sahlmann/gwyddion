@@ -220,7 +220,7 @@ update_labels(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
-    gdouble lines[4*NLINES];
+    gdouble line[4];
     gboolean is_visible;
     gint nselected, i;
     GString *str;
@@ -233,7 +233,7 @@ update_labels(GwyUnitoolState *state)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
     is_visible = state->is_visible;
-    nselected = gwy_selection_get_data(selection, lines);
+    nselected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !nselected)
         return;
 
@@ -252,8 +252,9 @@ update_labels(GwyUnitoolState *state)
         if (i < nselected) {
             gdouble dx, dy, r, a;
 
-            dx = lines[4*i+0] - lines[4*i+2];
-            dy = lines[4*i+3] - lines[4*i+1];
+            gwy_selection_get_object(selection, i, line);
+            dx = line[2] - line[0];
+            dy = line[3] - line[1];
             r = sqrt(dx*dx + dy*dy);
             a = atan2(dy, dx) * 180.0/G_PI;
 

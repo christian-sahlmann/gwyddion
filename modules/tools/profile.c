@@ -332,8 +332,7 @@ update_labels(GwyUnitoolState *state)
     gdouble lines[4*NPROFILE];
     GPtrArray *positions;
     GString *str;
-    gint i;
-    gint nselected = 0;
+    gint i, nselected;
 
     gwy_debug("");
 
@@ -371,9 +370,9 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *dfield;
     GwyDataViewLayer *layer;
     GwySelection *selection;
-    gdouble lines[4*NPROFILE];
+    gdouble line[4];
     gboolean is_visible;
-    gint nselected, i, j, lineres;
+    gint nselected, i, lineres;
     gint xl1, xl2, yl1, yl2;
     GwyGraphCurveModel *gcmodel;
     GwyRGBA color;
@@ -383,7 +382,7 @@ dialog_update(GwyUnitoolState *state,
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
     selection = gwy_vector_layer_get_selection(state->layer);
-    nselected = gwy_selection_get_data(selection, lines);
+    nselected = gwy_selection_get_data(selection, NULL);
     if (!is_visible && !nselected)
         return;
 
@@ -405,31 +404,32 @@ dialog_update(GwyUnitoolState *state,
     controls->isnpoints = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->isnofpoints));
 
     if (nselected) {
-        j = 0;
         for (i = 0; i < nselected; i++) {
-            xl2 = gwy_data_field_rtoj(dfield, lines[j++]);
-            yl2 = gwy_data_field_rtoi(dfield, lines[j++]);
-            xl1 = gwy_data_field_rtoj(dfield, lines[j++]);
-            yl1 = gwy_data_field_rtoi(dfield, lines[j++]);
+            gwy_selection_get_object(selection, i, line);
+            xl1 = gwy_data_field_rtoj(dfield, line[0]);
+            yl1 = gwy_data_field_rtoi(dfield, line[1]);
+            xl2 = gwy_data_field_rtoj(dfield, line[2]);
+            yl2 = gwy_data_field_rtoi(dfield, line[3]);
 
-            if (!controls->isnpoints)
-            {
-                lineres = ROUND(sqrt((xl1 - xl2)*(xl1 - xl2)
-                                 + (yl1 - yl2)*(yl1 - yl2)));
+            if (!controls->isnpoints) {
+                lineres = ROUND(hypot(xl1 - xl2, yl1 - yl2));
                 lineres = MAX(lineres, 10);
             }
             else
                 lineres = controls->npoints;
 
-            gwy_data_field_get_data_line_averaged(dfield, controls->dtl->pdata[i],
-                                                  xl1, yl1, xl2, yl2, lineres, controls->size,
+            gwy_data_field_get_data_line_averaged(dfield,
+                                                  controls->dtl->pdata[i],
+                                                  xl1, yl1, xl2, yl2,
+                                                  lineres, controls->size,
                                                   controls->interp);
             gcmodel = gwy_graph_curve_model_new();
             gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
             gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                          controls->dtl->pdata[i],
                                                          0, 0);
-            gwy_graph_curve_model_set_description(gcmodel, ((GString*)(controls->str->pdata[i]))->str);
+            gwy_graph_curve_model_set_description(gcmodel,
+                                                  ((GString*)(controls->str->pdata[i]))->str);
 
             color.r = 0;
             color.g = 0;
