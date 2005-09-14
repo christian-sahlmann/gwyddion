@@ -106,6 +106,10 @@ struct _GwyGraphArea {
     gboolean selecting;
     gboolean mouse_present;
 
+    /*grid lines*/
+    GArray *x_grid_data;
+    GArray *y_grid_data;
+    
     /*XXX remove this? It is not set! real boundaries*/
     gint x_max;
     gint x_min;
@@ -169,9 +173,6 @@ void gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
 
 void gwy_graph_area_set_selection_limit(GwyGraphArea *area, gint limit);
 
-gint gwy_graph_area_get_selection_limit(GwyGraphArea *area);
-
-void gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel);
 
 void gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
                                             gint x, gint y, gint width, gint height,
@@ -185,6 +186,14 @@ void gwy_graph_area_clear_selection(GwyGraphArea *area);
 void gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable);
 
 void gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor);
+
+void gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data);
+
+void gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data);
+
+const GArray* gwy_graph_area_get_x_grid_data(GwyGraphArea *area);
+
+const GArray* gwy_graph_area_get_y_grid_data(GwyGraphArea *area);
 
 
 G_END_DECLS

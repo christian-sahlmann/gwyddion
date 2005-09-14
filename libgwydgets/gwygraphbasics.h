@@ -94,6 +94,12 @@ void gwy_graph_draw_selection_lines (GdkDrawable *drawable,
                                      gint n_of_lines,
                                      GtkOrientation orientation);
 
+void gwy_graph_draw_grid            (GdkDrawable *drawable,
+                                     GdkGC *gc,
+                                     GwyGraphActiveAreaSpecs *specs,
+                                     GArray *x_grid_data,
+                                     GArray *y_grid_data);
+
 G_END_DECLS
 
 #endif /* __GWY_GRAPH_BASIC_H__ */

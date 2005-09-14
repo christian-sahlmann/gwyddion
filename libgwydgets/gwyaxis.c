@@ -30,6 +30,7 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyaxis.h"
 
+#include <stdio.h>
 enum {
     LABEL_UPDATED,
     RESCALED,
@@ -367,6 +368,7 @@ gwy_axis_size_allocate(GtkWidget *widget,
 static void
 gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
+    
     gint scaleres, iterations;   
 
     if (axis->orientation == GTK_POS_TOP
@@ -1559,6 +1561,22 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
     return out;
 }
 
+#include <stdio.h>
+void        
+gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
+{
+    gint i;
+    gdouble *pvalue;
+    GwyAxisLabeledTick *pmji;
+   
+    g_array_set_size(array, axis->mjticks->len);
+    
+    for (i = 0; i< axis->mjticks->len; i++) {
+        pmji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
+        pvalue = &g_array_index(array, gdouble, i);
+        *pvalue = pmji->t.value;
+    }
+}
 
 
 /************************** Documentation ****************************/

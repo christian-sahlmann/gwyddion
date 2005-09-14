@@ -64,6 +64,7 @@ struct _GwyGraph {
 
     GwyGraphModel *graph_model;
 
+    GwyGraphGridType grid_type;
     gboolean enable_user_input;
 
     gpointer reserved1;
@@ -132,6 +133,15 @@ void       gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
 
 void       gwy_graph_zoom_in(GwyGraph *graph);
 void       gwy_graph_zoom_out(GwyGraph *graph);
+
+void       gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type);
+GwyGraphGridType gwy_graph_get_grid_type(GwyGraph *graph);
+
+void gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data);
+void gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data);
+
+const GArray* gwy_graph_get_x_grid_data(GwyGraph *graph);
+const GArray* gwy_graph_get_y_grid_data(GwyGraph *graph);
 
 
 G_END_DECLS

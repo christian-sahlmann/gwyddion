@@ -28,6 +28,7 @@
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 
+#include <stdio.h>
 enum {
     SELECTED_SIGNAL,
     MOUSE_MOVED_SIGNAL,
@@ -161,6 +162,8 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_table_set_row_spacings(GTK_TABLE(graph), 0);
     gtk_table_set_col_spacings(GTK_TABLE(graph), 0);
 
+    graph->grid_type = GWY_GRAPH_GRID_AUTO;   
+
     if (gmodel != NULL) {
         graph->axis_top
             = GWY_AXIS(gwy_axis_new(GTK_POS_TOP, 2.24, 5.21,
@@ -278,6 +281,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
 void
 gwy_graph_refresh(GwyGraph *graph)
 {
+    
     GwyGraphModel *model;
     GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
@@ -320,6 +324,7 @@ gwy_graph_refresh(GwyGraph *graph)
         model->y_min = gwy_axis_get_minimum(graph->axis_left);
     }
 
+
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
 
@@ -356,7 +361,9 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 static void
 rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
 {
+    GArray *array = g_array_new(FALSE, FALSE, sizeof(gdouble));
     GwyGraphModel *model;
+    
     if (graph->graph_model == NULL)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);
@@ -365,6 +372,16 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
     model->y_max = gwy_axis_get_maximum(graph->axis_left);
     model->y_min = gwy_axis_get_minimum(graph->axis_left);
 
+    if (graph->grid_type == GWY_GRAPH_GRID_AUTO)
+    {
+        gwy_axis_set_grid_data(graph->axis_left, array);
+        gwy_graph_area_set_x_grid_data(graph->area, array);
+        gwy_axis_set_grid_data(graph->axis_bottom, array);
+        gwy_graph_area_set_y_grid_data(graph->area, array);
+    
+        g_array_free(array, TRUE);
+    }
+     
     gwy_graph_area_refresh(graph->area);
 }
 
@@ -696,7 +713,7 @@ gwy_graph_request_y_range(GwyGraph *graph,
     model->y_max = gwy_axis_get_maximum(graph->axis_left);
     model->y_min = gwy_axis_get_minimum(graph->axis_left);
 
-    /*refresh widgets*/
+     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
  }
 
@@ -878,6 +895,44 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
         break;
     }
 }
+
+void       
+gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
+{
+    graph->grid_type = grid_type;
+    gwy_graph_refresh(graph);
+}
+
+GwyGraphGridType 
+gwy_graph_get_grid_type(GwyGraph *graph)
+{
+    return graph->grid_type;
+}
+
+void 
+gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
+{
+    gwy_graph_area_set_x_grid_data(graph->area, grid_data);
+}
+
+void 
+gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
+{
+    gwy_graph_area_set_y_grid_data(graph->area, grid_data);
+}
+
+const GArray* 
+gwy_graph_get_x_grid_data(GwyGraph *graph)
+{
+    return gwy_graph_get_x_grid_data(graph->area);
+}
+
+const GArray* 
+gwy_graph_get_y_grid_data(GwyGraph *graph)
+{
+    return gwy_graph_get_y_grid_data(graph->area);
+}
+
 
 
 

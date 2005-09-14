@@ -85,6 +85,12 @@ typedef enum {
 } GwyGraphStatusType;
 
 typedef enum {
+    GWY_GRAPH_GRID_NONE,
+    GWY_GRAPH_GRID_AUTO,
+    GWY_GRAPH_GRID_USER
+} GwyGraphGridType;
+
+typedef enum {
     GWY_GRAPH_POINT_SQUARE        = 0,
     GWY_GRAPH_POINT_CROSS         = 1,
     GWY_GRAPH_POINT_CIRCLE        = 2,

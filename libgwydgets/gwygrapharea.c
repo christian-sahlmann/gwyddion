@@ -199,6 +199,10 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     area->actual_cursor_data = g_new(GwyGraphStatus_CursorData, 1);
 
+    area->x_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    area->y_grid_data = g_array_new(FALSE, FALSE, sizeof(gdouble));
+        
+    
     area->colors = NULL;
     area->enable_user_input = TRUE;
     area->selection_limit = 10;
@@ -413,6 +417,11 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
                                          (GwyGraphDataArea *)area->areasdata->data_areas->data,
                                          area->areasdata->data_areas->len);
 
+    
+    /*FIXME gc should be different and should be set to gray drawing*/
+    gwy_graph_draw_grid(drawable, gc, &specs,
+                        area->x_grid_data, area->y_grid_data);
+    
     for (i=0; i<model->ncurves; i++)
     {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
@@ -1048,6 +1057,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
     else
         gtk_widget_hide(GTK_WIDGET(area->lab));
 
+
     /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
@@ -1350,6 +1360,48 @@ gwy_graph_area_get_label(GwyGraphArea *area)
 {
     return GTK_WIDGET(area->lab);
 }
+
+
+void
+gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
+{
+    guint i;
+    gdouble *pdata, *psetdata;
+    g_array_set_size(area->x_grid_data, grid_data->len);
+
+    for (i=0; i<grid_data->len; i++){
+        pdata = &g_array_index(area->x_grid_data, gdouble, i);
+        psetdata = &g_array_index(grid_data, gdouble, i);
+        *pdata = *psetdata;
+    }
+}
+
+void
+gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
+{
+    guint i;
+    gdouble *pdata, *psetdata;
+    g_array_set_size(area->y_grid_data, grid_data->len);
+
+    for (i=0; i<grid_data->len; i++){
+        pdata = &g_array_index(area->y_grid_data, gdouble, i);
+        psetdata = &g_array_index(grid_data, gdouble, i);
+        *pdata = *psetdata;
+    }
+}
+
+const GArray*
+gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
+{
+    return area->x_grid_data;
+}
+
+const GArray*
+gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
+{
+    return area->y_grid_data;
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

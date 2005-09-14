@@ -316,4 +316,32 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
+void 
+gwy_graph_draw_grid(GdkDrawable *drawable, 
+                    GdkGC *gc,
+                    GwyGraphActiveAreaSpecs *specs,
+                    GArray *x_grid_data,
+                    GArray *y_grid_data)
+{
+    gint i;
+    gdouble pos, *pvalue;
+    static const GwyRGBA color = { 0.75, 0.75, 0.75, 1.0 };
+    
+    gwy_rgba_set_gdk_gc_fg(&color, gc);
+    
+    for (i = 0; i < x_grid_data->len; i++) {
+        pvalue = &g_array_index(x_grid_data, gdouble, i);
+        pos = y_data_to_pixel(specs, *pvalue);
+        gdk_draw_line(drawable, gc, specs->xmin - 1, pos, specs->xmin + specs->width + 1, pos);
+    }
+
+    for (i = 0; i < y_grid_data->len; i++) {
+        pvalue = &g_array_index(y_grid_data, gdouble, i);
+        pos = x_data_to_pixel(specs, *pvalue);
+        gdk_draw_line(drawable, gc, pos, specs->ymin - 1, pos, specs->ymin + specs->height + 1);
+    }
+    
+}
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -52,6 +52,7 @@ typedef struct {
     gint scrpos;        /*precomputed tick screen position*/
 } GwyAxisTick;
 
+
 typedef struct {
     GwyAxisTick t;
     GString *ttext;
@@ -163,6 +164,7 @@ GString*    gwy_axis_export_vector       (GwyAxis *axis,
                                           gint width, 
                                           gint height,
                                           gint fontsize);
+void        gwy_axis_set_grid_data      (GwyAxis *axis, GArray *array);
 
 G_END_DECLS
 
