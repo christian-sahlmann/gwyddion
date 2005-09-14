@@ -496,7 +496,7 @@ gwy_selection_delete_object_default(GwySelection *selection,
     g_return_if_fail(i >= 0 && i < selection->n);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     len = selection->objects->len;
-    g_array_remove_range(selection->objects, i, object_size);
+    g_array_remove_range(selection->objects, i*object_size, object_size);
     g_array_set_size(selection->objects, len);
     selection->n--;
 
