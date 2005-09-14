@@ -32,7 +32,7 @@ enum {
 
 typedef struct {
     GQuark key;
-    GObject *object;  /* TODO: keep references to the objects */
+    GValue value;
 } GwyAppUndoItem;
 
 typedef struct {
@@ -115,8 +115,6 @@ gwy_app_undo_checkpoint(GwyContainer *data,
  *
  * Create a point in the undo history is is possible to return to.
  *
- * XXX: It can only save the state of standard datafields.
- *
  * Returns: Undo level id.  Not useful (yet).
  **/
 gulong
@@ -124,9 +122,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
                          guint n,
                          const gchar **keys)
 {
-    const char *good_keys[] = {
-        "/0/data", "/0/mask", "/0/show", NULL
-    };
     GwyMenuSensData sens_data = {
         GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
         GWY_MENU_FLAG_UNDO
@@ -135,9 +130,8 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
-    GObject *object;
     GList *available;
-    const gchar **p, *key;
+    const gchar *key;
     guint i;
 
     if (!UNDO_LEVELS)
@@ -149,21 +143,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
         return 0UL;
     }
 
-    for (i = 0; i < n; i++) {
-        key = keys[i];
-        for (p = good_keys; *p && strcmp(key, *p); p++)
-            ;
-        if (!*p) {
-            g_warning("FIXME: Undo works only for standard datafields");
-            return 0UL;
-        }
-        if (gwy_container_contains_by_name(data, key)) {
-            object = gwy_container_get_object_by_name(data, key);
-            /* XXX: datafield special-casing */
-            g_return_val_if_fail(GWY_IS_DATA_FIELD(object), 0UL);
-        }
-    };
-
     /* create new undo level */
     undo_level_id++;
     gwy_debug("Creating a new appundo->undo level #%lu", undo_level_id);
@@ -172,15 +151,18 @@ gwy_app_undo_checkpointv(GwyContainer *data,
     level->items = g_new0(GwyAppUndoItem, n);
     level->id = undo_level_id;
 
-    /* fill the things to save, but don't create copies yet */
+    /* fill the things to save, but don't duplicate objects yet */
     for (i = 0; i < n; i++) {
+        GwyAppUndoItem *item = level->items + i;
         GQuark quark;
 
         key = keys[i];
         quark = g_quark_from_string(key);
-        level->items[i].key = quark;
-        if (gwy_container_gis_object(data, quark, &object))
-            level->items[i].object = object;
+        item->key = quark;
+        memset(&item->value, 0, sizeof(GValue));
+        /* note this call itself creates a copy for non-objects; for objects
+         * it increases reference count */
+        gwy_container_gis_value(data, quark, &item->value);
     }
 
     /* add to the undo queue */
@@ -216,42 +198,50 @@ gwy_app_undo_reuse_levels(GwyAppUndoLevel *level,
     GList *l;
     guint i, j;
     GwyAppUndoItem *item, *jtem;
+    GObject *iobject, *jobject;
     GwyAppUndoLevel *lvl;
     gboolean found;
 
     for (i = 0; i < level->nitems; i++) {
         item = level->items + i;
-        if (!item->object)
+        if (!G_VALUE_HOLDS_OBJECT(&item->value))
             continue;
 
         found = FALSE;
-        type = G_TYPE_FROM_INSTANCE(item->object);
+        iobject = g_value_get_object(&item->value);
+        type = G_TYPE_FROM_INSTANCE(iobject);
         /* scan through all available levels and all objects inside */
-        for (l = available; l; l = g_list_next(l)) {
+        for (l = available; l && FALSE /* XXX: don't reuse */; l = g_list_next(l)) {
             lvl = (GwyAppUndoLevel*)l->data;
             for (j = 0; j < lvl->nitems; j++) {
                 jtem = lvl->items + j;
-                if (!jtem->object)
+                if (!G_VALUE_HOLDS_OBJECT(&jtem->value))
                     continue;
-                if (G_TYPE_FROM_INSTANCE(jtem->object) == type) {
-                    /* we've found a reusable item
-                     * FIXME: for datafields, we normally know they are all
-                     * all the same size, but otherwise there should be some
-                     * real compatibility check */
-                    gwy_serializable_clone(item->object, jtem->object);
-                    item->object = jtem->object;
-                    jtem->object = NULL;
-                    found = TRUE;
-                    gwy_debug("Item (%lu,%x) reused from (%lu,%x)",
-                              level->id, item->key, lvl->id, jtem->key);
+                jobject = g_value_get_object(&jtem->value);
+                if (!G_TYPE_FROM_INSTANCE(jobject) == type)
+                    continue;
 
-                    l = NULL;    /* break from outer cycle */
-                    break;
-                }
+                /* we've found a reusable item
+                 * FIXME: for datafields, we normally know they are all
+                 * all the same size, but otherwise there should be some
+                 * real compatibility check */
+                gwy_serializable_clone(iobject, jobject);
+                g_value_copy(&jtem->value, &item->value);
+                g_value_unset(&jtem->value);
+                found = TRUE;
+                gwy_debug("Item (%lu,%x) reused from (%lu,%x)",
+                          level->id, item->key, lvl->id, jtem->key);
+
+                l = NULL;    /* break from outer cycle */
+                break;
             }
         }
         if (!found) {
-            item->object = gwy_serializable_duplicate(item->object);
+            if (G_VALUE_HOLDS_OBJECT(&item->value)) {
+                iobject = g_value_get_object(&item->value);
+                g_value_take_object(&item->value,
+                                    gwy_serializable_duplicate(iobject));
+            }
             gwy_debug("Item (%lu,%x) created as new",
                       level->id, item->key);
         }
@@ -337,34 +327,56 @@ static void
 gwy_app_undo_or_redo(GwyContainer *data,
                      GwyAppUndoLevel *level)
 {
-    GObject *dfapp, *df;
-    GQuark quark;
+    GValue value;
+    gboolean app, undo;
     guint i;
 
+    memset(&value, 0, sizeof(GValue));
     for (i = 0; i < level->nitems; i++) {
-        quark = level->items[i].key;
-        df = level->items[i].object;
-        dfapp = NULL;
-        gwy_container_gis_object(data, quark, &dfapp);
-        if (df && dfapp) {
-            gwy_debug("Changing object <%s>", g_quark_to_string(quark));
+        GwyAppUndoItem *item = level->items + i;
+
+        /* note this call itself creates a copy for non-objects; for objects
+         * it increases reference count */
+        app = gwy_container_gis_value(data, item->key, &value);
+        undo = G_VALUE_TYPE(&item->value) != 0;
+        if (undo && app) {
+            if (G_VALUE_TYPE(&item->value) != G_VALUE_TYPE(&value)) {
+                g_critical("Types of undone/redone and current object "
+                           "don't match");
+                continue;
+            }
+            gwy_debug("Changing item <%s>", g_quark_to_string(item->key));
             /* Note: we have to use duplicate to destroy object identity
              * (user data, signals, ...) */
-            level->items[i].object = gwy_serializable_duplicate(dfapp);
-            gwy_container_set_object(data, quark, df);
-            g_object_unref(df);
+            if (G_VALUE_HOLDS_OBJECT(&item->value)) {
+                GObject *object;
+
+                object = g_value_get_object(&item->value);
+                gwy_debug("saved object: %p", object);
+                object = gwy_serializable_duplicate(object);
+                gwy_container_set_object(data, item->key, object);
+                g_object_unref(object);
+
+                g_value_copy(&value, &item->value);
+                g_value_unset(&value);
+            }
+            else {
+                gwy_container_set_value(data, item->key, &item->value, 0);
+                g_value_copy(&item->value, &value);
+                g_value_unset(&value);
+            }
         }
-        else if (df && !dfapp) {
-            gwy_debug("Restoring object <%s>", g_quark_to_string(quark));
-            gwy_container_set_object(data, quark, df);
-            level->items[i].object = NULL;
-            g_object_unref(df);
+        else if (undo && !app) {
+            gwy_debug("Restoring item <%s>", g_quark_to_string(item->key));
+            gwy_container_set_value(data, item->key, &item->value, 0);
+            g_value_unset(&item->value);
         }
-        else if (!df && dfapp) {
-            gwy_debug("Deleting object <%s>", g_quark_to_string(quark));
-            level->items[i].object = dfapp;
-            g_object_ref(level->items[i].object);
-            gwy_container_remove(data, quark);
+        else if (!undo && app) {
+            gwy_debug("Deleting item <%s>", g_quark_to_string(item->key));
+            g_value_init(&item->value, G_VALUE_TYPE(&value));
+            g_value_copy(&value, &item->value);
+            gwy_container_remove(data, item->key);
+            g_value_unset(&value);
         }
         else
             g_warning("Undoing/redoing NULL to another NULL");
@@ -511,11 +523,13 @@ gwy_app_undo_list_free(GList *list)
     for (l = g_list_first(list); l; l = g_list_next(l)) {
         level = (GwyAppUndoLevel*)l->data;
         for (i = 0; i < level->nitems; i++) {
-            if (level->items[i].object) {
-                gwy_debug("Item (%lu,%x) destroyed",
-                          level->id, level->items[i].key);
+            GwyAppUndoItem *item = level->items + i;
+
+            if (G_VALUE_TYPE(&item->value)) {
+                gwy_debug("Item (%lu,%x) destroyed", level->id, item->key);
+                g_value_unset(&item->value);
             }
-            gwy_object_unref(level->items[i].object);
+            /* FIXME: gwy_object_unref(level->items[i].object); */
         }
     }
     g_list_free(list);
