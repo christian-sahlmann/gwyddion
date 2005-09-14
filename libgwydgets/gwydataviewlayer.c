@@ -40,7 +40,7 @@ enum {
 
 /* Forward declarations */
 
-static void gwy_data_view_layer_finalize      (GObject *object);
+static void gwy_data_view_layer_destroy       (GtkObject *object);
 static void gwy_data_view_layer_real_plugged  (GwyDataViewLayer *layer);
 static void gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer);
 
@@ -56,11 +56,10 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
 
-    gobject_class->finalize = gwy_data_view_layer_finalize;
+    object_class->destroy = gwy_data_view_layer_destroy;
 
     klass->plugged = gwy_data_view_layer_real_plugged;
     klass->unplugged = gwy_data_view_layer_real_unplugged;
-    klass->updated = NULL;
 
    /**
     * GwyDataViewLayer::plugged:
@@ -71,7 +70,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     */
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
-                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_OBJECT_CLASS_TYPE(gobject_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewLayerClass, plugged),
                      NULL, NULL,
@@ -87,7 +86,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     */
     data_view_layer_signals[UNPLUGGED] =
         g_signal_new("unplugged",
-                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_OBJECT_CLASS_TYPE(gobject_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewLayerClass, unplugged),
                      NULL, NULL,
@@ -103,7 +102,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
      */
     data_view_layer_signals[UPDATED] =
         g_signal_new("updated",
-                     G_OBJECT_CLASS_TYPE(object_class),
+                     G_OBJECT_CLASS_TYPE(gobject_class),
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(GwyDataViewLayerClass, updated),
                      NULL, NULL,
@@ -117,14 +116,13 @@ gwy_data_view_layer_init(G_GNUC_UNUSED GwyDataViewLayer *layer)
 }
 
 static void
-gwy_data_view_layer_finalize(GObject *object)
+gwy_data_view_layer_destroy(GtkObject *object)
 {
     GwyDataViewLayer *layer;
 
-    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(object));
     layer = GWY_DATA_VIEW_LAYER(object);
     gwy_object_unref(layer->data);
-    G_OBJECT_CLASS(gwy_data_view_layer_parent_class)->finalize(object);
+    GTK_OBJECT_CLASS(gwy_data_view_layer_parent_class)->destroy(object);
 }
 
 /**
@@ -132,6 +130,8 @@ gwy_data_view_layer_finalize(GObject *object)
  * @layer: A data view layer.
  *
  * Emits a "plugged" singal on a layer.
+ *
+ * Primarily intended for #GwyDataView implementation.
  **/
 void
 gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
@@ -146,6 +146,8 @@ gwy_data_view_layer_plugged(GwyDataViewLayer *layer)
  * @layer: A data view layer.
  *
  * Emits a "unplugged" singal on a layer.
+ *
+ * Primarily intended for #GwyDataView implementation.
  **/
 void
 gwy_data_view_layer_unplugged(GwyDataViewLayer *layer)
@@ -167,6 +169,44 @@ gwy_data_view_layer_updated(GwyDataViewLayer *layer)
     gwy_debug("");
     g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
     g_signal_emit(layer, data_view_layer_signals[UPDATED], 0);
+}
+
+/**
+ * gwy_data_view_layer_realize:
+ * @layer: A data view layer.
+ *
+ * Tells a data view layer its parent was realized and it can create
+ * display-specific resources.
+ **/
+void
+gwy_data_view_layer_realize(GwyDataViewLayer *layer)
+{
+    void (*method)(GwyDataViewLayer*);
+
+    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    method = GWY_DATA_VIEW_LAYER_GET_CLASS(layer)->realize;
+    if (method)
+        method(layer);
+}
+
+/**
+ * gwy_data_view_layer_unrealize:
+ * @layer: A data view layer.
+ *
+ * Tells a data view layer its parent was unrealized and it should destroy
+ * display-specific resources.
+ **/
+void
+gwy_data_view_layer_unrealize(GwyDataViewLayer *layer)
+{
+    void (*method)(GwyDataViewLayer*);
+
+    gwy_debug("");
+    g_return_if_fail(GWY_IS_DATA_VIEW_LAYER(layer));
+    method = GWY_DATA_VIEW_LAYER_GET_CLASS(layer)->unrealize;
+    if (method)
+        method(layer);
 }
 
 static void

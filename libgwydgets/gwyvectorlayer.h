@@ -44,7 +44,6 @@ struct _GwyVectorLayer {
     GdkGC *gc;
     PangoLayout *layout;
 
-    /* For new-style layers */
     GwySelection *selection;
     GQuark selection_key;
     gulong item_changed_id;
@@ -92,8 +91,6 @@ gboolean         gwy_vector_layer_key_press          (GwyVectorLayer *layer,
                                                       GdkEventKey *event);
 gboolean         gwy_vector_layer_key_release        (GwyVectorLayer *layer,
                                                       GdkEventKey *event);
-
-void             gwy_vector_layer_setup_gc           (GwyVectorLayer *layer);
 
 G_END_DECLS
 

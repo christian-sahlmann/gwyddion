@@ -100,8 +100,8 @@ static gboolean gwy_layer_point_button_released(GwyVectorLayer *layer,
                                                 GdkEventButton *event);
 static void     gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
                                                 gboolean draw_marker);
-static void     gwy_layer_point_plugged        (GwyDataViewLayer *layer);
-static void     gwy_layer_point_unplugged      (GwyDataViewLayer *layer);
+static void     gwy_layer_point_realize        (GwyDataViewLayer *layer);
+static void     gwy_layer_point_unrealize      (GwyDataViewLayer *layer);
 static gint     gwy_layer_point_near_point     (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
@@ -160,8 +160,8 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
     gobject_class->set_property = gwy_layer_point_set_property;
     gobject_class->get_property = gwy_layer_point_get_property;
 
-    layer_class->plugged = gwy_layer_point_plugged;
-    layer_class->unplugged = gwy_layer_point_unplugged;
+    layer_class->realize = gwy_layer_point_realize;
+    layer_class->unrealize = gwy_layer_point_unrealize;
 
     vector_class->selection_type = GWY_TYPE_SELECTION_POINT;
     vector_class->draw = gwy_layer_point_draw;
@@ -266,7 +266,6 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_vector_layer_setup_gc(layer);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xc, &yc);
     xmin = xc - CROSS_SIZE + 1;
     xmax = xc + CROSS_SIZE - 1;
@@ -441,12 +440,12 @@ gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
 }
 
 static void
-gwy_layer_point_plugged(GwyDataViewLayer *layer)
+gwy_layer_point_realize(GwyDataViewLayer *layer)
 {
     GwyLayerPointClass *klass;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->realize(layer);
 
     klass = GWY_LAYER_POINT_GET_CLASS(layer);
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
@@ -454,7 +453,7 @@ gwy_layer_point_plugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_point_unplugged(GwyDataViewLayer *layer)
+gwy_layer_point_unrealize(GwyDataViewLayer *layer)
 {
     GwyLayerPointClass *klass;
 
@@ -464,7 +463,7 @@ gwy_layer_point_unplugged(GwyDataViewLayer *layer)
     gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_point_parent_class)->unrealize(layer);
 }
 
 static gint

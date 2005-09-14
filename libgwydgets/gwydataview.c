@@ -240,6 +240,16 @@ gwy_data_view_unrealize(GtkWidget *widget)
 {
     GwyDataView *data_view = GWY_DATA_VIEW(widget);
 
+    if (data_view->base_layer)
+        gwy_data_view_layer_unrealize
+                                   (GWY_DATA_VIEW_LAYER(data_view->base_layer));
+    if (data_view->alpha_layer)
+        gwy_data_view_layer_unrealize
+                                  (GWY_DATA_VIEW_LAYER(data_view->alpha_layer));
+    if (data_view->top_layer)
+        gwy_data_view_layer_unrealize
+                                    (GWY_DATA_VIEW_LAYER(data_view->top_layer));
+
     gwy_object_unref(data_view->pixbuf);
     gwy_object_unref(data_view->base_pixbuf);
 
@@ -325,6 +335,14 @@ gwy_data_view_realize(GtkWidget *widget)
 
     widget->style = gtk_style_attach(widget->style, widget->window);
     gtk_style_set_background(widget->style, widget->window, GTK_STATE_NORMAL);
+
+    if (data_view->base_layer)
+        gwy_data_view_layer_realize(GWY_DATA_VIEW_LAYER(data_view->base_layer));
+    if (data_view->alpha_layer)
+        gwy_data_view_layer_realize
+                                  (GWY_DATA_VIEW_LAYER(data_view->alpha_layer));
+    if (data_view->top_layer)
+        gwy_data_view_layer_realize(GWY_DATA_VIEW_LAYER(data_view->top_layer));
 
     gwy_data_view_make_pixmap(data_view);
 }
@@ -760,6 +778,8 @@ gwy_data_view_set_layer(GwyDataView *data_view,
             g_signal_handler_disconnect(*which_layer, *hid);
             *hid = 0;
         }
+        if (GTK_WIDGET_REALIZED(GTK_WIDGET(data_view)))
+            gwy_data_view_layer_unrealize(GWY_DATA_VIEW_LAYER(*which_layer));
         gwy_data_view_layer_unplugged(*which_layer);
         (*which_layer)->parent = NULL;
         g_object_unref(*which_layer);
@@ -774,6 +794,8 @@ gwy_data_view_set_layer(GwyDataView *data_view,
                                             G_CALLBACK(gwy_data_view_update),
                                             data_view);
         gwy_data_view_layer_plugged(layer);
+        if (GTK_WIDGET_REALIZED(GTK_WIDGET(data_view)))
+            gwy_data_view_layer_realize(GWY_DATA_VIEW_LAYER(layer));
     }
     data_view->layers_changed = TRUE;
     *which_layer = layer;

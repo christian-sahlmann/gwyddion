@@ -116,8 +116,8 @@ static gboolean gwy_layer_line_button_released (GwyVectorLayer *layer,
                                                 GdkEventButton *event);
 static void     gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
                                                 gboolean line_numbers);
-static void     gwy_layer_line_plugged         (GwyDataViewLayer *layer);
-static void     gwy_layer_line_unplugged       (GwyDataViewLayer *layer);
+static void     gwy_layer_line_realize         (GwyDataViewLayer *layer);
+static void     gwy_layer_line_unrealize       (GwyDataViewLayer *layer);
 static gint     gwy_layer_line_near_line       (GwyVectorLayer *layer,
                                                 gdouble xreal,
                                                 gdouble yreal);
@@ -182,8 +182,8 @@ gwy_layer_line_class_init(GwyLayerLineClass *klass)
     gobject_class->set_property = gwy_layer_line_set_property;
     gobject_class->get_property = gwy_layer_line_get_property;
 
-    layer_class->plugged = gwy_layer_line_plugged;
-    layer_class->unplugged = gwy_layer_line_unplugged;
+    layer_class->realize = gwy_layer_line_realize;
+    layer_class->unrealize = gwy_layer_line_unrealize;
 
     vector_class->selection_type = GWY_TYPE_SELECTION_LINE;
     vector_class->draw = gwy_layer_line_draw;
@@ -304,7 +304,6 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_vector_layer_setup_gc(layer);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi0, &yi0);
     gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xi1, &yi1);
     gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
@@ -637,12 +636,12 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
 }
 
 static void
-gwy_layer_line_plugged(GwyDataViewLayer *layer)
+gwy_layer_line_realize(GwyDataViewLayer *layer)
 {
     GwyLayerLineClass *klass;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->realize(layer);
 
     klass = GWY_LAYER_LINE_GET_CLASS(layer);
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
@@ -651,7 +650,7 @@ gwy_layer_line_plugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_line_unplugged(GwyDataViewLayer *layer)
+gwy_layer_line_unrealize(GwyDataViewLayer *layer)
 {
     GwyLayerLine *lines_layer;
     GwyLayerLineClass *klass;
@@ -672,7 +671,7 @@ gwy_layer_line_unplugged(GwyDataViewLayer *layer)
         lines_layer->line_labels = NULL;
     }
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->unrealize(layer);
 }
 
 static gint

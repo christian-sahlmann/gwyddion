@@ -49,6 +49,8 @@ static void gwy_vector_layer_get_property        (GObject *object,
                                                   GParamSpec *pspec);
 static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
 static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
+static void gwy_vector_layer_realize             (GwyDataViewLayer *layer);
+static void gwy_vector_layer_unrealize           (GwyDataViewLayer *layer);
 static void gwy_vector_layer_update_context      (GwyVectorLayer *layer);
 static void gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
                                                   const gchar *selection_key_string);
@@ -74,6 +76,8 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
+    layer_class->realize = gwy_vector_layer_realize;
+    layer_class->unrealize = gwy_vector_layer_unrealize;
 
     /**
      * GwyVectorLayer:selection-key:
@@ -479,10 +483,48 @@ gwy_vector_layer_unplugged(GwyDataViewLayer *layer)
         g_signal_handler_disconnect(layer->data, vector_layer->item_changed_id);
     vector_layer->item_changed_id = 0;
 
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
+}
+
+static void
+gwy_vector_layer_realize(GwyDataViewLayer *layer)
+{
+    void (*method)(GwyDataViewLayer*);
+    GwyVectorLayer *vector_layer;
+    GdkColor color;
+
+    method = GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->realize;
+    if (method)
+        method(layer);
+
+    g_return_if_fail(layer->parent && GTK_WIDGET_REALIZED(layer->parent));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+
+    vector_layer->gc = gdk_gc_new(layer->parent->window);
+    gdk_gc_set_function(vector_layer->gc, GDK_XOR);
+
+    color.red = color.green = color.blue = 0xffff;
+    gdk_gc_set_rgb_fg_color(vector_layer->gc, &color);
+
+    color.red = color.green = color.blue = 0x0000;
+    gdk_gc_set_rgb_bg_color(vector_layer->gc, &color);
+}
+
+static void
+gwy_vector_layer_unrealize(GwyDataViewLayer *layer)
+{
+    GwyVectorLayer *vector_layer;
+    void (*method)(GwyDataViewLayer*);
+
+    vector_layer = GWY_VECTOR_LAYER(layer);
+
     gwy_object_unref(vector_layer->gc);
     gwy_object_unref(vector_layer->layout);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unplugged(layer);
+    method
+        = GWY_DATA_VIEW_LAYER_CLASS(gwy_vector_layer_parent_class)->unrealize;
+    if (method)
+        method(layer);
 }
 
 /**
@@ -508,35 +550,6 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
     if (layer->selecting >= 0)
         return;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
-}
-
-/**
- * gwy_vector_layer_setup_gc:
- * @layer: A vector data view layer.
- *
- * Sets up Gdk graphic context of the vector layer for its parent window.
- *
- * This function is intended only for layer implementation.
- **/
-void
-gwy_vector_layer_setup_gc(GwyVectorLayer *layer)
-{
-    GtkWidget *parent;
-    GdkColor color;
-
-    g_return_if_fail(GWY_IS_VECTOR_LAYER(layer));
-    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
-    if (layer->gc || !GTK_WIDGET_REALIZED(parent))
-        return;
-
-    layer->gc = gdk_gc_new(parent->window);
-    gdk_gc_set_function(layer->gc, GDK_XOR);
-
-    color.red = color.green = color.blue = 0xffff;
-    gdk_gc_set_rgb_fg_color(layer->gc, &color);
-
-    color.red = color.green = color.blue = 0x0000;
-    gdk_gc_set_rgb_bg_color(layer->gc, &color);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

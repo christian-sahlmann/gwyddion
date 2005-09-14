@@ -50,7 +50,11 @@ struct _GwyDataViewLayer {
 struct _GwyDataViewLayerClass {
     GtkObjectClass parent_class;
 
-    /* signal functions */
+    /* Virtual table */
+    void (*realize)(GwyDataViewLayer *layer);
+    void (*unrealize)(GwyDataViewLayer *layer);
+
+    /* Signals */
     void (*plugged)(GwyDataViewLayer *layer);
     void (*unplugged)(GwyDataViewLayer *layer);
     void (*updated)(GwyDataViewLayer *layer);
@@ -59,10 +63,12 @@ struct _GwyDataViewLayerClass {
     gpointer reserved2;
 };
 
-GType            gwy_data_view_layer_get_type        (void) G_GNUC_CONST;
-void             gwy_data_view_layer_plugged         (GwyDataViewLayer *layer);
-void             gwy_data_view_layer_unplugged       (GwyDataViewLayer *layer);
-void             gwy_data_view_layer_updated         (GwyDataViewLayer *layer);
+GType gwy_data_view_layer_get_type  (void) G_GNUC_CONST;
+void  gwy_data_view_layer_plugged   (GwyDataViewLayer *layer);
+void  gwy_data_view_layer_unplugged (GwyDataViewLayer *layer);
+void  gwy_data_view_layer_updated   (GwyDataViewLayer *layer);
+void  gwy_data_view_layer_realize   (GwyDataViewLayer *layer);
+void  gwy_data_view_layer_unrealize (GwyDataViewLayer *layer);
 
 G_END_DECLS
 

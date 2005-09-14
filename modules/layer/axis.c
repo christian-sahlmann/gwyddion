@@ -110,8 +110,8 @@ static gboolean gwy_layer_axis_button_pressed     (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
 static gboolean gwy_layer_axis_button_released    (GwyVectorLayer *layer,
                                                    GdkEventButton *event);
-static void     gwy_layer_axis_plugged            (GwyDataViewLayer *layer);
-static void     gwy_layer_axis_unplugged          (GwyDataViewLayer *layer);
+static void     gwy_layer_axis_realize            (GwyDataViewLayer *layer);
+static void     gwy_layer_axis_unrealize          (GwyDataViewLayer *layer);
 static gint     gwy_layer_axis_near_point         (GwyVectorLayer *layer,
                                                    gdouble xreal,
                                                    gdouble yreal);
@@ -193,8 +193,8 @@ gwy_layer_axis_class_init(GwyLayerAxisClass *klass)
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
     GwyVectorLayerClass *vector_class = GWY_VECTOR_LAYER_CLASS(klass);
 
-    layer_class->plugged = gwy_layer_axis_plugged;
-    layer_class->unplugged = gwy_layer_axis_unplugged;
+    layer_class->realize = gwy_layer_axis_realize;
+    layer_class->unrealize = gwy_layer_axis_unrealize;
 
     vector_class->selection_type = GWY_TYPE_SELECTION_AXIS;
     vector_class->draw = gwy_layer_axis_draw;
@@ -387,7 +387,6 @@ gwy_layer_axis_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_vector_layer_setup_gc(layer);
     gdk_drawable_get_size(drawable, &width, &height);
     switch (GWY_SELECTION_AXIS(layer->selection)->orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
@@ -553,12 +552,12 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
 }
 
 static void
-gwy_layer_axis_plugged(GwyDataViewLayer *layer)
+gwy_layer_axis_realize(GwyDataViewLayer *layer)
 {
     GwyLayerAxisClass *klass;
 
     gwy_debug("");
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->plugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->realize(layer);
 
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_FLEUR);
@@ -566,7 +565,7 @@ gwy_layer_axis_plugged(GwyDataViewLayer *layer)
 }
 
 static void
-gwy_layer_axis_unplugged(GwyDataViewLayer *layer)
+gwy_layer_axis_unrealize(GwyDataViewLayer *layer)
 {
     GwyLayerAxisClass *klass;
 
@@ -576,7 +575,7 @@ gwy_layer_axis_unplugged(GwyDataViewLayer *layer)
     gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
 
-    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->unplugged(layer);
+    GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_axis_parent_class)->unrealize(layer);
 }
 
 static gint
