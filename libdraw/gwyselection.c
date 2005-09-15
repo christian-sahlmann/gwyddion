@@ -113,7 +113,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
     /**
      * GwySelection::changed:
      * @gwyselection: The #GwySelection which received the signal.
-     * @arg1: Changed object position hint.  If the value is positive, only
+     * @arg1: Changed object position hint.  If the value is nonnegative, only
      *        this object has changed.  If it's negative, the selection has
      *        to be treated as completely changed.
      *
@@ -136,7 +136,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
      *
      * What exactly finished means is defined by corresponding
      * #GwyVectorLayer, but normally it involves user stopped changing
-     * a selection object. Selections never emit this signal itself.
+     * a selection object. Selections never emit this signal themselves.
      **/
     selection_signals[FINISHED]
         = g_signal_new("finished",
