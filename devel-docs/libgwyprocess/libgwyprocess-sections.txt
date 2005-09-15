@@ -217,6 +217,7 @@ gwy_data_field_grains_mark_slope
 gwy_data_field_grains_get_distribution
 gwy_data_field_grains_add
 gwy_data_field_grains_intersect
+gwy_data_field_area_grains_tgnd
 </SECTION>
 
 <SECTION>
@@ -308,10 +309,6 @@ gwy_data_field_shade
 </SECTION>
 
 <SECTION>
-<FILE>stamp-gwyprocesstypes</FILE>
-</SECTION>
-
-<SECTION>
 <FILE>stats</FILE>
 gwy_data_field_get_max
 gwy_data_field_get_min
@@ -344,6 +341,12 @@ gwy_data_field_area_hhcf
 gwy_data_field_hhcf
 gwy_data_field_area_psdf
 gwy_data_field_psdf
+gwy_data_field_area_minkowski_volume
+gwy_data_field_minkowski_volume
+gwy_data_field_area_minkowski_boundary
+gwy_data_field_minkowski_boundary
+gwy_data_field_area_minkowski_euler
+gwy_data_field_minkowski_euler
 gwy_data_field_slope_distribution
 gwy_data_field_get_normal_coeffs
 gwy_data_field_area_get_normal_coeffs
@@ -366,27 +369,27 @@ gwy_fft_window
 <SECTION>
 <FILE>gwyprocessenums</FILE>
 GwyMergeType
-gwy_merge_type_get_enum
 GwyWatershedStateType
 GwyPlaneSymmetry
-gwy_plane_symmetry_get_enum
 Gwy2DCWTWaveletType
-gwy_2d_cwt_wavelet_type_get_enum
 GwyOrientation
-gwy_orientation_get_enum
 GwyTransformDirection
 GwyDataFieldCached
 GwyComputationStateType
 GwyDWTType
-gwy_dwt_type_get_enum
 GwyDWTDenoiseType
-gwy_dwt_denoise_type_get_enum
 GwyInterpolationType
-gwy_interpolation_type_get_enum
 GwyPlaneFitQuantity
 GwyWindowingType
-gwy_windowing_type_get_enum
 GwyTipType
+gwy_merge_type_get_enum
+gwy_plane_symmetry_get_enum
+gwy_2d_cwt_wavelet_type_get_enum
+gwy_orientation_get_enum
+gwy_dwt_type_get_enum
+gwy_dwt_denoise_type_get_enum
+gwy_interpolation_type_get_enum
+gwy_windowing_type_get_enum
 </SECTION>
 
 <SECTION>

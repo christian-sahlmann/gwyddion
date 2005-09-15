@@ -38,6 +38,30 @@ libgwyprocess
 morph_lib
 
 
+<!-- ##### SECTION ./tmpl/stamp-gwyprocesstypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyprocesstypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyprocesstypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyprocesstypes.sgml:Stability_Level ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwyprocesstypes.sgml:Title ##### -->
+stamp-gwyprocesstypes
+
+
 <!-- ##### MACRO GWY_ENABLE_DEPRECATED ##### -->
 <para>
 

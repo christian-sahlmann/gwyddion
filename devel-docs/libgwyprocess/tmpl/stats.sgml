@@ -14,6 +14,9 @@ stats
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_data_field_get_max ##### -->
 <para>
 
@@ -457,6 +460,78 @@ stats
 @orientation: 
 @interpolation: 
 @windowing: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_minkowski_volume ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@col: 
+@row: 
+@width: 
+@height: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_minkowski_volume ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_minkowski_boundary ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@col: 
+@row: 
+@width: 
+@height: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_minkowski_boundary ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_area_minkowski_euler ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
+@col: 
+@row: 
+@width: 
+@height: 
+@nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_minkowski_euler ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@target_line: 
 @nstats: 
 
 

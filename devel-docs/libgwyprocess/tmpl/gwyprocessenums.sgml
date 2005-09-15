@@ -14,6 +14,9 @@ gwyprocessenums
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GwyMergeType ##### -->
 <para>
 
@@ -147,13 +150,13 @@ gwyprocessenums
 
 </para>
 
-@GWY_WINDOWING_NONE:
-@GWY_WINDOWING_HANN:
-@GWY_WINDOWING_HAMMING:
-@GWY_WINDOWING_BLACKMANN:
-@GWY_WINDOWING_LANCZOS:
-@GWY_WINDOWING_WELCH:
-@GWY_WINDOWING_RECT:
+@GWY_WINDOWING_NONE: 
+@GWY_WINDOWING_HANN: 
+@GWY_WINDOWING_HAMMING: 
+@GWY_WINDOWING_BLACKMANN: 
+@GWY_WINDOWING_LANCZOS: 
+@GWY_WINDOWING_WELCH: 
+@GWY_WINDOWING_RECT: 
 
 <!-- ##### ENUM GwyTipType ##### -->
 <para>
