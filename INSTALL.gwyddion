@@ -22,9 +22,14 @@ Prerequisities:
 - a C compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
-- Gtk+-2.6 or newer, including development files
+- GLib-2.6 and Gtk+-2.6 or newer, including development files
+- Pango-1.8 or newer, including development files
+
+Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
-- Pango with FT2 backend, including development files
+
+Optional, for speed up of some operations:
+- FFTW-3.0.0 or newer, including development files
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
@@ -111,7 +116,7 @@ Prerequisities:
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
 - Perl5
-- gtk-doc 0.6 or newer
+- gtk-doc 1.0 or newer
 - GNU gettext 0.12 or newer, including development stuff
 - who knows what else
 
