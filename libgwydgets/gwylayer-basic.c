@@ -65,6 +65,7 @@ static void gwy_layer_basic_container_connect    (GwyLayerBasic *basic_layer,
                                                   GCallback callback);
 static void gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_min_max_changed      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
 
 G_DEFINE_TYPE(GwyLayerBasic, gwy_layer_basic, GWY_TYPE_PIXMAP_LAYER)
@@ -626,11 +627,13 @@ gwy_layer_basic_connect_fixed(GwyLayerBasic *basic_layer)
     g_stpcpy(g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), prefix),
              "/min");
     basic_layer->min_id = connect_swapped_after(layer->data, detailed_signal,
-                                                gwy_layer_basic_changed, layer);
+                                                gwy_layer_basic_min_max_changed,
+                                                layer);
 
     strcpy(detailed_signal + len, "max");
     basic_layer->max_id = connect_swapped_after(layer->data, detailed_signal,
-                                                gwy_layer_basic_changed, layer);
+                                                gwy_layer_basic_min_max_changed,
+                                                layer);
 }
 
 static void
@@ -683,6 +686,21 @@ gwy_layer_basic_range_type_changed(GwyLayerBasic *basic_layer)
 {
     gwy_layer_basic_reconnect_fixed(basic_layer);
     gwy_layer_basic_changed(GWY_PIXMAP_LAYER(basic_layer));
+}
+
+static void
+gwy_layer_basic_min_max_changed(GwyLayerBasic *basic_layer)
+{
+    GwyContainer *data;
+    GwyLayerBasicRangeType range_type;
+
+    data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
+    range_type = GWY_LAYER_BASIC_RANGE_FULL;
+    if (basic_layer->range_type_key)
+        gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
+
+    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED)
+        gwy_layer_basic_changed(GWY_PIXMAP_LAYER(basic_layer));
 }
 
 static void
