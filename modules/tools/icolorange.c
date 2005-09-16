@@ -46,7 +46,6 @@ typedef enum {
 
 typedef struct {
     GwyUnitoolRectLabels labels;
-    GtkWidget *cdo_preview;
     GtkWidget *histogram;
     GtkWidget *cmin;
     GtkWidget *cmax;
@@ -55,15 +54,11 @@ typedef struct {
     IColorRangeSource range_source;
     gboolean in_update;
     gboolean initial_use;
-    gdouble min;
-    gdouble max;
     GwyDataLine *heightdist;
     GSList *modelist;
-    gboolean update_caused_by_mode;    /* FIXME: ugly temporary workaround */
     /* storable state */
     GQuark key_min;
     GQuark key_max;
-    gboolean do_preview;
     GwyGraphModel *histogram_model;
 } ToolControls;
 
@@ -75,18 +70,16 @@ static GtkWidget* dialog_create               (GwyUnitoolState *state);
 static void       dialog_update               (GwyUnitoolState *state,
                                                GwyUnitoolUpdateType reason);
 static void       dialog_abandon              (GwyUnitoolState *state);
-static void       apply                       (GwyUnitoolState *state);
-static void       do_preview_updated          (GtkWidget *toggle,
-                                               GwyUnitoolState *state);
 static void       histogram_selection_changed (GwyUnitoolState *state);
-static void       update_graph_selection      (GwyUnitoolState *state);
+static void       update_graph_selection      (GwyUnitoolState *state,
+                                               const gdouble *selection);
 static GwyLayerBasicRangeType get_range_type  (GwyUnitoolState *state);
 static void       set_range_type            (GwyUnitoolState *state,
                                              GwyLayerBasicRangeType range_type);
 static void       get_min_max                 (GwyUnitoolState *state,
-                                               gdouble *min,
-                                               gdouble *max);
-static void       set_min_max                 (GwyUnitoolState *state);
+                                               gdouble *selection);
+static void       set_min_max                 (GwyUnitoolState *state,
+                                               const gdouble *selection);
 static void       range_mode_changed          (GtkWidget *button,
                                                GwyUnitoolState *state);
 static void       load_args                   (GwyContainer *container,
@@ -113,7 +106,7 @@ static GwyUnitoolSlots func_slots = {
     dialog_create,                 /* dialog constructor */
     dialog_update,                 /* update view and controls */
     dialog_abandon,                /* dialog abandon hook */
-    apply,                         /* apply action */
+    NULL,                          /* apply action */
     NULL,                          /* nonstandard response handler */
 };
 
@@ -167,6 +160,7 @@ static void
 layer_setup(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwySelection *selection;
     GwyDataView *view;
     GwyPixmapLayer *layer;
     const gchar *prefix;
@@ -178,16 +172,16 @@ layer_setup(GwyUnitoolState *state)
                  "selection-key", "/0/select/rectangle",
                  "is-crop", FALSE,
                  NULL);
-
-    controls = (ToolControls*)state->user_data;
-    if (controls->modelist)
-        gwy_radio_buttons_set_current(controls->modelist, "range-type",
-                                      get_range_type(state));
+    selection = gwy_vector_layer_get_selection(state->layer);
 
     view = gwy_data_window_get_data_view(state->data_window);
     layer = gwy_data_view_get_base_layer(view);
     prefix = gwy_layer_basic_get_min_max_key(GWY_LAYER_BASIC(layer));
-    g_assert(prefix);
+    if (!prefix) {
+        /* TODO: Container */
+        prefix = "/0/base";
+        gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), prefix);
+    }
     len = strlen(prefix);
     key = g_newa(gchar, len + sizeof("/min"));
     g_stpcpy(g_stpcpy(key, prefix), "/min");
@@ -195,6 +189,10 @@ layer_setup(GwyUnitoolState *state)
     key[len + 2] = 'a';
     key[len + 3] = 'x';
     controls->key_max = g_quark_from_string(key);
+
+    if (controls->modelist)
+        gwy_radio_buttons_set_current(controls->modelist, "range-type",
+                                      get_range_type(state));
 }
 
 static GtkWidget*
@@ -207,20 +205,19 @@ dialog_create(GwyUnitoolState *state)
         { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT },
     };
     ToolControls *controls;
-    GwyLayerBasicRangeType range_type;
     GwyContainer *settings;
     GtkWidget *dialog, *table, *frame, *label, *hbox, *button;
+    GwyGraph *graph;
+    GwyGraphCurveModel *cmodel;
     GSList *modelist, *l;
     gint row;
 
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
-    range_type = get_range_type(state);
     load_args(settings, controls);
 
     dialog = gtk_dialog_new_with_buttons(_("Color Range"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
-    gwy_unitool_dialog_add_button_apply(dialog);
 
     frame = gwy_unitool_windowname_frame_create(state);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
@@ -230,7 +227,7 @@ dialog_create(GwyUnitoolState *state)
     modelist = gwy_radio_buttons_create(range_modes, G_N_ELEMENTS(range_modes),
                                         "range-type",
                                         G_CALLBACK(range_mode_changed), state,
-                                        range_type);
+                                        -1);
     for (l = modelist; l; l = g_slist_next(l)) {
         button = GTK_WIDGET(l->data);
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
@@ -240,22 +237,25 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
+    controls->heightdist = gwy_data_line_new(1.0, 1.0, TRUE);
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_description(cmodel,
+                                          _("Height histogram"));
+    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+
     controls->histogram_model = gwy_graph_model_new();
+    /* XXX: this hangs/crashes, but Petr promises to fix it */
+    gwy_graph_model_add_curve(controls->histogram_model, cmodel);
     controls->histogram = gwy_graph_new(controls->histogram_model);
+    graph = GWY_GRAPH(controls->histogram);
     gwy_graph_model_set_label_visible(controls->histogram_model, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls->histogram),
-                               GTK_POS_TOP, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls->histogram),
-                               GTK_POS_BOTTOM, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls->histogram),
-                               GTK_POS_LEFT, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls->histogram),
-                               GTK_POS_RIGHT, FALSE);
-    gwy_graph_set_status(GWY_GRAPH(controls->histogram), GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_set_selection_limit(GWY_GRAPH(controls->histogram), 1);
-    gwy_graph_enable_user_input(GWY_GRAPH(controls->histogram), FALSE);
-    gtk_widget_set_sensitive(controls->histogram,
-                             range_type == GWY_LAYER_BASIC_RANGE_FIXED);
+    gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_BOTTOM, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
+    gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
+    gwy_graph_set_selection_limit(graph, 1);
+    gwy_graph_enable_user_input(graph, FALSE);
     gtk_widget_set_size_request(controls->histogram, 240, 160);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->histogram,
                        TRUE, TRUE, 2);
@@ -287,19 +287,11 @@ dialog_create(GwyUnitoolState *state)
     gtk_misc_set_alignment(GTK_MISC(controls->cdatamin), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls->cdatamin, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    /*
-    gwy_unitool_update_label(state->value_format, controls->cdatamin,
-                             controls->datamin);
-                             */
 
     controls->cdatamax = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls->cdatamax), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls->cdatamax, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    /*
-    gwy_unitool_update_label(state->value_format, controls->cdatamax,
-                             controls->datamax);
-                             */
 
     label = gtk_label_new(_("Full"));
     gtk_table_attach(GTK_TABLE(table), label, 1, 3, row, row+1,
@@ -318,17 +310,6 @@ dialog_create(GwyUnitoolState *state)
     row += gwy_unitool_rect_info_table_setup(&controls->labels,
                                              GTK_TABLE(table), 0, row);
     controls->labels.unselected_is_full = TRUE;
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
-
-    controls->cdo_preview
-        = gtk_check_button_new_with_mnemonic(_("_Instant apply"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->cdo_preview),
-                                 controls->do_preview);
-    g_signal_connect(controls->cdo_preview, "toggled",
-                     G_CALLBACK(do_preview_updated), state);
-    gtk_table_attach(GTK_TABLE(table), controls->cdo_preview, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    row++;
 
     return dialog;
 }
@@ -344,6 +325,7 @@ dialog_update(GwyUnitoolState *state,
     ToolControls *controls;
     GwyGraphCurveModel *cmodel;
     GwyLayerBasicRangeType range_type;
+    gboolean has_selection = FALSE;
     gint isel[4];
     gdouble min, max, selection[2];
 
@@ -351,108 +333,69 @@ dialog_update(GwyUnitoolState *state,
     if (controls->in_update)
         return;
 
-    if (reason == GWY_UNITOOL_UPDATED_DATA && controls->update_caused_by_mode) {
-        controls->update_caused_by_mode = FALSE;
-        return;
-    }
-
     gwy_debug("%d (initial: %d)", reason, controls->initial_use);
     controls->in_update = TRUE;
     is_visible = state->is_visible;
+    if (controls->initial_use) {
+        reason = GWY_UNITOOL_UPDATED_DATA;
+        controls->initial_use = FALSE;
+    }
 
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     graph = GWY_GRAPH(controls->histogram);
-    min = gwy_data_field_get_min(dfield);
-    max = gwy_data_field_get_max(dfield);
 
-    if (reason == GWY_UNITOOL_UPDATED_DATA || controls->initial_use) {
-        if (controls->initial_use) {
-            controls->heightdist = gwy_data_line_new(1.0, 1.0, TRUE);
-            cmodel = gwy_graph_curve_model_new();
-            gwy_graph_curve_model_set_description(cmodel,
-                                                  _("Height histogram"));
-            gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
-        }
-        else
-            cmodel
-                = gwy_graph_model_get_curve_by_index(controls->histogram_model,
-                                                     0);
-
-        /* XXX */
-        controls->min = CLAMP(controls->min, min, max);
-        controls->max = CLAMP(controls->max, min, max);
-        if (controls->min >= controls->max) {
-            controls->min = min;
-            controls->max = max;
-        }
+    if (reason == GWY_UNITOOL_UPDATED_DATA) {
+        cmodel = gwy_graph_model_get_curve_by_index(controls->histogram_model,
+                                                    0);
         gwy_data_field_dh(dfield, controls->heightdist, 0);
         gwy_graph_curve_model_set_data_from_dataline(cmodel,
                                                      controls->heightdist,
                                                      0, 0);
-        if (controls->initial_use)
-            gwy_graph_model_add_curve(controls->histogram_model, cmodel);
     }
-
-    switch (reason) {
-        case GWY_UNITOOL_UPDATED_SELECTION:
+    else if (reason == GWY_UNITOOL_UPDATED_SELECTION)
         controls->range_source = USE_SELECTION;
-        break;
-
-        case GWY_UNITOOL_UPDATED_CONTROLS:
+    else if (reason == GWY_UNITOOL_UPDATED_CONTROLS)
         controls->range_source = USE_HISTOGRAM;
-        break;
 
-        default:
-        /* data was updated, so keep whatever source is set */
-        break;
-    }
-
-    range_type = get_range_type(state);
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED
-        && controls->range_source == USE_SELECTION) {
-        gwy_unitool_rect_info_table_fill(state, &controls->labels, NULL, isel);
-        controls->min = gwy_data_field_area_get_min(dfield,
-                                                    isel[0], isel[1],
-                                                    isel[2] - isel[0],
-                                                    isel[3] - isel[1]);
-        controls->max = gwy_data_field_area_get_max(dfield,
-                                                    isel[0], isel[1],
-                                                    isel[2] - isel[0],
-                                                    isel[3] - isel[1]);
-        set_min_max(state);
-        update_graph_selection(state);
-    }
-
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED
-        && controls->range_source == USE_HISTOGRAM
-        && !controls->initial_use) {
-        if (reason != GWY_UNITOOL_UPDATED_DATA) {
-            if (gwy_graph_get_selection_number(graph)) {
-                gwy_graph_get_selection(graph, selection);
-                controls->min = selection[0];
-                controls->max = selection[1];
-            }
-            else {
-                controls->min = min;
-                controls->max = max;
-            }
-            set_min_max(state);
+    min = selection[0] = gwy_data_field_get_min(dfield);
+    max = selection[1] = gwy_data_field_get_max(dfield);
+    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
+        if (gwy_graph_get_selection_number(graph)) {
+            gwy_graph_get_selection(graph, selection);
+            has_selection = TRUE;
         }
+
+        if (controls->range_source == USE_SELECTION) {
+            if (gwy_unitool_rect_info_table_fill(state, &controls->labels,
+                                                 NULL, isel))
+                has_selection = TRUE;
+            selection[0] = gwy_data_field_area_get_min(dfield,
+                                                       isel[0], isel[1],
+                                                       isel[2] - isel[0],
+                                                       isel[3] - isel[1]);
+            selection[1] = gwy_data_field_area_get_max(dfield,
+                                                       isel[0], isel[1],
+                                                       isel[2] - isel[0],
+                                                       isel[3] - isel[1]);
+            update_graph_selection(state, selection);
+        }
+        if (has_selection)
+            set_min_max(state, selection);
+        else
+            set_min_max(state, NULL);
+    }
+    else {
+        get_min_max(state, selection);
+        update_graph_selection(state, selection);
     }
 
-    gwy_unitool_update_label(state->value_format, controls->cmin,
-                             controls->min);
-    gwy_unitool_update_label(state->value_format, controls->cmax,
-                             controls->max);
+    gwy_unitool_update_label(state->value_format, controls->cmin, selection[0]);
+    gwy_unitool_update_label(state->value_format, controls->cmax, selection[1]);
     gwy_unitool_update_label(state->value_format, controls->cdatamin, min);
     gwy_unitool_update_label(state->value_format, controls->cdatamax, max);
 
-    controls->initial_use = FALSE;
     controls->in_update = FALSE;
-
-    if (controls->do_preview)
-        apply(state);
 }
 
 static void
@@ -470,35 +413,6 @@ dialog_abandon(GwyUnitoolState *state)
 }
 
 static void
-apply(GwyUnitoolState *state)
-{
-    ToolControls *controls;
-    GwyContainer *data;
-
-    controls = (ToolControls*)state->user_data;
-    if (controls->in_update)
-        return;
-
-    controls->in_update = TRUE;
-    data = gwy_data_window_get_data(state->data_window);
-    gwy_container_set_double(data, controls->key_min, controls->min);
-    gwy_container_set_double(data, controls->key_max, controls->max);
-    controls->in_update = FALSE;
-}
-
-static void
-do_preview_updated(GtkWidget *toggle, GwyUnitoolState *state)
-{
-    ToolControls *controls;
-
-    controls = (ToolControls*)state->user_data;
-    controls->do_preview
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
-    if (controls->do_preview)
-        apply(state);
-}
-
-static void
 histogram_selection_changed(GwyUnitoolState *state)
 {
     ToolControls *controls;
@@ -511,28 +425,27 @@ histogram_selection_changed(GwyUnitoolState *state)
 }
 
 static void
-update_graph_selection(GwyUnitoolState *state)
+update_graph_selection(GwyUnitoolState *state,
+                       const gdouble *selection)
 {
     ToolControls *controls;
     GwyGraph *graph;
     GwyContainer *data;
     GwyDataField *dfield;
-    gdouble selection[2];
+    gdouble min, max;
 
     controls = (ToolControls*)state->user_data;
     graph = GWY_GRAPH(controls->histogram);
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    selection[0] = gwy_data_field_get_min(dfield);
-    selection[1] = gwy_data_field_get_max(dfield);
+    min = gwy_data_field_get_min(dfield);
+    max = gwy_data_field_get_max(dfield);
 
-    if (controls->min == selection[0] && controls->max == selection[1])
+    if (min == selection[0] && max == selection[1])
         gwy_graph_clear_selection(graph);
-    else {
-        get_min_max(state, selection+0, selection+1);
+    else
         gwy_graph_area_set_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                                      GWY_GRAPH_STATUS_XSEL, selection, 1);
-    }
 }
 
 static GwyLayerBasicRangeType
@@ -583,8 +496,7 @@ set_range_type(GwyUnitoolState *state,
 
 static void
 get_min_max(GwyUnitoolState *state,
-            gdouble *min,
-            gdouble *max)
+            gdouble *selection)
 {
     ToolControls *controls;
     GwyDataView *view;
@@ -596,14 +508,15 @@ get_min_max(GwyUnitoolState *state,
     container = gwy_data_view_get_data(view);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
                                                              "/0/data"));
-    if (!gwy_container_gis_double(container, controls->key_min, min))
-        *min = gwy_data_field_get_min(dfield);
-    if (!gwy_container_gis_double(container, controls->key_max, max))
-        *max = gwy_data_field_get_max(dfield);
+    if (!gwy_container_gis_double(container, controls->key_min, &selection[0]))
+        selection[0] = gwy_data_field_get_min(dfield);
+    if (!gwy_container_gis_double(container, controls->key_max, &selection[1]))
+        selection[1] = gwy_data_field_get_max(dfield);
 }
 
 static void
-set_min_max(GwyUnitoolState *state)
+set_min_max(GwyUnitoolState *state,
+            const gdouble *selection)
 {
     ToolControls *controls;
     GwyDataView *view;
@@ -612,8 +525,14 @@ set_min_max(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     view = gwy_data_window_get_data_view(state->data_window);
     container = gwy_data_view_get_data(view);
-    gwy_container_set_double(container, controls->key_min, controls->min);
-    gwy_container_set_double(container, controls->key_max, controls->max);
+    if (selection) {
+        gwy_container_set_double(container, controls->key_min, selection[0]);
+        gwy_container_set_double(container, controls->key_max, selection[1]);
+    }
+    else {
+        gwy_container_remove(container, controls->key_min);
+        gwy_container_remove(container, controls->key_max);
+    }
 }
 
 static void
@@ -622,39 +541,14 @@ range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
 {
     ToolControls *controls;
     GwyLayerBasicRangeType range_type;
-    GwyDataView *view;
-    GwyPixmapLayer *layer;
 
     controls = (ToolControls*)state->user_data;
     range_type = gwy_radio_buttons_get_current(controls->modelist,
                                                "range-type");
-    set_range_type(state, range_type);
-
-    /* FIXME: this is a copy of dialog_update() parts.  It's already too ugly
-     * to add another broken logic */
-
-    if (controls->in_update)
-        return;
-    controls->in_update = TRUE;
-
-    view = gwy_data_window_get_data_view(state->data_window);
-    layer = gwy_data_view_get_base_layer(view);
-    gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer),
-                              &controls->min, &controls->max);
-    update_graph_selection(state);
-
-    if (state->is_visible) {
-        gwy_unitool_update_label(state->value_format, controls->cmin,
-                                 controls->min);
-        gwy_unitool_update_label(state->value_format, controls->cmax,
-                                 controls->max);
-    }
-
     gtk_widget_set_sensitive(controls->histogram,
                              range_type == GWY_LAYER_BASIC_RANGE_FIXED);
-
-    controls->update_caused_by_mode = TRUE;
-    controls->in_update = FALSE;
+    set_range_type(state, range_type);
+    dialog_update(state, GWY_UNITOOL_UPDATED_DATA);
 }
 
 static const gchar *do_preview_key = "/tool/icolorange/do_preview";
@@ -664,9 +558,8 @@ static const gchar *rel_max_key = "/tool/icolorange/rel_max";
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
-    gwy_container_set_boolean_by_name(container, do_preview_key,
-                                      controls->do_preview);
     /* TODO: remove someday */
+    gwy_container_remove_by_name(container, do_preview_key);
     gwy_container_remove_by_name(container, rel_min_key);
     gwy_container_remove_by_name(container, rel_max_key);
 }
@@ -674,12 +567,6 @@ save_args(GwyContainer *container, ToolControls *controls)
 static void
 load_args(GwyContainer *container, ToolControls *controls)
 {
-    controls->do_preview = TRUE;
-
-    gwy_container_gis_boolean_by_name(container, do_preview_key,
-                                      &controls->do_preview);
-
-    controls->do_preview = !!controls->do_preview;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
