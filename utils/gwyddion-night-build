@@ -79,6 +79,7 @@ function build_project() {
 
 
 function build_documentation() {
+  # Note this need build_project() to pass
   cd ./devel-docs
   make -k clean >/dev/null
   rm -fv */*-sections.txt */*-decl-list.txt
@@ -87,22 +88,41 @@ function build_documentation() {
 
 
 function check_coding_style() {
+  # Note this need build_documentation() to pass
+  # Source coding style
   find -name \*.c | grep -Ev '/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
+
+  # Libraries
   find . -path \*.libs/lib\*.so | grep -v '\..*\..*\..*\.' | while read lib; do
+    d=${lib##./}
+    d=${d%%/*}
     l=$(basename $lib .so)
     nm $lib \
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/\1/;t;d' \
       | grep -v '^_' \
-      | sort -u >evil-symbols-l.tmp
-    grep -ho '\<gwy_[A-Za-z0-9_]\{4,\}' $(dirname $(dirname $lib))/*.h \
-      | sort -u >evil-symbols-h.tmp
-    sort -m evil-symbols-h.tmp evil-symbols-h.tmp evil-symbols-l.tmp \
-      | uniq -u \
-      | sed -re 's/(.*)/Evil symbol ('$l'): \1/' 1>&2
+      | sort -u -o evil-symbols-defined.tmp
+    sed -n '/<FUNCTION>/,/<\/FUNCTION>/{s/<\/\?NAME>//g;t1;d;:1;p}' \
+      devel-docs/$l/$l-decl.txt \
+      | sort -u -o evil-symbols-declared.tmp
+    # XXX evil hack for private gwyapp symbols
+    if test $l = libgwyapp; then
+      {
+        cat evil-symbols-declared.tmp
+        grep -o '\<gwy_\w\+\> *(' app/gwyappinternal.h | sed -e 's/ *(//'
+      } | sort -o evil-symbols-declared.tmp
+    fi
+    diff evil-symbols-declared.tmp evil-symbols-defined.tmp \
+      | grep '^<' \
+      | sed -re 's/< (.*)/Declared undefined symbol ('$l'): \1/' 1>&2
+    diff evil-symbols-defined.tmp evil-symbols-declared.tmp \
+      | grep '^<' \
+      | sed -re 's/< (.*)/Exported undeclared symbol ('$l'): \1/' 1>&2
   done
-  rm -f evil-symbols-h.tmp evil-symbols-l.tmp
+  rm -f evil-symbols-{defined,declared}.tmp
+
+  # Extra symbols in modules
   find modules -path \*.libs/\*.so | while read mod; do
     m=$(basename $mod .so)
     nm $mod \
