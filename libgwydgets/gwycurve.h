@@ -76,28 +76,44 @@ G_BEGIN_DECLS
 typedef struct _GwyCurve        GwyCurve;
 typedef struct _GwyCurveClass   GwyCurveClass;
 
+typedef struct _GwyPoint        GwyPoint;
+typedef struct _GwyChannelData  GwyChannelData;
+
+struct _GwyPoint
+{
+    gfloat x;
+    gfloat y;
+};
+
+struct _GwyChannelData
+{
+    /* curve points: */
+    gint num_points;
+    GwyPoint *points;
+
+    /* control points: */
+    gint num_ctlpoints;
+    GwyPoint *ctlpoints;
+};
+
 struct _GwyCurve
 {
-  GtkDrawingArea graph;
+    GtkDrawingArea graph;
 
-  gint cursor_type;
-  gfloat min_x;
-  gfloat max_x;
-  gfloat min_y;
-  gfloat max_y;
-  GdkPixmap *pixmap;
-  GwyCurveType curve_type;
-  gint height;                  /* (cached) graph height in pixels */
-  gint grab_point;              /* point currently grabbed */
-  gint last;
+    gint cursor_type;
+    gfloat min_x;
+    gfloat max_x;
+    gfloat min_y;
+    gfloat max_y;
+    GdkPixmap *pixmap;
+    GwyCurveType curve_type;
+    gint height;                  /* (cached) graph height in pixels */
+    gint grab_point;              /* point currently grabbed */
+    gint last;
 
-  /* (cached) curve points: */
-  gint num_points;
-  GdkPoint *point;
-
-  /* control points: */
-  gint num_ctlpoints;           /* number of control points */
-  gfloat (*ctlpoint)[2];        /* array of control points */
+    /* curve point and control point data
+       (3 color channels: red, green, blue) */
+    GwyChannelData channel_data[3];
 };
 
 struct _GwyCurveClass
@@ -117,14 +133,16 @@ struct _GwyCurveClass
 GType       gwy_curve_get_type  (void) G_GNUC_CONST;
 GtkWidget*  gwy_curve_new       (void);
 void        gwy_curve_reset     (GwyCurve *curve);
-void        gwy_curve_set_gamma (GwyCurve *curve, gfloat gamma_);
+//void        gwy_curve_set_gamma (GwyCurve *curve, gfloat gamma_);
 void        gwy_curve_set_range (GwyCurve *curve,
-                     gfloat min_x, gfloat max_x,
-                     gfloat min_y, gfloat max_y);
-void        gwy_curve_get_vector    (GwyCurve *curve,
-                     int veclen, gfloat vector[]);
-void        gwy_curve_set_vector    (GwyCurve *curve,
-                     int veclen, gfloat vector[]);
+                      gfloat min_x, gfloat max_x,
+                      gfloat min_y, gfloat max_y);
+
+void    gwy_curve_get_vector    (GwyCurve *c, gint channel,
+                                 gint veclen, gfloat vector[]);
+
+//void        gwy_curve_set_vector    (GwyCurve *curve,
+//                     int veclen, gfloat vector[]);
 void        gwy_curve_set_curve_type (GwyCurve *curve, GwyCurveType type);
 
 
