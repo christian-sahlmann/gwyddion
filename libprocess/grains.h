@@ -76,9 +76,6 @@ void gwy_data_field_grains_watershed_iteration(GwyDataField *data_field,
                                                gboolean prefilter,
                                                gboolean below);
 
-void gwy_data_field_grains_mark_local_maxima(GwyDataField *data_field,
-                                             GwyDataField *grain_field);
-
 void gwy_data_field_grains_mark_height(GwyDataField *data_field,
                                        GwyDataField *grain_field,
                                        gdouble threshval,

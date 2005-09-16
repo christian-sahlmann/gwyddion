@@ -136,9 +136,6 @@ gdouble           gwy_data_field_rtoj                (GwyDataField *data_field,
                                                       gdouble realx);
 
 
-gboolean          gwy_data_field_outside             (GwyDataField *data_field,
-                                                      gint col,
-                                                      gint row);
 gdouble           gwy_data_field_get_val             (GwyDataField *data_field,
                                                       gint col,
                                                       gint row);

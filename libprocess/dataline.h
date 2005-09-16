@@ -139,12 +139,7 @@ gint           gwy_data_line_part_threshold        (GwyDataLine *data_line,
                                                     gdouble threshval,
                                                     gdouble bottom,
                                                     gdouble top);
-void           gwy_data_line_line_coeffs           (GwyDataLine *data_line,
-                                                    gdouble *av,
-                                                    gdouble *bv);
-void           gwy_data_line_part_line_coeffs      (GwyDataLine *data_line,
-                                                    gint from,
-                                                    gint to,
+void           gwy_data_get_line_coeffs            (GwyDataLine *data_line,
                                                     gdouble *av,
                                                     gdouble *bv);
 void           gwy_data_line_line_level            (GwyDataLine *data_line,

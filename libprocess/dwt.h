@@ -60,10 +60,6 @@ GwyDataField* gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
                                                  gdouble ratio,
                                                  gint lowlimit);
 
-GwyDataField* gwy_data_field_dwt_correction(GwyDataField *dfield,
-                                            GwyDataField *mask,
-                                            GwyDataLine *wt_coefs);
-
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_DWT__*/
