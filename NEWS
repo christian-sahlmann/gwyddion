@@ -1,4 +1,4 @@
-1.99.3cvs20050912
+1.99.3cvs20050918
 
 1.99.4
 Application:
@@ -58,6 +58,8 @@ Library:
 - libdraw, libgwydgets: Experimental adaptive color mapping mode was added.
 - libdraw, libgwydgets: GwySelection data selection abstract base class,
   GwyVectorLayer reworked to use it.
+- libgwyapp: Undo was generalized to work with arbitrary item types; it also
+  exports lower-level functions usable for undo outside main app windows.
 
 Modules:
 - BCR file: Unit support was improved, support for zmin added.
@@ -66,7 +68,9 @@ Modules:
 - Profile: Minkowski functionals were added.
 - Facet analysis: Improvements were merged from 1.12.
 - Layer modules: Reworked to use GwySelection, "pointer" and "points" merged,
-  various other changes.
+  various other changes, all support selection setting now as a side effect.
+- Rectangular selection: Hold Shift to select exact squares.
+- Line selection: Hold Shift to select lines in `nice' directions.
 
 Other:
 - Modules are built with libtool, so it should be possible to build
@@ -232,6 +236,30 @@ Library:
 
 Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
+1.13 (2005-09-19)
+Application:
+- Translations updated: Italian.
+
+Library:
+- libprocess: Minkowski functionals were added to line stat. function.
+
+Modules:
+- MI file (new): PicoView MI data file import.
+- 2D FFT filtering: Drawing artefacts were fixed, color range was fixed, zoom
+  option added, "Original" and "Difference" display modes added,
+  inclusion/exclusion behavior fixed (more user friendly).
+- SFunctions: Minkowski volume, boundary, and connectivity (Euler
+  characteristics) functionals were added.
+- BCR file: Unit support was improved, support for zmin added.
+- STP file: Channel labels fixed.
+- Statistical functions, Profile: Allow to select number of sampling points.
+- Profile: Maximum profile width was increased to 100.
+
+Other:
+- Modules are built with libtool, fixing portability problems to Mac OS X.
+- Missing Italic stock icon was added.
 
 
 1.12 (2005-07-15)
