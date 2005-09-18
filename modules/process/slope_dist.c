@@ -106,7 +106,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -151,9 +151,9 @@ slope_dist(GwyContainer *data, GwyRunType run)
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        pal = gwy_container_get_string_by_name(data, "/0/base/palette");
         switch (args.output_type) {
             case SLOPE_DIST_2D_DIST:
+            pal = gwy_container_get_string_by_name(data, "/0/base/palette");
             dfield = slope_do(dfield, &args);
             data = gwy_container_new();
             gwy_container_set_object_by_name(data, "/0/data", dfield);
@@ -379,11 +379,11 @@ slope_do_graph(GwyContainer *container,
                SlopeArgs *args)
 {
     GtkWidget *graph;
-    GwyGraphAutoProperties prop;
-    GwyDataWindow *data_window;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *cmodel;
     GwyDataField *dfield;
     GwyDataLine *dataline;
-    GString *lab;
+    GwySIUnit *siunitx;
     gdouble *xder, *yder, *data;
     gint xres, yres, n, i, iphi;
 
@@ -398,12 +398,6 @@ slope_do_graph(GwyContainer *container,
     yder = g_new(gdouble, n);
     compute_slopes(dfield, args->fit_plane ? args->kernel_size : 0, xder, yder);
 
-    graph = gwy_graph_new();
-    gwy_graph_get_autoproperties(GWY_GRAPH(graph), &prop);
-    prop.is_point = 0;
-    prop.is_line = 1;
-    gwy_graph_set_autoproperties(GWY_GRAPH(graph), &prop);
-
     dataline = GWY_DATA_LINE(gwy_data_line_new(args->size, 360, TRUE));
     data = dataline->data;
     for (i = 0; i < n; i++) {
@@ -417,15 +411,25 @@ slope_do_graph(GwyContainer *container,
     g_free(yder);
     g_free(xder);
 
-    lab = g_string_new(_("Angular slope distribution"));
-    gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
-                                      1, 1, "deg", " ");
-    data_window = gwy_app_data_window_get_for_data(container);
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
-                                           _("Slope Distribution"));
+    gmodel = gwy_graph_model_new();
+    gwy_graph_model_set_title(gmodel, _("Angular Slope Distribution"));
+    siunitx = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
+                                 gwy_data_field_get_si_unit_xy(dfield),
+                                 NULL);
+    gwy_graph_model_set_x_siunit(gmodel, siunitx);
+    g_object_unref(siunitx);
 
-    g_string_free(lab, TRUE);
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_description(cmodel, "slopes");
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
+    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
+
+    graph = gwy_graph_new(gmodel);
+    g_object_unref(gmodel);
+    gwy_app_graph_window_create(GWY_GRAPH(graph), container);
 
     return graph;
 }

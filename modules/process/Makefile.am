@@ -43,6 +43,7 @@ process_LTLIBRARIES = \
 	scale.la \
 	scars.la \
 	shade.la \
+	slope_dist.la \
 	sphere-revolve.la \
 	tip_blind.la \
 	tip_dilation.la \
@@ -216,8 +217,8 @@ shade_la_LIBADD = $(module_libadd)
 #stary_extract_la_SOURCES = stary_extract.c
 #stary_extract_la_LIBADD = $(module_libadd)
 
-#slope_dist_la_SOURCES = slope_dist.c
-#slope_dist_la_LIBADD = $(module_libadd)
+slope_dist_la_SOURCES = slope_dist.c
+slope_dist_la_LIBADD = $(module_libadd)
 
 sphere_revolve_la_SOURCES = sphere-revolve.c
 sphere_revolve_la_LIBADD = $(module_libadd)
