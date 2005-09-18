@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -69,15 +69,11 @@ module_register(const gchar *name)
 static gboolean
 dist(GwyContainer *data, GwyRunType run)
 {
-    GString *lab;
     GtkWidget *graph;
-    GwyGraphCurveModel *model;
+    GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-    GwyDataWindow *data_window;
-    GwyGraphAutoProperties prop;
     GwyDataLine *dataline;
     GwyDataField *dfield;
-    GwySIValueFormat *units;
 
     g_return_val_if_fail(run & DIST_RUN_MODES, FALSE);
     g_return_val_if_fail(gwy_container_contains_by_name(data, "/0/mask"),
@@ -85,29 +81,24 @@ dist(GwyContainer *data, GwyRunType run)
 
     gmodel = gwy_graph_model_new();
     graph = gwy_graph_new(gmodel);
-    
+
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dataline = gwy_data_line_new(10, 10, TRUE);
     gwy_data_field_grains_get_distribution(dfield, dataline);
 
     gwy_graph_model_set_title(gmodel, _("Grain size histogram"));
-   /* units = gwy_si_unit_get_format(dfield->si_unit_xy, dataline->real, NULL);*/
-    
-    
-    model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_description(model, "histrogram");
-    gwy_graph_curve_model_set_data_from_dataline(model, dataline, 0, 0);
-    gwy_graph_model_add_curve(gmodel, model);
-    
-    /*    gwy_graph_add_dataline_with_units(GWY_GRAPH(graph), dataline, 0, lab, NULL,
-                                        units->magnitude, 1, units->units, " ");
-*/
-    data_window = gwy_app_data_window_get_for_data(data);
-    gwy_app_graph_window_create_for_window(GWY_GRAPH(graph), data_window,
-                                           _("Grain size distribution"));
+    gwy_graph_model_set_x_siunit(gmodel, gwy_data_field_get_si_unit_xy(dfield));
+    gwy_graph_model_set_y_siunit(gmodel, gwy_data_field_get_si_unit_z(dfield));
 
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_description(cmodel, "histogram");
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    g_object_unref(cmodel);
+
+    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    g_object_unref(gmodel);
     g_object_unref(dataline);
-    /*g_free(units);*/
 
     return FALSE;
 }
