@@ -818,11 +818,14 @@ gwy_app_graph_window_foreach(GFunc func,
 }
 
 /**
- * gwy_app_graph_window_create_for_window:
+ * gwy_app_graph_window_create:
  * @graph: A graph widget.
  * @data: A data container to put the graph model to.
  *
  * Creates a new graph window showing a graph and does some basic setup.
+ *
+ * It calls gwy_app_graph_list_add() and does not assume a reference on the
+ * graph model, so you usually wish to unreference it after this call.
  *
  * Also calls gtk_window_present() on the newly created window, associates
  * it with a data window, and sets its title.

@@ -132,7 +132,6 @@ gwy_app_graph_list_add(GwyContainer *data,
                           GINT_TO_POINTER(lastid));
         gwy_container_set_int32_by_name(data, "/0/graph/lastid", lastid);
         gwy_container_set_object_by_name(data, key, gmodel);
-        g_object_unref(gmodel);
     }
 
     /* Until the graph list is first time invoked, don't bother with its
