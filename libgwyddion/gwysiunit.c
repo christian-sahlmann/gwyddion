@@ -642,6 +642,9 @@ gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
 {
     guint i, j;
 
+    if (siunit2 == siunit1)
+        return TRUE;
+
     if (siunit2->units->len != siunit1->units->len)
         return FALSE;
 
@@ -880,12 +883,15 @@ gwy_si_unit_parse(GwySIUnit *siunit,
  * gwy_si_unit_multiply:
  * @siunit1: An SI unit.
  * @siunit2: An SI unit.
- * @result:  An SI unit to set to product of @siunit1 and @siunit2.  It can be
- *           one of @siunit1, @siunit2.
+ * @result:  An SI unit to set to product of @siunit1 and @siunit2.  It is
+ *           safe to pass one of @siunit1, @siunit2. It can be %NULL
+ *           too, a new SI unit is created then and returned.
  *
  * Multiplies two SI units.
  *
- * Returns: @result, for convenience.
+ * Returns: When @result is %NULL, a newly created SI unit that has to be
+ *          dereferenced when no longer used later.  Otherwise @result itself
+ *          is simply returned, its reference count is NOT increased.
  **/
 GwySIUnit*
 gwy_si_unit_multiply(GwySIUnit *siunit1,
@@ -894,7 +900,10 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
 {
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
+
+    if (!result)
+        result = gwy_si_unit_new(NULL);
 
     return gwy_si_unit_power_multiply(siunit1, 1, siunit2, 1, result);
 }
@@ -903,12 +912,15 @@ gwy_si_unit_multiply(GwySIUnit *siunit1,
  * gwy_si_unit_divide:
  * @siunit1: An SI unit.
  * @siunit2: An SI unit.
- * @result:  An SI unit to set to quotient of @siunit1 and @siunit2.  It can be
- *           one of @siunit1, @siunit2.
+ * @result:  An SI unit to set to quotient of @siunit1 and @siunit2.  It is
+ *           safe to pass one of @siunit1, @siunit2. It can be %NULL
+ *           too, a new SI unit is created then and returned.
  *
  * Divides two SI units.
  *
- * Returns: @result, for convenience.
+ * Returns: When @result is %NULL, a newly created SI unit that has to be
+ *          dereferenced when no longer used later.  Otherwise @result itself
+ *          is simply returned, its reference count is NOT increased.
  **/
 GwySIUnit*
 gwy_si_unit_divide(GwySIUnit *siunit1,
@@ -917,7 +929,10 @@ gwy_si_unit_divide(GwySIUnit *siunit1,
 {
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit1), NULL);
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit2), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
+
+    if (!result)
+        result = gwy_si_unit_new(NULL);
 
     return gwy_si_unit_power_multiply(siunit1, 1, siunit2, -1, result);
 }
@@ -926,11 +941,15 @@ gwy_si_unit_divide(GwySIUnit *siunit1,
  * gwy_si_unit_power:
  * @siunit: An SI unit.
  * @power: Power to power @siunit to.
- * @result:  An SI unit to set to power of @siunit.  It can be @siunit itself.
+ * @result:  An SI unit to set to power of @siunit.  It is safe to pass
+ *           @siunit itself.  It can be %NULL too, a new SI unit is created
+ *           then and returned.
  *
  * Computes a power of an SI unit.
  *
- * Returns: @result, for convenience.
+ * Returns: When @result is %NULL, a newly created SI unit that has to be
+ *          dereferenced when no longer used later.  Otherwise @result itself
+ *          is simply returned, its reference count is NOT increased.
  **/
 GwySIUnit*
 gwy_si_unit_power(GwySIUnit *siunit,
@@ -938,7 +957,10 @@ gwy_si_unit_power(GwySIUnit *siunit,
                   GwySIUnit *result)
 {
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunit), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(result), NULL);
+    g_return_val_if_fail(!result || GWY_IS_SI_UNIT(result), NULL);
+
+    if (!result)
+        result = gwy_si_unit_new(NULL);
 
     gwy_si_unit_power_real(siunit, power, result);
     g_signal_emit(result, si_unit_signals[VALUE_CHANGED], 0);
