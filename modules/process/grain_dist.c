@@ -79,30 +79,25 @@ dist(GwyContainer *data, GwyRunType run)
     g_return_val_if_fail(gwy_container_contains_by_name(data, "/0/mask"),
                          FALSE);
 
-    gmodel = gwy_graph_model_new();
-    graph = gwy_graph_new(gmodel);
-
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dataline = gwy_data_line_new(10, 10, TRUE);
     gwy_data_field_grains_get_distribution(dfield, dataline);
 
-    gwy_graph_model_set_title(gmodel, _("Grain size histogram"));
+    gmodel = gwy_graph_model_new();
+    gwy_graph_model_set_title(gmodel, _("Grain Size Histogram"));
     gwy_graph_model_set_x_siunit(gmodel, gwy_data_field_get_si_unit_xy(dfield));
     gwy_graph_model_set_y_siunit(gmodel, gwy_data_field_get_si_unit_z(dfield));
 
     cmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_description(cmodel, "histogram");
+    gwy_graph_curve_model_set_description(cmodel, "grain sizes");
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     gwy_graph_model_add_curve(gmodel, cmodel);
-    g_object_unref(cmodel);
 
-    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    graph = gwy_graph_new(gmodel);
     g_object_unref(gmodel);
-    g_object_unref(dataline);
+    gwy_app_graph_window_create(GWY_GRAPH(graph), data);
 
     return FALSE;
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
