@@ -365,6 +365,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
     g_signal_connect(controls.update, "toggled",
                      G_CALLBACK(update_changed_cb), args);
 
+    args->update = 0;
     restore_ps(&controls, args);
     update_view(&controls, args);
 
@@ -444,7 +445,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     GwyDataLine *dline;
     GwyGraphCurveModel *cmodel;
     gdouble xdata[200];
-    gint i;
+    gint i, nofselection;
 
     dline = gwy_data_line_new(MAX_PREV, MAX_PREV, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(args->original,
@@ -453,24 +454,27 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_field_psdf(dfield, dline, args->direction, args->interpolation,
                         GWY_WINDOWING_RECT, MAX_PREV);
     if (!args->weights)
-        args->weights = gwy_data_line_new(dline->res, dline->res, FALSE);
+        args->weights = gwy_data_line_new(dline->res, dline->real, FALSE);
     gwy_data_line_fill(args->weights, 1);
-    gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
+ //   gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 
-    for (i = 0; i < MAX_PREV; i++)
-        xdata[i] = ((gdouble)i)/MAX_PREV;
-    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
+//    for (i = 0; i < MAX_PREV; i++)
+//        xdata[i] = ((gdouble)i)/MAX_PREV;
+//    gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
 
-    cmodel = gwy_graph_curve_model_new();
-    cmodel->xdata = xdata;
-    cmodel->type = GWY_GRAPH_CURVE_LINE;
-    cmodel->ydata = dline->data;
-    cmodel->n = MAX_PREV;
-    cmodel->description = g_string_new("PSDF");
-
+    //for (i = 0; i < dline->res; i++) printf("%g\n", dline->data[i]);
+    
     gwy_graph_model_remove_all_curves(controls->gmodel);
+    
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
+    gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+    gwy_graph_curve_model_set_description(cmodel, "PSDF");
+
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
-    gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
+    
+    nofselection = gwy_graph_get_selection_number(GWY_GRAPH(controls->graph));
+    if (nofselection != 0) gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
 
     if (args->update)
         update_view(controls, args);
@@ -505,9 +509,9 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
                 end = selection[2*i+1];
                 if (args->suppress == GWY_FFTF_1D_SUPPRESS_NULL)
                     gwy_data_line_part_fill(args->weights,
-                                            MAX(0, args->weights->res*beg),
+                                            MAX(0, gwy_data_line_rtoi(args->weights, beg)),
                                             MIN(args->weights->res,
-                                                args->weights->res*end),
+                                                gwy_data_line_rtoi(args->weights, end)),
                                             0);
                 else /*TODO put there at least some linear interpolation*/
                     gwy_data_line_part_fill(args->weights,
@@ -524,12 +528,11 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
 
             for (i = 0; i < nofselection; i++) {
                 beg = selection[2*i];
-                end = selection[2*i+1];
-
+                end = selection[2*i+1]; 
                 gwy_data_line_part_fill(args->weights,
-                                        MAX(0, args->weights->res*beg),
+                                        MAX(0, gwy_data_line_rtoi(args->weights, beg)),
                                         MIN(args->weights->res,
-                                            args->weights->res*end),
+                                            gwy_data_line_rtoi(args->weights, end)),
                                         1);
             }
             if (args->update)
