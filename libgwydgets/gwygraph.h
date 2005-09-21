@@ -93,6 +93,8 @@ GtkWidget *gwy_graph_get_area(GwyGraph *graph);
 
 void       gwy_graph_refresh(GwyGraph *graph);
 
+void       gwy_graph_signal_selected(GwyGraph *graph);
+
 void       gwy_graph_set_model(GwyGraph *graph, 
                                     GwyGraphModel *gmodel);
 void       gwy_graph_set_status(GwyGraph *graph,
@@ -100,10 +102,6 @@ void       gwy_graph_set_status(GwyGraph *graph,
 GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
 
 GwyGraphModel *gwy_graph_get_model(GwyGraph *graph);
-
-void       gwy_graph_signal_selected(GwyGraph *grapher);
-void       gwy_graph_signal_mouse_moved(GwyGraph *grapher);
-void       gwy_graph_signal_zoomed(GwyGraph *grapher);
 
 gint       gwy_graph_get_selection_number(GwyGraph *graph);
 void       gwy_graph_get_selection(GwyGraph *graph,

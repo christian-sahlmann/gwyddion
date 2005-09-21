@@ -49,7 +49,11 @@ static void replot_cb              (GObject *gobject,
 static void zoomed_cb              (GwyGraph *graph);
 static void label_updated_cb       (GwyAxis *axis,
                                     GwyGraph *graph);
-static void gwy_graph_finalize     (GObject *object);
+static void gwy_graph_finalize          (GObject *object);
+static void gwy_graph_signal_mouse_moved(GwyGraph *graph);
+static void gwy_graph_signal_zoomed     (GwyGraph *graph);
+
+
 
 static guint gwygraph_signals[LAST_SIGNAL] = { 0 };
 
@@ -766,20 +770,19 @@ gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable)
     gwy_axis_enable_label_edit(graph->axis_right, enable);
 }
 
-/*TODO decide which signals keep public*/
 void
 gwy_graph_signal_selected(GwyGraph *graph)
 {
     g_signal_emit(G_OBJECT(graph), gwygraph_signals[SELECTED_SIGNAL], 0);
 }
 
-void
-gwy_graph_signal_mouse_moved(GwyGraph *grapher)
+static void
+gwy_graph_signal_mouse_moved(GwyGraph *graph)
 {
-    g_signal_emit(G_OBJECT(grapher), gwygraph_signals[MOUSE_MOVED_SIGNAL], 0);
+    g_signal_emit(G_OBJECT(graph), gwygraph_signals[MOUSE_MOVED_SIGNAL], 0);
 }
 
-void
+static void
 gwy_graph_signal_zoomed(GwyGraph *graph)
 {
     g_signal_emit(G_OBJECT(graph), gwygraph_signals[ZOOMED_SIGNAL], 0);

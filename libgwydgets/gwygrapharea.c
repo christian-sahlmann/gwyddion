@@ -74,6 +74,8 @@ static gint     gwy_graph_area_find_line            (GwyGraphArea *area,
 static void     gwy_graph_area_draw_zoom            (GdkDrawable *drawable,
                                                        GdkGC *gc,
                                                        GwyGraphArea *area);
+static void     gwy_graph_area_signal_selected      (GwyGraphArea *area);
+static void     gwy_graph_area_signal_zoomed        (GwyGraphArea *area);
 
 /* Forward declarations - area related*/
 static gdouble  scr_to_data_x                       (GtkWidget *widget, gint scr);
@@ -1017,7 +1019,7 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
  * emit signal that something was selected by mouse. "Something" depends on the
  * actual graph status (points, horizontal selection, etc.).
  **/
-void
+static void
 gwy_graph_area_signal_selected(GwyGraphArea *area)
 {
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[SELECTED_SIGNAL], 0);
@@ -1029,7 +1031,7 @@ gwy_graph_area_signal_selected(GwyGraphArea *area)
  *
  * emit signal that user finished drawing zoom rectangle by mouse.
  **/
-void
+static void
 gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 {
     g_signal_emit (G_OBJECT (area), gwygrapharea_signals[ZOOMED_SIGNAL], 0);
