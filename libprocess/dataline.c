@@ -1107,7 +1107,6 @@ gwy_data_line_fft_hum(GwyTransformDirection direction,
  * @isrc: Imaginary input data line.
  * @rdest: Real output data line.
  * @idest: Imaginary output data line.
- * @fft: FFT algorithm to use.
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -1121,7 +1120,6 @@ gwy_data_line_fft_hum(GwyTransformDirection direction,
 void
 gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                   GwyDataLine *rdest, GwyDataLine *idest,
-                  GwyFFTFunc fft,
                   GwyWindowingType windowing,
                   GwyTransformDirection direction,
                   GwyInterpolationType interpolation,
@@ -1169,7 +1167,8 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
         gwy_fft_window(multra->data, multra->res, windowing);
         gwy_fft_window(multia->data, multia->res, windowing);
 
-        fft(direction, multra, multia, rdest, idest, interpolation);
+        gwy_data_line_fft_hum(direction, multra, multia, rdest, idest,
+                              interpolation);
 
         rmsb = 0;
         for (i = 0; i < multra->res/2; i++)
@@ -1187,7 +1186,8 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
         gwy_fft_window(rsrc->data, rsrc->res, windowing);
         gwy_fft_window(isrc->data, rsrc->res, windowing);
 
-        fft(direction, rsrc, isrc, rdest, idest, interpolation);
+        gwy_data_line_fft_hum(direction, rsrc, isrc, rdest, idest,
+                              interpolation);
     }
 }
 

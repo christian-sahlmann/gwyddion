@@ -379,8 +379,10 @@ gwy_data_line_psdf(GwyDataLine *data_line,
      * precision)*/
     gwy_data_line_resample(data_line, newres, interpolation);
 
-    gwy_data_line_fft(data_line, iin, rout, iout, gwy_data_line_fft_hum,
-                      windowing, 1, interpolation,
+    gwy_data_line_fft(data_line, iin, rout, iout,
+                      windowing,
+                      GWY_TRANSFORM_DIRECTION_FORWARD,
+                      interpolation,
                       TRUE, TRUE);
 
     gwy_data_line_resample(target_line, newres/2.0, GWY_INTERPOLATION_NONE);

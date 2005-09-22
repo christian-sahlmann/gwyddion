@@ -180,9 +180,8 @@ fft(GwyContainer *data, GwyRunType run)
     gwy_data_field_2dfft(dfield, imin,
                          raout,
                          ipout,
-                         gwy_data_line_fft_hum,
                          args.window,
-                         1,
+                         GWY_TRANSFORM_DIRECTION_FORWARD,
                          args.interp,
                          0,
                          0);

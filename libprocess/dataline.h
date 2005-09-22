@@ -54,13 +54,6 @@ struct _GwyDataLineClass {
     void (*data_changed)(GwyDataLine *data_line);
 };
 
-typedef void (*GwyFFTFunc)(GwyTransformDirection dir,
-                           GwyDataLine *re_in,
-                           GwyDataLine *im_in,
-                           GwyDataLine *re_out,
-                           GwyDataLine *im_out,
-                           GwyInterpolationType interpolation);
-
 #define gwy_data_line_duplicate(data_line) \
         (GWY_DATA_LINE(gwy_serializable_duplicate(G_OBJECT(data_line))))
 
@@ -154,7 +147,6 @@ void           gwy_data_line_fft           (GwyDataLine *rsrc,
                                             GwyDataLine *isrc,
                                             GwyDataLine *rdest,
                                             GwyDataLine *idest,
-                                            GwyFFTFunc fft,
                                             GwyWindowingType windowing,
                                             GwyTransformDirection direction,
                                             GwyInterpolationType interpolation,

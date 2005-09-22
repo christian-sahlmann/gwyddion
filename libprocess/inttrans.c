@@ -39,9 +39,8 @@ static gdouble  edist                            (gint xc1, gint yc1,
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm
  * @windowing: Windowing type.
- * @direction: FFT direction (1 or -1).
+ * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
@@ -56,7 +55,6 @@ static gdouble  edist                            (gint xc1, gint yc1,
 void
 gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
                      GwyDataField *rb, GwyDataField *ib,
-                     GwyFFTFunc fft,
                      GwyWindowingType windowing,
                      GwyTransformDirection direction,
                      GwyInterpolationType interpolation,
@@ -66,10 +64,10 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
 
     rh = gwy_data_field_new_alike(ra, FALSE);
     ih = gwy_data_field_new_alike(ra, FALSE);
-    gwy_data_field_xfft(ra, ia, rh, ih, fft,
+    gwy_data_field_xfft(ra, ia, rh, ih,
                         windowing, direction, interpolation,
                         preserverms, level);
-    gwy_data_field_yfft(rh, ih, rb, ib, fft,
+    gwy_data_field_yfft(rh, ih, rb, ib,
                         windowing, direction, interpolation,
                         preserverms, level);
 
@@ -85,9 +83,8 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @ra: Real input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm
  * @windowing: Windowing type.
- * @direction: FFT direction (1 or -1).
+ * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
@@ -100,7 +97,6 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
 void
 gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
                           GwyDataField *ib,
-                          GwyFFTFunc fft,
                           GwyWindowingType windowing,
                           GwyTransformDirection direction,
                           GwyInterpolationType interpolation,
@@ -110,10 +106,10 @@ gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
 
     rh = gwy_data_field_new_alike(ra, FALSE);
     ih = gwy_data_field_new_alike(ra, FALSE);
-    gwy_data_field_xfft_real(ra, rh, ih, fft,
+    gwy_data_field_xfft_real(ra, rh, ih,
                              windowing, direction, interpolation,
                              preserverms, level);
-    gwy_data_field_yfft(rh, ih, rb, ib, fft,
+    gwy_data_field_yfft(rh, ih, rb, ib,
                         windowing, direction, interpolation,
                         preserverms, level);
 
@@ -174,9 +170,8 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm
  * @windowing: Windowing type.
- * @direction: FFT direction (1 or -1).
+ * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
@@ -188,7 +183,6 @@ gwy_data_field_2dffthumanize(GwyDataField *a)
 void
 gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
-                    GwyFFTFunc fft,
                     GwyWindowingType windowing,
                     GwyTransformDirection direction,
                     GwyInterpolationType interpolation,
@@ -210,7 +204,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
         gwy_data_field_get_row(ra, rin, k);
         gwy_data_field_get_row(ia, iin, k);
 
-        gwy_data_line_fft(rin, iin, rout, iout, fft,
+        gwy_data_line_fft(rin, iin, rout, iout,
                           windowing, direction, interpolation,
                           preserverms, level);
 
@@ -233,9 +227,8 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * @ia: Imaginary input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm
  * @windowing: Windowing type.
- * @direction: FFT direction (1 or -1).
+ * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
@@ -247,7 +240,6 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 void
 gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
-                    GwyFFTFunc fft,
                     GwyWindowingType windowing,
                     GwyTransformDirection direction,
                     GwyInterpolationType interpolation,
@@ -269,7 +261,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     for (k = 0; k < ra->xres; k++) {
         gwy_data_field_get_column(ra, rin, k);
         gwy_data_field_get_column(ia, iin, k);
-        gwy_data_line_fft(rin, iin, rout, iout, fft,
+        gwy_data_line_fft(rin, iin, rout, iout,
                           windowing, direction, interpolation,
                           preserverms, level);
         gwy_data_field_set_column(rb, rout, k);
@@ -290,9 +282,8 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * @ra: Real input data field
  * @rb: Real output data field
  * @ib: Imaginary output data field
- * @fft: 1D FFT algorithm
  * @windowing: Windowing type.
- * @direction: FFT direction (1 or -1).
+ * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: preserve RMS while windowing
  * @level: level data before computation
@@ -305,7 +296,6 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
 void
 gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
                          GwyDataField *ib,
-                         GwyFFTFunc fft,
                          GwyWindowingType windowing,
                          GwyTransformDirection direction,
                          GwyInterpolationType interpolation,
@@ -336,7 +326,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
             gwy_data_line_clear(iin);
         }
 
-        gwy_data_line_fft(rin, iin, rout, iout, fft,
+        gwy_data_line_fft(rin, iin, rout, iout,
                           windowing, direction, interpolation,
                           preserverms, level);
 
@@ -461,9 +451,8 @@ gwy_data_field_cwt(GwyDataField *data_field,
                          imag_field,
                          hlp_r,
                          hlp_i,
-                         gwy_data_line_fft_hum,
                          GWY_WINDOWING_RECT,
-                         1,
+                         GWY_TRANSFORM_DIRECTION_FORWARD,
                          interpolation,
                          FALSE,
                          FALSE);
@@ -473,9 +462,8 @@ gwy_data_field_cwt(GwyDataField *data_field,
                          hlp_i,
                          data_field,
                          imag_field,
-                         gwy_data_line_fft_hum,
                          GWY_WINDOWING_RECT,
-                         -1,
+                         GWY_TRANSFORM_DIRECTION_BACKWARD,
                          interpolation,
                          FALSE,
                          FALSE);
@@ -511,8 +499,9 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 
     gwy_data_field_xfft(data_field, result_field,
                         hlp_dfield, hlp_idfield,
-                        gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
-                        1, interpolation,
+                        GWY_WINDOWING_NONE,
+                        GWY_TRANSFORM_DIRECTION_FORWARD,
+                        interpolation,
                         FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
@@ -537,8 +526,9 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 
     gwy_data_field_xfft(hlp_dfield, hlp_idfield,
                         result_field, iresult_field,
-                        gwy_data_line_fft_hum, GWY_WINDOWING_NONE,
-                        -1, interpolation,
+                        GWY_WINDOWING_NONE,
+                        GWY_TRANSFORM_DIRECTION_BACKWARD,
+                        interpolation,
                         FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
@@ -552,17 +542,5 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 }
 
 /************************** Documentation ****************************/
-
-/**
- * GwyFFTFunc:
- * @dir: Transform direction (forward or backward).
- * @re_in: Data line with real part of input data.
- * @im_in: Data line with imaginary part of input data.
- * @re_out: Data line to store real part of output data to.
- * @im_out: Data line to store imaginary part of output data to.
- * @interpolation: Interpolation type to use.
- *
- * Fast Fourier Transform (FFT) function type.
- **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
