@@ -141,7 +141,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -844,8 +844,8 @@ static void
 mask_color_change_cb(GtkWidget *color_button,
                      FacetsControls *controls)
 {
-    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button), NULL,
-                                "/0/mask");
+    gwy_color_selector_for_mask(NULL, GWY_COLOR_BUTTON(color_button),
+                                controls->mydata, "/0/mask");
     load_mask_color(color_button,
                     gwy_data_view_get_data(GWY_DATA_VIEW(controls->view)));
 }
