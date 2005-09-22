@@ -109,6 +109,7 @@ struct _GwyCurve
     GwyCurveType curve_type;
     gint height;                  /* (cached) graph height in pixels */
     gint grab_point;              /* point currently grabbed */
+    gint grab_channel;            /* channel of grabbed point */
     gint last;
 
     /* curve point and control point data

@@ -51,6 +51,7 @@
  */
 
 /*TODO: Clean up code style to match gwyddion standards */
+/*TODO: Fix cursor changes */
 
 #include <config.h>
 #include <stdlib.h>
@@ -111,11 +112,11 @@ static gboolean gwy_curve_expose         (GwyCurve *c);
 static gboolean gwy_curve_button_press   (GtkWidget *widget,
                                           GdkEventButton *event,
                                           GwyCurve *c);
-//static gboolean gwy_curve_button_release (GtkWidget *widget,
-//                                          GdkEventButton *event,
-//                                          GwyCurve *c);
-//static gboolean gwy_curve_motion_notify  (GwyCurve *c,
-//                                          GdkEventMotion *event);
+static gboolean gwy_curve_button_release (GtkWidget *widget,
+                                          GdkEventButton *event,
+                                          GwyCurve *c);
+static gboolean gwy_curve_motion_notify  (GwyCurve *c,
+                                          GdkEventMotion *event);
 
 GType
 gwy_curve_get_type (void)
@@ -227,6 +228,7 @@ gwy_curve_init (GwyCurve *curve)
     curve->curve_type = GWY_CURVE_TYPE_SPLINE;
     curve->height = 0;
     curve->grab_point = -1;
+    curve->grab_channel = -1;
 
     for (i=0; i<3; i++) {
         curve->channel_data[i].num_points = 0;
@@ -249,10 +251,10 @@ gwy_curve_init (GwyCurve *curve)
                              G_CALLBACK(gwy_curve_expose), curve);
     g_signal_connect(curve, "button-press-event",
                      G_CALLBACK(gwy_curve_button_press), curve);
-    //g_signal_connect(curve, "button-release-event",
-    //                 G_CALLBACK(gwy_curve_button_release), curve);
-    //g_signal_connect_swapped(curve, "motion-notify-event",
-    //                         G_CALLBACK(gwy_curve_motion_notify), curve);
+    g_signal_connect(curve, "button-release-event",
+                     G_CALLBACK(gwy_curve_button_release), curve);
+    g_signal_connect_swapped(curve, "motion-notify-event",
+                             G_CALLBACK(gwy_curve_motion_notify), curve);
 
     gwy_curve_size_graph (curve);
 }
@@ -523,6 +525,8 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
 
     gdk_draw_drawable(GTK_WIDGET(c)->window, style->fg_gc[state], c->pixmap,
                       0, 0, 0, 0, width + RADIUS * 2, height + RADIUS * 2);
+
+    g_object_unref(gc);
 }
 
 static gboolean
@@ -577,17 +581,17 @@ gwy_curve_button_press(GtkWidget *widget,
     GtkWidget *w;
     GwyChannelData *channel;
 
-    // get the widget size //
+    /* get the widget size */
     w = GTK_WIDGET(c);
     width = w->allocation.width - RADIUS * 2;
     height = w->allocation.height - RADIUS * 2;
 
-    //  get the pointer position  //
+    /*  get the pointer position  */
     gdk_window_get_pointer(w->window, &tx, &ty, NULL);
     x = CLAMP((tx - RADIUS), 0, width-1);
     y = CLAMP((ty - RADIUS), 0, height-1);
 
-    // determine closest channel to pointer //
+    /* determine closest channel to pointer */
     for (i=0, distance=~0U; i<3; i++) {
         channel = &c->channel_data[i];
         for (j=0, distance2=~0U; j<channel->num_points; j++) {
@@ -607,7 +611,7 @@ gwy_curve_button_press(GtkWidget *widget,
     closest_point = 0;
     channel = &c->channel_data[closest_channel];
 
-    // determine closest control point to pointer //
+    /* determine closest control point to pointer */
     for (i=0, distance = ~0U; i<channel->num_ctlpoints; ++i) {
         cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
         if ((guint) abs(x - cx) < distance) {
@@ -619,7 +623,7 @@ gwy_curve_button_press(GtkWidget *widget,
     g_debug("closest_point: %i   closest_channel: %i",
             closest_point, closest_channel);
 
-    // either add new point, or grab closest one //
+    /* either add new point, or grab closest one */
     gtk_grab_add(widget);
     new_type = GDK_TCROSS;
     switch (c->curve_type) {
@@ -642,6 +646,7 @@ gwy_curve_button_press(GtkWidget *widget,
                        sizeof(GwyPoint));
         }
         c->grab_point = closest_point;
+        c->grab_channel = closest_channel;
         channel->ctlpoints[c->grab_point].x =
             unproject(x, c->min_x, c->max_x, width);
         channel->ctlpoints[c->grab_point].y =
@@ -661,7 +666,6 @@ gwy_curve_button_press(GtkWidget *widget,
     return TRUE;
 }
 
-/*XXX - fixme
 static gboolean
 gwy_curve_button_release(GtkWidget *widget,
                          G_GNUC_UNUSED GdkEventButton *event,
@@ -671,6 +675,7 @@ gwy_curve_button_release(GtkWidget *widget,
     gint src, dst;
     gint width, height;
     GtkWidget *w;
+    GwyChannelData *channel;
 
     w = GTK_WIDGET(c);
     width = w->allocation.width - RADIUS * 2;
@@ -678,35 +683,37 @@ gwy_curve_button_release(GtkWidget *widget,
 
     gtk_grab_remove (widget);
 
-    /* delete inactive points: //
+    channel = &c->channel_data[c->grab_channel];
+
+    /* delete inactive points: */
     if (c->curve_type != GWY_CURVE_TYPE_FREE) {
-        for (src = dst = 0; src < c->num_ctlpoints; ++src) {
-            if (c->ctlpoint[src][0] >= c->min_x) {
-                memcpy(c->ctlpoint + dst, c->ctlpoint + src,
-                       sizeof (*c->ctlpoint));
+        for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
+            if (channel->ctlpoints[src].x >= c->min_x) {
+                memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
+                       sizeof(GwyPoint));
                 ++dst;
             }
         }
         if (dst < src) {
-            c->num_ctlpoints -= (src - dst);
-            if (c->num_ctlpoints <= 0) {
-                c->num_ctlpoints = 1;
-                c->ctlpoint[0][0] = c->min_x;
-                c->ctlpoint[0][1] = c->min_y;
+            channel->num_ctlpoints -= (src - dst);
+            if (channel->num_ctlpoints <= 0) {
+                channel->num_ctlpoints = 1;
+                channel->ctlpoints[0].x = c->min_x;
+                channel->ctlpoints[0].y = c->min_y;
                 gwy_curve_interpolate(c, width, height);
                 gwy_curve_draw(c, width, height);
             }
-            c->ctlpoint = g_realloc(c->ctlpoint,
-                                    c->num_ctlpoints * sizeof(*c->ctlpoint));
+            channel->ctlpoints =
+                g_realloc(channel->ctlpoints,
+                          channel->num_ctlpoints * sizeof(GwyPoint));
         }
     }
     new_type = GDK_FLEUR;
     c->grab_point = -1;
+    c->grab_channel = -1;
     return TRUE;
 }
-*/
 
-/*XXX - fixme
 static gboolean
 gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
 {
@@ -718,18 +725,20 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
     guint distance = ~0U;
     gint closest_point = 0;
     GtkWidget *w;
+    GwyChannelData *channel;
 
-    /* get the widget size //
+    /* get the widget size */
     w = GTK_WIDGET(c);
     width = w->allocation.width - RADIUS * 2;
     height = w->allocation.height - RADIUS * 2;
 
-    /*  get the pointer position  //
+    /*  get the pointer position  */
     gdk_window_get_pointer(w->window, &tx, &ty, NULL);
     x = CLAMP((tx - RADIUS), 0, width-1);
     y = CLAMP((ty - RADIUS), 0, height-1);
 
-    /* determine closest point to pointer //
+    /* determine closest control point to pointer */
+    /*
     for (i=0; i<c->num_ctlpoints; ++i) {
         cx = project(c->ctlpoint[i][0], c->min_x, c->max_x, width);
         if ((guint) abs (x - cx) < distance)
@@ -738,45 +747,51 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
             closest_point = i;
         }
     }
+    */
 
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_LINEAR:
         case GWY_CURVE_TYPE_SPLINE:
-        if (c->grab_point == -1) {
-            /* if no point is grabbed...  //
+        if (c->grab_channel == -1) {
+            //XXX: fix distance above
+            //if (c->grab_point == -1) {
+            /* if no point is grabbed...  */
             if (distance <= MIN_DISTANCE)
                 new_type = GDK_FLEUR;
             else
                 new_type = GDK_TCROSS;
         } else {
-            /* drag the grabbed point  //
+            /* drag the grabbed point  */
+            channel = &c->channel_data[c->grab_channel];
+
             new_type = GDK_TCROSS;
 
             leftbound = -MIN_DISTANCE;
             if (c->grab_point > 0)
-                leftbound = project(c->ctlpoint[c->grab_point - 1][0],
+                leftbound = project(channel->ctlpoints[c->grab_point - 1].x,
                                     c->min_x, c->max_x, width);
 
             rightbound = width + RADIUS * 2 + MIN_DISTANCE;
-            if (c->grab_point + 1 < c->num_ctlpoints)
-                rightbound = project(c->ctlpoint[c->grab_point + 1][0],
+            if (c->grab_point + 1 < channel->num_ctlpoints)
+                rightbound = project(channel->ctlpoints[c->grab_point + 1].x,
                                      c->min_x, c->max_x, width);
 
             if (tx <= leftbound || tx >= rightbound
                 || ty > height + RADIUS * 2 + MIN_DISTANCE
                 || ty < -MIN_DISTANCE)
-                c->ctlpoint[c->grab_point][0] = c->min_x - 1.0;
+                channel->ctlpoints[c->grab_point].x = c->min_x - 1.0;
             else {
                 rx = unproject(x, c->min_x, c->max_x, width);
                 ry = unproject(height - y, c->min_y, c->max_y, height);
-                c->ctlpoint[c->grab_point][0] = rx;
-                c->ctlpoint[c->grab_point][1] = ry;
+                channel->ctlpoints[c->grab_point].x = rx;
+                channel->ctlpoints[c->grab_point].y = ry;
             }
             gwy_curve_interpolate(c, width, height);
             gwy_curve_draw(c, width, height);
         }
         break;
 
+        /*
         case GWY_CURVE_TYPE_FREE:
         if(c->grab_point != -1) {
             if (c->grab_point > x) {
@@ -811,6 +826,7 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
         else
             new_type = GDK_PENCIL;
         break;
+        */
     }
     if (new_type != (GdkCursorType)c->cursor_type) {
         GdkCursor *cursor;
@@ -824,7 +840,6 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
     }
     return TRUE;
 }
-*/
 
 void
 gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
