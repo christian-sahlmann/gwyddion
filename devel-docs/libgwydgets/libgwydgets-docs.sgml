@@ -52,14 +52,14 @@
   <chapter id="Widgets3D">
     <title>3D Widgets</title>
     <xi:include href="xml/gwy3dview.xml"/>
-    <xi:include href="xml/gwy3dlabel.xml"/>
     <xi:include href="xml/gwy3dwindow.xml"/>
-    <xi:include href="xml/gwyglmaterial.xml"/>
+    <xi:include href="xml/gwy3dlabel.xml"/>
   </chapter>
 
   <chapter id="GeneralWidgets">
     <title>General Widgets</title>
     <xi:include href="xml/gwycolorbutton.xml"/>
+    <xi:include href="xml/gwycurve.xml"/>
     <xi:include href="xml/gwyruler.xml"/>
     <xi:include href="xml/gwyhruler.xml"/>
     <xi:include href="xml/gwyvruler.xml"/>

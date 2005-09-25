@@ -14,6 +14,9 @@ Data field displaying area
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyDataView ##### -->
 <para>
 
@@ -132,6 +135,15 @@ Data field displaying area
 
 
 <!-- ##### FUNCTION gwy_data_view_get_zoom ##### -->
+<para>
+
+</para>
+
+@data_view: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_data_view_get_real_zoom ##### -->
 <para>
 
 </para>

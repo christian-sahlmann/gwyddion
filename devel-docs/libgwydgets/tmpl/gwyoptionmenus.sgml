@@ -60,6 +60,9 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 <link linkend="libgwydgets-gwyradiobuttons">Radio button constructors</link>
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_menu_gradient ##### -->
 <para>
 
@@ -68,6 +71,48 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @callback: 
 @cbdata: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_selection_new ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@active: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@current: 
+
+
+<!-- ##### FUNCTION gwy_gradient_tree_view_new ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@active: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_selection_get_active ##### -->
+<para>
+
+</para>
+
+@selection: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gradient_selection_set_active ##### -->
+<para>
+
+</para>
+
+@selection: 
+@active: 
 
 
 <!-- ##### FUNCTION gwy_menu_gl_material ##### -->
@@ -80,60 +125,43 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_option_menu_gradient ##### -->
+<!-- ##### FUNCTION gwy_gl_material_selection_new ##### -->
 <para>
 
 </para>
 
 @callback: 
 @cbdata: 
-@current: 
+@active: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_option_menu_gl_material ##### -->
+<!-- ##### FUNCTION gwy_gl_material_selection_get_active ##### -->
+<para>
+
+</para>
+
+@selection: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gl_material_selection_set_active ##### -->
+<para>
+
+</para>
+
+@selection: 
+@active: 
+
+
+<!-- ##### FUNCTION gwy_gl_material_tree_view_new ##### -->
 <para>
 
 </para>
 
 @callback: 
 @cbdata: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_metric_unit ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@from: 
-@to: 
-@unit: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_set_history ##### -->
-<para>
-
-</para>
-
-@option_menu: 
-@key: 
-@current: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_option_menu_get_history ##### -->
-<para>
-
-</para>
-
-@option_menu: 
-@key: 
+@active: 
 @Returns: 
 
 

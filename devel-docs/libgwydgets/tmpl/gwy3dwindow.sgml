@@ -18,6 +18,9 @@ can be packed with gwy_3d_window_add_action_widget().
 #Gwy3DView
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT Gwy3DWindow ##### -->
 <para>
 

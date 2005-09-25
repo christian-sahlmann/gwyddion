@@ -17,28 +17,7 @@ with ranges in the requested interval.
 
 </para>
 
-<!-- ##### MACRO GWY_AXIS ##### -->
-<para>
-
-</para>
-
-@obj: 
-
-
-<!-- ##### MACRO GWY_AXIS_CLASS ##### -->
-<para>
-
-</para>
-
-@klass: 
-
-
-<!-- ##### MACRO GWY_AXIS_GET_CLASS ##### -->
-<para>
-
-</para>
-
-@obj: 
+<!-- ##### SECTION Stability_Level ##### -->
 
 
 <!-- ##### STRUCT GwyAxisActiveAreaSpecs ##### -->
@@ -332,5 +311,14 @@ with ranges in the requested interval.
 @Returns: 
 <!-- # Unused Parameters # -->
 @axiser: 
+
+
+<!-- ##### FUNCTION gwy_axis_set_grid_data ##### -->
+<para>
+
+</para>
+
+@axis: 
+@array: 
 
 

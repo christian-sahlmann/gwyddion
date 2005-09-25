@@ -22,6 +22,9 @@ be introduced probably.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyGraph ##### -->
 <para>
 
@@ -75,6 +78,35 @@ be introduced probably.
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_graph_get_axis ##### -->
+<para>
+
+</para>
+
+@graph: 
+@type: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_axis_visible ##### -->
+<para>
+
+</para>
+
+@graph: 
+@type: 
+@is_visible: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_area ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_graph_refresh ##### -->
 <para>
 
@@ -85,15 +117,23 @@ be introduced probably.
 @grapher: 
 
 
-<!-- ##### FUNCTION gwy_graph_change_model ##### -->
+<!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
+<para>
+
+</para>
+
+@graph: 
+<!-- # Unused Parameters # -->
+@grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_model ##### -->
 <para>
 
 </para>
 
 @graph: 
 @gmodel: 
-<!-- # Unused Parameters # -->
-@grapher: 
 
 
 <!-- ##### FUNCTION gwy_graph_set_status ##### -->
@@ -126,30 +166,6 @@ be introduced probably.
 @graph: 
 @Returns: 
 <!-- # Unused Parameters # -->
-@grapher: 
-
-
-<!-- ##### FUNCTION gwy_graph_signal_selected ##### -->
-<para>
-
-</para>
-
-@grapher: 
-
-
-<!-- ##### FUNCTION gwy_graph_signal_mouse_moved ##### -->
-<para>
-
-</para>
-
-@grapher: 
-
-
-<!-- ##### FUNCTION gwy_graph_signal_zoomed ##### -->
-<para>
-
-</para>
-
 @grapher: 
 
 
@@ -320,5 +336,59 @@ be introduced probably.
 @graph: 
 <!-- # Unused Parameters # -->
 @grapher: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_grid_type ##### -->
+<para>
+
+</para>
+
+@graph: 
+@grid_type: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_grid_type ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_x_grid_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@grid_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_set_y_grid_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@grid_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_x_grid_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_get_y_grid_data ##### -->
+<para>
+
+</para>
+
+@graph: 
+@Returns: 
 
 

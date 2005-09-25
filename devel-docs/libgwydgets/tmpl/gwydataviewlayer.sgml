@@ -14,6 +14,9 @@ A one #GwyDataView layer
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyDataViewLayer ##### -->
 <para>
 
@@ -47,6 +50,8 @@ A one #GwyDataView layer
 </para>
 
 @parent_class: 
+@realize: 
+@unrealize: 
 @plugged: 
 @unplugged: 
 @updated: 
@@ -70,6 +75,22 @@ A one #GwyDataView layer
 
 
 <!-- ##### FUNCTION gwy_data_view_layer_updated ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_realize ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+
+<!-- ##### FUNCTION gwy_data_view_layer_unrealize ##### -->
 <para>
 
 </para>

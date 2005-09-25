@@ -18,6 +18,26 @@
 gwyglmat
 
 
+<!-- ##### SECTION ./tmpl/gwyglmaterial.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyglmaterial.sgml:See_Also ##### -->
+<para>
+#Gwy3DView
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwyglmaterial.sgml:Short_Description ##### -->
+OpenGL materials
+
+
+<!-- ##### SECTION ./tmpl/gwyglmaterial.sgml:Title ##### -->
+gwyglmaterial
+
+
 <!-- ##### SECTION ./tmpl/gwygradsphere.sgml:Long_Description ##### -->
 <para>
 
@@ -318,6 +338,30 @@ GwyVectorShade
 GwyVMenuBar
 
 
+<!-- ##### SECTION ./tmpl/stamp-gwydgettypes.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwydgettypes.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwydgettypes.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwydgettypes.sgml:Stability_Level ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/stamp-gwydgettypes.sgml:Title ##### -->
+stamp-gwydgettypes
+
+
 <!-- ##### MACRO GWY_3D_LABELS ##### -->
 <para>
 
@@ -333,6 +377,13 @@ GwyVMenuBar
 @klass: 
 
 <!-- ##### MACRO GWY_3D_LABELS_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
+
+<!-- ##### MACRO GWY_AXIS ##### -->
 <para>
 
 </para>
@@ -369,6 +420,13 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### MACRO GWY_AXIS_CLASS ##### -->
+<para>
+
+</para>
+
+@klass: 
+
 <!-- ##### MACRO GWY_AXIS_EAST ##### -->
 <para>
 
@@ -386,6 +444,13 @@ GwyVMenuBar
 
 </para>
 
+
+<!-- ##### MACRO GWY_AXIS_GET_CLASS ##### -->
+<para>
+
+</para>
+
+@obj: 
 
 <!-- ##### MACRO GWY_AXIS_INT ##### -->
 <para>
@@ -489,7 +554,49 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### MACRO GWY_GL_MATERIAL_BRASS ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_BRONZE ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_GL_MATERIAL_CHROME ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_COPPER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_EMERALD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_GOLD ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_JADE ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_NONE ##### -->
 <para>
 
 </para>
@@ -501,7 +608,25 @@ GwyVMenuBar
 </para>
 
 
+<!-- ##### MACRO GWY_GL_MATERIAL_PEARL ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### MACRO GWY_GL_MATERIAL_RUBY ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_SILVER ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### MACRO GWY_GL_MATERIAL_TURQUOISE ##### -->
 <para>
 
 </para>
@@ -764,6 +889,29 @@ GwyVMenuBar
 </para>
 
 @gwydataviewlayer: the object which received the signal.
+
+<!-- ##### STRUCT GwyGLMaterial ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGLMaterialClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@materials: 
+
+<!-- ##### USER_FUNCTION GwyGLMaterialFunc ##### -->
+<para>
+
+</para>
+
+@name: 
+@glmaterial: 
+@user_data: 
 
 <!-- ##### SIGNAL GwyGraph::mousemoved ##### -->
 <para>
@@ -1065,6 +1213,15 @@ are saved here.
 </para>
 
 
+<!-- ##### STRUCT GwySciTextParams ##### -->
+<para>
+
+</para>
+
+@ent_text: 
+@utf_text: 
+@label_font: 
+
 <!-- ##### SIGNAL GwySphereCoords::value-changed ##### -->
 <para>
 
@@ -1079,6 +1236,19 @@ are saved here.
 
 @value: 
 @scrpos: 
+
+<!-- ##### SIGNAL GwyVectorLayer::selection-finished ##### -->
+<para>
+
+</para>
+
+@gwyvectorlayer: the object which received the signal.
+
+<!-- ##### ARG GwyVectorLayer:update-policy ##### -->
+<para>
+
+</para>
+
 
 <!-- ##### ENUM GwyZoomMode ##### -->
 <para>
@@ -1661,6 +1831,23 @@ are saved here.
 @color_button: 
 @title: 
 
+<!-- ##### FUNCTION gwy_curve_set_gamma ##### -->
+<para>
+
+</para>
+
+@curve: 
+@gamma_: 
+
+<!-- ##### FUNCTION gwy_curve_set_vector ##### -->
+<para>
+
+</para>
+
+@curve: 
+@veclen: 
+@vector: 
+
 <!-- ##### FUNCTION gwy_data_view_get_zoom_mode ##### -->
 <para>
 
@@ -1811,6 +1998,71 @@ are saved here.
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_gl_material_exists ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_foreach ##### -->
+<para>
+
+</para>
+
+@callback: 
+@user_data: 
+
+<!-- ##### FUNCTION gwy_gl_material_get_by_name ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_get_name ##### -->
+<para>
+
+</para>
+
+@gl_material: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_new ##### -->
+<para>
+
+</para>
+
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_sample ##### -->
+<para>
+
+</para>
+
+@glmaterial: 
+@size: 
+@oldsample: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_set_name ##### -->
+<para>
+
+</para>
+
+@gl_material: 
+@name: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_gl_material_setup_presets ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_glmaterial_exists ##### -->
 <para>
 
@@ -1920,6 +2172,14 @@ are saved here.
 @area: 
 @curve: 
 
+<!-- ##### FUNCTION gwy_graph_area_change_model ##### -->
+<para>
+
+</para>
+
+@area: 
+@gmodel: 
+
 <!-- ##### FUNCTION gwy_graph_area_clear ##### -->
 <para>
 
@@ -1959,6 +2219,29 @@ are saved here.
 </para>
 
 @area: 
+
+<!-- ##### FUNCTION gwy_graph_area_signal_selected ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_graph_area_signal_zoomed ##### -->
+<para>
+
+</para>
+
+@area: 
+
+<!-- ##### FUNCTION gwy_graph_change_model ##### -->
+<para>
+
+</para>
+
+@graph: 
+@gmodel: 
+@grapher: 
 
 <!-- ##### FUNCTION gwy_graph_clear ##### -->
 <para>
@@ -2081,6 +2364,14 @@ are saved here.
 @label: 
 @params: 
 
+<!-- ##### FUNCTION gwy_graph_label_change_model ##### -->
+<para>
+
+</para>
+
+@label: 
+@gmodel: 
+
 <!-- ##### FUNCTION gwy_graph_label_clear ##### -->
 <para>
 
@@ -2147,7 +2438,21 @@ are saved here.
 @y_min: 
 @y_max: 
 
+<!-- ##### FUNCTION gwy_graph_signal_mouse_moved ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
 <!-- ##### FUNCTION gwy_graph_signal_mousemoved ##### -->
+<para>
+
+</para>
+
+@grapher: 
+
+<!-- ##### FUNCTION gwy_graph_signal_zoomed ##### -->
 <para>
 
 </para>
@@ -3046,6 +3351,35 @@ are saved here.
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_get_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@key: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_gl_material ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_gradient ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_indentor ##### -->
 <para>
 
@@ -3086,6 +3420,19 @@ are saved here.
 @current: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_option_menu_metric_unit ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@from: 
+@to: 
+@unit: 
+@current: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_option_menu_nlfitpreset ##### -->
 <para>
 
@@ -3113,6 +3460,16 @@ are saved here.
 
 @callback: 
 @cbdata: 
+@current: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_option_menu_set_history ##### -->
+<para>
+
+</para>
+
+@option_menu: 
+@key: 
 @current: 
 @Returns: 
 
@@ -3222,6 +3579,59 @@ are saved here.
 
 @layer: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_vector_layer_get_update_policy ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
+<!-- ##### FUNCTION gwy_vector_layer_selection_finished ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_vector_layer_set_selection ##### -->
+<para>
+
+</para>
+
+@layer: 
+@nselected: 
+@selection: 
+
+<!-- ##### FUNCTION gwy_vector_layer_set_update_policy ##### -->
+<para>
+
+</para>
+
+@layer: 
+@policy: 
+
+<!-- ##### FUNCTION gwy_vector_layer_setup_gc ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_vector_layer_unselect ##### -->
+<para>
+
+</para>
+
+@layer: 
+
+<!-- ##### FUNCTION gwy_vector_layer_updated ##### -->
+<para>
+
+</para>
+
+@layer: 
 
 <!-- ##### FUNCTION gwy_windowing_option_menu ##### -->
 <para>

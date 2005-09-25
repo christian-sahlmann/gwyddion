@@ -14,6 +14,9 @@ gwydgetenums
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GwyAxisScaleFormat ##### -->
 <para>
 
@@ -96,6 +99,15 @@ gwydgetenums
 @GWY_GRAPH_STATUS_XLINES: 
 @GWY_GRAPH_STATUS_YLINES: 
 
+<!-- ##### ENUM GwyGraphGridType ##### -->
+<para>
+
+</para>
+
+@GWY_GRAPH_GRID_NONE: 
+@GWY_GRAPH_GRID_AUTO: 
+@GWY_GRAPH_GRID_USER: 
+
 <!-- ##### ENUM GwyGraphPointType ##### -->
 <para>
 
@@ -149,4 +161,14 @@ gwydgetenums
 @GWY_LAYER_BASIC_RANGE_FULL: 
 @GWY_LAYER_BASIC_RANGE_FIXED: 
 @GWY_LAYER_BASIC_RANGE_AUTO: 
+@GWY_LAYER_BASIC_RANGE_ADAPT: 
+
+<!-- ##### ENUM GwyCurveType ##### -->
+<para>
+
+</para>
+
+@GWY_CURVE_TYPE_LINEAR: 
+@GWY_CURVE_TYPE_SPLINE: 
+@GWY_CURVE_TYPE_FREE: 
 

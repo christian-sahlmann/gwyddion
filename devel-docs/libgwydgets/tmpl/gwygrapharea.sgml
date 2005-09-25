@@ -17,6 +17,9 @@ a set of data curves with a given plot properties.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyGraphStatus_PointData ##### -->
 <para>
 
@@ -132,20 +135,13 @@ a set of data curves with a given plot properties.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_area_signal_selected ##### -->
+<!-- ##### FUNCTION gwy_graph_area_get_label ##### -->
 <para>
 
 </para>
 
 @area: 
-
-
-<!-- ##### FUNCTION gwy_graph_area_signal_zoomed ##### -->
-<para>
-
-</para>
-
-@area: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_graph_area_refresh ##### -->
@@ -185,7 +181,7 @@ a set of data curves with a given plot properties.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_graph_area_change_model ##### -->
+<!-- ##### FUNCTION gwy_graph_area_set_model ##### -->
 <para>
 
 </para>
@@ -246,5 +242,41 @@ a set of data curves with a given plot properties.
 @area: 
 @x_cursor: 
 @y_cursor: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_set_x_grid_data ##### -->
+<para>
+
+</para>
+
+@area: 
+@grid_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_set_y_grid_data ##### -->
+<para>
+
+</para>
+
+@area: 
+@grid_data: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_get_x_grid_data ##### -->
+<para>
+
+</para>
+
+@area: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_area_get_y_grid_data ##### -->
+<para>
+
+</para>
+
+@area: 
+@Returns: 
 
 

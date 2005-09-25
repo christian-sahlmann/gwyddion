@@ -15,40 +15,6 @@ GWY_GRAPH_CORNER_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gwyglmaterial</FILE>
-GWY_GL_MATERIAL_NONE
-GWY_GL_MATERIAL_EMERALD
-GWY_GL_MATERIAL_JADE
-GWY_GL_MATERIAL_PEARL
-GWY_GL_MATERIAL_TURQUOISE
-GWY_GL_MATERIAL_BRASS
-GWY_GL_MATERIAL_BRONZE
-GWY_GL_MATERIAL_COPPER
-GWY_GL_MATERIAL_GOLD
-GWY_GL_MATERIAL_SILVER
-<TITLE>GwyGLMaterial</TITLE>
-GwyGLMaterial
-GwyGLMaterialClass
-GwyGLMaterialFunc
-gwy_gl_material_new
-gwy_gl_material_get_name
-gwy_gl_material_set_name
-gwy_gl_material_get_by_name
-gwy_gl_material_exists
-gwy_gl_material_foreach
-gwy_gl_material_setup_presets
-gwy_gl_material_sample
-<SUBSECTION Standard>
-GWY_GL_MATERIAL
-GWY_IS_GL_MATERIAL
-GWY_TYPE_GL_MATERIAL
-gwy_gl_material_get_type
-GWY_GL_MATERIAL_CLASS
-GWY_IS_GL_MATERIAL_CLASS
-GWY_GL_MATERIAL_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gwydataviewlayer</FILE>
 <TITLE>GwyDataViewLayer</TITLE>
 GwyDataViewLayer
@@ -56,6 +22,8 @@ GwyDataViewLayerClass
 gwy_data_view_layer_plugged
 gwy_data_view_layer_unplugged
 gwy_data_view_layer_updated
+gwy_data_view_layer_realize
+gwy_data_view_layer_unrealize
 <SUBSECTION Standard>
 GWY_DATA_VIEW_LAYER
 GWY_IS_DATA_VIEW_LAYER
@@ -186,6 +154,7 @@ GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR
 GWY_GRAPH_WINDOW_MEASURE_DIALOG
 GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS
 GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS
+MeasureMethodType
 <TITLE>GwyGraphWindowMeasureDialog</TITLE>
 GwyGraphWindowMeasureDialog
 GwyGraphWindowMeasureDialogClass
@@ -205,7 +174,7 @@ GwyGraphLabel
 GwyGraphLabelClass
 gwy_graph_label_new
 gwy_graph_label_refresh
-gwy_graph_label_change_model
+gwy_graph_label_set_model
 gwy_graph_label_draw_label_on_drawable
 gwy_graph_label_export_vector
 gwy_graph_label_enable_user_input
@@ -219,6 +188,25 @@ GWY_IS_GRAPH_LABEL_CLASS
 GWY_GRAPH_LABEL_GET_CLASS
 </SECTION>
 
+<SECTION>
+<FILE>gwycurve</FILE>
+GwyPoint
+GwyChannelData
+<TITLE>GwyCurve</TITLE>
+gwy_curve_new
+gwy_curve_reset
+gwy_curve_set_range
+gwy_curve_get_vector
+gwy_curve_set_curve_type
+<SUBSECTION Standard>
+GWY_CURVE
+GWY_IS_CURVE
+GWY_TYPE_CURVE
+gwy_curve_get_type
+GWY_CURVE_CLASS
+GWY_IS_CURVE_CLASS
+GWY_CURVE_GET_CLASS
+</SECTION>
 <SECTION>
 <FILE>gwyvalunit</FILE>
 <TITLE>GwyValUnit</TITLE>
@@ -254,13 +242,15 @@ GWY_GRAPH_LABEL_DIALOG_GET_CLASS
 </SECTION>
 <SECTION>
 <FILE>gwyscitext</FILE>
-GwySciTextParams
 <TITLE>GwySciText</TITLE>
 GwySciText
 GwySciTextClass
 gwy_sci_text_new
 gwy_sci_text_get_text
 gwy_sci_text_set_text
+gwy_sci_text_get_has_preview
+gwy_sci_text_set_has_preview
+gwy_sci_text_get_entry
 <SUBSECTION Standard>
 GWY_SCI_TEXT
 GWY_IS_SCI_TEXT
@@ -334,20 +324,15 @@ GWY_STATUSBAR_GET_CLASS
 <TITLE>GwyVectorLayer</TITLE>
 GwyVectorLayer
 GwyVectorLayerClass
+gwy_vector_layer_get_selection
+gwy_vector_layer_set_selection_key
+gwy_vector_layer_get_selection_key
 gwy_vector_layer_draw
 gwy_vector_layer_button_press
 gwy_vector_layer_button_release
 gwy_vector_layer_motion_notify
 gwy_vector_layer_key_press
 gwy_vector_layer_key_release
-gwy_vector_layer_selection_finished
-gwy_vector_layer_get_selection
-gwy_vector_layer_set_selection
-gwy_vector_layer_unselect
-gwy_vector_layer_get_update_policy
-gwy_vector_layer_set_update_policy
-gwy_vector_layer_updated
-gwy_vector_layer_setup_gc
 <SUBSECTION Standard>
 GWY_VECTOR_LAYER
 GWY_IS_VECTOR_LAYER
@@ -569,6 +554,7 @@ gwy_data_view_get_hexcess
 gwy_data_view_get_vexcess
 gwy_data_view_set_zoom
 gwy_data_view_get_zoom
+gwy_data_view_get_real_zoom
 gwy_data_view_get_data
 gwy_data_view_coords_xy_clamp
 gwy_data_view_coords_xy_to_real
@@ -663,18 +649,21 @@ GwyGraphAreaCurve
 GwyGraphArea
 GwyGraphAreaClass
 gwy_graph_area_new
-gwy_graph_area_signal_selected
-gwy_graph_area_signal_zoomed
+gwy_graph_area_get_label
 gwy_graph_area_refresh
 gwy_graph_area_set_selection
 gwy_graph_area_set_selection_limit
 gwy_graph_area_get_selection_limit
-gwy_graph_area_change_model
+gwy_graph_area_set_model
 gwy_graph_area_draw_area_on_drawable
 gwy_graph_area_export_vector
 gwy_graph_area_clear_selection
 gwy_graph_area_enable_user_input
 gwy_graph_area_get_cursor
+gwy_graph_area_set_x_grid_data
+gwy_graph_area_set_y_grid_data
+gwy_graph_area_get_x_grid_data
+gwy_graph_area_get_y_grid_data
 <SUBSECTION Standard>
 GWY_GRAPH_AREA
 GWY_IS_GRAPH_AREA
@@ -766,9 +755,6 @@ GWY_PIXMAP_LAYER_GET_CLASS
 
 <SECTION>
 <FILE>gwyaxis</FILE>
-GWY_AXIS
-GWY_AXIS_CLASS
-GWY_AXIS_GET_CLASS
 GwyAxisActiveAreaSpecs
 GwyAxisTick
 GwyAxisLabeledTick
@@ -795,11 +781,15 @@ gwy_axis_enable_label_edit
 gwy_axis_signal_rescaled
 gwy_axis_draw_on_drawable
 gwy_axis_export_vector
+gwy_axis_set_grid_data
 <SUBSECTION Standard>
-GWY_IS_AXISER
-GWY_TYPE_AXISER
+GWY_AXIS
+GWY_IS_AXIS
+GWY_TYPE_AXIS
 gwy_axis_get_type
-GWY_IS_AXISER_CLASS
+GWY_AXIS_CLASS
+GWY_IS_AXIS_CLASS
+GWY_AXIS_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -808,14 +798,15 @@ GWY_IS_AXISER_CLASS
 GwyGraph
 GwyGraphClass
 gwy_graph_new
+gwy_graph_get_axis
+gwy_graph_set_axis_visible
+gwy_graph_get_area
 gwy_graph_refresh
-gwy_graph_change_model
+gwy_graph_signal_selected
+gwy_graph_set_model
 gwy_graph_set_status
 gwy_graph_get_status
 gwy_graph_get_model
-gwy_graph_signal_selected
-gwy_graph_signal_mouse_moved
-gwy_graph_signal_zoomed
 gwy_graph_get_selection_number
 gwy_graph_get_selection
 gwy_graph_clear_selection
@@ -831,6 +822,12 @@ gwy_graph_export_pixmap
 gwy_graph_export_postscript
 gwy_graph_zoom_in
 gwy_graph_zoom_out
+gwy_graph_set_grid_type
+gwy_graph_get_grid_type
+gwy_graph_set_x_grid_data
+gwy_graph_set_y_grid_data
+gwy_graph_get_x_grid_data
+gwy_graph_get_y_grid_data
 <SUBSECTION Standard>
 GWY_GRAPH
 GWY_IS_GRAPH
@@ -851,16 +848,19 @@ Gwy3DViewLabel
 GwyUnitsPlacement
 GwyHScaleStyle
 GwyGraphStatusType
+GwyGraphGridType
 GwyGraphPointType
 GwyGraphCurveType
 GwyGraphLabelPosition
 GwyGraphModelExportStyle
 GwyLayerBasicRangeType
+GwyCurveType
 </SECTION>
 
 <SECTION>
 <FILE>gwycombobox</FILE>
 gwy_enum_combo_box_new
+gwy_combo_box_metric_unit_new
 gwy_enum_combo_box_set_active
 gwy_enum_combo_box_get_active
 gwy_enum_combo_box_update_int
@@ -877,10 +877,12 @@ gwy_graph_draw_curve
 gwy_graph_draw_selection_points
 gwy_graph_draw_selection_areas
 gwy_graph_draw_selection_lines
+gwy_graph_draw_grid
 </SECTION>
 
 <SECTION>
 <FILE>gwydgets</FILE>
+GdkGLConfig
 gwy_widgets_type_init
 gwy_widgets_gl_init
 gwy_widgets_get_gl_config
@@ -913,6 +915,8 @@ gwy_hscale_style_get_type
 GWY_TYPE_HSCALE_STYLE
 gwy_graph_status_type_get_type
 GWY_TYPE_GRAPH_STATUS_TYPE
+gwy_graph_grid_type_get_type
+GWY_TYPE_GRAPH_GRID_TYPE
 gwy_graph_point_type_get_type
 GWY_TYPE_GRAPH_POINT_TYPE
 gwy_graph_curve_type_get_type
@@ -923,10 +927,8 @@ gwy_graph_model_export_style_get_type
 GWY_TYPE_GRAPH_MODEL_EXPORT_STYLE
 gwy_layer_basic_range_type_get_type
 GWY_TYPE_LAYER_BASIC_RANGE_TYPE
-</SECTION>
-
-<SECTION>
-<FILE>stamp-gwydgettypes</FILE>
+gwy_curve_type_get_type
+GWY_TYPE_CURVE_TYPE
 </SECTION>
 
 <SECTION>
@@ -1018,11 +1020,14 @@ gwy_stock_register_stock_items
 <SECTION>
 <FILE>gwyoptionmenus</FILE>
 gwy_menu_gradient
+gwy_gradient_selection_new
+gwy_gradient_tree_view_new
+gwy_gradient_selection_get_active
+gwy_gradient_selection_set_active
 gwy_menu_gl_material
-gwy_option_menu_gradient
-gwy_option_menu_gl_material
-gwy_option_menu_metric_unit
-gwy_option_menu_set_history
-gwy_option_menu_get_history
+gwy_gl_material_selection_new
+gwy_gl_material_selection_get_active
+gwy_gl_material_selection_set_active
+gwy_gl_material_tree_view_new
 </SECTION>
 

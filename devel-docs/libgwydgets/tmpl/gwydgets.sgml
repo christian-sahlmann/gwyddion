@@ -20,6 +20,15 @@ gwy_widgets_gl_init().
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### TYPEDEF GdkGLConfig ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### FUNCTION gwy_widgets_type_init ##### -->
 <para>
 

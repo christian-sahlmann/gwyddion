@@ -14,6 +14,9 @@ gwycombobox
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_enum_combo_box_new ##### -->
 <para>
 
@@ -25,6 +28,20 @@ gwycombobox
 @cbdata: 
 @active: 
 @translate: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_combo_box_metric_unit_new ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@from: 
+@to: 
+@unit: 
+@active: 
 @Returns: 
 
 

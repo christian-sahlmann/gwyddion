@@ -24,6 +24,9 @@ item itself.  It exists even if item don't export any traits.  Columns from
 #GwyInventory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyInventoryStore ##### -->
 <para>
 

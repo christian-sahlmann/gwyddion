@@ -14,20 +14,16 @@ Base class for #GwyDataView vector (interactive) layers
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyVectorLayer ##### -->
 <para>
 
 </para>
 
 
-<!-- ##### SIGNAL GwyVectorLayer::selection-finished ##### -->
-<para>
-
-</para>
-
-@gwyvectorlayer: the object which received the signal.
-
-<!-- ##### ARG GwyVectorLayer:update-policy ##### -->
+<!-- ##### ARG GwyVectorLayer:selection-key ##### -->
 <para>
 
 </para>
@@ -38,18 +34,44 @@ Base class for #GwyDataView vector (interactive) layers
 </para>
 
 @parent_class: 
+@selection_type: 
 @draw: 
 @button_press: 
 @button_release: 
 @motion_notify: 
 @key_press: 
 @key_release: 
-@selection_finished: 
-@get_selection: 
-@set_selection: 
-@unselect: 
 @reserved1: 
 @reserved2: 
+
+<!-- ##### FUNCTION gwy_vector_layer_get_selection ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+<!-- # Unused Parameters # -->
+@selection: 
+
+
+<!-- ##### FUNCTION gwy_vector_layer_set_selection_key ##### -->
+<para>
+
+</para>
+
+@layer: 
+@key: 
+
+
+<!-- ##### FUNCTION gwy_vector_layer_get_selection_key ##### -->
+<para>
+
+</para>
+
+@layer: 
+@Returns: 
+
 
 <!-- ##### FUNCTION gwy_vector_layer_draw ##### -->
 <para>
@@ -108,75 +130,5 @@ Base class for #GwyDataView vector (interactive) layers
 @layer: 
 @event: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_selection_finished ##### -->
-<para>
-
-</para>
-
-@layer: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_get_selection ##### -->
-<para>
-
-</para>
-
-@layer: 
-@selection: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_set_selection ##### -->
-<para>
-
-</para>
-
-@layer: 
-@nselected: 
-@selection: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_unselect ##### -->
-<para>
-
-</para>
-
-@layer: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_get_update_policy ##### -->
-<para>
-
-</para>
-
-@layer: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_set_update_policy ##### -->
-<para>
-
-</para>
-
-@layer: 
-@policy: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_updated ##### -->
-<para>
-
-</para>
-
-@layer: 
-
-
-<!-- ##### FUNCTION gwy_vector_layer_setup_gc ##### -->
-<para>
-
-</para>
-
-@layer: 
 
 

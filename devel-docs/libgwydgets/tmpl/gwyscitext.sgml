@@ -14,14 +14,8 @@ Text entry with markup and special symbol entity helpers
 
 </para>
 
-<!-- ##### STRUCT GwySciTextParams ##### -->
-<para>
+<!-- ##### SECTION Stability_Level ##### -->
 
-</para>
-
-@ent_text: 
-@utf_text: 
-@label_font: 
 
 <!-- ##### STRUCT GwySciText ##### -->
 <para>
@@ -29,12 +23,25 @@ Text entry with markup and special symbol entity helpers
 </para>
 
 
+<!-- ##### SIGNAL GwySciText::edited ##### -->
+<para>
+
+</para>
+
+@gwyscitext: the object which received the signal.
+
+<!-- ##### ARG GwySciText:has-preview ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwySciTextClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@edited: 
 @reserved1: 
 @reserved2: 
 
@@ -62,5 +69,32 @@ Text entry with markup and special symbol entity helpers
 
 @sci_text: 
 @new_text: 
+
+
+<!-- ##### FUNCTION gwy_sci_text_get_has_preview ##### -->
+<para>
+
+</para>
+
+@sci_text: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_sci_text_set_has_preview ##### -->
+<para>
+
+</para>
+
+@sci_text: 
+@has_preview: 
+
+
+<!-- ##### FUNCTION gwy_sci_text_get_entry ##### -->
+<para>
+
+</para>
+
+@sci_text: 
+@Returns: 
 
 

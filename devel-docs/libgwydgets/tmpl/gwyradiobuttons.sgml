@@ -17,6 +17,9 @@ of radio button group, which is described in #GtkRadioButton reference.
 <link linkend="libgwydgets-gwyoptionmenus">Option menu constructors</link>
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_radio_buttons_create ##### -->
 <para>
 

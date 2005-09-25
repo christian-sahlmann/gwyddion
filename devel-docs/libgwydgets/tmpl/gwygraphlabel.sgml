@@ -15,6 +15,9 @@ the GwyGraph widget. It plots a curves legend.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyGraphLabel ##### -->
 <para>
 
@@ -47,7 +50,7 @@ the GwyGraph widget. It plots a curves legend.
 @label: 
 
 
-<!-- ##### FUNCTION gwy_graph_label_change_model ##### -->
+<!-- ##### FUNCTION gwy_graph_label_set_model ##### -->
 <para>
 
 </para>

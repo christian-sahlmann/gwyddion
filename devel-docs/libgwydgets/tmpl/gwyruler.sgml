@@ -19,6 +19,9 @@ gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
 #GwyVRuler, #GwyHRuler, #GwySIUnit.
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyRuler ##### -->
 <para>
 

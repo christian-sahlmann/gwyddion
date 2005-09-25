@@ -14,6 +14,9 @@ GwyGrapherWindowMeasureDialog
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR ##### -->
 <para>
 
@@ -44,6 +47,14 @@ GwyGrapherWindowMeasureDialog
 
 @obj: 
 
+
+<!-- ##### ENUM MeasureMethodType ##### -->
+<para>
+
+</para>
+
+@METHOD_INTERSECTIONS: 
+@METHOD_CROSSES: 
 
 <!-- ##### STRUCT GwyGraphWindowMeasureDialog ##### -->
 <para>
