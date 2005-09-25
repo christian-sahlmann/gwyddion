@@ -26,8 +26,6 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwygradient.h>
 
-#define GWY_GRADIENT_DEFAULT "Gray"
-
 /* Standard sample size, returned by gwy_gradient_get_samples() */
 enum {
     GWY_GRADIENT_DEFAULT_SIZE = 1024
@@ -1096,5 +1094,15 @@ gwy_gradients_get_gradient(const gchar *name)
  * Gradient color point struct.
  **/
 
+/**
+ * GWY_GRADIENT_DEFAULT:
+ *
+ * The name of the default gray color gradient.
+ *
+ * It is guaranteed to always exist.
+ *
+ * Note this is not the same as user's default gradient which corresponds to
+ * the default item in gwy_gradients() inventory and it change over time.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

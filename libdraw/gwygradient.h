@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+#define GWY_GRADIENT_DEFAULT "Gray"
+
 #define GWY_TYPE_GRADIENT                  (gwy_gradient_get_type())
 #define GWY_GRADIENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRADIENT, GwyGradient))
 #define GWY_GRADIENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT, GwyGradientClass))

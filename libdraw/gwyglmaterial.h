@@ -28,7 +28,8 @@
 
 G_BEGIN_DECLS
 
-#define GWY_GL_MATERIAL_NONE                 "None"
+#define GWY_GL_MATERIAL_DEFAULT "OpenGL-Default"
+#define GWY_GL_MATERIAL_NONE    "None"
 
 #define GWY_TYPE_GL_MATERIAL             (gwy_gl_material_get_type())
 #define GWY_GL_MATERIAL(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GL_MATERIAL, GwyGLMaterial))

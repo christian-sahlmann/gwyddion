@@ -26,8 +26,6 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwyglmaterial.h>
 
-#define GWY_GL_MATERIAL_DEFAULT "OpenGL-Default"
-
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
@@ -600,6 +598,17 @@ gwy_gl_materials_get_gl_material(const gchar *name)
  * GwyGLMaterialClass:
  *
  * #GwyGLMaterialClass does not contain any public members.
+ **/
+
+/**
+ * GWY_GL_MATERIAL_DEFAULT:
+ *
+ * The name of the default OpenGL material.
+ *
+ * It is guaranteed to always exist.
+ *
+ * Note this is not the same as user's default material which corresponds to
+ * the default item in gwy_gl_materials() inventory and it change over time.
  **/
 
 /**
