@@ -299,6 +299,8 @@ gwy_data_line_acf(GwyDataLine *data_line, GwyDataLine *target_line)
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
     avg = gwy_data_line_get_avg(data_line);
+    target_line->real = data_line->real;
+    target_line->off = 0.0;
 
     for (i = 0; i < n; i++) {
         for (j = 0; j < (n-i); j++) {
@@ -332,6 +334,8 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
     n = data_line->res;
     gwy_data_line_resample(target_line, n, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
+    target_line->real = data_line->real;
+    target_line->off = 0.0;
 
     for (i = 0; i < n; i++) {
         for (j = 0; j < (n-i); j++) {
@@ -394,10 +398,10 @@ gwy_data_line_psdf(GwyDataLine *data_line,
                                *data_line->real/(newres*newres*2*G_PI);
     }
     target_line->real = 2*G_PI*target_line->res/data_line->real;
+    target_line->off = 0.0;
 
     /*resample to given output size*/
     gwy_data_line_resample(target_line, oldres/2.0, interpolation);
-
 
     g_object_unref(rout);
     g_object_unref(iin);
@@ -452,7 +456,7 @@ gwy_data_line_dh(GwyDataLine *data_line,
     }
     nstep = n*step;
     gwy_data_line_multiply(target_line, 1.0/nstep);
-
+    target_line->off = ymin;
     target_line->real = ymax - ymin;
 }
 
@@ -536,6 +540,7 @@ gwy_data_line_da(GwyDataLine *data_line,
         target_line->data[val] += 1.0;
     }
     target_line->real = ymax - ymin;
+    target_line->off = ymin;
 }
 
 /**
