@@ -37,9 +37,10 @@
 
 typedef struct {
     GwyUnitoolState *state;
-    GtkWidget *units[4];
+    GtkWidget *units[5];
     GtkWidget *positions[NLINES * 2];
     GtkWidget *vectors[NLINES * 2];
+    GtkWidget *diffs[NLINES];
     GPtrArray *str;
 } ToolControls;
 
@@ -60,7 +61,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "1.3",
+    "1.4",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -149,24 +150,23 @@ dialog_create(GwyUnitoolState *state)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), frame,
                        FALSE, FALSE, 0);
 
-    table = gtk_table_new(NLINES+1, 5, FALSE);
+    table = gtk_table_new(NLINES+1, 6, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 0);
     str = g_string_new("");
 
     controls->units[0] = label= gtk_label_new(NULL);
-    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_hformat->units);
+    g_string_printf(str, "<b>Δx</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->units[1] = label = gtk_label_new(NULL);
-    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_hformat->units);
+    g_string_printf(str, "<b>Δy</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1, GTK_FILL, 0, 2, 2);
 
     controls->units[2] = label = gtk_label_new(NULL);
-    /*g_string_printf(str, _("<b>   &#8736;</b> [ &#176; ]"));*/
     g_string_printf(str, _("<b>Angle</b> [deg]"));
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 3, 4, 0, 1, GTK_FILL, 0, 2, 2);
@@ -175,6 +175,11 @@ dialog_create(GwyUnitoolState *state)
     g_string_printf(str, "<b>R</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
     gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1, GTK_FILL, 0, 2, 2);
+
+    controls->units[4] = label = gtk_label_new(NULL);
+    g_string_printf(str, "<b>Δz</b> [%s]", state->value_hformat->units);
+    gtk_label_set_markup(GTK_LABEL(label), str->str);
+    gtk_table_attach(GTK_TABLE(table), label, 5, 6, 0, 1, GTK_FILL, 0, 2, 2);
 
 
     controls->str = g_ptr_array_new();
@@ -202,6 +207,10 @@ dialog_create(GwyUnitoolState *state)
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 4, 5, i+1, i+2,
                          GTK_EXPAND | GTK_FILL, 0, 2, 2);
+        label = controls->diffs[i] = gtk_label_new("");
+        gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label, 5, 6, i+1, i+2,
+                         GTK_EXPAND | GTK_FILL, 0, 2, 2);
     }
     g_string_free(str, TRUE);
 
@@ -225,7 +234,6 @@ update_labels(GwyUnitoolState *state)
     gint nselected, i;
     GString *str;
 
-
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     data = gwy_data_view_get_data(GWY_DATA_VIEW(layer->parent));
@@ -239,18 +247,22 @@ update_labels(GwyUnitoolState *state)
 
     str = g_string_new("");
 
-    g_string_printf(str, "<b>&#916;x</b> [%s]", state->coord_hformat->units);
+    g_string_printf(str, "<b>Δx</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[0]), str->str);
 
-    g_string_printf(str, "<b>&#916;y</b> [%s]", state->coord_hformat->units);
+    g_string_printf(str, "<b>Δy</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[1]), str->str);
 
     g_string_printf(str, "<b>R</b> [%s]", state->coord_hformat->units);
     gtk_label_set_markup(GTK_LABEL(controls->units[3]), str->str);
 
+    g_string_printf(str, "<b>Δz</b> [%s]", state->value_hformat->units);
+    gtk_label_set_markup(GTK_LABEL(controls->units[4]), str->str);
+
     for (i = 0; i < NLINES; i++) {
         if (i < nselected) {
-            gdouble dx, dy, r, a;
+            gint x, y;
+            gdouble dx, dy, z1, z2, r, a;
 
             gwy_selection_get_object(selection, i, line);
             dx = line[2] - line[0];
@@ -258,23 +270,33 @@ update_labels(GwyUnitoolState *state)
             r = sqrt(dx*dx + dy*dy);
             a = atan2(dy, dx) * 180.0/G_PI;
 
+            x = gwy_data_field_rtoj(dfield, line[0]);
+            y = gwy_data_field_rtoi(dfield, line[1]);
+            z1 = gwy_data_field_get_val(dfield, x, y);
+            x = gwy_data_field_rtoj(dfield, line[2]);
+            y = gwy_data_field_rtoi(dfield, line[3]);
+            z2 = gwy_data_field_get_val(dfield, x, y);
+
             gwy_unitool_update_label_no_units(state->coord_hformat,
-                                              controls->positions[2*i+ 0], dx);
+                                              controls->positions[2*i + 0], dx);
             gwy_unitool_update_label_no_units(state->coord_hformat,
-                                              controls->positions[2*i+ 1], dy);
+                                              controls->positions[2*i + 1], dy);
 
             g_string_printf(str, "%#6.2f", a);
-            gtk_label_set_markup(GTK_LABEL(controls->vectors[2*i+0]), str->str);
+            gtk_label_set_markup(GTK_LABEL(controls->vectors[2*i + 0]),
+                                 str->str);
             gwy_unitool_update_label_no_units(state->coord_hformat,
-                                              controls->vectors[2*i+ 1], r);
+                                              controls->vectors[2*i + 1], r);
 
+            gwy_unitool_update_label_no_units(state->value_hformat,
+                                              controls->diffs[i], z2 - z1);
         }
         else {
-            gtk_label_set_text(GTK_LABEL(controls->positions[2*i+0]), "");
-            gtk_label_set_text(GTK_LABEL(controls->positions[2*i+1]), "");
-            gtk_label_set_text(GTK_LABEL(controls->vectors[2*i+0]), "");
-            gtk_label_set_text(GTK_LABEL(controls->vectors[2*i+1]), "");
-
+            gtk_label_set_text(GTK_LABEL(controls->positions[2*i + 0]), "");
+            gtk_label_set_text(GTK_LABEL(controls->positions[2*i + 1]), "");
+            gtk_label_set_text(GTK_LABEL(controls->vectors[2*i + 0]), "");
+            gtk_label_set_text(GTK_LABEL(controls->vectors[2*i + 1]), "");
+            gtk_label_set_text(GTK_LABEL(controls->diffs[i]), "");
         }
     }
 
