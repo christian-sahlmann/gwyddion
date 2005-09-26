@@ -730,6 +730,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
 
     /* Calculate height distribution */
     gwy_data_line_set_real(target_line, max - min);
+    gwy_data_line_set_offset(target_line, min);
     for (i = 0; i < height; i++) {
         drow = data_field->data + (i + row)*data_field->xres + col;
 
@@ -917,6 +918,8 @@ gwy_data_field_area_da(GwyDataField *data_field,
     /* Fix derivation normalization.  At the same time we have to multiply
      * target_line values with inverse factor to keep integral intact */
     gwy_data_line_set_real(target_line, q*gwy_data_line_get_real(target_line));
+    gwy_data_line_set_offset(target_line,
+                             q*gwy_data_line_get_offset(target_line));
     gwy_data_line_multiply(target_line, 1.0/q);
     g_object_unref(der);
 }
@@ -1108,6 +1111,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
         break;
     }
     gwy_data_line_clear(target_line);
+    gwy_data_line_set_offset(target_line, 0.0);
 
     din = gwy_data_line_new(res, 1.0, FALSE);
     dout = gwy_data_line_new(res, 1.0, FALSE);
@@ -1125,6 +1129,8 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
                 in[j] = drow[j] - avg;
             func(plan, din, dout, target_line);
         }
+        gwy_data_line_set_real(target_line,
+                               gwy_data_field_jtor(data_field, width));
         gwy_data_line_multiply(target_line, 1.0/(res*height));
         break;
 
@@ -1137,6 +1143,8 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
                 in[j] = dcol[j*xres] - avg;
             func(plan, din, dout, target_line);
         }
+        gwy_data_line_set_real(target_line,
+                               gwy_data_field_itor(data_field, height));
         gwy_data_line_multiply(target_line, 1.0/(res*width));
         break;
     }
@@ -1181,6 +1189,7 @@ gwy_data_field_area_func_lame(GwyDataField *data_field,
     tmp_line = gwy_data_line_new(size, 1.0, FALSE);
     gwy_data_line_resample(target_line, size, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
+    gwy_data_line_set_offset(target_line, 0.0);
 
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
@@ -1191,6 +1200,8 @@ gwy_data_field_area_func_lame(GwyDataField *data_field,
             for (j = 0; j < width; j++)
                 target_line->data[j] += tmp_line->data[j];
         }
+        gwy_data_line_set_real(target_line,
+                               gwy_data_field_jtor(data_field, width));
         gwy_data_line_multiply(target_line, 1.0/height);
         break;
 
@@ -1202,6 +1213,8 @@ gwy_data_field_area_func_lame(GwyDataField *data_field,
             for (j = 0; j < height; j++)
                 target_line->data[j] += tmp_line->data[j];
         }
+        gwy_data_line_set_real(target_line,
+                               gwy_data_field_itor(data_field, height));
         gwy_data_line_multiply(target_line, 1.0/width);
         break;
     }
@@ -1405,6 +1418,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         nstats = size;
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
+    gwy_data_line_set_offset(target_line, 0.0);
 
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
@@ -1498,7 +1512,6 @@ gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
                             nstats);
     gwy_data_line_multiply(target_line, -1.0);
     gwy_data_line_add(target_line, 1.0);
-    /* FIXME: Petr uses a different x-axis scale. */
 }
 
 /**
@@ -1521,7 +1534,6 @@ gwy_data_field_minkowski_volume(GwyDataField *data_field,
     gwy_data_field_cdh(data_field, target_line, nstats);
     gwy_data_line_multiply(target_line, -1.0);
     gwy_data_line_add(target_line, 1.0);
-    /* FIXME: Petr uses a different x-axis scale. */
 }
 
 /**
@@ -1598,8 +1610,8 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
     }
 
     gwy_data_line_multiply(target_line, 1.0/(width*height));
-    /* FIXME: Petr uses a different x-axis scale. */
     gwy_data_line_set_real(target_line, max - min);
+    gwy_data_line_set_offset(target_line, min);
 }
 
 /**

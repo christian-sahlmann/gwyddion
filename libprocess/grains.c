@@ -985,6 +985,7 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
         return;
     }
     gwy_data_line_set_real(target_line, max - min);
+    gwy_data_line_set_offset(target_line, min);
 
     /* Calculate discrete heights.
      *
