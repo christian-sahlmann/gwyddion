@@ -61,6 +61,9 @@ distance_la_LIBADD = $(module_libadd)
 filter_la_SOURCES = filter.c
 filter_la_LIBADD = $(module_libadd)
 
+#grain_eval_manually_la_SOURCES = grain_eval_manually.c
+#grain_eval_manually_la_LIBADD = $(module_libadd)
+
 grain_remove_manually_la_SOURCES = grain_remove_manually.c
 grain_remove_manually_la_LIBADD = $(module_libadd)
 

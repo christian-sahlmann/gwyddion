@@ -222,8 +222,6 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
                      G_CALLBACK(linesize_changed_cb), dialog);
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),

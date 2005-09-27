@@ -134,14 +134,10 @@ gwy_axis_init(GwyAxis *axis)
     axis->is_logarithmic = 0;
     axis->is_auto = 1;
     axis->is_standalone = 0;
-    /*axis->orientation = GTK_POS_TOP;*/
     axis->max = 0;
     axis->min = 0;
-    /*axis->mjticks = NULL;*/
-    /*axis->miticks = NULL;*/
     axis->label_x_pos = 0;
     axis->label_y_pos = 0;
-    /*axis->label_text = NULL;*/
     axis->par.major_printmode = GWY_AXIS_SCALE_FORMAT_AUTO;
 
     axis->par.major_length = 10;
@@ -153,14 +149,14 @@ gwy_axis_init(GwyAxis *axis)
     axis->par.minor_division = 10;
     axis->par.line_thickness = 1;
 
-    /*axis->dialog = NULL;*/
+    axis->dialog = NULL;
     axis->reqmax = 100;
     axis->reqmin = 0;
 
     axis->enable_label_edit = TRUE;
 
     axis->has_unit = 0;
-    axis->unit = NULL;
+    axis->unit = gwy_si_unit_new("");
     axis->magnification_string = NULL;
     axis->magnification = 1;
 }
@@ -209,14 +205,6 @@ gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
     pango_font_description_set_weight(axis->par.label_font, PANGO_WEIGHT_NORMAL);
     pango_font_description_set_size(axis->par.label_font, 12*PANGO_SCALE);
 
-    axis->dialog = gwy_axis_dialog_new();
-
-    /* FIXME: emits a spurious label_updated? */
-    g_signal_connect(axis->dialog, "response",
-                     G_CALLBACK(gwy_axis_entry), axis);
-    gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
-                          label);
-
     return GTK_WIDGET(axis);
 }
 
@@ -235,7 +223,9 @@ gwy_axis_finalize(GObject *object)
     g_array_free(axis->mjticks, FALSE);
     g_array_free(axis->miticks, FALSE);
 
-    gtk_widget_destroy(axis->dialog);
+    gwy_object_unref(axis->unit);
+
+    if (axis->dialog) gtk_widget_destroy(axis->dialog);
 
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
 }
@@ -435,10 +425,7 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
             axis->par.minor_division = 5;
         else 
             axis->par.minor_division = 10;
-       
     }
-
-
 }
 
 /**
@@ -537,7 +524,6 @@ gwy_axis_draw_axis(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *spe
         g_assert_not_reached();
         break;
     }
-
 }
 
 
@@ -789,7 +775,16 @@ gwy_axis_button_press(GtkWidget *widget,
     axis = GWY_AXIS(widget);
 
     if (axis->enable_label_edit)
+    {
+        if (!axis->dialog) {
+            axis->dialog = gwy_axis_dialog_new();
+            g_signal_connect(axis->dialog, "response",
+                     G_CALLBACK(gwy_axis_entry), axis);
+            gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
+                          axis->label_text);
+        }
         gtk_widget_show_all(axis->dialog);
+    }
 
     return FALSE;
 }
@@ -1079,19 +1074,17 @@ gwy_axis_precompute(GwyAxis *a, gint scrmin, gint scrmax)
     return 0;
 }
 
-/* XXX: return TRUE for success, not 0 */
 static gint
 gwy_axis_formatticks(GwyAxis *a)
 {
     guint i;
     gdouble value;
-    gdouble range; /*only for automode and precision*/
     gdouble average;
     PangoLayout *layout;
     PangoContext *context;
     PangoRectangle rect;
     gint totalwidth=0, totalheight=0;
-            
+    gdouble range;        
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
     /*determine range*/
@@ -1121,7 +1114,6 @@ gwy_axis_formatticks(GwyAxis *a)
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
-        range /= format->magnitude;
     } 
     else
     {
@@ -1148,9 +1140,8 @@ gwy_axis_formatticks(GwyAxis *a)
             value /= format->magnitude;
 
 
-        /*fill dependent to mode*/
-        if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_FLOAT
-            || a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
+        /*fill tick labels dependent to mode*/
+        if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
         }
         else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
@@ -1170,7 +1161,7 @@ gwy_axis_formatticks(GwyAxis *a)
     
     if (format) g_free(format->units);
   
-    /*printf("%d  %d\n", totalwidth, totalheight);*/
+    /*guess whether we dont have too many or not enough ticks*/
     if (a->orientation == GTK_POS_LEFT
         || a->orientation == GTK_POS_RIGHT) {
             if (totalheight > 200) return 1;
@@ -1231,7 +1222,7 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
     axis->reqmin = min;
     axis->reqmax = max;
     
-    /*prevent axis to allow null range. It has no sense*/
+    /*prevent axis to allow null range. It has no sense and even gnuplot does the same...*/
     if (min==max) axis->reqmax += 10.0;
   
     gwy_axis_adjust(axis,
@@ -1354,6 +1345,7 @@ gwy_axis_get_label(GwyAxis *axis)
 void
 gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 {
+    gwy_object_unref(axis->unit);
     axis->unit = GWY_SI_UNIT(gwy_serializable_duplicate(G_OBJECT(unit)));
     axis->has_unit = 1;
 }
@@ -1561,7 +1553,6 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
     return out;
 }
 
-#include <stdio.h>
 void        
 gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
 {

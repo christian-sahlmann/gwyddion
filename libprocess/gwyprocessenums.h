@@ -135,6 +135,23 @@ typedef enum {
     GWY_TIP_DELTA          = 3
 } GwyTipType;
 
+typedef enum {
+    GWY_GRAIN_VALUE_AREA                  = 0, /*grain projection area*/
+    GWY_GRAIN_VALUE_PERIMETER             = 1, /*grain projection perimeter*/
+    GWY_GRAIN_VALUE_AREA_RADIUS           = 2, /*projection area equivalent circle radius*/
+    GWY_GRAIN_VALUE_PERIMETER_RADIUS      = 3, /*projection perimeter equivalent circle radius*/
+    GWY_GRAIN_VALUE_MAX_Z                 = 4, /*maximum height above terrain*/
+    GWY_GRAIN_VALUE_MIN_Z                 = 5, /*minimum height below terrain*/
+    GWY_GRAIN_VALUE_VOLUME                = 6, /*volume above terrain*/
+    GWY_GRAIN_VALUE_SURFACE               = 7, /*surface above terrain*/
+    GWY_GRAIN_VALUE_MIN_BOUND             = 8, /*minimum one-directional bounding size (in any direction)*/
+    GWY_GRAIN_VALUE_MAX_BOUND             = 9, /*maximum one-directional bounding size (in any direction)*/
+    GWY_GRAIN_VALUE_MIN_BOUND_DIRECTION   = 10, /*minimum one-directional bounding direction*/
+    GWY_GRAIN_VALUE_MAX_BOUND_DIRECTION   = 11, /*maximum one-directional bounding direction*/
+    GWY_GRAIN_VALUE_MINMAX_DIFF           = 12, /*GWY_GRAIN_VALUE_MAX_BOUND - GWY_GRAIN_VALUE_MIN_BOUND*/
+    GWY_GRAIN_VALUE_MINMAX_DIFF_DIRECTION = 13  /*angle betwen minimum and maximum bound directions*/
+} GwyGrainValueType;
+
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;

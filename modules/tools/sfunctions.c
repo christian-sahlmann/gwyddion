@@ -414,11 +414,15 @@ apply(GwyUnitoolState *state)
 
     ToolControls *controls;
     GtkWidget *graph;
+    GwyGraphModel *gmodel;
 
     controls = (ToolControls*)state->user_data;
 
-    graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
-
+    gmodel = gwy_graph_model_duplicate(controls->graphmodel);
+    graph = gwy_graph_new(gmodel);
+   
+    gwy_object_unref(gmodel);
+        
     gwy_app_graph_window_create(GWY_GRAPH(graph),
                                 gwy_data_window_get_data(state->data_window));
 }

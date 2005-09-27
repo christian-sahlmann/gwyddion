@@ -45,7 +45,7 @@ struct _GwyGraphModel {
     gint ncurves;
     GObject **curves;
 
-    GString *title;    /* XXX: GwyGraph has no such thing */
+    GString *title;   
 
     gdouble x_max;
     gdouble x_min;
@@ -54,7 +54,7 @@ struct _GwyGraphModel {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GwySIUnit *x_unit;    /* XXX: Silly graph doesn't use GwySIUnit itself */
+    GwySIUnit *x_unit;   
     GwySIUnit *y_unit;
     
     GString *top_label;

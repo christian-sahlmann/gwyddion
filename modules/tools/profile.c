@@ -335,7 +335,6 @@ update_labels(GwyUnitoolState *state)
     gint i, nselected;
 
     gwy_debug("");
-
     controls = (ToolControls*)state->user_data;
     layer = GWY_DATA_VIEW_LAYER(state->layer);
     selection = gwy_vector_layer_get_selection(state->layer);
@@ -378,7 +377,6 @@ dialog_update(GwyUnitoolState *state,
     GwyRGBA color;
 
     gwy_debug("");
-
     controls = (ToolControls*)state->user_data;
     is_visible = state->is_visible;
     selection = gwy_vector_layer_get_selection(state->layer);
@@ -442,6 +440,7 @@ dialog_update(GwyUnitoolState *state,
 
             gwy_graph_curve_model_set_curve_color(gcmodel, color);
             gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
+            g_object_unref(gcmodel);
         }
     }
     update_labels(state);
@@ -475,11 +474,15 @@ apply(GwyUnitoolState *state)
             model->curves = g_new(GObject*, model->ncurves);
             model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
             graph = gwy_graph_new(model);
+            gwy_object_unref(model);
             gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+            
         }
     }
     else {
-        graph = gwy_graph_new(gwy_graph_model_duplicate(controls->graphmodel));
+        model = gwy_graph_model_duplicate(controls->graphmodel);
+        graph = gwy_graph_new(model);
+        gwy_object_unref(model);
         gwy_app_graph_window_create(GWY_GRAPH(graph), data);
     }
 }
@@ -502,6 +505,7 @@ dialog_abandon(GwyUnitoolState *state)
     g_ptr_array_free(controls->str, TRUE);
     g_ptr_array_free(controls->positions, TRUE);
 
+    gwy_object_unref(controls->graphmodel);
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 

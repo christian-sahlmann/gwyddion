@@ -137,7 +137,10 @@ static void
 gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
-    if (graph->graph_model) gwy_object_unref(graph->graph_model);
+    if (graph->graph_model) 
+    {
+        gwy_object_unref(graph->graph_model);
+    }
 }
 
 
@@ -264,7 +267,11 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
        g_signal_connect_swapped(gmodel, "notify",
                                 G_CALLBACK(gwy_graph_refresh), graph);
-    }
+
+       g_signal_connect_swapped(gmodel, "layout-updated",
+                                G_CALLBACK(gwy_graph_refresh), graph);
+
+      }
 
     gwy_graph_refresh(graph);
 

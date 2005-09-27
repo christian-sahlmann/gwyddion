@@ -228,7 +228,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
                 x = spoints[i];
                 y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
             }
-            
+    
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/dialog->x_mag, str);
 
@@ -344,6 +344,8 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     dialog->x_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
     dialog->y_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
+    printf("%g %g\n", dialog->x_mag, dialog->y_mag);
+
     header_label(table, 1, 1, "X", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
     header_label(table, 1, 2, "Y", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
     header_label(table, 1, 3, _("Length"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);

@@ -41,6 +41,12 @@ static GObject* gwy_graph_curve_model_duplicate_real  (GObject *object);
 
 static GObjectClass *parent_class = NULL;
 
+enum {
+    LAYOUT_UPDATED,
+    LAST_SIGNAL
+};
+
+static guint graph_curve_model_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gwy_graph_curve_model_get_type(void)
@@ -100,6 +106,15 @@ gwy_graph_curve_model_class_init(GwyGraphCurveModelClass *klass)
     parent_class = g_type_class_peek_parent(klass);
 
     gobject_class->finalize = gwy_graph_curve_model_finalize;
+
+    graph_curve_model_signals[LAYOUT_UPDATED]
+                       = g_signal_new("layout-updated",
+                       G_OBJECT_CLASS_TYPE(gobject_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyGraphCurveModelClass, layout_updated),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -294,6 +309,7 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
     gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
     gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
     gcmodel->n = n;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
 
 /**
@@ -308,6 +324,7 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
                                       gchar *description)
 {
     g_string_assign(gcmodel->description, description);
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
                         
 /**
@@ -322,6 +339,7 @@ gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
                                      GwyGraphCurveType type)
 {
     gcmodel->type = type;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
 
 /**
@@ -337,6 +355,7 @@ gwy_graph_curve_model_set_curve_point_type(GwyGraphCurveModel *gcmodel,
                                            GwyGraphPointType point_type)
 {
     gcmodel->point_type = point_type;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
                                                                                                                                                              
 /**
@@ -352,6 +371,7 @@ gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
                                            gint point_size)
 {
     gcmodel->point_size = point_size;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
                                                                                                                                                              
 /**
@@ -367,6 +387,7 @@ gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
                                            GdkLineStyle line_style)
 {
     gcmodel->line_style = line_style;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
                                                                                                                                                              
 /**
@@ -382,6 +403,7 @@ gwy_graph_curve_model_set_curve_line_size(GwyGraphCurveModel *gcmodel,
                                           gint line_size)
 {
     gcmodel->line_size = line_size;
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
                                                                                                                                                              
 /**
@@ -581,6 +603,22 @@ gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
 {
     return &gcmodel->color;
 }
+
+/**
+  * gwy_graph_curve_model_signal_layout_changed:
+  * @model: A #GwyGraphCurveModel.
+  *
+  * Emits signal that somehing general in curve layout (plotting style) was changed.
+  * Graph widget or other widgets connected to graph model object should react somehow.
+  **/
+void
+gwy_graph_curve_model_signal_layout_changed(GwyGraphCurveModel *model)
+{
+    g_signal_emit(model, graph_curve_model_signals[LAYOUT_UPDATED], 0);
+}
+
+
+
 
 /************************** Documentation ****************************/
 

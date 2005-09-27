@@ -77,6 +77,8 @@ struct _GwyGraphCurveModel {
 struct _GwyGraphCurveModelClass {
     GObjectClass parent_class;
 
+    void (*layout_updated)(GwyGraphCurveModel *model);
+    
     gpointer reserved1;
     gpointer reserved2;
     gpointer reserved3;
@@ -87,12 +89,7 @@ struct _GwyGraphCurveModelClass {
 
 GType      gwy_graph_curve_model_get_type       (void) G_GNUC_CONST;
 GwyGraphCurveModel*   gwy_graph_curve_model_new (void);
-/*gboolean   gwy_graph_curve_model_save_curve     (GwyGraphCurveModel *gcmodel,
-                                                 GwyGraph *graph,
-                                                 gint index_);
-void       gwy_graph_add_curve_from_model       (GwyGraph *graph,
-                                                 GwyGraphCurveModel *gcmodel);
-*/
+
 void       gwy_graph_curve_model_set_data       (GwyGraphCurveModel *gcmodel,
                                                  gdouble *xdata,
                                                  gdouble *ydata,
@@ -144,7 +141,7 @@ gint       gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel
 
 GwyRGBA*   gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel);
 
-
+void       gwy_graph_curve_model_signal_layout_changed    (GwyGraphCurveModel *model);
 
 
 

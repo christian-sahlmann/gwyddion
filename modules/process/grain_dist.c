@@ -94,7 +94,9 @@ dist(GwyContainer *data, GwyRunType run)
     gwy_graph_model_add_curve(gmodel, cmodel);
 
     graph = gwy_graph_new(gmodel);
-    g_object_unref(gmodel);
+    gwy_object_unref(cmodel);
+    gwy_object_unref(gmodel);
+    gwy_object_unref(dataline);
     gwy_app_graph_window_create(GWY_GRAPH(graph), data);
 
     return FALSE;

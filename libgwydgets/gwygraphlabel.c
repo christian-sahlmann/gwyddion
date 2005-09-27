@@ -25,6 +25,8 @@
 #include "gwygraph.h"
 #include "gwygraphmodel.h"
 
+#include <stdio.h>
+
 /* Forward declarations - widget related*/
 static void     gwy_graph_label_finalize     (GObject *object);
 static void     gwy_graph_label_realize      (GtkWidget *widget);
@@ -264,6 +266,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     PangoRectangle rect;
     GdkColor fg;
 
+    if (!label->graph_model) return;
     model = GWY_GRAPH_MODEL(label->graph_model);
     pango_layout_set_font_description(layout, label->label_font);
 
@@ -277,6 +280,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     winy = y;
     winwidth = x + width;
     winheight = y + height;
+
     for (i = 0; i < model->ncurves; i++) {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
 
@@ -431,7 +435,13 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
 void
 gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
 {
-    label->graph_model = gmodel;
+    if (gmodel != NULL) {
+        label->graph_model = GWY_GRAPH_MODEL(gmodel);
+
+        g_signal_connect_swapped(GWY_GRAPH_MODEL(gmodel), "notify",
+                     G_CALLBACK(gwy_graph_label_refresh), label);
+    }
+    
 }
 
 

@@ -857,6 +857,7 @@ gwy_app_graph_window_create(GwyGraph *graph,
 
     current_graph = g_list_append(current_graph, window);
 
+    gtk_window_set_default_size(window, 500, 400);
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 

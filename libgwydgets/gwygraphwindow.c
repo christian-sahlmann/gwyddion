@@ -338,20 +338,17 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("measure: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
     gwy_graph_signal_selected(GWY_GRAPH(graphwindow->graph));
     gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
-    /*printf("measure: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 
 static void
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
-    /*printf("measured: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 
     gwy_graph_clear_selection(GWY_GRAPH(graphwindow->graph));
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
@@ -362,14 +359,12 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 
     gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
     gtk_widget_hide(GTK_WIDGET(graphwindow->measure_dialog));
-    /*printf("measured: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 
 }
 
 static void
 gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom in: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in)))
     {
         last_status = gwy_graph_get_status(GWY_GRAPH(graphwindow->graph));
@@ -378,25 +373,20 @@ gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
     else
         gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
 
-    /*printf("zoom in: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 
 }
 
 static void
 gwy_graph_window_zoom_out_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom out: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gwy_graph_zoom_out(GWY_GRAPH(graphwindow->graph));
-    /*printf("zoom out: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 static void
 gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 {
-    /*printf("zoom finished: startstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
-    /*printf("zoom finished: endstat: %d\n", gwy_graph_get_status(graphwindow->graph));*/
 }
 
 static void

@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <string.h>
-
+#include <stdio.h>
 #include <glib/gstdio.h>
 
 #include <libgwyddion/gwyddion.h>
@@ -221,8 +221,8 @@ gwy_graph_model_finalize(GObject *object)
 
     gmodel = GWY_GRAPH_MODEL(object);
 
-    g_object_unref(gmodel->x_unit);
-    g_object_unref(gmodel->y_unit);
+    gwy_object_unref(gmodel->x_unit);
+    gwy_object_unref(gmodel->y_unit);
 
     g_string_free(gmodel->title, TRUE);
     g_string_free(gmodel->top_label, TRUE);
@@ -365,18 +365,36 @@ gwy_graph_model_duplicate_real(GObject *object)
     duplicate->ncurves = gmodel->ncurves;
     duplicate->curves = g_new(GObject*, gmodel->ncurves);
     for (i = 0; i < gmodel->ncurves; i++)
+    {
         duplicate->curves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
+        g_signal_connect_swapped(duplicate->curves[i], "layout-updated",
+                             gwy_graph_model_signal_layout_changed, duplicate);
+     
+    }
 
     return (GObject*)duplicate;
 }
 
 
 static void
-gwy_graph_model_set_property  (G_GNUC_UNUSED GObject *object,
-                                               G_GNUC_UNUSED guint prop_id,
-                                               G_GNUC_UNUSED const GValue *value,
-                                               G_GNUC_UNUSED GParamSpec *pspec)
+gwy_graph_model_set_property  (GObject *object,
+                                               guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec)
 {
+    GwyGraphModel *gmodel = GWY_GRAPH_MODEL(object);
+    switch (prop_id)
+    {
+        case PROP_TITLE:
+           gwy_graph_model_set_title(gmodel, g_value_get_string(value));
+           break;
+
+        default:
+           G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+           break;
+    }
+         
+        
 }
 
 static void
@@ -385,6 +403,23 @@ gwy_graph_model_get_property  (G_GNUC_UNUSED GObject*object,
                                                G_GNUC_UNUSED GValue *value,
                                                G_GNUC_UNUSED GParamSpec *pspec)
 {
+    GwyGraphModel *gmodel = GWY_GRAPH_MODEL(object);
+    switch (prop_id)
+    {
+        case PROP_TITLE:
+           g_value_set_string(value, gwy_graph_model_get_title(gmodel));
+           break;
+
+        case PROP_N:
+           g_value_set_int(value, gwy_graph_model_get_n_curves(gmodel));
+           break;
+
+        default:
+           G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+           break;
+    }
+         
+     
 }
 
 /**
@@ -427,6 +462,7 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     return duplicate;
 }
 
+
 /**
 * gwy_graph_model_add_curve:
 * @gmodel: A #GwyGraphModel.
@@ -449,6 +485,9 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
     g_object_ref(curve);
     gmodel->ncurves++;
 
+     g_signal_connect_swapped(curve, "layout-updated",
+                             gwy_graph_model_signal_layout_changed, gmodel);
+    
     g_object_notify(G_OBJECT(gmodel), "n");
 }
 
@@ -464,10 +503,6 @@ gwy_graph_model_get_n_curves(GwyGraphModel *gmodel)
 {
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
-
-    /*if (gmodel->graph)
-        return gwy_graph_get_number_of_curves(gmodel->graph);
-    else*/
         return gmodel->ncurves;
 
 }
@@ -487,7 +522,6 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
     {
         g_object_unref(gmodel->curves[i]);
     }
-   /*g_free(gmodel->curves);    */
 
 
     gmodel->ncurves = 0;

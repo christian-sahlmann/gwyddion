@@ -332,7 +332,7 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
     for (i = 0; i < x_grid_data->len; i++) {
         pvalue = &g_array_index(x_grid_data, gdouble, i);
         pos = y_data_to_pixel(specs, *pvalue);
-        gdk_draw_line(drawable, gc, specs->xmin - 1, pos, specs->xmin + specs->width + 1, pos);
+        gdk_draw_line(drawable, gc, specs->xmin - 1, specs->height - pos, specs->xmin + specs->width + 1, specs->height - pos);
     }
 
     for (i = 0; i < y_grid_data->len; i++) {
