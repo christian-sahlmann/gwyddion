@@ -369,7 +369,10 @@ gwy_graph_model_duplicate_real(GObject *object)
         duplicate->curves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_signal_connect_swapped(duplicate->curves[i], "layout-updated",
                              gwy_graph_model_signal_layout_changed, duplicate);
-     
+
+        g_signal_connect_swapped(duplicate->curves[i], "notify",
+                             gwy_graph_model_signal_layout_changed, duplicate);
+      
     }
 
     return (GObject*)duplicate;
@@ -487,7 +490,10 @@ gwy_graph_model_add_curve(GwyGraphModel *gmodel, GwyGraphCurveModel *curve)
 
      g_signal_connect_swapped(curve, "layout-updated",
                              gwy_graph_model_signal_layout_changed, gmodel);
-    
+
+     g_signal_connect_swapped(curve, "notify",
+                             gwy_graph_model_signal_layout_changed, gmodel);
+     
     g_object_notify(G_OBJECT(gmodel), "n");
 }
 
