@@ -28,6 +28,7 @@
 #include <app/settings.h>
 #include <app/gradient-editor.h>
 #include <libgwydgets/gwycurve.h>
+#include <glib/gstdio.h>
 
 /* For late objectzation... */
 typedef struct {
@@ -63,6 +64,7 @@ gwy_gradient_editor_changed(GtkTreeSelection *selection,
 
     gtk_widget_set_sensitive(editor->button_default, TRUE);
     is_modifiable = gwy_resource_get_is_modifiable(resource);
+
     gtk_widget_set_sensitive(editor->button_edit, is_modifiable);
     gtk_widget_set_sensitive(editor->button_delete, is_modifiable);
 }
@@ -98,15 +100,14 @@ gwy_gradient_editor_set_default(GwyGradientEditor *editor)
 }
 
 static void
-gwy_gradient_editor_new(GwyGradientEditor *editor)
+gwy_gradient_editor_edit(GwyGradientEditor *editor)
 {
     GtkWidget *curve, *vbox;
-//    gfloat pts[10];
-//    int i;
 
+    /* Popup color edit window */
     editor->edit_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(editor->edit_window),
-                         _("New Gradient"));
+                            _("Color Map"));
     gtk_window_set_default_size(GTK_WINDOW(editor->edit_window), 420, 420);
 
     vbox = gtk_vbox_new(FALSE, 0);
@@ -116,31 +117,77 @@ gwy_gradient_editor_new(GwyGradientEditor *editor)
     gwy_curve_set_range(GWY_CURVE(curve), 0, 1, 0, 1);
     gtk_box_pack_start(GTK_BOX(vbox), curve, TRUE, TRUE, 0);
 
-
-
     gtk_widget_show_all(vbox);
     gtk_window_present(GTK_WINDOW(editor->edit_window));
+}
 
-    //g_signal_connect_swapped(editor->window, "destroy",
-    //                         G_CALLBACK(gwy_gradient_editor_destroy), editor);
-    /*
+static void
+gwy_gradient_editor_new(GwyGradientEditor *editor)
+{
+    GwyGradient *new_gradient;
+    GwyResource *resource;
+    FILE *fh;
+    gchar *filename;
+    GString *str;
+
+    /* Add a new gradient resource to inventory */
+    new_gradient = gwy_inventory_new_item(gwy_gradients(),
+                                          "Gray", _("New Gradient"));
+    //gwy_gradient_reset(new_gradient); /*XXX Is this needed? */
+    //gwy_resource_set_is_preferred(GWY_RESOURCE(new_gradient), TRUE);
+
+    /* Save new gradient resource to file */
+    resource = GWY_RESOURCE(new_gradient);
+    filename = gwy_resource_build_filename(resource);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_error("Cannot save resource file: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+    str = gwy_resource_dump(resource);
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    /*XXX Edit new gradient */
+}
+
+static void
+gwy_gradient_editor_delete(GwyGradientEditor *editor)
+{
     GtkTreeModel *model;
     GtkTreeIter iter;
     GtkTreeSelection *selection;
     GwyResource *resource;
     GwyInventory *inventory;
+    gchar *filename;
+    int result;
 
+    /* Get selected resource, and the inventory it belongs to: */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
     if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        g_warning("Something should be selected for `Set Default'");
+        g_warning("Something should be selected for `Delete'");
         return;
     }
-
     gtk_tree_model_get(model, &iter, 0, &resource, -1);
     inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
-    gwy_inventory_set_default_item_name(inventory,
-                                        gwy_resource_get_name(resource));
-    */
+
+    /* Delete the resource file */
+    filename = gwy_resource_build_filename(resource);
+    result = g_remove(filename);
+    if (result) {
+        g_error("Resource (%s) could not be deleted.",
+                gwy_resource_get_name(resource));
+
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    /* Delete the resource from the inventory */
+    gwy_inventory_delete_item(inventory, gwy_resource_get_name(resource));
 }
 
 void
@@ -161,7 +208,7 @@ gwy_app_gradient_editor(void)
     /* Pop up */
     editor->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(editor->window),
-                         _("Color Gradient Editor"));
+                         _("Gradient Editor"));
     gtk_window_set_default_size(GTK_WINDOW(editor->window), -1, 420);
     g_signal_connect_swapped(editor->window, "destroy",
                              G_CALLBACK(gwy_gradient_editor_destroy), editor);
@@ -189,6 +236,9 @@ gwy_app_gradient_editor(void)
     button = gtk_button_new_from_stock(GTK_STOCK_EDIT);
     editor->button_edit = button;
     gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gradient_editor_edit),
+                             editor);
 
     button = gtk_button_new_from_stock(GTK_STOCK_NEW);
     editor->button_new = button;
@@ -200,6 +250,9 @@ gwy_app_gradient_editor(void)
     button = gtk_button_new_from_stock(GTK_STOCK_DELETE);
     editor->button_delete = button;
     gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gradient_editor_delete),
+                             editor);
 
     button = gtk_button_new_with_mnemonic(_("Set De_fault"));
     editor->button_default = button;
