@@ -808,15 +808,12 @@ static void
 gwy_data_window_gradient_selected(GtkWidget *item,
                                   GwyDataWindow *data_window)
 {
-    GwyInventory *inventory;
-    GtkTreePath *path;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTreeIter iter;
     GwyResource *resource;
     const gchar *gradient;
-    gint i;
 
     gradient = g_object_get_data(G_OBJECT(item), "gradient-name");
     if (!data_window->grad_selector) {
@@ -832,15 +829,9 @@ gwy_data_window_gradient_selected(GtkWidget *item,
             return;
     }
 
-    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
-    i = gwy_inventory_get_item_position(inventory, gradient);
-    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
     /* This leads to gwy_data_window_gradient_changed() which actually
      * updates the gradient */
-    path = gtk_tree_model_get_path(model, &iter);
-    gtk_tree_selection_select_iter(selection, &iter);
-    gtk_tree_view_scroll_to_cell(treeview, path, NULL, TRUE, 0.5, 0.0);
-    gtk_tree_path_free(path);
+    gwy_gradient_tree_view_set_active(data_window->grad_selector, gradient);
 }
 
 static void

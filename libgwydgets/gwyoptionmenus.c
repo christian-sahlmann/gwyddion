@@ -85,6 +85,8 @@ static GtkWidget* gwy_resource_selection_new      (const ResourceInfo *rinfo,
                                                    const gchar *active);
 static void gwy_resource_selection_set_active     (GtkWidget *widget,
                                                    const gchar *active);
+static gboolean gwy_resource_tree_view_set_active (GtkWidget *treeview,
+                                                   const gchar *active);
 static void gwy_resource_selection_cell_pixbuf    (GtkTreeViewColumn *column,
                                                    GtkCellRenderer *renderer,
                                                    GtkTreeModel *model,
@@ -209,6 +211,23 @@ gwy_gradient_tree_view_new(GCallback callback,
 }
 
 /**
+ * gwy_gradient_tree_view_set_active:
+ * @treeview: A gradient selector tree view.
+ * @active: Gradient name to be shown as currently selected.
+ *
+ * Selects a gradient in a gradient list and scrolls to make it visible.
+ *
+ * Returns: %TRUE if @active was selected, %FALSE if there is no such
+ *          gradient.
+ **/
+gboolean
+gwy_gradient_tree_view_set_active(GtkWidget *treeview,
+                                  const gchar *active)
+{
+    return gwy_resource_tree_view_set_active(treeview, active);
+}
+
+/**
  * gwy_gl_material_tree_view_new:
  * @callback: Callback to connect to "changed" signal of tree view selection
  *            (or %NULL for none).
@@ -227,6 +246,23 @@ gwy_gl_material_tree_view_new(GCallback callback,
 {
     return gwy_resource_tree_view_new(gl_material_resource_info(),
                                       callback, cbdata, active);
+}
+
+/**
+ * gwy_gl_material_tree_view_set_active:
+ * @treeview: A GL material selector tree view.
+ * @active: GL material name to be shown as currently selected.
+ *
+ * Selects a GL material in a GL material list and scrolls to make it visible.
+ *
+ * Returns: %TRUE if @active was selected, %FALSE if there is no such
+ *          GL material.
+ **/
+gboolean
+gwy_gl_material_tree_view_set_active(GtkWidget *treeview,
+                                     const gchar *active)
+{
+    return gwy_resource_tree_view_set_active(treeview, active);
 }
 
 /**
@@ -461,10 +497,6 @@ gwy_resource_selection_set_active(GtkWidget *widget,
                                   const gchar *active)
 {
     const ResourceInfo *rinfo;
-    GtkTreeModel *model;
-    GtkTreeSelection *selection;
-    GtkTreeIter iter;
-    GtkTreePath *path;
     GtkWidget *treeview;
     const gchar *current;
 
@@ -486,14 +518,31 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     }
 
     g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    gwy_resource_tree_view_set_active(treeview, active);
+}
+
+static gboolean
+gwy_resource_tree_view_set_active(GtkWidget *treeview,
+                                  const gchar *active)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
-    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), active, &iter);
+    if (!gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), active,
+                                      &iter))
+        return FALSE;
+
     gtk_tree_selection_select_iter(selection, &iter);
     path = gtk_tree_model_get_path(model, &iter);
     gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(treeview), path, NULL,
                                  TRUE, 0.5, 0.0);
     gtk_tree_path_free(path);
+
+    return TRUE;
 }
 
 static void
