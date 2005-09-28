@@ -137,7 +137,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window;
     GwyDataField *dfield;
     SlopeArgs args;
-    const gchar *pal;
+    const guchar *pal = NULL;
     gboolean ok;
 
     g_return_val_if_fail(run & SLOPE_DIST_RUN_MODES, FALSE);
@@ -153,7 +153,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
                                                                  "/0/data"));
         switch (args.output_type) {
             case SLOPE_DIST_2D_DIST:
-            pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+            gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
             dfield = slope_do(dfield, &args);
             data = gwy_container_new();
             gwy_container_set_object_by_name(data, "/0/data", dfield);
@@ -497,20 +497,21 @@ make_datafield(GwyDataField *old,
                gdouble real, gboolean logscale)
 {
     GwyDataField *dfield;
-    GwySIUnit *unit, *uz, *uxy;
+    GwySIUnit *unit;
     gdouble *d;
     gint i;
 
     dfield = gwy_data_field_new(res, res, real, real, FALSE);
+    gwy_data_field_set_xoffset(dfield, -gwy_data_field_get_xreal(dfield)/2);
+    gwy_data_field_set_yoffset(dfield, -gwy_data_field_get_yreal(dfield)/2);
 
     unit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
 
-    uz = gwy_data_field_get_si_unit_z(old);
-    uxy = gwy_data_field_get_si_unit_xy(old);
-    unit = gwy_si_unit_new("");
-    gwy_si_unit_divide(uz, uxy, unit);
+    unit = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(old),
+                              gwy_data_field_get_si_unit_xy(old),
+                              NULL);
     gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
 

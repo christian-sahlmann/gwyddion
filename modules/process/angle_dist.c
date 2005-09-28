@@ -136,7 +136,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
     GtkWidget *data_window;
     GwyDataField *dfield = NULL;
     AngleArgs args;
-    const gchar *pal = NULL;
+    const guchar *pal = NULL;
     gboolean ok;
 
     g_return_val_if_fail(run & ANGLE_DIST_RUN_MODES, FALSE);
@@ -150,7 +150,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
     if (ok) {
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                  "/0/data"));
-        pal = gwy_container_get_string_by_name(data, "/0/base/palette");
+        gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
         gwy_app_wait_start(GTK_WIDGET(gwy_app_data_window_get_for_data(data)),
                            _("Computing angle distribution"));
         dfield = angle_do(dfield, &args);
@@ -445,6 +445,9 @@ make_datafield(G_GNUC_UNUSED GwyDataField *old,
     gint i;
 
     dfield = gwy_data_field_new(res, res, real, real, FALSE);
+    gwy_data_field_set_xoffset(dfield, -gwy_data_field_get_xreal(dfield)/2);
+    gwy_data_field_set_yoffset(dfield, -gwy_data_field_get_yreal(dfield)/2);
+
     unit = gwy_si_unit_new("");
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
