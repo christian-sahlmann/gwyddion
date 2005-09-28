@@ -614,6 +614,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         if (event->button == 1 && area->linesdata->data_lines->len < area->selection_limit) /*add selection*/
         {
             g_array_append_val(area->linesdata->data_lines, dx);
+            area->selecting = TRUE;
         }
         else
         {
@@ -630,6 +631,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         if (event->button == 1 && area->linesdata->data_lines->len < area->selection_limit) /*add selection*/
         {
             g_array_append_val(area->linesdata->data_lines, dy);
+            area->selecting = TRUE;
         }
         else
         {
@@ -663,7 +665,7 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     GwyGraphModel *gmodel;
     GwyGraphDataArea *areadata;
     gint x, y, ispos = 0;
-    gdouble dx, dy;
+    gdouble dx, dy, *linedata;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
@@ -693,6 +695,26 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
          gwy_graph_area_signal_selected(area);
     }
 
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES) )
+    {
+        linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
+        if (area->status == GWY_GRAPH_STATUS_XLINES)
+            *linedata = dx;
+        else 
+            *linedata = dy;
+
+        area->selecting = FALSE;
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+        gwy_graph_area_signal_selected(area);
+    }
+
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_YLINES)
+    {
+        linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
+    }
+
+    
+ 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
                              && (area->selecting != 0)) {
          area->selecting = FALSE;
@@ -727,7 +749,7 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     GwyGraphModel *gmodel;
     GwyGraphDataArea *areadata;
     gint x, y, ispos = 0;
-    gdouble dx, dy;
+    gdouble dx, dy, *linedata;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
@@ -755,6 +777,19 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             areadata->ymax = dy;
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
+
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES) )
+    {
+        linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
+        if (area->status == GWY_GRAPH_STATUS_XLINES)
+            *linedata = dx;
+        else 
+            *linedata = dy;
+
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+        gwy_graph_area_signal_selected(area);
+    }
+
 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
                              && (area->selecting != 0)) {

@@ -1363,4 +1363,30 @@ gwy_data_field_fill_one_grain(gint xres,
     return count;
 }
 
+gdouble 
+gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
+                                           GwyDataField *grain_field,
+                                           gint col,
+                                           gint row,
+                                           GwyGrainValueType type)
+{
+    gint nindices, *indices;
+    gdouble pixel_to_area = data_field->xreal/data_field->xres
+                           *data_field->yreal/data_field->yres;
+
+    indices = gwy_data_field_fill_grain(grain_field, col, row, &nindices);
+    
+    switch (type) {
+        case GWY_GRAIN_VALUE_AREA:
+        g_free(indices);
+        return (gdouble)(nindices)*pixel_to_area;     
+
+        case GWY_GRAIN_VALUE_AREA_RADIUS:
+        g_free(indices);
+        return sqrt((gdouble)(nindices)*pixel_to_area/3.141592653589);     
+     }
+}
+
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

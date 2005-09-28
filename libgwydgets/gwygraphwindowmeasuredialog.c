@@ -122,7 +122,7 @@ value_label(GtkWidget *label, gdouble value, GString *str)
     gtk_label_set_text(GTK_LABEL(label), str->str);
 }
                                                                                                                                                              
-static void
+static GtkWidget *
 header_label(GtkWidget *table, gint row, gint col,
             const gchar *header, const gchar *unit,
             GString *str)
@@ -139,6 +139,19 @@ header_label(GtkWidget *table, gint row, gint col,
     gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, col, col+1, row, row+1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
+
+    return label;
+}
+
+static void
+header_label_update(GtkLabel *label, 
+                    const gchar *header, const gchar *unit, GString *str)
+{
+    if (unit)
+        g_string_printf(str, "<b>%s</b> [%s]", header, unit);
+    else
+        g_string_printf(str, "<b>%s</b>", header);
+    gtk_label_set_markup(label, str->str);     
 }
 
 
@@ -204,11 +217,23 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
         else
             spoints = (gdouble *) g_malloc(gwy_graph_get_selection_number(graph)*sizeof(gdouble));
     }
-    
+ 
+    str = g_string_new("");
+    dialog->x_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
+    dialog->y_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
+    header_label_update(GTK_LABEL(dialog->header_x), "X", 
+                        gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label_update(GTK_LABEL(dialog->header_y), "Y", 
+                        gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    header_label_update(GTK_LABEL(dialog->header_distx), _("Length"), 
+                        gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    header_label_update(GTK_LABEL(dialog->header_disty), _("Height"), 
+                        gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+ 
+ 
     gwy_graph_get_selection(graph, spoints);
     
     /*update points data */
-    str = g_string_new("");
     for (i = 0; i < NMAX; i++) {
         if (i < n) {
             if (i)
@@ -228,7 +253,6 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
                 x = spoints[i];
                 y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
             }
-    
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/dialog->x_mag, str);
 
@@ -344,12 +368,11 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     dialog->x_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
     dialog->y_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
-    printf("%g %g\n", dialog->x_mag, dialog->y_mag);
 
-    header_label(table, 1, 1, "X", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 2, "Y", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
-    header_label(table, 1, 3, _("Length"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label(table, 1, 4, _("Height"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    dialog->header_x = header_label(table, 1, 1, "X", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    dialog->header_y = header_label(table, 1, 2, "Y", gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
+    dialog->header_distx = header_label(table, 1, 3, _("Length"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
+    dialog->header_disty = header_label(table, 1, 4, _("Height"), gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
     header_label(table, 1, 5, _("Angle"), "deg", str);
 
     for (i = 0; i < NMAX; i++) {

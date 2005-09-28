@@ -62,6 +62,12 @@ struct _GwyGraphWindowMeasureDialog {
     GPtrArray *disty;
     GPtrArray *slope;
     GPtrArray *labpoint;
+
+    GtkWidget *header_x;
+    GtkWidget *header_y;
+    GtkWidget *header_distx;
+    GtkWidget *header_disty;
+    
     MeasureMethodType mmethod;
     gint n;
     gint curve_index;
