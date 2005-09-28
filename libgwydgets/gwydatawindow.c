@@ -312,7 +312,7 @@ gwy_data_window_get_data(GwyDataWindow *data_window)
 static void
 gwy_data_window_measure_changed(GwyDataWindow *data_window)
 {
-    gdouble excess, pos, real;
+    gdouble excess, offset, pos, real;
     GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
@@ -330,19 +330,21 @@ gwy_data_window_measure_changed(GwyDataWindow *data_window)
 
     /* horizontal */
     real =  gwy_data_field_get_xreal(dfield);
+    offset = gwy_data_field_get_xoffset(dfield);
     excess = real * gwy_data_view_get_hexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->hruler),
                         NULL, NULL, &pos, NULL);
     gwy_ruler_set_range(GWY_RULER(data_window->hruler),
-                        -excess, real + excess, pos, real);
+                        offset - excess, real + offset + excess, pos, real);
 
     /* vertical */
     real = gwy_data_field_get_yreal(dfield);
+    offset = gwy_data_field_get_yoffset(dfield);
     excess = real * gwy_data_view_get_vexcess(data_view)/2.0;
     gwy_ruler_get_range(GWY_RULER(data_window->vruler),
                         NULL, NULL, &pos, NULL);
     gwy_ruler_set_range(GWY_RULER(data_window->vruler),
-                        -excess, real + excess, pos, real);
+                        offset - excess, real + offset + excess, pos, real);
 }
 
 static void
@@ -487,7 +489,7 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
     GtkStatusbar *sbar = GTK_STATUSBAR(data_window->statusbar);
     const gchar *k;
     guint id;
-    gdouble xreal, yreal, value;
+    gdouble xreal, yreal, xoff, yoff, value;
     gint x, y;
 
     if (data_view) {
@@ -501,6 +503,8 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
         k = gwy_pixmap_layer_get_data_key(gwy_data_view_get_base_layer
                                                                   (data_view));
         dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, k));
+        xoff = gwy_data_field_get_xoffset(dfield);
+        yoff = gwy_data_field_get_yoffset(dfield);
         gwy_debug("xreal = %g, yreal = %g, xr = %g, yr = %g, xi = %d, yi = %d",
                   gwy_data_field_get_xreal(dfield),
                   gwy_data_field_get_yreal(dfield),
@@ -509,15 +513,15 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
                                              GWY_INTERPOLATION_ROUND);
     }
     else
-        xreal = yreal = value = 0.0;
+        xreal = yreal = xoff = yoff = value = 0.0;
 
     g_snprintf(label, sizeof(label), "(%.*f%s%s, %.*f%s%s): %.*f%s%s",
                data_window->coord_format->precision,
-               xreal/data_window->coord_format->magnitude,
+               (xreal + xoff)/data_window->coord_format->magnitude,
                strlen(data_window->coord_format->units) ? " " : "",
                data_window->coord_format->units,
                data_window->coord_format->precision,
-               yreal/data_window->coord_format->magnitude,
+               (yreal + yoff)/data_window->coord_format->magnitude,
                strlen(data_window->coord_format->units) ? " " : "",
                data_window->coord_format->units,
                data_window->value_format->precision,
@@ -893,6 +897,7 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
+    gwy_data_window_measure_changed(data_window);
     gwy_data_window_update_units(data_window);
 }
 
