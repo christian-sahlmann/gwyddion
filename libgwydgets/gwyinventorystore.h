@@ -63,6 +63,9 @@ GwyInventoryStore* gwy_inventory_store_new          (GwyInventory *inventory);
 GwyInventory*      gwy_inventory_store_get_inventory(GwyInventoryStore *store);
 gint          gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
                                                      const gchar *name);
+gboolean           gwy_inventory_store_get_iter     (GwyInventoryStore *store,
+                                                     const gchar *name,
+                                                     GtkTreeIter *iter);
 gboolean           gwy_inventory_store_iter_is_valid(GwyInventoryStore *store,
                                                      GtkTreeIter *iter);
 

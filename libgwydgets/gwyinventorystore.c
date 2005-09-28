@@ -43,10 +43,10 @@ static GType     gwy_inventory_store_get_column_type(GtkTreeModel *model,
                                                      gint column);
 static inline void gwy_inventory_store_update_iter  (GwyInventoryStore *store,
                                                      GtkTreeIter *iter);
-static gboolean  gwy_inventory_store_get_iter       (GtkTreeModel *model,
+static gboolean  gwy_inventory_store_get_tree_iter  (GtkTreeModel *model,
                                                      GtkTreeIter *iter,
                                                      GtkTreePath *path);
-static GtkTreePath* gwy_inventory_store_get_path       (GtkTreeModel *model,
+static GtkTreePath* gwy_inventory_store_get_path    (GtkTreeModel *model,
                                                      GtkTreeIter *iter);
 static void      gwy_inventory_store_get_value      (GtkTreeModel *model,
                                                      GtkTreeIter *iter,
@@ -102,7 +102,7 @@ gwy_inventory_store_tree_model_init(GtkTreeModelIface *iface)
     iface->get_flags = gwy_inventory_store_get_flags;
     iface->get_n_columns = gwy_inventory_store_get_n_columns;
     iface->get_column_type = gwy_inventory_store_get_column_type;
-    iface->get_iter = gwy_inventory_store_get_iter;
+    iface->get_iter = gwy_inventory_store_get_tree_iter;
     iface->get_path = gwy_inventory_store_get_path;
     iface->get_value = gwy_inventory_store_get_value;
     iface->iter_next = gwy_inventory_store_iter_next;
@@ -192,9 +192,9 @@ gwy_inventory_store_update_iter(GwyInventoryStore *store,
 }
 
 static gboolean
-gwy_inventory_store_get_iter(GtkTreeModel *model,
-                             GtkTreeIter *iter,
-                             GtkTreePath *path)
+gwy_inventory_store_get_tree_iter(GtkTreeModel *model,
+                                  GtkTreeIter *iter,
+                                  GtkTreePath *path)
 {
     GwyInventoryStore *store;
     gint i;
@@ -506,6 +506,39 @@ gwy_inventory_store_get_column_by_name(GwyInventoryStore *store,
             return i+1;
     }
     return -1;
+}
+
+/**
+ * gwy_inventory_store_get_iter:
+ * @store: An inventory store.
+ * @name: Item name.
+ * @iter: Tree iterator to set to point to item named @name.
+ *
+ * Initializes a tree iterator to row corresponding to a inventory item.
+ *
+ * Returns: %TRUE if @iter is valid, that is the item exists, %FALSE if @iter
+ *          was not set.
+ **/
+gboolean
+gwy_inventory_store_get_iter(GwyInventoryStore *store,
+                             const gchar *name,
+                             GtkTreeIter *iter)
+{
+    guint i;
+
+    g_return_val_if_fail(GWY_IS_INVENTORY_STORE(store), FALSE);
+    g_return_val_if_fail(iter, FALSE);
+
+    i = gwy_inventory_get_item_position(store->inventory, name);
+    if (i == (guint)-1)
+        return FALSE;
+
+    iter->stamp = store->stamp;
+    iter->user_data = gwy_inventory_get_nth_item(store->inventory, i);
+    g_assert(iter->user_data);
+    iter->user_data2 = GUINT_TO_POINTER(i);
+
+    return TRUE;
 }
 
 /**

@@ -463,11 +463,10 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     const ResourceInfo *rinfo;
     GtkTreeModel *model;
     GtkTreeSelection *selection;
-    GtkTreePath *path;
     GtkTreeIter iter;
+    GtkTreePath *path;
     GtkWidget *treeview;
     const gchar *current;
-    gint i;
 
     rinfo = g_object_get_data(G_OBJECT(widget), "resource-info");
     g_return_if_fail(rinfo);
@@ -489,10 +488,9 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
-    i = gwy_inventory_get_item_position(rinfo->inventory, active);
-    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
-    path = gtk_tree_model_get_path(model, &iter);
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), active, &iter);
     gtk_tree_selection_select_iter(selection, &iter);
+    path = gtk_tree_model_get_path(model, &iter);
     gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(treeview), path, NULL,
                                  TRUE, 0.5, 0.0);
     gtk_tree_path_free(path);
@@ -654,7 +652,6 @@ gwy_resource_selection_default_changed(GwyInventory *inventory,
     GwyResource *resource;
     GtkTreePath *path;
     GtkTreeIter iter;
-    gint i;
 
     resource = gwy_inventory_get_default_item(inventory);
     if (!resource)
@@ -664,9 +661,7 @@ gwy_resource_selection_default_changed(GwyInventory *inventory,
      * tree view is redrawn anyway so no one notices it.  Must emit
      * "row-changed" on old default in InventoryStore.  */
     model = GTK_TREE_MODEL(store);
-    i = gwy_inventory_get_item_position(inventory,
-                                        gwy_resource_get_name(resource));
-    gtk_tree_model_iter_nth_child(model, &iter, NULL, i);
+    gwy_inventory_store_get_iter(store, gwy_resource_get_name(resource), &iter);
     path = gtk_tree_model_get_path(model, &iter);
     gtk_tree_model_row_changed(model, path, &iter);
     gtk_tree_path_free(path);
