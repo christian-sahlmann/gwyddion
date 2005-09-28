@@ -871,7 +871,7 @@ gwy_inventory_insert_item(GwyInventory *inventory,
             m = j0;
         else {
             mp = g_ptr_array_index(inventory->items,
-                                   g_array_index(inventory->ridx, guint, j0));
+                                   g_array_index(inventory->ridx, guint, j1));
             if (inventory->item_type.compare(item, mp) < 0)
                 m = j1;
             else
