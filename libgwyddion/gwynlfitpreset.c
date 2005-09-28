@@ -957,6 +957,7 @@ gwy_nlfit_preset_class_init(GwyNLFitPresetClass *klass)
 
     res_class->name = "nlfitpresets";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
+    gwy_inventory_forget_order(res_class->inventory);
     /*
     gwy_inventory_set_default_item_name(res_class->inventory,
                                         GWY_NLFIT_PRESET_DEFAULT);
@@ -999,6 +1000,7 @@ _gwy_nlfit_preset_class_setup_presets(void)
         gwy_inventory_insert_item(klass->inventory, preset);
         g_object_unref(preset);
     }
+    gwy_inventory_restore_order(klass->inventory);
 
     /* The presets added a reference so we can safely unref it again */
     g_type_class_unref(klass);
