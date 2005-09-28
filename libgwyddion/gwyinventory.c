@@ -384,7 +384,7 @@ gwy_inventory_get_n_items(GwyInventory *inventory)
  * Returns whether an inventory can create new items itself.
  *
  * The prerequistie is that item type is a serializable object.  It enables
- * functions like gwy_inventory_new_item_as_copy().
+ * functions like gwy_inventory_new_item().
  *
  * Returns: %TRUE if inventory can create new items itself.
  **/
@@ -1263,7 +1263,7 @@ gwy_inventory_new_item(GwyInventory *inventory,
         && inventory->items->len)
         i = 1;
     if (i) {
-        item = g_ptr_array_index(inventory->items, 0);
+        item = g_ptr_array_index(inventory->items, i);
         name = inventory->item_type.get_name(item);
     }
 
