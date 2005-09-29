@@ -269,7 +269,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "4.7.3",
+    "4.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1649,6 +1649,28 @@ pixmap_save_dialog(GwyContainer *data,
  *
  ***************************************************************************/
 
+static void
+format_layout(PangoLayout *layout,
+              PangoRectangle *logical,
+              GString *string,
+              const gchar *format,
+              ...)
+{
+    gchar *buffer;
+    gint length;
+    va_list args;
+
+    g_string_truncate(string, 0);
+    va_start(args, format);
+    length = g_vasprintf(&buffer, format, args);
+    va_end(args);
+    g_string_append_len(string, buffer, length);
+    g_free(buffer);
+
+    pango_layout_set_markup(layout, string->str, length);
+    pango_layout_get_extents(layout, NULL, logical);
+}
+
 static GdkPixbuf*
 hruler(gint size,
        gint extra,
@@ -1656,7 +1678,6 @@ hruler(gint size,
        gdouble zoom,
        GwySIUnit *siunit)
 {
-    const guint bufsize = 64;
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -1664,25 +1685,21 @@ hruler(gint size,
     GdkGC *gc;
     GwySIValueFormat *format;
     gdouble base, step, x;
-    gchar *s;
+    GString *s;
     gint l, n, ix;
     gint tick, height, lw;
 
-    s = g_new(gchar, bufsize);
+    s = g_string_new("");
     layout = prepare_layout(zoom);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     real, real/12,
                                                     NULL);
-
-    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
-
-    g_snprintf(s, bufsize, "%.*f %s", format->precision, 0.0, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical2);
+    format_layout(layout, &logical1, s, "%.*f",
+                  format->precision, real/format->magnitude);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  format->precision, 0.0, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
@@ -1706,14 +1723,11 @@ hruler(gint size,
     drawable = prepare_drawable(size + extra, height, lw, &gc);
 
     for (x = 0.0; x <= real/format->magnitude; x += base*step) {
-        if (!x)
-            g_snprintf(s, bufsize, "%.*f %s",
-                       format->precision, x, format->units);
-        else
-            g_snprintf(s, bufsize, "%.*f", format->precision, x);
-        pango_layout_set_markup(layout, s, -1);
+        format_layout(layout, &logical1, s, "%.*f%s%s",
+                      format->precision, x,
+                      x ? "" : " ",
+                      x ? "" : format->units);
         ix = x/(real/format->magnitude)*size + lw/2;
-        pango_layout_get_extents(layout, NULL, &logical1);
         if (ix + PANGO_PIXELS(logical1.width) <= size + extra/4)
             gdk_draw_layout(drawable, gc, ix+1, 1, layout);
         gdk_draw_line(drawable, gc, ix, height-1, ix, height-1-tick);
@@ -1726,7 +1740,7 @@ hruler(gint size,
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
-    g_free(s);
+    g_string_free(s, TRUE);
 
     return pixbuf;
 }
@@ -1738,7 +1752,6 @@ vruler(gint size,
        gdouble zoom,
        GwySIUnit *siunit)
 {
-    enum { bufsize = 64 };
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -1746,11 +1759,11 @@ vruler(gint size,
     GdkGC *gc;
     GwySIValueFormat *format;
     gdouble base, step, x;
-    gchar *s;
+    GString *s;
     gint l, n, ix;
     gint tick, width, lw;
 
-    s = g_new(gchar, bufsize);
+    s = g_string_new("");
     layout = prepare_layout(zoom);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
@@ -1760,13 +1773,10 @@ vruler(gint size,
 
     /* note the algorithm is the same to force consistency between axes,
      * even though the vertical one could be filled with tick more densely */
-    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
-
-    g_snprintf(s, bufsize, "%.*f %s", format->precision, 0.0, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical2);
+    format_layout(layout, &logical1, s, "%.*f",
+                  format->precision, real/format->magnitude);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  format->precision, 0.0, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = MIN(10, size/l);
@@ -1783,9 +1793,8 @@ vruler(gint size,
         format->precision = MAX(format->precision - 1, 0);
     }
 
-    g_snprintf(s, bufsize, "%.*f", format->precision, real/format->magnitude);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
+    format_layout(layout, &logical1, s, "%.*f",
+                  format->precision, real/format->magnitude);
     l = PANGO_PIXELS(logical1.width);
 
     tick = zoom*TICK_LENGTH;
@@ -1794,10 +1803,8 @@ vruler(gint size,
     drawable = prepare_drawable(width, size + extra, lw, &gc);
 
     for (x = 0.0; x <= real/format->magnitude; x += base*step) {
-        g_snprintf(s, bufsize, "%.*f", format->precision, x);
-        pango_layout_set_markup(layout, s, -1);
+        format_layout(layout, &logical1, s, "%.*f", format->precision, x);
         ix = x/(real/format->magnitude)*size + lw/2;
-        pango_layout_get_extents(layout, NULL, &logical1);
         if (ix + PANGO_PIXELS(logical1.height) <= size + extra/4)
             gdk_draw_layout(drawable, gc,
                             l - PANGO_PIXELS(logical1.width) + 1, ix+1, layout);
@@ -1811,7 +1818,7 @@ vruler(gint size,
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
-    g_free(s);
+    g_string_free(s, TRUE);
 
     return pixbuf;
 }
@@ -1824,7 +1831,6 @@ fmscale(gint size,
         gdouble zoom,
         GwySIUnit *siunit)
 {
-    enum { bufsize = 64 };
     PangoRectangle logical1, logical2;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -1832,26 +1838,19 @@ fmscale(gint size,
     GdkGC *gc;
     gdouble x;
     GwySIValueFormat *format;
-    gchar *s;
+    GString *s;
     gint l, tick, width, lw;
 
-    s = g_new(gchar, bufsize);
+    s = g_string_new("");
     layout = prepare_layout(zoom);
 
     x = MAX(fabs(bot), fabs(top));
-    format = gwy_si_unit_get_format_with_resolution(siunit,
-                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                    x, x/120, NULL);
-
-    g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, top/format->magnitude, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
-
-    g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, bot/format->magnitude, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical2);
+    format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    x, NULL);
+    format_layout(layout, &logical1, s, "%.*f %s",
+                  format->precision, top/format->magnitude, format->units);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  format->precision, bot/format->magnitude, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     tick = zoom*TICK_LENGTH;
@@ -1859,20 +1858,16 @@ fmscale(gint size,
     width = l + 2*zoom + tick + 2;
     drawable = prepare_drawable(width, size, lw, &gc);
 
-    g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, bot/format->magnitude, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
+    format_layout(layout, &logical1, s, "%.*f %s",
+                  format->precision, bot/format->magnitude, format->units);
     gdk_draw_layout(drawable, gc,
                     width - PANGO_PIXELS(logical1.width) - 2,
                     size - 1 - PANGO_PIXELS(logical1.height),
                     layout);
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
 
-    g_snprintf(s, bufsize, "%.*f %s",
-               format->precision, top/format->magnitude, format->units);
-    pango_layout_set_markup(layout, s, -1);
-    pango_layout_get_extents(layout, NULL, &logical1);
+    format_layout(layout, &logical1, s, "%.*f %s",
+                  format->precision, top/format->magnitude, format->units);
     gdk_draw_layout(drawable, gc,
                     width - PANGO_PIXELS(logical1.width) - 2, 1,
                     layout);
@@ -1887,7 +1882,7 @@ fmscale(gint size,
     g_object_unref(gc);
     g_object_unref(drawable);
     g_object_unref(layout);
-    g_free(s);
+    g_string_free(s, TRUE);
 
     return pixbuf;
 }
@@ -1942,7 +1937,7 @@ prepare_layout(gdouble zoom)
     pango_context_set_font_description(context, fontdesc);
     layout = pango_layout_new(context);
     g_object_unref(context);
-    /* FIXME: who frees fontdesc? */
+    pango_font_description_free(fontdesc);
 
     return layout;
 }
