@@ -8,23 +8,24 @@ endif
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
-	asciiexport.la	\
-	apefile.la	\
-	assing-afm.la	\
-	bcrfile.la	\
-	createc.la	\
-	ezdfile.la	\
-	gwyfile.la	\
-	nanoscope.la	\
-	nt-mdt.la	\
-	pixmap.la	\
-	rawfile.la	\
-	rhk-spm32.la	\
-	sis.la		\
-	spmlab.la	\
-	stmprg.la	\
-	stpfile.la	\
-	wsxmfile.la	\
+	asciiexport.la \
+	apefile.la \
+	assing-afm.la \
+	bcrfile.la \
+	createc.la \
+	ezdfile.la \
+	gwyfile.la \
+	nanoscope.la \
+	nt-mdt.la \
+	mifile.la \
+	pixmap.la \
+	rawfile.la \
+	rhk-spm32.la \
+	sis.la \
+	spmlab.la \
+	stmprg.la \
+	stpfile.la \
+	wsxmfile.la \
 	$(tiff_modules)
 
 
@@ -51,12 +52,12 @@ AM_LDFLAGS = -avoid-version -module $(no_undefined)
 if MODULE_DEPENDENCIES
 MODULE_LIBTIFF = $(LIBTIFF)
 module_libadd = \
-	$(top_builddir)/app/libgwyapp.la		\
-	$(top_builddir)/libdraw/libgwydraw.la		\
-	$(top_builddir)/libgwyddion/libgwyddion.la	\
-	$(top_builddir)/libgwydgets/libgwydgets.la	\
-	$(top_builddir)/libgwymodule/libgwymodule.la	\
-	$(top_builddir)/libprocess/libgwyprocess.la	\
+	$(top_builddir)/app/libgwyapp.la \
+	$(top_builddir)/libdraw/libgwydraw.la \
+	$(top_builddir)/libgwyddion/libgwyddion.la \
+	$(top_builddir)/libgwydgets/libgwydgets.la \
+	$(top_builddir)/libgwymodule/libgwymodule.la \
+	$(top_builddir)/libprocess/libgwyprocess.la \
 	@GTK_LIBS@
 else
 MODULE_LIBTIFF =
@@ -94,6 +95,9 @@ nanoscope_la_LIBADD = $(module_libadd)
 
 nt_mdt_la_SOURCES = nt-mdt.c
 nt_mdt_la_LIBADD = $(module_libadd)
+
+mifile_la_SOURCES = mifile.c
+mifile_la_LIBADD = $(module_libadd)
 
 pixmap_la_SOURCES = pixmap.c
 pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
