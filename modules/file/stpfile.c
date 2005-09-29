@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging STP data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2.2",
+    "0.2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -271,7 +271,7 @@ file_read_header(STPFile *stpfile,
             data->id = atol(line + KEY_LEN);
             meta = data->meta;
         }
-        if (line[0] == ' ')
+        if (!line[0] || line[0] == ' ')
             continue;
 
         key = g_strstrip(g_strndup(line, KEY_LEN));
