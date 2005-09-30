@@ -1263,7 +1263,7 @@ gwy_inventory_new_item(GwyInventory *inventory,
         && inventory->items->len)
         i = 1;
     if (i) {
-        item = g_ptr_array_index(inventory->items, i);
+        item = g_ptr_array_index(inventory->items, i-1);
         name = inventory->item_type.get_name(item);
     }
 
