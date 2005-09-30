@@ -251,7 +251,7 @@ gwy_gradient_sample_real(GwyGradient *gradient,
     q = 1.0/(nsamples - 1.0);
     pt = &g_array_index(gradient->points, GwyGradientPoint, 0);
     for (i = j = k = 0; i < nsamples; i++) {
-        x = i*q;
+        x = MIN(i*q, 1.0);
         while (G_UNLIKELY(x > pt->x)) {
             j++;
             pt2 = pt;
