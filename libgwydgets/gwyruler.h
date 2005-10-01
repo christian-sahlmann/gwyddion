@@ -75,10 +75,11 @@ struct _GwyRuler
 {
     GtkWidget widget;
 
+    PangoLayout *layout;
     GdkPixmap *backing_store;
     GdkGC *non_gr_exp_gc;
     gint xsrc, ysrc;
-    gint slider_size;
+    gint hthickness, vthickness, height, pixelsize;
     GwySIUnit *units;
     GwyUnitsPlacement units_placement;
 
@@ -95,7 +96,14 @@ struct _GwyRulerClass
 {
     GtkWidgetClass parent_class;
 
-    void (*draw_ticks) (GwyRuler *ruler);
+    void (*prepare_sizes) (GwyRuler *ruler);
+    void (*draw_frame) (GwyRuler *ruler);
+    void (*draw_layout) (GwyRuler *ruler,
+                         gint hpos,
+                         gint vpos);
+    void (*draw_tick) (GwyRuler *ruler,
+                       gint pos,
+                       gint length);
     void (*draw_pos)   (GwyRuler *ruler);
 
     gpointer reserved1;
@@ -109,9 +117,8 @@ void              gwy_ruler_set_range           (GwyRuler      *ruler,
                                                  gdouble        upper,
                                                  gdouble        position,
                                                  gdouble        max_size);
-void              gwy_ruler_draw_ticks          (GwyRuler      *ruler);
-void              gwy_ruler_draw_pos            (GwyRuler      *ruler);
 
+void              gwy_ruler_draw_pos            (GwyRuler *ruler);
 void              gwy_ruler_get_range           (GwyRuler *ruler,
                                                  gdouble  *lower,
                                                  gdouble  *upper,

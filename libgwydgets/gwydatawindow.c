@@ -237,7 +237,7 @@ gwy_data_window_new(GwyDataView *data_view)
 
     data_window->vruler = gwy_vruler_new();
     gwy_ruler_set_units_placement(GWY_RULER(data_window->vruler),
-                                  GWY_UNITS_PLACEMENT_NONE);
+                                  GWY_UNITS_PLACEMENT_AT_ZERO);
     g_signal_connect_swapped(data_view, "motion-notify-event",
                              class_motion_notify_callback(data_window->vruler),
                              data_window->vruler);

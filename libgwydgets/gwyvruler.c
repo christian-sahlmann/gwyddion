@@ -46,7 +46,8 @@
 
 /*
  * Modified by Yeti 2003.  In fact, rewritten, except the skeleton
- * and a few drawing functions.
+ * and a few drawing functions.  Rewritten again in 2005 to minimize
+ * code duplication.
  */
 
 #include "config.h"
@@ -55,37 +56,20 @@
 #include <libgwyddion/gwymath.h>
 #include "gwyvruler.h"
 
-#define RULER_WIDTH           20
-#define MINIMUM_INCR          5
+#define RULER_WIDTH 20
 
-typedef enum {
-    GWY_SCALE_0,
-    GWY_SCALE_1,
-    GWY_SCALE_2,
-    GWY_SCALE_2_5,
-    GWY_SCALE_5,
-    GWY_SCALE_LAST
-} GwyScaleScale;
-
-static const gdouble steps[GWY_SCALE_LAST] = {
-    0.0, 1.0, 2.0, 2.5, 5.0,
-};
-
-
-static gboolean      gwy_vruler_motion_notify  (GtkWidget *widget,
-                                                GdkEventMotion *event);
-static void          gwy_vruler_draw_ticks     (GwyRuler *ruler);
-static void          gwy_vruler_real_draw_ticks(GwyRuler *ruler,
-                                                gint pixelsize,
-                                                gint min_label_spacing,
-                                                gint min_tick_spacing);
-static void          gwy_vruler_draw_pos       (GwyRuler *ruler);
-static gdouble       compute_base              (gdouble max,
-                                                gdouble basebase);
-static GwyScaleScale next_scale                (GwyScaleScale scale,
-                                                gdouble *base,
-                                                gdouble measure,
-                                                gint min_incr);
+static void     gwy_vruler_realize      (GtkWidget *widget);
+static gboolean gwy_vruler_motion_notify(GtkWidget *widget,
+                                         GdkEventMotion *event);
+static void     gwy_vruler_prepare_sizes(GwyRuler *ruler);
+static void     gwy_vruler_draw_frame   (GwyRuler *ruler);
+static void     gwy_vruler_draw_layout  (GwyRuler *ruler,
+                                         gint hpos,
+                                         gint vpos);
+static void     gwy_vruler_draw_tick    (GwyRuler *ruler,
+                                         gint pos,
+                                         gint length);
+static void     gwy_vruler_draw_pos     (GwyRuler *ruler);
 
 
 G_DEFINE_TYPE(GwyVRuler, gwy_vruler, GWY_TYPE_RULER)
@@ -100,8 +84,12 @@ gwy_vruler_class_init(GwyVRulerClass *klass)
     ruler_class = (GwyRulerClass*) klass;
 
     widget_class->motion_notify_event = gwy_vruler_motion_notify;
+    widget_class->realize = gwy_vruler_realize;
 
-    ruler_class->draw_ticks = gwy_vruler_draw_ticks;
+    ruler_class->prepare_sizes = gwy_vruler_prepare_sizes;
+    ruler_class->draw_frame = gwy_vruler_draw_frame;
+    ruler_class->draw_layout = gwy_vruler_draw_layout;
+    ruler_class->draw_tick = gwy_vruler_draw_tick;
     ruler_class->draw_pos = gwy_vruler_draw_pos;
 }
 
@@ -111,8 +99,8 @@ gwy_vruler_init(GwyVRuler *vruler)
     GtkWidget *widget;
 
     widget = GTK_WIDGET(vruler);
-    widget->requisition.width = widget->style->xthickness * 2 + RULER_WIDTH;
-    widget->requisition.height = widget->style->ythickness * 2 + 1;
+    widget->requisition.width = widget->style->xthickness*2 + RULER_WIDTH;
+    widget->requisition.height = widget->style->ythickness*2 + 1;
 }
 
 /**
@@ -128,6 +116,26 @@ gwy_vruler_new(void)
     return g_object_new(GWY_TYPE_VRULER, NULL);
 }
 
+static void
+gwy_vruler_realize(GtkWidget *widget)
+{
+    const PangoMatrix *cmatrix;
+    PangoMatrix matrix = PANGO_MATRIX_INIT;
+    PangoContext *context;
+    GwyRuler *ruler;
+
+    if (GTK_WIDGET_CLASS(gwy_vruler_parent_class)->realize)
+        (GTK_WIDGET_CLASS(gwy_vruler_parent_class)->realize)(widget);
+
+    ruler = GWY_RULER(widget);
+
+    context = pango_layout_get_context(ruler->layout);
+    if ((cmatrix = pango_context_get_matrix(context)))
+        matrix = *cmatrix;
+    pango_matrix_rotate(&matrix, -90.0);
+    pango_context_set_matrix(context, &matrix);
+    pango_layout_context_changed(ruler->layout);
+}
 
 static gboolean
 gwy_vruler_motion_notify(GtkWidget      *widget,
@@ -155,219 +163,65 @@ gwy_vruler_motion_notify(GtkWidget      *widget,
 }
 
 static void
-gwy_vruler_draw_ticks(GwyRuler *ruler)
+gwy_vruler_prepare_sizes(GwyRuler *ruler)
 {
     GtkWidget *widget;
-    GdkGC *gc;
-    gint width, height;
-    gint xthickness;
-    gint ythickness;
-
-    if (!GTK_WIDGET_DRAWABLE(ruler))
-        return;
 
     widget = GTK_WIDGET(ruler);
-
-    gc = widget->style->fg_gc[GTK_STATE_NORMAL];
-
-    xthickness = widget->style->xthickness;
-    ythickness = widget->style->ythickness;
-
-    height = widget->allocation.height;
-    width = widget->allocation.width - 2*xthickness;
-
-    gdk_draw_line(ruler->backing_store, gc,
-                  height + xthickness,
-                  ythickness,
-                  height + xthickness,
-                  widget->allocation.height - ythickness);
-
-    gwy_vruler_real_draw_ticks(ruler, height,
-                               xthickness + MINIMUM_INCR, MINIMUM_INCR);
+    ruler->hthickness = widget->style->ythickness;
+    ruler->vthickness = widget->style->xthickness;
+    ruler->height = widget->allocation.width - 2*ruler->vthickness;
+    ruler->pixelsize = widget->allocation.height;
 }
 
 static void
-gwy_vruler_real_draw_ticks(GwyRuler *ruler,
-                           gint pixelsize,
-                           gint min_label_spacing,
-                           gint min_tick_spacing)
+gwy_vruler_draw_frame(GwyRuler *ruler)
 {
-    gdouble lower, upper, max;
-    gint text_size, labels, i, scale_depth;
-    gdouble range, measure, base, step, first;
-    GwyScaleScale scale;
-    GwySIValueFormat *format;
-    PangoLayout *layout;
-    PangoRectangle rect;
-    gchar *unit_str;
-    gint unitstr_len, j;
-    gint width, tick_length, xthickness, ythickness;
-    gboolean units_drawn;
-    GtkWidget *widget;
     GdkGC *gc;
-    gint digit_width, digit_xoffset;
-    const gchar *utf8p, *utf8next;
-    gint ascent, descent, ypos;
-    struct { GwyScaleScale scale; double base; } tick_info[4];
+    GtkWidget *widget;
 
     widget = GTK_WIDGET(ruler);
-    xthickness = widget->style->xthickness;
-    ythickness = widget->style->ythickness;
-
-    format = ruler->vformat;
-    upper = ruler->upper;
-    lower = ruler->lower;
-    if (upper <= lower || pixelsize < 2 || pixelsize > 10000)
-        return;
-    max = ruler->max_size;
-    if (max == 0)
-        max = MAX(fabs(lower), fabs(upper));
-
-    range = upper - lower;
-    measure = range/format->magnitude / pixelsize;
-    max /= format->magnitude;
-
-    switch (ruler->units_placement && ruler->units) {
-        case GWY_UNITS_PLACEMENT_AT_ZERO:
-        unit_str
-            = g_strdup_printf("%d %s",
-                              (lower > 0) ? (gint)(lower/format->magnitude) : 0,
-                              format->units);
-        break;
-
-        default:
-        unit_str = g_strdup_printf("%d", (gint)max);
-        break;
-    }
-
-    layout = gtk_widget_create_pango_layout(widget, "012456789");
-    pango_layout_get_extents(layout, NULL, &rect);
-
-    digit_width = PANGO_PIXELS(rect.width)/10 + 1;
-    digit_xoffset = rect.x;
-
-    pango_layout_set_markup(layout, unit_str, -1);
-    pango_layout_get_extents(layout, &rect, NULL);
-    ascent = PANGO_ASCENT(rect);
-    descent = PANGO_DESCENT(rect);
-
-    text_size = g_utf8_strlen(pango_layout_get_text(layout), -1);
-    text_size = PANGO_PIXELS(ascent + descent)*text_size;
-
-    /* reallocate unit_str with some margin */
-    unitstr_len = strlen(unit_str) + 16;
-    unit_str = g_renew(gchar, unit_str, unitstr_len);
-
-    /* fit as many labels as you can */
-    labels = floor(pixelsize/(text_size + ythickness + min_label_spacing));
-    labels = MAX(labels, 1);
-    if (labels > 6)
-        labels = 6 + (labels - 5)/2;
-
-    step = range/format->magnitude / labels;
-    base = compute_base(step, 10);
-    step /= base;
-    if (step >= 5.0 || base < 1.0) {
-        scale = GWY_SCALE_1;
-        base *= 10;
-    }
-    else if (step >= 2.5)
-        scale = GWY_SCALE_5;
-    else if (step >= 2.0)
-        scale = GWY_SCALE_2_5;
-    else
-        scale = GWY_SCALE_2;
-    step = steps[scale];
-
-    /* draw labels */
-    width = widget->allocation.width - 2*xthickness;
-    units_drawn = FALSE;
-    first = floor(lower/format->magnitude / (base*step))*base*step;
-    for (i = 0; ; i++) {
-        gint pos;
-        gdouble val;
-
-        val = i*step*base + first;
-        pos = floor((val - lower/format->magnitude)/measure);
-        if (pos >= pixelsize)
-            break;
-        if (pos < 0)
-            continue;
-        if (!units_drawn
-            && (upper < 0 || val >= 0)
-            && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
-            && ruler->units) {
-            g_snprintf(unit_str, unitstr_len, "%d %s",
-                       ROUND(val), format->units);
-            units_drawn = TRUE;
-        }
-        else
-            g_snprintf(unit_str, unitstr_len, "%d", ROUND(val));
-
-        pango_layout_set_markup(layout, unit_str, -1);
-        utf8p = unit_str;
-        utf8next = g_utf8_next_char(utf8p);
-        j = 0;
-        ypos = pos + ythickness + 1;
-        while (*utf8p) {
-            pango_layout_set_text(layout, utf8p, utf8next - utf8p);
-            pango_layout_get_extents(layout, &rect, NULL);
-            gtk_paint_layout(widget->style,
-                             ruler->backing_store,
-                             GTK_WIDGET_STATE(widget),
-                             FALSE,
-                             NULL,
-                             widget,
-                             "vruler",
-                             xthickness + 1 + PANGO_PIXELS(digit_xoffset),
-                             ypos,
-                             layout);
-            utf8p = utf8next;
-            utf8next = g_utf8_next_char(utf8p);
-            ypos += PANGO_PIXELS(PANGO_ASCENT(rect) + PANGO_DESCENT(rect)) + 2;
-            j++;
-        }
-    }
-
-    /* draw tick marks, from smallest to largest */
-    scale_depth = 0;
-    while (scale && scale_depth < (gint)G_N_ELEMENTS(tick_info)) {
-        tick_info[scale_depth].scale = scale;
-        tick_info[scale_depth].base = base;
-        scale = next_scale(scale, &base, measure, min_tick_spacing);
-        scale_depth++;
-    }
-    scale_depth--;
-
     gc = widget->style->fg_gc[GTK_STATE_NORMAL];
-    while (scale_depth > -1) {
-        tick_length = width/(scale_depth + 1) - 2;
-        scale = tick_info[scale_depth].scale;
-        base = tick_info[scale_depth].base;
-        step = steps[scale];
-        first = floor(lower/format->magnitude / (base*step))*base*step;
-        for (i = 0; ; i++) {
-            gint pos;
-            gdouble val;
-
-            val = (i + 0.000001)*step*base + first;
-            pos = floor((val - lower/format->magnitude)/measure);
-            if (pos >= pixelsize)
-                break;
-            if (pos < 0)
-                continue;
-
-            gdk_draw_line(ruler->backing_store, gc,
-                          width + xthickness - tick_length, pos,
-                          width + xthickness, pos);
-        }
-        scale_depth--;
-    }
-
-    g_free(unit_str);
-    g_object_unref(layout);
+    gdk_draw_line(ruler->backing_store, gc,
+                  ruler->pixelsize + ruler->vthickness,
+                  ruler->hthickness,
+                  ruler->pixelsize + ruler->vthickness,
+                  ruler->pixelsize - ruler->hthickness);
 }
 
+static void
+gwy_vruler_draw_layout(GwyRuler *ruler,
+                       gint hpos,
+                       gint vpos)
+{
+    GtkWidget *widget;
+
+    widget = GTK_WIDGET(ruler);
+    gtk_paint_layout(widget->style,
+                     ruler->backing_store,
+                     GTK_WIDGET_STATE(widget),
+                     FALSE,
+                     NULL,
+                     widget,
+                     "vruler",
+                     vpos, hpos + 3,
+                     ruler->layout);
+}
+
+static void
+gwy_vruler_draw_tick(GwyRuler *ruler,
+                     gint pos,
+                     gint length)
+{
+    GdkGC *gc;
+    GtkWidget *widget;
+
+    widget = GTK_WIDGET(ruler);
+    gc = widget->style->fg_gc[GTK_STATE_NORMAL];
+    gdk_draw_line(ruler->backing_store, gc,
+                  ruler->height + ruler->vthickness, pos,
+                  ruler->height - length + ruler->vthickness, pos);
+}
 
 static void
 gwy_vruler_draw_pos(GwyRuler *ruler)
@@ -376,24 +230,16 @@ gwy_vruler_draw_pos(GwyRuler *ruler)
     GdkGC *gc;
     int i;
     gint x, y;
-    gint width, height;
     gint bs_width, bs_height;
-    gint xthickness;
-    gint ythickness;
     gdouble increment;
 
     if (GTK_WIDGET_DRAWABLE(ruler)) {
         widget = GTK_WIDGET(ruler);
-
         gc = widget->style->fg_gc[GTK_STATE_NORMAL];
-        xthickness = widget->style->xthickness;
-        ythickness = widget->style->ythickness;
-        width = widget->allocation.width - xthickness * 2;
-        height = widget->allocation.height;
 
-        bs_height = width / 2;
+        bs_height = ruler->height/2;
         bs_height |= 1;  /* make sure it's odd */
-        bs_width = bs_height / 2 + 1;
+        bs_width = bs_height/2 + 1;
 
         if ((bs_width > 0) && (bs_height > 0)) {
             /*  If a backing store exists, restore the ruler  */
@@ -405,11 +251,11 @@ gwy_vruler_draw_pos(GwyRuler *ruler)
                                   ruler->xsrc, ruler->ysrc,
                                   bs_width, bs_height);
 
-            increment = (gdouble) height / (ruler->upper - ruler->lower);
+            increment = (gdouble)ruler->pixelsize/(ruler->upper - ruler->lower);
 
-            x = (width + bs_width) / 2 + xthickness;
+            x = (ruler->height + bs_width)/2 + ruler->vthickness;
             y = ROUND((ruler->position - ruler->lower) * increment)
-                + (ythickness - bs_height) / 2 - 1;
+                + (ruler->hthickness - bs_height)/2 - 1;
 
             for (i = 0; i < bs_width; i++)
                 gdk_draw_line(widget->window, gc,
@@ -420,68 +266,6 @@ gwy_vruler_draw_pos(GwyRuler *ruler)
             ruler->ysrc = y;
         }
     }
-}
-
-static gdouble
-compute_base(gdouble max, gdouble basebase)
-{
-    gint i;
-    gdouble base;
-
-    i = floor(log(max)/log(basebase));
-    base = 1.0;
-    if (i > 0)
-        while (i--)
-            base *= basebase;
-    else
-        while (i++)
-            base /= basebase;
-    return base;
-}
-
-static GwyScaleScale
-next_scale(GwyScaleScale scale,
-           gdouble *base,
-           gdouble measure,
-           gint min_incr)
-{
-    GwyScaleScale new_scale = GWY_SCALE_0;
-
-    switch (scale) {
-        case GWY_SCALE_1:
-        *base /= 10.0;
-        if ((gint)floor(*base*2.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
-        else if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        break;
-
-        case GWY_SCALE_2:
-        if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
-        break;
-
-        case GWY_SCALE_2_5:
-        *base /= 10.0;
-        if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
-        break;
-
-        case GWY_SCALE_5:
-        if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
-        else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    return new_scale;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
