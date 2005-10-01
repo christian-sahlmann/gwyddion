@@ -47,6 +47,9 @@ struct _GwyGraphModel {
 
     GString *title;   
 
+    /*these values reflect reasonable bounding values of all the curves. They can
+     be set for example during curve adding to graph. They can differ sligthly
+     depending on axis mode (eg. logarithmic)*/
     gdouble x_max;
     gdouble x_min;
     gdouble y_max;
@@ -67,6 +70,11 @@ struct _GwyGraphModel {
     gboolean label_has_frame;
     gint label_frame_thickness;
 
+    /*logarithmic axis*/
+    gboolean x_is_logarithmic;
+    gboolean y_is_logarithmic;
+            
+    
     /* reserved stuff */
     gint int1;
     gint int2;
@@ -137,7 +145,16 @@ void           gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          gboolean export_labels,
                                                          gboolean export_metadata,
                                                          GwyGraphModelExportStyle export_style);
+
 void           gwy_graph_model_signal_layout_changed    (GwyGraphModel *model);
+
+void           gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
+                                                         GtkOrientation direction,
+                                                         gboolean is_logarithmic);
+gboolean       gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
+                                                         GtkOrientation direction);
+gboolean       gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model);
+gboolean       gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model);
 
 G_END_DECLS
 

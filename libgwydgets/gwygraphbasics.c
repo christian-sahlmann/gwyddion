@@ -31,17 +31,28 @@
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
-    return specs->xmin
+   if (!specs->log_x)
+       return specs->xmin
             + (gint)((data - specs->real_xmin)
                      /(specs->real_width)*((gdouble)specs->width-1));
+
+   return specs->xmin
+       + (gint)((log10(data) - log10(specs->real_xmin))
+                /((log10(specs->real_xmin + specs->real_width) - log10(specs->real_xmin)))*((gdouble)specs->width-1));
+   
 }
 
 static gint
 y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
+    if (!specs->log_y)
     return specs->ymin + specs->height
            - (gint)((data - specs->real_ymin)
                     /(specs->real_height)*((gdouble)specs->height-1));
+   
+    return specs->ymin + specs->height
+        - (gint)((log10(data) - log10(specs->real_ymin))
+                /((log10(specs->real_ymin + specs->real_height) - log10(specs->real_ymin)))*((gdouble)specs->height-1));
 }
 
 void
@@ -225,12 +236,12 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
 void
 gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
                                 GwyGraphActiveAreaSpecs *specs,
-                                GwyGraphDataPoint *data_points,
-                                gint n_of_points)
+                                GwySelectionGraphPoint *selection)
 {
     /* FIXME: use Gtk+ theme */
     static const GwyRGBA color = { 0.4, 0.4, 0.4, 1.0 };
     gint i, size;
+    gdouble selection_data[2];
 
     size = 6;
 
@@ -238,10 +249,11 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
     if (gc == NULL)
         gc = gdk_gc_new(drawable);
 
-    for (i = 0; i < n_of_points; i++) {
+    for (i = 0; i < GWY_SELECTION(selection)->n; i++) {
+        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_data);
         gwy_graph_draw_point(drawable, gc,
-                             x_data_to_pixel(specs, data_points[i].x),
-                             y_data_to_pixel(specs, data_points[i].y),
+                             x_data_to_pixel(specs, selection_data[0]),
+                             y_data_to_pixel(specs, selection_data[1]),
                              GWY_GRAPH_POINT_CROSS, size, &color, FALSE);
     }
 }

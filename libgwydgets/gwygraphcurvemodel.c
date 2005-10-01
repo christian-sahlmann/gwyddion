@@ -737,7 +737,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                    ydata,
                                    res);
     
-                    
+    gwy_graph_curve_model_signal_layout_changed(gcmodel);                    
 }
 
 

@@ -302,6 +302,11 @@ gwy_graph_refresh(GwyGraph *graph)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);
 
+    gwy_axis_set_logarithmic(graph->axis_left,   model->y_is_logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_right,  model->y_is_logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_top,    model->x_is_logarithmic);
+    gwy_axis_set_logarithmic(graph->axis_bottom, model->x_is_logarithmic);
+    
     gwy_axis_set_unit(graph->axis_top, model->x_unit);
     gwy_axis_set_unit(graph->axis_bottom, model->x_unit);
     gwy_axis_set_unit(graph->axis_left, model->y_unit);
@@ -527,7 +532,7 @@ gwy_graph_get_selection_number(GwyGraph *graph)
     if (graph->area->status == GWY_GRAPH_STATUS_XSEL)
         return graph->area->areasdata->data_areas->len;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_POINTS)
-        return graph->area->pointsdata->data_points->len;
+        return GWY_SELECTION(graph->area->pointsdata)->n;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_XLINES
              || graph->area->status ==  GWY_GRAPH_STATUS_YLINES)
         return graph->area->linesdata->data_lines->len;
@@ -616,12 +621,13 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
         break;
 
         case GWY_GRAPH_STATUS_POINTS:
-        for (i = 0; i < graph->area->pointsdata->data_points->len; i++) {
-            data_point = &g_array_index(graph->area->pointsdata->data_points,
-                                        GwyGraphDataPoint, i);
-            selection[2*i] = data_point->x;
-            selection[2*i + 1] = data_point->y;
-        }
+        gwy_selection_get_data(GWY_SELECTION(graph->area->pointsdata), selection);
+        //for (i = 0; i < graph->area->pointsdata->data_points->len; i++) {
+        //    data_point = &g_array_index(graph->area->pointsdata->data_points,
+        //                                GwyGraphDataPoint, i);
+        //    selection[2*i] = data_point->x;
+        //    selection[2*i + 1] = data_point->y;
+        //}
         break;
 
         case GWY_GRAPH_STATUS_ZOOM:

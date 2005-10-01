@@ -32,6 +32,7 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 #include "gwydgetutils.h"
+#include "gwygraphselections.h"
 
 enum {
     SELECTED_SIGNAL,
@@ -187,7 +188,8 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->mouse_present = FALSE;
 
     area->pointdata = g_new(GwyGraphStatus_PointData, 1);
-    area->pointsdata = g_new(GwyGraphStatus_PointsData, 1);
+    //area->pointsdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_POINT, 1);//g_new(GwyGraphStatus_PointsData, 1);
+    //g_assert(GWY_IS_SELECTION_GRAPH_POINT(area->pointsdata));
     area->areadata = g_new(GwyGraphStatus_AreaData, 1);
     area->areasdata = g_new(GwyGraphStatus_AreasData, 1);
     area->linesdata = g_new(GwyGraphStatus_LinesData, 1);
@@ -195,8 +197,8 @@ gwy_graph_area_init(GwyGraphArea *area)
 
     area->areasdata->data_areas = g_array_new(FALSE, TRUE,
                                               sizeof(GwyGraphDataArea));
-    area->pointsdata->data_points = g_array_new(FALSE, TRUE,
-                                                sizeof(GwyGraphDataPoint));
+    //area->pointsdata->data_points = g_array_new(FALSE, TRUE,
+      //                                          sizeof(GwyGraphDataPoint));
     area->linesdata->data_lines = g_array_new(FALSE, TRUE, sizeof(gdouble));
 
     area->actual_cursor_data = g_new(GwyGraphStatus_CursorData, 1);
@@ -267,7 +269,7 @@ gwy_graph_area_finalize(GObject *object)
     gtk_widget_destroy(GTK_WIDGET(area->label_dialog));
 
     g_array_free(area->areasdata->data_areas, TRUE);
-    g_array_free(area->pointsdata->data_points, TRUE);
+    //g_array_free(area->pointsdata->data_points, TRUE);
 
     G_OBJECT_CLASS(gwy_graph_area_parent_class)->finalize(object);
 }
@@ -411,7 +413,8 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     specs.real_ymin = model->y_min;
     specs.real_width = model->x_max - model->x_min;
     specs.real_height = model->y_max - model->y_min;
-    specs.log_x = specs.log_y = FALSE;
+    specs.log_x = model->x_is_logarithmic;
+    specs.log_y = model->y_is_logarithmic;
     /*draw continuous selection*/
     if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
         gwy_graph_draw_selection_areas(drawable,
@@ -432,11 +435,14 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     }
 
     /*draw discrete selection (points)*/
+    //g_assert(GWY_IS_SELECTION_GRAPH_POINT(area->pointsdata));
+    //g_assert(GWY_IS_SELECTION(area->pointsdata));
     if (area->status == GWY_GRAPH_STATUS_POINTS || area->status == GWY_GRAPH_STATUS_ZOOM)
         gwy_graph_draw_selection_points(drawable,
                                          gc, &specs,
-                                         (GwyGraphDataPoint *)area->pointsdata->data_points->data,
-                                         area->pointsdata->data_points->len);
+                                         //(GwyGraphDataPoint *)area->pointsdata->data_points->data,
+                                         area->pointsdata
+                                         /*area->pointsdata->data_points->len*/);
 
     /*draw discrete selection (points)*/
     if (area->status == GWY_GRAPH_STATUS_XLINES)
@@ -514,9 +520,10 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     GwyGraphArea *area;
     GwyGraphModel *gmodel;
     GtkLayoutChild *child;
-    GwyGraphDataPoint datpnt;
+    //GwyGraphDataPoint datpnt;
     GwyGraphDataArea areadata;
     gint x, y, curve, selection;
+    gdouble selection_data[2];
     gdouble dx, dy;
 
     gwy_debug("");
@@ -561,17 +568,23 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
 
     if (area->status == GWY_GRAPH_STATUS_POINTS)
     {
-        if (event->button == 1 && area->pointsdata->data_points->len < area->selection_limit) /*add selection*/
+        if (event->button == 1 && !gwy_selection_is_full(GWY_SELECTION(area->pointsdata))
+            /*&& area->pointsdata->data_points->len < area->selection_limit*/) /*add selection*/
         {
-            datpnt.x = dx;
-            datpnt.y = dy;
-            g_array_append_val(area->pointsdata->data_points, datpnt);
+            selection_data[0] = dx;
+            selection_data[1] = dy;
+            //datpnt.x = dx;
+            //datpnt.y = dy;
+            area->selecting = TRUE;
+            gwy_selection_set_object(GWY_SELECTION(area->pointsdata), -1, selection_data);
+            //g_array_append_val(area->pointsdata->data_points, datpnt);
         }
         else
         {
             selection = gwy_graph_area_find_point(area, dx, dy);
             if (selection >= 0)
-                g_array_remove_index(area->pointsdata->data_points, selection);
+                gwy_selection_delete_object(GWY_SELECTION(area->pointsdata), selection);
+                //g_array_remove_index(area->pointsdata->data_points, selection);
         }
         gtk_widget_queue_draw(GTK_WIDGET(area));
         gwy_graph_area_signal_selected(area);
@@ -663,9 +676,10 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
 {
     GwyGraphArea *area;
     GwyGraphModel *gmodel;
+    //GwyGraphDataPoint *datpnt;
     GwyGraphDataArea *areadata;
     gint x, y, ispos = 0;
-    gdouble dx, dy, *linedata;
+    gdouble dx, dy, *linedata, selection_data[2];
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
@@ -708,10 +722,21 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
         gwy_graph_area_signal_selected(area);
     }
 
-    if (area->selecting && area->status == GWY_GRAPH_STATUS_YLINES)
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_POINTS)
     {
-        linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
+        /*
+        datpnt = &g_array_index(area->pointsdata->data_points, GwyGraphDataPoint, area->pointsdata->data_points->len - 1);
+        datpnt->x = dx;
+        datpnt->y = dy;*/
+        gwy_selection_get_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
+        selection_data[0] = dx;
+        selection_data[1] = dy;
+        gwy_selection_set_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
+        area->selecting = FALSE;
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+        gwy_graph_area_signal_selected(area);
     }
+ 
 
     
  
@@ -748,8 +773,9 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     GwyGraphArea *area;
     GwyGraphModel *gmodel;
     GwyGraphDataArea *areadata;
+    //GwyGraphDataPoint *datpnt;
     gint x, y, ispos = 0;
-    gdouble dx, dy, *linedata;
+    gdouble dx, dy, *linedata, selection_data[2];
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_GRAPH_AREA(widget), FALSE);
@@ -790,7 +816,19 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
         gwy_graph_area_signal_selected(area);
     }
 
-
+    if (area->selecting && area->status == GWY_GRAPH_STATUS_POINTS)
+    {
+        //datpnt = &g_array_index(area->pointsdata->data_points, GwyGraphDataPoint, area->pointsdata->data_points->len - 1);
+        //datpnt->x = dx;
+        //datpnt->y = dy;
+        gwy_selection_get_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
+        selection_data[0] = dx;
+        selection_data[1] = dy;
+        gwy_selection_set_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
+        gtk_widget_queue_draw(GTK_WIDGET(area));
+        gwy_graph_area_signal_selected(area);
+    }
+ 
     if (area->status == GWY_GRAPH_STATUS_ZOOM
                              && (area->selecting != 0)) {
          area->zoomdata->width = dx - area->zoomdata->xmin;
@@ -880,21 +918,27 @@ static gint
 gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
 {
     gint i;
-    GwyGraphDataPoint *selection;
+    //GwyGraphDataPoint *selection;
     GwyGraphModel *model;
-    gdouble xmin, ymin, xmax, ymax, xoff, yoff;
+    gdouble xmin, ymin, xmax, ymax, xoff, yoff, selection_data[2];
 
     model = GWY_GRAPH_MODEL(area->graph_model);
     xoff = (model->x_max - model->x_min)/100;
     yoff = (model->y_max - model->y_min)/100;
 
-    for (i=0; i<area->pointsdata->data_points->len; i++)
+    for (i=0; i<GWY_SELECTION(area->pointsdata)->n; i++)
     {
-        selection = &g_array_index(area->pointsdata->data_points, GwyGraphDataPoint, i);
-        xmin = selection->x - xoff;
-        xmax = selection->x + xoff;
-        ymin = selection->y - yoff;
-        ymax = selection->y + yoff;
+        //selection = &g_array_index(area->pointsdata->data_points, GwyGraphDataPoint, i);
+        //xmin = selection->x - xoff;
+        //xmax = selection->x + xoff;
+        //ymin = selection->y - yoff;
+        //ymax = selection->y + yoff;
+        gwy_selection_get_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
+        xmin = selection_data[0] - xoff;
+        xmax = selection_data[0] + xoff;
+        ymin = selection_data[1] - yoff;
+        ymax = selection_data[1] + yoff;
+
 
         if (xmin <= x && xmax >= x && ymin <= y && ymax >= y) return i;
     }
@@ -1002,8 +1046,12 @@ scr_to_data_x(GtkWidget *widget, gint scr)
     model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
-    return model->x_min
+    if (!model->x_is_logarithmic) 
+        return model->x_min
            + scr*(model->x_max - model->x_min)/(widget->allocation.width-1);
+    else
+        return pow(10, log10(model->x_min)
+           + scr*(log10(model->x_max) - log10(model->x_min))/(widget->allocation.width-1));
 }
 
 static gint
@@ -1015,8 +1063,12 @@ data_to_scr_x(GtkWidget *widget, gdouble data)
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
 
-    return (data - model->x_min)
+    if (!model->x_is_logarithmic)
+        return (data - model->x_min)
            /((model->x_max - model->x_min)/(widget->allocation.width-1));
+    else
+       return (log10(data) - log10(model->x_min))
+           /((log10(model->x_max) - log10(model->x_min))/(widget->allocation.width-1));
 }
 
 static gdouble
@@ -1029,9 +1081,14 @@ scr_to_data_y(GtkWidget *widget, gint scr)
     model = GWY_GRAPH_MODEL(area->graph_model);
 
     scr = CLAMP(scr, 0, widget->allocation.height-1);
-    return model->y_min
+    if (!model->y_is_logarithmic)
+        return model->y_min
            + (widget->allocation.height - scr)*(model->y_max - model->y_min)
              /(widget->allocation.height-1);
+    else
+        return pow(10, log10(model->y_min)
+                   + (widget->allocation.height - scr)*(log10(model->y_max) - log10(model->y_min))
+                                                        /(widget->allocation.height-1));
 }
 
 static gint
@@ -1042,9 +1099,14 @@ data_to_scr_y(GtkWidget *widget, gdouble data)
 
     area = GWY_GRAPH_AREA(widget);
     model = GWY_GRAPH_MODEL(area->graph_model);
-    return widget->allocation.height
+    if (!model->y_is_logarithmic)
+        return widget->allocation.height
            - (data - model->y_min)
              /((model->y_max - model->y_min)/((gdouble)widget->allocation.height-1));
+    else
+        return widget->allocation.height
+            - (log10(data) - log10(model->y_min))
+            /((log10(model->y_max) - log10(model->y_min))/((gdouble)widget->allocation.height-1));
 }
 
 /**
@@ -1159,8 +1221,9 @@ gwy_graph_area_clear_selection(GwyGraphArea *area)
     }
     else if (area->status == GWY_GRAPH_STATUS_POINTS || area->status == GWY_GRAPH_STATUS_ZOOM)
     {
-        if (area->pointsdata) g_array_free(area->pointsdata->data_points, TRUE);
-        area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataPoint));
+        gwy_selection_clear(GWY_SELECTION(area->pointsdata));
+        //if (area->pointsdata) g_array_free(area->pointsdata->data_points, TRUE);
+        //area->pointsdata->data_points = g_array_new(FALSE, TRUE, sizeof(GwyGraphDataPoint));
     }
 
 

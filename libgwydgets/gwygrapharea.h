@@ -26,6 +26,7 @@
 #include <gtk/gtklayout.h>
 #include <libgwydgets/gwygraphareadialog.h>
 #include <libgwydgets/gwygraphlabeldialog.h>
+#include "gwygraphselections.h"
 
 G_BEGIN_DECLS
 
@@ -48,10 +49,10 @@ typedef struct {
   GwyGraphDataPoint data_point;
 } GwyGraphStatus_CursorData;
 
-typedef struct {
+/*typedef struct {
   GArray *data_points;
 } GwyGraphStatus_PointsData;
-
+*/
 typedef struct {
   GwyGraphDataArea data_area;
 } GwyGraphStatus_AreaData;
@@ -90,7 +91,8 @@ struct _GwyGraphArea {
 
     GwyGraphStatusType status;
     GwyGraphStatus_PointData *pointdata;
-    GwyGraphStatus_PointsData *pointsdata;
+    //GwyGraphStatus_PointsData *pointsdata;
+    GwySelectionGraphPoint *pointsdata;
     GwyGraphStatus_AreaData *areadata;
     GwyGraphStatus_AreasData *areasdata;
     GwyGraphStatus_LinesData *linesdata;
@@ -194,6 +196,7 @@ void gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data);
 const GArray* gwy_graph_area_get_x_grid_data(GwyGraphArea *area);
 
 const GArray* gwy_graph_area_get_y_grid_data(GwyGraphArea *area);
+
 
 
 G_END_DECLS

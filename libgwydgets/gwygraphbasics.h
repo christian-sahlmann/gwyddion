@@ -27,6 +27,7 @@
 #include <libgwydgets/gwydgetenums.h>
 #include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphselections.h>
 
 G_BEGIN_DECLS
 
@@ -80,8 +81,7 @@ void gwy_graph_draw_curve           (GdkDrawable *drawable,
 void gwy_graph_draw_selection_points(GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
-                                     GwyGraphDataPoint *data_points,
-                                     gint n_of_points);
+                                     GwySelectionGraphPoint *selection);
 void gwy_graph_draw_selection_areas (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,

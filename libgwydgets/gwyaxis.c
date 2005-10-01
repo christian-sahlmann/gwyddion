@@ -383,18 +383,20 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
         gwy_axis_autoset(axis, width, height);
     
     iterations = 0;
-    do {
-        scaleres = gwy_axis_scale(axis);
-        /*printf("scale: %d   iterations: %d\n", scaleres, iterations);*/
-        if (scaleres > 0)
-            axis->par.major_maxticks = (gint)(0.5*(gdouble)axis->par.major_maxticks);
+    if (axis->is_logarithmic) {gwy_axis_scale(axis);}
+    else {
+        do {
+            scaleres = gwy_axis_scale(axis);
+            /*printf("scale: %d   iterations: %d\n", scaleres, iterations);*/
+            if (scaleres > 0)
+                axis->par.major_maxticks = (gint)(0.5*(gdouble)axis->par.major_maxticks);
         
-        if (scaleres < 0)
-            axis->par.major_maxticks = (gint)(2*(gdouble)axis->par.major_maxticks);
+            if (scaleres < 0)
+                axis->par.major_maxticks = (gint)(2*(gdouble)axis->par.major_maxticks);
        
-        iterations++;
-    } while (scaleres != 0 && iterations < 10);
-
+            iterations++;
+        } while (scaleres != 0 && iterations < 10);
+    }
     if (axis->orientation == GTK_POS_TOP
         || axis->orientation == GTK_POS_BOTTOM)
         gwy_axis_precompute(axis, 0, width);
@@ -949,56 +951,74 @@ static gint
 gwy_axis_logscale(GwyAxis *a)
 {
     gint i;
-    gdouble max, min, _min, tickstep, base;
+    gdouble max, min, _min, logmax, logmin, tickstep, base;
     GwyAxisLabeledTick mjt;
     GwyAxisTick mit;
 
-    max = a->max;
-    min = a->min;
+    max = a->reqmax;
+    min = a->reqmin;
     _min = min+0.1;
 
+    /*printf("start: max %g, min %g\n", max, min);*/
+    
     /*no negative values are allowed*/
     if (min > 0)
-        min = log10(min);
+        logmin = log10(min);
     else if (min == 0)
-        min = log10(_min);
+        logmin = log10(_min);
     else
         return 1;
 
     if (max > 0)
-        max = log10(max);
+        logmax = log10(max);
     else
         return 1;
 
+    /*printf("logmax %g, logmin %g\n", max, min);*/
+    
     /*ticks will be linearly distributed again*/
 
     /*major ticks - will be equally ditributed in the log domain 1,10,100*/
     tickstep = 1; /*step*/
-    base = ceil(min/tickstep)*tickstep; /*starting value*/
-
+    base = ceil(logmin/tickstep)*tickstep - 1; /*starting value*/
+    logmin = base;
+    /*printf("MJ base %g, tickstep %g\n", base, tickstep);*/
     i = 0;
     do {
         mjt.t.value = base;
         mjt.ttext = g_string_new(" ");
         g_array_append_val(a->mjticks, mjt);
+        /*printf("MJ mjt_value[%d]: %g\n", i, mjt.t.value);*/
         base += tickstep;
         i++;
-    } while (base<=max && i<a->par.major_maxticks);
+    } while (i<2 || ((base - tickstep) < logmax && i<a->par.major_maxticks));
+    logmax = base - tickstep;
+    min = gwy_axis_dbl_raise(10.0, logmin);
+    max = gwy_axis_dbl_raise(10.0, logmax);
+    /*printf("recomputed: max %g, min %g\n", max, min);*/
+    
 
     /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
-    tickstep = gwy_axis_dbl_raise(10.0, (gint)floor(min));
-    base = ceil(pow(10, min)/tickstep)*tickstep;
-    max = a->max;
+    tickstep = min;
+    base = tickstep;
+    /*printf("MI starting value: base: %g  tickstep: %g\n", base, tickstep);*/
     i = 0;
     do {
          /*here, tickstep must be adapted do scale*/
          tickstep = gwy_axis_dbl_raise(10.0, (gint)floor(log10(base*1.01)));
              mit.value = log10(base);
          g_array_append_val(a->miticks, mit);
+         /*printf("MI mit_value[%d]: %g\n", i, mit.value);*/
+         /*printf("MI base: %g  tickstep: %g  mit_value[%d]: %g\n", base, tickstep, i, mit.value);*/
          base += tickstep;
+         /*printf("MI base: %g  max: %g\n", base, max);*/
          i++;
-    } while (base<=max && i<(a->par.major_maxticks*10));
+    } while (base<=max && i<(a->par.major_maxticks*20));
 
+    a->max = max;
+    a->min = min;
+    /*printf("max %g, min %g\n", max, min);*/
+    
     return 0;
 }
 
@@ -1011,9 +1031,8 @@ gwy_axis_scale(GwyAxis *a)
     gint ret;
     GwyAxisLabeledTick *mjt;
 
-    
     /*never use logarithmic mode for negative numbers*/
-    if (a->min < 0 && a->is_logarithmic == TRUE)
+    if (a->reqmin < 0 && a->is_logarithmic == TRUE)
         return 1; /*this is an error*/
 
     /*remove old ticks*/
@@ -1221,10 +1240,10 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
     axis->reqmin = min;
     axis->reqmax = max;
-    
+ 
     /*prevent axis to allow null range. It has no sense and even gnuplot does the same...*/
-    if (min==max) axis->reqmax += 10.0;
-  
+    if (min==max) axis->reqmax += 1.0;
+
     gwy_axis_adjust(axis,
                     (GTK_WIDGET(axis))->allocation.width,
                     (GTK_WIDGET(axis))->allocation.height);
@@ -1565,7 +1584,8 @@ gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
     for (i = 0; i< axis->mjticks->len; i++) {
         pmji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
         pvalue = &g_array_index(array, gdouble, i);
-        *pvalue = pmji->t.value;
+        if (!axis->is_logarithmic) *pvalue = pmji->t.value;
+        else *pvalue = gwy_axis_dbl_raise(10.0, pmji->t.value);
     }
 }
 

@@ -173,6 +173,9 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->y_min = 0.0;
     gmodel->y_max = 0.0;
 
+    gmodel->x_is_logarithmic = FALSE;
+    gmodel->y_is_logarithmic = FALSE;
+    
     gmodel->has_x_unit = FALSE;
     gmodel->has_y_unit = FALSE;
     gmodel->x_unit = gwy_si_unit_new("");
@@ -254,6 +257,8 @@ gwy_graph_model_serialize(GObject *obj,
         GwySerializeSpec spec[] = {
             { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
             { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
+            { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
+            { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
             { 'o', "y_unit", &gmodel->y_unit, NULL },
             { 's', "title", &gmodel->title->str, NULL },
@@ -293,6 +298,8 @@ gwy_graph_model_deserialize(const guchar *buffer,
         GwySerializeSpec spec[] = {
             { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
             { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
+            { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
+            { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
             { 'o', "x_unit", &gmodel->x_unit, NULL },
             { 'o', "y_unit", &gmodel->y_unit, NULL },
             { 's', "title", &title, NULL },
@@ -447,6 +454,8 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
     duplicate->title = g_string_new(gmodel->title->str);;
     duplicate->has_x_unit = gmodel->has_x_unit;
     duplicate->has_y_unit = gmodel->has_y_unit;
+    duplicate->x_is_logarithmic = gmodel->x_is_logarithmic;
+    duplicate->y_is_logarithmic = gmodel->y_is_logarithmic;
     duplicate->x_min = gmodel->x_min;
     duplicate->y_min = gmodel->y_min;
     duplicate->x_max = gmodel->x_max;
@@ -873,8 +882,71 @@ gwy_graph_model_get_y_siunit(GwyGraphModel *model)
     return gwy_si_unit_duplicate(model->y_unit);
 }
 
-/**
-* gwy_graph_model_export_ascii:
+
+void           
+gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
+                                          GtkOrientation direction,
+                                          gboolean is_logarithmic)
+{
+    if (direction == GTK_ORIENTATION_VERTICAL)
+       model->y_is_logarithmic = is_logarithmic;
+    else
+       model->x_is_logarithmic = is_logarithmic;
+        
+}
+
+gboolean       
+gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
+                                          GtkOrientation direction)
+{
+    if (direction == GTK_ORIENTATION_VERTICAL)
+       return model->y_is_logarithmic;
+
+    return model->x_is_logarithmic;
+}
+
+gboolean       
+gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
+{
+    GwyGraphCurveModel *cmodel;
+    gint i, j;
+    gdouble *data;
+
+    for (i = 0; i < model->ncurves; i++)
+    {
+        cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+        data = gwy_graph_curve_model_get_xdata(cmodel);
+        for (j = 0; j < gwy_graph_curve_model_get_ndata(cmodel); j++)
+        {
+            if (data[j] <= 0) return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+gboolean       
+gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
+{
+    GwyGraphCurveModel *cmodel;
+    gint i, j;
+    gdouble *data;
+
+    for (i = 0; i < model->ncurves; i++)
+    {
+        cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+        data = gwy_graph_curve_model_get_ydata(cmodel);
+        for (j = 0; j < gwy_graph_curve_model_get_ndata(cmodel); j++)
+        {
+            if (data[j] <= 0) return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+
+
+/** gwa_graph_model_export_ascii:
+ gwy_graph_model_export_ascii:
 * @model: A #GwyGraphModel.
 * @filename: name of file to be created
 * @export_units: export units in the column header

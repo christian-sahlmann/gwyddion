@@ -308,7 +308,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
                      "selected", G_CALLBACK(graph_selected), &controls);
 
     gtk_widget_show_all(dialog);
-    fractal_dialog_update(&controls, args, data);
+    //fractal_dialog_update(&controls, args, data);
 
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
