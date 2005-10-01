@@ -66,7 +66,7 @@ struct _GwyLayerEllipse {
 struct _GwyLayerEllipseClass {
     GwyVectorLayerClass parent_class;
 
-    GdkCursor *near_cursor;
+    GdkCursor *corner_cursor[4];
     GdkCursor *resize_cursor;
 };
 
@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of elliptic areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -326,8 +326,10 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
 
     if (!layer->button) {
         i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
+        if (i > 0)
+            i = i % OBJECT_SIZE;
         klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-        gdk_window_set_cursor(window, i == -1 ? NULL : klass->near_cursor);
+        gdk_window_set_cursor(window, i == -1 ? NULL : klass->corner_cursor[i]);
         return FALSE;
     }
 
@@ -475,8 +477,10 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     layer->selecting = -1;
     klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
+    if (i > 0)
+        i = i % OBJECT_SIZE;
     outside = outside || (i == -1);
-    gdk_window_set_cursor(window, outside ? NULL : klass->near_cursor);
+    gdk_window_set_cursor(window, outside ? NULL : klass->corner_cursor[i]);
     gwy_selection_finished(layer->selection);
 
     return FALSE;
@@ -514,23 +518,29 @@ gwy_layer_ellipse_realize(GwyDataViewLayer *layer)
 
     klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
     gwy_gdk_cursor_new_or_ref(&klass->resize_cursor, GDK_CROSS);
-    gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_SIZING);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[0], GDK_UL_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[1], GDK_LL_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[2], GDK_UR_ANGLE);
+    gwy_gdk_cursor_new_or_ref(&klass->corner_cursor[3], GDK_LR_ANGLE);
 }
 
 static void
 gwy_layer_ellipse_unrealize(GwyDataViewLayer *layer)
 {
     GwyLayerEllipseClass *klass;
+    gint i;
 
     gwy_debug("");
 
     klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
-    gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->resize_cursor);
+    for (i = 0; i < 4; i++)
+        gwy_gdk_cursor_free_or_unref(&klass->corner_cursor[i]);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_ellipse_parent_class)->unrealize(layer);
 }
 
+#if 0
 /* FIXME: This is a fake.  For circle-like ellpises it's good, but for
  * eccentric ellipses it's sometimes too large */
 static gdouble
@@ -583,6 +593,37 @@ gwy_layer_ellipse_near_point(GwyVectorLayer *layer,
     if (dmin > PROXIMITY_DISTANCE)
         return -1;
     return imin;
+}
+#endif
+
+static int
+gwy_layer_ellipse_near_point(GwyVectorLayer *layer,
+                             gdouble xreal, gdouble yreal)
+{
+    GwyDataView *view;
+    gdouble *coords, d2min, xy[OBJECT_SIZE];
+    gint i, n;
+
+    if (!(n = gwy_selection_get_data(layer->selection, NULL)))
+        return -1;
+
+    coords = g_newa(gdouble, 8*n);
+    for (i = 0; i < n; i++) {
+        gwy_selection_get_object(layer->selection, i, xy);
+        coords[8*i + 0] = coords[8*i + 2] = xy[0];
+        coords[8*i + 1] = coords[8*i + 5] = xy[1];
+        coords[8*i + 4] = coords[8*i + 6] = xy[2];
+        coords[8*i + 3] = coords[8*i + 7] = xy[3];
+    }
+    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords);
+
+    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    /* FIXME: this is simply nonsense when x measure != y measure */
+    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
+
+    if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
+        return -1;
+    return i;
 }
 
 static void
