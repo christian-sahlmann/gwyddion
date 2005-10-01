@@ -97,6 +97,15 @@ static const guint nice_fftw_num_2n[] = {
     0, 8, 15, 32, 59, 96, 135, 167, 200, 231, 270, 331
 };
 
+/**
+ * find_next_nice_fftw_number:
+ * @size: Array size.  Currently it must not be larger than a hard-coded
+ *        maximum (64800) which should be good enough for all normal uses.
+ *
+ * Find a nice-for-FFT array size larger than given number.
+ *
+ * Returns: The good array size.
+ **/
 static inline gint
 find_next_nice_fftw_number(gint size)
 {
