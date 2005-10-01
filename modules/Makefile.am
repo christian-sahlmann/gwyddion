@@ -45,11 +45,5 @@ plugin_proxy_la_SOURCES = plugin-proxy.c
 plugin_proxy_la_LIBADD = $(module_libadd)
 
 
-# To run uninstalled
-all-local: tool
-
-tool:
-	$(LN_S) tools tool
-
 clean-local:
-	rm -f core.* *~ tool
+	rm -f core.* *~
