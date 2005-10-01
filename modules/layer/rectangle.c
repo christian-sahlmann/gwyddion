@@ -45,7 +45,8 @@ enum {
 
 enum {
     PROP_0,
-    PROP_IS_CROP
+    PROP_IS_CROP,
+    PROP_DRAW_REFLECTION
 };
 
 typedef struct _GwyLayerRectangle          GwyLayerRectangle;
@@ -58,6 +59,7 @@ struct _GwyLayerRectangle {
 
     /* Properties */
     gboolean is_crop;
+    gboolean draw_reflection;
 
     /* Dynamic state */
     gboolean square;
@@ -102,6 +104,8 @@ static gboolean gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
                                                     GdkEventButton *event);
 static void     gwy_layer_rectangle_set_is_crop    (GwyLayerRectangle *layer,
                                                     gboolean is_crop);
+static void     gwy_layer_rectangle_set_reflection (GwyLayerRectangle *layer,
+                                                    gboolean draw_reflection);
 static void     gwy_layer_rectangle_realize        (GwyDataViewLayer *layer);
 static void     gwy_layer_rectangle_unrealize      (GwyDataViewLayer *layer);
 static gint     gwy_layer_rectangle_near_point     (GwyVectorLayer *layer,
@@ -120,7 +124,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -185,11 +189,22 @@ gwy_layer_rectangle_class_init(GwyLayerRectangleClass *klass)
                              "rectangle",
                              FALSE,
                              G_PARAM_READWRITE));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_DRAW_REFLECTION,
+        g_param_spec_boolean("draw-reflection",
+                             "Draw reflection",
+                             "Whether central reflection of selection should "
+                             "be drawn too",
+                             FALSE,
+                             G_PARAM_READWRITE));
 }
 
 static void
 gwy_selection_rectangle_init(GwySelectionRectangle *selection)
 {
+    /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
 }
 
@@ -211,6 +226,10 @@ gwy_layer_rectangle_set_property(GObject *object,
         gwy_layer_rectangle_set_is_crop(layer, g_value_get_boolean(value));
         break;
 
+        case PROP_DRAW_REFLECTION:
+        gwy_layer_rectangle_set_reflection(layer, g_value_get_boolean(value));
+        break;
+
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -228,6 +247,10 @@ gwy_layer_rectangle_get_property(GObject*object,
     switch (prop_id) {
         case PROP_IS_CROP:
         g_value_set_boolean(value, layer->is_crop);
+        break;
+
+        case PROP_DRAW_REFLECTION:
+        g_value_set_boolean(value, layer->draw_reflection);
         break;
 
         default:
@@ -284,9 +307,24 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
         if (xmin != xmax)
             gdk_draw_line(drawable, layer->gc, xmax, 0, xmax, height);
     }
-    else
+    else {
         gdk_draw_rectangle(drawable, layer->gc, FALSE,
                            xmin, ymin, xmax - xmin, ymax - ymin);
+
+        if (GWY_LAYER_RECTANGLE(layer)->draw_reflection) {
+            gint xs, ys, xe, ye;
+
+            /* FIXME: this is somewhat dirty, add some get-size method to
+             * DataView? */
+            xs = ys = G_MININT;
+            gwy_data_view_coords_xy_clamp(data_view, &xs, &ys);
+            xe = ye = G_MAXINT;
+            gwy_data_view_coords_xy_clamp(data_view, &xe, &ye);
+            gdk_draw_rectangle(drawable, layer->gc, FALSE,
+                               xs + xe - xmax, ys + ye - ymax,
+                               xmax - xmin, ymax - ymin);
+        }
+    }
 }
 
 static gboolean
@@ -502,6 +540,28 @@ gwy_layer_rectangle_set_is_crop(GwyLayerRectangle *layer,
     if (parent)
         gwy_layer_rectangle_draw(vector_layer, parent->window);
     g_object_notify(G_OBJECT(layer), "is-crop");
+}
+
+static void
+gwy_layer_rectangle_set_reflection(GwyLayerRectangle *layer,
+                                   gboolean draw_reflection)
+{
+    GwyVectorLayer *vector_layer;
+    GtkWidget *parent;
+
+    g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    parent = GWY_DATA_VIEW_LAYER(layer)->parent;
+
+    if (draw_reflection == layer->draw_reflection)
+        return;
+
+    if (parent)
+        gwy_layer_rectangle_undraw(vector_layer, parent->window);
+    layer->draw_reflection = draw_reflection;
+    if (parent)
+        gwy_layer_rectangle_draw(vector_layer, parent->window);
+    g_object_notify(G_OBJECT(layer), "draw-reflection");
 }
 
 static void
