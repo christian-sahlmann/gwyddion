@@ -1,6 +1,6 @@
-1.99.3cvs20050918
+1.99.3cvs20050930
 
-1.99.4
+1.99.4 (2005-10-01)
 Application:
 - GLib and Gtk+ 2.6 is required now.
 - Can optionally use FFTW v3 library (currently only for a few operations).
@@ -46,10 +46,10 @@ Library:
   calculated area was fixed.
 - libgwyddion, libgwydgets: GwyWatchable was finally removed.
 - libgwydgets: 3D Window crash on Export from small toolbar was fixed.
-- libprocess: overloaded gwy_data_line_get_stat_function() was replaced with
-  individual statistical functions, several of them are faster now
-- libprocess: GwyDataField and GwyDataLine support offsets of coordinates
-  origin.
+- libprocess: Overloaded gwy_data_line_get_stat_function() was replaced with
+  individual statistical functions, several of them are faster now.
+- libprocess, libgwydgets: GwyDataField and GwyDataLine support presentational
+  offsets of coordinates origin, widgets support them to some extent.
 - libgwyddion: Text entities are in a GwyInventory instead of a raw array.
 - libgwydgets: It's possible to get real GwyDataView zoom, GwyDataWindow
   displays that in window title instead of requested zoom.
@@ -60,6 +60,8 @@ Library:
   GwyVectorLayer reworked to use it.
 - libgwyapp: Undo was generalized to work with arbitrary item types; it also
   exports lower-level functions usable for undo outside main app windows.
+- libprocess: FFT backend argument was removed from FFT functions.
+- libgwydgets: Vertical rulers look like rotated horizontal rulers now.
 
 Modules:
 - BCR file: Unit support was improved, support for zmin added.
@@ -71,10 +73,14 @@ Modules:
   various other changes, all support selection setting now as a side effect.
 - Rectangular selection: Hold Shift to select exact squares.
 - Line selection: Hold Shift to select lines in `nice' directions.
+- Distance: Displays value difference too.
+- Pixmap: The same unit selection/formatting is used for false color scale
+  as on data windows (bug #63).
 
 Other:
 - Modules are built with libtool, so it should be possible to build
-  Gwyddion on more systems.
+  Gwyddion on more systems, but it's impossible to run Gwyddion uninstalled
+  again.
 - Missing Italic stock icon was added.
 - MSVC makefile templates (.gwt) are distributed in source code tarball,
   allowing to re-generate makefile.msc files.

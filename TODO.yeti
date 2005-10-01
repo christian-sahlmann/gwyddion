@@ -1,6 +1,3 @@
-GWYDDION-1
-- Check GUI style in Petr's modules
-
 SF CVS cleanup:
 - modules/tools -> modules/tool
 
@@ -13,22 +10,22 @@ HEAD
   must watch GL materials, they are editable now
 - GwyColorAxis needs overhaul
 - Graphs:
+  units displayed only as a multiplier, no base SI unit
+  add support for offsets
   infinite, memory allocating loop in gwy_axis_scale
-  infinite graph-related loop in 1D FFT filter
   sfunctions never frees anything, leaks awful lots of GwyGraphCurveModels
   and GwySIUnits
   graph titles don't work
   silly public signal emitors, mouse-moved
   property get/set not implemented
-  too large value warning on ACF
   kill global last_status in gwygraphwindow
   gwy_graph_model_get_*_siunit return copies -- why? (set() also sets copies)
   selection API is strange and partially duplicated between Graph and GraphArea
-  impossible(?) to hide curve descriptions
   stray "layout-updated" signal in GwyGraphModel
   old graph modules are still present
   layout issues
-- Use Pango FT2 to render fonts in pixmap instead of the ugly hack
+- Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
+  complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
   libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType,
               GwyComputationStateType, GwyDWTDenoiseType, GwyTipType
@@ -42,9 +39,8 @@ HEAD
   number of lines should be increased)
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
-- Write a Postscript export module based on JP's work
+- Write a Postscript export module based on JP's work -- or wait for Cairo?
 - Convert Logarithmic scale value to logarithmic presentation
-- Add Clear to Icolorange -- that's convoluted, cannot be Unitool's clear
 - Rawfile presets setable as new filetype -- may need to wait to GtkUIManager,
   as now the menu updates would be messy
 - Display whether data are unchanged/modified/new somewhere
