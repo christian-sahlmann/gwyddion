@@ -200,10 +200,10 @@ static GtkWidget*
 dialog_create(GwyUnitoolState *state)
 {
     static const GwyEnum range_modes[] = {
-        { N_("Full"), GWY_LAYER_BASIC_RANGE_FULL },
-        { N_("Fixed"), GWY_LAYER_BASIC_RANGE_FIXED },
-        { N_("Auto"), GWY_LAYER_BASIC_RANGE_AUTO },
-        { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT },
+        { N_("Full"),     GWY_LAYER_BASIC_RANGE_FULL,  },
+        { N_("Fixed"),    GWY_LAYER_BASIC_RANGE_FIXED, },
+        { N_("Auto"),     GWY_LAYER_BASIC_RANGE_AUTO,  },
+        { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT, },
     };
     ToolControls *controls;
     GwyContainer *settings;
@@ -228,7 +228,7 @@ dialog_create(GwyUnitoolState *state)
     modelist = gwy_radio_buttons_create(range_modes, G_N_ELEMENTS(range_modes),
                                         "range-type",
                                         G_CALLBACK(range_mode_changed), state,
-                                        -1);
+                                        get_range_type(state));
     for (l = modelist; l; l = g_slist_next(l)) {
         button = GTK_WIDGET(l->data);
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
