@@ -168,6 +168,7 @@ layer_setup(GwyUnitoolState *state)
     guint len;
 
     g_assert(CHECK_LAYER_TYPE(state->layer));
+    controls = (ToolControls*)state->user_data;
     g_object_set(state->layer,
                  "selection-key", "/0/select/rectangle",
                  "is-crop", FALSE,
@@ -242,9 +243,13 @@ dialog_create(GwyUnitoolState *state)
     gwy_graph_curve_model_set_description(cmodel,
                                           _("Height histogram"));
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
+    /* XXX XXX XXX XXX Workaround for hang-up Petr promises to fix */
+    {
+        gdouble d[] = { 0.0, 1.0 };
+        gwy_graph_curve_model_set_data(cmodel, d, d, G_N_ELEMENTS(d));
+    }
 
     controls->histogram_model = gwy_graph_model_new();
-    /* XXX: this hangs/crashes, but Petr promises to fix it */
     gwy_graph_model_add_curve(controls->histogram_model, cmodel);
     controls->histogram = gwy_graph_new(controls->histogram_model);
     graph = GWY_GRAPH(controls->histogram);
@@ -344,6 +349,7 @@ dialog_update(GwyUnitoolState *state,
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     graph = GWY_GRAPH(controls->histogram);
+    range_type = get_range_type(state);
 
     if (reason == GWY_UNITOOL_UPDATED_DATA) {
         cmodel = gwy_graph_model_get_curve_by_index(controls->histogram_model,
