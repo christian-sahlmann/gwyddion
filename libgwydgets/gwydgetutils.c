@@ -281,6 +281,7 @@ gwy_table_attach_hscale(GtkWidget *table,
     GwyHScaleStyle base_style;
     GtkTable *tab;
     gdouble u, l;
+    gint digits;
 
     g_return_val_if_fail(GTK_IS_TABLE(table), NULL);
     tab = GTK_TABLE(table);
@@ -314,7 +315,9 @@ gwy_table_attach_hscale(GtkWidget *table,
 
     if (base_style != GWY_HSCALE_WIDGET
         && base_style != GWY_HSCALE_WIDGET_NO_EXPAND) {
-        spin = gtk_spin_button_new(adj, 1, 0);
+        u = adj->step_increment;
+        digits = (u > 0.0) ? (gint)floor(-log10(u)) : 0;
+        spin = gtk_spin_button_new(adj, 1, MAX(digits, 0));
         u = adj->value;
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
