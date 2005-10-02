@@ -159,7 +159,6 @@ contrast_dialog(ContrastArgs *args)
     controls.weight = gtk_adjustment_new(args->weight, 0.0, 1.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_hscale(table, row++, _("_Weight:"), NULL,
                                    controls.weight, 0);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     gtk_widget_show_all(dialog);
     do {

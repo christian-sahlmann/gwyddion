@@ -258,11 +258,8 @@ dialog_create(GwyUnitoolState *state)
     spin = gwy_table_attach_hscale(table, row, _("Size:"), NULL,
                                    GTK_OBJECT(controls->size),
                                    GWY_HSCALE_DEFAULT);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     g_signal_connect(controls->size, "value_changed",
-                                G_CALLBACK(size_changed_cb), controls);
-
-
+                     G_CALLBACK(size_changed_cb), controls);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("Interpolation type:"));

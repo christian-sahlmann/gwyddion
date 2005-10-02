@@ -217,7 +217,6 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                                    0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Height:"), "%",
                                    controls.threshold_height, GWY_HSCALE_CHECK);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     controls.is_height = g_object_get_data(G_OBJECT(controls.threshold_height),
                                            "check");
     row++;

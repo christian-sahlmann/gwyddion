@@ -280,8 +280,6 @@ crosscor_window_construct(CrosscorArgs *args,
     spin = gwy_table_attach_hscale(table, row, _("_Threshold:"), NULL,
                                    controls->threshold, 0);
     gwy_table_hscale_set_sensitive(controls->threshold, args->add_ls_mask);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
-
 
     gtk_widget_show_all(dialog);
 
