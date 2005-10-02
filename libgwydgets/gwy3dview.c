@@ -74,7 +74,8 @@ enum {
     PROP_SHOW_AXES,
     PROP_SHOW_LABELS,
     PROP_VISUALIZATION,
-    PROP_REDUCED_SIZE
+    PROP_REDUCED_SIZE,
+    PROP_VISUALIZATION
 };
 
 #ifdef HAVE_GTKGLEXT
@@ -208,7 +209,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
                            "Movement type",
                            "What quantity is changed when uses moves pointer",
                            GWY_TYPE_3D_MOVEMENT,
-                           GWY_3D_MOVEMENT_ROTATION,
+                           GWY_3D_MOVEMENT_NONE,
                            G_PARAM_READWRITE));
 
     /**
@@ -260,6 +261,17 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
                            "Reduced size",
                            "The size of downsampled data in quick view",
                            4, 4096, 100, G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
+         PROP_VISUALIZATION,
+         g_param_spec_enum("visualization",
+                           "Visualization type",
+                           "The type of data visualization",
+                           GWY_TYPE_3D_VISUALIZATION,
+                           GWY_3D_VISUALIZATION_GRADIENT,
+                           G_PARAM_READWRITE));
+
 }
 
 static void
@@ -352,11 +364,11 @@ gwy_3d_view_set_property(GObject *object,
 
     switch (prop_id) {
         case PROP_MOVEMENT:
-        gwy_3d_view_set_movement_type(view, g_value_get_uint(value));
+        gwy_3d_view_set_movement_type(view, g_value_get_enum(value));
         break;
 
         case PROP_PROJECTION:
-        gwy_3d_view_set_projection(view, g_value_get_uint(value));
+        gwy_3d_view_set_projection(view, g_value_get_enum(value));
         break;
 
         case PROP_SHOW_AXES:
@@ -369,6 +381,10 @@ gwy_3d_view_set_property(GObject *object,
 
         case PROP_REDUCED_SIZE:
         gwy_3d_view_set_reduced_size(view, g_value_get_uint(value));
+        break;
+
+        case PROP_VISUALIZATION:
+        gwy_3d_view_set_visualization(view, g_value_get_enum(value));
         break;
 
         default:
@@ -387,11 +403,11 @@ gwy_3d_view_get_property(GObject*object,
 
     switch (prop_id) {
         case PROP_MOVEMENT:
-        g_value_set_uint(value, view->movement);
+        g_value_set_enum(value, view->movement);
         break;
 
         case PROP_PROJECTION:
-        g_value_set_uint(value, view->projection);
+        g_value_set_enum(value, view->projection);
         break;
 
         case PROP_SHOW_AXES:
@@ -404,6 +420,10 @@ gwy_3d_view_get_property(GObject*object,
 
         case PROP_REDUCED_SIZE:
         g_value_set_boolean(value, view->reduced_size);
+        break;
+
+        case PROP_VISUALIZATION:
+        g_value_set_enum(value, view->visual);
         break;
 
         default:
@@ -1408,8 +1428,7 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
         gwy3dview->shape_current = GWY_3D_SHAPE_REDUCED;
 
     if (invalidate_now || immediate)
-        gdk_window_invalidate_rect(GTK_WIDGET(gwy3dview)->window,
-                                   &GTK_WIDGET(gwy3dview)->allocation, FALSE);
+        gtk_widget_queue_draw(GTK_WIDGET(gwy3dview));
 
     if (!immediate) {
         gwy3dview->timeout_id = g_timeout_add(GWY_3D_TIMEOUT_DELAY,
