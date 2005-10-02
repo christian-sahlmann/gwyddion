@@ -23,12 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <glib/gstdio.h>
-
-#ifdef HAVE_GTKGLEXT
-#include <gtk/gtkglinit.h>
-#endif
 
 #include <libgwyddion/gwyddion.h>
 #include <libgwymodule/gwymodule.h>
@@ -80,15 +75,12 @@ main(int argc, char *argv[])
 #endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
-#ifdef HAVE_GTKGLEXT
-    gwy_gl_ok = gtk_gl_init_check(&argc, &argv);
-#endif  /* HAVE_GTKGLEXT */
 
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_debug("Text settings file is `%s'. Do we have it: %s",
               settings_file, has_settings ? "TRUE" : "FALSE");
-    gwy_app_init();
+    gwy_app_init(&argc, &argv);
 
     gwy_app_splash_create();
 

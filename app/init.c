@@ -27,28 +27,41 @@
 #include <app/menu.h>
 #include "gwyddion.h"
 
+#ifdef HAVE_GTKGLEXT
+#include <gtk/gtkglinit.h>
+#endif
+
 static GSList *palettes = NULL;
 
 static void gwy_app_init_set_window_icon (void);
 
 /**
  * gwy_app_init:
+ * @argc: Address of the argc parameter of main(). Passed to
+ *        gtk_gl_init_check().
+ * @argv: Address of the argv parameter of main(). Passed to
+ *        gtk_gl_init_check().
  *
  * Initializes all Gwyddion data types, i.e. types that may appear in
  * serialized data. GObject has to know about them when g_type_from_name()
  * is called.
  *
- * XXX: This function does much more. It registeres stock items, initializes
- * various class resources, etc.
+ * It registeres stock items, initializes tooltip class resources, sets
+ * application icon, sets Gwyddion specific widget resources.
+ *
+ * If NLS is compiled in, it sets it up and binds text domains.
+ *
+ * If OpenGL is compiled in, it checks whether it's really available (calling
+ * gtk_gl_init_check() and gwy_widgets_gl_init()).
  **/
 void
-gwy_app_init(void)
+gwy_app_init(int *argc,
+             char ***argv)
 {
     g_assert(palettes == NULL);
 
     gwy_widgets_type_init();
-    if (gwy_gl_ok)
-        gwy_gl_ok = gwy_widgets_gl_init();
+    gwy_gl_ok = gtk_gl_init_check(argc, argv) && gwy_widgets_gl_init();
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
     /* XXX: These reference are never released. */
@@ -117,19 +130,8 @@ gwy_app_set_find_self_style(const gchar *argv0)
 
 #ifdef G_OS_UNIX
 void
-gwy_app_set_find_self_style(const gchar *argv0)
+gwy_app_set_find_self_style(G_GNUC_UNUSED const gchar *argv0)
 {
-    const gchar *ext ="/app/.libs/lt-gwyddion";
-    gchar *p;
-
-    if (g_str_has_suffix(argv0, ext)) {
-        g_printerr("Warning: Running uninstalled, "
-                   "but may be still using *installed* libraries.\n");
-        p = g_strdup(argv0);
-        strcpy(p + strlen(p) - strlen(ext) + 1, "gwyddion");
-        gwy_find_self_set_argv0(p);
-        g_free(p);
-    }
 }
 #endif  /* G_OS_UNIX */
 
