@@ -75,12 +75,12 @@ main(int argc, char *argv[])
 #endif  /* LOG_TO_FILE */
 
     gtk_init(&argc, &argv);
+    gwy_app_init(&argc, &argv);
 
     settings_file = gwy_app_settings_get_settings_filename();
     has_settings = g_file_test(settings_file, G_FILE_TEST_IS_REGULAR);
     gwy_debug("Text settings file is `%s'. Do we have it: %s",
               settings_file, has_settings ? "TRUE" : "FALSE");
-    gwy_app_init(&argc, &argv);
 
     gwy_app_splash_create();
 
@@ -121,8 +121,6 @@ main(int argc, char *argv[])
     if (settings_ok || !has_settings)
         gwy_app_settings_save(settings_file);
     gwy_app_recent_file_list_save(recent_file_file);
-    gwy_resource_class_save(g_type_class_peek(GWY_TYPE_GRADIENT), NULL);
-    gwy_resource_class_save(g_type_class_peek(GWY_TYPE_GL_MATERIAL), NULL);
     /* XXX: Finalize all gradients.  Useless, but makes --debug-objects happy.
      * Remove in production version. */
     g_object_unref(gwy_gradients());
