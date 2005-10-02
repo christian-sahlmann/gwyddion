@@ -49,6 +49,7 @@ typedef struct {
     GtkWidget *edit_window;
     GSList *components;
     GtkWidget *colorsel;
+    GtkObject *shininess;
     GtkWidget *preview;
 } GwyGLMaterialEditor;
 
@@ -61,6 +62,7 @@ static void gwy_gl_material_editor_construct   (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
 static void gwy_gl_material_editor_closed      (GwyGLMaterialEditor *editor);
+static void gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_component_cb(GtkWidget *widget,
                                                 GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_color_cb    (GtkWidget *widget,
@@ -197,6 +199,7 @@ gwy_gl_material_editor_edit(GwyGLMaterialEditor *editor)
     if (!editor->edit_window) {
         gwy_gl_material_editor_construct(editor);
     }
+    gwy_gl_material_editor_update(editor);
     gtk_window_present(GTK_WINDOW(editor->edit_window));
 }
 
@@ -262,6 +265,7 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
                      editor);
     spin = gwy_table_attach_hscale(table, 0, _("Shininess:"), NULL, adj,
                                    GWY_HSCALE_DEFAULT);
+    editor->shininess = adj;
 
     gwy_gl_material_editor_preview_new(editor);
     gtk_box_pack_end(GTK_BOX(hbox), editor->preview, FALSE, FALSE, 0);
@@ -297,6 +301,52 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
 
     editor->preview = view;
+}
+
+static void
+gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
+{
+    GwyGLMaterial *material;
+    GdkColor gdkcolor;
+    const GwyRGBA *color;
+    gint component;
+
+    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    if (!material) {
+        g_warning("Editing non-existent material.  "
+                  "Either make it impossible, or implement some reasonable "
+                  "behaviour.");
+        return;
+    }
+    component = gwy_radio_buttons_get_current(editor->components,
+                                              "color-component");
+    switch (component) {
+        case GL_MATERIAL_AMBIENT:
+        color = gwy_gl_material_get_ambient(material);
+        break;
+
+        case GL_MATERIAL_DIFFUSE:
+        color = gwy_gl_material_get_diffuse(material);
+        break;
+
+        case GL_MATERIAL_SPECULAR:
+        color = gwy_gl_material_get_specular(material);
+        break;
+
+        case GL_MATERIAL_EMISSION:
+        color = gwy_gl_material_get_emission(material);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+    gwy_rgba_to_gdk_color(color, &gdkcolor);
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(editor->colorsel),
+                                          &gdkcolor);
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(editor->shininess),
+                             gwy_gl_material_get_shininess(material));
 }
 
 static void
@@ -353,6 +403,7 @@ static void
 gwy_gl_material_editor_component_cb(GtkWidget *widget,
                                     GwyGLMaterialEditor *editor)
 {
+    gwy_gl_material_editor_update(editor);
 }
 
 static void
@@ -374,6 +425,7 @@ gwy_gl_material_editor_closed(GwyGLMaterialEditor *editor)
     editor->components = NULL;
     editor->colorsel = NULL;
     editor->preview = NULL;
+    editor->shininess = NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
