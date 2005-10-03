@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
@@ -56,6 +57,8 @@ typedef struct {
 static void gwy_gl_material_editor_changed     (GtkTreeSelection *selection,
                                                 GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_destroy     (GwyGLMaterialEditor *editor);
+static void gwy_gl_material_editor_new         (GwyGLMaterialEditor *editor);
+static void gwy_gl_material_editor_delete      (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_set_default (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_edit        (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_construct   (GwyGLMaterialEditor *editor);
@@ -67,7 +70,7 @@ static void gwy_gl_material_editor_component_cb(GtkWidget *widget,
                                                 GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_color_cb    (GtkWidget *widget,
                                                 GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_shininess_cb(GtkWidget *widget,
+static void gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
                                                 GwyGLMaterialEditor *editor);
 
 void
@@ -122,10 +125,16 @@ gwy_app_gl_material_editor(void)
     button = gtk_button_new_from_stock(GTK_STOCK_NEW);
     editor->button_new = button;
     gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gl_material_editor_new),
+                             editor);
 
     button = gtk_button_new_from_stock(GTK_STOCK_DELETE);
     editor->button_delete = button;
     gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gl_material_editor_delete),
+                             editor);
 
     button = gtk_button_new_with_mnemonic(_("Set De_fault"));
     editor->button_default = button;
@@ -191,6 +200,77 @@ gwy_gl_material_editor_set_default(GwyGLMaterialEditor *editor)
     inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
     gwy_inventory_set_default_item_name(inventory,
                                         gwy_resource_get_name(resource));
+}
+
+static void
+gwy_gl_material_editor_new(GwyGLMaterialEditor *editor)
+{
+    GwyGLMaterial *new_gl_material;
+    GwyResource *resource;
+    FILE *fh;
+    gchar *filename;
+    GString *str;
+
+    /* Add a new gl_material resource to inventory */
+    new_gl_material = gwy_inventory_new_item(gwy_gl_materials(),
+                                             editor->active->str, NULL);
+    resource = GWY_RESOURCE(new_gl_material);
+    gwy_gl_material_tree_view_set_active(editor->treeview,
+                                         gwy_resource_get_name(resource));
+
+    /* Save new gl_material resource to file */
+    filename = gwy_resource_build_filename(resource);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        /* FIXME: GUIze this */
+        g_warning("Cannot save resource file: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+    str = gwy_resource_dump(resource);
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    gwy_gl_material_editor_edit(editor);
+}
+
+static void
+gwy_gl_material_editor_delete(GwyGLMaterialEditor *editor)
+{
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    GwyResource *resource;
+    GwyInventory *inventory;
+    gchar *filename;
+    int result;
+
+    /* Get selected resource, and the inventory it belongs to: */
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
+        g_warning("Something should be selected for `Delete'");
+        return;
+    }
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+
+    /* Delete the resource file */
+    filename = gwy_resource_build_filename(resource);
+    result = g_remove(filename);
+    if (result) {
+        /* FIXME: GUIze this */
+        g_warning("Resource (%s) could not be deleted.",
+                  gwy_resource_get_name(resource));
+
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    /* Delete the resource from the inventory */
+    gwy_inventory_delete_item(inventory, gwy_resource_get_name(resource));
 }
 
 static void
@@ -261,12 +341,12 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
     table = gtk_table_new(1, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     adj = gtk_adjustment_new(0.0, 0.0, 1.0, 0.001, 0.1, 0.0);
-    g_signal_connect(adj, "changed",
+    editor->shininess = adj;
+    spin = gwy_table_attach_hscale(table, 0, _("Shininess:"), NULL,
+                                   adj, GWY_HSCALE_DEFAULT);
+    g_signal_connect(adj, "value-changed",
                      G_CALLBACK(gwy_gl_material_editor_shininess_cb),
                      editor);
-    spin = gwy_table_attach_hscale(table, 0, _("Shininess:"), NULL, adj,
-                                   GWY_HSCALE_DEFAULT);
-    editor->shininess = adj;
 
     gwy_gl_material_editor_preview_new(editor);
     gtk_box_pack_end(GTK_BOX(hbox), editor->preview, FALSE, FALSE, 0);
@@ -452,7 +532,7 @@ gwy_gl_material_editor_color_cb(GtkWidget *widget,
 }
 
 static void
-gwy_gl_material_editor_shininess_cb(GtkWidget *widget,
+gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
                                     GwyGLMaterialEditor *editor)
 {
     GwyGLMaterial *material;
@@ -463,7 +543,7 @@ gwy_gl_material_editor_shininess_cb(GtkWidget *widget,
         g_warning("Current material is nonexistent/unmodifiable");
         return;
     }
-    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(editor->shininess));
+    val = gtk_adjustment_get_value(adj);
     gwy_gl_material_set_shininess(material, val);
 }
 
