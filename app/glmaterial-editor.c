@@ -211,7 +211,7 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
         { N_("Ambient"),  GL_MATERIAL_AMBIENT,  },
         { N_("Diffuse"),  GL_MATERIAL_DIFFUSE,  },
         { N_("Specular"), GL_MATERIAL_SPECULAR, },
-        { N_("Emission"), GL_MATERIAL_EMISSION, },
+        /*{ N_("Emission"), GL_MATERIAL_EMISSION, },*/
     };
     GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table, *spin;
     GtkObject *adj;
