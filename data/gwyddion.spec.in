@@ -1,22 +1,11 @@
 # @(#) $Id$
-%define release_ext %{nil}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
-
-%if %{distro_is_suse}
-%{expand:%global distro_version %(sed 's/VERSION *= *//;t;d' /etc/SuSE-release)}
-%define release_ext suse%{distro_version}
-%endif
-
-%if %{distro_is_fedora}
-%{expand:%global distro_version %(sed 's/.* release *//;s/ .*//;' /etc/fedora-release)}
-%define release_ext fc%{distro_version}
-%endif
 
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
-Release: @RPM_RELEASE@%{release_ext}
+Release: @RPM_RELEASE@
 License: GNU GPL
 Group: Applications/Engineering
 Source: http://trific.ath.cx/Ftp/%{name}/@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2
