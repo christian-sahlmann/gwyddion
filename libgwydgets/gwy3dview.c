@@ -1714,7 +1714,8 @@ gwy_3d_view_expose(GtkWidget *widget,
 
 
     glCallList(gwy3D->shape_list_base + gwy3D->shape_current);
-    gwy_3d_draw_axes(gwy3D);
+    if (gwy3D->show_axes)
+        gwy_3d_draw_axes(gwy3D);
 
     if (gwy3D->movement == GWY_3D_MOVEMENT_LIGHT
           && gwy3D->shape_current == GWY_3D_SHAPE_REDUCED)
@@ -2071,102 +2072,100 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glMaterialf(GL_FRONT, GL_SHININESS,
                 (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
 
-    if (widget->show_axes) {
-        rx = 0.1;
-        if (rx >= 0.0 && rx <= 90.0) {
-            Ay = yres;
-            Cx = xres;
-            yfirst = TRUE;
-        } else if (rx > 90.0 && rx <= 180.0) {
-            Ax = xres;
-            Ay = yres;
-            By = yres;
-            yfirst = FALSE;
-        } else if (rx > 180.0 && rx <= 270.0) {
-            Ax = xres;
-            Bx = xres;
-            By = yres;
-            Cy = yres;
-           yfirst = TRUE;
-        } else if (rx >= 270.0 && rx <= 360.0) {
-            Bx = xres;
-            Cx = xres;
-            Cy = yres;
-            yfirst = FALSE;
-        }
-        glBegin(GL_LINE_STRIP);
-            glColor3f(0.0, 0.0, 0.0);
-            glVertex3f(Ax, Ay, 0.0f);
-            glVertex3f(Bx, By, 0.0f);
-            glVertex3f(Cx, Cy, 0.0f);
-            glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
-        glEnd();
-        glBegin(GL_LINES);
-            glVertex3f(Ax, Ay, 0.0f);
-            glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
-            glVertex3f((Ax+Bx) / 2, (Ay+By) / 2, 0.0f);
-            glVertex3f((Ax+Bx) / 2 - (Cx-Bx)*0.02,
-                       (Ay+By) / 2 - (Cy-By)*0.02, 0.0f );
-            glVertex3f(Bx , By, 0.0f);
-            glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
-            glVertex3f(Bx, By, 0.0f);
-            glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
-            glVertex3f((Cx+Bx) / 2, (Cy+By) / 2, 0.0f);
-            glVertex3f((Cx+Bx) / 2 - (Ax-Bx)*0.02,
-                       (Cy+By) / 2 - (Ay-By)*0.02, 0.0f );
-            glVertex3f(Cx , Cy, 0.0f);
-            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
+    rx = 0.1;
+    if (rx >= 0.0 && rx <= 90.0) {
+        Ay = yres;
+        Cx = xres;
+        yfirst = TRUE;
+    } else if (rx > 90.0 && rx <= 180.0) {
+        Ax = xres;
+        Ay = yres;
+        By = yres;
+        yfirst = FALSE;
+    } else if (rx > 180.0 && rx <= 270.0) {
+        Ax = xres;
+        Bx = xres;
+        By = yres;
+        Cy = yres;
+       yfirst = TRUE;
+    } else if (rx >= 270.0 && rx <= 360.0) {
+        Bx = xres;
+        Cx = xres;
+        Cy = yres;
+        yfirst = FALSE;
+    }
+    glBegin(GL_LINE_STRIP);
+        glColor3f(0.0, 0.0, 0.0);
+        glVertex3f(Ax, Ay, 0.0f);
+        glVertex3f(Bx, By, 0.0f);
+        glVertex3f(Cx, Cy, 0.0f);
+        glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
+    glEnd();
+    glBegin(GL_LINES);
+        glVertex3f(Ax, Ay, 0.0f);
+        glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
+        glVertex3f((Ax+Bx) / 2, (Ay+By) / 2, 0.0f);
+        glVertex3f((Ax+Bx) / 2 - (Cx-Bx)*0.02,
+                   (Ay+By) / 2 - (Cy-By)*0.02, 0.0f );
+        glVertex3f(Bx , By, 0.0f);
+        glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
+        glVertex3f(Bx, By, 0.0f);
+        glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
+        glVertex3f((Cx+Bx) / 2, (Cy+By) / 2, 0.0f);
+        glVertex3f((Cx+Bx) / 2 - (Ax-Bx)*0.02,
+                   (Cy+By) / 2 - (Ay-By)*0.02, 0.0f );
+        glVertex3f(Cx , Cy, 0.0f);
+        glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
 
-            glPushMatrix();
-            glTranslatef(Cx*cos(widget->rot_x->value * DEG_2_RAD)
-                         - Cy*sin(widget->rot_x->value * DEG_2_RAD),
-                         Cx*sin(widget->rot_x->value * DEG_2_RAD)
-                         + Cy*cos(widget->rot_x->value * DEG_2_RAD), 0.0f);
-            glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
-            glTranslatef(-Cx, -Cy, 0.0f);
-            glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
-            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
-                     widget->data_max - widget->data_min);
-            glVertex3f(Cx, Cy, (widget->data_max - widget->data_min)/2);
-            glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
-                       (widget->data_max-widget->data_min)/2);
-            glPopMatrix();
-        glEnd();
+        glPushMatrix();
+        glTranslatef(Cx*cos(widget->rot_x->value * DEG_2_RAD)
+                     - Cy*sin(widget->rot_x->value * DEG_2_RAD),
+                     Cx*sin(widget->rot_x->value * DEG_2_RAD)
+                     + Cy*cos(widget->rot_x->value * DEG_2_RAD), 0.0f);
+        glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
+        glTranslatef(-Cx, -Cy, 0.0f);
+        glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
+        glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
+                 widget->data_max - widget->data_min);
+        glVertex3f(Cx, Cy, (widget->data_max - widget->data_min)/2);
+        glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
+                   (widget->data_max-widget->data_min)/2);
+        glPopMatrix();
+    glEnd();
 
-        /*
-        TODO: create bitmaps with labels in the beginning (possibly in init_gl)
-              into display lists and draw here
-        */
-        if (widget->show_labels) {
-            guint view_size;
-            gint size;
+    /*
+    TODO: create bitmaps with labels in the beginning (possibly in init_gl)
+          into display lists and draw here
+    */
+    if (widget->show_labels) {
+        guint view_size;
+        gint size;
 
-            view_size = MIN(GTK_WIDGET(widget)->allocation.width,
-                            GTK_WIDGET(widget)->allocation.height);
-            size = (gint)(sqrt(view_size)*0.8);
+        view_size = MIN(GTK_WIDGET(widget)->allocation.width,
+                        GTK_WIDGET(widget)->allocation.height);
+        size = (gint)(sqrt(view_size)*0.8);
 
-            glColor3f(0.0, 0.0, 0.0);
-            gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
-                                             : GWY_3D_VIEW_LABEL_X,
-                              (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                              (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
-                              size, 1, 1);
+        glColor3f(0.0, 0.0, 0.0);
+        gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
+                                         : GWY_3D_VIEW_LABEL_X,
+                          (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
+                          (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
+                          size, 1, 1);
 
-            gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
-                                             : GWY_3D_VIEW_LABEL_Y,
-                              (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                              (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
-                              size, 1, -1);
+        gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
+                                         : GWY_3D_VIEW_LABEL_Y,
+                          (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
+                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
+                          size, 1, -1);
 
-            gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MAX,
-                              Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                              (widget->data_max - widget->data_min),
-                              size, 0, -1);
+        gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MAX,
+                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
+                          (widget->data_max - widget->data_min),
+                          size, 0, -1);
 
-            gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MIN,
-                              Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
-                              size, 0, -1);
-        }
+        gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MIN,
+                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
+                          size, 0, -1);
     }
 
    glPopMatrix();
