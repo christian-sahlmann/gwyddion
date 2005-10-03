@@ -63,6 +63,7 @@ static void gwy_gl_material_editor_set_default (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_edit        (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_construct   (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
+static void gwy_gl_material_editor_preview_set (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
 static void gwy_gl_material_editor_closed      (GwyGLMaterialEditor *editor);
 static void gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
@@ -279,7 +280,7 @@ gwy_gl_material_editor_edit(GwyGLMaterialEditor *editor)
     if (!editor->edit_window) {
         gwy_gl_material_editor_construct(editor);
     }
-    gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview), editor->active->str);
+    gwy_gl_material_editor_preview_set(editor);
     gwy_gl_material_editor_update(editor);
     gtk_window_present(GTK_WINDOW(editor->edit_window));
 }
@@ -349,7 +350,8 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
                      editor);
 
     gwy_gl_material_editor_preview_new(editor);
-    gtk_box_pack_end(GTK_BOX(hbox), editor->preview, FALSE, FALSE, 0);
+    if (editor->preview)
+        gtk_box_pack_end(GTK_BOX(hbox), editor->preview, FALSE, FALSE, 0);
     gtk_widget_show_all(hbox);
 }
 
@@ -361,6 +363,11 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     GwyContainer *container;
     GwyDataField *dfield;
     GtkAdjustment *adj;
+
+    if (!gwy_app_gl_is_ok()) {
+        editor->preview = NULL;
+        return;
+    }
 
     dfield = gwy_data_field_new(N, N, 1.0, 1.0, FALSE);
     gwy_gl_material_editor_make_data(dfield);
@@ -382,6 +389,16 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
 
     editor->preview = view;
+}
+
+static void
+gwy_gl_material_editor_preview_set(GwyGLMaterialEditor *editor)
+{
+    if (gwy_app_gl_is_ok()) {
+        gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
+                                 editor->active->str);
+        return;
+    }
 }
 
 static void

@@ -36,6 +36,10 @@ gchar*        gwy_app_settings_get_settings_filename    (void);
 gchar*        gwy_app_settings_get_log_filename         (void);
 gchar*        gwy_app_settings_get_recent_file_list_filename (void);
 
+gboolean      gwy_app_gl_init                           (int *argc,
+                                                         char ***argv);
+gboolean      gwy_app_gl_is_ok                          (void);
+
 G_END_DECLS
 
 #endif /* __GWY_APP_SETTINGS_H__ */

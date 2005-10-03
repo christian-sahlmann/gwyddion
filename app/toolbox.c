@@ -1056,7 +1056,7 @@ gwy_app_gl_view_maybe_cb(void)
 {
     static GtkWidget *dialog = NULL;
 
-    if (gwy_gl_ok) {
+    if (gwy_app_gl_is_ok()) {
         gwy_app_3d_view_cb();
         return;
     }

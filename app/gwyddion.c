@@ -39,8 +39,6 @@
 #undef LOG_TO_FILE
 #endif
 
-gboolean gwy_gl_ok = FALSE;
-
 #ifdef LOG_TO_FILE
 static void setup_logging(void);
 static void logger(const gchar *log_domain,

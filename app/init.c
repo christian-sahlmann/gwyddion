@@ -25,22 +25,15 @@
 #include <libprocess/gwyprocess.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/menu.h>
+#include <app/settings.h>
 #include "gwyddion.h"
-
-#ifdef HAVE_GTKGLEXT
-#include <gtk/gtkglinit.h>
-#endif
-
-static GSList *palettes = NULL;
 
 static void gwy_app_init_set_window_icon (void);
 
 /**
  * gwy_app_init:
- * @argc: Address of the argc parameter of main(). Passed to
- *        gtk_gl_init_check().
- * @argv: Address of the argv parameter of main(). Passed to
- *        gtk_gl_init_check().
+ * @argc: Address of the argc parameter of main(). Passed to gwy_app_gl_init().
+ * @argv: Address of the argv parameter of main(). Passed to gwy_app_gl_init().
  *
  * Initializes all Gwyddion data types, i.e. types that may appear in
  * serialized data. GObject has to know about them when g_type_from_name()
@@ -58,12 +51,10 @@ void
 gwy_app_init(int *argc,
              char ***argv)
 {
-    g_assert(palettes == NULL);
-
     gwy_widgets_type_init();
-    gwy_gl_ok = gtk_gl_init_check(argc, argv) && gwy_widgets_gl_init();
     g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
+    gwy_app_gl_init(argc, argv);
     /* XXX: These reference are never released. */
     gwy_data_window_class_set_tooltips(gwy_app_tooltips_get());
     gwy_3d_window_class_set_tooltips(gwy_app_tooltips_get());

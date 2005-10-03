@@ -24,10 +24,14 @@
 
 #include <glib/gstdio.h>
 
+#ifdef HAVE_GTKGLEXT
+#include <gtk/gtkglinit.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwyserializable.h>
-#include <libdraw/gwydraw.h>
+#include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 
 static gboolean create_config_dir_real         (const gchar *cfgdir);
@@ -38,6 +42,7 @@ static void     gwy_app_settings_apply         (GwyContainer *settings);
 static const gchar *magic_header = "Gwyddion Settings 1.0\n";
 
 static GwyContainer *gwy_settings = NULL;
+static gboolean gwy_gl_ok = FALSE;
 
 /**
  * gwy_app_settings_get:
@@ -471,6 +476,47 @@ gchar*
 gwy_app_settings_get_recent_file_list_filename(void)
 {
     return g_build_filename(gwy_get_user_dir(), "recent-files", NULL);
+}
+
+/* FIXME: move elsewhere? */
+/**
+ * gwy_app_gl_init:
+ * @argc: Address of the argc parameter of main(). Passed to
+ *        gtk_gl_init_check().
+ * @argv: Address of the argv parameter of main(). Passed to
+ *        gtk_gl_init_check().
+ *
+ * Checks for working OpenGL and initializes it.
+ *
+ * When OpenGL support is not compiled in, this function does not do anything.
+ * When OpenGL is supported, it calls gtk_gl_init_check() and
+ * gwy_widgets_gl_init() (if the former succeeeds).
+ *
+ * Returns: %TRUE if OpenGL initialization succeeeded.
+ **/
+gboolean
+gwy_app_gl_init(G_GNUC_UNUSED int *argc,
+                G_GNUC_UNUSED char ***argv)
+{
+#ifdef HAVE_GTKGLEXT
+    gwy_gl_ok = gtk_gl_init_check(argc, argv) && gwy_widgets_gl_init();
+#endif
+
+    return gwy_gl_ok;
+}
+
+/**
+ * gwy_app_gl_is_ok:
+ *
+ * Returns OpenGL availability.
+ *
+ * Returns: The return value is the same as return value of gwy_app_gl_init(),
+ *          which must be called prior to this function.
+ **/
+gboolean
+gwy_app_gl_is_ok(void)
+{
+    return gwy_gl_ok;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
