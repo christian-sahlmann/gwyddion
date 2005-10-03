@@ -1421,6 +1421,10 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
+    if (gwy_data_field_get_xres(gwy3dview->data) <= gwy3dview->reduced_size
+        && gwy_data_field_get_yres(gwy3dview->data) <= gwy3dview->reduced_size)
+        immediate = TRUE;
+
     if (immediate)
         gwy3dview->shape_current = GWY_3D_SHAPE_AFM;
     else
