@@ -199,6 +199,7 @@ gwy_gl_material_editor_edit(GwyGLMaterialEditor *editor)
     if (!editor->edit_window) {
         gwy_gl_material_editor_construct(editor);
     }
+    gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview), editor->active->str);
     gwy_gl_material_editor_update(editor);
     gtk_window_present(GTK_WINDOW(editor->edit_window));
 }
@@ -240,7 +241,7 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
                          "color-component",
                          G_CALLBACK(gwy_gl_material_editor_component_cb),
                          editor,
-                         -1);
+                         GL_MATERIAL_AMBIENT);
     for (l = group; l; l = g_slist_next(l)) {
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(l->data), FALSE);
         gtk_box_pack_start(GTK_BOX(buttonbox), GTK_WIDGET(l->data),
@@ -410,12 +411,60 @@ static void
 gwy_gl_material_editor_color_cb(GtkWidget *widget,
                                 GwyGLMaterialEditor *editor)
 {
+    GwyGLMaterial *material;
+    GwyRGBA color;
+    GdkColor gdkcolor;
+    gint component;
+
+    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
+        g_warning("Current material is nonexistent/unmodifiable");
+        return;
+    }
+
+    component = gwy_radio_buttons_get_current(editor->components,
+                                              "color-component");
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(editor->colorsel),
+                                          &gdkcolor);
+    gwy_rgba_from_gdk_color(&color, &gdkcolor);
+    color.a = 1.0;    /* FIXME */
+    switch (component) {
+        case GL_MATERIAL_AMBIENT:
+        gwy_gl_material_set_ambient(material, &color);
+        break;
+
+        case GL_MATERIAL_DIFFUSE:
+        gwy_gl_material_set_diffuse(material, &color);
+        break;
+
+        case GL_MATERIAL_SPECULAR:
+        gwy_gl_material_set_specular(material, &color);
+        break;
+
+        case GL_MATERIAL_EMISSION:
+        gwy_gl_material_set_emission(material, &color);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
 gwy_gl_material_editor_shininess_cb(GtkWidget *widget,
                                     GwyGLMaterialEditor *editor)
 {
+    GwyGLMaterial *material;
+    gdouble val;
+
+    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
+        g_warning("Current material is nonexistent/unmodifiable");
+        return;
+    }
+    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(editor->shininess));
+    gwy_gl_material_set_shininess(material, val);
 }
 
 static void
