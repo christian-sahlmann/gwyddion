@@ -317,7 +317,7 @@ gwy_table_attach_hscale(GtkWidget *table,
         && base_style != GWY_HSCALE_WIDGET_NO_EXPAND) {
         u = adj->step_increment;
         digits = (u > 0.0) ? (gint)floor(-log10(u)) : 0;
-        spin = gtk_spin_button_new(adj, 1, MAX(digits, 0));
+        spin = gtk_spin_button_new(adj, adj->step_increment, MAX(digits, 0));
         u = adj->value;
         gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
         gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), TRUE);
@@ -547,8 +547,7 @@ gwy_stock_like_button_new(const gchar *label_text,
 
 /**
  * gwy_get_pango_ft2_font_map:
- * @unref: If %TRUE, function removes the font map reference and return %NULL
- *         %NULL.
+ * @unref: If %TRUE, function removes the font map reference and returns %NULL.
  *
  * Returns global Pango FT2 font map, eventually creating it.
  *
