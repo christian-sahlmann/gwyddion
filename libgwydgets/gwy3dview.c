@@ -97,6 +97,7 @@ static void          gwy_3d_view_get_property   (GObject*object,
 static void          gwy_3d_view_realize        (GtkWidget *widget);
 static void          gwy_3d_view_unrealize      (GtkWidget *widget);
 static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_material_changed(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_realize_gl     (Gwy3DView *widget);
 static void          gwy_3d_view_size_request   (GtkWidget *widget,
@@ -440,9 +441,12 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy_debug(" ");
 
-    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
-                                         G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, gwy3dview);
+    if (gwy3dview->gradient_id)
+        g_signal_handler_disconnect(gwy3dview->gradient,
+                                    gwy3dview->gradient_id);
+    if (gwy3dview->material_id)
+        g_signal_handler_disconnect(gwy3dview->material,
+                                    gwy3dview->material_id);
 
     if (gwy3dview->shape_list_base >= 0) {
         glDeleteLists(gwy3dview->shape_list_base, 2);
@@ -474,6 +478,7 @@ gwy_3d_view_new(GwyContainer *data)
     Gwy3DView *gwy3dview;
     const guchar *name;
     GwyDataField *dfield;
+    gulong id;
     guint i;
 
     gwy_debug(" ");
@@ -523,9 +528,10 @@ gwy_3d_view_new(GwyContainer *data)
         gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
     gwy3dview->gradient = gwy_gradients_get_gradient(name);
     gwy_resource_use(GWY_RESOURCE(gwy3dview->gradient));
-    g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
-                             G_CALLBACK(gwy_3d_view_gradient_changed),
-                             gwy3dview);
+    id = g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
+                                  G_CALLBACK(gwy_3d_view_gradient_changed),
+                                  gwy3dview);
+    gwy3dview->gradient_id = id;
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
@@ -545,6 +551,10 @@ gwy_3d_view_new(GwyContainer *data)
     gwy_container_gis_string_by_name(data, "/0/3d/material", &name);
     gwy3dview->material = gwy_gl_materials_get_gl_material(name);
     gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
+    id = g_signal_connect_swapped(gwy3dview->material, "data-changed",
+                                  G_CALLBACK(gwy_3d_view_material_changed),
+                                  gwy3dview);
+    gwy3dview->material_id = id;
 
     /* should be always true */
     if (gwy3dview->data != NULL) {
@@ -762,65 +772,6 @@ gwy_3d_view_update(Gwy3DView *gwy3dview)
 }
 
 /**
- * gwy_3d_view_set_gradient:
- * @gwy3dview: A 3D data view widget.
- * @gradient: Name of gradient @gwy3dview should use.  It should exist.
- *
- * Sets the color gradient a 3D data view should use.
- **/
-void
-gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
-                         const gchar *gradient)
-{
-    GwyGradient *grad, *old;
-    gchar *gradstr;
-
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%s", gradient);
-
-    grad = gwy_gradients_get_gradient(gradient);
-    if (grad == gwy3dview->gradient)
-        return;
-
-    /* the string we've got as argument can be owned by somethin we are
-     * going to destroy */
-    gradstr = g_strdup(gradient);
-    old = gwy3dview->gradient;
-    g_signal_handlers_disconnect_matched(gwy3dview->gradient,
-                                         G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL, NULL, gwy3dview);
-    gwy_resource_use(GWY_RESOURCE(grad));
-    gwy3dview->gradient = grad;
-    g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
-                             G_CALLBACK(gwy_3d_view_gradient_changed),
-                             gwy3dview);
-    gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                     gradstr);
-    gwy_resource_release(GWY_RESOURCE(old));
-
-    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
-        gwy_3d_view_update_lists(gwy3dview);
-}
-
-static void
-gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
-{
-    if (!GTK_WIDGET_REALIZED(gwy3dview))
-        return;
-
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-}
-
-static void
-gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
-{
-    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
-        gwy_3d_view_update_lists(gwy3dview);
-}
-
-/**
  * gwy_3d_view_get_gradient:
  * @gwy3dview: A 3D data view widget.
  *
@@ -833,6 +784,128 @@ gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient));
+}
+
+/**
+ * gwy_3d_view_set_gradient:
+ * @gwy3dview: A 3D data view widget.
+ * @gradient: Name of gradient @gwy3dview should use.  It should exist.
+ *
+ * Sets the color gradient a 3D data view should use.
+ **/
+void
+gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
+                         const gchar *gradient)
+{
+    GwyGradient *grad, *old;
+    gchar *gradstr;
+    gulong id;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    gwy_debug("%s", gradient);
+
+    grad = gwy_gradients_get_gradient(gradient);
+    old = gwy3dview->gradient;
+    if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(old)), gradient))
+        return;
+
+    gradstr = g_strdup(gradient);
+    if (gwy3dview->gradient_id)
+        g_signal_handler_disconnect(gwy3dview->gradient,
+                                    gwy3dview->gradient_id);
+    gwy_resource_use(GWY_RESOURCE(grad));
+    gwy3dview->gradient = grad;
+    id = g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
+                                  G_CALLBACK(gwy_3d_view_gradient_changed),
+                                  gwy3dview);
+    gwy3dview->gradient_id = id;
+    gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
+                                     gradstr);
+    gwy_resource_release(GWY_RESOURCE(old));
+
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
+        gwy_3d_view_update_lists(gwy3dview);
+}
+
+static void
+gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
+{
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
+        gwy_3d_view_update_lists(gwy3dview);
+}
+
+/**
+ * gwy_3d_view_get_material:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns a name of GL material used to draw data with lights on.
+ *
+ * Returns: A GL material name as a string owned by the material.
+ **/
+const gchar*
+gwy_3d_view_get_material(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
+    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material));
+}
+
+/**
+ * gwy_3d_view_set_material:
+ * @gwy3dview: A 3D data view widget.
+ * @material: A #GwyGLMaterial name to render data with lights on.
+ *
+ * Sets the material of the surface.
+ **/
+void
+gwy_3d_view_set_material(Gwy3DView *gwy3dview,
+                         const gchar *material)
+{
+    GwyGLMaterial *glmat, *old;
+    gchar *gradstr;
+    gulong id;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+    gwy_debug("%s", material);
+
+    glmat = gwy_gl_materials_get_gl_material(material);
+    old = gwy3dview->material;
+    if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(old)), material))
+        return;
+
+    gradstr = g_strdup(material);
+    if (gwy3dview->material_id)
+        g_signal_handler_disconnect(gwy3dview->material,
+                                    gwy3dview->material_id);
+    gwy_resource_use(GWY_RESOURCE(glmat));
+    gwy3dview->material = glmat;
+    id = g_signal_connect_swapped(gwy3dview->material, "data-changed",
+                                  G_CALLBACK(gwy_3d_view_material_changed),
+                                  gwy3dview);
+    gwy3dview->material_id = id;
+    gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/material",
+                                     gradstr);
+    gwy_resource_release(GWY_RESOURCE(old));
+
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING)
+        gwy_3d_view_update_lists(gwy3dview);
+}
+
+static void
+gwy_3d_view_material_changed(Gwy3DView *gwy3dview)
+{
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING)
+        gwy_3d_view_update_lists(gwy3dview);
+}
+
+static void
+gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
+{
+    if (!GTK_WIDGET_REALIZED(gwy3dview))
+        return;
+
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
+    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 /**
@@ -1090,48 +1163,6 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
         gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
     }
 
-}
-
-/**
- * gwy_3d_view_get_material:
- * @gwy3dview: A 3D data view widget.
- *
- * Returns a name of GL material used to draw data with lights on.
- *
- * Returns: A GL material name as a string owned by the material.
- **/
-const gchar*
-gwy_3d_view_get_material(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material));
-}
-
-/**
- * gwy_3d_view_set_material:
- * @gwy3dview: A 3D data view widget.
- * @material: A #GwyGLMaterial name to render data with lights on.
- *
- * Sets the material of the surface.
- **/
-void
-gwy_3d_view_set_material(Gwy3DView *gwy3dview,
-                         const gchar *material)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-    if (gwy_strequal(material,
-                     gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material))))
-        return;
-
-    gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
-    gwy3dview->material = gwy_gl_materials_get_gl_material(material);
-    gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
-    gwy_container_set_string_by_name(gwy3dview->container,
-                                      "/0/3d/material",
-                                      g_strdup(material));
-
-    gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
 Gwy3DLabel*

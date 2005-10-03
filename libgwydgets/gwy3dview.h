@@ -53,6 +53,7 @@ struct _Gwy3DView {
     GwyDataField *data;           /* Data to be shown */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
     GwyGradient  *gradient;
+    gulong gradient_id;
 
     gdouble data_min;             /* minimal z-value of the heights */
     gdouble data_max;             /* maximal z-value od the heights */
@@ -87,6 +88,7 @@ struct _Gwy3DView {
 
     GwyGLMaterial *material;      /* Current material (influences the color
                                      of the object, lights must be on) */
+    gulong material_id;
 
     gdouble mouse_begin_x;        /* Start x-coordinate of mouse */
     gdouble mouse_begin_y;        /* Start y-coordinate of mouse */
