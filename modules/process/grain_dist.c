@@ -84,14 +84,15 @@ dist(GwyContainer *data, GwyRunType run)
     gwy_data_field_grains_get_distribution(dfield, dataline);
 
     gmodel = gwy_graph_model_new();
+    cmodel = gwy_graph_curve_model_new();
+    gwy_graph_model_add_curve(gmodel, cmodel);
+    
     gwy_graph_model_set_title(gmodel, _("Grain Size Histogram"));
     gwy_graph_model_set_x_siunit(gmodel, gwy_data_field_get_si_unit_xy(dfield));
     gwy_graph_model_set_y_siunit(gmodel, gwy_data_field_get_si_unit_z(dfield));
 
-    cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_description(cmodel, "grain sizes");
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
-    gwy_graph_model_add_curve(gmodel, cmodel);
 
     graph = gwy_graph_new(gmodel);
     gwy_object_unref(cmodel);
