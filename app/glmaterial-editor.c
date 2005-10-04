@@ -34,7 +34,8 @@ enum {
     GL_MATERIAL_AMBIENT,
     GL_MATERIAL_DIFFUSE,
     GL_MATERIAL_SPECULAR,
-    GL_MATERIAL_EMISSION
+    GL_MATERIAL_EMISSION,
+    GL_MATERIAL_N
 };
 
 /* For late objectzation... */
@@ -52,6 +53,7 @@ typedef struct {
     GtkWidget *colorsel;
     GtkObject *shininess;
     GtkWidget *preview;
+    GwyRGBA old[GL_MATERIAL_N];
 } GwyGLMaterialEditor;
 
 static void gwy_gl_material_editor_changed     (GtkTreeSelection *selection,
@@ -277,10 +279,17 @@ gwy_gl_material_editor_delete(GwyGLMaterialEditor *editor)
 static void
 gwy_gl_material_editor_edit(GwyGLMaterialEditor *editor)
 {
+    GwyGLMaterial *material;
+
     if (!editor->edit_window) {
         gwy_gl_material_editor_construct(editor);
     }
     gwy_gl_material_editor_preview_set(editor);
+    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
+    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
+    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
+    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
     gwy_gl_material_editor_update(editor);
     gtk_window_present(GTK_WINDOW(editor->edit_window));
 }
@@ -404,6 +413,7 @@ gwy_gl_material_editor_preview_set(GwyGLMaterialEditor *editor)
 static void
 gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
 {
+    GtkColorSelection *colorsel;
     GwyGLMaterial *material;
     GdkColor gdkcolor;
     const GwyRGBA *color;
@@ -439,9 +449,11 @@ gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
         g_return_if_reached();
         break;
     }
+    colorsel = GTK_COLOR_SELECTION(editor->colorsel);
     gwy_rgba_to_gdk_color(color, &gdkcolor);
-    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(editor->colorsel),
-                                          &gdkcolor);
+    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
+    gwy_rgba_to_gdk_color(&editor->old[component], &gdkcolor);
+    gtk_color_selection_set_previous_color(colorsel, &gdkcolor);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(editor->shininess),
                              gwy_gl_material_get_shininess(material));
