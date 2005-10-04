@@ -188,8 +188,8 @@ gwy_graph_area_init(GwyGraphArea *area)
     area->mouse_present = FALSE;
 
     area->pointdata = g_new(GwyGraphStatus_PointData, 1);
-    //area->pointsdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_POINT, 1);//g_new(GwyGraphStatus_PointsData, 1);
-    //g_assert(GWY_IS_SELECTION_GRAPH_POINT(area->pointsdata));
+    area->pointsdata = g_object_new(GWY_TYPE_SELECTION_GRAPH_POINT, NULL);//g_new(GwyGraphStatus_PointsData, 1);
+    gwy_selection_set_max_objects(GWY_SELECTION(area->pointsdata), 10);
     area->areadata = g_new(GwyGraphStatus_AreaData, 1);
     area->areasdata = g_new(GwyGraphStatus_AreasData, 1);
     area->linesdata = g_new(GwyGraphStatus_LinesData, 1);

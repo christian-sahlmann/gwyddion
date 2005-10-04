@@ -708,7 +708,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     gdouble *xdata;
     gdouble *ydata;
     gint res, i;
-    gdouble realmin, realmax;
+    gdouble realmin, realmax, offset;
              
     if (from_index == to_index || from_index > to_index)
     {
@@ -725,10 +725,13 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     }
 
     xdata = (gdouble *)g_malloc(sizeof(gdouble)*res);
-    ydata = (gdouble *)g_malloc(sizeof(gdouble)*res);                                                                                                                                                             
+    ydata = (gdouble *)g_malloc(sizeof(gdouble)*res);   
+
+    offset = gwy_data_line_get_offset(dline);
+    
     for (i=0; i<res; i++)
     {
-        xdata[i] = realmin + (gdouble)i*(realmax - realmin)/(gdouble)res;
+        xdata[i] = realmin + (gdouble)i*(realmax - realmin)/(gdouble)res + offset;
         ydata[i] = dline->data[i + from_index];
     }
 
