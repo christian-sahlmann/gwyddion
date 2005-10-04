@@ -48,6 +48,7 @@ struct _GwyGLMaterial {
     GwyRGBA diffuse;
     GwyRGBA specular;
     GwyRGBA emission;
+    GwyRGBA reserved;
     gdouble shininess;
 
     gpointer reserved1;

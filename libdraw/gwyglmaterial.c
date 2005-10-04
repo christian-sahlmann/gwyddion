@@ -80,29 +80,47 @@ gwy_gl_material_init(GwyGLMaterial *gl_material)
 }
 
 /**
- * gwy_gl_material_fix_rgba:
- * @color: A color.
+ * gwy_gl_material_set_rgba:
+ * @src: A color.
+ * @dest: A color to update.
  *
- * Fixes color components to range -1..1.
+ * Assigns two colors, fixing color components to range -1..1.
  *
- * Returns: The fixed color.
+ * Returns: Whether the color has actually changed.
  **/
-static inline GwyRGBA
-gwy_gl_material_fix_rgba(const GwyRGBA *color)
+static inline gboolean
+gwy_gl_material_set_rgba(const GwyRGBA *src,
+                         GwyRGBA *dest)
 {
-    GwyRGBA rgba;
+    gboolean changed = FALSE;
+    gdouble c;
 
-    rgba.r = CLAMP(color->r, -1.0, 1.0);
-    rgba.g = CLAMP(color->g, -1.0, 1.0);
-    rgba.b = CLAMP(color->b, -1.0, 1.0);
-    rgba.a = CLAMP(color->a, -1.0, 1.0);
-    if (rgba.r != color->r
-        || rgba.g != color->g
-        || rgba.b != color->b
-        || rgba.a != color->a)
-        g_warning("Color component outside -1..1 range");
+    if ((c = CLAMP(src->r, -1.0, 1.0)) != dest->r) {
+        if (c != src->r)
+            g_warning("Red component outside -1..1 range");
+        dest->r = c;
+        changed = TRUE;
+    }
+    if ((c = CLAMP(src->g, -1.0, 1.0)) != dest->g) {
+        if (c != src->g)
+            g_warning("Green component outside -1..1 range");
+        dest->g = c;
+        changed = TRUE;
+    }
+    if ((c = CLAMP(src->b, -1.0, 1.0)) != dest->b) {
+        if (c != src->b)
+            g_warning("Blue component outside -1..1 range");
+        dest->b = c;
+        changed = TRUE;
+    }
+    if ((c = CLAMP(src->a, -1.0, 1.0)) != dest->a) {
+        if (c != src->a)
+            g_warning("Alpha component outside -1..1 range");
+        dest->a = c;
+        changed = TRUE;
+    }
 
-    return rgba;
+    return changed;
 }
 
 /**
@@ -133,8 +151,8 @@ gwy_gl_material_set_ambient(GwyGLMaterial *gl_material,
                             const GwyRGBA *ambient)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->ambient = gwy_gl_material_fix_rgba(ambient);
-    gwy_gl_material_changed(gl_material);
+    if (gwy_gl_material_set_rgba(ambient, &gl_material->ambient))
+        gwy_gl_material_changed(gl_material);
 }
 
 /**
@@ -165,8 +183,8 @@ gwy_gl_material_set_diffuse(GwyGLMaterial *gl_material,
                             const GwyRGBA *diffuse)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->diffuse = gwy_gl_material_fix_rgba(diffuse);
-    gwy_gl_material_changed(gl_material);
+    if (gwy_gl_material_set_rgba(diffuse, &gl_material->diffuse))
+        gwy_gl_material_changed(gl_material);
 }
 
 /**
@@ -197,8 +215,8 @@ gwy_gl_material_set_specular(GwyGLMaterial *gl_material,
                              const GwyRGBA *specular)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->specular = gwy_gl_material_fix_rgba(specular);
-    gwy_gl_material_changed(gl_material);
+    if (gwy_gl_material_set_rgba(specular, &gl_material->specular))
+        gwy_gl_material_changed(gl_material);
 }
 
 /**
@@ -229,8 +247,8 @@ gwy_gl_material_set_emission(GwyGLMaterial *gl_material,
                              const GwyRGBA *emission)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->emission = gwy_gl_material_fix_rgba(emission);
-    gwy_gl_material_changed(gl_material);
+    if (gwy_gl_material_set_rgba(emission, &gl_material->emission))
+        gwy_gl_material_changed(gl_material);
 }
 
 /**
@@ -260,8 +278,11 @@ gwy_gl_material_set_shininess(GwyGLMaterial *gl_material,
                               gdouble shininess)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
-    gl_material->shininess = CLAMP(shininess, 0.0, 1.0);
-    gwy_gl_material_changed(gl_material);
+    shininess = CLAMP(shininess, 0.0, 1.0);
+    if (shininess != gl_material->shininess) {
+        gl_material->shininess = shininess;
+        gwy_gl_material_changed(gl_material);
+    }
 }
 
 /**
@@ -535,10 +556,10 @@ gwy_gl_material_parse(const gchar *text,
         goto fail;
     }
 
-    gwy_gl_material_fix_rgba(&ambient);
-    gwy_gl_material_fix_rgba(&diffuse);
-    gwy_gl_material_fix_rgba(&specular);
-    gwy_gl_material_fix_rgba(&emission);
+    gwy_gl_material_set_rgba(&ambient, &ambient);
+    gwy_gl_material_set_rgba(&diffuse, &diffuse);
+    gwy_gl_material_set_rgba(&specular, &specular);
+    gwy_gl_material_set_rgba(&emission, &emission);
     shininess = CLAMP(shininess, 0.0, 1.0);
 
     gl_material = gwy_gl_material_new("",
