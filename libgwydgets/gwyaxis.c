@@ -895,13 +895,12 @@ gwy_axis_normalscale(GwyAxis *a)
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
         
-    /*printf("reqmin=%g, reqmax=%g\n", a->reqmin, a->reqmax);*/
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
     if (range > 1e40 || range < -1e40)
     {
         g_warning("Axis with extreme range (>1e40)!");
-        a->reqmax = 100; a->reqmin = 0;
+        return 0;
     }
     
     tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
@@ -1240,7 +1239,7 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 {
     axis->reqmin = min;
     axis->reqmax = max;
- 
+
     /*prevent axis to allow null range. It has no sense and even gnuplot does the same...*/
     if (min==max) axis->reqmax += 1.0;
 

@@ -694,7 +694,8 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
     gmodel = GWY_GRAPH_MODEL(area->graph_model);
 
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
+        && area->areasdata->data_areas->len)
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGraphDataArea, area->areasdata->data_areas->len - 1);
          if (area->status == GWY_GRAPH_STATUS_XSEL)
@@ -709,7 +710,8 @@ gwy_graph_area_button_release(GtkWidget *widget, GdkEventButton *event)
          gwy_graph_area_signal_selected(area);
     }
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES) )
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES) 
+        && area->linesdata->data_lines->len)
     {
         linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
         if (area->status == GWY_GRAPH_STATUS_XLINES)
@@ -794,7 +796,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->actual_cursor_data->data_point.y = dy;
     g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL))
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
+        && area->areasdata->data_areas->len)
     {
          areadata = &g_array_index(area->areasdata->data_areas, GwyGraphDataArea, area->areasdata->data_areas->len - 1);
          if (area->status == GWY_GRAPH_STATUS_XSEL)
@@ -804,7 +807,8 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
          gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
-    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES) )
+    if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
+        && area->linesdata->data_lines->len)
     {
         linedata = &g_array_index(area->linesdata->data_lines, gdouble, area->linesdata->data_lines->len - 1);
         if (area->status == GWY_GRAPH_STATUS_XLINES)

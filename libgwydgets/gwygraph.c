@@ -297,6 +297,7 @@ gwy_graph_refresh(GwyGraph *graph)
     GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
     gint i, j;
+    gboolean has_data;
 
     if (graph->graph_model == NULL)
         return;
@@ -316,6 +317,7 @@ gwy_graph_refresh(GwyGraph *graph)
         /*refresh axis and reset axis requirements*/
         x_reqmin = y_reqmin = G_MAXDOUBLE;
         x_reqmax = y_reqmax = -G_MAXDOUBLE;
+        has_data = FALSE;
         for (i = 0; i < model->ncurves; i++) {
             curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
             for (j = 0; j < curvemodel->n; j++) {
@@ -327,7 +329,12 @@ gwy_graph_refresh(GwyGraph *graph)
                     x_reqmax = curvemodel->xdata[j];
                 if (y_reqmax < curvemodel->ydata[j])
                     y_reqmax = curvemodel->ydata[j];
+                has_data = TRUE;
             }
+        }
+        if (!has_data) {
+            x_reqmin = y_reqmin = 0;
+            x_reqmax = y_reqmax = 1;
         }
         gwy_axis_set_req(graph->axis_top, x_reqmin, x_reqmax);
         gwy_axis_set_req(graph->axis_bottom, x_reqmin, x_reqmax);
@@ -338,6 +345,18 @@ gwy_graph_refresh(GwyGraph *graph)
         model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
         model->y_max = gwy_axis_get_maximum(graph->axis_left);
         model->y_min = gwy_axis_get_minimum(graph->axis_left);
+    }
+    else {
+        gwy_axis_set_req(graph->axis_top, 0, 1);
+        gwy_axis_set_req(graph->axis_bottom, 0, 1);
+        gwy_axis_set_req(graph->axis_left, 0, 1);
+        gwy_axis_set_req(graph->axis_right, 0, 1);
+
+        model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
+        model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
+        model->y_max = gwy_axis_get_maximum(graph->axis_left);
+        model->y_min = gwy_axis_get_minimum(graph->axis_left);
+         
     }
 
 
