@@ -89,6 +89,7 @@ gwy_graph_window_init(G_GNUC_UNUSED GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_finalize(GObject *object)
 {
+    gtk_widget_destroy(GTK_WIDGET(GWY_GRAPH_WINDOW(object)->measure_dialog));
     G_OBJECT_CLASS(gwy_graph_window_parent_class)->finalize(object);
 }
 
