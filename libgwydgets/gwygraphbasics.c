@@ -261,15 +261,16 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
 void
 gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
-                               GwyGraphDataArea *data_areas,
-                               gint n_of_areas)
+                               GwySelectionGraphArea *selection)
 {
     /* FIXME: use Gtk+ theme */
     static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
-    gint i;
+    gint i, n_of_areas;
     gint xmin, xmax, ymin, ymax;
+    gdouble selection_areadata[4];
 
-    if (n_of_areas == 0 || data_areas == NULL)
+    n_of_areas = GWY_SELECTION(selection)->n;
+    if (n_of_areas == 0)
         return;
 
     /* XXX and who will free this? XXX */
@@ -279,10 +280,11 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_areas; i++) {
-        xmin = x_data_to_pixel(specs, data_areas[i].xmin);
-        xmax = x_data_to_pixel(specs, data_areas[i].xmax);
-        ymin = y_data_to_pixel(specs, data_areas[i].ymin);
-        ymax = y_data_to_pixel(specs, data_areas[i].ymax);
+        gwy_selection_get_object(GWY_SELECTION(selection), i, selection_areadata);
+        xmin = x_data_to_pixel(specs, selection_areadata[0]);
+        xmax = x_data_to_pixel(specs, selection_areadata[2]);
+        ymin = y_data_to_pixel(specs, selection_areadata[1]);
+        ymax = y_data_to_pixel(specs, selection_areadata[3]);
 
         gdk_draw_rectangle(drawable, gc, TRUE,
                            MIN(xmin, xmax),

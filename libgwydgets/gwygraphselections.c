@@ -30,7 +30,8 @@
 #include <stdio.h>
 
 enum {
-        OBJECT_SIZE = 2
+        POINT_OBJECT_SIZE = 2,
+        AREA_OBJECT_SIZE = 4
 };
 
 
@@ -42,14 +43,33 @@ gwy_selection_graph_point_class_init(GwySelectionGraphPointClass *klass)
 {
         GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
-        sel_class->object_size = OBJECT_SIZE;
+        sel_class->object_size = POINT_OBJECT_SIZE;
 }
 
 
 static void
 gwy_selection_graph_point_init(GwySelectionGraphPoint *selection)
 {
-        g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
+        g_array_set_size(GWY_SELECTION(selection)->objects, POINT_OBJECT_SIZE);
+}
+
+
+G_DEFINE_TYPE(GwySelectionGraphArea, gwy_selection_graph_area, GWY_TYPE_SELECTION)
+
+
+static void
+gwy_selection_graph_area_class_init(GwySelectionGraphAreaClass *klass)
+{
+        GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
+
+        sel_class->object_size = AREA_OBJECT_SIZE;
+}
+
+
+static void
+gwy_selection_graph_area_init(GwySelectionGraphArea *selection)
+{
+        g_array_set_size(GWY_SELECTION(selection)->objects, AREA_OBJECT_SIZE);
 }
 
 

@@ -49,17 +49,9 @@ typedef struct {
   GwyGraphDataPoint data_point;
 } GwyGraphStatus_CursorData;
 
-/*typedef struct {
-  GArray *data_points;
-} GwyGraphStatus_PointsData;
-*/
 typedef struct {
   GwyGraphDataArea data_area;
 } GwyGraphStatus_AreaData;
-
-typedef struct {
-  GArray *data_areas;
-} GwyGraphStatus_AreasData;
 
 typedef struct {
   GArray *data_lines;
@@ -91,10 +83,9 @@ struct _GwyGraphArea {
 
     GwyGraphStatusType status;
     GwyGraphStatus_PointData *pointdata;
-    //GwyGraphStatus_PointsData *pointsdata;
     GwySelectionGraphPoint *pointsdata;
     GwyGraphStatus_AreaData *areadata;
-    GwyGraphStatus_AreasData *areasdata;
+    GwySelectionGraphArea *areasdata;
     GwyGraphStatus_LinesData *linesdata;
     GwyGraphStatus_CursorData *cursordata;
     GwyGraphStatus_ZoomData *zoomdata;

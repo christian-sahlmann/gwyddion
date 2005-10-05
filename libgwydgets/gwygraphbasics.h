@@ -85,8 +85,7 @@ void gwy_graph_draw_selection_points(GdkDrawable *drawable,
 void gwy_graph_draw_selection_areas (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
-                                     GwyGraphDataArea *data_areas,
-                                     gint n_of_areas);
+                                     GwySelectionGraphArea *selection);
 void gwy_graph_draw_selection_lines (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,

@@ -549,7 +549,7 @@ gint
 gwy_graph_get_selection_number(GwyGraph *graph)
 {
     if (graph->area->status == GWY_GRAPH_STATUS_XSEL)
-        return graph->area->areasdata->data_areas->len;
+        return GWY_SELECTION(graph->area->areasdata)->n;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_POINTS)
         return GWY_SELECTION(graph->area->pointsdata)->n;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_XLINES
@@ -606,27 +606,25 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
     gint i;
     GwyGraphDataArea *data_area;
     GwyGraphDataPoint *data_point;
-    gdouble data_value;
+    gdouble data_value, area_selection[4];
 
     if (selection == NULL)
         return;
 
     switch (graph->area->status) {
         case GWY_GRAPH_STATUS_XSEL:
-        for (i = 0; i < graph->area->areasdata->data_areas->len; i++) {
-            data_area = &g_array_index(graph->area->areasdata->data_areas,
-                                       GwyGraphDataArea, i);
-            selection[2*i] = data_area->xmin;
-            selection[2*i + 1] = data_area->xmax;
+        for (i = 0; i < GWY_SELECTION(graph->area->areasdata)->n; i++) {
+            gwy_selection_get_object(GWY_SELECTION(graph->area->areasdata), i, area_selection);
+            selection[2*i] = area_selection[0];
+            selection[2*i + 1] = area_selection[2];
         }
         break;
 
         case GWY_GRAPH_STATUS_YSEL:
-        for (i = 0; i < graph->area->areasdata->data_areas->len; i++) {
-            data_area = &g_array_index(graph->area->areasdata->data_areas,
-                                       GwyGraphDataArea, i);
-            selection[2*i] = data_area->ymin;
-            selection[2*i + 1] = data_area->ymax;
+        for (i = 0; i < GWY_SELECTION(graph->area->areasdata)->n; i++) {
+            gwy_selection_get_object(GWY_SELECTION(graph->area->areasdata), i, area_selection);
+            selection[2*i] = area_selection[1];
+            selection[2*i + 1] = area_selection[3];
         }
         break;
 
