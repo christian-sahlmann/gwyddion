@@ -36,12 +36,6 @@ typedef struct {
     gdouble y;
 } GwyGraphDataPoint;
 
-typedef struct {
-    gdouble xmin;
-    gdouble xmax;
-    gdouble ymin;
-    gdouble ymax;
-} GwyGraphDataArea;
 
 typedef struct {
     gint xmin;         /*x offset of the active area with respect to drawable left border*/
@@ -89,8 +83,7 @@ void gwy_graph_draw_selection_areas (GdkDrawable *drawable,
 void gwy_graph_draw_selection_lines (GdkDrawable *drawable,
                                      GdkGC *gc,
                                      GwyGraphActiveAreaSpecs *specs,
-                                     double *data_lines,
-                                     gint n_of_lines,
+                                     GwySelectionGraphLine *selection,
                                      GtkOrientation orientation);
 
 void gwy_graph_draw_grid            (GdkDrawable *drawable,

@@ -75,6 +75,29 @@ struct _GwySelectionGraphAreaClass {
 GType    gwy_selection_graph_area_get_type       (void) G_GNUC_CONST;
 
 
+
+#define GWY_TYPE_SELECTION_GRAPH_LINE            (gwy_selection_graph_line_get_type())
+#define GWY_SELECTION_GRAPH_LINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLine))
+#define GWY_SELECTION_GRAPH_LINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLineClass))
+#define GWY_IS_SELECTION_GRAPH_LINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_SELECTION_GRAPH_LINE))
+#define GWY_IS_SELECTION_GRAPH_LINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_SELECTION_GRAPH_LINE))
+#define GWY_SELECTION_GRAPH_LINE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_SELECTION_GRAPH_LINE, GwySelectionGraphLineClass))
+
+typedef struct _GwySelectionGraphLine      GwySelectionGraphLine;
+typedef struct _GwySelectionGraphLineClass GwySelectionGraphLineClass;
+
+struct _GwySelectionGraphLine {
+        GwySelection parent_instance;
+};
+
+struct _GwySelectionGraphLineClass {
+        GwySelectionClass parent_class;
+};
+
+
+GType    gwy_selection_graph_line_get_type       (void) G_GNUC_CONST;
+
+
 G_END_DECLS
 
 #endif /* __GWY_GRAPHSEL_H__ */

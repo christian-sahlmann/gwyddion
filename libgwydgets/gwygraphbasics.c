@@ -296,14 +296,16 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
 void
 gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
-                               double *data_lines,
-                               gint n_of_lines, GtkOrientation orientation)
+                               GwySelectionGraphLine *selection,
+                               GtkOrientation orientation)
 {
     /* FIXME: use Gtk+ theme */
     static const GwyRGBA color = { 0.8, 0.3, 0.6, 1.0 };
-    gint i;
+    gint i, n_of_lines;
+    gdouble selection_linedata;
 
-    if (n_of_lines == 0 || data_lines == NULL)
+    n_of_lines = GWY_SELECTION(selection)->n;
+    if (n_of_lines == 0)
         return;
 
     /* XXX and who will free this? XXX */
@@ -313,18 +315,19 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_lines; i++) {
+        gwy_selection_get_object(GWY_SELECTION(selection), i, &selection_linedata);
         if (orientation == GTK_ORIENTATION_HORIZONTAL)
             gwy_graph_draw_line(drawable, gc,
                                 specs->xmin,
-                                y_data_to_pixel(specs, data_lines[i]),
+                                y_data_to_pixel(specs, selection_linedata),
                                 specs->xmin + specs->width,
-                                y_data_to_pixel(specs, data_lines[i]),
+                                y_data_to_pixel(specs, selection_linedata),
                                 GDK_LINE_SOLID, 1, &color);
         else
             gwy_graph_draw_line(drawable, gc,
-                                x_data_to_pixel(specs, data_lines[i]),
+                                x_data_to_pixel(specs, selection_linedata),
                                 specs->ymin,
-                                x_data_to_pixel(specs, data_lines[i]),
+                                x_data_to_pixel(specs, selection_linedata),
                                 specs->ymin + specs->height,
                                 GDK_LINE_SOLID, 1, &color);
     }

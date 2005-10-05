@@ -31,7 +31,8 @@
 
 enum {
         POINT_OBJECT_SIZE = 2,
-        AREA_OBJECT_SIZE = 4
+        AREA_OBJECT_SIZE = 4,
+        LINE_OBJECT_SIZE = 1
 };
 
 
@@ -70,6 +71,25 @@ static void
 gwy_selection_graph_area_init(GwySelectionGraphArea *selection)
 {
         g_array_set_size(GWY_SELECTION(selection)->objects, AREA_OBJECT_SIZE);
+}
+
+
+G_DEFINE_TYPE(GwySelectionGraphLine, gwy_selection_graph_line, GWY_TYPE_SELECTION)
+
+
+static void
+gwy_selection_graph_line_class_init(GwySelectionGraphLineClass *klass)
+{
+        GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
+
+        sel_class->object_size = LINE_OBJECT_SIZE;
+}
+
+
+static void
+gwy_selection_graph_line_init(GwySelectionGraphLine *selection)
+{
+        g_array_set_size(GWY_SELECTION(selection)->objects, LINE_OBJECT_SIZE);
 }
 
 

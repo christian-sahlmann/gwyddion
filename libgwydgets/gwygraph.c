@@ -554,7 +554,7 @@ gwy_graph_get_selection_number(GwyGraph *graph)
         return GWY_SELECTION(graph->area->pointsdata)->n;
     else if (graph->area->status ==  GWY_GRAPH_STATUS_XLINES
              || graph->area->status ==  GWY_GRAPH_STATUS_YLINES)
-        return graph->area->linesdata->data_lines->len;
+        return GWY_SELECTION(graph->area->linesdata)->n;
     else
         return 0;
 }
@@ -604,8 +604,6 @@ void
 gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
 {
     gint i;
-    GwyGraphDataArea *data_area;
-    GwyGraphDataPoint *data_point;
     gdouble data_value, area_selection[4];
 
     if (selection == NULL)
@@ -630,21 +628,11 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
 
         case GWY_GRAPH_STATUS_XLINES:
         case GWY_GRAPH_STATUS_YLINES:
-        for (i = 0; i < graph->area->linesdata->data_lines->len; i++) {
-            data_value = g_array_index(graph->area->linesdata->data_lines,
-                                       gdouble, i);
-            selection[i] = data_value;
-        }
+        gwy_selection_get_data(GWY_SELECTION(graph->area->linesdata), selection);
         break;
 
         case GWY_GRAPH_STATUS_POINTS:
         gwy_selection_get_data(GWY_SELECTION(graph->area->pointsdata), selection);
-        //for (i = 0; i < graph->area->pointsdata->data_points->len; i++) {
-        //    data_point = &g_array_index(graph->area->pointsdata->data_points,
-        //                                GwyGraphDataPoint, i);
-        //    selection[2*i] = data_point->x;
-        //    selection[2*i + 1] = data_point->y;
-        //}
         break;
 
         case GWY_GRAPH_STATUS_ZOOM:
