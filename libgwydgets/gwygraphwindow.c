@@ -29,7 +29,6 @@
 #include "gwydgets.h"
 #include "gwygraphwindow.h"
 #include "gwygraphdata.h"
-#include <libgwydgets/gwygraphwindowasciidialog.h>
 
 #define DEFAULT_SIZE 360
 
@@ -47,7 +46,6 @@ static void gwy_graph_window_zoom_finished_cb   (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
                                                  gint response);
 static void gwy_graph_window_export_vector_cb   (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_export_ascii_cb    (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_export_bitmap_cb   (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
                                                  const gchar *tip_text);
@@ -210,15 +208,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_widget_set_sensitive(graphwindow->button_y_log,
                 gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
     
-     /*
-    graphwindow->button_export_ascii = gtk_button_new();
-    gtk_container_add(gtk_container(graphwindow->button_export_ascii),
-                      gtk_image_new_from_stock(gwy_stock_graph_ascii, gtk_icon_size_button));
-    gtk_box_pack_start(gtk_box(hbox), graphwindow->button_export_ascii, false, false, 0);
-    g_signal_connect_swapped(graphwindow->button_export_ascii, "clicked",
-                           g_callback(gwy_graph_window_export_ascii_cb),
-                           graphwindow);
-
+                           /*
     graphwindow->button_export_vector = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_export_vector),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_VECTOR, GTK_ICON_SIZE_BUTTON));
@@ -458,52 +448,6 @@ gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
 
 }
 
-static void
-gwy_graph_window_export_ascii_cb(GwyGraphWindow *graphwindow)
-{
-    GwyGraphWindowAsciiDialog *dialog;
-    GtkDialog *filedialog;
-    gchar *filename;
-    gboolean units, labels, metadata;
-    GwyGraphModelExportStyle style;
-    gint result;
-
-    dialog = GWY_GRAPH_WINDOW_ASCII_DIALOG(gwy_graph_window_ascii_dialog_new());
-    result = gtk_dialog_run (GTK_DIALOG (dialog));
-    switch (result)
-    {
-       case GTK_RESPONSE_OK:
-       gwy_graph_window_ascii_dialog_get_data(dialog,
-                                              &style,
-                                              &units,
-                                              &labels,
-                                              &metadata);
-       filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to ASCII File",
-                                                 GTK_WINDOW(graphwindow),
-                                                 GTK_FILE_CHOOSER_ACTION_SAVE,
-                                                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                 GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                                 NULL));
-       if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-       {
-           filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-           gwy_graph_model_export_ascii(GWY_GRAPH(graphwindow->graph)->graph_model, filename,
-                                        units, labels, metadata,
-                                        style);
-
-       }
-       gtk_widget_destroy(GTK_WIDGET(filedialog));
-
-
-       break;
-
-       default:
-       break;
-    }
-
-    gtk_widget_destroy(GTK_WIDGET(dialog));
-
-}
 
 static void
 gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)

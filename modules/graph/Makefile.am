@@ -3,6 +3,7 @@
 graphdir = $(pkglibdir)/modules/graph
 
 graph_LTLIBRARIES = \
+	graph_export_ascii.la \
 	graph_fit.la	\
 	graph_cd.la \
 	graph_level.la \
@@ -37,8 +38,8 @@ module_libadd = \
 endif
 
 
-#graph_export_ascii_la_SOURCES = graph_export_ascii.c
-#graph_export_ascii_la_LIBADD = $(module_libadd)
+graph_export_ascii_la_SOURCES = graph_export_ascii.c
+graph_export_ascii_la_LIBADD = $(module_libadd)
 
 graph_fit_la_SOURCES = graph_fit.c
 graph_fit_la_LIBADD = $(module_libadd)

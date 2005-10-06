@@ -26,7 +26,6 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphdata.h \
 	gwygraphmodel.h \
 	gwygraphwindow.h \
-	gwygraphwindowasciidialog.h \
 	gwygraphwindowmeasuredialog.h \
 	gwygraphareadialog.h \
 	gwygrapharea.h \
@@ -93,7 +92,6 @@ libgwydgets_la_SOURCES = \
 	gwygraphdata.c \
 	gwygraphmodel.c \
 	gwygraphwindow.c \
-	gwygraphwindowasciidialog.c \
 	gwygraphwindowmeasuredialog.c \
 	gwygraphareadialog.c \
 	gwygrapharea.c \

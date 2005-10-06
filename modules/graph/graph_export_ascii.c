@@ -23,23 +23,66 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
+#include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
 
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    ascii                      (GwyGraph *graph);
-void store_filename (GtkWidget *widget, gpointer user_data);
-void create_file_selection (void);
+/* Data for this function.*/
 
+typedef struct {
+    GtkWidget *preference;
+    GtkWidget *check_labels;
+    GtkWidget *check_units;
+    GtkWidget *check_metadata;
+
+    gboolean units;
+    gboolean labels;
+    gboolean metadata;
+    GwyGraphModelExportStyle style;
+
+    GwyGraphModel *model;
+} ExportControls;
+
+
+static gboolean    module_register             (const gchar *name);
+static gboolean    export                      (GwyGraph *graph);
+static gboolean    export_dialog                (GwyGraph *graph);
+static void        export_dialog_closed_cb      (GwyGraph *graph);
+static void        export_dialog_response_cb    (GtkDialog *pdialog, 
+                                                 gint response, 
+                                                 GwyGraph *graph);
+static void        units_changed_cb             (ExportControls *pcontrols);
+
+static void        labels_changed_cb            (ExportControls *pcontrols);
+
+static void        metadata_changed_cb          (ExportControls *pcontrols);
+
+static void        style_cb                     (GtkWidget *combo);
+static void        load_args                    (GwyContainer *container,
+                                                 ExportControls *pcontrols);
+static void        save_args                    (GwyContainer *container,
+                                                 ExportControls *pcontrols);
+
+
+GwyEnum style_type[] = {
+   {N_("Plain text"),             GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN   },
+   {N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT },
+   {N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV     },
+   {N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN  },
+};
+
+
+static GtkWidget *dialog = NULL;
+static ExportControls controls;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Export graph curves to ASCII file"),
+    N_("Graph ASCII export."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -51,47 +94,202 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo read_func_info = {
-        "graph_ascii_export",
-        N_("/_Export ASCII..."),
-        (GwyGraphFunc)&ascii,
+    static GwyGraphFuncInfo export_func_info = {
+        "export",
+        N_("/_ASCII export"),
+        (GwyGraphFunc)&export,
     };
 
-    gwy_graph_func_register(name, &read_func_info);
+    gwy_graph_func_register(name, &export_func_info);
 
     return TRUE;
 }
 
 static gboolean
-ascii(GwyGraph *graph)
+export(GwyGraph *graph)
 {
-    GtkWidget *dialog;
-    const gchar *selected_filename = NULL;
-    gint response;
+    GwyContainer *settings;
 
     if (!graph) {
+        if (dialog)
+            gtk_widget_destroy(dialog);
+        dialog = NULL;
         return TRUE;
     }
 
-    dialog = gtk_file_selection_new(_("Export Graph to File"));
-    gtk_file_selection_set_filename(GTK_FILE_SELECTION(dialog),
-                                    gwy_app_get_current_directory());
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    if (response == GTK_RESPONSE_OK) {
-        selected_filename
-            = gtk_file_selection_get_filename(GTK_FILE_SELECTION(dialog));
-        gtk_widget_destroy(dialog);
-    }
-    else {
-        gtk_widget_destroy(dialog);
-        return TRUE;
-    }
-
-    if (selected_filename != NULL)
-        gwy_graph_export_ascii(graph, selected_filename);
+    settings = gwy_app_settings_get();
+    load_args(settings, &controls);
+    
+    
+    if (!dialog)
+        export_dialog(graph);
 
     return TRUE;
 }
+
+
+static gboolean
+export_dialog(GwyGraph *graph)
+{
+    controls.model = graph->graph_model;
+    
+    dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
+                                         NULL,
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+    g_signal_connect_swapped(dialog, "delete_event",
+                             G_CALLBACK(export_dialog_closed_cb), graph);
+    g_signal_connect(dialog, "response",
+                           G_CALLBACK(export_dialog_response_cb),
+                           graph);
+
+    g_signal_connect_swapped(graph, "destroy",
+                             G_CALLBACK(export_dialog_closed_cb), graph);
+
+
+    controls.preference = gwy_enum_combo_box_new(style_type, G_N_ELEMENTS(style_type),
+                                                       G_CALLBACK(style_cb), dialog,
+                                                       controls.style, TRUE);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                                       controls.preference);
+        
+    
+    controls.check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_labels), controls.labels);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                             controls.check_labels);
+    g_signal_connect_swapped(controls.check_labels, "clicked",
+                                             G_CALLBACK(labels_changed_cb), &controls);
+    controls.check_units = gtk_check_button_new_with_mnemonic(_("Export _units"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_units), controls.units);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                                controls.check_units);
+    g_signal_connect_swapped(controls.check_units, "clicked",
+                                                G_CALLBACK(units_changed_cb), &controls);
+    controls.check_metadata = gtk_check_button_new_with_mnemonic(_("Export _metadata"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_metadata), controls.metadata);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
+                                                controls.check_metadata);
+    g_signal_connect_swapped(controls.check_metadata, "clicked",
+                                                G_CALLBACK(metadata_changed_cb), &controls);
+
+
+    gtk_widget_show_all(controls.preference);
+    gtk_widget_show(controls.check_units);
+    gtk_widget_show(controls.check_labels);
+    gtk_widget_show(controls.check_metadata);
+                        
+    gtk_widget_show_all(dialog);
+
+    return TRUE;
+}
+
+
+static void
+export_dialog_closed_cb(G_GNUC_UNUSED GwyGraph *graph)
+{
+
+    if (dialog) {
+        gtk_widget_destroy(dialog);
+        dialog = NULL;
+    }
+}
+
+
+static void
+export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
+{
+    GtkDialog *filedialog;
+    GwyContainer *settings;
+    gchar *filename;
+    
+    if (response == GTK_RESPONSE_OK)
+    {
+        filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to ASCII File",
+                                                             GTK_WINDOW(pdialog),
+                                                             GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                            GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                                            NULL));
+        if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
+        {
+            filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+            gwy_graph_model_export_ascii(graph->graph_model, filename,
+                                         controls.units, controls.labels, controls.metadata,
+                                         controls.style);
+        }
+        gtk_widget_destroy(GTK_WIDGET(filedialog));    
+        settings = gwy_app_settings_get();
+        save_args(settings, &controls);
+    }
+    
+    export_dialog_closed_cb(graph);
+}
+
+static void
+units_changed_cb(ExportControls *pcontrols)
+{
+    pcontrols->units = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_units));
+}
+
+static void
+labels_changed_cb(ExportControls *pcontrols)
+{
+    pcontrols->labels = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_labels));
+}
+
+static void
+metadata_changed_cb(ExportControls *pcontrols)
+{
+    pcontrols->metadata = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pcontrols->check_metadata));
+}
+
+static void
+style_cb(GtkWidget *combo)
+{
+    controls.style = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+}
+
+
+
+
+
+static const gchar *style_key = "/module/graph_export_ascii/style";
+static const gchar *labels_key = "/module/graph_export_ascii/labels";
+static const gchar *units_key = "/module/graph_export_ascii/units";
+static const gchar *metadata_key = "/module/graph_export_ascii/metadata";
+
+
+static void
+load_args(GwyContainer *container,
+                    ExportControls *pcontrols)
+{
+    gwy_container_gis_boolean_by_name(container, labels_key, &pcontrols->labels);
+    gwy_container_gis_boolean_by_name(container, units_key, &pcontrols->units);
+    gwy_container_gis_boolean_by_name(container, metadata_key, &pcontrols->metadata);
+    gwy_container_gis_enum_by_name(container, style_key, &pcontrols->style);
+
+}
+
+static void
+save_args(GwyContainer *container,
+                    ExportControls *pcontrols)
+{
+    gwy_container_set_boolean_by_name(container, labels_key, pcontrols->labels);
+    gwy_container_set_boolean_by_name(container, units_key, pcontrols->units);
+    gwy_container_set_boolean_by_name(container, metadata_key, pcontrols->metadata);
+    gwy_container_set_enum_by_name(container, style_key, pcontrols->style);
+}
+
+
+
+
+
 
 
 
