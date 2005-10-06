@@ -24,10 +24,6 @@ Elaboration of 2.0 items started on http://gwyddion.net/gwyddion-2/.
 Unimplemented stuff:
 - libprocess/correlation.c: @window_width and @window_height are unused in
   gwy_data_field_crosscorrelate() and gwy_data_field_crosscorrelate_iteration()
-- libprocess/filters.c: gwy_data_field_area_filter_canny() always filters
-  entire data field
-- libprocess/grains.c: gwy_data_field_grains_get_average() is not implemented
-  at all
 
 ============================================================================
 Release checklist:
