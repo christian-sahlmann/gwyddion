@@ -36,8 +36,6 @@
 #include <app/settings.h>
 #include <app/unitool.h>
 
-#include <stdio.h>
-
 #define CHECK_LAYER_TYPE(l) \
     (G_TYPE_CHECK_INSTANCE_TYPE((l), func_slots.layer_type))
 
@@ -363,9 +361,8 @@ dialog_update(GwyUnitoolState *state,
 
     min = selection[0] = gwy_data_field_get_min(dfield);
     max = selection[1] = gwy_data_field_get_max(dfield);
-    
+
     if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
-        
         if (gwy_graph_get_selection_number(graph)) {
             gwy_graph_get_selection(graph, selection);
             has_selection = TRUE;
@@ -439,19 +436,18 @@ update_graph_selection(GwyUnitoolState *state,
     GwyDataField *dfield;
     gdouble min, max;
 
-    
     controls = (ToolControls*)state->user_data;
     graph = GWY_GRAPH(controls->histogram);
     data = gwy_data_window_get_data(state->data_window);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     min = gwy_data_field_get_min(dfield);
     max = gwy_data_field_get_max(dfield);
-    
+
     if (min == selection[0] && max == selection[1])
         gwy_graph_clear_selection(graph);
     else
-       gwy_graph_area_set_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
-                                    GWY_GRAPH_STATUS_XSEL, selection, 1);
+        gwy_graph_area_set_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
+                                     GWY_GRAPH_STATUS_XSEL, selection, 1);
 }
 
 static GwyLayerBasicRangeType
