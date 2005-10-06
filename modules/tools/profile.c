@@ -316,7 +316,6 @@ dialog_create(GwyUnitoolState *state)
     controls->graph = gwy_graph_new(controls->graphmodel);
     gtk_widget_set_size_request(controls->graph, 400, 150);
     gwy_graph_enable_user_input(GWY_GRAPH(controls->graph), FALSE);
-    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH_MODEL(controls->graphmodel), GTK_ORIENTATION_VERTICAL, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->graph, TRUE, TRUE, 0);
 
     return dialog;

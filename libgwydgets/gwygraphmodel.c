@@ -892,7 +892,8 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
        model->y_is_logarithmic = is_logarithmic;
     else
        model->x_is_logarithmic = is_logarithmic;
-        
+
+    gwy_graph_model_signal_layout_changed(model);
 }
 
 gboolean       

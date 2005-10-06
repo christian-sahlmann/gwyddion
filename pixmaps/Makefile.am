@@ -29,6 +29,8 @@ pixmapdata_DATA = \
 	gwy_graph_export_ascii-24.png \
 	gwy_graph_export_bitmap-24.png \
 	gwy_graph_export_vector-24.png \
+	gwy_graph_x_logarithmic-24.png \
+	gwy_graph_y_logarithmic-24.png \
 	gwy_graph_fit_func-24.png \
 	gwy_graph_gauss-24.png \
 	gwy_graph_halfgauss-24.png \

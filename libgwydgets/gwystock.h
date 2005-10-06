@@ -54,6 +54,8 @@ G_BEGIN_DECLS
 #define GWY_STOCK_GRAPH_ZOOM_FIT  "gwy_graph_zoom_fit"
 #define GWY_STOCK_GRAPH_ZOOM_IN   "gwy_graph_zoom_in"
 #define GWY_STOCK_GRAPH_ZOOM_OUT  "gwy_graph_zoom_out"
+#define GWY_STOCK_GRAPH_X_LOGARITHMIC  "gwy_graph_x_logarithmic"
+#define GWY_STOCK_GRAPH_Y_LOGARITHMIC  "gwy_graph_y_logarithmic"
 #define GWY_STOCK_GWYDDION        "gwy_gwyddion"
 #define GWY_STOCK_ITALIC          "gwy_italic"
 #define GWY_STOCK_LESS            "gwy_less"

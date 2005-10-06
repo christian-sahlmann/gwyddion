@@ -41,6 +41,8 @@ static void gwy_graph_cursor_motion_cb          (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_cb         (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_in_cb         (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_out_cb        (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_x_log_cb           (GwyGraphWindow *graphwindow);
+static void gwy_graph_window_y_log_cb           (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_finished_cb   (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
                                                  gint response);
@@ -185,12 +187,36 @@ gwy_graph_window_new(GwyGraph *graph)
                            G_CALLBACK(gwy_graph_window_zoom_out_cb),
                            graphwindow);
 
+
+    graphwindow->button_x_log = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_X_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log, FALSE, FALSE, 0);
+    g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
+                           G_CALLBACK(gwy_graph_window_x_log_cb),
+                           graphwindow);
+    
+    gtk_widget_set_sensitive(graphwindow->button_x_log,
+                gwy_graph_model_x_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
+     
+    graphwindow->button_y_log = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log, FALSE, FALSE, 0);
+    g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
+                           G_CALLBACK(gwy_graph_window_y_log_cb),
+                           graphwindow);
+    
+    gtk_widget_set_sensitive(graphwindow->button_y_log,
+                gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
+    
+     /*
     graphwindow->button_export_ascii = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_ascii),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ASCII, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_ascii, FALSE, FALSE, 0);
+    gtk_container_add(gtk_container(graphwindow->button_export_ascii),
+                      gtk_image_new_from_stock(gwy_stock_graph_ascii, gtk_icon_size_button));
+    gtk_box_pack_start(gtk_box(hbox), graphwindow->button_export_ascii, false, false, 0);
     g_signal_connect_swapped(graphwindow->button_export_ascii, "clicked",
-                           G_CALLBACK(gwy_graph_window_export_ascii_cb),
+                           g_callback(gwy_graph_window_export_ascii_cb),
                            graphwindow);
 
     graphwindow->button_export_vector = gtk_button_new();
@@ -208,7 +234,7 @@ gwy_graph_window_new(GwyGraph *graph)
     g_signal_connect_swapped(graphwindow->button_export_bitmap, "clicked",
                            G_CALLBACK(gwy_graph_window_export_bitmap_cb),
                            graphwindow);
-
+*/
 
     graphwindow->label_what = gtk_label_new("Cursor values:");
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, FALSE, FALSE, 4);
@@ -389,6 +415,26 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
 }
+
+
+static void 
+gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
+{
+    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
+                                              GTK_ORIENTATION_HORIZONTAL,
+                   !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
+                                                                           GTK_ORIENTATION_HORIZONTAL));
+}
+
+static void 
+gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
+{
+    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
+                                              GTK_ORIENTATION_VERTICAL,
+                   !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
+                                                                           GTK_ORIENTATION_VERTICAL));
+}
+
 
 static void
 gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
