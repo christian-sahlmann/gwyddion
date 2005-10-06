@@ -113,6 +113,18 @@ stamp-gwyprocesstypes
 </para>
 
 
+<!-- ##### USER_FUNCTION GwyFFTFunc ##### -->
+<para>
+
+</para>
+
+@dir: 
+@re_in: 
+@im_in: 
+@re_out: 
+@im_out: 
+@interpolation: 
+
 <!-- ##### ENUM GwyFFTOutputType ##### -->
 <para>
 FFT output.
@@ -321,6 +333,16 @@ Fit polynomial degree selection.
 @state: 
 @iteration: 
 
+<!-- ##### FUNCTION gwy_data_field_dwt_correction ##### -->
+<para>
+
+</para>
+
+@dfield: 
+@mask: 
+@wt_coefs: 
+@Returns: 
+
 <!-- ##### FUNCTION gwy_data_field_free ##### -->
 <para>
 
@@ -449,6 +471,14 @@ Fit polynomial degree selection.
 @grain_field: 
 @Returns: 
 
+<!-- ##### FUNCTION gwy_data_field_grains_mark_local_maxima ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+
 <!-- ##### FUNCTION gwy_data_field_grains_remove_manually ##### -->
 <para>
 
@@ -484,6 +514,17 @@ Fit polynomial degree selection.
 @min_scar_len: 
 @max_scar_width: 
 
+<!-- ##### FUNCTION gwy_data_field_outside ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@col: 
+@row: 
+@Returns: 
+@a: 
+
 <!-- ##### FUNCTION gwy_data_field_plane_coeffs ##### -->
 <para>
 
@@ -507,6 +548,30 @@ Fit polynomial degree selection.
 @ap: 
 @bp: 
 @cp: 
+
+<!-- ##### FUNCTION gwy_data_field_yfft_real ##### -->
+<para>
+
+</para>
+
+@ra: 
+@rb: 
+@ib: 
+@fft: 
+@windowing: 
+@direction: 
+@interpolation: 
+@preserverms: 
+@level: 
+
+<!-- ##### FUNCTION gwy_data_get_line_coeffs ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@av: 
+@bv: 
 
 <!-- ##### FUNCTION gwy_data_line_alloc ##### -->
 <para>
@@ -555,6 +620,16 @@ Fit polynomial degree selection.
 @real: 
 @nullme: 
 
+<!-- ##### FUNCTION gwy_data_line_line_coeffs ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@av: 
+@bv: 
+@a: 
+
 <!-- ##### FUNCTION gwy_data_line_line_coefs ##### -->
 <para>
 
@@ -563,6 +638,18 @@ Fit polynomial degree selection.
 @a: 
 @av: 
 @bv: 
+
+<!-- ##### FUNCTION gwy_data_line_part_line_coeffs ##### -->
+<para>
+
+</para>
+
+@data_line: 
+@from: 
+@to: 
+@av: 
+@bv: 
+@a: 
 
 <!-- ##### FUNCTION gwy_data_line_part_line_coefs ##### -->
 <para>

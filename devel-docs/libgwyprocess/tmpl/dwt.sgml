@@ -109,14 +109,3 @@ Discrete Wavelet Transform
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_data_field_dwt_correction ##### -->
-<para>
-
-</para>
-
-@dfield: 
-@mask: 
-@wt_coefs: 
-@Returns: 
-
-

@@ -1,5 +1,6 @@
 <SECTION>
 <FILE>gwyglmaterial</FILE>
+GWY_GL_MATERIAL_DEFAULT
 GWY_GL_MATERIAL_NONE
 <TITLE>GwyGLMaterial</TITLE>
 GwyGLMaterial
@@ -27,8 +28,10 @@ GWY_GL_MATERIAL_CLASS
 GWY_IS_GL_MATERIAL_CLASS
 GWY_GL_MATERIAL_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwygradient</FILE>
+GWY_GRADIENT_DEFAULT
 GwyGradientPoint
 <TITLE>GwyGradient</TITLE>
 GwyGradient
@@ -86,6 +89,7 @@ GWY_SELECTION_CLASS
 GWY_IS_SELECTION_CLASS
 GWY_SELECTION_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyrgba</FILE>
 GWY_TYPE_RGBA
@@ -103,6 +107,7 @@ gwy_rgba_store_to_container
 gwy_rgba_set_gdk_gc_fg
 gwy_rgba_set_gdk_gc_bg
 </SECTION>
+
 <SECTION>
 <FILE>gwypixfield</FILE>
 gwy_pixbuf_draw_data_field
@@ -110,7 +115,9 @@ gwy_pixbuf_draw_data_field_with_range
 gwy_pixbuf_draw_data_field_adaptive
 gwy_pixbuf_draw_data_field_as_mask
 </SECTION>
+
 <SECTION>
 <FILE>gwydraw</FILE>
 gwy_draw_type_init
 </SECTION>
+

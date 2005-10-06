@@ -985,6 +985,16 @@ are saved here.
 @point_size: 
 @color: 
 
+<!-- ##### STRUCT GwyGraphDataArea ##### -->
+<para>
+
+</para>
+
+@xmin: 
+@xmax: 
+@ymin: 
+@ymax: 
+
 <!-- ##### STRUCT GwyGraphEpitomeCurve ##### -->
 <para>
 
@@ -1014,6 +1024,34 @@ are saved here.
 
 @i: 
 @j: 
+
+<!-- ##### STRUCT GwyGraphStatus_AreaData ##### -->
+<para>
+
+</para>
+
+@data_area: 
+
+<!-- ##### STRUCT GwyGraphStatus_AreasData ##### -->
+<para>
+
+</para>
+
+@data_areas: 
+
+<!-- ##### STRUCT GwyGraphStatus_LinesData ##### -->
+<para>
+
+</para>
+
+@data_lines: 
+
+<!-- ##### STRUCT GwyGraphStatus_PointsData ##### -->
+<para>
+
+</para>
+
+@data_points: 
 
 <!-- ##### STRUCT GwyGraphStatus_SelData ##### -->
 <para>
@@ -3540,6 +3578,13 @@ are saved here.
 @key: 
 @current: 
 @Returns: 
+
+<!-- ##### FUNCTION gwy_ruler_draw_ticks ##### -->
+<para>
+
+</para>
+
+@ruler: 
 
 <!-- ##### FUNCTION gwy_shader_set_spherical_angle ##### -->
 <para>

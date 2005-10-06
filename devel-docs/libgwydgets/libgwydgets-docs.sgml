@@ -44,8 +44,7 @@
     <xi:include href="xml/gwyaxisdialog.xml"/>
     <xi:include href="xml/gwygraphlabel.xml"/>
     <xi:include href="xml/gwygraphdata.xml"/>
-    <xi:include href="xml/gwygraphwindowasciidialog.xml"/>
-    <xi:include href="xml/gwygraphwindowmeasuredialog.xml"/>
+    <xi:include href="xml/gwygraphselections.xml"/>
     <xi:include href="xml/gwygraphcorner.xml"/>
   </chapter>
 

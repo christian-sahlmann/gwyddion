@@ -14,6 +14,9 @@ Graph modules implement operations on graphs (like profiles).
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GwyGraphFuncInfo ##### -->
 <para>
 

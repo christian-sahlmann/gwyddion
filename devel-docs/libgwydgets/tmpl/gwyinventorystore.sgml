@@ -68,6 +68,17 @@ item itself.  It exists even if item don't export any traits.  Columns from
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_inventory_store_get_iter ##### -->
+<para>
+
+</para>
+
+@store: 
+@name: 
+@iter: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_inventory_store_iter_is_valid ##### -->
 <para>
 

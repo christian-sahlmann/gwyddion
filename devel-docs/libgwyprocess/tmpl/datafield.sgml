@@ -386,19 +386,6 @@ as they are connected with GwyDataField.
 @a: 
 
 
-<!-- ##### FUNCTION gwy_data_field_outside ##### -->
-<para>
-
-</para>
-
-@data_field: 
-@col: 
-@row: 
-@Returns: 
-<!-- # Unused Parameters # -->
-@a: 
-
-
 <!-- ##### FUNCTION gwy_data_field_get_val ##### -->
 <para>
 

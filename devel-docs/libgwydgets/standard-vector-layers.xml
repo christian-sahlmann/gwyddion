@@ -17,6 +17,7 @@
 
   <refsect1>
     <title>Overview</title>
+    <warning>This section is outdated.</warning>
     <para>
       Vector layers, implementing means how user can draw on data views, are
       provided by <link linkend="libgwymodule-gwymodule-layer">layer

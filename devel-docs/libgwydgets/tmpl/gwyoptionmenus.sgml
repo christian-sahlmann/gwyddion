@@ -97,6 +97,16 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_gradient_tree_view_set_active ##### -->
+<para>
+
+</para>
+
+@treeview: 
+@active: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_gradient_selection_get_active ##### -->
 <para>
 
@@ -136,6 +146,27 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_gl_material_tree_view_new ##### -->
+<para>
+
+</para>
+
+@callback: 
+@cbdata: 
+@active: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_gl_material_tree_view_set_active ##### -->
+<para>
+
+</para>
+
+@treeview: 
+@active: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_gl_material_selection_get_active ##### -->
 <para>
 
@@ -152,16 +183,5 @@ gwy_option_menu_gl_material() (or gwy_menu_gl_material() for a normal menu).
 
 @selection: 
 @active: 
-
-
-<!-- ##### FUNCTION gwy_gl_material_tree_view_new ##### -->
-<para>
-
-</para>
-
-@callback: 
-@cbdata: 
-@active: 
-@Returns: 
 
 

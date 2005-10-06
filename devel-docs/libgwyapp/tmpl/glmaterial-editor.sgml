@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gwymodule
+glmaterial-editor
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -15,5 +15,12 @@ gwymodule
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION gwy_app_gl_material_editor ##### -->
+<para>
+
+</para>
+
 
 

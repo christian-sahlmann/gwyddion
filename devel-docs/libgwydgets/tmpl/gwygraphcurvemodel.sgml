@@ -25,12 +25,50 @@ graph widgets and should be mostly ignored for now.
 </para>
 
 
+<!-- ##### SIGNAL GwyGraphCurveModel::layout-updated ##### -->
+<para>
+
+</para>
+
+@gwygraphcurvemodel: the object which received the signal.
+
+<!-- ##### ARG GwyGraphCurveModel:curve-type ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphCurveModel:description ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphCurveModel:line-size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphCurveModel:line-style ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphCurveModel:point-size ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyGraphCurveModel:point-type ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT GwyGraphCurveModelClass ##### -->
 <para>
 
 </para>
 
 @parent_class: 
+@layout_updated: 
 @reserved1: 
 @reserved2: 
 @reserved3: 
@@ -224,5 +262,13 @@ graph widgets and should be mostly ignored for now.
 
 @gcmodel: 
 @Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_curve_model_signal_layout_changed ##### -->
+<para>
+
+</para>
+
+@model: 
 
 

@@ -34,7 +34,6 @@ gwy_data_field_itor
 gwy_data_field_jtor
 gwy_data_field_rtoi
 gwy_data_field_rtoj
-gwy_data_field_outside
 gwy_data_field_get_val
 gwy_data_field_set_val
 gwy_data_field_get_dval
@@ -82,7 +81,6 @@ GWY_DATA_FIELD_GET_CLASS
 <TITLE>GwyDataLine</TITLE>
 GwyDataLine
 GwyDataLineClass
-GwyFFTFunc
 gwy_data_line_duplicate
 gwy_data_line_new
 gwy_data_line_new_alike
@@ -114,8 +112,7 @@ gwy_data_line_part_multiply
 gwy_data_line_part_add
 gwy_data_line_threshold
 gwy_data_line_part_threshold
-gwy_data_line_line_coeffs
-gwy_data_line_part_line_coeffs
+gwy_data_line_get_line_coeffs
 gwy_data_line_line_level
 gwy_data_line_line_rotate
 gwy_data_line_get_der
@@ -182,6 +179,8 @@ gwy_windowing_type_get_type
 GWY_TYPE_WINDOWING_TYPE
 gwy_tip_type_get_type
 GWY_TYPE_TIP_TYPE
+gwy_grain_value_type_get_type
+GWY_TYPE_GRAIN_VALUE_TYPE
 </SECTION>
 
 <SECTION>
@@ -198,7 +197,6 @@ gwy_data_field_ydwt
 gwy_data_field_dwt
 gwy_data_field_dwt_denoise
 gwy_data_field_dwt_mark_anisotropy
-gwy_data_field_dwt_correction
 </SECTION>
 
 <SECTION>
@@ -211,13 +209,13 @@ gwy_data_field_grains_extract_grain
 gwy_data_field_grains_remove_by_size
 gwy_data_field_grains_remove_by_height
 gwy_data_field_grains_watershed_iteration
-gwy_data_field_grains_mark_local_maxima
 gwy_data_field_grains_mark_height
 gwy_data_field_grains_mark_slope
 gwy_data_field_grains_get_distribution
 gwy_data_field_grains_add
 gwy_data_field_grains_intersect
 gwy_data_field_area_grains_tgnd
+gwy_data_field_grains_get_grain_value
 </SECTION>
 
 <SECTION>
@@ -259,7 +257,6 @@ gwy_data_field_2dffthumanize
 gwy_data_field_xfft
 gwy_data_field_yfft
 gwy_data_field_xfft_real
-gwy_data_field_yfft_real
 gwy_data_field_cwt
 gwy_data_field_fft_filter_1d
 </SECTION>
@@ -382,6 +379,7 @@ GwyInterpolationType
 GwyPlaneFitQuantity
 GwyWindowingType
 GwyTipType
+GwyGrainValueType
 gwy_merge_type_get_enum
 gwy_plane_symmetry_get_enum
 gwy_2d_cwt_wavelet_type_get_enum

@@ -10,6 +10,8 @@
   <xi:include href="xml/settings.xml"/>
   <xi:include href="xml/filelist.xml"/>
   <xi:include href="xml/graphlist.xml"/>
+  <xi:include href="xml/glmaterial-editor.xml"/>
+  <xi:include href="xml/gradient-editor.xml"/>
   <xi:include href="xml/menu.xml"/>
   <xi:include href="xml/menu-windowlist.xml"/>
   <xi:include href="xml/undo.xml"/>

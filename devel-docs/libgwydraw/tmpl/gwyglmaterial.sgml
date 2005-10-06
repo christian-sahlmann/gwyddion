@@ -18,6 +18,13 @@ corresponding OpenGL material characteristics, all are in the range [0,1].
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO GWY_GL_MATERIAL_DEFAULT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_GL_MATERIAL_NONE ##### -->
 <para>
 

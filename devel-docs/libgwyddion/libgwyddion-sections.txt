@@ -82,6 +82,7 @@ GWY_NLFIT_PRESET_CLASS
 GWY_IS_NLFIT_PRESET_CLASS
 GWY_NLFIT_PRESET_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyinventory</FILE>
 GwyInventoryItemType
@@ -162,6 +163,7 @@ gwy_container_new
 gwy_container_value_type
 gwy_container_contains
 gwy_container_get_value
+gwy_container_gis_value
 gwy_container_set_value
 gwy_container_set_value_by_name
 gwy_container_remove
@@ -198,6 +200,7 @@ gwy_container_deserialize_from_text
 gwy_container_value_type_by_name
 gwy_container_contains_by_name
 gwy_container_get_value_by_name
+gwy_container_gis_value_by_name
 gwy_container_remove_by_name
 gwy_container_rename_by_name
 gwy_container_set_boolean_by_name

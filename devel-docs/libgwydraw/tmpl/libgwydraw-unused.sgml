@@ -58,12 +58,6 @@ GwyPaletteDef
 GwyResource
 
 
-<!-- ##### MACRO GWY_GRADIENT_DEFAULT ##### -->
-<para>
-
-</para>
-
-
 <!-- ##### MACRO GWY_PALETTE_BLUE ##### -->
 <para>
 

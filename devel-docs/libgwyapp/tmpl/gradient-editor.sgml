@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gwymodule
+gradient-editor
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -15,5 +15,12 @@ gwymodule
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### FUNCTION gwy_app_gradient_editor ##### -->
+<para>
+
+</para>
+
 
 

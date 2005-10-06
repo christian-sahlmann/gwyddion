@@ -74,6 +74,11 @@ the 3D view to update self, when data changes.
 
 </para>
 
+<!-- ##### ARG Gwy3DView:visualization ##### -->
+<para>
+
+</para>
+
 <!-- ##### STRUCT Gwy3DViewClass ##### -->
 <para>
 

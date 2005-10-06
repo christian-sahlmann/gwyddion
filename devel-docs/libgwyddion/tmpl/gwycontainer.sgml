@@ -139,6 +139,17 @@ gwy_container_set_double_by_name().
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_container_gis_value ##### -->
+<para>
+
+</para>
+
+@container: 
+@key: 
+@value: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_container_set_value ##### -->
 <para>
 
@@ -504,6 +515,16 @@ gwy_container_set_double_by_name().
 
 @c: 
 @n: 
+
+
+<!-- ##### MACRO gwy_container_gis_value_by_name ##### -->
+<para>
+
+</para>
+
+@c: 
+@n: 
+@v: 
 
 
 <!-- ##### MACRO gwy_container_remove_by_name ##### -->

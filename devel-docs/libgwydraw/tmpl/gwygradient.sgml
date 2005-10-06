@@ -42,6 +42,13 @@ queried with gwy_gradient_is_modifiable().
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO GWY_GRADIENT_DEFAULT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### STRUCT GwyGradientPoint ##### -->
 <para>
 

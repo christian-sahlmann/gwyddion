@@ -59,7 +59,10 @@ gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
 </para>
 
 @parent_class: 
-@draw_ticks: 
+@prepare_sizes: 
+@draw_frame: 
+@draw_layout: 
+@draw_tick: 
 @draw_pos: 
 @reserved1: 
 @reserved2: 
@@ -74,14 +77,6 @@ gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
 @upper: 
 @position: 
 @max_size: 
-
-
-<!-- ##### FUNCTION gwy_ruler_draw_ticks ##### -->
-<para>
-
-</para>
-
-@ruler: 
 
 
 <!-- ##### FUNCTION gwy_ruler_draw_pos ##### -->

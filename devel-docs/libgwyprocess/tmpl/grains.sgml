@@ -127,15 +127,6 @@ Grain detection and processing
 @dir: 
 
 
-<!-- ##### FUNCTION gwy_data_field_grains_mark_local_maxima ##### -->
-<para>
-
-</para>
-
-@data_field: 
-@grain_field: 
-
-
 <!-- ##### FUNCTION gwy_data_field_grains_mark_height ##### -->
 <para>
 
@@ -202,5 +193,18 @@ Grain detection and processing
 @height: 
 @below: 
 @nstats: 
+
+
+<!-- ##### FUNCTION gwy_data_field_grains_get_grain_value ##### -->
+<para>
+
+</para>
+
+@data_field: 
+@grain_field: 
+@col: 
+@row: 
+@type: 
+@Returns: 
 
 

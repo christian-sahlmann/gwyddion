@@ -26,6 +26,9 @@ and the signatures of particular file operations:
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GWY_FILE_DETECT_BUFFER_SIZE ##### -->
 <para>
 

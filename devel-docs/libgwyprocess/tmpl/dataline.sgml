@@ -40,19 +40,6 @@ connected with 1D data, graphs, etc.
 @parent_class: 
 @data_changed: 
 
-<!-- ##### USER_FUNCTION GwyFFTFunc ##### -->
-<para>
-
-</para>
-
-@dir: 
-@re_in: 
-@im_in: 
-@re_out: 
-@im_out: 
-@interpolation: 
-
-
 <!-- ##### MACRO gwy_data_line_duplicate ##### -->
 <para>
 
@@ -407,7 +394,7 @@ connected with 1D data, graphs, etc.
 @a: 
 
 
-<!-- ##### FUNCTION gwy_data_line_line_coeffs ##### -->
+<!-- ##### FUNCTION gwy_data_line_get_line_coeffs ##### -->
 <para>
 
 </para>
@@ -415,22 +402,6 @@ connected with 1D data, graphs, etc.
 @data_line: 
 @av: 
 @bv: 
-<!-- # Unused Parameters # -->
-@a: 
-
-
-<!-- ##### FUNCTION gwy_data_line_part_line_coeffs ##### -->
-<para>
-
-</para>
-
-@data_line: 
-@from: 
-@to: 
-@av: 
-@bv: 
-<!-- # Unused Parameters # -->
-@a: 
 
 
 <!-- ##### FUNCTION gwy_data_line_line_level ##### -->
@@ -478,13 +449,13 @@ connected with 1D data, graphs, etc.
 @isrc: 
 @rdest: 
 @idest: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
 <!-- # Unused Parameters # -->
+@fft: 
 @ra: 
 @ia: 
 @rb: 

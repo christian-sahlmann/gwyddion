@@ -316,3 +316,41 @@ widgets and should be mostly ignored for now.
 @model: 
 
 
+<!-- ##### FUNCTION gwy_graph_model_set_direction_logarithmic ##### -->
+<para>
+
+</para>
+
+@model: 
+@direction: 
+@is_logarithmic: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_get_direction_logarithmic ##### -->
+<para>
+
+</para>
+
+@model: 
+@direction: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_x_data_can_be_logarithmed ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_graph_model_y_data_can_be_logarithmed ##### -->
+<para>
+
+</para>
+
+@model: 
+@Returns: 
+
+

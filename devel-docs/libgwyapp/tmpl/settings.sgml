@@ -24,6 +24,9 @@ main application.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_app_settings_get ##### -->
 <para>
 
@@ -90,6 +93,24 @@ main application.
 
 
 <!-- ##### FUNCTION gwy_app_settings_get_recent_file_list_filename ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_gl_init ##### -->
+<para>
+
+</para>
+
+@argc: 
+@argv: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_app_gl_is_ok ##### -->
 <para>
 
 </para>

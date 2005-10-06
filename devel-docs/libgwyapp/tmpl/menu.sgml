@@ -23,6 +23,9 @@ If there are no conditions defined, the widget is sensitive always.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GwyMenuSensFlags ##### -->
 <para>
 

@@ -35,12 +35,13 @@ inttrans
 @ia: 
 @rb: 
 @ib: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
+<!-- # Unused Parameters # -->
+@fft: 
 
 
 <!-- ##### FUNCTION gwy_data_field_2dfft_real ##### -->
@@ -51,12 +52,13 @@ inttrans
 @ra: 
 @rb: 
 @ib: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
+<!-- # Unused Parameters # -->
+@fft: 
 
 
 <!-- ##### FUNCTION gwy_data_field_2dffthumanize ##### -->
@@ -76,12 +78,13 @@ inttrans
 @ia: 
 @rb: 
 @ib: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
+<!-- # Unused Parameters # -->
+@fft: 
 
 
 <!-- ##### FUNCTION gwy_data_field_yfft ##### -->
@@ -93,12 +96,13 @@ inttrans
 @ia: 
 @rb: 
 @ib: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
+<!-- # Unused Parameters # -->
+@fft: 
 
 
 <!-- ##### FUNCTION gwy_data_field_xfft_real ##### -->
@@ -109,28 +113,13 @@ inttrans
 @ra: 
 @rb: 
 @ib: 
-@fft: 
 @windowing: 
 @direction: 
 @interpolation: 
 @preserverms: 
 @level: 
-
-
-<!-- ##### FUNCTION gwy_data_field_yfft_real ##### -->
-<para>
-
-</para>
-
-@ra: 
-@rb: 
-@ib: 
+<!-- # Unused Parameters # -->
 @fft: 
-@windowing: 
-@direction: 
-@interpolation: 
-@preserverms: 
-@level: 
 
 
 <!-- ##### FUNCTION gwy_data_field_cwt ##### -->

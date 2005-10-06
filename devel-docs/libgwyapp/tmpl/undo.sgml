@@ -23,6 +23,9 @@ main application.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gwy_app_undo_checkpoint ##### -->
 <para>
 
@@ -62,7 +65,44 @@ main application.
 @data: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_container_has_undo ##### -->
+<!-- ##### FUNCTION gwy_undo_checkpoint ##### -->
+<para>
+
+</para>
+
+@data: 
+@Varargs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_undo_checkpointv ##### -->
+<para>
+
+</para>
+
+@data: 
+@n: 
+@keys: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_undo_undo_container ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### FUNCTION gwy_undo_redo_container ##### -->
+<para>
+
+</para>
+
+@data: 
+
+
+<!-- ##### FUNCTION gwy_undo_container_has_undo ##### -->
 <para>
 
 </para>
@@ -71,7 +111,7 @@ main application.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_container_has_redo ##### -->
+<!-- ##### FUNCTION gwy_undo_container_has_redo ##### -->
 <para>
 
 </para>
@@ -80,7 +120,7 @@ main application.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_container_get_modified ##### -->
+<!-- ##### FUNCTION gwy_undo_container_get_modified ##### -->
 <para>
 
 </para>
@@ -89,7 +129,7 @@ main application.
 @Returns: 
 
 
-<!-- ##### FUNCTION gwy_app_undo_container_set_unmodified ##### -->
+<!-- ##### FUNCTION gwy_undo_container_set_unmodified ##### -->
 <para>
 
 </para>
