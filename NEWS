@@ -61,6 +61,10 @@ Library:
   exports lower-level functions usable for undo outside main app windows.
 - libprocess: FFT backend argument was removed from FFT functions.
 - libgwydgets: Vertical rulers look like rotated horizontal rulers now.
+- libgwydgets: Graph: API cleaned, logarithmic axis reworked and enabled, 
+  offsets introduced, GwySelection implemented, signals properly implemented,
+  set/get properties implemented, export GUI moved to modules, graph selection
+  can be moved while creating it.
 
 Modules:
 - MI file (new): PicoView MI data file import.
@@ -78,6 +82,9 @@ Modules:
 - Distance: Displays value difference too.
 - Pixmap: The same unit selection/formatting is used for false color scale
   as on data windows (bug #63).
+- Graph export vector, ascii and bitmap: functionality moved from Graph (withing bugs)
+  moved here
+- Graph level: simple line leveling by 1st order polynome
 
 Other:
 - Modules are built with libtool, so it should be possible to build

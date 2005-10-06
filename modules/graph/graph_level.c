@@ -84,6 +84,7 @@ level(GwyGraph *graph)
         ndata = gwy_graph_curve_model_get_ndata(cmodel);
 
         level_do(xdata, ydata, ndata);
+        gwy_graph_curve_model_signal_layout_changed(cmodel);
     }
 
     return ok;
