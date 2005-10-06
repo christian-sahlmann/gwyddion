@@ -273,10 +273,9 @@ gwy_selection_get_object(GwySelection *selection,
  * Sets one selection object.
  *
  * This method can be also used to append objects (if the maximum number is
- * not exceeded).
- *
- * Since there cannot be holes in the object list, @i must be equal to either
- * the number of selected objects or special value -1 meaning append to end.
+ * not exceeded).  Since there cannot be holes in the object list, @i must be
+ * then equal to either the number of selected objects or special value -1
+ * meaning append to end.
  *
  * Returns: The index of actually set object (useful namely when @i is -1).
  **/
@@ -467,7 +466,7 @@ gwy_selection_set_object_default(GwySelection *selection,
 {
     guint object_size, max_len;
 
-    gwy_debug("%p: setting object %d", selection, i);
+    gwy_debug("%p: setting object %d, n=%d", selection, i, selection->n);
     if (i < 0)
         i = selection->n;
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
@@ -547,6 +546,7 @@ gwy_selection_set_max_objects_default(GwySelection *selection,
 {
     guint object_size;
 
+    gwy_debug("%d", max_objects);
     g_return_if_fail(max_objects >= 1);
     object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
     if (max_objects*object_size == selection->objects->len)
