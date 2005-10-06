@@ -45,8 +45,6 @@ static void gwy_graph_window_y_log_cb           (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_zoom_finished_cb   (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow,
                                                  gint response);
-static void gwy_graph_window_export_vector_cb   (GwyGraphWindow *graphwindow);
-static void gwy_graph_window_export_bitmap_cb   (GwyGraphWindow *graphwindow);
 static void gwy_graph_window_set_tooltip        (GtkWidget *widget,
                                                  const gchar *tip_text);
 
@@ -208,23 +206,6 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_widget_set_sensitive(graphwindow->button_y_log,
                 gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
     
-                           /*
-    graphwindow->button_export_vector = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_vector),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_VECTOR, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_vector, FALSE, FALSE, 0);
-    g_signal_connect_swapped(graphwindow->button_export_vector, "clicked",
-                           G_CALLBACK(gwy_graph_window_export_vector_cb),
-                           graphwindow);
-
-    graphwindow->button_export_bitmap = gtk_button_new();
-    gtk_container_add(GTK_CONTAINER(graphwindow->button_export_bitmap),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_BITMAP, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_export_bitmap, FALSE, FALSE, 0);
-    g_signal_connect_swapped(graphwindow->button_export_bitmap, "clicked",
-                           G_CALLBACK(gwy_graph_window_export_bitmap_cb),
-                           graphwindow);
-*/
 
     graphwindow->label_what = gtk_label_new("Cursor values:");
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, FALSE, FALSE, 4);
@@ -426,49 +407,6 @@ gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
 }
 
 
-static void
-gwy_graph_window_export_vector_cb(GwyGraphWindow *graphwindow)
-{
-    GtkDialog *filedialog;
-    gchar *filename;
-
-    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to postscript",
-                                              GTK_WINDOW(graphwindow),
-                                              GTK_FILE_CHOOSER_ACTION_SAVE,
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                              NULL));
-    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-    {
-       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-       gwy_graph_export_postscript(GWY_GRAPH(graphwindow->graph), filename,
-                                   TRUE, TRUE, TRUE);
-    }
-    gtk_widget_destroy(GTK_WIDGET(filedialog));
-
-}
-
-
-static void
-gwy_graph_window_export_bitmap_cb(GwyGraphWindow *graphwindow)
-{
-    GtkDialog *filedialog;
-    gchar *filename;
-
-    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
-                                              GTK_WINDOW(graphwindow),
-                                              GTK_FILE_CHOOSER_ACTION_SAVE,
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-                                              NULL));
-    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
-    {
-       filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-       gwy_graph_export_pixmap(GWY_GRAPH(graphwindow->graph), filename,
-                               TRUE, TRUE, TRUE);
-    }
-    gtk_widget_destroy(GTK_WIDGET(filedialog));
-}
 
 static void
 gwy_graph_window_set_tooltip(GtkWidget *widget,

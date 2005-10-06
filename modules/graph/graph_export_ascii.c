@@ -95,8 +95,8 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyGraphFuncInfo export_func_info = {
-        "export",
-        N_("/_ASCII export"),
+        "graph_export_ascii",
+        N_("/Export _ASCII"),
         (GwyGraphFunc)&export,
     };
 
@@ -116,7 +116,6 @@ export(GwyGraph *graph)
         dialog = NULL;
         return TRUE;
     }
-
     settings = gwy_app_settings_get();
     load_args(settings, &controls);
     

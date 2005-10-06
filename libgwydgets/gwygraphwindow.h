@@ -59,9 +59,6 @@ struct _GwyGraphWindow {
     GtkWidget *button_x_log;
     GtkWidget *button_y_log;
 
-    GtkWidget *button_export_bitmap;
-    GtkWidget *button_export_vector;
-
     GtkWidget *label_what;
     GtkWidget *label_x;
     GtkWidget *label_y;

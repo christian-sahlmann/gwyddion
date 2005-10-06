@@ -36,16 +36,15 @@
 /* Data for this function.*/
 
 static gboolean    module_register           (const gchar *name);
-static gboolean    level                     (GwyGraph *graph);
-static void        level_do                  (gdouble *x, gdouble *y, gdouble n);
+static gboolean    export                     (GwyGraph *graph);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Level graph by line"),
+    N_("Export graph into bitmap"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.2",
+    "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -57,50 +56,39 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(const gchar *name)
 {
-    static GwyGraphFuncInfo fit_func_info = {
-        "graph_level",
-        N_("/_Level"),
-        (GwyGraphFunc)&level,
+    static GwyGraphFuncInfo export_info = {
+        "graph_export_bitmap",
+        N_("/Export _bitmap"),
+        (GwyGraphFunc)&export,
     };
 
-    gwy_graph_func_register(name, &fit_func_info);
-
+    gwy_graph_func_register(name, &export_info);
     return TRUE;
 }
 
 static gboolean
-level(GwyGraph *graph)
+export(GwyGraph *graph)
 {
-    GwyGraphCurveModel *cmodel;
-    gboolean ok;
-    gdouble *xdata, *ydata;
-    gint i, ndata;
-
-    for (i=0; i<gwy_graph_model_get_n_curves(gwy_graph_get_model(graph)); i++)
+    GtkDialog *filedialog;
+    gchar *filename;
+    
+    filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to bitmap",
+                                                          NULL,
+                                                          GTK_FILE_CHOOSER_ACTION_SAVE,
+                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                                          GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                                          NULL));
+    if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
-        cmodel = gwy_graph_model_get_curve_by_index(gwy_graph_get_model(graph), i);
-        xdata = gwy_graph_curve_model_get_xdata(cmodel);
-        ydata = gwy_graph_curve_model_get_ydata(cmodel);
-        ndata = gwy_graph_curve_model_get_ndata(cmodel);
-
-        level_do(xdata, ydata, ndata);
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
+        //gwy_graph_export_pixmap(graph, filename,
+          //                               TRUE, TRUE, TRUE);
     }
-
-    return ok;
+    gtk_widget_destroy(GTK_WIDGET(filedialog));
+ 
+    return TRUE;
 }
 
-static void        
-level_do(gdouble *x, gdouble *y, gdouble n)
-{
-    gint i;
-    gdouble result[2];
-    gwy_math_fit_polynom(n, x, y, 1, result);
-
-    for (i=0; i<n; i++)
-    {
-        y[i] -= result[0] + result[1]*x[i];
-    }
-}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
