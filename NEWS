@@ -1,6 +1,5 @@
-1.99.3cvs20050930
 
-1.99.4 (2005-10-01)
+1.99.4 (2005-10-06)
 Application:
 - GLib and Gtk+ 2.6 is required now.
 - Can optionally use FFTW v3 library (currently only for a few operations).
@@ -8,8 +7,8 @@ Application:
 - System chdir() is no longer used, so that e.g. core is always dumped to the
   directory where app was started, otherwise directory behaviour has not
   changed.
-- Color gradient and GL material ,editors`, currently can only set default
-  gradient/GL material.
+- Color gradient and GL material editors, the only functionality that
+  actually works now is Set default.
 
 Library:
 - libprocess: All interpolation is pixel-like instead of function-like now.
@@ -64,6 +63,7 @@ Library:
 - libgwydgets: Vertical rulers look like rotated horizontal rulers now.
 
 Modules:
+- MI file (new): PicoView MI data file import.
 - BCR file: Unit support was improved, support for zmin added.
 - Profile: Maximum profile width was increased to 100.
 - Statistical functions, Profile: Allow to select number of sampling points.
@@ -73,6 +73,8 @@ Modules:
   various other changes, all support selection setting now as a side effect.
 - Rectangular selection: Hold Shift to select exact squares.
 - Line selection: Hold Shift to select lines in `nice' directions.
+- Elliptic (circular) selection layer (new).
+- Slope and grain distribution were ported to new graph API.
 - Distance: Displays value difference too.
 - Pixmap: The same unit selection/formatting is used for false color scale
   as on data windows (bug #63).
