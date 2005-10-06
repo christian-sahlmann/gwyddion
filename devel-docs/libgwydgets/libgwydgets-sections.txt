@@ -156,8 +156,6 @@ GWY_GRAPH_WINDOW_MEASURE_DIALOG_CLASS
 GWY_GRAPH_WINDOW_MEASURE_DIALOG_GET_CLASS
 MeasureMethodType
 <TITLE>GwyGraphWindowMeasureDialog</TITLE>
-GwyGraphWindowMeasureDialog
-GwyGraphWindowMeasureDialogClass
 gwy_graph_window_measure_dialog_new
 gwy_graph_window_measure_dialog_set_curve_data
 <SUBSECTION Standard>
@@ -166,7 +164,6 @@ GWY_TYPE_GRAPH_MEASURE_DIALOG
 gwy_graph_window_measure_dialog_get_type
 GWY_IS_GRAPH_MEASURE_DIALOG_CLASS
 </SECTION>
-
 <SECTION>
 <FILE>gwygraphlabel</FILE>
 <TITLE>GwyGraphLabel</TITLE>
@@ -193,6 +190,8 @@ GWY_GRAPH_LABEL_GET_CLASS
 GwyPoint
 GwyChannelData
 <TITLE>GwyCurve</TITLE>
+GwyCurve
+GwyCurveClass
 gwy_curve_new
 gwy_curve_reset
 gwy_curve_set_range
@@ -207,6 +206,7 @@ GWY_CURVE_CLASS
 GWY_IS_CURVE_CLASS
 GWY_CURVE_GET_CLASS
 </SECTION>
+
 <SECTION>
 <FILE>gwyvalunit</FILE>
 <TITLE>GwyValUnit</TITLE>
@@ -349,7 +349,6 @@ GWY_VECTOR_LAYER_GET_CLASS
 GwyRuler
 GwyRulerClass
 gwy_ruler_set_range
-gwy_ruler_draw_ticks
 gwy_ruler_draw_pos
 gwy_ruler_get_range
 gwy_ruler_set_units
@@ -440,6 +439,7 @@ gwy_graph_curve_model_get_curve_point_size
 gwy_graph_curve_model_get_curve_line_style
 gwy_graph_curve_model_get_curve_line_size
 gwy_graph_curve_model_get_curve_color
+gwy_graph_curve_model_signal_layout_changed
 <SUBSECTION Standard>
 GWY_GRAPH_CURVE_MODEL
 GWY_IS_GRAPH_CURVE_MODEL
@@ -448,6 +448,41 @@ gwy_graph_curve_model_get_type
 GWY_GRAPH_CURVE_MODEL_CLASS
 GWY_IS_GRAPH_CURVE_MODEL_CLASS
 GWY_GRAPH_CURVE_MODEL_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gwygraphselections</FILE>
+<TITLE>GwySelectionGraphPoint</TITLE>
+GwySelectionGraphPoint
+GwySelectionGraphPointClass
+GWY_TYPE_SELECTION_GRAPH_AREA
+GWY_SELECTION_GRAPH_AREA
+GWY_SELECTION_GRAPH_AREA_CLASS
+GWY_IS_SELECTION_GRAPH_AREA
+GWY_IS_SELECTION_GRAPH_AREA_CLASS
+GWY_SELECTION_GRAPH_AREA_GET_CLASS
+<TITLE>GwySelectionGraphArea</TITLE>
+GwySelectionGraphArea
+GwySelectionGraphAreaClass
+gwy_selection_graph_area_get_type
+GWY_TYPE_SELECTION_GRAPH_LINE
+GWY_SELECTION_GRAPH_LINE
+GWY_SELECTION_GRAPH_LINE_CLASS
+GWY_IS_SELECTION_GRAPH_LINE
+GWY_IS_SELECTION_GRAPH_LINE_CLASS
+GWY_SELECTION_GRAPH_LINE_GET_CLASS
+<TITLE>GwySelectionGraphLine</TITLE>
+GwySelectionGraphLine
+GwySelectionGraphLineClass
+gwy_selection_graph_line_get_type
+<SUBSECTION Standard>
+GWY_SELECTION_GRAPH_POINT
+GWY_IS_SELECTION_GRAPH_POINT
+GWY_TYPE_SELECTION_GRAPH_POINT
+gwy_selection_graph_point_get_type
+GWY_SELECTION_GRAPH_POINT_CLASS
+GWY_IS_SELECTION_GRAPH_POINT_CLASS
+GWY_SELECTION_GRAPH_POINT_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -606,6 +641,10 @@ gwy_graph_model_get_x_siunit
 gwy_graph_model_get_y_siunit
 gwy_graph_model_export_ascii
 gwy_graph_model_signal_layout_changed
+gwy_graph_model_set_direction_logarithmic
+gwy_graph_model_get_direction_logarithmic
+gwy_graph_model_x_data_can_be_logarithmed
+gwy_graph_model_y_data_can_be_logarithmed
 <SUBSECTION Standard>
 GWY_GRAPH_MODEL
 GWY_IS_GRAPH_MODEL
@@ -624,6 +663,7 @@ GwyInventoryStoreClass
 gwy_inventory_store_new
 gwy_inventory_store_get_inventory
 gwy_inventory_store_get_column_by_name
+gwy_inventory_store_get_iter
 gwy_inventory_store_iter_is_valid
 <SUBSECTION Standard>
 GWY_INVENTORY_STORE
@@ -639,10 +679,6 @@ GWY_INVENTORY_STORE_GET_CLASS
 <FILE>gwygrapharea</FILE>
 GwyGraphStatus_PointData
 GwyGraphStatus_CursorData
-GwyGraphStatus_PointsData
-GwyGraphStatus_AreaData
-GwyGraphStatus_AreasData
-GwyGraphStatus_LinesData
 GwyGraphStatus_ZoomData
 GwyGraphAreaCurve
 <TITLE>GwyGraphArea</TITLE>
@@ -714,23 +750,6 @@ gwy_3d_window_get_type
 GWY_3D_WINDOW_CLASS
 GWY_IS_3D_WINDOW_CLASS
 GWY_3D_WINDOW_GET_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>gwygraphwindowasciidialog</FILE>
-<TITLE>GwyGraphWindowAsciiDialog</TITLE>
-GwyGraphWindowAsciiDialog
-GwyGraphWindowAsciiDialogClass
-gwy_graph_window_ascii_dialog_new
-gwy_graph_window_ascii_dialog_get_data
-<SUBSECTION Standard>
-GWY_GRAPH_WINDOW_ASCII_DIALOG
-GWY_IS_GRAPH_WINDOW_ASCII_DIALOG
-GWY_TYPE_GRAPH_WINDOW_ASCII_DIALOG
-gwy_graph_window_ascii_dialog_get_type
-GWY_GRAPH_WINDOW_ASCII_DIALOG_CLASS
-GWY_IS_GRAPH_WINDOW_ASCII_DIALOG_CLASS
-GWY_GRAPH_WINDOW_ASCII_DIALOG_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -869,7 +888,6 @@ gwy_enum_combo_box_update_int
 <SECTION>
 <FILE>gwygraphbasics</FILE>
 GwyGraphDataPoint
-GwyGraphDataArea
 GwyGraphActiveAreaSpecs
 gwy_graph_draw_point
 gwy_graph_draw_line
@@ -980,6 +998,8 @@ GWY_STOCK_GRAPH_RULER
 GWY_STOCK_GRAPH_ZOOM_FIT
 GWY_STOCK_GRAPH_ZOOM_IN
 GWY_STOCK_GRAPH_ZOOM_OUT
+GWY_STOCK_GRAPH_X_LOGARITHMIC
+GWY_STOCK_GRAPH_Y_LOGARITHMIC
 GWY_STOCK_GWYDDION
 GWY_STOCK_ITALIC
 GWY_STOCK_LESS
@@ -1022,12 +1042,14 @@ gwy_stock_register_stock_items
 gwy_menu_gradient
 gwy_gradient_selection_new
 gwy_gradient_tree_view_new
+gwy_gradient_tree_view_set_active
 gwy_gradient_selection_get_active
 gwy_gradient_selection_set_active
 gwy_menu_gl_material
 gwy_gl_material_selection_new
+gwy_gl_material_tree_view_new
+gwy_gl_material_tree_view_set_active
 gwy_gl_material_selection_get_active
 gwy_gl_material_selection_set_active
-gwy_gl_material_tree_view_new
 </SECTION>
 

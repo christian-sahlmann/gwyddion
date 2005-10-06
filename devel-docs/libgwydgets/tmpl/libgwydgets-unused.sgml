@@ -118,6 +118,30 @@ GwyGrapherCurveModel
 GwyGrapherModel
 
 
+<!-- ##### SECTION ./tmpl/gwygraphwindowasciidialog.sgml:Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphwindowasciidialog.sgml:See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION ./tmpl/gwygraphwindowasciidialog.sgml:Short_Description ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwygraphwindowasciidialog.sgml:Stability_Level ##### -->
+
+
+
+<!-- ##### SECTION ./tmpl/gwygraphwindowasciidialog.sgml:Title ##### -->
+GwyGrapherWindowAsciiDialog
+
+
 <!-- ##### SECTION ./tmpl/gwylayer-axes.sgml:Long_Description ##### -->
 <para>
 
@@ -1062,6 +1086,36 @@ are saved here.
 @scr_end: 
 @data_start: 
 @data_end: 
+
+<!-- ##### STRUCT GwyGraphWindowAsciiDialog ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphWindowAsciiDialogClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
+
+<!-- ##### STRUCT GwyGraphWindowMeasureDialog ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwyGraphWindowMeasureDialogClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@reserved1: 
+@reserved2: 
 
 <!-- ##### STRUCT GwyGrapherActiveAreaSpecs ##### -->
 <para>
@@ -2503,6 +2557,24 @@ are saved here.
 </para>
 
 @graph: 
+
+<!-- ##### FUNCTION gwy_graph_window_ascii_dialog_get_data ##### -->
+<para>
+
+</para>
+
+@dialog: 
+@style: 
+@units: 
+@labels: 
+@metadata: 
+
+<!-- ##### FUNCTION gwy_graph_window_ascii_dialog_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
 
 <!-- ##### FUNCTION gwy_grapher_area_change_model ##### -->
 <para>

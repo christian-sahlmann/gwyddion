@@ -35,6 +35,56 @@ GwyCurve
 @num_ctlpoints: 
 @ctlpoints: 
 
+<!-- ##### STRUCT GwyCurve ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GwyCurve::curve-type-changed ##### -->
+<para>
+
+</para>
+
+@gwycurve: the object which received the signal.
+
+<!-- ##### ARG GwyCurve:curve-type ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyCurve:max-x ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyCurve:max-y ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyCurve:min-x ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GwyCurve:min-y ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GwyCurveClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@curve_type_changed: 
+@_gtk_reserved1: 
+@_gtk_reserved2: 
+@_gtk_reserved3: 
+@_gtk_reserved4: 
+
 <!-- ##### FUNCTION gwy_curve_new ##### -->
 <para>
 

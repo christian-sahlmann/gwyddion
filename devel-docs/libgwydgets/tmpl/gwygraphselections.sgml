@@ -17,6 +17,19 @@ GwySelectionGraphPoint
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### STRUCT GwySelectionGraphPoint ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwySelectionGraphPointClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
 <!-- ##### MACRO GWY_TYPE_SELECTION_GRAPH_AREA ##### -->
 <para>
 
@@ -63,6 +76,19 @@ GwySelectionGraphPoint
 
 @obj: 
 
+
+<!-- ##### STRUCT GwySelectionGraphArea ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwySelectionGraphAreaClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
 
 <!-- ##### FUNCTION gwy_selection_graph_area_get_type ##### -->
 <para>
@@ -118,6 +144,19 @@ GwySelectionGraphPoint
 
 @obj: 
 
+
+<!-- ##### STRUCT GwySelectionGraphLine ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GwySelectionGraphLineClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
 
 <!-- ##### FUNCTION gwy_selection_graph_line_get_type ##### -->
 <para>

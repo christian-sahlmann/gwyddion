@@ -56,21 +56,6 @@ GwyGrapherWindowMeasureDialog
 @METHOD_INTERSECTIONS: 
 @METHOD_CROSSES: 
 
-<!-- ##### STRUCT GwyGraphWindowMeasureDialog ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### STRUCT GwyGraphWindowMeasureDialogClass ##### -->
-<para>
-
-</para>
-
-@parent_class: 
-@reserved1: 
-@reserved2: 
-
 <!-- ##### FUNCTION gwy_graph_window_measure_dialog_new ##### -->
 <para>
 

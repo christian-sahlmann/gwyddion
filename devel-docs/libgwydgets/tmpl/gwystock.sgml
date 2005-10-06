@@ -282,6 +282,20 @@ The "Graph-Zoom-Out" stock icon.
 
 
 
+<!-- ##### MACRO GWY_STOCK_GRAPH_X_LOGARITHMIC ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GWY_STOCK_GRAPH_Y_LOGARITHMIC ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GWY_STOCK_GWYDDION ##### -->
 <para>
 The "Gwyddion" stock icon.
