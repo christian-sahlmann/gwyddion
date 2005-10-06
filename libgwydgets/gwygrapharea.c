@@ -1209,51 +1209,50 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
                              gdouble* selection, gint n_of_selections)
 {
     gint i;
-    gdouble selection_areadata[4];
-    gdouble selection_linedata;
-    gdouble selection_pointdata[2];
+
     area->status = status;
 
-    if (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
-    {
-        for (i=0; i<n_of_selections; i++)
-        {
-            if (area->status == GWY_GRAPH_STATUS_XSEL)
-            {
-                selection_areadata[0] = selection[2*i];
-                selection_areadata[2] = selection[2*i + 1];
-                selection_areadata[1] = GWY_GRAPH_MODEL(area->graph_model)->y_min;
-                selection_areadata[3] = GWY_GRAPH_MODEL(area->graph_model)->y_max;
+    switch (area->status) {
+        case GWY_GRAPH_STATUS_XSEL:
+        for (i = 0; i < n_of_selections; i++) {
+            gdouble selection_areadata[4];
+
+            selection_areadata[0] = selection[2*i];
+            selection_areadata[2] = selection[2*i + 1];
+            selection_areadata[1] = GWY_GRAPH_MODEL(area->graph_model)->y_min;
+            selection_areadata[3] = GWY_GRAPH_MODEL(area->graph_model)->y_max;
+            gwy_selection_set_object(GWY_SELECTION(area->areasdata),
+                                     i, selection_areadata);
+        }
+        break;
+
+        case GWY_GRAPH_STATUS_YSEL:
+        for (i = 0; i < n_of_selections; i++) {
+            gdouble selection_areadata[4];
+
+            selection_areadata[0] = GWY_GRAPH_MODEL(area->graph_model)->x_min;
+            selection_areadata[2] = GWY_GRAPH_MODEL(area->graph_model)->x_max;
+            selection_areadata[1] = selection[2*i];
+            selection_areadata[3] = selection[2*i + 1];
+            gwy_selection_set_object(GWY_SELECTION(area->areasdata),
+                                     i, selection_areadata);
             }
-            else
-            {
-                selection_areadata[0] = GWY_GRAPH_MODEL(area->graph_model)->x_min;
-                selection_areadata[2] = GWY_GRAPH_MODEL(area->graph_model)->x_max;
-                selection_areadata[1] = selection[2*i];
-                selection_areadata[3] = selection[2*i + 1];
-            }
-            gwy_selection_set_object(GWY_SELECTION(area->areasdata), -1, selection_areadata);
-        }
-        
-    }
-    else if (area->status == GWY_GRAPH_STATUS_POINTS)
-    {
-        for (i=0; i<n_of_selections; i++)
-        {
-            selection_pointdata[0] = selection[2*i];
-            selection_pointdata[1] = selection[2*i + 1];
-            gwy_selection_set_object(GWY_SELECTION(area->pointsdata), -1, selection_pointdata);
-        }
-        
-    }
-    else if (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
-    {
-        for (i=0; i<n_of_selections; i++)
-        {
-            selection_linedata = selection[i];
-            gwy_selection_set_object(GWY_SELECTION(area->linesdata), -1, &selection_linedata);
-        }
-        
+        break;
+
+        case GWY_GRAPH_STATUS_POINTS:
+        gwy_selection_set_data(GWY_SELECTION(area->pointsdata),
+                               n_of_selections, selection);
+        break;
+
+        case GWY_GRAPH_STATUS_XLINES:
+        case GWY_GRAPH_STATUS_YLINES:
+        gwy_selection_set_data(GWY_SELECTION(area->linesdata),
+                               n_of_selections, selection);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
     }
 }
 
