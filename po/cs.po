@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: http://trific.ath.cx/bugzilla/\n"
-"POT-Creation-Date: 2005-07-10 19:50+0200\n"
+"POT-Creation-Date: 2005-10-06 12:44+0200\n"
 "PO-Revision-Date: 2005-06-04 07:42+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -11,249 +11,400 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: libgwyddion/gwyinventory.c:1047 libdraw/gwygradient.c:909
-#: libgwydgets/gwyglmaterial.c:297
+#: libgwyddion/gwyinventory.c:1310
 msgid "Untitled"
 msgstr "Nepojmenovaný"
 
-#: libprocess/morph_lib.c:168 libprocess/morph_lib.c:458
+#: libprocess/gwyprocessenums.c:43
+msgid "Union"
+msgstr "Sjednocení"
+
+#: libprocess/gwyprocessenums.c:44
+msgid "Intersection"
+msgstr "Průnik"
+
+#: libprocess/gwyprocessenums.c:78
+msgid "Detected"
+msgstr "Detekovaná"
+
+#: libprocess/gwyprocessenums.c:79
+msgid "Parallel"
+msgstr "Dvojčetná"
+
+#: libprocess/gwyprocessenums.c:80
+msgid "Triangular"
+msgstr "Trojčetná"
+
+#: libprocess/gwyprocessenums.c:81
+msgid "Square"
+msgstr "Čtvercová"
+
+#: libprocess/gwyprocessenums.c:82
+msgid "Rhombic"
+msgstr "Rombická"
+
+#: libprocess/gwyprocessenums.c:83
+msgid "Hexagonal"
+msgstr "Hexagonální"
+
+#: libprocess/gwyprocessenums.c:100
+msgid "Gaussian"
+msgstr "Gaussovský"
+
+#: libprocess/gwyprocessenums.c:101
+msgid "Hat"
+msgstr "Hat"
+
+#: libprocess/gwyprocessenums.c:125
+msgid "Horizontal"
+msgstr "Vodorovný"
+
+#: libprocess/gwyprocessenums.c:126
+msgid "Vertical"
+msgstr "Svislý"
+
+#: libprocess/gwyprocessenums.c:143
+msgid "Haar"
+msgstr "Haar"
+
+#: libprocess/gwyprocessenums.c:144
+msgid "Daubechies 4"
+msgstr "Daubechies 4"
+
+#: libprocess/gwyprocessenums.c:145
+msgid "Daubechies 6"
+msgstr "Daubechies 6"
+
+#: libprocess/gwyprocessenums.c:146
+msgid "Daubechies 8"
+msgstr "Daubechies 8"
+
+#: libprocess/gwyprocessenums.c:147
+msgid "Daubechies 12"
+msgstr "Daubechies 12"
+
+#: libprocess/gwyprocessenums.c:148
+msgid "Daubechies 20"
+msgstr "Daubechies 20"
+
+#: libprocess/gwyprocessenums.c:165
+msgid "Universal"
+msgstr "Univerzální"
+
+#: libprocess/gwyprocessenums.c:166
+msgid "Scale adaptive"
+msgstr "Frekvenčně adaptabilní"
+
+#: libprocess/gwyprocessenums.c:167
+msgid "Scale and space adaptive"
+msgstr "Frekvenčně a lokálně adaptabilní"
+
+#: libprocess/gwyprocessenums.c:199
+msgid "Round"
+msgstr "Zaokrouhlení"
+
+#: libprocess/gwyprocessenums.c:200
+msgid "Bilinear"
+msgstr "Bilineární"
+
+#: libprocess/gwyprocessenums.c:201
+msgid "Key"
+msgstr "Key"
+
+#: libprocess/gwyprocessenums.c:202
+msgid "BSpline"
+msgstr "BSpline"
+
+#: libprocess/gwyprocessenums.c:203
+msgid "OMOMS"
+msgstr "OMOMS"
+
+#: libprocess/gwyprocessenums.c:204
+msgid "NNA"
+msgstr "NNA"
+
+#: libprocess/gwyprocessenums.c:233
+msgid "None"
+msgstr "Žádný"
+
+#: libprocess/gwyprocessenums.c:234
+msgid "Hann"
+msgstr "Hann"
+
+#: libprocess/gwyprocessenums.c:235
+msgid "Hamming"
+msgstr "Hamming"
+
+#: libprocess/gwyprocessenums.c:236
+msgid "Blackman"
+msgstr "Blackman"
+
+#: libprocess/gwyprocessenums.c:237
+msgid "Lanzcos"
+msgstr "Lanzcos"
+
+#: libprocess/gwyprocessenums.c:238
+msgid "Welch"
+msgstr "Welch"
+
+#: libprocess/gwyprocessenums.c:239
+msgid "Rect"
+msgstr "Obdélník"
+
+#: libprocess/morph_lib.c:169 libprocess/morph_lib.c:459
 msgid "Dilation"
 msgstr "Konvoluce"
 
-#: libprocess/morph_lib.c:234 libprocess/morph_lib.c:525
+#: libprocess/morph_lib.c:235 libprocess/morph_lib.c:526
 msgid "Erosion"
 msgstr "Eroze"
 
-#: libprocess/morph_lib.c:302
+#: libprocess/morph_lib.c:303
 msgid "Certainty map"
 msgstr "Mapa spolehlivosti"
 
-#: libprocess/morph_lib.c:613 libprocess/morph_lib.c:758
+#: libprocess/morph_lib.c:614 libprocess/morph_lib.c:759
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Iteruji odhad (iterace %d)"
 
-#: libprocess/morph_lib.c:621 libprocess/morph_lib.c:781
+#: libprocess/morph_lib.c:622 libprocess/morph_lib.c:782
 #, c-format
 msgid "%d image locations produced refinement"
 msgstr "%d míst v obrázku dalo zpřesnění"
 
-#: libprocess/morph_lib.c:720
+#: libprocess/morph_lib.c:721
 msgid "Searching for local maxima"
 msgstr "Hledám lokální maxima"
 
-#: libprocess/morph_lib.c:743
+#: libprocess/morph_lib.c:744
 #, c-format
 msgid "Found %d internal local maxima"
 msgstr "Bylo nalezeno %d lokálních maxim"
 
-#: libprocess/tip.c:785 libprocess/tip.c:813 libprocess/tip.c:862
-#: libprocess/tip.c:889
+#: libprocess/tip.c:788 libprocess/tip.c:816 libprocess/tip.c:865
+#: libprocess/tip.c:892
 msgid "Converting fields"
 msgstr "Konvertuji pole"
 
-#: libprocess/tip.c:795
+#: libprocess/tip.c:798
 msgid "Starting partial estimation"
 msgstr "Začínám částečný odhad"
 
-#: libprocess/tip.c:872
+#: libprocess/tip.c:875
 msgid "Starting full estimation"
 msgstr "Začínám plný odhad"
 
-#: libgwydgets/gwy3dwindow.c:187
+#: libgwydgets/gwy3dwindow.c:397
 msgid "Rotate view"
 msgstr "Otáčení pohledu"
 
-#: libgwydgets/gwy3dwindow.c:192
+#: libgwydgets/gwy3dwindow.c:402
 msgid "Scale view as a whole"
 msgstr "Škálování celého pohledu"
 
-#: libgwydgets/gwy3dwindow.c:197
+#: libgwydgets/gwy3dwindow.c:407
 msgid "Scale value range"
 msgstr "Škálování rozsahu hodnot"
 
-#: libgwydgets/gwy3dwindow.c:202
+#: libgwydgets/gwy3dwindow.c:412
 msgid "Move light source"
 msgstr "Posun zdroje světla"
 
-#: libgwydgets/gwy3dwindow.c:240
+#: libgwydgets/gwy3dwindow.c:449
 msgid "X-axis"
 msgstr "X-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:241
+#: libgwydgets/gwy3dwindow.c:450
 msgid "Y-axis"
 msgstr "Y-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:242
+#: libgwydgets/gwy3dwindow.c:451
 msgid "Minimum z value"
 msgstr "Nejmenší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:243
+#: libgwydgets/gwy3dwindow.c:452
 msgid "Maximum z value"
 msgstr "Největší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:246
+#: libgwydgets/gwy3dwindow.c:455
 msgid "_Lighting"
 msgstr "_Osvětlení"
 
-#: libgwydgets/gwy3dwindow.c:247
-msgid "P_alette"
-msgstr "P_aleta"
+#: libgwydgets/gwy3dwindow.c:456
+msgid "_Gradient"
+msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:291
+#: libgwydgets/gwy3dwindow.c:502
 msgid "Show full controls"
 msgstr "Zobraz kompletní ovládací prvky"
 
-#: libgwydgets/gwy3dwindow.c:316
+#: libgwydgets/gwy3dwindow.c:529
 msgid "Hide full controls"
 msgstr "Skryj kompletní ovládací prvky"
 
-#: libgwydgets/gwy3dwindow.c:332
+#: libgwydgets/gwy3dwindow.c:545
 msgid "Basic"
 msgstr "Základní"
 
-#: libgwydgets/gwy3dwindow.c:339 modules/process/shade.c:233
+#: libgwydgets/gwy3dwindow.c:552 modules/process/shade.c:234
 msgid "_Phi:"
 msgstr "_Fí:"
 
-#: libgwydgets/gwy3dwindow.c:339 libgwydgets/gwy3dwindow.c:342
-#: libgwydgets/gwy3dwindow.c:422 libgwydgets/gwy3dwindow.c:428
-#: modules/process/rotate.c:240 modules/process/tip_model.c:244
-#: modules/process/tip_model.c:250 modules/process/unrotate.c:335
+#: libgwydgets/gwy3dwindow.c:552 libgwydgets/gwy3dwindow.c:555
+#: libgwydgets/gwy3dwindow.c:635 libgwydgets/gwy3dwindow.c:641
+#: modules/process/rotate.c:241 modules/process/tip_model.c:244
+#: modules/process/tip_model.c:250 modules/process/unrotate.c:326
 msgid "deg"
 msgstr "stupňů"
 
-#: libgwydgets/gwy3dwindow.c:342 modules/process/shade.c:225
+#: libgwydgets/gwy3dwindow.c:555 modules/process/shade.c:226
 msgid "_Theta:"
 msgstr "_Théta:"
 
-#: libgwydgets/gwy3dwindow.c:345 modules/process/cwt.c:194
+#: libgwydgets/gwy3dwindow.c:558 modules/process/cwt.c:187
 msgid "_Scale:"
 msgstr "Š_kála:"
 
-#: libgwydgets/gwy3dwindow.c:349
+#: libgwydgets/gwy3dwindow.c:562
 msgid "_Value scale:"
 msgstr "Škála _hodnot:"
 
-#: libgwydgets/gwy3dwindow.c:353
+#: libgwydgets/gwy3dwindow.c:566
 msgid "Show _axes"
 msgstr "Zobrazuj _osy"
 
-#: libgwydgets/gwy3dwindow.c:362
+#: libgwydgets/gwy3dwindow.c:575
 msgid "Show _labels"
 msgstr "Zobrazuj _popisky"
 
-#: libgwydgets/gwy3dwindow.c:372
+#: libgwydgets/gwy3dwindow.c:585
 msgid "_Ortographic projection"
 msgstr "_Ortografická projekce"
 
-#: libgwydgets/gwy3dwindow.c:386
+#: libgwydgets/gwy3dwindow.c:599
 msgid "Light & Material"
 msgstr "Světlo a materiál"
 
-#: libgwydgets/gwy3dwindow.c:403
+#: libgwydgets/gwy3dwindow.c:617
 msgid "_Material:"
 msgstr "_Materiál:"
 
-#: libgwydgets/gwy3dwindow.c:422
+#: libgwydgets/gwy3dwindow.c:635
 msgid "Light _phi:"
 msgstr "_Fí světla:"
 
-#: libgwydgets/gwy3dwindow.c:428
+#: libgwydgets/gwy3dwindow.c:641
 msgid "Light _theta:"
 msgstr "_Théta světla:"
 
-#: libgwydgets/gwy3dwindow.c:459
+#: libgwydgets/gwy3dwindow.c:672
 msgid "Labels"
 msgstr "Popisky"
 
-#: libgwydgets/gwy3dwindow.c:469
+#: libgwydgets/gwy3dwindow.c:681
 msgid "_Label:"
 msgstr "Pop_isek:"
 
-#: libgwydgets/gwy3dwindow.c:474
+#: libgwydgets/gwy3dwindow.c:686
 msgid "_Text:"
 msgstr "_Text:"
 
-#: libgwydgets/gwy3dwindow.c:494
+#: libgwydgets/gwy3dwindow.c:707
 msgid "Move label"
 msgstr "Pos_uň popisek"
 
-#: libgwydgets/gwy3dwindow.c:501
+#: libgwydgets/gwy3dwindow.c:714
 msgid "_Horizontally:"
 msgstr "_Vodorovně:"
 
-#: libgwydgets/gwy3dwindow.c:507
+#: libgwydgets/gwy3dwindow.c:720
 msgid "_Vertically:"
 msgstr "_Svisle:"
 
-#: libgwydgets/gwy3dwindow.c:513
+#: libgwydgets/gwy3dwindow.c:726
 msgid "Scale size _automatically"
 msgstr "_Automaticky uprav velikost"
 
-#: libgwydgets/gwy3dwindow.c:524 modules/tools/filter.c:253
+#: libgwydgets/gwy3dwindow.c:737 modules/tools/filter.c:259
 msgid "Si_ze:"
 msgstr "Veli_kost:"
 
-#: libgwydgets/gwy3dwindow.c:524 modules/process/cwt.c:194
+#: libgwydgets/gwy3dwindow.c:737 modules/process/cwt.c:187
 msgid "pixels"
 msgstr "pixelů"
 
-#: libgwydgets/gwy3dwindow.c:530 modules/file/pixmap.c:668
-#: modules/file/pixmap.c:1557 modules/file/rawfile.c:481
-#: modules/process/angle_dist.c:185 modules/process/calibrate.c:214
-#: modules/process/cwt.c:179 modules/process/dwt.c:178
-#: modules/process/dwtanisotropy.c:193 modules/process/dwtcorrection.c:173
-#: modules/process/dwtdenoise.c:186 modules/process/facet_analysis.c:241
-#: modules/process/fft.c:313 modules/process/fractal.c:212
-#: modules/process/grain_mark.c:203 modules/process/grain_rem_threshold.c:174
-#: modules/process/grain_wshed.c:177 modules/process/local_contrast.c:136
-#: modules/process/mask_grow_shrink.c:174 modules/process/median-bg.c:185
-#: modules/process/polylevel.c:192 modules/process/rotate.c:222
-#: modules/process/scale.c:163 modules/process/scars.c:406
-#: modules/process/shade.c:196 modules/process/slope_dist.c:197
-#: modules/process/sphere-revolve.c:221 modules/process/tip_model.c:179
-#: modules/process/unrotate.c:216
+#: libgwydgets/gwy3dwindow.c:743 modules/file/pixmap.c:659
+#: modules/file/pixmap.c:1549 modules/file/rawfile.c:482
+#: modules/process/angle_dist.c:186 modules/process/calibrate.c:215
+#: modules/process/cwt.c:172 modules/process/dwt.c:175
+#: modules/process/dwtanisotropy.c:192 modules/process/dwtcorrection.c:169
+#: modules/process/dwtdenoise.c:179 modules/process/facet_analysis.c:256
+#: modules/process/fft.c:312 modules/process/fractal.c:210
+#: modules/process/grain_mark.c:203 modules/process/grain_rem_threshold.c:175
+#: modules/process/grain_wshed.c:178 modules/process/local_contrast.c:137
+#: modules/process/mask_grow_shrink.c:175 modules/process/median-bg.c:186
+#: modules/process/polylevel.c:195 modules/process/rotate.c:223
+#: modules/process/scale.c:162 modules/process/scars.c:407
+#: modules/process/shade.c:197 modules/process/slope_dist.c:198
+#: modules/process/sphere-revolve.c:222 modules/process/tip_model.c:179
+#: modules/process/unrotate.c:208
 msgid "_Reset"
 msgstr "_Obnovit"
 
-#: libgwydgets/gwydgetutils.c:475
+#: libgwydgets/gwy3dwindow.c:1108
+msgid "S_witch to Lighting Mode"
+msgstr ""
+
+#: libgwydgets/gwy3dwindow.c:1116
+msgid "S_witch to Color Gradient Mode"
+msgstr ""
+
+#: libgwydgets/gwydatawindow.c:754
+msgid "More..."
+msgstr ""
+
+#: libgwydgets/gwydatawindow.c:783
+msgid "Choose Gradient"
+msgstr ""
+
+#: libgwydgets/gwydgetutils.c:479
 msgid "Change Mask Color"
 msgstr "Změna barvy masky"
 
-#: libgwydgets/gwygraphareadialog.c:43
+#: libgwydgets/gwygraphareadialog.c:42
 msgid "Points"
 msgstr "Body"
 
-#: libgwydgets/gwygraphareadialog.c:44
+#: libgwydgets/gwygraphareadialog.c:43
 msgid "Line"
 msgstr "Čára"
 
-#: libgwydgets/gwygraphareadialog.c:45
+#: libgwydgets/gwygraphareadialog.c:44
 msgid "Line + points"
 msgstr "Body + čára"
 
-#: libgwydgets/gwygraphareadialog.c:46
+#: libgwydgets/gwygraphareadialog.c:45
 msgid "Hidden"
 msgstr "Skrytý"
 
-#: libgwydgets/gwygraphareadialog.c:152
+#: libgwydgets/gwygraphareadialog.c:147
 msgid "_Curve label:"
 msgstr "Popisek _křivky:"
 
-#: libgwydgets/gwygraphareadialog.c:168
+#: libgwydgets/gwygraphareadialog.c:163
 msgid "_Plot style:"
 msgstr "Styl křivky"
 
-#: libgwydgets/gwygraphareadialog.c:182
+#: libgwydgets/gwygraphareadialog.c:176
 msgid "P_lot color:"
 msgstr "Barva křivky"
 
-#: libgwydgets/gwygraphareadialog.c:200
+#: libgwydgets/gwygraphareadialog.c:197
 msgid "Point type:"
 msgstr "Typ bodu"
 
-#: libgwydgets/gwygraphareadialog.c:205
+#: libgwydgets/gwygraphareadialog.c:202
 msgid "Point size:"
 msgstr "Velikost bodu"
 
@@ -265,289 +416,163 @@ msgstr "Typ čáry"
 msgid "Line thickness:"
 msgstr "Tloušťka čáry"
 
-#: libgwydgets/gwygraphlabeldialog.c:116
+#: libgwydgets/gwygraphlabeldialog.c:115
 msgid "Frame thickness:"
 msgstr "Tloušťka rámečku"
 
-#: libgwydgets/gwygraphlabeldialog.c:126
+#: libgwydgets/gwygraphlabeldialog.c:125
 msgid "_reversed"
 msgstr "otočený"
 
-#: libgwydgets/gwygraphwindowasciidialog.c:31
-msgid "Plain text"
+#: libgwydgets/gwygraphwindowmeasuredialog.c:51
+msgid "Intersections"
 msgstr ""
 
-#: libgwydgets/gwygraphwindowasciidialog.c:32
-msgid "Gnuplot friendly"
+#: libgwydgets/gwygraphwindowmeasuredialog.c:52
+msgid "Points anywhere"
 msgstr ""
 
-#: libgwydgets/gwygraphwindowasciidialog.c:33
-msgid "Comma separated values"
-msgstr ""
-
-#: libgwydgets/gwygraphwindowasciidialog.c:34
-msgid "Origin friendly"
-msgstr ""
-
-#: libgwydgets/gwygraphwindowasciidialog.c:123
-msgid "Export _labels"
-msgstr ""
-
-#: libgwydgets/gwygraphwindowasciidialog.c:130
-msgid "Export _units"
-msgstr ""
-
-#: libgwydgets/gwygraphwindowasciidialog.c:137
-msgid "Export _metadata"
-msgstr ""
-
-#: libgwydgets/gwygraphwindowmeasuredialog.c:239
-#: modules/graph/graph_points.c:205
-msgid "<b>Points</b>"
-msgstr "<b>Body</b>"
-
-#: libgwydgets/gwygraphwindowmeasuredialog.c:249
+#: libgwydgets/gwygraphwindowmeasuredialog.c:228
+#: libgwydgets/gwygraphwindowmeasuredialog.c:374
 #: modules/graph/graph_points.c:215
 msgid "Length"
 msgstr "Délka"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:250 app/unitool.c:729
+#: libgwydgets/gwygraphwindowmeasuredialog.c:230
+#: libgwydgets/gwygraphwindowmeasuredialog.c:375 app/unitool.c:760
 #: modules/graph/graph_points.c:216
 msgid "Height"
 msgstr "Výška"
 
-#: libgwydgets/gwygraphwindowmeasuredialog.c:251
-#: modules/graph/graph_points.c:217 modules/process/angle_dist.c:168
-#: modules/process/crosscor.c:97
+#: libgwydgets/gwygraphwindowmeasuredialog.c:342
+msgid "Method:"
+msgstr ""
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:363
+#: modules/graph/graph_points.c:205
+msgid "<b>Points</b>"
+msgstr "<b>Body</b>"
+
+#: libgwydgets/gwygraphwindowmeasuredialog.c:376
+#: modules/graph/graph_points.c:217 modules/process/angle_dist.c:169
+#: modules/process/crosscor.c:98
 msgid "Angle"
 msgstr "Úhel"
 
-#: libgwydgets/gwyoptionmenus.c:567
-msgid "Round"
-msgstr "Zaokrouhlení"
+#: libgwydgets/gwyoptionmenus.c:419
+msgid "Preferred"
+msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:568
-msgid "Bilinear"
-msgstr "Bilineární"
+#: libgwydgets/gwyoptionmenus.c:433 modules/file/rawfile.c:1018
+msgid "Name"
+msgstr "Jméno"
 
-#: libgwydgets/gwyoptionmenus.c:569
-msgid "Key"
-msgstr "Key"
-
-#: libgwydgets/gwyoptionmenus.c:570
-msgid "BSpline"
-msgstr "BSpline"
-
-#: libgwydgets/gwyoptionmenus.c:571
-msgid "OMOMS"
-msgstr "OMOMS"
-
-#: libgwydgets/gwyoptionmenus.c:572
-msgid "NNA"
-msgstr "NNA"
-
-#: libgwydgets/gwyoptionmenus.c:602
-msgid "None"
-msgstr "Žádný"
-
-#: libgwydgets/gwyoptionmenus.c:603
-msgid "Hann"
-msgstr "Hann"
-
-#: libgwydgets/gwyoptionmenus.c:604
-msgid "Hamming"
-msgstr "Hamming"
-
-#: libgwydgets/gwyoptionmenus.c:605
-msgid "Blackman"
-msgstr "Blackman"
-
-#: libgwydgets/gwyoptionmenus.c:606
-msgid "Lanzcos"
-msgstr "Lanzcos"
-
-#: libgwydgets/gwyoptionmenus.c:607
-msgid "Welch"
-msgstr "Welch"
-
-#: libgwydgets/gwyoptionmenus.c:608
-msgid "Rect"
-msgstr "Obdélník"
-
-#: libgwydgets/gwyoptionmenus.c:637
-msgid "Gaussian"
-msgstr "Gaussovský"
-
-#: libgwydgets/gwyoptionmenus.c:638
-msgid "Hat"
-msgstr "Hat"
-
-#: libgwydgets/gwyoptionmenus.c:667
-msgid "Haar"
-msgstr "Haar"
-
-#: libgwydgets/gwyoptionmenus.c:668
-msgid "Daubechies 4"
-msgstr "Daubechies 4"
-
-#: libgwydgets/gwyoptionmenus.c:669
-msgid "Daubechies 6"
-msgstr "Daubechies 6"
-
-#: libgwydgets/gwyoptionmenus.c:670
-msgid "Daubechies 8"
-msgstr "Daubechies 8"
-
-#: libgwydgets/gwyoptionmenus.c:671
-msgid "Daubechies 12"
-msgstr "Daubechies 12"
-
-#: libgwydgets/gwyoptionmenus.c:672
-msgid "Daubechies 20"
-msgstr "Daubechies 20"
-
-#: libgwydgets/gwyoptionmenus.c:702
-msgid "Dist. of heights"
-msgstr "Rozdělení výšek"
-
-#: libgwydgets/gwyoptionmenus.c:703
-msgid "Cum. dist. of heights"
-msgstr "Kumul. rozdělení výšek"
-
-#: libgwydgets/gwyoptionmenus.c:704
-msgid "Dist. of angles"
-msgstr "Rozdělení úhlů"
-
-#: libgwydgets/gwyoptionmenus.c:705
-msgid "Cum. dist. of angles"
-msgstr "Kumul. rozdělení úhlů"
-
-#: libgwydgets/gwyoptionmenus.c:706
-msgid "Autocorrelation"
-msgstr "Autokorelace"
-
-#: libgwydgets/gwyoptionmenus.c:707
-msgid "Height-height cor."
-msgstr "Korelace výška-výška"
-
-#: libgwydgets/gwyoptionmenus.c:708
-msgid "Power spectral density"
-msgstr "Spektrální hustota"
-
-#: libgwydgets/gwyoptionmenus.c:736
-msgid "Horizontal"
-msgstr "Vodorovný"
-
-#: libgwydgets/gwyoptionmenus.c:737
-msgid "Vertical"
-msgstr "Svislý"
-
-#: libgwydgets/gwyoptionmenus.c:765
-msgid "Union"
-msgstr "Sjednocení"
-
-#: libgwydgets/gwyoptionmenus.c:766
-msgid "Intersection"
-msgstr "Průnik"
+#: libgwydgets/gwyoptionmenus.c:794
+msgid "Color Gradient"
+msgstr ""
 
 #: libgwydgets/gwyoptionmenus.c:795
-msgid "Vickers"
+msgid "Choose Color Gradient"
 msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:796
-msgid "Berkovich"
+#: libgwydgets/gwyoptionmenus.c:809
+msgid "GL Material"
 msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:797
-msgid "Berkovich (modified)"
-msgstr "Berkovich (modifikovaný)"
-
-#: libgwydgets/gwyoptionmenus.c:798
-msgid "Knoop"
+#: libgwydgets/gwyoptionmenus.c:810
+msgid "Choose GL Material"
 msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:799
-msgid "Brinell"
+#: libgwydgets/gwyscitext.c:81
+msgid "_Bold"
 msgstr ""
 
-#: libgwydgets/gwyoptionmenus.c:800
-msgid "Cube corner"
-msgstr "Vrchol krychle"
-
-#: libgwydgets/gwyoptionmenus.c:801
-msgid "Rockwell"
+#: libgwydgets/gwyscitext.c:87
+msgid "_Italic"
 msgstr ""
 
-#: libgwymodule/gwymodulebrowser.c:64
+#: libgwydgets/gwyscitext.c:93
+msgid "_Subscript"
+msgstr ""
+
+#: libgwydgets/gwyscitext.c:99
+msgid "Su_perscript"
+msgstr ""
+
+#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:617
+msgid "Preview"
+msgstr "Náhled"
+
+#: libgwymodule/gwymodulebrowser.c:65
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
 
-#: libgwymodule/gwymodulebrowser.c:107 modules/process/fft.c:435
+#: libgwymodule/gwymodulebrowser.c:108 modules/process/fft.c:303
 msgid "Module"
 msgstr "Modul"
 
-#: libgwymodule/gwymodulebrowser.c:108
+#: libgwymodule/gwymodulebrowser.c:109
 msgid "Version"
 msgstr "Verze"
 
-#: libgwymodule/gwymodulebrowser.c:109
+#: libgwymodule/gwymodulebrowser.c:110
 msgid "Author"
 msgstr "Autor"
 
-#: libgwymodule/gwymodulebrowser.c:161
+#: libgwymodule/gwymodulebrowser.c:162
 msgid "Name-Version:"
 msgstr "Jméno-verze"
 
-#: libgwymodule/gwymodulebrowser.c:162
+#: libgwymodule/gwymodulebrowser.c:163
 msgid "File:"
 msgstr "Soubor:"
 
-#: libgwymodule/gwymodulebrowser.c:163
+#: libgwymodule/gwymodulebrowser.c:164
 msgid "Registered functions:"
 msgstr "Registrované funkce:"
 
-#: libgwymodule/gwymodulebrowser.c:164
+#: libgwymodule/gwymodulebrowser.c:165
 msgid "Authors:"
 msgstr "Autoři:"
 
-#: libgwymodule/gwymodulebrowser.c:165
+#: libgwymodule/gwymodulebrowser.c:166
 msgid "Copyright:"
 msgstr "Copyright:"
 
-#: libgwymodule/gwymodulebrowser.c:166
+#: libgwymodule/gwymodulebrowser.c:167
 msgid "Date:"
 msgstr "Datum:"
 
-#: libgwymodule/gwymodulebrowser.c:167
+#: libgwymodule/gwymodulebrowser.c:168
 msgid "Description:"
 msgstr "Popis:"
 
-#: app/about.c:43
+#: app/about.c:44
 #, c-format
 msgid "About %s"
 msgstr "O programu %s"
 
-#: app/about.c:80
+#: app/about.c:81
 msgid "An SPM data analysis framework."
 msgstr "Systém pro analýzu SPM dat."
 
-#: app/about.c:97
+#: app/about.c:98
 msgid "Credits"
 msgstr "Zásluhy"
 
-#: app/about.c:108
+#: app/about.c:109
 msgid "<b>Core developers</b>\n"
 msgstr "<b>Kmenoví vývojáři</b>\n"
 
-#: app/about.c:114
+#: app/about.c:115
 msgid "<b>Developers</b>\n"
 msgstr "<b>Vývojáři</b>\n"
 
-#: app/about.c:120
+#: app/about.c:121
 msgid "<b>Translators</b>\n"
 msgstr "<b>Překladatelé</b>\n"
 
-#: app/about.c:127
+#: app/about.c:128
 msgid ""
 "Development is supported by the Czech Metrology Insitute (<i>http://www.cmi."
 "cz/</i>).\n"
@@ -555,7 +580,7 @@ msgstr ""
 "Vývoj programu podporuje Český metrologický institut (<i>http://www.cmi.cz/</"
 "i>).\n"
 
-#: app/about.c:140
+#: app/about.c:141
 #, c-format
 msgid ""
 "\n"
@@ -583,158 +608,198 @@ msgstr ""
 "%s\n"
 "Opravdu skončit?"
 
-#: app/app.c:839 app/app.c:892
-msgid "Untitled Graph"
-msgstr "Nepojmenovaný graf"
-
-#: app/app.c:1021
+#: app/app.c:971
 msgid "Export"
 msgstr "Export"
 
-#: app/app.c:1025
+#: app/app.c:975
 msgid "Export 3D view to PNG image"
 msgstr "Exportovat trojrozměrný pohled do PNG obrázku"
 
-#: app/app.c:1307 app/app.c:1319
+#: app/app.c:1237 app/app.c:1249
 #, c-format
 msgid "Untitled %d"
 msgstr "Nepojmenovaný %d"
 
-#: app/app.c:1337 app/toolbox.c:756
+#: app/app.c:1267 app/toolbox.c:757
 msgid "/Remove _Mask"
 msgstr "/Odstranit _masku"
 
-#: app/app.c:1338 app/toolbox.c:772
+#: app/app.c:1268
 msgid "/Mask _Color"
 msgstr "/_Barva masky"
 
-#: app/app.c:1339
+#: app/app.c:1269
 msgid "/Fix _Zero"
 msgstr "/Opravit _nulu"
 
-#: app/app.c:1340 app/toolbox.c:764
+#: app/app.c:1270 app/toolbox.c:765
 msgid "/Remove _Presentation"
 msgstr "/Odstranit _presentaci"
 
-#: app/app.c:1341
+#: app/app.c:1271 modules/graph/graph_level.c:62
 msgid "/_Level"
 msgstr "/_Vyrovnat"
 
-#: app/app.c:1342
+#: app/app.c:1272
 msgid "/Zoom _1:1"
 msgstr "/Zvětšení _1:1"
 
-#: app/app.c:1565
+#: app/app.c:1495
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
-#: app/app.c:1592
+#: app/app.c:1522
 msgid "Change Default Mask Color"
 msgstr "Změnit předvolenou barvu masky"
 
-#: app/file.c:56
+#: app/file.c:53
 msgid "Open File"
 msgstr "Otevření souboru"
 
-#: app/file.c:81
+#: app/file.c:78
 msgid "Save File"
 msgstr "Uložení souboru"
 
-#: app/file.c:144
+#: app/file.c:141
 msgid "Export Data"
 msgstr "Export dat"
 
-#: app/file.c:158
+#: app/file.c:155
 msgid "Import Data"
 msgstr "Import dat"
 
-#: app/file.c:353
+#: app/file.c:347
 #, c-format
 msgid "File %s already exists. Overwrite?"
 msgstr "Soubor %s již existuje. Přepsat?"
 
-#: app/file.c:355
+#: app/file.c:349
 msgid "Overwrite?"
 msgstr "Přepsat?"
 
-#: app/filelist.c:196
+#: app/filelist.c:202
 msgid "Document History"
 msgstr "Historie dokumentů"
 
-#: app/filelist.c:218
+#: app/filelist.c:221
 msgid "_Prune"
 msgstr "_Pročistit"
 
-#: app/filelist.c:222
+#: app/filelist.c:225
 msgid "Remove entries of files that no longer exist"
 msgstr "Odstranit položky souborů, které už neexistují"
 
-#: app/filelist.c:231
+#: app/filelist.c:234
 msgid "Close file list"
 msgstr "Zavřít seznam souborů"
 
-#: app/filelist.c:238
+#: app/filelist.c:241
 msgid "Open selected file"
 msgstr "Otevřít vybraný soubor"
 
-#: app/graphlist.c:148
+#: app/glmaterial-editor.c:96 app/glmaterial-editor.c:316
+msgid "GL Material Editor"
+msgstr ""
+
+#: app/glmaterial-editor.c:142 app/gradient-editor.c:257
+msgid "Set De_fault"
+msgstr ""
+
+#: app/glmaterial-editor.c:301
+msgid "Ambient"
+msgstr ""
+
+#: app/glmaterial-editor.c:302
+msgid "Diffuse"
+msgstr ""
+
+#: app/glmaterial-editor.c:303
+msgid "Specular"
+msgstr ""
+
+#: app/glmaterial-editor.c:355
+msgid "Shininess:"
+msgstr ""
+
+#: app/gradient-editor.c:110
+msgid "Color Map"
+msgstr ""
+
+#: app/gradient-editor.c:135
+msgid "New Gradient"
+msgstr ""
+
+#: app/gradient-editor.c:211
+msgid "Gradient Editor"
+msgstr ""
+
+#: app/graphlist.c:180
 #, c-format
 msgid "Graph List for %s"
 msgstr "Seznam grafů pro %s"
 
-#: app/graphlist.c:173 modules/file/rawfile.c:1112
+#: app/graphlist.c:209 modules/file/rawfile.c:1111
 msgid "_Delete"
 msgstr "_Smazat"
 
-#: app/graphlist.c:178
+#: app/graphlist.c:215
 msgid "Delete _All"
 msgstr "Smazat _všechny"
 
-#: app/graphlist.c:183
+#: app/graphlist.c:221
 msgid "_Show All"
 msgstr "_Ukázat všechny"
 
-#: app/graphlist.c:188
+#: app/graphlist.c:227
 msgid "_Hide All"
 msgstr "S_krýt všechny"
 
-#: app/graphlist.c:213
+#: app/graphlist.c:271
 msgid "Vis."
 msgstr "Vid."
 
-#: app/graphlist.c:214
+#: app/graphlist.c:281
 msgid "Title"
 msgstr "Titulek"
 
-#: app/graphlist.c:215
+#: app/graphlist.c:293
 msgid "graphlist|Curves"
 msgstr "Křivky"
 
-#: app/gwyddion.c:92
-msgid "Loading settings"
-msgstr "Načítám nastavení"
-
-#: app/gwyddion.c:98
+#: app/gwyddion.c:85
 msgid "Loading document history"
 msgstr "Načítám historii dokumentů"
 
-#: app/gwyddion.c:103
+#: app/gwyddion.c:89
 msgid "Registering "
 msgstr "Registruji "
 
-#: app/gwyddion.c:104
+#: app/gwyddion.c:90
 msgid "stock items"
 msgstr "standardní ikony"
 
-#: app/gwyddion.c:107
-msgid "modules"
-msgstr "moduly"
+#: app/gwyddion.c:93
+msgid "gradients"
+msgstr ""
 
-#: app/gwyddion.c:112
+#: app/gwyddion.c:95
+msgid "GL materials"
+msgstr ""
+
+#: app/gwyddion.c:99
+msgid "Loading settings"
+msgstr "Načítám nastavení"
+
+#: app/gwyddion.c:105
+msgid "Registering modules"
+msgstr ""
+
+#: app/gwyddion.c:109
 msgid "Initializing GUI"
 msgstr "Inicializuji GUI"
 
-#: app/gwyddion.c:220
+#: app/gwyddion.c:221
 #, c-format
 msgid ""
 "Could not read settings file `%s'.\n"
@@ -745,366 +810,391 @@ msgstr ""
 "\n"
 "Nastavení se nebude ukládat, dokud nebude opraven či odstraněn."
 
-#: app/menu-windowlist.c:137
+#: app/menu-windowlist.c:138
 msgid "(none)"
 msgstr "(nic)"
 
-#: app/menu.c:358
+#: app/menu.c:361
 msgid "Repeat"
 msgstr "Opakovat"
 
-#: app/menu.c:366
+#: app/menu.c:369
 msgid "Re-show"
 msgstr "Ukázat znovu"
 
-#: app/menu.c:514
+#: app/menu.c:517
 msgid "_Document history"
 msgstr "_Historie dokumentů"
 
-#: app/meta.c:82
+#: app/meta.c:83
 #, c-format
 msgid "There is no metadata in %s."
 msgstr "V %s nejsou žádná metadata."
 
-#: app/meta.c:94
+#: app/meta.c:95
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Metadata %s (%s)"
 
-#: app/meta.c:144
+#: app/meta.c:145
 msgid "metadata|Key"
 msgstr "Klíč"
 
-#: app/meta.c:145 modules/tools/level3.c:162 modules/tools/level3.c:240
-#: modules/tools/readvalue.c:151 modules/tools/readvalue.c:221
+#: app/meta.c:146 modules/tools/level3.c:170 modules/tools/level3.c:249
+#: modules/tools/readvalue.c:167 modules/tools/readvalue.c:239
 msgid "Value"
 msgstr "Hodnota"
 
-#: app/splash.c:56
+#: app/splash.c:51
 msgid "Starting "
 msgstr "Spouštím "
 
-#: app/splash.c:93
+#: app/splash.c:88
 msgid " is free software released under GNU GPL."
 msgstr " je svobodný software uvolněný pod GNU GPL."
 
-#: app/toolbox.c:127
+#: app/toolbox.c:131
 msgid "Zoom in"
 msgstr "Zvětšit"
 
-#: app/toolbox.c:133
+#: app/toolbox.c:137
 msgid "Zoom 1:1"
 msgstr "Velikost 1:1"
 
-#: app/toolbox.c:139 modules/graph/graph_unzoom.c:38
+#: app/toolbox.c:143 modules/graph/graph_unzoom.c:38
 msgid "Zoom out"
 msgstr "Zmenšit"
 
-#: app/toolbox.c:145
+#: app/toolbox.c:149
 msgid "Display a 3D view of data"
 msgstr "Zobrazit data v trojrozměrném pohledu"
 
-#: app/toolbox.c:153
+#: app/toolbox.c:157
 msgid "Fix minimum value to zero"
 msgstr "Opravit minimální hodnotu na nulu"
 
-#: app/toolbox.c:159
+#: app/toolbox.c:163
 msgid "Scale data"
 msgstr "Zvětšení/zmenšení dat"
 
-#: app/toolbox.c:165
+#: app/toolbox.c:169
 msgid "Rotate by arbitrary angle"
 msgstr "Rotace o libovolný úhel"
 
-#: app/toolbox.c:171
+#: app/toolbox.c:175
 msgid "Automatically correct rotation"
 msgstr "Automatická oprava rotace"
 
-#: app/toolbox.c:177
+#: app/toolbox.c:181
 msgid "Automatically level data"
 msgstr "Automatické vyrovnání dat"
 
-#: app/toolbox.c:183
+#: app/toolbox.c:187
 msgid "Facet-level data"
 msgstr "Vyrovnání dat podle plošek"
 
-#: app/toolbox.c:189
+#: app/toolbox.c:193
 msgid "Fast Fourier Transform"
 msgstr "Rychlá Fourierova transformace"
 
-#: app/toolbox.c:195
+#: app/toolbox.c:199
 msgid "Continuous Wavelet Transform"
 msgstr "Spojitá waveletová transformace"
 
-#: app/toolbox.c:201
+#: app/toolbox.c:205
 msgid "Mark grains by threshold"
 msgstr "Vyznačení zrn podle prahu"
 
-#: app/toolbox.c:207
+#: app/toolbox.c:211
 msgid "Mark grains by watershed"
 msgstr "Vyznačení zrn stékáním"
 
-#: app/toolbox.c:213
+#: app/toolbox.c:217
 msgid "Remove grains by threshold"
 msgstr "Odstranění zrn podle prahu"
 
-#: app/toolbox.c:219 modules/process/grain_dist.c:106
+#: app/toolbox.c:223
 msgid "Grain size distribution"
 msgstr "Rozdělení velikosti zrn"
 
-#: app/toolbox.c:225
+#: app/toolbox.c:229
 msgid "Calculate fractal dimension"
 msgstr "Výpočet fraktální dimenze"
 
-#: app/toolbox.c:231
+#: app/toolbox.c:235
 msgid "Shade data"
 msgstr "Vystínování dat"
 
-#: app/toolbox.c:237
+#: app/toolbox.c:241
 msgid "Remove polynomial background"
 msgstr "Odstranění polynomiálního pozadí"
 
-#: app/toolbox.c:243
+#: app/toolbox.c:247
 msgid "Remove scars"
 msgstr "Odstranění šrámů"
 
-#: app/toolbox.c:251
+#: app/toolbox.c:255
 msgid "Read coordinates"
 msgstr "Odečítání souřadnic"
 
-#: app/toolbox.c:257
+#: app/toolbox.c:261
 msgid "Zoom a part of graph"
 msgstr "Zvětšení části grafu"
 
-#: app/toolbox.c:263
+#: app/toolbox.c:267
 msgid "Reset zoom to display complete data"
 msgstr "Nastavení zvětšení, aby se zobrazila celá data"
 
-#: app/toolbox.c:269
+#: app/toolbox.c:273
 msgid "Measure graph point distances"
 msgstr "Měření vzdálenosti bodů na grafu"
 
-#: app/toolbox.c:275
+#: app/toolbox.c:279
 msgid "Fit critical dimension"
 msgstr "Proložení kritické dimenze"
 
-#: app/toolbox.c:281
+#: app/toolbox.c:285
 msgid "Fit functions to graph data"
 msgstr "Proložení funkce grafem"
 
-#: app/toolbox.c:324
+#: app/toolbox.c:328
 msgid "_File"
 msgstr "_Soubor"
 
-#: app/toolbox.c:327
+#: app/toolbox.c:331
 msgid "_Edit"
 msgstr "Úpr_avy"
 
-#: app/toolbox.c:330
+#: app/toolbox.c:334
 msgid "_Data Process"
 msgstr "Zpracování _dat"
 
-#: app/toolbox.c:333
+#: app/toolbox.c:337
 msgid "_Graph"
 msgstr "_Graf"
 
-#: app/toolbox.c:336
+#: app/toolbox.c:340
 msgid "_Meta"
 msgstr "_Meta"
 
-#: app/toolbox.c:341
+#: app/toolbox.c:345
 msgid "View"
 msgstr "Zobrazení"
 
-#: app/toolbox.c:362
+#: app/toolbox.c:363
 msgid "Data Process"
 msgstr "Zpracování dat"
 
-#: app/toolbox.c:388
+#: app/toolbox.c:389
 msgid "Graph"
 msgstr "Graf"
 
-#: app/toolbox.c:410
+#: app/toolbox.c:411
 msgid "Tools"
 msgstr "Nástroje"
 
-#: app/toolbox.c:483
+#: app/toolbox.c:484
 msgid "Re-show Last"
 msgstr "Ukázat poslední"
 
-#: app/toolbox.c:496
+#: app/toolbox.c:497
 msgid "Repeat Last"
 msgstr "Opakovat poslední"
 
-#: app/toolbox.c:546
+#: app/toolbox.c:547
 msgid "/Module _Browser"
 msgstr "/_Prohlížeč modulů"
 
-#: app/toolbox.c:554
+#: app/toolbox.c:555
 msgid "/_Metadata Browser"
 msgstr "/Prohlížeč _metadat"
 
-#: app/toolbox.c:569
+#: app/toolbox.c:570
 msgid "/_About Gwyddion"
 msgstr "/_O Gwyddionu"
 
-#: app/toolbox.c:611
+#: app/toolbox.c:612
 msgid "/_Open"
 msgstr "/_Otevřít"
 
-#: app/toolbox.c:619
+#: app/toolbox.c:620
 msgid "/Open _Recent"
 msgstr "/Otevřít _nedávný"
 
-#: app/toolbox.c:627
+#: app/toolbox.c:628
 msgid "/Open Recent/---"
 msgstr "/Otevřít _nedávný/---"
 
-#: app/toolbox.c:635
+#: app/toolbox.c:636
 msgid "/_Save"
 msgstr "/_Uložit"
 
-#: app/toolbox.c:643
+#: app/toolbox.c:644
 msgid "/Save _As"
 msgstr "/Uložit j_ako"
 
-#: app/toolbox.c:653
+#: app/toolbox.c:654
 msgid "/_Close"
 msgstr "/_Zavřít"
 
-#: app/toolbox.c:669
+#: app/toolbox.c:670
 msgid "/_Quit"
 msgstr "/U_končit"
 
-#: app/toolbox.c:692
+#: app/toolbox.c:693
 msgid "/_Export To"
 msgstr "/_Exportovat do"
 
-#: app/toolbox.c:694
+#: app/toolbox.c:695
 msgid "/_Import From"
 msgstr "/_Načíst z"
 
-#: app/toolbox.c:724
+#: app/toolbox.c:725
 msgid "/_Undo"
 msgstr "/_Zpět"
 
-#: app/toolbox.c:732
+#: app/toolbox.c:733
 msgid "/_Redo"
 msgstr "/Z_novu"
 
-#: app/toolbox.c:740
+#: app/toolbox.c:741
 msgid "/_Duplicate"
 msgstr "/Vytvořit _kopii"
 
-#: app/toolbox.c:780
-msgid "/Default Mask _Color"
-msgstr "/Předvolená ba_rva masky"
+#: app/toolbox.c:781
+msgid "/Mask _Color..."
+msgstr ""
 
-#: app/unitool.c:453
+#: app/toolbox.c:789
+msgid "/Default Mask _Color..."
+msgstr ""
+
+#: app/toolbox.c:797
+msgid "/G_L Materials..."
+msgstr ""
+
+#: app/toolbox.c:805
+msgid "/Color _Gradients..."
+msgstr ""
+
+#: app/toolbox.c:1071
+msgid "OpenGL 3D graphics not available"
+msgstr ""
+
+#: app/toolbox.c:1078
+msgid ""
+"Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
+"warning messages printed to console during Gwyddion startup."
+msgstr ""
+
+#: app/toolbox.c:1082
+msgid "This version of Gwyddion was built without OpenGL support."
+msgstr ""
+
+#: app/unitool.c:476
 msgid "_Hide"
 msgstr "S_krýt"
 
-#: app/unitool.c:703
+#: app/unitool.c:734
 msgid "<b>Origin</b>"
 msgstr "<b>Počátek</b>"
 
-#: app/unitool.c:719
+#: app/unitool.c:750
 msgid "<b>Size</b>"
 msgstr "<b>Rozměry</b>"
 
-#: app/unitool.c:724
+#: app/unitool.c:755
 msgid "Width"
 msgstr "Šířka"
 
-#: app/unitool.c:818 app/unitool.c:822 app/unitool.c:829 app/unitool.c:836
-#: modules/file/pixmap.c:692 modules/file/pixmap.c:699
-#: modules/tools/level3.c:198 modules/tools/profile.c:255
-#: modules/tools/readvalue.c:179
+#: app/unitool.c:849 app/unitool.c:853 app/unitool.c:860 app/unitool.c:867
+#: modules/file/pixmap.c:683 modules/file/pixmap.c:690
+#: modules/tools/level3.c:206 modules/tools/readvalue.c:195
 msgid "px"
 msgstr "px"
 
-#: app/wait.c:101
+#: app/wait.c:102
 msgid "Please wait"
 msgstr "Čekej, prosím"
 
-#: modules/file/apefile.c:127
+#: modules/file/apefile.c:128
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Načítá datové soubory APE (Applied Physics and Engineering)."
 
-#: modules/file/apefile.c:143
+#: modules/file/apefile.c:144
 msgid "APE files (.dat)"
 msgstr "APE soubory (.dat)"
 
-#: modules/file/apefile.c:389
+#: modules/file/apefile.c:390
 #, c-format
 msgid "Channel %u"
 msgstr "Kanál %u"
 
-#: modules/file/apefile.c:392 modules/file/ezdfile.c:560
-#: modules/file/nanoscope.c:577 modules/file/nt-mdt.c:451
-#: modules/file/rhk-spm32.c:500 modules/file/sis.c:504
-#: modules/file/stpfile.c:534
+#: modules/file/apefile.c:393 modules/file/ezdfile.c:561
+#: modules/file/mifile.c:304 modules/file/nanoscope.c:584
+#: modules/file/nt-mdt.c:446 modules/file/rhk-spm32.c:501
+#: modules/file/sis.c:499 modules/file/stpfile.c:535
 msgid "Select Data"
 msgstr "Vyber data"
 
-#: modules/file/apefile.c:409 modules/file/ezdfile.c:577
-#: modules/file/nanoscope.c:594 modules/file/nt-mdt.c:468
-#: modules/file/rhk-spm32.c:517 modules/file/sis.c:521
-#: modules/file/stpfile.c:551
+#: modules/file/apefile.c:410 modules/file/ezdfile.c:578
+#: modules/file/mifile.c:321 modules/file/nanoscope.c:601
+#: modules/file/nt-mdt.c:463 modules/file/rhk-spm32.c:518
+#: modules/file/sis.c:516 modules/file/stpfile.c:552
 msgid "Data to load:"
 msgstr "Data k načtení:"
 
-#: modules/file/asciiexport.c:46
+#: modules/file/asciiexport.c:48
 msgid "Exports data as simple ASCII matrix."
 msgstr "Exportuje data jako jednoduchou textovou matici."
 
-#: modules/file/asciiexport.c:62
+#: modules/file/asciiexport.c:64
 msgid "ASCII data matrix (.txt)"
 msgstr "Textová matice dat (.txt)"
 
-#: modules/file/assing-afm.c:61
+#: modules/file/assing-afm.c:63
 msgid "Imports Assing AFM data files."
 msgstr "Načítá datové soubory Assing AFM."
 
-#: modules/file/assing-afm.c:77
+#: modules/file/assing-afm.c:79
 msgid "Assing AFM files (.afm)"
 msgstr "Soubory Assing AFM (.afm)"
 
-#: modules/file/bcrfile.c:67
+#: modules/file/bcrfile.c:73
 msgid "Imports Image Metrology BCR data files."
 msgstr "Načítá datové soubory BCR Image Metrology."
 
-#: modules/file/bcrfile.c:83
+#: modules/file/bcrfile.c:89
 msgid "BCR files (.bcr, .bcrf)"
 msgstr "BCR soubory (.bcr, .bcrf)"
 
-#: modules/file/createc.c:61
+#: modules/file/createc.c:62
 msgid "Imports Createc data files."
 msgstr "Načítá datové soubory Createc."
 
-#: modules/file/createc.c:77
+#: modules/file/createc.c:78
 msgid "Createc files (.dat)"
 msgstr "Createc soubory (.dat)"
 
-#: modules/file/ezdfile.c:106
+#: modules/file/ezdfile.c:107
 msgid "Imports Nanosurf EZD data files."
 msgstr "Načítá datové soubory EZD Nanosurf."
 
-#: modules/file/ezdfile.c:122
+#: modules/file/ezdfile.c:123
 msgid "Nanosurf files (.ezd)"
 msgstr "Nanosurf soubory (.ezd)"
 
-#: modules/file/ezdfile.c:553
+#: modules/file/ezdfile.c:554
 #, c-format
 msgid "Group %d, Channel %d"
 msgstr "Skupina %d, kanál %d"
 
-#: modules/file/gwyfile.c:53
+#: modules/file/gwyfile.c:56
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
 msgstr ""
 "Načítá a ukládá přirozený datový formát Gwyddionu (serializované objekty)."
 
-#: modules/file/gwyfile.c:69
+#: modules/file/gwyfile.c:72
 msgid "Gwyddion native format (.gwy)"
 msgstr "Přirozený formát Gwyddionu (.gwy) "
 
@@ -1150,142 +1240,152 @@ msgstr ""
 msgid "Ch_annel:"
 msgstr ""
 
-#: modules/file/jpkscan.c:897
-msgid "(invalid filename encoding)"
+#: modules/file/mifile.c:103
+msgid "Imports Molecular Imaging MI data files."
 msgstr ""
 
-#: modules/file/nanoscope.c:127
+#: modules/file/mifile.c:119
+msgid "PicoView Data Files (.mi)"
+msgstr ""
+
+#: modules/file/mifile.c:299 modules/file/stpfile.c:528
+#, c-format
+msgid "Buffer %u (%s)"
+msgstr "Datové pole %u (%s)"
+
+#: modules/file/mifile.c:301 modules/file/stpfile.c:531
+#, c-format
+msgid "Buffer %u"
+msgstr "Datové pole %u"
+
+#: modules/file/nanoscope.c:126
 msgid "Imports Veeco Nanoscope data files."
 msgstr "Načítá datové soubory Veeco Nanoscope."
 
-#: modules/file/nanoscope.c:143
+#: modules/file/nanoscope.c:142
 msgid "Nanoscope files"
 msgstr "Nanoscope soubory"
 
-#: modules/file/nt-mdt.c:304
+#: modules/file/nt-mdt.c:299
 msgid "Imports NT-MDT data files."
 msgstr "Načítá datové soubory NT-MDT."
 
-#: modules/file/nt-mdt.c:320
+#: modules/file/nt-mdt.c:315
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT soubory (.mdt)"
 
-#: modules/file/nt-mdt.c:377
+#: modules/file/nt-mdt.c:372
 msgid "Frame"
 msgstr "Obraz"
 
-#: modules/file/pixmap.c:217
+#: modules/file/pixmap.c:208
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:223
+#: modules/file/pixmap.c:214
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:230
+#: modules/file/pixmap.c:221
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:237
+#: modules/file/pixmap.c:228
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:243
+#: modules/file/pixmap.c:234
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Bitmapa Windows či OS2 (.bmp)"
 
-#: modules/file/pixmap.c:249
+#: modules/file/pixmap.c:240
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:271
+#: modules/file/pixmap.c:262
 msgid ""
-"Exports data as as pixmap images and imports data from pixmap images. "
-"Supports following image formats for export: PNG, JPEG, TIFF (if available), "
-"PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-"
+"Exports data as pixmap images and imports data from pixmap images. Supports "
+"following image formats for export: PNG, JPEG, TIFF (if available), PPM, "
+"BMP, TARGA. Import support relies on GDK and thus may be installation-"
 "dependent."
 msgstr ""
-"Exportuje data do rastrových obrázků a importuje data z rastrových obrázků. "
-"Umožňuje export do těchto grafických formátů: PNG, JPEG, TIFF (je-li "
-"dostupný), PPM, BPM, TARGA. Import se spoléhá na GDK a tudíž se jeho "
-"možnosti mohou u různých instalací lišit."
 
-#: modules/file/pixmap.c:665
+#: modules/file/pixmap.c:656
 msgid "Import "
 msgstr "Načtení "
 
-#: modules/file/pixmap.c:687 modules/file/rawfile.c:679
+#: modules/file/pixmap.c:678 modules/file/rawfile.c:680
 msgid "<b>Resolution</b>"
 msgstr "<b>Rozlišení</b>"
 
-#: modules/file/pixmap.c:692 modules/file/rawfile.c:684
+#: modules/file/pixmap.c:683 modules/file/rawfile.c:685
 msgid "_Horizontal size:"
 msgstr "_Vodorovný rozměr:"
 
-#: modules/file/pixmap.c:699 modules/file/rawfile.c:691
+#: modules/file/pixmap.c:690 modules/file/rawfile.c:692
 msgid "_Vertical size:"
 msgstr "_Svislý rozměr:"
 
-#: modules/file/pixmap.c:715 modules/file/rawfile.c:702
+#: modules/file/pixmap.c:706 modules/file/rawfile.c:703
 msgid "<b>Physical dimensions</b>"
 msgstr "<b>Fyzické rozměry</b>"
 
-#: modules/file/pixmap.c:723
+#: modules/file/pixmap.c:714
 msgid "_Width"
 msgstr "Šířk_a"
 
-#: modules/file/pixmap.c:745
+#: modules/file/pixmap.c:736
 msgid "H_eight"
 msgstr "_Výška"
 
-#: modules/file/pixmap.c:752 modules/file/rawfile.c:740
+#: modules/file/pixmap.c:743 modules/file/rawfile.c:741
 msgid "Identical _measures"
 msgstr "Stejná _měřítka"
 
-#: modules/file/pixmap.c:764 modules/file/rawfile.c:752
+#: modules/file/pixmap.c:755 modules/file/rawfile.c:753
 msgid "_Z-scale (per sample unit):"
 msgstr ""
 
-#: modules/file/pixmap.c:781
+#: modules/file/pixmap.c:772
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Varování: Barevné obrázky nemohou být bezpečně převedeny na smysluplné "
 "hodnoty."
 
-#: modules/file/pixmap.c:796
+#: modules/file/pixmap.c:786
 msgid "Use"
 msgstr "Použít"
 
-#: modules/file/pixmap.c:796
+#: modules/file/pixmap.c:786
 msgid "as data"
 msgstr "jako data"
 
-#: modules/file/pixmap.c:1532
+#: modules/file/pixmap.c:1524
 msgid "_Data alone"
 msgstr "Jen _data"
 
-#: modules/file/pixmap.c:1533
+#: modules/file/pixmap.c:1525
 msgid "Data + _rulers"
 msgstr "Data + _pravítka"
 
-#: modules/file/pixmap.c:1534
+#: modules/file/pixmap.c:1526
 msgid "_Everything"
 msgstr "_Všechno"
 
-#: modules/file/pixmap.c:1554
+#: modules/file/pixmap.c:1546
 msgid "Export "
 msgstr "Export "
 
-#: modules/file/pixmap.c:1577
+#: modules/file/pixmap.c:1569
 msgid "_Zoom:"
 msgstr "_Zvětšení"
 
-#: modules/file/pixmap.c:1581
+#: modules/file/pixmap.c:1573
 msgid "Output:"
 msgstr "Výstup:"
 
-#: modules/file/rawfile.c:249
+#: modules/file/rawfile.c:250
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
@@ -1293,120 +1393,116 @@ msgstr ""
 "Načítá surové datové soubory, textové i binární, ve formátu specifikovaném "
 "uživatelem."
 
-#: modules/file/rawfile.c:381
+#: modules/file/rawfile.c:382
 msgid "User-specified"
 msgstr "Předepsán uživatelem"
 
-#: modules/file/rawfile.c:382
+#: modules/file/rawfile.c:383
 msgid "Signed byte"
 msgstr "Bajt se znaménkem"
 
-#: modules/file/rawfile.c:383
+#: modules/file/rawfile.c:384
 msgid "Unsigned byte"
 msgstr "Bajt bez znaménka"
 
-#: modules/file/rawfile.c:384
+#: modules/file/rawfile.c:385
 msgid "Signed 16bit word"
 msgstr "16bitové slovo se znaménkem"
 
-#: modules/file/rawfile.c:385
+#: modules/file/rawfile.c:386
 msgid "Unsigned 16bit word"
 msgstr "16bit slovo bez znaménka"
 
-#: modules/file/rawfile.c:386
+#: modules/file/rawfile.c:387
 msgid "Signed 32bit word"
 msgstr "32bitové slovo se znaménkem"
 
-#: modules/file/rawfile.c:387
+#: modules/file/rawfile.c:388
 msgid "Unsigned 32bit word"
 msgstr "32bitové slovo bez znaménka"
 
-#: modules/file/rawfile.c:388
+#: modules/file/rawfile.c:389
 msgid "IEEE single"
 msgstr "Reálné číslo IEEE single"
 
-#: modules/file/rawfile.c:389
+#: modules/file/rawfile.c:390
 msgid "IEEE double"
 msgstr "Reálné číslo IEEE double"
 
-#: modules/file/rawfile.c:415
+#: modules/file/rawfile.c:416
 msgid "Raw data files"
 msgstr "Surová data"
 
-#: modules/file/rawfile.c:480
+#: modules/file/rawfile.c:481
 msgid "Read Raw File"
 msgstr "Načtení surových dat"
 
-#: modules/file/rawfile.c:504
+#: modules/file/rawfile.c:505
 msgid "Information"
 msgstr "Informace"
 
-#: modules/file/rawfile.c:509
+#: modules/file/rawfile.c:510
 msgid "Data Format"
 msgstr "Formát dat"
 
-#: modules/file/rawfile.c:514
+#: modules/file/rawfile.c:515
 msgid "Presets"
 msgstr "Předvolby"
 
-#: modules/file/rawfile.c:616
-msgid "Preview"
-msgstr "Náhled"
-
-#: modules/file/rawfile.c:629
+#: modules/file/rawfile.c:630
 msgid "_Update"
 msgstr "_Aktualizovat"
 
-#: modules/file/rawfile.c:655
+#: modules/file/rawfile.c:656
 msgid "<b>File</b>"
 msgstr "<b>Soubor</b>"
 
-#: modules/file/rawfile.c:685 modules/file/rawfile.c:692
+#: modules/file/rawfile.c:686 modules/file/rawfile.c:693
 msgid "data samples"
 msgstr "vzorků"
 
-#: modules/file/rawfile.c:696
+#: modules/file/rawfile.c:697
 msgid "S_quare sample"
 msgstr "Č_tvercový vzorek"
 
-#: modules/file/rawfile.c:711 modules/process/crosscor.c:227
-#: modules/process/crosscor.c:247 modules/process/tip_blind.c:250
+#: modules/file/rawfile.c:712 modules/process/crosscor.c:228
+#: modules/process/crosscor.c:248 modules/process/tip_blind.c:251
 msgid "_Width:"
 msgstr "Šířk_a:"
 
-#: modules/file/rawfile.c:733
+#: modules/file/rawfile.c:734
 msgid "H_eight:"
 msgstr "_Výška:"
 
-#: modules/file/rawfile.c:776
+#: modules/file/rawfile.c:777
 msgid "_Text data"
 msgstr "_Textová data"
 
-#: modules/file/rawfile.c:777
+#: modules/file/rawfile.c:778
 msgid "_Binary data"
 msgstr "_Binární data"
 
-#: modules/file/rawfile.c:780
+#: modules/file/rawfile.c:781
 msgid "Any whitespace"
 msgstr "Libovolné bílé znaky"
 
-#: modules/file/rawfile.c:781
+#: modules/file/rawfile.c:782
 msgid "TAB character"
 msgstr "Tabelátor"
 
-#: modules/file/rawfile.c:782
+#: modules/file/rawfile.c:783
 msgid "Ohter character"
 msgstr "Jiný znak"
 
-#: modules/file/rawfile.c:808
+#: modules/file/rawfile.c:809
 msgid "Start from _line:"
 msgstr "Začít od řá_dku:"
 
-#: modules/file/rawfile.c:815
+#: modules/file/rawfile.c:816
 msgid "E_ach row skip:"
 msgstr "Na každém řádku _přeskočit:"
 
-#: modules/file/rawfile.c:820
+#: modules/file/rawfile.c:821
 msgid "_Field delimiter:"
 msgstr "_Oddělovač polí:"
 
@@ -1418,97 +1514,93 @@ msgstr "_Oddělovač polí:"
 msgid "_Decimal separator is comma"
 msgstr "_Desetinný oddělovač je čárka"
 
-#: modules/file/rawfile.c:866
+#: modules/file/rawfile.c:865
 msgid "Byte s_wap pattern:"
 msgstr "Vzor pře_házení bajtů:"
 
-#: modules/file/rawfile.c:880
+#: modules/file/rawfile.c:879
 msgid "Start at _offset:"
 msgstr "_Začít na pozici:"
 
-#: modules/file/rawfile.c:887
+#: modules/file/rawfile.c:886
 msgid "_Sample size:"
 msgstr "_Velikost vzorku:"
 
-#: modules/file/rawfile.c:895
+#: modules/file/rawfile.c:894
 msgid "After each sample s_kip:"
 msgstr "Po každém vzorku přes_kočit:"
 
-#: modules/file/rawfile.c:903
+#: modules/file/rawfile.c:902
 msgid "After each _row skip:"
 msgstr "Po každém řádk_u přeskočit:"
 
-#: modules/file/rawfile.c:909
+#: modules/file/rawfile.c:908
 msgid "_Reverse bits in bytes"
 msgstr "Převrátit b_ity v bajtech"
 
-#: modules/file/rawfile.c:914
+#: modules/file/rawfile.c:913
 msgid "Reverse bi_ts in samples"
 msgstr "Převrátit bity ve vzo_rcích"
 
-#: modules/file/rawfile.c:919
+#: modules/file/rawfile.c:918
 msgid "Samples are si_gned"
 msgstr "Vzorky mají z_naménko"
 
-#: modules/file/rawfile.c:955
+#: modules/file/rawfile.c:954
 msgid "Binary"
 msgstr "Binární"
 
-#: modules/file/rawfile.c:955
+#: modules/file/rawfile.c:954
 msgid "Text"
 msgstr "Text"
 
-#: modules/file/rawfile.c:991
+#: modules/file/rawfile.c:990
 msgid "Delimiter: whitespace"
 msgstr "Oddělovač: bílé znaky"
 
-#: modules/file/rawfile.c:994
+#: modules/file/rawfile.c:993
 #, c-format
 msgid "Delimiter: 0x%02x"
 msgstr "Oddělovač: 0x%02x"
 
-#: modules/file/rawfile.c:996
+#: modules/file/rawfile.c:995
 #, c-format
 msgid "Delimiter: %s"
 msgstr "Oddělovač: %s"
 
 #: modules/file/rawfile.c:1019
-msgid "Name"
-msgstr "Jméno"
-
-#: modules/file/rawfile.c:1020
 msgid "Type"
 msgstr "Typ"
 
-#: modules/file/rawfile.c:1021
+#: modules/file/rawfile.c:1020
 msgid "Size"
 msgstr "Velikost"
 
-#: modules/file/rawfile.c:1022
+#: modules/file/rawfile.c:1021
 msgid "Info"
 msgstr "Info"
 
-#: modules/file/rawfile.c:1037
+#: modules/file/rawfile.c:1036
 msgid "Preset l_ist"
 msgstr "_Seznam předvoleb"
 
-#: modules/file/rawfile.c:1097
+#: modules/file/rawfile.c:1096
 msgid "_Load"
 msgstr "_Načti"
 
-#: modules/file/rawfile.c:1102
+#: modules/file/rawfile.c:1101
 msgid "_Store"
 msgstr "_Ulož"
 
-#: modules/file/rawfile.c:1107
+#: modules/file/rawfile.c:1106
 msgid "_Rename"
 msgstr "_Přejmenuj"
 
-#: modules/file/rawfile.c:1125
+#: modules/file/rawfile.c:1124
 msgid "Preset _name:"
 msgstr "_Jméno předvolby:"
 
-#: modules/file/rawfile.c:1197
+#: modules/file/rawfile.c:1196
 #, c-format
 msgid ""
 "The format would require %u bytes long file (at least), but the length of `%"
@@ -1517,7 +1609,7 @@ msgstr ""
 "Formát by vyžadoval soubor dlouhý alespoň %u bajtů, ale délka „%s“ je jen %u "
 "bajtů."
 
-#: modules/file/rawfile.c:1218
+#: modules/file/rawfile.c:1217
 #, c-format
 msgid ""
 "Parsing of %s failed:\n"
@@ -1526,187 +1618,177 @@ msgstr ""
 "Rozebrání %s selhalo:\n"
 "%s."
 
-#: modules/file/rawfile.c:1557
+#: modules/file/rawfile.c:1556
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Jméno „%s“ je neplatné."
 
-#: modules/file/rawfile.c:2011
+#: modules/file/rawfile.c:2008
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Příliš málo řádků (%d), než aby šlo začít od pozice %d"
 
-#: modules/file/rawfile.c:2036
+#: modules/file/rawfile.c:2033
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem bílé znaky, abych mohl přeskočit další pole v řádku %u, ale "
 "narazil jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2049
+#: modules/file/rawfile.c:2046
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%c“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2063
+#: modules/file/rawfile.c:2060
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%s“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2080 modules/file/rawfile.c:2094
-#: modules/file/rawfile.c:2120
+#: modules/file/rawfile.c:2077 modules/file/rawfile.c:2091
+#: modules/file/rawfile.c:2117
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Nesmysly „%.16s“ v řádku %u, sloupci %u"
 
-#: modules/file/rawfile.c:2106
+#: modules/file/rawfile.c:2103
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Čekal bych oddělovač „%c“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%c“"
 
-#: modules/file/rawfile.c:2132
+#: modules/file/rawfile.c:2129
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
 "Čekal bych oddělovač „%s“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%.16s“"
 
-#: modules/file/rhk-spm32.c:144
+#: modules/file/rhk-spm32.c:145
 msgid "Imports RHK Technology SPM32 data files."
 msgstr "Načítá datové soubory RHK Technology SPM32."
 
-#: modules/file/rhk-spm32.c:160
+#: modules/file/rhk-spm32.c:161
 msgid "RHK SPM32 files (.sm2)"
 msgstr "RHK SPM32 soubory (.sm2)"
 
-#: modules/file/rhk-spm32.c:495
+#: modules/file/rhk-spm32.c:496
 #, c-format
 msgid "Page %u (%s)"
 msgstr "Stránka %u (%s)"
 
-#: modules/file/sis.c:356
+#: modules/file/sis.c:351
 msgid "Imports SIS (Surface Imaging Systems) data files."
 msgstr "Načítá datové soubory SIS (Surface Imaging Systems)."
 
-#: modules/file/sis.c:372
+#: modules/file/sis.c:367
 msgid "SIS files (.sis)"
 msgstr "SIS soubory (.sis)"
 
-#: modules/file/spmlab.c:49
+#: modules/file/spmlab.c:50
 msgid "Imports Thermicroscopes SpmLab R4, R5, and R6 data files."
 msgstr "Načítá datové soubory Thermicroscopes SpmLab R4, R5 a R6."
 
-#: modules/file/spmlab.c:65
+#: modules/file/spmlab.c:66
 msgid "Thermicroscopes SpmLab R4, R5, R6 files"
 msgstr "Thermicroscopes SpmLab R6, R6, R6 soubory"
 
-#: modules/file/stmprg.c:68
+#: modules/file/stmprg.c:69
 msgid "Imports Omicron STMPRG data files (tp ta)."
 msgstr "Načítá datové soubory Omicron STMPRG (tp ta)."
 
-#: modules/file/stmprg.c:84
+#: modules/file/stmprg.c:85
 msgid "Omicron STMPRG files (tp ta)"
 msgstr "Soubory Omicron STMPRG (tp ta)"
 
-#: modules/file/stpfile.c:97
+#: modules/file/stpfile.c:98
 msgid "Topography"
 msgstr "Topografie"
 
-#: modules/file/stpfile.c:98
-msgid "Current or Deflection"
-msgstr "Proud nebo výchylka"
-
 #: modules/file/stpfile.c:99
+msgid "Current or Deflection or Amplitude"
+msgstr ""
+
+#: modules/file/stpfile.c:100
 msgid "Electrochemical voltage"
 msgstr "Elektrochemické napětí"
 
-#: modules/file/stpfile.c:100
+#: modules/file/stpfile.c:101
 msgid "Topography and SPS"
 msgstr "Topografie a SPS"
 
-#: modules/file/stpfile.c:101
+#: modules/file/stpfile.c:102
 msgid "Topography and SPS scripted"
 msgstr "Topografie a skriptované SPS"
 
-#: modules/file/stpfile.c:102
+#: modules/file/stpfile.c:103
 msgid "Electrochemical current"
 msgstr "Elektrochemický proud"
 
-#: modules/file/stpfile.c:103
-msgid "Friction"
-msgstr "Tření"
-
 #: modules/file/stpfile.c:104
-msgid "AUX in BNC"
+msgid "Friction or Phase"
 msgstr ""
 
 #: modules/file/stpfile.c:105
+msgid "AUX in BNC"
+msgstr ""
+
+#: modules/file/stpfile.c:106
 msgid "External"
 msgstr "Vnější"
 
-#: modules/file/stpfile.c:112
+#: modules/file/stpfile.c:113
 msgid "Imports Molecular Imaging STP data files."
 msgstr "Načítá datové soubory STP Molecular Imaging."
 
-#: modules/file/stpfile.c:128
+#: modules/file/stpfile.c:129
 msgid "STP files (.stp)"
 msgstr "STP soubory (.stp)"
 
-#: modules/file/stpfile.c:527
-#, c-format
-msgid "Buffer %u (%s)"
-msgstr "Datové pole %u (%s)"
-
-#: modules/file/stpfile.c:530
-#, c-format
-msgid "Buffer %u"
-msgstr "Datové pole %u"
-
-#: modules/file/wsxmfile.c:64
+#: modules/file/wsxmfile.c:65
 msgid "Imports Nanotec WSxM data files."
 msgstr "Načítá datové soubory Nanotec WSxM."
 
-#: modules/file/wsxmfile.c:80
+#: modules/file/wsxmfile.c:81
 msgid "WSXM files (.tom)"
 msgstr "WSXM soubory (.tom)"
 
-#: modules/graph/graph_cd.c:116
+#: modules/graph/graph_cd.c:120
 msgid "Critical dimension measurements"
 msgstr "Měření kritické dimenze"
 
-#: modules/graph/graph_cd.c:132
+#: modules/graph/graph_cd.c:136
 msgid "/_Critical dimension"
 msgstr "/_Kritická dimenze"
 
-#: modules/graph/graph_cd.c:237 modules/graph/graph_fit.c:253
+#: modules/graph/graph_cd.c:241 modules/graph/graph_fit.c:259
 msgid "Fit graph"
 msgstr "Proložení grafu"
 
-#: modules/graph/graph_cd.c:240 modules/graph/graph_fit.c:256
-#: modules/process/fit_2d.c:220
+#: modules/graph/graph_cd.c:244 modules/graph/graph_fit.c:262
+#: modules/process/fit_2d.c:226
 msgid "_Fit"
 msgstr "_Proložit"
 
-#: modules/graph/graph_cd.c:264 modules/graph/graph_fit.c:279
+#: modules/graph/graph_cd.c:268 modules/graph/graph_fit.c:285
 msgid "<b>Function definition:</b>"
 msgstr "<b>Funkční předpis:</b>"
 
-#: modules/graph/graph_cd.c:284
+#: modules/graph/graph_cd.c:288
 msgid "<b>Fitting parameters</b>"
 msgstr "<b>Parametry prokládání</b>"
 
-#: modules/graph/graph_cd.c:389 modules/graph/graph_fit.c:420
+#: modules/graph/graph_cd.c:393 modules/graph/graph_fit.c:426
 msgid "Graph data curve"
 msgstr "Křivka"
 
-#: modules/graph/graph_cd.c:839 modules/graph/graph_fit.c:930
-#: modules/process/fit_2d.c:981
+#: modules/graph/graph_cd.c:843 modules/graph/graph_fit.c:931
+#: modules/process/fit_2d.c:986
 #, c-format
 msgid ""
 "Cannot save report to %s.\n"
@@ -1715,41 +1797,41 @@ msgstr ""
 "Nemohu uložit výsledky do %s.\n"
 "%s\n"
 
-#: modules/graph/graph_cd.c:863 modules/graph/graph_fit.c:954
-#: modules/process/fit_2d.c:1005
+#: modules/graph/graph_cd.c:867 modules/graph/graph_fit.c:955
+#: modules/process/fit_2d.c:1010
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
-#: modules/graph/graph_cd.c:926 modules/graph/graph_fit.c:1019
-#: modules/process/fit_2d.c:1045
+#: modules/graph/graph_cd.c:932 modules/graph/graph_fit.c:1022
+#: modules/process/fit_2d.c:1050
 msgid "Fit results"
 msgstr "Výsledky"
 
-#: modules/graph/graph_cd.c:939 modules/graph/graph_fit.c:1032
-#: modules/process/fit_2d.c:1057
+#: modules/graph/graph_cd.c:945 modules/graph/graph_fit.c:1035
+#: modules/process/fit_2d.c:1062
 msgid "<b>Data:</b>"
 msgstr "<b>Data:</b>"
 
-#: modules/graph/graph_cd.c:948 modules/graph/graph_fit.c:1040
+#: modules/graph/graph_cd.c:954 modules/graph/graph_fit.c:1043
 msgid "Num of points:"
 msgstr "Počet bodů"
 
-#: modules/graph/graph_cd.c:957 modules/graph/graph_fit.c:1048
+#: modules/graph/graph_cd.c:963 modules/graph/graph_fit.c:1051
 msgid "X range:"
 msgstr "X-ový rozsah"
 
-#: modules/graph/graph_cd.c:968 modules/graph/graph_fit.c:1059
-#: modules/process/fit_2d.c:1063
+#: modules/graph/graph_cd.c:974 modules/graph/graph_fit.c:1062
+#: modules/process/fit_2d.c:1068
 msgid "<b>Function:</b>"
 msgstr "<b>Funkce:</b>"
 
-#: modules/graph/graph_cd.c:989 modules/graph/graph_fit.c:1071
-#: modules/process/fit_2d.c:1068
+#: modules/graph/graph_cd.c:995 modules/graph/graph_fit.c:1074
+#: modules/process/fit_2d.c:1073
 msgid "<b>Results</b>"
 msgstr "<b>Výsledky</b>"
 
-#: modules/graph/graph_cd.c:1041 modules/graph/graph_fit.c:1137
-#: modules/process/fit_2d.c:1136
+#: modules/graph/graph_cd.c:1047 modules/graph/graph_fit.c:1140
+#: modules/process/fit_2d.c:1141
 msgid ""
 "\n"
 "===== Fit Results =====\n"
@@ -1757,29 +1839,29 @@ msgstr ""
 "\n"
 "===== Výsledky fitu =====\n"
 
-#: modules/graph/graph_cd.c:1045 modules/graph/graph_fit.c:1141
-#: modules/process/fit_2d.c:1139
+#: modules/graph/graph_cd.c:1051 modules/graph/graph_fit.c:1144
+#: modules/process/fit_2d.c:1144
 #, c-format
 msgid "Data: %s\n"
 msgstr "Data: %s\n"
 
-#: modules/graph/graph_cd.c:1047 modules/graph/graph_fit.c:1143
+#: modules/graph/graph_cd.c:1053 modules/graph/graph_fit.c:1146
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Počet bodů:      %d z %d\n"
 
-#: modules/graph/graph_cd.c:1052 modules/graph/graph_fit.c:1148
+#: modules/graph/graph_cd.c:1058 modules/graph/graph_fit.c:1151
 #, c-format
 msgid "X range:          %g to %g\n"
 msgstr "Rozsah X:        %g do %g\n"
 
-#: modules/graph/graph_cd.c:1054 modules/graph/graph_fit.c:1150
+#: modules/graph/graph_cd.c:1060 modules/graph/graph_fit.c:1153
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
-#: modules/graph/graph_cd.c:1056 modules/graph/graph_fit.c:1152
-#: modules/process/fit_2d.c:1142
+#: modules/graph/graph_cd.c:1062 modules/graph/graph_fit.c:1155
+#: modules/process/fit_2d.c:1147
 msgid ""
 "\n"
 "Results\n"
@@ -1787,89 +1869,133 @@ msgstr ""
 "\n"
 "Výsledky\n"
 
-#: modules/graph/graph_export_ascii.c:40
-msgid "Export graph curves to ASCII file"
-msgstr "Exportuje křivky grafu do textových souborů"
+#: modules/graph/graph_export_ascii.c:69
+msgid "Plain text"
+msgstr ""
 
-#: modules/graph/graph_export_ascii.c:56
-msgid "/_Export ASCII..."
-msgstr "/_Export ASCII..."
+#: modules/graph/graph_export_ascii.c:70
+msgid "Gnuplot friendly"
+msgstr ""
 
-#: modules/graph/graph_export_ascii.c:76
-msgid "Export Graph to File"
-msgstr "Exportovat graf do souboru"
+#: modules/graph/graph_export_ascii.c:71
+msgid "Comma separated values"
+msgstr ""
 
-#: modules/graph/graph_fit.c:122
+#: modules/graph/graph_export_ascii.c:72
+msgid "Origin friendly"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:83
+msgid "Graph ASCII export."
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:99
+msgid "/Export _ASCII"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:135 modules/graph/graph_stats.c:108
+msgid "Graph statistics"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:161
+msgid "Export _labels"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:167
+msgid "Export _units"
+msgstr ""
+
+#: modules/graph/graph_export_ascii.c:173
+msgid "Export _metadata"
+msgstr ""
+
+#: modules/graph/graph_export_bitmap.c:45
+msgid "Export graph into bitmap"
+msgstr ""
+
+#: modules/graph/graph_export_bitmap.c:61
+msgid "/Export _bitmap"
+msgstr ""
+
+#: modules/graph/graph_export_vector.c:45
+msgid "Export graph in postscript"
+msgstr ""
+
+#: modules/graph/graph_export_vector.c:61
+msgid "/Export postscript"
+msgstr ""
+
+#: modules/graph/graph_fit.c:125
 msgid "Fit graph with function"
 msgstr "Proložení funkce grafem"
 
-#: modules/graph/graph_fit.c:138
+#: modules/graph/graph_fit.c:141
 msgid "/_Fit Graph"
 msgstr "/Proložit _funkci"
 
-#: modules/graph/graph_fit.c:260
+#: modules/graph/graph_fit.c:266
 msgid "_Reset inits"
 msgstr "_Obnovit odhady"
 
-#: modules/graph/graph_fit.c:262 modules/process/fit_2d.c:222
+#: modules/graph/graph_fit.c:268 modules/process/fit_2d.c:228
 msgid "_Plot inits"
 msgstr "_Použít odhady"
 
-#: modules/graph/graph_fit.c:293 modules/process/fit_2d.c:272
+#: modules/graph/graph_fit.c:299 modules/process/fit_2d.c:278
 msgid "<b>Fitting parameters:</b>"
 msgstr "<b>Parametry prokládání:</b>"
 
-#: modules/graph/graph_fit.c:305 modules/process/fit_2d.c:315
+#: modules/graph/graph_fit.c:311 modules/process/fit_2d.c:321
 msgid "<b>Initial</b>"
 msgstr "<b>Počáteční</b>"
 
-#: modules/graph/graph_fit.c:311 modules/process/fit_2d.c:321
-#: modules/process/fractal.c:286
+#: modules/graph/graph_fit.c:317 modules/process/fit_2d.c:327
+#: modules/process/fractal.c:284
 msgid "<b>Result</b>"
 msgstr "<b>Výsledek</b>"
 
-#: modules/graph/graph_fit.c:317 modules/process/fit_2d.c:328
+#: modules/graph/graph_fit.c:323 modules/process/fit_2d.c:334
 msgid "<b>Error</b>"
 msgstr "<b>Chyba</b>"
 
-#: modules/graph/graph_fit.c:323 modules/process/fit_2d.c:334
+#: modules/graph/graph_fit.c:329 modules/process/fit_2d.c:340
 msgid "<b>Fix</b>"
 msgstr "<b>Pevný</b>"
 
-#: modules/graph/graph_fit.c:381 modules/process/fit_2d.c:393
+#: modules/graph/graph_fit.c:387 modules/process/fit_2d.c:399
 msgid "<b>Correlation matrix:</b>"
 msgstr "<b>Korelační matice:</b>"
 
-#: modules/graph/graph_fit.c:399 modules/process/fit_2d.c:412
+#: modules/graph/graph_fit.c:405 modules/process/fit_2d.c:418
 msgid "<b>Chi-square result:</b>"
 msgstr "<b>Chí kvadrát výsledku:</b>"
 
-#: modules/graph/graph_fit.c:411 modules/process/fractal.c:265
+#: modules/graph/graph_fit.c:417 modules/process/fractal.c:263
 msgid "<b>Fit area</b>"
 msgstr "<b>Oblast fitování</b>"
 
-#: modules/graph/graph_fit.c:428
+#: modules/graph/graph_fit.c:434
 msgid "From"
 msgstr "Od"
 
-#: modules/graph/graph_fit.c:439
+#: modules/graph/graph_fit.c:445
 msgid "To"
 msgstr "Do"
 
-#: modules/graph/graph_fit.c:651 modules/tools/stats.c:310
-#: modules/tools/stats.c:311 modules/tools/stats.c:312
+#: modules/graph/graph_fit.c:660 modules/tools/stats.c:311
+#: modules/tools/stats.c:312 modules/tools/stats.c:313
 msgid "N.A."
 msgstr ""
 
-#: modules/graph/graph_fit.c:1094 modules/process/fit_2d.c:1093
+#: modules/graph/graph_fit.c:1097 modules/process/fit_2d.c:1098
 msgid "Residual sum:"
 msgstr "Suma reziduí:"
 
-#: modules/graph/graph_fit.c:1102 modules/process/fit_2d.c:1101
+#: modules/graph/graph_fit.c:1105 modules/process/fit_2d.c:1106
 msgid "<b>Correlation matrix</b>"
 msgstr "<b>Korelační matice</b>"
 
-#: modules/graph/graph_fit.c:1165 modules/process/fit_2d.c:1156
+#: modules/graph/graph_fit.c:1167 modules/process/fit_2d.c:1161
 #, c-format
 msgid ""
 "\n"
@@ -1878,13 +2004,17 @@ msgstr ""
 "\n"
 "Suma reziduí:   %g\n"
 
-#: modules/graph/graph_fit.c:1167 modules/process/fit_2d.c:1158
+#: modules/graph/graph_fit.c:1169 modules/process/fit_2d.c:1163
 msgid ""
 "\n"
 "Correlation matrix\n"
 msgstr ""
 "\n"
 "Korelační matice\n"
+
+#: modules/graph/graph_level.c:46
+msgid "Level graph by line"
+msgstr ""
 
 #: modules/graph/graph_points.c:69
 msgid "Measure distances between points"
@@ -1897,6 +2027,14 @@ msgstr "/_Měřit vzdálenosti"
 #: modules/graph/graph_points.c:150
 msgid "Measure distances"
 msgstr "Měření vzdáleností"
+
+#: modules/graph/graph_stats.c:56
+msgid "Graph statistics."
+msgstr ""
+
+#: modules/graph/graph_stats.c:72
+msgid "/_Graph statistics"
+msgstr ""
 
 #: modules/graph/graph_unzoom.c:54
 msgid "/Zoom _Out"
@@ -1922,30 +2060,29 @@ msgstr "/Odečítání _hodnot"
 msgid "Read Graph Values"
 msgstr "Odečítání hodnot z grafu"
 
-#: modules/layer/axes.c:125
+#: modules/layer/axis.c:128
 msgid "Layer allowing selection of horizontal or vertical lines."
 msgstr "Vrstva umožňující výběr vodorovných nebo svislých čar."
 
-#: modules/layer/lines.c:139
+#: modules/layer/ellipse.c:122
+msgid "Layer allowing selection of elliptic areas."
+msgstr ""
+
+#: modules/layer/line.c:139
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Vrstva umožňující výběr libovolných přímých čar."
 
-#: modules/layer/pointer.c:105
+#: modules/layer/point.c:116
 msgid ""
-"Layer allowing selection of a single point, more precisely just reading "
-"pointer coordinates."
+"Layer allowing selection of several points, displayed as crosses or "
+"inivisible."
 msgstr ""
-"Vrstva umožňující výběr jednoho bodu, přesněji jen čtení souřadnic myši."
 
-#: modules/layer/points.c:126
-msgid "Layer allowing selection of several points, displayed as crosses."
-msgstr "Vrstva umožňující výběr několika bodů zobrazených jako křížky."
-
-#: modules/layer/select.c:122
+#: modules/layer/rectangle.c:125
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Vrstva umožňující výběr pravoúhlých oblastí."
 
-#: modules/plugin-proxy.c:147
+#: modules/plugin-proxy.c:145
 msgid ""
 "Plug-in proxy is a module capable of querying, registering, and running "
 "external programs (plug-ins) on data pretending they are data processing or "
@@ -1955,11 +2092,11 @@ msgstr ""
 "jiné programů (pluginů) na data, předstíraje přitom, že jsou to moduly "
 "zpracovávajícími data či načítajícími/ukládajícími soubory."
 
-#: modules/plugin-proxy.c:465
+#: modules/plugin-proxy.c:463
 msgid "/_Plug-Ins"
 msgstr "/_Pluginy"
 
-#: modules/process/angle_dist.c:104
+#: modules/process/angle_dist.c:105
 msgid ""
 "Calculates two-dimensional distribution of angles, that is projections of "
 "slopes to all directions."
@@ -1967,39 +2104,39 @@ msgstr ""
 "Počítá dvourozměrné rozdělení úhlů, tj. projekci sklonů do všech možných "
 "směrů."
 
-#: modules/process/angle_dist.c:121
+#: modules/process/angle_dist.c:122
 msgid "/_Statistics/_Angle Distribution..."
 msgstr "/_Statistika/Rozdělení ú_hlů..."
 
-#: modules/process/angle_dist.c:154
+#: modules/process/angle_dist.c:155
 msgid "Computing angle distribution"
 msgstr "Počítám rozdělení úhlů"
 
-#: modules/process/angle_dist.c:184
+#: modules/process/angle_dist.c:185
 msgid "Angle Distribution"
 msgstr "Rozdělení úhlů"
 
-#: modules/process/angle_dist.c:200 modules/process/slope_dist.c:231
+#: modules/process/angle_dist.c:201 modules/process/slope_dist.c:232
 msgid "Output _size:"
 msgstr "_Velikost výstupu:"
 
-#: modules/process/angle_dist.c:205 modules/process/grain_wshed.c:221
+#: modules/process/angle_dist.c:206 modules/process/grain_wshed.c:222
 msgid "_Number of steps:"
 msgstr "Počet _kroků:"
 
-#: modules/process/angle_dist.c:210 modules/process/slope_dist.c:236
+#: modules/process/angle_dist.c:211 modules/process/slope_dist.c:237
 msgid "_Logarithmic value scale"
 msgstr "_Logaritmická škála hodnot"
 
-#: modules/process/angle_dist.c:216 modules/process/slope_dist.c:242
+#: modules/process/angle_dist.c:217 modules/process/slope_dist.c:243
 msgid "Use local plane _fitting"
 msgstr "Používat lokální _prokládání rovinou"
 
-#: modules/process/angle_dist.c:225 modules/process/slope_dist.c:251
+#: modules/process/angle_dist.c:226 modules/process/slope_dist.c:252
 msgid "_Plane size:"
 msgstr "Velikost _roviny:"
 
-#: modules/process/arithmetic.c:86
+#: modules/process/arithmetic.c:87
 msgid ""
 "Simple arithmetic operations with two data fields (or a data field and a "
 "scalar)."
@@ -2007,31 +2144,31 @@ msgstr ""
 "Jednoduché aritmetické operace se dvěma datovými poli (nebo datovými poli a "
 "skaláry)."
 
-#: modules/process/arithmetic.c:103
+#: modules/process/arithmetic.c:104
 msgid "/M_ultidata/_Arithmetic..."
 msgstr "/M_ultidata/_Aritmetika..."
 
-#: modules/process/arithmetic.c:148
+#: modules/process/arithmetic.c:149
 msgid "Arithmetic"
 msgstr "Aritmetika"
 
-#: modules/process/arithmetic.c:161
+#: modules/process/arithmetic.c:162
 msgid "Operands:"
 msgstr "O_perandy:"
 
-#: modules/process/arithmetic.c:189
+#: modules/process/arithmetic.c:190
 msgid "_Expression:"
 msgstr "_Výraz:"
 
-#: modules/process/arithmetic.c:358
+#: modules/process/arithmetic.c:359
 msgid "Pixel dimensions differ"
 msgstr "Nekompatibilní rozlišení"
 
-#: modules/process/arithmetic.c:367
+#: modules/process/arithmetic.c:368
 msgid "Physical dimensions differ"
 msgstr "Nekompatibilní fyzické rozměry"
 
-#: modules/process/basicops.c:50
+#: modules/process/basicops.c:51
 msgid ""
 "Basic operations like flipping, value inversion, and rotation by multiples "
 "of 90 degrees."
@@ -2039,265 +2176,253 @@ msgstr ""
 "Základní operace, jako překlápěni, inverze hodnot a rotace o násobky 90 "
 "stupňů."
 
-#: modules/process/basicops.c:67
+#: modules/process/basicops.c:68
 msgid "/_Basic Operations/Flip _Horizontally"
 msgstr "/_Jednoduché operace/_Vodorovné překlopení"
 
-#: modules/process/basicops.c:74
+#: modules/process/basicops.c:75
 msgid "/_Basic Operations/Flip _Vertically"
 msgstr "/_Jednoduché operace/_Svislé překlopení"
 
-#: modules/process/basicops.c:81
+#: modules/process/basicops.c:82
 msgid "/_Basic Operations/_Invert Value"
 msgstr "/_Jednoduché operace/_Inverze hodnoty"
 
-#: modules/process/basicops.c:88
+#: modules/process/basicops.c:89
 msgid "/_Basic Operations/_Rotate Clockwise"
 msgstr "/_Jednoduché operace/Rotace v _záporném smyslu"
 
-#: modules/process/basicops.c:95
+#: modules/process/basicops.c:96
 msgid "/_Basic Operations/Rotate _Counterclockwise"
 msgstr "/_Jednoduché operace/Rotace v _kladném smyslu"
 
-#: modules/process/basicops.c:102
+#: modules/process/basicops.c:103
 msgid "/_Basic Operations/Flip _Both"
 msgstr "/_Jednoduché operace/Překlopení v _obou směrech"
 
-#: modules/process/calibrate.c:117
+#: modules/process/calibrate.c:118
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Kalibruje podélné rozměry vozrku nebo rozsah hodnot."
 
-#: modules/process/calibrate.c:133
+#: modules/process/calibrate.c:134
 msgid "/_Basic Operations/_Recalibrate..."
 msgstr "/_Jednoduché operace/_Kalibrace os..."
 
-#: modules/process/calibrate.c:213
+#: modules/process/calibrate.c:214
 msgid "Calibrate"
 msgstr "Kalibrovat osy"
 
-#: modules/process/calibrate.c:232
+#: modules/process/calibrate.c:233
 msgid "<b>New Real Dimensions</b>"
 msgstr "<b>Nové fyzické rozměry</b>"
 
-#: modules/process/calibrate.c:238
+#: modules/process/calibrate.c:239
 msgid "_X range:"
 msgstr "_X-ový rozsah:"
 
-#: modules/process/calibrate.c:261
+#: modules/process/calibrate.c:262
 msgid "_Y range:"
 msgstr "_Y-ový rozsah:"
 
-#: modules/process/calibrate.c:275
+#: modules/process/calibrate.c:276
 msgid "_Square samples"
 msgstr "Č_tvercové pixely"
 
-#: modules/process/calibrate.c:280
+#: modules/process/calibrate.c:281
 msgid "_Z range:"
 msgstr "_Z-ový rozsah:"
 
-#: modules/process/calibrate.c:305
+#: modules/process/calibrate.c:306
 msgid "<b>Calibration Coefficients</b>"
 msgstr "<b>Kalibrační koeficienty</b>"
 
-#: modules/process/calibrate.c:313
+#: modules/process/calibrate.c:314
 msgid "_X calibration factor:"
 msgstr "Kalibrační faktor v ose _X:"
 
-#: modules/process/calibrate.c:321
+#: modules/process/calibrate.c:322
 msgid "_Y calibration factor:"
 msgstr "Kalibrační faktor v ose _Y:"
 
-#: modules/process/calibrate.c:329
+#: modules/process/calibrate.c:330
 msgid "_Z calibration factor:"
 msgstr "Kalibrační faktor v ose _Z:"
 
-#: modules/process/crosscor.c:94
+#: modules/process/crosscor.c:95
 msgid "Absolute"
 msgstr "Absolutní vzdálenost"
 
-#: modules/process/crosscor.c:95
+#: modules/process/crosscor.c:96
 msgid "X Distance"
 msgstr "Vzdálenost v ose X"
 
-#: modules/process/crosscor.c:96
+#: modules/process/crosscor.c:97
 msgid "Y Distance"
 msgstr "Vzdálenost v ose Y"
 
-#: modules/process/crosscor.c:108
+#: modules/process/crosscor.c:109
 msgid "Calculates cross-correlation of two data fields."
 msgstr "Počítá vzájemnou korelaci dvou datových polí."
 
-#: modules/process/crosscor.c:124
+#: modules/process/crosscor.c:125
 msgid "/M_ultidata/_Cross-Correlation..."
 msgstr "/M_ultidata/_Vzájemná korelace..."
 
-#: modules/process/crosscor.c:191
+#: modules/process/crosscor.c:192
 msgid "Cross-Correlation"
 msgstr "Vzájemná korelace"
 
-#: modules/process/crosscor.c:206
+#: modules/process/crosscor.c:207
 msgid "_First operand:"
 msgstr "_První operand:"
 
-#: modules/process/crosscor.c:212
+#: modules/process/crosscor.c:213
 msgid "_Second operand:"
 msgstr "_Druhý operand:"
 
-#: modules/process/crosscor.c:219
+#: modules/process/crosscor.c:220
 msgid "Search size"
 msgstr "Velikost hledání"
 
-#: modules/process/crosscor.c:233 modules/process/crosscor.c:253
-#: modules/process/grain_mark.c:244 modules/process/grain_rem_threshold.c:217
-#: modules/process/tip_blind.c:257
+#: modules/process/crosscor.c:234 modules/process/crosscor.c:254
+#: modules/process/grain_mark.c:244 modules/process/grain_rem_threshold.c:218
+#: modules/process/tip_blind.c:258
 msgid "_Height:"
 msgstr "_Výška:"
 
-#: modules/process/crosscor.c:239
+#: modules/process/crosscor.c:240
 msgid "Window size"
 msgstr "Velikost okna"
 
-#: modules/process/crosscor.c:264 modules/process/fft.c:350
-#: modules/process/fractal.c:248 modules/process/maskcor.c:188
-#: modules/tools/sfunctions.c:201
+#: modules/process/crosscor.c:263 modules/process/fft.c:352
+#: modules/process/fractal.c:247 modules/process/maskcor.c:186
+#: modules/tools/sfunctions.c:226
 msgid "_Output type:"
 msgstr "Typ _výstupu:"
 
-#: modules/process/crosscor.c:270
+#: modules/process/crosscor.c:269
 msgid "Add _low score results mask"
 msgstr "Přidat _masku s nízkým skóre"
 
-#: modules/process/crosscor.c:281 modules/process/dwtdenoise.c:224
-#: modules/process/grain_wshed.c:238 modules/process/maskcor.c:194
-#: modules/process/tip_blind.c:275
+#: modules/process/crosscor.c:280 modules/process/dwtdenoise.c:220
+#: modules/process/grain_wshed.c:239 modules/process/maskcor.c:192
+#: modules/process/tip_blind.c:276
 msgid "_Threshold:"
 msgstr "Prá_h: "
 
-#: modules/process/crosscor.c:394
+#: modules/process/crosscor.c:391
 msgid "Both data fields must have same size."
 msgstr "Obě pole musí mít stejnou velikost."
 
-#: modules/process/cwt.c:81
+#: modules/process/cwt.c:74
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
 msgstr "Dvourozměrná CWT (spojitá waveletová transformace)."
 
-#: modules/process/cwt.c:97
+#: modules/process/cwt.c:90
 msgid "/_Integral Transforms/_2D CWT..."
 msgstr "/_Integrální transformace/_2D CWT..."
 
-#: modules/process/cwt.c:128 modules/process/dwt.c:126
-#: modules/process/dwtanisotropy.c:131 modules/process/dwtcorrection.c:120
-#: modules/process/dwtdenoise.c:133 modules/process/fft.c:150
+#: modules/process/cwt.c:121 modules/process/dwt.c:123
+#: modules/process/dwtanisotropy.c:130 modules/process/dwtcorrection.c:116
+#: modules/process/dwtdenoise.c:126 modules/process/fft.c:142
 #, c-format
 msgid "%s: Data must be square."
 msgstr "%s: Data musejí být čtvercová."
 
-#: modules/process/cwt.c:178
+#: modules/process/cwt.c:171
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:198 modules/process/dwt.c:191
-#: modules/process/dwtdenoise.c:200 modules/process/fft.c:327
+#: modules/process/cwt.c:191 modules/process/dwt.c:188
+#: modules/process/dwtdenoise.c:193 modules/process/fft.c:326
 msgid "_Preserve size (don't resize to power of 2)"
 msgstr "Zachovej velikost (neškáluj na mocninu 2)"
 
-#: modules/process/cwt.c:210 modules/process/dwt.c:203
-#: modules/process/dwtanisotropy.c:210 modules/process/dwtcorrection.c:189
-#: modules/process/dwtdenoise.c:212 modules/process/fft.c:339
-#: modules/process/fft_filter_1d.c:340 modules/process/fractal.c:233
-#: modules/process/nanoindent_adjust.c:245 modules/process/rotate.c:248
-#: modules/process/scale.c:206 modules/process/unrotate.c:274
-#: modules/tools/profile.c:272
+#: modules/process/cwt.c:204 modules/process/dwt.c:201
+#: modules/process/dwtanisotropy.c:209 modules/process/dwtcorrection.c:186
+#: modules/process/dwtdenoise.c:206 modules/process/fft.c:339
+#: modules/process/fft_filter_1d.c:345 modules/process/fractal.c:231
+#: modules/process/nanoindent_adjust.c:247 modules/process/rotate.c:250
+#: modules/process/scale.c:206 modules/process/unrotate.c:265
+#: modules/tools/profile.c:302
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
-#: modules/process/cwt.c:215 modules/process/dwt.c:209
-#: modules/process/dwtanisotropy.c:216 modules/process/dwtcorrection.c:195
-#: modules/process/dwtdenoise.c:218
+#: modules/process/cwt.c:210 modules/process/dwt.c:208
+#: modules/process/dwtanisotropy.c:216 modules/process/dwtcorrection.c:193
+#: modules/process/dwtdenoise.c:213
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
 
-#: modules/process/dwt.c:79
+#: modules/process/dwt.c:76
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "Dvourozměrná DWT (diskrétní waveletová transformace)."
 
-#: modules/process/dwt.c:95
+#: modules/process/dwt.c:92
 msgid "/_Integral Transforms/_2D DWT..."
 msgstr "/_Integrální transformace/_2D DWT..."
 
-#: modules/process/dwt.c:177
+#: modules/process/dwt.c:174
 msgid "2D DWT"
 msgstr "2D DWT"
 
-#: modules/process/dwtanisotropy.c:84
+#: modules/process/dwtanisotropy.c:83
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
 msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
 
-#: modules/process/dwtanisotropy.c:100
+#: modules/process/dwtanisotropy.c:99
 msgid "/_Integral Transforms/DWT _Anisotropy..."
 msgstr "/_Integrální transformace/DWT _anisotropie"
 
-#: modules/process/dwtanisotropy.c:131
+#: modules/process/dwtanisotropy.c:130
 msgid "DWT Anisotropy"
 msgstr "DWT anisotropie"
 
-#: modules/process/dwtanisotropy.c:192
+#: modules/process/dwtanisotropy.c:191
 msgid "2D DWT Anisotropy"
 msgstr "2D DWT detekce anisotropie"
 
-#: modules/process/dwtanisotropy.c:222
+#: modules/process/dwtanisotropy.c:221
 msgid "X/Y ratio threshold:"
 msgstr "práh poměru X/Y:"
 
-#: modules/process/dwtanisotropy.c:231
+#: modules/process/dwtanisotropy.c:229
 msgid "Low level exclude limit:"
 msgstr "Spodní limit rozkladu:"
 
-#: modules/process/dwtcorrection.c:73
+#: modules/process/dwtcorrection.c:69
 msgid "2D Discrete Wavelet Transform module"
 msgstr "2D diskrétní waveletová transformace"
 
-#: modules/process/dwtcorrection.c:89
+#: modules/process/dwtcorrection.c:85
 msgid "/_Integral Transforms/DWT C_orrection..."
 msgstr "/_Integrální transformace/DWT K_orekce..."
 
-#: modules/process/dwtcorrection.c:120
+#: modules/process/dwtcorrection.c:116
 msgid "DWT Correction"
 msgstr "DWT korekce"
 
-#: modules/process/dwtcorrection.c:172
+#: modules/process/dwtcorrection.c:168
 msgid "2D DWT Correction"
 msgstr ""
 
-#: modules/process/dwtdenoise.c:86
+#: modules/process/dwtdenoise.c:79
 msgid "2D DWT denoising module"
 msgstr ""
 
-#: modules/process/dwtdenoise.c:102
+#: modules/process/dwtdenoise.c:95
 msgid "/_Integral Transforms/DWT De_noise..."
 msgstr "/_Integrální transformace/DWT odšu_mování..."
 
-#: modules/process/dwtdenoise.c:133 modules/process/dwtdenoise.c:170
+#: modules/process/dwtdenoise.c:126 modules/process/dwtdenoise.c:163
 msgid "DWT Denoise"
 msgstr "DWT odšumování"
 
-#: modules/process/dwtdenoise.c:185
+#: modules/process/dwtdenoise.c:178
 msgid "2D DWT Denoise"
 msgstr "Odšumování pomocí DWT"
 
-#: modules/process/dwtdenoise.c:263
-msgid "Universal"
-msgstr "Univerzální"
-
-#: modules/process/dwtdenoise.c:264
-msgid "Scale adaptive"
-msgstr "Frekvenčně adaptabilní"
-
-#: modules/process/dwtdenoise.c:265
-msgid "Scale and space adaptive"
-msgstr "Frekvenčně a lokálně adaptabilní"
-
-#: modules/process/edge.c:55
+#: modules/process/edge.c:56
 msgid ""
 "Several edge detection methods (Laplacian of Gaussian, Canny, and some "
 "experimental), creates presentation."
@@ -2305,37 +2430,37 @@ msgstr ""
 "Několik metod detekce hran (Laplacián gaussiánů, Canny a další, "
 "experimentální), vytváří presentaci."
 
-#: modules/process/edge.c:72
+#: modules/process/edge.c:73
 msgid "/_Display/_Edge detection/_Laplacian of Gaussian"
 msgstr "/_Zobrazení/Detekce _hran/_Laplacián gaussiánu"
 
-#: modules/process/edge.c:79
+#: modules/process/edge.c:80
 msgid "/_Display/_Edge detection/_Canny"
 msgstr "/_Zobrazení/Detekce _hran/_Canny "
 
-#: modules/process/edge.c:86
+#: modules/process/edge.c:87
 msgid "/_Display/_Edge detection/_RMS"
 msgstr "/_Zobrazení/Detekce _hran/_RMS"
 
-#: modules/process/edge.c:93
+#: modules/process/edge.c:94
 msgid "/_Display/_Edge detection/RMS _Edge"
 msgstr "/_Zobrazení/Detekce _hran/RMS _hrany"
 
-#: modules/process/edge.c:100
+#: modules/process/edge.c:101
 msgid "/_Display/_Edge detection/Local _Nonlinearity"
 msgstr "/_Zobrazení/Detekce _hran/Lokální _nelinearita"
 
-#: modules/process/entropy.c:70
+#: modules/process/entropy.c:71
 msgid ""
 "Calculates two-dimensional distribution of entropys or graph of their "
 "angular distribution."
 msgstr ""
 
-#: modules/process/entropy.c:87
+#: modules/process/entropy.c:88
 msgid "/_Level/_Entropy Level"
 msgstr ""
 
-#: modules/process/facet-level.c:40
+#: modules/process/facet-level.c:41
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
 "point up."
@@ -2343,257 +2468,261 @@ msgstr ""
 "Automatické vyrovnání podle plošek. Vyrovná data tak, aby byly plošky "
 "orientovány vzhůru."
 
-#: modules/process/facet-level.c:57
+#: modules/process/facet-level.c:58
 msgid "/_Level/_Facet Level"
 msgstr "/_Vyrovnání/Vyrovnání podle p_lošek"
 
-#: modules/process/facet-level.c:87
+#: modules/process/facet-level.c:88
 msgid "Facet-levelling"
 msgstr "Vyrovnávám podle plošek"
 
-#: modules/process/facet_analysis.c:128
+#: modules/process/facet_analysis.c:142
 msgid "Visualizes, marks and measures facet orientation."
 msgstr ""
 
-#: modules/process/facet_analysis.c:144
+#: modules/process/facet_analysis.c:158
 msgid "/_Statistics/Facet _Analysis..."
 msgstr ""
 
-#: modules/process/facet_analysis.c:237
+#: modules/process/facet_analysis.c:252
 msgid "Mark Facets"
 msgstr ""
 
-#: modules/process/facet_analysis.c:240
+#: modules/process/facet_analysis.c:255
 msgid "_Mark"
 msgstr ""
 
-#: modules/process/facet_analysis.c:311
-msgid "<b>Inclination</b>"
+#: modules/process/facet_analysis.c:328
+msgid "<b>Normal</b>"
 msgstr ""
 
-#: modules/process/facet_analysis.c:317 modules/process/facet_analysis.c:328
+#: modules/process/facet_analysis.c:334 modules/process/facet_analysis.c:352
 msgid "Theta:"
 msgstr ""
 
-#: modules/process/facet_analysis.c:318 modules/process/facet_analysis.c:329
+#: modules/process/facet_analysis.c:335 modules/process/facet_analysis.c:353
 msgid "Phi:"
 msgstr ""
 
-#: modules/process/facet_analysis.c:322
-msgid "<b>Mean Inclination</b>"
-msgstr ""
-
 #: modules/process/facet_analysis.c:337
-msgid "Tolerance:"
+msgid "_Find Maximum"
 msgstr ""
 
-#: modules/process/facet_analysis.c:346 modules/process/grain_mark.c:284
-#: modules/process/grain_rem_threshold.c:257 modules/process/grain_wshed.c:291
-#: modules/process/scars.c:479
+#: modules/process/facet_analysis.c:346
+msgid "<b>Mean Normal</b>"
+msgstr ""
+
+#: modules/process/facet_analysis.c:361
+msgid "_Tolerance:"
+msgstr ""
+
+#: modules/process/facet_analysis.c:370 modules/process/grain_mark.c:286
+#: modules/process/grain_rem_threshold.c:261 modules/process/grain_wshed.c:292
+#: modules/process/scars.c:478
 msgid "_Mask color:"
 msgstr "Barva _masky"
 
-#: modules/process/facet_analysis.c:355
+#: modules/process/facet_analysis.c:379
 msgid ""
 "Warning: Lateral and value units differ. Angles are not physically "
 "meaningful."
 msgstr ""
 
-#: modules/process/fft.c:101
+#: modules/process/fft.c:93
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "Dvourozměrná FFT (rychlá Fourierova transformace)."
 
-#: modules/process/fft.c:117
+#: modules/process/fft.c:109
 msgid "/_Integral Transforms/_2D FFT..."
 msgstr "/_Integrální transformace/_2D FFT..."
 
-#: modules/process/fft.c:217
+#: modules/process/fft.c:208
 msgid "FFT Real"
 msgstr "Reálná část FFT"
 
-#: modules/process/fft.c:236
+#: modules/process/fft.c:227
 msgid "FFT Imag"
 msgstr "Imaginární část FFT"
 
-#: modules/process/fft.c:247
+#: modules/process/fft.c:238
 msgid "FFT Modulus"
 msgstr "Modul FFT"
 
-#: modules/process/fft.c:265
+#: modules/process/fft.c:256
 msgid "FFT Phase"
 msgstr "Fáze FFT"
 
-#: modules/process/fft.c:312
-msgid "2D FFT"
-msgstr "2D FFT"
-
-#: modules/process/fft.c:344
-msgid "_Windowing type:"
-msgstr "Typ _okénkové funkce:"
-
-#: modules/process/fft.c:431
+#: modules/process/fft.c:299
 msgid "Real + Imaginary"
 msgstr "Reálný + imaginární"
 
-#: modules/process/fft.c:432
+#: modules/process/fft.c:300
 msgid "Module + Phase"
 msgstr "Modul + fáze"
 
-#: modules/process/fft.c:433
+#: modules/process/fft.c:301
 msgid "Real"
 msgstr "Reálný"
 
-#: modules/process/fft.c:434
+#: modules/process/fft.c:302
 msgid "Imaginary"
 msgstr "Imaginární"
 
-#: modules/process/fft.c:436
+#: modules/process/fft.c:304
 msgid "Phase"
 msgstr "Fáze"
 
-#: modules/process/fft_filter_1d.c:126
+#: modules/process/fft.c:311
+msgid "2D FFT"
+msgstr "2D FFT"
+
+#: modules/process/fft.c:345
+msgid "_Windowing type:"
+msgstr "Typ _okénkové funkce:"
+
+#: modules/process/fft_filter_1d.c:120
 msgid "FFT filtering"
 msgstr "Filtrování pomocí FFT"
 
-#: modules/process/fft_filter_1d.c:146
+#: modules/process/fft_filter_1d.c:140
 msgid "/_Correct Data/1D _FFT filtering..."
 msgstr "/_Korekce dat/1D _FFT filtrování..."
 
-#: modules/process/fft_filter_1d.c:193
-msgid "1D FFT filter"
-msgstr "1D FFT filtr"
-
-#: modules/process/fft_filter_1d.c:194
-msgid "_Run"
-msgstr "_Filtrovat"
-
-#: modules/process/fft_filter_1d.c:195
-msgid "_Restore PS"
-msgstr "Obnovit spekt_rum"
-
-#: modules/process/fft_filter_1d.c:282
-msgid "<b>Power spectrum (select areas by mouse):</b>"
-msgstr "<b>Spektrum (vyberte oblasti myší)</b>"
-
-#: modules/process/fft_filter_1d.c:302
-msgid "<b>Settings:</b>"
-msgstr "Nastavení"
-
-#: modules/process/fft_filter_1d.c:308
-msgid "Suppress type:"
-msgstr "Typ potlačení"
-
-#: modules/process/fft_filter_1d.c:321 modules/process/fit_2d.c:291
-msgid "Preview type:"
-msgstr "Typ náhledu"
-
-#: modules/process/fft_filter_1d.c:347 modules/tools/filter.c:239
-msgid "_Direction:"
-msgstr "S_měr:"
-
-#: modules/process/fft_filter_1d.c:351
-msgid "_Update dynamically"
-msgstr "_Dynamicky obnovovat"
-
-#: modules/process/fft_filter_1d.c:566
-msgid "Filtered data"
-msgstr "Filtrovaná data"
-
-#: modules/process/fft_filter_1d.c:576
-msgid "Null"
-msgstr "nulovat"
-
-#: modules/process/fft_filter_1d.c:577
-msgid "Suppress"
-msgstr "potlačit"
-
-#: modules/process/fft_filter_1d.c:589
+#: modules/process/fft_filter_1d.c:177
 msgid "Marked"
 msgstr "označené"
 
-#: modules/process/fft_filter_1d.c:590
+#: modules/process/fft_filter_1d.c:178
 msgid "Unmarked"
 msgstr "neoznačené"
 
-#: modules/process/fit_2d.c:150
+#: modules/process/fft_filter_1d.c:181
+msgid "Null"
+msgstr "nulovat"
+
+#: modules/process/fft_filter_1d.c:182
+msgid "Suppress"
+msgstr "potlačit"
+
+#: modules/process/fft_filter_1d.c:195
+msgid "1D FFT filter"
+msgstr "1D FFT filtr"
+
+#: modules/process/fft_filter_1d.c:196
+msgid "_Run"
+msgstr "_Filtrovat"
+
+#: modules/process/fft_filter_1d.c:197
+msgid "_Restore PS"
+msgstr "Obnovit spekt_rum"
+
+#: modules/process/fft_filter_1d.c:285
+msgid "<b>Power spectrum (select areas by mouse):</b>"
+msgstr "<b>Spektrum (vyberte oblasti myší)</b>"
+
+#: modules/process/fft_filter_1d.c:305
+msgid "<b>Settings:</b>"
+msgstr "Nastavení"
+
+#: modules/process/fft_filter_1d.c:311
+msgid "Suppress type:"
+msgstr "Typ potlačení"
+
+#: modules/process/fft_filter_1d.c:325 modules/process/fit_2d.c:297
+msgid "Preview type:"
+msgstr "Typ náhledu"
+
+#: modules/process/fft_filter_1d.c:353 modules/tools/filter.c:245
+msgid "_Direction:"
+msgstr "S_měr:"
+
+#: modules/process/fft_filter_1d.c:357
+msgid "_Update dynamically"
+msgstr "_Dynamicky obnovovat"
+
+#: modules/process/fft_filter_1d.c:569
+msgid "Filtered data"
+msgstr "Filtrovaná data"
+
+#: modules/process/fit_2d.c:156
 msgid "2D fitting"
 msgstr "2D fitování"
 
-#: modules/process/fit_2d.c:169
+#: modules/process/fit_2d.c:175
 msgid "/_Level/_Fit Sphere..."
 msgstr "/_Vyrovnání/Proložit s_féru..."
 
-#: modules/process/fit_2d.c:219
+#: modules/process/fit_2d.c:225
 msgid "Fit sphere"
 msgstr "Proložení sféry"
 
-#: modules/process/fit_2d.c:221
+#: modules/process/fit_2d.c:227
 msgid "_Guess"
 msgstr "_Provést odhad"
 
-#: modules/process/fit_2d.c:278
+#: modules/process/fit_2d.c:284
 msgid "Function type:"
 msgstr "Typ funkce"
 
-#: modules/process/fit_2d.c:605 modules/process/grain_wshed.c:530
-#: modules/process/tip_blind.c:495 modules/process/tip_map.c:258
-#: modules/process/tip_reconstruction.c:263
+#: modules/process/fit_2d.c:611 modules/process/grain_wshed.c:533
+#: modules/process/tip_blind.c:496 modules/process/tip_map.c:259
+#: modules/process/tip_reconstruction.c:264
 msgid "Initializing"
 msgstr "Inicializace"
 
-#: modules/process/fit_2d.c:624
+#: modules/process/fit_2d.c:630
 msgid "Fitting"
 msgstr "Fitovat"
 
-#: modules/process/fit_2d.c:701
+#: modules/process/fit_2d.c:708
 msgid "Data"
 msgstr "Data"
 
-#: modules/process/fit_2d.c:702
+#: modules/process/fit_2d.c:709
 msgid "Fit result"
 msgstr "Výsledek fitování"
 
-#: modules/process/fit_2d.c:703
+#: modules/process/fit_2d.c:710
 msgid "Difference"
 msgstr "Rozdíl"
 
-#: modules/process/fit_2d.c:715
+#: modules/process/fit_2d.c:722
 msgid "Sphere (up)"
 msgstr "Koule (horní část)"
 
-#: modules/process/fit_2d.c:716
+#: modules/process/fit_2d.c:723
 msgid "Sphere (down)"
 msgstr "Koule (dolní část)"
 
-#: modules/process/fit_2d.c:1141
+#: modules/process/fit_2d.c:1146
 msgid "Fitted function: sphere\n"
 msgstr "Fitovaná funkce: koule\n"
 
-#: modules/process/fraccor.c:45
+#: modules/process/fraccor.c:46
 msgid "Removes data under mask using fractal interpolation."
 msgstr "Odstraňuje data pod maskou pomocí fraktální interpolace."
 
-#: modules/process/fraccor.c:61
+#: modules/process/fraccor.c:62
 msgid "/_Correct Data/_Fractal correction"
 msgstr "/_Korekce dat/_Fraktální korekce"
 
-#: modules/process/fractal.c:125
+#: modules/process/fractal.c:123
 msgid "Partitioning"
 msgstr "Partitioning"
 
-#: modules/process/fractal.c:126
+#: modules/process/fractal.c:124
 msgid "Cube counting"
 msgstr "Cube counting"
 
-#: modules/process/fractal.c:127
+#: modules/process/fractal.c:125
 msgid "Triangulation"
 msgstr "Triangulace"
 
-#: modules/process/fractal.c:128
+#: modules/process/fractal.c:126
 msgid "Power spectrum"
 msgstr "Spektrální hustota"
 
-#: modules/process/fractal.c:149
+#: modules/process/fractal.c:147
 msgid ""
 "Calculates fractal dimension using several methods (partitioning, box "
 "counting, triangulation, power spectrum)."
@@ -2601,77 +2730,77 @@ msgstr ""
 "Počítá fraktální dimenzi několika metodami (rozdělování, počítání boxů, "
 "triangulace, ze spektrální hustoty)."
 
-#: modules/process/fractal.c:166
+#: modules/process/fractal.c:164
 msgid "/_Statistics/_Fractal Dimension..."
 msgstr "/_Statistika/_Fraktální dimenze..."
 
-#: modules/process/fractal.c:210
+#: modules/process/fractal.c:208
 msgid "Fractal Dimension"
 msgstr "Fraktální dimenze"
 
-#: modules/process/fractal.c:211
+#: modules/process/fractal.c:209
 msgid "Reco_mpute"
 msgstr "Pře_počítat"
 
-#: modules/process/fractal.c:271
+#: modules/process/fractal.c:269
 msgid "From:"
 msgstr "Od:"
 
-#: modules/process/fractal.c:271 modules/process/fractal.c:512
-#: modules/process/fractal.c:540
+#: modules/process/fractal.c:269 modules/process/fractal.c:513
+#: modules/process/fractal.c:541
 msgid "minimum"
 msgstr "minimum"
 
-#: modules/process/fractal.c:274
+#: modules/process/fractal.c:272
 msgid "To:"
 msgstr "Do:"
 
-#: modules/process/fractal.c:274 modules/process/fractal.c:513
-#: modules/process/fractal.c:541
+#: modules/process/fractal.c:272 modules/process/fractal.c:514
+#: modules/process/fractal.c:542
 msgid "maximum"
 msgstr "maximum"
 
-#: modules/process/fractal.c:471
+#: modules/process/fractal.c:472
 msgid "Linear fit"
 msgstr "Proložená přímka"
 
-#: modules/process/gradient.c:44
+#: modules/process/gradient.c:45
 msgid "Creates presentations with various gradients (Sobel, Prewitt)."
 msgstr "Vytváří presentace s různými gradienty (Sobel, Prewitt)."
 
-#: modules/process/gradient.c:61
+#: modules/process/gradient.c:62
 msgid "/_Display/_Gradient/_Sobel (horizontal)"
 msgstr "/_Zobrazení/_Gradient/_Sobel (vodorovný)"
 
-#: modules/process/gradient.c:68
+#: modules/process/gradient.c:69
 msgid "/_Display/_Gradient/_Sobel (vertical)"
 msgstr "/_Zobrazení/_Gradient/_Sobel (svislý)"
 
-#: modules/process/gradient.c:76
+#: modules/process/gradient.c:77
 msgid "/_Display/_Gradient/_Prewitt (horizontal)"
 msgstr "/_Zobrazení/_Gradient/_Prewitt (vodorovný)"
 
-#: modules/process/gradient.c:83
+#: modules/process/gradient.c:84
 msgid "/_Display/_Gradient/_Prewitt (vertical)"
 msgstr "/_Zobrazení/_Gradient/_Prewitt (svislý)"
 
-#: modules/process/grain_dist.c:41
+#: modules/process/grain_dist.c:42
 msgid "Evaluates distribution of grains (continuous parts of mask)."
 msgstr "Počítá rozdělení zrn (spojitých částí masky)."
 
-#: modules/process/grain_dist.c:57
+#: modules/process/grain_dist.c:58
 msgid "/_Grains/_Size Distribution"
 msgstr "/_Zrna/Rozdělení velikostí"
 
-#: modules/process/grain_dist.c:92
-msgid "Grain size histogram"
-msgstr "Histogram rozdělení velikostí zrn"
+#: modules/process/grain_dist.c:90
+msgid "Grain Size Histogram"
+msgstr ""
 
-#: modules/process/grain_mark.c:120
+#: modules/process/grain_mark.c:121
 msgid "Marks grains by thresholding (height, slope, curvature)."
 msgstr "Označuje zrna podle prahu (výšky, sklonu, křivosti)."
 
-#: modules/process/grain_mark.c:136
+#: modules/process/grain_mark.c:137
 msgid "/_Grains/_Mark by Threshold..."
 msgstr "/_Zrna/_Označit zrna..."
 
@@ -2679,12 +2808,12 @@ msgstr "/_Zrna/_Označit zrna..."
 msgid "Mark Grains by Threshold"
 msgstr "Vyznačení zrn podle prahu"
 
-#: modules/process/grain_mark.c:202 modules/process/grain_rem_threshold.c:173
-#: modules/process/grain_wshed.c:176 modules/process/tip_model.c:178
+#: modules/process/grain_mark.c:202 modules/process/grain_rem_threshold.c:174
+#: modules/process/grain_wshed.c:177 modules/process/tip_model.c:178
 msgid "_Update Preview"
 msgstr "A_ktualizuj náhled"
 
-#: modules/process/grain_mark.c:238 modules/process/grain_rem_threshold.c:209
+#: modules/process/grain_mark.c:238 modules/process/grain_rem_threshold.c:210
 msgid "<b>Threshold By</b>"
 msgstr "<b>Označit podle prahu</b>"
 
@@ -2696,30 +2825,30 @@ msgstr "_Sklon:"
 msgid "_Curvature:"
 msgstr "_Křivost:"
 
-#: modules/process/grain_mark.c:258 modules/process/grain_rem_threshold.c:234
-#: modules/process/grain_wshed.c:271 modules/tools/profile.c:248
-#: modules/tools/sfunctions.c:195
+#: modules/process/grain_mark.c:258 modules/process/grain_rem_threshold.c:235
+#: modules/process/grain_wshed.c:272 modules/tools/profile.c:262
+#: modules/tools/sfunctions.c:220
 msgid "<b>Options</b>"
 msgstr "<b>Volby</b>"
 
-#: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:240
-#: modules/process/grain_wshed.c:277
+#: modules/process/grain_mark.c:264 modules/process/grain_rem_threshold.c:241
+#: modules/process/grain_wshed.c:278
 msgid "_Invert height"
 msgstr "_Invertovat výšku"
 
-#: modules/process/grain_mark.c:275
+#: modules/process/grain_mark.c:277
 msgid "Mer_ge mode:"
 msgstr "Spo_jení kritérií:"
 
-#: modules/process/grain_rem_threshold.c:103
+#: modules/process/grain_rem_threshold.c:104
 msgid "Removes grains by thresholding (height, size)."
 msgstr "Odstraňuje zrna podle prahu (výšky, velikosti)."
 
-#: modules/process/grain_rem_threshold.c:119
+#: modules/process/grain_rem_threshold.c:120
 msgid "/_Grains/_Remove by Threshold..."
 msgstr "/_Zrna/Odstranit podle velikosti..."
 
-#: modules/process/grain_rem_threshold.c:171
+#: modules/process/grain_rem_threshold.c:172
 msgid "Remove Grains by Threshold"
 msgstr "Odstranění zrn podle prahu"
 
@@ -2727,72 +2856,72 @@ msgstr "Odstranění zrn podle prahu"
 msgid "_Area:"
 msgstr "_Plocha:"
 
-#: modules/process/grain_rem_threshold.c:248
+#: modules/process/grain_rem_threshold.c:252
 msgid "_Selection mode:"
 msgstr "Způsob výběru:"
 
-#: modules/process/grain_wshed.c:110
+#: modules/process/grain_wshed.c:111
 msgid "Marks grains by watershed algorithm."
 msgstr "Označuje zrna metodou stékání."
 
-#: modules/process/grain_wshed.c:126
+#: modules/process/grain_wshed.c:127
 msgid "/_Grains/Mark by _Watershed..."
 msgstr "/_Zrna/Označit metodou _stékání..."
 
-#: modules/process/grain_wshed.c:174
+#: modules/process/grain_wshed.c:175
 msgid "Mark Grains by Watershed"
 msgstr "Vyznačení zrn stékáním"
 
-#: modules/process/grain_wshed.c:213
+#: modules/process/grain_wshed.c:214
 msgid "<b>Grain Location</b>"
 msgstr "<b>Hledání pozic zrn</b>"
 
-#: modules/process/grain_wshed.c:229
+#: modules/process/grain_wshed.c:230
 msgid "_Drop size:"
 msgstr "Velikost ka_pky:"
 
-#: modules/process/grain_wshed.c:246
+#: modules/process/grain_wshed.c:247
 msgid "<b>Segmentation</b>"
 msgstr "<b>Segmentace</b>"
 
-#: modules/process/grain_wshed.c:254
+#: modules/process/grain_wshed.c:255
 msgid "Num_ber of steps:"
 msgstr "Počet _kroků:"
 
-#: modules/process/grain_wshed.c:262
+#: modules/process/grain_wshed.c:263
 msgid "Dr_op size:"
 msgstr "Velikost k_apky:"
 
-#: modules/process/grain_wshed.c:542
+#: modules/process/grain_wshed.c:545
 msgid "Finding minima"
 msgstr "Hledám minima"
 
-#: modules/process/grain_wshed.c:548
+#: modules/process/grain_wshed.c:551
 msgid "Locating"
 msgstr "Lokalizuji"
 
-#: modules/process/grain_wshed.c:555
+#: modules/process/grain_wshed.c:558
 msgid "Watershed"
 msgstr "Watershed"
 
-#: modules/process/grain_wshed.c:561
+#: modules/process/grain_wshed.c:564
 msgid "Marking boundaries"
 msgstr "Označuji hranice"
 
-#: modules/process/laplace.c:45
+#: modules/process/laplace.c:46
 msgid ""
 "Removes data under mask, interpolating them with Laplace equation solution."
 msgstr "Odstraňuje data pod maskou, interpoluje je řešním Laplaceovy rovnice."
 
-#: modules/process/laplace.c:62
+#: modules/process/laplace.c:63
 msgid "/_Correct Data/_Remove Data Under Mask"
 msgstr "/_Korekce dat/_Odstranit data pod maskou"
 
-#: modules/process/laplace.c:97
+#: modules/process/laplace.c:98
 msgid "Laplace correction"
 msgstr "Laplaceovská korekce"
 
-#: modules/process/level.c:45
+#: modules/process/level.c:46
 msgid ""
 "Levels data by simple plane subtraction or by rotation, and fixes minimal or "
 "mean value to zero."
@@ -2800,105 +2929,105 @@ msgstr ""
 "Vyrovnává data data jednoduchým odečtením roviny nebo rotací, srovnává "
 "minimální či střední hodnotu na nulu."
 
-#: modules/process/level.c:62
+#: modules/process/level.c:63
 msgid "/_Level/_Level"
 msgstr "/_Vyrovnání/_Vyrovnání"
 
-#: modules/process/level.c:69
+#: modules/process/level.c:70
 msgid "/_Level/Level _Rotate"
 msgstr "/_Vyrovnání/Vyrovnání _rotací"
 
-#: modules/process/level.c:76
+#: modules/process/level.c:77
 msgid "/_Level/Fix _Zero"
 msgstr "/_Vyrovnání/Oprava _nuly"
 
-#: modules/process/level.c:83
+#: modules/process/level.c:84
 msgid "/_Level/Zero _Mean Value"
 msgstr "/_Vyrovnání/Vynulování _střední hodnoty"
 
-#: modules/process/linecorrect.c:57
+#: modules/process/linecorrect.c:59
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Opravuje řádkové defekty (převážně experimentální algoritmy)."
 
-#: modules/process/linecorrect.c:73
+#: modules/process/linecorrect.c:75
 msgid "/_Correct Data/M_odus Line Correction"
 msgstr "/_Korekce dat/M_odusová korekce řádků"
 
-#: modules/process/linecorrect.c:80
+#: modules/process/linecorrect.c:82
 msgid "/_Correct Data/M_edian Line Correction"
 msgstr "/_Korekce dat/M_ediánová korekce řádků"
 
-#: modules/process/local_contrast.c:77
+#: modules/process/local_contrast.c:78
 msgid "Maximizes local contrast."
 msgstr "Maximalizuje lokální kontrast."
 
-#: modules/process/local_contrast.c:93
+#: modules/process/local_contrast.c:94
 msgid "/_Display/_Local Contrast..."
 msgstr "/_Zobrazení/_Lokální kontrast..."
 
-#: modules/process/local_contrast.c:134
+#: modules/process/local_contrast.c:135
 msgid "Increase Local Contrast"
 msgstr "Zvětšení lokálního kontrastu"
 
-#: modules/process/local_contrast.c:151
+#: modules/process/local_contrast.c:152
 msgid "Kernel _size:"
 msgstr "_Velikost jádra:"
 
-#: modules/process/local_contrast.c:155
+#: modules/process/local_contrast.c:156
 msgid "Blending _depth:"
 msgstr "Rozsah _mísení:"
 
-#: modules/process/local_contrast.c:159
+#: modules/process/local_contrast.c:160
 msgid "_Weight:"
 msgstr "Vá_ha:"
 
-#: modules/process/mask_grow_shrink.c:70
+#: modules/process/mask_grow_shrink.c:71
 msgid "Grows and shrinks masks."
 msgstr "Rozšiřuje a zmenšuje masky."
 
-#: modules/process/mask_grow_shrink.c:86
+#: modules/process/mask_grow_shrink.c:87
 msgid "/_Mask/_Grow Mask..."
 msgstr "/_Maska/_Rozšířit masku..."
 
-#: modules/process/mask_grow_shrink.c:93
+#: modules/process/mask_grow_shrink.c:94
 msgid "/_Mask/_Shrink Mask..."
 msgstr "/_Maska/_Zúžit masku..."
 
-#: modules/process/mask_grow_shrink.c:117
+#: modules/process/mask_grow_shrink.c:118
 msgid "Grow Mask"
 msgstr "Rozšíření masky"
 
-#: modules/process/mask_grow_shrink.c:118
+#: modules/process/mask_grow_shrink.c:119
 msgid "Grow mask by:"
 msgstr "Rozšířit masku o:"
 
-#: modules/process/mask_grow_shrink.c:123
+#: modules/process/mask_grow_shrink.c:124
 msgid "Shrink Mask"
 msgstr "Zúžení masky"
 
-#: modules/process/mask_grow_shrink.c:124
+#: modules/process/mask_grow_shrink.c:125
 msgid "Shrink mask by:"
 msgstr "Zúžit masku o:"
 
-#: modules/process/maskcor.c:69
-msgid "Objects marked"
-msgstr "Vyznačené objekty"
-
-#: modules/process/maskcor.c:70
-msgid "Correlation maxima"
-msgstr "Maxima korelace"
-
-#: modules/process/maskcor.c:71
-msgid "Correlation score"
-msgstr "Výsledek korelace"
-
-#: modules/process/maskcor.c:82
+#: modules/process/maskcor.c:77
 msgid "Creates mask by correlation with another data."
 msgstr "Vytváří masku z korelace s jinými daty."
 
-#: modules/process/maskcor.c:98
+#: modules/process/maskcor.c:93
 msgid "/M_ultidata/_Mask by Correlation..."
 msgstr "/M_ultidata/_Maska pomocí korelace..."
+
+#: modules/process/maskcor.c:152
+msgid "Objects marked"
+msgstr "Vyznačené objekty"
+
+#: modules/process/maskcor.c:153
+msgid "Correlation maxima"
+msgstr "Maxima korelace"
+
+#: modules/process/maskcor.c:154
+msgid "Correlation score"
+msgstr "Výsledek korelace"
 
 #: modules/process/maskcor.c:161
 msgid "Mask by Correlation"
@@ -2912,394 +3041,422 @@ msgstr "Změnit _data:"
 msgid "_Correlation kernel:"
 msgstr "_Jádro korelace:"
 
-#: modules/process/maskops.c:41
+#: modules/process/maskops.c:42
 msgid "Basic operations with mask: inversion, removal, extraction."
 msgstr "Základní operace s maskou: inverze, odstranění, extrakce."
 
-#: modules/process/maskops.c:57
+#: modules/process/maskops.c:58
 msgid "/_Mask/_Remove Mask"
 msgstr "/_Maska/Odstranit _masku"
 
-#: modules/process/maskops.c:64
+#: modules/process/maskops.c:65
 msgid "/_Mask/_Invert Mask"
 msgstr "/_Maska/_Invertovat masku"
 
-#: modules/process/maskops.c:71
+#: modules/process/maskops.c:72
 msgid "/_Mask/_Extract Mask"
 msgstr "/_Maska/_Extrahovat masku"
 
-#: modules/process/median-bg.c:85
+#: modules/process/median-bg.c:86
 msgid "Subtracts background using a rank-based algorithm."
 msgstr "Odečítá pozadí kvantilovou metodou."
 
-#: modules/process/median-bg.c:101
+#: modules/process/median-bg.c:102
 msgid "/_Level/_Median Level..."
 msgstr "/_Vyrovnání/_Mediánové vyrovnání..."
 
-#: modules/process/median-bg.c:148
+#: modules/process/median-bg.c:149
 msgid "Median-leveling"
 msgstr "Mediánové vyrovnání"
 
-#: modules/process/median-bg.c:184
+#: modules/process/median-bg.c:185
 msgid "Median Level"
 msgstr "Mediánové vyrovnání"
 
-#: modules/process/median-bg.c:203 modules/process/sphere-revolve.c:239
+#: modules/process/median-bg.c:204 modules/process/sphere-revolve.c:240
 msgid "Real _radius:"
 msgstr "_Skutečný poloměr:"
 
-#: modules/process/median-bg.c:213 modules/process/sphere-revolve.c:249
+#: modules/process/median-bg.c:214 modules/process/sphere-revolve.c:250
 msgid "_Pixel radius:"
 msgstr "Poloměr v _pixelech:"
 
-#: modules/process/median-bg.c:221 modules/process/polylevel.c:234
-#: modules/process/sphere-revolve.c:270
+#: modules/process/median-bg.c:222 modules/process/polylevel.c:237
+#: modules/process/sphere-revolve.c:271
 msgid "E_xtract background"
 msgstr "_Extrahovat pozadí"
 
-#: modules/process/nanoindent_adjust.c:95
+#: modules/process/nanoindent_adjust.c:96
 msgid "Adjust images of two indentor prints."
 msgstr "Srovnat dva obrázky vtisků indentoru"
 
-#: modules/process/nanoindent_adjust.c:111
+#: modules/process/nanoindent_adjust.c:112
 msgid "/Indento_r/Ad_just..."
 msgstr "/Indento_r/Srovnat..."
 
-#: modules/process/nanoindent_adjust.c:177
+#: modules/process/nanoindent_adjust.c:178
 msgid "Imprints adjustment"
 msgstr "Srovnání vtisků"
 
-#: modules/process/nanoindent_adjust.c:192
+#: modules/process/nanoindent_adjust.c:193
 msgid "_Indentor model imprint:"
 msgstr "Modelování vtisku indentoru"
 
-#: modules/process/nanoindent_adjust.c:203
+#: modules/process/nanoindent_adjust.c:204
 msgid "Imprint to be _adjusted:"
 msgstr ""
 
-#: modules/process/nanoindent_adjust.c:214
+#: modules/process/nanoindent_adjust.c:215
 msgid "_Move data"
 msgstr "_Posunout data"
 
-#: modules/process/nanoindent_adjust.c:223
+#: modules/process/nanoindent_adjust.c:224
 msgid "_Rotate data"
 msgstr "_Otočit data"
 
-#: modules/process/nanoindent_adjust.c:232
+#: modules/process/nanoindent_adjust.c:233
 msgid "E_xtrapolate result data out of measured range"
 msgstr "E_xtrapolovat chybějící data na okrajích"
 
-#: modules/process/nanoindent_adjust.c:311 modules/process/tip_dilation.c:229
-#: modules/process/tip_map.c:231 modules/process/tip_reconstruction.c:229
+#: modules/process/nanoindent_adjust.c:313 modules/process/tip_dilation.c:230
+#: modules/process/tip_map.c:232 modules/process/tip_reconstruction.c:230
 msgid ""
 "Tip has different range/resolution ratio than image. Tip will be resampled."
 msgstr "Hrot má jiný poměr rozlišení ku reálné velikosti. Bude převzorkován."
 
-#: modules/process/nanoindent_analyze.c:230
+#: modules/process/nanoindent_analyze.c:256
 msgid "Do nothing"
 msgstr "Nedělat nic"
 
-#: modules/process/nanoindent_analyze.c:231
+#: modules/process/nanoindent_analyze.c:257
 msgid "Plane level"
 msgstr "Proložit rovinu"
 
-#: modules/process/nanoindent_analyze.c:232
+#: modules/process/nanoindent_analyze.c:258
 msgid "Plane rotate"
 msgstr "Rotovat rovinu"
 
-#: modules/process/nanoindent_analyze.c:245
+#: modules/process/nanoindent_analyze.c:262
 msgid "New"
 msgstr "Nový"
 
-#: modules/process/nanoindent_analyze.c:246
+#: modules/process/nanoindent_analyze.c:263
 msgid "AND"
 msgstr "A"
 
-#: modules/process/nanoindent_analyze.c:247
+#: modules/process/nanoindent_analyze.c:264
 msgid "OR"
 msgstr "Nebo"
 
-#: modules/process/nanoindent_analyze.c:248
+#: modules/process/nanoindent_analyze.c:265
 msgid "NOT"
 msgstr "Negace"
 
-#: modules/process/nanoindent_analyze.c:249
+#: modules/process/nanoindent_analyze.c:266
 msgid "XOR"
 msgstr "Xor"
 
-#: modules/process/nanoindent_analyze.c:266
+#: modules/process/nanoindent_analyze.c:270
 msgid "Nothing"
 msgstr "Nic"
 
-#: modules/process/nanoindent_analyze.c:267
+#: modules/process/nanoindent_analyze.c:271
 msgid "Above"
 msgstr "Objem nad"
 
-#: modules/process/nanoindent_analyze.c:268
+#: modules/process/nanoindent_analyze.c:272
 msgid "Bellow"
 msgstr "Objem pod"
 
-#: modules/process/nanoindent_analyze.c:269
+#: modules/process/nanoindent_analyze.c:273
 msgid "Plane"
 msgstr "Rovinu"
 
-#: modules/process/nanoindent_analyze.c:270
+#: modules/process/nanoindent_analyze.c:274
 msgid "Impression"
 msgstr "Vtisk"
 
-#: modules/process/nanoindent_analyze.c:271
+#: modules/process/nanoindent_analyze.c:275
 msgid "Inner Pile-up"
 msgstr "Vnitřní část vytlačení"
 
-#: modules/process/nanoindent_analyze.c:272
+#: modules/process/nanoindent_analyze.c:276
 msgid "Outer Pile-up"
 msgstr "Vnější část vytlačení"
 
-#: modules/process/nanoindent_analyze.c:273
+#: modules/process/nanoindent_analyze.c:277
 msgid "Special points"
 msgstr "Speciální body"
 
-#: modules/process/nanoindent_analyze.c:274
+#: modules/process/nanoindent_analyze.c:278
 msgid "Faces border"
 msgstr "Rozhraní stěn"
 
+#: modules/process/nanoindent_analyze.c:282
+msgid "Vickers"
+msgstr ""
+
+#: modules/process/nanoindent_analyze.c:283
+msgid "Berkovich"
+msgstr ""
+
 #: modules/process/nanoindent_analyze.c:284
+msgid "Berkovich (modified)"
+msgstr "Berkovich (modifikovaný)"
+
+#: modules/process/nanoindent_analyze.c:285
+msgid "Knoop"
+msgstr ""
+
+#: modules/process/nanoindent_analyze.c:286
+msgid "Brinell"
+msgstr ""
+
+#: modules/process/nanoindent_analyze.c:287
+msgid "Cube corner"
+msgstr "Vrchol krychle"
+
+#: modules/process/nanoindent_analyze.c:288
+msgid "Rockwell"
+msgstr ""
+
+#: modules/process/nanoindent_analyze.c:295
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)"
 msgstr "Analýza vtisků indentoru"
 
-#: modules/process/nanoindent_analyze.c:300
+#: modules/process/nanoindent_analyze.c:311
 msgid "/Indento_r/_Analyze..."
 msgstr "/Indento_r/_Analyzovat..."
 
-#: modules/process/nanoindent_analyze.c:360
+#: modules/process/nanoindent_analyze.c:371
 msgid "Indentaion statistics"
 msgstr "Statistika"
 
-#: modules/process/nanoindent_analyze.c:361
+#: modules/process/nanoindent_analyze.c:372
 msgid "_Compute & mark"
 msgstr "Počítat a označit"
 
-#: modules/process/nanoindent_analyze.c:362
+#: modules/process/nanoindent_analyze.c:373
 msgid "_Save statistics"
 msgstr "Uložit _statistiku"
 
-#: modules/process/nanoindent_analyze.c:402
+#: modules/process/nanoindent_analyze.c:414
 msgid "Data field leveling:"
 msgstr "Proložení dat:"
 
-#: modules/process/nanoindent_analyze.c:411
+#: modules/process/nanoindent_analyze.c:422
 msgid "Marked areas:"
 msgstr "Označené plochy:"
 
-#: modules/process/nanoindent_analyze.c:418
+#: modules/process/nanoindent_analyze.c:430
 msgid "Indentor type:"
 msgstr "Typ indentoru"
 
-#: modules/process/nanoindent_analyze.c:426
+#: modules/process/nanoindent_analyze.c:437
 msgid "Mask creation type:"
 msgstr "Vytvoření masky:"
 
-#: modules/process/nanoindent_analyze.c:431
+#: modules/process/nanoindent_analyze.c:443
 msgid "Ref. plane tolerance:"
 msgstr "Tolerance ref. roviny:"
 
-#: modules/process/nanoindent_analyze.c:436
+#: modules/process/nanoindent_analyze.c:448
 msgid "Angle 1 tolerance:"
 msgstr "Úhlová tolerance:"
 
-#: modules/process/nanoindent_analyze.c:441
+#: modules/process/nanoindent_analyze.c:453
 msgid "Theta range:"
 msgstr "Rozsah úhlu theta:"
 
-#: modules/process/nanoindent_analyze.c:458
+#: modules/process/nanoindent_analyze.c:470
 msgid "Indent centre at"
 msgstr "Střed vtisku v bodě"
 
-#: modules/process/nanoindent_analyze.c:461
+#: modules/process/nanoindent_analyze.c:473
 msgid "Maximum at"
 msgstr "Maimumv bodě"
 
-#: modules/process/nanoindent_analyze.c:464
+#: modules/process/nanoindent_analyze.c:476
 msgid "Max-min diference"
 msgstr "Z-ový rozsah"
 
-#: modules/process/nanoindent_analyze.c:472
+#: modules/process/nanoindent_analyze.c:484
 msgid "Expected A_d:"
 msgstr "Očekávané A_d:"
 
-#: modules/process/nanoindent_analyze.c:475
+#: modules/process/nanoindent_analyze.c:487
 msgid "Expected A_p:"
 msgstr "Očekávané A_p:"
 
-#: modules/process/nanoindent_analyze.c:516
+#: modules/process/nanoindent_analyze.c:528
 msgid "Volume above-below"
 msgstr "Objem nad-pod"
 
-#: modules/process/nanoindent_analyze.c:526
+#: modules/process/nanoindent_analyze.c:538
 msgid "Indent. volume"
 msgstr "Objem vtisku"
 
-#: modules/process/nanoindent_analyze.c:532
+#: modules/process/nanoindent_analyze.c:544
 msgid "Indent. A_d"
 msgstr "A_d vtisku"
 
-#: modules/process/nanoindent_analyze.c:535
+#: modules/process/nanoindent_analyze.c:547
 msgid "Indent. A_p"
 msgstr "A_p vtisku"
 
-#: modules/process/nanoindent_analyze.c:544
+#: modules/process/nanoindent_analyze.c:556
 msgid "Inner Pile-Up A_d"
 msgstr "A_d vnitřní části vytlačení"
 
-#: modules/process/nanoindent_analyze.c:547
+#: modules/process/nanoindent_analyze.c:559
 msgid "Inner Pile-Up A_p"
 msgstr "A_p vnitřní části vytlačení"
 
-#: modules/process/nanoindent_analyze.c:550
+#: modules/process/nanoindent_analyze.c:562
 msgid "Outer Pile-Up A_d"
 msgstr "A_d vnější části vytlačení"
 
-#: modules/process/nanoindent_analyze.c:553
+#: modules/process/nanoindent_analyze.c:565
 msgid "Outer Pile-Up A_p"
 msgstr "A_p vnější části vytlačení"
 
-#: modules/process/outliers.c:43
+#: modules/process/outliers.c:44
 msgid "Creates mask of outliers."
 msgstr "Vytváří masku z vybočujících hodnot."
 
-#: modules/process/outliers.c:59
+#: modules/process/outliers.c:60
 msgid "/_Correct Data/_Mask of Outliers"
 msgstr "/_Korekce dat/Maska vybočujících hodnot"
 
-#: modules/process/polylevel.c:86
+#: modules/process/polylevel.c:87
 msgid "Subtracts polynomial background."
 msgstr "Odečítá polynomiální pozadí."
 
-#: modules/process/polylevel.c:102
+#: modules/process/polylevel.c:103
 msgid "/_Level/_Polynomial Background..."
 msgstr "/_Vyrovnání/_Polynomiální pozadí..."
 
-#: modules/process/polylevel.c:176
+#: modules/process/polylevel.c:179
 msgid "Background"
 msgstr "Pozadí"
 
-#: modules/process/polylevel.c:190
+#: modules/process/polylevel.c:193
 msgid "Remove Polynomial Background"
 msgstr "Odstranění polynomiálního pozadí"
 
-#: modules/process/polylevel.c:209
+#: modules/process/polylevel.c:212
 msgid "_Horizontal polynom degree:"
 msgstr "Stupeň _vodorovného polynomu:"
 
-#: modules/process/polylevel.c:217
+#: modules/process/polylevel.c:220
 msgid "_Vertical polynom degree:"
 msgstr "Stupeň _svislého polynomu:"
 
-#: modules/process/polylevel.c:223
+#: modules/process/polylevel.c:226
 msgid "_Same degrees"
 msgstr "S_tejné stupně"
 
-#: modules/process/presentationops.c:49
+#: modules/process/presentationops.c:50
 msgid "Basic operations with presentation: extraction, removal."
 msgstr "Základní operace s presentacemi: extrakce, odstranění."
 
-#: modules/process/presentationops.c:65
+#: modules/process/presentationops.c:66
 msgid "/_Display/_Remove Presentation"
 msgstr "/_Zobrazení/Odst_ranit presentaci"
 
-#: modules/process/presentationops.c:72
+#: modules/process/presentationops.c:73
 msgid "/_Display/E_xtract Presentation"
 msgstr "/_Zobrazení/_Extrahovat presentaci"
 
-#: modules/process/presentationops.c:79
+#: modules/process/presentationops.c:80
 msgid "/_Display/_Attach Presentation..."
 msgstr ""
 
-#: modules/process/presentationops.c:147
+#: modules/process/presentationops.c:148
 msgid "Attach Presentation"
 msgstr ""
 
-#: modules/process/presentationops.c:159
+#: modules/process/presentationops.c:160
 msgid "_Data to attach:"
 msgstr ""
 
-#: modules/process/rotate.c:85
+#: modules/process/rotate.c:86
 msgid "Rotates data by arbitrary angle."
 msgstr "Rotuje data o libovolný úhel."
 
-#: modules/process/rotate.c:101
+#: modules/process/rotate.c:102
 msgid "/_Basic Operations/Rotate by _Angle..."
 msgstr "/_Jednoduché operace/Rot_ace o úhel..."
 
-#: modules/process/rotate.c:221
+#: modules/process/rotate.c:222
 msgid "Rotate"
 msgstr "Rotace"
 
-#: modules/process/rotate.c:240
+#: modules/process/rotate.c:241
 msgid "Rotate by _angle:"
 msgstr "Otočit o ú_hel:"
 
-#: modules/process/rotate.c:252
+#: modules/process/rotate.c:254
 msgid "E_xpand result to fit complete data"
 msgstr "_Rozšířit výsledek, aby se vešla celá data"
 
-#: modules/process/scale.c:82
+#: modules/process/scale.c:81
 msgid "Scales data by arbitrary factor."
 msgstr "Škáluje data o libovolný faktor."
 
-#: modules/process/scale.c:98
+#: modules/process/scale.c:97
 msgid "/_Basic Operations/Scale..."
 msgstr "/_Jednoduché operace/Změna velikosti..."
 
-#: modules/process/scale.c:162
+#: modules/process/scale.c:161
 msgid "Scale"
 msgstr "Změnit velikost"
 
-#: modules/process/scale.c:180
+#: modules/process/scale.c:179
 msgid "Scale by _ratio:"
 msgstr "Zvětšit/zmenšit v _poměru:"
 
-#: modules/process/scale.c:189
+#: modules/process/scale.c:188
 msgid "New _width:"
 msgstr "Nová šířk_a:"
 
-#: modules/process/scale.c:197
+#: modules/process/scale.c:196
 msgid "New _height:"
 msgstr "Nová _výška:"
 
-#: modules/process/scars.c:102
+#: modules/process/scars.c:103
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
 msgstr "Označuje a/nebo odstraňuje šrámy (vodorovné lineární defekty)."
 
-#: modules/process/scars.c:118
+#: modules/process/scars.c:119
 msgid "/_Correct Data/M_ark Scars..."
 msgstr "/_Korekce dat/O_značení šrámů..."
 
-#: modules/process/scars.c:125
+#: modules/process/scars.c:126
 msgid "/_Correct Data/Remove _Scars"
 msgstr "/_Korekce dat/_Odstranění šrámů"
 
-#: modules/process/scars.c:402
+#: modules/process/scars.c:403
 msgid "Mark Scars"
 msgstr "Označení šrámů"
 
-#: modules/process/scars.c:405
+#: modules/process/scars.c:406
 msgid "_Update preview"
 msgstr "A_ktualizuj náhled"
 
-#: modules/process/scars.c:439
+#: modules/process/scars.c:440
 msgid "Maximum _width:"
 msgstr "Maximální šířk_a:"
 
-#: modules/process/scars.c:444
+#: modules/process/scars.c:445
 msgid "Minimum _length:"
 msgstr "Minimální _délka:"
 
-#: modules/process/scars.c:449
+#: modules/process/scars.c:450
 msgid "_Hard threshold:"
 msgstr "_Tvrdý práh:"
 
-#: modules/process/scars.c:450 modules/process/scars.c:458
+#: modules/process/scars.c:451 modules/process/scars.c:458
 msgid "RMS"
 msgstr "RMS"
 
@@ -3307,23 +3464,23 @@ msgstr "RMS"
 msgid "_Soft threshold:"
 msgstr "_Měkký práh:"
 
-#: modules/process/scars.c:467
+#: modules/process/scars.c:466
 msgid "_Negative"
 msgstr "_Záporné"
 
-#: modules/process/shade.c:83
+#: modules/process/shade.c:84
 msgid "Creates a shaded presentation of data."
 msgstr "Vytváří vystínovanou presentaci dat."
 
-#: modules/process/shade.c:99
+#: modules/process/shade.c:100
 msgid "/_Display/_Shading..."
 msgstr "/_Zobrazení/_Stínování..."
 
-#: modules/process/shade.c:195
+#: modules/process/shade.c:196
 msgid "Shading"
 msgstr "Stínování"
 
-#: modules/process/slope_dist.c:105
+#: modules/process/slope_dist.c:106
 msgid ""
 "Calculates two-dimensional distribution of slopes or graph of their angular "
 "distribution."
@@ -3331,158 +3488,158 @@ msgstr ""
 "Počítá dvourozměrné rozdělení sklonů, případně graf jejich úhlového "
 "rozdělení."
 
-#: modules/process/slope_dist.c:122
+#: modules/process/slope_dist.c:123
 msgid "/_Statistics/_Slope Distribution..."
 msgstr "/_Statistika/Rozdělení _sklonu..."
 
-#: modules/process/slope_dist.c:166
+#: modules/process/slope_dist.c:167
 msgid "Slope"
 msgstr "Sklon"
 
-#: modules/process/slope_dist.c:186
+#: modules/process/slope_dist.c:187
 msgid "_Two-dimensional distribution"
 msgstr "_Dvojrozměrné rozdělení"
 
-#: modules/process/slope_dist.c:187
+#: modules/process/slope_dist.c:188
 msgid "Per-angle _graph"
 msgstr "_Graf podle úhlu"
 
-#: modules/process/slope_dist.c:196 modules/process/slope_dist.c:424
+#: modules/process/slope_dist.c:197
 msgid "Slope Distribution"
 msgstr "Rozdělení sklonu"
 
-#: modules/process/slope_dist.c:211
+#: modules/process/slope_dist.c:212
 msgid "Output type"
 msgstr "Typ výstupu"
 
-#: modules/process/slope_dist.c:419
-msgid "Angular slope distribution"
-msgstr "Úhlové rozdělení sklonu"
+#: modules/process/slope_dist.c:415
+msgid "Angular Slope Distribution"
+msgstr ""
 
-#: modules/process/sphere-revolve.c:98
+#: modules/process/sphere-revolve.c:99
 msgid "Subtracts background by arc or sphere revolution."
 msgstr "Odečítá pozadí pomocí valení oblouku či sféry."
 
-#: modules/process/sphere-revolve.c:114
+#: modules/process/sphere-revolve.c:115
 msgid "/_Level/Revolve _Arc..."
 msgstr "/_Vyrovnání/Valení _oblouku..."
 
-#: modules/process/sphere-revolve.c:209 modules/tools/polynom.c:146
+#: modules/process/sphere-revolve.c:210 modules/tools/polynom.c:150
 msgid "_Horizontal direction"
 msgstr "_Vodorovný směr"
 
-#: modules/process/sphere-revolve.c:210 modules/tools/polynom.c:147
+#: modules/process/sphere-revolve.c:211 modules/tools/polynom.c:151
 msgid "_Vertical direction"
 msgstr "_Svislý směr"
 
-#: modules/process/sphere-revolve.c:211
+#: modules/process/sphere-revolve.c:212
 msgid "_Both directions"
 msgstr "O_ba směry"
 
-#: modules/process/sphere-revolve.c:220
+#: modules/process/sphere-revolve.c:221
 msgid "Revolve Arc"
 msgstr "Valení oblouku"
 
-#: modules/process/tip_blind.c:120
+#: modules/process/tip_blind.c:121
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
 msgstr "Slepý odhad tvaru SPM hrotu Villarubiovou metodou."
 
-#: modules/process/tip_blind.c:136
+#: modules/process/tip_blind.c:137
 msgid "/_Tip/_Blind estimation..."
 msgstr "/_Hrot SPM/_Slepý odhad tvaru hrotu..."
 
-#: modules/process/tip_blind.c:177
+#: modules/process/tip_blind.c:178
 msgid "Blind Tip Estimation"
 msgstr "Slepý odhad tvaru hrotu"
 
-#: modules/process/tip_blind.c:178
+#: modules/process/tip_blind.c:179
 msgid "Run _Partial"
 msgstr "Čás_t. odhad"
 
-#: modules/process/tip_blind.c:179
+#: modules/process/tip_blind.c:180
 msgid "Run _Full"
 msgstr "Pl_ný odhad"
 
-#: modules/process/tip_blind.c:180
+#: modules/process/tip_blind.c:181
 msgid "_Reset Tip"
 msgstr "_Obnovit hrot"
 
-#: modules/process/tip_blind.c:238 modules/process/tip_model.c:228
+#: modules/process/tip_blind.c:239 modules/process/tip_model.c:228
 msgid "Related _data:"
 msgstr "Související data:"
 
-#: modules/process/tip_blind.c:243
+#: modules/process/tip_blind.c:244
 msgid "Estimated Tip Size"
 msgstr "Odhadovaná velikost hrotu"
 
-#: modules/process/tip_blind.c:264
+#: modules/process/tip_blind.c:265
 msgid "_Same resolution"
 msgstr "S_tejná rozlišení"
 
-#: modules/process/tip_blind.c:285
+#: modules/process/tip_blind.c:286
 msgid "Use _boundaries"
 msgstr "Použít _okraje"
 
-#: modules/process/tip_dilation.c:58
+#: modules/process/tip_dilation.c:59
 msgid "Dilates data with given tip."
 msgstr "Konvolvuje data s daným hrotem."
 
-#: modules/process/tip_dilation.c:74
+#: modules/process/tip_dilation.c:75
 msgid "/_Tip/_Dilation..."
 msgstr "/_Hrot SPM/K_onvoluce hrotu..."
 
-#: modules/process/tip_dilation.c:131
+#: modules/process/tip_dilation.c:132
 msgid "Tip Dilation"
 msgstr "Konvoluce hrotu"
 
-#: modules/process/tip_dilation.c:146 modules/process/tip_map.c:148
-#: modules/process/tip_reconstruction.c:146
+#: modules/process/tip_dilation.c:147 modules/process/tip_map.c:149
+#: modules/process/tip_reconstruction.c:147
 msgid "_Tip morphology:"
 msgstr "_Tvar hrotu:"
 
-#: modules/process/tip_dilation.c:157
+#: modules/process/tip_dilation.c:158
 msgid "_Surface to be dilated:"
 msgstr "Konvolvovat _povrch:"
 
-#: modules/process/tip_map.c:58
+#: modules/process/tip_map.c:59
 msgid "Computes tip certainty map."
 msgstr "Počítá mapu spolehlivosti hrotu."
 
-#: modules/process/tip_map.c:74
+#: modules/process/tip_map.c:75
 msgid "/_Tip/_Certainty Map..."
 msgstr "/_Hrot SPM/Mapa _spolehlivosti..."
 
-#: modules/process/tip_map.c:133
+#: modules/process/tip_map.c:134
 msgid "Certainty Map Analysis"
 msgstr "Analýza mapy spolehlivosti"
 
-#: modules/process/tip_map.c:159
+#: modules/process/tip_map.c:160
 msgid "_Surface to be analyzed:"
 msgstr "Analyzovat _povrch:"
 
-#: modules/process/tip_model.c:34
-msgid "Pyramide (general)"
-msgstr "Pyramida (obecná)"
-
-#: modules/process/tip_model.c:35
-msgid "Contact etched"
-msgstr "Leptaný kontaktní"
-
-#: modules/process/tip_model.c:36
-msgid "Noncontact etched"
-msgstr "Leptaný bezkontaktní"
-
-#: modules/process/tip_model.c:37
-msgid "Delta function"
-msgstr "Delta funkce"
-
-#: modules/process/tip_model.c:117
+#: modules/process/tip_model.c:111
 msgid "Models SPM tip."
 msgstr "Moduluje SPM hrot."
 
-#: modules/process/tip_model.c:133
+#: modules/process/tip_model.c:127
 msgid "/_Tip/_Model Tip..."
 msgstr "/_Hrot SPM/_Modelovat hrot..."
+
+#: modules/process/tip_model.c:162
+msgid "Pyramide (general)"
+msgstr "Pyramida (obecná)"
+
+#: modules/process/tip_model.c:163
+msgid "Contact etched"
+msgstr "Leptaný kontaktní"
+
+#: modules/process/tip_model.c:164
+msgid "Noncontact etched"
+msgstr "Leptaný bezkontaktní"
+
+#: modules/process/tip_model.c:165
+msgid "Delta function"
+msgstr "Delta funkce"
 
 #: modules/process/tip_model.c:177
 msgid "Model Tip"
@@ -3512,109 +3669,85 @@ msgstr "Poloměr _vrcholku:"
 msgid "Resolution will be determined according to tip type."
 msgstr "Rozlišení bude určeno podle typu hrotu."
 
-#: modules/process/tip_model.c:500
+#: modules/process/tip_model.c:499
 #, c-format
 msgid "Tip resolution: %d x %d pixels"
 msgstr "Rozlišení: %d x %d pixelů"
 
-#: modules/process/tip_reconstruction.c:58
+#: modules/process/tip_reconstruction.c:59
 msgid "Reconstructs surface assuming specified tip."
 msgstr "Rekonstruuje povrch předpokládaje předepsaný hrot."
 
-#: modules/process/tip_reconstruction.c:74
+#: modules/process/tip_reconstruction.c:75
 msgid "/_Tip/_Surface Reconstruction..."
 msgstr "/_Hrot SPM/_Rekonstrukce povrchu..."
 
-#: modules/process/tip_reconstruction.c:131
+#: modules/process/tip_reconstruction.c:132
 msgid "Surface Reconstruction"
 msgstr "Rekonstrukce povrchu"
 
-#: modules/process/tip_reconstruction.c:157
+#: modules/process/tip_reconstruction.c:158
 msgid "_Surface to be reconstructed:"
 msgstr "Rekonstruovat _povrch:"
 
-#: modules/process/unrotate.c:76
-msgid "Detected"
-msgstr "Detekovaná"
-
-#: modules/process/unrotate.c:77
-msgid "Parallel"
-msgstr "Dvojčetná"
-
-#: modules/process/unrotate.c:78
-msgid "Triangular"
-msgstr "Trojčetná"
-
-#: modules/process/unrotate.c:79
-msgid "Square"
-msgstr "Čtvercová"
-
-#: modules/process/unrotate.c:80
-msgid "Rhombic"
-msgstr "Rombická"
-
-#: modules/process/unrotate.c:81
-msgid "Hexagonal"
-msgstr "Hexagonální"
-
-#: modules/process/unrotate.c:93
+#: modules/process/unrotate.c:85
 msgid ""
 "Rotates data to make characteristic directions parallel with x or y axis."
 msgstr "Rotuje data, aby sronval charakteristické směry s osou x či y."
 
-#: modules/process/unrotate.c:110
+#: modules/process/unrotate.c:102
 msgid "/_Correct Data/_Unrotate..."
 msgstr "/_Korekce dat/Korekce _Rotace..."
 
-#: modules/process/unrotate.c:215
+#: modules/process/unrotate.c:207
 msgid "Correct Rotation"
 msgstr "Oprava rotace"
 
-#: modules/process/unrotate.c:234
+#: modules/process/unrotate.c:226
 msgid "<b>Structure</b>"
 msgstr "<b>Struktura</b>"
 
-#: modules/process/unrotate.c:240
+#: modules/process/unrotate.c:232
 msgid "Detected:"
 msgstr "Detekovaná:"
 
-#: modules/process/unrotate.c:257
+#: modules/process/unrotate.c:247
 msgid "_Assume:"
 msgstr "_Předpokládat:"
 
-#: modules/process/unrotate.c:260
+#: modules/process/unrotate.c:250
 msgid "Correction:"
 msgstr "Korekce:"
 
-#: modules/tools/crop.c:52
+#: modules/tools/crop.c:53
 msgid "Crop tool, crops data to smaller size."
 msgstr "Nástroj ořez, ořezává data na menší velikost."
 
-#: modules/tools/crop.c:79
+#: modules/tools/crop.c:80
 msgid "Crop data"
 msgstr "Ořízni data"
 
-#: modules/tools/crop.c:125
+#: modules/tools/crop.c:129
 msgid "Crop"
 msgstr "Ořez"
 
-#: modules/tools/distance.c:60
+#: modules/tools/distance.c:62
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Nástroj měření vzdálenosti, měří vzdálenosti a úhly."
 
-#: modules/tools/distance.c:87
+#: modules/tools/distance.c:89
 msgid "Measure distances between points."
 msgstr "Měření vzdáleností"
 
-#: modules/tools/distance.c:139
+#: modules/tools/distance.c:145
 msgid "Distances"
 msgstr "Vzdálenosti"
 
-#: modules/tools/distance.c:165
+#: modules/tools/distance.c:170
 msgid "<b>Angle</b> [deg]"
 msgstr "<b>Úhel</b> [deg]"
 
-#: modules/tools/filter.c:94
+#: modules/tools/filter.c:96
 msgid ""
 "Filter tool, processes selected part of data with a filter (conservative "
 "denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -3622,94 +3755,94 @@ msgstr ""
 "Nástroj filtr, zpracovává vybranou část dat filtrem (konzervativní odšumění, "
 "střední hodnota, medián, Kuwahara, minimum, maximum)."
 
-#: modules/tools/filter.c:122
+#: modules/tools/filter.c:124
 msgid "Basic filters"
 msgstr "Jednoduché filtry"
 
-#: modules/tools/filter.c:187
+#: modules/tools/filter.c:192
 msgid "Mean value"
 msgstr "Střední hodnota"
 
-#: modules/tools/filter.c:188
+#: modules/tools/filter.c:193
 msgid "Median value"
 msgstr "Medián"
 
-#: modules/tools/filter.c:189
+#: modules/tools/filter.c:194
 msgid "Conservative denoise"
 msgstr "Konzervativní odšumění"
 
-#: modules/tools/filter.c:190 modules/tools/stats.c:185
+#: modules/tools/filter.c:195 modules/tools/stats.c:189
 msgid "Minimum"
 msgstr "Minimum"
 
-#: modules/tools/filter.c:191 modules/tools/stats.c:186
+#: modules/tools/filter.c:196 modules/tools/stats.c:190
 msgid "Maximum"
 msgstr "Maximum"
 
-#: modules/tools/filter.c:192
+#: modules/tools/filter.c:197
 msgid "Kuwahara"
 msgstr "Kuwahara"
 
-#: modules/tools/filter.c:204
+#: modules/tools/filter.c:209
 msgid "Filters"
 msgstr "Filtry"
 
-#: modules/tools/filter.c:225
+#: modules/tools/filter.c:230
 msgid "<b>Filter</b>"
 msgstr "<b>Filtr</b>"
 
-#: modules/tools/filter.c:233 modules/tools/polynom.c:196
+#: modules/tools/filter.c:238 modules/tools/polynom.c:200
 msgid "_Type:"
 msgstr "_Typ:"
 
-#: modules/tools/filter.c:259
+#: modules/tools/filter.c:265
 msgid "_Update preview dynamically"
 msgstr "_Automaticky aktualizuj náhled"
 
-#: modules/tools/grain_remove_manually.c:79
+#: modules/tools/grain_remove_manually.c:80
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
 "Nástroj odstraňování zrn, odstraňuje souvislé části masky a/nebo data ležící "
 "pod ní."
 
-#: modules/tools/grain_remove_manually.c:98
+#: modules/tools/grain_remove_manually.c:99
 msgid "_Mask"
 msgstr "_Masku"
 
-#: modules/tools/grain_remove_manually.c:99
+#: modules/tools/grain_remove_manually.c:100
 msgid "_Data"
 msgstr "_Data"
 
-#: modules/tools/grain_remove_manually.c:100
+#: modules/tools/grain_remove_manually.c:101
 msgid "_Both"
 msgstr "_Obojí"
 
-#: modules/tools/grain_remove_manually.c:104 modules/tools/spotremove.c:131
+#: modules/tools/grain_remove_manually.c:105 modules/tools/spotremove.c:132
 msgid "Laplace solver"
 msgstr "Řešení Laplaceovy rovnice"
 
-#: modules/tools/grain_remove_manually.c:105 modules/tools/spotremove.c:132
+#: modules/tools/grain_remove_manually.c:106 modules/tools/spotremove.c:133
 msgid "Fractal correction"
 msgstr "Fraktální korekce"
 
-#: modules/tools/grain_remove_manually.c:118
+#: modules/tools/grain_remove_manually.c:119
 msgid "Manually remove grains (continuous parts of mask)"
 msgstr "Ručně odstranit zrna (souvislé části masky)"
 
-#: modules/tools/grain_remove_manually.c:184
+#: modules/tools/grain_remove_manually.c:194
 msgid "Remove Grains"
 msgstr "Odstranění zrn"
 
-#: modules/tools/grain_remove_manually.c:196
+#: modules/tools/grain_remove_manually.c:206
 msgid "Remove:"
 msgstr "Odstranit:"
 
-#: modules/tools/grain_remove_manually.c:213
+#: modules/tools/grain_remove_manually.c:223
 msgid "_Data removal method:"
 msgstr "M_etoda odstranění dat:"
 
-#: modules/tools/icolorange.c:109
+#: modules/tools/icolorange.c:94
 msgid ""
 "Interactive color range tool, allows to select data range false color scale "
 "should map to, either on data or on height distribution histogram."
@@ -3717,39 +3850,39 @@ msgstr ""
 "Nástroj interaktivní nastavení barevného rozsahu, umožňuje vybrat rozsah, na "
 "nějž se mapuje barevá škála, na datech či histogramu rozdělení výšky."
 
-#: modules/tools/icolorange.c:138
+#: modules/tools/icolorange.c:123
 msgid "Stretch color range to part of data."
 msgstr "Přizpůsobit barevnou škálu části dat."
 
-#: modules/tools/icolorange.c:209 modules/tools/icolorange.c:290
+#: modules/tools/icolorange.c:203 modules/tools/icolorange.c:296
 msgid "Full"
 msgstr "Plný"
 
-#: modules/tools/icolorange.c:210
+#: modules/tools/icolorange.c:204
 msgid "Fixed"
 msgstr "Pevný"
 
-#: modules/tools/icolorange.c:211
+#: modules/tools/icolorange.c:205
 msgid "Auto"
 msgstr ""
 
-#: modules/tools/icolorange.c:223
+#: modules/tools/icolorange.c:206
+msgid "Adaptive"
+msgstr ""
+
+#: modules/tools/icolorange.c:220
 msgid "Color Range"
 msgstr "Barevný rozsah"
 
-#: modules/tools/icolorange.c:271
+#: modules/tools/icolorange.c:244
+msgid "Height histogram"
+msgstr ""
+
+#: modules/tools/icolorange.c:281
 msgid "Range"
 msgstr "Rozsah"
 
-#: modules/tools/icolorange.c:310
-msgid "_Instant apply"
-msgstr "_Okamžitě použít"
-
-#: modules/tools/icolorange.c:383
-msgid "histogram"
-msgstr ""
-
-#: modules/tools/level3.c:58
+#: modules/tools/level3.c:59
 msgid ""
 "Three-point level tool, levels data by subtracting a plane fitted through "
 "three selected points."
@@ -3757,191 +3890,210 @@ msgstr ""
 "Nástroj tříbodové vyrovnání, vyrovnává data odečtením roviny proložené třemi "
 "vybranými body."
 
-#: modules/tools/level3.c:86
+#: modules/tools/level3.c:87
 msgid "Level data using three points."
 msgstr "Vyrovnej data pomocí tří bodů."
 
-#: modules/tools/level3.c:136
+#: modules/tools/level3.c:144
 msgid "Level"
 msgstr "Vyrovnání"
 
-#: modules/tools/level3.c:198 modules/tools/readvalue.c:179
+#: modules/tools/level3.c:206 modules/tools/readvalue.c:195
 msgid "_Averaging radius:"
 msgstr "_Poloměr oblasti průměrování:"
 
-#: modules/tools/maskedit.c:71
+#: modules/tools/maskedit.c:72
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 "Nástroj editor masky, umožňuje interaktivně přidávat či odstraňovat části "
 "masky."
 
-#: modules/tools/maskedit.c:99
+#: modules/tools/maskedit.c:100
 msgid "Edit mask"
 msgstr "Upravit masku"
 
-#: modules/tools/maskedit.c:163
+#: modules/tools/maskedit.c:172
 msgid "Set mask to selection"
 msgstr "Nastavení masky na výběr"
 
-#: modules/tools/maskedit.c:168
+#: modules/tools/maskedit.c:177
 msgid "Add selection to mask"
 msgstr "Přidávání výběru k masce"
 
-#: modules/tools/maskedit.c:173
+#: modules/tools/maskedit.c:182
 msgid "Subtract selection from mask"
 msgstr "Odebírání výběru od masky"
 
-#: modules/tools/maskedit.c:178
+#: modules/tools/maskedit.c:187
 msgid "Intersect selection with mask"
 msgstr "Průnik výběru s maskou"
 
-#: modules/tools/maskedit.c:193
+#: modules/tools/maskedit.c:200
 msgid "Mask Editor"
 msgstr "Editor masky"
 
-#: modules/tools/maskedit.c:209
+#: modules/tools/maskedit.c:216
 msgid "Mode:"
 msgstr "Mód:"
 
-#: modules/tools/polynom.c:70
+#: modules/tools/polynom.c:71
 msgid "Polynom fit tool, fits polynoms to X or Y profiles and subtracts them."
 msgstr ""
 "Nástroj prokládání polynomů, prokládá a odečítá polynomy ve směru x či y."
 
-#: modules/tools/polynom.c:98
+#: modules/tools/polynom.c:99
 msgid "Fit X or Y profiles by polynom"
 msgstr "Prokládání x či y profilů polynomem"
 
-#: modules/tools/polynom.c:140
+#: modules/tools/polynom.c:144
 msgid "Fit height"
 msgstr "Proložit konstantu"
 
-#: modules/tools/polynom.c:141
+#: modules/tools/polynom.c:145
 msgid "Fit linear"
 msgstr "Proložit přímku"
 
-#: modules/tools/polynom.c:142
+#: modules/tools/polynom.c:146
 msgid "Fit quadratic"
 msgstr "Proložit parabolu"
 
-#: modules/tools/polynom.c:143
+#: modules/tools/polynom.c:147
 msgid "Fit cubic"
 msgstr "Proložit kubiku"
 
-#: modules/tools/polynom.c:164
+#: modules/tools/polynom.c:168
 msgid "X/Y Profile Level"
 msgstr "Proložení profilů"
 
-#: modules/tools/polynom.c:186
+#: modules/tools/polynom.c:190
 msgid "<b>Fiting mode</b>"
 msgstr "<b>Mód prokládání</b>"
 
-#: modules/tools/polynom.c:213
+#: modules/tools/polynom.c:217
 msgid "_Exclude area if selected"
 msgstr "V_yjmi vybranou oblast"
 
-#: modules/tools/polynom.c:222
+#: modules/tools/polynom.c:226
 msgid "(otherwise will be used for fitting)"
 msgstr "(jinak bude použit jen výběr)"
 
-#: modules/tools/profile.c:79
+#: modules/tools/profile.c:89
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Nástroj profil, vytváří grafy profilů z vybraných úseček."
 
-#: modules/tools/profile.c:106
+#: modules/tools/profile.c:116
 msgid "Extract profiles from data."
 msgstr "Vybrat profily z dat"
 
-#: modules/tools/profile.c:168
+#: modules/tools/profile.c:182
 msgid "Extract Profile"
 msgstr "Vybrat profil"
 
-#: modules/tools/profile.c:192
+#: modules/tools/profile.c:206
 msgid "<b>Profile Positions</b> [pixels]"
 msgstr "<b>Polohy profilů</b> [v pixelech]"
 
-#: modules/tools/profile.c:232
+#: modules/tools/profile.c:246
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
 
-#: modules/tools/profile.c:255
+#: modules/tools/profile.c:270
 msgid "Thickness:"
 msgstr "Tloušťka:"
 
-#: modules/tools/profile.c:262
+#: modules/tools/profile.c:277
+msgid "Fix res.:"
+msgstr ""
+
+#: modules/tools/profile.c:292
 msgid "_Separate profiles"
 msgstr "_Oddělit profily"
 
-#: modules/tools/profile.c:434
+#: modules/tools/profile.c:400
 msgid "Profiles"
 msgstr "Profily"
 
-#: modules/tools/readvalue.c:58
+#: modules/tools/readvalue.c:60
 msgid "Pointer tool, reads value under pointer."
 msgstr "Nástroj ukazatel, čte hodnotu pod ukazatelem myši."
 
-#: modules/tools/readvalue.c:85
+#: modules/tools/readvalue.c:87
 msgid "Read value under mouse cursor."
 msgstr "Čti hodnoty pod ukazatelem myši."
 
-#: modules/tools/readvalue.c:127
+#: modules/tools/readvalue.c:143
 msgid "Read Value"
 msgstr "Čtení hodnot"
 
-#: modules/tools/sfunctions.c:78
+#: modules/tools/sfunctions.c:97
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
-"(height distribution, correlations, PSDF) of selected part of data."
+"(height distribution, correlations, PSDF, Minkowski functionals) of selected "
+"part of data."
 msgstr ""
-"Nástroj statistické funkce, počítá jednorozměrné statistické funkce "
-"(rozdělení výšek, korelace, spektrální hustotu) vybrané části dat."
 
-#: modules/tools/sfunctions.c:98
+#: modules/tools/sfunctions.c:117
 msgid "Height distribution"
 msgstr "Rozdělení výšek"
 
-#: modules/tools/sfunctions.c:99
+#: modules/tools/sfunctions.c:118
 msgid "Cum. height distribution"
 msgstr "Kumul. rozdělení výšek"
 
-#: modules/tools/sfunctions.c:100
+#: modules/tools/sfunctions.c:119
 msgid "Distribution of angles"
 msgstr "Rozdělení úhlů"
 
-#: modules/tools/sfunctions.c:101
+#: modules/tools/sfunctions.c:120
 msgid "Cum. distribution of angles"
 msgstr "Kumul. rozdělení úhlů"
 
-#: modules/tools/sfunctions.c:102
+#: modules/tools/sfunctions.c:121
 msgid "ACF"
 msgstr "ACF"
 
-#: modules/tools/sfunctions.c:103
+#: modules/tools/sfunctions.c:122
 msgid "HHCF"
 msgstr "HHCF"
 
-#: modules/tools/sfunctions.c:104
+#: modules/tools/sfunctions.c:123
 msgid "PSDF"
 msgstr "PSDF"
 
-#: modules/tools/sfunctions.c:117
+#: modules/tools/sfunctions.c:124
+msgid "Minkowski volume"
+msgstr ""
+
+#: modules/tools/sfunctions.c:125
+msgid "Minkowski boundary"
+msgstr ""
+
+#: modules/tools/sfunctions.c:126
+msgid "Minkowski connectivity"
+msgstr ""
+
+#: modules/tools/sfunctions.c:139
 msgid "Compute 1D statistical functions."
 msgstr "Spočíst 1D statistické funkce"
 
-#: modules/tools/sfunctions.c:168
+#: modules/tools/sfunctions.c:193
 msgid "Statistical Functions"
 msgstr "Statistické funkce"
 
-#: modules/tools/sfunctions.c:215
+#: modules/tools/sfunctions.c:241
 msgid "Computation _direction:"
 msgstr "S_měr výpočtu:"
 
-#: modules/tools/sfunctions.c:229
+#: modules/tools/sfunctions.c:258
+msgid "Size:"
+msgstr ""
+
+#: modules/tools/sfunctions.c:265
 msgid "Interpolation type:"
 msgstr "Typ interpolace:"
 
-#: modules/tools/spotremove.c:110
+#: modules/tools/spotremove.c:111
 msgid ""
 "Spot removal tool, interpolates small parts of data (displayed on a zoomed "
 "view) using selected algorithm."
@@ -3949,27 +4101,27 @@ msgstr ""
 "Nástroj odstranění skvrn, interpoluje malé části dat (zobrazené na zvětšeném "
 "pohledu) vybraným algoritmem."
 
-#: modules/tools/spotremove.c:129
+#: modules/tools/spotremove.c:130
 msgid "Hyperbolic flatten"
 msgstr "Hyperbolické zploštění"
 
-#: modules/tools/spotremove.c:130
+#: modules/tools/spotremove.c:131
 msgid "Pseudo-Laplace"
 msgstr "Psudolaplaceova interpolace"
 
-#: modules/tools/spotremove.c:145
+#: modules/tools/spotremove.c:146
 msgid "Manually remove spots"
 msgstr "Ruční odstranění skvrn"
 
-#: modules/tools/spotremove.c:217
+#: modules/tools/spotremove.c:221
 msgid "Remove Spots"
 msgstr "Odstranění skvrn"
 
-#: modules/tools/spotremove.c:268
+#: modules/tools/spotremove.c:273
 msgid "Removal _method:"
 msgstr "_Metoda odstranění"
 
-#: modules/tools/stats.c:66
+#: modules/tools/stats.c:67
 msgid ""
 "Statistical quantities tool, calculates various statistical characteristics "
 "(mean, median, RMS, skew, kurtosis, inclination, area, projected area) of "
@@ -3979,57 +4131,142 @@ msgstr ""
 "(střední hodnota, medián, RMS, šikmost, špičatost, sklon, plocha, "
 "projektovaná plocha) vybrané části dat."
 
-#: modules/tools/stats.c:95
+#: modules/tools/stats.c:96
 msgid "Statistical quantities"
 msgstr "Statistické veličiny"
 
-#: modules/tools/stats.c:180
+#: modules/tools/stats.c:184
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/stats.c:181
+#: modules/tools/stats.c:185
 msgid "Rms"
 msgstr "Rms"
 
-#: modules/tools/stats.c:182
+#: modules/tools/stats.c:186
 msgid "Skew"
 msgstr "Šikmost"
 
-#: modules/tools/stats.c:183
+#: modules/tools/stats.c:187
 msgid "Kurtosis"
 msgstr "Špičatost"
 
-#: modules/tools/stats.c:184
+#: modules/tools/stats.c:188
 msgid "Average height"
 msgstr "Průměrná výška"
 
-#: modules/tools/stats.c:187
+#: modules/tools/stats.c:191
 msgid "Median"
 msgstr "Medián"
 
-#: modules/tools/stats.c:188
+#: modules/tools/stats.c:192
 msgid "Projected area"
 msgstr "Projektovaná plocha"
 
-#: modules/tools/stats.c:189
+#: modules/tools/stats.c:193
 msgid "Area"
 msgstr "Plocha"
 
-#: modules/tools/stats.c:190
+#: modules/tools/stats.c:194
 msgid "Inclination theta"
 msgstr "Théta sklonu"
 
-#: modules/tools/stats.c:191
+#: modules/tools/stats.c:195
 msgid "Inclination phi"
 msgstr "Fí sklonu"
 
-#: modules/tools/stats.c:203
+#: modules/tools/stats.c:207
 msgid "Statistical Quantities"
 msgstr "Statistické veličiny"
 
-#: modules/tools/stats.c:217
+#: modules/tools/stats.c:221
 msgid "<b>Parameters</b>"
 msgstr "<b>Parametry</b>"
+
+#~ msgid "Export graph curves to ASCII file"
+#~ msgstr "Exportuje křivky grafu do textových souborů"
+
+#~ msgid "/_Export ASCII..."
+#~ msgstr "/_Export ASCII..."
+
+#~ msgid "Export Graph to File"
+#~ msgstr "Exportovat graf do souboru"
+
+#~ msgid "Grain size histogram"
+#~ msgstr "Histogram rozdělení velikostí zrn"
+
+#~ msgid "Angular slope distribution"
+#~ msgstr "Úhlové rozdělení sklonu"
+
+#~ msgid "_Instant apply"
+#~ msgstr "_Okamžitě použít"
+
+#~ msgid ""
+#~ "Layer allowing selection of a single point, more precisely just reading "
+#~ "pointer coordinates."
+#~ msgstr ""
+#~ "Vrstva umožňující výběr jednoho bodu, přesněji jen čtení souřadnic myši."
+
+#~ msgid "Layer allowing selection of several points, displayed as crosses."
+#~ msgstr "Vrstva umožňující výběr několika bodů zobrazených jako křížky."
+
+#~ msgid ""
+#~ "Statistical function tool, calculates one-dimensional statistical "
+#~ "functions (height distribution, correlations, PSDF) of selected part of "
+#~ "data."
+#~ msgstr ""
+#~ "Nástroj statistické funkce, počítá jednorozměrné statistické funkce "
+#~ "(rozdělení výšek, korelace, spektrální hustotu) vybrané části dat."
+
+#~ msgid "P_alette"
+#~ msgstr "P_aleta"
+
+#~ msgid "Untitled Graph"
+#~ msgstr "Nepojmenovaný graf"
+
+#~ msgid "/Default Mask _Color"
+#~ msgstr "/Předvolená ba_rva masky"
+
+#~ msgid "modules"
+#~ msgstr "moduly"
+
+#~ msgid "Dist. of heights"
+#~ msgstr "Rozdělení výšek"
+
+#~ msgid "Cum. dist. of heights"
+#~ msgstr "Kumul. rozdělení výšek"
+
+#~ msgid "Dist. of angles"
+#~ msgstr "Rozdělení úhlů"
+
+#~ msgid "Cum. dist. of angles"
+#~ msgstr "Kumul. rozdělení úhlů"
+
+#~ msgid "Autocorrelation"
+#~ msgstr "Autokorelace"
+
+#~ msgid "Height-height cor."
+#~ msgstr "Korelace výška-výška"
+
+#~ msgid "Power spectral density"
+#~ msgstr "Spektrální hustota"
+
+#~ msgid "Current or Deflection"
+#~ msgstr "Proud nebo výchylka"
+
+#~ msgid "Friction"
+#~ msgstr "Tření"
+
+#~ msgid ""
+#~ "Exports data as as pixmap images and imports data from pixmap images. "
+#~ "Supports following image formats for export: PNG, JPEG, TIFF (if "
+#~ "available), PPM, BMP, TARGA. Import support relies on GDK and thus may be "
+#~ "installation-dependent."
+#~ msgstr ""
+#~ "Exportuje data do rastrových obrázků a importuje data z rastrových "
+#~ "obrázků. Umožňuje export do těchto grafických formátů: PNG, JPEG, TIFF "
+#~ "(je-li dostupný), PPM, BPM, TARGA. Import se spoléhá na GDK a tudíž se "
+#~ "jeho možnosti mohou u různých instalací lišit."
 
 #~ msgid "_Z-scale"
 #~ msgstr "_Z-škála"
