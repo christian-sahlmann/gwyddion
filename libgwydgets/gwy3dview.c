@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -81,6 +81,8 @@ enum {
 typedef struct {
     GLfloat x, y, z;
 } Gwy3DVector;
+
+static GLuint global_base = 0;
 
 /* Forward declarations */
 
@@ -2131,7 +2133,10 @@ gwy_3d_draw_axes(Gwy3DView *widget)
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
                    (widget->data_max-widget->data_min)/2);
         glPopMatrix();
+        /* FIXME */
+        gwy_debug("glError0: %d", glGetError());
     glEnd();
+    gwy_debug("glError1: %d", glGetError());
 
     /*
     TODO: create bitmaps with labels in the beginning (possibly in init_gl)
@@ -2259,7 +2264,12 @@ gwy_3d_view_realize_gl(Gwy3DView *widget)
     glDepthFunc(GL_LESS);
 
     /* Shape display lists */
-    widget->shape_list_base = glGenLists(2);
+    widget->shape_list_base = glGenLists(global_base + 2);
+    widget->shape_list_base += global_base;
+    /* FIXME: uncommenting this makes the shape clonning proble to go away.
+     * Why?*/
+    /* global_base += 2; */
+
     gwy_3d_make_list(widget, widget->data, GWY_3D_SHAPE_AFM);
     gwy_3d_make_list(widget, widget->downsampled, GWY_3D_SHAPE_REDUCED);
 
