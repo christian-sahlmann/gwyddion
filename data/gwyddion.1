@@ -38,12 +38,42 @@ Prints list of objects created during run time, with creation and
 desctruction times or reference counts on program exit.  If you don't
 know what it's good for, you don't need it.
 .
+.SH ENVIRONMENT
+.TP
+.B GWYDDION_DATADIR
+Data directory where resources were installed.
+If not set, it defaults to compiled-in value of ${datadir}.
+.
+.TP
+.B GWYDDION_LIBDIR
+Library directory where modules were installed.
+If not set, it defaults to compiled-in value of
+${libdir}.
+.
+.TP
+.B GWYDDION_LIBEXECDIR
+Libexec directory where plug-ins were installed.
+If not set, it defaults to compiled-in value of ${libexecdir}.
+.
+.TP
+.B GWYDDION_LOCALEDIR
+Locale distrectory where translations were installed.
+If not set, it defaults to compiled-in value of ${datadir}/locale.
+.
 .
 .SH FILES
 .TP
 .B ~/.gwyddion/settings
 Saved user settings and tool states.  Don't edit when Gwyddion is running,
 it will overwrite it at exit.
+.
+.TP
+\fB~/.gwyddion/glmaterials\fR, \fB~/.gwyddion/gradients\fR, ...
+User directories with various resources (OpenGL materials, color gradients, ...).
+.
+.TP
+\fB$GWYDDION_DATADIR/gwyddion/glmaterials\fR, ...
+The same for system-wide resources.
 .
 .TP
 .B ~/.gwyddion/modules
@@ -53,7 +83,7 @@ subdirectories according to their kind, though this is more a convention
 than anything else.
 .
 .TP
-.B ${exec_prefix}/lib/gwyddion/modules
+.B $GWYDDION_LIBDIR/gwyddion/modules
 The same for system-wide modules.
 .
 .TP
@@ -62,7 +92,7 @@ Directory to place user plug-ins to.  They should be placed into
 \fBfile\fR and \fBprocess\fR subdirectories according to their kind.
 .
 .TP
-.B ${exec_prefix}/libexec/gwyddion/plugins
+.B $GWYDDION_LIBEXECDIR/gwyddion/plugins
 The same for system-wide plug-ins.
 .
 .
