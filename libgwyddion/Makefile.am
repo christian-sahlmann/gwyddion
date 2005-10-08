@@ -2,6 +2,8 @@
 
 libgwyddionincludedir = $(pkgincludedir)/libgwyddion
 
+localedir = $(datadir)/locale
+
 libgwyddioninclude_HEADERS = \
 	gwycontainer.h \
 	gwyddion.h \
@@ -64,7 +66,7 @@ libgwyddion_la_SOURCES = \
 	gwysiunit.c
 
 INCLUDES = -I$(top_srcdir)
-AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_MODULE_DIR=\"$(pkglibdir)/modules\" -DGWY_DATA_DIR=\"$(pkgdatadir)\" -DGWY_PLUGIN_DIR=\"$(libexecdir)/@PACKAGE@/plugins\"
+AM_CPPFLAGS = -DG_LOG_DOMAIN=\"Gwyddion\" -DGWY_LIBDIR=\"$(libdir)\" -DGWY_DATADIR=\"$(datadir)\" -DGWY_LIBEXECDIR=\"$(libexecdir)\" -DGWY_LOCALEDIR=\"$(localedir)\"
 
 clean-local:
 	rm -f core.* *~ testser.object *.xgen

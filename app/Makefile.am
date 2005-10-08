@@ -6,8 +6,6 @@ libgwyprocess = $(top_builddir)/libprocess/libgwyprocess.la
 libgwydraw = $(top_builddir)/libdraw/libgwydraw.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets.la
 
-localedir = $(datadir)/locale
-
 libgwyappincludedir = $(pkgincludedir)/app
 
 libgwyappinclude_HEADERS = \
@@ -73,7 +71,6 @@ gwyddion_SOURCES = \
 	splash.c \
 	toolbox.c
 
-gwyddion_CFLAGS = -DLOCALEDIR=\"$(localedir)\"
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
 	libgwyapp.la \
 	$(libgwymodule) \
