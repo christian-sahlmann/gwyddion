@@ -26,6 +26,7 @@ process_LTLIBRARIES = \
 	grain_mark.la \
 	grain_rem_threshold.la \
 	grain_wshed.la \
+	hough.la \
 	laplace.la \
 	level.la \
 	linecorrect.la \
@@ -159,6 +160,10 @@ grain_wshed_la_LIBADD = $(module_libadd)
 
 grain_dist_la_SOURCES = grain_dist.c
 grain_dist_la_LIBADD = $(module_libadd)
+
+hough_la_SOURCES = hough.c
+hough_la_LIBADD = $(module_libadd)
+
 
 #indent_analyze_la_SOURCES = indent_analyze.c
 #indent_analyze_la_LIBADD = $(module_libadd)

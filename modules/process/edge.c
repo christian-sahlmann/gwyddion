@@ -26,6 +26,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/hough.h>
 #include <libprocess/level.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
@@ -48,6 +49,9 @@ static void        rms_edge_do                  (GwyDataField *dfield,
                                                  GwyDataField *show);
 static void        nonlinearity_do              (GwyDataField *dfield,
                                                  GwyDataField *show);
+static void        hough_lines_do               (GwyDataField *dfield,
+                                                 GwyDataField *show);
+
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -103,13 +107,22 @@ module_register(const gchar *name)
         EDGE_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo hough_lines_func_info = {
+        "hough_lines",
+        N_("/_Display/_Edge detection/Hough L_ines"),
+        (GwyProcessFunc)&edge,
+        EDGE_RUN_MODES,
+        0,
+    };
+
 
     gwy_process_func_register(name, &laplacian_func_info);
     gwy_process_func_register(name, &canny_func_info);
     gwy_process_func_register(name, &rms_func_info);
     gwy_process_func_register(name, &rms_edge_func_info);
     gwy_process_func_register(name, &nonlinearity_func_info);
-
+    gwy_process_func_register(name, &hough_lines_func_info);
+    
     return TRUE;
 }
 
@@ -149,7 +162,9 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         rms_edge_do(dfield, show);
     else if (gwy_strequal(name, "nonlinearity"))
         nonlinearity_do(dfield, show);
-    else {
+    else if (gwy_strequal(name, "hough_lines"))
+        hough_lines_do(dfield, show);
+     else {
         g_warning("Function called under unregistered name: %s", name);
         gwy_data_field_copy(dfield, show, FALSE);
     }
@@ -249,5 +264,21 @@ nonlinearity_do(GwyDataField *dfield, GwyDataField *show)
     for (i = 0; i < xres*yres; i++)
         data[i] = sqrt(data[i]);
 }
+
+static void
+hough_lines_do(GwyDataField *dfield, GwyDataField *show)
+{
+    gint xres, yres, i;
+    gdouble *data;
+
+    gwy_data_field_copy(dfield, show, FALSE);
+    gwy_data_field_filter_canny(show, 0.1);    
+    
+    xres = gwy_data_field_get_xres(show);
+    yres = gwy_data_field_get_yres(show);
+
+    gwy_data_field_hough_line_strenghten(show, NULL, NULL, 1);
+}
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

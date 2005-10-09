@@ -20,6 +20,7 @@ libgwyprocessinclude_HEADERS = \
 	gwyprocess.h \
 	gwyprocessenums.h \
 	gwyprocesstypes.h \
+	hough.h \
 	interpolation.h \
 	inttrans.h \
 	level.h \
@@ -62,10 +63,11 @@ libgwyprocess_la_SOURCES = \
 	dwt.c \
 	filters.c \
 	fractals.c \
-	grains.c \
+	grains.c \ \
 	gwyprocess.c \
 	gwyprocessenums.c \
 	gwyprocesstypes.c \
+	hough.c \
 	interpolation.c \
 	inttrans.c \
 	level.c \
