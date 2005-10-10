@@ -2121,14 +2121,6 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glEnd();
     gwy_debug("glError1a: %d", glGetError());
 
-    glPushMatrix();
-    glTranslatef(Cx*cos(widget->rot_x->value * DEG_2_RAD)
-                    - Cy*sin(widget->rot_x->value * DEG_2_RAD),
-                    Cx*sin(widget->rot_x->value * DEG_2_RAD)
-                    + Cy*cos(widget->rot_x->value * DEG_2_RAD), 0.0f);
-    glRotatef(-widget->rot_x->value, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-Cx, -Cy, 0.0f);
-
     glBegin(GL_LINES);
         glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
@@ -2139,7 +2131,6 @@ gwy_3d_draw_axes(Gwy3DView *widget)
         /* FIXME */
     glEnd();
     gwy_debug("glError1b: %d", glGetError());
-    glPopMatrix();
 
     /*
     TODO: create bitmaps with labels in the beginning (possibly in init_gl)
