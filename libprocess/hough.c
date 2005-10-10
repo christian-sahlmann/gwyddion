@@ -30,52 +30,46 @@
 void bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta);
 
 
-void add_point(GwyDataField *result, 
+void 
+add_point(GwyDataField *result, 
                gint rho, gint theta, 
                gdouble value, gint hsize)
 {
     gint col, row;
-    gdouble *rdata;
+    gdouble *rdata, coeff;
   
     rdata = gwy_data_field_get_data(result);
     for (col = MAX(0, rho-hsize); col < MIN(result->xres, rho+hsize); col++)
     {
         for (row = MAX(0, theta-hsize); row < MIN(result->yres, theta+hsize); row++)
         {
-            rdata[col + row*result->xres] += value;
+            if (hsize) coeff = 1 + sqrt((col-rho)*(col-rho) + (row-theta)*(row-theta));
+            else coeff = 1;
+            rdata[col + row*result->xres] += value/coeff;
         }
     }
 }
 
 
-void gwy_data_field_hough_line(GwyDataField *dfield,
+void 
+gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
                                GwyDataField *y_gradient,
                                GwyDataField *result,
                                gint hwidth)
 {
     gint k, col, row, xres, yres, rxres, ryres;
-    gdouble rho, theta, rhostep, thetastep, *data;
+    gdouble rho, theta, rhostep, thetastep, *data, gradangle, gradangle2, gradangle3;
     
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     rxres = gwy_data_field_get_xres(result); /*rho*/
     ryres = gwy_data_field_get_yres(result); /*theta*/
      
-    
-    if (!x_gradient) {
-        x_gradient = gwy_data_field_duplicate(dfield);
-        gwy_data_field_filter_sobel(x_gradient, GTK_ORIENTATION_HORIZONTAL);
-    }
-    if (!y_gradient) {
-        y_gradient = gwy_data_field_duplicate(dfield);
-        gwy_data_field_filter_sobel(y_gradient, GTK_ORIENTATION_HORIZONTAL);
-    }
-     
-    if (xres != gwy_data_field_get_xres(x_gradient) ||
-        yres != gwy_data_field_get_yres(x_gradient) ||
-        xres != gwy_data_field_get_xres(y_gradient) ||
-        yres != gwy_data_field_get_yres(y_gradient))
+    if ((x_gradient && xres != gwy_data_field_get_xres(x_gradient)) ||
+        (x_gradient && yres != gwy_data_field_get_yres(x_gradient)) ||
+        (y_gradient && xres != gwy_data_field_get_xres(y_gradient)) ||
+        (y_gradient && yres != gwy_data_field_get_yres(y_gradient)))
     {
         g_warning("Hough: input fields must be of same size (or null).\n");
         return;
@@ -93,9 +87,20 @@ void gwy_data_field_hough_line(GwyDataField *dfield,
         {
             if (dfield->data[col + row*xres] > 0)
             {
+                if (x_gradient && y_gradient)
+                {
+                    gradangle = atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
+                    gradangle2 = gradangle + G_PI;
+                    gradangle3 = gradangle + 2*G_PI;
+                }
                 for (k = 0; k < result->yres; k++)
                 {
                     theta = (gdouble)k*thetastep;
+                    
+                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<0.3 || fabs(theta-gradangle2)<0.3 
+                        || fabs(theta-gradangle3)<0.3)) continue;
+                    
+                     
                     rho = ((gdouble)col)*cos(theta) + ((gdouble)row)*sin(theta);
        
                     add_point(result, 
@@ -103,6 +108,7 @@ void gwy_data_field_hough_line(GwyDataField *dfield,
                               k, 
                               data[col + row*xres], 
                               hwidth);
+                    
                 }
             }
         }
@@ -112,14 +118,15 @@ void gwy_data_field_hough_line(GwyDataField *dfield,
 
 }
 
-void gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
+void 
+gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                           GwyDataField *x_gradient,
                                           GwyDataField *y_gradient,
                                           gint hwidth)
 {
     GwyDataField *result;
-    gdouble hmax, hmin, threshold;
-    gint col, row;
+    gdouble hmax, hmin, threshold, zdata[200];
+    gint i, xdata[200], ydata[200];
 
     result = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
                              +gwy_data_field_get_yres(dfield)*gwy_data_field_get_yres(dfield)),
@@ -130,23 +137,29 @@ void gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     hmax = gwy_data_field_get_max(result);
     hmin = gwy_data_field_get_min(result);
-    threshold = hmax - (hmax + hmin)/3; /*FIXME do some local maxima neighbours supression*/
+    threshold = hmax - (hmax - hmin)/2.5; /*FIXME do GUI for this parameter*/
 
-    for (col = 0; col < result->xres; col++)
+    gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
+
+    for (i = 0; i < 200; i++)
     {
-        for (row = 0; row < result->yres; row++)
-        {
-            if (result->data[col + row*result->xres] > threshold)
+        /*FIXME use only half of spectrum (the right one)*/
+        if (zdata[i]>threshold && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
+                /*printf("rho: %g   theta: %g  (%g):  (%d  %d  %g)\n", ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres),
+                                                             180/G_PI*((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
+                                                             ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
+                                                             xdata[i], ydata[i], zdata[i]);
+                */
                 bresenhams_line_polar(dfield, 
-                                      col*result->xreal/result->xres - result->xreal/2, 
-                                      row*G_PI*2/result->yres);
+                                      ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres) - result->xreal/2, 
+                                      ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres));
         }
     }
-
 }
 
 
-gint signum(gint x)
+gint 
+signum(gint x)
 {
     if (x<0) {
         return -1;
@@ -159,7 +172,8 @@ gint signum(gint x)
 
 
 
-void bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta)
+void 
+bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta)
 {
      gint x_top, x_bottom, y_left, y_right;
      gint x1, x2, y1, y2, i;
@@ -205,7 +219,11 @@ void bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta)
      if (y_right >= 0 && y_right < dfield->yres)
      {
          x2 = dfield->xres - 1;
-         y2 = y_left;
+         y2 = y_right;
+     }
+     if (!x1set) {
+         g_warning("line does not intersect image\n"); 
+         return;
      }
      
      dx = x2 - x1;      
@@ -249,6 +267,133 @@ void bresenhams_line_polar(GwyDataField *dfield, gdouble rho, gdouble theta)
              dfield->data[px + py*dfield->xres] = 1;
          }
      }
+}
+
+gint 
+find_smallest_index(gdouble *data, gint n)
+{
+    gint i, imin;
+    gdouble valmin = G_MAXDOUBLE;
+
+    for (i=0; i<n; i++)
+    {
+        if (data[i] < valmin) {
+            imin = i;
+            valmin = data[i];
+        }
+    }
+    return imin;
+            
+}
+
+gboolean 
+find_isthere(gint *xdata, gint *ydata, gint mcol, gint mrow, gint n)
+{
+    gint i;
+    for (i=0; i<n; i++)
+    {
+        if (xdata[i] == mcol && ydata[i] == mrow) return TRUE;
+    }     
+    return FALSE;
+}
+
+gdouble 
+find_nmax(GwyDataField *dfield, gint *mcol, gint *mrow)
+{
+    
+    if ((*mcol) > 0 && dfield->data[(*mcol) - 1 + (*mrow)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) -= 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+    if ((*mrow) > 0 && dfield->data[(*mcol) + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mrow) -= 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mcol) < (dfield->xres - 1) && 
+         dfield->data[(*mcol) + 1 + (*mrow)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) += 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mrow) < (dfield->yres - 1) && 
+         dfield->data[(*mcol) + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mrow) += 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mcol) > 0  && (*mrow) > 0 && 
+         dfield->data[(*mcol) - 1 + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) -= 1;
+        (*mrow) -= 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mcol) > 0 && (*mrow) < (dfield->yres - 1) && 
+         dfield->data[(*mcol) - 1 + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) -= 1;
+        (*mrow) += 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mcol) < (dfield->xres - 1) && (*mrow) > 0 && 
+         dfield->data[(*mcol) + 1 + ((*mrow) - 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) += 1;
+        (*mrow) -= 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     if ((*mcol) < (dfield->xres - 1) && 
+         (*mrow) < (dfield->yres - 1) && dfield->data[(*mcol) + 1 + ((*mrow) + 1)*dfield->xres] > dfield->data[(*mcol) + (*mrow)*dfield->xres]) 
+    {
+        (*mcol) += 1;
+        (*mrow) += 1;
+        find_nmax(dfield, mcol, mrow);
+    }
+     
+    return dfield->data[(*mcol) + (*mrow)*dfield->xres];
+}
+
+
+
+void 
+gwy_data_field_get_local_maxima_list(GwyDataField *dfield, 
+                                          gint *xdata,
+                                          gint *ydata,
+                                          gdouble *zdata,
+                                          gint ndata,
+                                          gint skip)
+{
+    gint col, row, mcol, mrow, i;
+    gdouble value;
+
+    for (i=0; i<ndata; i++)
+    {
+        xdata[i] = 0;
+        ydata[i] = 0;
+        zdata[i] = -G_MAXDOUBLE;
+    }
+    
+    for (col=0; col<dfield->xres; col += 1 + skip)
+    {
+        for (row=0; row<dfield->yres; row+=2)
+        {
+            mcol = col;
+            mrow = row;
+            value = find_nmax(dfield, &mcol, &mrow);
+        
+            if (find_isthere(xdata, ydata, mcol, mrow, ndata)) continue;
+            
+            i = find_smallest_index(zdata, ndata);
+            if (zdata[i] < value) {
+                zdata[i] = value;
+                xdata[i] = mcol;
+                ydata[i] = mrow;
+            }
+        }
+    }
+
 }
 
 /************************** Documentation ****************************/

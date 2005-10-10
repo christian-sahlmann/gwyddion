@@ -102,8 +102,8 @@ hough(GwyContainer *data, GwyRunType run)
     gwy_data_field_filter_sobel(gradient_y, GTK_ORIENTATION_VERTICAL);
     
     gwy_data_field_hough_line(edgefield,
-			      gradient_x,
-			      gradient_y,
+			      NULL,
+			      NULL,
 			      result,
 			      1);
     
