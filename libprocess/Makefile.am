@@ -63,7 +63,7 @@ libgwyprocess_la_SOURCES = \
 	dwt.c \
 	filters.c \
 	fractals.c \
-	grains.c \ \
+	grains.c \
 	gwyprocess.c \
 	gwyprocessenums.c \
 	gwyprocesstypes.c \
