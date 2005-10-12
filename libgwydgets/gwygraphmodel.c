@@ -554,7 +554,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 **/
 void
 gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
-                                             gchar *description)
+                                            const gchar *description)
 {
     GObject **newcurves;
     GwyGraphCurveModel *cmodel;
@@ -565,7 +565,8 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     for (i = 0; i < gmodel->ncurves; i++)
     {
         cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
-        if (gwy_strequal(description, cmodel->description->str)) continue;
+        if (gwy_strequal(description, cmodel->description->str))
+            continue;
 
         newcurves[i] = gwy_serializable_duplicate(gmodel->curves[i]);
         g_object_unref(gmodel->curves[i]);
@@ -619,7 +620,8 @@ gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint cindex)
 * it for some other purposes and do not free it unless you know what you are doing.
 **/
 GwyGraphCurveModel*
-gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *description)
+gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
+                                         const gchar *description)
 {
     GwyGraphCurveModel *cmodel;
     gint i;
@@ -627,7 +629,8 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel, gchar *descripti
     for (i = 0; i < gmodel->ncurves; i++)
     {
         cmodel = GWY_GRAPH_CURVE_MODEL(gmodel->curves[i]);
-        if (gwy_strequal(description, cmodel->description->str)) return cmodel;
+        if (gwy_strequal(description, cmodel->description->str))
+            return cmodel;
     }
 
     return NULL;
