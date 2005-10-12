@@ -284,8 +284,8 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     for (i = 0; i < model->ncurves; i++) {
         curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
 
-        pango_layout_set_text(layout, curvemodel->description->str,
-                              curvemodel->description->len);
+        pango_layout_set_markup(layout, curvemodel->description->str,
+                                curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
         if (model->label_reverse)
@@ -405,7 +405,8 @@ set_requised_size(GwyGraphLabel *label)
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
 
         pango_layout_set_font_description(layout, label->label_font);
-        pango_layout_set_text(layout, curvemodel->description->str, curvemodel->description->len);
+        pango_layout_set_markup(layout, curvemodel->description->str,
+                                curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
         if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30 + model->label_frame_thickness;
