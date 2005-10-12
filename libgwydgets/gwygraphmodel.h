@@ -21,6 +21,7 @@
 #ifndef __GWY_GRAPH_MODEL_H__
 #define __GWY_GRAPH_MODEL_H__
 
+#include <gtk/gtk.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
 #include <libgwyddion/gwysiunit.h>
 
@@ -45,7 +46,7 @@ struct _GwyGraphModel {
     gint ncurves;
     GObject **curves;
 
-    GString *title;   
+    GString *title;
 
     /*these values reflect reasonable bounding values of all the curves. They can
      be set for example during curve adding to graph. They can differ sligthly
@@ -57,9 +58,9 @@ struct _GwyGraphModel {
 
     gboolean has_x_unit;
     gboolean has_y_unit;
-    GwySIUnit *x_unit;   
+    GwySIUnit *x_unit;
     GwySIUnit *y_unit;
-    
+
     GString *top_label;
     GString *bottom_label;
     GString *left_label;
@@ -73,8 +74,8 @@ struct _GwyGraphModel {
     /*logarithmic axis*/
     gboolean x_is_logarithmic;
     gboolean y_is_logarithmic;
-            
-    
+
+
     /* reserved stuff */
     gint int1;
     gint int2;
@@ -116,7 +117,7 @@ GwyGraphCurveModel* gwy_graph_model_get_curve_by_index  (GwyGraphModel *gmodel,
                                                          gint cindex);
 void           gwy_graph_model_remove_all_curves        (GwyGraphModel *gmodel);
 void           gwy_graph_model_set_title                (GwyGraphModel *model,
-                                                         gchar *title);
+                                                         const gchar *title);
 void           gwy_graph_model_set_label_position       (GwyGraphModel *model,
                                                          GwyGraphLabelPosition position);
 void           gwy_graph_model_set_label_has_frame      (GwyGraphModel *model,

@@ -41,7 +41,7 @@ static void     gwy_graph_window_measure_dialog_finalize         (GObject *objec
 static gboolean gwy_graph_window_measure_dialog_delete           (GtkWidget *widget,
                                                                     GdkEventAny *event);
 
-static void     selection_updated_cb                               (GwyGraph *graph, 
+static void     selection_updated_cb                               (GwyGraph *graph,
                                                                     GwyGraphWindowMeasureDialog *dialog);
 static void     index_changed_cb                                 (GwyGraphWindowMeasureDialog *dialog);
 static void     method_cb                                        (GtkWidget *combo,
@@ -118,24 +118,24 @@ value_label(GtkWidget *label, gdouble value, GString *str)
         g_string_printf(str, "%.2f", value);
     else
         g_string_printf(str, "%.2e", value);
-                                                                                                                                                                         
+
     gtk_label_set_text(GTK_LABEL(label), str->str);
 }
-                                                                                                                                                             
+
 static GtkWidget *
 header_label(GtkWidget *table, gint row, gint col,
             const gchar *header, const gchar *unit,
             GString *str)
 {
     GtkWidget *label;
-                                                                                                                                                                     
+
     label = gtk_label_new(NULL);
     if (unit)
         g_string_printf(str, "<b>%s</b> [%s]", header, unit);
     else
         g_string_printf(str, "<b>%s</b>", header);
     gtk_label_set_markup(GTK_LABEL(label), str->str);
-                                                                                                                                                                                     
+
     gtk_misc_set_alignment(GTK_MISC(label), 0.5, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, col, col+1, row, row+1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
@@ -144,14 +144,14 @@ header_label(GtkWidget *table, gint row, gint col,
 }
 
 static void
-header_label_update(GtkLabel *label, 
+header_label_update(GtkLabel *label,
                     const gchar *header, const gchar *unit, GString *str)
 {
     if (unit)
         g_string_printf(str, "<b>%s</b> [%s]", header, unit);
     else
         g_string_printf(str, "<b>%s</b>", header);
-    gtk_label_set_markup(label, str->str);     
+    gtk_label_set_markup(label, str->str);
 }
 
 
@@ -166,25 +166,25 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
 {
     GwyGraphModel *model;
     GwyGraphCurveModel *cmodel;
-    gdouble *xdata, *ydata;
+    const gdouble *xdata, *ydata;
     gint ndata, i, pos;
-    
+
     model = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
     if (model->ncurves <= curve) {
         *ret = FALSE;
         return 0;
     }
-    
+
     cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[curve]);
     xdata = gwy_graph_curve_model_get_xdata(cmodel);
     ydata = gwy_graph_curve_model_get_ydata(cmodel);
     ndata = gwy_graph_curve_model_get_ndata(cmodel);
-    
+
     pos = -1;
     for (i = 0; i < (ndata - 1); i++)
     {
         if (xdata[i] < x && xdata[i+1] >= x) {
-            pos = i; 
+            pos = i;
             break;
         }
     }
@@ -207,7 +207,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     gboolean ret = TRUE,  prevret = TRUE;
 
     g_return_if_fail(GWY_IS_GRAPH(graph));
-    if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS || 
+    if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS ||
         gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
 
     if ((n = gwy_graph_get_selection_number(graph))>0)
@@ -217,22 +217,22 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
         else
             spoints = (gdouble *) g_malloc(gwy_graph_get_selection_number(graph)*sizeof(gdouble));
     }
- 
+
     str = g_string_new("");
     dialog->x_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_top);
     dialog->y_mag = gwy_axis_get_magnification(GWY_GRAPH(dialog->graph)->axis_left);
-    header_label_update(GTK_LABEL(dialog->header_x), "X", 
+    header_label_update(GTK_LABEL(dialog->header_x), "X",
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label_update(GTK_LABEL(dialog->header_y), "Y", 
+    header_label_update(GTK_LABEL(dialog->header_y), "Y",
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
-    header_label_update(GTK_LABEL(dialog->header_distx), _("Length"), 
+    header_label_update(GTK_LABEL(dialog->header_distx), _("Length"),
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_top)->str, str);
-    header_label_update(GTK_LABEL(dialog->header_disty), _("Height"), 
+    header_label_update(GTK_LABEL(dialog->header_disty), _("Height"),
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
- 
- 
+
+
     gwy_graph_get_selection(graph, spoints);
-    
+
     /*update points data */
     for (i = 0; i < NMAX; i++) {
         if (i < n) {
@@ -242,7 +242,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
                 yp = y;
                 prevret = ret;
             }
-            
+
             if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
             {
                 x = spoints[2*i];
@@ -260,7 +260,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             if (ret)
                 value_label(label, y/dialog->y_mag, str);
             else
-                gtk_label_set_text(GTK_LABEL(label), "");                
+                gtk_label_set_text(GTK_LABEL(label), "");
 
             if (!i)
                 continue;
@@ -268,13 +268,13 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
             label = g_ptr_array_index(dialog->distx, i);
             value_label(label, (x - xp)/dialog->x_mag, str);
 
-            
+
             label = g_ptr_array_index(dialog->disty, i);
             if (ret && prevret)
                 value_label(label, (y - yp)/dialog->y_mag, str);
             else
                 gtk_label_set_text(GTK_LABEL(label), "");
-            
+
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret)
                 value_label(label,
@@ -311,7 +311,7 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     GwyGraphModel *gmodel;
     gint i;
     GString *str;
-    
+
     gwy_debug("");
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG (g_object_new (gwy_graph_window_measure_dialog_get_type (), NULL));
 
@@ -352,7 +352,7 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
 
-    
+
     /* big table */
     table = gtk_table_new(6, 11, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -420,10 +420,10 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
-   
+
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                                 "Clear", GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR);
-    
+
     return GTK_WIDGET(dialog);
 }
 
@@ -437,15 +437,15 @@ gwy_graph_window_measure_dialog_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static void     
+static void
 index_changed_cb(GwyGraphWindowMeasureDialog *dialog)
 {
-   dialog->curve_index = 
+   dialog->curve_index =
         gtk_adjustment_get_value(GTK_ADJUSTMENT(dialog->index));
-   selection_updated_cb(GWY_GRAPH(dialog->graph), dialog);    
+   selection_updated_cb(GWY_GRAPH(dialog->graph), dialog);
 }
 
-static void     
+static void
 method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
     dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));

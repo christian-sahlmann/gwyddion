@@ -388,9 +388,9 @@ gwy_graph_model_duplicate_real(GObject *object)
 
 static void
 gwy_graph_model_set_property  (GObject *object,
-                                               guint prop_id,
-                                               const GValue *value,
-                                               GParamSpec *pspec)
+                               guint prop_id,
+                               const GValue *value,
+                               GParamSpec *pspec)
 {
     GwyGraphModel *gmodel = GWY_GRAPH_MODEL(object);
     switch (prop_id)
@@ -673,7 +673,8 @@ gwy_graph_model_signal_layout_changed(GwyGraphModel *model)
 **/
 
 void
-gwy_graph_model_set_title(GwyGraphModel *model, gchar *title)
+gwy_graph_model_set_title(GwyGraphModel *model,
+                          const gchar *title)
 {
     g_string_assign(model->title, title);
     g_object_notify(G_OBJECT(model), "title");
@@ -911,7 +912,7 @@ gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
 {
     GwyGraphCurveModel *cmodel;
     gint i, j;
-    gdouble *data;
+    const gdouble *data;
 
     for (i = 0; i < model->ncurves; i++)
     {
@@ -930,7 +931,7 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 {
     GwyGraphCurveModel *cmodel;
     gint i, j;
-    gdouble *data;
+    const gdouble *data;
 
     for (i = 0; i < model->ncurves; i++)
     {

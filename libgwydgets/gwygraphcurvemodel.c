@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gtk/gtk.h>
 #include <libdraw/gwyrgba.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/dataline.h>
@@ -488,7 +489,7 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
 **/
 void
 gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
-                                      gchar *description)
+                                      const gchar *description)
 {
     g_string_assign(gcmodel->description, description);
     g_object_notify(G_OBJECT(gcmodel), "description");
@@ -620,7 +621,7 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 * Returns: Curve data description (what appears as curve label on graph) as
 *          a string owned by curve.
 **/
-gchar*
+const gchar*
 gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
 {
     return gcmodel->description->str;
