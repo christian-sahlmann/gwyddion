@@ -122,6 +122,7 @@ struct _GwyCurveClass
   GtkDrawingAreaClass parent_class;
 
   void (* curve_type_changed) (GwyCurve *curve);
+  void (* curve_edited) (GwyCurve *curve);
 
   /* Padding for future expansion */
   void (*_gtk_reserved1) (void);
@@ -144,6 +145,13 @@ void    gwy_curve_get_vector    (GwyCurve *c, gint channel,
 
 //void        gwy_curve_set_vector    (GwyCurve *curve,
 //                     int veclen, gfloat vector[]);
+
+void        gwy_curve_set_control_points(GwyCurve *curve,
+                                         GwyChannelData *channel_data);
+void        gwy_curve_get_control_points(GwyCurve *curve,
+                                         GwyChannelData *channel_data);
+
+
 void        gwy_curve_set_curve_type (GwyCurve *curve, GwyCurveType type);
 
 

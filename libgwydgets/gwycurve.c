@@ -52,6 +52,8 @@
 
 /*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Fix cursor changes */
+/*TODO: Fix warnings (unused variables, etc) */
+/*TODO: Deal with freehand mode */
 
 #include <config.h>
 #include <stdlib.h>
@@ -91,6 +93,7 @@ enum {
 
 static GtkDrawingAreaClass *parent_class = NULL;
 static guint curve_type_changed_signal = 0;
+static guint curve_edited_signal = 0;
 
 
 /* forward declarations: */
@@ -207,14 +210,23 @@ gwy_curve_class_init (GwyCurveClass *class)
                                G_PARAM_READABLE |
                                G_PARAM_WRITABLE));
 
-  curve_type_changed_signal =
-    g_signal_new ("curve_type_changed",
-           G_OBJECT_CLASS_TYPE (gobject_class),
-           G_SIGNAL_RUN_FIRST,
-           G_STRUCT_OFFSET (GwyCurveClass, curve_type_changed),
-           NULL, NULL,
-           g_cclosure_marshal_VOID__VOID,
-           G_TYPE_NONE, 0);
+    curve_type_changed_signal =
+        g_signal_new ("curve_type_changed",
+                      G_OBJECT_CLASS_TYPE (gobject_class),
+                      G_SIGNAL_RUN_FIRST,
+                      G_STRUCT_OFFSET (GwyCurveClass, curve_type_changed),
+                      NULL, NULL,
+                      g_cclosure_marshal_VOID__VOID,
+                      G_TYPE_NONE, 0);
+
+    curve_edited_signal =
+        g_signal_new ("curve_edited",
+                      G_OBJECT_CLASS_TYPE (gobject_class),
+                      G_SIGNAL_RUN_FIRST,
+                      G_STRUCT_OFFSET (GwyCurveClass, curve_edited),
+                      NULL, NULL,
+                      g_cclosure_marshal_VOID__VOID,
+                      G_TYPE_NONE, 0);
 }
 
 static void
@@ -225,7 +237,7 @@ gwy_curve_init (GwyCurve *curve)
 
     curve->cursor_type = GDK_TOP_LEFT_ARROW;
     curve->pixmap = NULL;
-    curve->curve_type = GWY_CURVE_TYPE_SPLINE;
+    curve->curve_type = GWY_CURVE_TYPE_LINEAR;
     curve->height = 0;
     curve->grab_point = -1;
     curve->grab_channel = -1;
@@ -663,6 +675,8 @@ gwy_curve_button_press(GtkWidget *widget,
         break;*/
     }
     gwy_curve_draw(c, width, height);
+
+    g_signal_emit(c, curve_edited_signal, 0);
     return TRUE;
 }
 
@@ -711,6 +725,8 @@ gwy_curve_button_release(GtkWidget *widget,
     new_type = GDK_FLEUR;
     c->grab_point = -1;
     c->grab_channel = -1;
+
+    g_signal_emit(c, curve_edited_signal, 0);
     return TRUE;
 }
 
@@ -788,6 +804,8 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
             }
             gwy_curve_interpolate(c, width, height);
             gwy_curve_draw(c, width, height);
+
+            g_signal_emit(c, curve_edited_signal, 0);
         }
         break;
 
@@ -838,6 +856,7 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
         gdk_window_set_cursor(w->window, cursor);
         gdk_cursor_unref(cursor);
     }
+
     return TRUE;
 }
 
@@ -1013,7 +1032,7 @@ gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
 
 void
 gwy_curve_set_range (GwyCurve *curve,
-             gfloat    min_x,
+                     gfloat    min_x,
                      gfloat    max_x,
                      gfloat    min_y,
                      gfloat    max_y)
@@ -1039,6 +1058,49 @@ gwy_curve_set_range (GwyCurve *curve,
 
   gwy_curve_size_graph (curve);
   gwy_curve_reset_vector (curve);
+}
+
+void
+gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
+{
+    gint width, height;
+    gint c_index, i;
+    GwyChannelData *channel;
+
+    for (c_index=0; c_index<3; c_index++) {
+        channel = &curve->channel_data[c_index];
+
+        if (channel->ctlpoints)
+            g_free(channel->ctlpoints);
+
+        channel->num_ctlpoints = channel_data[c_index].num_ctlpoints;
+        channel->ctlpoints = g_malloc(channel->num_ctlpoints*sizeof(GwyPoint));
+        for (i=0; i<channel->num_ctlpoints; i++) {
+            channel->ctlpoints[i].x = channel_data[c_index].ctlpoints[i].x;
+            channel->ctlpoints[i].y = channel_data[c_index].ctlpoints[i].y;
+        }
+    }
+
+    if (curve->pixmap) {
+        width = GTK_WIDGET(curve)->allocation.width - RADIUS * 2;
+        height = GTK_WIDGET(curve)->allocation.height - RADIUS * 2;
+
+        if (curve->curve_type == GWY_CURVE_TYPE_FREE) {
+            curve->curve_type = GWY_CURVE_TYPE_LINEAR;
+            gwy_curve_interpolate(curve, width, height);
+            curve->curve_type = GWY_CURVE_TYPE_FREE;
+        }
+        else
+            gwy_curve_interpolate(curve, width, height);
+
+        gwy_curve_draw(curve, width, height);
+    }
+}
+
+void
+gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
+{
+    channel_data = &curve->channel_data;
 }
 
 /*XXX - fixme
