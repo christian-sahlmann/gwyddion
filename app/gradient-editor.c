@@ -42,6 +42,7 @@ typedef struct {
 
     GtkWidget *edit_window;
     GtkWidget *curve;
+    GtkWidget *button_reset;
 } GwyGradientEditor;
 
 static void gwy_gradient_editor_changed     (GtkTreeSelection *selection,
@@ -53,6 +54,7 @@ static void gwy_gradient_editor_delete      (GwyGradientEditor *editor);
 static void gwy_gradient_editor_edit        (GwyGradientEditor *editor);
 static void gwy_gradient_editor_construct   (GwyGradientEditor *editor);
 static void gwy_gradient_editor_edited      (GwyGradientEditor *editor);
+static void gwy_gradient_editor_reset       (GwyGradientEditor *editor);
 static void gwy_gradient_editor_closed      (GwyGradientEditor *editor);
 
 void
@@ -307,7 +309,7 @@ gwy_gradient_editor_edit(GwyGradientEditor *editor)
 static void
 gwy_gradient_editor_construct(GwyGradientEditor *editor)
 {
-    GtkWidget *vbox, *curve;
+    GtkWidget *hbox, *vbox, *curve, *button;
 
     g_return_if_fail(editor->edit_window == NULL);
 
@@ -319,18 +321,27 @@ gwy_gradient_editor_construct(GwyGradientEditor *editor)
     g_signal_connect_swapped(editor->edit_window, "destroy",
                              G_CALLBACK(gwy_gradient_editor_closed), editor);
 
-    vbox = gtk_vbox_new(FALSE, 5);
-    gtk_container_add(GTK_CONTAINER(editor->edit_window), vbox);
+    hbox = gtk_hbox_new(FALSE, 5);
+    gtk_container_add(GTK_CONTAINER(editor->edit_window), hbox);
 
     curve = gwy_curve_new();
     gwy_curve_set_range(GWY_CURVE(curve), 0, 1, 0, 1);
-    gtk_box_pack_start(GTK_BOX(vbox), curve, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), curve, TRUE, TRUE, 0);
     gtk_widget_set_size_request(curve, 300, 200);
     g_signal_connect_swapped(curve, "curve_edited",
                              G_CALLBACK(gwy_gradient_editor_edited), editor);
     editor->curve = curve;
 
-    gtk_widget_show_all(vbox);
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_mnemonic("_Reset");
+    gtk_box_pack_start(GTK_BOX(vbox), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_gradient_editor_reset), editor);
+    editor->button_reset = button;
+
+    gtk_widget_show_all(hbox);
 }
 
 static void
@@ -377,6 +388,12 @@ gwy_gradient_editor_edited(GwyGradientEditor *editor)
     */
 
     g_debug("The signal worked!");
+}
+
+static void
+gwy_gradient_editor_reset(GwyGradientEditor *editor)
+{
+    gwy_curve_reset(GWY_CURVE(editor->curve));
 }
 
 static void

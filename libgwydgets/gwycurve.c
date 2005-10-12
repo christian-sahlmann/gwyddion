@@ -985,10 +985,10 @@ gwy_curve_reset (GwyCurve *c)
   GwyCurveType old_type;
 
   old_type = c->curve_type;
-  c->curve_type = GWY_CURVE_TYPE_SPLINE;
+  c->curve_type = GWY_CURVE_TYPE_LINEAR;
   gwy_curve_reset_vector (c);
 
-  if (old_type != GWY_CURVE_TYPE_SPLINE)
+  if (old_type != GWY_CURVE_TYPE_LINEAR)
     {
        g_signal_emit (c, curve_type_changed_signal, 0);
        g_object_notify (G_OBJECT (c), "curve-type");
