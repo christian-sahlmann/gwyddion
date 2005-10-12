@@ -72,7 +72,7 @@ module_register(const gchar *name)
 static gboolean
 hough(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *edgefield, *result;
+    GwyDataField *dfield, *edgefield, *result, *f1, *f2;
     GwyContainer *resdata;
     GtkWidget *data_window;
     
@@ -87,21 +87,33 @@ hough(GwyContainer *data, GwyRunType run)
 					       NULL);
     
     result = GWY_DATA_FIELD(gwy_container_get_object_by_name(resdata, "/0/data"));
-    gwy_data_field_resample(result, 
-			    sqrt(gwy_data_field_get_xres(result)*gwy_data_field_get_xres(result)
-				 +gwy_data_field_get_yres(result)*gwy_data_field_get_yres(result)), 
-			    360,
-			    GWY_INTERPOLATION_NONE);
+//    gwy_data_field_resample(result, 
+//			    sqrt(gwy_data_field_get_xres(result)*gwy_data_field_get_xres(result)
+//				 +gwy_data_field_get_yres(result)*gwy_data_field_get_yres(result)), 
+//			    360,
+//			    GWY_INTERPOLATION_NONE);
     
     edgefield = gwy_data_field_duplicate(dfield);
+    f1 = gwy_data_field_duplicate(dfield);
+    f2 = gwy_data_field_duplicate(dfield);
+    
     
     gwy_data_field_filter_canny(edgefield, 0.1);
-    gwy_data_field_hough_line(edgefield,
+    gwy_data_field_filter_sobel(f1, GTK_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(f2, GTK_ORIENTATION_VERTICAL);
+    /*gwy_data_field_hough_line(edgefield,
 			      NULL,
 			      NULL,
 			      result,
 			      1);
+    */
+    gwy_data_field_hough_circle(edgefield,
+			      f1,
+			      f2,
+			      result,
+			      10);
     
+     
     data_window = gwy_app_data_window_create(resdata);
 
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),

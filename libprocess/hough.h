@@ -31,10 +31,22 @@ void gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *result,
                                gint hwidth);
 
+void gwy_data_field_hough_circle(GwyDataField *dfield,
+                                 GwyDataField *x_gradient,
+                                 GwyDataField *y_gradient,
+                                 GwyDataField *result,
+                                 gdouble radius);
+
+
 void gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                GwyDataField *x_gradient,
                                GwyDataField *y_gradient,
                                gint hwidth);
+void gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
+                               GwyDataField *x_gradient,
+                               GwyDataField *y_gradient,
+                               gdouble radius);
+
 
 void gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
                                           gint *xdata,
