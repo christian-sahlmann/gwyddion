@@ -59,7 +59,7 @@ gwy_data_field_hough_line(GwyDataField *dfield,
                                gint hwidth)
 {
     gint k, col, row, xres, yres, rxres, ryres;
-    gdouble rho, theta, rhostep, thetastep, *data, gradangle, gradangle2, gradangle3;
+    gdouble rho, theta, rhostep, thetastep, *data, gradangle, gradangle0, gradangle2, gradangle3, threshold;
     
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
@@ -89,16 +89,19 @@ gwy_data_field_hough_line(GwyDataField *dfield,
             {
                 if (x_gradient && y_gradient)
                 {
-                    gradangle = atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
+                    /*TODO fix this maximally stupid angle wrapping*/
+                    gradangle = G_PI/2.0 + atan2(y_gradient->data[col + row*xres], x_gradient->data[col + row*xres]);
                     gradangle2 = gradangle + G_PI;
+                    gradangle0 = gradangle - G_PI;
                     gradangle3 = gradangle + 2*G_PI;
                 }
                 for (k = 0; k < result->yres; k++)
                 {
                     theta = (gdouble)k*thetastep;
                     
-                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<0.3 || fabs(theta-gradangle2)<0.3 
-                        || fabs(theta-gradangle3)<0.3)) continue;
+                    threshold = 0.1;
+                    if (x_gradient && y_gradient && !(fabs(theta-gradangle)<threshold || fabs(theta-gradangle2)<threshold 
+                        || fabs(theta-gradangle3)<threshold || fabs(theta-gradangle0)<threshold)) continue;
                     
                      
                     rho = ((gdouble)col)*cos(theta) + ((gdouble)row)*sin(theta);
@@ -137,19 +140,13 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     hmax = gwy_data_field_get_max(result);
     hmin = gwy_data_field_get_min(result);
-    threshold = hmax - (hmax - hmin)/2.5; /*FIXME do GUI for this parameter*/
+    threshold = hmax - (hmax - hmin)/1.5; /*FIXME do GUI for this parameter*/
 
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
 
     for (i = 0; i < 200; i++)
     {
-        /*FIXME use only half of spectrum (the right one)*/
         if (zdata[i]>threshold && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
-                /*printf("rho: %g   theta: %g  (%g):  (%d  %d  %g)\n", ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres),
-                                                             180/G_PI*((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
-                                                             ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
-                                                             xdata[i], ydata[i], zdata[i]);
-                */
                 bresenhams_line_polar(dfield, 
                                       ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres) - result->xreal/2, 
                                       ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres));

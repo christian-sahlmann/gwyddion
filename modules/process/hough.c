@@ -72,7 +72,7 @@ module_register(const gchar *name)
 static gboolean
 hough(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *edgefield, *gradient_x, *gradient_y, *result;
+    GwyDataField *dfield, *edgefield, *result;
     GwyContainer *resdata;
     GtkWidget *data_window;
     
@@ -94,13 +94,8 @@ hough(GwyContainer *data, GwyRunType run)
 			    GWY_INTERPOLATION_NONE);
     
     edgefield = gwy_data_field_duplicate(dfield);
-    gradient_x = gwy_data_field_duplicate(dfield);
-    gradient_y = gwy_data_field_duplicate(dfield);
     
     gwy_data_field_filter_canny(edgefield, 0.1);
-    gwy_data_field_filter_sobel(gradient_x, GTK_ORIENTATION_HORIZONTAL);
-    gwy_data_field_filter_sobel(gradient_y, GTK_ORIENTATION_VERTICAL);
-    
     gwy_data_field_hough_line(edgefield,
 			      NULL,
 			      NULL,
