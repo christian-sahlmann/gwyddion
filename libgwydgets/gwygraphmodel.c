@@ -560,13 +560,13 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     newcurves = g_ptr_array_new();
     for (i = 0; i < gmodel->curves->len; i++) {
         cmodel = g_ptr_array_index(gmodel->curves, i);
-        if (gwy_strequal(description, cmodel->description->str))
-            g_ptr_array_add(newcurves, cmodel);
-        else {
+        if (gwy_strequal(description, cmodel->description->str)) {
             g_signal_handlers_disconnect_by_func
                        (cmodel, gwy_graph_model_signal_layout_changed, gmodel);
             g_object_unref(cmodel);
         }
+        else
+            g_ptr_array_add(newcurves, cmodel);
     }
 
     /* Do nothing when no curve was actually removed */
