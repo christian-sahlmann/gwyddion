@@ -545,9 +545,9 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
  *
  * Removes all the curves having same description string as @description.
  *
- * Returns: %TRUE if any curve was removed, %FALSE otherwise.
+ * Returns: The number of removed curves.
  **/
-gboolean
+gint
 gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
                                             const gchar *description)
 {
@@ -555,7 +555,7 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     GwyGraphCurveModel *cmodel;
     guint i;
 
-    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), 0);
 
     newcurves = g_ptr_array_new();
     for (i = 0; i < gmodel->curves->len; i++) {
@@ -570,15 +570,16 @@ gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
     }
 
     /* Do nothing when no curve was actually removed */
-    if (gmodel->curves->len == newcurves->len) {
+    i = gmodel->curves->len - newcurves->len;
+    if (i == 0) {
         g_ptr_array_free(newcurves, TRUE);
-        return FALSE;
+        return 0;
     }
     GWY_SWAP(GPtrArray*, gmodel->curves, newcurves);
     g_ptr_array_free(newcurves, TRUE);
 
     g_object_notify(G_OBJECT(gmodel), "n");
-    return TRUE;
+    return i;
 }
 
 /**
