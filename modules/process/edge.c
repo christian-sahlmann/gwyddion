@@ -283,7 +283,7 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     xres = gwy_data_field_get_xres(show);
     yres = gwy_data_field_get_yres(show);
 
-    gwy_data_field_hough_circle_strenghten(show, x_gradient, y_gradient, 11);
+    gwy_data_field_hough_circle_strenghten(show, x_gradient, y_gradient, 11, 0.8);
 }
 
 

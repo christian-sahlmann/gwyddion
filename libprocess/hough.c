@@ -127,10 +127,11 @@ void
 gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
                                           GwyDataField *x_gradient,
                                           GwyDataField *y_gradient,
-                                          gint hwidth)
+                                          gint hwidth,
+                                          gdouble threshold)
 {
     GwyDataField *result;
-    gdouble hmax, hmin, threshold, zdata[200];
+    gdouble hmax, hmin, threshval, zdata[200];
     gint i, xdata[200], ydata[200];
 
     result = gwy_data_field_new(sqrt(gwy_data_field_get_xres(dfield)*gwy_data_field_get_xres(dfield)
@@ -142,13 +143,13 @@ gwy_data_field_hough_line_strenghten(GwyDataField *dfield,
 
     hmax = gwy_data_field_get_max(result);
     hmin = gwy_data_field_get_min(result);
-    threshold = hmax - (hmax - hmin)/2.5; /*FIXME do GUI for this parameter*/
+    threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
 
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
 
     for (i = 0; i < 200; i++)
     {
-        if (zdata[i]>threshold && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
+        if (zdata[i]>threshval && (ydata[i]<result->yres/4 || ydata[i]>=3*result->yres/4)) {
                 bresenhams_line_polar(dfield, 
                                       ((gdouble)xdata[i])*result->xreal/((gdouble)result->xres) - result->xreal/2, 
                                       ((gdouble)ydata[i])*G_PI*2.0/((gdouble)result->yres),
@@ -204,10 +205,11 @@ void
 gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
                                           GwyDataField *x_gradient,
                                           GwyDataField *y_gradient,
-                                          gdouble radius)
+                                          gdouble radius,
+                                          gdouble threshold)
 {
     GwyDataField *result, *buffer;
-    gdouble hmax, hmin, threshold, zdata[200];
+    gdouble hmax, hmin, threshval, zdata[200];
     gint i, xdata[200], ydata[200];
 
     result = gwy_data_field_new_alike(dfield, FALSE);
@@ -216,7 +218,7 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
 
     hmax = gwy_data_field_get_max(result);
     hmin = gwy_data_field_get_min(result);
-    threshold = hmax - (hmax - hmin)/5; /*FIXME do GUI for this parameter*/
+    threshval = hmax + (hmax - hmin)*threshold; /*FIXME do GUI for this parameter*/
 
     gwy_data_field_get_local_maxima_list(result, xdata, ydata, zdata, 200, 2);
 
@@ -225,7 +227,7 @@ gwy_data_field_hough_circle_strenghten(GwyDataField *dfield,
     
     for (i = 0; i < 200; i++)
     {
-        if (zdata[i]>threshold) {
+        if (zdata[i]>threshval) {
                 bresenhams_circle(buffer, 
                                       (gint)radius,
                                       xdata[i], 
