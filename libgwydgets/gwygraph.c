@@ -64,13 +64,13 @@ gwy_graph_class_init(GwyGraphClass *klass)
 {
     GtkWidgetClass *widget_class;
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    
+
     widget_class = (GtkWidgetClass*)klass;
 
     widget_class->size_request = gwy_graph_size_request;
     widget_class->size_allocate = gwy_graph_size_allocate;
     gobject_class->finalize = gwy_graph_finalize;
-    
+
     klass->selected = NULL;
     klass->mouse_moved = NULL;
     klass->zoomed = NULL;
@@ -133,11 +133,11 @@ gwy_graph_init(G_GNUC_UNUSED GwyGraph *graph)
 
 }
 
-static void 
+static void
 gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
-    if (graph->graph_model) 
+    if (graph->graph_model)
     {
         gwy_object_unref(graph->graph_model);
     }
@@ -158,18 +158,18 @@ gwy_graph_new(GwyGraphModel *gmodel)
     GwyGraph *graph = GWY_GRAPH(g_object_new(gwy_graph_get_type(), NULL));
     gwy_debug("");
 
-    if (gmodel != NULL) 
+    if (gmodel != NULL)
     {
        graph->graph_model = gmodel;
        g_object_ref(gmodel);
     }
-    
+
     gtk_table_resize(GTK_TABLE(graph), 3, 3);
     gtk_table_set_homogeneous(GTK_TABLE(graph), FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(graph), 0);
     gtk_table_set_col_spacings(GTK_TABLE(graph), 0);
 
-    graph->grid_type = GWY_GRAPH_GRID_AUTO;   
+    graph->grid_type = GWY_GRAPH_GRID_AUTO;
 
     if (gmodel != NULL) {
         graph->axis_top
@@ -188,7 +188,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
     gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
     gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
-    
+
     g_signal_connect(graph->axis_left, "rescaled",
                      G_CALLBACK(rescaled_cb), graph);
     g_signal_connect(graph->axis_bottom, "rescaled",
@@ -292,11 +292,12 @@ gwy_graph_new(GwyGraphModel *gmodel)
 void
 gwy_graph_refresh(GwyGraph *graph)
 {
-    
+
     GwyGraphModel *model;
     GwyGraphCurveModel *curvemodel;
     gdouble x_reqmin, x_reqmax, y_reqmin, y_reqmax;
-    gint i, j;
+    gint i, j, nc, ndata;
+    const gdouble *xdata, *ydata;
     gboolean has_data;
 
     if (graph->graph_model == NULL)
@@ -307,28 +308,31 @@ gwy_graph_refresh(GwyGraph *graph)
     gwy_axis_set_logarithmic(graph->axis_right,  model->y_is_logarithmic);
     gwy_axis_set_logarithmic(graph->axis_top,    model->x_is_logarithmic);
     gwy_axis_set_logarithmic(graph->axis_bottom, model->x_is_logarithmic);
-    
+
     gwy_axis_set_unit(graph->axis_top, model->x_unit);
     gwy_axis_set_unit(graph->axis_bottom, model->x_unit);
     gwy_axis_set_unit(graph->axis_left, model->y_unit);
     gwy_axis_set_unit(graph->axis_right, model->y_unit);
-    if (model->ncurves > 0) {
-
+    nc = gwy_graph_model_get_n_curves(model);
+    if (nc > 0) {
         /*refresh axis and reset axis requirements*/
         x_reqmin = y_reqmin = G_MAXDOUBLE;
         x_reqmax = y_reqmax = -G_MAXDOUBLE;
         has_data = FALSE;
-        for (i = 0; i < model->ncurves; i++) {
-            curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
-            for (j = 0; j < curvemodel->n; j++) {
-                if (x_reqmin > curvemodel->xdata[j])
-                    x_reqmin = curvemodel->xdata[j];
-                if (y_reqmin > curvemodel->ydata[j])
-                    y_reqmin = curvemodel->ydata[j];
-                if (x_reqmax < curvemodel->xdata[j])
-                    x_reqmax = curvemodel->xdata[j];
-                if (y_reqmax < curvemodel->ydata[j])
-                    y_reqmax = curvemodel->ydata[j];
+        for (i = 0; i < nc; i++) {
+            curvemodel = gwy_graph_model_get_curve_by_index(model, i);
+            ndata = gwy_graph_curve_model_get_ndata(curvemodel);
+            xdata = gwy_graph_curve_model_get_xdata(curvemodel);
+            ydata = gwy_graph_curve_model_get_ydata(curvemodel);
+            for (j = 0; j < ndata; j++) {
+                if (x_reqmin > xdata[j])
+                    x_reqmin = xdata[j];
+                if (y_reqmin > ydata[j])
+                    y_reqmin = ydata[j];
+                if (x_reqmax < xdata[j])
+                    x_reqmax = xdata[j];
+                if (y_reqmax < ydata[j])
+                    y_reqmax = ydata[j];
                 has_data = TRUE;
             }
         }
@@ -356,7 +360,7 @@ gwy_graph_refresh(GwyGraph *graph)
         model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
         model->y_max = gwy_axis_get_maximum(graph->axis_left);
         model->y_min = gwy_axis_get_minimum(graph->axis_left);
-         
+
     }
 
 
@@ -398,7 +402,7 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
 {
     GArray *array = g_array_new(FALSE, FALSE, sizeof(gdouble));
     GwyGraphModel *model;
-    
+
     if (graph->graph_model == NULL)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);
@@ -413,10 +417,10 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
         gwy_graph_area_set_x_grid_data(graph->area, array);
         gwy_axis_set_grid_data(graph->axis_bottom, array);
         gwy_graph_area_set_y_grid_data(graph->area, array);
-    
+
         g_array_free(array, TRUE);
     }
-     
+
     gwy_graph_area_refresh(graph->area);
 }
 
@@ -917,38 +921,38 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
     }
 }
 
-void       
+void
 gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
 {
     graph->grid_type = grid_type;
     gwy_graph_refresh(graph);
 }
 
-GwyGraphGridType 
+GwyGraphGridType
 gwy_graph_get_grid_type(GwyGraph *graph)
 {
     return graph->grid_type;
 }
 
-void 
+void
 gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
 {
     gwy_graph_area_set_x_grid_data(graph->area, grid_data);
 }
 
-void 
+void
 gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
 {
     gwy_graph_area_set_y_grid_data(graph->area, grid_data);
 }
 
-const GArray* 
+const GArray*
 gwy_graph_get_x_grid_data(GwyGraph *graph)
 {
     return gwy_graph_get_x_grid_data(graph->area);
 }
 
-const GArray* 
+const GArray*
 gwy_graph_get_y_grid_data(GwyGraph *graph)
 {
     return gwy_graph_get_y_grid_data(graph->area);

@@ -260,7 +260,7 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                        GwyGraphLabel *label)
 {
     gint ypos, winheight, winwidth, winx, winy, frame_off;
-    gint i;
+    gint i, nc;
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     PangoRectangle rect;
@@ -281,8 +281,9 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     winwidth = x + width;
     winheight = y + height;
 
-    for (i = 0; i < model->ncurves; i++) {
-        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+    nc = gwy_graph_model_get_n_curves(model);
+    for (i = 0; i < nc; i++) {
+        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
 
         pango_layout_set_markup(layout, curvemodel->description->str,
                                 curvemodel->description->len);
@@ -389,18 +390,19 @@ gwy_graph_label_draw_label(GtkWidget *widget)
 static void
 set_requised_size(GwyGraphLabel *label)
 {
-    gint i;
+    gint i, nc;
     PangoLayout *layout;
     PangoRectangle rect;
     GwyGraphCurveModel *curvemodel;
-    GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
+    GwyGraphModel *model;
 
     label->reqheight = 0;
     label->reqwidth = 0;
 
-    for (i=0; i<model->ncurves; i++)
-    {
-        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+    model = GWY_GRAPH_MODEL(label->graph_model);
+    nc = gwy_graph_model_get_n_curves(model);
+    for (i = 0; i < nc; i++) {
+        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
 
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), "");
 
@@ -409,23 +411,33 @@ set_requised_size(GwyGraphLabel *label)
                                 curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
 
-        if (label->reqwidth < rect.width) label->reqwidth = rect.width + 30 + model->label_frame_thickness;
+        if (label->reqwidth < rect.width)
+            label->reqwidth = rect.width + 30 + model->label_frame_thickness;
         label->reqheight += rect.height + 5 + model->label_frame_thickness;
     }
-    if (label->reqwidth == 0) label->reqwidth = 30;
-    if (label->reqheight == 0) label->reqheight = 30;
+    if (label->reqwidth == 0)
+        label->reqwidth = 30;
+    if (label->reqheight == 0)
+        label->reqheight = 30;
 }
 
 /*synchronize label with information in graphmodel*/
 void
 gwy_graph_label_refresh(GwyGraphLabel *label)
 {
-    GwyGraphModel *model = GWY_GRAPH_MODEL(label->graph_model);
+    GwyGraphModel *model;
+    gint nc;
+
+    model = GWY_GRAPH_MODEL(label->graph_model);
+    nc = gwy_graph_model_get_n_curves(model);
 
     /*repaint label samples and descriptions*/
-    if (label->samplepos) g_free(label->samplepos);
-    if (model->ncurves > 0) label->samplepos = g_new(gint, model->ncurves);
-    else label->samplepos = NULL;
+    if (label->samplepos)
+        g_free(label->samplepos);
+    if (nc > 0)
+        label->samplepos = g_new(gint, nc);
+    else
+        label->samplepos = NULL;
 
     set_requised_size(label);
     gtk_widget_queue_resize(GTK_WIDGET(label));
@@ -442,7 +454,7 @@ gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
         g_signal_connect_swapped(GWY_GRAPH_MODEL(gmodel), "notify",
                      G_CALLBACK(gwy_graph_label_refresh), label);
     }
-    
+
 }
 
 
@@ -453,12 +465,13 @@ gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
 }
 
 
-GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
-                                      gint x, gint y,
-                                      gint width, gint height,
-                                      gint fontsize)
+GString*
+gwy_graph_label_export_vector(GwyGraphLabel *label,
+                              gint x, gint y,
+                              gint width, gint height,
+                              gint fontsize)
 {
-    gint i;
+    gint i, nc;
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     GString *out;
@@ -471,7 +484,6 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
 
     g_string_append_printf(out, "/Times-Roman findfont\n");
     g_string_append_printf(out, "%d scalefont\n setfont\n", fontsize);
-
 
     model = GWY_GRAPH_MODEL(label->graph_model);
     g_string_append_printf(out, "/box {\n"
@@ -498,12 +510,12 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
     g_string_append_printf(out, "1 setgray\n");
     g_string_append_printf(out, "fill\n");
 
-
     xpos = 5;
     ypos = height - fontsize;
-    for (i=0; i<model->ncurves; i++)
-    {
-        curvemodel = GWY_GRAPH_CURVE_MODEL(model->curves[i]);
+
+    nc = gwy_graph_model_get_n_curves(model);
+    for (i = 0; i < nc; i++) {
+        curvemodel = gwy_graph_model_get_curve_by_index(model, i);
         pointsize = gwy_graph_curve_model_get_curve_point_size(curvemodel);
         linesize = gwy_graph_curve_model_get_curve_line_size(curvemodel);
         color = gwy_graph_curve_model_get_curve_color(curvemodel);
@@ -512,11 +524,13 @@ GString* gwy_graph_label_export_vector(GwyGraphLabel *label,
         g_string_append_printf(out, "/hpt2 hpt 2 mul def\n");
         g_string_append_printf(out, "/vpt2 vpt 2 mul def\n");
         g_string_append_printf(out, "%d setlinewidth\n", linesize);
-        g_string_append_printf(out, "%f %f %f setrgbcolor\n", color->r, color->g, color->b);
+        g_string_append_printf(out, "%f %f %f setrgbcolor\n",
+                               color->r, color->g, color->b);
         g_string_append_printf(out, "%d %d M\n", x + xpos, y + ypos);
         g_string_append_printf(out, "%d %d L\n", x + xpos + 20, y + ypos);
         g_string_append_printf(out, "%d %d R\n", 5, -(gint)(fontsize/4));
-        g_string_append_printf(out, "(%s) show\n", gwy_graph_curve_model_get_description(curvemodel));
+        g_string_append_printf(out, "(%s) show\n",
+                               gwy_graph_curve_model_get_description(curvemodel));
         g_string_append_printf(out, "stroke\n");
         ypos -= fontsize + 5;
     }

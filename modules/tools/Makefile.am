@@ -2,6 +2,8 @@
 
 toolsdir = $(pkglibdir)/modules/tool
 
+# XXX: profile.la
+
 tools_LTLIBRARIES = \
 	distance.la		\
 	crop.la			\
@@ -11,7 +13,6 @@ tools_LTLIBRARIES = \
 	level3.la		\
 	maskedit.la		\
 	polynom.la		\
-	profile.la		\
 	readvalue.la		\
 	sfunctions.la		\
 	spotremove.la		\
@@ -79,8 +80,8 @@ maskedit_la_LIBADD = $(module_libadd)
 polynom_la_SOURCES = polynom.c
 polynom_la_LIBADD = $(module_libadd)
 
-profile_la_SOURCES = profile.c
-profile_la_LIBADD = $(module_libadd)
+#profile_la_SOURCES = profile.c
+#profile_la_LIBADD = $(module_libadd)
 
 readvalue_la_SOURCES = readvalue.c
 readvalue_la_LIBADD = $(module_libadd)

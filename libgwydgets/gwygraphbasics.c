@@ -39,7 +39,7 @@ x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
    return specs->xmin
        + (gint)((log10(data) - log10(specs->real_xmin))
                 /((log10(specs->real_xmin + specs->real_width) - log10(specs->real_xmin)))*((gdouble)specs->width-1));
-   
+
 }
 
 static gint
@@ -49,7 +49,7 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
     return specs->ymin + specs->height
            - (gint)((data - specs->real_ymin)
                     /(specs->real_height)*((gdouble)specs->height-1));
-   
+
     return specs->ymin + specs->height
         - (gint)((log10(data) - log10(specs->real_ymin))
                 /((log10(specs->real_ymin + specs->real_height) - log10(specs->real_ymin)))*((gdouble)specs->height-1));
@@ -333,8 +333,8 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
-void 
-gwy_graph_draw_grid(GdkDrawable *drawable, 
+void
+gwy_graph_draw_grid(GdkDrawable *drawable,
                     GdkGC *gc,
                     GwyGraphActiveAreaSpecs *specs,
                     GArray *x_grid_data,
@@ -343,9 +343,9 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
     gint i;
     gdouble pos, *pvalue;
     static const GwyRGBA color = { 0.75, 0.75, 0.75, 1.0 };
-    
+
     gwy_rgba_set_gdk_gc_fg(&color, gc);
-    
+
     for (i = 0; i < x_grid_data->len; i++) {
         pvalue = &g_array_index(x_grid_data, gdouble, i);
         pos = y_data_to_pixel(specs, *pvalue);
@@ -357,7 +357,7 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
         pos = x_data_to_pixel(specs, *pvalue);
         gdk_draw_line(drawable, gc, pos, specs->ymin - 1, pos, specs->ymin + specs->height + 1);
     }
-    
+
 }
 
 

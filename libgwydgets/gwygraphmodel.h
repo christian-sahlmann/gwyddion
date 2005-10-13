@@ -43,9 +43,7 @@ typedef struct _GwyGraphModelClass GwyGraphModelClass;
 struct _GwyGraphModel {
     GObject parent_instance;
 
-    gint ncurves;
-    GObject **curves;
-
+    GPtrArray *curves;
     GString *title;
 
     /*these values reflect reasonable bounding values of all the curves. They can
@@ -107,7 +105,7 @@ GwyGraphModel* gwy_graph_model_new_alike                (GwyGraphModel *gmodel);
 gint           gwy_graph_model_get_n_curves             (GwyGraphModel *gmodel);
 void           gwy_graph_model_add_curve                (GwyGraphModel *gmodel,
                                                          GwyGraphCurveModel *curve);
-void         gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
+gboolean       gwy_graph_model_remove_curve_by_description(GwyGraphModel *gmodel,
                                                          const gchar *description);
 void           gwy_graph_model_remove_curve_by_index    (GwyGraphModel *gmodel,
                                                          gint cindex);

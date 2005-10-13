@@ -170,12 +170,12 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
     gint ndata, i, pos;
 
     model = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
-    if (model->ncurves <= curve) {
+    if (gwy_graph_model_get_n_curves(model) <= curve) {
         *ret = FALSE;
         return 0;
     }
 
-    cmodel = GWY_GRAPH_CURVE_MODEL(model->curves[curve]);
+    cmodel = gwy_graph_model_get_curve_by_index(model, curve);
     xdata = gwy_graph_curve_model_get_xdata(cmodel);
     ydata = gwy_graph_curve_model_get_ydata(cmodel);
     ndata = gwy_graph_curve_model_get_ndata(cmodel);
@@ -332,7 +332,9 @@ gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
-    dialog->index = GTK_OBJECT(gtk_adjustment_new(dialog->curve_index, 1, gmodel->ncurves, 1, 5, 0));
+    dialog->index = gtk_adjustment_new(dialog->curve_index,
+                                       1, gwy_graph_model_get_n_curves(gmodel),
+                                       1, 5, 0);
     gwy_table_attach_spinbutton(table, 0, "Curve:", "", dialog->index);
     g_signal_connect_swapped(dialog->index, "value-changed",
                              G_CALLBACK(index_changed_cb), dialog);
