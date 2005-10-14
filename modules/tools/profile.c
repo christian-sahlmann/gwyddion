@@ -468,11 +468,10 @@ apply(GwyUnitoolState *state)
     if (controls->separate) {
         for (i = 0; i < nselected; i++) {
             model = gwy_graph_model_new_alike(controls->graphmodel);
-
-            model->ncurves = 1;
+            gwy_graph_model_remove_all_curves(model);
+            gwy_graph_model_add_curve(model, gwy_graph_model_get_curve_by_index(controls->graphmodel, i));
             gwy_graph_model_set_title(model, ((GString*)controls->str->pdata[i])->str);
-            model->curves = g_new(GObject*, model->ncurves);
-            model->curves[0] = gwy_serializable_duplicate(controls->graphmodel->curves[i]);
+             
             graph = gwy_graph_new(model);
             gwy_object_unref(model);
             gwy_app_graph_window_create(GWY_GRAPH(graph), data);
