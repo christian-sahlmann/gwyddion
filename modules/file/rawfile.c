@@ -250,7 +250,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.6.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1377,8 +1377,8 @@ preview_cb(RawFileControls *controls)
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf, *pixbuf2;
-    gint xres, yres, avg, rms;
-    gdouble zoom;
+    gint xres, yres;
+    gdouble zoom, avg, rms;
 
     update_dialog_values(controls);
     if (!(dfield = rawfile_read_data_field(controls->dialog,
