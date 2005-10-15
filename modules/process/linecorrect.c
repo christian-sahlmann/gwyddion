@@ -44,6 +44,8 @@ static gboolean    line_correct_modus         (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    line_correct_median        (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    line_correct_match         (GwyContainer *data,
+                                               GwyRunType run);
 static gdouble     find_minima_golden         (gdouble (*func)(gdouble x,
                                                                gpointer data),
                                                gdouble from,
@@ -58,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -84,9 +86,17 @@ module_register(const gchar *name)
         LINECORR_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo line_correct_match_func_info = {
+        "line_correct_match",
+        N_("/_Correct Data/Ma_tch Line Correction"),
+        (GwyProcessFunc)&line_correct_match,
+        LINECORR_RUN_MODES,
+        0,
+    };
 
     gwy_process_func_register(name, &line_correct_modus_func_info);
     gwy_process_func_register(name, &line_correct_median_func_info);
+    gwy_process_func_register(name, &line_correct_match_func_info);
 
     return TRUE;
 }
@@ -229,6 +239,74 @@ sum_of_abs_diff(gdouble shift,
         sum += fabs(b[i] - (a[i] + shift));
 
     return sum;
+}
+
+static gboolean
+line_correct_match(GwyContainer *data,
+                   GwyRunType run)
+{
+    GwyDataField *dfield;
+    GwyDataLine *shifts;
+    gint xres, yres, i, j;
+    gdouble m, wsum, lambda, x;
+    gdouble *d, *s, *w;
+    const gdouble *a, *b;
+
+    g_return_val_if_fail(run & LINECORR_RUN_MODES, FALSE);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    gwy_app_undo_checkpoint(data, "/0/data", NULL);
+
+    yres = gwy_data_field_get_yres(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+
+    shifts = gwy_data_line_new(yres, 1.0, TRUE);
+    s = gwy_data_line_get_data(shifts);
+
+    w = g_new(gdouble, xres-1);
+    for (i = 1; i < yres; i++) {
+        a = d + xres*(i - 1);
+        b = d + xres*i;
+
+        /* Diffnorm */
+        wsum = 0.0;
+        for (j = 0; j < xres-1; j++) {
+            x = a[j+1] - a[j] - b[j+1] + b[j];
+            wsum += fabs(x);
+        }
+        if (wsum == 0)
+            continue;
+        m = wsum/(xres-1);
+
+        /* Weights */
+        wsum = 0.0;
+        for (j = 0; j < xres-1; j++) {
+            x = a[j+1] - a[j] - b[j+1] + b[j];
+            w[j] = exp(-(x*x/(2.0*m)));
+            wsum += w[j];
+        }
+
+        /* Correction */
+        lambda = (a[0] - b[0])*w[0];
+        for (j = 1; j < xres-1; j++)
+            lambda += (a[j] - b[j])*(w[j-1] + w[j]);
+        lambda += (a[xres-1] - b[xres-1])*w[xres-2];
+        lambda /= 2.0*wsum;
+
+        g_printerr("%g %g %g\n", m, wsum, lambda);
+
+        s[i] = lambda;
+    }
+    gwy_data_line_cumulate(shifts);
+    for (i = 1; i < yres; i++)
+        gwy_data_field_area_add(dfield, 0, i, xres, i+1, s[i]);
+    gwy_data_field_add(dfield, -s[yres-1]/(xres*yres));
+
+    g_object_unref(shifts);
+    g_free(w);
+    gwy_data_field_data_changed(dfield);
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
