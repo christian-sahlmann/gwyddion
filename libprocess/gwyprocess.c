@@ -27,9 +27,13 @@ static guint types_initialized = 0;
 /**
  * gwy_process_type_init:
  *
- * Initializes libgwyprocess types, making their deserialization safe.
+ * Makes libgwyprocess types safe for deserialization and performs other
+ * initialization.  You have to call this function before using objects
+ * from libgwyprocess.
  *
- * Eventually calls gwy_type_init().
+ * Calls gwy_type_init() first to make sure libgwyddion is initialized.
+ *
+ * It is safe to call this function more than once, subsequent calls are no-op.
  **/
 void
 gwy_process_type_init(void)

@@ -30,9 +30,14 @@ static guint types_initialized = 0;
 /**
  * gwy_draw_type_init:
  *
- * Initializes libgwydraw types, making their deserialization safe.
+ * Makes libgwydraw types safe for deserialization and performs other
+ * initialization.  You have to call this function before using objects
+ * from libgwydraw.
  *
- * Eventually calls gwy_process_type_init().
+ * Calls gwy_process_type_init() first to make sure libgwyprocess is
+ * initialized.
+ *
+ * It is safe to call this function more than once, subsequent calls are no-op.
  **/
 void
 gwy_draw_type_init(void)

@@ -30,9 +30,13 @@ static guint types_initialized = 0;
 /**
  * gwy_widgets_type_init:
  *
- * Initializes libgwywidgets data types, making their deserialization safe.
+ * Makes libgwydgets types safe for deserialization and performs other
+ * initialization.  You have to call this function before using widgets and
+ * objects from libgwydgets.
  *
- * Eventually calls gwy_draw_type_init().
+ * Calls gwy_draw_type_init() first to make sure libgwydraw is initialized.
+ *
+ * It is safe to call this function more than once, subsequent calls are no-op.
  **/
 void
 gwy_widgets_type_init(void)

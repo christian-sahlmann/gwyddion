@@ -28,9 +28,13 @@ static guint types_initialized = 0;
 /**
  * gwy_type_init:
  *
- * Initializes libgwyddion types, making their deserialization safe.
+ * Makes libgwyddion types safe for deserialization and performs other
+ * initialization.  You have to call this function before using objects
+ * from libgwyddion.
  *
- * Eventually calls g_type_init().
+ * Calls g_type_init() first to make sure GLib object system is initialized.
+ *
+ * It is safe to call this function more than once, subsequent calls are no-op.
  **/
 void
 gwy_type_init(void)
