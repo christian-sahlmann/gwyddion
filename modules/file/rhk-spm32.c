@@ -30,7 +30,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #define HEADER_SIZE 512
 
