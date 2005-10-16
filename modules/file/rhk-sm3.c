@@ -199,12 +199,8 @@ static gboolean      module_register         (const gchar *name);
 static gint          rhk_sm3_detect         (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer* rhk_sm3_load           (const gchar *filename);
-static gboolean      rhk_sm3_read_header    (RHKPage *rhkpage);
-static void          rhk_sm3_free           (RHKPage *rhkpage);
 static void          rhk_sm3_store_metadata (RHKPage *rhkpage,
                                             GwyContainer *container);
-static GwyDataField* rhk_sm3_read_data      (RHKPage *rhkpage,
-                                            GwyDataField *dfield);
 static guint         select_which_data       (GArray *rhkfile);
 static void          selection_changed       (GtkWidget *button,
                                               RHKControls *controls);
@@ -260,25 +256,28 @@ static guchar*
 rhk_sm3_read_string(const guchar **buffer,
                     gsize len)
 {
-    gchar *s;
-    guint n;
+    gchar *s, *p;
+    guint i, n;
+    gunichar chr;
 
     if (len < 2)
         return NULL;
 
-    n = 2*get_WORD(buffer);
+    n = get_WORD(buffer);
     len -= 2;
-    if (len < n)
+    if (len < 2*n)
         return NULL;
 
     if (!n)
         return g_strdup("");
 
-    s = g_convert(*buffer, n, "UTF-16LE", "UTF-8", NULL, NULL, NULL);
-    if (!s)
-        s = g_strdup("Invalid UTF-16");
+    p = s = g_new(gchar, 6*n + 1);
+    for (i = 0; i < n; i++) {
+        chr = get_WORD(buffer);
+        p += g_unichar_to_utf8(chr, p);
+    }
+    *p = '\0';
     gwy_debug("String: <%s>", s);
-    *buffer += n;
 
     return s;
 }
@@ -429,6 +428,55 @@ FAIL:
     return NULL;
 }
 
+static GwyDataField*
+rhk_sm3_page_to_data_field(const RHKPage *page)
+{
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    const gchar *unit;
+    gint xres, yres, i;
+    gint32 *pdata;
+    gdouble *data;
+
+    xres = page->x_size;
+    yres = page->y_size;
+    dfield = gwy_data_field_new(xres, yres,
+                                xres*fabs(page->x_scale),
+                                yres*fabs(page->y_scale),
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+    pdata = (gint32*)page->page_data;
+    for (i = 0; i < xres*yres; i++)
+        data[i] = GINT32_FROM_LE(pdata[i])*page->z_scale + page->z_offset;
+
+    if (page->strings[RHK_STRING_X_UNITS]
+        && page->strings[RHK_STRING_Y_UNITS]) {
+        if (!gwy_strequal(page->strings[RHK_STRING_X_UNITS],
+                          page->strings[RHK_STRING_Y_UNITS]))
+            g_warning("X and Y units are different, using X");
+        unit = page->strings[RHK_STRING_X_UNITS];
+    }
+    else if (page->strings[RHK_STRING_X_UNITS])
+        unit = page->strings[RHK_STRING_X_UNITS];
+    else if (page->strings[RHK_STRING_Y_UNITS])
+        unit = page->strings[RHK_STRING_Y_UNITS];
+    else
+        unit = "";
+    siunit = gwy_si_unit_new(unit);
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    if (page->strings[RHK_STRING_Z_UNITS])
+        unit = page->strings[RHK_STRING_Z_UNITS];
+    else
+        unit = "";
+    siunit = gwy_si_unit_new(unit);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    return dfield;
+}
+
 static GwyContainer*
 rhk_sm3_load(const gchar *filename)
 {
@@ -460,6 +508,11 @@ rhk_sm3_load(const gchar *filename)
     while ((rhkpage = rhk_sm3_read_page(&p, &size))) {
         gwy_debug("Page #%u read OK", rhkfile->len);
         gwy_debug("position %04x", p - buffer);
+        if (rhkpage->type != RHK_TYPE_IMAGE) {
+            gwy_debug("Page is not IMAGE, skipping");
+            rhk_sm3_page_free(rhkpage);
+            continue;
+        }
         g_ptr_array_add(rhkfile, rhkpage);
     }
 
@@ -476,6 +529,13 @@ rhk_sm3_load(const gchar *filename)
     else if (message)
         g_warning("%s", message);
         */
+
+    if (rhkfile->len) {
+        container = gwy_container_new();
+        dfield = rhk_sm3_page_to_data_field(g_ptr_array_index(rhkfile, 0));
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+    }
 
     gwy_file_abandon_contents(buffer, size, NULL);
     for (i = 0; i < rhkfile->len; i++)
