@@ -20,6 +20,7 @@ file_LTLIBRARIES = \
 	mifile.la \
 	pixmap.la \
 	rawfile.la \
+	rhk-sm3.la \
 	rhk-spm32.la \
 	sis.la \
 	spmlab.la \
@@ -104,6 +105,9 @@ pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
 rawfile_la_SOURCES = rawfile.c
 rawfile_la_LIBADD = $(module_libadd)
+
+rhk_sm3_la_SOURCES = rhk-sm3.c
+rhk_sm3_la_LIBADD = $(module_libadd)
 
 rhk_spm32_la_SOURCES = rhk-spm32.c
 rhk_spm32_la_LIBADD = $(module_libadd)
