@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -191,20 +191,20 @@ typedef struct {
 } RHKPage;
 
 typedef struct {
-    GArray *file;
+    GPtrArray *file;
     GwyContainer *data;
     GtkWidget *data_view;
 } RHKControls;
 
-static gboolean      module_register         (const gchar *name);
-static gint          rhk_sm3_detect         (const GwyFileDetectInfo *fileinfo,
+static gboolean      module_register       (const gchar *name);
+static gint          rhk_sm3_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* rhk_sm3_load           (const gchar *filename);
-static void          rhk_sm3_store_metadata (RHKPage *rhkpage,
+static GwyContainer* rhk_sm3_load          (const gchar *filename);
+static void          rhk_sm3_store_metadata(RHKPage *rhkpage,
                                             GwyContainer *container);
-static guint         select_which_data       (GArray *rhkfile);
-static void          selection_changed       (GtkWidget *button,
-                                              RHKControls *controls);
+static guint         select_which_data     (GPtrArray *rhkfile);
+static void          selection_changed     (GtkWidget *button,
+                                            RHKControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -546,9 +546,9 @@ rhk_sm3_load(const gchar *filename)
     count = 0;
     gwy_debug("position %04x", p - buffer);
     while ((rhkpage = rhk_sm3_read_page(&p, &size))) {
-        rhkpage->pageno = count;
         gwy_debug("Page #%u read OK", count);
         count++;
+        rhkpage->pageno = count;
         gwy_debug("position %04x", p - buffer);
         if (rhkpage->type != RHK_TYPE_IMAGE) {
             gwy_debug("Page is not IMAGE, skipping");
@@ -558,22 +558,9 @@ rhk_sm3_load(const gchar *filename)
         g_ptr_array_add(rhkfile, rhkpage);
     }
 
-    /*
     i = select_which_data(rhkfile);
     if (i != (guint)-1) {
-        rhkpage = &g_array_index(rhkfile, RHKPage, i);
-        dfield = rhk_sm3_read_data(rhkpage, NULL);
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        g_object_unref(dfield);
-        rhk_sm3_store_metadata(rhkpage, container);
-    }
-    else if (message)
-        g_warning("%s", message);
-        */
-
-    if (rhkfile->len) {
-        rhkpage = g_ptr_array_index(rhkfile, 0);
+        rhkpage = g_ptr_array_index(rhkfile, i);
         container = gwy_container_new();
         dfield = rhk_sm3_page_to_data_field(rhkpage);
         gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -662,9 +649,8 @@ rhk_sm3_store_metadata(RHKPage *rhkpage,
     gwy_container_set_string_by_name(container, "/meta/Page ID", str);
 }
 
-#if 0
 static guint
-select_which_data(GArray *rhkfile)
+select_which_data(GPtrArray *rhkfile)
 {
     RHKControls controls;
     RHKPage *rhkpage;
@@ -674,6 +660,7 @@ select_which_data(GArray *rhkfile)
     GwyPixmapLayer *layer;
     GSList *radio, *rl;
     guint i, b = (guint)-1;
+    const gchar *s;
 
     if (!rhkfile->len)
         return b;
@@ -682,14 +669,18 @@ select_which_data(GArray *rhkfile)
         return 0;
 
     controls.file = rhkfile;
-    choices = g_new(GwyEnum, rhkfile->len);
+    choices = g_new(GwyEnum, rhkfile->len + 1);
     for (i = 0; i < rhkfile->len; i++) {
-        rhkpage = &g_array_index(rhkfile, RHKPage, i);
+        rhkpage = g_ptr_array_index(rhkfile, i);
         choices[i].value = i;
-        choices[i].name = g_strdup_printf(_("Page %u (%s)"),
-                                          i+1, rhkpage->label);
+        s = rhkpage->strings[RHK_STRING_LABEL];
+        if (s && *s)
+            choices[i].name = g_strdup_printf(_("Page %u (%s)"),
+                                              rhkpage->pageno, s);
+        else
+            choices[i].name = g_strdup_printf(_("Page %u"), rhkpage->pageno);
     }
-    rhkpage = &g_array_index(rhkfile, RHKPage, 0);
+    rhkpage = g_ptr_array_index(rhkfile, 0);
 
     dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -723,7 +714,7 @@ select_which_data(GArray *rhkfile)
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     controls.data = gwy_container_new();
-    dfield = rhk_sm3_read_data(rhkpage, NULL);
+    dfield = rhk_sm3_page_to_data_field(rhkpage);
     gwy_container_set_object_by_name(controls.data, "data", dfield);
     gwy_container_set_enum_by_name(controls.data, "range-type",
                                    GWY_LAYER_BASIC_RANGE_AUTO);
@@ -732,7 +723,7 @@ select_which_data(GArray *rhkfile)
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/MAX(rhkpage->xres, rhkpage->yres));
+                           120.0/MAX(rhkpage->x_size, rhkpage->y_size));
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "data");
     gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
@@ -778,13 +769,11 @@ selection_changed(GtkWidget *button,
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "data"));
-    rhkpage = &g_array_index(controls->file, RHKPage, i);
-    rhk_sm3_read_data(rhkpage, dfield);
-    gwy_data_field_data_changed(dfield);
+    rhkpage = g_ptr_array_index(controls->file, i);
+    dfield = rhk_sm3_page_to_data_field(rhkpage);
+    gwy_container_set_object_by_name(controls->data, "data", dfield);
+    g_object_unref(dfield);
 }
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
