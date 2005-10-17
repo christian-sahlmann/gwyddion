@@ -2074,7 +2074,6 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glMaterialf(GL_FRONT, GL_SHININESS,
                 (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
 
-    rx = 0.1;
     if (rx >= 0.0 && rx <= 90.0) {
         Ay = yres;
         Cx = xres;
