@@ -151,6 +151,7 @@ typedef struct {
 } RHKColorInformation;
 
 typedef struct {
+    guint pageno;  /* Our counter */
     guint param_size;
     gchar version[36];
     guint string_count;
@@ -216,6 +217,50 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
+static const GwyEnum page_types[] = {
+    { "Topographic",              RHK_PAGE_TOPOGAPHIC               },
+    { "Current",                  RHK_PAGE_CURRENT                  },
+    { "Aux",                      RHK_PAGE_AUX                      },
+    { "Force",                    RHK_PAGE_FORCE                    },
+    { "Signal",                   RHK_PAGE_SIGNAL                   },
+    { "FFT transform",            RHK_PAGE_FFT                      },
+    { "Noise power spectrum",     RHK_PAGE_NOISE_POWER_SPECTRUM     },
+    { "Line test",                RHK_PAGE_LINE_TEST                },
+    { "Oscilloscope",             RHK_PAGE_OSCILLOSCOPE             },
+    { "IV spectra",               RHK_PAGE_IV_SPECTRA               },
+    { "Image IV 4x4",             RHK_PAGE_IV_4x4                   },
+    { "Image IV 8x8",             RHK_PAGE_IV_8x8                   },
+    { "Image IV 16x16",           RHK_PAGE_IV_16x16                 },
+    { "Image IV 32x32",           RHK_PAGE_IV_32x32                 },
+    { "Image IV Center",          RHK_PAGE_IV_CENTER                },
+    { "Interactive spectra",      RHK_PAGE_INTERACTIVE_SPECTRA      },
+    { "Autocorrelation",          RHK_PAGE_AUTOCORRELATION          },
+    { "IZ spectra",               RHK_PAGE_IZ_SPECTRA               },
+    { "4 gain topography",        RHK_PAGE_4_GAIN_TOPOGRAPHY        },
+    { "8 gain topography",        RHK_PAGE_8_GAIN_TOPOGRAPHY        },
+    { "4 gain current",           RHK_PAGE_4_GAIN_CURRENT           },
+    { "8 gain current",           RHK_PAGE_8_GAIN_CURRENT           },
+    { "Image IV 64x64",           RHK_PAGE_IV_64x64                 },
+    { "Autocorrelation spectrum", RHK_PAGE_AUTOCORRELATION_SPECTRUM },
+    { "Counter data",             RHK_PAGE_COUNTER                  },
+    { "Multichannel analyser",    RHK_PAGE_MULTICHANNEL_ANALYSER    },
+    { "AFM using AFM-100",        RHK_PAGE_AFM_100                  },
+};
+
+static const GwyEnum page_sources[] = {
+    { "Raw",        RHK_SOURCE_RAW_PAGE,        },
+    { "Processed",  RHK_SOURCE_PROCESSED_PAGE,  },
+    { "Calculated", RHK_SOURCE_CALCULATED_PAGE, },
+    { "Imported",   RHK_SOURCE_IMPORTED_PAGE,   },
+};
+
+static const GwyEnum scan_directions[] = {
+    { "Right", RHK_SCAN_RIGHT, },
+    { "Left",  RHK_SCAN_LEFT,  },
+    { "Up",    RHK_SCAN_UP,    },
+    { "Down",  RHK_SCAN_DOWN,  },
+};
+
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
@@ -277,6 +322,7 @@ rhk_sm3_read_string(const guchar **buffer,
         p += g_unichar_to_utf8(chr, p);
     }
     *p = '\0';
+    g_strstrip(s);
     gwy_debug("String: <%s>", s);
 
     return s;
@@ -385,31 +431,24 @@ rhk_sm3_read_page(const guchar **buffer,
     }
 
     expected = page->x_size * page->y_size * sizeof(gint32);
+    gwy_debug("expecting %u bytes of page data now", expected);
     if (*len < (p - *buffer) + expected) {
         g_warning("Page data truncated");
         goto FAIL;
     }
 
-    page->page_data = p;
-    p += expected;
-
-    if (page->type == RHK_TYPE_LINE) {
-        expected = page->y_size * sizeof(gfloat);
-        if (*len < (p - *buffer) + expected) {
-            g_warning("Spectral data truncated");
-            goto FAIL;
-        }
-
+    if (page->type == RHK_TYPE_IMAGE)
+        page->page_data = p;
+    else
         page->spectral_data = p;
-        p += expected;
-    }
+    p += expected;
 
     if (page->type == RHK_TYPE_IMAGE) {
         if (*len < (p - *buffer) + 4) {
             g_warning("Color data header truncated");
             goto FAIL;
         }
-        /* XXX: Unlike others info size includes itself */
+        /* Info size includes itself */
         page->color_info.size = get_DWORD(&p) - 2;
         if (*len < (p - *buffer) + page->color_info.size) {
             g_warning("Color data truncated");
@@ -488,7 +527,7 @@ rhk_sm3_load(const gchar *filename)
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     const guchar *p;
-    guint i;
+    guint i, count;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         g_warning("Cannot read file %s", filename);
@@ -504,9 +543,12 @@ rhk_sm3_load(const gchar *filename)
     rhkfile = g_ptr_array_new();
 
     p = buffer;
+    count = 0;
     gwy_debug("position %04x", p - buffer);
     while ((rhkpage = rhk_sm3_read_page(&p, &size))) {
-        gwy_debug("Page #%u read OK", rhkfile->len);
+        rhkpage->pageno = count;
+        gwy_debug("Page #%u read OK", count);
+        count++;
         gwy_debug("position %04x", p - buffer);
         if (rhkpage->type != RHK_TYPE_IMAGE) {
             gwy_debug("Page is not IMAGE, skipping");
@@ -531,10 +573,12 @@ rhk_sm3_load(const gchar *filename)
         */
 
     if (rhkfile->len) {
+        rhkpage = g_ptr_array_index(rhkfile, 0);
         container = gwy_container_new();
-        dfield = rhk_sm3_page_to_data_field(g_ptr_array_index(rhkfile, 0));
+        dfield = rhk_sm3_page_to_data_field(rhkpage);
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
+        rhk_sm3_store_metadata(rhkpage, container);
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -545,104 +589,80 @@ rhk_sm3_load(const gchar *filename)
     return container;
 }
 
-#if 0
 static void
 rhk_sm3_store_metadata(RHKPage *rhkpage,
-                        GwyContainer *container)
+                       GwyContainer *container)
 {
-    const GwyEnum page_types[] = {
-        { "Topographic",              RHK_PAGE_TOPOGAPHIC               },
-        { "Current",                  RHK_PAGE_CURRENT                  },
-        { "Aux",                      RHK_PAGE_AUX                      },
-        { "Force",                    RHK_PAGE_FORCE                    },
-        { "Signal",                   RHK_PAGE_SIGNAL                   },
-        { "FFT transform",            RHK_PAGE_FFT                      },
-        { "Noise power spectrum",     RHK_PAGE_NOISE_POWER_SPECTRUM     },
-        { "Line test",                RHK_PAGE_LINE_TEST                },
-        { "Oscilloscope",             RHK_PAGE_OSCILLOSCOPE             },
-        { "IV spectra",               RHK_PAGE_IV_SPECTRA               },
-        { "Image IV 4x4",             RHK_PAGE_IV_4x4                   },
-        { "Image IV 8x8",             RHK_PAGE_IV_8x8                   },
-        { "Image IV 16x16",           RHK_PAGE_IV_16x16                 },
-        { "Image IV 32x32",           RHK_PAGE_IV_32x32                 },
-        { "Image IV Center",          RHK_PAGE_IV_CENTER                },
-        { "Interactive spectra",      RHK_PAGE_INTERACTIVE_SPECTRA      },
-        { "Autocorrelation",          RHK_PAGE_AUTOCORRELATION          },
-        { "IZ spectra",               RHK_PAGE_IZ_SPECTRA               },
-        { "4 gain topography",        RHK_PAGE_4_GAIN_TOPOGRAPHY        },
-        { "8 gain topography",        RHK_PAGE_8_GAIN_TOPOGRAPHY        },
-        { "4 gain current",           RHK_PAGE_4_GAIN_CURRENT           },
-        { "8 gain current",           RHK_PAGE_8_GAIN_CURRENT           },
-        { "Image IV 64x64",           RHK_PAGE_IV_64x64                 },
-        { "Autocorrelation spectrum", RHK_PAGE_AUTOCORRELATION_SPECTRUM },
-        { "Counter data",             RHK_PAGE_COUNTER                  },
-        { "Multichannel analyser",    RHK_PAGE_MULTICHANNEL_ANALYSER    },
-        { "AFM using AFM-100",        RHK_PAGE_AFM_100                  },
-    };
     const gchar *s;
-
-    gwy_container_set_string_by_name(container, "/meta/Tunneling voltage",
-                                     g_strdup_printf("%g mV",
-                                                     1e3*rhkpage->iv.offset));
-    gwy_container_set_string_by_name(container, "/meta/Current",
-                                     g_strdup_printf("%g nA",
-                                                     1e9*rhkpage->iv.scale));
-    gwy_container_set_string_by_name(container, "/meta/Id",
-                                     g_strdup_printf("%u", rhkpage->id));
-    if (rhkpage->date && *rhkpage->date)
-        gwy_container_set_string_by_name(container, "/meta/Date",
-                                         g_strdup(rhkpage->date));
-    if (rhkpage->comment && *rhkpage->comment)
-        gwy_container_set_string_by_name(container, "/meta/Comment",
-                                         g_strdup(rhkpage->comment));
-    if (rhkpage->label && *rhkpage->label)
-        gwy_container_set_string_by_name(container, "/meta/Label",
-                                         g_strdup(rhkpage->label));
+    gchar *str;
+    guint i;
 
     s = gwy_enum_to_string(rhkpage->page_type,
                            page_types, G_N_ELEMENTS(page_types));
     if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Image type",
+        gwy_container_set_string_by_name(container, "/meta/Type",
                                          g_strdup(s));
-}
 
-static GwyDataField*
-rhk_sm3_read_data(RHKPage *rhkpage,
-                   GwyDataField *dfield)
-{
-    const guint16 *p;
-    GwySIUnit *siunit;
-    gdouble *data;
-    guint i;
+    s = gwy_enum_to_string(rhkpage->scan_dir,
+                           scan_directions, G_N_ELEMENTS(scan_directions));
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/Scan Direction",
+                                         g_strdup(s));
 
-    p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
-    if (!dfield)
-        dfield = gwy_data_field_new(rhkpage->xres, rhkpage->yres,
-                                    rhkpage->xres * rhkpage->x.scale,
-                                    rhkpage->yres * rhkpage->y.scale,
-                                    FALSE);
-    else {
-        gwy_data_field_resample(dfield, rhkpage->xres, rhkpage->yres,
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_set_xreal(dfield, rhkpage->xres * rhkpage->x.scale);
-        gwy_data_field_set_yreal(dfield, rhkpage->yres * rhkpage->y.scale);
+    s = gwy_enum_to_string(rhkpage->source_type,
+                           page_sources, G_N_ELEMENTS(page_sources));
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/Source",
+                                         g_strdup(s));
+
+    gwy_container_set_string_by_name(container, "/meta/Bias",
+                                     g_strdup_printf("%g V", rhkpage->bias));
+    gwy_container_set_string_by_name(container, "/meta/Rotation angle",
+                                     g_strdup_printf("%f", rhkpage->angle));
+    gwy_container_set_string_by_name(container, "/meta/Period",
+                                     g_strdup_printf("%f s", rhkpage->period));
+
+    s = rhkpage->strings[RHK_STRING_DATE];
+    if (s && *s) {
+        str = g_strconcat(s, " ", rhkpage->strings[RHK_STRING_TIME], NULL);
+        gwy_container_set_string_by_name(container, "/meta/Date", str);
     }
 
-    data = gwy_data_field_get_data(dfield);
-    for (i = 0; i < rhkpage->xres*rhkpage->yres; i++)
-        data[i] = GINT16_FROM_LE(p[i]);
+    s = rhkpage->strings[RHK_STRING_LABEL];
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/Label", g_strdup(s));
 
-    gwy_data_field_multiply(dfield, rhkpage->z.scale);
+    s = rhkpage->strings[RHK_STRING_PATH];
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/Path", g_strdup(s));
 
-    siunit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_set_unit_string(siunit, rhkpage->x.units);
+    s = rhkpage->strings[RHK_STRING_SYSTEM_TEXT];
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/System comment",
+                                         g_strdup(s));
 
-    siunit = gwy_data_field_get_si_unit_z(dfield);
-    gwy_si_unit_set_unit_string(siunit, rhkpage->z.units);
+    s = rhkpage->strings[RHK_STRING_SESSION_TEXT];
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/Session comment",
+                                         g_strdup(s));
 
-    return dfield;
+    s = rhkpage->strings[RHK_STRING_USER_TEXT];
+    if (s && *s)
+        gwy_container_set_string_by_name(container, "/meta/User comment",
+                                         g_strdup(s));
+
+    str = g_new(gchar, 33);
+    for (i = 0; i < 16; i++) {
+        static const gchar hex[] = "0123456789abcdef";
+
+        str[2*i] = hex[rhkpage->page_id[i]/16];
+        str[2*i + 1] = hex[rhkpage->page_id[i] % 16];
+    }
+    str[32] = '\0';
+    gwy_container_set_string_by_name(container, "/meta/Page ID", str);
 }
 
+#if 0
 static guint
 select_which_data(GArray *rhkfile)
 {
