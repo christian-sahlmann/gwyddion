@@ -748,19 +748,16 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 /**
 * gwy_graph_curve_model_set_curve_color:
 * @gcmodel: A #GwyGraphCurveModel.
-* @color: GwyRGBA color structure (will not be directly used)
+* @color: Color to use for this curve (both line and symbols).
 *
 * Sets the curve color.
 **/
 void
 gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
-                                                   GwyRGBA color)
+                                      const GwyRGBA *color)
 {
-    gcmodel->color.r = color.r;
-    gcmodel->color.g = color.g;
-    gcmodel->color.b = color.b;
-    gcmodel->color.a = color.a;
-
+    g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
+    gcmodel->color = *color;
 }
 
 /**

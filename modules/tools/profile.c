@@ -438,7 +438,7 @@ dialog_update(GwyUnitoolState *state,
             else if (i==2) color.g = 1;
             else if (i==3) color.b = 1;
 
-            gwy_graph_curve_model_set_curve_color(gcmodel, color);
+            gwy_graph_curve_model_set_curve_color(gcmodel, &color);
             gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
             g_object_unref(gcmodel);
         }
