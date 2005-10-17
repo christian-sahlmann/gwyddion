@@ -283,7 +283,7 @@ module_register(const gchar *name)
 
 static gint
 rhk_sm3_detect(const GwyFileDetectInfo *fileinfo,
-                gboolean only_name)
+               gboolean only_name)
 {
     gint score = 0;
 
