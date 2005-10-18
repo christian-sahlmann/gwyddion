@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -55,10 +55,6 @@
 #define RAD_2_DEG (180.0 / G_PI)
 
 #define BITS_PER_SAMPLE 8
-#define GWY_3D_VIEW_DEFAULT_SIZE_X 260
-#define GWY_3D_VIEW_DEFAULT_SIZE_Y 260
-#define GWY_3D_SHAPE_AFM     0
-#define GWY_3D_SHAPE_REDUCED 1
 
 #define  GWY_3D_ORTHO_CORRECTION   2.0
 #define  GWY_3D_Z_DEFORMATION     1.01
@@ -66,6 +62,17 @@
 #define  GWY_3D_Z_DISPLACEMENT    -0.2
 
 #define GWY_3D_TIMEOUT_DELAY      1000
+
+enum {
+    GWY_3D_VIEW_DEFAULT_SIZE_X = 260,
+    GWY_3D_VIEW_DEFAULT_SIZE_Y = 260
+};
+
+enum {
+    GWY_3D_SHAPE_AFM = 0,
+    GWY_3D_SHAPE_REDUCED = 1,
+    GWY_3D_N_LISTS
+};
 
 enum {
     PROP_0,
@@ -81,8 +88,6 @@ enum {
 typedef struct {
     GLfloat x, y, z;
 } Gwy3DVector;
-
-static GLuint global_base = 0;
 
 /* Forward declarations */
 
@@ -149,6 +154,9 @@ static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
                                                  guint          size,
                                                  gint           vjustify,
                                                  gint           hjustify);
+static void          gwy_3d_view_class_make_list_pool(Gwy3DViewClass *klass);
+static void          gwy_3d_view_assign_lists   (Gwy3DView *gwy3dview);
+static void          gwy_3d_view_release_lists  (Gwy3DView *gwy3dview);
 
 /* Local data */
 
@@ -288,7 +296,6 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->movement              = GWY_3D_MOVEMENT_ROTATION;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
-    gwy3dview->shape_list_base       = -1;
 
     gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                  NULL, g_free);
@@ -322,10 +329,8 @@ gwy_3d_view_destroy(GtkObject *object)
         gwy3dview->material = NULL;
     }
 
-    if (gwy3dview->shape_list_base >= 0) {
-        glDeleteLists(gwy3dview->shape_list_base, 2);
-        gwy3dview->shape_list_base = -1;
-    }
+    if (gwy3dview->shape_list_base > 0)
+        gwy_3d_view_release_lists(gwy3dview);
 
     if (gwy3dview->labels) {
         for (i = 0; i < G_N_ELEMENTS(labels); i++) {
@@ -450,11 +455,7 @@ gwy_3d_view_unrealize(GtkWidget *widget)
         g_signal_handler_disconnect(gwy3dview->material,
                                     gwy3dview->material_id);
 
-    if (gwy3dview->shape_list_base >= 0) {
-        glDeleteLists(gwy3dview->shape_list_base, 2);
-        gwy3dview->shape_list_base = -1;
-    }
-
+    gwy_3d_view_release_lists(gwy3dview);
     g_object_unref(gwy3dview->ft2_context);
     g_object_unref(gwy3dview->ft2_font_map);
 
@@ -1660,17 +1661,18 @@ gwy_3d_view_expose(GtkWidget *widget,
     GwyGLMaterial *material;
     GdkGLContext  *glcontext;
     GdkGLDrawable *gldrawable;
-    Gwy3DView * gwy3D;
+    Gwy3DView *gwy3dview;
 
     GLfloat light_position[] = { 0.0, 0.0, 4.0, 1.0 };
 
     gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(widget), FALSE);
-    gwy3D = GWY_3D_VIEW(widget);
+    gwy3dview = GWY_3D_VIEW(widget);
 
     glcontext  = gtk_widget_get_gl_context(widget);
     gldrawable = gtk_widget_get_gl_drawable(widget);
+    gwy_debug("GLContext: %p, GLDrawable: %p", glcontext, gldrawable);
 
     /*** OpenGL BEGIN ***/
     if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
@@ -1681,19 +1683,19 @@ gwy_3d_view_expose(GtkWidget *widget,
     glLoadIdentity();
 
     /* View transformation. */
-    gwy_3d_set_projection(gwy3D);
+    gwy_3d_set_projection(gwy3dview);
     glTranslatef(0.0, 0.0, -10.0);
-    glScalef(gwy3D->view_scale->value,
-             gwy3D->view_scale->value,
-             gwy3D->view_scale->value);
+    glScalef(gwy3dview->view_scale->value,
+             gwy3dview->view_scale->value,
+             gwy3dview->view_scale->value);
 
-    glRotatef(gwy3D->rot_y->value, 1.0, 0.0, 0.0);
-    glRotatef(gwy3D->rot_x->value, 0.0,  0.0, 1.0);
-    glScalef(1.0f, 1.0f, gwy3D->deformation_z->value);
+    glRotatef(gwy3dview->rot_y->value, 1.0, 0.0, 0.0);
+    glRotatef(gwy3dview->rot_x->value, 0.0,  0.0, 1.0);
+    glScalef(1.0f, 1.0f, gwy3dview->deformation_z->value);
 
     /* Render shape */
-    if (gwy3D->visual == GWY_3D_VISUALIZATION_LIGHTING) {
-        material = gwy3D->material;
+    if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING) {
+        material = gwy3dview->material;
 
         glEnable(GL_LIGHTING);
         gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
@@ -1705,8 +1707,8 @@ gwy_3d_view_expose(GtkWidget *widget,
         glMaterialf(GL_FRONT, GL_SHININESS,
                     (GLfloat)gwy_gl_material_get_shininess(material)*128.0f);
         glPushMatrix();
-        glRotatef(gwy3D->light_z->value, 0.0f, 0.0f, 1.0f);
-        glRotatef(gwy3D->light_y->value, 0.0f, 1.0f, 0.0f);
+        glRotatef(gwy3dview->light_z->value, 0.0f, 0.0f, 1.0f);
+        glRotatef(gwy3dview->light_y->value, 0.0f, 1.0f, 0.0f);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glPopMatrix();
     }
@@ -1715,22 +1717,23 @@ gwy_3d_view_expose(GtkWidget *widget,
     }
 
 
-    glCallList(gwy3D->shape_list_base + gwy3D->shape_current);
-    if (gwy3D->show_axes)
-        gwy_3d_draw_axes(gwy3D);
+    glCallList(gwy3dview->shape_list_base + gwy3dview->shape_current);
+    if (gwy3dview->show_axes)
+        gwy_3d_draw_axes(gwy3dview);
 
-    if (gwy3D->movement == GWY_3D_MOVEMENT_LIGHT
-          && gwy3D->shape_current == GWY_3D_SHAPE_REDUCED)
-        gwy_3d_draw_light_position(gwy3D);
+    if (gwy3dview->movement == GWY_3D_MOVEMENT_LIGHT
+        && gwy3dview->shape_current == GWY_3D_SHAPE_REDUCED)
+        gwy_3d_draw_light_position(gwy3dview);
 
     /* Swap buffers */
     if (gdk_gl_drawable_is_double_buffered(gldrawable))
-      gdk_gl_drawable_swap_buffers(gldrawable);
+        gdk_gl_drawable_swap_buffers(gldrawable);
     else
-      glFlush();
+        glFlush();
 
     gdk_gl_drawable_gl_end(gldrawable);
     /*** OpenGL END ***/
+
     return FALSE;
 }
 
@@ -1978,7 +1981,7 @@ gwy_3d_make_normals(GwyDataField *dfield,
 }
 
 static void
-gwy_3d_make_list(Gwy3DView *gwy3D,
+gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyDataField *dfield,
                  gint shape)
 {
@@ -1993,16 +1996,16 @@ gwy_3d_make_list(Gwy3DView *gwy3D,
    yres = gwy_data_field_get_yres(dfield);
    data = gwy_data_field_get_data_const(dfield);
    res  = xres > yres ? xres : yres;
-   grad = gwy3D->gradient;
+   grad = gwy3dview->gradient;
 
-   glNewList(gwy3D->shape_list_base + shape, GL_COMPILE);
+   glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
    glPushMatrix();
    glTranslatef(-(xres/(double)res), -(yres/(double)res),
                 GWY_3D_Z_DISPLACEMENT);
    glScalef(2.0/res, 2.0/res,
-            GWY_3D_Z_TRANSFORMATION / (gwy3D->data_max - gwy3D->data_min));
-   glTranslatef(0.0, 0.0, -gwy3D->data_min);
-   zdifr = 1.0/(gwy3D->data_max - gwy3D->data_min);
+            GWY_3D_Z_TRANSFORMATION/(gwy3dview->data_max - gwy3dview->data_min));
+   glTranslatef(0.0, 0.0, -gwy3dview->data_min);
+   zdifr = 1.0/(gwy3dview->data_max - gwy3dview->data_min);
    normals = g_new(Gwy3DVector, xres * yres);
    if (!gwy_3d_make_normals(dfield, normals)) {
        /*TODO solve not enough momory problem*/
@@ -2018,13 +2021,15 @@ gwy_3d_make_list(Gwy3DView *gwy3D,
            glNormal3d(normals[j*xres+i].x,
                       normals[j*xres+i].y,
                       normals[j*xres+i].z);
-           gwy_gradient_get_color(grad, (a - gwy3D->data_min) * zdifr, &color);
+           gwy_gradient_get_color(grad, (a - gwy3dview->data_min) * zdifr,
+                                  &color);
            glColor3d(color.r , color.g, color.b);
            glVertex3d((double)i, (double)j, a);
            glNormal3d(normals[(j+1)*xres+i].x,
                       normals[(j+1)*xres+i].y,
                       normals[(j+1)*xres+i].z);
-           gwy_gradient_get_color(grad, (b - gwy3D->data_min) * zdifr, &color);
+           gwy_gradient_get_color(grad, (b - gwy3dview->data_min) * zdifr,
+                                  &color);
            glColor3d(color.r , color.g, color.b);
            glVertex3d((double)i, (double)(j+1), b);
        }
@@ -2053,7 +2058,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
     yfirst = TRUE;
     rx = widget->rot_x->value
-                 - ((int)(widget->rot_x->value / 360.0)) * 360.0;
+                 - ((int)(widget->rot_x->value/360.0)) * 360.0;
     if (rx < 0.0)
         rx += 360.0;
 
@@ -2064,7 +2069,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
                  GWY_3D_Z_DISPLACEMENT);
     glScalef(2.0/res,
              2.0/res,
-             GWY_3D_Z_TRANSFORMATION / (widget->data_max - widget->data_min));
+             GWY_3D_Z_TRANSFORMATION/(widget->data_max - widget->data_min));
     gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
                         gwy_gl_material_get_ambient(mat_none));
     gwy_3d_view_rgba_dv(GL_FRONT, GL_DIFFUSE,
@@ -2105,20 +2110,19 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glBegin(GL_LINES);
         glVertex3f(Ax, Ay, 0.0f);
         glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
-        glVertex3f((Ax+Bx) / 2, (Ay+By) / 2, 0.0f);
-        glVertex3f((Ax+Bx) / 2 - (Cx-Bx)*0.02,
-                   (Ay+By) / 2 - (Cy-By)*0.02, 0.0f );
+        glVertex3f((Ax+Bx)/2, (Ay+By)/2, 0.0f);
+        glVertex3f((Ax+Bx)/2 - (Cx-Bx)*0.02,
+                   (Ay+By)/2 - (Cy-By)*0.02, 0.0f );
         glVertex3f(Bx , By, 0.0f);
         glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
         glVertex3f(Bx, By, 0.0f);
         glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
-        glVertex3f((Cx+Bx) / 2, (Cy+By) / 2, 0.0f);
-        glVertex3f((Cx+Bx) / 2 - (Ax-Bx)*0.02,
-                   (Cy+By) / 2 - (Ay-By)*0.02, 0.0f );
+        glVertex3f((Cx+Bx)/2, (Cy+By)/2, 0.0f);
+        glVertex3f((Cx+Bx)/2 - (Ax-Bx)*0.02,
+                   (Cy+By)/2 - (Ay-By)*0.02, 0.0f );
         glVertex3f(Cx , Cy, 0.0f);
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
     glEnd();
-    gwy_debug("glError1a: %d", glGetError());
 
     glBegin(GL_LINES);
         glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
@@ -2127,9 +2131,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
         glVertex3f(Cx, Cy, (widget->data_max - widget->data_min)/2);
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
                    (widget->data_max-widget->data_min)/2);
-        /* FIXME */
     glEnd();
-    gwy_debug("glError1b: %d", glGetError());
 
     /*
     TODO: create bitmaps with labels in the beginning (possibly in init_gl)
@@ -2201,7 +2203,7 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
         for (i = -180; i <= 180; i += 5) {
             GLfloat x = cos(i * DEG_2_RAD) * G_SQRT2;
             GLfloat z = sin(i * DEG_2_RAD) * G_SQRT2;
-            glVertex3f( x, 0.05f, z);
+            glVertex3f(x,  0.05f, z);
             glVertex3f(x, -0.05f, z);
         }
     glEnd();
@@ -2257,12 +2259,7 @@ gwy_3d_view_realize_gl(Gwy3DView *widget)
     glDepthFunc(GL_LESS);
 
     /* Shape display lists */
-    widget->shape_list_base = glGenLists(global_base + 2);
-    widget->shape_list_base += global_base;
-    /* FIXME: uncommenting this makes the shape clonning proble to go away.
-     * Why?*/
-    /* global_base += 2; */
-
+    gwy_3d_view_assign_lists(widget);
     gwy_3d_make_list(widget, widget->data, GWY_3D_SHAPE_AFM);
     gwy_3d_make_list(widget, widget->downsampled, GWY_3D_SHAPE_REDUCED);
 
@@ -2495,6 +2492,95 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
 
     return ;
 }
+
+/**
+ * gwy_3d_view_class_make_list_pool:
+ * @klass: 3D view class.
+ *
+ * Allocates a pool of OpenGL lists to assign list numbers from.
+ *
+ * We are only able to get GLContext-unique list id's from glGenLists(),
+ * but lists with the same id's seem to interfere across GLContexts.  See
+ * bug #53 for more.
+ *
+ * We store the pool in bits of one 64bit integer.
+ **/
+static void
+gwy_3d_view_class_make_list_pool(Gwy3DViewClass *klass)
+{
+    guint try_size = 64;
+
+    while (try_size >= 1) {
+        glGetError();
+        klass->shape_list_base = glGenLists(GWY_3D_N_LISTS*try_size);
+        if (!glGetError()) {
+            gwy_debug("Allocated a pool with %u items (%u lists)",
+                      try_size, GWY_3D_N_LISTS*try_size);
+            klass->list_pool_size = try_size;
+            return;
+        }
+        try_size = (try_size*2)/3;
+    }
+    g_warning("Cannot get any OpenGL lists");
+    klass->shape_list_base = 0;
+}
+
+/**
+ * gwy_3d_view_allocate_lists:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Allocates a block of free OpenGL lists from pool for this 3D view to use.
+ **/
+static void
+gwy_3d_view_assign_lists(Gwy3DView *gwy3dview)
+{
+    Gwy3DViewClass *klass;
+    guint64 b;
+    guint i;
+
+    klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
+    if (!klass->list_pool) {
+        g_return_if_fail(GTK_WIDGET_REALIZED(gwy3dview));
+        gwy_3d_view_class_make_list_pool(klass);
+    }
+    g_return_if_fail(klass->list_pool_size > 0);
+
+    b = 1;
+    for (i = 0; i < klass->list_pool_size && (klass->list_pool & b); i++)
+        b <<= 1;
+    if (i == klass->list_pool_size) {
+        g_critical("No more free OpenGL lists");
+        return;
+    }
+
+    gwy_debug("Assigned list #%u", i);
+    klass->list_pool |= b;
+    gwy3dview->shape_list_base = klass->shape_list_base + i*GWY_3D_N_LISTS;
+}
+
+/**
+ * gwy_3d_view_release_lists:
+ * @gwy3dview: A 3D data view widget.
+ *
+ * Returns OpenGL lists in use by this 3D view back to the pool.
+ **/
+static void
+gwy_3d_view_release_lists(Gwy3DView *gwy3dview)
+{
+    Gwy3DViewClass *klass;
+    guint i;
+    guint64 b = 1;
+
+    klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
+    g_return_if_fail(gwy3dview->shape_list_base >= klass->shape_list_base);
+
+    i = (gwy3dview->shape_list_base - klass->shape_list_base)/GWY_3D_N_LISTS;
+    gwy_debug("Released list #%u", i);
+    b <<= i;
+    klass->list_pool &= ~b;
+    gwy3dview->shape_list_base = 0;
+}
+
 #else /* HAVE_GTKGLEXT */
 /* Export the same set of symbols if we don't have OpenGL support.  But let
  * them all fail. */

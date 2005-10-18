@@ -119,6 +119,10 @@ struct _Gwy3DView {
 struct _Gwy3DViewClass {
     GtkWidgetClass parent_class;
 
+    guint shape_list_base;
+    guint list_pool_size;
+    guint64 list_pool;
+
     gpointer reserved1;             /* reserved for future use (signals) */
     gpointer reserved2;
     gpointer reserved3;
