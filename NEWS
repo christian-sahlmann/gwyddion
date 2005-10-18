@@ -1,3 +1,16 @@
+1.99.4cvs20051018
+
+1.99.5
+Library:
+- libgwydgets: Broken graph curve removal was fixed.
+- libgwydgets: Crashes and other problems with multiple 3D views were fixed
+  (bug #53).
+
+Modules:
+- RHK-SM3 (new): RTH Technology SM3 file import.
+- Rawfile: Always black preview was fixed.
+- EZDfile: Explict support for NID files was added, some bugs fixed.
+
 
 1.99.4 (2005-10-06)
 Application:
