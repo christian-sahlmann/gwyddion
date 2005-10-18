@@ -470,11 +470,13 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
 **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
-                               gdouble *xdata,
-                               gdouble *ydata,
+                               const gdouble *xdata,
+                               const gdouble *ydata,
                                gint n)
 {
+    g_free(gcmodel->xdata);
     gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
+    g_free(gcmodel->ydata);
     gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
     gcmodel->n = n;
     gwy_graph_curve_model_signal_layout_changed(gcmodel);

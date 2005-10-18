@@ -86,8 +86,8 @@ struct _GwyGraphCurveModelClass {
 GType               gwy_graph_curve_model_get_type              (void) G_GNUC_CONST;
 GwyGraphCurveModel* gwy_graph_curve_model_new                   (void);
 void                gwy_graph_curve_model_set_data              (GwyGraphCurveModel *gcmodel,
-                                                                 gdouble *xdata,
-                                                                 gdouble *ydata,
+                                                                 const gdouble *xdata,
+                                                                 const gdouble *ydata,
                                                                  gint n);
 void                gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                                                  GwyDataLine *dline,
