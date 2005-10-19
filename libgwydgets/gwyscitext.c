@@ -31,8 +31,6 @@
 #include <libgwydgets/gwyscitext.h>
 #include <libgwydgets/gwydgetutils.h>
 
-#define GWY_SCI_TEXT_TYPE_NAME "GwySciText"
-
 enum {
     GWY_SCI_TEXT_BOLD        = 1,
     GWY_SCI_TEXT_ITALIC      = 2,
