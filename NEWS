@@ -1,6 +1,9 @@
 1.99.4cvs20051018
 
 1.99.5
+Application:
+- Unix installations are relocatable via environment variables.
+
 Library:
 - libgwydgets: Broken graph curve removal was fixed.
 - libgwydgets: Crashes and other problems with multiple 3D views were fixed
