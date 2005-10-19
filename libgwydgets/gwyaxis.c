@@ -30,7 +30,6 @@
 #include <libgwyddion/gwymacros.h>
 #include "gwyaxis.h"
 
-#include <stdio.h>
 enum {
     LABEL_UPDATED,
     RESCALED,
@@ -781,9 +780,10 @@ gwy_axis_button_press(GtkWidget *widget,
         if (!axis->dialog) {
             axis->dialog = gwy_axis_dialog_new();
             g_signal_connect(axis->dialog, "response",
-                     G_CALLBACK(gwy_axis_entry), axis);
-            gwy_sci_text_set_text(GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
-                          axis->label_text);
+                             G_CALLBACK(gwy_axis_entry), axis);
+            gwy_sci_text_set_text
+                        (GWY_SCI_TEXT(GWY_AXIS_DIALOG(axis->dialog)->sci_text),
+                         axis->label_text->str);
         }
         gtk_widget_show_all(axis->dialog);
     }
