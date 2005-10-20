@@ -23,7 +23,9 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
+#include <libprocess/inttrans.h>
 
+#include <stdio.h>
 /* INTERPOLATION: New (not applicable). */
 
 /**
@@ -134,10 +136,13 @@ gwy_data_field_get_correlation_score(GwyDataField *data_field,
  **/
 void
 gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
-                         GwyDataField *score)
+                         GwyDataField *score, GwyCorrelationType method)
 {
 
-    gint xres, yres, kxres, kyres, i, j;
+    gint xres, yres, kxres, kyres, i, j, fftxres, fftyres;
+    GwyDataField *data_in_re, *data_out_re, *data_out_im;
+    GwyDataField *kernel_in_re, *kernel_out_re, *kernel_out_im;
+    gdouble norm;
 
     g_return_if_fail(data_field != NULL && kernel_field != NULL);
 
@@ -151,20 +156,79 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         return;
     }
 
-    gwy_data_field_fill(score, -1);
-    /*correlation request outside kernel */
-    if (kxres > xres || kyres > yres) {
-        return;
-    }
+    switch (method)
+    {
+        case GWY_CORRELATION_NORMAL:
+        gwy_data_field_fill(score, -1);
+        /*correlation request outside kernel */
+        if (kxres > xres || kyres > yres) {
+            return;
+        }
 
-    for (i = (kxres/2); i < (xres - kxres/2); i++) {        /*col */
-        for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
-            score->data[i + xres * j] =
-                gwy_data_field_get_correlation_score(data_field, kernel_field,
+        for (i = (kxres/2); i < (xres - kxres/2); i++) {        /*col */
+            for (j = (kyres/2); j < (yres - kyres/2); j++) {    /*row */
+                score->data[i + xres * j] =
+                    gwy_data_field_get_correlation_score(data_field, kernel_field,
                                                      i - kxres/2,
                                                      j - kyres/2, 0, 0, kxres,
                                                      kyres);
+            }
         }
+        break;
+
+        case GWY_CORRELATION_FFT:
+        case GWY_CORRELATION_POC:
+        fftxres = gwy_data_field_get_fft_res(xres);
+        fftyres = gwy_data_field_get_fft_res(yres);
+        data_in_re = gwy_data_field_duplicate(data_field);
+        kernel_in_re = gwy_data_field_new_alike(data_field, TRUE);
+        gwy_data_field_area_copy(kernel_field, kernel_in_re,
+                                 0, 0, kernel_field->xres, kernel_field->yres,
+                                 kernel_in_re->xres/2 - kernel_field->xres/2,
+                                 kernel_in_re->yres/2 - kernel_field->yres/2);
+        gwy_data_field_resample(data_in_re, fftxres, fftyres, GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(kernel_in_re, fftxres, fftyres, GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(score, fftxres, fftyres, GWY_INTERPOLATION_NONE);
+
+        data_out_re = gwy_data_field_new_alike(data_in_re, TRUE);
+        data_out_im = gwy_data_field_new_alike(data_in_re, TRUE);
+        kernel_out_re = gwy_data_field_new_alike(data_in_re, TRUE);
+        kernel_out_im = gwy_data_field_new_alike(data_in_re, TRUE);
+
+        gwy_data_field_2dfft_real(data_in_re, data_out_re, data_out_im, GWY_WINDOWING_NONE,
+                                  GWY_TRANSFORM_DIRECTION_FORWARD,
+                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+        gwy_data_field_2dfft_real(kernel_in_re, kernel_out_re, kernel_out_im, GWY_WINDOWING_NONE,
+                                  GWY_TRANSFORM_DIRECTION_FORWARD,
+                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+
+        for (i = 0; i < fftxres*fftyres; i++)
+        {
+            /*NOTE: now we construct new "complex field" from data and kernel fields, just to save memory*/
+            data_in_re->data[i] = data_out_re->data[i]*kernel_out_re->data[i]
+                + data_out_im->data[i]*kernel_out_im->data[i];
+            kernel_in_re->data[i] = -data_out_re->data[i]*kernel_out_im->data[i]
+                + data_out_im->data[i]*kernel_out_re->data[i];
+            if (method == GWY_CORRELATION_POC) {
+                norm = sqrt(data_in_re->data[i]*data_in_re->data[i] + kernel_in_re->data[i]*kernel_in_re->data[i]);
+                data_in_re->data[i] /= norm;
+                kernel_in_re->data[i] /= norm;
+            }
+        }
+        gwy_data_field_2dfft(data_in_re, kernel_in_re, score, data_out_im, GWY_WINDOWING_NONE,
+                                  GWY_TRANSFORM_DIRECTION_BACKWARD,
+                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+        gwy_data_field_2dffthumanize(score);
+        //gwy_data_field_resample(score, data_field->xres, data_field->yres, GWY_INTERPOLATION_BILINEAR);
+
+        /*TODO compute it and put to score field*/
+        g_object_unref(data_in_re);
+        g_object_unref(data_out_re);
+        g_object_unref(data_out_im);
+        g_object_unref(kernel_in_re);
+        g_object_unref(kernel_out_re);
+        g_object_unref(kernel_out_im);
+        break;
     }
 
     gwy_data_field_invalidate(score);

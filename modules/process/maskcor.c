@@ -39,6 +39,7 @@ typedef enum {
 typedef struct {
     MaskcorResult result;
     gdouble threshold;
+    GwyCorrelationType method;
     GwyDataWindow *win1;
     GwyDataWindow *win2;
 } MaskcorArgs;
@@ -67,7 +68,7 @@ static void       maskcor_save_args        (GwyContainer *settings,
 static void       maskcor_sanitize_args    (MaskcorArgs *args);
 
 static const MaskcorArgs maskcor_defaults = {
-    GWY_MASKCOR_OBJECTS, 0.95, NULL, NULL
+    GWY_MASKCOR_OBJECTS, 0.95, GWY_CORRELATION_NORMAL, NULL, NULL
 };
 
 /* The module info. */
@@ -153,7 +154,7 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
         { N_("Correlation maxima"), GWY_MASKCOR_MAXIMA },
         { N_("Correlation score"),  GWY_MASKCOR_SCORE },
     };
-    GtkWidget *dialog, *table, *omenu, *spin, *combo;
+    GtkWidget *dialog, *table, *omenu, *spin, *combo, *method;
     GtkObject *adj;
 
     controls->args = args;
@@ -165,7 +166,7 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(2, 4, FALSE);
+    table = gtk_table_new(2, 5, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
@@ -183,13 +184,17 @@ maskcor_window_construct(MaskcorArgs *args, MaskcorControls *controls)
     combo = gwy_enum_combo_box_new(results, G_N_ELEMENTS(results),
                                    G_CALLBACK(maskcor_operation_cb), controls,
                                    args->result, TRUE);
-    gwy_table_attach_hscale(table, 2, _("_Output type:"), NULL,
-                            GTK_OBJECT(omenu), GWY_HSCALE_WIDGET);
+    gwy_table_attach_row(table, 2, _("_Output type:"), "", combo);
 
     /**** Parameters ********/
+    method = gwy_enum_combo_box_new(gwy_correlation_type_get_enum(), -1,
+                                       G_CALLBACK(gwy_enum_combo_box_update_int),
+                                              &args->method, args->method, TRUE);
+    gwy_table_attach_row(table, 3, _("_Correlation method:"), "", method);
+
     adj = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.01, 0.1, 0);
     controls->threshold = adj;
-    spin = gwy_table_attach_hscale(table, 3, _("_Threshold:"), NULL, adj, 0);
+    spin = gwy_table_attach_hscale(table, 4, _("_Threshold:"), NULL, adj, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(adj, args->result != GWY_MASKCOR_SCORE);
     g_signal_connect(adj, "value-changed",
@@ -284,7 +289,7 @@ maskcor_do(MaskcorArgs *args)
 {
     GtkWidget *data_window;
     GwyContainer *data, *ret, *kernel;
-    GwyDataField *dfield, *kernelfield, *retfield;
+    GwyDataField *dfield, *kernelfield, *retfield, *scorefield;
     GwyDataWindow *operand1, *operand2;
     gint iteration = 0;
     GwyComputationStateType state;
@@ -301,27 +306,34 @@ maskcor_do(MaskcorArgs *args)
     kernelfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(kernel,
                                                                   "/0/data"));
 
-    state = GWY_COMPUTATION_STATE_INIT;
-    gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
-    do {
-        gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
+    if (args->method == GWY_CORRELATION_NORMAL)
+    {
+        state = GWY_COMPUTATION_STATE_INIT;
+        gwy_app_wait_start(GTK_WIDGET(args->win1), "Initializing...");
+        do {
+            gwy_data_field_correlate_iteration(dfield, kernelfield, retfield,
                                            &state, &iteration);
-        gwy_app_wait_set_message("Correlating...");
-        if (!gwy_app_wait_set_fraction
-                (iteration/(gdouble)(gwy_data_field_get_xres(dfield)
+            gwy_app_wait_set_message("Correlating...");
+            if (!gwy_app_wait_set_fraction
+                    (iteration/(gdouble)(gwy_data_field_get_xres(dfield)
                                      - gwy_data_field_get_xres(kernelfield)/2)))
-            return FALSE;
+                return FALSE;
 
-    } while (state != GWY_COMPUTATION_STATE_FINISHED);
-    gwy_app_wait_finish();
+        } while (state != GWY_COMPUTATION_STATE_FINISHED);
+        gwy_app_wait_finish();
+    }
+    else gwy_data_field_correlate(dfield, kernelfield, retfield, args->method);
 
     /*score - do new data with score*/
     if (args->result == GWY_MASKCOR_SCORE) {
         ret = gwy_container_duplicate_by_prefix(data,
+                                                "/0/data",
                                                 "/0/base/palette",
                                                 NULL);
-        /* TODO: resize, there's an empty border! */
-        /* TODO: set some units! */
+        scorefield = GWY_DATA_FIELD(gwy_container_get_object_by_name(ret,
+                                                                     "/0/data"));
+        gwy_data_field_resample(scorefield, retfield->xres, retfield->yres, 0);
+        gwy_data_field_copy(retfield, scorefield, TRUE);
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
@@ -346,12 +358,14 @@ maskcor_do(MaskcorArgs *args)
 }
 
 static const gchar *result_key = "/module/maskcor/result";
+static const gchar *method_key = "/module/maskcor/method";
 static const gchar *threshold_key = "/module/maskcor/threshold";
 
 static void
 maskcor_sanitize_args(MaskcorArgs *args)
 {
     args->result = MIN(args->result, GWY_MASKCOR_LAST-1);
+    args->method = MIN(args->method, GWY_CORRELATION_POC);
     args->threshold = CLAMP(args->threshold, -1.0, 1.0);
 }
 
@@ -364,6 +378,7 @@ maskcor_load_args(GwyContainer *settings,
 
     *args = maskcor_defaults;
     gwy_container_gis_enum_by_name(settings, result_key, &args->result);
+    gwy_container_gis_enum_by_name(settings, method_key, &args->method);
     gwy_container_gis_double_by_name(settings, threshold_key, &args->threshold);
     maskcor_sanitize_args(args);
 }
@@ -373,6 +388,7 @@ maskcor_save_args(GwyContainer *settings,
                   MaskcorArgs *args)
 {
     gwy_container_set_enum_by_name(settings, result_key, args->result);
+    gwy_container_set_enum_by_name(settings, method_key, args->method);
     gwy_container_set_double_by_name(settings, threshold_key, args->threshold);
 }
 

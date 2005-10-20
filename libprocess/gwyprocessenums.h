@@ -136,6 +136,13 @@ typedef enum {
 } GwyTipType;
 
 typedef enum {
+    GWY_CORRELATION_NORMAL  = 0,
+    GWY_CORRELATION_FFT     = 1,
+    GWY_CORRELATION_POC     = 2
+} GwyCorrelationType;
+
+
+typedef enum {
     GWY_GRAIN_VALUE_AREA                  = 0, /*grain projection area*/
     GWY_GRAIN_VALUE_PERIMETER             = 1, /*grain projection perimeter*/
     GWY_GRAIN_VALUE_AREA_RADIUS           = 2, /*projection area equivalent circle radius*/
@@ -160,6 +167,7 @@ const GwyEnum* gwy_dwt_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_dwt_denoise_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_interpolation_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_windowing_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_correlation_type_get_enum(void) G_GNUC_CONST;
 
 G_END_DECLS
 

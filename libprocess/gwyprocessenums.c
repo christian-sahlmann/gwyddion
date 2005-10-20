@@ -242,6 +242,19 @@ gwy_windowing_type_get_enum(void)
     return entries;
 }
 
+const GwyEnum*
+gwy_correlation_type_get_enum(void)
+{
+    static const GwyEnum entries[] = {
+        { N_("Normal"),      GWY_CORRELATION_NORMAL, },
+        { N_("FFT"),         GWY_CORRELATION_FFT,    },
+        { N_("Phase only"),  GWY_CORRELATION_POC,    },
+        { NULL,           0,                       },
+    };
+    return entries;
+}
+
+
 /************************** Documentation ****************************/
 
 /**

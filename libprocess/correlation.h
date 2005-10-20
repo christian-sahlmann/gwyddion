@@ -58,7 +58,8 @@ void gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
 
 void gwy_data_field_correlate(GwyDataField *data_field,
                               GwyDataField *kernel_field,
-                              GwyDataField *score);
+                              GwyDataField *score,
+                              GwyCorrelationType method);
 
 void gwy_data_field_correlate_iteration(GwyDataField *data_field,
                                         GwyDataField *kernel_field,
