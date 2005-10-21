@@ -89,6 +89,12 @@ typedef struct {
     GLfloat x, y, z;
 } Gwy3DVector;
 
+typedef struct {
+    guint base;
+    guint size;
+    guint64 pool;
+} Gwy3DListPool;
+
 /* Forward declarations */
 
 static void          gwy_3d_view_destroy        (GtkObject *object);
@@ -154,7 +160,7 @@ static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
                                                  guint          size,
                                                  gint           vjustify,
                                                  gint           hjustify);
-static void          gwy_3d_view_class_make_list_pool(Gwy3DViewClass *klass);
+static void          gwy_3d_view_class_make_list_pool(Gwy3DListPool *pool);
 static void          gwy_3d_view_assign_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_release_lists  (Gwy3DView *gwy3dview);
 
@@ -205,6 +211,8 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
     widget_class->button_press_event = gwy_3d_view_button_press;
     widget_class->button_release_event = gwy_3d_view_button_release;
     widget_class->motion_notify_event = gwy_3d_view_motion_notify;
+
+    klass->list_pool = g_new0(Gwy3DListPool, 1);
 
     /**
      * Gwy3DView:movement-type:
@@ -2506,23 +2514,23 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
  * We store the pool in bits of one 64bit integer.
  **/
 static void
-gwy_3d_view_class_make_list_pool(Gwy3DViewClass *klass)
+gwy_3d_view_class_make_list_pool(Gwy3DListPool *pool)
 {
     guint try_size = 64;
 
+    glGetError();
     while (try_size >= 1) {
-        glGetError();
-        klass->shape_list_base = glGenLists(GWY_3D_N_LISTS*try_size);
+        pool->base = glGenLists(GWY_3D_N_LISTS*try_size);
         if (!glGetError()) {
             gwy_debug("Allocated a pool with %u items (%u lists)",
                       try_size, GWY_3D_N_LISTS*try_size);
-            klass->list_pool_size = try_size;
+            pool->size = try_size;
             return;
         }
         try_size = (try_size*2)/3;
     }
     g_warning("Cannot get any OpenGL lists");
-    klass->shape_list_base = 0;
+    pool->base = 0;
 }
 
 /**
@@ -2534,28 +2542,28 @@ gwy_3d_view_class_make_list_pool(Gwy3DViewClass *klass)
 static void
 gwy_3d_view_assign_lists(Gwy3DView *gwy3dview)
 {
-    Gwy3DViewClass *klass;
+    Gwy3DListPool *pool;
     guint64 b;
     guint i;
 
-    klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
-    if (!klass->list_pool) {
+    pool = GWY_3D_VIEW_GET_CLASS(gwy3dview)->list_pool;
+    if (!pool->size) {
         g_return_if_fail(GTK_WIDGET_REALIZED(gwy3dview));
-        gwy_3d_view_class_make_list_pool(klass);
+        gwy_3d_view_class_make_list_pool(pool);
     }
-    g_return_if_fail(klass->list_pool_size > 0);
+    g_return_if_fail(pool->size > 0);
 
     b = 1;
-    for (i = 0; i < klass->list_pool_size && (klass->list_pool & b); i++)
+    for (i = 0; i < pool->size && (pool->pool & b); i++)
         b <<= 1;
-    if (i == klass->list_pool_size) {
+    if (i == pool->size) {
         g_critical("No more free OpenGL lists");
         return;
     }
 
     gwy_debug("Assigned list #%u", i);
-    klass->list_pool |= b;
-    gwy3dview->shape_list_base = klass->shape_list_base + i*GWY_3D_N_LISTS;
+    pool->pool |= b;
+    gwy3dview->shape_list_base = pool->base + i*GWY_3D_N_LISTS;
 }
 
 /**
@@ -2567,17 +2575,17 @@ gwy_3d_view_assign_lists(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_release_lists(Gwy3DView *gwy3dview)
 {
-    Gwy3DViewClass *klass;
+    Gwy3DListPool *pool;
     guint i;
     guint64 b = 1;
 
-    klass = GWY_3D_VIEW_GET_CLASS(gwy3dview);
-    g_return_if_fail(gwy3dview->shape_list_base >= klass->shape_list_base);
+    pool = GWY_3D_VIEW_GET_CLASS(gwy3dview)->list_pool;
+    g_return_if_fail(gwy3dview->shape_list_base >= pool->base);
 
-    i = (gwy3dview->shape_list_base - klass->shape_list_base)/GWY_3D_N_LISTS;
+    i = (gwy3dview->shape_list_base - pool->base)/GWY_3D_N_LISTS;
     gwy_debug("Released list #%u", i);
     b <<= i;
-    klass->list_pool &= ~b;
+    pool->pool &= ~b;
     gwy3dview->shape_list_base = 0;
 }
 
