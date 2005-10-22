@@ -467,9 +467,29 @@ fix_scales(EZDSection *section,
     g_object_unref(siunit);
 
     /* Some metadata */
-    if (section->zrange.name)
+    if (section->zrange.name) {
+        const gchar *s;
+
         gwy_container_set_string_by_name(container, "/meta/Channel name",
                                          g_strdup(section->zrange.name));
+        switch (section->direction) {
+            case SCAN_FORWARD:
+            s = " forward";
+            break;
+
+            case SCAN_BACKWARD:
+            s = " backward";
+            break;
+
+            default:
+            s = "";
+            break;
+        }
+        gwy_container_set_string_by_name(container, "/filename/title",
+                                         g_strdup_printf("%s%s",
+                                                         section->zrange.name,
+                                                         s));
+    }
 }
 
 static void

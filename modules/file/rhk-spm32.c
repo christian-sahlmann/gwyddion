@@ -421,9 +421,12 @@ rhkspm32_store_metadata(RHKPage *rhkpage,
     if (rhkpage->comment && *rhkpage->comment)
         gwy_container_set_string_by_name(container, "/meta/Comment",
                                          g_strdup(rhkpage->comment));
-    if (rhkpage->label && *rhkpage->label)
+    if (rhkpage->label && *rhkpage->label) {
         gwy_container_set_string_by_name(container, "/meta/Label",
                                          g_strdup(rhkpage->label));
+        gwy_container_set_string_by_name(container, "/filename/title",
+                                         g_strdup(rhkpage->label));
+    }
 
     s = gwy_enum_to_string(rhkpage->page_type,
                            page_types, G_N_ELEMENTS(page_types));

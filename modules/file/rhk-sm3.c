@@ -473,7 +473,7 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
     GwySIUnit *siunit;
     const gchar *unit;
     gint xres, yres, i;
-    gint32 *pdata;
+    const gint32 *pdata;
     gdouble *data;
 
     xres = page->x_size;
@@ -483,7 +483,7 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
                                 yres*fabs(page->y_scale),
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
-    pdata = (gint32*)page->page_data;
+    pdata = (const gint32*)page->page_data;
     for (i = 0; i < xres*yres; i++)
         data[i] = GINT32_FROM_LE(pdata[i])*page->z_scale + page->z_offset;
 
@@ -615,8 +615,11 @@ rhk_sm3_store_metadata(RHKPage *rhkpage,
     }
 
     s = rhkpage->strings[RHK_STRING_LABEL];
-    if (s && *s)
+    if (s && *s) {
         gwy_container_set_string_by_name(container, "/meta/Label", g_strdup(s));
+        gwy_container_set_string_by_name(container, "/filename/title",
+                                         g_strdup(s));
+    }
 
     s = rhkpage->strings[RHK_STRING_PATH];
     if (s && *s)
@@ -668,7 +671,7 @@ select_which_data(GPtrArray *rhkfile)
         return 0;
 
     controls.file = rhkfile;
-    choices = g_new(GwyEnum, rhkfile->len + 1);
+    choices = g_new(GwyEnum, rhkfile->len);
     for (i = 0; i < rhkfile->len; i++) {
         rhkpage = g_ptr_array_index(rhkfile, i);
         choices[i].value = i;
