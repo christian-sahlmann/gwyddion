@@ -103,4 +103,14 @@ get_CHARS(gchar *dest, const guchar **p, guint size)
 
 #define get_CHARARRAY(dest, p) get_CHARS(dest, p, sizeof(dest))
 
+static inline gboolean
+get_BBOOLEAN(const guchar **p)
+{
+    gboolean b;
+
+    b = (**p != 0);
+    (*p)++;
+    return b;
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

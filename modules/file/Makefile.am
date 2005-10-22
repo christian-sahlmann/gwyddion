@@ -26,6 +26,7 @@ file_LTLIBRARIES = \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
+	witfile.la \
 	wsxmfile.la \
 	$(tiff_modules)
 
@@ -123,6 +124,9 @@ stmprg_la_LIBADD = $(module_libadd)
 
 stpfile_la_SOURCES = stpfile.c
 stpfile_la_LIBADD = $(module_libadd)
+
+witfile_la_SOURCES = witfile.c
+witfile_la_LIBADD = $(module_libadd)
 
 wsxmfile_la_SOURCES = wsxmfile.c
 wsxmfile_la_LIBADD = $(module_libadd)
