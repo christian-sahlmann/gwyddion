@@ -15,6 +15,7 @@ file_LTLIBRARIES = \
 	createc.la \
 	ezdfile.la \
 	gwyfile.la \
+	hitachi-afm.la \
 	nanoscope.la \
 	nt-mdt.la \
 	mifile.la \
@@ -86,6 +87,9 @@ ezdfile_la_LIBADD = $(module_libadd)
 
 gwyfile_la_SOURCES = gwyfile.c
 gwyfile_la_LIBADD = $(module_libadd)
+
+hitachi_afm_la_SOURCES = hitachi-afm.c
+hitachi_afm_la_LIBADD = $(module_libadd)
 
 if HAVE_TIFF
 jpkscan_la_SOURCES = jpk.h jpkscan.c
