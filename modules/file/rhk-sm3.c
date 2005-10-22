@@ -411,8 +411,7 @@ rhk_sm3_read_page(const guchar **buffer,
     page->angle = get_FLOAT(&p);
     gwy_debug("period = %g, bias = %g, current = %g, angle = %g",
               page->period, page->bias, page->current, page->angle);
-    memcpy(page->page_id, p, 16);
-    p += 16;
+    get_CHARARRAY(page->page_id, &p);
 
     p = *buffer + 2 + page->param_size;
     for (i = 0; i < page->string_count; i++) {

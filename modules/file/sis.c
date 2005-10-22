@@ -887,8 +887,7 @@ sis_real_load(const guchar *buffer,
             if (!i || !channel || len < 26)
                 return FALSE;
             /* This is really a guchar[4], not int32 */
-            memcpy(image->processing_step, p, 4);
-            p += 4;
+            get_CHARARRAY(image->processing_step, &p);
             procstep = NULL;
             for (j = 0; j < G_N_ELEMENTS(processing_steps); j++) {
                 if (memcmp(image->processing_step, processing_steps[j].symbol,
