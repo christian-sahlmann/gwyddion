@@ -195,20 +195,41 @@ typedef struct {
 } WITecFile;
 
 typedef struct {
-    GPtrArray *file;
+    WITecFile *file;
     GwyContainer *data;
     GtkWidget *data_view;
 } WITecControls;
 
-static gboolean      module_register       (const gchar *name);
-static gint          witec_detect        (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* witec_load          (const gchar *filename);
-static void          witec_store_metadata(WITecFile *witfile,
-                                            GwyContainer *container);
-static guint         select_which_data     (GPtrArray *rhkfile);
-static void          selection_changed     (GtkWidget *button,
-                                            WITecControls *controls);
+static gboolean      module_register          (const gchar *name);
+static gint          witec_detect            (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* witec_load               (const gchar *filename);
+static gboolean      witec_read_file          (const guchar *buffer,
+                                               gsize len,
+                                               WITecFile *witfile);
+static void          witec_store_metadata     (WITecFile *witfile,
+                                               GwyContainer *container,
+                                               guint i);
+static GwyDataField* witec_image_to_data_field(WITecFile *witfile,
+                                               guint i);
+static gboolean      witec_read_scale         (const guchar **p,
+                                               gsize *len,
+                                               WITecScale *scale);
+static gboolean      witec_read_header        (const guchar **p,
+                                               gsize *len,
+                                               WITecHeader *header);
+static gboolean      witec_read_footer        (const guchar **p,
+                                               gsize *len,
+                                               WITecFooter *footer);
+static gboolean      witec_read_range_options (const guchar **p,
+                                               gsize *len,
+                                               WITecRangeOptions *options);
+static gboolean      witec_read_image_options (const guchar **p,
+                                               gsize *len,
+                                               WITecImageOptions *options);
+static guint         select_which_data        (WITecFile *witfile);
+static void          selection_changed        (GtkWidget *button,
+                                               WITecControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -243,21 +264,181 @@ module_register(const gchar *name)
 
 static gint
 witec_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+             gboolean only_name)
 {
-    /*
     gint score = 0;
 
-    if (only_name)*/
+    if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
-        /*
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0)
-        score = 100;
+    /* The format has no magic header.  So we try to read the short header
+     * and check whether we get the right file size if we assume it's a
+     * WIT file. */
+    if (fileinfo->file_size >= WITEC_SIZE_MIN
+        && fileinfo->buffer_len >= WITEC_SIZE_HEADER) {
+        WITecHeader header;
+        const guchar *p = fileinfo->buffer;
+        gsize len = fileinfo->file_size;
+        gsize expected;
+
+        if (witec_read_header(&p, &len, &header)) {
+            expected = WITEC_SIZE_HEADER
+                       + header.channels*(2*header.rows*header.pixels
+                                          + WITEC_SIZE_SCALE)
+                       + WITEC_SIZE_FOOTER
+                       + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS;
+            if (expected == fileinfo->file_size)
+                score = 100;
+        }
+    }
 
     return score;
-    */
+}
+
+static GwyContainer*
+witec_load(const gchar *filename)
+{
+    WITecFile witfile;
+    GwyContainer *container = NULL;
+    guchar *buffer = NULL;
+    gsize size = 0;
+    GError *err = NULL;
+    GwyDataField *dfield = NULL;
+    guint i;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        g_warning("Cannot read file %s", filename);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    memset(&witfile, 0, sizeof(witfile));
+    if (!witec_read_file(buffer, size, &witfile)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    i = select_which_data(&witfile);
+    if (i != (guint)-1) {
+        container = gwy_container_new();
+        dfield = witec_image_to_data_field(&witfile, i);
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+        witec_store_metadata(&witfile, container, i);
+    }
+
+    gwy_file_abandon_contents(buffer, size, NULL);
+    g_free(witfile.images);
+    g_free(witfile.scales);
+
+    return container;
+}
+
+static gboolean
+witec_read_file(const guchar *buffer,
+                gsize len,
+                WITecFile *witfile)
+{
+    const guchar *p = buffer;
+    gint xres, yres;
+    guint i, expected, ndata;
+
+    if (len < WITEC_SIZE_MIN) {
+        g_warning("File is too short");
+        return FALSE;
+    }
+
+    witec_read_header(&p, &len, &witfile->header);
+    xres = witfile->header.pixels;
+    yres = witfile->header.rows;
+    ndata = witfile->header.channels;
+    expected = ndata*(2*xres*yres + WITEC_SIZE_SCALE)
+               + WITEC_SIZE_FOOTER
+               + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS;
+    if (len != expected) {
+        g_warning("File size doesn't match, expecting %u bytes after header, "
+                  "but got %u bytes", expected, len);
+        return FALSE;
+    }
+
+    witfile->images = g_new0(const guchar*, ndata);
+    for (i = 0; i < ndata; i++) {
+        witfile->images[i] = p;
+        p += 2*xres*yres;
+        len -= 2*xres*yres;
+    }
+
+    witec_read_footer(&p, &len, &witfile->footer);
+    witfile->scales = g_new(WITecScale, ndata);
+    for (i = 0; i < ndata; i++)
+        witec_read_scale(&p, &len, witfile->scales + i);
+
+    witec_read_range_options(&p, &len, &witfile->range_options);
+    witec_read_image_options(&p, &len, &witfile->image_options);
+
+    return TRUE;
+}
+
+static GwyDataField*
+witec_image_to_data_field(WITecFile *witfile,
+                          guint i)
+{
+    gchar unit[9];
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gint xres, yres, j, power10;
+    const gint16 *pdata;
+    gdouble q, z0;
+    gdouble *data;
+
+    xres = witfile->header.pixels;
+    yres = witfile->header.rows;
+    dfield = gwy_data_field_new(xres, yres, 
+                                witfile->footer.xscale.scale
+                                * witfile->image_options.points_per_line,
+                                witfile->footer.yscale.scale
+                                * witfile->image_options.lines_per_image,
+                                FALSE);
+    q = witfile->scales[i].scale;
+    z0 = witfile->scales[i].offset;
+    data = gwy_data_field_get_data(dfield);
+    pdata = (const gint16*)witfile->images[i];
+    for (j = 0; j < xres*yres; j++)
+        data[j] = GINT32_FROM_LE(pdata[j] + 32768)*q + z0;
+
+    if (strncmp(witfile->range_options.unit_x, witfile->range_options.unit_y,
+                sizeof(witfile->range_options.unit_x)) != 0) {
+        g_warning("X and Y units differ, ignoring Y");
+    }
+    unit[sizeof(unit)-1] = 0;
+    memcpy(unit, witfile->range_options.unit_x,
+           sizeof(witfile->range_options.unit_x));
+    siunit = gwy_si_unit_new_parse(unit, &power10);
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+    q = pow10((gdouble)power10);
+    gwy_data_field_set_xreal(dfield, gwy_data_field_get_xreal(dfield)*q);
+    gwy_data_field_set_yreal(dfield, gwy_data_field_get_yreal(dfield)*q);
+
+    memcpy(unit, witfile->scales[i].measure,
+           sizeof(witfile->scales[i].measure));
+    siunit = gwy_si_unit_new_parse(unit, &power10);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+    q = pow10((gdouble)power10);
+    gwy_data_field_multiply(dfield, q);
+
+    return dfield;
+}
+
+static void
+witec_store_metadata(WITecFile *witfile,
+                     GwyContainer *container,
+                     guint i)
+{
+    gwy_container_set_string_by_name(container, "/filename/title",
+                                     g_strndup(witfile->scales[i].name,
+                                              sizeof(witfile->scales[i].name)));
 }
 
 static gboolean
@@ -336,7 +517,7 @@ witec_read_footer(const guchar **p,
         get_CHARARRAY(footer->notebook_params[i], p);
     get_CHARARRAY(footer->comments, p);
 
-    /* XXX: the len argument is a fake here, buffer size is already checked */
+    /* The len argument is a fake here, data size was already checked */
     witec_read_scale(p, len, &footer->xscale);
     witec_read_scale(p, len, &footer->yscale);
 
@@ -432,197 +613,31 @@ witec_read_image_options(const guchar **p,
     return TRUE;
 }
 
-static gboolean
-witec_read_file(const guchar *buffer,
-                gsize len,
-                WITecFile *witfile)
-
-{
-    const guchar *p = buffer;
-    gint xres, yres;
-    guint i, expected, ndata;
-
-    if (len < WITEC_SIZE_MIN) {
-        g_warning("File is too short");
-        return FALSE;
-    }
-
-    witec_read_header(&p, &len, &witfile->header);
-    xres = witfile->header.pixels;
-    yres = witfile->header.rows;
-    ndata = witfile->header.channels;
-    expected = ndata*(2*xres*yres + WITEC_SIZE_SCALE)
-               + WITEC_SIZE_FOOTER
-               + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS;
-    if (len != expected) {
-        g_warning("File size doesn't match, expecting %u bytes after header, "
-                  "but got %u bytes", expected, len);
-        return FALSE;
-    }
-
-    witfile->images = g_new0(const guchar*, ndata);
-    for (i = 0; i < ndata; i++) {
-        witfile->images[i] = p;
-        p += 2*xres*yres;
-        len -= 2*xres*yres;
-    }
-
-    witec_read_footer(&p, &len, &witfile->footer);
-    witfile->scales = g_new(WITecScale, ndata);
-    for (i = 0; i < ndata; i++)
-        witec_read_scale(&p, &len, witfile->scales + i);
-
-    witec_read_range_options(&p, &len, &witfile->range_options);
-    witec_read_image_options(&p, &len, &witfile->image_options);
-
-    return FALSE;
-}
-
-static GwyContainer*
-witec_load(const gchar *filename)
-{
-    WITecFile witfile;
-    GwyContainer *container = NULL;
-    guchar *buffer = NULL;
-    gsize size = 0;
-    GError *err = NULL;
-    GwyDataField *dfield = NULL;
-    guint i;
-
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
-        g_clear_error(&err);
-        return NULL;
-    }
-
-    memset(&witfile, 0, sizeof(witfile));
-    if (!witec_read_file(buffer, size, &witfile))
-        return NULL;
-
-    /*
-    i = select_which_data(witfile);
-    if (i != (guint)-1) {
-        witpage = g_ptr_array_index(witfile, i);
-        container = gwy_container_new();
-        dfield = witec_page_to_data_field(witpage);
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        g_object_unref(dfield);
-        witec_store_metadata(witpage, container);
-    }
-    */
-
-    gwy_file_abandon_contents(buffer, size, NULL);
-    /* free sutff */
-
-    return container;
-}
-
-#if 0
-static void
-witec_store_metadata(WITecPage *rhkpage,
-                       GwyContainer *container)
-{
-    const gchar *s;
-    gchar *str;
-    guint i;
-
-    s = gwy_enum_to_string(rhkpage->page_type,
-                           page_types, G_N_ELEMENTS(page_types));
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Type",
-                                         g_strdup(s));
-
-    s = gwy_enum_to_string(rhkpage->scan_dir,
-                           scan_directions, G_N_ELEMENTS(scan_directions));
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Scan Direction",
-                                         g_strdup(s));
-
-    s = gwy_enum_to_string(rhkpage->source_type,
-                           page_sources, G_N_ELEMENTS(page_sources));
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Source",
-                                         g_strdup(s));
-
-    gwy_container_set_string_by_name(container, "/meta/Bias",
-                                     g_strdup_printf("%g V", rhkpage->bias));
-    gwy_container_set_string_by_name(container, "/meta/Rotation angle",
-                                     g_strdup_printf("%f", rhkpage->angle));
-    gwy_container_set_string_by_name(container, "/meta/Period",
-                                     g_strdup_printf("%f s", rhkpage->period));
-
-    s = rhkpage->strings[WITEC_STRING_DATE];
-    if (s && *s) {
-        str = g_strconcat(s, " ", rhkpage->strings[WITEC_STRING_TIME], NULL);
-        gwy_container_set_string_by_name(container, "/meta/Date", str);
-    }
-
-    s = rhkpage->strings[WITEC_STRING_LABEL];
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Label", g_strdup(s));
-
-    s = rhkpage->strings[WITEC_STRING_PATH];
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Path", g_strdup(s));
-
-    s = rhkpage->strings[WITEC_STRING_SYSTEM_TEXT];
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/System comment",
-                                         g_strdup(s));
-
-    s = rhkpage->strings[WITEC_STRING_SESSION_TEXT];
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/Session comment",
-                                         g_strdup(s));
-
-    s = rhkpage->strings[WITEC_STRING_USER_TEXT];
-    if (s && *s)
-        gwy_container_set_string_by_name(container, "/meta/User comment",
-                                         g_strdup(s));
-
-    str = g_new(gchar, 33);
-    for (i = 0; i < 16; i++) {
-        static const gchar hex[] = "0123456789abcdef";
-
-        str[2*i] = hex[rhkpage->page_id[i]/16];
-        str[2*i + 1] = hex[rhkpage->page_id[i] % 16];
-    }
-    str[32] = '\0';
-    gwy_container_set_string_by_name(container, "/meta/Page ID", str);
-}
-
 static guint
-select_which_data(GPtrArray *rhkfile)
+select_which_data(WITecFile *witfile)
 {
     WITecControls controls;
-    WITecPage *rhkpage;
     GtkWidget *dialog, *label, *vbox, *hbox, *align;
     GwyDataField *dfield;
     GwyEnum *choices;
     GwyPixmapLayer *layer;
     GSList *radio, *rl;
-    guint i, b = (guint)-1;
-    const gchar *s;
+    guint i, ndata, b = (guint)-1;
 
-    if (!rhkfile->len)
+    ndata = witfile->header.channels;
+    if (!ndata)
         return b;
 
-    if (rhkfile->len == 1)
+    if (ndata == 1)
         return 0;
 
-    controls.file = rhkfile;
-    choices = g_new(GwyEnum, rhkfile->len + 1);
-    for (i = 0; i < rhkfile->len; i++) {
-        rhkpage = g_ptr_array_index(rhkfile, i);
+    controls.file = witfile;
+    choices = g_new(GwyEnum, ndata);
+    for (i = 0; i < ndata; i++) {
         choices[i].value = i;
-        s = rhkpage->strings[WITEC_STRING_LABEL];
-        if (s && *s)
-            choices[i].name = g_strdup_printf(_("Page %u (%s)"),
-                                              rhkpage->pageno, s);
-        else
-            choices[i].name = g_strdup_printf(_("Page %u"), rhkpage->pageno);
+        choices[i].name = g_strdup_printf(_("Channel %u (%s)"),
+                                          i, witfile->scales[i].name);
     }
-    rhkpage = g_ptr_array_index(rhkfile, 0);
 
     dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -645,7 +660,7 @@ select_which_data(GPtrArray *rhkfile)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
 
-    radio = gwy_radio_buttons_create(choices, rhkfile->len, "data",
+    radio = gwy_radio_buttons_create(choices, ndata, "data",
                                      G_CALLBACK(selection_changed), &controls,
                                      0);
     for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
@@ -656,7 +671,7 @@ select_which_data(GPtrArray *rhkfile)
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
     controls.data = gwy_container_new();
-    dfield = witec_page_to_data_field(rhkpage);
+    dfield = witec_image_to_data_field(witfile, 0);
     gwy_container_set_object_by_name(controls.data, "data", dfield);
     gwy_container_set_enum_by_name(controls.data, "range-type",
                                    GWY_LAYER_BASIC_RANGE_AUTO);
@@ -665,7 +680,8 @@ select_which_data(GPtrArray *rhkfile)
     controls.data_view = gwy_data_view_new(controls.data);
     g_object_unref(controls.data);
     gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/MAX(rhkpage->x_size, rhkpage->y_size));
+                           120.0/MAX(witfile->header.pixels,
+                                     witfile->header.rows));
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "data");
     gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
@@ -691,7 +707,7 @@ select_which_data(GPtrArray *rhkfile)
         break;
     }
 
-    for (i = 0; i < rhkfile->len; i++)
+    for (i = 0; i < ndata; i++)
         g_free((gpointer)choices[i].name);
     g_free(choices);
 
@@ -702,7 +718,6 @@ static void
 selection_changed(GtkWidget *button,
                   WITecControls *controls)
 {
-    WITecPage *rhkpage;
     GwyDataField *dfield;
     guint i;
 
@@ -711,12 +726,10 @@ selection_changed(GtkWidget *button,
 
     i = gwy_radio_buttons_get_current_from_widget(button, "data");
     g_assert(i != (guint)-1);
-    rhkpage = g_ptr_array_index(controls->file, i);
-    dfield = witec_page_to_data_field(rhkpage);
+    dfield = witec_image_to_data_field(controls->file, i);
     gwy_container_set_object_by_name(controls->data, "data", dfield);
     g_object_unref(dfield);
 }
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
