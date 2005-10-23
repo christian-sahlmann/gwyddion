@@ -1,4 +1,4 @@
-1.99.4cvs20051018
+1.99.4cvs20051023
 
 1.99.5
 Application:
@@ -11,8 +11,12 @@ Library:
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
-- Rawfile: Always black preview was fixed.
+- WITfile (new): WITec WIT file import.
+- SDFile (new): Surfstand Surface Data File (SDF) import.
+- Hitachi AFM (new): Hitachi AFM file import.
+- Unisoku (new): Unisoku HDR + DAT file import.
 - EZDfile: Explict support for NID files was added, some bugs fixed.
+- Rawfile: Always black preview was fixed.
 
 
 1.99.4 (2005-10-06)
