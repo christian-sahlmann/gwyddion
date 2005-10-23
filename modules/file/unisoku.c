@@ -1,0 +1,388 @@
+/*
+ *  $Id$
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
+
+#include "config.h"
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
+#include <libgwymodule/gwymodule.h>
+#include <libprocess/datafield.h>
+#include <app/gwyapp.h>
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "get.h"
+
+#define MAGIC ":STM data\r\n"
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
+
+#define EXTENSION_HEADER ".hdr"
+#define EXTENSION_DATA ".dat"
+
+typedef enum {
+    UNISOKU_UINT8  = 2,
+    UNISOKU_SINT8  = 3,
+    UNISOKU_UINT16 = 4,
+    UNISOKU_SINT16 = 5,
+    UNISOKU_FLOAT  = 8
+} UnisokuDataType;
+
+typedef enum {
+    UNISOKU_DIM_LENGTH = 1,
+    UNISOKU_DIM_TIME = 2,
+    UNISOKU_DIM_CURRENT = 3,
+    UNISOKU_DIM_VOLTAGE = 4,
+    UNISOKU_DIM_TEMPERATURE = 5,
+    UNISOKU_DIM_INVERSE_LENGTH = 6,
+    UNISOKU_DIM_INVERSE_TIME = 7,
+    UNISOKU_DIM_OTHER = 8
+} UnisokuDimType;
+
+typedef struct {
+    gint format_version;
+    gchar *date;
+    gchar *time;
+    gchar *sample_name;
+    gchar *remark;
+    gboolean ascii_flag;
+    UnisokuDataType data_type;
+    gint xres;
+    gint yres;
+    UnisokuDimType dim_x;
+    UnisokuDimType dim_y;
+    gchar *unit_x;
+    gdouble start_x;
+    gdouble end_x;
+    gboolean log_flag_x;
+    gchar *unit_y;
+    gdouble start_y;
+    gdouble end_y;
+    gboolean log_flag_y;
+    gboolean ineq_flag;
+    gchar *unit_z;
+    gdouble min_z;
+    gdouble max_z;
+    gdouble min_raw_z;
+    gdouble max_raw_z;
+    gboolean log_flag_z;
+    gdouble stm_voltage;
+    gdouble stm_current;
+    gdouble scan_time;
+    gint accum;
+    gchar *stm_voltage_unit;
+    gchar *stm_current_unit;
+} UnisokuFile;
+
+static gboolean      module_register        (const gchar *name);
+static gint          unisoku_detect         (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer* unisoku_load           (const gchar *filename);
+static gboolean      unisoku_read_header    (gchar *buffer,
+                                             UnisokuFile *ufile);
+static GwyDataField* unisoku_read_data_field(const guchar *buffer,
+                                             gsize size,
+                                             UnisokuFile *ufile);
+static gchar*        unisoku_find_data_name (const gchar *header_name);
+static void          unisoku_file_free      (UnisokuFile *ufile);
+
+/* The module info. */
+static GwyModuleInfo module_info = {
+    GWY_MODULE_ABI_VERSION,
+    &module_register,
+    N_("Imports Unisoku data files (two-part .hdr + .dat)."),
+    "Yeti <yeti@gwyddion.net>",
+    "0.2",
+    "David Nečas (Yeti) & Petr Klapetek",
+    "2005",
+};
+
+/* This is the ONLY exported symbol.  The argument is the module info.
+ * NO semicolon after. */
+GWY_MODULE_QUERY(module_info)
+
+static gboolean
+module_register(const gchar *name)
+{
+    static GwyFileFuncInfo unisoku_func_info = {
+        "unisoku",
+        N_("Unisoku files (.hdr + .dat)"),
+        (GwyFileDetectFunc)&unisoku_detect,
+        (GwyFileLoadFunc)&unisoku_load,
+        NULL
+    };
+
+    gwy_file_func_register(name, &unisoku_func_info);
+
+    return TRUE;
+}
+
+static gint
+unisoku_detect(const GwyFileDetectInfo *fileinfo,
+               gboolean only_name)
+{
+    gint score = 0;
+
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION_HEADER)
+               ? 10 : 0;
+
+    if (fileinfo->buffer_len > MAGIC_SIZE
+        && memcmp(fileinfo->buffer, MAGIC, MAGIC_SIZE) == 0
+        && g_str_has_suffix(fileinfo->name_lowercase, EXTENSION_HEADER)) {
+        gchar *data_name;
+
+        if ((data_name = unisoku_find_data_name(fileinfo->name))) {
+            score = 100;
+            g_free(data_name);
+        }
+    }
+
+    return score;
+}
+
+static GwyContainer*
+unisoku_load(const gchar *filename)
+{
+    UnisokuFile ufile;
+    GwyContainer *container = NULL;
+    guchar *buffer = NULL;
+    gchar *text = NULL;
+    gsize size = 0;
+    GError *err = NULL;
+    GwyDataField *dfield = NULL;
+    gchar *data_name;
+
+    if (!g_file_get_contents(filename, &text, NULL, &err)) {
+        g_warning("Cannot read file `%s'", filename);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    memset(&ufile, 0, sizeof(UnisokuFile));
+    if (!unisoku_read_header(text, &ufile)) {
+        unisoku_file_free(&ufile);
+        g_free(text);
+        return NULL;
+    }
+    g_free(text);
+
+    if (!(data_name = unisoku_find_data_name(filename))) {
+        unisoku_file_free(&ufile);
+        return NULL;
+    }
+
+    if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
+        g_warning("Cannot read file `%s'", filename);
+        unisoku_file_free(&ufile);
+        g_clear_error(&err);
+        return NULL;
+    }
+
+    dfield = unisoku_read_data_field(buffer, size, &ufile);
+    gwy_file_abandon_contents(buffer, size, NULL);
+    if (!dfield) {
+        g_warning("Failed to read data from `%s'", filename);
+        return NULL;
+    }
+
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    return container;
+}
+
+#define NEXT(buffer, line) \
+    do { \
+        if (!(line = gwy_str_next_line(&buffer))) { \
+            g_warning("Unexpected end of header"); \
+            return FALSE; \
+        } \
+    } while (g_str_has_prefix(line, "\t:")); \
+    g_strstrip(line)
+
+static gboolean
+unisoku_read_header(gchar *buffer,
+                    UnisokuFile *ufile)
+{
+    gchar *line;
+    guint type1, type2;
+
+    line = gwy_str_next_line(&buffer);
+    if (!line)
+        return FALSE;
+
+    NEXT(buffer, line);
+    /* garbage */
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%d", &ufile->format_version) != 1)
+        return FALSE;
+
+    NEXT(buffer, line);
+    ufile->date = g_strdup(line);
+    NEXT(buffer, line);
+    ufile->time = g_strdup(line);
+    NEXT(buffer, line);
+    ufile->sample_name = g_strdup(line);
+    NEXT(buffer, line);
+    ufile->remark = g_strdup(line);
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%d %u", &ufile->ascii_flag, &type1) != 2)
+        return FALSE;
+    ufile->data_type = type1;
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%d %d", &ufile->xres, &ufile->yres) != 2)
+        return FALSE;
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%u %u", &type1, &type2) != 2)
+        return FALSE;
+    ufile->dim_x = type1;
+    ufile->dim_y = type2;
+
+    NEXT(buffer, line);
+    ufile->unit_x = g_strdup(line);
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%lf %lf %d",
+               &ufile->start_x, &ufile->end_x, &ufile->log_flag_x) != 3)
+        return FALSE;
+
+    NEXT(buffer, line);
+    ufile->unit_y = g_strdup(line);
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%lf %lf %d %d",
+               &ufile->start_y, &ufile->end_y,
+               &ufile->ineq_flag, &ufile->log_flag_y) != 4)
+        return FALSE;
+
+    NEXT(buffer, line);
+    ufile->unit_z = g_strdup(line);
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%lf %lf %lf %lf %d",
+               &ufile->max_z, &ufile->min_z,
+               &ufile->max_raw_z, &ufile->min_raw_z,
+               &ufile->log_flag_z) != 5)
+        return FALSE;
+
+    NEXT(buffer, line);
+    if (sscanf(line, "%lf %lf %lf %d",
+               &ufile->stm_voltage, &ufile->stm_current,
+               &ufile->scan_time, &ufile->accum) != 4)
+        return FALSE;
+
+    NEXT(buffer, line);
+    /* reserved */
+
+    NEXT(buffer, line);
+    ufile->stm_voltage_unit = g_strdup(line);
+
+    NEXT(buffer, line);
+    ufile->stm_current_unit = g_strdup(line);
+
+    /* There is more stuff after that, but heaven knows what it means... */
+
+    return TRUE;
+}
+
+static GwyDataField*
+unisoku_read_data_field(const guchar *buffer,
+                        gsize size,
+                        UnisokuFile *ufile)
+{
+    gint i, n;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gdouble *data;
+    const gint16 *pdata = (const gint16*)buffer;
+
+    n = ufile->xres * ufile->yres;
+    if (n > size)
+        return NULL;
+
+    dfield = gwy_data_field_new(ufile->xres, ufile->yres,
+                                (ufile->end_x - ufile->start_x)*1e-9,
+                                (ufile->end_y - ufile->start_y)*1e-9,
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < n; i++)
+        data[i] = GINT16_FROM_LE(pdata[i]);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new("");
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    return dfield;
+}
+
+static gchar*
+unisoku_find_data_name(const gchar *header_name)
+{
+    GString *data_name;
+    gchar *retval;
+    gboolean ok = FALSE;
+
+    data_name = g_string_new(header_name);
+    g_string_truncate(data_name,
+                      data_name->len - (sizeof(EXTENSION_HEADER) - 1));
+    g_string_append(data_name, EXTENSION_DATA);
+    if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
+        ok = TRUE;
+    else {
+        g_ascii_strup(data_name->str
+                      + data_name->len - (sizeof(EXTENSION_DATA) - 1),
+                      -1);
+        if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
+            ok = TRUE;
+    }
+    retval = data_name->str;
+    g_string_free(data_name, !ok);
+
+    return ok ? retval : NULL;
+}
+
+static void
+unisoku_file_free(UnisokuFile *ufile)
+{
+    g_free(ufile->date);
+    g_free(ufile->time);
+    g_free(ufile->sample_name);
+    g_free(ufile->remark);
+    g_free(ufile->unit_x);
+    g_free(ufile->unit_y);
+    g_free(ufile->unit_z);
+    g_free(ufile->stm_voltage_unit);
+    g_free(ufile->stm_current_unit);
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+
