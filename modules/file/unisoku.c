@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "get.h"
@@ -98,6 +99,9 @@ static gint          unisoku_detect         (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* unisoku_load           (const gchar *filename);
 static gboolean      unisoku_read_header    (gchar *buffer,
                                              UnisokuFile *ufile);
+static gint          unisoku_sscanf         (const gchar *str,
+                                             const gchar *format,
+                                             ...);
 static GwyDataField* unisoku_read_data_field(const guchar *buffer,
                                              gsize size,
                                              UnisokuFile *ufile);
@@ -225,7 +229,7 @@ unisoku_read_header(gchar *buffer,
                     UnisokuFile *ufile)
 {
     gchar *line;
-    guint type1, type2;
+    gint type1, type2;
 
     line = gwy_str_next_line(&buffer);
     if (!line)
@@ -235,7 +239,7 @@ unisoku_read_header(gchar *buffer,
     /* garbage */
 
     NEXT(buffer, line);
-    if (sscanf(line, "%d", &ufile->format_version) != 1)
+    if (unisoku_sscanf(line, "i", &ufile->format_version) != 1)
         return FALSE;
 
     NEXT(buffer, line);
@@ -248,16 +252,16 @@ unisoku_read_header(gchar *buffer,
     ufile->remark = g_strdup(line);
 
     NEXT(buffer, line);
-    if (sscanf(line, "%d %u", &ufile->ascii_flag, &type1) != 2)
+    if (unisoku_sscanf(line, "ii", &ufile->ascii_flag, &type1) != 2)
         return FALSE;
     ufile->data_type = type1;
 
     NEXT(buffer, line);
-    if (sscanf(line, "%d %d", &ufile->xres, &ufile->yres) != 2)
+    if (unisoku_sscanf(line, "ii", &ufile->xres, &ufile->yres) != 2)
         return FALSE;
 
     NEXT(buffer, line);
-    if (sscanf(line, "%u %u", &type1, &type2) != 2)
+    if (unisoku_sscanf(line, "ii", &type1, &type2) != 2)
         return FALSE;
     ufile->dim_x = type1;
     ufile->dim_y = type2;
@@ -266,33 +270,34 @@ unisoku_read_header(gchar *buffer,
     ufile->unit_x = g_strdup(line);
 
     NEXT(buffer, line);
-    if (sscanf(line, "%lf %lf %d",
-               &ufile->start_x, &ufile->end_x, &ufile->log_flag_x) != 3)
+    if (unisoku_sscanf(line, "ddi",
+                       &ufile->start_x, &ufile->end_x,
+                       &ufile->log_flag_x) != 3)
         return FALSE;
 
     NEXT(buffer, line);
     ufile->unit_y = g_strdup(line);
 
     NEXT(buffer, line);
-    if (sscanf(line, "%lf %lf %d %d",
-               &ufile->start_y, &ufile->end_y,
-               &ufile->ineq_flag, &ufile->log_flag_y) != 4)
+    if (unisoku_sscanf(line, "ddii",
+                       &ufile->start_y, &ufile->end_y,
+                       &ufile->ineq_flag, &ufile->log_flag_y) != 4)
         return FALSE;
 
     NEXT(buffer, line);
     ufile->unit_z = g_strdup(line);
 
     NEXT(buffer, line);
-    if (sscanf(line, "%lf %lf %lf %lf %d",
-               &ufile->max_z, &ufile->min_z,
-               &ufile->max_raw_z, &ufile->min_raw_z,
-               &ufile->log_flag_z) != 5)
+    if (unisoku_sscanf(line, "ddddi",
+                       &ufile->max_z, &ufile->min_z,
+                       &ufile->max_raw_z, &ufile->min_raw_z,
+                       &ufile->log_flag_z) != 5)
         return FALSE;
 
     NEXT(buffer, line);
-    if (sscanf(line, "%lf %lf %lf %d",
-               &ufile->stm_voltage, &ufile->stm_current,
-               &ufile->scan_time, &ufile->accum) != 4)
+    if (unisoku_sscanf(line, "dddi",
+                       &ufile->stm_voltage, &ufile->stm_current,
+                       &ufile->scan_time, &ufile->accum) != 4)
         return FALSE;
 
     NEXT(buffer, line);
@@ -307,6 +312,47 @@ unisoku_read_header(gchar *buffer,
     /* There is more stuff after that, but heaven knows what it means... */
 
     return TRUE;
+}
+
+static gint
+unisoku_sscanf(const gchar *str,
+               const gchar *format,
+               ...)
+{
+    va_list ap;
+    gchar *endptr;
+    gint *pi;
+    gdouble *pd;
+    gint count = 0;
+
+    va_start(ap, format);
+    while (*format) {
+        switch (*format++) {
+            case 'i':
+            pi = va_arg(ap, gint*);
+            g_assert(pi);
+            *pi = strtol(str, &endptr, 10);
+            break;
+
+            case 'd':
+            pd = va_arg(ap, gdouble*);
+            g_assert(pd);
+            *pd = g_ascii_strtod(str, &endptr);
+            break;
+
+            default:
+            g_return_val_if_reached(0);
+            break;
+        }
+        if ((gchar*)str == endptr)
+            break;
+
+        count++;
+        str = endptr;
+    }
+    va_end(ap);
+
+    return count;
 }
 
 static GwyDataField*
