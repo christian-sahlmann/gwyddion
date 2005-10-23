@@ -103,7 +103,7 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyFileFuncInfo sdfile_func_info = {
-        "sdfile_afm",
+        "sdfile",
         N_("Surfstand SDF files"),
         (GwyFileDetectFunc)&sdfile_detect,
         (GwyFileLoadFunc)&sdfile_load,
