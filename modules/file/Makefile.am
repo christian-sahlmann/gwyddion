@@ -23,6 +23,7 @@ file_LTLIBRARIES = \
 	rawfile.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
+	sdfile.la \
 	sis.la \
 	spmlab.la \
 	stmprg.la \
@@ -116,6 +117,9 @@ rhk_sm3_la_LIBADD = $(module_libadd)
 
 rhk_spm32_la_SOURCES = rhk-spm32.c
 rhk_spm32_la_LIBADD = $(module_libadd)
+
+sdfile_la_SOURCES = sdfile.c
+sdfile_la_LIBADD = $(module_libadd)
 
 sis_la_SOURCES = sis.c
 sis_la_LIBADD = $(module_libadd)
