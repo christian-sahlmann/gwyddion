@@ -76,11 +76,13 @@ static GwyContainer* sdfile_load            (const gchar *filename);
 static gboolean      sdfile_read_header_bin (const guchar **p,
                                              gsize *len,
                                              SDFile *sdfile);
-static gboolean      sdfile_read_header_text(const guchar **p,
+static gboolean      sdfile_read_header_text(const guchar **buffer,
                                              gsize *len,
                                              SDFile *sdfile);
-static GwyDataField* read_data_field_bin    (SDFile *sdfile);
-static GwyDataField* read_data_field_text   (SDFile *sdfile);
+static gchar*        sdfile_next_line       (gchar **buffer,
+                                             const gchar *key);
+static GwyDataField* sdfile_read_data_bin   (SDFile *sdfile);
+static GwyDataField* sdfile_read_data_text  (SDFile *sdfile);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -168,7 +170,7 @@ sdfile_load(const gchar *filename)
         && sdfile.expected_size == len
         && !sdfile.compression
         && !sdfile.check_type)
-        dfield = read_data_field_bin(&sdfile);
+        dfield = sdfile_read_data_bin(&sdfile);
     else {
         p = buffer;
         len = size;
@@ -176,7 +178,7 @@ sdfile_load(const gchar *filename)
             && sdfile.expected_size <= len
             && !sdfile.compression
             && !sdfile.check_type)
-            dfield = read_data_field_text(&sdfile);
+            dfield = sdfile_read_data_text(&sdfile);
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -240,14 +242,12 @@ sdfile_read_header_bin(const guchar **p,
 }
 
 static gboolean
-sdfile_read_header_text(const guchar **p,
+sdfile_read_header_text(const guchar **buffer,
                         gsize *len,
                         SDFile *sdfile)
 {
     enum { PING_SIZE = 400 };
-    gchar *star;
-    guint data_type;
-    gchar *header;
+    gchar *val, *p, *header;
     gsize size;
 
     /* We do not need exact lenght of the minimum file */
@@ -257,40 +257,72 @@ sdfile_read_header_text(const guchar **p,
     /* Make a nul-terminated copy */
     size = MIN(*len+1, PING_SIZE);
     header = g_newa(gchar, size);
-    memcpy(header, *p, size-1);
+    memcpy(header, *buffer, size-1);
     header[size-1] = '\0';
 
     memset(sdfile, 0, sizeof(SDFile));
-    if (sscanf(header,
-               "%8s "
-               "ManufacID %10s "
-               "CreateDate %12s "
-               "ModDate %12s "
-               "NumPoints %d "
-               "NumProfiles %d "
-               "Xscale %lf "
-               "Yscale %lf "
-               "Zscale %lf "
-               "Zresolution %lf "
-               "Compression %d "
-               "DataType %u "
-               "CheckType %d "
-               "*",
-               sdfile->version,
-               sdfile->manufacturer,
-               sdfile->creation,
-               sdfile->modification,
-               &sdfile->xres,
-               &sdfile->yres,
-               &sdfile->xscale,
-               &sdfile->yscale,
-               &sdfile->zscale,
-               &sdfile->zres,
-               &sdfile->compression,
-               &data_type,
-               &sdfile->check_type) != 13)
+    p = header;
+
+    val = g_strstrip(gwy_str_next_line(&p));
+    strncpy(sdfile->version, val, sizeof(sdfile->version));
+
+    if (!(val = sdfile_next_line(&p, "ManufacID")))
         return FALSE;
-    sdfile->data_type = data_type;
+    strncpy(sdfile->manufacturer, val, sizeof(sdfile->manufacturer));
+
+    if (!(val = sdfile_next_line(&p, "CreateDate")))
+        return FALSE;
+    strncpy(sdfile->creation, val, sizeof(sdfile->creation));
+
+    if (!(val = sdfile_next_line(&p, "ModDate")))
+        return FALSE;
+    strncpy(sdfile->modification, val, sizeof(sdfile->modification));
+
+    if (!(val = sdfile_next_line(&p, "NumPoints")))
+        return FALSE;
+    sdfile->xres = atoi(val);
+    if (sdfile->xres <= 0)
+        return FALSE;
+
+    if (!(val = sdfile_next_line(&p, "NumProfiles")))
+        return FALSE;
+    sdfile->yres = atoi(val);
+    if (sdfile->yres <= 0)
+        return FALSE;
+
+    if (!(val = sdfile_next_line(&p, "Xscale")))
+        return FALSE;
+    sdfile->xscale = g_ascii_strtod(val, NULL);
+    if (sdfile->xscale <= 0.0)
+        return FALSE;
+
+    if (!(val = sdfile_next_line(&p, "Yscale")))
+        return FALSE;
+    sdfile->yscale = g_ascii_strtod(val, NULL);
+    if (sdfile->yscale <= 0.0)
+        return FALSE;
+
+    if (!(val = sdfile_next_line(&p, "Zscale")))
+        return FALSE;
+    sdfile->zscale = g_ascii_strtod(val, NULL);
+    if (sdfile->zscale <= 0.0)
+        return FALSE;
+
+    if (!(val = sdfile_next_line(&p, "Zresolution")))
+        return FALSE;
+    sdfile->zres = g_ascii_strtod(val, NULL);
+
+    if (!(val = sdfile_next_line(&p, "Compression")))
+        return FALSE;
+    sdfile->compression = atoi(val);
+
+    if (!(val = sdfile_next_line(&p, "DataType")))
+        return FALSE;
+    sdfile->data_type = atoi(val);
+
+    if (!(val = sdfile_next_line(&p, "CheckType")))
+        return FALSE;
+    sdfile->check_type = atoi(val);
 
     /* at least */
     if (sdfile->data_type < SDF_NTYPES)
@@ -298,27 +330,40 @@ sdfile_read_header_text(const guchar **p,
     else
         sdfile->expected_size = -1;
 
-    /* find standalone `*' */
-    star = header + 128;
-    do {
-        star = memchr(star, '*', size - (star - header) - 1);
-        if (g_ascii_isspace(*(star-1)) && g_ascii_isspace(*(star+1))) {
-            star++;
-            *len -= star - header;
-            *p += star - header;
-            sdfile->data = *p;
-            return TRUE;
-        }
-        star++;
-    } while (star + 1 < header + size);
+    val = g_strstrip(gwy_str_next_line(&p));
+    if (!val || *val != '*')
+        return FALSE;
 
-    g_assert_not_reached();
+    *buffer += p - header;
+    *len -= p - header;
+    sdfile->data = *buffer;
+    return TRUE;
+}
 
-    return FALSE;
+static gchar*
+sdfile_next_line(gchar **buffer,
+                 const gchar *key)
+{
+    guint klen;
+    gchar *value, *line;
+
+    line = gwy_str_next_line(buffer);
+    if (!line)
+        return NULL;
+
+    klen = strlen(key);
+    if (strncmp(line, key, klen) != 0
+        || !g_ascii_isspace(line[klen]))
+        return NULL;
+
+    value = line + klen;
+    g_strstrip(value);
+
+    return value;
 }
 
 static GwyDataField*
-read_data_field_bin(SDFile *sdfile)
+sdfile_read_data_bin(SDFile *sdfile)
 {
     gint i, n;
     GwyDataField *dfield;
@@ -402,7 +447,7 @@ read_data_field_bin(SDFile *sdfile)
 }
 
 static GwyDataField*
-read_data_field_text(SDFile *sdfile)
+sdfile_read_data_text(SDFile *sdfile)
 {
     gint i, n;
     GwyDataField *dfield;
