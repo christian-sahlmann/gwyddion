@@ -137,14 +137,14 @@ gwy_data_field_get_fft_res(gint data_res)
 
 
 /**
- * gwy_data_field_2dffthumanize:
+ * gwy_data_field_2dfft_humanize:
  * @a: A data field
  *
  * Swap top-left, top-right, bottom-left and bottom-right
  * squares to obtain a humanized 2D FFT output with 0,0 in the center.
  **/
 void
-gwy_data_field_2dffthumanize(GwyDataField *a)
+gwy_data_field_2dfft_humanize(GwyDataField *a)
 {
     gint i, j, im, jm, xres;
     GwyDataField *b;

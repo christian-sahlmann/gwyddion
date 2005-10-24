@@ -1018,7 +1018,7 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
     /* Calculate inverse discrete distribution function nh.  In other words,
      * group pixels of the same discrete height.  nh then holds indices in
      * hindex where each height starts.  The other half of nh serves as a
-     * scratch space where we keep how many pixels we have in each group 
+     * scratch space where we keep how many pixels we have in each group
      * so far.
      *
      * The purpose of all this is to scale well with nstats.  For small nstats
@@ -1363,7 +1363,7 @@ gwy_data_field_fill_one_grain(gint xres,
     return count;
 }
 
-gdouble 
+gdouble
 gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
                                            GwyDataField *grain_field,
                                            gint col,
@@ -1375,15 +1375,15 @@ gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
                            *data_field->yreal/data_field->yres;
 
     indices = gwy_data_field_fill_grain(grain_field, col, row, &nindices);
-    
+
     switch (type) {
         case GWY_GRAIN_VALUE_AREA:
         g_free(indices);
-        return (gdouble)(nindices)*pixel_to_area;     
+        return (gdouble)(nindices)*pixel_to_area;
 
         case GWY_GRAIN_VALUE_AREA_RADIUS:
         g_free(indices);
-        return sqrt((gdouble)(nindices)*pixel_to_area/3.141592653589);     
+        return sqrt((gdouble)(nindices)*pixel_to_area/G_PI);
      }
 }
 

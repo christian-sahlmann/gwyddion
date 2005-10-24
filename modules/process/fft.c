@@ -185,8 +185,8 @@ fft(GwyContainer *data, GwyRunType run)
                          args.interp,
                          0,
                          0);
-    gwy_data_field_2dffthumanize(raout);
-    gwy_data_field_2dffthumanize(ipout);
+    gwy_data_field_2dfft_humanize(raout);
+    gwy_data_field_2dfft_humanize(ipout);
 
     newreals = ((gdouble)gwy_data_field_get_xres(dfield))
                /gwy_data_field_get_xreal(dfield);

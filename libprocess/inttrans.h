@@ -46,7 +46,7 @@ void gwy_data_field_2dfft_real    (GwyDataField *ra,
                                    GwyInterpolationType interpolation,
                                    gboolean preserverms,
                                    gboolean level);
-void gwy_data_field_2dffthumanize (GwyDataField *a);
+void gwy_data_field_2dfft_humanize(GwyDataField *a);
 void gwy_data_field_xfft          (GwyDataField *ra,
                                    GwyDataField *ia,
                                    GwyDataField *rb,

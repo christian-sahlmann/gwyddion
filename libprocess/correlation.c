@@ -218,7 +218,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         gwy_data_field_2dfft(data_in_re, kernel_in_re, score, data_out_im, GWY_WINDOWING_NONE,
                                   GWY_TRANSFORM_DIRECTION_BACKWARD,
                                   GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
-        gwy_data_field_2dffthumanize(score);
+        gwy_data_field_2dfft_humanize(score);
         //gwy_data_field_resample(score, data_field->xres, data_field->yres, GWY_INTERPOLATION_BILINEAR);
 
         /*TODO compute it and put to score field*/
