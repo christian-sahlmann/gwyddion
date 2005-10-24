@@ -82,10 +82,6 @@ static void       set_min_max                 (GwyUnitoolState *state,
                                                const gdouble *selection);
 static void       range_mode_changed          (GtkWidget *button,
                                                GwyUnitoolState *state);
-static void       load_args                   (GwyContainer *container,
-                                               ToolControls *controls);
-static void       save_args                   (GwyContainer *container,
-                                               ToolControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -95,7 +91,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "1.99",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -206,7 +202,6 @@ dialog_create(GwyUnitoolState *state)
         { N_("Adaptive"), GWY_LAYER_BASIC_RANGE_ADAPT, },
     };
     ToolControls *controls;
-    GwyContainer *settings;
     GtkWidget *dialog, *table, *frame, *label, *hbox, *button;
     GwyGraph *graph;
     GwyGraphCurveModel *cmodel;
@@ -214,8 +209,6 @@ dialog_create(GwyUnitoolState *state)
     gint row;
 
     controls = (ToolControls*)state->user_data;
-    settings = gwy_app_settings_get();
-    load_args(settings, controls);
 
     dialog = gtk_dialog_new_with_buttons(_("Color Range"), NULL, 0, NULL);
     gwy_unitool_dialog_add_button_hide(dialog);
@@ -403,13 +396,21 @@ dialog_update(GwyUnitoolState *state,
 static void
 dialog_abandon(GwyUnitoolState *state)
 {
+    static const gchar *do_preview_key = "/tool/icolorange/do_preview";
+    static const gchar *rel_min_key = "/tool/icolorange/rel_min";
+    static const gchar *rel_max_key = "/tool/icolorange/rel_max";
+
     GwyContainer *settings;
     ToolControls *controls;
 
     settings = gwy_app_settings_get();
     controls = (ToolControls*)state->user_data;
-    save_args(settings, controls);
     gwy_object_unref(controls->heightdist);
+
+    /* TODO: remove someday */
+    gwy_container_remove_by_name(settings, do_preview_key);
+    gwy_container_remove_by_name(settings, rel_min_key);
+    gwy_container_remove_by_name(settings, rel_max_key);
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }
@@ -551,24 +552,6 @@ range_mode_changed(G_GNUC_UNUSED GtkWidget *button,
                              range_type == GWY_LAYER_BASIC_RANGE_FIXED);
     set_range_type(state, range_type);
     dialog_update(state, GWY_UNITOOL_UPDATED_DATA);
-}
-
-static const gchar *do_preview_key = "/tool/icolorange/do_preview";
-static const gchar *rel_min_key = "/tool/icolorange/rel_min";
-static const gchar *rel_max_key = "/tool/icolorange/rel_max";
-
-static void
-save_args(GwyContainer *container, ToolControls *controls)
-{
-    /* TODO: remove someday */
-    gwy_container_remove_by_name(container, do_preview_key);
-    gwy_container_remove_by_name(container, rel_min_key);
-    gwy_container_remove_by_name(container, rel_max_key);
-}
-
-static void
-load_args(GwyContainer *container, ToolControls *controls)
-{
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
