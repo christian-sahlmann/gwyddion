@@ -19,9 +19,8 @@
  */
 
 #include "config.h"
-#include "gwyddion.h"
-
-void _gwy_nlfit_preset_class_setup_presets(void);
+#include <libgwyddion/gwyddion.h>
+#include "gwyddioninternal.h"
 
 static guint types_initialized = 0;
 

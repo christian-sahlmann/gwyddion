@@ -38,7 +38,9 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwyddion.def
 
-noinst_HEADERS = gwytestser.h
+noinst_HEADERS = \
+	gwyddioninternal.h \
+	gwytestser.h
 
 # In following order do:
 # Any code change     C:   R++: A

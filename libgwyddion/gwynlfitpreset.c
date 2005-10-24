@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwynlfitpreset.h>
+#include "gwyddioninternal.h"
 
 typedef void (*GwyNLFitGuessFunc)(gint n_dat,
                                   const gdouble *x,
@@ -66,10 +67,10 @@ G_DEFINE_TYPE(GwyNLFitPreset, gwy_nlfit_preset, GWY_TYPE_RESOURCE)
 /*********************** gaussian *****************************/
 static gdouble
 gauss_func(gdouble x,
-          G_GNUC_UNUSED gint n_param,
-          const gdouble *b,
-          G_GNUC_UNUSED gpointer user_data,
-          gboolean *fres)
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
 {
     gdouble c;
 
