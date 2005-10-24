@@ -119,6 +119,8 @@ static GwyModuleInfo module_info = {
     "2005",
 };
 
+static const guint type_sizes[] = { 0, 0, 1, 1, 2, 2, 0, 0, 4 };
+
 /* This is the ONLY exported symbol.  The argument is the module info.
  * NO semicolon after. */
 GWY_MODULE_QUERY(module_info)
@@ -188,6 +190,14 @@ unisoku_load(const gchar *filename)
         return NULL;
     }
     g_free(text);
+
+    if (ufile.data_type < UNISOKU_UINT8
+        || ufile.data_type > UNISOKU_FLOAT
+        || type_sizes[ufile.data_type] == 0) {
+        g_warning("Uknown data type: %d", ufile.data_type);
+        unisoku_file_free(&ufile);
+        return NULL;
+    }
 
     if (!(data_name = unisoku_find_data_name(filename))) {
         unisoku_file_free(&ufile);
@@ -364,11 +374,12 @@ unisoku_read_data_field(const guchar *buffer,
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble *data;
-    const gint16 *pdata = (const gint16*)buffer;
 
     n = ufile->xres * ufile->yres;
-    if (n > size)
+    if (n*type_sizes[ufile->data_type] > size) {
+        g_warning("Data file is truncated");
         return NULL;
+    }
 
     dfield = gwy_data_field_new(ufile->xres, ufile->yres,
                                 (ufile->end_x - ufile->start_x)*1e-9,
@@ -376,8 +387,45 @@ unisoku_read_data_field(const guchar *buffer,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
 
-    for (i = 0; i < n; i++)
-        data[i] = GINT16_FROM_LE(pdata[i]);
+    /* FIXME: what to do when ascii_flag is set? */
+    switch (ufile->data_type) {
+        case UNISOKU_UINT8:
+        for (i = 0; i < n; i++)
+            data[i] = buffer[i];
+        break;
+
+        case UNISOKU_SINT8:
+        for (i = 0; i < n; i++)
+            data[i] = (signed char)buffer[i];
+        break;
+
+        case UNISOKU_UINT16:
+        {
+            const guint16 *pdata = (const guint16*)buffer;
+
+            for (i = 0; i < n; i++)
+                data[i] = GUINT16_FROM_LE(pdata[i]);
+        }
+        break;
+
+        case UNISOKU_SINT16:
+        {
+            const gint16 *pdata = (const gint16*)buffer;
+
+            for (i = 0; i < n; i++)
+                data[i] = GUINT16_FROM_LE(pdata[i]);
+        }
+        break;
+
+        case UNISOKU_FLOAT:
+        for (i = 0; i < n; i++)
+            data[i] = get_FLOAT(&buffer);
+        break;
+
+        default:
+        g_return_val_if_reached(NULL);
+        break;
+    }
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
