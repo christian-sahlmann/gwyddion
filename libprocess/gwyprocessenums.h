@@ -50,7 +50,7 @@ typedef enum {
     GWY_SYMMETRY_LAST
 } GwyPlaneSymmetry;
 
-typedef enum { /*< lowercase_name=gwy_2dcwt_wavelet_type >*/
+typedef enum { /*< lowercase_name=gwy_2d_cwt_wavelet_type >*/
     GWY_2DCWT_GAUSS,
     GWY_2DCWT_HAT
 } Gwy2DCWTWaveletType;
