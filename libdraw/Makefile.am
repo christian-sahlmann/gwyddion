@@ -20,6 +20,9 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwydraw.def
 
+noinst_HEADERS = \
+	gwydrawinternal.h
+
 #noinst_PROGRAMS = test
 
 # In following order do:

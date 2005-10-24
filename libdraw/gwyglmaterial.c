@@ -25,6 +25,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwyglmaterial.h>
+#include "gwydrawinternal.h"
 
 #define BITS_PER_SAMPLE 8
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))

@@ -25,6 +25,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwygradient.h>
+#include "gwydrawinternal.h"
 
 /* Standard sample size, returned by gwy_gradient_get_samples() */
 enum {

@@ -20,10 +20,8 @@
 
 #include "config.h"
 #include <libprocess/gwyprocess.h>
-#include "gwydraw.h"
-
-void _gwy_gradient_class_setup_presets   (void);
-void _gwy_gl_material_class_setup_presets(void);
+#include <libdraw/gwydraw.h>
+#include "gwydrawinternal.h"
 
 static guint types_initialized = 0;
 
