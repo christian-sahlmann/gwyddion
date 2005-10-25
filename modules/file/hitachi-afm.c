@@ -55,7 +55,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.0.2",
+    "0.0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -139,11 +139,11 @@ read_data_field(const guchar *buffer, guint size)
         XRES_OFFSET   = 0x1dc,
         YRES_OFFSET   = 0x1dc,
     };
-    gint xres, yres, i;
+    gint xres, yres, n, i, j;
     gdouble xreal, yreal, q;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    gdouble *data;
+    gdouble *data, *row;
     const gint16 *pdata;
     const guchar *p;
 
@@ -152,9 +152,10 @@ read_data_field(const guchar *buffer, guint size)
     p = buffer + YRES_OFFSET;
     yres = get_DWORD(&p);
 
-    if (size != 2*xres*yres + HEADER_SIZE) {
+    n = xres*yres;
+    if (size != 2*n + HEADER_SIZE) {
         g_warning("File size doesn't match, expecting %d, got %u",
-                  2*xres*yres + HEADER_SIZE, size);
+                  2*n + HEADER_SIZE, size);
         return NULL;
     }
 
@@ -168,8 +169,11 @@ read_data_field(const guchar *buffer, guint size)
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     pdata = (const gint16*)(buffer + HEADER_SIZE);
-    for (i = 0; i < xres*yres; i++)
-        data[i] = GINT16_TO_LE(pdata[i])/65536.0*q;
+    for (i = 0; i < yres; i++) {
+        row = data + i*xres;
+        for (j = 0; j < xres; j++)
+            row[xres-1 - j] = GINT16_TO_LE(pdata[i*xres + j])/65536.0*q;
+    }
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
