@@ -165,6 +165,9 @@ read_data_field(const guchar *buffer, guint size)
     yreal = get_DOUBLE(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
     q = get_DOUBLE(&p) * Nanometer;
+    /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
+     * the imported data match the original software. */
+    q /= 2.0;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
