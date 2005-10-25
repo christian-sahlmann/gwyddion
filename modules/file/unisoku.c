@@ -213,6 +213,8 @@ unisoku_load(const gchar *filename)
 
     dfield = unisoku_read_data_field(buffer, size, &ufile);
     gwy_file_abandon_contents(buffer, size, NULL);
+    unisoku_file_free(&ufile);
+
     if (!dfield) {
         g_warning("Failed to read data from `%s'", filename);
         return NULL;
@@ -370,9 +372,11 @@ unisoku_read_data_field(const guchar *buffer,
                         gsize size,
                         UnisokuFile *ufile)
 {
-    gint i, n;
+    gint i, n, power10;
+    const gchar *unit;
     GwyDataField *dfield;
     GwySIUnit *siunit;
+    gdouble q;
     gdouble *data;
 
     n = ufile->xres * ufile->yres;
@@ -382,8 +386,8 @@ unisoku_read_data_field(const guchar *buffer,
     }
 
     dfield = gwy_data_field_new(ufile->xres, ufile->yres,
-                                (ufile->end_x - ufile->start_x)*1e-9,
-                                (ufile->end_y - ufile->start_y)*1e-9,
+                                fabs((ufile->end_x - ufile->start_x)),
+                                fabs((ufile->end_y - ufile->start_y)),
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
 
@@ -413,7 +417,7 @@ unisoku_read_data_field(const guchar *buffer,
             const gint16 *pdata = (const gint16*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = GUINT16_FROM_LE(pdata[i]);
+                data[i] = GINT16_FROM_LE(pdata[i]);
         }
         break;
 
@@ -427,12 +431,22 @@ unisoku_read_data_field(const guchar *buffer,
         break;
     }
 
-    siunit = gwy_si_unit_new("m");
+    unit = ufile->unit_x;
+    if (!*unit)
+        unit = "nm";
+    siunit = gwy_si_unit_new_parse(unit, &power10);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
+    q = pow10((gdouble)power10);
+    gwy_data_field_set_xreal(dfield, q*gwy_data_field_get_xreal(dfield));
+    gwy_data_field_set_yreal(dfield, q*gwy_data_field_get_yreal(dfield));
     g_object_unref(siunit);
 
-    siunit = gwy_si_unit_new("");
+    unit = ufile->unit_z;
+    /* XXX: No fallback yet, just make z unitless */
+    siunit = gwy_si_unit_new_parse(unit, &power10);
     gwy_data_field_set_si_unit_z(dfield, siunit);
+    q = pow10((gdouble)power10);
+    gwy_data_field_multiply(dfield, q);
     g_object_unref(siunit);
 
     return dfield;
