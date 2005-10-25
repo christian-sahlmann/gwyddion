@@ -45,34 +45,6 @@ typedef enum {
     WITEC_BACKWARD
 } WITecScanDirection;
 
-typedef enum {
-    WITEC_SUBTRACT_NONE,
-    WITEC_SUBTRACT_AVERAGE,
-    WITEC_SUBTRACT_BACKGROUND
-} WITecSubtractionType;
-
-typedef enum {
-    WITEC_DISPLAY_IMAGE,
-    WITEC_DISPLAY_LINE_TRACE
-} WITecDisplayMode;
-
-typedef enum {
-    WITEC_WIN_SPEC_MIN,
-    WITEC_WIN_SPEC_AVG,
-    WITEC_WIN_SPEC_MAX,
-    WITEC_WIN_SPEC_CMASS,
-    WITEC_WIN_SPEC_PEAK,
-    WITEC_WIN_SPEC_VALLEY,
-    WITEC_WIN_SPEC_INTEG
-} WITecWinSpecFunction;
-
-typedef enum {
-    WITEC_OPERAND_CHANNEL,
-    WITEC_OPERAND_ROW_NUMBER,
-    WITEC_OPERAND_COLUMN_NUMBER,
-    WITEC_OPERAND_CONSTANT
-} WITecOperandType;
-
 enum {
     WITEC_SIZE_SCALE = 2*4 + 8 + 48,
     WITEC_SIZE_HEADER = 16,
@@ -89,11 +61,6 @@ enum {
                      + WITEC_SIZE_RANGE_OPTIONS
                      + WITEC_SIZE_IMAGE_OPTIONS
 };
-
-typedef struct {
-    gint operation;
-    gint noperands;
-} WITecOperationRecord;
 
 typedef struct {
     gdouble x;
@@ -357,7 +324,7 @@ witec_read_file(const guchar *buffer,
                + WITEC_SIZE_RANGE_OPTIONS + WITEC_SIZE_IMAGE_OPTIONS;
     if (len != expected) {
         g_warning("File size doesn't match, expecting %u bytes after header, "
-                  "but got %u bytes", expected, len);
+                  "but got %" G_GSIZE_FORMAT " bytes", expected, len);
         return FALSE;
     }
 
