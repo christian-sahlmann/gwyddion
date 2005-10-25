@@ -403,9 +403,36 @@ witec_store_metadata(WITecFile *witfile,
                      GwyContainer *container,
                      guint i)
 {
+    gdouble v;
+
     gwy_container_set_string_by_name(container, "/filename/title",
                                      g_strndup(witfile->scales[i].name,
                                               sizeof(witfile->scales[i].name)));
+
+    if (witfile->footer.title[0])
+        gwy_container_set_string_by_name(container, "/meta/Title",
+                                         g_strdup(witfile->footer.title));
+    if (witfile->footer.comments[0])
+        gwy_container_set_string_by_name(container, "/meta/Comments",
+                                         g_strdup(witfile->footer.comments));
+    gwy_container_set_string_by_name(container, "/meta/Date",
+                                     g_strdup_printf("%d-%02d-%02d "
+                                                     "%02d:%02d:%02d",
+                                                     witfile->footer.year,
+                                                     witfile->footer.month,
+                                                     witfile->footer.day,
+                                                     witfile->footer.hour,
+                                                     witfile->footer.minute,
+                                                     witfile->footer.second));
+    if ((v = witfile->range_options.overscan_range))
+        gwy_container_set_string_by_name(container, "/meta/Overscan range",
+                                         g_strdup_printf("%g", v));
+    if ((v = witfile->image_options.scan_time[WITEC_FORWARD]))
+        gwy_container_set_string_by_name(container, "/meta/Scan time forward",
+                                         g_strdup_printf("%g s", v));
+    if ((v = witfile->image_options.scan_time[WITEC_BACKWARD]))
+        gwy_container_set_string_by_name(container, "/meta/Scan time backward",
+                                         g_strdup_printf("%g s", v));
 }
 
 static gboolean
@@ -420,12 +447,10 @@ witec_read_scale(const guchar **p,
 
     scale->scale = get_FLOAT(p);
     scale->offset = get_FLOAT(p);
-    get_CHARARRAY(scale->measure, p);
-    get_CHARARRAY(scale->name, p);
-    gwy_debug("scale: %g %g <%.*s> [%.*s]",
-              scale->scale, scale->offset,
-              sizeof(scale->measure), scale->measure,
-              sizeof(scale->name), scale->name);
+    get_CHARARRAY0(scale->measure, p);
+    get_CHARARRAY0(scale->name, p);
+    gwy_debug("scale: %g %g <%s> [%s]",
+              scale->scale, scale->offset, scale->measure, scale->name);
 
     *len += WITEC_SIZE_SCALE;
     return TRUE;
@@ -447,8 +472,8 @@ witec_read_header(const guchar **p,
     gwy_debug("rows = %d, pixels = %d, channels = %d",
               header->rows, header->pixels, header->channels);
     header->area = get_WORD(p);
-    get_CHARARRAY(header->date, p);
-    gwy_debug("date = <%.*s>", sizeof(header->date), header->date);
+    get_CHARARRAY0(header->date, p);
+    gwy_debug("date = <%s>", header->date);
 
     *len -= WITEC_SIZE_HEADER;
     return TRUE;
@@ -466,7 +491,7 @@ witec_read_footer(const guchar **p,
         return FALSE;
     }
 
-    get_CHARARRAY(footer->title, p);
+    get_CHARARRAY0(footer->title, p);
     footer->year = get_WORD(p);
     footer->month = get_WORD(p);
     footer->day = get_WORD(p);
@@ -479,10 +504,10 @@ witec_read_footer(const guchar **p,
     footer->timeline = get_FLOAT(p);
 
     for (i = 0; i < G_N_ELEMENTS(footer->notebook_header); i++)
-        get_CHARARRAY(footer->notebook_header[i], p);
+        get_CHARARRAY0(footer->notebook_header[i], p);
     for (i = 0; i < G_N_ELEMENTS(footer->notebook_params); i++)
-        get_CHARARRAY(footer->notebook_params[i], p);
-    get_CHARARRAY(footer->comments, p);
+        get_CHARARRAY0(footer->notebook_params[i], p);
+    get_CHARARRAY0(footer->comments, p);
 
     /* The len argument is a fake here, data size was already checked */
     witec_read_scale(p, len, &footer->xscale);
@@ -508,11 +533,9 @@ witec_read_range_options(const guchar **p,
     options->scan_origin.y = get_FLOAT(p);
     options->total_scan_range.x = get_FLOAT(p);
     options->total_scan_range.y = get_FLOAT(p);
-    get_CHARARRAY(options->unit_x, p);
-    get_CHARARRAY(options->unit_y, p);
-    gwy_debug("unit x: <%.*s>, y: <%.*s>",
-              sizeof(options->unit_x), options->unit_x,
-              sizeof(options->unit_y), options->unit_y);
+    get_CHARARRAY0(options->unit_x, p);
+    get_CHARARRAY0(options->unit_y, p);
+    gwy_debug("unit x: <%s>, y: <%s>", options->unit_x, options->unit_y);
     options->da_nsamples = get_WORD(p);
     options->zoom_in = get_BBOOLEAN(p);
     options->overscan_range = get_FLOAT(p);
@@ -525,7 +548,7 @@ witec_read_range_options(const guchar **p,
     options->total_scan_range_unused = get_FLOAT(p);
     options->exchange_xz = get_BBOOLEAN(p);
     options->exchange_yz = get_BBOOLEAN(p);
-    get_CHARARRAY(options->reserved, p);
+    get_CHARARRAY0(options->reserved, p);
 
     *len -= WITEC_SIZE_RANGE_OPTIONS;
     return TRUE;

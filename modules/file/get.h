@@ -101,7 +101,16 @@ get_CHARS(gchar *dest, const guchar **p, guint size)
     *p += size;
 }
 
+static inline void
+get_CHARS0(gchar *dest, const guchar **p, guint size)
+{
+    memcpy(dest, *p, size);
+    *p += size;
+    dest[size-1] = '\0';
+}
+
 #define get_CHARARRAY(dest, p) get_CHARS(dest, p, sizeof(dest))
+#define get_CHARARRAY0(dest, p) get_CHARS0(dest, p, sizeof(dest))
 
 static inline gboolean
 get_BBOOLEAN(const guchar **p)
