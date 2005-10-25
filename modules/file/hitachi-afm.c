@@ -170,9 +170,9 @@ read_data_field(const guchar *buffer, guint size)
     data = gwy_data_field_get_data(dfield);
     pdata = (const gint16*)(buffer + HEADER_SIZE);
     for (i = 0; i < yres; i++) {
-        row = data + i*xres;
+        row = data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            row[xres-1 - j] = GINT16_TO_LE(pdata[i*xres + j])/65536.0*q;
+            row[j] = GINT16_TO_LE(pdata[i*xres + j])/65536.0*q;
     }
 
     siunit = gwy_si_unit_new("m");
