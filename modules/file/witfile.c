@@ -360,7 +360,15 @@ witec_image_to_data_field(WITecFile *witfile,
 
     xres = witfile->header.pixels;
     yres = witfile->header.rows;
-    dfield = gwy_data_field_new(xres, yres, 
+    if (xres != witfile->image_options.points_per_line)
+        g_warning("pixels (%d) != points_per_line (%d). "
+                  "Someone has to tell me what it means.",
+                  xres, witfile->image_options.points_per_line);
+    if (yres != witfile->image_options.lines_per_image)
+        g_warning("rows (%d) != lines_per_image (%d). "
+                  "Someone has to tell me what it means.",
+                  yres, witfile->image_options.lines_per_image);
+    dfield = gwy_data_field_new(xres, yres,
                                 witfile->footer.xscale.scale
                                 * witfile->image_options.points_per_line,
                                 witfile->footer.yscale.scale
@@ -573,6 +581,8 @@ witec_read_image_options(const guchar **p,
     options->points_per_line = get_WORD(p);
     options->averages = get_WORD(p);
     options->lines_per_image = get_WORD(p);
+    gwy_debug("lines_per_image: %d, points_per_line = %d",
+              options->lines_per_image, options->points_per_line);
     options->cruise_time = get_FLOAT(p);
     options->settling_time = get_FLOAT(p);
     options->continuous_scan = get_BBOOLEAN(p);
