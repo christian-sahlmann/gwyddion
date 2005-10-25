@@ -105,6 +105,8 @@ static gint          unisoku_sscanf         (const gchar *str,
 static GwyDataField* unisoku_read_data_field(const guchar *buffer,
                                              gsize size,
                                              UnisokuFile *ufile);
+static void          unisoku_store_metadata (UnisokuFile *ufile,
+                                             GwyContainer *container);
 static gchar*        unisoku_find_data_name (const gchar *header_name);
 static void          unisoku_file_free      (UnisokuFile *ufile);
 
@@ -200,6 +202,7 @@ unisoku_load(const gchar *filename)
     }
 
     if (!(data_name = unisoku_find_data_name(filename))) {
+        g_warning("No data file found for header file `%s'", filename);
         unisoku_file_free(&ufile);
         return NULL;
     }
@@ -213,16 +216,18 @@ unisoku_load(const gchar *filename)
 
     dfield = unisoku_read_data_field(buffer, size, &ufile);
     gwy_file_abandon_contents(buffer, size, NULL);
-    unisoku_file_free(&ufile);
 
     if (!dfield) {
         g_warning("Failed to read data from `%s'", filename);
+        unisoku_file_free(&ufile);
         return NULL;
     }
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+    unisoku_store_metadata(&ufile, container);
+    unisoku_file_free(&ufile);
 
     return container;
 }
@@ -450,6 +455,21 @@ unisoku_read_data_field(const guchar *buffer,
     g_object_unref(siunit);
 
     return dfield;
+}
+
+static void
+unisoku_store_metadata(UnisokuFile *ufile,
+                       GwyContainer *container)
+{
+    gwy_container_set_string_by_name(container, "/meta/Date",
+                                     g_strconcat(ufile->date, " ",
+                                                 ufile->time, NULL));
+    if (*ufile->remark)
+        gwy_container_set_string_by_name(container, "/meta/Remark",
+                                         g_strdup(ufile->remark));
+    if (*ufile->sample_name)
+        gwy_container_set_string_by_name(container, "/meta/Sample name",
+                                         g_strdup(ufile->sample_name));
 }
 
 static gchar*
