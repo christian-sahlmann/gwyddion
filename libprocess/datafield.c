@@ -47,6 +47,7 @@ static void       gwy_data_field_finalize         (GObject *object);
 static void       gwy_data_field_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_data_field_serialize       (GObject *obj,
                                                    GByteArray *buffer);
+static gsize      gwy_data_field_get_size         (GObject *obj);
 static GObject*   gwy_data_field_deserialize      (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -65,6 +66,7 @@ gwy_data_field_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_data_field_serialize;
     iface->deserialize = gwy_data_field_deserialize;
+    iface->get_size = gwy_data_field_get_size;
     iface->duplicate = gwy_data_field_duplicate_real;
     iface->clone = gwy_data_field_clone_real;
 }
@@ -237,6 +239,41 @@ gwy_data_field_serialize(GObject *obj,
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_DATA_FIELD_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_data_field_get_size(GObject *obj)
+{
+    GwyDataField *data_field;
+    guint32 datasize, cachesize;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), 0);
+
+    data_field = GWY_DATA_FIELD(obj);
+    if (!data_field->si_unit_xy)
+        data_field->si_unit_xy = gwy_si_unit_new("m");
+    if (!data_field->si_unit_z)
+        data_field->si_unit_z = gwy_si_unit_new("m");
+    datasize = data_field->xres*data_field->yres;
+    cachesize = GWY_DATA_FIELD_CACHE_SIZE;
+    {
+        GwySerializeSpec spec[] = {
+            { 'i', "xres", &data_field->xres, NULL, },
+            { 'i', "yres", &data_field->yres, NULL, },
+            { 'd', "xreal", &data_field->xreal, NULL, },
+            { 'd', "yreal", &data_field->yreal, NULL, },
+            { 'd', "xoff", &data_field->xoff, NULL, },
+            { 'd', "yoff", &data_field->yoff, NULL, },
+            { 'o', "si_unit_xy", &data_field->si_unit_xy, NULL, },
+            { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
+            { 'D', "data", &data_field->data, &datasize, },
+            { 'i', "cache_bits", &data_field->cached, NULL, },
+            { 'D', "cache_data", &data_field->cache, &cachesize, },
+        };
+        return gwy_serialize_get_struct_size(GWY_DATA_FIELD_TYPE_NAME,
+                                             G_N_ELEMENTS(spec), spec);
     }
 }
 

@@ -43,6 +43,7 @@ static void        gwy_data_line_finalize         (GObject *object);
 static void        gwy_data_line_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_data_line_serialize        (GObject *obj,
                                                    GByteArray *buffer);
+static gsize       gwy_data_line_get_size         (GObject *obj);
 static GObject*    gwy_data_line_deserialize      (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -61,6 +62,7 @@ gwy_data_line_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_data_line_serialize;
     iface->deserialize = gwy_data_line_deserialize;
+    iface->get_size = gwy_data_line_get_size;
     iface->duplicate = gwy_data_line_duplicate_real;
     iface->clone = gwy_data_line_clone_real;
 }
@@ -167,6 +169,28 @@ gwy_data_line_serialize(GObject *obj,
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_DATA_LINE_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_data_line_get_size(GObject *obj)
+{
+    GwyDataLine *data_line;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
+
+    data_line = GWY_DATA_LINE(obj);
+    {
+        GwySerializeSpec spec[] = {
+            { 'i', "res", &data_line->res, NULL, },
+            { 'd', "real", &data_line->real, NULL, },
+            { 'd', "off", &data_line->off, NULL, },
+            { 'D', "data", &data_line->data, &data_line->res, },
+        };
+
+        return gwy_serialize_get_struct_size(GWY_DATA_LINE_TYPE_NAME,
+                                             G_N_ELEMENTS(spec), spec);
     }
 }
 
