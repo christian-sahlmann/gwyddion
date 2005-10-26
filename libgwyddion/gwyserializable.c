@@ -28,6 +28,8 @@
 
 #define GWY_SERIALIZABLE_TYPE_NAME "GwySerializable"
 
+static GByteArray* gwy_serializable_do_serialize   (GObject *serializable,
+                                                    GByteArray *buffer);
 static void        gwy_serialize_skip_type         (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
@@ -37,6 +39,7 @@ static GObject*    gwy_serializable_duplicate_hard_way (GObject *object);
 
 static GByteArray* gwy_serialize_spec              (GByteArray *buffer,
                                                     const GwySerializeSpec *sp);
+static gsize       gwy_serialize_spec_get_size     (const GwySerializeSpec *sp);
 static gboolean    gwy_deserialize_spec_value      (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
@@ -91,11 +94,16 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
 
 /**
  * gwy_serializable_serialize:
- * @serializable: A #GObject implementing #GwySerializable interface.
+ * @serializable: A #GObject that implements #GwySerializable interface.
  * @buffer: A buffer to which the serialized object should be appended,
- *          or %NULL.
+ *          or %NULL to allocate and return a new #GByteArray.
  *
  * Serializes an object to byte buffer.
+ *
+ * This is a high-level method.  Do not use it for implementation of child
+ * object serialization (should you ever need to do it manually), it would
+ * lead to repeated required buffer size calculations.  In such a case, use
+ * gwy_serializable_do_serialize() FIXME: but that's not public.
  *
  * Returns: @buffer or a newly allocated #GByteArray with serialized
  *          object appended.
@@ -105,6 +113,7 @@ gwy_serializable_serialize(GObject *serializable,
                            GByteArray *buffer)
 {
     GwySerializeFunc serialize_method;
+    gsize expected_size;
 
     g_return_val_if_fail(serializable, NULL);
     g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
@@ -113,11 +122,54 @@ gwy_serializable_serialize(GObject *serializable,
 
     serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
     if (!serialize_method) {
-        g_error("`%s' doesn't implement serialize()",
-                g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+        g_critical("`%s' doesn't implement serialize()",
+                   g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
         return NULL;
     }
+
+    /* Allocate space for all the data in one turn */
+    expected_size = gwy_serializable_get_size(serializable);
+    if (!buffer)
+        buffer = g_byte_array_sized_new(expected_size);
+    else {
+        /* This trick can make GLib to fill the unused part of array with
+         * zeros.  But that's a small price to pay. */
+        g_byte_array_set_size(buffer, buffer->len + expected_size);
+        g_byte_array_set_size(buffer, buffer->len - expected_size);
+    }
+
     return serialize_method(serializable, buffer);
+}
+
+/**
+ * gwy_serializable_get_size:
+ * @serializable: A #GObject that implements #GwySerializable interface.
+ *
+ * Calculates the expected size of serialized object.
+ *
+ * Returns: The expected size of serialized @serializable.
+ **/
+gsize
+gwy_serializable_get_size(GObject *serializable)
+{
+    gsize (*get_size_method)(GObject*);
+    const gchar *type_name;
+    gsize size;
+
+    g_return_val_if_fail(serializable, 0);
+    g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), 0);
+
+    get_size_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->get_size;
+    type_name = g_type_name(G_TYPE_FROM_INSTANCE(serializable));
+    if (!get_size_method) {
+        g_warning("`%s' doesn't implement get_size(), assuming empty",
+                  type_name);
+        return strlen(type_name) + 1 + sizeof(guint32);
+    }
+
+    size = get_size_method(serializable);
+    gwy_debug("Expected size of `%s' is %" G_GSIZE_FORMAT, size);
+    return size;
 }
 
 /**
@@ -301,8 +353,8 @@ gwy_serializable_clone(GObject *source,
 
     clone_method = GWY_SERIALIZABLE_GET_IFACE(copy)->clone;
     if (!clone_method) {
-        g_error("`%s' doesn't implement clone()",
-                g_type_name(G_TYPE_FROM_INSTANCE(copy)));
+        g_critical("`%s' doesn't implement clone()",
+                   g_type_name(G_TYPE_FROM_INSTANCE(copy)));
         return;
     }
     clone_method(source, copy);
@@ -425,6 +477,39 @@ ctype_size(guchar ctype)
  * Serialization
  *
  ****************************************************************************/
+
+/**
+ * gwy_serializable_do_serialize:
+ * @serializable: A #GObject that implements #GwySerializable interface.
+ * @buffer: A buffer to which the serialized object should be appended,
+ *
+ * Performs serialization of an object to byte buffer.
+ *
+ * This is the low-level method that does not attempt to calculate required
+ * buffer size and that should be used for child object serialization.
+ *
+ * Returns: @buffer or a newly allocated #GByteArray with serialized
+ *          object appended.
+ **/
+static GByteArray*
+gwy_serializable_do_serialize(GObject *serializable,
+                              GByteArray *buffer)
+{
+    GwySerializeFunc serialize_method;
+
+    g_return_val_if_fail(serializable, NULL);
+    g_return_val_if_fail(GWY_IS_SERIALIZABLE(serializable), NULL);
+    gwy_debug("serializing a `%s'",
+              g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+
+    serialize_method = GWY_SERIALIZABLE_GET_IFACE(serializable)->serialize;
+    if (!serialize_method) {
+        g_critical("`%s' doesn't implement serialize()",
+                   g_type_name(G_TYPE_FROM_INSTANCE(serializable)));
+        return NULL;
+    }
+    return serialize_method(serializable, buffer);
+}
 
 /**
  * gwy_serialize_store_int32:
@@ -716,7 +801,7 @@ gwy_serialize_spec(GByteArray *buffer,
             else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
                 g_critical("Object must be serializable");
             else
-                gwy_serializable_serialize(value, buffer);
+                gwy_serializable_do_serialize(value, buffer);
         }
         break;
 
@@ -730,18 +815,182 @@ gwy_serialize_spec(GByteArray *buffer,
                 else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
                     g_critical("Object must be serializable");
                 else
-                    gwy_serializable_serialize(value, buffer);
+                    gwy_serializable_do_serialize(value, buffer);
             }
         }
         break;
 
         default:
-        g_error("wrong spec <%c>", sp->ctype);
+        g_critical("wrong spec <%c>", sp->ctype);
         break;
     }
 
     gwy_debug("after: %u", buffer->len);
     return buffer;
+}
+
+/****************************************************************************
+ *
+ * Size calculation
+ *
+ ****************************************************************************/
+
+/**
+ * gwy_serialize_get_struct_object_size:
+ * @object_name: The g_type_name() of the object.
+ * @nspec: The number of items in @spec.
+ * @spec: The components to serialize.
+ *
+ * Calculates serialized object size for struct-like objects.
+ *
+ * The component specification is the same as in
+ * gwy_serialize_pack_object_struct().
+ *
+ * Returns: Serialized object size, it included space for object name and size.
+ *          The value is exact unless some components are objects that do not
+ *          return exact size estimate themselves.
+ **/
+gsize
+gwy_serialize_get_struct_size(const guchar *object_name,
+                              gsize nspec,
+                              const GwySerializeSpec *spec)
+{
+    gsize i, size;
+
+    g_return_val_if_fail(spec || !nspec, 0);
+    g_return_val_if_fail(object_name && *object_name, 0);
+
+    size = strlen(object_name) + 1 + sizeof(guint32);
+    for (i = 0; i < nspec; i++) {
+        if (!spec[i].value) {
+            gwy_debug("ignoring item `%s' with NULL value", spec[i].name);
+            continue;
+        }
+        size += gwy_serialize_spec_get_size(spec + i);
+    }
+
+    return size;
+}
+
+/**
+ * gwy_serialize_get_items_size:
+ * @object_name: The g_type_name() of the object.
+ * @nitems: The number of @items items.
+ * @items: The components to serialize.
+ *
+ * Calculates serialized object size for hash-like objects.
+ *
+ * The component specification is the same as in
+ * gwy_serialize_object_items().
+ *
+ * Returns: Serialized object size, it included space for object name and size.
+ *          The value is exact unless some components are objects that do not
+ *          return exact size estimate themselves.
+ **/
+gsize
+gwy_serialize_get_items_size(const guchar *object_name,
+                             gsize nitems,
+                             const GwySerializeItem *items)
+{
+    GwySerializeSpec sp;
+    gsize size, i;
+
+    g_return_val_if_fail(items || !nitems, 0);
+    g_return_val_if_fail(object_name && *object_name, 0);
+
+    size = strlen(object_name) + 1 + sizeof(guint32);
+    for (i = 0; i < nitems; i++) {
+        sp.ctype = items[i].ctype;
+        sp.name = items[i].name;
+        sp.value = (const gpointer)&items[i].value;
+        sp.array_size = (guint32*)&items[i].array_size;
+        size += gwy_serialize_spec_get_size(&sp);
+    }
+
+    return size;
+}
+
+static gsize
+gwy_serialize_spec_get_size(const GwySerializeSpec *sp)
+{
+    guint32 asize = 0;
+    gsize size, j, s;
+    guint8 *arr = NULL;
+
+    g_assert(sp->value);
+    if (g_ascii_isupper(sp->ctype)) {
+        g_assert(sp->array_size);
+        g_assert(*(gpointer*)sp->value);
+        asize = *sp->array_size;
+        if (!asize) {
+            g_warning("Ignoring zero-length array <%s>", sp->name);
+            return 0;
+        }
+        arr = *(guint8**)sp->value;
+    }
+
+    size = strlen(sp->name) + 1;
+    size++;
+    if ((s = ctype_size(sp->ctype)))
+        return size + s;
+    else if ((s = g_ascii_tolower(sp->ctype)))
+        return size + s*asize;
+
+    switch (sp->ctype) {
+        case 's': {
+            guchar *value = *(guchar**)sp->value;
+
+            size++;
+            if (value)
+                size += strlen(value);
+        }
+        break;
+
+        case 'S': {
+            size += sizeof(guint32);
+            for (j = 0; j < asize; j++) {
+                guchar *value = ((guchar**)arr)[j];
+
+                if (value)
+                    size += strlen(value);
+            }
+            size += asize;
+        }
+        break;
+
+        case 'o': {
+            GObject *value = *(GObject**)sp->value;
+
+            if (G_UNLIKELY(!value))
+                g_critical("Object cannot be NULL");
+            else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
+                g_critical("Object must be serializable");
+            else
+                size += gwy_serializable_get_size(value);
+        }
+        break;
+
+        case 'O': {
+            size += sizeof(guint32);
+            for (j = 0; j < asize; j++) {
+                GObject *value = ((GObject**)arr)[j];
+
+                if (G_UNLIKELY(!value))
+                    g_critical("Object cannot be NULL");
+                else if (G_UNLIKELY(!GWY_IS_SERIALIZABLE(value)))
+                    g_critical("Object must be serializable");
+                else
+                    size += gwy_serializable_get_size(value);
+            }
+        }
+        break;
+
+        default:
+        g_critical("wrong spec <%c>", sp->ctype);
+        break;
+    }
+
+    return size;
 }
 
 /****************************************************************************
@@ -1892,6 +2141,12 @@ gwy_serialize_check_string(const guchar *buffer,
  *             description.
  * @deserialize: Restore method (obligatory), see #GwyDeserializeFunc for
  *               description.
+ * @get_size: Serialized size calculation method (optional).
+ *            Calculates expected serialized object size (including object
+ *            name and size header).
+ *            Its purpose is to avoid frequent memory reallocations during
+ *            serialization of large objects.
+ *            The returned value may not be exact, it can be an upper bound.
  * @clone: Clone method (obligatory).  Copies complete object `value' to an
  *         existing object of the same type.  This method is called from
  *         copy's class if source and copy classes differ.

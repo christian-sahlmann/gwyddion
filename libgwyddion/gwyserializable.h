@@ -22,6 +22,7 @@
 #define __GWY_SERIALIZABLE_H__
 
 #include <glib-object.h>
+#include <libgwyddion/gwyddionenums.h>
 
 G_BEGIN_DECLS
 
@@ -56,6 +57,7 @@ struct _GwySerializableIface {
     GwyDeserializeFunc deserialize;
     void (*clone)(GObject *source, GObject *copy);
     GObject* (*duplicate)(GObject *object);
+    gsize (*get_size)(GObject *object);
 };
 
 typedef struct {
@@ -89,30 +91,38 @@ typedef struct {
     guint32 array_size;
 } GwySerializeItem;
 
-GType       gwy_serializable_get_type            (void) G_GNUC_CONST;
-GByteArray* gwy_serializable_serialize           (GObject *serializable,
-                                                  GByteArray *buffer);
-GObject*    gwy_serializable_deserialize         (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position);
-GObject*    gwy_serializable_duplicate           (GObject *object);
-void        gwy_serializable_clone               (GObject *source,
-                                                  GObject *copy);
+GType       gwy_serializable_get_type           (void) G_GNUC_CONST;
+GByteArray* gwy_serializable_serialize          (GObject *serializable,
+                                                 GByteArray *buffer);
+GObject*    gwy_serializable_deserialize        (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position);
+GObject*    gwy_serializable_duplicate          (GObject *object);
+void        gwy_serializable_clone              (GObject *source,
+                                                 GObject *copy);
 
-GByteArray* gwy_serialize_pack_object_struct     (GByteArray *buffer,
-                                                  const guchar *object_name,
-                                                  gsize nspec,
-                                                  const GwySerializeSpec *spec);
-gboolean    gwy_serialize_unpack_object_struct   (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize *position,
-                                                  const guchar *object_name,
-                                                  gsize nspec,
-                                                  GwySerializeSpec *spec);
-gsize       gwy_serialize_check_string           (const guchar *buffer,
-                                                  gsize size,
-                                                  gsize position,
-                                                  const guchar *compare_to);
+gsize       gwy_serializable_get_size           (GObject *serializable);
+gsize       gwy_serialize_get_struct_size       (const guchar *object_name,
+                                                 gsize nspec,
+                                                 const GwySerializeSpec *spec);
+gsize       gwy_serialize_get_items_size        (const guchar *object_name,
+                                                 gsize nitems,
+                                                 const GwySerializeItem *items);
+
+GByteArray* gwy_serialize_pack_object_struct    (GByteArray *buffer,
+                                                 const guchar *object_name,
+                                                 gsize nspec,
+                                                 const GwySerializeSpec *spec);
+gboolean    gwy_serialize_unpack_object_struct  (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize *position,
+                                                 const guchar *object_name,
+                                                 gsize nspec,
+                                                 GwySerializeSpec *spec);
+gsize       gwy_serialize_check_string          (const guchar *buffer,
+                                                 gsize size,
+                                                 gsize position,
+                                                 const guchar *compare_to);
 
 GByteArray*       gwy_serialize_object_items    (GByteArray *buffer,
                                                  const guchar *object_name,
