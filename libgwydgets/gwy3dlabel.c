@@ -50,6 +50,7 @@ static void        gwy_3d_label_finalize          (GObject *object);
 static void        gwy_3d_label_serializable_init (GwySerializableIface *iface);
 static GByteArray* gwy_3d_label_serialize         (GObject *obj,
                                                    GByteArray *buffer);
+static gsize       gwy_3d_label_get_size          (GObject *obj);
 static GObject*    gwy_3d_label_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -84,6 +85,7 @@ gwy_3d_label_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_3d_label_serialize;
     iface->deserialize = gwy_3d_label_deserialize;
+    iface->get_size = gwy_3d_label_get_size;
     iface->duplicate = gwy_3d_label_duplicate_real;
     iface->clone = gwy_3d_label_clone_real;
 }
@@ -250,6 +252,30 @@ gwy_3d_label_serialize(GObject *obj,
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_3D_LABEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_3d_label_get_size(GObject *obj)
+{
+    Gwy3DLabel *label;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_3D_LABEL(obj), 0);
+
+    label = GWY_3D_LABEL(obj);
+    {
+        GwySerializeSpec spec[] = {
+            { 'd', "delta_x", &label->delta_x->value, NULL, },
+            { 'd', "delta_y", &label->delta_y->value, NULL, },
+            { 'd', "rotation", &label->rotation->value, NULL, },
+            { 'd', "size", &label->size->value, NULL, },
+            { 's', "text", &label->text->str, NULL, },
+            { 's', "default_text", &label->default_text, NULL, },
+            { 'b', "fixed_size", &label->fixed_size, NULL, },
+        };
+        return gwy_serialize_get_struct_size(GWY_3D_LABEL_TYPE_NAME,
+                                             G_N_ELEMENTS(spec), spec);
     }
 }
 

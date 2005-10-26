@@ -31,24 +31,25 @@
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
-static void   gwy_graph_model_class_init        (GwyGraphModelClass *klass);
-static void   gwy_graph_model_init              (GwyGraphModel *gmodel);
-static void   gwy_graph_model_finalize          (GObject *object);
-static void   gwy_graph_model_serializable_init (GwySerializableIface *iface);
-static GByteArray* gwy_graph_model_serialize    (GObject *obj,
-                                                 GByteArray*buffer);
-static GObject* gwy_graph_model_deserialize     (const guchar *buffer,
-                                                 gsize size,
-                                                 gsize *position);
-static GObject* gwy_graph_model_duplicate_real       (GObject *object);
-static void     gwy_graph_model_set_property  (GObject *object,
-                                                guint prop_id,
-                                               const GValue *value,
-                                               GParamSpec *pspec);
-static void     gwy_graph_model_get_property  (GObject*object,
-                                               guint prop_id,
-                                               GValue *value,
-                                               GParamSpec *pspec);
+static void     gwy_graph_model_class_init       (GwyGraphModelClass *klass);
+static void     gwy_graph_model_init             (GwyGraphModel *gmodel);
+static void     gwy_graph_model_finalize         (GObject *object);
+static void     gwy_graph_model_serializable_init(GwySerializableIface *iface);
+static GByteArray* gwy_graph_model_serialize     (GObject *obj,
+                                                  GByteArray*buffer);
+static gsize    gwy_graph_model_get_size         (GObject *obj);
+static GObject* gwy_graph_model_deserialize      (const guchar *buffer,
+                                                  gsize size,
+                                                  gsize *position);
+static GObject* gwy_graph_model_duplicate_real   (GObject *object);
+static void     gwy_graph_model_set_property     (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_graph_model_get_property     (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
 
 
 static GObjectClass *parent_class = NULL;
@@ -109,10 +110,9 @@ gwy_graph_model_get_type(void)
 static void
 gwy_graph_model_serializable_init(GwySerializableIface *iface)
 {
-    gwy_debug("");
-    /* initialize stuff */
     iface->serialize = gwy_graph_model_serialize;
     iface->deserialize = gwy_graph_model_deserialize;
+    iface->get_size = gwy_graph_model_get_size;
     iface->duplicate = gwy_graph_model_duplicate_real;
 }
 
@@ -241,7 +241,6 @@ gwy_graph_model_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-
 static GByteArray*
 gwy_graph_model_serialize(GObject *obj,
                           GByteArray *buffer)
@@ -280,6 +279,45 @@ gwy_graph_model_serialize(GObject *obj,
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_GRAPH_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_graph_model_get_size(GObject *obj)
+{
+    GwyGraphModel *gmodel;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(obj), 0);
+
+    gmodel = GWY_GRAPH_MODEL(obj);
+    {
+        guint32 ncurves = gmodel->curves->len;
+        GwySerializeSpec spec[] = {
+            { 'b', "has_x_unit", &gmodel->has_x_unit, NULL },
+            { 'b', "has_y_unit", &gmodel->has_y_unit, NULL },
+            { 'b', "x_is_logarithmic", &gmodel->x_is_logarithmic, NULL },
+            { 'b', "y_is_logarithmic", &gmodel->y_is_logarithmic, NULL },
+            { 'o', "x_unit", &gmodel->x_unit, NULL },
+            { 'o', "y_unit", &gmodel->y_unit, NULL },
+            { 's', "title", &gmodel->title->str, NULL },
+            { 's', "top_label", &gmodel->top_label->str, NULL },
+            { 's', "bottom_label", &gmodel->bottom_label->str, NULL },
+            { 's', "left_label", &gmodel->left_label->str, NULL },
+            { 's', "right_label", &gmodel->right_label->str, NULL },
+            { 'd', "x_reqmin", &gmodel->x_min, NULL },
+            { 'd', "y_reqmin", &gmodel->y_min, NULL },
+            { 'd', "x_reqmax", &gmodel->x_max, NULL },
+            { 'd', "y_reqmax", &gmodel->y_max, NULL },
+            { 'i', "label.position", &gmodel->label_position, NULL },
+            { 'b', "label.has_frame", &gmodel->label_has_frame, NULL },
+            { 'i', "label.frame_thickness", &gmodel->label_frame_thickness,
+                NULL },
+            { 'O', "curves", &gmodel->curves->pdata, &ncurves },
+        };
+
+        return gwy_serialize_get_struct_size(GWY_GRAPH_MODEL_TYPE_NAME,
+                                             G_N_ELEMENTS(spec), spec);
     }
 }
 

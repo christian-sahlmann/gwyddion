@@ -29,24 +29,25 @@
 
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
 
-static void   gwy_graph_curve_model_class_init        (GwyGraphCurveModelClass *klass);
-static void   gwy_graph_curve_model_init              (GwyGraphCurveModel *gcmodel);
-static void   gwy_graph_curve_model_finalize          (GObject *object);
-static void   gwy_graph_curve_model_serializable_init (GwySerializableIface *iface);
-static GByteArray* gwy_graph_curve_model_serialize    (GObject *object,
-                                                       GByteArray*buffer);
-static GObject* gwy_graph_curve_model_deserialize     (const guchar *buffer,
-                                                       gsize size,
-                                                       gsize *position);
-static GObject* gwy_graph_curve_model_duplicate_real  (GObject *object);
-static void     gwy_graph_curve_model_set_property  (GObject *object,
-                                                       guint prop_id,
-                                                      const GValue *value,
-                                                       GParamSpec *pspec);
-static void     gwy_graph_curve_model_get_property  (GObject*object,
-                                                     guint prop_id,
-                                                     GValue *value,
-                                                      GParamSpec *pspec);
+static void     gwy_graph_curve_model_class_init       (GwyGraphCurveModelClass *klass);
+static void     gwy_graph_curve_model_init             (GwyGraphCurveModel *gcmodel);
+static void     gwy_graph_curve_model_finalize         (GObject *object);
+static void     gwy_graph_curve_model_serializable_init(GwySerializableIface *iface);
+static GByteArray* gwy_graph_curve_model_serialize     (GObject *object,
+                                                        GByteArray*buffer);
+static gsize    gwy_graph_curve_model_get_size         (GObject *object);
+static GObject* gwy_graph_curve_model_deserialize      (const guchar *buffer,
+                                                        gsize size,
+                                                        gsize *position);
+static GObject* gwy_graph_curve_model_duplicate_real   (GObject *object);
+static void     gwy_graph_curve_model_set_property     (GObject *object,
+                                                        guint prop_id,
+                                                        const GValue *value,
+                                                        GParamSpec *pspec);
+static void     gwy_graph_curve_model_get_property     (GObject*object,
+                                                        guint prop_id,
+                                                        GValue *value,
+                                                        GParamSpec *pspec);
 
 
 static GObjectClass *parent_class = NULL;
@@ -111,10 +112,9 @@ gwy_graph_curve_model_get_type(void)
 static void
 gwy_graph_curve_model_serializable_init(GwySerializableIface *iface)
 {
-    gwy_debug("");
-    /* initialize stuff */
     iface->serialize = gwy_graph_curve_model_serialize;
     iface->deserialize = gwy_graph_curve_model_deserialize;
+    iface->get_size = gwy_graph_curve_model_get_size;
     iface->duplicate = gwy_graph_curve_model_duplicate_real;
 }
 
@@ -345,8 +345,6 @@ gwy_graph_curve_model_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-
-
 static GByteArray*
 gwy_graph_curve_model_serialize(GObject *object,
                                 GByteArray *buffer)
@@ -375,6 +373,35 @@ gwy_graph_curve_model_serialize(GObject *object,
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_graph_curve_model_get_size(GObject *object)
+{
+    GwyGraphCurveModel *gcmodel;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(object), 0);
+
+    gcmodel = GWY_GRAPH_CURVE_MODEL(object);
+    {
+        GwySerializeSpec spec[] = {
+            { 'D', "xdata", &gcmodel->xdata, &gcmodel->n },
+            { 'D', "ydata", &gcmodel->ydata, &gcmodel->n },
+            { 's', "description", &gcmodel->description->str, NULL },
+            { 'd', "color.red", &gcmodel->color.r, NULL },
+            { 'd', "color.green", &gcmodel->color.g, NULL },
+            { 'd', "color.blue", &gcmodel->color.b, NULL },
+            { 'i', "type", &gcmodel->type, NULL },
+            { 'i', "point_type", &gcmodel->point_type, NULL },
+            { 'i', "point_size", &gcmodel->point_size, NULL },
+            { 'i', "line_style", &gcmodel->line_style, NULL },
+            { 'i', "line_size", &gcmodel->line_size, NULL },
+        };
+
+        return gwy_serialize_get_struct_size(GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
+                                             G_N_ELEMENTS(spec), spec);
     }
 }
 
