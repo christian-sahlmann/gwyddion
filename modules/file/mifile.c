@@ -21,6 +21,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -42,9 +43,6 @@
 #define KEY_LEN 14
 
 #define Angstrom (1e-10)
-#ifndef HAVE_POW10
-#define pow10(x) (exp(G_LN10*(x)))
-#endif
 
 typedef struct {
     gchar *id;
