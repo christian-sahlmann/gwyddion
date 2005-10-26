@@ -3,7 +3,8 @@
 # The uncommented paths should work for GladeWin32 All-in-one,
 # if you have separate Gtk+ and GtkGLext, defined GTKGLEXT_TOP accordingly
 #GTK_TOP = C:\Dev-C++
-GTK_TOP = C:\Program Files\Common Files\Gtk\2.0
+#GTK_TOP = C:\Program Files\Common Files\Gtk\2.0
+GTK_TOP = C:\Gtk
 #GTKGLEXT_TOP = C:\GtkGLExt\1.0
 GTKGLEXT_TOP = $(GTK_TOP)
 MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
