@@ -64,6 +64,7 @@ static void  gwy_selection_set_max_objects_default(GwySelection *selection,
                                                    guint max_objects);
 static GByteArray* gwy_selection_serialize_default(GObject *obj,
                                                    GByteArray *buffer);
+static gsize     gwy_selection_get_size_default   (GObject *obj);
 static GObject*  gwy_selection_deserialize_default(const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -153,6 +154,7 @@ gwy_selection_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_selection_serialize_default;
     iface->deserialize = gwy_selection_deserialize_default;
+    iface->get_size = gwy_selection_get_size_default;
     iface->duplicate = gwy_selection_duplicate_default;
     iface->clone = gwy_selection_clone_default;
 }
@@ -586,6 +588,30 @@ gwy_selection_serialize_default(GObject *obj,
 
         return gwy_serialize_pack_object_struct(buffer, name,
                                                 G_N_ELEMENTS(spec), spec);
+    }
+}
+
+static gsize
+gwy_selection_get_size_default(GObject *obj)
+{
+    GwySelection *selection;
+    gint object_size;
+
+    g_return_val_if_fail(GWY_IS_SELECTION(obj), 0);
+
+    selection = GWY_SELECTION(obj);
+    object_size = GWY_SELECTION_GET_CLASS(selection)->object_size;
+    {
+        guint32 len = selection->n * object_size;
+        guint32 max = selection->objects->len/object_size;
+        gpointer pdata = len ? &selection->objects->data : NULL;
+        const gchar *name = g_type_name(G_TYPE_FROM_INSTANCE(obj));
+        GwySerializeSpec spec[] = {
+            { 'i', "max", &max, NULL, },
+            { 'D', "data", pdata, &len, },
+        };
+
+        return gwy_serialize_get_struct_size(name, G_N_ELEMENTS(spec), spec);
     }
 }
 
