@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <app/gwyapp.h>
 
 #include <string.h>
@@ -91,6 +92,7 @@ typedef struct {
     gint accum;
     gchar *stm_voltage_unit;
     gchar *stm_current_unit;
+    gchar *ad_name;
 } UnisokuFile;
 
 static gboolean      module_register        (const gchar *name);
@@ -326,6 +328,9 @@ unisoku_read_header(gchar *buffer,
     NEXT(buffer, line);
     ufile->stm_current_unit = g_strdup(line);
 
+    NEXT(buffer, line);
+    ufile->ad_name = g_strdup(line);
+
     /* There is more stuff after that, but heaven knows what it means... */
 
     return TRUE;
@@ -400,12 +405,12 @@ unisoku_read_data_field(const guchar *buffer,
     switch (ufile->data_type) {
         case UNISOKU_UINT8:
         for (i = 0; i < n; i++)
-            data[i] = buffer[i];
+            data[i] = buffer[i]/256.0;
         break;
 
         case UNISOKU_SINT8:
         for (i = 0; i < n; i++)
-            data[i] = (signed char)buffer[i];
+            data[i] = (signed char)buffer[i]/256.0;
         break;
 
         case UNISOKU_UINT16:
@@ -413,7 +418,7 @@ unisoku_read_data_field(const guchar *buffer,
             const guint16 *pdata = (const guint16*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = GUINT16_FROM_LE(pdata[i]);
+                data[i] = GUINT16_FROM_LE(pdata[i])/65536.0;
         }
         break;
 
@@ -422,7 +427,7 @@ unisoku_read_data_field(const guchar *buffer,
             const gint16 *pdata = (const gint16*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = GINT16_FROM_LE(pdata[i]);
+                data[i] = GINT16_FROM_LE(pdata[i])/65536.0;
         }
         break;
 
@@ -450,8 +455,9 @@ unisoku_read_data_field(const guchar *buffer,
     /* XXX: No fallback yet, just make z unitless */
     siunit = gwy_si_unit_new_parse(unit, &power10);
     gwy_data_field_set_si_unit_z(dfield, siunit);
+    gwy_data_field_normalize(dfield);
     q = pow10((gdouble)power10);
-    gwy_data_field_multiply(dfield, q);
+    gwy_data_field_multiply(dfield, q*(ufile->max_raw_z - ufile->min_raw_z));
     g_object_unref(siunit);
 
     return dfield;
@@ -470,6 +476,9 @@ unisoku_store_metadata(UnisokuFile *ufile,
     if (*ufile->sample_name)
         gwy_container_set_string_by_name(container, "/meta/Sample name",
                                          g_strdup(ufile->sample_name));
+    if (*ufile->ad_name)
+        gwy_container_set_string_by_name(container, "/meta/AD name",
+                                         g_strdup(ufile->ad_name));
 }
 
 static gchar*
