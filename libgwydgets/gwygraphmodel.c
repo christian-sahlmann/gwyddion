@@ -31,8 +31,6 @@
 
 #define GWY_GRAPH_MODEL_TYPE_NAME "GwyGraphModel"
 
-static void     gwy_graph_model_class_init       (GwyGraphModelClass *klass);
-static void     gwy_graph_model_init             (GwyGraphModel *gmodel);
 static void     gwy_graph_model_finalize         (GObject *object);
 static void     gwy_graph_model_serializable_init(GwySerializableIface *iface);
 static GByteArray* gwy_graph_model_serialize     (GObject *obj,
@@ -51,10 +49,6 @@ static void     gwy_graph_model_get_property     (GObject*object,
                                                   GValue *value,
                                                   GParamSpec *pspec);
 
-
-static GObjectClass *parent_class = NULL;
-
-
 enum {
       PROP_0,
       PROP_N,
@@ -70,42 +64,9 @@ enum {
 static guint graph_model_signals[LAST_SIGNAL] = { 0 };
 
 
-GType
-gwy_graph_model_get_type(void)
-{
-    static GType gwy_graph_model_type = 0;
-
-    if (!gwy_graph_model_type) {
-        static const GTypeInfo gwy_graph_model_info = {
-            sizeof(GwyGraphModelClass),
-            NULL,
-            NULL,
-            (GClassInitFunc)gwy_graph_model_class_init,
-            NULL,
-            NULL,
-            sizeof(GwyGraphModel),
-            0,
-            (GInstanceInitFunc)gwy_graph_model_init,
-            NULL,
-        };
-
-        GInterfaceInfo gwy_serializable_info = {
-            (GInterfaceInitFunc)gwy_graph_model_serializable_init, NULL, 0
-        };
-
-        gwy_debug("");
-        gwy_graph_model_type
-          = g_type_register_static(G_TYPE_OBJECT,
-                                   GWY_GRAPH_MODEL_TYPE_NAME,
-                                   &gwy_graph_model_info,
-                                   0);
-        g_type_add_interface_static(gwy_graph_model_type,
-                                    GWY_TYPE_SERIALIZABLE,
-                                    &gwy_serializable_info);
-    }
-
-    return gwy_graph_model_type;
-}
+G_DEFINE_TYPE_EXTENDED
+    (GwyGraphModel, gwy_graph_model, G_TYPE_OBJECT, 0,
+     GWY_IMPLEMENT_SERIALIZABLE(gwy_graph_model_serializable_init))
 
 static void
 gwy_graph_model_serializable_init(GwySerializableIface *iface)
@@ -122,14 +83,9 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
-    gwy_debug("");
-
-    parent_class = g_type_class_peek_parent(klass);
-
     gobject_class->finalize = gwy_graph_model_finalize;
     gobject_class->set_property = gwy_graph_model_set_property;
     gobject_class->get_property = gwy_graph_model_get_property;
-
 
     g_object_class_install_property
         (gobject_class,
@@ -164,21 +120,10 @@ gwy_graph_model_class_init(GwyGraphModelClass *klass)
 static void
 gwy_graph_model_init(GwyGraphModel *gmodel)
 {
-    gwy_debug("");
     gwy_debug_objects_creation((GObject*)gmodel);
 
     gmodel->curves = g_ptr_array_new();
 
-    gmodel->x_min = 0.0;
-    gmodel->x_max = 0.0;
-    gmodel->y_min = 0.0;
-    gmodel->y_max = 0.0;
-
-    gmodel->x_is_logarithmic = FALSE;
-    gmodel->y_is_logarithmic = FALSE;
-
-    gmodel->has_x_unit = FALSE;
-    gmodel->has_y_unit = FALSE;
     gmodel->x_unit = gwy_si_unit_new("");
     gmodel->y_unit = gwy_si_unit_new("");
 
@@ -194,7 +139,6 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
     gmodel->label_frame_thickness = 1;
     gmodel->label_reverse = 0; /*designed to be added*/
     gmodel->label_visible = TRUE;
-
 }
 
 /**
@@ -238,7 +182,7 @@ gwy_graph_model_finalize(GObject *object)
         g_object_unref(g_ptr_array_index(gmodel->curves, i));
     g_ptr_array_free(gmodel->curves, TRUE);
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gwy_graph_model_parent_class)->finalize(object);
 }
 
 static GByteArray*
