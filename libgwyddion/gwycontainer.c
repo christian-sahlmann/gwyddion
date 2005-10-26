@@ -93,6 +93,7 @@ static void     gwy_container_set_by_name_valist (GwyContainer *container,
                                                   gboolean do_create);
 static GByteArray* gwy_container_serialize       (GObject *object,
                                                   GByteArray *buffer);
+static gsize    gwy_container_get_size           (GObject *object);
 static void     hash_serialize_func              (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
@@ -136,6 +137,7 @@ gwy_container_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_container_serialize;
     iface->deserialize = gwy_container_deserialize;
+    iface->get_size = gwy_container_get_size;
     iface->duplicate = gwy_container_duplicate_real;
     iface->clone = gwy_container_clone_real;
 }
@@ -1694,6 +1696,28 @@ gwy_container_serialize(GObject *object,
     g_free(sdata.items);
 
     return buffer;
+}
+
+static gsize
+gwy_container_get_size(GObject *object)
+{
+    GwyContainer *container;
+    gsize nitems = 0, size;
+    SerializeData sdata;
+
+    gwy_debug("");
+    g_return_val_if_fail(GWY_IS_CONTAINER(object), 0);
+    container = GWY_CONTAINER(object);
+
+    nitems = g_hash_table_size(container->values);
+    sdata.items = g_new0(GwySerializeItem, nitems);
+    sdata.i = 0;
+    g_hash_table_foreach(container->values, hash_serialize_func, &sdata);
+    size = gwy_serialize_get_items_size(GWY_CONTAINER_TYPE_NAME,
+                                        sdata.i, sdata.items);
+    g_free(sdata.items);
+
+    return size;
 }
 
 static void

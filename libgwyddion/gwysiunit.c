@@ -61,6 +61,7 @@ static void         gwy_si_unit_finalize          (GObject *object);
 static void         gwy_si_unit_serializable_init (GwySerializableIface *iface);
 static GByteArray*  gwy_si_unit_serialize         (GObject *obj,
                                                    GByteArray *buffer);
+static gsize        gwy_si_unit_get_size          (GObject *obj);
 static GObject*     gwy_si_unit_deserialize       (const guchar *buffer,
                                                    gsize size,
                                                    gsize *position);
@@ -164,6 +165,7 @@ gwy_si_unit_serializable_init(GwySerializableIface *iface)
 {
     iface->serialize = gwy_si_unit_serialize;
     iface->deserialize = gwy_si_unit_deserialize;
+    iface->get_size = gwy_si_unit_get_size;
     iface->duplicate = gwy_si_unit_duplicate_real;
     iface->clone = gwy_si_unit_clone_real;
 }
@@ -228,6 +230,22 @@ gwy_si_unit_serialize(GObject *obj,
                                                 G_N_ELEMENTS(spec), spec);
         g_free(unitstr);
     }
+}
+
+static gsize
+gwy_si_unit_get_size(GObject *obj)
+{
+    GwySIUnit *si_unit;
+    gsize size;
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(obj), 0);
+
+    si_unit = GWY_SI_UNIT(obj);
+    size = gwy_serialize_get_struct_size(GWY_SI_UNIT_TYPE_NAME, 0, NULL);
+    /* Just estimate */
+    size += 20*si_unit->units->len;
+
+    return size;
 }
 
 static GObject*

@@ -168,7 +168,7 @@ gwy_serializable_get_size(GObject *serializable)
     }
 
     size = get_size_method(serializable);
-    gwy_debug("Expected size of `%s' is %" G_GSIZE_FORMAT, size);
+    gwy_debug("Expected size of `%s' is %" G_GSIZE_FORMAT, type_name, size);
     return size;
 }
 
@@ -455,7 +455,7 @@ ctype_size(guchar ctype)
         break;
 
         case 'i':
-        return sizeof(gint);
+        return sizeof(gint32);
         break;
 
         case 'q':
@@ -933,7 +933,7 @@ gwy_serialize_spec_get_size(const GwySerializeSpec *sp)
     size++;
     if ((s = ctype_size(sp->ctype)))
         return size + s;
-    else if ((s = g_ascii_tolower(sp->ctype)))
+    else if ((s = ctype_size(g_ascii_tolower(sp->ctype))))
         return size + s*asize;
 
     switch (sp->ctype) {
