@@ -58,6 +58,15 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
 	@echo '*** Rebuilding template files ***'
 	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	if test "x$(REMOVE_SECTION_TITLES)" = "xyes"; then \
+		for i in $(srcdir)/tmpl/*.sgml; do \
+			sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
+			if diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1; then :; else \
+				cat $(DOC_MODULE).rstmpl >"$$i"; \
+			fi; \
+		done; \
+		rm -f $(DOC_MODULE).rstmpl; \
+	fi; \
 	touch tmpl-build.stamp
 
 tmpl.stamp: tmpl-build.stamp

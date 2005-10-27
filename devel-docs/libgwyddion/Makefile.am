@@ -24,6 +24,9 @@ SCANOBJ_OPTIONS =
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GWY_DISABLE_DEPRECATED"
 
+# Remove titles from generated template files?
+REMOVE_SECTION_TITLES = yes
+
 # Extra options to supply to gtkdoc-mkdb.
 MKDB_OPTIONS =
 
