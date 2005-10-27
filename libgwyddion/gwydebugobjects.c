@@ -183,6 +183,22 @@ gwy_debug_objects_clear(void)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwydebugobjects
+ * @title: gwydebugobjects
+ * @short_description: Helps chasing leaking objects (debug).
+ * 
+ * If you wonder about some object lifetime rules, these functions can help
+ * you: gwy_debug_objects_creation() hooks object finalization so it is
+ * possible to tell later whether and when the object was destroyed -- use
+ * gwy_debug_objects_dump_to_file() to dump this information to a file.
+ *
+ * If debugging is not enabled with gwy_debug_objects_enable() these functions
+ * do nothing.  Note all Gwyddion data-like objects (i.e., not widgets) already
+ * call gwy_debug_objects_creation() so to debug their lifetime rules, just
+ * enable it.
+ **/
+
+/**
  * GwyDebugObjectsDumpFlags:
  * @GWY_DEBUG_OBJECTS_DUMP_ONLY_ALIVE: Dump only objects that are still
  *                                     alive.

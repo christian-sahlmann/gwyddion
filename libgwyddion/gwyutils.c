@@ -696,6 +696,27 @@ gwy_str_next_line(gchar **buffer)
 /* Note: gwymacros.h documentation is also here. */
 
 /**
+ * SECTION:gwyutils
+ * @title: gwyutils
+ * @short_description: Various utility functions.
+ * @see_also: <link linkend="libgwyddion-gwymacros">gwymacros</link> --
+ *            utility macros
+ *
+ * Various utility functions: creating GLib lists from hash tables
+ * gwy_hash_table_to_list_cb()), protably finding Gwyddion application
+ * directories (gwy_find_self_dir()), string functions (gwy_strreplace()), path
+ * manipulation (gwy_canonicalize_path()).
+ **/
+
+/**
+ * SECTION:gwymacros
+ * @title: gwymacros
+ * @short_description: Utility macros.
+ * @see_also: <link linkend="libgwyddion-gwyutils">gwyutils</link> -- utility
+ *            functions
+ **/
+
+/**
  * gwy_debug:
  * @format...: A format string followed by stuff to print.
  *

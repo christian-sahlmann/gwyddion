@@ -1,36 +1,12 @@
 <!-- ##### SECTION Title ##### -->
-GwySerializable
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Abstract interface for serializable objects.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GwySerializable is an abstract interface for value-like object that can be
-serialized and deserialized.  You can serialize any object implementing this
-interface with gwy_serializable_serialize() and the restore (deserialize) it
-with gwy_serializable_deserialize(). It is also posible it duplicate any such
-object with gwy_serializable_duplicate() and transform one object to copy of
-another with gwy_serializable_clone().
-</para>
 
-<para>
-Note all #GwySerializable methods work with object `value', whatever it means
-for a particular type.  Beside that, objects also have their identity which
-is unique and can't be subject of cloning.  It consists of properties like
-memory address or references held by object users.  Two important properties
-related to identity (and thus NOT retained) are: signals connected to
-a particular object and user data set with g_object_set_data() or
-g_object_set_qdata().
-</para>
-
-<para>
-You should implement serialization and deserialization in your classes with
-gwy_serialize_pack_object_struct() and gwy_serialize_unpack_object_struct()
-or with gwy_serialize_object_items() and gwy_deserialize_object_hash().
-The former two are useful for struct-like objects (most objects are of this
-kind), the latter two for hash-like objects, i.e., objects that can contain
-components of arbitrary name and type.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -58,6 +34,7 @@ components of arbitrary name and type.
 @deserialize: 
 @clone: 
 @duplicate: 
+@get_size: 
 
 <!-- ##### STRUCT GwySerializable ##### -->
 <para>
@@ -114,8 +91,6 @@ components of arbitrary name and type.
 @serializable: 
 @buffer: 
 @Returns: 
-<!-- # Unused Parameters # -->
-@size: 
 
 
 <!-- ##### FUNCTION gwy_serializable_deserialize ##### -->
@@ -145,6 +120,37 @@ components of arbitrary name and type.
 
 @source: 
 @copy: 
+
+
+<!-- ##### FUNCTION gwy_serializable_get_size ##### -->
+<para>
+
+</para>
+
+@serializable: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_get_struct_size ##### -->
+<para>
+
+</para>
+
+@object_name: 
+@nspec: 
+@spec: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gwy_serialize_get_items_size ##### -->
+<para>
+
+</para>
+
+@object_name: 
+@nitems: 
+@items: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_serialize_pack_object_struct ##### -->

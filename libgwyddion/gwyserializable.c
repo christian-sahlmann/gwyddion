@@ -836,7 +836,7 @@ gwy_serialize_spec(GByteArray *buffer,
  ****************************************************************************/
 
 /**
- * gwy_serialize_get_struct_object_size:
+ * gwy_serialize_get_struct_size:
  * @object_name: The g_type_name() of the object.
  * @nspec: The number of items in @spec.
  * @spec: The components to serialize.
@@ -2057,6 +2057,34 @@ gwy_serialize_check_string(const guchar *buffer,
 }
 
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyserializable
+ * @title: GwySerializable
+ * @short_description: Abstract interface for serializable objects.
+ *
+ * GwySerializable is an abstract interface for value-like object that can be
+ * serialized and deserialized.  You can serialize any object implementing this
+ * interface with gwy_serializable_serialize() and the restore (deserialize) it
+ * with gwy_serializable_deserialize(). It is also posible it duplicate any
+ * such object with gwy_serializable_duplicate() and transform one object to
+ * copy of another with gwy_serializable_clone().
+ *
+ * Note all #GwySerializable methods work with object `value', whatever it means
+ * for a particular type.  Beside that, objects also have their identity which
+ * is unique and can't be subject of cloning.  It consists of properties like
+ * memory address or references held by object users.  Two important properties
+ * related to identity (and thus NOT retained) are: signals connected to
+ * a particular object and user data set with g_object_set_data() or
+ * g_object_set_qdata().
+ *
+ * You should implement serialization and deserialization in your classes with
+ * gwy_serialize_pack_object_struct() and gwy_serialize_unpack_object_struct()
+ * or with gwy_serialize_object_items() and gwy_deserialize_object_hash().
+ * The former two are useful for struct-like objects (most objects are of this
+ * kind), the latter two for hash-like objects, i.e., objects that can contain
+ * components of arbitrary name and type.
+ **/
 
 /**
  * GwySerializeFunc:

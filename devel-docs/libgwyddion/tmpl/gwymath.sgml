@@ -1,38 +1,15 @@
 <!-- ##### SECTION Title ##### -->
-gwymath
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Mathematical utility functions
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Functions
-<link linkend="gwy-math-SI-prefix">gwy_math_SI_prefix()</link> and
-<link linkend="gwy-math-humanize-numbers">gwy_math_humanize_numbers()</link>
-deal with number representation.
-</para>
-
-<para>
-Nearest object finding functions
-<link linkend="gwy-math-find-nearest-line">gwy_math_find_nearest_line()</link>
-and
-<link linkend="gwy-math-find-nearest-point">gwy_math_find_nearest_point()</link>
-can be useful in widget and vector layer implementation.
-</para>
-
-<para>
-And
-<link linkend="gwy-math-lin-solve">gwy_math_lin_solve()</link>,
-<link linkend="gwy-math-lin-solve-rewrite">gwy_math_lin_solve_rewrite()</link>,
-and
-<link linkend="gwy-math-fit-polynom">gwy_math_fit_polynom()</link>
-are general purpose numeric methods.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="libgwyddion-gwynlfit">Gwyddion non-linear least square
-fitter</link>
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

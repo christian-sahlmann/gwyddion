@@ -727,6 +727,23 @@ jump_over:;
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymath
+ * @title: gwymath
+ * @short_description: Mathematical utility functions.
+ * @see_also: #GwyNLFitter, non-linear least square fitter
+ *
+ * Functions gwy_math_SI_prefix() and gwy_math_humanize_numbers() deal with
+ * number representation.
+ *
+ * Nearest object finding functions gwy_math_find_nearest_line() and
+ * gwy_math_find_nearest_point() can be useful in widget and vector layer
+ * implementation.
+ *
+ * And gwy_math_lin_solve(), gwy_math_lin_solve_rewrite(), and
+ * gwy_math_fit_polynom() are general purpose numeric methods.
+ **/
+
+/**
  * ROUND:
  * @x: A double value.
  *

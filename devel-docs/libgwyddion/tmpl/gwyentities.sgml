@@ -1,21 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-gwyentities
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Transform SGML-like symbol entities to UTF-8 and back
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A subset of named SGML-like symbol entities
-(e.g. <literal>&amp;alpha;</literal>),
-to be used namely in <link linkend="GwySciText">GwySciText</link>.
-</para>
-
-<para>
-Function gwy_entities_entity_to_utf8() converts a signle entity to UTF-8.
-Function gwy_entities_text_to_utf8() converts a text containing entities to
-UTF-8. An #GwyInventory with all available entities can be obtained with
-gwy_entities().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

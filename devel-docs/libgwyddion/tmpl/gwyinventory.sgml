@@ -1,46 +1,16 @@
 <!-- ##### SECTION Title ##### -->
-GwyInventory
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Ordered item inventory, indexed by both name and position
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-#GwyInventory is a uniform container that offers both hash table and array
-(sorted or unsorted) interfaces.  Both types of read access are fast,
-operations that modify it may be slower.  Inventory can also maintain
-a notion of default item.
-</para>
-
-<para>
-#GwyInventory can be used both as an actual container for some data, or just
-wrap a static array with a the same interface so the actual storage is opaque
-to inventory user.  The former kind of inventories can be created with
-gwy_inventory_new() or gwy_inventory_new_filled(); constant inventory is
-created with gwy_inventory_new_from_array().  Contantess of an inventory can
-be tested with gwy_inventory_is_const().
-</para>
-
-<para>
-Possible operations with data items stored in an inventory are specified upon
-inventory creation with #GwyInventoryItemType structure.  Not all fields are
-mandatory, with items allowing more operations the inventory is more capable
-too.  For example, if items offer a method to make copies,
-gwy_inventory_new_item() can be used to directly create new items in the
-inventory (this capability can be tested with
-gwy_inventory_can_make_copies()).
-</para>
-
-<para>
-Item can have `traits', that is data that can be obtained generically.
-They are similar to #GObject properties.  Actually, if items are objects,
-they should simply map object properties to traits.  But it's possible to
-define traits for simple structures.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GwyContainer
+
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

@@ -54,4 +54,22 @@ gwy_type_init(void)
     _gwy_nlfit_preset_class_setup_presets();
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyddion
+ * @title: gwyddion
+ * @short_description: Base functions, library initialization.
+ * @see_also: #GwySerializable
+ *
+ * Gwyddion classes has to be initialized before they can be safely
+ * deserialized. The function gwy_type_init() performs this initialization.
+ **/
+
+/**
+ * SECTION:gwyddionenums
+ * @title: gwyddionenums
+ * @short_description: Common libgwyddion enumerations.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

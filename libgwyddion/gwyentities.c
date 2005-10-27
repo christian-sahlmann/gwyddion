@@ -324,6 +324,20 @@ gwy_entities_text_to_utf8(const gchar *text)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyentities
+ * @title: gwyentities
+ * @short_description: Transform SGML-like symbol entities to UTF-8.
+ *
+ * A subset of named SGML-like symbol entities (e.g.
+ * <literal>&amp;alpha;</literal>), to be used namely in #GwySciText.
+ *
+ * Function gwy_entities_entity_to_utf8() converts a signle entity to UTF-8.
+ * Function gwy_entities_text_to_utf8() converts a text containing entities to
+ * UTF-8. An #GwyInventory with all available entities can be obtained with
+ * gwy_entities().
+ **/
+
+/**
  * GwyTextEntity:
  * @entity: Bare entity name, without the leading ampersand and trailing
  *          semicolon.

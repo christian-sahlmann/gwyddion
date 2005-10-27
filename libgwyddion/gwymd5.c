@@ -296,4 +296,17 @@ gwy_md5_transform(guint32 buf[4], const guint32 in[16])
     buf[3] += d;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwymd5
+ * @title: gwymd5
+ * @short_description: Compute MD5 digest.
+ *
+ * MD5 (<ulink url="http://www.faqs.org/rfcs/rfc1321.html">RFC1321</ulink>) is
+ * a reasonably fast digest function.  It can be used for hash key creation and
+ * fast data indexing, but should be no longer used for cryptographic and
+ * security purposes.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

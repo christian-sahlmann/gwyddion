@@ -1,41 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-gwynlfit
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Marquardt-Levenberg nonlinear least square fitter
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-A new Marquardt-Levenberg nonlinear least square fitter can be created with
-gwy_math_nlfit_new(), specifying the function to fit (as GwyNLFitFunc) and
-its derivation (as GwyNLFitDerFunc). For functions for whose analytic
-derivation is not available or very impractical, gwy_math_nlfit_derive()
-(computing the derivation numerically) can be used instead.
-</para>
-
-<para>
-A fitter can be then repeatedly used on different data either in
-gwy_math_nlfit_fit(), or gwy_math_nlfit_fit_with_fixed() when there are some
-fixed parameters. Arbitrary additional (non-fitting) parameters can be passed
-to the fited function in <parameter>user_data</parameter>.
-</para>
-
-<para>
-After a successfull fit additional fit information can be obtained with
-gwy_math_nlfit_get_dispersion(), gwy_math_nlfit_get_correlations(),
-gwy_math_nlfit_get_sigma(). Note these functions may be used only after
-a successfull fit. When a fitter is no longer needed, it should be freed with
-gwy_math_nlfit_free().
-</para>
-
-<para>
-Several common functions are also available as fitting presets that can be
-fitted with gwy_math_nlfit_fit_preset(). Each one can be identified by
-a unique name or a numeric id (the latter one may however change between
-releases) the number of presets can be obtained with
-gwy_math_nlfit_get_npresets(). Preset properties can be obtained with
-functions like gwy_math_nlfit_get_preset_nparams() or
-gwy_math_nlfit_get_preset_formula().
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

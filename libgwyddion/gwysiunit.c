@@ -1231,6 +1231,22 @@ gwy_si_unit_prefix(gint power)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwysiunit
+ * @title: GwySIUnit
+ * @short_description: SI unit representation, physical quantitiy formatting.
+ *
+ * #GwySIUnit object represents a physical SI unit (or any other unit), it can
+ * be created from a unit string with gwy_si_unit_new().
+ *
+ * GwySIUnit is also responsible for prefixes selection and generally
+ * formatting of physical quantities (see also gwymath for pure number
+ * formatting functions).  There are several functions computing value format
+ * (as a #GwySIValueFormat structure) with given resolution --
+ * gwy_si_unit_get_format_with_resolution(), or number of significant digits --
+ * gwy_si_unit_get_format_with_digits().
+ **/
+
+/**
  * GwySIUnit:
  *
  * The #GwySIUnit struct contains private data only and should be accessed

@@ -1,15 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-gwyutils
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Various utility functions
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Various utility functions: creating GLib lists from hash tables
-gwy_hash_table_to_list_cb()), protably finding Gwyddion application
-directories (gwy_find_self_dir()), string functions (gwy_strreplace()), path
-manipulation (gwy_canonicalize_path()).
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -791,6 +791,18 @@ gwy_resource_build_filename(GwyResource *resource)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyresource
+ * @title: GwyResource
+ * @short_description: Built-in and/or user supplied application resources.
+ * @see_also: #GwyInventory
+ *
+ * #GwyResource is a base class for various application resources.  It defines
+ * common interface: questioning resource name (gwy_resource_get_name()),
+ * modifiability (gwy_resource_get_is_modifiable()), loading resources from
+ * files and saving them.
+ **/
+
+/**
  * GwyResource:
  *
  * The #GwyResource struct contains private data only and should be accessed

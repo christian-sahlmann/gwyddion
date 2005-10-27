@@ -330,6 +330,17 @@ gwy_enum_inventory_new(const GwyEnum *enum_table,
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyenum
+ * @title: GwyEnum
+ * @short_description: String-integer value pair.
+ * @see_also: #GwyInventory
+ *
+ * #GwyEnum is a simple association of a string and integer enum value used in
+ * various places in Gwyddion.  An enum table can be easily used as a constant
+ * #GwyInventory base with gwy_enum_inventory_new().
+ **/
+
+/**
  * GwyEnum:
  * @name: Value name.
  * @value: The (integer) enum value.

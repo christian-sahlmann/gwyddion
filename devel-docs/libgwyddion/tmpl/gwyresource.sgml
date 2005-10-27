@@ -1,20 +1,16 @@
 <!-- ##### SECTION Title ##### -->
-GwyResource
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Built-in and/or user supplied application resources
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-#GwyResource is a base class for various application resources.  It defines
-common interface: questioning resource name (gwy_resource_get_name()),
-modifiability (gwy_resource_get_is_modifiable()), loading resources from
-files and saving them.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GwyInventory
+
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

@@ -1690,6 +1690,29 @@ gwy_expr_undefine_constant(GwyExpr *expr,
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyexpr
+ * @title: GwyExp
+ * @short_description: Arithmetic expression parser and evaluator.
+ *
+ * #GwyExpr is an expression evaluator, more precisely parser, compiler, and
+ * evaluator. A new #GwyExpr can be created with gwy_expr_new(), then it can be
+ * used to evaluate any number of expressions; when it's no longer needed, it
+ * should be destroyed with gwy_expr_free().
+ *
+ * Simple arithmetic expressions without variables can be directly evaluated
+ * with gwy_expr_evaluate().
+ *
+ * Expression with variables have to be compiled first with gwy_expr_compile().
+ * Then either gwy_expr_resolve_variables() or gwy_expr_get_variables() can be
+ * used to obtain information what variables are present in the expression and
+ * at which positions (variables are references by position, not name during
+ * final evaluation because of effieiency reasons). Subsequent evaluation with
+ * variable substitution is performed by gwy_expr_execute(). Eventually,
+ * expression can be evaluated on each item of value arrays by
+ * gwy_expr_vector_execute().
+ **/
+
+/**
  * GwyExprError:
  * @GWY_EXPR_ERROR_CLOSING_PARENTHESIS: A closing parenthesis is missing.
  * @GWY_EXPR_ERROR_EMPTY: Expression is empty.
