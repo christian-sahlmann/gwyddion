@@ -360,7 +360,7 @@ def tokenize(lines):
     re_dbl = re.compile(r'\b(\d*\.\d+|\d+\.?)(?:[Ee][-+]?\d+)?[FfLl]?\b')
     re_int = re.compile(r'\b(?:0[xX][a-fA-F0-9]+|0[0-7]+|[-+]?\d+)[LlUu]*\b')
     re_eq = re.compile(r'(?:[-+*%/&|!<>=^]|&&|>>|<<|\|\|)?=')
-    re_grp = re.compile(r'&&|<<|>>|->|::|\.\*|->\*|\|\|')
+    re_grp = re.compile(r'&&|<<|>>|->|::|\.\*|->\*|\|\||\+\+|--|\*\*+|\.\.\.')
     re_sin = re.compile(r'[][(){};:?,.+~!%^&*|/^<>]|-')
     re_tokens = re_com, re_str, re_chr, re_id, re_dbl, re_int, \
                 re_eq, re_grp, re_sin
