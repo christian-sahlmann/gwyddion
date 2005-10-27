@@ -1,50 +1,52 @@
-## Gtk-doc tests.  This file is in public domain.
+# serial 1
 
-## Check for gtk-doc.
-## Defines:
-## HTML_DIR to direcotry to install HTML docs into
-## GTKDOC to whether gtkdoc-mkdb is found
-## ENABLE_GTK_DOC to yes when gtk-doc should be enabled
-AC_DEFUN([gtk_CHECK_GTK_DOC],
-[dnl
+dnl Usage:
+dnl   GTK_DOC_CHECK([minimum-gtk-doc-version])
+AC_DEFUN([GTK_DOC_CHECK],
+[
+  AC_BEFORE([AC_PROG_LIBTOOL],[$0])dnl setup libtool first
+  AC_BEFORE([AM_PROG_LIBTOOL],[$0])dnl setup libtool first
+  dnl for overriding the documentation installation directory
+  AC_ARG_WITH(html-dir,
+    AC_HELP_STRING([--with-html-dir=PATH], [path to installed docs]),,
+    [with_html_dir='${datadir}/gtk-doc/html'])
+  HTML_DIR="$with_html_dir"
+  AC_SUBST(HTML_DIR)
 
-AC_ARG_WITH(html-dir, [  --with-html-dir=PATH    path to installed docs @<:@DATADIR/gtk-doc/html@:>@])
+  dnl enable/disable documentation building
+  AC_ARG_ENABLE(gtk-doc,
+    AC_HELP_STRING([--enable-gtk-doc],
+                   [use gtk-doc to build documentation [default=no]]),,
+    enable_gtk_doc=no)
 
-if test "x$with_html_dir" = "x" ; then
-  HTML_DIR=$datadir/gtk-doc/html
-else
-  HTML_DIR=$with_html_dir
-fi
+  have_gtk_doc=no
+  if test x$enable_gtk_doc = xyes; then
+    if test -z "$PKG_CONFIG"; then
+      AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+    fi
+    if test "$PKG_CONFIG" != "no" && $PKG_CONFIG --exists gtk-doc; then
+      have_gtk_doc=yes
+    fi
 
-AC_SUBST(HTML_DIR)
-
-AC_CHECK_PROG(GTKDOC, gtkdoc-mkdb, true, false)
-
-gtk_doc_min_version=0.6
-if $GTKDOC ; then 
-    gtk_doc_version=`gtkdoc-mkdb --version`
-    AC_MSG_CHECKING([gtk-doc version ($gtk_doc_version) >= $gtk_doc_min_version])
-    if perl <<EOF ; then
-      exit (("$gtk_doc_version" =~ /^[[0-9]]+\.[[0-9]]+$/) &&
-            ("$gtk_doc_version" >= "$gtk_doc_min_version") ? 0 : 1);
-EOF
-      AC_MSG_RESULT(yes)
-   else
-      AC_MSG_RESULT(no)
-      GTKDOC=false
-   fi
-fi
-
-dnl Let people disable the gtk-doc stuff.
-AC_ARG_ENABLE(gtk-doc, [  --enable-gtk-doc        use gtk-doc to build documentation @<:@yes@:>@], enable_gtk_doc="$enableval", enable_gtk_doc=yes)
-
-if test x$enable_gtk_doc = xyes ; then
-  if test x$GTKDOC = xtrue ; then
-    enable_gtk_doc=yes
-  else
-    enable_gtk_doc=no 
-  fi
-fi
-
-AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
+  dnl do we want to do a version check?
+ifelse([$1],[],,
+    [gtk_doc_min_version=$1
+    if test "$have_gtk_doc" = yes; then
+      AC_MSG_CHECKING([gtk-doc version >= $gtk_doc_min_version])
+      if $PKG_CONFIG --atleast-version $gtk_doc_min_version gtk-doc; then
+        AC_MSG_RESULT(yes)
+      else
+        AC_MSG_RESULT(no)
+        have_gtk_doc=no
+      fi
+    fi
 ])
+    if test "$have_gtk_doc" != yes; then
+      enable_gtk_doc=no
+    fi
+  fi
+
+  AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
+  AM_CONDITIONAL(GTK_DOC_USE_LIBTOOL, test -n "$LIBTOOL")
+])
+

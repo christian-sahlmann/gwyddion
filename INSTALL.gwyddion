@@ -116,7 +116,7 @@ Prerequisities:
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
 - Perl5
-- gtk-doc 1.0 or newer
+- gtk-doc 1.4 or newer
 - GNU gettext 0.12 or newer, including development stuff
 - who knows what else
 

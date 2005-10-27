@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.4cvs20051015, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.4cvs20051027, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.5
@@ -74,7 +74,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_CHECK_PROGS([STRIP],[strip])
 AC_CHECK_PROGS([XSLTPROC],[xsltproc],[:])
-gtk_CHECK_GTK_DOC
+GTK_DOC_CHECK(1.4)
 
 #############################################################################
 # Target sytstem.
