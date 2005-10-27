@@ -1,6 +1,7 @@
 *.stamp
 Makefile
 Makefile.in
+tmpl
 html
 xml
 *-decl-list.txt
