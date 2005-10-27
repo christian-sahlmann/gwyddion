@@ -7,6 +7,7 @@ struct GwySerializableIface {
     GwyDeserializeFunc deserialize;
     void (*clone)(GObject *source, GObject *copy);
     GObject* (*duplicate)(GObject *object);
+    gsize (*get_size)(GObject *object);
 };
 </STRUCT>
 
