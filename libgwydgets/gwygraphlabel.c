@@ -291,10 +291,11 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
 
         if (model->label_reverse)
             gdk_draw_layout(drawable, gc,
-                            winwidth - rect.width - 25 - frame_off, ypos,
+                            winx + winwidth - rect.width - 25 - frame_off, 
+                            winy + ypos,
                             layout);
         else
-            gdk_draw_layout(drawable, gc, 25 + frame_off, ypos, layout);
+            gdk_draw_layout(drawable, gc, winx + 25 + frame_off, winy + ypos, layout);
 
         label->samplepos[i] = ypos;
 
@@ -302,16 +303,19 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
             || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
                 gwy_graph_draw_line(drawable, gc,
-                                    winwidth - 20 - frame_off,
-                                    ypos + rect.height/2, winwidth - 5,
-                                    ypos + rect.height/2,
+                                    winx + winwidth - 20 - frame_off,
+                                    winy + ypos + rect.height/2, 
+                                    winx + winwidth - 5,
+                                    winy + ypos + rect.height/2,
                                     curvemodel->line_style,
                                     curvemodel->line_size,
                                     &(curvemodel->color));
             else
                 gwy_graph_draw_line(drawable, gc,
-                                    5 + frame_off, ypos + rect.height/2,
-                                    20 + frame_off, ypos + rect.height/2,
+                                    winx + 5 + frame_off, 
+                                    winy + ypos + rect.height/2,
+                                    winx + 20 + frame_off, 
+                                    winy + ypos + rect.height/2,
                                     curvemodel->line_style,
                                     curvemodel->line_size,
                                     &(curvemodel->color));
@@ -320,14 +324,15 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
             || curvemodel->type == GWY_GRAPH_CURVE_LINE_POINTS) {
             if (model->label_reverse)
                 gwy_graph_draw_point(drawable, gc,
-                                     winwidth - 13 - frame_off,
-                                     ypos + rect.height/2,
+                                     winx + winwidth - 13 - frame_off,
+                                     winy + ypos + rect.height/2,
                                      curvemodel->point_type,
                                      curvemodel->point_size,
                                      &(curvemodel->color), FALSE);
             else
                 gwy_graph_draw_point(drawable, gc,
-                                     12 + frame_off, ypos + rect.height/2,
+                                     winx + 12 + frame_off, 
+                                     winy + ypos + rect.height/2,
                                      curvemodel->point_type,
                                      curvemodel->point_size,
                                      &(curvemodel->color), FALSE);
@@ -343,25 +348,25 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                    GDK_JOIN_MITER);
 
         gdk_draw_line(drawable, gc,
-                      model->label_frame_thickness/2,
-                      model->label_frame_thickness/2,
-                      winwidth - model->label_frame_thickness/2 - 1,
-                      model->label_frame_thickness/2);
+                      winx + model->label_frame_thickness/2,
+                      winy + model->label_frame_thickness/2,
+                      winx + winwidth - model->label_frame_thickness/2 - 1,
+                      winy + model->label_frame_thickness/2);
         gdk_draw_line(drawable, gc,
-                      model->label_frame_thickness/2,
-                      winheight - model->label_frame_thickness/2 - 1,
-                      winwidth - model->label_frame_thickness/2 - 1,
-                      winheight - model->label_frame_thickness/2 - 1);
+                      winx + model->label_frame_thickness/2,
+                      winy + winheight - model->label_frame_thickness/2 - 1,
+                      winx + winwidth - model->label_frame_thickness/2 - 1,
+                      winy + winheight - model->label_frame_thickness/2 - 1);
         gdk_draw_line(drawable, gc,
-                      model->label_frame_thickness/2,
-                      model->label_frame_thickness/2,
-                      model->label_frame_thickness/2,
-                      winheight - model->label_frame_thickness/2 - 1);
+                      winx + model->label_frame_thickness/2,
+                      winy + model->label_frame_thickness/2,
+                      winx + model->label_frame_thickness/2,
+                      winy + winheight - model->label_frame_thickness/2 - 1);
         gdk_draw_line(drawable, gc,
-                      winwidth - model->label_frame_thickness/2 - 1,
-                      model->label_frame_thickness/2,
-                      winwidth - model->label_frame_thickness/2 - 1,
-                      winheight - model->label_frame_thickness/2 - 1);
+                      winx + winwidth - model->label_frame_thickness/2 - 1,
+                      winy + model->label_frame_thickness/2,
+                      winx + winwidth - model->label_frame_thickness/2 - 1,
+                      winy + winheight - model->label_frame_thickness/2 - 1);
     }
 }
 

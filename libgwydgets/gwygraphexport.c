@@ -39,7 +39,10 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     GdkVisual *visual;
     GdkPixmap *pixmap;
     GdkPixbuf *pixbuf;
+    PangoLayout *layout;
+    PangoContext *context;
     gint width, height, topheight, bottomheight, leftwidth, rightwidth;
+    gint labelx, labely, labelw, labelh;
 
     width = (GTK_WIDGET(graph))->allocation.width;
     height = (GTK_WIDGET(graph))->allocation.height;
@@ -48,6 +51,11 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     bottomheight = (GTK_WIDGET(graph->axis_bottom))->allocation.height;
     rightwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
     leftwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
+
+    labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + leftwidth;
+    labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
+    labelw = (GWY_GRAPH_LABEL(graph->area->lab))->reqwidth;
+    labelh = (GWY_GRAPH_LABEL(graph->area->lab))->reqheight;
     
     visual = gdk_visual_get_best();
     pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
@@ -82,23 +90,19 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                               leftwidth, height - topheight - bottomheight,
                               graph->axis_left);
 
+    context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
+    pango_context_set_font_description(context, graph->area->lab->label_font);
+    layout = pango_layout_new(context);
+    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
+                                           labelx, labely, labelw, labelh,
+                                           graph->area->lab);
+
     pixbuf = gdk_pixbuf_get_from_drawable(NULL,
                                           pixmap,
                                           cmap,
                                           0, 0, 0, 0,
                                           -1, -1);
     gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
-    
-
-    /*plot label*/
-    
-//    context = pango_context_new(); /*this function is not known to compiler,
-//     probably due to undefined PANGO_ENABLE_BACKEND, check this.*/
-//    pango_context_set_font_description(context, graph->area->lab->label_font);
-//    layout = pango_layout_new(context);
-//    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
-//                                           labelx, labely, labelw, labelh,
-//                                           graph->area->lab);
 
 }
 
