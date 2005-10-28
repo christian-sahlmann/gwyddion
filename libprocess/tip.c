@@ -906,7 +906,7 @@ gwy_tip_estimate_full(GwyDataField *tip,
 /**
  * SECTION:tip
  * @title: tip
- * @short_description: SPM tip methods.
+ * @short_description: SPM tip methods
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

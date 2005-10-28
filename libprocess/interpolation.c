@@ -209,7 +209,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 /**
  * SECTION:interpolation
  * @title: interpolation
- * @short_description: General interpolation functions.
+ * @short_description: General interpolation functions
  *
  * Data interpolation is usually pixel-like in Gwyddion, not function-like.
  * That means the contribution of individual data saples is preserved on

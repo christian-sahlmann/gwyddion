@@ -729,7 +729,7 @@ jump_over:;
 /**
  * SECTION:gwymath
  * @title: gwymath
- * @short_description: Mathematical utility functions.
+ * @short_description: Mathematical utility functions
  * @see_also: #GwyNLFitter, non-linear least square fitter
  *
  * Functions gwy_math_SI_prefix() and gwy_math_humanize_numbers() deal with

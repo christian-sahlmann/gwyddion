@@ -2362,7 +2362,7 @@ fail:
 /**
  * SECTION:gwycontainer
  * @title: GwyContainer
- * @short_description: A container with items identified by a #GQuark.
+ * @short_description: A container with items identified by a #GQuark
  * @see_also: #GwyInventory
  *
  * #GwyContainer is a general-purpose container, it can hold atomic types,

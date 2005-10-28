@@ -326,7 +326,7 @@ gwy_entities_text_to_utf8(const gchar *text)
 /**
  * SECTION:gwyentities
  * @title: gwyentities
- * @short_description: Transform SGML-like symbol entities to UTF-8.
+ * @short_description: Transform SGML-like symbol entities to UTF-8
  *
  * A subset of named SGML-like symbol entities (e.g.
  * <literal>&amp;alpha;</literal>), to be used namely in #GwySciText.

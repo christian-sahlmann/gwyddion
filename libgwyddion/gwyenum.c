@@ -332,7 +332,7 @@ gwy_enum_inventory_new(const GwyEnum *enum_table,
 /**
  * SECTION:gwyenum
  * @title: GwyEnum
- * @short_description: String-integer value pair.
+ * @short_description: String-integer value pair
  * @see_also: #GwyInventory
  *
  * #GwyEnum is a simple association of a string and integer enum value used in

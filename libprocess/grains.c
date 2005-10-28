@@ -1390,7 +1390,7 @@ gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
 /**
  * SECTION:grains
  * @title: grains
- * @short_description: Grain detection and processing.
+ * @short_description: Grain detection and processing
  **/
 
 

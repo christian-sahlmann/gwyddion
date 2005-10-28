@@ -655,7 +655,7 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
 /**
  * SECTION:gwynlfit
  * @title: GwyNLFitter
- * @short_description: Marquardt-Levenberg nonlinear least square fitter.
+ * @short_description: Marquardt-Levenberg nonlinear least square fitter
  * @see_also: #GwyNLFitPreset
  *
  * A new Marquardt-Levenberg nonlinear least square fitter can be created with

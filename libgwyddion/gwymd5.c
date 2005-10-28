@@ -301,7 +301,7 @@ gwy_md5_transform(guint32 buf[4], const guint32 in[16])
 /**
  * SECTION:gwymd5
  * @title: gwymd5
- * @short_description: Compute MD5 digest.
+ * @short_description: Compute MD5 digest
  *
  * MD5 (<ulink url="http://www.faqs.org/rfcs/rfc1321.html">RFC1321</ulink>) is
  * a reasonably fast digest function.  It can be used for hash key creation and

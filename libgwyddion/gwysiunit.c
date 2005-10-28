@@ -1233,7 +1233,7 @@ gwy_si_unit_prefix(gint power)
 /**
  * SECTION:gwysiunit
  * @title: GwySIUnit
- * @short_description: SI unit representation, physical quantitiy formatting.
+ * @short_description: SI unit representation, physical quantitiy formatting
  *
  * #GwySIUnit object represents a physical SI unit (or any other unit), it can
  * be created from a unit string with gwy_si_unit_new().

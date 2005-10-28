@@ -1190,7 +1190,7 @@ gwy_nlfit_presets(void)
 /**
  * SECTION:gwynlfitpreset
  * @title: GwyNLFitPreset
- * @short_description: NL fitter presets.
+ * @short_description: NL fitter presets
  * @see_also: #GwyNLFitter
  **/
 

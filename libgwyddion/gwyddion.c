@@ -59,7 +59,7 @@ gwy_type_init(void)
 /**
  * SECTION:gwyddion
  * @title: gwyddion
- * @short_description: Base functions, library initialization.
+ * @short_description: Base functions, library initialization
  * @see_also: #GwySerializable
  *
  * Gwyddion classes has to be initialized before they can be safely
@@ -69,7 +69,7 @@ gwy_type_init(void)
 /**
  * SECTION:gwyddionenums
  * @title: gwyddionenums
- * @short_description: Common libgwyddion enumerations.
+ * @short_description: Common libgwyddion enumerations
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

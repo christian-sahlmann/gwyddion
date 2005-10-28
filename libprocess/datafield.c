@@ -2434,7 +2434,7 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
 /**
  * SECTION:datafield
  * @title: GwyDataField
- * @short_description: Two-dimensional data representation.
+ * @short_description: Two-dimensional data representation
  *
  * #GwyDataField is an object that is used for representation of all
  * two-dimensional data matrices. Most of the basic data handling and

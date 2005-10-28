@@ -185,7 +185,7 @@ gwy_debug_objects_clear(void)
 /**
  * SECTION:gwydebugobjects
  * @title: gwydebugobjects
- * @short_description: Helps chasing leaking objects (debug).
+ * @short_description: Helps chasing leaking objects (debug)
  * 
  * If you wonder about some object lifetime rules, these functions can help
  * you: gwy_debug_objects_creation() hooks object finalization so it is

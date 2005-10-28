@@ -1401,7 +1401,7 @@ gwy_data_line_cumulate(GwyDataLine *data_line)
 /**
  * SECTION:dataline
  * @title: GwyDataLine
- * @short_description: One-dimensional data representation.
+ * @short_description: One-dimensional data representation
  *
  * #GwyDataLine represents 1D data arrays in Gwyddion. It is used for most of
  * the data processing functions connected with 1D data, graphs, etc.

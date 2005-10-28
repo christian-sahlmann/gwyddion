@@ -576,7 +576,7 @@ gwy_data_field_get_local_maxima_list(GwyDataField *dfield,
 /**
  * SECTION:hough
  * @title: hough
- * @short_description: Hough transform.
+ * @short_description: Hough transform
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

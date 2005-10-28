@@ -179,7 +179,7 @@ gwy_fft_window(gdouble *data,
 /**
  * SECTION:simplefft
  * @title: simplefft
- * @short_description: Simple FFT algorithm.
+ * @short_description: Simple FFT algorithm
  *
  * The simple one-dimensional FFT algorithm gwy_fft_hum() is used as a fallback
  * by other functions when better implementation (FFTW3) is not available.

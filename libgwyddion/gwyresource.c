@@ -793,7 +793,7 @@ gwy_resource_build_filename(GwyResource *resource)
 /**
  * SECTION:gwyresource
  * @title: GwyResource
- * @short_description: Built-in and/or user supplied application resources.
+ * @short_description: Built-in and/or user supplied application resources
  * @see_also: #GwyInventory
  *
  * #GwyResource is a base class for various application resources.  It defines

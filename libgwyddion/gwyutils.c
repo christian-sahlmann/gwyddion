@@ -698,7 +698,7 @@ gwy_str_next_line(gchar **buffer)
 /**
  * SECTION:gwyutils
  * @title: gwyutils
- * @short_description: Various utility functions.
+ * @short_description: Various utility functions
  * @see_also: <link linkend="libgwyddion-gwymacros">gwymacros</link> --
  *            utility macros
  *
@@ -711,7 +711,7 @@ gwy_str_next_line(gchar **buffer)
 /**
  * SECTION:gwymacros
  * @title: gwymacros
- * @short_description: Utility macros.
+ * @short_description: Utility macros
  * @see_also: <link linkend="libgwyddion-gwyutils">gwyutils</link> -- utility
  *            functions
  **/

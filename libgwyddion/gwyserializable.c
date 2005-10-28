@@ -2061,7 +2061,7 @@ gwy_serialize_check_string(const guchar *buffer,
 /**
  * SECTION:gwyserializable
  * @title: GwySerializable
- * @short_description: Abstract interface for serializable objects.
+ * @short_description: Abstract interface for serializable objects
  *
  * GwySerializable is an abstract interface for value-like object that can be
  * serialized and deserialized.  You can serialize any object implementing this

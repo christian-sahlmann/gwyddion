@@ -53,7 +53,7 @@ gwy_process_type_init(void)
 /**
  * SECTION:gwyprocess
  * @title: gwyprocess
- * @short_description: Base functions.
+ * @short_description: Base functions
  *
  * Gwyddion classes has to be initialized before they can be safely
  * deserialized. The function gwy_process_type_init() performs this

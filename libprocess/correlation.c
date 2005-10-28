@@ -491,7 +491,7 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
 /**
  * SECTION:correlation
  * @title: correlation
- * @short_description: Correlation and crosscorrelation.
+ * @short_description: Correlation and crosscorrelation
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
