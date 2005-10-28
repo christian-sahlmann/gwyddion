@@ -24,6 +24,8 @@
 #include "config.h"
 #include <string.h>
 
+#include <pango/pangoft2.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydataview.h>
@@ -61,6 +63,10 @@ struct _GwyLayerLine {
 
     /* Properties */
     gboolean line_numbers;
+
+    /* FT2 stuff */
+    PangoContext *ft2_context;
+    PangoFontMap *ft2_font_map;
 
     /* Dynamic state */
     gboolean moving_line;
@@ -328,11 +334,14 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
                            gint i)
 {
     GwyVectorLayer *layer;
+    FT_Bitmap bitmap;
     PangoRectangle rect;
     GdkPixmap *pixmap;
+    GdkPixbuf *pixbuf;
     GdkGC *gc;
-    GdkColor color;
+    guchar *pixels;
     gchar buffer[8];
+    gint j, k, rowstride;
 
     if (!layer_line->line_labels)
         layer_line->line_labels = g_ptr_array_new();
@@ -346,33 +355,51 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
 
     layer = GWY_VECTOR_LAYER(layer_line);
     if (!layer->layout) {
-        PangoFontDescription *fontdesc;
-
-        layer->layout = gtk_widget_create_pango_layout
-                                   (GWY_DATA_VIEW_LAYER(layer)->parent,
-                                    "");
-        /* FIXME: just set ,bigger and bold`, not particular font */
-        fontdesc = pango_font_description_from_string("Helvetica bold 12");
-        pango_layout_set_font_description(layer->layout, fontdesc);
-        pango_font_description_free(fontdesc);
+        layer->layout = pango_layout_new(layer_line->ft2_context);
+        pango_layout_set_width(layer->layout, -1);
+        pango_layout_set_alignment(layer->layout, PANGO_ALIGN_LEFT);
     }
 
     g_snprintf(buffer, sizeof(buffer), "%d", i+1);
     pango_layout_set_text(layer->layout, buffer, -1);
     pango_layout_get_pixel_extents(layer->layout, NULL, &rect);
 
+    bitmap.rows = rect.height;
+    bitmap.width = rect.width;
+    bitmap.pitch = bitmap.width;
+    /* Use gray, I can't get mono working */
+    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
+    bitmap.num_grays = 2;
+    bitmap.buffer = g_malloc0(bitmap.rows * bitmap.pitch);
+
+    pango_ft2_render_layout(&bitmap, layer->layout, -rect.x, 0);
+
+    /* Draw via a pixbuf detour because we don't want to draw pixel by
+     * pixel to a server-side GdkDrawable */
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                            bitmap.width, bitmap.rows);
+    gdk_pixbuf_fill(pixbuf, 0);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    for (j = 0; j < bitmap.rows; j++) {
+        guchar *row = pixels + j*rowstride;
+
+        for (k = 0; k < bitmap.width; k++, row += 3) {
+            if (bitmap.buffer[j*bitmap.pitch + k])
+                row[0] = row[1] = row[2] = 0xff;
+        }
+    }
+    g_free(bitmap.buffer);
+
     pixmap = gdk_pixmap_new(drawable, rect.width, rect.height, -1);
     g_ptr_array_index(layer_line->line_labels, i) = pixmap;
 
     gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
     gdk_gc_set_function(gc, GDK_COPY);
-    color.red = 0;
-    color.green = 0;
-    color.blue = 0;
-    gdk_gc_set_rgb_fg_color(gc, &color);
-    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, rect.width, rect.height);
-    gdk_draw_layout(pixmap, layer->gc, -rect.x, -rect.y, layer->layout);
+    gdk_draw_pixbuf(pixmap, gc, pixbuf, 0, 0, 0, 0, bitmap.width, bitmap.rows,
+                    GDK_RGB_DITHER_NONE, 0, 0);
     g_object_unref(gc);
+    g_object_unref(pixbuf);
 }
 
 static gboolean
@@ -638,38 +665,58 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
 static void
 gwy_layer_line_realize(GwyDataViewLayer *layer)
 {
+    PangoFontDescription *fontdesc;
+    PangoContext *context;
+    GwyLayerLine *layer_line;
     GwyLayerLineClass *klass;
 
     gwy_debug("");
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->realize(layer);
 
+    layer_line = GWY_LAYER_LINE(layer);
     klass = GWY_LAYER_LINE_GET_CLASS(layer);
+
     gwy_gdk_cursor_new_or_ref(&klass->near_cursor, GDK_DOTBOX);
     gwy_gdk_cursor_new_or_ref(&klass->move_cursor, GDK_CROSS);
     gwy_gdk_cursor_new_or_ref(&klass->nearline_cursor, GDK_FLEUR);
+
+    layer_line->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
+    g_object_ref(layer_line->ft2_font_map);
+    layer_line->ft2_context = pango_ft2_font_map_create_context
+                               (PANGO_FT2_FONT_MAP(layer_line->ft2_font_map));
+
+    context = gtk_widget_get_pango_context(layer->parent);
+    fontdesc = pango_context_get_font_description(context);
+    fontdesc = pango_font_description_copy_static(fontdesc);
+    pango_font_description_set_size(fontdesc, 12*PANGO_SCALE);
+    pango_context_set_font_description(layer_line->ft2_context, fontdesc);
+    pango_font_description_free(fontdesc);
 }
 
 static void
 gwy_layer_line_unrealize(GwyDataViewLayer *layer)
 {
-    GwyLayerLine *lines_layer;
+    GwyLayerLine *layer_line;
     GwyLayerLineClass *klass;
     guint i;
 
     gwy_debug("");
-    lines_layer = GWY_LAYER_LINE(layer);
+    layer_line = GWY_LAYER_LINE(layer);
 
     klass = GWY_LAYER_LINE_GET_CLASS(layer);
     gwy_gdk_cursor_free_or_unref(&klass->near_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->move_cursor);
     gwy_gdk_cursor_free_or_unref(&klass->nearline_cursor);
 
-    if (lines_layer->line_labels) {
-        for (i = 0; i < lines_layer->line_labels->len; i++)
-            gwy_object_unref(g_ptr_array_index(lines_layer->line_labels, i));
-        g_ptr_array_free(lines_layer->line_labels, TRUE);
-        lines_layer->line_labels = NULL;
+    if (layer_line->line_labels) {
+        for (i = 0; i < layer_line->line_labels->len; i++)
+            gwy_object_unref(g_ptr_array_index(layer_line->line_labels, i));
+        g_ptr_array_free(layer_line->line_labels, TRUE);
+        layer_line->line_labels = NULL;
     }
+
+    g_object_unref(layer_line->ft2_context);
+    g_object_unref(layer_line->ft2_font_map);
 
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_line_parent_class)->unrealize(layer);
 }
