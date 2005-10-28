@@ -712,6 +712,32 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyselection
+ * @title: GwySelection
+ * @short_description: Data selection base class
+ * @see_also: #GwyVectorLayer -- uses #GwySelection for selections,
+ *            #GwyGraphArea -- uses #GwySelection for selections
+ *
+ * #GwySelection is an abstract class representing data selections.  Particular
+ * selection types are defined by vector layer modules.
+ *
+ * Selections behave as flat arrays of coordinates.  They are however logically
+ * split into selection objects (points, lines, rectangles), characteristic for
+ * each selection type. For example, to describe a horizontal line one needs
+ * only one coordinate, for a point two coordinates are needed, rectangle or
+ * arbitrary line need four.  gwy_selection_get_object_size() can be used to
+ * generically determine the number of coordinates used to describe a one
+ * selection object.
+ *
+ * The number of selection objects in a selection can vary,
+ * gwy_selection_set_max_objects() sets the maximum possible number.  Functions
+ * for getting and setting individual selection objects
+ * (gwy_selection_get_object(), gwy_selection_set_object()) or complete
+ * selection (gwy_selection_get_data(), gwy_selection_set_data()) are
+ * available.
+ **/
+
+/**
  * GwySelection:
  * @objects: Array of object coordinates whose meaning is defined by each
  *           selection type (subclass).  Default #GwySelection virtual methods

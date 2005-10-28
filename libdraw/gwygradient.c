@@ -1075,6 +1075,29 @@ gwy_gradients_get_gradient(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwygradient
+ * @title: GwyGradient
+ * @short_description: A map from numbers to RGBA colors
+ * @see_also: <link linkend="libgwydraw-gwypixfield">gwypixfield</link> --
+ *            Drawing data with gradients,
+ *            #GwyInventory -- the container holding all gradients,
+ *            #GwyDataView -- 2D data display widget,
+ *            #GwyColorAxis -- false color axis widget
+ *
+ * Gradient is a map from interval [0,1] to RGB(A) color space. Each gradient
+ * is defined by an ordered set of color points, the first of them is always at
+ * 0.0, the last at 1.0 (thus each gradient must consist of at least two
+ * points).  Between them, the color is interpolated.  Color points of
+ * modifiable gradients (see below) can be edited with functions like
+ * gwy_gradient_insert_point(), gwy_gradient_set_point_color(), or
+ * gwy_gradient_set_points().
+ *
+ * Gradient objects can be obtained from gwy_gradients_get_gradient(). New
+ * gradients can be created with gwy_inventory_new_item() on the #GwyInventory
+ * returned by gwy_gradients().
+ **/
+
+/**
  * GwyGradient:
  *
  * The #GwyGradient struct contains private data only and should be accessed

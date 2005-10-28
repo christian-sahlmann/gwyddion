@@ -610,6 +610,23 @@ gwy_gl_materials_get_gl_material(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyglmaterial
+ * @title: GwyGLMaterial
+ * @short_description: OpenGL material representation
+ * @see_also: #Gwy3DView -- 3D data display widget,
+ *            #GwyRGBA -- representation of color components,
+ *            #GwyInventory -- the container holding all GL materials
+ *
+ * #GwyGLMaterial represents an OpenGL material.  Its properties directly map
+ * to corresponding OpenGL material characteristics, all are in the range
+ * [0,1].
+ *
+ * Gradient objects can be obtained from gwy_gl_materials_get_gl_material().
+ * New GL materials can be created with gwy_inventory_new_item() on the
+ * #GwyInventory returned by gwy_gl_materials().
+ **/
+
+/**
  * GwyGLMaterial:
  *
  * The #GwyGLMaterial struct contains private data only and should be accessed

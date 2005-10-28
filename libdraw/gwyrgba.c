@@ -318,6 +318,21 @@ gwy_rgba_compute_color_quarks(const gchar *prefix,
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyrgba
+ * @title: GwyRGBA
+ * @short_description: Bit depth independet RGBA colors
+ *
+ * #GwyRGBA is a bit depth independent representation of an RGB or RGBA color,
+ * using floating point values from the [0,1] interval.
+ *
+ * #GwyRGBA is not an object, but a simple struct that can be allocated on
+ * stack on created with g_new() or malloc(). Helper functions for conversion
+ * between #GwyRGBA and #GdkColor (gwy_rgba_to_gdk_color(),
+ * gwy_rgba_from_gdk_color()) and for #GwyContainer storage by component
+ * (gwy_rgba_store_to_container(), gwy_rgba_get_from_container()) are provided.
+ **/
+
+/**
  * GwyRGBA:
  * @r: The red component.
  * @g: The green component.
