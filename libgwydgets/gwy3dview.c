@@ -2349,7 +2349,7 @@ gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
     bitmap.pitch = bitmap.width;
     bitmap.buffer = g_malloc(bitmap.rows * bitmap.width);
     bitmap.num_grays = 256;
-    bitmap.pixel_mode = ft_pixel_mode_grays;
+    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
 
     memset(bitmap.buffer, 0, bitmap.rows * bitmap.width);
     pango_ft2_render_layout(&bitmap, layout,
