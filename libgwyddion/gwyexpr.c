@@ -1691,7 +1691,7 @@ gwy_expr_undefine_constant(GwyExpr *expr,
 
 /**
  * SECTION:gwyexpr
- * @title: GwyExp
+ * @title: GwyExpr
  * @short_description: Arithmetic expression parser and evaluator.
  *
  * #GwyExpr is an expression evaluator, more precisely parser, compiler, and
