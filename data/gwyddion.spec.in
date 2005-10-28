@@ -1,6 +1,8 @@
 # @(#) $Id$
-%{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
+%{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
+%{expand:%global distro_is_mdk %(test ! -f /etc/mandrake-release; echo $?)}
+%{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
 Summary: A SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
@@ -22,7 +24,6 @@ BuildPrereq: gtkglext-devel >= 1.0
 BuildPrereq: libpng-devel
 BuildPrereq: libjpeg-devel
 BuildPrereq: libtiff-devel >= 3.6
-BuildPrereq: gtk-doc >= 1.0
 BuildPrereq: python >= 2.2
 BuildPrereq: ruby >= 1.8
 BuildPrereq: perl >= 5.005
