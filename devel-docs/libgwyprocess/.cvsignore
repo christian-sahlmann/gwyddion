@@ -2,6 +2,7 @@
 Makefile
 Makefile.in
 html
+tmpl
 xml
 *-decl-list.txt
 *-undocumented.txt

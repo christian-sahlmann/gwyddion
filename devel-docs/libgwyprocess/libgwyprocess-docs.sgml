@@ -21,6 +21,7 @@
   <xi:include href="xml/filters.xml"/>
   <xi:include href="xml/fractals.xml"/>
   <xi:include href="xml/grains.xml"/>
+  <xi:include href="xml/hough.xml"/>
   <xi:include href="xml/inttrans.xml"/>
   <xi:include href="xml/interpolation.xml"/>
   <xi:include href="xml/level.xml"/>

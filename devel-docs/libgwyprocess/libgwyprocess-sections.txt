@@ -157,7 +157,7 @@ gwy_watershed_state_type_get_type
 GWY_TYPE_WATERSHED_STATE_TYPE
 gwy_plane_symmetry_get_type
 GWY_TYPE_PLANE_SYMMETRY
-gwy_2dcwt_wavelet_type_get_type
+gwy_2d_cwt_wavelet_type_get_type
 GWY_TYPE_2DCWT_WAVELET_TYPE
 gwy_orientation_get_type
 GWY_TYPE_ORIENTATION
@@ -179,6 +179,8 @@ gwy_windowing_type_get_type
 GWY_TYPE_WINDOWING_TYPE
 gwy_tip_type_get_type
 GWY_TYPE_TIP_TYPE
+gwy_correlation_type_get_type
+GWY_TYPE_CORRELATION_TYPE
 gwy_grain_value_type_get_type
 GWY_TYPE_GRAIN_VALUE_TYPE
 </SECTION>
@@ -253,7 +255,7 @@ gwy_data_field_correlate_iteration
 gwy_data_field_get_fft_res
 gwy_data_field_2dfft
 gwy_data_field_2dfft_real
-gwy_data_field_2dffthumanize
+gwy_data_field_2dfft_humanize
 gwy_data_field_xfft
 gwy_data_field_yfft
 gwy_data_field_xfft_real
@@ -350,6 +352,7 @@ gwy_data_field_area_get_normal_coeffs
 gwy_data_field_area_get_inclination
 gwy_data_field_get_inclination
 gwy_data_field_normalize
+gwy_data_field_renormalize
 </SECTION>
 
 <SECTION>
@@ -379,6 +382,7 @@ GwyInterpolationType
 GwyPlaneFitQuantity
 GwyWindowingType
 GwyTipType
+GwyCorrelationType
 GwyGrainValueType
 gwy_merge_type_get_enum
 gwy_plane_symmetry_get_enum
@@ -388,6 +392,16 @@ gwy_dwt_type_get_enum
 gwy_dwt_denoise_type_get_enum
 gwy_interpolation_type_get_enum
 gwy_windowing_type_get_enum
+gwy_correlation_type_get_enum
+</SECTION>
+
+<SECTION>
+<FILE>hough</FILE>
+gwy_data_field_hough_line
+gwy_data_field_hough_circle
+gwy_data_field_hough_line_strenghten
+gwy_data_field_hough_circle_strenghten
+gwy_data_field_get_local_maxima_list
 </SECTION>
 
 <SECTION>
