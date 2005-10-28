@@ -81,8 +81,8 @@ export(GwyGraph *graph)
     if (gtk_dialog_run (GTK_DIALOG (filedialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (filedialog));
-        //gwy_graph_export_pixmap(graph, filename,
-          //                               TRUE, TRUE, TRUE);
+        gwy_graph_export_pixmap(graph, filename,
+                                         TRUE, TRUE, TRUE);
     }
     gtk_widget_destroy(GTK_WIDGET(filedialog));
  

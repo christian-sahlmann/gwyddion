@@ -499,26 +499,26 @@ gwy_axis_draw_axis(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *spe
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_line(drawable, gc,
-                      0, 0,
-                      specs->width-1, 0);
+                      specs->xmin, specs->ymin,
+                      specs->xmin + specs->width-1, specs->ymin);
         break;
 
         case GTK_POS_TOP:
         gdk_draw_line(drawable, gc,
-                      0, specs->height-1,
-                      specs->width-1, specs->height-1);
+                      specs->xmin, specs->ymin + specs->height-1,
+                      specs->xmin + specs->width-1, specs->ymin + specs->height-1);
         break;
 
         case GTK_POS_LEFT:
         gdk_draw_line(drawable, gc,
-                      0, 0,
-                      0, specs->height-1);
+                      specs->xmin, specs->ymin,
+                      specs->xmin, specs->ymin + specs->height-1);
         break;
 
         case GTK_POS_RIGHT:
         gdk_draw_line(drawable, gc,
-                      specs->width-1, 0,
-                      specs->width-1, specs->height-1);
+                      specs->xmin + specs->width-1, specs->ymin,
+                      specs->xmin + specs->width-1, specs->ymin + specs->height-1);
         break;
 
         default:
@@ -545,34 +545,34 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
         switch (axis->orientation) {
             case GTK_POS_BOTTOM:
             gdk_draw_line(drawable, gc,
-                          pmjt->t.scrpos,
-                          0,
-                          pmjt->t.scrpos,
-                          axis->par.major_length);
+                          specs->xmin + pmjt->t.scrpos,
+                          specs->ymin,
+                          specs->xmin + pmjt->t.scrpos,
+                          specs->ymin + axis->par.major_length);
             break;
 
             case GTK_POS_TOP:
             gdk_draw_line(drawable, gc,
-                          pmjt->t.scrpos,
-                          specs->height-1,
-                          pmjt->t.scrpos,
-                          specs->height-1 - axis->par.major_length);
+                          specs->xmin + pmjt->t.scrpos,
+                          specs->ymin + specs->height-1,
+                          specs->xmin + pmjt->t.scrpos,
+                          specs->ymin + specs->height-1 - axis->par.major_length);
             break;
 
             case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
-                          0,
-                          specs->height-1 - pmjt->t.scrpos,
-                          axis->par.major_length,
-                          specs->height-1 - pmjt->t.scrpos);
+                          specs->xmin,
+                          specs->ymin + specs->height-1 - pmjt->t.scrpos,
+                          specs->xmin + axis->par.major_length,
+                          specs->ymin + specs->height-1 - pmjt->t.scrpos);
             break;
 
             case GTK_POS_RIGHT:
             gdk_draw_line(drawable, gc,
-                          specs->width-1,
-                          specs->height-1 - pmjt->t.scrpos,
-                          specs->width-1 - axis->par.major_length,
-                          specs->height-1 - pmjt->t.scrpos);
+                          specs->xmin + specs->width-1,
+                          specs->ymin + specs->height-1 - pmjt->t.scrpos,
+                          specs->xmin + specs->width-1 - axis->par.major_length,
+                          specs->ymin + specs->height-1 - pmjt->t.scrpos);
             break;
 
             default:
@@ -590,34 +590,34 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
         switch (axis->orientation) {
             case GTK_POS_BOTTOM:
             gdk_draw_line(drawable, gc,
-                          pmit->scrpos,
-                          0,
-                          pmit->scrpos,
-                          axis->par.minor_length);
+                          specs->xmin + pmit->scrpos,
+                          specs->ymin,
+                          specs->xmin + pmit->scrpos,
+                          specs->ymin + axis->par.minor_length);
             break;
 
             case GTK_POS_TOP:
             gdk_draw_line(drawable, gc,
-                          pmit->scrpos,
-                          specs->height-1,
-                          pmit->scrpos,
-                          specs->height-1 - axis->par.minor_length);
+                          specs->xmin + pmit->scrpos,
+                          specs->ymin + specs->height-1,
+                          specs->xmin + pmit->scrpos,
+                          specs->ymin + specs->height-1 - axis->par.minor_length);
             break;
 
             case GTK_POS_LEFT:
             gdk_draw_line(drawable, gc,
-                          0,
-                          specs->height-1 - pmit->scrpos,
-                          axis->par.minor_length,
-                          specs->height-1 - pmit->scrpos);
+                          specs->xmin,
+                          specs->ymin + specs->height-1 - pmit->scrpos,
+                          specs->xmin + axis->par.minor_length,
+                          specs->ymin + specs->height-1 - pmit->scrpos);
             break;
 
             case GTK_POS_RIGHT:
             gdk_draw_line(drawable, gc,
-                          specs->width-1,
-                          specs->height-1 - pmit->scrpos,
-                          specs->width-1 - axis->par.minor_length,
-                          specs->height-1 - pmit->scrpos);
+                          specs->xmin + specs->width-1,
+                          specs->ymin + specs->height-1 - pmit->scrpos,
+                          specs->xmin + specs->width-1 - axis->par.minor_length,
+                          specs->ymin + specs->height-1 - pmit->scrpos);
             break;
 
             default:
@@ -651,25 +651,25 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 
         switch (axis->orientation) {
             case GTK_POS_BOTTOM:
-            xpos = pmjt->t.scrpos - rect.width/2;
-            ypos = axis->par.major_length + sep;
+            xpos = specs->xmin + pmjt->t.scrpos - rect.width/2;
+            ypos = specs->ymin + axis->par.major_length + sep;
             break;
 
             case GTK_POS_TOP:
-            xpos = pmjt->t.scrpos - rect.width/2;
-            ypos = specs->height-1
+            xpos = specs->xmin + pmjt->t.scrpos - rect.width/2;
+            ypos = specs->ymin + specs->height-1
                    - axis->par.major_length - rect.height;
             break;
 
             case GTK_POS_LEFT:
-            xpos = axis->par.major_length + sep;
-            ypos = specs->height-1 - pmjt->t.scrpos - rect.height/2;
+            xpos = specs->xmin + axis->par.major_length + sep;
+            ypos = specs->ymin + specs->height-1 - pmjt->t.scrpos - rect.height/2;
             break;
 
             case GTK_POS_RIGHT:
-            xpos = specs->width-1
+            xpos = specs->xmin + specs->width-1
                    - axis->par.major_length - sep - rect.width;
-            ypos = specs->height-1
+            ypos = specs->ymin + specs->height-1
                    - pmjt->t.scrpos - rect.height/2;
             break;
 
@@ -678,14 +678,14 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
             break;
         }
         if ((specs->width-1 - xpos) < rect.width)
-            xpos = specs->width-1 - rect.width;
+            xpos = specs->xmin + specs->width-1 - rect.width;
         else if (xpos < 0)
-            xpos = 0;
+            xpos = specs->xmin;
 
         if ((specs->height-1 - ypos) < rect.height)
-            ypos = specs->height-1 - rect.height;
+            ypos = specs->ymin + specs->height-1 - rect.height;
         else if (ypos < 0)
-            ypos = 0;
+            ypos = specs->ymin;
 
         gdk_draw_layout(drawable, gc, xpos, ypos, layout);
     }
@@ -693,7 +693,7 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 }
 
 static void
-gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, G_GNUC_UNUSED GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
 {
     PangoLayout *layout;
     PangoContext *context;
@@ -723,14 +723,15 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, G_GNUC_UNUSED GwyAxisActiv
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
-                        axis->label_x_pos - rect.width/2, axis->label_y_pos,
+                        specs->xmin + axis->label_x_pos - rect.width/2, 
+                        specs->ymin + axis->label_y_pos,
                         layout);
         break;
 
         case GTK_POS_TOP:
         gdk_draw_layout(drawable, gc,
-                        axis->label_x_pos - rect.width/2,
-                        axis->label_y_pos,
+                        specs->xmin + axis->label_x_pos - rect.width/2,
+                        specs->ymin + axis->label_y_pos,
                         layout);
         break;
 
@@ -740,15 +741,15 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, G_GNUC_UNUSED GwyAxisActiv
         pango_layout_context_changed (layout);
         pango_layout_get_size (layout, &width, &height);*/
         gdk_draw_layout(drawable, gc,
-                        axis->label_x_pos,
-                        axis->label_y_pos,
+                        specs->xmin + axis->label_x_pos,
+                        specs->ymin + axis->label_y_pos,
                         layout);
         break;
 
         case GTK_POS_RIGHT:
         gdk_draw_layout(drawable, gc,
-                        axis->label_x_pos - rect.width,
-                        axis->label_y_pos,
+                        specs->xmin + axis->label_x_pos - rect.width,
+                        specs->ymin + axis->label_y_pos,
                         layout);
         break;
 

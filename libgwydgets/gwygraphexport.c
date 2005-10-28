@@ -33,53 +33,62 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                      G_GNUC_UNUSED gboolean export_title, G_GNUC_UNUSED gboolean export_axis,
                                      G_GNUC_UNUSED gboolean export_labels)
 {
-    GdkPixmap *pixmap;
-    GdkPixbuf *pixbuf;
+    GdkColor color = { 0, 65535, 65535, 65535 };
     GdkColormap *cmap;
     GdkGC *gc;
-    gint width, height, areax, areay, areaw, areah, labelx, labely, labelw, labelh;
-    GError *error=NULL;
-    PangoLayout *layout;
-    PangoContext *context = NULL;
-    GdkVisual   *visual = gdk_visual_get_best ();
+    GdkVisual *visual;
+    GdkPixmap *pixmap;
+    GdkPixbuf *pixbuf;
+    gint width, height, topheight, bottomheight, leftwidth, rightwidth;
+
+    width = (GTK_WIDGET(graph))->allocation.width;
+    height = (GTK_WIDGET(graph))->allocation.height;
+
+    topheight = (GTK_WIDGET(graph->axis_top))->allocation.height;
+    bottomheight = (GTK_WIDGET(graph->axis_bottom))->allocation.height;
+    rightwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
+    leftwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
     
-    /*create pixmap*/
-    width = 600;
-    height = 450;
-    areax = 90;
-    areay = 90;
-    areaw = width - 2*areax;
-    areah = height - 2*areay;
-   
-    labelh = graph->area->lab->reqheight;
-    labelw = graph->area->lab->reqwidth;
-    labelx = width - areax - labelw - 5;
-    labely = height - areay - labelh - 5;
- 
-    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);    //8                                        
-    cmap = gdk_colormap_new(visual, FALSE);
-    
-    /*plot area*/
+    visual = gdk_visual_get_best();
+    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);
     gc = gdk_gc_new(pixmap);
+    cmap = gdk_colormap_new(visual, FALSE);
+
+    gdk_gc_set_rgb_fg_color(gc, &color);
+    gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
+
     gwy_graph_area_draw_area_on_drawable(pixmap, gc,
-                                         areax, areay, areaw, areah,
-                                         graph->area);
-        
-    
+                                        rightwidth, topheight,
+                                        width - rightwidth - leftwidth,
+                                        height - topheight - bottomheight,
+                                        graph->area);
+
+
     /*plot axis*/
     gwy_axis_draw_on_drawable(pixmap, gc,
-                              areax, 0, width - areax, areay,
+                              rightwidth, 0,
+                              width - rightwidth - leftwidth, topheight,
                               graph->axis_top);
     gwy_axis_draw_on_drawable(pixmap, gc,
-                              areax, height - areay, width - areax, areay,
+                              rightwidth, height - bottomheight,
+                              width - rightwidth - leftwidth, bottomheight,
                               graph->axis_bottom);
     gwy_axis_draw_on_drawable(pixmap, gc,
-                              0, areay, areax, height - areay,
-                              graph->axis_left);
-    gwy_axis_draw_on_drawable(pixmap, gc,
-                              width - areax, areay, areax, height - areay,
+                              0, topheight,
+                              rightwidth, height - topheight - bottomheight,
                               graph->axis_right);
+    gwy_axis_draw_on_drawable(pixmap, gc,
+                              width - leftwidth, topheight, 
+                              leftwidth, height - topheight - bottomheight,
+                              graph->axis_left);
 
+    pixbuf = gdk_pixbuf_get_from_drawable(NULL,
+                                          pixmap,
+                                          cmap,
+                                          0, 0, 0, 0,
+                                          -1, -1);
+    gdk_pixbuf_save(pixbuf, filename, "png", NULL, NULL);
+    
 
     /*plot label*/
     
@@ -91,14 +100,6 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
 //                                           labelx, labely, labelw, labelh,
 //                                           graph->area->lab);
 
-    /*save pixmap*/
-    pixbuf = gdk_pixbuf_get_from_drawable(NULL,
-                                          pixmap,
-                                          cmap,
-                                          0, 0, 0, 0,
-                                          -1, -1);
-    gdk_pixbuf_savev(pixbuf, filename, "png", NULL, NULL, &error);
-    
 }
 
 void       

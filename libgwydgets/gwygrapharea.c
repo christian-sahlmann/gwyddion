@@ -461,10 +461,10 @@ gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
     gdk_gc_set_rgb_fg_color(gc, &fg);
     gdk_gc_set_line_attributes(gc, 1,
                                 GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
-    gdk_draw_line(drawable, gc, 0, 0, width-1, 0);
-    gdk_draw_line(drawable, gc, width-1, 0, width-1, height-1);
-    gdk_draw_line(drawable, gc, width-1, height-1, 0, height-1);
-    gdk_draw_line(drawable, gc, 0, height-1, 0, 0);
+    gdk_draw_line(drawable, gc, x, y, x + width-1, y);
+    gdk_draw_line(drawable, gc, x + width-1, y, x + width-1, y + height-1);
+    gdk_draw_line(drawable, gc, x + width-1, y + height-1, x, y + height-1);
+    gdk_draw_line(drawable, gc, x, y + height-1, x, y);
 
 }
 
