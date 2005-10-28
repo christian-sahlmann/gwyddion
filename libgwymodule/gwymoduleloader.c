@@ -458,6 +458,18 @@ gwy_module_lookup(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymoduleenums
+ * @title: gwymoduleenums
+ * @short_description: Common enumerations
+ **/
+
+/**
+ * SECTION:gwymoduleloader
+ * @title: gwymoduleloader
+ * @short_description: Basic module loader interface
+ **/
+
+/**
  * GWY_MODULE_ABI_VERSION:
  *
  * Gwyddion module ABI version.

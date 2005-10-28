@@ -384,6 +384,16 @@ _gwy_process_func_remove(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymodule-process
+ * @title: gwymodule-process
+ * @short_description: Data processing modules
+ *
+ * Data processing modules implement the actual ability to do something useful
+ * with data. They reigster functions that get a #GwyContainer with data
+ * and either modify it or create a new data from it.
+ **/
+
+/**
  * GwyProcessFuncInfo:
  * @name: An unique data processing function name.
  * @menu_path: A path under "/Data Process" where the function should appear.

@@ -266,6 +266,15 @@ gwy_tool_func_get_tooltip(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymodule-tool
+ * @title: gwymodule-tool
+ * @short_description: Interactive tool modules
+ *
+ * Tool modules implement interactive tools that work directly on data
+ * windows.
+ **/
+
+/**
  * GwyToolFuncInfo:
  * @name: An unique tool function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).

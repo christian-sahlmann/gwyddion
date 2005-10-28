@@ -562,6 +562,21 @@ _gwy_file_func_remove(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymodule-file
+ * @title: gwymodule-file
+ * @short_description: File loading and saving modules
+ *
+ * File modules implement file loading, saving and file type detection
+ * functions.  Not all fuctions has to be implemented, a file module can be
+ * import-only or export-only.  If it does not implement file type detection,
+ * files of this type can be read/written only on user's explicite request.
+ *
+ * For file module writers, the only useful function here is the registration
+ * function gwy_file_func_register() and the signatures of particular file
+ * operations: #GwyFileDetectFunc, #GwyFileLoadFunc, and #GwyFileSaveFunc.
+ **/
+
+/**
  * GwyFileFuncInfo:
  * @name: File type function name (used for all detect/save/load functions).
  * @file_desc: Brief file type description.  This will appear in the menu

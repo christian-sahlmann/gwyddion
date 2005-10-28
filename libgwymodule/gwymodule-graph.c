@@ -308,6 +308,14 @@ _gwy_graph_func_remove(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymodule-graph
+ * @title: gwymodule-graph
+ * @short_description: Graph modules
+ *
+ * Graph modules implement operations on graphs, e.g., curve fitting.
+ **/
+
+/**
  * GwyGraphFuncInfo:
  * @name: An unique data graphing function name.
  * @menu_path: A path under "/Data Graph" where the function should appear.

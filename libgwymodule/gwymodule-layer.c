@@ -120,6 +120,15 @@ _gwy_layer_func_remove(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwymodule-layer
+ * @title: gwymodule-layer
+ * @short_description: #GwyDataView layer modules
+ *
+ * Layer modules implement #GwyDataView layers, corresponding to different
+ * kinds of selections.
+ **/
+
+/**
  * GwyLayerFuncInfo:
  * @name: An unique data layer type name (GwyLayerSomething is preferred).
  * @type: The type as obtained from gwy_layer_something_get_type().
