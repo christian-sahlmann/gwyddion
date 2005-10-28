@@ -1415,7 +1415,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     size = (orientation == GWY_ORIENTATION_HORIZONTAL) ? width : height;
     g_return_if_fail(col >= 0 && row >= 0
                      && width >= 1 && height >= 1
-                     && size >= 8
+                     && size >= 4
                      && col + width <= xres
                      && row + height <= yres);
     g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
