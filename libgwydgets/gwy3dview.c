@@ -1564,8 +1564,6 @@ gwy_3d_view_realize(GtkWidget *widget)
     /* Get PangoFT2 context. */
     gwy3dview->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
     g_object_ref(gwy3dview->ft2_font_map);
-    pango_ft2_font_map_set_resolution
-                         (PANGO_FT2_FONT_MAP(gwy3dview->ft2_font_map), 72, 72);
     gwy3dview->ft2_context = pango_ft2_font_map_create_context
                                  (PANGO_FT2_FONT_MAP(gwy3dview->ft2_font_map));
 }
@@ -2340,20 +2338,18 @@ gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
     guint8 *row, *row_end;
     int i;
 
-    pango_layout_get_extents(layout, NULL, &logical_rect);
+    pango_layout_get_pixel_extents(layout, NULL, &logical_rect);
     if (logical_rect.width == 0 || logical_rect.height == 0)
         return;
 
-    bitmap.rows = PANGO_PIXELS(logical_rect.height);
-    bitmap.width = PANGO_PIXELS(logical_rect.width);
+    bitmap.rows = logical_rect.height;
+    bitmap.width = logical_rect.width;
     bitmap.pitch = bitmap.width;
-    bitmap.buffer = g_malloc(bitmap.rows * bitmap.width);
-    bitmap.num_grays = 256;
     bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
+    bitmap.num_grays = 256;
+    bitmap.buffer = g_malloc0(bitmap.rows * bitmap.pitch);
 
-    memset(bitmap.buffer, 0, bitmap.rows * bitmap.width);
-    pango_ft2_render_layout(&bitmap, layout,
-                            PANGO_PIXELS(-logical_rect.x), 0);
+    pango_ft2_render_layout(&bitmap, layout, -logical_rect.x, 0);
 
     pixels = g_malloc(bitmap.rows * bitmap.width * 4);
     p = (guint32 *)pixels;
@@ -2463,9 +2459,9 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
     /* TODO: use Pango to rotate text, after Pango is capable doing it */
 
     /* Text position */
-    pango_layout_get_extents(layout, NULL, &logical_rect);
-    text_w = PANGO_PIXELS(logical_rect.width);
-    text_h = PANGO_PIXELS(logical_rect.height);
+    pango_layout_get_pixel_extents(layout, NULL, &logical_rect);
+    text_w = logical_rect.width;
+    text_h = logical_rect.height;
 
     glRasterPos3f(raster_x, raster_y, raster_z);
     glBitmap(0, 0, 0, 0, displacement_x, displacement_y, (GLubyte *)&hlp);

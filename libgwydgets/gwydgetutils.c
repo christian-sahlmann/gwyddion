@@ -569,6 +569,8 @@ gwy_get_pango_ft2_font_map(gboolean unref)
 
     ft2_font_map = pango_ft2_font_map_new();
     gwy_debug_objects_creation(G_OBJECT(ft2_font_map));
+    pango_ft2_font_map_set_resolution(PANGO_FT2_FONT_MAP(ft2_font_map),
+                                      72, 72);
 
     return ft2_font_map;
 }
