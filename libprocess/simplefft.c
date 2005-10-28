@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include <math.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/simplefft.h>
 
 typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
@@ -31,7 +31,7 @@ typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
  * @im_in: Imaginary part of input data.
  * @re_out: Real part of output data.
  * @im_out: Imaginary part of output data.
- * @n: Number of data points.
+ * @n: Number of data points.  It must be a power of 2.
  *
  * Performs FST algorithm.
  **/
@@ -173,5 +173,18 @@ gwy_fft_window(gdouble *data,
     if (windowings[windowing])
         gwy_fft_mult(data, n, windowings[windowing]);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:simplefft
+ * @title: simplefft
+ * @short_description: Simple FFT algorithm.
+ *
+ * The simple one-dimensional FFT algorithm gwy_fft_hum() is used as a fallback
+ * by other functions when better implementation (FFTW3) is not available.
+ *
+ * It works only on data sizes that are powers of 2.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -23,8 +23,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 /**
  * gwy_interpolation_get_dval:
  * @x: requested value coordinate
@@ -206,7 +204,17 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
     return w1*data[l-1] + w2*data[l] + w3*data[l+1] + w4*data[l+2];
 }
 
-/***** Documentation *******************************************************/
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:interpolation
+ * @title: interpolation
+ * @short_description: General interpolation functions.
+ *
+ * Data interpolation is usually pixel-like in Gwyddion, not function-like.
+ * That means the contribution of individual data saples is preserved on
+ * scaling.
+ **/
 
 /* Maple source of Hornerization.
 

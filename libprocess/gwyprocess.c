@@ -48,5 +48,17 @@ gwy_process_type_init(void)
     types_initialized |= 1;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyprocess
+ * @title: gwyprocess
+ * @short_description: Base functions.
+ *
+ * Gwyddion classes has to be initialized before they can be safely
+ * deserialized. The function gwy_process_type_init() performs this
+ * initialization.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

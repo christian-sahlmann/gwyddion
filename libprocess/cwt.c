@@ -22,8 +22,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/cwt.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 gdouble
 gwy_cwt_wfunc_2d(gdouble scale,
                  gdouble mval,
@@ -54,5 +52,13 @@ gwy_cwt_wfunc_2d(gdouble scale,
     }
     return 1.0;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:cwt
+ * @title: cwt
+ * @short_description: Continuous Wavelet Transform
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

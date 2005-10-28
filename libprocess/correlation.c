@@ -25,9 +25,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/inttrans.h>
 
-#include <stdio.h>
-/* INTERPOLATION: New (not applicable). */
-
 /**
  * gwy_data_field_get_correlation_score:
  * @data_field: A data field.
@@ -320,8 +317,8 @@ gwy_data_field_crosscorrelate(GwyDataField *data_field1,
                               GwyDataField *data_field2, GwyDataField *x_dist,
                               GwyDataField *y_dist, GwyDataField *score,
                               gint search_width, gint search_height,
-                              G_GNUC_UNUSED gint window_width,
-                              G_GNUC_UNUSED gint window_height)
+                              gint window_width,
+                              gint window_height)
 {
     gint xres, yres, i, j, m, n;
     gint imax, jmax;
@@ -413,8 +410,8 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
                                         GwyDataField *y_dist,
                                         GwyDataField *score,
                                         gint search_width, gint search_height,
-                                        G_GNUC_UNUSED gint window_width,
-                                        G_GNUC_UNUSED gint window_height,
+                                        gint window_width,
+                                        gint window_height,
                                         GwyComputationStateType * state,
                                         gint *iteration)
 {
@@ -488,6 +485,14 @@ gwy_data_field_crosscorrelate_iteration(GwyDataField *data_field1,
     gwy_data_field_invalidate(x_dist);
     gwy_data_field_invalidate(y_dist);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:correlation
+ * @title: correlation
+ * @short_description: Correlation and crosscorrelation.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

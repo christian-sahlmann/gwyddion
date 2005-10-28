@@ -258,6 +258,12 @@ gwy_correlation_type_get_enum(void)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwyprocessenums
+ * @title: gwyprocessenums
+ * @short_description: Common enumerations.
+ **/
+
+/**
  * GwyTransformDirection:
  * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward (inverse) transform.
  * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.

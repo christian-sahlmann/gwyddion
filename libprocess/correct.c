@@ -26,8 +26,6 @@
 #include <libprocess/stats.h>
 #include <libprocess/correct.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
@@ -380,5 +378,13 @@ unrotate_refine_correction(GwyDataLine *derdist,
 
     return phi;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:correct
+ * @title: correct
+ * @short_description: Data correction
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

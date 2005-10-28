@@ -25,8 +25,6 @@
 #include <libprocess/datafield.h>
 #include <libprocess/level.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 /**
  * gwy_data_field_fit_plane:
  * @data_field: A data field.
@@ -697,5 +695,13 @@ gwy_data_field_local_plane_quantity(GwyDataField *data_field,
 
     return result;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:level
+ * @title: level
+ * @short_description: Leveling and background removal.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

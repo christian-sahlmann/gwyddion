@@ -21,8 +21,6 @@
 #include "config.h"
 #include <libprocess/arithmetic.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
@@ -263,5 +261,13 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     else
         gwy_data_field_invalidate(result);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:arithmetic
+ * @title: arithmetic
+ * @short_description: Arithmetic opetations on data fields.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

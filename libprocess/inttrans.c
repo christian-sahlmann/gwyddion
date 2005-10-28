@@ -24,8 +24,6 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/cwt.h>
 
-/* INTERPOLATION: New (not applicable). */
-
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
                                                   gdouble scale,
@@ -542,5 +540,11 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 }
 
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:inttrans
+ * @title: inttrans
+ * @short_description: Two-dimensional integral transforms.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

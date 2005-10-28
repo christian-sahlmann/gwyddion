@@ -31,8 +31,6 @@
 
 #define GWY_DATA_FIELD_TYPE_NAME "GwyDataField"
 
-/* INTERPOLATION: New */
-
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
 #define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
@@ -2432,6 +2430,17 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
 }
 
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:datafield
+ * @title: GwyDataField
+ * @short_description: Two-dimensional data representation.
+ *
+ * #GwyDataField is an object that is used for representation of all
+ * two-dimensional data matrices. Most of the basic data handling and
+ * processing functions in Gwyddion are declared here as they are connected
+ * with #GwyDataField.
+ **/
 
 /**
  * GwyDataField:
