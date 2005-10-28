@@ -1123,7 +1123,6 @@ gwy_axis_formatticks(GwyAxis *a)
         range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));
     }
 
-    
     /*move exponents to axis label*/
     if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO)
     {
@@ -1157,18 +1156,27 @@ gwy_axis_formatticks(GwyAxis *a)
         if (format) 
             value /= format->magnitude;
 
-
         /*fill tick labels dependent to mode*/
-        if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
+        if (a->is_logarithmic) {
+            if (value >= 1 && value <= 1000)
+                g_string_printf(pmjt->ttext,"%d", (int)value);
+            else if (value < 1 && value > 1e-4)
+                g_string_printf(pmjt->ttext,"%.*f", (int)fabs(log10(value)), value);
+            else
+                g_string_printf(pmjt->ttext,"%.1E", value);
+        }
+        else {
+            if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
-        }
-        else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
-            g_string_printf(pmjt->ttext,"%.1E", value);
-            if (value == 0)
+            }
+            else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
+                g_string_printf(pmjt->ttext,"%.1E", value);
+                if (value == 0)
                 g_string_printf(pmjt->ttext,"0");
-        }
-        else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_INT) {
-            g_string_printf(pmjt->ttext,"%d", (int)(value+0.5));
+            }
+            else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_INT) {
+                g_string_printf(pmjt->ttext,"%d", (int)(value+0.5));
+            }
         }
 
         pango_layout_set_text(layout,  pmjt->ttext->str, pmjt->ttext->len);

@@ -41,6 +41,7 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     GError *error=NULL;
     PangoLayout *layout;
     PangoContext *context = NULL;
+    GdkVisual   *visual = gdk_visual_get_best ();
     
     /*create pixmap*/
     width = 600;
@@ -55,9 +56,8 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     labelx = width - areax - labelw - 5;
     labely = height - areay - labelh - 5;
  
-    cmap = gdk_colormap_new(gdk_visual_get_best_with_depth(8), TRUE);
-    pixmap = gdk_pixmap_new(NULL, width, height, 8);                                            
-    gdk_drawable_set_colormap(pixmap, cmap);
+    pixmap = gdk_pixmap_new(NULL, width, height, visual->depth);    //8                                        
+    cmap = gdk_colormap_new(visual, FALSE);
     
     /*plot area*/
     gc = gdk_gc_new(pixmap);
@@ -83,13 +83,13 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
 
     /*plot label*/
     
-    /*XXX context = pango_context_new(); this function is not known to compiler,
-     probably due to undefined PANGO_ENABLE_BACKEND, check this.*/
-    pango_context_set_font_description(context, graph->area->lab->label_font);
-    layout = pango_layout_new(context);
-    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
-                                           labelx, labely, labelw, labelh,
-                                           graph->area->lab);
+//    context = pango_context_new(); /*this function is not known to compiler,
+//     probably due to undefined PANGO_ENABLE_BACKEND, check this.*/
+//    pango_context_set_font_description(context, graph->area->lab->label_font);
+//    layout = pango_layout_new(context);
+//    gwy_graph_label_draw_label_on_drawable(pixmap, gc, layout,
+//                                           labelx, labely, labelw, labelh,
+//                                           graph->area->lab);
 
     /*save pixmap*/
     pixbuf = gdk_pixbuf_get_from_drawable(NULL,
