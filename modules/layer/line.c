@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -433,7 +433,7 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
 
     if (i > -1)
         gwy_selection_get_object(layer->selection, i/2, xy);
-    /* FIXME: here is normally something like
+    /* here is normally something like
     if (i > -1 && xreal == xy[2] && yreal == xy[3])
         return FALSE;
        but we need to know which endpoint is moving...
