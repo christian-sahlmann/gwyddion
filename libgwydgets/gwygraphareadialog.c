@@ -38,6 +38,8 @@ enum {
     COLUMN_PIXBUF
 };
 
+/* TODO: create gwydgetenums.c similar to gwyprocessenums.c and move things
+ * like this there */
 static const GwyEnum curve_type[] = {
     { N_("Points"),          GWY_GRAPH_CURVE_POINTS      },
     { N_("Line"),            GWY_GRAPH_CURVE_LINE        },
