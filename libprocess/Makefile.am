@@ -111,10 +111,3 @@ gwyprocesstypes.c: $(enum_headers) gwyprocesstypes.c.template
 	&& rm -f gwyprocesstypes.c.xgen
 endif
 
-#noinst_PROGRAMS = test
-#
-#test_SOURCES = \
-#	test.c
-#test_LDADD = libgwyprocess.la \
-#	$(libgwyddion)
-
