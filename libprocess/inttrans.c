@@ -31,6 +31,98 @@ static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
 static gdouble  edist                            (gint xc1, gint yc1,
                                                   gint xc2, gint yc2);
 
+/*#ifdef HAVE_FFTW3*/
+/* Good FFTW array sizes for extended and resampled arrays.
+ *
+ * Since extending and resampling always involves an O(N) part -- N being the
+ * extended array size -- that may even be dominant, it isn't wise to use the
+ * fastest possible FFT if it requires considerably larger array.  Following
+ * numbers represent a reasonable compromise tested on a few platforms */
+static const guint16 nice_fftw_num[] = {
+       18,    20,    22,    24,    25,    27,    28,    30,    32,    33,
+       35,    36,    40,    42,    44,    72,    75,    77,    81,    84,
+       88,    90,    96,    98,    99,   100,   105,   108,   110,   112,
+      120,   126,   128,   132,   135,   140,   144,   150,   154,   160,
+      165,   168,   175,   176,   180,   189,   196,   198,   200,   210,
+      216,   220,   224,   225,   231,   240,   243,   250,   252,   256,
+      264,   270,   275,   280,   288,   294,   297,   300,   308,   315,
+      320,   324,   330,   336,   343,   350,   352,   360,   375,   384,
+      385,   396,   400,   405,   420,   432,   441,   448,   450,   462,
+      480,   486,   490,   495,   500,   504,   512,   528,   540,   550,
+      576,   588,   594,   600,   616,   630,   640,   648,   672,   675,
+      686,   700,   704,   720,   729,   735,   750,   768,   770,   784,
+      792,   800,   810,   825,   840,   864,   896,   900,   924,   960,
+      972,   980,   990,  1000,  1008,  1024,  1050,  1056,  1080,  1100,
+     1120,  1152,  1155,  1176,  1200,  1215,  1232,  1280,  1296,  1320,
+     1344,  1350,  1400,  1408,  1440,  1470,  1536,  1568,  1575,  1584,
+     1620,  1680,  1728,  1760,  1792,  1800,  1920,  2048,  2058,  2100,
+     2112,  2160,  2240,  2250,  2304,  2310,  2352,  2400,  2430,  2464,
+     2520,  2560,  2592,  2688,  2700,  2744,  2800,  2816,  2880,  3072,
+     3136,  3200,  3240,  3360,  3456,  3520,  3584,  3600,  3645,  3840,
+     4096,  4116,  4200,  4224,  4320,  4480,  4608,  4704,  4800,  4860,
+     5120,  5184,  5376,  5400,  5488,  5632,  5760,  6144,  6272,  6400,
+     6480,  6720,  6750,  6912,  7168,  7200,  7680,  7776,  7840,  8000,
+     8064,  8192,  8232,  8400,  8448,  8640,  8960,  9216,  9408,  9600,
+     9720,  9800, 10080, 10240, 10368, 10560, 10752, 10800, 10976, 11088,
+    11520, 11760, 12288, 12544, 12600, 12800, 12960, 13200, 13440, 13824,
+    14080, 14112, 14336, 14400, 15360, 15552, 15680, 16000, 16128, 16200,
+    16384, 16464, 16632, 16800, 16875, 17280, 17600, 17920, 18432, 18480,
+    19200, 19440, 19600, 19712, 19800, 20160, 20250, 20480, 20736, 21120,
+    21504, 21600, 21870, 22050, 22176, 22400, 23040, 23100, 23328, 23520,
+    23760, 24000, 24192, 24300, 24576, 24640, 24696, 24750, 25088, 25200,
+    25344, 25600, 25920, 26400, 26880, 27000, 27648, 27720, 28160, 28672,
+    28800, 29160, 29400, 29568, 30000, 30720, 31104, 31680, 32000, 32256,
+    32400, 33000, 33264, 33600, 33792, 34560, 34992, 35000, 35200, 35280,
+    35640, 35840, 36000, 36450, 36864, 36960, 37632, 37800, 38016, 38400,
+    38880, 39424, 39600, 40000, 40320, 40500, 40960, 41472, 42000, 42240,
+    42336, 42525, 43008, 43200, 43218, 43740, 43904, 44000, 44352, 44550,
+    44800, 45000, 45056, 45360, 46080, 46656, 47520, 48000, 48384, 48600,
+    49152, 49280, 49392, 49500, 50176, 50400, 50625, 50688, 51840, 52800,
+    52920, 53760, 54000, 54432, 54675, 55296, 55440, 56250, 57600, 58320,
+    58800, 59400, 60000, 60480, 60750, 61440, 61740, 62208, 63000, 63360,
+    64800,
+};
+
+/* Indices of powers of 2 in nice_fftw_numbers[], starting from 2^4 */
+static const guint nice_fftw_num_2n[] = {
+    0, 8, 15, 32, 59, 96, 135, 167, 200, 231, 270, 331
+};
+
+/**
+ * gwy_fft_find_nice_size:
+ * @size: Array size.  Currently it must not be larger than a hard-coded
+ *        maximum (64800) which should be good enough for all normal uses.
+ *
+ * Finds a nice-for-FFT array size.
+ *
+ * XXX XXX XXX Until the transition to FFTW is finished, it always returns
+ * number nice for FFTW, ignoring simplefft.
+ *
+ * The `nice' means three properties are guaranteed: it is greater than or
+ * equal to @size; it can be directly used with current FFT backend without
+ * scaling (<link linkend="libgwyprocess-simplefft">simplefft</link> can only
+ * handle powers of 2); and the transform is fast (this is important for FFTW
+ * backend which can handle all array sizes, but performance may suffer).
+ *
+ * Returns: A nice FFT array size.
+ **/
+gint
+gwy_fft_find_nice_size(gint size)
+{
+    gint x, p2;
+
+    if (size <= 1 << 4)
+        return size;
+    g_return_val_if_fail(size <= nice_fftw_num[G_N_ELEMENTS(nice_fftw_num)-1],
+                         size);
+    for (x = size >> 4, p2 = 0; x; p2++, x = x >> 1)
+        ;
+    for (x = nice_fftw_num_2n[p2-1]; nice_fftw_num[x] < size; x++)
+        ;
+    return nice_fftw_num[x];
+}
+/*#endif*/  /* HAVE_FFTW3 */
+
 /**
  * gwy_data_field_2dfft:
  * @ra: Real input data field

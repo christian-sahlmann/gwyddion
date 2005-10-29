@@ -26,6 +26,7 @@
 
 G_BEGIN_DECLS
 
+gint gwy_fft_find_nice_size       (gint size);
 #ifndef GWY_DISABLE_DEPRECATED
 gint gwy_data_field_get_fft_res   (gint data_res);
 #endif
