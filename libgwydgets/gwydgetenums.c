@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
-#include <libprocess/gwydgetenums.h>
+#include <libgwydgets/gwydgetenums.h>
 
 /**
  * GwyGraphCurveType:
