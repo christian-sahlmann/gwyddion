@@ -40,15 +40,13 @@ static gdouble  edist                            (gint xc1, gint yc1,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- * @preserverms: preserve RMS while windowing
- * @level: level data before computation
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
  *
- * Computes 2D FFT using a specified 1D alogrithm.
+ * Computes 2D Fast Fourier Transform.
  *
- * This can be for example "gwy_data_line_fft_hum", which is the
- * simplest algoritm avalilable. If requested a windowing
- * and/or leveling is applied to preprocess data to obtain
- * reasonable results.
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
  **/
 void
 gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
@@ -84,13 +82,13 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- * @preserverms: preserve RMS while windowing
- * @level: level data before computation
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
  *
- * Computes 2D FFT using a specified 1D algorithm.
+ * Computes 2D Fast Fourier Transform of real data.
  *
- * As the input is only real, the computation can be a little bit
- * faster.
+ * As the input is only real, the computation can be a somewhat faster
+ * than gwy_data_field_2dfft().
  **/
 void
 gwy_data_field_2dfft_real(GwyDataField *ra, GwyDataField *rb,
@@ -136,10 +134,12 @@ gwy_data_field_get_fft_res(gint data_res)
 
 /**
  * gwy_data_field_2dfft_humanize:
- * @a: A data field
+ * @data_field: A data field.
  *
- * Swap top-left, top-right, bottom-left and bottom-right
- * squares to obtain a humanized 2D FFT output with 0,0 in the center.
+ * Rearranges 2D FFT output to a human-friendly form.
+ *
+ * Top-left, top-right, bottom-left and bottom-right sub-squares are swapped
+ * to obtain a humanized 2D FFT output with (0,0) in the center.
  **/
 void
 gwy_data_field_2dfft_humanize(GwyDataField *a)
@@ -171,12 +171,13 @@ gwy_data_field_2dfft_humanize(GwyDataField *a)
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- * @preserverms: preserve RMS while windowing
- * @level: level data before computation
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
  *
- * Transform all rows in the data field using 1D algorithm
- * and other parameters specified.
+ * Transforms all rows in a data field with Fast Fourier Transform.
  *
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
  **/
 void
 gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
@@ -228,12 +229,13 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- * @preserverms: preserve RMS while windowing
- * @level: level data before computation
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
  *
- * Transform all columns in the data field using 1D algorithm
- * and other parameters specified.
+ * Transforms all columns in a data field with Fast Fourier Transform.
  *
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
  **/
 void
 gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
@@ -283,13 +285,13 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- * @preserverms: preserve RMS while windowing
- * @level: level data before computation
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
  *
- * Transform all rows in the data field using 1D algorithm
- * and other parameters specified. Only real input field
- * is used, so computation can be faster.
+ * Transforms all rows in a data real field with Fast Fourier Transform.
  *
+ * As the input is only real, the computation can be a somewhat faster
+ * than gwy_data_field_xfft().
  **/
 void
 gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
