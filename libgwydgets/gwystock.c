@@ -670,7 +670,7 @@ free_the_icon_factory(void)
  * GWY_STOCK_SCARS
  *
  * The "Scars" stock icon.
- * <inlinegraphic fileref="gwy_mask_scars-24.png" format="PNG"/>
+ * <inlinegraphic fileref="gwy_scars-24.png" format="PNG"/>
  **/
 
 /**
