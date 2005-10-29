@@ -1600,14 +1600,4 @@ gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
 
 /************************** Documentation ****************************/
 
-/**
- * GwyAxisScaleFormat:
- * @GWY_AXIS_SCALE_FORMAT_FLOAT: Floating point format.
- * @GWY_AXIS_SCALE_FORMAT_EXP: Exponential (`scienfitic') format.
- * @GWY_AXIS_SCALE_FORMAT_INT: Integer format.
- * @GWY_AXIS_SCALE_FORMAT_AUTO: Automatical format.
- *
- * Labeled axis tick mark format.
- **/
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

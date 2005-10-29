@@ -86,6 +86,7 @@ libgwydgets_la_SOURCES = \
 	gwydataviewlayer.c \
 	gwydatawindow.c \
 	gwydgets.c \
+	gwydgetenums.c \
 	gwydgettypes.c \
 	gwydgetutils.c \
 	gwygraphcurvemodel.c \

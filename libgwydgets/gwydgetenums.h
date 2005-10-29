@@ -22,6 +22,7 @@
 #define __GWY_GWYDGET_ENUMS_H__
 
 #include <glib/gmacros.h>
+#include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
 
@@ -116,10 +117,10 @@ typedef enum {
 } GwyGraphLabelPosition;
 
 typedef enum {
-    GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN = 0,
+    GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN   = 0,
     GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT = 1,
-    GWY_GRAPH_MODEL_EXPORT_ASCII_CSV = 2,
-    GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN = 3
+    GWY_GRAPH_MODEL_EXPORT_ASCII_CSV     = 2,
+    GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN  = 3
 } GwyGraphModelExportStyle;
 
 typedef enum {
@@ -129,12 +130,13 @@ typedef enum {
     GWY_LAYER_BASIC_RANGE_ADAPT
 } GwyLayerBasicRangeType;
 
-typedef enum
-{
-    GWY_CURVE_TYPE_LINEAR,       /* linear interpolation */
-    GWY_CURVE_TYPE_SPLINE,       /* spline interpolation */
-    GWY_CURVE_TYPE_FREE          /* free form curve */
+typedef enum {
+    GWY_CURVE_TYPE_LINEAR,
+    GWY_CURVE_TYPE_SPLINE,
+    GWY_CURVE_TYPE_FREE
 } GwyCurveType;
+
+const GwyEnum* gwy_graph_curve_type_get_enum(void) G_GNUC_CONST;
 
 G_END_DECLS
 

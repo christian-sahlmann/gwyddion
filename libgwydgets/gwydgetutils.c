@@ -628,22 +628,4 @@ gwy_gdk_cursor_free_or_unref(GdkCursor **cursor)
  * Gets a properly rounded integer value from an adjustment.
  **/
 
-/**
- * GwyHScaleStyle:
- * @GWY_HSCALE_DEFAULT: Default label, hscale, spinbutton, and units widget
- *                      row.
- * @GWY_HSCALE_LOG: Hscale is logarithmic.
- * @GWY_HSCALE_SQRT: Hscale is square root.
- * @GWY_HSCALE_NO_SCALE: There is no hscale.
- * @GWY_HSCALE_WIDGET: An user-specified widget is used in place of hscale and
- *                     spinbutton.
- * @GWY_HSCALE_WIDGET_NO_EXPAND: An user-specified widget is used in place of
- *                               hscale and spinbutton, and it is left-aligned
- *                               instead of taking all the alloted space.
- * @GWY_HSCALE_CHECK: The label is actually a check button that controls
- *                    sensitivity of the row.
- *
- * Options controlling gwy_table_attach_hscale() behaviour.
- **/
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

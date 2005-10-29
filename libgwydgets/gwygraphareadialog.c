@@ -38,18 +38,6 @@ enum {
     COLUMN_PIXBUF
 };
 
-/* TODO: create gwydgetenums.c similar to gwyprocessenums.c and move things
- * like this there */
-static const GwyEnum curve_type[] = {
-    { N_("Points"),          GWY_GRAPH_CURVE_POINTS      },
-    { N_("Line"),            GWY_GRAPH_CURVE_LINE        },
-    { N_("Line + points"),   GWY_GRAPH_CURVE_LINE_POINTS },
-    { N_("Hidden"),          GWY_GRAPH_CURVE_HIDDEN      },
-};
-
-
-
-
 static void       gwy_graph_area_dialog_class_init (GwyGraphAreaDialogClass *klass);
 static void       gwy_graph_area_dialog_init       (GwyGraphAreaDialog *dialog);
 static void       gwy_graph_area_dialog_finalize   (GObject *object);
@@ -167,7 +155,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     dialog->curvetype_menu
-        = gwy_enum_combo_box_new(curve_type, G_N_ELEMENTS(curve_type),
+        = gwy_enum_combo_box_new(gwy_graph_curve_type_get_enum(), -1,
                                  G_CALLBACK(curvetype_changed_cb), dialog,
                                  0, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), dialog->curvetype_menu);
