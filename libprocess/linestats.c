@@ -22,6 +22,7 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/inttrans.h>
 #include <libprocess/linestats.h>
 
 /**

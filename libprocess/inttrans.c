@@ -19,11 +19,24 @@
  */
 
 #include "config.h"
+
+#ifdef HAVE_FFTW3
+#include <fftw3.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/inttrans.h>
+#include <libprocess/linestats.h>
+#include <libprocess/simplefft.h>
 #include <libprocess/cwt.h>
 
+static void     gwy_data_line_fft_hum      (GwyTransformDirection direction,
+                                            GwyDataLine *rsrc,
+                                            GwyDataLine *isrc,
+                                            GwyDataLine *rdest,
+                                            GwyDataLine *idest,
+                                            GwyInterpolationType interpolation);
 static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
                                                   GwyDataField *imag_field,
                                                   gdouble scale,
@@ -122,6 +135,184 @@ gwy_fft_find_nice_size(gint size)
     return nice_fftw_num[x];
 }
 /*#endif*/  /* HAVE_FFTW3 */
+
+/**
+ * gwy_data_line_fft_hum:
+ * @direction: FFT direction (1 or -1).
+ * @rsrc: Real input.
+ * @isrc: Imaginary input.
+ * @rdest: Real output.
+ * @idest: Imaginary output.
+ * @interpolation: interpolation used
+ *
+ * Performs 1D FFT using the alogrithm ffthum (see simplefft.h).
+ * Resamples data to closest 2^N and then resamples result back.
+ * Resample data by yourself if you want further FFT processing as
+ * resampling of the FFT spectrum can destroy some information in it.
+ **/
+#ifdef HAVE_FFTW3
+static void
+gwy_data_line_fft_hum(GwyTransformDirection direction,
+                      GwyDataLine *rsrc, GwyDataLine *isrc,
+                      GwyDataLine *rdest, GwyDataLine *idest,
+                      GwyInterpolationType interpolation)
+{
+    gint newres, oldres, i;
+    fftw_complex *in, *out;
+    fftw_plan plan;
+    gdouble q;
+
+    newres = gwy_fft_find_nice_size(rsrc->res);
+    oldres = rsrc->res;
+    q = sqrt(newres);
+
+    gwy_data_line_resample(rsrc, newres, interpolation);
+    gwy_data_line_resample(isrc, newres, interpolation);
+    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+
+    in = fftw_malloc(sizeof(fftw_complex) * newres);
+    out = fftw_malloc(sizeof(fftw_complex) * newres);
+    plan = fftw_plan_dft_1d(newres, in, out, direction, FFTW_MEASURE);
+    for (i = 0; i < newres; i++) {
+        in[i][0] = rsrc->data[i];
+        in[i][1] = isrc->data[i];
+    }
+    fftw_execute(plan);
+    for (i = 0; i < newres; i++) {
+        rdest->data[i] = out[i][0]/q;
+        idest->data[i] = out[i][1]/q;
+    }
+    fftw_destroy_plan(plan);
+    fftw_free(in);
+    fftw_free(out);
+
+    /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
+     after all the processings*/
+    gwy_data_line_resample(rsrc, oldres, interpolation);
+    gwy_data_line_resample(isrc, oldres, interpolation);
+    gwy_data_line_resample(rdest, oldres, interpolation);
+    gwy_data_line_resample(idest, oldres, interpolation);
+}
+#else
+static void
+gwy_data_line_fft_hum(GwyTransformDirection direction,
+                      GwyDataLine *rsrc, GwyDataLine *isrc,
+                      GwyDataLine *rdest, GwyDataLine *idest,
+                      GwyInterpolationType interpolation)
+{
+    gint newres, oldres;
+
+    /*find the next power of two*/
+    newres = gwy_data_field_get_fft_res(rsrc->res);
+    oldres = rsrc->res;
+
+    gwy_data_line_resample(rsrc, newres, interpolation);
+    gwy_data_line_resample(isrc, newres, interpolation);
+    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+
+    gwy_fft_hum(direction, rsrc->data, isrc->data, rdest->data, idest->data,
+                newres);
+
+    /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
+     after all the processings*/
+    gwy_data_line_resample(rsrc, oldres, interpolation);
+    gwy_data_line_resample(isrc, oldres, interpolation);
+    gwy_data_line_resample(rdest, oldres, interpolation);
+    gwy_data_line_resample(idest, oldres, interpolation);
+}
+#endif
+
+/**
+ * gwy_data_line_fft:
+ * @rsrc: Real input data line.
+ * @isrc: Imaginary input data line.
+ * @rdest: Real output data line.
+ * @idest: Imaginary output data line.
+ * @windowing: Windowing mode.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS value while windowing.
+ * @level: %TRUE to level line before computation.
+ *
+ * Performs Fast Fourier transform using a given algorithm.
+ *
+ * A windowing or data leveling can be applied if requested.
+ **/
+void
+gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
+                  GwyDataLine *rdest, GwyDataLine *idest,
+                  GwyWindowingType windowing,
+                  GwyTransformDirection direction,
+                  GwyInterpolationType interpolation,
+                  gboolean preserverms,
+                  gboolean level)
+{
+    gint i, n;
+    gdouble rmsa, rmsb;
+    GwyDataLine *multra, *multia;
+    gdouble coefs[4];
+
+    g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
+    g_return_if_fail(GWY_IS_DATA_LINE(rdest));
+    g_return_if_fail(GWY_IS_DATA_LINE(idest));
+
+    gwy_debug("");
+    if (isrc->res != rsrc->res) {
+        gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
+        gwy_data_line_clear(isrc);
+    }
+    if (rdest->res != rsrc->res)
+        gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
+    if (idest->res != rsrc->res)
+        gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
+
+    if (level == TRUE) {
+        n = 1;
+        gwy_data_line_fit_polynom(rsrc, n, coefs);
+        gwy_data_line_subtract_polynom(rsrc, n, coefs);
+        gwy_data_line_fit_polynom(isrc, n, coefs);
+        gwy_data_line_subtract_polynom(isrc, n, coefs);
+    }
+
+    gwy_data_line_clear(rdest);
+    gwy_data_line_clear(idest);
+
+
+    if (preserverms == TRUE) {
+        multra = gwy_data_line_duplicate(rsrc);
+        multia = gwy_data_line_duplicate(isrc);
+
+        rmsa = gwy_data_line_get_rms(multra);
+
+        gwy_fft_window(multra->data, multra->res, windowing);
+        gwy_fft_window(multia->data, multia->res, windowing);
+
+        gwy_data_line_fft_hum(direction, multra, multia, rdest, idest,
+                              interpolation);
+
+        rmsb = 0;
+        for (i = 0; i < multra->res/2; i++)
+            rmsb += 2*(rdest->data[i]*rdest->data[i]
+                       + idest->data[i]*idest->data[i])
+                    /(rsrc->res*rsrc->res);
+        rmsb = sqrt(rmsb);
+
+        gwy_data_line_multiply(rdest, rmsa/rmsb);
+        gwy_data_line_multiply(idest, rmsa/rmsb);
+        g_object_unref(multra);
+        g_object_unref(multia);
+    }
+    else {
+        gwy_fft_window(rsrc->data, rsrc->res, windowing);
+        gwy_fft_window(isrc->data, rsrc->res, windowing);
+
+        gwy_data_line_fft_hum(direction, rsrc, isrc, rdest, idest,
+                              interpolation);
+    }
+}
 
 /**
  * gwy_data_field_2dfft:
@@ -638,7 +829,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 /**
  * SECTION:inttrans
  * @title: inttrans
- * @short_description: Two-dimensional integral transforms
+ * @short_description: FFT and other integral transforms
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

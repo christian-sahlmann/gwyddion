@@ -30,6 +30,15 @@ gint gwy_fft_find_nice_size       (gint size);
 #ifndef GWY_DISABLE_DEPRECATED
 gint gwy_data_field_get_fft_res   (gint data_res);
 #endif
+void gwy_data_line_fft            (GwyDataLine *rsrc,
+                                   GwyDataLine *isrc,
+                                   GwyDataLine *rdest,
+                                   GwyDataLine *idest,
+                                   GwyWindowingType windowing,
+                                   GwyTransformDirection direction,
+                                   GwyInterpolationType interpolation,
+                                   gboolean preserverms,
+                                   gboolean level);
 void gwy_data_field_2dfft         (GwyDataField *ra,
                                    GwyDataField *ia,
                                    GwyDataField *rb,

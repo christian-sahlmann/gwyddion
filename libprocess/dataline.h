@@ -143,21 +143,6 @@ void           gwy_data_line_line_rotate           (GwyDataLine *data_line,
                                                     gint interpolation);
 gdouble        gwy_data_line_get_der               (GwyDataLine *data_line,
                                                     gint i);
-void           gwy_data_line_fft           (GwyDataLine *rsrc,
-                                            GwyDataLine *isrc,
-                                            GwyDataLine *rdest,
-                                            GwyDataLine *idest,
-                                            GwyWindowingType windowing,
-                                            GwyTransformDirection direction,
-                                            GwyInterpolationType interpolation,
-                                            gboolean preserverms,
-                                            gboolean level);
-void           gwy_data_line_fft_hum       (GwyTransformDirection direction,
-                                            GwyDataLine *rsrc,
-                                            GwyDataLine *isrc,
-                                            GwyDataLine *rdest,
-                                            GwyDataLine *idest,
-                                            GwyInterpolationType interpolation);
 gdouble*       gwy_data_line_part_fit_polynom      (GwyDataLine *data_line,
                                                     gint n,
                                                     gdouble *coeffs,
