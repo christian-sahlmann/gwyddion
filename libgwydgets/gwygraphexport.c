@@ -52,7 +52,7 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
     rightwidth = (GTK_WIDGET(graph->axis_right))->allocation.width;
     leftwidth = (GTK_WIDGET(graph->axis_left))->allocation.width;
 
-    labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + leftwidth;
+    labelx = (GTK_WIDGET(graph->area->lab))->allocation.x + rightwidth;
     labely = (GTK_WIDGET(graph->area->lab))->allocation.y + topheight;
     labelw = (GWY_GRAPH_LABEL(graph->area->lab))->reqwidth;
     labelh = (GWY_GRAPH_LABEL(graph->area->lab))->reqheight;
@@ -70,7 +70,6 @@ void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                         width - rightwidth - leftwidth,
                                         height - topheight - bottomheight,
                                         graph->area);
-
 
     /*plot axis*/
     gwy_axis_draw_on_drawable(pixmap, gc,

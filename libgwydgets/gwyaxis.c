@@ -677,12 +677,12 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
             g_assert_not_reached();
             break;
         }
-        if ((specs->width-1 - xpos) < rect.width)
+        if ((specs->xmin + specs->width-1 - xpos) < rect.width)
             xpos = specs->xmin + specs->width-1 - rect.width;
         else if (xpos < 0)
             xpos = specs->xmin;
 
-        if ((specs->height-1 - ypos) < rect.height)
+        if ((specs->ymin + specs->height-1 - ypos) < rect.height)
             ypos = specs->ymin + specs->height-1 - rect.height;
         else if (ypos < 0)
             ypos = specs->ymin;

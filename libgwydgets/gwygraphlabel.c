@@ -264,7 +264,8 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     GwyGraphCurveModel *curvemodel;
     GwyGraphModel *model;
     PangoRectangle rect;
-    GdkColor fg;
+    GdkColor fg = { 0, 0, 0, 0 };
+    GdkColor color = { 0, 65535, 65535, 65535 };
 
     if (!label->graph_model) return;
     model = GWY_GRAPH_MODEL(label->graph_model);
@@ -273,13 +274,14 @@ gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
     frame_off = model->label_frame_thickness/2;
     ypos = 5 + frame_off;
 
-    /* FIXME: use Gtk+ theme */
-    fg.red = fg.green = fg.blue = 0;
+    gdk_gc_set_rgb_fg_color(gc, &color);
+    gdk_draw_rectangle(drawable, gc, TRUE, x, y, width, height);
+    gdk_gc_set_rgb_fg_color(gc, &fg);
 
     winx = x;
     winy = y;
-    winwidth = x + width;
-    winheight = y + height;
+    winwidth = width;
+    winheight = height;
 
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
