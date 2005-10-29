@@ -13,7 +13,6 @@ process_LTLIBRARIES = \
 	dwtanisotropy.la \
 	dwtdenoise.la \
 	edge.la \
-	entropy.la \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \
@@ -124,9 +123,6 @@ dwtdenoise_la_LIBADD = $(module_libadd)
 
 edge_la_SOURCES = edge.c
 edge_la_LIBADD = $(module_libadd)
-
-entropy_la_SOURCES = entropy.c
-entropy_la_LIBADD = $(module_libadd)
 
 facet_analysis_la_SOURCES = facet_analysis.c
 facet_analysis_la_LIBADD = $(module_libadd)
