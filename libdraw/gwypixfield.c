@@ -143,6 +143,18 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
     }
 }
 
+/**
+ * gwy_pixbuf_draw_data_field_adaptive:
+ * @pixbuf: A Gdk pixbuf to draw to.
+ * @data_field: A data field to draw.
+ * @gradient: A color gradient to draw with.
+ *
+ * Paints a data field to a pixbuf with a color gradient adaptively.
+ *
+ * The mapping from data field (minimum, maximum) range to gradient is
+ * nonlinear, deformed using inverse function to height density cummulative
+ * distribution.
+ **/
 void
 gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
                                     GwyDataField *data_field,
