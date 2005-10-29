@@ -19,9 +19,9 @@
  */
 
 #include "config.h"
-#include <math.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
@@ -41,8 +41,6 @@ typedef enum {
     GWY_FFT_OUTPUT_PHASE      = 5
 } GwyFFTOutputType;
 
-/* Data for this function.
- * (It looks a little bit silly with just one parameter.) */
 typedef struct {
     gboolean preserve;
     GwyInterpolationType interp;
@@ -266,30 +264,34 @@ fft(GwyContainer *data, GwyRunType run)
 static void
 set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
-    gint i, j;
-    gdouble rval, ival;
-    gint xres = gwy_data_field_get_xres(re);
-    gint yres = gwy_data_field_get_xres(re);
+    const gdouble *datare, *dataim;
+    gdouble *data;
+    gint xres, yres, i;
 
-    for (i = 0; i < xres; i++) {
-        for (j=0; j < yres; j++) {
-            rval = gwy_data_field_get_val(re, i, j);
-            ival = gwy_data_field_get_val(im, i, j);
-            gwy_data_field_set_val(target, i, j, sqrt(rval*rval + ival*ival));
-        }
-    }
+    xres = gwy_data_field_get_xres(re);
+    yres = gwy_data_field_get_xres(re);
+    datare = gwy_data_field_get_data_const(re);
+    dataim = gwy_data_field_get_data_const(im);
+    data = gwy_data_field_get_data(target);
+    for (i = xres*yres; i; i--, datare++, dataim++, data++)
+        *data = hypot(*datare, *dataim);
 }
 
 static void
 set_dfield_phase(GwyDataField *re, GwyDataField *im,
                  GwyDataField *target)
 {
-    gint i;
-    gint xres = gwy_data_field_get_xres(re);
-    gint yres = gwy_data_field_get_xres(re);
+    const gdouble *datare, *dataim;
+    gdouble *data;
+    gint xres, yres, i;
 
-    for (i = 0; i < (xres*yres); i++)
-        target->data[i] = atan2(im->data[i], re->data[i]);
+    xres = gwy_data_field_get_xres(re);
+    yres = gwy_data_field_get_xres(re);
+    datare = gwy_data_field_get_data_const(re);
+    dataim = gwy_data_field_get_data_const(im);
+    data = gwy_data_field_get_data(target);
+    for (i = xres*yres; i; i--, datare++, dataim++, data++)
+        *data = atan2(*dataim, *datare);
 }
 
 static gboolean
