@@ -76,4 +76,15 @@ gwy_statusbar_update_markup(GtkStatusbar *statusbar,
     gtk_label_set_markup(GTK_LABEL(statusbar->label), text);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwystatusbar
+ * @title: GwyStatusbar
+ * @short_description: Statusbar with Pango markup support
+ *
+ * This widget is completely identical to #GtkStatusbar except that it
+ * interprets Pango markup in its messages.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

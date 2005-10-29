@@ -710,4 +710,18 @@ gwy_layer_basic_changed(GwyPixmapLayer *pixmap_layer)
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(pixmap_layer));
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwylayer-basic
+ * @title: GwyLayerBasic
+ * @short_description: Display data colored with a gradient
+ * @see_also: #GwyDataView -- data display widget,
+ *            #GwyLayerMask -- display data as color mask,
+ *            #GwyGradient -- color gradient representation
+ *
+ * #GwyLayerBasic is a data view layer that can paint data with a false color
+ * gradient.  It is not normally usable outside a #GwyDataView.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

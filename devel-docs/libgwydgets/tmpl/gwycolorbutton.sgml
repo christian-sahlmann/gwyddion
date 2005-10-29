@@ -1,16 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyColorButton
+
 
 <!-- ##### SECTION Short_Description ##### -->
-A color displaying button
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This is GtkColorButton widget backported from Gtk+-2.4.  Or originally
-was, it does not have its own colors selection dialog any more, it's just an
-ordinary button displaying a color. You have to connect some callback to
-its "clicked" signal. And it uses <link linkend="GwyRGBA">GwyRGBA</link>
-instead of Gdk colors.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

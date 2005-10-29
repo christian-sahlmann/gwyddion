@@ -589,4 +589,25 @@ gwy_inventory_store_check_item(gpointer key,
     return TRUE;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyinventorystore
+ * @title: GwyInventoryStore
+ * @short_description: #GtkTreeModel wrapper around #GwyInventory
+ * @see_also: #GwyInventory -- the actual data container,
+ *            #GtkListStore, #GtkTreeStore -- Gtk+ tree model implementations
+ *
+ * #GwyInventoryStore is a simple adaptor class that wraps #GwyInventory in
+ * #GtkTreeModel interface.  It is list-only and has persistent iterators.  It
+ * offers no methods to manipulate items, this should be done on the underlying
+ * inventory.
+ *
+ * #GwyInventoryStore maps inventory item traits to virtual #GtkTreeModel
+ * columns.  Zeroth column is always of type %G_TYPE_POINTER and contains item
+ * itself.  It exists even if item don't export any traits.  Columns from 1
+ * onward are formed by item traits.  You can obtain column id of a named
+ * item trait with gwy_inventory_store_get_column_by_name().
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -519,4 +519,19 @@ gwy_color_button_get_property(GObject    *object,
     }
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwycolorbutton
+ * @title: GwyColorButton
+ * @short_description: A color displaying button
+ *
+ * This widget is somewhat similar to #GtkColorButton, or more likely
+ * #GimpColorButton.
+ *
+ * It does not have its own color selection dialog however, it's just an
+ * ordinary button displaying a color.  You have to connect some callback to
+ * its "clicked" signal.  Also it uses #GwyRGBA instead of #GdkColor.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

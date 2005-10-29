@@ -245,4 +245,15 @@ gwy_hruler_draw_pos(GwyRuler *ruler)
     }
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyhruler
+ * @title: GwyHRuler
+ * @short_description: Horizontal ruler, similar to #GtkRuler
+ * @see_also: #GwyVRuler -- vertical ruler
+ *
+ * Please see #GwyRuler for differences from #GtkHRuler.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -2829,4 +2829,30 @@ gwy_3d_view_set_min_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview,
 
 /************************** Documentation ****************************/
 
+/**
+ * SECTION:gwy3dview
+ * @title: Gwy3DView
+ * @short_description: OpenGL 3D data display
+ * @see_also: #Gwy3DWindow -- window combining 3D view with controls,
+ *            #GwyGLMaterial -- OpenGL materials
+ *
+ * #Gwy3DView displays a data field as a threedimensional heightfield using
+ * OpenGL. You can create a new 3D view for a data container with
+ * gwy_3d_view_new().  By default, it inherits properties like palette from
+ * <link linkend="GwyDataView">data view</link> settings, but supports separate
+ * settings -- see gwy_3d_view_set_palette() et al.
+ *
+ * #Gwy3DView allows the user to interactively rotate, scale, z-scale the data
+ * or move lights, depending on its <link linkend="Gwy3DMovement">movement
+ * state</link>. There are no controls provided for mode change, you have to
+ * provide some yourself and set the movement mode with
+ * gwy_3d_view_set_movement_type(). There are #GtkAdjustment's for each view
+ * parameter, you can fetch them with gwy_3d_view_get_rot_x_adjustment(),
+ * gwy_3d_view_get_rot_y_adjustment(), etc.
+ *
+ * You have initialize GtkGLExt with gtk_gl_init_check() and then Gwyddion's
+ * OpenGL with gwy_widgets_gl_init() before you can use #Gwy3DView.  These
+ * functions may not always succeed, see their description for more.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

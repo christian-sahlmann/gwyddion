@@ -268,4 +268,18 @@ gwy_vruler_draw_pos(GwyRuler *ruler)
     }
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyvruler
+ * @title: GwyVRuler
+ * @short_description: Vertical ruler, similar to #GtkRuler
+ * @see_also: #GwyHRuler -- horizontal ruler
+ *
+ * Please see #GwyRuler for differences from #GtkVRuler.
+ *
+ * A specific #GwyVRuler feature is that it's drawn vertically including text,
+ * like a rotated horizontal ruler.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

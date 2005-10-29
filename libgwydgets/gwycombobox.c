@@ -262,4 +262,62 @@ gwy_combo_box_metric_unit_new(GCallback callback,
     return combo;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwycombobox
+ * @title: gwycombobox
+ * @short_description: Combo box constructors
+ * @see_also: <link linkend="libgwydget-gwyradiobuttons">gwyradiobuttons</link>
+ *            -- radio button constructors
+ *
+ * Combo boxes can be easily constructed from #GwyEnum's with
+ * gwy_enum_combo_box_new().   Here's an example of construction of a combo
+ * box with three items:
+ * <informalexample><programlisting>
+ * typedef enum {
+ *     MY_ENUM_FOO, MY_ENUM_BAR, MY_ENUM_BAZ
+ * } MyEnum;
+ * <!-- Hello, gtk-doc! -->
+ * static GwyEnum my_enum_fields[] = {
+ *     { N_("Foo"), MY_ENUM_FOO },
+ *     { N_("Bar"), MY_ENUM_BAR },
+ *     { N_("Baz"), MY_ENUM_BAZ },
+ * };
+ * <!-- Hello, gtk-doc! -->
+ * static void
+ * menu_callback(GtkWidget *combo, gpointer cbdata)
+ * {
+ *     MyEnum value;
+ *     <!-- Hello, gtk-doc! -->
+ *     value = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+ *     ...
+ * }
+ * <!-- Hello, gtk-doc! -->
+ * static void
+ * function(void) {
+ *     GtkWidget *combo;
+ *     ...
+ *     <!-- Hello, gtk-doc! -->
+ *     combo = gwy_enum_combo_box_new(fields, G_N_ELEMENTS(fields),
+ *                                    G_CALLBACK(menu_callback), NULL,
+ *                                    MY_ENUM_FOO, TRUE);
+ *     ...
+ * }
+ * </programlisting></informalexample>
+ *
+ * Many common Gwyddion enumerations have companion function returning
+ * corresponding #GwyEnum, see for example
+ * <link linkend="libgwyprocess-gwyprocessenums">gwyprocessenums</link>,
+ * making combo box construction even easier.
+ *
+ * For example, a combo box with possible interpolation types can be
+ * constructed:
+ * <informalexample><programlisting>
+ * combo = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+ *                                G_CALLBACK(menu_callback), NULL,
+ *                                GWY_INTERPOLATION_BILINEAR, TRUE);
+ * </programlisting></informalexample>
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

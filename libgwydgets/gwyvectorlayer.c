@@ -552,4 +552,14 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyvectorlayer
+ * @title: GwyVectorLayer
+ * @short_description: Base class for #GwyDataView vector (interactive) layers
+ * @see_also: <link linkend="standard-vector-layers">Standard vector
+ *            layers</link>
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

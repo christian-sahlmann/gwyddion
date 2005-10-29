@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-GwyPixmapLayer
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Base class for #GwyDataView pixmap layers
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

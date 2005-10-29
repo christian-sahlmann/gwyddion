@@ -41,6 +41,13 @@ GwyCurve
 </para>
 
 
+<!-- ##### SIGNAL GwyCurve::curve-edited ##### -->
+<para>
+
+</para>
+
+@gwycurve: the object which received the signal.
+
 <!-- ##### SIGNAL GwyCurve::curve-type-changed ##### -->
 <para>
 
@@ -80,6 +87,7 @@ GwyCurve
 
 @parent_class: 
 @curve_type_changed: 
+@curve_edited: 
 @_gtk_reserved1: 
 @_gtk_reserved2: 
 @_gtk_reserved3: 
@@ -124,6 +132,24 @@ GwyCurve
 @vector: 
 <!-- # Unused Parameters # -->
 @curve: 
+
+
+<!-- ##### FUNCTION gwy_curve_set_control_points ##### -->
+<para>
+
+</para>
+
+@curve: 
+@channel_data: 
+
+
+<!-- ##### FUNCTION gwy_curve_get_control_points ##### -->
+<para>
+
+</para>
+
+@curve: 
+@channel_data: 
 
 
 <!-- ##### FUNCTION gwy_curve_set_curve_type ##### -->

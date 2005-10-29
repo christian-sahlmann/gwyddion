@@ -1,8 +1,8 @@
 <!-- ##### SECTION Title ##### -->
-gwystock
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Stock icons
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
@@ -19,156 +19,126 @@ Stock icons
 
 <!-- ##### MACRO GWY_STOCK_3D_BASE ##### -->
 <para>
-The "3D-Base" stock icon.
-<inlinegraphic fileref="gwy_3d_base-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.5
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_BOLD ##### -->
 <para>
-The "Bold" stock icon.
-<inlinegraphic fileref="gwy_bold-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_CROP ##### -->
 <para>
-The "Crop" stock icon.
-<inlinegraphic fileref="gwy_crop-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_COLOR_RANGE ##### -->
 <para>
-The "Color-Range" stock icon.
-<inlinegraphic fileref="gwy_color_range-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.6
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_CWT ##### -->
 <para>
-The "Continuous-Wavelet-Transform" stock icon.
-<inlinegraphic fileref="gwy_cwt-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_DISTANCE ##### -->
 <para>
-The "Distance" stock icon.
-<inlinegraphic fileref="gwy_distance-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FACET_LEVEL ##### -->
 <para>
-The "Facet-Level" stock icon.
-<inlinegraphic fileref="gwy_facet_level-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FILTER ##### -->
 <para>
-The "Filter" stock icon.
-<inlinegraphic fileref="gwy_filter-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FIT_PLANE ##### -->
 <para>
-The "Fit-Plane" stock icon.
-<inlinegraphic fileref="gwy_fit_plane-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FIT_TRIANGLE ##### -->
 <para>
-The "Fit-Triangle" stock icon.
-<inlinegraphic fileref="gwy_fit_triangle-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FIX_ZERO ##### -->
 <para>
-The "Fix-Zero" stock icon.
-<inlinegraphic fileref="gwy_fix_zero-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FFT ##### -->
 <para>
-The "Fast-Fourier-Transform" stock icon.
-<inlinegraphic fileref="gwy_fft-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_FRACTAL ##### -->
 <para>
-The "Fractal" stock icon.
-<inlinegraphic fileref="gwy_fractal-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.1
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS ##### -->
 <para>
-The "Grains" stock icon.
-<inlinegraphic fileref="gwy_grains-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS_GRAPH ##### -->
 <para>
-The "Grains-Graph" stock icon.
-<inlinegraphic fileref="gwy_grains_graph-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS_REMOVE ##### -->
 <para>
-The "Grains-Remove" stock icon.
-<inlinegraphic fileref="gwy_grains_remove-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAINS_WATER ##### -->
 <para>
-The "Grains-Water" stock icon.
-<inlinegraphic fileref="gwy_grains_water-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH ##### -->
 <para>
-The "Graph" stock icon.
-<inlinegraphic fileref="gwy_graph-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
@@ -196,88 +166,70 @@ The "Graph" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_FIT_FUNC ##### -->
 <para>
-The "Graph-Fit-Func" stock icon.
-<inlinegraphic fileref="gwy_graph_fit_func-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.2
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_GAUSS ##### -->
 <para>
-The "Graph-Gauss" stock icon.
-<inlinegraphic fileref="gwy_graph_gauss-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_HALFGAUSS ##### -->
 <para>
-The "Graph-Halfgauss" stock icon.
-<inlinegraphic fileref="gwy_graph_halfgauss-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_MEASURE ##### -->
 <para>
-The "Graph-Measure" stock icon.
-<inlinegraphic fileref="gwy_graph_measure-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_PALETTE ##### -->
 <para>
-The "Graph-Palette" stock icon.
-<inlinegraphic fileref="gwy_graph_palette-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_POINTER ##### -->
 <para>
-The "Graph-Pointer" stock icon.
-<inlinegraphic fileref="gwy_graph_pointer-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_RULER ##### -->
 <para>
-The "Graph-Ruler" stock icon.
-<inlinegraphic fileref="gwy_graph_ruler-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.4
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_FIT ##### -->
 <para>
-The "Graph-Zoom-Fit" stock icon.
-<inlinegraphic fileref="gwy_graph_zoom_fit-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_IN ##### -->
 <para>
-The "Graph-Zoom-In" stock icon.
-<inlinegraphic fileref="gwy_graph_zoom_in-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_GRAPH_ZOOM_OUT ##### -->
 <para>
-The "Graph-Zoom-Out" stock icon.
-<inlinegraphic fileref="gwy_graph_zoom_out-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
@@ -298,324 +250,231 @@ The "Graph-Zoom-Out" stock icon.
 
 <!-- ##### MACRO GWY_STOCK_GWYDDION ##### -->
 <para>
-The "Gwyddion" stock icon.
-<inlinegraphic fileref="gwy_gwyddion-60.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ITALIC ##### -->
 <para>
-The "Italic" stock icon.
-<inlinegraphic fileref="gwy_italic-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.6
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_LESS ##### -->
 <para>
-The "Less" stock icon.
-<inlinegraphic fileref="gwy_less-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_LIGHT_ROTATE ##### -->
 <para>
-The "Light-Rotate" stock icon.
-<inlinegraphic fileref="gwy_light_rotate-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.5
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_ADD ##### -->
 <para>
-The "Mask-Add" stock icon.
-<inlinegraphic fileref="gwy_mask_add-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_GROW ##### -->
 <para>
-The "Mask-Grow" stock icon.
-<inlinegraphic fileref="gwy_mask_grow-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_EDITOR ##### -->
 <para>
-The "Mask-Editor" stock icon.
-<inlinegraphic fileref="gwy_mask_editor-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_INTERSECT ##### -->
 <para>
-The "Mask-Intersect" stock icon.
-<inlinegraphic fileref="gwy_mask_intersect-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_INVERT ##### -->
 <para>
-The "Mask-Invert" stock icon.
-<inlinegraphic fileref="gwy_mask_invert-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_REMOVE ##### -->
 <para>
-The "Mask-Remove" stock icon.
-<inlinegraphic fileref="gwy_mask_remove-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SET ##### -->
 <para>
-The "Mask-Set" stock icon.
-<inlinegraphic fileref="gwy_mask_set-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SHRINK ##### -->
 <para>
-The "Mask-Shrink" stock icon.
-<inlinegraphic fileref="gwy_mask_shrink-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MASK_SUBTRACT ##### -->
 <para>
-The "Mask-Subtract" stock icon.
-<inlinegraphic fileref="gwy_mask_subtract-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_MORE ##### -->
 <para>
-The "More" stock icon.
-<inlinegraphic fileref="gwy_more-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.6
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_NONE ##### -->
 <para>
-The "None" stock icon.
-<inlinegraphic fileref="gwy_none-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_POINTER ##### -->
 <para>
-The "Pointer" stock icon.
-<inlinegraphic fileref="gwy_pointer-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_POINTER_MEASURE ##### -->
 <para>
-The "Pointer-Measure" stock icon.
-<inlinegraphic fileref="gwy_pointer_measure-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_POLYNOM_REMOVE ##### -->
 <para>
-The "Polynom-Remove" stock icon.
-<inlinegraphic fileref="gwy_polynom_remove-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_PROFILE ##### -->
 <para>
-The "Profile" stock icon.
-<inlinegraphic fileref="gwy_profile-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ROTATE ##### -->
 <para>
-The "Rotate" stock icon.
-<inlinegraphic fileref="gwy_rotate-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SCALE ##### -->
 <para>
-The "Scale" stock icon.
-<inlinegraphic fileref="gwy_scale-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SCARS ##### -->
 <para>
-The "Scars" stock icon.
-<inlinegraphic fileref="gwy_mask_scars-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.7
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SHADER ##### -->
 <para>
-The "Shader" stock icon.
-<inlinegraphic fileref="gwy_shader-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SPOT_REMOVE ##### -->
 <para>
-The "Spot-Remove" stock icon.
-<inlinegraphic fileref="gwy_spot_remove-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_STAT_QUANTITIES ##### -->
 <para>
-The "Stat-Quantities" stock icon.
-<inlinegraphic fileref="gwy_stat_quantities-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SUBSCRIPT ##### -->
 <para>
-The "Subscript" stock icon.
-<inlinegraphic fileref="gwy_subscript-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_SUPERSCRIPT ##### -->
 <para>
-The "Superscript" stock icon.
-<inlinegraphic fileref="gwy_superscript-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_UNROTATE ##### -->
 <para>
-The "Unrotate" stock icon.
-<inlinegraphic fileref="gwy_unrotate-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.2
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_Z_SCALE ##### -->
 <para>
-The "Z-Scale" stock icon.
-<inlinegraphic fileref="gwy_z_scale-24.png" format="PNG"></inlinegraphic>
-</para>
 
-<para>
-Since: 1.5
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_1_1 ##### -->
 <para>
-The "Zoom-1:1" stock icon.
-<inlinegraphic fileref="gwy_zoom_1_1-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_FIT ##### -->
 <para>
-The "Zoom-Fit" stock icon.
-<inlinegraphic fileref="gwy_zoom_fit-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_IN ##### -->
 <para>
-The "Zoom-In" stock icon.
-<inlinegraphic fileref="gwy_zoom_in-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 
 
 <!-- ##### MACRO GWY_STOCK_ZOOM_OUT ##### -->
 <para>
-The "Zoom-Out" stock icon.
-<inlinegraphic fileref="gwy_zoom_out-24.png" format="PNG"></inlinegraphic>
+
 </para>
 
 

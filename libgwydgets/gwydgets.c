@@ -107,4 +107,18 @@ gwy_widgets_get_gl_config(void)
     return glconfig;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwydgets
+ * @title: gwydgets
+ * @short_description: Base functions
+ *
+ * Gwyddion classes has to be initialized before they can be safely
+ * deserialized. The function gwy_type_init() performs this initialization.
+ *
+ * Before 3D widgets (#Gwy3DView) can be used, OpenGL must be initialized with
+ * gwy_widgets_gl_init().
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

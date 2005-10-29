@@ -196,6 +196,8 @@ gwy_curve_new
 gwy_curve_reset
 gwy_curve_set_range
 gwy_curve_get_vector
+gwy_curve_set_control_points
+gwy_curve_get_control_points
 gwy_curve_set_curve_type
 <SUBSECTION Standard>
 GWY_CURVE

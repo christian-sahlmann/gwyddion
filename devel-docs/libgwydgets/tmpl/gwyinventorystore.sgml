@@ -1,27 +1,16 @@
 <!-- ##### SECTION Title ##### -->
-GwyInventoryStore
+
 
 <!-- ##### SECTION Short_Description ##### -->
-#GtkTreeModel wrapper around #GwyInventory
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-#GwyInventoryStore is a simple adaptor class that wraps #GwyInventory in
-#GtkTreeModel interface.  It is list-only and has persistent iterators.
-It offers no methods to manipulate items, this should be done on the
-underlying inventory.
-</para>
-
-<para>
-#GwyInventoryStore maps inventory item traits to virtual #GtkTreeModel
-column.  Zeroth column is always of type %G_TYPE_POINTER and contains
-item itself.  It exists even if item don't export any traits.  Columns from
-1 onward are formed by item traits.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-#GwyInventory
+
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

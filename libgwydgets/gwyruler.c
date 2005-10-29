@@ -804,4 +804,19 @@ next_scale(GwyScaleScale scale,
     return new_scale;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyruler
+ * @title: GwyRuler
+ * @short_description: Base class for #GwyHRuler and #GwyVRuler
+ *
+ * #GwyRuler is a ruler similar to #GtkRuler, but it is more suited for a
+ * scientific application.  It is scale-independent and thus has no arbitrary
+ * limits on the ranges or interpretation of displayed values.  It can display
+ * units on the ruler (this can be controlled with
+ * gwy_ruler_set_units_placement()) and cooperates with #GwySIUnit (see
+ * gwy_ruler_set_units()).  It also better follows Gtk+ theme than #GtkRuler.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

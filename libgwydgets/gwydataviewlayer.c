@@ -232,4 +232,19 @@ gwy_data_view_layer_real_unplugged(GwyDataViewLayer *layer)
     gwy_object_unref(layer->data);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwydataviewlayer
+ * @title: GwyDataViewLayer
+ * @short_description: Layer #GwyDataView is composed of
+ * @see_also: #GwyDataView -- data display widget,
+ *            <link linkend="libgwydraw-gwypixfield">gwypixfield</link> --
+ *            low level functions for painting data fields,
+ *
+ * #GwyDataViewLayer's are parts of #GwyDataView.  They are not widgets and
+ * they are not normally usable outside of a data view.  The perform a specific
+ * visualization task: drawing the data, drawing mask, or drawing selection.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

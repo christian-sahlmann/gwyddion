@@ -106,6 +106,7 @@ widgets and should be mostly ignored for now.
 
 @gmodel: 
 @description: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gwy_graph_model_remove_curve_by_index ##### -->

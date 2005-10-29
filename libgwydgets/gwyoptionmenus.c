@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 
@@ -812,5 +812,17 @@ gl_material_resource_info(void)
     }
     return &rinfo;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyoptionmenus
+ * @title: gwyoptionmenus
+ * @short_description: Resource selectors
+ * @see_also: <link linkend="libgwydget-gwyradiobuttons">gwyradiobuttons</link>
+ *            -- radio button constructors,
+ *            <link linkend="libgwydget-gwycombobox">gwycombobox</link>
+ *            -- combo box constructors
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

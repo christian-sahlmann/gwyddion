@@ -42,77 +42,9 @@ IGNORE_HFILES = stamp-gwydgettypes.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES = \
-	$(top_srcdir)/pixmaps/gwy_3d_base-24.png \
-	$(top_srcdir)/pixmaps/gwy_bold-24.png \
-	$(top_srcdir)/pixmaps/gwy_color_range-24.png \
-	$(top_srcdir)/pixmaps/gwy_crop-24.png \
-	$(top_srcdir)/pixmaps/gwy_cwt-24.png \
-	$(top_srcdir)/pixmaps/gwy_dwt-24.png \
-	$(top_srcdir)/pixmaps/gwy_data_arithmetic-24.png \
-	$(top_srcdir)/pixmaps/gwy_distance-24.png \
-	$(top_srcdir)/pixmaps/gwy_facet_level-24.png \
-	$(top_srcdir)/pixmaps/gwy_filter-24.png \
-	$(top_srcdir)/pixmaps/gwy_fit_plane-24.png \
-	$(top_srcdir)/pixmaps/gwy_fit_triangle-24.png \
-	$(top_srcdir)/pixmaps/gwy_fix_zero-24.png \
-	$(top_srcdir)/pixmaps/gwy_fft-24.png \
-	$(top_srcdir)/pixmaps/gwy_flip_horizontally-24.png \
-	$(top_srcdir)/pixmaps/gwy_flip_vertically-24.png \
-	$(top_srcdir)/pixmaps/gwy_fractal-24.png \
-	$(top_srcdir)/pixmaps/gwy_grains-24.png \
-	$(top_srcdir)/pixmaps/gwy_grains_graph-24.png \
-	$(top_srcdir)/pixmaps/gwy_grains_remove-24.png \
-	$(top_srcdir)/pixmaps/gwy_grains_water-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_fit_func-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_gauss-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_halfgauss-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_measure-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_palette-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_pointer-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_ruler-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_zoom_fit-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_zoom_in-24.png \
-	$(top_srcdir)/pixmaps/gwy_graph_zoom_out-24.png \
+	$(top_srcdir)/pixmaps/gwy_*-24.png \
 	$(top_srcdir)/pixmaps/gwy_gwyddion-60.png \
 	$(top_srcdir)/pixmaps/gwy_gwyddion-32.png \
-	$(top_srcdir)/pixmaps/gwy_less-24.png \
-	$(top_srcdir)/pixmaps/gwy_light_rotate-24.png \
-	$(top_srcdir)/pixmaps/gwy_line_correction-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_add-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_editor-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_grow-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_intersect-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_invert-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_remove-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_set-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_shrink-24.png \
-	$(top_srcdir)/pixmaps/gwy_mask_subtract-24.png \
-	$(top_srcdir)/pixmaps/gwy_more-24.png \
-	$(top_srcdir)/pixmaps/gwy_none-24.png \
-	$(top_srcdir)/pixmaps/gwy_pointer-24.png \
-	$(top_srcdir)/pixmaps/gwy_pointer_measure-24.png \
-	$(top_srcdir)/pixmaps/gwy_polynom_remove-24.png \
-	$(top_srcdir)/pixmaps/gwy_profile-24.png \
-	$(top_srcdir)/pixmaps/gwy_rotate-24.png \
-	$(top_srcdir)/pixmaps/gwy_rotate_180-24.png \
-	$(top_srcdir)/pixmaps/gwy_rotate_90_ccw-24.png \
-	$(top_srcdir)/pixmaps/gwy_rotate_90_cw-24.png \
-	$(top_srcdir)/pixmaps/gwy_scale-24.png \
-	$(top_srcdir)/pixmaps/gwy_scars-24.png \
-	$(top_srcdir)/pixmaps/gwy_shader-24.png \
-	$(top_srcdir)/pixmaps/gwy_spot_remove-24.png \
-	$(top_srcdir)/pixmaps/gwy_stat_quantities-24.png \
-	$(top_srcdir)/pixmaps/gwy_subscript-24.png \
-	$(top_srcdir)/pixmaps/gwy_superscript-24.png \
-	$(top_srcdir)/pixmaps/gwy_unrotate-24.png \
-	$(top_srcdir)/pixmaps/gwy_value_invert-24.png \
-	$(top_srcdir)/pixmaps/gwy_window_measure-24.png \
-	$(top_srcdir)/pixmaps/gwy_z_scale-24.png \
-	$(top_srcdir)/pixmaps/gwy_zoom_1_1-24.png \
-	$(top_srcdir)/pixmaps/gwy_zoom_fit-24.png \
-	$(top_srcdir)/pixmaps/gwy_zoom_in-24.png \
-	$(top_srcdir)/pixmaps/gwy_zoom_out-24.png \
 	$(top_srcdir)/pixmaps/cd_line.png \
 	$(top_srcdir)/pixmaps/cd_rline.png \
 	$(top_srcdir)/pixmaps/cd_step.png \

@@ -622,6 +622,12 @@ gwy_gdk_cursor_free_or_unref(GdkCursor **cursor)
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwydgetutils
+ * @title: gwydgetutils
+ * @short_description: Miscellaneous widget utilities
+ **/
+
+/**
  * gwy_adjustment_get_int:
  * @adj: A #GtkAdjustment to get value of.
  *

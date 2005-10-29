@@ -913,4 +913,16 @@ gwy_shader_update(GwyShader *shader)
         gdk_window_invalidate_rect(widget->window, NULL, TRUE);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyshader
+ * @title: GwyShader
+ * @short_description: Spherical angle selector
+ *
+ * #GwyShader is a spherical angle selector that allows user to change angle
+ * by simply moving the north pole of a sphere around with mouse.  It can
+ * display the sphere colored with various #GwyGradient's.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -1172,4 +1172,18 @@ gwy_3d_window_material_selected(GtkWidget *item,
     gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwy3dwindow
+ * @title: Gwy3DWindow
+ * @short_description: 3D data display window
+ * @see_also: #Gwy3DView -- the basic 3D data display widget
+ *
+ * #Gwy3DWindow encapsulates a #Gwy3DView together with appropriate controls.
+ * You can create a 3D window for a 3D view with gwy_3d_window_new(). It has an
+ * `action area' below the controls where additional widgets can be packed with
+ * gwy_3d_window_add_action_widget().
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
