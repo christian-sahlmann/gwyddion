@@ -709,6 +709,16 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     return menu;
 }
 
+#include <app/resource-editor.h>
+static void
+gwy_app_just_testing(void)
+{
+    GtkWidget *editor;
+
+    editor = g_object_new(GWY_TYPE_RESOURCE_EDITOR, NULL);
+    gtk_widget_show_all(editor);
+}
+
 GtkWidget*
 gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 {
@@ -805,6 +815,14 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             N_("/Color _Gradients..."),
             NULL,
             gwy_app_gradient_editor,
+            1,
+            NULL,
+            NULL 
+        },
+        {
+            N_("/_Forgive me my sins..."),
+            NULL,
+            gwy_app_just_testing,
             1,
             NULL,
             NULL 

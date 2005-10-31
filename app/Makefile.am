@@ -17,6 +17,7 @@ libgwyappinclude_HEADERS = \
 	gwyapp.h \
 	menu.h \
 	menu-windowlist.h \
+	resource-editor.h \
 	settings.h \
 	undo.h \
 	unitool.h \
@@ -59,6 +60,7 @@ libgwyapp_la_SOURCES = \
 	menu.c \
 	menu-windowlist.c \
 	settings.c \
+	resource-editor.c \
 	unitool.c \
 	undo.c \
 	wait.c
