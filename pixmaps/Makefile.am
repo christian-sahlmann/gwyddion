@@ -13,6 +13,7 @@ pixmapdata_DATA = \
 	gwy_data_arithmetic-24.png \
 	gwy_distance-24.png \
 	gwy_facet_level-24.png \
+	gwy_favourite-24.png \
 	gwy_filter-24.png \
 	gwy_fit_plane-24.png \
 	gwy_fit_triangle-24.png \
