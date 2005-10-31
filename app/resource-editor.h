@@ -50,9 +50,9 @@ struct _GwyResourceEditor {
     GtkWidget *vbox;
     GtkWidget *treeview;
     GtkWidget *buttons[GWY_RESOURCE_EDITOR_NBUTTONS];
-    GString *active;
 
-    guint save_source_id;
+    guint commit_id;
+    GString *edited_resource;
 
     GtkWidget *edit_window;
 };
@@ -62,16 +62,23 @@ struct _GwyResourceEditorClass {
 
     GType resource_type;
     const gchar *base_resource;
-    GtkWidget* (*construct_treeview)(GCallback callback,
-                                     gpointer cbdata,
-                                     const gchar *active);
     const gchar *window_title;
     const gchar *editor_title;
 
-    GtkWidget *instance;    /* editor is singleton */
+    GtkWidget* (*construct_treeview)(GCallback callback,
+                                     gpointer cbdata,
+                                     const gchar *active);
+    GtkWidget* (*construct_editor)(GwyResourceEditor *editor);
+    void (*apply_changes)(GwyResourceEditor *editor);
+    void (*switch_resource)(GwyResourceEditor *editor);
+
+    GwyResourceEditor *instance;    /* editor is singleton */
+    GString *active;
 };
 
-GType             gwy_resource_editor_get_type              (void) G_GNUC_CONST;
+GType  gwy_resource_editor_get_type    (void) G_GNUC_CONST;
+void   gwy_resource_editor_queue_commit(GwyResourceEditor *editor);
+void   gwy_resource_editor_commit      (GwyResourceEditor *editor);
 
 G_END_DECLS
 

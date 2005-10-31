@@ -36,37 +36,42 @@ enum {
     LAST_SIGNAL
 };
 
-static void gwy_resource_editor_finalize     (GObject *object);
-static void gwy_resource_editor_set_property (GObject *object,
-                                              guint prop_id,
-                                              const GValue *value,
-                                              GParamSpec *pspec);
-static void gwy_resource_editor_get_property (GObject *object,
-                                              guint prop_id,
-                                              GValue *value,
-                                              GParamSpec *pspec);
-static void gwy_resource_editor_cell_name    (GtkTreeViewColumn *column,
-                                              GtkCellRenderer *renderer,
-                                              GtkTreeModel *model,
-                                              GtkTreeIter *iter,
-                                              gpointer data);
-static void gwy_resource_editor_changed      (GtkTreeSelection *selection,
-                                              GwyResourceEditor *editor);
-static void gwy_resource_editor_destroy      (GtkObject *object);
-static void gwy_resource_editor_new          (GwyResourceEditor *editor);
-static void gwy_resource_editor_duplicate    (GwyResourceEditor *editor);
-static void gwy_resource_editor_copy         (GwyResourceEditor *editor,
-                                              const gchar *name,
-                                              const gchar *newname);
-static void gwy_resource_editor_delete       (GwyResourceEditor *editor);
-static void gwy_resource_editor_set_default  (GwyResourceEditor *editor);
-static void gwy_resource_editor_edit         (GwyResourceEditor *editor);
-static void gwy_resource_editor_row_activated(GwyResourceEditor *editor,
-                                              GtkTreePath *path,
-                                              GtkTreeViewColumn *column);
-static void gwy_resource_editor_name_edited  (GwyResourceEditor *editor,
-                                              const gchar *strpath,
-                                              const gchar *text);
+static void     gwy_resource_editor_finalize     (GObject *object);
+static void     gwy_resource_editor_set_property (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_resource_editor_get_property (GObject *object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_resource_editor_cell_name    (GtkTreeViewColumn *column,
+                                                  GtkCellRenderer *renderer,
+                                                  GtkTreeModel *model,
+                                                  GtkTreeIter *iter,
+                                                  gpointer data);
+static void     gwy_resource_editor_changed      (GtkTreeSelection *selection,
+                                                  GwyResourceEditor *editor);
+static void     gwy_resource_editor_destroy      (GtkObject *object);
+static void     gwy_resource_editor_new          (GwyResourceEditor *editor);
+static void     gwy_resource_editor_duplicate    (GwyResourceEditor *editor);
+static void     gwy_resource_editor_copy         (GwyResourceEditor *editor,
+                                                  const gchar *name,
+                                                  const gchar *newname);
+static void     gwy_resource_editor_delete       (GwyResourceEditor *editor);
+static void     gwy_resource_editor_set_default  (GwyResourceEditor *editor);
+static void     gwy_resource_editor_edit         (GwyResourceEditor *editor);
+static void     gwy_resource_editor_row_activated(GwyResourceEditor *editor,
+                                                  GtkTreePath *path,
+                                                  GtkTreeViewColumn *column);
+static void     gwy_resource_editor_edit_resource(GwyResourceEditor *editor,
+                                                  const gchar *name);
+static void     gwy_resource_editor_editor_closed(GwyResourceEditor *editor);
+static void     gwy_resource_editor_name_edited  (GwyResourceEditor *editor,
+                                                  const gchar *strpath,
+                                                  const gchar *text);
+static gboolean gwy_resource_editor_save         (GwyResourceEditor *editor,
+                                                  const gchar *name);
 
 static guint resource_editor_signals[LAST_SIGNAL] = { 0 };
 
@@ -94,6 +99,15 @@ gwy_resource_editor_class_init(GwyResourceEditorClass *klass)
     klass->window_title = "Window Title";
     klass->editor_title = "Editor Title";
     klass->construct_treeview = gwy_gl_material_tree_view_new;
+}
+
+static void
+gwy_resource_editor_finalize(GObject *object)
+{
+    GwyResourceEditorClass *klass;
+
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(object);
+    klass->instance = NULL;
 }
 
 static void
@@ -149,9 +163,14 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
     GList *rlist;
     guint i;
 
-    editor->active = g_string_new("");
-
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
+    if (klass->instance) {
+        g_warning("An instance of this editor already exists.  "
+                  "This is not going to work.");
+    }
+    klass->instance = editor;
+    if (!klass->active)
+        klass->active = g_string_new(klass->base_resource);
 
     /* Window setup */
     gtk_window_set_resizable(GTK_WINDOW(editor), TRUE);
@@ -167,10 +186,9 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 
-    /* XXX: must get active resource */
     editor->treeview
         = klass->construct_treeview(G_CALLBACK(gwy_resource_editor_changed),
-                                    editor, editor->active->str);
+                                    editor, klass->active->str);
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
     inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
     column = gtk_tree_view_get_column(GTK_TREE_VIEW(editor->treeview), 2);
@@ -229,22 +247,12 @@ gwy_resource_editor_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-gwy_resource_editor_finalize(GObject *object)
-{
-    GwyResourceEditor *editor = (GwyResourceEditor*)object;
-
-    g_string_free(editor->active, TRUE);
-
-    G_OBJECT_CLASS(gwy_resource_editor_parent_class)->finalize(object);
-}
-
-static void
 gwy_resource_editor_set_property(GObject *object,
                                  guint prop_id,
                                  const GValue *value,
                                  GParamSpec *pspec)
 {
-    GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);
+    /*GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);*/
 
     switch (prop_id) {
         default:
@@ -259,7 +267,7 @@ gwy_resource_editor_get_property(GObject *object,
                                  GValue *value,
                                  GParamSpec *pspec)
 {
-    GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);
+    /*GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);*/
 
     switch (prop_id) {
         default:
@@ -280,6 +288,7 @@ gwy_resource_editor_changed(GtkTreeSelection *selection,
         GWY_RESOURCE_EDITOR_BUTTON_EDIT,
         GWY_RESOURCE_EDITOR_BUTTON_DELETE,
     };
+    GwyResourceEditorClass *klass;
     GwyResource *resource;
     GtkTreeModel *model;
     GtkTreeIter iter;
@@ -297,8 +306,9 @@ gwy_resource_editor_changed(GtkTreeSelection *selection,
         return;
     }
 
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
     gtk_tree_model_get(model, &iter, 0, &resource, -1);
-    g_string_assign(editor->active, gwy_resource_get_name(resource));
+    g_string_assign(klass->active, gwy_resource_get_name(resource));
 
     for (i = 0; i < G_N_ELEMENTS(needs_selection); i++)
         gtk_widget_set_sensitive(editor->buttons[needs_selection[i]],
@@ -312,13 +322,18 @@ gwy_resource_editor_changed(GtkTreeSelection *selection,
 static void
 gwy_resource_editor_destroy(GtkObject *object)
 {
-    gwy_debug("");
-    /*
-    GString *s = editor->active;
+    GwyResourceEditor *editor;
+    GwyResourceEditorClass *klass;
 
-    memset(editor, 0, sizeof(GwyResourceEditor));
-    editor->active = s;
-    */
+    gwy_debug("");
+    editor = GWY_RESOURCE_EDITOR(object);
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(object);
+
+    gwy_resource_editor_commit(editor);
+    if (editor->edited_resource) {
+        g_string_free(editor->edited_resource, TRUE);
+        editor->edited_resource = NULL;
+    }
 
     GTK_OBJECT_CLASS(gwy_resource_editor_parent_class)->destroy(object);
 }
@@ -358,8 +373,11 @@ gwy_resource_editor_new(GwyResourceEditor *editor)
 static void
 gwy_resource_editor_duplicate(GwyResourceEditor *editor)
 {
+    GwyResourceEditorClass *klass;
+
     gwy_debug("");
-    gwy_resource_editor_copy(editor, editor->active->str, NULL);
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
+    gwy_resource_editor_copy(editor, klass->active->str, NULL);
 }
 
 static void
@@ -370,32 +388,14 @@ gwy_resource_editor_copy(GwyResourceEditor *editor,
     GtkTreeModel *model;
     GwyInventory *inventory;
     GwyResource *resource;
-    FILE *fh;
-    gchar *filename;
-    GString *str;
 
-    gwy_debug("");
+    gwy_debug("<%s> -> <%s>", name, newname);
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
     inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
     resource = gwy_inventory_new_item(inventory, name, newname);
     gwy_resource_tree_view_set_active(editor->treeview,
                                       gwy_resource_get_name(resource));
-
-    /* Save new resource to file */
-    filename = gwy_resource_build_filename(resource);
-    fh = g_fopen(filename, "w");
-    if (!fh) {
-        /* FIXME: GUIze this */
-        g_warning("Cannot save resource file: %s", filename);
-        g_free(filename);
-        return;
-    }
-    g_free(filename);
-    str = gwy_resource_dump(resource);
-    fwrite(str->str, 1, str->len, fh);
-    fclose(fh);
-    g_string_free(str, TRUE);
-
+    gwy_resource_editor_save(editor, gwy_resource_get_name(resource));
     /* XXX: don't? gwy_resource_editor_edit(editor); */
 }
 
@@ -412,6 +412,8 @@ gwy_resource_editor_delete(GwyResourceEditor *editor)
     int result;
 
     gwy_debug("");
+    gwy_resource_editor_commit(editor);
+
     /* Get selected resource, and the inventory it belongs to: */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
     if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
@@ -444,30 +446,58 @@ gwy_resource_editor_delete(GwyResourceEditor *editor)
 static void
 gwy_resource_editor_edit(GwyResourceEditor *editor)
 {
-    gwy_debug("");
-    /*
-    GwyGLMaterial *material;
+    GwyResourceEditorClass *klass;
 
-    if (!editor->edit_window) {
-        gwy_resource_editor_construct(editor);
-    }
-    gwy_resource_editor_preview_set(editor);
-    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
-    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
-    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
-    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
-    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
-    gwy_resource_editor_update(editor);
-    gtk_window_present(GTK_WINDOW(editor->edit_window));
-    */
+    gwy_debug("");
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
+    gwy_resource_editor_edit_resource(editor, klass->active->str);
 }
 
 static void
 gwy_resource_editor_row_activated(GwyResourceEditor *editor,
                                   GtkTreePath *path,
-                                  GtkTreeViewColumn *column)
+                                  G_GNUC_UNUSED GtkTreeViewColumn *column)
 {
+    GwyResource *resource;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+
     gwy_debug("");
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    gwy_resource_editor_edit_resource(editor, gwy_resource_get_name(resource));
+}
+
+static void
+gwy_resource_editor_edit_resource(GwyResourceEditor *editor,
+                                  const gchar *name)
+{
+    GwyResourceEditorClass *klass;
+
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
+    gwy_resource_editor_commit(editor);
+
+    if (!editor->edit_window) {
+        editor->edited_resource = g_string_new(name);
+        editor->edit_window = klass->construct_editor(editor);
+        g_signal_connect_swapped(editor->edit_window, "destroy",
+                                 G_CALLBACK(gwy_resource_editor_editor_closed),
+                                 editor);
+    }
+    else {
+        /* TODO: apply pending changes */
+        g_string_assign(editor->edited_resource, name);
+        klass->switch_resource(editor);
+        gtk_window_present(GTK_WINDOW(editor->edit_window));
+    }
+}
+
+static void
+gwy_resource_editor_editor_closed(GwyResourceEditor *editor)
+{
+    gwy_resource_editor_commit(editor);
+    editor->edit_window = NULL;
 }
 
 static void
@@ -506,6 +536,7 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
     if (item)
         return;
 
+    gwy_resource_editor_commit(editor);
     oldfilename = gwy_resource_build_filename(resource);
     gwy_inventory_rename_item(inventory, oldname, newname);
     newfilename = gwy_resource_build_filename(resource);
@@ -517,6 +548,99 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
     }
     g_free(oldfilename);
     g_free(newfilename);
+}
+
+/**
+ * gwy_resource_editor_queue_save:
+ * @editor: A resource editor.
+ *
+ * Queues commit of resource changes, marking the currently edited resource
+ * `dirty'.
+ *
+ * Call this method in particular resource editor subclass whenever user
+ * changes some editor property.
+ **/
+void
+gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
+{
+    if (editor->commit_id)
+        g_source_remove(editor->commit_id);
+
+    editor->commit_id
+        = g_timeout_add_full(G_PRIORITY_LOW, 200,
+                             (GSourceFunc)&gwy_resource_editor_commit, editor,
+                             NULL);
+}
+
+/**
+ * gwy_resource_editor_commit:
+ * @editor: A resource editor.
+ *
+ * Forces commit of pending resource changes.
+ *
+ * It calls @apply_changes method first (if it exists), then saves resource to
+ * disk.
+ *
+ * Changes are always immediately committed (if there are any pending): before
+ * the editor is destroyed, when a resource stops being edited, before a
+ * resource is deleted, before a resource is renamed. When a resource is newly
+ * created, it is immediately created on disk too.
+ **/
+void
+gwy_resource_editor_commit(GwyResourceEditor *editor)
+{
+    GwyResourceEditorClass *klass;
+
+    if (!editor->commit_id)
+        return;
+
+    g_return_if_fail(editor->edited_resource
+                     && *editor->edited_resource->str);
+
+    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
+    if (klass->apply_changes)
+        klass->apply_changes(editor);
+
+    gwy_resource_editor_save(editor, editor->edited_resource->str);
+    editor->commit_id = 0;
+}
+
+static gboolean
+gwy_resource_editor_save(GwyResourceEditor *editor,
+                         const gchar *name)
+{
+    GwyInventory *inventory;
+    GwyResource *resource;
+    GtkTreeModel *model;
+    gchar *filename;
+    GString *str;
+    FILE *fh;
+
+    gwy_debug("<%s>", name);
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+    resource = gwy_inventory_get_item(inventory, name);
+    if (!resource) {
+        g_warning("Trying to save `%s' that isn't in inventory", name);
+        return FALSE;
+    }
+
+    filename = gwy_resource_build_filename(resource);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        /* FIXME: GUIze this */
+        g_warning("Cannot save resource file: %s", filename);
+        g_free(filename);
+        return FALSE;
+    }
+    g_free(filename);
+
+    str = gwy_resource_dump(resource);
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
