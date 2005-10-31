@@ -36,35 +36,37 @@ enum {
     LAST_SIGNAL
 };
 
-static void gwy_resource_editor_finalize    (GObject *object);
-static void gwy_resource_editor_set_property(GObject *object,
-                                             guint prop_id,
-                                             const GValue *value,
-                                             GParamSpec *pspec);
-static void gwy_resource_editor_get_property(GObject *object,
-                                             guint prop_id,
-                                             GValue *value,
-                                             GParamSpec *pspec);
-static void gwy_resource_editor_cell_name   (GtkTreeViewColumn *column,
-                                             GtkCellRenderer *renderer,
-                                             GtkTreeModel *model,
-                                             GtkTreeIter *iter,
-                                             gpointer data);
-static void gwy_resource_editor_changed     (GtkTreeSelection *selection,
-                                             GwyResourceEditor *editor);
-static void gwy_resource_editor_destroy     (GtkObject *object);
-static void gwy_resource_editor_new         (GwyResourceEditor *editor);
-static void gwy_resource_editor_duplicate   (GwyResourceEditor *editor);
-static void gwy_resource_editor_copy        (GwyResourceEditor *editor,
-                                             const gchar *name,
-                                             const gchar *newname);
-static void gwy_resource_editor_delete      (GwyResourceEditor *editor);
-static void gwy_resource_editor_set_default (GwyResourceEditor *editor);
-static void gwy_resource_editor_edit        (GwyResourceEditor *editor);
-static void gwy_resource_editor_name_edited (GtkCellRendererText *renderer,
-                                             const gchar *path,
-                                             const gchar *text,
-                                             GwyResourceEditor *editor);
+static void gwy_resource_editor_finalize     (GObject *object);
+static void gwy_resource_editor_set_property (GObject *object,
+                                              guint prop_id,
+                                              const GValue *value,
+                                              GParamSpec *pspec);
+static void gwy_resource_editor_get_property (GObject *object,
+                                              guint prop_id,
+                                              GValue *value,
+                                              GParamSpec *pspec);
+static void gwy_resource_editor_cell_name    (GtkTreeViewColumn *column,
+                                              GtkCellRenderer *renderer,
+                                              GtkTreeModel *model,
+                                              GtkTreeIter *iter,
+                                              gpointer data);
+static void gwy_resource_editor_changed      (GtkTreeSelection *selection,
+                                              GwyResourceEditor *editor);
+static void gwy_resource_editor_destroy      (GtkObject *object);
+static void gwy_resource_editor_new          (GwyResourceEditor *editor);
+static void gwy_resource_editor_duplicate    (GwyResourceEditor *editor);
+static void gwy_resource_editor_copy         (GwyResourceEditor *editor,
+                                              const gchar *name,
+                                              const gchar *newname);
+static void gwy_resource_editor_delete       (GwyResourceEditor *editor);
+static void gwy_resource_editor_set_default  (GwyResourceEditor *editor);
+static void gwy_resource_editor_edit         (GwyResourceEditor *editor);
+static void gwy_resource_editor_row_activated(GwyResourceEditor *editor,
+                                              GtkTreePath *path,
+                                              GtkTreeViewColumn *column);
+static void gwy_resource_editor_name_edited  (GwyResourceEditor *editor,
+                                              const gchar *strpath,
+                                              const gchar *text);
 
 static guint resource_editor_signals[LAST_SIGNAL] = { 0 };
 
@@ -77,7 +79,6 @@ G_DEFINE_TYPE(GwyResourceEditor, gwy_resource_editor, GTK_TYPE_WINDOW)
 static void
 gwy_resource_editor_class_init(GwyResourceEditorClass *klass)
 {
-    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
     GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
@@ -180,8 +181,12 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
                                             GTK_CELL_RENDERER(rlist->data),
                                             gwy_resource_editor_cell_name,
                                             inventory, NULL);
-    g_signal_connect(rlist->data, "edited",
-                     G_CALLBACK(gwy_resource_editor_name_edited), editor);
+    g_signal_connect_swapped(rlist->data, "edited",
+                             G_CALLBACK(gwy_resource_editor_name_edited),
+                             editor);
+    g_signal_connect_swapped(editor->treeview, "row-activated",
+                             G_CALLBACK(gwy_resource_editor_row_activated),
+                             editor);
     g_list_free(rlist);
     gtk_container_add(GTK_CONTAINER(scwin), editor->treeview);
 
@@ -402,6 +407,7 @@ gwy_resource_editor_delete(GwyResourceEditor *editor)
     GtkTreeSelection *selection;
     GwyResource *resource;
     GwyInventory *inventory;
+    GtkTreePath *path;
     gchar *filename;
     int result;
 
@@ -429,7 +435,10 @@ gwy_resource_editor_delete(GwyResourceEditor *editor)
     g_free(filename);
 
     /* Delete the resource from the inventory */
+    path = gtk_tree_model_get_path(model, &iter);
     gwy_inventory_delete_item(inventory, gwy_resource_get_name(resource));
+    gtk_tree_selection_select_path(selection, path);
+    gtk_tree_path_free(path);
 }
 
 static void
@@ -454,12 +463,60 @@ gwy_resource_editor_edit(GwyResourceEditor *editor)
 }
 
 static void
-gwy_resource_editor_name_edited(GtkCellRendererText *renderer,
-                                const gchar *path,
-                                const gchar *text,
-                                GwyResourceEditor *editor)
+gwy_resource_editor_row_activated(GwyResourceEditor *editor,
+                                  GtkTreePath *path,
+                                  GtkTreeViewColumn *column)
 {
-    gwy_debug("path: <%s>, text: <%s>", path, text);
+    gwy_debug("");
+}
+
+static void
+gwy_resource_editor_name_edited(GwyResourceEditor *editor,
+                                const gchar *strpath,
+                                const gchar *text)
+{
+    GwyResource *resource, *item;
+    GwyInventory *inventory;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    const gchar *s;
+    gchar *oldname, *newname, *oldfilename, *newfilename;
+
+    gwy_debug("path: <%s>, text: <%s>", strpath, text);
+    newname = g_newa(gchar, strlen(text)+1);
+    strcpy(newname, text);
+    g_strstrip(newname);
+    gwy_debug("newname: <%s>", newname);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+    gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    s = gwy_resource_get_name(resource);
+    oldname = g_newa(gchar, strlen(s)+1);
+    strcpy(oldname, s);
+    gwy_debug("oldname: <%s>", oldname);
+    if (gwy_strequal(newname, oldname))
+        return;
+
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+    item = gwy_inventory_get_item(inventory, newname);
+    if (item)
+        return;
+
+    oldfilename = gwy_resource_build_filename(resource);
+    gwy_inventory_rename_item(inventory, oldname, newname);
+    newfilename = gwy_resource_build_filename(resource);
+    if (g_rename(oldfilename, newfilename) != 0) {
+        /* FIXME: GUIze this */
+        g_warning("Cannot rename resource file: %s to %s",
+                  oldfilename, newfilename);
+        gwy_inventory_rename_item(inventory, newname, oldname);
+    }
+    g_free(oldfilename);
+    g_free(newfilename);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
