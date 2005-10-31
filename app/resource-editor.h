@@ -61,6 +61,7 @@ struct _GwyResourceEditorClass {
     GtkWindowClass parent_class;
 
     GType resource_type;
+    const gchar *base_resource;
     GtkWidget* (*construct_treeview)(GCallback callback,
                                      gpointer cbdata,
                                      const gchar *active);
