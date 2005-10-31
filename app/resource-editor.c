@@ -45,7 +45,7 @@ static void gwy_resource_editor_get_property (GObject *object,
                                               guint prop_id,
                                               GValue *value,
                                               GParamSpec *pspec);
-static void gwy_resource_editor_name_editable(GtkTreeViewColumn *column,
+static void gwy_resource_editor_cell_name    (GtkTreeViewColumn *column,
                                               GtkCellRenderer *renderer,
                                               GtkTreeModel *model,
                                               GtkTreeIter *iter,
@@ -134,8 +134,9 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
     };
 
     GwyResourceEditorClass *klass;
-    GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
+    GwyInventory *inventory;
+    GtkTreeModel *model;
     GtkWidget *hbox, *button;
     GtkTooltips *tooltips;
     GtkWidget *scwin;
@@ -164,14 +165,16 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
     editor->treeview
         = klass->construct_treeview(G_CALLBACK(gwy_resource_editor_changed),
                                     editor, editor->active->str);
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
     column = gtk_tree_view_get_column(GTK_TREE_VIEW(editor->treeview), 2);
     rlist = gtk_tree_view_column_get_cell_renderers(column);
     g_assert(rlist && !rlist->next);
     g_object_set(rlist->data, "editable-set", TRUE, NULL);
     gtk_tree_view_column_set_cell_data_func(column,
                                             GTK_CELL_RENDERER(rlist->data),
-                                            gwy_resource_editor_name_editable,
-                                            NULL, NULL);
+                                            gwy_resource_editor_cell_name,
+                                            inventory, NULL);
     g_signal_connect(rlist->data, "edited",
                      G_CALLBACK(gwy_resource_editor_name_edited), editor);
     g_list_free(rlist);
@@ -196,17 +199,22 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
 }
 
 static void
-gwy_resource_editor_name_editable(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                                  GtkCellRenderer *renderer,
-                                  GtkTreeModel *model,
-                                  GtkTreeIter *iter,
-                                  G_GNUC_UNUSED gpointer data)
+gwy_resource_editor_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                              GtkCellRenderer *renderer,
+                              GtkTreeModel *model,
+                              GtkTreeIter *iter,
+                              gpointer data)
 {
-    GwyResource *resource;
+    GwyResource *item;
+    gpointer defitem;
 
-    gtk_tree_model_get(model, iter, 0, &resource, -1);
+    defitem = gwy_inventory_get_default_item(GWY_INVENTORY(data));
+    gtk_tree_model_get(model, iter, 0, &item, -1);
     g_object_set(renderer,
-                 "editable", gwy_resource_get_is_modifiable(resource),
+                 "editable",
+                 gwy_resource_get_is_modifiable(item),
+                 "weight",
+                 (item == defitem) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
                  NULL);
 }
 
