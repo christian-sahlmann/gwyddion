@@ -521,7 +521,17 @@ gwy_resource_selection_set_active(GtkWidget *widget,
     gwy_resource_tree_view_set_active(treeview, active);
 }
 
-static gboolean
+/**
+ * gwy_resource_tree_view_set_active:
+ * @treeview: A resource selector tree view.
+ * @active: Resource name to be shown as currently selected.
+ *
+ * Selects a resource in a list and scrolls to make it visible.
+ *
+ * Returns: %TRUE if @active was selected, %FALSE if there is no such
+ *          resource.
+ **/
+gboolean
 gwy_resource_tree_view_set_active(GtkWidget *treeview,
                                   const gchar *active)
 {

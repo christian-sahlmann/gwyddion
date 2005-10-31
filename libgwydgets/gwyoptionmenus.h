@@ -53,6 +53,9 @@ const gchar* gwy_gl_material_selection_get_active(GtkWidget *selection);
 void         gwy_gl_material_selection_set_active(GtkWidget *selection,
                                                   const gchar *active);
 
+gboolean     gwy_resource_tree_view_set_active   (GtkWidget *treeview,
+                                                  const gchar *active);
+
 G_END_DECLS
 
 #endif /* __GWY_OPTION_MENUS_H__ */
