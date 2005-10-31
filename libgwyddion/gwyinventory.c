@@ -1302,6 +1302,7 @@ gwy_inventory_invent_name(GwyInventory *inventory,
                           const gchar *prefix)
 {
     static GString *str = NULL;
+    const gchar *p, *last;
     gint n, i;
 
     if (!str)
@@ -1310,6 +1311,17 @@ gwy_inventory_invent_name(GwyInventory *inventory,
     g_string_assign(str, prefix ? prefix : _("Untitled"));
     if (!gwy_inventory_lookup(inventory, str->str))
         return str->str;
+
+    last = str->str + MAX(str->len-1, 0);
+    for (p = last; p >= str->str; p--) {
+        if (!g_ascii_isdigit(*p))
+            break;
+    }
+    if (p == last || (p >= str->str && !g_ascii_isspace(*p)))
+        p = last;
+    while (p >= str->str && g_ascii_isspace(*p))
+        p--;
+    g_string_truncate(str, p+1 - str->str);
 
     g_string_append_c(str, ' ');
     n = str->len;
