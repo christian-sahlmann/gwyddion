@@ -85,8 +85,6 @@ static GtkWidget* gwy_resource_selection_new      (const ResourceInfo *rinfo,
                                                    const gchar *active);
 static void gwy_resource_selection_set_active     (GtkWidget *widget,
                                                    const gchar *active);
-static gboolean gwy_resource_tree_view_set_active (GtkWidget *treeview,
-                                                   const gchar *active);
 static void gwy_resource_selection_cell_pixbuf    (GtkTreeViewColumn *column,
                                                    GtkCellRenderer *renderer,
                                                    GtkTreeModel *model,
