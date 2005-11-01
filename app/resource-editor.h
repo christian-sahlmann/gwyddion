@@ -51,10 +51,9 @@ struct _GwyResourceEditor {
     GtkWidget *treeview;
     GtkWidget *buttons[GWY_RESOURCE_EDITOR_NBUTTONS];
 
-    guint commit_id;
-    GString *edited_resource;
-
     GtkWidget *edit_window;
+    GString *edited_resource;
+    guint commit_id;
 };
 
 struct _GwyResourceEditorClass {
@@ -68,12 +67,11 @@ struct _GwyResourceEditorClass {
     GtkWidget* (*construct_treeview)(GCallback callback,
                                      gpointer cbdata,
                                      const gchar *active);
-    GtkWidget* (*construct_editor)(GwyResourceEditor *editor);
+    void (*construct_editor)(GwyResourceEditor *editor);
     void (*apply_changes)(GwyResourceEditor *editor);
     void (*switch_resource)(GwyResourceEditor *editor);
 
     GwyResourceEditor *instance;    /* editor is singleton */
-    GString *active;
 };
 
 GType  gwy_resource_editor_get_type    (void) G_GNUC_CONST;
