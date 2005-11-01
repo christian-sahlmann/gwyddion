@@ -23,10 +23,9 @@
  */
 
 #include "config.h"
-#include "gwymacros.h"
-
 #include <string.h>
-#include "gwymath.h"
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 
 /* Lower symmetric part indexing */
 /* i MUST be greater or equal than j */
@@ -40,7 +39,7 @@
  * @maximum: The maximum possible value.
  * @precision: A location to store printf() precession, if not %NULL.
  *
- * Find a human readable representation for a range of numbers.
+ * Finds a human-friendly representation for a range of numbers.
  *
  * Returns: The magnitude i.e., a power of 1000.
  **/
@@ -49,30 +48,19 @@ gwy_math_humanize_numbers(gdouble unit,
                           gdouble maximum,
                           gint *precision)
 {
-    gdouble lm, lu, mag, range, min;
+    gdouble lm, lu, mag, q;
 
-    lm = log10(maximum);
-    lu = log10(unit);
-    mag = 3.0*floor((lm + lu)/6.0);
-    if (precision) {
-        range = lm - lu;
-        if (range > 3.0)
-            range = (range + 3.0)/2;
-        min = lm - range;
-        *precision = (min < mag) ? (gint)ceil(mag - min) : 0;
-    }
+    lm = log10(maximum) + 1e-12;
+    lu = log10(unit) + 1e-12;
+    mag = 3.0*floor(lm/3.0);
+    q = 3.0*ceil(lu/3.0);
+    if (q > mag)
+        q = 3.0*ceil((lu - 1.0)/3.0);
+    while (q > mag)
+        mag += 3.0;
 
-    /* prefer unscaled numbers (mag = 0), if feasible */
-    if (mag < 0 && maximum >= 1.0) {
-        gwy_debug("killing mag = %f, *precision = %d", mag, *precision);
-        *precision += -mag;
-        mag = 0;
-    }
-    else if (mag > 0 && mag <= 3.0 && mag - *precision <= 0) {
-        gwy_debug("killing mag = %f, *precision = %d", mag, *precision);
-        *precision -= mag;
-        mag = 0;
-    }
+    if (precision)
+        *precision = MAX(0, ceil(mag - lu));
 
     return pow10(mag);
 }
@@ -85,7 +73,7 @@ gwy_math_humanize_numbers(gdouble unit,
  * @n: The number of lines (i.e. @coords has 4@n items).
  * @coords: Line coordinates stored as x00, y00, x01, y01, x10, y10, etc.
  *
- * Find the line from @coords nearest to the point (@x, @y).
+ * Finds the line from @coords nearest to the point (@x, @y).
  *
  * Returns: The line number. It may return -1 if (@x, @y) doesn't lie
  *          in the orthogonal stripe of any of the lines.
@@ -138,7 +126,7 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
  * @n: The number of points (i.e. @coords has 2@n items).
  * @coords: Point coordinates stored as x0, y0, x1, y1, x2, y2, etc.
  *
- * Find the point from @coords nearest to the point (@x, @y).
+ * Finds the point from @coords nearest to the point (@x, @y).
  *
  * Returns: The point number.
  **/
@@ -213,7 +201,7 @@ gwy_math_lin_solve(gint n, const gdouble *matrix,
  * @result: Where the result should be stored.  May be %NULL to allocate
  *          a fresh array for the result.
  *
- * Solve a regular system of linear equations.
+ * Solves a regular system of linear equations.
  *
  * This is a memory-conservative version of gwy_math_lin_solve() overwriting
  * @matrix and @rhs with intermediate results.

@@ -454,6 +454,30 @@ test_math(void)
 }
 
 static void
+test_humanize(void)
+{
+    static gdouble mantisas[] = { 1.0, 1.01, 2.0, 3.0, 5.0, 8.0, 9.5, };
+    gdouble scale, offset, mag;
+    gint prec;
+    guint i;
+
+    g_message("====== HUMANIZE ======================");
+
+    for (scale = 1e-2; scale <= 1e4; scale *= 10.0) {
+        for (offset = 1e-5; offset <= 1.0; offset *= 10) {
+            g_print("%.0e %.0e:", scale, offset);
+            for (i = 0; i < G_N_ELEMENTS(mantisas); i++) {
+                mag = gwy_math_humanize_numbers(mantisas[i]*scale*offset,
+                                                mantisas[i]*scale,
+                                                &prec);
+                g_print(" %.*f", prec, mantisas[i]*scale/mag);
+            }
+            g_print("\n");
+        }
+    }
+}
+
+static void
 test_string_utils(void)
 {
     gchar *s, *s2;
@@ -1489,6 +1513,7 @@ test_inventory(void)
         foo_compare,
         NULL,
         NULL,
+        NULL,
         foo_get_traits,
         foo_get_trait_name,
         foo_get_trait_value,
@@ -1628,6 +1653,7 @@ test_all(void)
     test_entities();
     test_enums();
     test_math();
+    test_humanize();
     test_string_utils();
     test_nlfit();
     test_path_normalization();
@@ -1647,7 +1673,7 @@ main(void)
 {
     g_type_init();
     g_log_set_handler(G_LOG_DOMAIN, G_LOG_LEVEL_MESSAGE, log_handler, NULL);
-    test_inventory();
+    test_humanize();
 
     return 0;
 }
