@@ -109,7 +109,21 @@ gwy_resource_editor_finalize(GObject *object)
 }
 
 static void
-gwy_resource_editor_init(GwyResourceEditor *editor)
+gwy_resource_editor_init(G_GNUC_UNUSED GwyResourceEditor *editor)
+{
+}
+
+/**
+ * gwy_resource_editor_setup:
+ * @klass: A resource editor.
+ *
+ * Sets up particular resource editor.
+ *
+ * Helper method only intended for resource editor implementation.
+ * To be called in particular resource initialization methods.
+ **/
+void
+gwy_resource_editor_setup(GwyResourceEditor *editor)
 {
     static const struct {
         GwyResourceEditorButton id;
@@ -703,15 +717,16 @@ gwy_resource_editor_get_active(GwyResourceEditor *editor,
 }
 
 /**
- * gwy_resource_class_setup_keys:
+ * gwy_resource_editor_class_setup:
  * @klass: A resource editor class.
  *
  * Sets up particular resource editor class.
  *
+ * Helper class method only intended for resource editor implementation.
  * To be called in particular class initialization methods.
  **/
 void
-gwy_resource_class_setup(GwyResourceEditorClass *klass)
+gwy_resource_editor_class_setup(GwyResourceEditorClass *klass)
 {
     GwyResourceClass *rklass;
     const gchar *name;

@@ -94,7 +94,7 @@ gwy_gl_material_editor_class_init(GwyGLMaterialEditorClass *klass)
     editor_class->construct_editor = gwy_gl_material_editor_construct;
     editor_class->apply_changes = gwy_gl_material_editor_apply;
     editor_class->switch_resource = gwy_gl_material_editor_switch;
-    gwy_resource_class_setup(editor_class);
+    gwy_resource_editor_class_setup(editor_class);
 }
 
 static void
@@ -116,6 +116,7 @@ gwy_app_gl_material_editor(void)
     }
 
     editor = g_object_new(GWY_TYPE_GL_MATERIAL_EDITOR, NULL);
+    gwy_resource_editor_setup(editor);
     g_type_class_unref(klass);
     gtk_widget_show_all(GTK_WIDGET(editor));
 }

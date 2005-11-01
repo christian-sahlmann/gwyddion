@@ -83,7 +83,8 @@ GType        gwy_resource_editor_get_type    (void) G_GNUC_CONST;
 GwyResource* gwy_resource_editor_get_edited  (GwyResourceEditor *editor);
 void         gwy_resource_editor_queue_commit(GwyResourceEditor *editor);
 void         gwy_resource_editor_commit      (GwyResourceEditor *editor);
-void         gwy_resource_class_setup        (GwyResourceEditorClass *klass);
+void         gwy_resource_editor_setup       (GwyResourceEditor *editor);
+void         gwy_resource_editor_class_setup (GwyResourceEditorClass *klass);
 
 G_END_DECLS
 
