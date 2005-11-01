@@ -481,6 +481,9 @@ gwy_resource_editor_row_activated(GwyResourceEditor *editor,
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_model_get(model, &iter, 0, &resource, -1);
+    if (!gwy_resource_get_is_modifiable(resource))
+        return;
+
     gwy_resource_editor_edit_resource(editor, gwy_resource_get_name(resource));
 }
 
