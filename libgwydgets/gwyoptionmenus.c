@@ -361,6 +361,40 @@ gwy_gl_material_selection_set_active(GtkWidget *selection,
     gwy_resource_selection_set_active(selection, active);
 }
 
+/**
+ * gwy_resource_tree_view_set_active:
+ * @treeview: A resource selector tree view.
+ * @active: Resource name to be shown as currently selected.
+ *
+ * Selects a resource in a list and scrolls to make it visible.
+ *
+ * Returns: %TRUE if @active was selected, %FALSE if there is no such
+ *          resource.
+ **/
+gboolean
+gwy_resource_tree_view_set_active(GtkWidget *treeview,
+                                  const gchar *active)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
+    if (!gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), active,
+                                      &iter))
+        return FALSE;
+
+    gtk_tree_selection_select_iter(selection, &iter);
+    path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(treeview), path, NULL,
+                                 TRUE, 0.5, 0.0);
+    gtk_tree_path_free(path);
+
+    return TRUE;
+}
+
 /************************** Private methods ****************************/
 
 static GtkWidget*
@@ -517,40 +551,6 @@ gwy_resource_selection_set_active(GtkWidget *widget,
 
     g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
     gwy_resource_tree_view_set_active(treeview, active);
-}
-
-/**
- * gwy_resource_tree_view_set_active:
- * @treeview: A resource selector tree view.
- * @active: Resource name to be shown as currently selected.
- *
- * Selects a resource in a list and scrolls to make it visible.
- *
- * Returns: %TRUE if @active was selected, %FALSE if there is no such
- *          resource.
- **/
-gboolean
-gwy_resource_tree_view_set_active(GtkWidget *treeview,
-                                  const gchar *active)
-{
-    GtkTreeSelection *selection;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    GtkTreePath *path;
-
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
-    model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
-    if (!gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), active,
-                                      &iter))
-        return FALSE;
-
-    gtk_tree_selection_select_iter(selection, &iter);
-    path = gtk_tree_model_get_path(model, &iter);
-    gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(treeview), path, NULL,
-                                 TRUE, 0.5, 0.0);
-    gtk_tree_path_free(path);
-
-    return TRUE;
 }
 
 static void
