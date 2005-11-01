@@ -21,8 +21,6 @@
 #ifndef __GWY_APP_GL_MATERIAL_EDITOR_H__
 #define __GWY_APP_GL_MATERIAL_EDITOR_H__
 
-#include <gtk/gtkwidget.h>
-
 G_BEGIN_DECLS
 
 void gwy_app_gl_material_editor(void);

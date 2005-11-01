@@ -28,6 +28,7 @@
 #include <libdraw/gwyglmaterial.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
+#include <app/resource-editor.h>
 #include <app/glmaterial-editor.h>
 
 enum {
@@ -38,264 +39,88 @@ enum {
     GL_MATERIAL_N
 };
 
-/* For late objectzation... */
-typedef struct {
-    GtkWidget *window;
-    GtkWidget *treeview;
-    GtkWidget *button_edit;
-    GtkWidget *button_new;
-    GtkWidget *button_delete;
-    GtkWidget *button_default;
-    GString *active;
+#define GWY_TYPE_GL_MATERIAL_EDITOR             (gwy_gl_material_editor_get_type())
+#define GWY_GL_MATERIAL_EDITOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GL_MATERIAL_EDITOR, GwyGLMaterialEditor))
+#define GWY_GL_MATERIAL_EDITOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GL_MATERIAL_EDITOR, GwyGLMaterialEditorClass))
+#define GWY_IS_GL_MATERIAL_EDITOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_GL_MATERIAL_EDITOR))
+#define GWY_IS_GL_MATERIAL_EDITOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_GL_MATERIAL_EDITOR))
+#define GWY_GL_MATERIAL_EDITOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_GL_MATERIAL_EDITOR, GwyGLMaterialEditorClass))
 
-    GtkWidget *edit_window;
+typedef struct _GwyGLMaterialEditor      GwyGLMaterialEditor;
+typedef struct _GwyGLMaterialEditorClass GwyGLMaterialEditorClass;
+
+struct _GwyGLMaterialEditor {
+    GwyResourceEditor parent_instance;
+
     GSList *components;
     GtkWidget *colorsel;
     GtkObject *shininess;
     GtkWidget *preview;
     GwyRGBA old[GL_MATERIAL_N];
-} GwyGLMaterialEditor;
+};
 
-static void gwy_gl_material_editor_changed     (GtkTreeSelection *selection,
-                                                GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_destroy     (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_new         (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_delete      (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_set_default (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_edit        (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_construct   (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_preview_set (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
-static void gwy_gl_material_editor_closed      (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_component_cb(GtkWidget *widget,
-                                                GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_color_cb    (GtkWidget *widget,
-                                                GwyGLMaterialEditor *editor);
-static void gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
-                                                GwyGLMaterialEditor *editor);
+struct _GwyGLMaterialEditorClass {
+    GwyResourceEditorClass parent_class;
+};
+
+static GType gwy_gl_material_editor_get_type    (void) G_GNUC_CONST;
+static void  gwy_gl_material_editor_construct   (GwyResourceEditor *res_editor);
+static void  gwy_gl_material_editor_apply       (GwyResourceEditor *res_editor);
+static void  gwy_gl_material_editor_switch      (GwyResourceEditor *res_editor);
+static void  gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_preview_set (GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
+static void  gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_component_cb(GtkWidget *widget,
+                                                 GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_color_cb    (GtkWidget *widget,
+                                                 GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
+                                                 GwyGLMaterialEditor *editor);
+
+G_DEFINE_TYPE(GwyGLMaterialEditor, gwy_gl_material_editor,
+              GWY_TYPE_RESOURCE_EDITOR)
+
+static void
+gwy_gl_material_editor_class_init(GwyGLMaterialEditorClass *klass)
+{
+    GwyResourceEditorClass *editor_class = GWY_RESOURCE_EDITOR_CLASS(klass);
+
+    editor_class->resource_type = GWY_TYPE_GL_MATERIAL;
+    editor_class->base_resource = GWY_GL_MATERIAL_DEFAULT;
+    editor_class->window_title = _("GL Material Editor");
+    editor_class->editor_title = _("GL Material %s");
+    editor_class->construct_treeview = gwy_gl_material_tree_view_new;
+    editor_class->construct_editor = gwy_gl_material_editor_construct;
+    editor_class->apply_changes = gwy_gl_material_editor_apply;
+    editor_class->switch_resource = gwy_gl_material_editor_switch;
+}
+
+static void
+gwy_gl_material_editor_init(GwyGLMaterialEditor *editor)
+{
+}
 
 void
 gwy_app_gl_material_editor(void)
 {
-    static GwyGLMaterialEditor *editor = NULL;
-    GtkWidget *treeview, *scwin, *vbox, *toolbox, *button;
+    GwyGLMaterialEditorClass *klass;
+    GwyResourceEditor *editor;
 
-    if (!editor) {
-        editor = g_new0(GwyGLMaterialEditor, 1);
-        editor->active = g_string_new("");
-    }
-    else if (editor->window) {
-        gtk_window_present(GTK_WINDOW(editor->window));
+    klass = g_type_class_ref(GWY_TYPE_GL_MATERIAL_EDITOR);
+    if ((editor = GWY_RESOURCE_EDITOR_CLASS(klass)->instance)) {
+        gtk_window_present(GTK_WINDOW(editor));
+        g_type_class_unref(klass);
         return;
     }
 
-    /* Pop up */
-    editor->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(editor->window), _("GL Material Editor"));
-    gtk_window_set_default_size(GTK_WINDOW(editor->window), -1, 420);
-    g_signal_connect_swapped(editor->window, "destroy",
-                             G_CALLBACK(gwy_gl_material_editor_destroy), editor);
-
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(editor->window), vbox);
-
-    /* GL Materials */
-    scwin = gtk_scrolled_window_new(NULL, NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), scwin, TRUE, TRUE, 0);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
-                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-
-    treeview
-        = gwy_gl_material_tree_view_new(G_CALLBACK(gwy_gl_material_editor_changed),
-                                        editor, editor->active->str);
-    editor->treeview = treeview;
-    gtk_container_add(GTK_CONTAINER(scwin), treeview);
-
-    /* Controls */
-    toolbox = gtk_hbox_new(TRUE, 0);
-    gtk_container_set_border_width(GTK_CONTAINER(toolbox), 2);
-    gtk_box_pack_start(GTK_BOX(vbox), toolbox, FALSE, FALSE, 0);
-
-    button = gtk_button_new_from_stock(GTK_STOCK_EDIT);
-    editor->button_edit = button;
-    gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_gl_material_editor_edit),
-                             editor);
-
-    button = gtk_button_new_from_stock(GTK_STOCK_NEW);
-    editor->button_new = button;
-    gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_gl_material_editor_new),
-                             editor);
-
-    button = gtk_button_new_from_stock(GTK_STOCK_DELETE);
-    editor->button_delete = button;
-    gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_gl_material_editor_delete),
-                             editor);
-
-    button = gtk_button_new_with_mnemonic(_("Set De_fault"));
-    editor->button_default = button;
-    gtk_box_pack_start(GTK_BOX(toolbox), button, TRUE, TRUE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_gl_material_editor_set_default),
-                             editor);
-
-    gtk_widget_show_all(vbox);
-    gtk_window_present(GTK_WINDOW(editor->window));
+    editor = g_object_new(GWY_TYPE_GL_MATERIAL_EDITOR, NULL);
+    g_type_class_unref(klass);
+    gtk_widget_show_all(GTK_WIDGET(editor));
 }
 
 static void
-gwy_gl_material_editor_changed(GtkTreeSelection *selection,
-                               GwyGLMaterialEditor *editor)
-{
-    GwyResource *resource;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    gboolean is_modifiable;
-
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        gtk_widget_set_sensitive(editor->button_edit, FALSE);
-        gtk_widget_set_sensitive(editor->button_delete, FALSE);
-        gtk_widget_set_sensitive(editor->button_default, FALSE);
-        return;
-    }
-
-    gtk_tree_model_get(model, &iter, 0, &resource, -1);
-    g_string_assign(editor->active, gwy_resource_get_name(resource));
-
-    gtk_widget_set_sensitive(editor->button_default, TRUE);
-    is_modifiable = gwy_resource_get_is_modifiable(resource);
-    gtk_widget_set_sensitive(editor->button_edit, is_modifiable);
-    gtk_widget_set_sensitive(editor->button_delete, is_modifiable);
-}
-
-static void
-gwy_gl_material_editor_destroy(GwyGLMaterialEditor *editor)
-{
-    GString *s = editor->active;
-
-    memset(editor, 0, sizeof(GwyGLMaterialEditor));
-    editor->active = s;
-}
-
-static void
-gwy_gl_material_editor_set_default(GwyGLMaterialEditor *editor)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    GtkTreeSelection *selection;
-    GwyResource *resource;
-    GwyInventory *inventory;
-
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        g_warning("Something should be selected for `Set Default'");
-        return;
-    }
-
-    gtk_tree_model_get(model, &iter, 0, &resource, -1);
-    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
-    gwy_inventory_set_default_item_name(inventory,
-                                        gwy_resource_get_name(resource));
-}
-
-static void
-gwy_gl_material_editor_new(GwyGLMaterialEditor *editor)
-{
-    GwyGLMaterial *new_gl_material;
-    GwyResource *resource;
-    FILE *fh;
-    gchar *filename;
-    GString *str;
-
-    /* Add a new gl_material resource to inventory */
-    new_gl_material = gwy_inventory_new_item(gwy_gl_materials(),
-                                             editor->active->str, NULL);
-    resource = GWY_RESOURCE(new_gl_material);
-    gwy_gl_material_tree_view_set_active(editor->treeview,
-                                         gwy_resource_get_name(resource));
-
-    /* Save new gl_material resource to file */
-    filename = gwy_resource_build_filename(resource);
-    fh = g_fopen(filename, "w");
-    if (!fh) {
-        /* FIXME: GUIze this */
-        g_warning("Cannot save resource file: %s", filename);
-        g_free(filename);
-        return;
-    }
-    g_free(filename);
-    str = gwy_resource_dump(resource);
-    fwrite(str->str, 1, str->len, fh);
-    fclose(fh);
-    g_string_free(str, TRUE);
-
-    gwy_gl_material_editor_edit(editor);
-}
-
-static void
-gwy_gl_material_editor_delete(GwyGLMaterialEditor *editor)
-{
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    GtkTreeSelection *selection;
-    GwyResource *resource;
-    GwyInventory *inventory;
-    gchar *filename;
-    int result;
-
-    /* Get selected resource, and the inventory it belongs to: */
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(editor->treeview));
-    if (!gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        g_warning("Something should be selected for `Delete'");
-        return;
-    }
-    gtk_tree_model_get(model, &iter, 0, &resource, -1);
-    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
-
-    /* Delete the resource file */
-    filename = gwy_resource_build_filename(resource);
-    result = g_remove(filename);
-    if (result) {
-        /* FIXME: GUIze this */
-        g_warning("Resource (%s) could not be deleted.",
-                  gwy_resource_get_name(resource));
-
-        g_free(filename);
-        return;
-    }
-    g_free(filename);
-
-    /* Delete the resource from the inventory */
-    gwy_inventory_delete_item(inventory, gwy_resource_get_name(resource));
-}
-
-static void
-gwy_gl_material_editor_edit(GwyGLMaterialEditor *editor)
-{
-    GwyGLMaterial *material;
-
-    if (!editor->edit_window) {
-        gwy_gl_material_editor_construct(editor);
-    }
-    gwy_gl_material_editor_preview_set(editor);
-    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
-    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
-    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
-    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
-    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
-    gwy_gl_material_editor_update(editor);
-    gtk_window_present(GTK_WINDOW(editor->edit_window));
-}
-
-static void
-gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
+gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
 {
     static const GwyEnum color_components[] = {
         { N_("Ambient"),  GL_MATERIAL_AMBIENT,  },
@@ -304,21 +129,19 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
         /*{ N_("Emission"), GL_MATERIAL_EMISSION, },*/
     };
     GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table, *spin;
+    GwyGLMaterialEditor *editor;
+    GwyGLMaterial *material;
     GtkObject *adj;
     GSList *group, *l;
 
-    g_return_if_fail(editor->edit_window == NULL);
+    g_return_if_fail(GTK_IS_WINDOW(res_editor->edit_window));
+    editor = GWY_GL_MATERIAL_EDITOR(res_editor);
 
-    /* Popup color edit window */
-    editor->edit_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_container_set_border_width(GTK_CONTAINER(editor->edit_window), 4);
-    gtk_window_set_title(GTK_WINDOW(editor->edit_window),
-                            _("GL Material Editor"));
-    g_signal_connect_swapped(editor->edit_window, "destroy",
-                             G_CALLBACK(gwy_gl_material_editor_closed), editor);
+    gtk_container_set_border_width(GTK_CONTAINER(res_editor->edit_window),
+                                   4);
 
     hbox = gtk_hbox_new(FALSE, 12);
-    gtk_container_add(GTK_CONTAINER(editor->edit_window), hbox);
+    gtk_container_add(GTK_CONTAINER(res_editor->edit_window), hbox);
 
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
@@ -362,6 +185,15 @@ gwy_gl_material_editor_construct(GwyGLMaterialEditor *editor)
     if (editor->preview)
         gtk_box_pack_end(GTK_BOX(hbox), editor->preview, FALSE, FALSE, 0);
     gtk_widget_show_all(hbox);
+
+    gwy_gl_material_editor_preview_set(editor);
+    material = gwy_inventory_get_item(gwy_gl_materials(),
+                                      res_editor->edited_resource->str);
+    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
+    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
+    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
+    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
+    gwy_gl_material_editor_update(editor);
 }
 
 static void
@@ -403,9 +235,12 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
 static void
 gwy_gl_material_editor_preview_set(GwyGLMaterialEditor *editor)
 {
+    GwyResourceEditor *res_editor;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
     if (gwy_app_gl_is_ok()) {
         gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
-                                 editor->active->str);
+                                 res_editor->edited_resource->str);
         return;
     }
 }
@@ -414,12 +249,15 @@ static void
 gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
 {
     GtkColorSelection *colorsel;
+    GwyResourceEditor *res_editor;
     GwyGLMaterial *material;
     GdkColor gdkcolor;
     const GwyRGBA *color;
     gint component;
 
-    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    material = gwy_inventory_get_item(gwy_gl_materials(),
+                                      res_editor->edited_resource->str);
     if (!material) {
         g_warning("Editing non-existent material.  "
                   "Either make it impossible, or implement some reasonable "
@@ -520,12 +358,15 @@ static void
 gwy_gl_material_editor_color_cb(GtkWidget *widget,
                                 GwyGLMaterialEditor *editor)
 {
+    GwyResourceEditor *res_editor;
     GwyGLMaterial *material;
     GwyRGBA color;
     GdkColor gdkcolor;
     gint component;
 
-    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    material = gwy_inventory_get_item(gwy_gl_materials(),
+                                      res_editor->edited_resource->str);
     if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
         g_warning("Current material is nonexistent/unmodifiable");
         return;
@@ -564,10 +405,13 @@ static void
 gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
                                     GwyGLMaterialEditor *editor)
 {
+    GwyResourceEditor *res_editor;
     GwyGLMaterial *material;
     gdouble val;
 
-    material = gwy_inventory_get_item(gwy_gl_materials(), editor->active->str);
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    material = gwy_inventory_get_item(gwy_gl_materials(),
+                                      res_editor->edited_resource->str);
     if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
         g_warning("Current material is nonexistent/unmodifiable");
         return;
@@ -577,13 +421,13 @@ gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
 }
 
 static void
-gwy_gl_material_editor_closed(GwyGLMaterialEditor *editor)
+gwy_gl_material_editor_apply(GwyResourceEditor *res_editor)
 {
-    editor->edit_window = NULL;
-    editor->components = NULL;
-    editor->colorsel = NULL;
-    editor->preview = NULL;
-    editor->shininess = NULL;
+}
+
+static void
+gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
+{
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

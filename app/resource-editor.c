@@ -82,11 +82,8 @@ static GwyResource* gwy_resource_editor_get_active(GwyResourceEditor *editor,
 
 static guint resource_editor_signals[LAST_SIGNAL] = { 0 };
 
-/* XXX: for initial testing we need something instantiable
 G_DEFINE_ABSTRACT_TYPE(GwyResourceEditor, gwy_resource_editor,
                        GTK_TYPE_WINDOW)
-                       */
-G_DEFINE_TYPE(GwyResourceEditor, gwy_resource_editor, GTK_TYPE_WINDOW)
 
 static void
 gwy_resource_editor_class_init(GwyResourceEditorClass *klass)
@@ -99,13 +96,6 @@ gwy_resource_editor_class_init(GwyResourceEditorClass *klass)
     gobject_class->set_property = gwy_resource_editor_set_property;
 
     object_class->destroy = gwy_resource_editor_destroy;
-
-    /* XXX XXX XXX */
-    klass->resource_type = GWY_TYPE_GL_MATERIAL;
-    klass->base_resource = GWY_GL_MATERIAL_DEFAULT;
-    klass->window_title = "Window Title";
-    klass->editor_title = "Editor Title %s";
-    klass->construct_treeview = gwy_gl_material_tree_view_new;
 }
 
 static void
