@@ -22,6 +22,7 @@
 #define __GWY_RESOURCE_EDITOR_H__
 
 #include <gtk/gtkwidget.h>
+#include <libgwyddion/gwyresource.h>
 
 G_BEGIN_DECLS
 
@@ -64,6 +65,10 @@ struct _GwyResourceEditorClass {
     const gchar *window_title;
     const gchar *editor_title;
 
+    GQuark current_key;
+    GQuark width_key;
+    GQuark height_key;
+
     GtkWidget* (*construct_treeview)(GCallback callback,
                                      gpointer cbdata,
                                      const gchar *active);
@@ -74,9 +79,11 @@ struct _GwyResourceEditorClass {
     GwyResourceEditor *instance;    /* editor is singleton */
 };
 
-GType  gwy_resource_editor_get_type    (void) G_GNUC_CONST;
-void   gwy_resource_editor_queue_commit(GwyResourceEditor *editor);
-void   gwy_resource_editor_commit      (GwyResourceEditor *editor);
+GType        gwy_resource_editor_get_type    (void) G_GNUC_CONST;
+GwyResource* gwy_resource_editor_get_edited  (GwyResourceEditor *editor);
+void         gwy_resource_editor_queue_commit(GwyResourceEditor *editor);
+void         gwy_resource_editor_commit      (GwyResourceEditor *editor);
+void         gwy_resource_class_setup        (GwyResourceEditorClass *klass);
 
 G_END_DECLS
 

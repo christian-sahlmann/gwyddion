@@ -74,7 +74,6 @@ static void     gwy_resource_editor_name_edited   (GwyResourceEditor *editor,
 static gboolean gwy_resource_editor_save          (GwyResourceEditor *editor,
                                                    const gchar *name);
 static void     gwy_resource_editor_update_title  (GwyResourceEditor *editor);
-static gchar*   gwy_resource_editor_get_active_key(GwyResourceEditor *editor);
 static GwyResource* gwy_resource_editor_get_active(GwyResourceEditor *editor,
                                                    GtkTreeModel **model,
                                                    GtkTreeIter *iter,
@@ -162,7 +161,6 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
     GtkWidget *scwin;
     const guchar *name;
     GList *rlist;
-    gchar *key;
     guint i;
 
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
@@ -174,9 +172,7 @@ gwy_resource_editor_init(GwyResourceEditor *editor)
 
     settings = gwy_app_settings_get();
     name = klass->base_resource;
-    key = gwy_resource_editor_get_active_key(editor);
-    gwy_container_gis_string_by_name(settings, key, &name);
-    g_free(key);
+    gwy_container_gis_string(settings, klass->current_key, &name);
 
     /* Window setup */
     gtk_window_set_resizable(GTK_WINDOW(editor), TRUE);
@@ -344,14 +340,10 @@ gwy_resource_editor_destroy(GtkObject *object)
         && (resource = gwy_resource_editor_get_active(editor,
                                                       NULL, NULL, NULL))) {
         GwyContainer *settings;
-        gchar *key;
 
         settings = gwy_app_settings_get();
-        key = gwy_resource_editor_get_active_key(editor);
-        gwy_container_set_string_by_name(settings, key,
-                                         g_strdup(gwy_resource_get_name
-                                                                  (resource)));
-        g_free(key);
+        gwy_container_set_string(settings, klass->current_key,
+                                 g_strdup(gwy_resource_get_name(resource)));
     }
     editor->treeview = NULL;
 
@@ -585,6 +577,8 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
 void
 gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
 {
+    g_return_if_fail(GWY_IS_RESOURCE_EDITOR(editor));
+
     if (editor->commit_id)
         g_source_remove(editor->commit_id);
 
@@ -598,7 +592,7 @@ gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
  * gwy_resource_editor_commit:
  * @editor: A resource editor.
  *
- * Forces commit of pending resource changes.
+ * Commits pending resource changes, if there are any.
  *
  * It calls @apply_changes method first (if it exists), then saves resource to
  * disk.
@@ -613,7 +607,9 @@ gwy_resource_editor_commit(GwyResourceEditor *editor)
 {
     GwyResourceEditorClass *klass;
 
+    g_return_if_fail(GWY_IS_RESOURCE_EDITOR(editor));
     gwy_debug("%u", editor->commit_id);
+
     if (!editor->commit_id)
         return;
 
@@ -679,24 +675,6 @@ gwy_resource_editor_update_title(GwyResourceEditor *editor)
     g_free(title);
 }
 
-static gchar*
-gwy_resource_editor_get_active_key(GwyResourceEditor *editor)
-{
-    GwyResourceEditorClass *klass;
-    GwyResourceClass *rklass;
-    gchar *key;
-
-    gwy_debug("");
-    klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
-    rklass = g_type_class_ref(klass->resource_type);
-    key = g_strdup_printf("/app/%s-editor/current",
-                          gwy_resource_class_get_name(rklass));
-    g_type_class_unref(rklass);
-    gwy_debug("<%s>", key);
-
-    return key;
-}
-
 static GwyResource*
 gwy_resource_editor_get_active(GwyResourceEditor *editor,
                                GtkTreeModel **model,
@@ -722,6 +700,63 @@ gwy_resource_editor_get_active(GwyResourceEditor *editor,
         *iter = treeiter;
 
     return resource;
+}
+
+/**
+ * gwy_resource_class_setup_keys:
+ * @klass: A resource editor class.
+ *
+ * Sets up particular resource editor class.
+ *
+ * To be called in particular class initialization methods.
+ **/
+void
+gwy_resource_class_setup(GwyResourceEditorClass *klass)
+{
+    GwyResourceClass *rklass;
+    const gchar *name;
+    GString *str;
+
+    gwy_debug("");
+    g_return_if_fail(GWY_IS_RESOURCE_EDITOR_CLASS(klass));
+
+    rklass = g_type_class_ref(klass->resource_type);
+    name = gwy_resource_class_get_name(rklass);
+    g_type_class_unref(rklass);
+
+    str = g_string_new("");
+    g_string_printf(str, "/app/%s/editor/current", name);
+    klass->current_key = g_quark_from_string(str->str);
+    g_string_printf(str, "/app/%s/editor/position/width", name);
+    klass->width_key = g_quark_from_string(str->str);
+    g_string_printf(str, "/app/%s/editor/position/height", name);
+    klass->height_key = g_quark_from_string(str->str);
+}
+
+/**
+ * gwy_resource_editor_get_edited:
+ * @editor: A resource editor.
+ *
+ * Gets the currently edited resource.
+ *
+ * It is an error to call this method when no resource is being edited.
+ *
+ * Returns: The currently edited resource.
+ **/
+GwyResource*
+gwy_resource_editor_get_edited(GwyResourceEditor *editor)
+{
+    GwyInventory *inventory;
+    GtkTreeModel *model;
+
+    g_return_val_if_fail(GWY_IS_RESOURCE_EDITOR(editor), NULL);
+    g_return_val_if_fail(editor->edited_resource, NULL);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(editor->treeview));
+    inventory = gwy_inventory_store_get_inventory(GWY_INVENTORY_STORE(model));
+
+    return (GwyResource*)gwy_inventory_get_item(inventory,
+                                                editor->edited_resource->str);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
