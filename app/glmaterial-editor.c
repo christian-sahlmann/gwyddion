@@ -21,7 +21,6 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
-#include <glib/gstdio.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
@@ -52,6 +51,7 @@ typedef struct _GwyGLMaterialEditorClass GwyGLMaterialEditorClass;
 struct _GwyGLMaterialEditor {
     GwyResourceEditor parent_instance;
 
+    guint last_component;
     GSList *components;
     GtkWidget *colorsel;
     GtkObject *shininess;
@@ -68,14 +68,9 @@ static void  gwy_gl_material_editor_construct   (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_apply       (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_switch      (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
-static void  gwy_gl_material_editor_preview_set (GwyGLMaterialEditor *editor);
 static void  gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
 static void  gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
 static void  gwy_gl_material_editor_component_cb(GtkWidget *widget,
-                                                 GwyGLMaterialEditor *editor);
-static void  gwy_gl_material_editor_color_cb    (GtkWidget *widget,
-                                                 GwyGLMaterialEditor *editor);
-static void  gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
                                                  GwyGLMaterialEditor *editor);
 
 G_DEFINE_TYPE(GwyGLMaterialEditor, gwy_gl_material_editor,
@@ -100,6 +95,7 @@ gwy_gl_material_editor_class_init(GwyGLMaterialEditorClass *klass)
 static void
 gwy_gl_material_editor_init(GwyGLMaterialEditor *editor)
 {
+    editor->last_component = GL_MATERIAL_AMBIENT;
 }
 
 void
@@ -132,7 +128,6 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     };
     GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table, *spin;
     GwyGLMaterialEditor *editor;
-    GwyGLMaterial *material;
     GtkObject *adj;
     GSList *group, *l;
 
@@ -156,7 +151,7 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
                          "color-component",
                          G_CALLBACK(gwy_gl_material_editor_component_cb),
                          editor,
-                         GL_MATERIAL_AMBIENT);
+                         editor->last_component);
     for (l = group; l; l = g_slist_next(l)) {
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(l->data), FALSE);
         gtk_box_pack_start(GTK_BOX(buttonbox), GTK_WIDGET(l->data),
@@ -170,8 +165,9 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(colorsel),
                                                 FALSE);
     gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(colorsel), FALSE);
-    g_signal_connect(colorsel, "color-changed",
-                     G_CALLBACK(gwy_gl_material_editor_color_cb), editor);
+    g_signal_connect_swapped(colorsel, "color-changed",
+                             G_CALLBACK(gwy_resource_editor_queue_commit),
+                             res_editor);
 
     table = gtk_table_new(1, 4, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
@@ -179,9 +175,9 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     editor->shininess = adj;
     spin = gwy_table_attach_hscale(table, 0, _("Shininess:"), NULL,
                                    adj, GWY_HSCALE_DEFAULT);
-    g_signal_connect(adj, "value-changed",
-                     G_CALLBACK(gwy_gl_material_editor_shininess_cb),
-                     editor);
+    g_signal_connect_swapped(adj, "value-changed",
+                             G_CALLBACK(gwy_resource_editor_queue_commit),
+                             res_editor);
 
     gwy_gl_material_editor_preview_new(editor);
     if (editor->preview)
@@ -189,13 +185,7 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     gtk_widget_show_all(hbox);
 
     /* switch */
-    gwy_gl_material_editor_preview_set(editor);
-    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited(res_editor));
-    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
-    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
-    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
-    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
-    gwy_gl_material_editor_update(editor);
+    gwy_gl_material_editor_switch(res_editor);
 }
 
 static void
@@ -235,38 +225,23 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
 }
 
 static void
-gwy_gl_material_editor_preview_set(GwyGLMaterialEditor *editor)
-{
-    GwyResourceEditor *res_editor;
-
-    res_editor = GWY_RESOURCE_EDITOR(editor);
-    if (gwy_app_gl_is_ok()) {
-        gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
-                                 res_editor->edited_resource->str);
-        return;
-    }
-}
-
-static void
 gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
 {
+    GwyResourceEditor *res_editor;
     GtkColorSelection *colorsel;
     GwyGLMaterial *material;
     GdkColor gdkcolor;
     const GwyRGBA *color;
-    gint component;
 
-    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited
-                                                (GWY_RESOURCE_EDITOR(editor)));
-    if (!material) {
-        g_warning("Editing non-existent material.  "
-                  "Either make it impossible, or implement some reasonable "
-                  "behaviour.");
-        return;
-    }
-    component = gwy_radio_buttons_get_current(editor->components,
-                                              "color-component");
-    switch (component) {
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    editor->last_component = gwy_radio_buttons_get_current(editor->components,
+                                                           "color-component");
+    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited(res_editor));
+    g_return_if_fail(material
+                     && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
+
+    g_printerr("<%s>", gwy_resource_get_name(GWY_RESOURCE(material)));
+    switch (editor->last_component) {
         case GL_MATERIAL_AMBIENT:
         color = gwy_gl_material_get_ambient(material);
         break;
@@ -290,7 +265,7 @@ gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
     colorsel = GTK_COLOR_SELECTION(editor->colorsel);
     gwy_rgba_to_gdk_color(color, &gdkcolor);
     gtk_color_selection_set_current_color(colorsel, &gdkcolor);
-    gwy_rgba_to_gdk_color(&editor->old[component], &gdkcolor);
+    gwy_rgba_to_gdk_color(&editor->old[editor->last_component], &gdkcolor);
     gtk_color_selection_set_previous_color(colorsel, &gdkcolor);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(editor->shininess),
@@ -348,35 +323,32 @@ gwy_gl_material_editor_make_data(GwyDataField *dfield1)
 }
 
 static void
-gwy_gl_material_editor_component_cb(GtkWidget *widget,
+gwy_gl_material_editor_component_cb(G_GNUC_UNUSED GtkWidget *widget,
                                     GwyGLMaterialEditor *editor)
 {
+    gwy_resource_editor_commit(GWY_RESOURCE_EDITOR(editor));
     gwy_gl_material_editor_update(editor);
 }
 
 static void
-gwy_gl_material_editor_color_cb(GtkWidget *widget,
-                                GwyGLMaterialEditor *editor)
+gwy_gl_material_editor_apply(GwyResourceEditor *res_editor)
 {
+    GwyGLMaterialEditor *editor;
     GwyGLMaterial *material;
     GwyRGBA color;
     GdkColor gdkcolor;
-    gint component;
+    gdouble val;
 
-    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited
-                                                (GWY_RESOURCE_EDITOR(editor)));
-    if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
-        g_warning("Current material is nonexistent/unmodifiable");
-        return;
-    }
+    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited(res_editor));
+    g_return_if_fail(material
+                     && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
 
-    component = gwy_radio_buttons_get_current(editor->components,
-                                              "color-component");
+    editor = GWY_GL_MATERIAL_EDITOR(res_editor);
     gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(editor->colorsel),
                                           &gdkcolor);
     gwy_rgba_from_gdk_color(&color, &gdkcolor);
     color.a = 1.0;    /* FIXME */
-    switch (component) {
+    switch (editor->last_component) {
         case GL_MATERIAL_AMBIENT:
         gwy_gl_material_set_ambient(material, &color);
         break;
@@ -394,36 +366,35 @@ gwy_gl_material_editor_color_cb(GtkWidget *widget,
         break;
 
         default:
-        g_return_if_reached();
+        g_assert_not_reached();
         break;
     }
-}
 
-static void
-gwy_gl_material_editor_shininess_cb(GtkAdjustment *adj,
-                                    GwyGLMaterialEditor *editor)
-{
-    GwyGLMaterial *material;
-    gdouble val;
-
-    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited
-                                                (GWY_RESOURCE_EDITOR(editor)));
-    if (!material || !gwy_resource_get_is_modifiable(GWY_RESOURCE(material))) {
-        g_warning("Current material is nonexistent/unmodifiable");
-        return;
-    }
-    val = gtk_adjustment_get_value(adj);
+    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(editor->shininess));
     gwy_gl_material_set_shininess(material, val);
-}
-
-static void
-gwy_gl_material_editor_apply(GwyResourceEditor *res_editor)
-{
 }
 
 static void
 gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
 {
+    GwyGLMaterial *material;
+    GwyGLMaterialEditor *editor;
+
+    editor = GWY_GL_MATERIAL_EDITOR(res_editor);
+
+    material = GWY_GL_MATERIAL(gwy_resource_editor_get_edited(res_editor));
+    g_return_if_fail(material
+                     && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
+
+    if (gwy_app_gl_is_ok())
+        gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
+                                 gwy_resource_get_name(GWY_RESOURCE(material)));
+
+    editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
+    editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);
+    editor->old[GL_MATERIAL_SPECULAR] = *gwy_gl_material_get_specular(material);
+    editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
+    gwy_gl_material_editor_update(editor);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

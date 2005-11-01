@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -26,26 +26,15 @@
 #include <app/menu.h>
 #include <app/settings.h>
 #include <app/resource-editor.h>
-
-#include <libdraw/gwyglmaterial.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwydgetutils.h>
 
 enum {
-    WHATEVER,
-    LAST_SIGNAL
+    COMMIT_TIMEOUT = 150
 };
 
 static void     gwy_resource_editor_finalize      (GObject *object);
-static void     gwy_resource_editor_set_property  (GObject *object,
-                                                   guint prop_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec);
-static void     gwy_resource_editor_get_property  (GObject *object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec);
 static void     gwy_resource_editor_cell_name     (GtkTreeViewColumn *column,
                                                    GtkCellRenderer *renderer,
                                                    GtkTreeModel *model,
@@ -80,8 +69,6 @@ static GwyResource* gwy_resource_editor_get_active(GwyResourceEditor *editor,
                                                    GtkTreeIter *iter,
                                                    const gchar *warnwhat);
 
-static guint resource_editor_signals[LAST_SIGNAL] = { 0 };
-
 G_DEFINE_ABSTRACT_TYPE(GwyResourceEditor, gwy_resource_editor,
                        GTK_TYPE_WINDOW)
 
@@ -93,8 +80,6 @@ gwy_resource_editor_class_init(GwyResourceEditorClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_resource_editor_finalize;
-    gobject_class->get_property = gwy_resource_editor_get_property;
-    gobject_class->set_property = gwy_resource_editor_set_property;
 
     object_class->destroy = gwy_resource_editor_destroy;
 
@@ -275,36 +260,6 @@ gwy_resource_editor_cell_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
                  "weight",
                  (item == defitem) ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
                  NULL);
-}
-
-static void
-gwy_resource_editor_set_property(GObject *object,
-                                 guint prop_id,
-                                 const GValue *value,
-                                 GParamSpec *pspec)
-{
-    /*GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);*/
-
-    switch (prop_id) {
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gwy_resource_editor_get_property(GObject *object,
-                                 guint prop_id,
-                                 GValue *value,
-                                 GParamSpec *pspec)
-{
-    /*GwyResourceEditor *editor = GWY_RESOURCE_EDITOR(object);*/
-
-    switch (prop_id) {
-        default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
 }
 
 static void
@@ -636,7 +591,7 @@ gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
         g_source_remove(editor->commit_id);
 
     editor->commit_id
-        = g_timeout_add_full(G_PRIORITY_LOW, 200,
+        = g_timeout_add_full(G_PRIORITY_LOW, COMMIT_TIMEOUT,
                              (GSourceFunc)&gwy_resource_editor_commit, editor,
                              NULL);
 }
@@ -654,20 +609,23 @@ gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
  * the editor is destroyed, when a resource stops being edited, before a
  * resource is deleted, before a resource is renamed. When a resource is newly
  * created, it is immediately created on disk too.
+ *
+ * Returns: Always %FALSE (to be usable as #GSourceFunc).
  **/
-void
+gboolean
 gwy_resource_editor_commit(GwyResourceEditor *editor)
 {
     GwyResourceEditorClass *klass;
 
-    g_return_if_fail(GWY_IS_RESOURCE_EDITOR(editor));
+    g_return_val_if_fail(GWY_IS_RESOURCE_EDITOR(editor), FALSE);
     gwy_debug("%u", editor->commit_id);
 
     if (!editor->commit_id)
-        return;
+        return FALSE;
 
-    g_return_if_fail(editor->edited_resource
-                     && *editor->edited_resource->str);
+    g_return_val_if_fail(editor->edited_resource
+                         && *editor->edited_resource->str,
+                         FALSE);
 
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
     if (klass->apply_changes)
@@ -675,6 +633,8 @@ gwy_resource_editor_commit(GwyResourceEditor *editor)
 
     gwy_resource_editor_save(editor, editor->edited_resource->str);
     editor->commit_id = 0;
+
+    return FALSE;
 }
 
 static gboolean
