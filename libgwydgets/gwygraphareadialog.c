@@ -117,7 +117,7 @@ gwy_graph_area_dialog_class_init(GwyGraphAreaDialogClass *klass)
 
 static gboolean
 gwy_graph_area_dialog_delete(GtkWidget *widget,
-                       G_GNUC_UNUSED GdkEventAny *event)
+                             G_GNUC_UNUSED GdkEventAny *event)
 {
     gwy_debug("");
     gtk_widget_hide(widget);
