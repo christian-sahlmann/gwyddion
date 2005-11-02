@@ -55,7 +55,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.0.3",
+    "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -137,7 +137,7 @@ read_data_field(const guchar *buffer, guint size)
         YREAL_OFFSET  = 0x176,
         ZSCALE_OFFSET = 0x184,
         XRES_OFFSET   = 0x1dc,
-        YRES_OFFSET   = 0x1dc,
+        YRES_OFFSET   = 0x1e0,
     };
     gint xres, yres, n, i, j;
     gdouble xreal, yreal, q;
@@ -151,6 +151,7 @@ read_data_field(const guchar *buffer, guint size)
     xres = get_DWORD(&p);
     p = buffer + YRES_OFFSET;
     yres = get_DWORD(&p);
+    gwy_debug("xres: %d, yres: %d", xres, yres);
 
     n = xres*yres;
     if (size != 2*n + HEADER_SIZE) {
@@ -165,6 +166,8 @@ read_data_field(const guchar *buffer, guint size)
     yreal = get_DOUBLE(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
     q = get_DOUBLE(&p) * Nanometer;
+    gwy_debug("xreal: %g, yreal: %g, zreal: %g",
+              xreal/Nanometer, yreal/Nanometer, q/Nanometer);
     /* XXX: I don't know where the factor of 0.5 comes from.  But it makes
      * the imported data match the original software. */
     q /= 2.0;
