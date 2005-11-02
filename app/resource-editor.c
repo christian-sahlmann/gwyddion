@@ -104,7 +104,7 @@ gwy_resource_editor_init(G_GNUC_UNUSED GwyResourceEditor *editor)
 
 /**
  * gwy_resource_editor_setup:
- * @klass: A resource editor.
+ * @editor: A resource editor.
  *
  * Sets up particular resource editor.
  *
