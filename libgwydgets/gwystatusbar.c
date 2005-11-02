@@ -73,6 +73,7 @@ gwy_statusbar_update_markup(GtkStatusbar *statusbar,
     if (!text)
         text = "";
 
+    /* FIXME: this causes size allocation request */
     gtk_label_set_markup(GTK_LABEL(statusbar->label), text);
 }
 

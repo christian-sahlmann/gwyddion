@@ -53,6 +53,7 @@ struct _GwyDataWindow {
     GtkWidget *statusbar;
     GtkWidget *coloraxis;
     GtkWidget *grad_selector;
+    GtkAllocation old_allocation;
 
     guint statusbar_context_id;
     guint statusbar_message_id;

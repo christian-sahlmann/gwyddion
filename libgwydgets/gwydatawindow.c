@@ -45,7 +45,8 @@ enum {
 
 static void     gwy_data_window_finalize          (GObject *object);
 static void     gwy_data_window_destroy           (GtkObject *object);
-static void     gwy_data_window_measure_changed   (GwyDataWindow *data_window);
+static void     gwy_data_window_size_allocate     (GtkWidget *widget,
+                                                   GtkAllocation *alc);
 static void     gwy_data_window_lame_resize       (GwyDataWindow *data_window);
 static void     gwy_data_window_fit_to_screen     (GwyDataWindow *data_window,
                                                    GwyDataView *data_view);
@@ -84,13 +85,16 @@ static void
 gwy_data_window_class_init(GwyDataWindowClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkObjectClass *object_class;
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(klass);
 
     object_class = (GtkObjectClass*)klass;
 
     gobject_class->finalize = gwy_data_window_finalize;
 
     object_class->destroy = gwy_data_window_destroy;
+
+    widget_class->size_allocate = gwy_data_window_size_allocate;
 
     klass->title_changed = NULL;
 
@@ -268,8 +272,6 @@ gwy_data_window_new(GwyDataView *data_view)
 
     gtk_widget_show_all(vbox);
 
-    g_signal_connect(data_window, "size-allocate",
-                     G_CALLBACK(gwy_data_window_measure_changed), NULL);
     g_signal_connect(data_window, "key-press-event",
                      G_CALLBACK(gwy_data_window_key_pressed), NULL);
 
@@ -310,15 +312,29 @@ gwy_data_window_get_data(GwyDataWindow *data_window)
 }
 
 static void
-gwy_data_window_measure_changed(GwyDataWindow *data_window)
+gwy_data_window_size_allocate(GtkWidget *widget,
+                              GtkAllocation *alc)
 {
     gdouble excess, offset, pos, real;
+    GwyDataWindow *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
     GwyDataField *dfield;
     const gchar *k;
 
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
+    data_window = GWY_DATA_WINDOW(widget);
+    if (alc) {
+        if (data_window->old_allocation.x == alc->x
+            && data_window->old_allocation.y == alc->y
+            && data_window->old_allocation.width == alc->width
+            && data_window->old_allocation.height == alc->height)
+            return;
+
+        GTK_WIDGET_CLASS(gwy_data_window_parent_class)->size_allocate(widget,
+                                                                      alc);
+        data_window->old_allocation = *alc;
+    }
+
     data_view = GWY_DATA_VIEW(data_window->data_view);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
     data = gwy_data_view_get_data(data_view);
@@ -888,7 +904,7 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
-    gwy_data_window_measure_changed(data_window);
+    gwy_data_window_size_allocate(GTK_WIDGET(data_window), NULL);
     gwy_data_window_update_units(data_window);
 }
 
