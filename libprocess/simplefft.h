@@ -22,11 +22,13 @@
 #define __GWY_PROCESS_SIMPLEFFT_H__
 
 #include <glib.h>
+#include <gtk/gtk.h>
 #include <libprocess/gwyprocessenums.h>
+#include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
 
-void gwy_fft_hum(GwyTransformDirection dir,
+void gwy_fft_simple(GwyTransformDirection dir,
                  const gdouble *re_in,
                  const gdouble *im_in,
                  gdouble *re_out,
@@ -36,6 +38,12 @@ void gwy_fft_hum(GwyTransformDirection dir,
 void gwy_fft_window(gdouble *data,
                     gint n,
                     GwyWindowingType windowing);
+
+void
+gwy_fft_window_datafield(GwyDataField *dfield,
+                    GtkOrientation orientation,
+                    GwyWindowingType windowing);
+
 
 G_END_DECLS
 

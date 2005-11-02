@@ -36,7 +36,7 @@ typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
  * Performs FST algorithm.
  **/
 void
-gwy_fft_hum(GwyTransformDirection dir,
+gwy_fft_simple(GwyTransformDirection dir,
             const gdouble *re_in,
             const gdouble *im_in,
             gdouble *re_out,
@@ -172,6 +172,54 @@ gwy_fft_window(gdouble *data,
     g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
     if (windowings[windowing])
         gwy_fft_mult(data, n, windowings[windowing]);
+}
+
+void 
+gwy_fft_window_datafield(GwyDataField *dfield,
+                         GtkOrientation orientation,
+                         GwyWindowingType windowing)
+{
+    gint res, xres, yres, col, row, i;
+    gdouble *table, *data;
+    
+    
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+        res = xres;
+    else
+        res = yres;
+
+    table = (gdouble *)g_try_malloc(res*sizeof(gdouble));
+    g_assert(table);
+
+    for (i = 0; i<res; i++) table[i] = 1;
+    
+    gwy_fft_window(table, res, windowing);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+
+    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    {
+       for (col = 0; col < xres; col++)
+       {
+           *data += xres;
+           for (row = 0; row < yres; row++)
+               data[row] *= table[row];
+       }
+    }
+    else
+    {
+       for (col = 0; col < xres; col++)
+       {
+           for (row = 0; row < yres; row++)
+               data[col] *= table[col];
+       }
+    }
+         
+    g_free(table);
 }
 
 /************************** Documentation ****************************/
