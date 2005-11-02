@@ -37,8 +37,12 @@
 
 #define MAGIC "fileType      Image"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
-#define DATA_MAGIC "data          \n"
-#define DATA_MAGIC_SIZE (sizeof(DATA_MAGIC) - 1)
+
+#define BINARY_DATA_MAGIC "data          BINARY\n"
+#define BINARY_DATA_MAGIC_SIZE (sizeof(BINARY_DATA_MAGIC) - 1)
+#define ASCII_DATA_MAGIC  "data          ASCII\n"
+#define ASCII_DATA_MAGIC_SIZE (sizeof(ASCII_DATA_MAGIC) - 1)
+
 #define EXTENSION ".mi"
 #define KEY_LEN 14
 
@@ -78,7 +82,8 @@ static GwyContainer*    mifile_load          (const gchar *filename);
 
 /* Helper Functions */
 static guint            find_data_start      (const guchar *buffer,
-                                              gsize size);
+                                              gsize size,
+                                              gboolean *isbinary);
 static guint            file_read_header     (MIFile *mifile,
                                               gchar *buffer);
 static guint            select_which_data    (MIFile *mifile);
@@ -152,6 +157,7 @@ mifile_load(const gchar *filename)
     guint header_size;
     gchar *p;
     gboolean ok;
+    gboolean isbinary;
     guint i = 0, pos;
 
     /* Open the file and load in its contents into "buffer" */
@@ -163,8 +169,8 @@ mifile_load(const gchar *filename)
 
     /* Find out the length of the file header */
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
-        || size <= DATA_MAGIC_SIZE
-        || !(header_size = find_data_start(buffer, size))) {
+        || size <= BINARY_DATA_MAGIC_SIZE
+        || !(header_size = find_data_start(buffer, size, &isbinary))) {
 
         g_warning("File %s is not a MI file", filename);
         gwy_file_abandon_contents(buffer, size, NULL);
@@ -212,20 +218,24 @@ mifile_load(const gchar *filename)
 }
 
 static guint
-find_data_start(const guchar *buffer,
-                gsize size)
+find_data_start(const guchar *buffer, gsize size, gboolean *isbinary)
 {
     /* NOTE: TRY USING g_strrstr () INSTEAD */
     const guchar *p;
 
-    size -= DATA_MAGIC_SIZE;
+    size -= BINARY_DATA_MAGIC_SIZE;
 
     for (p = buffer;
-         p && strncmp(p, DATA_MAGIC, DATA_MAGIC_SIZE);
-         p = memchr(p+1, (DATA_MAGIC)[0], size - (p - buffer) - 1))
+         p && strncmp(p, BINARY_DATA_MAGIC, BINARY_DATA_MAGIC_SIZE);
+         p = memchr(p+1, (BINARY_DATA_MAGIC)[0], size - (p - buffer) - 1))
         ;
 
-    return p ? (p - buffer) + DATA_MAGIC_SIZE : 0;
+    if (p)
+        *isbinary = TRUE;
+    else
+        *isbinary = FALSE;
+
+    return p ? (p - buffer) + BINARY_DATA_MAGIC_SIZE : 0;
 }
 
 static guint
