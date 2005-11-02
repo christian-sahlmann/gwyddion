@@ -245,6 +245,7 @@ gwy_data_field_get_size(GObject *obj)
 {
     GwyDataField *data_field;
     guint32 datasize, cachesize;
+    gdouble *cache;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), 0);
@@ -255,6 +256,7 @@ gwy_data_field_get_size(GObject *obj)
     if (!data_field->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_new("m");
     datasize = data_field->xres*data_field->yres;
+    cache = data_field->cache;
     cachesize = GWY_DATA_FIELD_CACHE_SIZE;
     {
         GwySerializeSpec spec[] = {
@@ -268,7 +270,7 @@ gwy_data_field_get_size(GObject *obj)
             { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
             { 'i', "cache_bits", &data_field->cached, NULL, },
-            { 'D', "cache_data", &data_field->cache, &cachesize, },
+            { 'D', "cache_data", &cache, &cachesize, },
         };
         return gwy_serialize_get_struct_size(GWY_DATA_FIELD_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
