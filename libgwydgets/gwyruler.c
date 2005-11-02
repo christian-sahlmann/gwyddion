@@ -49,7 +49,7 @@
  * and a few drawing functions.  Rewritten again in 2005 to minimize
  * code duplication.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
@@ -93,8 +93,6 @@ static void          gwy_ruler_get_property       (GObject *object,
                                                    GValue *value,
                                                    GParamSpec *pspec);
 static void          gwy_ruler_update_value_format(GwyRuler *ruler);
-static gdouble       compute_base                 (gdouble max,
-                                                   gdouble basebase);
 static GwyScaleScale next_scale                   (GwyScaleScale scale,
                                                    gdouble *base,
                                                    gdouble measure,
@@ -561,14 +559,8 @@ gwy_ruler_update_value_format(GwyRuler *ruler)
     ruler->vformat
         = gwy_si_unit_get_format_with_resolution(ruler->units,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 max, max/12,
+                                                 max, max/15,
                                                  ruler->vformat);
-    if (ruler->vformat->precision > 1)
-        ruler->vformat
-            = gwy_si_unit_get_format_with_resolution(ruler->units,
-                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                     max/12, max/24,
-                                                     ruler->vformat);
 }
 
 /**
@@ -588,23 +580,49 @@ gwy_ruler_draw_pos(GwyRuler *ruler)
         method(ruler);
 }
 
+static gboolean
+gwy_ruler_is_precision_ok(const GwySIValueFormat *format,
+                          guint unitstr_len,
+                          gdouble first,
+                          gdouble bstep)
+{
+    gchar *unit_str, *unit_str2;
+
+    unit_str = g_newa(gchar, unitstr_len);
+    unit_str2 = g_newa(gchar, unitstr_len);
+    g_snprintf(unit_str, unitstr_len, "%.*f",
+               format->precision, first/format->magnitude);
+    g_snprintf(unit_str2, unitstr_len, "%.*f",
+               format->precision, (first + bstep)/format->magnitude);
+    if (gwy_strequal(unit_str, unit_str2))
+        return FALSE;
+
+    g_snprintf(unit_str, unitstr_len, "%.*f",
+               format->precision, (first + 2*bstep)/format->magnitude);
+    if (gwy_strequal(unit_str, unit_str2))
+        return FALSE;
+
+    return TRUE;
+}
+
 static void
 gwy_ruler_draw_ticks(GwyRuler *ruler)
 {
+    enum { FINALLY_OK, FIRST_TRY, ADD_DIGITS, LESS_TICKS };
+    struct { GwyScaleScale scale; double base; } tick_info[4];
     gdouble lower, upper, max;
     gint text_size, labels, i, scale_depth;
     gint tick_length, min_label_spacing, min_tick_spacing;
-    gdouble range, measure, base, step, first;
-    GwyScaleScale scale;
+    gdouble range, measure, base, step, first, bstep;
+    GwyScaleScale scale = GWY_SCALE_1;
     GwySIValueFormat *format;
     PangoRectangle rect;
     gchar *unit_str;
-    gint unitstr_len;
+    guint unitstr_len;
     gboolean units_drawn;
     GtkWidget *widget;
     GdkGC *gc;
-    gint ascent, descent, vpos;
-    struct { GwyScaleScale scale; double base; } tick_info[4];
+    gint ascent = 0, descent, vpos, state;
 
     widget = GTK_WIDGET(ruler);
     if (!GTK_WIDGET_DRAWABLE(ruler))
@@ -626,63 +644,94 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         max = MAX(fabs(lower), fabs(upper));
 
     range = upper - lower;
-    measure = range/format->magnitude / ruler->pixelsize;
-    max /= format->magnitude;
+    measure = range / ruler->pixelsize;
 
-    switch (ruler->units_placement && ruler->units) {
-        case GWY_UNITS_PLACEMENT_AT_ZERO:
-        unit_str
-            = g_strdup_printf("%d %s",
-                              (lower > 0) ? (gint)(lower/format->magnitude) : 0,
-                              format->units);
-        break;
+    unitstr_len = strlen(format->units) + 12;
+    unit_str = g_newa(gchar, unitstr_len);
+    state = FIRST_TRY;
+    do {
+        if (state != LESS_TICKS) {
+            switch (ruler->units_placement && ruler->units) {
+                case GWY_UNITS_PLACEMENT_AT_ZERO:
+                if (lower > 0)
+                    g_snprintf(unit_str, unitstr_len, "%.*f %s",
+                               format->precision, lower/format->magnitude,
+                               format->units);
+                else
+                    g_snprintf(unit_str, unitstr_len, "0 %s", format->units);
+                break;
 
-        default:
-        unit_str = g_strdup_printf("%d", (gint)max);
-        break;
-    }
+                default:
+                g_snprintf(unit_str, unitstr_len, "%.*f",
+                           format->precision, max/format->magnitude);
+                break;
+            }
 
-    pango_layout_set_markup(ruler->layout, unit_str, -1);
-    pango_layout_get_extents(ruler->layout, NULL, &rect);
-    ascent = PANGO_ASCENT(rect);
-    descent = PANGO_DESCENT(rect);
-    text_size = PANGO_PIXELS(rect.width) + 1;
+            pango_layout_set_markup(ruler->layout, unit_str, -1);
+            pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
+            ascent = PANGO_ASCENT(rect);
+            descent = PANGO_DESCENT(rect);
+            text_size = rect.width + 1;
 
-    /* reallocate unit_str with some margin */
-    unitstr_len = strlen(unit_str) + 16;
-    unit_str = g_renew(gchar, unit_str, unitstr_len);
+            /* fit as many labels as you can */
+            labels = floor(ruler->pixelsize/(text_size + ruler->hthickness
+                                             + min_label_spacing));
+            labels = MAX(labels, 1);
+            if (labels > 8)
+                labels = 8 + (labels - 7)/2;
 
-    /* fit as many labels as you can */
-    labels = floor(ruler->pixelsize/(text_size + ruler->hthickness
-                                     + min_label_spacing));
-    labels = MAX(labels, 1);
-    if (labels > 6)
-        labels = 6 + (labels - 5)/2;
+            step = range / labels;
+            base = pow10(floor(log10(step) + 1e-12));
+            step /= base;
+            while (step <= 0.5) {
+                base /= 10.0;
+                step += 10.0;
+            }
+            while (step > 5.0) {
+                base *= 10.0;
+                step /= 10.0;
+            }
+            if (step <= 1.0)
+                scale = GWY_SCALE_1;
+            else if (step <= 2.0)
+                scale = GWY_SCALE_2;
+            else if (step <= 2.5)
+                scale = GWY_SCALE_2_5;
+            else
+                scale = GWY_SCALE_5;
+        }
 
-    step = range/format->magnitude / labels;
-    base = compute_base(step, 10);
-    step /= base;
-    if (step >= 5.0 || base < 1.0) {
-        scale = GWY_SCALE_1;
-        base *= 10;
-    }
-    else if (step >= 2.5)
-        scale = GWY_SCALE_5;
-    else if (step >= 2.0)
-        scale = GWY_SCALE_2_5;
-    else
-        scale = GWY_SCALE_2;
-    step = steps[scale];
+        step = steps[scale];
+        bstep = base*step;
+        first = floor(lower / (bstep))*bstep;
+
+        if (!gwy_ruler_is_precision_ok(format, unitstr_len, first, base*step)) {
+            if (state == FIRST_TRY) {
+                state = ADD_DIGITS;
+                format->precision++;
+            }
+            else {
+                state = LESS_TICKS;
+                base *= 10;
+                scale = GWY_SCALE_1;
+            }
+        }
+        else {
+            if (state == FIRST_TRY && format->precision > 0)
+                format->precision--;
+            else
+                state = FINALLY_OK;
+        }
+    } while (state != FINALLY_OK);
 
     /* draw labels */
     units_drawn = FALSE;
-    first = floor(lower/format->magnitude / (base*step))*base*step;
     for (i = 0; ; i++) {
         gint pos;
         gdouble val;
 
-        val = i*step*base + first;
-        pos = floor((val - lower/format->magnitude)/measure);
+        val = i*bstep + first;
+        pos = floor((val - lower)/measure);
         if (pos >= ruler->pixelsize)
             break;
         if (pos < 0)
@@ -691,18 +740,23 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
             && (upper < 0 || val >= 0)
             && ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
             && ruler->units) {
-            g_snprintf(unit_str, unitstr_len, "%d %s",
-                       ROUND(val), format->units);
+            if (val == 0)
+                g_snprintf(unit_str, unitstr_len, "0 %s", format->units);
+            else
+                g_snprintf(unit_str, unitstr_len, "%.*f %s",
+                           format->precision, val/format->magnitude,
+                           format->units);
             units_drawn = TRUE;
         }
         else
-            g_snprintf(unit_str, unitstr_len, "%d", ROUND(val));
+            g_snprintf(unit_str, unitstr_len, "%.*f",
+                       format->precision, val/format->magnitude);
 
         pango_layout_set_markup(ruler->layout, unit_str, -1);
         /* this is the best approximation of same positioning I'm able to do,
          * but it's still wrong */
-        pango_layout_get_extents(ruler->layout, NULL, &rect);
-        vpos = ruler->vthickness + PANGO_PIXELS(ascent - PANGO_ASCENT(rect));
+        pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
+        vpos = ruler->vthickness + ascent - PANGO_ASCENT(rect);
         GWY_RULER_GET_CLASS(ruler)->draw_layout(ruler, pos + 3, vpos);
     }
 
@@ -721,14 +775,14 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         tick_length = ruler->height/(scale_depth + 1) - 2;
         scale = tick_info[scale_depth].scale;
         base = tick_info[scale_depth].base;
-        step = steps[scale];
-        first = floor(lower/format->magnitude / (base*step))*base*step;
+        bstep = base*steps[scale];
+        first = floor(lower / (bstep))*bstep;
         for (i = 0; ; i++) {
             gint pos;
             gdouble val;
 
-            val = (i + 0.000001)*step*base + first;
-            pos = floor((val - lower/format->magnitude)/measure);
+            val = (i + 0.000001)*bstep + first;
+            pos = floor((val - lower)/measure);
             if (pos >= ruler->pixelsize)
                 break;
             if (pos < 0)
@@ -738,25 +792,6 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         }
         scale_depth--;
     }
-
-    g_free(unit_str);
-}
-
-static gdouble
-compute_base(gdouble max, gdouble basebase)
-{
-    gint i;
-    gdouble base;
-
-    i = floor(log(max)/log(basebase));
-    base = 1.0;
-    if (i > 0)
-        while (i--)
-            base *= basebase;
-    else
-        while (i++)
-            base /= basebase;
-    return base;
 }
 
 static GwyScaleScale
