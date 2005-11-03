@@ -558,7 +558,7 @@ gwy_ruler_update_value_format(GwyRuler *ruler)
     ruler->vformat
         = gwy_si_unit_get_format_with_resolution(ruler->units,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 max, max/2,
+                                                 max, max/21,
                                                  ruler->vformat);
 }
 
