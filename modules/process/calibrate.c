@@ -39,12 +39,16 @@ typedef struct {
     gint xyexponent;
     gint zexponent;
     gboolean square;
-    gdouble zreal;
     gdouble xreal;
     gdouble yreal;
+    gdouble zreal;
+    gdouble x0;
+    gdouble y0;
     gdouble xorig;
     gdouble yorig;
     gdouble zorig;
+    gdouble x0orig;
+    gdouble y0orig;
     gint xyorigexp;
     gint zorigexp;
     gint xres;
@@ -65,6 +69,8 @@ typedef struct {
     GtkObject *xreal;
     GtkObject *yreal;
     GtkObject *zreal;
+    GtkObject *x0;
+    GtkObject *y0;
     gboolean in_update;
 } CalibrateControls;
 
@@ -84,6 +90,10 @@ static void        zratio_changed_cb         (GtkAdjustment *adj,
 static void        xreal_changed_cb          (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        yreal_changed_cb          (GtkAdjustment *adj,
+                                              CalibrateControls *controls);
+static void        x0_changed_cb             (GtkAdjustment *adj,
+                                              CalibrateControls *controls);
+static void        y0_changed_cb             (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        zreal_changed_cb          (GtkAdjustment *adj,
                                               CalibrateControls *controls);
@@ -108,7 +118,7 @@ CalibrateArgs calibrate_defaults = {
     -6,
     -6,
     TRUE,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 };
 
 /* The module info. */
@@ -117,7 +127,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -163,6 +173,8 @@ calibrate(GwyContainer *data, GwyRunType run)
                  - gwy_data_field_get_min(dfield);
     args.xres = gwy_data_field_get_xres(dfield);
     args.yres = gwy_data_field_get_yres(dfield);
+    args.x0orig = gwy_data_field_get_xoffset(dfield);
+    args.y0orig = gwy_data_field_get_yoffset(dfield);
     args.xyorigexp = 3*floor(log10(args.xorig*args.yorig)/6);
     args.zorigexp = 3*floor(log10(args.zorig)/3);
     args.xreal = args.xratio * args.xorig;
@@ -170,6 +182,8 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.zreal = args.zratio * args.zorig;
     args.xyexponent = 3*floor(log10(args.xreal*args.yreal)/6);
     args.zexponent = 3*floor(log10(args.zreal)/3);
+    args.x0 = args.x0orig;
+    args.y0 = args.y0orig;
 
     ok = (run != GWY_RUN_MODAL) || calibrate_dialog(&args, data);
     if (run == GWY_RUN_MODAL)
@@ -181,10 +195,16 @@ calibrate(GwyContainer *data, GwyRunType run)
     gwy_app_clean_up_data(data);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    gwy_data_field_set_xreal(dfield, args.xreal);
-    gwy_data_field_set_yreal(dfield, args.yreal);
+    if (args.xreal != args.xorig)
+        gwy_data_field_set_xreal(dfield, args.xreal);
+    if (args.yreal != args.yorig)
+        gwy_data_field_set_yreal(dfield, args.yreal);
     if (args.zratio != 1.0)
         gwy_data_field_multiply(dfield, args.zratio);
+    if (args.x0 != args.x0orig)
+        gwy_data_field_set_xoffset(dfield, args.x0);
+    if (args.y0 != args.y0orig)
+        gwy_data_field_set_yoffset(dfield, args.y0);
 
     if (gwy_container_gis_object_by_name(data, "/0/mask", &dfield)) {
         gwy_data_field_set_xreal(dfield, args.xreal);
@@ -223,12 +243,13 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     controls.in_update = TRUE;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    table = gtk_table_new(9, 3, FALSE);
+    table = gtk_table_new(12, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = 0;
 
+    /***** New Real Dimensions *****/
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), _("<b>New Real Dimensions</b>"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -278,6 +299,41 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
     row++;
 
+    label = gtk_label_new_with_mnemonic(_("_X offset:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    controls.x0 = gtk_adjustment_new(args->x0/pow10(args->xyexponent),
+                                     -10000, 10000, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.x0), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_table_attach(GTK_TABLE(table), spin,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Y offset:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    controls.y0 = gtk_adjustment_new(args->y0/pow10(args->xyexponent),
+                                     -10000, 10000, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.y0), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_table_attach(GTK_TABLE(table), spin,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    /***** Value Range *****/
+    label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(label), _("<b>Value Range</b>"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    row++;
+
     label = gtk_label_new_with_mnemonic(_("_Z range:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -301,6 +357,7 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    /***** Calibration Coefficients *****/
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label),
                          _("<b>Calibration Coefficients</b>"));
@@ -337,6 +394,10 @@ calibrate_dialog(CalibrateArgs *args, GwyContainer *data)
                      G_CALLBACK(xreal_changed_cb), &controls);
     g_signal_connect(controls.yreal, "value-changed",
                      G_CALLBACK(yreal_changed_cb), &controls);
+    g_signal_connect(controls.x0, "value-changed",
+                     G_CALLBACK(x0_changed_cb), &controls);
+    g_signal_connect(controls.y0, "value-changed",
+                     G_CALLBACK(y0_changed_cb), &controls);
     g_signal_connect(controls.zreal, "value-changed",
                      G_CALLBACK(zreal_changed_cb), &controls);
     g_signal_connect(controls.xratio, "value-changed",
@@ -399,6 +460,10 @@ dialog_reset(CalibrateControls *controls,
     args->zexponent = args->zorigexp;
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zratio),
                              calibrate_defaults.zratio);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->x0),
+                             args->x0orig/pow10(args->xyexponent));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->y0),
+                             args->y0orig/pow10(args->xyexponent));
     calibrate_dialog_update(controls, args);
 }
 
@@ -504,6 +569,38 @@ yreal_changed_cb(GtkAdjustment *adj,
 }
 
 static void
+x0_changed_cb(GtkAdjustment *adj,
+              CalibrateControls *controls)
+{
+    CalibrateArgs *args = controls->args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+    args->x0 = gtk_adjustment_get_value(adj) * pow10(args->xyexponent);
+    calibrate_dialog_update(controls, args);
+    controls->in_update = FALSE;
+
+}
+
+static void
+y0_changed_cb(GtkAdjustment *adj,
+              CalibrateControls *controls)
+{
+    CalibrateArgs *args = controls->args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+
+    args->y0 = gtk_adjustment_get_value(adj) * pow10(args->xyexponent);
+    calibrate_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+static void
 zreal_changed_cb(GtkAdjustment *adj,
                  CalibrateControls *controls)
 {
@@ -554,9 +651,13 @@ xyexponent_changed_cb(GtkWidget *combo,
     args->xyexponent = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     args->xreal = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xreal))
                   * pow10(args->xyexponent);
+    args->x0 = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->x0))
+               * pow10(args->xyexponent);
     args->xratio = args->xreal/args->xorig;
     args->yreal = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yreal))
                   * pow10(args->xyexponent);
+    args->y0 = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->y0))
+               * pow10(args->xyexponent);
     args->yratio = args->yreal/args->yorig;
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
@@ -592,6 +693,11 @@ calibrate_dialog_update(CalibrateControls *controls,
                              args->xreal/pow10(args->xyexponent));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yreal),
                              args->yreal/pow10(args->xyexponent));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->x0),
+                             args->x0/pow10(args->xyexponent));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->y0),
+                             args->y0/pow10(args->xyexponent));
+
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zreal),
                              args->zreal/pow10(args->zexponent));
 
