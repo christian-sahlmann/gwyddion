@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -210,7 +210,7 @@ dialog_update(GwyUnitoolState *state,
     GwyDataViewLayer *layer;
     GwySelection *selection;
     GString *str;
-    gdouble value, xy[2];
+    gdouble value, xoff, yoff, xy[2];
     gboolean is_visible, is_selected;
     gint radius;
 
@@ -242,10 +242,12 @@ dialog_update(GwyUnitoolState *state,
     g_string_free(str, TRUE);
 
     if (is_selected) {
+        xoff = gwy_data_field_get_xoffset(dfield);
+        yoff = gwy_data_field_get_yoffset(dfield);
         gwy_unitool_update_label_no_units(state->coord_hformat,
-                                          controls->x, xy[0]);
+                                          controls->x, xy[0] + xoff);
         gwy_unitool_update_label_no_units(state->coord_hformat,
-                                          controls->y, xy[1]);
+                                          controls->y, xy[1] + yoff);
         value = gwy_unitool_get_z_average(dfield, xy[0], xy[1], radius);
         gwy_unitool_update_label_no_units(state->value_hformat,
                                           controls->val, value);

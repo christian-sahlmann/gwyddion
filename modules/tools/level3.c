@@ -59,7 +59,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -223,7 +223,7 @@ dialog_update(GwyUnitoolState *state,
     GString *str;
     gdouble points[6];
     gboolean is_visible;
-    gdouble val;
+    gdouble val, xoff, yoff;
     gint nselected, i, radius;
 
     gwy_debug("");
@@ -251,10 +251,14 @@ dialog_update(GwyUnitoolState *state,
     gtk_label_set_markup(GTK_LABEL(controls->zunits), str->str);
     g_string_free(str, TRUE);
 
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+
     for (i = 0; i < 6; i++) {
         if (i < 2*nselected) {
             gwy_unitool_update_label_no_units(state->coord_hformat,
-                                              controls->coords[i], points[i]);
+                                              controls->coords[i],
+                                              points[i] + (i%2 ? yoff : xoff));
             if (i%2 == 0) {
                 val = gwy_unitool_get_z_average(dfield, points[i], points[i+1],
                                                 radius);
