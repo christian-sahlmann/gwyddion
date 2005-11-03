@@ -28,8 +28,6 @@
 #include "gwygraphmodel.h"
 #include "gwygraphcurvemodel.h"
 
-#define SQRT3 1.7320508075688772935274
-
 static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
@@ -193,9 +191,9 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
         case GWY_GRAPH_POINT_TRIANGLE_UP:
         {
             GdkPoint vertices[] = {
-                { i, j - size/SQRT3 },
-                { i - size_half, j + size/SQRT3/2.0 },
-                { i + size_half, j + size/SQRT3/2.0 },
+                { i, j - size/GWY_SQRT3 },
+                { i - size_half, j + size/GWY_SQRT3/2.0 },
+                { i + size_half, j + size/GWY_SQRT3/2.0 },
             };
             gdk_draw_polygon(drawable, gc, filled,
                              vertices, G_N_ELEMENTS(vertices));
@@ -207,9 +205,9 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
         case GWY_GRAPH_POINT_TRIANGLE_DOWN:
         {
             GdkPoint vertices[] = {
-                { i, j + size/SQRT3 },
-                { i - size_half, j - size/SQRT3/2.0 },
-                { i + size_half, j - size/SQRT3/2.0 },
+                { i, j + size/GWY_SQRT3 },
+                { i - size_half, j - size/GWY_SQRT3/2.0 },
+                { i + size_half, j - size/GWY_SQRT3/2.0 },
             };
             gdk_draw_polygon(drawable, gc, filled,
                              vertices, G_N_ELEMENTS(vertices));

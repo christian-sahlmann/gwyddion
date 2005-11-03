@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
+#define GWY_SQRT3 1.73205080756887729352744634150587236694280525381038
+
 gdouble      gwy_math_humanize_numbers   (gdouble unit,
                                           gdouble maximum,
                                           gint *precision);
