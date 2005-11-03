@@ -240,7 +240,6 @@ gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
     g_return_if_fail(material
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
 
-    g_printerr("<%s>", gwy_resource_get_name(GWY_RESOURCE(material)));
     switch (editor->last_component) {
         case GL_MATERIAL_AMBIENT:
         color = gwy_gl_material_get_ambient(material);
