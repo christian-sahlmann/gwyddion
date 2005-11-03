@@ -876,6 +876,7 @@ GwyGraphLabelPosition
 GwyGraphModelExportStyle
 GwyLayerBasicRangeType
 GwyCurveType
+gwy_graph_curve_type_get_enum
 </SECTION>
 
 <SECTION>
@@ -962,6 +963,7 @@ gwy_table_get_child_widget
 gwy_color_selector_for_mask
 gwy_dialog_prevent_delete_cb
 gwy_stock_like_button_new
+gwy_tool_like_button_new
 gwy_get_pango_ft2_font_map
 gwy_gdk_cursor_new_or_ref
 gwy_gdk_cursor_free_or_unref
@@ -1053,5 +1055,6 @@ gwy_gl_material_tree_view_new
 gwy_gl_material_tree_view_set_active
 gwy_gl_material_selection_get_active
 gwy_gl_material_selection_set_active
+gwy_resource_tree_view_set_active
 </SECTION>
 

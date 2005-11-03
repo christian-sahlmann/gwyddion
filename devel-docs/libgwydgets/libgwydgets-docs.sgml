@@ -34,7 +34,7 @@
   </chapter>
 
   <chapter id="GraphWidgets">
-    <title>Graph</title>
+    <title>Graphs</title>
     <xi:include href="xml/gwygraph.xml"/>
     <xi:include href="xml/gwygraphwindow.xml"/>
     <xi:include href="xml/gwygraphmodel.xml"/>
@@ -44,6 +44,7 @@
     <xi:include href="xml/gwyaxisdialog.xml"/>
     <xi:include href="xml/gwygraphlabel.xml"/>
     <xi:include href="xml/gwygraphdata.xml"/>
+    <xi:include href="xml/gwygraphbasics.xml"/>
     <xi:include href="xml/gwygraphselections.xml"/>
     <xi:include href="xml/gwygraphcorner.xml"/>
   </chapter>
@@ -66,17 +67,16 @@
     <xi:include href="xml/gwystatusbar.xml"/>
     <xi:include href="xml/gwyshader.xml"/>
     <xi:include href="xml/gwyinventorystore.xml"/>
-    <xi:include href="xml/gwyvalunit.xml"/>
   </chapter>
 
   <chapter id="WidgetUtilities">
     <title>Widget Utilities</title>
+    <xi:include href="xml/gwydgets.xml"/>
     <xi:include href="xml/gwydgetenums.xml"/>
     <xi:include href="xml/gwydgetutils.xml"/>
     <xi:include href="xml/gwystock.xml"/>
     <xi:include href="xml/gwyoptionmenus.xml"/>
     <xi:include href="xml/gwycombobox.xml"/>
     <xi:include href="xml/gwyradiobuttons.xml"/>
-    <xi:include href="xml/gwydgets.xml"/>
   </chapter>
 </book>
