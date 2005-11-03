@@ -1,20 +1,15 @@
 <!-- ##### SECTION Title ##### -->
-gwyradiobuttons
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Radio button constructors for enums
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Radio button constructors are very similar to
-<link linkend="libgwydgets-gwyoptionmenus">option menu constructors</link>,
-please see them for detailed description.  The only difference is the usage
-of radio button group, which is described in #GtkRadioButton reference.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-<link linkend="libgwydgets-gwyoptionmenus">Option menu constructors</link>
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

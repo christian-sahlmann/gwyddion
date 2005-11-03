@@ -137,3 +137,13 @@
 @active: 
 
 
+<!-- ##### FUNCTION gwy_resource_tree_view_set_active ##### -->
+<para>
+
+</para>
+
+@treeview: 
+@active: 
+@Returns: 
+
+

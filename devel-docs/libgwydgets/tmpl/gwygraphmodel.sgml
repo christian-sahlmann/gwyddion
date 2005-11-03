@@ -1,14 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyGraphModel
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Representation of a graph.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-#GwyGraphModel represents information about a graph necessary to fully
-reconstruct it.  It will be meaningfully used by the new generation of graph
-widgets and should be mostly ignored for now.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

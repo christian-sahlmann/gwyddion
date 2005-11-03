@@ -1,15 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyAxis
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Widget for drawing axis
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This widget is used for drawing axis. It is namely used
-within GwyGraph widget, byt it can be also used separately.
-It plots a horizontal or vertical axis with amjor and minor ticks,
-with ranges in the requested interval.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

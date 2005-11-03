@@ -1,15 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyGraphArea
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Layout for drawing graph curves.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This widget is a part of GwyGraph widget. It is
-recommended to use it within the GwyGraph widget,
-however, it can be used separately. It plots
-a set of data curves with a given plot properties.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

@@ -115,6 +115,16 @@
 @Returns: 
 
 
+<!-- ##### FUNCTION gwy_tool_like_button_new ##### -->
+<para>
+
+</para>
+
+@label_text: 
+@stock_id: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gwy_get_pango_ft2_font_map ##### -->
 <para>
 

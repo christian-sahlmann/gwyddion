@@ -194,4 +194,19 @@ gwy_radio_buttons_get_current_from_widget(GtkWidget *widget,
                (gtk_radio_button_get_group(GTK_RADIO_BUTTON(widget)), key);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyradiobuttons
+ * @title: gwyradiobuttons
+ * @short_description: Radio button constructors for enums
+ * @see_also: <link linkend="libgwydget-gwycombobox">gwycombobox</link>
+ *            -- combo box constructors
+ *
+ * Radio button groups can be easily constructed from #GwyEnum's with
+ * gwy_radio_buttons_create() specifying a key that will be used to define
+ * value of each item so that it can be either fetched with g_object_get_data()
+ * in a callback function or with gwy_radio_buttons_get_current().
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

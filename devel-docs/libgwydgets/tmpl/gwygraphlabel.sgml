@@ -1,13 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyGraphLabel
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Graph label
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-This widget should be probabaly used only within
-the GwyGraph widget. It plots a curves legend.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

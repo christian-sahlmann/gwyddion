@@ -772,10 +772,16 @@ gwy_graph_curve_model_signal_layout_changed(GwyGraphCurveModel *model)
     g_signal_emit(model, graph_curve_model_signals[LAYOUT_UPDATED], 0);
 }
 
-
-
-
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:gwygraphcurvemodel
+ * @title: GwyGraphCurveModel
+ * @short_description: Representation of a one graph curve
+ *
+ * #GwyGraphCurveModel represents information about a graph curve necessary to
+ * fully reconstruct it.
+ **/
 
 /**
  * gwy_graph_curve_model_duplicate:

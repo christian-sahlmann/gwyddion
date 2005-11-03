@@ -1100,6 +1100,15 @@ gwy_graph_model_export_ascii(GwyGraphModel *model, const gchar *filename,
 /************************** Documentation ****************************/
 
 /**
+ * SECTION:gwygraphmodel
+ * @title: GwyGraphModel
+ * @short_description: Representation of a graph
+ *
+ * #GwyGraphModel represents information about a graph necessary to fully
+ * reconstruct it.
+ **/
+
+/**
  * gwy_graph_model_duplicate:
  * @gmodel: A graph model to duplicate.
  *

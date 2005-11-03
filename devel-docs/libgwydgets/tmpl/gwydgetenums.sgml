@@ -1,5 +1,5 @@
 <!-- ##### SECTION Title ##### -->
-gwydgetenums
+
 
 <!-- ##### SECTION Short_Description ##### -->
 
@@ -120,6 +120,12 @@ gwydgetenums
 @GWY_GRAPH_POINT_TRIANGLE_UP: 
 @GWY_GRAPH_POINT_TRIANGLE_DOWN: 
 @GWY_GRAPH_POINT_DIAMOND: 
+@GWY_GRAPH_POINT_FILLED_SQUARE: 
+@GWY_GRAPH_POINT_DISC: 
+@GWY_GRAPH_POINT_FILLED_CIRCLE: 
+@GWY_GRAPH_POINT_FILLED_TRIANGLE_UP: 
+@GWY_GRAPH_POINT_FILLED_TRIANGLE_DOWN: 
+@GWY_GRAPH_POINT_FILLED_DIAMOND: 
 
 <!-- ##### ENUM GwyGraphCurveType ##### -->
 <para>
@@ -170,4 +176,12 @@ gwydgetenums
 @GWY_CURVE_TYPE_LINEAR: 
 @GWY_CURVE_TYPE_SPLINE: 
 @GWY_CURVE_TYPE_FREE: 
+
+<!-- ##### FUNCTION gwy_graph_curve_type_get_enum ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
 

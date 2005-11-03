@@ -1,20 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-GwyGraph
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Widget for displaying graphs
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-GwyGraph is basic widget for displaying graphs.
-It consist of several widgets that can be also used sparately.
-However, it is recomended (and it should be easy)
-to use whole GwyGraph widget and its API for most of the purposes.
-</para>
-<para>
-GwyGraph is still in developement. Basic functionality and API is
-however allready set up. In the future, more API functions will
-be introduced probably.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
