@@ -91,14 +91,20 @@ typedef enum {
 } GwyGraphGridType;
 
 typedef enum {
-    GWY_GRAPH_POINT_SQUARE        = 0,
-    GWY_GRAPH_POINT_CROSS         = 1,
-    GWY_GRAPH_POINT_CIRCLE        = 2,
-    GWY_GRAPH_POINT_STAR          = 3,
-    GWY_GRAPH_POINT_TIMES         = 4,
-    GWY_GRAPH_POINT_TRIANGLE_UP   = 5,
-    GWY_GRAPH_POINT_TRIANGLE_DOWN = 6,
-    GWY_GRAPH_POINT_DIAMOND       = 7
+    GWY_GRAPH_POINT_SQUARE               = 0,
+    GWY_GRAPH_POINT_CROSS                = 1,
+    GWY_GRAPH_POINT_CIRCLE               = 2,
+    GWY_GRAPH_POINT_STAR                 = 3,
+    GWY_GRAPH_POINT_TIMES                = 4,
+    GWY_GRAPH_POINT_TRIANGLE_UP          = 5,
+    GWY_GRAPH_POINT_TRIANGLE_DOWN        = 6,
+    GWY_GRAPH_POINT_DIAMOND              = 7,
+    GWY_GRAPH_POINT_FILLED_SQUARE        = 8,
+    GWY_GRAPH_POINT_DISC                 = 9,
+    GWY_GRAPH_POINT_FILLED_CIRCLE        = GWY_GRAPH_POINT_DISC,
+    GWY_GRAPH_POINT_FILLED_TRIANGLE_UP   = 10,
+    GWY_GRAPH_POINT_FILLED_TRIANGLE_DOWN = 11,
+    GWY_GRAPH_POINT_FILLED_DIAMOND       = 12
 } GwyGraphPointType;
 
 typedef enum {

@@ -35,6 +35,7 @@
 
 enum {
     COLUMN_VALUE,
+    COLUMN_NAME,
     COLUMN_PIXBUF
 };
 
@@ -47,6 +48,7 @@ static GtkWidget* gwy_graph_combo_box_new          (GtkWidget *parent,
                                                     GCallback callback,
                                                     gpointer cbdata,
                                                     gint last,
+                                                    const gchar **labels,
                                                     GCallback realize_cb,
                                                     gint current);
 static void       gwy_graph_point_combo_box_realize(GtkWidget *parent,
@@ -128,8 +130,15 @@ gwy_graph_area_dialog_delete(GtkWidget *widget,
 static void
 gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
 {
+    static const gchar *point_types[] = {
+        N_("Square"), N_("Cross"), N_("Circle"), N_("Star"),
+        N_("Diagonal cross"), N_("Triangle up"), N_("Triangle down"),
+        N_("Diamond"), N_("Full square"), N_("Disc"),
+        N_("Full triangle up"), N_("Full triangle down"), N_("Full diamond"),
+    };
     GtkWidget *label, *table, *button;
     gint row = 0;
+
     gwy_debug("");
 
     table = gtk_table_new(2, 8, FALSE);
@@ -181,7 +190,8 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     dialog->pointtype_menu
         = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
                                   G_CALLBACK(pointtype_cb), dialog,
-                                  GWY_GRAPH_POINT_DIAMOND,
+                                  GWY_GRAPH_POINT_FILLED_DIAMOND,
+                                  point_types,
                                   G_CALLBACK(gwy_graph_point_combo_box_realize),
                                   0);
     gwy_table_attach_row(table, row, _("Point type:"), NULL,
@@ -199,6 +209,7 @@ gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
         = gwy_graph_combo_box_new(GTK_WIDGET(dialog),
                                   G_CALLBACK(linetype_cb), dialog,
                                   GDK_LINE_DOUBLE_DASH,
+                                  NULL,
                                   G_CALLBACK(gwy_graph_line_combo_box_realize),
                                   0);
     gwy_table_attach_row(table, row, _("Line type:"), "",
@@ -280,6 +291,7 @@ gwy_graph_combo_box_new(GtkWidget *parent,
                         GCallback callback,
                         gpointer cbdata,
                         gint last,
+                        const gchar **labels,
                         GCallback realize_cb,
                         gint current)
 {
@@ -289,10 +301,16 @@ gwy_graph_combo_box_new(GtkWidget *parent,
     GtkTreeIter iter;
     gint i;
 
-    store = gtk_list_store_new(2, G_TYPE_INT, GDK_TYPE_PIXBUF);
+    store = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_STRING, GDK_TYPE_PIXBUF);
     for (i = 0; i <= last; i++) {
         gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, COLUMN_VALUE, i, -1);
+        if (labels)
+            gtk_list_store_set(store, &iter,
+                               COLUMN_VALUE, i,
+                               COLUMN_NAME, _(labels[i]),
+                               -1);
+        else
+            gtk_list_store_set(store, &iter, COLUMN_VALUE, i, -1);
     }
 
     combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
@@ -302,6 +320,12 @@ gwy_graph_combo_box_new(GtkWidget *parent,
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
     gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), renderer,
                                   "pixbuf", COLUMN_PIXBUF);
+    if (labels) {
+        renderer = gtk_cell_renderer_text_new();
+        gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, FALSE);
+        gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), renderer,
+                                      "text", COLUMN_NAME);
+    }
 
     if (current <= GWY_GRAPH_POINT_DIAMOND)
         gtk_combo_box_set_active(GTK_COMBO_BOX(combo), current);
@@ -325,21 +349,24 @@ gwy_graph_point_combo_box_realize(GtkWidget *parent,
     GtkTreeModel *model;
     GtkTreeIter iter;
     GdkGC *gc;
-    gint width, height, i;
+    gint width, height, i, size;
 
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
+    width |= 1;
+    height |= 1;
     gc = gdk_gc_new(parent->window);
     pixmap = gdk_pixmap_new(parent->window, width, height, -1);
 
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
     gtk_tree_model_get_iter_first(model, &iter);
+    size = (3*height/4 - 1) | 1;
     do {
         gtk_tree_model_get(model, &iter, COLUMN_VALUE, &i, -1);
 
         gdk_gc_set_rgb_fg_color(gc, &bg);
         gdk_draw_rectangle(pixmap, gc, TRUE, 0, 0, width, height);
         gwy_graph_draw_point(pixmap, gc, width/2, height/2, i,
-                             height/2, &fg, FALSE);
+                             size, &fg, FALSE);
 
         pixbuf = gdk_pixbuf_get_from_drawable(NULL, GDK_DRAWABLE(pixmap), NULL,
                                               0, 0, 0, 0, width, height);
