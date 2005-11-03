@@ -81,9 +81,6 @@ static GwyResource* gwy_resource_parse_real     (const gchar *text,
                                                  GType expected_type,
                                                  gboolean is_const);
 static void         gwy_resource_modified       (GwyResource *resource);
-static gboolean     gwy_resource_save           (gpointer key,
-                                                 gpointer item,
-                                                 gpointer user_data);
 static void         gwy_resource_class_load_dir (const gchar *path,
                                                  GwyResourceClass *klass,
                                                  gboolean is_system);
@@ -600,86 +597,6 @@ static void
 gwy_resource_modified(GwyResource *resource)
 {
     resource->is_modified = TRUE;
-}
-
-/**
- * gwy_resource_class_save:
- * @klass: A resource class.
- * @err: Location to store save error to, or %NULL.
- *
- * Saves modified user resources of a resource class to user directory.
- *
- * <warning>This function will be probably removed, as resources should be
- * saved on disk immediately.  Namely because it's impossible to handle
- * renamed resources this way.</warning>
- *
- * Returns: %TRUE if save succeeded, %FALSE if it failed.
- **/
-gboolean
-gwy_resource_class_save(GwyResourceClass *klass,
-                        GError **err)
-{
-    gchar *path;
-    GError *serr = NULL;
-    gboolean ok;
-
-    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), FALSE);
-    g_return_val_if_fail(klass->inventory, FALSE);
-
-    path = g_build_filename(gwy_get_user_dir(), klass->name, NULL);
-    if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
-        if (g_mkdir(path, 0700) != 0) {
-            g_set_error(err,
-                        G_FILE_ERROR,
-                        g_file_error_from_errno(errno),
-                        "Cannot create directory `%s': %s",
-                        path, g_strerror(errno));
-            g_free(path);
-            return FALSE;
-        }
-    }
-    g_free(path);
-
-    ok = !gwy_inventory_find(klass->inventory, &gwy_resource_save, &serr);
-    if (!ok)
-        g_propagate_error(err, serr);
-
-    return ok;
-}
-
-static gboolean
-gwy_resource_save(G_GNUC_UNUSED gpointer key,
-                  gpointer item,
-                  gpointer user_data)
-{
-    GwyResource *resource = GWY_RESOURCE(item);
-    GError **err = (GError**)user_data;
-    GString *str;
-    FILE *fh;
-    gchar *filename;
-
-    /* Only attempt to save modified user resourced */
-    if (resource->is_const || !resource->is_modified)
-        return FALSE;
-
-    filename = gwy_resource_build_filename(resource);
-    fh = g_fopen(filename, "w");
-    if (!fh) {
-        g_set_error(err,
-                    G_FILE_ERROR,
-                    g_file_error_from_errno(errno),
-                    "Cannot save file `%s': %s",
-                    filename, g_strerror(errno));
-        g_free(filename);
-        return TRUE;
-    }
-    g_free(filename);
-    str = gwy_resource_dump(resource);
-    fwrite(str->str, 1, str->len, fh);
-    fclose(fh);
-    g_string_free(str, TRUE);
-
-    return FALSE;
 }
 
 /**

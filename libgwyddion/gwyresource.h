@@ -92,8 +92,6 @@ gchar*            gwy_resource_build_filename        (GwyResource *resource);
 GString*          gwy_resource_dump                  (GwyResource *resource);
 GwyResource*      gwy_resource_parse                 (const gchar *text,
                                                       GType expected_type);
-gboolean          gwy_resource_class_save            (GwyResourceClass *klass,
-                                                      GError **err);
 void              gwy_resource_class_load            (GwyResourceClass *klass);
 
 G_END_DECLS
