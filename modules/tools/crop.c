@@ -242,6 +242,10 @@ apply(GwyUnitoolState *state)
             gwy_data_field_set_xoffset(dfield, sel[0]);
             gwy_data_field_set_yoffset(dfield, sel[1]);
         }
+        else {
+            gwy_data_field_set_xoffset(dfield, 0.0);
+            gwy_data_field_set_yoffset(dfield, 0.0);
+        }
     }
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
