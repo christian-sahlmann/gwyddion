@@ -1,13 +1,21 @@
-1.99.4cvs20051023
+1.99.4cvs20051103
 
 1.99.5
 Application:
 - Unix installations are relocatable via environment variables.
+- OpenGL material editor works.
 
 Library:
 - libgwydgets: Broken graph curve removal was fixed.
 - libgwydgets: Crashes and other problems with multiple 3D views were fixed
   (bug #53).
+- libgwyddion: Serialization is two stage now (calculate size, then
+  serialize), fixing repeated memory reallocations.
+- libgwydgets: Ruler tick formatting was improved, it can use non-integer
+  formats when they are suitable.
+- libgwydgets: Just moving mouse over data windows should consume much less
+  CPU.
+- libgwyapp: Unitool rectangular selection info supports lateral offsets.
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
@@ -16,7 +24,13 @@ Modules:
 - Hitachi AFM (new): Hitachi AFM file import.
 - Unisoku (new): Unisoku HDR + DAT file import.
 - EZDfile: Explict support for NID files was added, some bugs fixed.
+- MI file: Updated to reflect format changes.
 - Rawfile: Always black preview was fixed.
+- Lines layer: Jagged line number edges were fixed.
+- Level3, Read value: Display properly lateral offsets.
+- Crop: Allows to either keep lateral offsets where the data was cut, or
+  reset them to zero.
+- Calibrate: Can set lateral offsets too.
 
 
 1.99.4 (2005-10-06)
@@ -57,7 +71,7 @@ Library:
 - libprocess: Memory leaks in DWT were fixes and it was sped up.
 - libgwyddion: gwywin32unistd.h was removed, use gstdio wrappers.
 - libgwydgets, libgwyapp: A one global GtkTooltips object is used now,
-  API added to widgets to accomodate this.
+  API added to widgets to accommodate this.
 - libgwydgets: Crashes when mask/presentation is removed were fixed.
 - libprocess, libgwydgets: Data field and line interpolation was changed to
   centered data value style.
@@ -192,7 +206,7 @@ Modules:
 - IColorange supports auto-range mode.
 - Points layer: Supports set_selection(), if selection is one point it does
   not have to be dragged, click is enough to move it.
-- Pixmap: Import from TIFF images was enables on MS Windows too.
+- Pixmap: Import from TIFF images was enabled on MS Windows too.
 - Bugfixes were merged from 1.11 (bug #44, bug #46, bug #42, bug #52, others).
 - graph_points, graph_measure, graph_zoom, graph_unzoom removed as this
   functionality is now in the GwyGraphWindow widget directly.
