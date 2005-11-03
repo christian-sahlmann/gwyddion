@@ -831,6 +831,7 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
     gdouble sel[4];
     gint isel[4];
     gchar buf[16];
+    gdouble xoff, yoff;
     gboolean is_selected;
 
     data = gwy_data_window_get_data(GWY_DATA_WINDOW(state->data_window));
@@ -840,8 +841,10 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
                                                    sel, sel+1, sel+2, sel+3);
     if (is_selected || rinfo->unselected_is_full) {
         units = state->coord_format;
-        gwy_unitool_update_label(units, rinfo->xreal, sel[0]);
-        gwy_unitool_update_label(units, rinfo->yreal, sel[1]);
+        xoff = gwy_data_field_get_xoffset(dfield);
+        yoff = gwy_data_field_get_yoffset(dfield);
+        gwy_unitool_update_label(units, rinfo->xreal, sel[0] + xoff);
+        gwy_unitool_update_label(units, rinfo->yreal, sel[1] + yoff);
         gwy_unitool_update_label(units, rinfo->wreal, sel[2] - sel[0]);
         gwy_unitool_update_label(units, rinfo->hreal, sel[3] - sel[1]);
 
