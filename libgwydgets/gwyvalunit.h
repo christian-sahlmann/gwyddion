@@ -26,8 +26,9 @@
 #include <gtk/gtkwidget.h>
 #include <libgwyddion/gwysiunit.h>
 
-
 G_BEGIN_DECLS
+
+#ifndef GWY_DISABLE_DEPRECATED
 
 #define GWY_TYPE_VAL_UNIT            (gwy_val_unit_get_type())
 #define GWY_VAL_UNIT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_VAL_UNIT, GwyValUnit))
@@ -75,6 +76,7 @@ gdouble    gwy_val_unit_get_value (GwyValUnit *val_unit);
 
 void gwy_val_unit_signal_value_changed(GwyValUnit *val_unit);
 
+#endif
 
 G_END_DECLS
 
