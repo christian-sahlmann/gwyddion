@@ -38,7 +38,8 @@ x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 
    return specs->xmin
        + (gint)((log10(data) - log10(specs->real_xmin))
-                /((log10(specs->real_xmin + specs->real_width) - log10(specs->real_xmin)))*((gdouble)specs->width-1));
+                /((log10(specs->real_xmin + specs->real_width)
+                   - log10(specs->real_xmin)))*((gdouble)specs->width-1));
 
 }
 
@@ -46,13 +47,14 @@ static gint
 y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
     if (!specs->log_y)
-    return specs->ymin + specs->height
-           - (gint)((data - specs->real_ymin)
-                    /(specs->real_height)*((gdouble)specs->height-1));
+        return specs->ymin + specs->height
+            - (gint)((data - specs->real_ymin)
+                     /(specs->real_height)*((gdouble)specs->height-1));
 
     return specs->ymin + specs->height
         - (gint)((log10(data) - log10(specs->real_ymin))
-                /((log10(specs->real_ymin + specs->real_height) - log10(specs->real_ymin)))*((gdouble)specs->height-1));
+                /((log10(specs->real_ymin + specs->real_height)
+                   - log10(specs->real_ymin)))*((gdouble)specs->height-1));
 }
 
 void
@@ -64,7 +66,7 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
     GwyGraphCurveModel *cmodel;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(curvemodel);
-    for (i = 0; i < (cmodel->n); i++) {
+    for (i = 0; i < cmodel->n; i++) {
         if (i == 0) {
             x = x_data_to_pixel(specs, cmodel->xdata[i]);
             y = y_data_to_pixel(specs, cmodel->ydata[i]);
@@ -73,11 +75,11 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
             x = pxn;
             y = pyn;
         }
-        if (i < (cmodel->n - 1)) {
+        if (i < cmodel->n - 1) {
             pxn = x_data_to_pixel(specs, cmodel->xdata[i + 1]);
             pyn = y_data_to_pixel(specs, cmodel->ydata[i + 1]);
         }
-        if (i < (cmodel->n - 1)
+        if (i < cmodel->n - 1
             && (cmodel->type == GWY_GRAPH_CURVE_LINE
                 || cmodel->type == GWY_GRAPH_CURVE_LINE_POINTS))
             gwy_graph_draw_line(drawable, gc,
@@ -107,10 +109,6 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
 {
     GwyRGBA rgba;
 
-    /* XXX and who will free this? XXX */
-    if (gc == NULL)
-        gc = gdk_gc_new(drawable);
-
     gwy_rgba_set_gdk_gc_fg(color, gc);
     rgba.r = MIN(color->g + 0.2, 1.0);
     rgba.g = MIN(color->b + 0.2, 1.0);
@@ -136,10 +134,6 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
     gint i, j;
     gint size_half = size/2;
     gboolean filled = FALSE;
-
-    /* XXX and who will free this? XXX */
-    if (gc == NULL)
-        gc = gdk_gc_new(drawable);
 
     point_thickness = MAX(size/10, 1);
 
@@ -245,10 +239,6 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
 
     size = 6;
 
-    /* XXX and who will free this? XXX */
-    if (gc == NULL)
-        gc = gdk_gc_new(drawable);
-
     for (i = 0; i < GWY_SELECTION(selection)->n; i++) {
         gwy_selection_get_object(GWY_SELECTION(selection), i, selection_data);
         gwy_graph_draw_point(drawable, gc,
@@ -272,10 +262,6 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     n_of_areas = GWY_SELECTION(selection)->n;
     if (n_of_areas == 0)
         return;
-
-    /* XXX and who will free this? XXX */
-    if (gc == NULL)
-        gc = gdk_gc_new(drawable);
 
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
@@ -308,14 +294,11 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     if (n_of_lines == 0)
         return;
 
-    /* XXX and who will free this? XXX */
-    if (gc == NULL)
-        gc = gdk_gc_new(drawable);
-
     gwy_rgba_set_gdk_gc_fg(&color, gc);
 
     for (i = 0; i < n_of_lines; i++) {
-        gwy_selection_get_object(GWY_SELECTION(selection), i, &selection_linedata);
+        gwy_selection_get_object(GWY_SELECTION(selection),
+                                 i, &selection_linedata);
         if (orientation == GTK_ORIENTATION_HORIZONTAL)
             gwy_graph_draw_line(drawable, gc,
                                 specs->xmin,
@@ -349,13 +332,17 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
     for (i = 0; i < x_grid_data->len; i++) {
         pvalue = &g_array_index(x_grid_data, gdouble, i);
         pos = y_data_to_pixel(specs, *pvalue);
-        gdk_draw_line(drawable, gc, specs->xmin - 1, specs->height - pos, specs->xmin + specs->width + 1, specs->height - pos);
+        gdk_draw_line(drawable, gc,
+                      specs->xmin - 1, specs->height - pos,
+                      specs->xmin + specs->width + 1, specs->height - pos);
     }
 
     for (i = 0; i < y_grid_data->len; i++) {
         pvalue = &g_array_index(y_grid_data, gdouble, i);
         pos = x_data_to_pixel(specs, *pvalue);
-        gdk_draw_line(drawable, gc, pos, specs->ymin - 1, pos, specs->ymin + specs->height + 1);
+        gdk_draw_line(drawable, gc,
+                      pos, specs->ymin - 1, pos,
+                      specs->ymin + specs->height + 1);
     }
 
 }
