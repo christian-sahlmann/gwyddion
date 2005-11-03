@@ -277,5 +277,12 @@ gwy_graph_data_signal_selected(GwyGraphData *graph_data)
     g_signal_emit (G_OBJECT (graph_data), gwygraph_data_signals[SELECTED_SIGNAL], 0);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwygraphdata
+ * @title: GwyGraphData
+ * @short_description: Graph data table
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

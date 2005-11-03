@@ -548,4 +548,14 @@ gwy_color_axis_set_si_unit(GwyColorAxis *axis,
     gwy_object_unref(old);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwycoloraxis
+ * @title: GwyColorAxis
+ * @short_description: Simple axis with a false color scale
+ * @see_also: #GwyAxis -- Axis for use in graphs,
+ *            #GwyRuler -- Horizontal and vertical rulers
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

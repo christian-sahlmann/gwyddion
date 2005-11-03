@@ -1498,6 +1498,18 @@ gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
     return area->y_grid_data;
 }
 
+/************************** Documentation ****************************/
 
+/**
+ * SECTION:gwygrapharea
+ * @title: GwyGraphArea
+ * @short_description: Layout for drawing graph curves
+ *
+ * #GwyGraphArea is the central part of #GwyGraph widget. It plots a set of
+ * data curves with a given plot properties.
+ *
+ * It is recommended to use it within #GwyGraph, however, it can be used
+ * separately.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -71,11 +71,10 @@ gwy_graph_corner_init(G_GNUC_UNUSED GwyGraphCorner *graph_corner)
 
 /**
  * gwy_graph_corner_new:
- *  
  *
  * GwyGraphCorner has now no special features. It is reserved for future.
  *
- * Returns: new #GwyGraphCorner widget
+ * Returns: A new #GwyGraphCorner widget.
  **/
 GtkWidget*
 gwy_graph_corner_new()
@@ -84,7 +83,7 @@ gwy_graph_corner_new()
 
     gwy_debug("");
 
-    graph_corner = gtk_type_new (gwy_graph_corner_get_type ());
+    graph_corner = g_object_new(GWY_TYPE_GRAPH_CORNER, NULL);
 
     return GTK_WIDGET(graph_corner);
 }
@@ -118,11 +117,6 @@ gwy_graph_corner_realize(GtkWidget *widget)
     GdkWindowAttr attributes;
     gint attributes_mask;
     GtkStyle *s;
-
-    gwy_debug("realizing a GwyGraphCorner (%ux%u)",
-              widget->allocation.x, widget->allocation.height);
-
-    g_return_if_fail(widget != NULL);
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     graph_corner = GWY_GRAPH_CORNER(widget);
@@ -171,9 +165,9 @@ gwy_graph_corner_size_request(GtkWidget *widget,
                              GtkRequisition *requisition)
 {
     GwyGraphCorner *graph_corner;
+
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
     graph_corner = GWY_GRAPH_CORNER(widget);
 
     requisition->width = 10;
@@ -188,8 +182,6 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
 
     gwy_debug("");
 
-    g_return_if_fail(GWY_IS_GRAPH_CORNER(widget));
-
     widget->allocation = *allocation;
 
     if (GTK_WIDGET_REALIZED(widget)) {
@@ -198,7 +190,6 @@ gwy_graph_corner_size_allocate(GtkWidget *widget,
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
-
     }
 }
 
@@ -209,7 +200,6 @@ gwy_graph_corner_expose(GtkWidget *widget,
 {
     GwyGraphCorner *graph_corner;
 
-    g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     if (event->count > 0)
@@ -233,7 +223,6 @@ gwy_graph_corner_button_press(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
 
     gwy_debug("");
-    g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     graph_corner = GWY_GRAPH_CORNER(widget);
@@ -249,17 +238,23 @@ gwy_graph_corner_button_release(GtkWidget *widget,
     GwyGraphCorner *graph_corner;
 
     gwy_debug("");
-
-
-    g_return_val_if_fail(GWY_IS_GRAPH_CORNER(widget), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
 
     graph_corner = GWY_GRAPH_CORNER(widget);
 
-
     return FALSE;
 }
 
+/************************** Documentation ****************************/
 
+/**
+ * SECTION:gwygraphcorner
+ * @title: GwyGraphCorner
+ * @short_description: Graph corners
+ *
+ * #GwyGraphCorner is a part of #GwyGraph and currently had no functionality.
+ * It is reserved for future. It will be probably used for some graph options
+ * quick accesibility.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

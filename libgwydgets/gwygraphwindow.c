@@ -416,5 +416,16 @@ gwy_graph_window_set_tooltip(GtkWidget *widget,
         gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwygraphwindow
+ * @title: GwyGraphWindow
+ * @short_description: Graph display window
+ *
+ * #GwyGraphWindow encapsulates a #GwyGraph together with other controls and
+ * graph data view.
+ * You can create a graph window for a graph with gwy_graph_window_new().
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

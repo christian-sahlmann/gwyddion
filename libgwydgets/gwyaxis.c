@@ -297,7 +297,7 @@ gwy_axis_realize(GtkWidget *widget)
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
 
     axis->gc = gdk_gc_new(widget->window);
-    
+
     /*compute ticks*/
     gwy_axis_adjust(axis, widget->allocation.width, widget->allocation.height);
 }
@@ -312,7 +312,7 @@ gwy_axis_size_request(GtkWidget *widget,
     axis = GWY_AXIS(widget);
 
     if (axis->is_visible) {
-        if (axis->orientation == GTK_POS_LEFT 
+        if (axis->orientation == GTK_POS_LEFT
             || axis->orientation == GTK_POS_RIGHT) {
             requisition->width = 80;
             requisition->height = 100;
@@ -357,8 +357,8 @@ gwy_axis_size_allocate(GtkWidget *widget,
 static void
 gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 {
-    
-    gint scaleres, iterations;   
+
+    gint scaleres, iterations;
 
     if (axis->orientation == GTK_POS_TOP
         || axis->orientation == GTK_POS_BOTTOM) {
@@ -380,7 +380,7 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
     if (axis->is_auto)
         gwy_axis_autoset(axis, width, height);
-    
+
     iterations = 0;
     if (axis->is_logarithmic) {gwy_axis_scale(axis);}
     else {
@@ -389,10 +389,10 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
             /*printf("scale: %d   iterations: %d\n", scaleres, iterations);*/
             if (scaleres > 0)
                 axis->par.major_maxticks = (gint)(0.5*(gdouble)axis->par.major_maxticks);
-        
+
             if (scaleres < 0)
                 axis->par.major_maxticks = (gint)(2*(gdouble)axis->par.major_maxticks);
-       
+
             iterations++;
         } while (scaleres != 0 && iterations < 10);
     }
@@ -413,9 +413,9 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
         || axis->orientation == GTK_POS_BOTTOM) {
 
         axis->par.major_maxticks = width/50; /*empirical equation*/
-        if (width < 300) 
+        if (width < 300)
             axis->par.minor_division = 5;
-        else 
+        else
             axis->par.minor_division = 10;
     }
     if (axis->orientation == GTK_POS_LEFT
@@ -424,14 +424,14 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
         axis->par.major_maxticks = height/40; /*empirical equation*/
         if (height < 150)
             axis->par.minor_division = 5;
-        else 
+        else
             axis->par.minor_division = 10;
     }
 }
 
 /**
  * gwy_axis_set_logarithmic:
- * @axis: axis 
+ * @axis: axis
  * @is_logarithmic: logarithimc mode
  *
  * Sets logarithmic mode. Untested.
@@ -473,7 +473,7 @@ gwy_axis_expose(GtkWidget *widget,
     return FALSE;
 }
 
-void 
+void
 gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin, gint width, gint height,
                     GwyAxis *axis)
 {
@@ -482,8 +482,8 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin
     specs.ymin = ymin;
     specs.width = width;
     specs.height = height;
-     
-    if (axis->is_standalone && axis->is_visible) 
+
+    if (axis->is_standalone && axis->is_visible)
         gwy_axis_draw_axis(drawable, gc, &specs, axis);
     if (axis->is_visible) gwy_axis_draw_ticks(drawable, gc, &specs, axis);
     if (axis->is_visible) gwy_axis_draw_tlabels(drawable, gc, &specs, axis);
@@ -723,7 +723,7 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
         gdk_draw_layout(drawable, gc,
-                        specs->xmin + axis->label_x_pos - rect.width/2, 
+                        specs->xmin + axis->label_x_pos - rect.width/2,
                         specs->ymin + axis->label_y_pos,
                         layout);
         break;
@@ -839,7 +839,7 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
 }
 
 
-void        
+void
 gwy_axis_signal_rescaled(GwyAxis *axis)
 {
     g_signal_emit(axis, axis_signals[RESCALED], 0);
@@ -895,7 +895,7 @@ gwy_axis_normalscale(GwyAxis *a)
     gdouble range, tickstep, majorbase, minortickstep, minorbase;
 
     if (a->reqmax == a->reqmin) {g_warning("Axis with zero range!"); a->reqmax = a->reqmin+1;}
-        
+
     range = fabs(a->reqmax - a->reqmin); /*total range of the field*/
 
     if (range > 1e40 || range < -1e40)
@@ -903,7 +903,7 @@ gwy_axis_normalscale(GwyAxis *a)
         g_warning("Axis with extreme range (>1e40)!");
         return 0;
     }
-    
+
     tickstep = gwy_axis_quantize_normal_tics(range, a->par.major_maxticks); /*step*/
     majorbase = ceil(a->reqmin/tickstep)*tickstep; /*starting value*/
     minortickstep = tickstep/(gdouble)a->par.minor_division;
@@ -915,7 +915,7 @@ gwy_axis_normalscale(GwyAxis *a)
     if (majorbase > a->reqmin) {
         majorbase -= tickstep;
         minorbase = majorbase;
-        a->min = majorbase; 
+        a->min = majorbase;
     }
     else
         a->min = a->reqmin;
@@ -932,8 +932,8 @@ gwy_axis_normalscale(GwyAxis *a)
         i++;
     } while ((majorbase - tickstep) < a->reqmax && i<(2*a->par.major_maxticks));
     a->max = majorbase - tickstep;
-    
-    
+
+
     i = 0;
     /*minor tics*/
     do {
@@ -960,7 +960,7 @@ gwy_axis_logscale(GwyAxis *a)
     _min = min+0.1;
 
     /*printf("start: max %g, min %g\n", max, min);*/
-    
+
     /*no negative values are allowed*/
     if (min > 0)
         logmin = log10(min);
@@ -975,7 +975,7 @@ gwy_axis_logscale(GwyAxis *a)
         return 1;
 
     /*printf("logmax %g, logmin %g\n", max, min);*/
-    
+
     /*ticks will be linearly distributed again*/
 
     /*major ticks - will be equally ditributed in the log domain 1,10,100*/
@@ -996,7 +996,7 @@ gwy_axis_logscale(GwyAxis *a)
     min = gwy_axis_dbl_raise(10.0, logmin);
     max = gwy_axis_dbl_raise(10.0, logmax);
     /*printf("recomputed: max %g, min %g\n", max, min);*/
-    
+
 
     /*minor ticks - will be equally distributed in the normal domain 1,2,3...*/
     tickstep = min;
@@ -1018,7 +1018,7 @@ gwy_axis_logscale(GwyAxis *a)
     a->max = max;
     a->min = min;
     /*printf("max %g, min %g\n", max, min);*/
-    
+
     return 0;
 }
 
@@ -1103,7 +1103,7 @@ gwy_axis_formatticks(GwyAxis *a)
     PangoContext *context;
     PangoRectangle rect;
     gint totalwidth=0, totalheight=0;
-    gdouble range;        
+    gdouble range;
     GwySIValueFormat *format = NULL;
     GwyAxisLabeledTick mji, mjx, *pmjt;
     /*determine range*/
@@ -1132,7 +1132,7 @@ gwy_axis_formatticks(GwyAxis *a)
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
         a->magnification_string = g_string_new(format->units);
         a->magnification = format->magnitude;
-    } 
+    }
     else
     {
         if (a->magnification_string) g_string_free(a->magnification_string, TRUE);
@@ -1143,7 +1143,7 @@ gwy_axis_formatticks(GwyAxis *a)
     context = gdk_pango_context_get_for_screen(gdk_screen_get_default());
     layout = pango_layout_new(context);
     pango_layout_set_font_description(layout, a->par.major_font);
-            
+
 
     for (i = 0; i< a->mjticks->len; i++)
     {
@@ -1154,7 +1154,7 @@ gwy_axis_formatticks(GwyAxis *a)
         else
             value = pow(10, pmjt->t.value);
 
-        if (format) 
+        if (format)
             value /= format->magnitude;
 
         /*fill tick labels dependent to mode*/
@@ -1185,21 +1185,21 @@ gwy_axis_formatticks(GwyAxis *a)
         totalwidth += rect.width;
         totalheight += rect.height;
     }
-    
+
     if (format) g_free(format->units);
-  
+
     /*guess whether we dont have too many or not enough ticks*/
     if (a->orientation == GTK_POS_LEFT
         || a->orientation == GTK_POS_RIGHT) {
             if (totalheight > 200) return 1;
-            else if (a->mjticks->len < 3) return -1; 
+            else if (a->mjticks->len < 3) return -1;
      }
      else {
             if (totalwidth > 200) return 1;
-            else if (a->mjticks->len < 3) return -1;           
+            else if (a->mjticks->len < 3) return -1;
      }
-            
- 
+
+
     return 0;
 }
 
@@ -1207,7 +1207,7 @@ gwy_axis_formatticks(GwyAxis *a)
 
 /**
  * gwy_axis_set_visible:
- * @axis: axis widget 
+ * @axis: axis widget
  * @is_visible: visibility
  *
  * Sets visibility of axis.
@@ -1221,7 +1221,7 @@ gwy_axis_set_visible(GwyAxis *axis, gboolean is_visible)
 
 /**
  * gwy_axis_set_auto:
- * @axis: axis widget 
+ * @axis: axis widget
  * @is_auto: auto preperty
  *
  * Sets the auto property. If TRUE, axis changes fonts
@@ -1236,7 +1236,7 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 
 /**
  * gwy_axis_set_req:
- * @axis: axis widget 
+ * @axis: axis widget
  * @min: minimum requisistion
  * @max: maximum requisition
  *
@@ -1259,7 +1259,7 @@ gwy_axis_set_req(GwyAxis *axis, gdouble min, gdouble max)
 
 /**
  * gwy_axis_set_style:
- * @axis: axis widget 
+ * @axis: axis widget
  * @style: axis style
  *
  * Set axis style. The style affects used tick sizes, fonts etc.
@@ -1275,9 +1275,9 @@ gwy_axis_set_style(GwyAxis *axis, GwyAxisParams style)
 
 /**
  * gwy_axis_get_maximum:
- * @axis: axis widget 
+ * @axis: axis widget
  *
- * 
+ *
  *
  * Returns: real maximum of axis
  **/
@@ -1289,9 +1289,9 @@ gwy_axis_get_maximum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_minimum:
- * @axis: axis widget 
+ * @axis: axis widget
  *
- * 
+ *
  *
  * Returns: real minimum of axis
  **/
@@ -1303,9 +1303,9 @@ gwy_axis_get_minimum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_reqmaximum:
- * @axis: axis widget 
+ * @axis: axis widget
  *
- * 
+ *
  *
  * Returns: axis requisition maximum
  **/
@@ -1317,9 +1317,9 @@ gwy_axis_get_reqmaximum(GwyAxis *axis)
 
 /**
  * gwy_axis_get_reqminimum:
- * @axis: axis widget 
+ * @axis: axis widget
  *
- * 
+ *
  *
  * Returns: axis requisition minimum
  **/
@@ -1331,7 +1331,7 @@ gwy_axis_get_reqminimum(GwyAxis *axis)
 
 /**
  * gwy_axis_set_label:
- * @axis: axis widget 
+ * @axis: axis widget
  * @label_text: label to be set
  *
  * sets the label text
@@ -1349,9 +1349,9 @@ gwy_axis_set_label(GwyAxis *axis, GString *label_text)
 
 /**
  * gwy_axis_get_label:
- * @axis: axis widget 
+ * @axis: axis widget
  *
- * 
+ *
  *
  * Returns: axis label string
  **/
@@ -1363,7 +1363,7 @@ gwy_axis_get_label(GwyAxis *axis)
 
 /**
  * gwy_axis_set_unit:
- * @axis: axis widget 
+ * @axis: axis widget
  * @unit: axis unit
  *
  * Sets the axis unit. This will be added automatically
@@ -1380,8 +1380,8 @@ gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
 
 /**
  * gwy_axis_enable_label_edit:
- * @axis: Axis widget 
- * @enable: enable/disable user to change axis label 
+ * @axis: Axis widget
+ * @enable: enable/disable user to change axis label
  *
  * Enables/disables user to change axis label by clicking on axis widget.
  *
@@ -1393,13 +1393,13 @@ gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
     axis->enable_label_edit = enable;
 }
 
-gdouble     
+gdouble
 gwy_axis_get_magnification (GwyAxis *axis)
 {
     return axis->magnification;
 }
 
-GString*    
+GString*
 gwy_axis_get_magnification_string(GwyAxis *axis)
 {
     if (axis->magnification_string != NULL)
@@ -1408,8 +1408,8 @@ gwy_axis_get_magnification_string(GwyAxis *axis)
 }
 
 
-GString*    
-gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin, 
+GString*
+gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
                         gint width, gint height, gint fontsize)
 {
     GString *out;
@@ -1426,7 +1426,7 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
         mult = height/(axis->max - axis->min);
 
     out = g_string_new("%%Axis\n");
-   
+
     g_string_append_printf(out, "/Times-Roman findfont\n");
     g_string_append_printf(out, "%d scalefont\n setfont\n", fontsize);
     g_string_append_printf(out, "%d setlinewidth\n", linewidth);
@@ -1575,20 +1575,20 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
         g_assert_not_reached();
         break;
     }
-     
+
 
     return out;
 }
 
-void        
+void
 gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
 {
     gint i;
     gdouble *pvalue;
     GwyAxisLabeledTick *pmji;
-   
+
     g_array_set_size(array, axis->mjticks->len);
-    
+
     for (i = 0; i< axis->mjticks->len; i++) {
         pmji = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
         pvalue = &g_array_index(array, gdouble, i);
@@ -1597,7 +1597,19 @@ gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
     }
 }
 
-
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:gwyaxis
+ * @title: GwyAxis
+ * @short_description: Axis with ticks and labels
+ * @see_also: #GwyColorAxis -- Axis with a false color scale,
+ *            #GwyRuler -- Horizontal and vertical rulers
+ *
+ * #GwyAxis is used for drawing axis. It is namely used within #GwyGraph
+ * widget, but it can be also used standalone. It plots a horizontal or
+ * vertical axis with major and minor ticks, with ranges in the requested
+ * interval.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
