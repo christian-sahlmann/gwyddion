@@ -412,6 +412,17 @@ gwy_pixmap_layer_make_pixbuf(GwyPixmapLayer *pixmap_layer,
  * SECTION:gwypixmaplayer
  * @title: GwyPixmapLayer
  * @short_description: Base class for #GwyDataView pixmap layers
+ *
+ * #GwyPixmapLayer is a base class for data field displaying
+ * #GwyDataViewLayer's.  It is a #GwyDataView component and it is not normally
+ * usable outside of it.
+ *
+ * The layer takes the data field to display from its parent #GwyDataView.
+ * The key under which the data field is found must be set with
+ * gwy_pixmap_layer_set_data_key().
+ *
+ * The other methods are only rarely needed outside #GwyDataView
+ * implementation.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

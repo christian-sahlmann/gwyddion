@@ -338,8 +338,13 @@ gwy_layer_mask_changed(GwyPixmapLayer *pixmap_layer)
  *            #GwyLayerBasic -- display data colored with a gradient,
  *            #GwyRGBA -- color representation
  *
- * #GwyLayerMask is a data view layer that can paint data as a color mask.
- * It is not normally usable outside a #GwyDataView.
+ * #GwyLayerMask is a data view layer that can paint data as a color mask with
+ * varying opacity.  It is not normally usable outside a #GwyDataView.
+ *
+ * The layer takes all infromation from its parent #GwyDataView, therefore you
+ * do not set its properties directly, but you change them in the corresponding
+ * #GwyContainer and/or use methods like gwy_layer_mask_set_color_key() to
+ * make the layer read a different value from the container.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

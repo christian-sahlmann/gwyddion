@@ -1216,7 +1216,31 @@ gwy_data_view_get_pixbuf(GwyDataView *data_view,
  *            low level functions for painting data fields,
  *            #Gwy3DView -- OpenGL 3D data display
  *
- * FIXME
+ * #GwyDataView is a basic two-dimensional data display widget.  The actual
+ * rendering is performed by one or more #GwyDataViewLayer's, pluggable into
+ * the data view.  Each layer generally displays different data field from
+ * the container supplied to gwy_data_view_new().
+ *
+ * A base layer (set with gwy_data_view_set_base_layer()) must be always
+ * present, and normally it is always a #GwyLayerBasic.
+ *
+ * Other layers are optional.  Middle, or alpha, layer (set with
+ * gwy_data_view_set_alpha_layer()) used to display masks is normally always
+ * a #GwyLayerMask.  Top layer, if present, is a #GwyVectorLayer allowing to
+ * draw selections with mouse and otherwise interace with the view, it is set
+ * with gwy_data_view_set_top_layer().
+ *
+ * The size of a data view is affected by two factors: zoom and outer
+ * constraints. If an explicit size set by window manager or by Gtk+ means, the
+ * view scales the displayed data to fit into this size (while keeping x/y
+ * ratio). Zoom controlls the size a data view requests, and can be set with
+ * gwy_data_view_set_zoom().
+ *
+ * Several helper functions are available for transformation between screen
+ * coordinates in the view and physical coordinates in the displayed data
+ * field: gwy_data_view_coords_xy_to_real(), gwy_data_view_get_xmeasure(),
+ * gwy_data_view_get_hexcess(), and others. Physical coordinates are always
+ * taken from data field displayed by base layer.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

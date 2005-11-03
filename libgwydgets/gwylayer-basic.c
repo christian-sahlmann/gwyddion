@@ -722,6 +722,14 @@ gwy_layer_basic_changed(GwyPixmapLayer *pixmap_layer)
  *
  * #GwyLayerBasic is a data view layer that can paint data with a false color
  * gradient.  It is not normally usable outside a #GwyDataView.
+ *
+ * The layer takes all infromation from its parent #GwyDataView, therefore you
+ * do not set its properties directly, but you change them in the corresponding
+ * #GwyContainer and/or use methods like gwy_layer_basic_set_gradient_key() to
+ * make the layer read a different value from the container.
+ *
+ * Several types of mapping of data to colors are available, see
+ * #GwyLayerBasicRangeType for their description.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

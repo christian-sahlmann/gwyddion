@@ -560,6 +560,17 @@ gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
  * @short_description: Base class for #GwyDataView vector (interactive) layers
  * @see_also: <link linkend="standard-vector-layers">Standard vector
  *            layers</link>
+ *
+ * #GwyVectorLayer is a base class for #GwyDataViewLayer's displaying
+ * selections and handling user input.  It is a #GwyDataView component and it
+ * is not normally usable outside of it.
+ * 
+ * The layer takes the selection to display from its parent #GwyDataView.
+ * The key under which the selection is found must be set with
+ * gwy_vector_layer_set_selection_key().  The selection object currently in
+ * use can be obtained with gwy_vector_layer_get_selection().
+ *
+ * The other methods are rarely useful outside #GwyDataView implementation.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
