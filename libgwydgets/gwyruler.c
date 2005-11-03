@@ -49,14 +49,14 @@
  * and a few drawing functions.  Rewritten again in 2005 to minimize
  * code duplication.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwyddion.h>
 #include "gwyruler.h"
 #include "gwydgettypes.h"
 
-#define MINIMUM_INCR 5
+enum { MINIMUM_INCR = 5 };
 
 enum {
     PROP_0,
@@ -68,39 +68,38 @@ enum {
 };
 
 typedef enum {
-    GWY_SCALE_0,
-    GWY_SCALE_1,
-    GWY_SCALE_2,
-    GWY_SCALE_2_5,
-    GWY_SCALE_5,
-    GWY_SCALE_LAST
-} GwyScaleScale;
+    SCALE_0,
+    SCALE_1,
+    SCALE_2,
+    SCALE_2_5,
+    SCALE_5,
+    SCALE_LAST
+} ScaleBase;
 
-static void          gwy_ruler_draw_ticks         (GwyRuler *ruler);
-static void          gwy_ruler_realize            (GtkWidget *widget);
-static void          gwy_ruler_unrealize          (GtkWidget *widget);
-static void          gwy_ruler_size_allocate      (GtkWidget *widget,
-                                                   GtkAllocation *allocation);
-static gint          gwy_ruler_expose             (GtkWidget *widget,
-                                                   GdkEventExpose *event);
-static void          gwy_ruler_make_pixmap        (GwyRuler *ruler);
-static void          gwy_ruler_set_property       (GObject *object,
-                                                   guint prop_id,
-                                                   const GValue *value,
-                                                   GParamSpec *pspec);
-static void          gwy_ruler_get_property       (GObject *object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec);
-static void          gwy_ruler_update_value_format(GwyRuler *ruler);
-static GwyScaleScale next_scale                   (GwyScaleScale scale,
-                                                   gdouble *base,
-                                                   gdouble measure,
-                                                   gint min_incr);
-
-static const gdouble steps[GWY_SCALE_LAST] = {
-    0.0, 1.0, 2.0, 2.5, 5.0,
-};
+static void      gwy_ruler_draw_ticks         (GwyRuler *ruler);
+static void      gwy_ruler_realize            (GtkWidget *widget);
+static void      gwy_ruler_unrealize          (GtkWidget *widget);
+static void      gwy_ruler_size_allocate      (GtkWidget *widget,
+                                               GtkAllocation *allocation);
+static gint      gwy_ruler_expose             (GtkWidget *widget,
+                                               GdkEventExpose *event);
+static void      gwy_ruler_make_pixmap        (GwyRuler *ruler);
+static void      gwy_ruler_set_property       (GObject *object,
+                                               guint prop_id,
+                                               const GValue *value,
+                                               GParamSpec *pspec);
+static void      gwy_ruler_get_property       (GObject *object,
+                                               guint prop_id,
+                                               GValue *value,
+                                               GParamSpec *pspec);
+static void      gwy_ruler_update_value_format(GwyRuler *ruler);
+static gboolean  gwy_ruler_is_precision_ok    (const GwySIValueFormat *format,
+                                               guint unitstr_len,
+                                               gdouble bstep);
+static ScaleBase gwy_ruler_next_scale         (ScaleBase scale,
+                                               gdouble *base,
+                                               gdouble measure,
+                                               gint min_incr);
 
 G_DEFINE_ABSTRACT_TYPE(GwyRuler, gwy_ruler, GTK_TYPE_WIDGET)
 
@@ -559,7 +558,7 @@ gwy_ruler_update_value_format(GwyRuler *ruler)
     ruler->vformat
         = gwy_si_unit_get_format_with_resolution(ruler->units,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 max, max/15,
+                                                 max, max/2,
                                                  ruler->vformat);
 }
 
@@ -580,41 +579,20 @@ gwy_ruler_draw_pos(GwyRuler *ruler)
         method(ruler);
 }
 
-static gboolean
-gwy_ruler_is_precision_ok(const GwySIValueFormat *format,
-                          guint unitstr_len,
-                          gdouble first,
-                          gdouble bstep)
-{
-    gchar *unit_str, *unit_str2;
-
-    unit_str = g_newa(gchar, unitstr_len);
-    unit_str2 = g_newa(gchar, unitstr_len);
-    g_snprintf(unit_str, unitstr_len, "%.*f",
-               format->precision, first/format->magnitude);
-    g_snprintf(unit_str2, unitstr_len, "%.*f",
-               format->precision, (first + bstep)/format->magnitude);
-    if (gwy_strequal(unit_str, unit_str2))
-        return FALSE;
-
-    g_snprintf(unit_str, unitstr_len, "%.*f",
-               format->precision, (first + 2*bstep)/format->magnitude);
-    if (gwy_strequal(unit_str, unit_str2))
-        return FALSE;
-
-    return TRUE;
-}
-
 static void
 gwy_ruler_draw_ticks(GwyRuler *ruler)
 {
     enum { FINALLY_OK, FIRST_TRY, ADD_DIGITS, LESS_TICKS };
-    struct { GwyScaleScale scale; double base; } tick_info[4];
+    static const gdouble steps[SCALE_LAST] = {
+        0.0, 1.0, 2.0, 2.5, 5.0,
+    };
+
+    struct { ScaleBase scale; double base; } tick_info[4];
     gdouble lower, upper, max;
-    gint text_size, labels, i, scale_depth;
+    gint text_size, labels = 0, i, scale_depth;
     gint tick_length, min_label_spacing, min_tick_spacing;
     gdouble range, measure, base, step, first, bstep;
-    GwyScaleScale scale = GWY_SCALE_1;
+    ScaleBase scale = SCALE_1;
     GwySIValueFormat *format;
     PangoRectangle rect;
     gchar *unit_str;
@@ -692,20 +670,28 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
                 step /= 10.0;
             }
             if (step <= 1.0)
-                scale = GWY_SCALE_1;
+                scale = SCALE_1;
             else if (step <= 2.0)
-                scale = GWY_SCALE_2;
+                scale = SCALE_2;
             else if (step <= 2.5)
-                scale = GWY_SCALE_2_5;
+                scale = SCALE_2_5;
             else
-                scale = GWY_SCALE_5;
+                scale = SCALE_5;
         }
 
         step = steps[scale];
         bstep = base*step;
         first = floor(lower / (bstep))*bstep;
+        gwy_debug("%d first: %g, base: %g, step: %g, prec: %d, labels: %d",
+                  state, first, base, step, format->precision, labels);
 
-        if (!gwy_ruler_is_precision_ok(format, unitstr_len, first, base*step)) {
+        if (gwy_ruler_is_precision_ok(format, unitstr_len, base*step)) {
+            if (state == FIRST_TRY && format->precision > 0)
+                format->precision--;
+            else
+                state = FINALLY_OK;
+        }
+        else {
             if (state == FIRST_TRY) {
                 state = ADD_DIGITS;
                 format->precision++;
@@ -713,14 +699,8 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
             else {
                 state = LESS_TICKS;
                 base *= 10;
-                scale = GWY_SCALE_1;
+                scale = SCALE_1;
             }
-        }
-        else {
-            if (state == FIRST_TRY && format->precision > 0)
-                format->precision--;
-            else
-                state = FINALLY_OK;
         }
     } while (state != FINALLY_OK);
 
@@ -765,7 +745,7 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     while (scale && scale_depth < (gint)G_N_ELEMENTS(tick_info)) {
         tick_info[scale_depth].scale = scale;
         tick_info[scale_depth].base = base;
-        scale = next_scale(scale, &base, measure, min_tick_spacing);
+        scale = gwy_ruler_next_scale(scale, &base, measure, min_tick_spacing);
         scale_depth++;
     }
     scale_depth--;
@@ -794,41 +774,65 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     }
 }
 
-static GwyScaleScale
-next_scale(GwyScaleScale scale,
-           gdouble *base,
-           gdouble measure,
-           gint min_incr)
+static gboolean
+gwy_ruler_is_precision_ok(const GwySIValueFormat *format,
+                          guint unitstr_len,
+                          gdouble bstep)
 {
-    GwyScaleScale new_scale = GWY_SCALE_0;
+    gchar *unit_str, *unit_str2;
+
+    unit_str = g_newa(gchar, unitstr_len);
+    unit_str2 = g_newa(gchar, unitstr_len);
+    g_snprintf(unit_str, unitstr_len, "%.*f",
+               format->precision, 0.0);
+    g_snprintf(unit_str2, unitstr_len, "%.*f",
+               format->precision, bstep/format->magnitude);
+    if (gwy_strequal(unit_str, unit_str2))
+        return FALSE;
+
+    g_snprintf(unit_str, unitstr_len, "%.*f",
+               format->precision, 2*bstep/format->magnitude);
+    if (gwy_strequal(unit_str, unit_str2))
+        return FALSE;
+
+    return TRUE;
+}
+
+static ScaleBase
+gwy_ruler_next_scale(ScaleBase scale,
+                     gdouble *base,
+                     gdouble measure,
+                     gint min_incr)
+{
+    ScaleBase new_scale = SCALE_0;
 
     switch (scale) {
-        case GWY_SCALE_1:
+        case SCALE_1:
         *base /= 10.0;
         if ((gint)floor(*base*2.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
+            new_scale = SCALE_5;
         else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
+            new_scale = SCALE_2_5;
         else if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
+            new_scale = SCALE_5;
         break;
 
-        case GWY_SCALE_2:
+        case SCALE_2:
         if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
+            new_scale = SCALE_1;
         break;
 
-        case GWY_SCALE_2_5:
+        case SCALE_2_5:
         *base /= 10.0;
         if ((gint)floor(*base*5.0/measure) > min_incr)
-            new_scale = GWY_SCALE_5;
+            new_scale = SCALE_5;
         break;
 
-        case GWY_SCALE_5:
+        case SCALE_5:
         if ((gint)floor(*base/measure) > min_incr)
-            new_scale = GWY_SCALE_1;
+            new_scale = SCALE_1;
         else if ((gint)floor(*base*2.5/measure) > min_incr)
-            new_scale = GWY_SCALE_2_5;
+            new_scale = SCALE_2_5;
         break;
 
         default:
