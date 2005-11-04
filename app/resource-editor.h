@@ -21,7 +21,7 @@
 #ifndef __GWY_RESOURCE_EDITOR_H__
 #define __GWY_RESOURCE_EDITOR_H__
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtkwindow.h>
 #include <libgwyddion/gwyresource.h>
 
 G_BEGIN_DECLS
