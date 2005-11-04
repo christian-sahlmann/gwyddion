@@ -33,7 +33,8 @@ void gwy_fft_simple(GwyTransformDirection dir,
                  const gdouble *im_in,
                  gdouble *re_out,
                  gdouble *im_out,
-                 gint n);
+                 gint n,
+		 gint stride);
 
 void gwy_fft_window(gdouble *data,
                     gint n,

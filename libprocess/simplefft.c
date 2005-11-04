@@ -41,7 +41,8 @@ gwy_fft_simple(GwyTransformDirection dir,
             const gdouble *im_in,
             gdouble *re_out,
             gdouble *im_out,
-            gint n)
+            gint n,
+            gint stride)
 {
     gdouble rc, ic, rt, it, fact;
     gint m, l, i, j, is;
@@ -52,12 +53,12 @@ gwy_fft_simple(GwyTransformDirection dir,
     j = 1;
     for (i = 1; i <= n; i++) {
         if (i <= j) {
-            rt = fact * re_in[i-1];
-            it = fact * im_in[i-1];
-            re_out[i-1] = fact * re_in[j-1];
-            im_out[i-1] = fact * im_in[j-1];
-            re_out[j-1] = rt;
-            im_out[j-1] = it;
+            rt = fact * re_in[(i-1)*stride];
+            it = fact * im_in[(i-1)*stride];
+            re_out[(i-1)*stride] = fact * re_in[(j-1)*stride];
+            im_out[(i-1)*stride] = fact * im_in[(j-1)*stride];
+            re_out[(j-1)*stride] = rt;
+            im_out[(j-1)*stride] = it;
         }
         m = n >> 1;
         while (j > m && m)
@@ -75,12 +76,12 @@ gwy_fft_simple(GwyTransformDirection dir,
             rc = cos(imlt * (m - 1)/l);
             ic = sin(imlt * (m - 1)/l);
             for (i = m; i <= n; i += is) {
-                rt = rc*re_out[i+l-1] - ic*im_out[i+l-1];
-                it = rc*im_out[i+l-1] + ic*re_out[i+l-1];
-                re_out[i+l-1] = re_out[i-1] - rt;
-                im_out[i+l-1] = im_out[i-1] - it;
-                re_out[i-1] += rt;
-                im_out[i-1] += it;
+                rt = rc*re_out[(i+l-1)*stride] - ic*im_out[(i+l-1)*stride];
+                it = rc*im_out[(i+l-1)*stride] + ic*re_out[(i+l-1)*stride];
+                re_out[(i+l-1)*stride] = re_out[(i-1)*stride] - rt;
+                im_out[(i+l-1)*stride] = im_out[(i-1)*stride] - it;
+                re_out[(i-1)*stride] += rt;
+                im_out[(i-1)*stride] += it;
             }
         }
         l = is;
