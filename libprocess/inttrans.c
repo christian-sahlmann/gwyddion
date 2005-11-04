@@ -636,10 +636,10 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
                          GwyInterpolationType interpolation,
                          gboolean preserverms, gboolean level)
 {
-    gint k, newxres;
+    gint j, k, newxres;
     GwyDataField *rin;
     const gdouble *in_rdata, *in_idata;
-    gdouble *out_rdata, *out_idata;
+    gdouble *out_rdata, *out_idata, *re, *im, *nulldata;
 
     rin = gwy_data_field_duplicate(ra);
 
@@ -667,41 +667,54 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     in_rdata = gwy_data_field_get_data_const(rin);
     out_rdata = gwy_data_field_get_data(rb);
     out_idata = gwy_data_field_get_data(ib);
-    
-
+    re = (gdouble *)g_malloc(newxres*sizeof(gdouble));
+    im = (gdouble *)g_malloc(newxres*sizeof(gdouble));
     
     /*we compute allways two FFTs simultaneously*/
-    for (k = 0; k < ra->yres; k++) {
+    for (k = 0; k < (ra->yres/2); k+=2) {
         
-        if (k < (ra->yres - 1))
-            gwy_fft_simple(direction, 
+        gwy_fft_simple(direction, 
                        in_rdata + 2*k*ra->xres,
                        in_rdata + 2*k*ra->xres + ra->xres,
-                       out_rdata + 2*k*ra->xres,
-                       out_idata + 2*k*ra->xres + ra->xres,
+                       re,
+                       im,
                        newxres,
                        0);
-             
+     
         /*extract back the two profiles FFTs*/
-      //  rft1->data[0] = rout->data[0];
-      //  ift1->data[0] = 0;
-      //  rft2->data[0] = iout->data[0];
-      //  ift2->data[0] = 0;
-      //  for (j = 1; j < ra->xres; j++) {
-      //      rft1->data[j] = (rout->data[j] + rout->data[ra->xres - j])/2;
-      //      ift1->data[j] = (iout->data[j] - iout->data[ra->xres - j])/2;
-      //      rft2->data[j] = (iout->data[j] + iout->data[ra->xres - j])/2;
-      //      ift2->data[j] = -(rout->data[j] - rout->data[ra->xres - j])/2;
-      //  }
+         out_rdata[k*newxres] = re[0];
+         out_idata[k*newxres] = 0;
+         out_rdata[(k+1)*newxres] = im[0];
+         out_idata[(k+1)*newxres] = 0;
+         for (j = 1; j < ra->xres; j++) {
+             out_rdata[k*newxres + j] = (re[j] + re[ra->xres - j])/2;
+             out_idata[k*newxres + j] = (im[j] - im[ra->xres - j])/2;
+             out_rdata[(k+1)*newxres + j] = (im[j] + im[ra->xres - j])/2;
+             out_idata[(k+1)*newxres + j] = -(re[j] - re[ra->xres - j])/2;
+         }
     }
-
+    /*if there is one more row at the end of field, we compute its FFT normally*/
+    if (ra->yres > 2*floor(ra->yres/2)) {
+        nulldata = (gdouble *)g_malloc(newxres*sizeof(gdouble));
+        
+        for (j = 0; j < newxres; j++) 
+            nulldata[j] = 0;
+        
+        gwy_fft_simple(direction, 
+                       in_rdata - ra->xres - 1,
+                       nulldata,
+                       out_rdata - ra->xres - 1,
+                       out_idata - ra->xres - 1,
+                       newxres,
+                       0);
+        g_free(nulldata);
+    }
+         
     gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_BILINEAR);
  
-    g_object_unref(in_rdata);
-    g_object_unref(out_rdata);
-    g_object_unref(in_idata);
-    g_object_unref(out_idata);
+    g_object_unref(rin);
+    /*here ends the fft itself*/
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);

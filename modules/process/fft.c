@@ -175,7 +175,7 @@ fft(GwyContainer *data, GwyRunType run)
                             /(gwy_data_field_get_max(dfield)
                               - gwy_data_field_get_min(dfield)));
 
-    gwy_data_field_2dfft(dfield, imin,
+    gwy_data_field_2dfft_real(dfield, //imin
                          raout,
                          ipout,
                          args.window,
