@@ -58,10 +58,11 @@ extra_files = makefile.msc
 GTKDOC_CFLAGS = -I${top_srcdir} @CFLAGS@
 GTKDOC_LIBS = \
 	${top_srcdir}/$(DOC_DIRNAME)/$(DOC_MODULE).la \
-	${top_srcdir}/libgwyddion/libgwyddion.la \
+	${top_srcdir}/libgwymodule/libgwymodule.la \
+	${top_srcdir}/libgwydgets/libgwydgets.la \
 	${top_srcdir}/libdraw/libgwydraw.la \
 	${top_srcdir}/libprocess/libgwyprocess.la \
-	${top_srcdir}/libprocess/libgwymodule.la \
+	${top_srcdir}/libgwyddion/libgwyddion.la \
 	@LDFLAGS@ @GTK_LIBS@
 
 GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC)
