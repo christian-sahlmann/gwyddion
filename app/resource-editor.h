@@ -76,7 +76,7 @@ struct _GwyResourceEditorClass {
     void (*apply_changes)(GwyResourceEditor *editor);
     void (*switch_resource)(GwyResourceEditor *editor);
 
-    GwyResourceEditor *instance;    /* editor is singleton */
+    GwyResourceEditor *instance;
 };
 
 GType        gwy_resource_editor_get_type    (void) G_GNUC_CONST;

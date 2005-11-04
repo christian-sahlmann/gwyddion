@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 
 #define GWY_UNITOOL_RESPONSE_UNSELECT 255
 
+#ifndef GWY_DISABLE_DEPRECATED
 typedef enum {
     GWY_UNITOOL_UPDATED_SELECTION,
     GWY_UNITOOL_UPDATED_DATA,
@@ -110,6 +111,8 @@ GtkWidget*   gwy_unitool_dialog_add_button_clear (GtkWidget *dialog);
 GtkWidget*   gwy_unitool_dialog_add_button_hide  (GtkWidget *dialog);
 void         gwy_unitool_apply_set_sensitive     (GwyUnitoolState *state,
                                                   gboolean sensitive);
+#endif
+
 GtkWidget*   gwy_unitool_windowname_frame_create (GwyUnitoolState *state);
 gdouble      gwy_unitool_get_z_average           (GwyDataField *dfield,
                                                   gdouble xreal,
@@ -134,7 +137,6 @@ gboolean     gwy_unitool_rect_info_table_fill    (GwyUnitoolState *state,
                                                   GwyUnitoolRectLabels *rinfo,
                                                   gdouble *selreal,
                                                   gint *selpix);
-
 G_END_DECLS
 
 #endif /* __GWY_APP_UNITOOL_H__ */

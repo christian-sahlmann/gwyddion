@@ -1573,7 +1573,13 @@ gwy_app_show_kill_cb(void)
     }
 }
 
-/***** Documentation *******************************************************/
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:app
+ * @title: app
+ * @short_description: Core application interface, window management
+ **/
 
 /**
  * GwyAppWindowType:

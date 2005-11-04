@@ -773,4 +773,65 @@ gwy_resource_editor_get_edited(GwyResourceEditor *editor)
                                                 editor->edited_resource->str);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:resource-editor
+ * @title: GwyResourceEditor
+ * @short_description: Base/helper class for resource editors
+ *
+ * The base class contains all the methods that handle the resource list, set
+ * defaults, or sync resource list with disk.  Particular editors (subclasses)
+ * have to override (in fact, to fill, because #GwyResourceEditor does not
+ * define them) the methods and class data in their class init methods.  Then
+ * they generally only need to care about widgets inside their edit windows.
+ **/
+
+/**
+ * GwyResourceEditorButton:
+ * @GWY_RESOURCE_EDITOR_BUTTON_EDIT: `Edit' button.
+ * @GWY_RESOURCE_EDITOR_BUTTON_NEW: `New' button.
+ * @GWY_RESOURCE_EDITOR_BUTTON_COPY: `Copy' button.
+ * @GWY_RESOURCE_EDITOR_BUTTON_DELETE: `Delete' button.
+ * @GWY_RESOURCE_EDITOR_BUTTON_SET_DEFAULT: `Default' button.
+ * @GWY_RESOURCE_EDITOR_NBUTTONS: The number of toolbar buttons.
+ *
+ * Resource editor toolbar button id's.
+ **/
+
+/**
+ * GwyResourceEditorClass:
+ * @resource_type: The #GType of edited resources.  It must be a type derived
+ *                 from #GwyResource.
+ * @base_resource: The name of vanilla, default resource.  The `New' button
+ *                 creates a new resource as a copy of this one.
+ * @window_title: Resource list window title.  It should be already translated.
+ * @editor_title: Editor window title template.  It must contain one
+ *                <literal>%s</literal> that will be replaced with edited
+ *                resource name.  It should be already translated.
+ * @current_key: Settings key for currently active resource, filled by
+ *               gwy_resource_editor_class_setup().
+ * @width_key: Settings key for window width, filled by
+ *             gwy_resource_editor_class_setup().
+ * @height_key: Settings key for window height, filled by
+ *              gwy_resource_editor_class_setup().
+ * @construct_treeview: Method to create the resource list widget, it is
+ *                      of the gwy_gradients_tree_view_new() signature.
+ *                      There are currently some hardcoded assumptions about
+ *                      the tree view columns, so it cannot be completely
+ *                      arbitrary.
+ * @construct_editor: Method to construct editor window contents (the window
+ *                    itself is managed by #GwyResourceEditor, its contents
+ *                    by a particular editor).
+ * @apply_changes: Method called on commit (before resource is written to
+ *                 disk).  It should obtain values from the editor widgets
+ *                 and actually update the resource.
+ * @switch_resource: Method to update editor window widgets to display another
+ *                   resource.
+ * @instance: Editor instance.  Resource editors are singletons so if an
+ *            instance exists, pointer to it is kept here.
+ *
+ * The resource editor class.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

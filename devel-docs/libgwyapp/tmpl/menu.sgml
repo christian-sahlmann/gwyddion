@@ -1,21 +1,11 @@
 <!-- ##### SECTION Title ##### -->
-menu
+
 
 <!-- ##### SECTION Short_Description ##### -->
-Menu and sensitivity functions.
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-Menu and toolbox item sensitivity is updated by main application whenever its
-state changes.  Possible states that may affect widget sesitivity are defined
-in <link linkend="GwyMenuSensFlags">GwyMenuSensFlags</link>.
-</para>
-
-<para>
-A widget can have defined a set of conditions (by
-<link linkend="gwy-app-menu-set-sensitive-both">gwy_app_menu_set_sensitive_both()</link>
-and other fucntions) that have all to be satisfied to become sensitive.
-If there are no conditions defined, the widget is sensitive always.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->

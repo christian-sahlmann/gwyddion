@@ -589,7 +589,22 @@ gwy_app_tooltips_get(void)
     return app_tooltips;
 }
 
-/***** Documentation *******************************************************/
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:menu
+ * @title: menu
+ * @short_description: Menu and sensitivity functions
+ *
+ * Menu and toolbox item sensitivity is updated by main application whenever
+ * its state changes.  Possible states that may affect widget sesitivity are
+ * defined in #GwyMenuSensFlags.
+ *
+ * A widget can have defined a set of conditions (by
+ * gwy_app_menu_set_sensitive_both() and other fucntions) that have all to be
+ * satisfied to become sensitive. If there are no conditions defined, the
+ * widget is sensitive always.
+ **/
 
 /**
  * GwyMenuSensFlags:

@@ -26,10 +26,12 @@
 
 G_BEGIN_DECLS
 
+#ifndef GWY_DISABLE_DEPRECATED
 GtkWidget* gwy_app_graph_list_new     (GwyDataWindow *data_window);
 void       gwy_app_graph_list_add     (GwyContainer *data,
                                        GwyGraphModel *gmodel,
                                        GwyGraphWindow *graph);
+#endif
 
 G_END_DECLS
 

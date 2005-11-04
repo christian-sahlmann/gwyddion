@@ -98,6 +98,16 @@ gwy_gl_material_editor_init(GwyGLMaterialEditor *editor)
     editor->last_component = GL_MATERIAL_AMBIENT;
 }
 
+/**
+ * gwy_app_gl_material_editor:
+ *
+ * Creates or presents OpenGL material editor.
+ *
+ * Material editor is singleton, therefore if it doesn't exist, this function
+ * creates and displays it.  If it already exists, it simply calls
+ * gtk_window_present() on the existing instance.  It exists until it's closed
+ * by user.
+ **/
 void
 gwy_app_gl_material_editor(void)
 {
@@ -395,6 +405,14 @@ gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
     editor->old[GL_MATERIAL_EMISSION] = *gwy_gl_material_get_emission(material);
     gwy_gl_material_editor_update(editor);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:glmaterial-editor
+ * @title: GwyGLMaterialEditor
+ * @short_description: OpenGL material editor
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

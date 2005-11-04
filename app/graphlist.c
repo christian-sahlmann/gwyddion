@@ -672,4 +672,15 @@ gwy_app_graph_list_destroy(Controls *controls)
     g_free(controls);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:graphlist
+ * @title: graphlist
+ * @short_description: Data window graph list
+ *
+ * <warning>To be removed or at least reworked, integrated
+ * elsewhere.</warning>
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

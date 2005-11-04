@@ -889,7 +889,16 @@ gwy_unitool_rect_info_table_fill(GwyUnitoolState *state,
     return is_selected;
 }
 
-/***** Documentation *******************************************************/
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:unitool
+ * @title: Unitool
+ * @short_description: Universal tool template
+ *
+ * <warning>To be changed to a proper class, slots and helper functions to
+ * methods.</warning>.
+ **/
 
 /**
  * GwyUnitoolSlots:

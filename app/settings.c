@@ -146,14 +146,14 @@ gwy_app_settings_save(const gchar *filename)
 }
 
 /**
- * gwy_app_settings_load_text:
+ * gwy_app_settings_load:
  * @filename: A filename to read settings from.
  *
  * Loads settings file.
  *
  * Returns: Whether it succeeded.  In either case you can call
- * gwy_app_settings_get() then to obtain either the loaded settings or the
- * old ones (if failed), or an empty #GwyContainer.
+ *          gwy_app_settings_get() then to obtain either the loaded settings
+ *          or the old ones (if failed), or an empty #GwyContainer.
  **/
 gboolean
 gwy_app_settings_load(const gchar *filename)
@@ -518,5 +518,20 @@ gwy_app_gl_is_ok(void)
 {
     return gwy_gl_ok;
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:settings
+ * @title: settings
+ * @short_description: Application and module settings
+ *
+ * All application and module settings are stored in a one big #GwyContainer
+ * which can be obtained by gwy_app_settings_get(). Then you can use
+ * #GwyContainer functions to get and save settings.
+ *
+ * The rest of the setting manipulating functions is normally useful only in
+ * main application.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -681,4 +681,29 @@ gwy_undo_get_for_data(GwyContainer *data,
     return (GwyAppUndo*)l->data;
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:undo
+ * @title: undo
+ * @short_description: Undo and redo facility
+ * 
+ * For a module developer, the only two useful undo/redo functions are probably
+ * gwy_app_undo_checkpoint() and gwy_app_undo_checkpointv() creating a
+ * checkpoint in the undo history to which is possible to return to later. You
+ * should use these functions before commiting changes to data.
+ *
+ * The other functions actually perform undo or redo, and has little use
+ * outside main application, unless it wishes to implement its local undo.
+ *
+ * There are two types of functions app-level and container-level.  App-level
+ * functions (have `app' in their names) should be generally used only by the
+ * main application as they update menus and toolboxes according to undo and
+ * redo state.  Container-level functions only perform the actual undo or redo
+ * and can be used for local undo implementation.
+ *
+ * Undo information for a #GwyContainer is automatically destroyed when the
+ * container is finalized.
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
