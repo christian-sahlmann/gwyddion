@@ -651,6 +651,22 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
             descent = PANGO_DESCENT(rect);
             text_size = rect.width + 1;
 
+            if (lower < 0) {
+                g_snprintf(unit_str, unitstr_len, "%.*f",
+                           format->precision, lower/format->magnitude);
+                if (unit_str[0] == '-') {
+                    g_memmove(unit_str+2, unit_str, unitstr_len-3);
+                    unit_str[unitstr_len-1] = '\0';
+                    unit_str[0] = '\xe2';
+                    unit_str[1] = '\x88';
+                    unit_str[2] = '\x92';
+                }
+                pango_layout_set_markup(ruler->layout, unit_str, -1);
+                pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
+                if (text_size < rect.width + 1)
+                    text_size = rect.width + 1;
+            }
+
             /* fit as many labels as you can */
             labels = floor(ruler->pixelsize/(text_size + ruler->hthickness
                                              + min_label_spacing));
@@ -731,6 +747,14 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         else
             g_snprintf(unit_str, unitstr_len, "%.*f",
                        format->precision, val/format->magnitude);
+
+        if (unit_str[0] == '-') {
+            g_memmove(unit_str+2, unit_str, unitstr_len-3);
+            unit_str[unitstr_len-1] = '\0';
+            unit_str[0] = '\xe2';
+            unit_str[1] = '\x88';
+            unit_str[2] = '\x92';
+        }
 
         pango_layout_set_markup(ruler->layout, unit_str, -1);
         /* this is the best approximation of same positioning I'm able to do,
