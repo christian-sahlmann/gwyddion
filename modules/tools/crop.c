@@ -217,7 +217,7 @@ apply(GwyUnitoolState *state)
     GwyContainer *data;
     GwyDataField *dfield;
     gint ximin, yimin, ximax, yimax;
-    gdouble sel[4];
+    gdouble xoff, yoff, sel[4];
     gsize i;
 
     controls = (ToolControls*)state->user_data;
@@ -239,8 +239,10 @@ apply(GwyUnitoolState *state)
         yimax = gwy_data_field_rtoi(dfield, sel[3]) + 1;
         gwy_data_field_resize(dfield, ximin, yimin, ximax, yimax);
         if (controls->keep_offsets) {
-            gwy_data_field_set_xoffset(dfield, sel[0]);
-            gwy_data_field_set_yoffset(dfield, sel[1]);
+            xoff = gwy_data_field_get_xoffset(dfield);
+            yoff = gwy_data_field_get_yoffset(dfield);
+            gwy_data_field_set_xoffset(dfield, sel[0] + xoff);
+            gwy_data_field_set_yoffset(dfield, sel[1] + yoff);
         }
         else {
             gwy_data_field_set_xoffset(dfield, 0.0);
