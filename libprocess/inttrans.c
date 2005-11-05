@@ -437,6 +437,8 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
             GWY_SWAP(gdouble, data[j + (i + im)*xres], data[(j + jm) + i*xres]);
         }
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 
