@@ -141,7 +141,7 @@ gwy_fft_find_nice_size(gint size)
 {
     gint p2;
 
-    g_return_if_fail(size <= 0x40000000, 0x40000000);
+    g_return_val_if_fail(size <= 0x40000000, 0x40000000);
 
     for (p2 = 1; p2 < size; p2 = p2 << 1)
         ;
@@ -425,6 +425,8 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
         }
     }
     fftw_destroy_plan(plan);
+    gwy_data_field_multiply(rb, 1.0/sqrt(newxres*newyres));
+    gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
 #else
     for (k = 0; k < newyres; k++) {
         gwy_fft_simple(direction,
@@ -628,6 +630,8 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
         }
     }
     fftw_destroy_plan(plan);
+    gwy_data_field_multiply(rb, 1.0/sqrt(newxres));
+    gwy_data_field_multiply(ib, 1.0/sqrt(newxres));
 #else
     for (k = 0; k < yres; k++) {
         gwy_fft_simple(direction,
@@ -749,6 +753,8 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
         }
     }
     fftw_destroy_plan(plan);
+    gwy_data_field_multiply(rb, 1.0/sqrt(newyres));
+    gwy_data_field_multiply(ib, 1.0/sqrt(newyres));
 #else
     for (k = 0; k < xres; k++) {
         gwy_fft_simple(direction,
