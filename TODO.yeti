@@ -1,20 +1,16 @@
-SF CVS cleanup:
-- modules/tools -> modules/tool
-
 HEAD
+- Ruler:
+  - When all range is negative, units are not placed anywhere
+  - For 2.5 scale type, the correctness test isn't wrong, it passes with
+    precision=0, but actually requires precision=1
 - Why DWT methods have return values?
 - Should GwyDataLine have units?  Set data line offsets in stat functions.
 - 3D View still not MVCized
 - 3D:
   light source grid not visible on some machines?
-  must watch GL materials, they are editable now
 - GwyColorAxis needs overhaul
 - Graphs:
   units displayed only as a multiplier, no base SI unit
-  add support for offsets
-  infinite, memory allocating loop in gwy_axis_scale
-  sfunctions never frees anything, leaks awful lots of GwyGraphCurveModels
-  and GwySIUnits
   graph titles don't work
   silly public signal emitors, mouse-moved
   property get/set not implemented
@@ -23,7 +19,6 @@ HEAD
   selection API is strange and partially duplicated between Graph and GraphArea
   stray "layout-updated" signal in GwyGraphModel
   old graph modules are still present
-  layout issues
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
