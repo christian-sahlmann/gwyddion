@@ -142,7 +142,7 @@ dwt(GwyContainer *data, GwyRunType run)
                                              NULL);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
 
-    newsize = gwy_data_field_get_fft_res(xsize);
+    newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);

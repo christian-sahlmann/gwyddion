@@ -164,7 +164,7 @@ fft(GwyContainer *data, GwyRunType run)
     gwy_data_field_set_si_unit_xy(dfield, xyunit);
     g_object_unref(xyunit);
 
-    newsize = gwy_data_field_get_fft_res(xsize);
+    newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
     raout = gwy_data_field_new_alike(dfield, TRUE);

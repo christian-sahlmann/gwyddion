@@ -148,7 +148,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     gwy_app_undo_checkpoint(data, "/0/mask", NULL);
     gwy_container_gis_object_by_name(data, "/0/mask", &mask);
 
-    newsize = gwy_data_field_get_fft_res(xsize);
+    newsize = gwy_fft_find_nice_size(xsize);
     dfield = gwy_data_field_duplicate(dfield);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
     gwy_data_field_resample(dfield, newsize, newsize,

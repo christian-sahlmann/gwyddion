@@ -175,8 +175,8 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
         case GWY_CORRELATION_FFT:
         case GWY_CORRELATION_POC:
-        fftxres = gwy_data_field_get_fft_res(xres);
-        fftyres = gwy_data_field_get_fft_res(yres);
+        fftxres = gwy_fft_find_nice_size(xres);
+        fftyres = gwy_fft_find_nice_size(yres);
         data_in_re = gwy_data_field_duplicate(data_field);
         kernel_in_re = gwy_data_field_new_alike(data_field, TRUE);
         gwy_data_field_area_copy(kernel_field, kernel_in_re,

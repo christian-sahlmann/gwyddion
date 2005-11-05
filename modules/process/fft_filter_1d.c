@@ -219,7 +219,7 @@ fftf_1d_dialog(Fftf1dArgs *args, GwyContainer *data)
                                                              "/0/data"));
     args->original_xres = dfield->xres;
     args->original_yres = dfield->yres;
-    newsize = gwy_data_field_get_fft_res(MAX(dfield->xres, dfield->yres));
+    newsize = gwy_fft_find_nice_size(MAX(dfield->xres, dfield->yres));
 
     gwy_data_field_resample(dfield, newsize, newsize,
                             args->interpolation);
