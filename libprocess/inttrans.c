@@ -425,7 +425,6 @@ void
 gwy_data_field_2dfft_humanize(GwyDataField *data_field)
 {
     gint i, j, im, jm, xres;
-    gdouble c1, c2, c3, c4;
     gdouble *data;
 
     im = data_field->yres/2;
@@ -434,14 +433,8 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
     data = data_field->data;
     for (i = 0; i < im; i++) {
         for (j = 0; j < jm; j++) {
-            c1 = data[j + i*xres];
-            c2 = data[j + (i + im)*xres];
-            c3 = data[(j + jm) + i*xres];
-            c4 = data[(j + jm) + (i + im)*xres];
-            data[(j + jm) + (i + im)*xres] = c1;
-            data[(j + jm) + i*xres] = c2;
-            data[j + (i + im)*xres] = c3;
-            data[j + i*xres] = c4;
+            GWY_SWAP(gdouble, data[j + i*xres], data[(j + jm) + (i + im)*xres]);
+            GWY_SWAP(gdouble, data[j + (i + im)*xres], data[(j + jm) + i*xres]);
         }
     }
 }
