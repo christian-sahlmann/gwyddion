@@ -467,7 +467,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
                     GwyInterpolationType interpolation,
                     gboolean preserverms, gboolean level)
 {
-    gint k, yres, newxres;
+    gint k, xres, yres, newxres;
     GwyDataField *rbuf, *ibuf;
     const gdouble *in_rdata, *in_idata;
     gdouble *out_rdata, *out_idata;
@@ -483,28 +483,32 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
 
+    xres = ra->xres;
     yres = ra->yres;
     newxres = gwy_fft_find_nice_size(ra->xres);
-    gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_clear(rb);
-    gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_clear(ib);
 
     /* We need complex scratch space for fftw while simplefft needs a second
      * pair of real arrays. */
 #ifdef HAVE_FFTW3
     rbuf = rb;
     ibuf = ib;
+    gwy_data_field_resample(rbuf, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ibuf, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_copy(ra, rbuf, FALSE);
     gwy_data_field_copy(ia, ibuf, FALSE);
     buffer = fftw_malloc(sizeof(fftw_complex) * newxres*yres);
 #else
     rbuf = gwy_data_field_duplicate(ra);
     ibuf = gwy_data_field_duplicate(ia);
+    gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
+    /* FIXME: is it necessary? */
+    gwy_data_field_clear(rb);
+    gwy_data_field_clear(ib);
 #endif
 
-    gwy_fft_window_datafield(rbuf, GTK_ORIENTATION_HORIZONTAL, windowing);
-    gwy_fft_window_datafield(ibuf, GTK_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
 
     gwy_data_field_resample(rbuf, newxres, yres, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(ibuf, newxres, yres, GWY_INTERPOLATION_BILINEAR);
@@ -542,8 +546,8 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, ra->xres, yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, ra->xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
 
 #ifdef HAVE_FFTW3
     fftw_free(buffer);
@@ -581,7 +585,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
                     GwyInterpolationType interpolation,
                     gboolean preserverms, gboolean level)
 {
-    gint k, xres, newyres;
+    gint k, xres, yres, newyres;
     GwyDataField *rbuf, *ibuf;
     const gdouble *in_rdata, *in_idata;
     gdouble *out_rdata, *out_idata;
@@ -598,27 +602,31 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
 
     xres = ra->xres;
+    yres = ra->yres;
     newyres = gwy_fft_find_nice_size(ra->yres);
-    gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_clear(rb);
-    gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_clear(ib);
 
     /* We need complex scratch space for fftw while simplefft needs a second
      * pair of real arrays. */
 #ifdef HAVE_FFTW3
     rbuf = rb;
     ibuf = ib;
+    gwy_data_field_resample(rbuf, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ibuf, xres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_copy(ra, rbuf, FALSE);
     gwy_data_field_copy(ia, ibuf, FALSE);
     buffer = fftw_malloc(sizeof(fftw_complex) * newyres*xres);
 #else
     rbuf = gwy_data_field_duplicate(ra);
     ibuf = gwy_data_field_duplicate(ia);
+    gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
+    /* FIXME: is it necessary? */
+    gwy_data_field_clear(rb);
+    gwy_data_field_clear(ib);
 #endif
 
-    gwy_fft_window_datafield(rbuf, GTK_ORIENTATION_HORIZONTAL, windowing);
-    gwy_fft_window_datafield(ibuf, GTK_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
 
     gwy_data_field_resample(rbuf, xres, newyres, GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_resample(ibuf, xres, newyres, GWY_INTERPOLATION_BILINEAR);
@@ -647,17 +655,17 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
         }
     }
 #else
-    for (k = 0; k < rin->xres; k++) {
+    for (k = 0; k < xres; k++) {
         gwy_fft_simple(direction,
                        in_rdata + k, in_idata + k,
                        out_rdata + k, out_idata + k,
                        newyres,
-                       rin->xres);
+                       xres);
      }
 #endif
 
-    gwy_data_field_resample(rb, xres, ra->xres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, xres, ra->xres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
 
 #ifdef HAVE_FFTW3
     fftw_free(buffer);
@@ -701,7 +709,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
 
     rin = gwy_data_field_duplicate(ra);
 
-    gwy_fft_window_datafield(rin, GTK_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(rin, GWY_ORIENTATION_HORIZONTAL, windowing);
     if (!rb)
         rb = gwy_data_field_new_alike(ra, TRUE);
     else {
