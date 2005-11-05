@@ -351,20 +351,109 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
                      GwyInterpolationType interpolation,
                      gboolean preserverms, gboolean level)
 {
-    GwyDataField *rh, *ih;
+    gint k, xres, yres, newxres, newyres;
+    GwyDataField *rbuf, *ibuf;
+    const gdouble *in_rdata, *in_idata;
+    gdouble *out_rdata, *out_idata;
+#ifdef HAVE_FFTW3
+    fftw_complex *buffer;
+    fftw_plan plan;
+    gint j;
+#endif
 
-    rh = gwy_data_field_new_alike(ra, FALSE);
-    ih = gwy_data_field_new_alike(ra, FALSE);
+    g_return_if_fail(GWY_IS_DATA_FIELD(ra));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rb));
+    g_return_if_fail(GWY_IS_DATA_FIELD(ia));
+    g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
 
-    gwy_data_field_xfft(ra, ia, rh, ih,
-                        windowing, direction, interpolation,
-                        preserverms, level);
-    gwy_data_field_yfft(rh, ih, rb, ib,
-                        windowing, direction, interpolation,
-                        preserverms, level);
+    xres = ra->xres;
+    yres = ra->yres;
+    newxres = gwy_fft_find_nice_size(xres);
+    newyres = gwy_fft_find_nice_size(yres);
 
-    g_object_unref(rh);
-    g_object_unref(ih);
+    /* We need complex scratch space for fftw while simplefft needs a second
+     * pair of real arrays. */
+#ifdef HAVE_FFTW3
+    rbuf = rb;
+    ibuf = ib;
+    gwy_data_field_resample(rbuf, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ibuf, xres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_copy(ra, rbuf, FALSE);
+    gwy_data_field_copy(ia, ibuf, FALSE);
+    buffer = fftw_malloc(sizeof(fftw_complex) * newxres*newyres);
+#else
+    rbuf = gwy_data_field_duplicate(ra);
+    ibuf = gwy_data_field_duplicate(ia);
+    gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
+    /* FIXME: is it necessary? */
+    gwy_data_field_clear(rb);
+    gwy_data_field_clear(ib);
+#endif
+
+    gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
+    gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_fft_window_datafield(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
+
+    gwy_data_field_resample(rbuf, newxres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ibuf, newxres, newyres, GWY_INTERPOLATION_BILINEAR);
+
+    in_rdata = gwy_data_field_get_data_const(rbuf);
+    in_idata = gwy_data_field_get_data_const(ibuf);
+    out_rdata = gwy_data_field_get_data(rb);
+    out_idata = gwy_data_field_get_data(ib);
+
+#ifdef HAVE_FFTW3
+    /* TODO: use fftw_plan_guru_split_dft() that should be possible to
+     * use on split arrays */
+    plan = fftw_plan_dft_2d(newxres, newyres,
+                            buffer, buffer,
+                            direction, FFTW_MEASURE);
+    for (k = 0; k < newyres; k++) {
+        for (j = 0; j < newxres; j++) {
+            buffer[k*newxres + j][0] = in_rdata[k*newxres + j];
+            buffer[k*newxres + j][1] = in_idata[k*newxres + j];
+        }
+    }
+    fftw_execute(plan);
+    for (k = 0; k < newyres; k++) {
+        for (j = 0; j < newxres; j++) {
+            out_rdata[k*newxres + j] = buffer[k*newxres + j][0];
+            out_idata[k*newxres + j] = buffer[k*newxres + j][1];
+        }
+    }
+    fftw_destroy_plan(plan);
+#else
+    for (k = 0; k < newyres; k++) {
+        gwy_fft_simple(direction,
+                       in_rdata + k*newxres, in_idata + k*newxres,
+                       out_rdata + k*newxres, out_idata + k*newxres,
+                       newxres,
+                       1);
+    }
+    /* FIXME: this is a bit cruel */
+    gwy_data_field_copy(rb, rbuf, FALSE);
+    gwy_data_field_copy(ib, ibuf, FALSE);
+    for (k = 0; k < newxres; k++) {
+        gwy_fft_simple(direction,
+                       in_rdata + k, in_idata + k,
+                       out_rdata + k, out_idata + k,
+                       newyres,
+                       newxres);
+     }
+#endif
+
+    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
+
+#ifdef HAVE_FFTW3
+    fftw_free(buffer);
+#else
+    g_object_unref(rbuf);
+    g_object_unref(ibuf);
+#endif
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
@@ -485,7 +574,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 
     xres = ra->xres;
     yres = ra->yres;
-    newxres = gwy_fft_find_nice_size(ra->xres);
+    newxres = gwy_fft_find_nice_size(xres);
 
     /* We need complex scratch space for fftw while simplefft needs a second
      * pair of real arrays. */
@@ -519,6 +608,8 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = gwy_data_field_get_data(ib);
 
 #ifdef HAVE_FFTW3
+    /* TODO: use fftw_plan_guru_split_dft() that should be possible to
+     * use on split arrays */
     plan = fftw_plan_many_dft(1, &newxres, yres,
                               buffer, NULL, 1, newxres,
                               buffer, NULL, 1, newxres,
@@ -536,6 +627,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
             out_idata[k*newxres + j] = buffer[k*newxres + j][1];
         }
     }
+    fftw_destroy_plan(plan);
 #else
     for (k = 0; k < yres; k++) {
         gwy_fft_simple(direction,
@@ -603,7 +695,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
 
     xres = ra->xres;
     yres = ra->yres;
-    newyres = gwy_fft_find_nice_size(ra->yres);
+    newyres = gwy_fft_find_nice_size(yres);
 
     /* We need complex scratch space for fftw while simplefft needs a second
      * pair of real arrays. */
@@ -637,6 +729,8 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = gwy_data_field_get_data(ib);
 
 #ifdef HAVE_FFTW3
+    /* TODO: use fftw_plan_guru_split_dft() that should be possible to
+     * use on split arrays */
     plan = fftw_plan_many_dft(1, &newyres, xres,
                               buffer, NULL, 1, newyres,
                               buffer, NULL, 1, newyres,
@@ -654,6 +748,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
             out_idata[k + j*xres] = buffer[k*newyres + j][1];
         }
     }
+    fftw_destroy_plan(plan);
 #else
     for (k = 0; k < xres; k++) {
         gwy_fft_simple(direction,

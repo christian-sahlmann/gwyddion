@@ -175,18 +175,18 @@ gwy_fft_window(gdouble *data,
         gwy_fft_mult(data, n, windowings[windowing]);
 }
 
-void 
+void
 gwy_fft_window_datafield(GwyDataField *dfield,
-                         GtkOrientation orientation,
+                         GwyOrientation orientation,
                          GwyWindowingType windowing)
 {
     gint res, xres, yres, col, row, i;
     gdouble *table, *data;
-    
-    
+
+
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    if (orientation == GWY_ORIENTATION_HORIZONTAL)
         res = xres;
     else
         res = yres;
@@ -195,14 +195,14 @@ gwy_fft_window_datafield(GwyDataField *dfield,
     g_assert(table);
 
     for (i = 0; i<res; i++) table[i] = 1;
-    
+
     gwy_fft_window(table, res, windowing);
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    if (orientation == GWY_ORIENTATION_HORIZONTAL)
     {
        for (col = 0; col < xres; col++)
        {
@@ -219,7 +219,7 @@ gwy_fft_window_datafield(GwyDataField *dfield,
                data[col] *= table[col];
        }
     }
-         
+
     g_free(table);
 }
 
