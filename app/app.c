@@ -443,8 +443,6 @@ gwy_app_data_window_create(GwyContainer *data)
                      G_CALLBACK(gwy_app_data_window_set_current), NULL);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_data_window_remove), NULL);
-    g_signal_connect_swapped(data_window, "destroy",
-                             G_CALLBACK(g_object_unref), data);
     g_signal_connect(corner, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggle_cb), data_window);
 
