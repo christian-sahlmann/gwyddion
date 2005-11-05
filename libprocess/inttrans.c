@@ -387,9 +387,6 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     ibuf = gwy_data_field_duplicate(ia);
     gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
-    /* FIXME: is it necessary? */
-    gwy_data_field_clear(rb);
-    gwy_data_field_clear(ib);
 #endif
 
     gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
@@ -593,9 +590,6 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     ibuf = gwy_data_field_duplicate(ia);
     gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
-    /* FIXME: is it necessary? */
-    gwy_data_field_clear(rb);
-    gwy_data_field_clear(ib);
 #endif
 
     gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
@@ -716,9 +710,6 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     ibuf = gwy_data_field_duplicate(ia);
     gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
     gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
-    /* FIXME: is it necessary? */
-    gwy_data_field_clear(rb);
-    gwy_data_field_clear(ib);
 #endif
 
     gwy_fft_window_datafield(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);

@@ -164,15 +164,15 @@ fft(GwyContainer *data, GwyRunType run)
     newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
                             GWY_INTERPOLATION_BILINEAR);
-    raout = gwy_data_field_new_alike(dfield, TRUE);
-    ipout = gwy_data_field_new_alike(dfield, TRUE);
+    raout = gwy_data_field_new_alike(dfield, FALSE);
+    ipout = gwy_data_field_new_alike(dfield, FALSE);
     imin = gwy_data_field_new_alike(dfield, TRUE);
 
     gwy_data_field_multiply(dfield, 1.0
                             /(gwy_data_field_get_max(dfield)
                               - gwy_data_field_get_min(dfield)));
 
-    /* FIXME: temporary hack, xfft_real is borken */
+    /* FIXME: temporary hack, 2dfft_real is borken */
     tmp = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_2dfft(dfield, tmp,
                          raout, ipout,
