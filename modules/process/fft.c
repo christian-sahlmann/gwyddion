@@ -58,6 +58,9 @@ typedef struct {
 static gboolean    module_register            (const gchar *name);
 static gboolean    fft                        (GwyContainer *data,
                                                GwyRunType run);
+static GwyDataField* fft_create_output        (GwyContainer *data,
+                                               GwyDataField *dfield,
+                                               const gchar *window_name);
 static gboolean    fft_dialog                 (FFTArgs *args);
 static void        preserve_changed_cb        (GtkToggleButton *button,
                                                FFTArgs *args);
@@ -118,8 +121,8 @@ module_register(const gchar *name)
 static gboolean
 fft(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *data_window, *dialog;
-    GwyDataField *dfield;
+    GtkWidget *dialog;
+    GwyDataField *dfield, *tmp;
     GwyDataField *raout, *ipout, *imin;
     GwySIUnit *xyunit;
     FFTArgs args;
@@ -154,15 +157,9 @@ fft(GwyContainer *data, GwyRunType run)
     if (!ok)
         return FALSE;
 
-    data = gwy_container_duplicate_by_prefix(data,
-                                             "/0/data",
-                                             "/0/base/palette",
-                                             NULL);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
-    xyunit = gwy_si_unit_duplicate(gwy_data_field_get_si_unit_xy(dfield));
+    dfield = gwy_data_field_duplicate(dfield);
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_power(xyunit, -1, xyunit);
-    gwy_data_field_set_si_unit_xy(dfield, xyunit);
-    g_object_unref(xyunit);
 
     newsize = gwy_fft_find_nice_size(xsize);
     gwy_data_field_resample(dfield, newsize, newsize,
@@ -175,14 +172,17 @@ fft(GwyContainer *data, GwyRunType run)
                             /(gwy_data_field_get_max(dfield)
                               - gwy_data_field_get_min(dfield)));
 
-    gwy_data_field_2dfft_real(dfield, //imin
-                         raout,
-                         ipout,
+    /* FIXME: temporary hack, xfft_real is borken */
+    tmp = gwy_data_field_new_alike(dfield, TRUE);
+    gwy_data_field_2dfft(dfield, tmp,
+                         raout, ipout,
                          args.window,
                          GWY_TRANSFORM_DIRECTION_FORWARD,
                          args.interp,
                          0,
                          0);
+    g_object_unref(tmp);
+
     gwy_data_field_2dfft_humanize(raout);
     gwy_data_field_2dfft_humanize(ipout);
 
@@ -195,70 +195,67 @@ fft(GwyContainer *data, GwyRunType run)
         gwy_data_field_resample(ipout, xsize, ysize, args.interp);
     }
 
+    gwy_data_field_set_xreal(dfield, newreals);
+    gwy_data_field_set_yreal(dfield, newreals);
+
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL) {
-        gwy_data_field_copy(raout, dfield, FALSE);
-        gwy_data_field_set_xreal(dfield, newreals);
-        gwy_data_field_set_yreal(dfield, newreals);
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("FFT Real"));
+        tmp = fft_create_output(data, dfield, _("FFT Real"));
+        gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
+        gwy_data_field_data_changed(tmp);
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
-        if (args.out == GWY_FFT_OUTPUT_REAL_IMG) {
-            data = gwy_container_duplicate_by_prefix(data,
-                                                     "/0/data",
-                                                     "/0/base/palette",
-                                                     NULL);
-            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/data"));
-        }
-        gwy_data_field_copy(ipout, dfield, FALSE);
-        gwy_data_field_set_xreal(dfield, newreals);
-        gwy_data_field_set_yreal(dfield, newreals);
-
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("FFT Imag"));
+        tmp = fft_create_output(data, dfield, _("FFT Imag"));
+        gwy_data_field_area_copy(ipout, tmp, 0, 0, xsize, ysize, 0, 0);
+        gwy_data_field_data_changed(tmp);
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
-        set_dfield_module(raout, ipout, dfield);
-        gwy_data_field_set_xreal(dfield, newreals);
-        gwy_data_field_set_yreal(dfield, newreals);
-
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("FFT Modulus"));
+        tmp = fft_create_output(data, dfield, _("FFT Modulus"));
+        set_dfield_module(raout, ipout, tmp);
+        gwy_data_field_data_changed(tmp);
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
-        if (args.out == GWY_FFT_OUTPUT_MOD_PHASE) {
-            data = gwy_container_duplicate_by_prefix(data,
-                                                     "/0/data",
-                                                     "/0/base/palette",
-                                                     NULL);
-            dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
-                                                                    "/0/data"));
-        }
-        set_dfield_phase(raout, ipout, dfield);
-        gwy_data_field_set_xreal(dfield, newreals);
-        gwy_data_field_set_yreal(dfield, newreals);
-
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                         _("FFT Phase"));
+        tmp = fft_create_output(data, dfield, _("FFT Phase"));
+        set_dfield_phase(raout, ipout, tmp);
+        gwy_data_field_data_changed(tmp);
     }
 
+    g_object_unref(dfield);
     g_object_unref(raout);
     g_object_unref(ipout);
     g_object_unref(imin);
 
     return FALSE;
+}
+
+static GwyDataField*
+fft_create_output(GwyContainer *data,
+                  GwyDataField *dfield,
+                  const gchar *window_name)
+{
+    GtkWidget *data_window;
+    GwyContainer *newdata;
+    const guchar *pal = NULL;
+
+    dfield = gwy_data_field_new_alike(dfield, FALSE);
+
+    newdata = gwy_container_new();
+    gwy_container_set_object_by_name(newdata, "/0/data", dfield);
+    g_object_unref(dfield);
+
+    gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
+    if (pal)
+        gwy_container_set_string_by_name(newdata, "/0/base/palette",
+                                         g_strdup(pal));
+
+    data_window = gwy_app_data_window_create(newdata);
+    g_object_unref(newdata);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), window_name);
+
+    return dfield;
 }
 
 static void
@@ -269,7 +266,7 @@ set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     gint xres, yres, i;
 
     xres = gwy_data_field_get_xres(re);
-    yres = gwy_data_field_get_xres(re);
+    yres = gwy_data_field_get_yres(re);
     datare = gwy_data_field_get_data_const(re);
     dataim = gwy_data_field_get_data_const(im);
     data = gwy_data_field_get_data(target);
@@ -281,17 +278,21 @@ static void
 set_dfield_phase(GwyDataField *re, GwyDataField *im,
                  GwyDataField *target)
 {
+    GwySIUnit *unit;
     const gdouble *datare, *dataim;
     gdouble *data;
     gint xres, yres, i;
 
     xres = gwy_data_field_get_xres(re);
-    yres = gwy_data_field_get_xres(re);
+    yres = gwy_data_field_get_yres(re);
     datare = gwy_data_field_get_data_const(re);
     dataim = gwy_data_field_get_data_const(im);
     data = gwy_data_field_get_data(target);
     for (i = xres*yres; i; i--, datare++, dataim++, data++)
         *data = atan2(*dataim, *datare);
+
+    unit = gwy_data_field_get_si_unit_z(target);
+    gwy_si_unit_set_unit_string(unit, "");
 }
 
 static gboolean
