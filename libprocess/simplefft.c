@@ -24,6 +24,25 @@
 
 typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
 
+
+static gdouble gwy_fft_window_hann     (gint i, gint n);
+static gdouble gwy_fft_window_hamming  (gint i, gint n);
+static gdouble gwy_fft_window_blackmann(gint i, gint n);
+static gdouble gwy_fft_window_lanczos  (gint i, gint n);
+static gdouble gwy_fft_window_welch    (gint i, gint n);
+static gdouble gwy_fft_window_rect     (gint i, gint n);
+
+/* The order must match GwyWindowingType enum */
+static const GwyFFTWindowingFunc windowings[] = {
+    NULL,  /* none */
+    &gwy_fft_window_hann,
+    &gwy_fft_window_hamming,
+    &gwy_fft_window_blackmann,
+    &gwy_fft_window_lanczos,
+    &gwy_fft_window_welch,
+    &gwy_fft_window_rect,
+};
+
 /**
  * gwy_fft_hum:
  * @dir: Transformation direction.
@@ -113,6 +132,8 @@ gwy_fft_window_lanczos(gint i, gint n)
 {
     gdouble n_2 = ((gdouble)n)/2;
 
+    if (i == n/2)
+        return 1;
     return sin(G_PI*(i-n_2)/n_2)/(G_PI*(i-n_2)/n_2);
 }
 
@@ -158,17 +179,6 @@ gwy_fft_window(gdouble *data,
                gint n,
                GwyWindowingType windowing)
 {
-    /* The order must match GwyWindowingType enum */
-    GwyFFTWindowingFunc windowings[] = {
-        NULL,  /* none */
-        gwy_fft_window_hann,
-        gwy_fft_window_hamming,
-        gwy_fft_window_blackmann,
-        gwy_fft_window_lanczos,
-        gwy_fft_window_welch,
-        gwy_fft_window_rect,
-    };
-
     g_return_if_fail(data);
     g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
     if (windowings[windowing])
@@ -180,47 +190,44 @@ gwy_fft_window_datafield(GwyDataField *dfield,
                          GwyOrientation orientation,
                          GwyWindowingType windowing)
 {
-    gint res, xres, yres, col, row, i;
-    gdouble *table, *data;
+    GwyFFTWindowingFunc window;
+    gint xres, yres, col, row;
+    gdouble *data, q;
 
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
+    g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    if (orientation == GWY_ORIENTATION_HORIZONTAL)
-        res = xres;
-    else
-        res = yres;
+    window = windowings[windowing];
+    if (!window)
+        return;
 
-    table = (gdouble *)g_try_malloc(res*sizeof(gdouble));
-    g_assert(table);
+    xres = dfield->xres;
+    yres = dfield->yres;
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        for (col = 0; col < xres; col++) {
+            q = window(col, xres);
+            data = dfield->data + col;
+            for (row = 0; row < yres; row++)
+                data[row*xres] *= q;
+        }
+        break;
 
-    for (i = 0; i<res; i++) table[i] = 1;
+        case GWY_ORIENTATION_VERTICAL:
+        for (row = 0; row < yres; row++) {
+            q = window(row, xres);
+            data = dfield->data + row*xres;
+            for (col = 0; col < xres; col++)
+                data[col] *= q;
+        }
+        break;
 
-    gwy_fft_window(table, res, windowing);
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    data = gwy_data_field_get_data(dfield);
-
-    if (orientation == GWY_ORIENTATION_HORIZONTAL)
-    {
-       for (col = 0; col < xres; col++)
-       {
-           *data += xres;
-           for (row = 0; row < yres; row++)
-               data[row] *= table[row];
-       }
-    }
-    else
-    {
-       for (col = 0; col < xres; col++)
-       {
-           for (row = 0; row < yres; row++)
-               data[col] *= table[col];
-       }
+        default:
+        g_return_if_reached();
+        break;
     }
 
-    g_free(table);
+    gwy_data_field_invalidate(dfield);
 }
 
 /************************** Documentation ****************************/
