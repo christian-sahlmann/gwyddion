@@ -312,7 +312,7 @@ dialog_update(GwyUnitoolState *state,
                                                                "/0/data"));
     pal = NULL;
     gwy_container_gis_string_by_name(data, "/0/base/palette", &pal);
-    if (pal && !gwy_strequal(pal, controls->pal)) {
+    if (pal && (!controls->pal || !gwy_strequal(pal, controls->pal))) {
         gwy_container_set_string_by_name(mydata, "/0/base/palette",
                                          g_strdup(pal));
         g_free(controls->pal);
