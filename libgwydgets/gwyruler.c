@@ -94,8 +94,8 @@ static void      gwy_ruler_get_property       (GObject *object,
                                                GParamSpec *pspec);
 static void      gwy_ruler_update_value_format(GwyRuler *ruler);
 static gboolean  gwy_ruler_is_precision_ok    (const GwySIValueFormat *format,
-                                               guint unitstr_len,
-                                               gdouble bstep);
+                                               gdouble base,
+                                               ScaleBase scale);
 static ScaleBase gwy_ruler_next_scale         (ScaleBase scale,
                                                gdouble *base,
                                                gdouble measure,
@@ -701,7 +701,7 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         gwy_debug("%d first: %g, base: %g, step: %g, prec: %d, labels: %d",
                   state, first, base, step, format->precision, labels);
 
-        if (gwy_ruler_is_precision_ok(format, unitstr_len, base*step)) {
+        if (gwy_ruler_is_precision_ok(format, base, scale)) {
             if (state == FIRST_TRY && format->precision > 0)
                 format->precision--;
             else
@@ -800,26 +800,14 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
 
 static gboolean
 gwy_ruler_is_precision_ok(const GwySIValueFormat *format,
-                          guint unitstr_len,
-                          gdouble bstep)
+                          gdouble base,
+                          ScaleBase scale)
 {
-    gchar *unit_str, *unit_str2;
+    gint m;
 
-    unit_str = g_newa(gchar, unitstr_len);
-    unit_str2 = g_newa(gchar, unitstr_len);
-    g_snprintf(unit_str, unitstr_len, "%.*f",
-               format->precision, 0.0);
-    g_snprintf(unit_str2, unitstr_len, "%.*f",
-               format->precision, bstep/format->magnitude);
-    if (gwy_strequal(unit_str, unit_str2))
-        return FALSE;
+    m = ROUND(log10(base/format->magnitude));
 
-    g_snprintf(unit_str, unitstr_len, "%.*f",
-               format->precision, 2*bstep/format->magnitude);
-    if (gwy_strequal(unit_str, unit_str2))
-        return FALSE;
-
-    return TRUE;
+    return format->precision + m >= (scale == SCALE_2_5) ? 1 : 0;
 }
 
 static ScaleBase
