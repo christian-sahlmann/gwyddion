@@ -576,6 +576,15 @@ gwy_app_toolbox_update_state(const GwyMenuSensData *sens_data)
                                              sens_data);
 }
 
+/**
+ * gwy_app_tooltips_get:
+ *
+ * Gets the application-wide tooltips instance.
+ *
+ * Returns: The global tooltips distance.  No reference is added, you can
+ *          add yours, but the returned object will exist to the end of program
+ *          anyway.
+ **/
 GtkTooltips*
 gwy_app_tooltips_get(void)
 {
