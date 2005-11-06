@@ -186,9 +186,9 @@ gwy_fft_window(gdouble *data,
 }
 
 void
-gwy_fft_window_datafield(GwyDataField *dfield,
-                         GwyOrientation orientation,
-                         GwyWindowingType windowing)
+gwy_fft_window_data_field(GwyDataField *dfield,
+                          GwyOrientation orientation,
+                          GwyWindowingType windowing)
 {
     GwyFFTWindowingFunc window;
     gint xres, yres, col, row;

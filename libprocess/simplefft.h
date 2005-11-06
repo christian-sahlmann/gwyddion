@@ -40,12 +40,10 @@ void gwy_fft_window(gdouble *data,
                     gint n,
                     GwyWindowingType windowing);
 
-void gwy_fft_window_datafield(GwyDataField *dfield,
-                              GwyOrientation orientation,
-                              GwyWindowingType windowing);
-
+void gwy_fft_window_data_field(GwyDataField *dfield,
+                               GwyOrientation orientation,
+                               GwyWindowingType windowing);
 
 G_END_DECLS
-
 
 #endif /*__GWY_PROCESS_SIMPLEFFT__*/
