@@ -1,4 +1,4 @@
-1.99.4cvs20051103
+
 
 1.99.5
 Application:
@@ -285,6 +285,31 @@ Library:
 
 Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
+
+
+1.14 (2005-11-07)
+Application:
+- Unix installations are relocatable via environment variables.
+- Translations updated: Czech.
+
+Library:
+- libgwydgets: Crashes and other problems with multiple 3D views were fixed
+  (bug #53).
+- libgwydgets: `Invalid UTF-8 string...' messages in 3D view were fixed
+  (not sure about bug #28 connection).
+- libgwydgets: Just moving mouse over data windows should consume much less
+  CPU.
+
+Modules:
+- RHK-SM3 (new): RTH Technology SM3 file import.
+- WITfile (new): WITec WIT file import.
+- SDFile (new): Surfstand Surface Data File (SDF) import.
+- Hitachi AFM (new): Hitachi AFM file import.
+- Unisoku (new): Unisoku HDR + DAT file import.
+- EZDfile: Explict support for NID files was added, some bugs fixed.
+- MI file: Updated to reflect format changes.
+- Pixmap: The same unit selection/formatting is used for false color scale
+  as on data windows (bug #63).
 
 
 1.13 (2005-09-19)
