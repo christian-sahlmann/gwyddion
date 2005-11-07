@@ -103,13 +103,6 @@ GwyGraphStatusType  gwy_graph_get_status(GwyGraph *graph);
 
 GwyGraphModel *gwy_graph_get_model(GwyGraph *graph);
 
-//gint       gwy_graph_get_selection_number(GwyGraph *graph);
-//void       gwy_graph_get_selection(GwyGraph *graph,
-//                                     gdouble *selection);
-
-//void       gwy_graph_clear_selection(GwyGraph *graph);
-//void       gwy_graph_set_selection_limit(GwyGraph *graph, gint limit);
-//gint       gwy_graph_get_selection_limit(GwyGraph *graph);
 
 void       gwy_graph_get_cursor(GwyGraph *graph,
                                   gdouble *x_cursor, gdouble *y_cursor);
