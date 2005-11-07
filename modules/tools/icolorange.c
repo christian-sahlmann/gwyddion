@@ -247,7 +247,7 @@ dialog_create(GwyUnitoolState *state)
     gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
     gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_set_selection_limit(graph, 1);
+    gwy_graph_area_set_selection_limit(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), 1);
     gwy_graph_enable_user_input(graph, FALSE);
     gtk_widget_set_size_request(controls->histogram, 240, 160);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls->histogram,
@@ -356,8 +356,8 @@ dialog_update(GwyUnitoolState *state,
     max = selection[1] = gwy_data_field_get_max(dfield);
 
     if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
-        if (gwy_graph_get_selection_number(graph)) {
-            gwy_graph_get_selection(graph, selection);
+        if (gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(graph)))) {
+            gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), selection);
             has_selection = TRUE;
         }
 
@@ -445,7 +445,7 @@ update_graph_selection(GwyUnitoolState *state,
     max = gwy_data_field_get_max(dfield);
 
     if (min == selection[0] && max == selection[1])
-        gwy_graph_clear_selection(graph);
+        gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)));
     else
         gwy_graph_area_set_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)),
                                      GWY_GRAPH_STATUS_XSEL, selection, 1);

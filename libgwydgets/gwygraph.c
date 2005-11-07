@@ -549,7 +549,7 @@ gwy_graph_get_status(GwyGraph *graph)
  *
  * Returns: number of selections
  **/
-gint
+/*gint
 gwy_graph_get_selection_number(GwyGraph *graph)
 {
     if (graph->area->status == GWY_GRAPH_STATUS_XSEL)
@@ -562,7 +562,7 @@ gwy_graph_get_selection_number(GwyGraph *graph)
     else
         return 0;
 }
-
+*/
 /**
  * gwy_graph_set_selection_limit:
  * @graph: A graph widget
@@ -570,24 +570,26 @@ gwy_graph_get_selection_number(GwyGraph *graph)
  *
  * Set maximum number of selections done by mouse
 */
+/*
 void
 gwy_graph_set_selection_limit(GwyGraph *graph, gint limit)
 {
     gwy_graph_area_set_selection_limit(graph->area, limit);
 }
-
+*/
 /**
  * gwy_graph_get_selection_limit:
  * @graph: A graph widget
  *
  * Returns: maximum number of selections done by mouse
 */
+/*
 gint
 gwy_graph_get_selection_limit(GwyGraph *graph)
 {
     return gwy_graph_area_get_selection_limit(graph->area);
 }
-
+*/
 /**
  * gwy_graph_get_selection:
  * @graph: A graph widget.
@@ -604,6 +606,7 @@ gwy_graph_get_selection_limit(GwyGraph *graph)
  * and can be set by gwy_graph_set_selection_limit() function).
  *
  **/
+/*
 void
 gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
 {
@@ -665,7 +668,7 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
         g_assert_not_reached();
     }
 }
-
+*/
 /**
  * gwy_graph_clear_selection:
  * @graph: A graph widget.
@@ -673,12 +676,13 @@ gwy_graph_get_selection(GwyGraph *graph, gdouble *selection)
  * Clear all selections from the graph widget.
  *
  **/
+/*
 void
 gwy_graph_clear_selection(GwyGraph *graph)
 {
     gwy_graph_area_clear_selection(graph->area);
 }
-
+*/
 /**
  * gwy_graph_request_x_range:
  * @graph: A graph widget.
@@ -858,7 +862,7 @@ zoomed_cb(GwyGraph *graph)
 
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM)
         return;
-    gwy_graph_get_selection(graph, selection);
+    gwy_graph_area_get_selection(gwy_graph_get_area(graph), selection);
 
     x_reqmin = selection[0];
     x_reqmax = selection[0] + selection[1];

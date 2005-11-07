@@ -302,7 +302,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
                        TRUE, TRUE, 4);
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_set_selection_limit(GWY_GRAPH(controls.graph), 1);
+    gwy_graph_area_set_selection_limit(gwy_graph_get_area(GWY_GRAPH(controls.graph)), 1);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     g_signal_connect(GWY_GRAPH(controls.graph)->area,
                      "selected", G_CALLBACK(graph_selected), &controls);
@@ -327,7 +327,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
             case RESPONSE_RESET:
             args->from[args->out] = 0;
             args->to[args->out] = 0;
-            gwy_graph_clear_selection(GWY_GRAPH(controls.graph));
+            gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls.graph)));
             fractal_dialog_update(&controls, args, data);
             break;
 
@@ -384,7 +384,7 @@ out_changed_cb(GtkWidget *combo,
     args->out = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     gwy_graph_set_status(GWY_GRAPH(controls->graph), GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
+    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph))));
     fractal_dialog_update(controls, args, controls->data);
     update_labels(controls, args);
 }
@@ -505,10 +505,10 @@ graph_selected(GwyGraphArea *area, FractalControls *controls)
     gdouble from, to;
     gdouble selection[2];
 
-    gwy_graph_get_selection(GWY_GRAPH(controls->graph), selection);
+    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph))), selection);
 
     args = controls->args;
-    if (gwy_graph_get_selection_number(GWY_GRAPH(controls->graph)) == 0
+    if (gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(controls->graph)))) == 0
         || selection[0] == selection[1]) {
         gtk_label_set_text(GTK_LABEL(controls->from), _("minimum"));
         gtk_label_set_text(GTK_LABEL(controls->to), _("maximum"));

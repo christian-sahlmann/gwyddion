@@ -91,7 +91,7 @@ stats(GwyGraph *graph)
 
     controls.last_status = gwy_graph_get_status(graph);
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_set_selection_limit(graph, 1);
+    gwy_graph_area_set_selection_limit(gwy_graph_get_area(graph), 1);
     
     if (!dialog)
         stats_dialog(graph);
@@ -176,9 +176,9 @@ selection_updated_cb(gpointer data)
     g_return_if_fail(GWY_IS_GRAPH(graph));
 
 
-    if (gwy_graph_get_selection_number(graph))
+    if (gwy_graph_area_get_selection_number(gwy_graph_get_area(graph)))
     {
-        gwy_graph_get_selection(graph, selection);
+        gwy_graph_area_get_selection(gwy_graph_get_area(graph), selection);
         from = selection[0];
         to = selection[1];
     }

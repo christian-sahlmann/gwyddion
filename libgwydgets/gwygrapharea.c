@@ -1498,6 +1498,108 @@ gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
     return area->y_grid_data;
 }
 
+/**
+  * gwy_graph_area_get_selection_number:
+  * @area: A graph area widget.
+  *
+  * Gets number of selections selected by user.
+  *
+  * Returns: number of selections
+ **/
+gint
+gwy_graph_area_get_selection_number(GwyGraphArea *area)
+{
+    if (area->status == GWY_GRAPH_STATUS_XSEL)
+         return GWY_SELECTION(area->areasdata)->n;
+    else if (area->status ==  GWY_GRAPH_STATUS_POINTS)
+         return GWY_SELECTION(area->pointsdata)->n;
+    else if (area->status ==  GWY_GRAPH_STATUS_XLINES
+         || area->status ==  GWY_GRAPH_STATUS_YLINES)
+         return GWY_SELECTION(area->linesdata)->n;
+    else
+         return 0;
+}
+
+/**
+  * gwy_graph_get_selection:
+  * @graph: A graph widget.
+  * @selection: allocated field of gdoubles
+  *
+  * Fills the @selection field with current selection values.
+  * The values of selections are written to the field
+  * as (start_selection_1, end_selection_1, start_selection_2, ...)
+  * for GWY_GRAPH_STATUS_XSEL and GWY_GRAPH_STATUS_YSEL type selections,
+  * as (x1, y1, x2, y2,...) for GWY_GRAPH_STATUS_POINTS or GWY_GRAPH_STATUS_CURSOR
+  * type selections, as (x_start, y_start, width, height) for GWY_GRAPH_STATUS_ZOOM.
+  * The field mus be allready allocated, therefore the field size should
+  * match the maximum number of selections (that is  by default 10 for each type
+  * and can be set by gwy_graph_set_selection_limit() function).
+  *
+ **/
+void
+gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
+{
+    gint i;
+    gdouble data_value, area_selection[4];
+
+    if (selection == NULL) return;
+
+    switch (area->status) {
+        case GWY_GRAPH_STATUS_XSEL:
+        for (i = 0; i < GWY_SELECTION(area->areasdata)->n; i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->areasdata), i, area_selection);
+            selection[2*i] = area_selection[0];
+            selection[2*i + 1] = area_selection[2];
+        }
+        break;
+
+        case GWY_GRAPH_STATUS_YSEL:
+        for (i = 0; i < GWY_SELECTION(area->areasdata)->n; i++) {
+            gwy_selection_get_object(GWY_SELECTION(area->areasdata), i, area_selection);
+            selection[2*i] = area_selection[1];
+            selection[2*i + 1] = area_selection[3];
+        }
+        break;
+
+        case GWY_GRAPH_STATUS_XLINES:
+        case GWY_GRAPH_STATUS_YLINES:
+        gwy_selection_get_data(GWY_SELECTION(area->linesdata), selection);
+        break;
+
+        case GWY_GRAPH_STATUS_POINTS:
+        gwy_selection_get_data(GWY_SELECTION(area->pointsdata), selection);
+        break;
+
+        case GWY_GRAPH_STATUS_ZOOM:
+        if (area->zoomdata->width > 0) {
+            selection[0] = area->zoomdata->xmin;
+            selection[1] = area->zoomdata->width;
+        }
+        else {
+            selection[0] = area->zoomdata->xmin
+                           + area->zoomdata->width;
+            selection[1] = -area->zoomdata->width;
+        }
+
+        if (area->zoomdata->height > 0) {
+            selection[2] = area->zoomdata->ymin;
+            selection[3] = area->zoomdata->height;
+        }
+        else {
+            selection[2] = area->zoomdata->ymin
+                           + area->zoomdata->height;
+            selection[3] = -area->zoomdata->height;
+        }
+        break;
+
+        default:
+        g_assert_not_reached();
+    }                                                                                    
+}
+                
+   
+
+
 /************************** Documentation ****************************/
 
 /**

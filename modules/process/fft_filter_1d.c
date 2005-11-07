@@ -473,8 +473,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
     
-    nofselection = gwy_graph_get_selection_number(GWY_GRAPH(controls->graph));
-    if (nofselection != 0) gwy_graph_clear_selection(GWY_GRAPH(controls->graph));
+    nofselection = gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
+    if (nofselection != 0) gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(controls->graph)));
 
     if (args->update)
         update_view(controls, args);
@@ -489,13 +489,13 @@ graph_selected(G_GNUC_UNUSED GwyGraphArea *area,
     gdouble *selection;
 
     /*get graph selection*/
-    nofselection = gwy_graph_get_selection_number(GWY_GRAPH(pcontrols->graph));
+    nofselection = gwy_graph_area_get_selection_number(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)));
     if (nofselection == 0) {
         restore_ps(pcontrols, args);
     }
     else {
         selection = (gdouble *)g_malloc(2*nofselection*sizeof(gdouble));
-        gwy_graph_get_selection(GWY_GRAPH(pcontrols->graph), selection);
+        gwy_graph_area_get_selection(gwy_graph_get_area(GWY_GRAPH(pcontrols->graph)), selection);
 
         /*setup weights for inverse FFT computation*/
         if (args->weights == NULL)

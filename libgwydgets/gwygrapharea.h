@@ -156,7 +156,13 @@ void gwy_graph_area_set_selection_limit(GwyGraphArea *area, gint limit);
 gint gwy_graph_area_get_selection_limit(GwyGraphArea *area);
 
 void gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel);
-    
+
+gint gwy_graph_area_get_selection_number(GwyGraphArea *area);
+void gwy_graph_area_get_selection(GwyGraphArea *area,
+                                     gdouble *selection);
+
+void gwy_graph_area_clear_selection(GwyGraphArea *area);
+
 
 void gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
                                             gint x, gint y, gint width, gint height,
