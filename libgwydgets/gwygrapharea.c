@@ -560,6 +560,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
                                                  G_OBJECT(cmodel));
             gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
+            gtk_window_present(area->area_dialog);
         }
     }
 
