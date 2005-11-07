@@ -563,6 +563,10 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
         }
     }
 
+
+    if (gwy_graph_area_get_selection_limit(area) == 1) 
+        gwy_graph_area_clear_selection(area);
+    
     if (area->status == GWY_GRAPH_STATUS_POINTS)
     {
         if (event->button == 1 && !gwy_selection_is_full(GWY_SELECTION(area->pointsdata))) /*add selection*/
