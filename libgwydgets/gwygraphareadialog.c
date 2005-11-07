@@ -424,6 +424,7 @@ color_changed_cb(GtkColorSelectionDialog *selector,
                  gpointer user_data)
 {
     GdkColor gcl;
+    GwyRGBA grgba;
     GwyGraphAreaDialog *dialog;
     GwyGraphCurveModel *cmodel;
 
@@ -435,7 +436,9 @@ color_changed_cb(GtkColorSelectionDialog *selector,
 
     if (arg1 == GTK_RESPONSE_OK) {
         gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector->colorsel), &gcl);
-        gwy_rgba_from_gdk_color(&cmodel->color, &gcl);
+        //gwy_rgba_from_gdk_color(&cmodel->color, &gcl);
+        gwy_rgba_from_gdk_color(&grgba, &gcl);
+        gwy_graph_curve_model_set_curve_color(cmodel, &grgba);
         refresh(dialog);
 
     }

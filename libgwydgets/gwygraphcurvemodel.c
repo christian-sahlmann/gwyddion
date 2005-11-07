@@ -745,6 +745,7 @@ gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
 {
     g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
     gcmodel->color = *color;
+    g_object_notify(G_OBJECT(gcmodel), "curve-type");   
 }
 
 /**
