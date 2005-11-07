@@ -55,28 +55,28 @@ typedef struct {
     GtkWidget *out;
 } FFTControls;
 
-static gboolean    module_register            (const gchar *name);
-static gboolean    fft                        (GwyContainer *data,
-                                               GwyRunType run);
-static GwyDataField* fft_create_output        (GwyContainer *data,
-                                               GwyDataField *dfield,
-                                               const gchar *window_name);
-static gboolean    fft_dialog                 (FFTArgs *args);
-static void        preserve_changed_cb        (GtkToggleButton *button,
-                                               FFTArgs *args);
-static void        fft_dialog_update          (FFTControls *controls,
-                                               FFTArgs *args);
-static void        set_dfield_module          (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-static void        set_dfield_phase           (GwyDataField *re,
-                                               GwyDataField *im,
-                                               GwyDataField *target);
-static void        fft_load_args              (GwyContainer *container,
-                                               FFTArgs *args);
-static void        fft_save_args              (GwyContainer *container,
-                                               FFTArgs *args);
-static void        fft_sanitize_args          (FFTArgs *args);
+static gboolean module_register    (const gchar *name);
+static gboolean fft                (GwyContainer *data,
+                                    GwyRunType run);
+static void     fft_create_output  (GwyContainer *data,
+                                    GwyDataField *dfield,
+                                    const gchar *window_name);
+static gboolean fft_dialog         (FFTArgs *args);
+static void     preserve_changed_cb(GtkToggleButton *button,
+                                    FFTArgs *args);
+static void     fft_dialog_update  (FFTControls *controls,
+                                    FFTArgs *args);
+static void     set_dfield_modulus (GwyDataField *re,
+                                    GwyDataField *im,
+                                    GwyDataField *target);
+static void     set_dfield_phase   (GwyDataField *re,
+                                    GwyDataField *im,
+                                    GwyDataField *target);
+static void     fft_load_args      (GwyContainer *container,
+                                    FFTArgs *args);
+static void     fft_save_args      (GwyContainer *container,
+                                    FFTArgs *args);
+static void     fft_sanitize_args  (FFTArgs *args);
 
 
 
@@ -93,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -122,8 +122,7 @@ static gboolean
 fft(GwyContainer *data, GwyRunType run)
 {
     GtkWidget *dialog;
-    GwyDataField *dfield, *tmp;
-    GwyDataField *raout, *ipout, *imin;
+    GwyDataField *dfield, *tmp, *raout, *ipout;
     GwySIUnit *xyunit;
     FFTArgs args;
     gboolean ok;
@@ -166,22 +165,19 @@ fft(GwyContainer *data, GwyRunType run)
                             GWY_INTERPOLATION_BILINEAR);
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
-    imin = gwy_data_field_new_alike(dfield, TRUE);
 
     gwy_data_field_multiply(dfield, 1.0
                             /(gwy_data_field_get_max(dfield)
                               - gwy_data_field_get_min(dfield)));
 
     /* FIXME: temporary hack, 2dfft_real is borken */
-    tmp = gwy_data_field_new_alike(dfield, TRUE);
-    gwy_data_field_2dfft(dfield, tmp,
-                         raout, ipout,
-                         args.window,
-                         GWY_TRANSFORM_DIRECTION_FORWARD,
-                         args.interp,
-                         0,
-                         0);
-    g_object_unref(tmp);
+    gwy_data_field_2dfft_real(dfield,
+                              raout, ipout,
+                              args.window,
+                              GWY_TRANSFORM_DIRECTION_FORWARD,
+                              args.interp,
+                              0,
+                              0);
 
     gwy_data_field_2dfft_humanize(raout);
     gwy_data_field_2dfft_humanize(ipout);
@@ -200,38 +196,37 @@ fft(GwyContainer *data, GwyRunType run)
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL) {
-        tmp = fft_create_output(data, dfield, _("FFT Real"));
+        tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
-        gwy_data_field_data_changed(tmp);
+        fft_create_output(data, dfield, _("FFT Real"));
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
-        tmp = fft_create_output(data, dfield, _("FFT Imag"));
+        tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(ipout, tmp, 0, 0, xsize, ysize, 0, 0);
-        gwy_data_field_data_changed(tmp);
+        fft_create_output(data, tmp, _("FFT Imag"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_MOD) {
-        tmp = fft_create_output(data, dfield, _("FFT Modulus"));
-        set_dfield_module(raout, ipout, tmp);
-        gwy_data_field_data_changed(tmp);
+        tmp = gwy_data_field_new_alike(dfield, FALSE);
+        set_dfield_modulus(raout, ipout, tmp);
+        fft_create_output(data, tmp, _("FFT Modulus"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
         || args.out == GWY_FFT_OUTPUT_PHASE) {
-        tmp = fft_create_output(data, dfield, _("FFT Phase"));
+        tmp = gwy_data_field_new_alike(dfield, FALSE);
         set_dfield_phase(raout, ipout, tmp);
-        gwy_data_field_data_changed(tmp);
+        fft_create_output(data, tmp, _("FFT Phase"));
     }
 
     g_object_unref(dfield);
     g_object_unref(raout);
     g_object_unref(ipout);
-    g_object_unref(imin);
 
     return FALSE;
 }
 
-static GwyDataField*
+static void
 fft_create_output(GwyContainer *data,
                   GwyDataField *dfield,
                   const gchar *window_name)
@@ -239,8 +234,6 @@ fft_create_output(GwyContainer *data,
     GtkWidget *data_window;
     GwyContainer *newdata;
     const guchar *pal = NULL;
-
-    dfield = gwy_data_field_new_alike(dfield, FALSE);
 
     newdata = gwy_container_new();
     gwy_container_set_object_by_name(newdata, "/0/data", dfield);
@@ -254,12 +247,10 @@ fft_create_output(GwyContainer *data,
     data_window = gwy_app_data_window_create(newdata);
     g_object_unref(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), window_name);
-
-    return dfield;
 }
 
 static void
-set_dfield_module(GwyDataField *re, GwyDataField *im, GwyDataField *target)
+set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
 {
     const gdouble *datare, *dataim;
     gdouble *data;
