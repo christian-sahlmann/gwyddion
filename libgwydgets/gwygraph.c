@@ -249,7 +249,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     g_signal_connect_swapped(graph->area, "selected",
                      G_CALLBACK(gwy_graph_signal_selected), graph);
 
-    g_signal_connect_swapped(graph->area, "mouse-moved",
+    g_signal_connect_swapped(graph->area, "motion-notify-event",
                      G_CALLBACK(gwy_graph_signal_mouse_moved), graph);
 
     g_signal_connect_swapped(graph->area, "zoomed",

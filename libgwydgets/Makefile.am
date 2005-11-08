@@ -155,7 +155,7 @@ gwydgettypes.c: $(enum_headers) gwydgettypes.c.template
 endif
 
 # Note these are test programs not to be included in the distro
-#noinst_PROGRAMS = test
+noinst_PROGRAMS = test
 #
 #main_SOURCES = main.c
 #main_LDADD = libgwydgets.la \
@@ -163,12 +163,12 @@ endif
 #	$(libgwyprocess) \
 #	$(libgwyddion)
 #
-#test_SOURCES = test.c
-#test_LDADD = libgwydgets.la \
-#	$(libgwydraw) \
-#	$(libgwyprocess) \
-#	$(libgwyddion)
-#
+test_SOURCES = test.c
+test_LDADD = libgwydgets.la \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+
 #create_data_SOURCES = create-data.c
 #create_data_LDADD = \
 #	$(libgwyprocess) \
