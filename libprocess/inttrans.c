@@ -188,6 +188,7 @@ gwy_data_line_fft_simple(GwyTransformDirection direction,
 
     buffer = fftw_malloc(sizeof(fftw_complex) * newres);
     plan = fftw_plan_dft_1d(newres, buffer, buffer, direction, FFTW_MEASURE);
+    g_return_if_fail(plan);
     for (i = 0; i < newres; i++) {
         buffer[i][0] = rsrc->data[i];
         buffer[i][1] = isrc->data[i];
@@ -376,13 +377,13 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     rbuf = gwy_data_field_duplicate(ra);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(rbuf, newxres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_duplicate(ia);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(ibuf, newxres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
     in_idata = ibuf->data;
 
 #ifdef HAVE_FFTW3
@@ -409,6 +410,7 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
                                             in_idata, in_rdata,
                                             out_idata, out_rdata,
                                             FFTW_MEASURE);
+        g_return_if_fail(plan);
         fftw_execute(plan);
         fftw_destroy_plan(plan);
     }
@@ -438,8 +440,8 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -494,7 +496,7 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
     rbuf = gwy_data_field_duplicate(ra);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(rbuf, newxres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_new_alike(rbuf, FALSE);
@@ -542,7 +544,6 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
         }
     }
     gwy_data_field_multiply(rb, 1.0/sqrt(newxres*newyres));
-    /* FIXME: Check correctness! */
     if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
         gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
     else
@@ -583,8 +584,8 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -686,12 +687,12 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 
     rbuf = gwy_data_field_duplicate(ra);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_data_field_resample(rbuf, newxres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rbuf, newxres, yres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_duplicate(ia);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_data_field_resample(ibuf, newxres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ibuf, newxres, yres, interpolation);
     in_idata = ibuf->data;
 
 #ifdef HAVE_FFTW3
@@ -715,6 +716,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
                                             in_idata, in_rdata,
                                             out_idata, out_rdata,
                                             FFTW_MEASURE);
+        g_return_if_fail(plan);
         fftw_execute(plan);
         fftw_destroy_plan(plan);
     }
@@ -734,8 +736,137 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
+
+    g_object_unref(rbuf);
+    g_object_unref(ibuf);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
+}
+
+/**
+ * gwy_data_field_xfft_real:
+ * @ra: Real input data field
+ * @rb: Real output data field
+ * @ib: Imaginary output data field
+ * @windowing: Windowing type.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
+ *
+ * Transforms all rows in a data real field with Fast Fourier Transform.
+ *
+ * As the input is only real, the computation can be a somewhat faster
+ * than gwy_data_field_xfft().
+ **/
+void
+gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
+                         GwyDataField *ib,
+                         GwyWindowingType windowing,
+                         GwyTransformDirection direction,
+                         GwyInterpolationType interpolation,
+                         gboolean preserverms, gboolean level)
+{
+    gint xres, yres, newxres, j, k;
+    GwyDataField *rbuf, *ibuf;
+    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(ra));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rb));
+    g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+
+    xres = ra->xres;
+    yres = ra->yres;
+    newxres = gwy_fft_find_nice_size(xres);
+
+    gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
+    out_rdata = rb->data;
+
+    gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
+    out_idata = ib->data;
+
+    rbuf = gwy_data_field_duplicate(ra);
+    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
+    gwy_data_field_resample(rbuf, newxres, yres, interpolation);
+    in_rdata = rbuf->data;
+
+    ibuf = gwy_data_field_new_alike(rbuf, FALSE);
+    in_idata = ibuf->data;
+
+#ifdef HAVE_FFTW3
+    {
+        fftw_iodim dims[1], howmany_dims[1];
+        fftw_plan plan;
+
+        dims[0].n = newxres;
+        dims[0].is = 1;
+        dims[0].os = 1;
+        howmany_dims[0].n = yres;
+        howmany_dims[0].is = newxres;
+        howmany_dims[0].os = newxres;
+        plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
+                                            in_idata, out_rdata, out_idata,
+                                            FFTW_MEASURE);
+        g_return_if_fail(plan);
+        /* R2C destroys input, and especially, the planner destroys input too */
+        gwy_data_field_copy(rbuf, ibuf, FALSE);
+        fftw_execute(plan);
+        fftw_destroy_plan(plan);
+
+        /* Complete the missing half of transform.  */
+        for (k = 0; k < yres; k++) {
+            gdouble *re, *im;
+
+            re = out_rdata + k*newxres;
+            im = out_idata + k*newxres;
+            for (j = newxres/2 + 1; j < newxres; j++) {
+                re[j] = re[newxres - j];
+                im[j] = -im[newxres - j];
+            }
+        }
+    }
+    gwy_data_field_multiply(rb, 1.0/sqrt(newxres));
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        gwy_data_field_multiply(ib, 1.0/sqrt(newxres));
+    else
+        gwy_data_field_multiply(ib, -1.0/sqrt(newxres));
+#else
+    {
+        for (k = 0; k < yres; k += 2) {
+            gdouble *re, *im, *r0, *r1, *i0, *i1;
+
+            re = in_idata + k*newxres;
+            im = in_idata + (k + 1)*newxres;
+            r0 = in_rdata + k*newxres;
+            r1 = in_rdata + (k + 1)*newxres;
+
+            gwy_fft_simple(direction, r0, r1, re, im, newxres, 1);
+
+            r0 = out_rdata + k*newxres;
+            r1 = out_rdata + (k + 1)*newxres;
+            i0 = out_idata + k*newxres;
+            i1 = out_idata + (k + 1)*newxres;
+
+            /* Disentangle transforms of the row couples */
+            r0[0] = re[0];
+            i0[0] = 0.0;
+            r1[0] = im[0];
+            i1[0] = 0.0;
+            for (j = 1; j < newxres; j++) {
+                r0[j] = (re[j] + re[newxres - j])/2.0;
+                i0[j] = (im[j] - im[newxres - j])/2.0;
+                r1[j] = (im[j] + im[newxres - j])/2.0;
+                i1[j] = (-re[j] + re[newxres - j])/2.0;
+            }
+        }
+    }
+#endif
+
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -792,12 +923,12 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
 
     rbuf = gwy_data_field_duplicate(ra);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(rbuf, xres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rbuf, xres, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_duplicate(ia);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(ibuf, xres, newyres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(ibuf, xres, newyres, interpolation);
     in_idata = ibuf->data;
 
 #ifdef HAVE_FFTW3
@@ -821,6 +952,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
                                             in_idata, in_rdata,
                                             out_idata, out_rdata,
                                             FFTW_MEASURE);
+        g_return_if_fail(plan);
         fftw_execute(plan);
         fftw_destroy_plan(plan);
     }
@@ -840,119 +972,11 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, xres, yres, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
-
-    gwy_data_field_invalidate(rb);
-    gwy_data_field_invalidate(ib);
-}
-
-/**
- * gwy_data_field_xfft_real:
- * @ra: Real input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
- * @windowing: Windowing type.
- * @direction: FFT direction.
- * @interpolation: Interpolation type.
- * @preserverms: %TRUE to preserve RMS while windowing.
- * @level: %TRUE to level data before computation.
- *
- * Transforms all rows in a data real field with Fast Fourier Transform.
- *
- * As the input is only real, the computation can be a somewhat faster
- * than gwy_data_field_xfft().
- **/
-void
-gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
-                         GwyDataField *ib,
-                         GwyWindowingType windowing,
-                         GwyTransformDirection direction,
-                         GwyInterpolationType interpolation,
-                         gboolean preserverms, gboolean level)
-{
-    gint j, k, newxres;
-    GwyDataField *rin;
-    const gdouble *in_rdata, *in_idata;
-    gdouble *out_rdata, *out_idata, *re, *im, *nulldata;
-
-    rin = gwy_data_field_duplicate(ra);
-
-    gwy_fft_window_data_field(rin, GWY_ORIENTATION_HORIZONTAL, windowing);
-    if (!rb)
-        rb = gwy_data_field_new_alike(ra, TRUE);
-    else {
-        gwy_data_field_resample(rb, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
-        gwy_data_field_fill(rb, 0);
-    }
-    if (!ib)
-        ib = gwy_data_field_new_alike(ra, TRUE);
-    else {
-        gwy_data_field_resample(ib, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
-        gwy_data_field_fill(ib, 0);
-    }
-
-
-    /*here starts the fft itself*/
-    newxres = gwy_fft_find_nice_size(gwy_data_field_get_xres(rin));
-    gwy_data_field_resample(rin, newxres, rin->yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(rb, newxres, rin->yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, newxres, rin->yres, GWY_INTERPOLATION_BILINEAR);
-
-    in_rdata = gwy_data_field_get_data_const(rin);
-    out_rdata = gwy_data_field_get_data(rb);
-    out_idata = gwy_data_field_get_data(ib);
-    re = (gdouble *)g_malloc(newxres*sizeof(gdouble));
-    im = (gdouble *)g_malloc(newxres*sizeof(gdouble));
-
-    /*we compute allways two FFTs simultaneously*/
-    for (k = 0; k < (ra->yres/2); k+=2) {
-
-        gwy_fft_simple(direction,
-                       in_rdata + 2*k*ra->xres,
-                       in_rdata + 2*k*ra->xres + ra->xres,
-                       re,
-                       im,
-                       newxres,
-                       0);
-
-        /*extract back the two profiles FFTs*/
-         out_rdata[k*newxres] = re[0];
-         out_idata[k*newxres] = 0;
-         out_rdata[(k+1)*newxres] = im[0];
-         out_idata[(k+1)*newxres] = 0;
-         for (j = 1; j < ra->xres; j++) {
-             out_rdata[k*newxres + j] = (re[j] + re[ra->xres - j])/2;
-             out_idata[k*newxres + j] = (im[j] - im[ra->xres - j])/2;
-             out_rdata[(k+1)*newxres + j] = (im[j] + im[ra->xres - j])/2;
-             out_idata[(k+1)*newxres + j] = -(re[j] - re[ra->xres - j])/2;
-         }
-    }
-    /*if there is one more row at the end of field, we compute its FFT normally*/
-    if (ra->yres > 2*floor(ra->yres/2)) {
-        nulldata = (gdouble *)g_malloc(newxres*sizeof(gdouble));
-
-        for (j = 0; j < newxres; j++)
-            nulldata[j] = 0;
-
-        gwy_fft_simple(direction,
-                       in_rdata - ra->xres - 1,
-                       nulldata,
-                       out_rdata - ra->xres - 1,
-                       out_idata - ra->xres - 1,
-                       newxres,
-                       0);
-        g_free(nulldata);
-    }
-
-    gwy_data_field_resample(rb, ra->xres, ra->yres, GWY_INTERPOLATION_BILINEAR);
-    gwy_data_field_resample(ib, ra->xres, ra->yres, GWY_INTERPOLATION_BILINEAR);
-
-    g_object_unref(rin);
-    /*here ends the fft itself*/
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);

@@ -1045,6 +1045,7 @@ gwy_data_field_area_func_fft(GwyDataField *data_field,
     in = gwy_data_line_get_data(din);
     out = gwy_data_line_get_data(dout);
     plan = fftw_plan_r2r_1d(res, in, out, FFTW_R2HC, FFTW_MEASURE);
+    g_return_if_fail(plan);
 
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
