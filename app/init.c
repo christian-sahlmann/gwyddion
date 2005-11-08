@@ -107,19 +107,4 @@ gwy_app_init_set_window_icon(void)
     g_free(p);
 }
 
-#ifdef G_OS_WIN32
-void
-gwy_app_set_find_self_style(const gchar *argv0)
-{
-    gwy_find_self_set_argv0(argv0);
-}
-#endif  /* G_OS_WIN32 */
-
-#ifdef G_OS_UNIX
-void
-gwy_app_set_find_self_style(G_GNUC_UNUSED const gchar *argv0)
-{
-}
-#endif  /* G_OS_UNIX */
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

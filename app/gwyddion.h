@@ -31,7 +31,6 @@ void       gwy_app_about                     (void);
 void       gwy_app_metadata_browser          (GwyDataWindow *data_window);
 void       gwy_app_init                      (int *argc,
                                               char ***argv);
-void       gwy_app_set_find_self_style       (const gchar *argv0);
 
 void       gwy_app_splash_create             (void);
 void       gwy_app_splash_close              (void);

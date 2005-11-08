@@ -47,7 +47,6 @@ gboolean     gwy_file_abandon_contents (guchar *buffer,
                                         gsize size,
                                         GError **error);
 gchar*       gwy_find_self_dir         (const gchar *dirname);
-void         gwy_find_self_set_argv0   (const gchar *argv0);
 const gchar* gwy_get_user_dir          (void);
 const gchar* gwy_get_home_dir          (void);
 gchar*       gwy_canonicalize_path     (const gchar *path);
