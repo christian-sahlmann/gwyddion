@@ -301,11 +301,11 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 
         rmsa = gwy_data_line_get_rms(multra);
 
-        gwy_fft_window(multra->data, multra->res, windowing);
-        gwy_fft_window(multia->data, multia->res, windowing);
+        gwy_fft_window(multra->res, multra->data, windowing);
+        gwy_fft_window(multia->res, multia->data, windowing);
 
         gwy_data_line_fft_simple(direction, multra, multia, rdest, idest,
-                              interpolation);
+                                 interpolation);
 
         rmsb = 0;
         for (i = 0; i < multra->res/2; i++)
@@ -320,8 +320,8 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
         g_object_unref(multia);
     }
     else {
-        gwy_fft_window(rsrc->data, rsrc->res, windowing);
-        gwy_fft_window(isrc->data, rsrc->res, windowing);
+        gwy_fft_window(rsrc->res, rsrc->data, windowing);
+        gwy_fft_window(rsrc->res, isrc->data, windowing);
 
         gwy_data_line_fft_simple(direction, rsrc, isrc, rdest, idest,
                               interpolation);
@@ -421,21 +421,17 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
         gint k;
 
         for (k = 0; k < newyres; k++) {
-            gwy_fft_simple(direction,
-                           in_rdata + k*newxres, in_idata + k*newxres,
-                           out_rdata + k*newxres, out_idata + k*newxres,
-                           newxres,
-                           1);
+            gwy_fft_simple(direction, newxres,
+                           1, in_rdata + k*newxres, in_idata + k*newxres,
+                           1, out_rdata + k*newxres, out_idata + k*newxres);
         }
         /* FIXME: this is a bit cruel */
         gwy_data_field_copy(rb, rbuf, FALSE);
         gwy_data_field_copy(ib, ibuf, FALSE);
         for (k = 0; k < newxres; k++) {
-            gwy_fft_simple(direction,
-                           in_rdata + k, in_idata + k,
-                           out_rdata + k, out_idata + k,
-                           newyres,
-                           newxres);
+            gwy_fft_simple(direction, newyres,
+                           newxres, in_rdata + k, in_idata + k,
+                           newxres, out_rdata + k, out_idata + k);
         }
     }
 #endif
@@ -560,7 +556,7 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
             i0 = in_idata + k*newxres;
             i1 = in_idata + (k + 1)*newxres;
 
-            gwy_fft_simple(direction, r0, r1, re, im, newxres, 1);
+            gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
 
             /* Disentangle transforms of the row couples */
             r0[0] = re[0];
@@ -575,11 +571,9 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
             }
         }
         for (k = 0; k < newxres; k++) {
-            gwy_fft_simple(direction,
-                           in_rdata + k, in_idata + k,
-                           out_rdata + k, out_idata + k,
-                           newyres,
-                           newxres);
+            gwy_fft_simple(direction, newyres,
+                           newxres, in_rdata + k, in_idata + k,
+                           newxres, out_rdata + k, out_idata + k);
         }
     }
 #endif
@@ -727,11 +721,9 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
         gint k;
 
         for (k = 0; k < yres; k++) {
-            gwy_fft_simple(direction,
-                           in_rdata + k*newxres, in_idata + k*newxres,
-                           out_rdata + k*newxres, out_idata + k*newxres,
-                           newxres,
-                           1);
+            gwy_fft_simple(direction, newxres,
+                           1, in_rdata + k*newxres, in_idata + k*newxres,
+                           1, out_rdata + k*newxres, out_idata + k*newxres);
         }
     }
 #endif
@@ -843,7 +835,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
             r0 = in_rdata + k*newxres;
             r1 = in_rdata + (k + 1)*newxres;
 
-            gwy_fft_simple(direction, r0, r1, re, im, newxres, 1);
+            gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
 
             r0 = out_rdata + k*newxres;
             r1 = out_rdata + (k + 1)*newxres;
@@ -963,11 +955,9 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
         gint k;
 
         for (k = 0; k < xres; k++) {
-            gwy_fft_simple(direction,
-                           in_rdata + k, in_idata + k,
-                           out_rdata + k, out_idata + k,
-                           newyres,
-                           xres);
+            gwy_fft_simple(direction, newyres,
+                           xres, in_rdata + k, in_idata + k,
+                           xres, out_rdata + k, out_idata + k);
         }
     }
 #endif

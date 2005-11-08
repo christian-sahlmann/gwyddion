@@ -29,15 +29,16 @@
 G_BEGIN_DECLS
 
 void gwy_fft_simple(GwyTransformDirection dir,
+                    gint n,
+                    gint istride,
                     const gdouble *re_in,
                     const gdouble *im_in,
+                    gint ostride,
                     gdouble *re_out,
-                    gdouble *im_out,
-                    gint n,
-                    gint stride);
+                    gdouble *im_out);
 
-void gwy_fft_window(gdouble *data,
-                    gint n,
+void gwy_fft_window(gint n,
+                    gdouble *data,
                     GwyWindowingType windowing);
 
 void gwy_fft_window_data_field(GwyDataField *dfield,

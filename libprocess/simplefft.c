@@ -46,22 +46,34 @@ static const GwyFFTWindowingFunc windowings[] = {
 /**
  * gwy_fft_hum:
  * @dir: Transformation direction.
+ * @n: Number of data points.  It must be a power of 2.
+ * @istride: Input data stride.
  * @re_in: Real part of input data.
  * @im_in: Imaginary part of input data.
+ * @ostride: Output data stride.
  * @re_out: Real part of output data.
  * @im_out: Imaginary part of output data.
- * @n: Number of data points.  It must be a power of 2.
  *
  * Performs FST algorithm.
+ *
+ * This is low-level function used by other FFT functions when no better
+ * backend is available.
+ *
+ * Strides are distances between samples in input and output arrays.  Use 1
+ * for normal `dense' arrays.  To use gwy_fft_simple() with interleaved arrays,
+ * that is with alternating real and imaginary data, call it with
+ * @istride=2, @re_in=@complex_array, @im_in=@complex_array+1 (and similarly
+ * for output arrays).
  **/
 void
 gwy_fft_simple(GwyTransformDirection dir,
-            const gdouble *re_in,
-            const gdouble *im_in,
-            gdouble *re_out,
-            gdouble *im_out,
-            gint n,
-            gint stride)
+               gint n,
+               gint istride,
+               const gdouble *re_in,
+               const gdouble *im_in,
+               gint ostride,
+               gdouble *re_out,
+               gdouble *im_out)
 {
     gdouble rc, ic, rt, it, fact;
     gint m, l, i, j, is;
@@ -72,12 +84,12 @@ gwy_fft_simple(GwyTransformDirection dir,
     j = 1;
     for (i = 1; i <= n; i++) {
         if (i <= j) {
-            rt = fact * re_in[(i-1)*stride];
-            it = fact * im_in[(i-1)*stride];
-            re_out[(i-1)*stride] = fact * re_in[(j-1)*stride];
-            im_out[(i-1)*stride] = fact * im_in[(j-1)*stride];
-            re_out[(j-1)*stride] = rt;
-            im_out[(j-1)*stride] = it;
+            rt = fact * re_in[(i-1)*istride];
+            it = fact * im_in[(i-1)*istride];
+            re_out[(i-1)*ostride] = fact * re_in[(j-1)*istride];
+            im_out[(i-1)*ostride] = fact * im_in[(j-1)*istride];
+            re_out[(j-1)*ostride] = rt;
+            im_out[(j-1)*ostride] = it;
         }
         m = n >> 1;
         while (j > m && m)
@@ -95,12 +107,12 @@ gwy_fft_simple(GwyTransformDirection dir,
             rc = cos(imlt * (m - 1)/l);
             ic = sin(imlt * (m - 1)/l);
             for (i = m; i <= n; i += is) {
-                rt = rc*re_out[(i+l-1)*stride] - ic*im_out[(i+l-1)*stride];
-                it = rc*im_out[(i+l-1)*stride] + ic*re_out[(i+l-1)*stride];
-                re_out[(i+l-1)*stride] = re_out[(i-1)*stride] - rt;
-                im_out[(i+l-1)*stride] = im_out[(i-1)*stride] - it;
-                re_out[(i-1)*stride] += rt;
-                im_out[(i-1)*stride] += it;
+                rt = rc*re_out[(i+l-1)*ostride] - ic*im_out[(i+l-1)*ostride];
+                it = rc*im_out[(i+l-1)*ostride] + ic*re_out[(i+l-1)*ostride];
+                re_out[(i+l-1)*ostride] = re_out[(i-1)*ostride] - rt;
+                im_out[(i+l-1)*ostride] = im_out[(i-1)*ostride] - it;
+                re_out[(i-1)*ostride] += rt;
+                im_out[(i-1)*ostride] += it;
             }
         }
         l = is;
@@ -116,7 +128,7 @@ gwy_fft_window_hann(gint i, gint n)
 static gdouble
 gwy_fft_window_hamming(gint i, gint n)
 {
-    return 0.54 - 0.46*(cos(2*G_PI*i/n));
+    return 0.54 - 0.46*(cos(2*G_PI*i/(n-1)));
 }
 
 static gdouble
@@ -157,32 +169,29 @@ gwy_fft_window_rect(gint i, gint n)
     return par;
 }
 
-static void
-gwy_fft_mult(gdouble *data, gint n, GwyFFTWindowingFunc window)
-{
-    gint i;
-
-    for (i = 0; i < n; i++)
-        data[i] *= window(i, n);
-}
-
 /**
  * gwy_fft_window:
- * @data: Data values.
  * @n: Number of data values.
+ * @data: Data values.
  * @windowing: Method used for windowing.
  *
  * Multiplies data by given window.
  **/
 void
-gwy_fft_window(gdouble *data,
-               gint n,
+gwy_fft_window(gint n,
+               gdouble *data,
                GwyWindowingType windowing)
 {
+    GwyFFTWindowingFunc window;
+    gint i;
+
     g_return_if_fail(data);
     g_return_if_fail(windowing <= GWY_WINDOWING_RECT);
-    if (windowings[windowing])
-        gwy_fft_mult(data, n, windowings[windowing]);
+    window = windowings[windowing];
+    if (window) {
+        for (i = 0; i < n; i++)
+            data[i] *= window(i, n);
+    }
 }
 
 void
