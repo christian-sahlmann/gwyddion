@@ -14,8 +14,8 @@ EXTRA_DIST = 				\
 	$(DOC_MODULE)-decl.txt	\
 	$(DOC_OVERRIDES)
 
-DOC_STAMPS=scan-build.stamp tmpl-build.stamp sgml-build.stamp html-build.stamp \
-	   $(srcdir)/tmpl.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
+DOC_STAMPS=scan-build.stamp template-build.stamp sgml-build.stamp html-build.stamp \
+	   $(srcdir)/template.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
 
 SCANOBJ_FILES = 		\
 	$(DOC_MODULE).args 	\
@@ -54,11 +54,11 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 
 #### templates ####
 
-tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
+template-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections.txt $(DOC_OVERRIDES)
 	@echo '*** Rebuilding template files ***'
-	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE)
+	cd $(srcdir) && gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=$(srcdir)/template
 	if test "x$(REMOVE_SECTION_TITLES)" = "xyes"; then \
-		for i in $(srcdir)/tmpl/*.sgml; do \
+		for i in $(srcdir)/template/*.sgml; do \
 			sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
 			if diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1; then :; else \
 				cat $(DOC_MODULE).rstmpl >"$$i"; \
@@ -66,17 +66,17 @@ tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-sections
 		done; \
 		rm -f $(DOC_MODULE).rstmpl; \
 	fi; \
-	touch tmpl-build.stamp
+	touch template-build.stamp
 
-tmpl.stamp: tmpl-build.stamp
+template.stamp: template-build.stamp
 	@true
 
 #### sgml ####
 
-sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(srcdir)/tmpl/*.sgml
+sgml-build.stamp: template.stamp $(CFILE_GLOB) $(srcdir)/template/*.sgml
 	@echo '*** Building SGML ***'
 	cd $(srcdir) && \
-	gtkdoc-mkdb --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=$(srcdir)/template --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
@@ -156,10 +156,10 @@ dist-check-gtkdoc:
 endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
-	mkdir $(distdir)/tmpl
+	mkdir $(distdir)/template
 	mkdir $(distdir)/xml
 	mkdir $(distdir)/html
-	-cp $(srcdir)/tmpl/*.sgml $(distdir)/tmpl
+	-cp $(srcdir)/template/*.sgml $(distdir)/template
 	-cp $(srcdir)/xml/*.xml $(distdir)/xml
 	-cp $(srcdir)/html/index.sgml $(distdir)/html
 	-cp $(srcdir)/html/*.html $(srcdir)/html/*.css $(distdir)/html
