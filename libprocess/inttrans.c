@@ -972,6 +972,137 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_invalidate(ib);
 }
 
+/**
+ * gwy_data_field_yfft_real:
+ * @ra: Real input data field
+ * @rb: Real output data field
+ * @ib: Imaginary output data field
+ * @windowing: Windowing type.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
+ *
+ * Transforms all columns in a data real field with Fast Fourier Transform.
+ *
+ * As the input is only real, the computation can be a somewhat faster
+ * than gwy_data_field_yfft().
+ **/
+void
+gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
+                         GwyDataField *ib,
+                         GwyWindowingType windowing,
+                         GwyTransformDirection direction,
+                         GwyInterpolationType interpolation,
+                         gboolean preserverms, gboolean level)
+{
+    gint xres, yres, newyres, j, k;
+    GwyDataField *rbuf, *ibuf;
+    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(ra));
+    g_return_if_fail(GWY_IS_DATA_FIELD(rb));
+    g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+
+    xres = ra->xres;
+    yres = ra->yres;
+    newyres = gwy_fft_find_nice_size(yres);
+
+    gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
+    out_rdata = rb->data;
+
+    gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
+    out_idata = ib->data;
+
+    rbuf = gwy_data_field_duplicate(ra);
+    gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
+    gwy_data_field_resample(rbuf, xres, newyres, interpolation);
+    in_rdata = rbuf->data;
+
+    ibuf = gwy_data_field_new_alike(rbuf, FALSE);
+    in_idata = ibuf->data;
+
+#ifdef HAVE_FFTW3
+    {
+        fftw_iodim dims[1], howmany_dims[1];
+        fftw_plan plan;
+
+        dims[0].n = newyres;
+        dims[0].is = xres;
+        dims[0].os = xres;
+        howmany_dims[0].n = xres;
+        howmany_dims[0].is = 1;
+        howmany_dims[0].os = 1;
+        plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
+                                            in_idata, out_rdata, out_idata,
+                                            FFTW_MEASURE);
+        g_return_if_fail(plan);
+        /* R2C destroys input, and especially, the planner destroys input too */
+        gwy_data_field_copy(rbuf, ibuf, FALSE);
+        fftw_execute(plan);
+        fftw_destroy_plan(plan);
+
+        /* Complete the missing half of transform.  */
+        for (k = 0; k < xres; k++) {
+            gdouble *re, *im;
+
+            re = out_rdata + k;
+            im = out_idata + k;
+            for (j = newyres/2 + 1; j < newyres; j++) {
+                re[xres*j] = re[xres*(newyres - j)];
+                im[xres*j] = -im[xres*(newyres - j)];
+            }
+        }
+    }
+    gwy_data_field_multiply(rb, 1.0/sqrt(newyres));
+    if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+        gwy_data_field_multiply(ib, 1.0/sqrt(newyres));
+    else
+        gwy_data_field_multiply(ib, -1.0/sqrt(newyres));
+#else
+    {
+        for (k = 0; k < xres; k += 2) {
+            gdouble *re, *im, *r0, *r1, *i0, *i1;
+
+            re = in_idata + k;
+            im = in_idata + (k + 1);
+            r0 = in_rdata + k;
+            r1 = in_rdata + (k + 1);
+
+            /* FIXME: we could achieve better data locality by using the in
+             * arrays `rotated'. */
+            gwy_fft_simple(direction, newyres, xres, r0, r1, xres, re, im);
+
+            r0 = out_rdata + k;
+            r1 = out_rdata + (k + 1);
+            i0 = out_idata + k;
+            i1 = out_idata + (k + 1);
+
+            /* Disentangle transforms of the row couples */
+            r0[0] = re[0];
+            i0[0] = 0.0;
+            r1[0] = im[0];
+            i1[0] = 0.0;
+            for (j = 1; j < newyres; j++) {
+                r0[xres*j] = (re[xres*j] + re[xres*(newyres - j)])/2.0;
+                i0[xres*j] = (im[xres*j] - im[xres*(newyres - j)])/2.0;
+                r1[xres*j] = (im[xres*j] + im[xres*(newyres - j)])/2.0;
+                i1[xres*j] = (-re[xres*j] + re[xres*(newyres - j)])/2.0;
+            }
+        }
+    }
+#endif
+
+    gwy_data_field_resample(rb, xres, yres, interpolation);
+    gwy_data_field_resample(ib, xres, yres, interpolation);
+
+    g_object_unref(rbuf);
+    g_object_unref(ibuf);
+
+    gwy_data_field_invalidate(rb);
+    gwy_data_field_invalidate(ib);
+}
+
 static inline gdouble
 edist(gint xc1, gint yc1, gint xc2, gint yc2)
 {
