@@ -1360,11 +1360,12 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     target = target_line->data;
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        gwy_data_field_xfft_real(data_field, re_field, im_field,
-                                 windowing,
-                                 GWY_TRANSFORM_DIRECTION_FORWARD,
-                                 interpolation,
-                                 TRUE, TRUE);
+        gwy_data_field_1dfft(data_field, NULL, re_field, im_field,
+                             orientation,
+                             windowing,
+                             GWY_TRANSFORM_DIRECTION_FORWARD,
+                             interpolation,
+                             TRUE, TRUE);
         for (i = 0; i < height; i++) {
             for (j = 0; j < size/2; j++)
                 target[j] += re[i*width + j]*re[i*width + j]
@@ -1375,11 +1376,12 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         break;
 
         case GWY_ORIENTATION_VERTICAL:
-        gwy_data_field_yfft_real(data_field, re_field, im_field,
-                                 windowing,
-                                 GWY_TRANSFORM_DIRECTION_FORWARD,
-                                 interpolation,
-                                 TRUE, TRUE);
+        gwy_data_field_1dfft(data_field, NULL, re_field, im_field,
+                             orientation,
+                             windowing,
+                             GWY_TRANSFORM_DIRECTION_FORWARD,
+                             interpolation,
+                             TRUE, TRUE);
         for (i = 0; i < width; i++) {
             for (j = 0; j < size/2; j++)
                 target[j] += re[j*width + i]*re[j*width + i]

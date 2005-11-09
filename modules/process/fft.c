@@ -170,14 +170,13 @@ fft(GwyContainer *data, GwyRunType run)
                             /(gwy_data_field_get_max(dfield)
                               - gwy_data_field_get_min(dfield)));
 
-    /* FIXME: temporary hack, 2dfft_real is borken */
-    gwy_data_field_2dfft_real(dfield,
-                              raout, ipout,
-                              args.window,
-                              GWY_TRANSFORM_DIRECTION_FORWARD,
-                              args.interp,
-                              0,
-                              0);
+    gwy_data_field_2dfft(dfield, NULL,
+                         raout, ipout,
+                         args.window,
+                         GWY_TRANSFORM_DIRECTION_FORWARD,
+                         args.interp,
+                         0,
+                         0);
 
     gwy_data_field_2dfft_humanize(raout);
     gwy_data_field_2dfft_humanize(ipout);

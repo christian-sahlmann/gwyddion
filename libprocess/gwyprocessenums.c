@@ -269,6 +269,9 @@ gwy_correlation_type_get_enum(void)
  * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.
  *
  * Transform (namely integral transform) direction.
+ *
+ * In FFT, it is equal to sign of the exponent, that is backward transform
+ * uses -1, forward transform +1.
  **/
 
 /**

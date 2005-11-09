@@ -192,12 +192,14 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
         kernel_out_re = gwy_data_field_new_alike(data_in_re, TRUE);
         kernel_out_im = gwy_data_field_new_alike(data_in_re, TRUE);
 
-        gwy_data_field_2dfft_real(data_in_re, data_out_re, data_out_im, GWY_WINDOWING_NONE,
-                                  GWY_TRANSFORM_DIRECTION_FORWARD,
-                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
-        gwy_data_field_2dfft_real(kernel_in_re, kernel_out_re, kernel_out_im, GWY_WINDOWING_NONE,
-                                  GWY_TRANSFORM_DIRECTION_FORWARD,
-                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+        gwy_data_field_2dfft(data_in_re, NULL, data_out_re, data_out_im,
+                             GWY_WINDOWING_NONE,
+                             GWY_TRANSFORM_DIRECTION_FORWARD,
+                             GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+        gwy_data_field_2dfft(kernel_in_re, NULL, kernel_out_re, kernel_out_im,
+                             GWY_WINDOWING_NONE,
+                             GWY_TRANSFORM_DIRECTION_FORWARD,
+                             GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
 
         for (i = 0; i < fftxres*fftyres; i++)
         {
@@ -212,9 +214,10 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                 kernel_in_re->data[i] /= norm;
             }
         }
-        gwy_data_field_2dfft(data_in_re, kernel_in_re, score, data_out_im, GWY_WINDOWING_NONE,
-                                  GWY_TRANSFORM_DIRECTION_BACKWARD,
-                                  GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
+        gwy_data_field_2dfft(data_in_re, kernel_in_re, score, data_out_im,
+                             GWY_WINDOWING_NONE,
+                             GWY_TRANSFORM_DIRECTION_BACKWARD,
+                             GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
         gwy_data_field_2dfft_humanize(score);
 
         /*TODO compute it and put to score field*/

@@ -64,6 +64,10 @@ static const GwyFFTWindowingFunc windowings[] = {
  * that is with alternating real and imaginary data, call it with
  * @istride=2, @re_in=@complex_array, @im_in=@complex_array+1 (and similarly
  * for output arrays).
+ *
+ * The output is symmetrically normalized by square root of @n for both
+ * transform directions.  By performing forward and then backward transform,
+ * you will obtain the original array (up to rounding errors).
  **/
 void
 gwy_fft_simple(GwyTransformDirection dir,

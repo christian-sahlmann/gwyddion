@@ -32,22 +32,65 @@
 #include <libprocess/stats.h>
 #include <libprocess/cwt.h>
 
-static void     gwy_data_line_fft_simple   (GwyTransformDirection direction,
-                                            GwyDataLine *rsrc,
-                                            GwyDataLine *isrc,
-                                            GwyDataLine *rdest,
-                                            GwyDataLine *idest,
-                                            GwyInterpolationType interpolation);
-static void     gwy_data_field_mult_wav          (GwyDataField *real_field,
-                                                  GwyDataField *imag_field,
-                                                  gdouble scale,
-                                                  Gwy2DCWTWaveletType wtype);
-static gdouble  edist                            (gint xc1, gint yc1,
-                                                  gint xc2, gint yc2);
-
-static void     flip_xy                     (GwyDataField *source,
-                                             GwyDataField *dest,
-                                             gboolean minor);
+static void    gwy_data_field_2dfft_real(GwyDataField *ra,
+                                         GwyDataField *rb,
+                                         GwyDataField *ib,
+                                         GwyWindowingType windowing,
+                                         GwyTransformDirection direction,
+                                         GwyInterpolationType interpolation,
+                                         gboolean preserverms,
+                                         gboolean level);
+static void    gwy_data_field_xfft      (GwyDataField *ra,
+                                         GwyDataField *ia,
+                                         GwyDataField *rb,
+                                         GwyDataField *ib,
+                                         GwyWindowingType windowing,
+                                         GwyTransformDirection direction,
+                                         GwyInterpolationType interpolation,
+                                         gboolean preserverms,
+                                         gboolean level);
+static void    gwy_data_field_xfft_real (GwyDataField *ra,
+                                         GwyDataField *rb,
+                                         GwyDataField *ib,
+                                         GwyWindowingType windowing,
+                                         GwyTransformDirection direction,
+                                         GwyInterpolationType interpolation,
+                                         gboolean preserverms,
+                                         gboolean level);
+static void    gwy_data_field_yfft      (GwyDataField *ra,
+                                         GwyDataField *ia,
+                                         GwyDataField *rb,
+                                         GwyDataField *ib,
+                                         GwyWindowingType windowing,
+                                         GwyTransformDirection direction,
+                                         GwyInterpolationType interpolation,
+                                         gboolean preserverms,
+                                         gboolean level);
+static void    gwy_data_field_yfft_real (GwyDataField *ra,
+                                         GwyDataField *rb,
+                                         GwyDataField *ib,
+                                         GwyWindowingType windowing,
+                                         GwyTransformDirection direction,
+                                         GwyInterpolationType interpolation,
+                                         gboolean preserverms,
+                                         gboolean level);
+static void    gwy_data_line_fft_simple (GwyTransformDirection direction,
+                                         GwyDataLine *rsrc,
+                                         GwyDataLine *isrc,
+                                         GwyDataLine *rdest,
+                                         GwyDataLine *idest,
+                                         GwyInterpolationType interpolation);
+static void    gwy_data_field_mult_wav  (GwyDataField *real_field,
+                                         GwyDataField *imag_field,
+                                         gdouble scale,
+                                         Gwy2DCWTWaveletType wtype);
+static gdouble edist                    (gint xc1,
+                                         gint yc1,
+                                         gint xc2,
+                                         gint yc2);
+static void    flip_xy                  (GwyDataField *source,
+                                         GwyDataField *dest,
+                                         gboolean minor);
 
 #ifdef HAVE_FFTW3
 /* Good FFTW array sizes for extended and resampled arrays.
@@ -330,10 +373,12 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 
 /**
  * gwy_data_field_2dfft:
- * @ra: Real input data field
- * @ia: Imaginary input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @rin: Real input data field.
+ * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
+ *       transform which can be somewhat faster than complex-to-complex
+ *       transform.
+ * @rout: Real output data field.
+ * @iout: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -356,6 +401,13 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     gint xres, yres, newxres, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+
+    if (!ia) {
+        gwy_data_field_2dfft_real(ra, rb, ib,
+                                  windowing, direction, interpolation,
+                                  preserverms, level);
+        return;
+    }
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
@@ -448,9 +500,9 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
 
 /**
  * gwy_data_field_2dfft_real:
- * @ra: Real input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @ra: Real input data field.
+ * @rb: Real output data field.
+ * @ib: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -462,7 +514,7 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
  * As the input is only real, the computation can be a somewhat faster
  * than gwy_data_field_2dfft().
  **/
-void
+static void
 gwy_data_field_2dfft_real(GwyDataField *ra,
                           GwyDataField *rb, GwyDataField *ib,
                           GwyWindowingType windowing,
@@ -633,13 +685,77 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
     g_object_unref(tmp);
 }
 
+/**
+ * gwy_data_field_xfft:
+ * @rin: Real input data field.
+ * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
+ *       transform which can be somewhat faster than complex-to-complex
+ *       transform.
+ * @rout: Real output data field.
+ * @iout: Imaginary output data field.
+ * @orientation: Orientation: pass %GWY_ORIENTATION_HORIZONTAL to
+ *               transform rows, %GWY_ORIENTATION_VERTICAL to transform
+ *               columns.
+ * @windowing: Windowing type.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
+ *
+ * Transforms all rows or columns in a data field with Fast Fourier Transform.
+ *
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
+ **/
+void
+gwy_data_field_1dfft(GwyDataField *rin,
+                     GwyDataField *iin,
+                     GwyDataField *rout,
+                     GwyDataField *iout,
+                     GwyOrientation orientation,
+                     GwyWindowingType windowing,
+                     GwyTransformDirection direction,
+                     GwyInterpolationType interpolation,
+                     gboolean preserverms,
+                     gboolean level)
+{
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        if (!iin)
+            gwy_data_field_xfft_real(rin, rout, iout,
+                                     windowing, direction, interpolation,
+                                     preserverms, level);
+        else
+            gwy_data_field_xfft(rin, iin, rout, iout,
+                                windowing, direction, interpolation,
+                                preserverms, level);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        if (!iin)
+            gwy_data_field_yfft_real(rin, rout, iout,
+                                     windowing, direction, interpolation,
+                                     preserverms, level);
+        else
+            gwy_data_field_yfft(rin, iin, rout, iout,
+                                windowing, direction, interpolation,
+                                preserverms, level);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
 
 /**
  * gwy_data_field_xfft:
- * @ra: Real input data field
- * @ia: Imaginary input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @ra: Real input data field.
+ * @ia: Imaginary input data field.  It can be %NULL for real-to-complex
+ *      transform which can be somewhat faster than complex-to-complex
+ *      transform.
+ * @rb: Real output data field.
+ * @ib: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -651,7 +767,7 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
  * If requested a windowing and/or leveling is applied to preprocess data to
  * obtain reasonable results.
  **/
-void
+static void
 gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
                     GwyWindowingType windowing,
@@ -740,9 +856,9 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 
 /**
  * gwy_data_field_xfft_real:
- * @ra: Real input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @ra: Real input data field.
+ * @rb: Real output data field.
+ * @ib: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -754,7 +870,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * As the input is only real, the computation can be a somewhat faster
  * than gwy_data_field_xfft().
  **/
-void
+static void
 gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
                          GwyDataField *ib,
                          GwyWindowingType windowing,
@@ -869,10 +985,12 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
 
 /**
  * gwy_data_field_yfft:
- * @ra: Real input data field
- * @ia: Imaginary input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @ra: Real input data field.
+ * @ia: Imaginary input data field.  It can be %NULL for real-to-complex
+ *      transform which can be somewhat faster than complex-to-complex
+ *      transform.
+ * @rb: Real output data field.
+ * @ib: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -884,7 +1002,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
  * If requested a windowing and/or leveling is applied to preprocess data to
  * obtain reasonable results.
  **/
-void
+static void
 gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
                     GwyDataField *rb, GwyDataField *ib,
                     GwyWindowingType windowing,
@@ -974,9 +1092,9 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
 
 /**
  * gwy_data_field_yfft_real:
- * @ra: Real input data field
- * @rb: Real output data field
- * @ib: Imaginary output data field
+ * @ra: Real input data field.
+ * @rb: Real output data field.
+ * @ib: Imaginary output data field.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -988,7 +1106,7 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * As the input is only real, the computation can be a somewhat faster
  * than gwy_data_field_yfft().
  **/
-void
+static void
 gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
                          GwyDataField *ib,
                          GwyWindowingType windowing,
