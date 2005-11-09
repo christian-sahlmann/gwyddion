@@ -1324,7 +1324,8 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                          GwyWindowingType windowing,
                          gint nstats)
 {
-    GwyDataLine *data_line, *tmp_line;
+    GwyDataField *re_field, *im_field;
+    gdouble *re, *im, *target;
     gint i, j, xres, yres, size;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -1340,44 +1341,59 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
                      || orientation == GWY_ORIENTATION_VERTICAL);
 
-    data_line = gwy_data_line_new(size, 1.0, FALSE);
-    tmp_line = gwy_data_line_new(size, 1.0, FALSE);
+    if (width != xres || height != yres) {
+        g_warning("Area PSDF not working yet.");
+        return;
+    }
+
     if (nstats < 0)
-        nstats = size;
-    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+        nstats = size/2;
+    gwy_data_line_resample(target_line, size/2, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
     gwy_data_line_set_offset(target_line, 0.0);
 
+    /* TODO: set output physical dimensions */
+    re_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    im_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+    re = re_field->data;
+    im = im_field->data;
+    target = target_line->data;
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
+        gwy_data_field_xfft_real(data_field, re_field, im_field,
+                                 windowing,
+                                 GWY_TRANSFORM_DIRECTION_FORWARD,
+                                 interpolation,
+                                 TRUE, TRUE);
         for (i = 0; i < height; i++) {
-            gwy_data_field_get_row_part(data_field, data_line, row+i,
-                                        col, col+width);
-            gwy_data_line_psdf(data_line, tmp_line, windowing, interpolation);
-            gwy_data_line_resample(tmp_line, nstats, interpolation);
-            for (j = 0; j < nstats; j++)
-                target_line->data[j] += tmp_line->data[j];
-            target_line->real = tmp_line->real;
+            for (j = 0; j < size/2; j++)
+                target[j] += re[i*width + j]*re[i*width + j]
+                             + im[i*width + j]*im[i*width + j];
         }
-        gwy_data_line_multiply(target_line, 1.0/height);
+        gwy_data_line_multiply(target_line,
+                               data_field->xreal/xres/(2*G_PI*height*width));
         break;
 
         case GWY_ORIENTATION_VERTICAL:
+        gwy_data_field_yfft_real(data_field, re_field, im_field,
+                                 windowing,
+                                 GWY_TRANSFORM_DIRECTION_FORWARD,
+                                 interpolation,
+                                 TRUE, TRUE);
         for (i = 0; i < width; i++) {
-            gwy_data_field_get_column_part(data_field, data_line, col+i,
-                                           row, row+height);
-            gwy_data_line_psdf(data_line, tmp_line, windowing, interpolation);
-            gwy_data_line_resample(tmp_line, nstats, interpolation);
-            for (j = 0; j < nstats; j++)
-                target_line->data[j] += tmp_line->data[j];
-            target_line->real = tmp_line->real;
+            for (j = 0; j < size/2; j++)
+                target[j] += re[j*width + i]*re[j*width + i]
+                             + im[j*width + i]*im[j*width + i];
         }
-        gwy_data_line_multiply(target_line, 1.0/width);
+        gwy_data_line_multiply(target_line,
+                               data_field->yreal/yres/(2*G_PI*height*width));
         break;
     }
 
-    g_object_unref(data_line);
-    g_object_unref(tmp_line);
+    gwy_data_line_resample(target_line, nstats, interpolation);
+
+    g_object_unref(re_field);
+    g_object_unref(im_field);
 }
 
 /**
