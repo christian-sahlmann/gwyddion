@@ -37,7 +37,6 @@
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
-    MOUSE_MOVED_SIGNAL,
     LAST_SIGNAL
 };
 
@@ -142,7 +141,6 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
 
     klass->selected = NULL;
     klass->zoomed = NULL;
-    //klass->mouse_moved = NULL;
     klass->cross_cursor = NULL;
     klass->arrow_cursor = NULL;
     gwygrapharea_signals[SELECTED_SIGNAL]
@@ -165,15 +163,6 @@ gwy_graph_area_class_init(GwyGraphAreaClass *klass)
                        g_cclosure_marshal_VOID__VOID,
                        G_TYPE_NONE, 0);
 
-   /* gwygrapharea_signals[MOUSE_MOVED_SIGNAL]
-        = g_signal_new("mouse-moved",
-                       G_TYPE_FROM_CLASS (klass),
-                       G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                       G_STRUCT_OFFSET(GwyGraphAreaClass, mouse_moved),
-                       NULL,
-                       NULL,
-                       g_cclosure_marshal_VOID__VOID,
-                       G_TYPE_NONE, 0);*/
 }
 
 static void
@@ -781,7 +770,6 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
     area->mouse_present = TRUE;
     area->actual_cursor_data->data_point.x = dx;
     area->actual_cursor_data->data_point.y = dy;
-    //g_signal_emit(G_OBJECT(area), gwygrapharea_signals[MOUSE_MOVED_SIGNAL], 0);
 
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XSEL || area->status == GWY_GRAPH_STATUS_YSEL)
         && GWY_SELECTION(area->areasdata)->n)

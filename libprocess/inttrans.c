@@ -269,8 +269,7 @@ gwy_data_line_fft_simple(GwyTransformDirection direction,
     gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
 
-    gwy_fft_simple(direction, rsrc->data, isrc->data, rdest->data, idest->data,
-                newres, 1);
+    gwy_fft_simple(direction, newres, 1, rsrc->data, isrc->data, 1, rdest->data, idest->data);
 
     /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
      after all the processings*/
