@@ -686,7 +686,7 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
 }
 
 /**
- * gwy_data_field_xfft:
+ * gwy_data_field_1dfft:
  * @rin: Real input data field.
  * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
  *       transform which can be somewhat faster than complex-to-complex

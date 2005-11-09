@@ -44,7 +44,7 @@ static const GwyFFTWindowingFunc windowings[] = {
 };
 
 /**
- * gwy_fft_hum:
+ * gwy_fft_simple:
  * @dir: Transformation direction.
  * @n: Number of data points.  It must be a power of 2.
  * @istride: Input data stride.
