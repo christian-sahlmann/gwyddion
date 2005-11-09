@@ -1,8 +1,12 @@
 HEAD
+- FFT
+  - Fix PSDF real sizes
+  - Simplify API:
+    - allow to pass NULL as imaginary data field in complex FFTs turning them
+      to R2C
+    - changed xfft and yfft to 1dfft with orientation argument
 - Ruler:
   - When all range is negative, units are not placed anywhere
-  - For 2.5 scale type, the correctness test isn't wrong, it passes with
-    precision=0, but actually requires precision=1
 - Why DWT methods have return values?
 - Should GwyDataLine have units?  Set data line offsets in stat functions.
 - 3D View still not MVCized
