@@ -135,7 +135,6 @@ struct _GwyCurveClass
 GType       gwy_curve_get_type  (void) G_GNUC_CONST;
 GtkWidget*  gwy_curve_new       (void);
 void        gwy_curve_reset     (GwyCurve *curve);
-//void        gwy_curve_set_gamma (GwyCurve *curve, gfloat gamma_);
 void        gwy_curve_set_range (GwyCurve *curve,
                       gfloat min_x, gfloat max_x,
                       gfloat min_y, gfloat max_y);
@@ -143,8 +142,6 @@ void        gwy_curve_set_range (GwyCurve *curve,
 void    gwy_curve_get_vector    (GwyCurve *c, gint channel,
                                  gint veclen, gfloat vector[]);
 
-//void        gwy_curve_set_vector    (GwyCurve *curve,
-//                     int veclen, gfloat vector[]);
 
 void        gwy_curve_set_control_points(GwyCurve *curve,
                                          GwyChannelData *channel_data);

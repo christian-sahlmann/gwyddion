@@ -133,8 +133,6 @@ struct _GwyGraphAreaClass {
     GdkCursor *arrow_cursor;
     void (*selected)(GwyGraphArea *area);
     void (*zoomed)(GwyGraphArea *area);
-//    void (*mouse_moved)(GwyGraphArea *area);
-
 
     gpointer reserved1;
     gpointer reserved2;

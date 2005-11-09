@@ -60,15 +60,11 @@
 #include <string.h>
 #include <math.h>
 
-//#include <glib-object.h>
 #include "gwycurve.h"
 #include <gtk/gtkdrawingarea.h>
 #include <gtk/gtkmain.h>
-//#include "gtkmarshalers.h"
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtktable.h>
-//#include "gtkintl.h"
-//#include "gtkalias.h"
 #include "gwydgettypes.h"
 
 #define RADIUS          3   /* radius of the control points */
@@ -425,7 +421,6 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
             if (channel->points)
                 g_free (channel->points);
             channel->points = g_malloc(channel->num_points * sizeof(GwyPoint));
-                       //g_malloc(channel->num_points * sizeof(c->point[0]));
         }
 
         for (i=0; i<width; ++i) {
@@ -510,9 +505,6 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
             gdk_draw_point(c->pixmap, gc,
                            (gint)channel->points[i].x,
                            (gint)channel->points[i].y);
-
-            //gdk_draw_points(c->pixmap, style->fg_gc[state],
-            //            channel->points, channel->num_points);
         }
     }
 
@@ -642,7 +634,7 @@ gwy_curve_button_press(GtkWidget *widget,
         case GWY_CURVE_TYPE_LINEAR:
         case GWY_CURVE_TYPE_SPLINE:
         if (distance > MIN_DISTANCE) {
-            // insert a new control point //
+            /* insert a new control point */
             if (channel->num_ctlpoints > 0) {
                 cx = project(channel->ctlpoints[closest_point].x,
                              c->min_x, c->max_x, width);
@@ -769,8 +761,8 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
         case GWY_CURVE_TYPE_LINEAR:
         case GWY_CURVE_TYPE_SPLINE:
         if (c->grab_channel == -1) {
-            //XXX: fix distance above
-            //if (c->grab_point == -1) {
+            /* XXX: fix distance above
+            if (c->grab_point == -1) { */
             /* if no point is grabbed...  */
             if (distance <= MIN_DISTANCE)
                 new_type = GDK_FLEUR;
@@ -1294,4 +1286,3 @@ gwy_curve_finalize (GObject *object)
 }
 
 #define __GWY_CURVE_C__
-//#include "gtkaliasdef.c"
