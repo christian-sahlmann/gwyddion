@@ -1341,11 +1341,6 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
                      || orientation == GWY_ORIENTATION_VERTICAL);
 
-    if (width != xres || height != yres) {
-        g_warning("Area PSDF not working yet.");
-        return;
-    }
-
     if (nstats < 0)
         nstats = size/2;
     gwy_data_line_resample(target_line, size/2, GWY_INTERPOLATION_NONE);
@@ -1355,17 +1350,18 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     /* TODO: set output physical dimensions */
     re_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     im_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
-    re = re_field->data;
-    im = im_field->data;
     target = target_line->data;
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        gwy_data_field_1dfft(data_field, NULL, re_field, im_field,
-                             orientation,
-                             windowing,
-                             GWY_TRANSFORM_DIRECTION_FORWARD,
-                             interpolation,
-                             TRUE, TRUE);
+        gwy_data_field_area_1dfft(data_field, NULL, re_field, im_field,
+                                  col, row, width, height,
+                                  orientation,
+                                  windowing,
+                                  GWY_TRANSFORM_DIRECTION_FORWARD,
+                                  interpolation,
+                                  TRUE, TRUE);
+        re = re_field->data;
+        im = im_field->data;
         for (i = 0; i < height; i++) {
             for (j = 0; j < size/2; j++)
                 target[j] += re[i*width + j]*re[i*width + j]
@@ -1376,12 +1372,15 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         break;
 
         case GWY_ORIENTATION_VERTICAL:
-        gwy_data_field_1dfft(data_field, NULL, re_field, im_field,
-                             orientation,
-                             windowing,
-                             GWY_TRANSFORM_DIRECTION_FORWARD,
-                             interpolation,
-                             TRUE, TRUE);
+        gwy_data_field_area_1dfft(data_field, NULL, re_field, im_field,
+                                  col, row, width, height,
+                                  orientation,
+                                  windowing,
+                                  GWY_TRANSFORM_DIRECTION_FORWARD,
+                                  interpolation,
+                                  TRUE, TRUE);
+        re = re_field->data;
+        im = im_field->data;
         for (i = 0; i < width; i++) {
             for (j = 0; j < size/2; j++)
                 target[j] += re[j*width + i]*re[j*width + i]
