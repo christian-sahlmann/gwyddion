@@ -76,7 +76,7 @@ struct _GwyGraphClass {
 
     void (*gwygraph)(GwyGraph *grapher);
     void (*selected)(GwyGraph *grapher);
-    void (*mouse_moved)(GwyGraph *grapher);    
+//    void (*mouse_moved)(GwyGraph *grapher);    
     void (*zoomed)(GwyGraph *grapher);
     
     gpointer reserved1;

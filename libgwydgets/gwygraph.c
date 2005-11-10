@@ -31,7 +31,6 @@
 #include <stdio.h>
 enum {
     SELECTED_SIGNAL,
-    MOUSE_MOVED_SIGNAL,
     ZOOMED_SIGNAL,
     LAST_SIGNAL
 };
@@ -50,7 +49,6 @@ static void zoomed_cb              (GwyGraph *graph);
 static void label_updated_cb       (GwyAxis *axis,
                                     GwyGraph *graph);
 static void gwy_graph_finalize          (GObject *object);
-static void gwy_graph_signal_mouse_moved(GwyGraph *graph);
 static void gwy_graph_signal_zoomed     (GwyGraph *graph);
 
 
@@ -72,7 +70,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
     gobject_class->finalize = gwy_graph_finalize;
 
     klass->selected = NULL;
-    klass->mouse_moved = NULL;
     klass->zoomed = NULL;
 
     gwygraph_signals[SELECTED_SIGNAL]
@@ -80,16 +77,6 @@ gwy_graph_class_init(GwyGraphClass *klass)
                                G_TYPE_FROM_CLASS(klass),
                                G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
                                G_STRUCT_OFFSET(GwyGraphClass, selected),
-                               NULL,
-                               NULL,
-                               g_cclosure_marshal_VOID__VOID,
-                               G_TYPE_NONE, 0);
-
-    gwygraph_signals[MOUSE_MOVED_SIGNAL]
-                = g_signal_new("mouse-moved",
-                               G_TYPE_FROM_CLASS(klass),
-                               G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-                               G_STRUCT_OFFSET(GwyGraphClass, mouse_moved),
                                NULL,
                                NULL,
                                g_cclosure_marshal_VOID__VOID,
@@ -248,9 +235,6 @@ gwy_graph_new(GwyGraphModel *gmodel)
 
     g_signal_connect_swapped(graph->area, "selected",
                      G_CALLBACK(gwy_graph_signal_selected), graph);
-
-    g_signal_connect_swapped(graph->area, "motion-notify-event",
-                     G_CALLBACK(gwy_graph_signal_mouse_moved), graph);
 
     g_signal_connect_swapped(graph->area, "zoomed",
                      G_CALLBACK(zoomed_cb), graph);
@@ -660,11 +644,8 @@ gwy_graph_signal_selected(GwyGraph *graph)
     g_signal_emit(G_OBJECT(graph), gwygraph_signals[SELECTED_SIGNAL], 0);
 }
 
-static void
-gwy_graph_signal_mouse_moved(GwyGraph *graph)
-{
-    g_signal_emit(G_OBJECT(graph), gwygraph_signals[MOUSE_MOVED_SIGNAL], 0);
-}
+/*
+*/
 
 static void
 gwy_graph_signal_zoomed(GwyGraph *graph)
