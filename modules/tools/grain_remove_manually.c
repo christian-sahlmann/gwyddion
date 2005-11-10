@@ -396,10 +396,10 @@ laplace_interpolation(GwyDataField *dfield,
     ymax = MIN(yres, ymax+2);
 
     /* Create smaller working datafields */
-    area = gwy_data_field_new(xmax - xmin, ymax - ymin, 1.0, 1.0, FALSE);
-    gwy_data_field_area_copy(dfield, area, xmin, ymin, xmax, ymax, 0, 0);
-    mask = gwy_data_field_new(xmax - xmin, ymax - ymin, 1.0, 1.0, FALSE);
-    gwy_data_field_area_copy(grain, mask, xmin, ymin, xmax, ymax, 0, 0);
+    area = gwy_data_field_area_extract(dfield,
+                                       xmin, ymin, xmax - xmin, ymax - ymin);
+    mask = gwy_data_field_area_extract(grain,
+                                       xmin, ymin, xmax - xmin, ymax - ymin);
 
     /* Interpolate */
     maxer = gwy_data_field_get_rms(area)/1.0e3;
