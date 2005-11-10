@@ -591,8 +591,8 @@ gwy_data_field_resample(GwyDataField *data_field,
  *
  * Resizes (crops) a data field.
  *
- * Extracts rectangular part of the a data field.between upper-left and
- * bottom-right points, recomputing real size.
+ * Crops a data field to a rectangle between upper-left and bottom-right
+ * points, recomputing real size.
  *
  * This method may invalidate raw data buffer returned by
  * gwy_data_field_get_data().
@@ -635,6 +635,47 @@ gwy_data_field_resize(GwyDataField *data_field,
     g_object_unref(b);
 
     gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_area_extract:
+ * @data_field: A data field to be resized
+ * @row: Upper-left row coordinate.
+ * @col: Upper-left column coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Extracts a rectangular part of a data field to a new data field.
+ **/
+GwyDataField*
+gwy_data_field_area_extract(GwyDataField *data_field,
+                            gint col, gint row,
+                            gint width, gint height)
+{
+    GwyDataField *result;
+    gint i, xres, yres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(col >= 0
+                     && row >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    result = gwy_data_field_new(width, height,
+                                data_field->xreal*width/data_field->xres,
+                                data_field->yreal*height/data_field->yres,
+                                FALSE);
+    for (i = 0; i < height; i++) {
+        memcpy(result->data + i*width,
+               data_field->data + (i + row)*data_field->xres + col,
+               width*sizeof(gdouble));
+    }
+    if (data_field->si_unit_xy)
+        result->si_unit_xy = gwy_si_unit_duplicate(data_field->si_unit_xy);
+    if (data_field->si_unit_z)
+        result->si_unit_z = gwy_si_unit_duplicate(data_field->si_unit_z);
+
+    return result;
 }
 
 /**

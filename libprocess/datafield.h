@@ -86,6 +86,11 @@ void              gwy_data_field_resize              (GwyDataField *data_field,
                                                       gint ulrow,
                                                       gint brcol,
                                                       gint brrow);
+GwyDataField*     gwy_data_field_area_extract        (GwyDataField *data_field,
+                                                      gint col,
+                                                      gint row,
+                                                      gint width,
+                                                      gint height);
 void              gwy_data_field_copy                (GwyDataField *src,
                                                       GwyDataField *dest,
                                                       gboolean nondata_too);
