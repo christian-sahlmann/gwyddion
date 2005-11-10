@@ -40,7 +40,6 @@ for line in sys.stdin.readlines():
         text.append('<p><b>%s</b></p>\n<ul>' % m.group('component'))
         in_list = True
         continue
-    # Transform bug #NN references to hyperlinks
     line = escape(line)
     # Transform bug #NN references to hyperlinks
     line = re.sub(r'[bB]ug #(\d+)',
@@ -88,7 +87,26 @@ if in_list:
 if in_para:
     text.append('</p>')
 
-print '<p>Jump to news for version:'
-print ',\n'.join(['<a href="#v%s">%s</a>' % (x, x) for x in version_list]) + '.'
+# Split version list by major version, assuming there are two series
+# formed by N.x and N.99.x versions
+i = 0
+version_lists = []
+while True:
+    s = str(i) + '.'
+    l = [x for x in version_list if x.startswith(s)]
+    if not l:
+        break
+    s += '99.'
+    version_lists.append([x for x in l if not x.startswith(s)])
+    version_lists.append([x for x in l if x.startswith(s)])
+    i += 1
+version_lists = [x for x in version_lists if x]
+version_lists.reverse()
+
+print '<p>Jump to news for version:<br/>'
+l = []
+for ver in version_lists:
+    l.append(',\n'.join(['<a href="#v%s">%s</a>' % (x, x) for x in ver]))
+print '<br/>\n'.join(l)
 print '</p>'
 print '\n'.join(text)
