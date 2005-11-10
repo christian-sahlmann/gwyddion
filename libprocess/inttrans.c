@@ -696,8 +696,8 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
  * obtain reasonable results.
  **/
 void
-gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *rout,
-                     GwyDataField *iin, GwyDataField *iout,
+gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *iin,
+                     GwyDataField *rout, GwyDataField *iout,
                      GwyWindowingType windowing,
                      GwyTransformDirection direction,
                      GwyInterpolationType interpolation,
