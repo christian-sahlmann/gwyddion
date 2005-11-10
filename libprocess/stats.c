@@ -1347,7 +1347,6 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
     gwy_data_line_clear(target_line);
     gwy_data_line_set_offset(target_line, 0.0);
 
-    /* TODO: set output physical dimensions */
     re_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     im_field = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     target = target_line->data;
@@ -1369,6 +1368,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         }
         gwy_data_line_multiply(target_line,
                                data_field->xreal/xres/(2*G_PI*height*width));
+        gwy_data_line_set_real(target_line, G_PI*xres/data_field->xreal);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
@@ -1388,6 +1388,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
         }
         gwy_data_line_multiply(target_line,
                                data_field->yreal/yres/(2*G_PI*height*width));
+        gwy_data_line_set_real(target_line, G_PI*yres/data_field->yreal);
         break;
     }
 
