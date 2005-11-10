@@ -32,65 +32,85 @@
 #include <libprocess/stats.h>
 #include <libprocess/cwt.h>
 
-static void    gwy_data_field_2dfft_real(GwyDataField *ra,
-                                         GwyDataField *rb,
-                                         GwyDataField *ib,
-                                         GwyWindowingType windowing,
-                                         GwyTransformDirection direction,
-                                         GwyInterpolationType interpolation,
-                                         gboolean preserverms,
-                                         gboolean level);
-static void    gwy_data_field_xfft      (GwyDataField *ra,
-                                         GwyDataField *ia,
-                                         GwyDataField *rb,
-                                         GwyDataField *ib,
-                                         GwyWindowingType windowing,
-                                         GwyTransformDirection direction,
-                                         GwyInterpolationType interpolation,
-                                         gboolean preserverms,
-                                         gboolean level);
-static void    gwy_data_field_xfft_real (GwyDataField *ra,
-                                         GwyDataField *rb,
-                                         GwyDataField *ib,
-                                         GwyWindowingType windowing,
-                                         GwyTransformDirection direction,
-                                         GwyInterpolationType interpolation,
-                                         gboolean preserverms,
-                                         gboolean level);
-static void    gwy_data_field_yfft      (GwyDataField *ra,
-                                         GwyDataField *ia,
-                                         GwyDataField *rb,
-                                         GwyDataField *ib,
-                                         GwyWindowingType windowing,
-                                         GwyTransformDirection direction,
-                                         GwyInterpolationType interpolation,
-                                         gboolean preserverms,
-                                         gboolean level);
-static void    gwy_data_field_yfft_real (GwyDataField *ra,
-                                         GwyDataField *rb,
-                                         GwyDataField *ib,
-                                         GwyWindowingType windowing,
-                                         GwyTransformDirection direction,
-                                         GwyInterpolationType interpolation,
-                                         gboolean preserverms,
-                                         gboolean level);
-static void    gwy_data_line_fft_simple (GwyTransformDirection direction,
-                                         GwyDataLine *rsrc,
-                                         GwyDataLine *isrc,
-                                         GwyDataLine *rdest,
-                                         GwyDataLine *idest,
-                                         GwyInterpolationType interpolation);
-static void    gwy_data_field_mult_wav  (GwyDataField *real_field,
-                                         GwyDataField *imag_field,
-                                         gdouble scale,
-                                         Gwy2DCWTWaveletType wtype);
-static gdouble edist                    (gint xc1,
-                                         gint yc1,
-                                         gint xc2,
-                                         gint yc2);
-static void    flip_xy                  (GwyDataField *source,
-                                         GwyDataField *dest,
-                                         gboolean minor);
+static void  gwy_data_field_area_2dfft_real(GwyDataField *ra,
+                                            GwyDataField *rb,
+                                            GwyDataField *ib,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+static void  gwy_data_field_area_xfft      (GwyDataField *ra,
+                                            GwyDataField *ia,
+                                            GwyDataField *rb,
+                                            GwyDataField *ib,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+static void  gwy_data_field_area_xfft_real (GwyDataField *ra,
+                                            GwyDataField *rb,
+                                            GwyDataField *ib,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+static void  gwy_data_field_area_yfft      (GwyDataField *ra,
+                                            GwyDataField *ia,
+                                            GwyDataField *rb,
+                                            GwyDataField *ib,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+static void  gwy_data_field_area_yfft_real (GwyDataField *ra,
+                                            GwyDataField *rb,
+                                            GwyDataField *ib,
+                                            gint col,
+                                            gint row,
+                                            gint width,
+                                            gint height,
+                                            GwyWindowingType windowing,
+                                            GwyTransformDirection direction,
+                                            GwyInterpolationType interpolation,
+                                            gboolean preserverms,
+                                            gboolean level);
+static void  gwy_data_line_fft_simple      (GwyTransformDirection direction,
+                                            GwyDataLine *rsrc,
+                                            GwyDataLine *isrc,
+                                            GwyDataLine *rdest,
+                                            GwyDataLine *idest,
+                                            GwyInterpolationType interpolation);
+static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
+                                            GwyDataField *imag_field,
+                                            gdouble scale,
+                                            Gwy2DCWTWaveletType wtype);
+static gdouble edist                       (gint xc1,
+                                            gint yc1,
+                                            gint xc2,
+                                            gint yc2);
+static void  flip_xy                       (GwyDataField *source,
+                                            GwyDataField *dest,
+                                            gboolean minor);
 
 #ifdef HAVE_FFTW3
 /* Good FFTW array sizes for extended and resampled arrays.
@@ -371,40 +391,47 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 }
 
 /**
- * gwy_data_field_2dfft:
+ * gwy_data_field_area_2dfft:
  * @rin: Real input data field.
  * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
  *       transform which can be somewhat faster than complex-to-complex
  *       transform.
- * @rout: Real output data field.
- * @iout: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
  * @level: %TRUE to level data before computation.
  *
- * Computes 2D Fast Fourier Transform.
+ * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
  *
  * If requested a windowing and/or leveling is applied to preprocess data to
  * obtain reasonable results.
  **/
 void
-gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
-                     GwyDataField *rb, GwyDataField *ib,
-                     GwyWindowingType windowing,
-                     GwyTransformDirection direction,
-                     GwyInterpolationType interpolation,
-                     gboolean preserverms, gboolean level)
+gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
+                          GwyDataField *rb, GwyDataField *ib,
+                          gint col, gint row,
+                          gint width, gint height,
+                          GwyWindowingType windowing,
+                          GwyTransformDirection direction,
+                          GwyInterpolationType interpolation,
+                          gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newxres, newyres;
+    gint newxres, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
     if (!ia) {
-        gwy_data_field_2dfft_real(ra, rb, ib,
-                                  windowing, direction, interpolation,
-                                  preserverms, level);
+        gwy_data_field_area_2dfft_real(ra, rb, ib,
+                                       col, row, width, height,
+                                       windowing, direction, interpolation,
+                                       preserverms, level);
         return;
     }
 
@@ -413,11 +440,13 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    newxres = gwy_fft_find_nice_size(xres);
-    newyres = gwy_fft_find_nice_size(yres);
+    newxres = gwy_fft_find_nice_size(width);
+    newyres = gwy_fft_find_nice_size(height);
 
     gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
@@ -425,13 +454,13 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
-    ibuf = gwy_data_field_duplicate(ia);
+    ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
@@ -487,8 +516,8 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -498,41 +527,49 @@ gwy_data_field_2dfft(GwyDataField *ra, GwyDataField *ia,
 }
 
 /**
- * gwy_data_field_2dfft_real:
+ * gwy_data_field_area_2dfft_real:
  * @ra: Real input data field.
- * @rb: Real output data field.
- * @ib: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
  * @preserverms: %TRUE to preserve RMS while windowing.
  * @level: %TRUE to level data before computation.
  *
- * Computes 2D Fast Fourier Transform of real data.
+ * Calculates 2D Fast Fourier Transform of a rectangular area of a data field.
  *
  * As the input is only real, the computation can be a somewhat faster
  * than gwy_data_field_2dfft().
  **/
 static void
-gwy_data_field_2dfft_real(GwyDataField *ra,
-                          GwyDataField *rb, GwyDataField *ib,
-                          GwyWindowingType windowing,
-                          GwyTransformDirection direction,
-                          GwyInterpolationType interpolation,
-                          gboolean preserverms, gboolean level)
+gwy_data_field_area_2dfft_real(GwyDataField *ra,
+                               GwyDataField *rb, GwyDataField *ib,
+                               gint col, gint row,
+                               gint width, gint height,
+                               GwyWindowingType windowing,
+                               GwyTransformDirection direction,
+                               GwyInterpolationType interpolation,
+                               gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newxres, newyres, j, k;
+    gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    newxres = gwy_fft_find_nice_size(xres);
-    newyres = gwy_fft_find_nice_size(yres);
+    newxres = gwy_fft_find_nice_size(width);
+    newyres = gwy_fft_find_nice_size(height);
 
     gwy_data_field_resample(rb, newxres, newyres, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
@@ -540,7 +577,7 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
     gwy_data_field_resample(ib, newxres, newyres, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
@@ -629,14 +666,55 @@ gwy_data_field_2dfft_real(GwyDataField *ra,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
+}
+
+/**
+ * gwy_data_field_2dfft:
+ * @rin: Real input data field.
+ * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
+ *       transform which can be somewhat faster than complex-to-complex
+ *       transform.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @windowing: Windowing type.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
+ *
+ * Calculates 2D Fast Fourier Transform of a rectangular a data field.
+ *
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
+ **/
+void
+gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *rout,
+                     GwyDataField *iin, GwyDataField *iout,
+                     GwyWindowingType windowing,
+                     GwyTransformDirection direction,
+                     GwyInterpolationType interpolation,
+                     gboolean preserverms, gboolean level)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+
+    if (!iin)
+        gwy_data_field_area_2dfft_real(rin, rout, iout,
+                                       0, 0, rin->xres, rin->yres,
+                                       windowing, direction, interpolation,
+                                       preserverms, level);
+    else
+        gwy_data_field_area_2dfft(rin, iin, rout, iout,
+                                  0, 0, rin->xres, rin->yres,
+                                  windowing, direction, interpolation,
+                                  preserverms, level);
 }
 
 /**
@@ -685,13 +763,85 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
 }
 
 /**
+ * gwy_data_field_area_1dfft:
+ * @rin: Real input data field.
+ * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
+ *       transform which can be somewhat faster than complex-to-complex
+ *       transform.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
+ * @orientation: Orientation: pass %GWY_ORIENTATION_HORIZONTAL to
+ *               transform rows, %GWY_ORIENTATION_VERTICAL to transform
+ *               columns.
+ * @windowing: Windowing type.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS while windowing.
+ * @level: %TRUE to level data before computation.
+ *
+ * Transforms all rows or columns in a rectangular part of a data field with
+ * Fast Fourier Transform.
+ *
+ * If requested a windowing and/or leveling is applied to preprocess data to
+ * obtain reasonable results.
+ **/
+void
+gwy_data_field_area_1dfft(GwyDataField *rin, GwyDataField *iin,
+                          GwyDataField *rout, GwyDataField *iout,
+                          gint col, gint row,
+                          gint width, gint height,
+                          GwyOrientation orientation,
+                          GwyWindowingType windowing,
+                          GwyTransformDirection direction,
+                          GwyInterpolationType interpolation,
+                          gboolean preserverms,
+                          gboolean level)
+{
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        if (!iin)
+            gwy_data_field_area_xfft_real(rin, rout, iout,
+                                          col, row, width, height,
+                                          windowing, direction, interpolation,
+                                          preserverms, level);
+        else
+            gwy_data_field_area_xfft(rin, iin, rout, iout,
+                                     col, row, width, height,
+                                     windowing, direction, interpolation,
+                                     preserverms, level);
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        if (!iin)
+            gwy_data_field_area_yfft_real(rin, rout, iout,
+                                          col, row, width, height,
+                                          windowing, direction, interpolation,
+                                          preserverms, level);
+        else
+            gwy_data_field_area_yfft(rin, iin, rout, iout,
+                                     col, row, width, height,
+                                     windowing, direction, interpolation,
+                                     preserverms, level);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+/**
  * gwy_data_field_1dfft:
  * @rin: Real input data field.
  * @iin: Imaginary input data field.  It can be %NULL for real-to-complex
  *       transform which can be somewhat faster than complex-to-complex
  *       transform.
- * @rout: Real output data field.
- * @iout: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
  * @orientation: Orientation: pass %GWY_ORIENTATION_HORIZONTAL to
  *               transform rows, %GWY_ORIENTATION_VERTICAL to transform
  *               columns.
@@ -707,10 +857,8 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
  * obtain reasonable results.
  **/
 void
-gwy_data_field_1dfft(GwyDataField *rin,
-                     GwyDataField *iin,
-                     GwyDataField *rout,
-                     GwyDataField *iout,
+gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
+                     GwyDataField *rout, GwyDataField *iout,
                      GwyOrientation orientation,
                      GwyWindowingType windowing,
                      GwyTransformDirection direction,
@@ -718,27 +866,33 @@ gwy_data_field_1dfft(GwyDataField *rin,
                      gboolean preserverms,
                      gboolean level)
 {
+    g_return_if_fail(GWY_IS_DATA_FIELD(rin));
+
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
         if (!iin)
-            gwy_data_field_xfft_real(rin, rout, iout,
+            gwy_data_field_area_xfft_real(rin, rout, iout,
+                                          0, 0, rin->xres, rin->yres,
+                                          windowing, direction, interpolation,
+                                          preserverms, level);
+        else
+            gwy_data_field_area_xfft(rin, iin, rout, iout,
+                                     0, 0, rin->xres, rin->yres,
                                      windowing, direction, interpolation,
                                      preserverms, level);
-        else
-            gwy_data_field_xfft(rin, iin, rout, iout,
-                                windowing, direction, interpolation,
-                                preserverms, level);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
         if (!iin)
-            gwy_data_field_yfft_real(rin, rout, iout,
+            gwy_data_field_area_yfft_real(rin, rout, iout,
+                                          0, 0, rin->xres, rin->yres,
+                                          windowing, direction, interpolation,
+                                          preserverms, level);
+        else
+            gwy_data_field_area_yfft(rin, iin, rout, iout,
+                                     0, 0, rin->xres, rin->yres,
                                      windowing, direction, interpolation,
                                      preserverms, level);
-        else
-            gwy_data_field_yfft(rin, iin, rout, iout,
-                                windowing, direction, interpolation,
-                                preserverms, level);
         break;
 
         default:
@@ -748,13 +902,17 @@ gwy_data_field_1dfft(GwyDataField *rin,
 }
 
 /**
- * gwy_data_field_xfft:
+ * gwy_data_field_area_xfft:
  * @ra: Real input data field.
  * @ia: Imaginary input data field.  It can be %NULL for real-to-complex
  *      transform which can be somewhat faster than complex-to-complex
  *      transform.
- * @rb: Real output data field.
- * @ib: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -767,14 +925,16 @@ gwy_data_field_1dfft(GwyDataField *rin,
  * obtain reasonable results.
  **/
 static void
-gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
-                    GwyDataField *rb, GwyDataField *ib,
-                    GwyWindowingType windowing,
-                    GwyTransformDirection direction,
-                    GwyInterpolationType interpolation,
-                    gboolean preserverms, gboolean level)
+gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
+                         GwyDataField *rb, GwyDataField *ib,
+                         gint col, gint row,
+                         gint width, gint height,
+                         GwyWindowingType windowing,
+                         GwyTransformDirection direction,
+                         GwyInterpolationType interpolation,
+                         gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newxres;
+    gint newxres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
@@ -783,25 +943,27 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    newxres = gwy_fft_find_nice_size(xres);
+    newxres = gwy_fft_find_nice_size(width);
 
-    gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rb, newxres, height, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
 
-    gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, newxres, height, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_data_field_resample(rbuf, newxres, yres, interpolation);
+    gwy_data_field_resample(rbuf, newxres, height, interpolation);
     in_rdata = rbuf->data;
 
-    ibuf = gwy_data_field_duplicate(ia);
+    ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_data_field_resample(ibuf, newxres, yres, interpolation);
+    gwy_data_field_resample(ibuf, newxres, height, interpolation);
     in_idata = ibuf->data;
 
 #ifdef HAVE_FFTW3
@@ -812,7 +974,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
         dims[0].n = newxres;
         dims[0].is = 1;
         dims[0].os = 1;
-        howmany_dims[0].n = yres;
+        howmany_dims[0].n = height;
         howmany_dims[0].is = newxres;
         howmany_dims[0].os = newxres;
         if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
@@ -835,7 +997,7 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     {
         gint k;
 
-        for (k = 0; k < yres; k++) {
+        for (k = 0; k < height; k++) {
             gwy_fft_simple(direction, newxres,
                            1, in_rdata + k*newxres, in_idata + k*newxres,
                            1, out_rdata + k*newxres, out_idata + k*newxres);
@@ -843,8 +1005,8 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -854,10 +1016,14 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
 }
 
 /**
- * gwy_data_field_xfft_real:
+ * gwy_data_field_area_xfft_real:
  * @ra: Real input data field.
- * @rb: Real output data field.
- * @ib: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -870,34 +1036,38 @@ gwy_data_field_xfft(GwyDataField *ra, GwyDataField *ia,
  * than gwy_data_field_xfft().
  **/
 static void
-gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
-                         GwyDataField *ib,
-                         GwyWindowingType windowing,
-                         GwyTransformDirection direction,
-                         GwyInterpolationType interpolation,
-                         gboolean preserverms, gboolean level)
+gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
+                              GwyDataField *ib,
+                              gint col, gint row,
+                              gint width, gint height,
+                              GwyWindowingType windowing,
+                              GwyTransformDirection direction,
+                              GwyInterpolationType interpolation,
+                              gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newxres, j, k;
+    gint newxres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    newxres = gwy_fft_find_nice_size(xres);
+    newxres = gwy_fft_find_nice_size(width);
 
-    gwy_data_field_resample(rb, newxres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rb, newxres, height, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
 
-    gwy_data_field_resample(ib, newxres, yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, newxres, height, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
-    gwy_data_field_resample(rbuf, newxres, yres, interpolation);
+    gwy_data_field_resample(rbuf, newxres, height, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_new_alike(rbuf, FALSE);
@@ -911,7 +1081,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
         dims[0].n = newxres;
         dims[0].is = 1;
         dims[0].os = 1;
-        howmany_dims[0].n = yres;
+        howmany_dims[0].n = height;
         howmany_dims[0].is = newxres;
         howmany_dims[0].os = newxres;
         plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
@@ -924,7 +1094,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
         fftw_destroy_plan(plan);
 
         /* Complete the missing half of transform.  */
-        for (k = 0; k < yres; k++) {
+        for (k = 0; k < height; k++) {
             gdouble *re, *im;
 
             re = out_rdata + k*newxres;
@@ -942,7 +1112,7 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
         gwy_data_field_multiply(ib, -1.0/sqrt(newxres));
 #else
     {
-        for (k = 0; k < yres; k += 2) {
+        for (k = 0; k < height; k += 2) {
             gdouble *re, *im, *r0, *r1, *i0, *i1;
 
             re = in_idata + k*newxres;
@@ -972,8 +1142,8 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -983,13 +1153,17 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
 }
 
 /**
- * gwy_data_field_yfft:
+ * gwy_data_field_area_yfft:
  * @ra: Real input data field.
  * @ia: Imaginary input data field.  It can be %NULL for real-to-complex
  *      transform which can be somewhat faster than complex-to-complex
  *      transform.
- * @rb: Real output data field.
- * @ib: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -1002,14 +1176,16 @@ gwy_data_field_xfft_real(GwyDataField *ra, GwyDataField *rb,
  * obtain reasonable results.
  **/
 static void
-gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
-                    GwyDataField *rb, GwyDataField *ib,
-                    GwyWindowingType windowing,
-                    GwyTransformDirection direction,
-                    GwyInterpolationType interpolation,
-                    gboolean preserverms, gboolean level)
+gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
+                         GwyDataField *rb, GwyDataField *ib,
+                         gint col, gint row,
+                         gint width, gint height,
+                         GwyWindowingType windowing,
+                         GwyTransformDirection direction,
+                         GwyInterpolationType interpolation,
+                         gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newyres;
+    gint newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
@@ -1018,26 +1194,27 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     g_return_if_fail(GWY_IS_DATA_FIELD(ia));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
     g_return_if_fail(ra->xres == ia->xres && ra->yres == rb->yres);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    xres = gwy_fft_find_nice_size(xres);
-    newyres = gwy_fft_find_nice_size(yres);
+    newyres = gwy_fft_find_nice_size(height);
 
-    gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rb, width, newyres, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
 
-    gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, width, newyres, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(rbuf, xres, newyres, interpolation);
+    gwy_data_field_resample(rbuf, width, newyres, interpolation);
     in_rdata = rbuf->data;
 
-    ibuf = gwy_data_field_duplicate(ia);
+    ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(ibuf, xres, newyres, interpolation);
+    gwy_data_field_resample(ibuf, width, newyres, interpolation);
     in_idata = ibuf->data;
 
 #ifdef HAVE_FFTW3
@@ -1046,9 +1223,9 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
         fftw_plan plan;
 
         dims[0].n = newyres;
-        dims[0].is = xres;
-        dims[0].os = xres;
-        howmany_dims[0].n = xres;
+        dims[0].is = width;
+        dims[0].os = width;
+        howmany_dims[0].n = width;
         howmany_dims[0].is = 1;
         howmany_dims[0].os = 1;
         if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
@@ -1071,16 +1248,16 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
     {
         gint k;
 
-        for (k = 0; k < xres; k++) {
+        for (k = 0; k < width; k++) {
             gwy_fft_simple(direction, newyres,
-                           xres, in_rdata + k, in_idata + k,
-                           xres, out_rdata + k, out_idata + k);
+                           width, in_rdata + k, in_idata + k,
+                           width, out_rdata + k, out_idata + k);
         }
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -1090,10 +1267,14 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
 }
 
 /**
- * gwy_data_field_yfft_real:
+ * gwy_data_field_area_yfft_real:
  * @ra: Real input data field.
- * @rb: Real output data field.
- * @ib: Imaginary output data field.
+ * @rout: Real output data field, it will be resized to area size.
+ * @iout: Imaginary output data field, it will be resized to area size.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns), must be at least 4.
+ * @height: Area height (number of rows), must be at least 4.
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
@@ -1106,34 +1287,38 @@ gwy_data_field_yfft(GwyDataField *ra, GwyDataField *ia,
  * than gwy_data_field_yfft().
  **/
 static void
-gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
-                         GwyDataField *ib,
-                         GwyWindowingType windowing,
-                         GwyTransformDirection direction,
-                         GwyInterpolationType interpolation,
-                         gboolean preserverms, gboolean level)
+gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
+                              GwyDataField *ib,
+                              gint col, gint row,
+                              gint width, gint height,
+                              GwyWindowingType windowing,
+                              GwyTransformDirection direction,
+                              GwyInterpolationType interpolation,
+                              gboolean preserverms, gboolean level)
 {
-    gint xres, yres, newyres, j, k;
+    gint newyres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
     g_return_if_fail(GWY_IS_DATA_FIELD(ib));
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= ra->xres
+                     && row + height <= ra->yres);
 
-    xres = ra->xres;
-    yres = ra->yres;
-    newyres = gwy_fft_find_nice_size(yres);
+    newyres = gwy_fft_find_nice_size(height);
 
-    gwy_data_field_resample(rb, xres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rb, width, newyres, GWY_INTERPOLATION_NONE);
     out_rdata = rb->data;
 
-    gwy_data_field_resample(ib, xres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(ib, width, newyres, GWY_INTERPOLATION_NONE);
     out_idata = ib->data;
 
-    rbuf = gwy_data_field_duplicate(ra);
+    rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
-    gwy_data_field_resample(rbuf, xres, newyres, interpolation);
+    gwy_data_field_resample(rbuf, width, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_new_alike(rbuf, FALSE);
@@ -1145,9 +1330,9 @@ gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
         fftw_plan plan;
 
         dims[0].n = newyres;
-        dims[0].is = xres;
-        dims[0].os = xres;
-        howmany_dims[0].n = xres;
+        dims[0].is = width;
+        dims[0].os = width;
+        howmany_dims[0].n = width;
         howmany_dims[0].is = 1;
         howmany_dims[0].os = 1;
         plan = fftw_plan_guru_split_dft_r2c(1, dims, 1, howmany_dims,
@@ -1160,14 +1345,14 @@ gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
         fftw_destroy_plan(plan);
 
         /* Complete the missing half of transform.  */
-        for (k = 0; k < xres; k++) {
+        for (k = 0; k < width; k++) {
             gdouble *re, *im;
 
             re = out_rdata + k;
             im = out_idata + k;
             for (j = newyres/2 + 1; j < newyres; j++) {
-                re[xres*j] = re[xres*(newyres - j)];
-                im[xres*j] = -im[xres*(newyres - j)];
+                re[width*j] = re[width*(newyres - j)];
+                im[width*j] = -im[width*(newyres - j)];
             }
         }
     }
@@ -1178,7 +1363,7 @@ gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
         gwy_data_field_multiply(ib, -1.0/sqrt(newyres));
 #else
     {
-        for (k = 0; k < xres; k += 2) {
+        for (k = 0; k < width; k += 2) {
             gdouble *re, *im, *r0, *r1, *i0, *i1;
 
             re = in_idata + k;
@@ -1188,7 +1373,7 @@ gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
 
             /* FIXME: we could achieve better data locality by using the in
              * arrays `rotated'. */
-            gwy_fft_simple(direction, newyres, xres, r0, r1, xres, re, im);
+            gwy_fft_simple(direction, newyres, width, r0, r1, width, re, im);
 
             r0 = out_rdata + k;
             r1 = out_rdata + (k + 1);
@@ -1201,17 +1386,17 @@ gwy_data_field_yfft_real(GwyDataField *ra, GwyDataField *rb,
             r1[0] = im[0];
             i1[0] = 0.0;
             for (j = 1; j < newyres; j++) {
-                r0[xres*j] = (re[xres*j] + re[xres*(newyres - j)])/2.0;
-                i0[xres*j] = (im[xres*j] - im[xres*(newyres - j)])/2.0;
-                r1[xres*j] = (im[xres*j] + im[xres*(newyres - j)])/2.0;
-                i1[xres*j] = (-re[xres*j] + re[xres*(newyres - j)])/2.0;
+                r0[width*j] = (re[width*j] + re[width*(newyres - j)])/2.0;
+                i0[width*j] = (im[width*j] - im[width*(newyres - j)])/2.0;
+                r1[width*j] = (im[width*j] + im[width*(newyres - j)])/2.0;
+                i1[width*j] = (-re[width*j] + re[width*(newyres - j)])/2.0;
             }
         }
     }
 #endif
 
-    gwy_data_field_resample(rb, xres, yres, interpolation);
-    gwy_data_field_resample(ib, xres, yres, interpolation);
+    gwy_data_field_resample(rb, width, height, interpolation);
+    gwy_data_field_resample(ib, width, height, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
@@ -1352,12 +1537,13 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(data_field, G_PI/2, interpolation);
 
-    gwy_data_field_xfft(data_field, result_field,
-                        hlp_dfield, hlp_idfield,
-                        GWY_WINDOWING_NONE,
-                        GWY_TRANSFORM_DIRECTION_FORWARD,
-                        interpolation,
-                        FALSE, FALSE);
+    gwy_data_field_area_xfft(data_field, result_field,
+                             hlp_dfield, hlp_idfield,
+                             0, 0, data_field->xres, data_field->yres,
+                             GWY_WINDOWING_NONE,
+                             GWY_TRANSFORM_DIRECTION_FORWARD,
+                             interpolation,
+                             FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(data_field, -G_PI/2, interpolation);
@@ -1379,12 +1565,13 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
         gwy_data_field_set_row(hlp_idfield, dline, i);
     }
 
-    gwy_data_field_xfft(hlp_dfield, hlp_idfield,
-                        result_field, iresult_field,
-                        GWY_WINDOWING_NONE,
-                        GWY_TRANSFORM_DIRECTION_BACKWARD,
-                        interpolation,
-                        FALSE, FALSE);
+    gwy_data_field_area_xfft(hlp_dfield, hlp_idfield,
+                             result_field, iresult_field,
+                             0, 0, data_field->xres, data_field->yres,
+                             GWY_WINDOWING_NONE,
+                             GWY_TRANSFORM_DIRECTION_BACKWARD,
+                             interpolation,
+                             FALSE, FALSE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
         gwy_data_field_rotate(result_field, -G_PI/2, interpolation);
