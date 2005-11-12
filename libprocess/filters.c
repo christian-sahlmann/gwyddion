@@ -77,18 +77,19 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
 
     for (i = row; i < row + height; i++) {   /*0-yres */
         for (j = col; j < col + width; j++) {       /*0-xres */
-            /*target_field->data[j + data_field->xres*i]; */
-            for (m = (-kyres/2); m < (kyres - kyres/2); m++) {
-                for (n = (-kxres/2); n < (kxres - kxres/2); n++) {
-                    if (((j + n) < xres) && ((i + m) < yres) && ((j + n) >= 0)
-                        && ((i + m) >= 0))
+            for (m = -kyres/2; m < kyres - kyres/2; m++) {
+                for (n = -kxres/2; n < kxres - kxres/2; n++) {
+                    if (j + n < xres
+                        && i + m < yres
+                        && j + n >= 0
+                        && i + m >= 0)
                         fieldval = data_field->data[(j + n) + xres * (i + m)];
                     else
                         fieldval = avgval;
 
                     hlp_df->data[j + xres * i] +=
-                        fieldval * kernel_field->data[(m + kyres/2)
-                                                      + kxres * (n + kxres/2)];
+                        fieldval * kernel_field->data[(n + kxres/2)
+                                                      + kxres * (m + kyres/2)];
                 }
             }
         }
@@ -526,7 +527,7 @@ gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
     xres = data_field->xres;
     yres = data_field->yres;
     switch (orientation) {
-        case GWY_ORIENTATION_HORIZONTAL:
+        case GWY_ORIENTATION_VERTICAL:
         if (height < 3)
             return;
         memcpy(data_field->data + xres*row + col,
@@ -537,7 +538,7 @@ gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
                width*sizeof(gdouble));
         break;
 
-        case GWY_ORIENTATION_VERTICAL:
+        case GWY_ORIENTATION_HORIZONTAL:
         if (width < 3)
             return;
         for (i = 0; i < height; i++) {
