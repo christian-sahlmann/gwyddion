@@ -28,6 +28,10 @@
 #include <libprocess/stats.h>
 
 static gint thin_data_field(GwyDataField *data_field);
+static void gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
+                                                     GwyOrientation orientation,
+                                                     gint col, gint row,
+                                                     gint width, gint height);
 
 /**
  * gwy_data_field_area_convolve:
@@ -358,7 +362,6 @@ gwy_data_field_filter_canny(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
-
  /**
  * gwy_data_field_area_filter_laplacian:
  * @data_field: A data field to apply mean filter to.
@@ -432,6 +435,8 @@ gwy_data_field_area_filter_sobel(GwyDataField *data_field,
     else
         memcpy(kernel->data, vsobel, sizeof(vsobel));
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    gwy_data_field_area_fix_3x3_filter_edges(data_field, orientation,
+                                             col, row, width, height);
     g_object_unref(kernel);
 }
 
@@ -481,6 +486,8 @@ gwy_data_field_area_filter_prewitt(GwyDataField *data_field,
     else
         memcpy(kernel->data, vprewitt, sizeof(vprewitt));
     gwy_data_field_area_convolve(data_field, kernel, col, row, width, height);
+    gwy_data_field_area_fix_3x3_filter_edges(data_field, orientation,
+                                             col, row, width, height);
     g_object_unref(kernel);
 }
 
@@ -491,6 +498,60 @@ gwy_data_field_filter_prewitt(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_filter_prewitt(data_field, orientation, 0, 0,
                                        data_field->xres, data_field->yres);
+}
+
+/**
+ * gwy_data_field_area_fix_3x3_filter_edges:
+ * @data_field: A data field just processed with a 3x3 convolution filter.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @orientation: Filter orientation.
+ *
+ * Overwrites edge rows/columns with next-to-edge rows/columns.
+ *
+ * The intention is to fix the output of 3x3 convolution filters that does not
+ * fill the edge rows/columns with reasonable values.
+ **/
+static void
+gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
+                                         GwyOrientation orientation,
+                                         gint col, gint row,
+                                         gint width, gint height)
+{
+    gint xres, yres, i;
+    gdouble *data;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    switch (orientation) {
+        case GWY_ORIENTATION_HORIZONTAL:
+        if (height < 3)
+            return;
+        memcpy(data_field->data + xres*row + col,
+               data_field->data + xres*(row + 1) + col,
+               width*sizeof(gdouble));
+        memcpy(data_field->data + xres*(row + height - 1) + col,
+               data_field->data + xres*(row + height - 2) + col,
+               width*sizeof(gdouble));
+        break;
+
+        case GWY_ORIENTATION_VERTICAL:
+        if (width < 3)
+            return;
+        for (i = 0; i < height; i++) {
+            data = data_field->data + xres*(row + i) + col;
+            data[0] = data[1];
+            data[width - 1] = data[width - 2];
+        }
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -1225,26 +1286,28 @@ gwy_data_field_shade(GwyDataField *data_field,
                      gdouble theta, gdouble phi)
 {
     gint i, j;
-    gdouble max, maxval;
+    gdouble max, maxval, v;
+    gdouble *data;
 
     gwy_data_field_resample(target_field, data_field->xres, data_field->yres,
                             GWY_INTERPOLATION_NONE);
 
     max = -G_MAXDOUBLE;
+    data = target_field->data;
     for (i = 0; i < data_field->yres; i++) {
 
         for (j = 0; j < data_field->xres; j++) {
-            target_field->data[j + data_field->xres*i]
-                = -gwy_data_field_get_angder(data_field, j, i, phi);
+            v = -gwy_data_field_get_angder(data_field, j, i, phi);
+            data[j + data_field->xres*i] = v;
 
-            if (max < target_field->data[j + data_field->xres*i])
-                max = target_field->data[j + data_field->xres*i];
+            if (max < v)
+                max = v;
         }
     }
 
     maxval = theta/max;
     for (i = 0; i < data_field->xres*data_field->yres; i++)
-        target_field->data[i] = max - fabs(maxval-target_field->data[i]);
+        data[i] = max - fabs(maxval - data[i]);
 
     gwy_data_field_invalidate(target_field);
 }
