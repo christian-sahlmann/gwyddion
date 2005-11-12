@@ -76,9 +76,8 @@ struct _GwyGraphClass {
 
     void (*gwygraph)(GwyGraph *grapher);
     void (*selected)(GwyGraph *grapher);
-//    void (*mouse_moved)(GwyGraph *grapher);    
     void (*zoomed)(GwyGraph *grapher);
-    
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -95,7 +94,7 @@ void       gwy_graph_refresh(GwyGraph *graph);
 
 void       gwy_graph_signal_selected(GwyGraph *graph);
 
-void       gwy_graph_set_model(GwyGraph *graph, 
+void       gwy_graph_set_model(GwyGraph *graph,
                                     GwyGraphModel *gmodel);
 void       gwy_graph_set_status(GwyGraph *graph,
                                   GwyGraphStatusType status);
@@ -115,7 +114,7 @@ void       gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max
 void       gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable);
 
 
-void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename, 
+void       gwy_graph_export_pixmap(GwyGraph *graph, const gchar *filename,
                                      gboolean export_title, gboolean export_axis,
                                      gboolean export_labels);
 void       gwy_graph_export_postscript(GwyGraph *graph, const gchar *filename,
