@@ -643,18 +643,18 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
     unit = gwy_data_field_get_si_unit_xy(gwy3dview->data);
     format = gwy_si_unit_get_format_with_resolution(unit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                    xreal, xreal/3, NULL);
-    g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
-               xreal/format->magnitude, format->units);
+                                                    xreal, xreal/12, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
+               format->precision, xreal/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "x");
     if (!s || strcmp(s, buffer))
         g_hash_table_insert(gwy3dview->variables, "x", g_strdup(buffer));
 
     /* $y */
     gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                           yreal, yreal/3, format);
-    g_snprintf(buffer, sizeof(buffer), "%1.1f %s",
-               yreal/format->magnitude, format->units);
+                                           yreal, yreal/12, format);
+    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
+               format->precision, yreal/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "y");
     if (!s || strcmp(s, buffer))
         g_hash_table_insert(gwy3dview->variables, "y", g_strdup(buffer));
@@ -662,16 +662,16 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
     /* $max */
     unit = gwy_data_field_get_si_unit_z(gwy3dview->data);
     gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                           maximum, range/3, format);
-    g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
-               data_max/format->magnitude, format->units);
+                                           maximum, range/12, format);
+    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
+               format->precision, data_max/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "max");
     if (!s || strcmp(s, buffer))
         g_hash_table_insert(gwy3dview->variables, "max", g_strdup(buffer));
 
     /* $min */
-    g_snprintf(buffer, sizeof(buffer), "%1.0f %s",
-               data_min/format->magnitude, format->units);
+    g_snprintf(buffer, sizeof(buffer), "%.*f %s",
+               format->precision, data_min/format->magnitude, format->units);
     s = g_hash_table_lookup(gwy3dview->variables, "min");
     if (!s || strcmp(s, buffer))
         g_hash_table_insert(gwy3dview->variables, "min", g_strdup(buffer));
