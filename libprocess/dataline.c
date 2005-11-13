@@ -960,7 +960,6 @@ gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     gdouble sumsixi = 0.0;
     gdouble sumsi = 0.0;
     gdouble n = a->res;
-    gdouble *pdata;
     gint i;
 
     g_return_if_fail(GWY_IS_DATA_LINE(a));
@@ -968,11 +967,9 @@ gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     sumxi = (n-1)/2;
     sumxixi = (2*n-1)*(n-1)/6;
 
-    pdata = a->data;
-    for (i = a->res; i; i--) {
-        sumsi += *pdata;
-        sumsixi += *pdata * i;
-        pdata++;
+    for (i = 0; i < a->res; i++) {
+        sumsi += a->data[i];
+        sumsixi += a->data[i] * i;
     }
     sumsi /= n;
     sumsixi /= n;
