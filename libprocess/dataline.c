@@ -964,6 +964,7 @@ gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
 
     g_return_if_fail(GWY_IS_DATA_LINE(a));
 
+    /* These are already averages, not sums */
     sumxi = (n-1)/2;
     sumxixi = (2*n-1)*(n-1)/6;
 

@@ -29,6 +29,7 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/linestats.h>
 #include <libprocess/simplefft.h>
+#include <libprocess/level.h>
 #include <libprocess/stats.h>
 #include <libprocess/cwt.h>
 
@@ -98,6 +99,9 @@ static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
                                             GwyDataField *imag_field,
                                             gdouble scale,
                                             Gwy2DCWTWaveletType wtype);
+static void  gwy_level_simple              (gint n,
+                                            gint stride,
+                                            gdouble *data);
 static gdouble edist                       (gint xc1,
                                             gint yc1,
                                             gint xc2,
@@ -269,7 +273,7 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     gint newres, i;
     GwyDataLine *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble av, bv, rmsa = 0.0, rmsb;
+    gdouble rmsa = 0.0, rmsb;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
@@ -289,10 +293,8 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     out_idata = idest->data;
 
     rbuf = gwy_data_line_part_extract(rsrc, from, len);
-    if (level) {
-        gwy_data_line_get_line_coeffs(rbuf, &av, &bv);
-        gwy_data_line_line_level(rbuf, av, bv);
-    }
+    if (level)
+        gwy_level_simple(len, 1, rbuf->data);
     if (preserverms)
         rmsa = gwy_data_line_get_rms(rbuf);
     gwy_fft_window(len, rbuf->data, windowing);
@@ -300,10 +302,8 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_line_part_extract(isrc, from, len);
-    if (level) {
-        gwy_data_line_get_line_coeffs(ibuf, &av, &bv);
-        gwy_data_line_line_level(ibuf, av, bv);
-    }
+    if (level)
+        gwy_level_simple(len, 1, ibuf->data);
     if (preserverms)
         rmsa = hypot(rmsa, gwy_data_line_get_rms(ibuf));
     gwy_fft_window(len, ibuf->data, windowing);
@@ -399,6 +399,7 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     gint newxres, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+    gdouble a, bx, by;
 
     if (!ia) {
         gwy_data_field_area_2dfft_real(ra, rb, ib,
@@ -428,12 +429,20 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
+        gwy_data_field_plane_level(rbuf, a, bx, by);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
+    if (level) {
+        gwy_data_field_fit_plane(ibuf, &a,  &bx, &by);
+        gwy_data_field_plane_level(ibuf, a, bx, by);
+    }
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
@@ -532,6 +541,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+    gdouble a, bx, by;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
@@ -551,6 +561,10 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
+        gwy_data_field_plane_level(rbuf, a, bx, by);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
@@ -909,7 +923,7 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
                          GwyInterpolationType interpolation,
                          gboolean preserverms, gboolean level)
 {
-    gint newxres;
+    gint k, newxres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
@@ -932,11 +946,19 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        for (k = 0; k < height; k++)
+            gwy_level_simple(width, 1, rbuf->data + k*width);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(rbuf, newxres, height, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
+    if (level) {
+        for (k = 0; k < height; k++)
+            gwy_level_simple(width, 1, ibuf->data + k*width);
+    }
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(ibuf, newxres, height, interpolation);
     in_idata = ibuf->data;
@@ -1041,6 +1063,10 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        for (k = 0; k < height; k++)
+            gwy_level_simple(width, 1, rbuf->data + k*width);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_data_field_resample(rbuf, newxres, height, interpolation);
     in_rdata = rbuf->data;
@@ -1160,7 +1186,7 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
                          GwyInterpolationType interpolation,
                          gboolean preserverms, gboolean level)
 {
-    gint newyres;
+    gint k, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
 
@@ -1183,11 +1209,19 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        for (k = 0; k < width; k++)
+            gwy_level_simple(height, width, rbuf->data + k);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, width, newyres, interpolation);
     in_rdata = rbuf->data;
 
     ibuf = gwy_data_field_area_extract(ia, col, row, width, height);
+    if (level) {
+        for (k = 0; k < width; k++)
+            gwy_level_simple(height, width, ibuf->data + k);
+    }
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(ibuf, width, newyres, interpolation);
     in_idata = ibuf->data;
@@ -1221,8 +1255,6 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_multiply(ib, 1.0/sqrt(newyres));
 #else
     {
-        gint k;
-
         for (k = 0; k < width; k++) {
             gwy_fft_simple(direction, newyres,
                            width, in_rdata + k, in_idata + k,
@@ -1292,6 +1324,10 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
     out_idata = ib->data;
 
     rbuf = gwy_data_field_area_extract(ra, col, row, width, height);
+    if (level) {
+        for (k = 0; k < width; k++)
+            gwy_level_simple(height, width, rbuf->data + k);
+    }
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, width, newyres, interpolation);
     in_rdata = rbuf->data;
@@ -1378,6 +1414,40 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
 
     gwy_data_field_invalidate(rb);
     gwy_data_field_invalidate(ib);
+}
+
+static void
+gwy_level_simple(gint n,
+                 gint stride,
+                 gdouble *data)
+{
+    gdouble sumxi, sumxixi, sumsi, sumsixi, a, b;
+    gdouble *pdata;
+    gint i;
+
+    /* These are already averages, not sums */
+    sumxi = (n - 1.0)/2.0;
+    sumxixi = (2.0*n - 1.0)*(n - 1.0)/6.0;
+
+    sumsi = sumsixi = 0.0;
+
+    pdata = data;
+    for (i = n; i; i--) {
+        sumsi += *pdata;
+        sumsixi += *pdata * i;
+        pdata += stride;
+    }
+    sumsi /= n;
+    sumsixi /= n;
+
+    b = (sumsixi - sumsi*sumxi)/(sumxixi - sumxi*sumxi);
+    a = (sumsi*sumxixi - sumxi*sumsixi)/(sumxixi - sumxi*sumxi);
+
+    pdata = data;
+    for (i = n; i; i--) {
+        *pdata -= a + b*i;
+        pdata += stride;
+    }
 }
 
 static inline gdouble
