@@ -1038,6 +1038,11 @@ gwy_3d_window_set_visualization(Gwy3DWindow *window,
     gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], visual);
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
                              visual);
+    if (visual == GWY_3D_VISUALIZATION_GRADIENT
+        && gwy_3d_view_get_movement_type(GWY_3D_VIEW(window->gwy3dview))
+            == GWY_3D_MOVEMENT_LIGHT)
+        g_signal_emit_by_name(window->buttons[GWY_3D_MOVEMENT_ROTATION],
+                              "clicked");
 }
 
 static void
