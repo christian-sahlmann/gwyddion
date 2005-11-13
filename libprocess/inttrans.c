@@ -94,12 +94,6 @@ static void  gwy_data_field_area_yfft_real (GwyDataField *ra,
                                             GwyInterpolationType interpolation,
                                             gboolean preserverms,
                                             gboolean level);
-static void  gwy_data_line_fft_simple      (GwyTransformDirection direction,
-                                            GwyDataLine *rsrc,
-                                            GwyDataLine *isrc,
-                                            GwyDataLine *rdest,
-                                            GwyDataLine *idest,
-                                            GwyInterpolationType interpolation);
 static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
                                             GwyDataField *imag_field,
                                             gdouble scale,
@@ -108,9 +102,6 @@ static gdouble edist                       (gint xc1,
                                             gint yc1,
                                             gint xc2,
                                             gint yc2);
-static void  flip_xy                       (GwyDataField *source,
-                                            GwyDataField *dest,
-                                            gboolean minor);
 
 #ifdef HAVE_FFTW3
 /* Good FFTW array sizes for extended and resampled arrays.
@@ -215,92 +206,6 @@ gwy_fft_find_nice_size(gint size)
 #endif  /* HAVE_FFTW3 */
 
 /**
- * gwy_data_line_fft_hum:
- * @direction: FFT direction (1 or -1).
- * @rsrc: Real input.
- * @isrc: Imaginary input.
- * @rdest: Real output.
- * @idest: Imaginary output.
- * @interpolation: interpolation used
- *
- * Performs 1D FFT using the alogrithm ffthum (see simplefft.h).
- * Resamples data to closest 2^N and then resamples result back.
- * Resample data by yourself if you want further FFT processing as
- * resampling of the FFT spectrum can destroy some information in it.
- **/
-#ifdef HAVE_FFTW3
-static void
-gwy_data_line_fft_simple(GwyTransformDirection direction,
-                         GwyDataLine *rsrc, GwyDataLine *isrc,
-                         GwyDataLine *rdest, GwyDataLine *idest,
-                         GwyInterpolationType interpolation)
-{
-    gint newres, oldres, i;
-    fftw_complex *buffer;
-    fftw_plan plan;
-    gdouble q;
-
-    newres = gwy_fft_find_nice_size(rsrc->res);
-    oldres = rsrc->res;
-    q = sqrt(newres);
-
-    gwy_data_line_resample(rsrc, newres, interpolation);
-    gwy_data_line_resample(isrc, newres, interpolation);
-    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
-
-    buffer = fftw_malloc(sizeof(fftw_complex) * newres);
-    plan = fftw_plan_dft_1d(newres, buffer, buffer, direction, FFTW_MEASURE);
-    g_return_if_fail(plan);
-    for (i = 0; i < newres; i++) {
-        buffer[i][0] = rsrc->data[i];
-        buffer[i][1] = isrc->data[i];
-    }
-    fftw_execute(plan);
-    for (i = 0; i < newres; i++) {
-        rdest->data[i] = buffer[i][0]/q;
-        idest->data[i] = buffer[i][1]/q;
-    }
-    fftw_destroy_plan(plan);
-    fftw_free(buffer);
-
-    /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
-     after all the processings*/
-    gwy_data_line_resample(rsrc, oldres, interpolation);
-    gwy_data_line_resample(isrc, oldres, interpolation);
-    gwy_data_line_resample(rdest, oldres, interpolation);
-    gwy_data_line_resample(idest, oldres, interpolation);
-}
-#else
-static void
-gwy_data_line_fft_simple(GwyTransformDirection direction,
-                         GwyDataLine *rsrc, GwyDataLine *isrc,
-                         GwyDataLine *rdest, GwyDataLine *idest,
-                         GwyInterpolationType interpolation)
-{
-    gint newres, oldres;
-
-    newres = gwy_fft_find_nice_size(rsrc->res);
-    newres = gwy_fft_find_nice_size(rsrc->res);
-    oldres = rsrc->res;
-
-    gwy_data_line_resample(rsrc, newres, interpolation);
-    gwy_data_line_resample(isrc, newres, interpolation);
-    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
-
-    gwy_fft_simple(direction, newres, 1, rsrc->data, isrc->data, 1, rdest->data, idest->data);
-
-    /*FIXME interpolation can dramatically alter the spectrum. Do it preferably
-     after all the processings*/
-    gwy_data_line_resample(rsrc, oldres, interpolation);
-    gwy_data_line_resample(isrc, oldres, interpolation);
-    gwy_data_line_resample(rdest, oldres, interpolation);
-    gwy_data_line_resample(idest, oldres, interpolation);
-}
-#endif
-
-/**
  * gwy_data_line_fft:
  * @rsrc: Real input data line.
  * @isrc: Imaginary input data line.
@@ -312,7 +217,7 @@ gwy_data_line_fft_simple(GwyTransformDirection direction,
  * @preserverms: %TRUE to preserve RMS value while windowing.
  * @level: %TRUE to level line before computation.
  *
- * Performs Fast Fourier transform using a given algorithm.
+ * Calculates Fast Fourier Transform of a data line.
  *
  * A windowing or data leveling can be applied if requested.
  **/
@@ -325,69 +230,137 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                   gboolean preserverms,
                   gboolean level)
 {
-    gint i, n;
-    gdouble rmsa, rmsb;
-    GwyDataLine *multra, *multia;
-    gdouble coefs[4];
+    g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
+
+    gwy_data_line_part_fft(rsrc, isrc, rdest, idest,
+                           0, rsrc->res,
+                           windowing, direction, interpolation,
+                           preserverms, level);
+}
+
+/**
+ * gwy_data_line_part_fft:
+ * @rsrc: Real input data line.
+ * @isrc: Imaginary input data line.
+ * @rdest: Real output data line, it will be resized to @len.
+ * @idest: Imaginary output data line, it will be resized to @len.
+ * @from: The index in input lines to start from (inclusive).
+ * @len: Lenght of data line part, it must be at least 4.
+ * @windowing: Windowing mode.
+ * @direction: FFT direction.
+ * @interpolation: Interpolation type.
+ * @preserverms: %TRUE to preserve RMS value while windowing.
+ * @level: %TRUE to level line before computation.
+ *
+ * Calculates Fast Fourier Transform of a part of a data line.
+ *
+ * A windowing or data leveling can be applied if requested.
+ **/
+void
+gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
+                       GwyDataLine *rdest, GwyDataLine *idest,
+                       gint from, gint len,
+                       GwyWindowingType windowing,
+                       GwyTransformDirection direction,
+                       GwyInterpolationType interpolation,
+                       gboolean preserverms,
+                       gboolean level)
+{
+    gint newres, i;
+    GwyDataLine *rbuf, *ibuf;
+    gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
+    gdouble av, bv, rmsa = 0.0, rmsb;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
+    g_return_if_fail(rsrc->res == isrc->res);
+    g_return_if_fail(from >= 0
+                     && len >= 4
+                     && from + len <= rsrc->res);
 
-    gwy_debug("");
-    if (isrc->res != rsrc->res) {
-        gwy_data_line_resample(isrc, rsrc->res, GWY_INTERPOLATION_NONE);
-        gwy_data_line_clear(isrc);
+    newres = gwy_fft_find_nice_size(rsrc->res);
+
+    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
+    out_rdata = rdest->data;
+
+    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+    out_idata = idest->data;
+
+    rbuf = gwy_data_line_part_extract(rsrc, from, len);
+    if (level) {
+        gwy_data_line_get_line_coeffs(rbuf, &av, &bv);
+        gwy_data_line_line_level(rbuf, av, bv);
     }
-    if (rdest->res != rsrc->res)
-        gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
-    if (idest->res != rsrc->res)
-        gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
+    if (preserverms)
+        rmsa = gwy_data_line_get_rms(rbuf);
+    gwy_fft_window(len, rbuf->data, windowing);
+    gwy_data_line_resample(rbuf, newres, interpolation);
+    in_rdata = rbuf->data;
 
-    if (level == TRUE) {
-        n = 1;
-        gwy_data_line_fit_polynom(rsrc, n, coefs);
-        gwy_data_line_subtract_polynom(rsrc, n, coefs);
-        gwy_data_line_fit_polynom(isrc, n, coefs);
-        gwy_data_line_subtract_polynom(isrc, n, coefs);
+    ibuf = gwy_data_line_part_extract(isrc, from, len);
+    if (level) {
+        gwy_data_line_get_line_coeffs(ibuf, &av, &bv);
+        gwy_data_line_line_level(ibuf, av, bv);
     }
+    if (preserverms)
+        rmsa = hypot(rmsa, gwy_data_line_get_rms(ibuf));
+    gwy_fft_window(len, ibuf->data, windowing);
+    gwy_data_line_resample(ibuf, newres, interpolation);
+    in_idata = ibuf->data;
 
-    gwy_data_line_clear(rdest);
-    gwy_data_line_clear(idest);
+#ifdef HAVE_FFTW3
+    {
+        fftw_iodim dims[1], howmany_dims[1];
+        fftw_plan plan;
 
+        dims[0].n = newres;
+        dims[0].is = 1;
+        dims[0].os = 1;
+        howmany_dims[0].n = 1;
+        howmany_dims[0].is = newres;
+        howmany_dims[0].os = newres;
+        if (direction == GWY_TRANSFORM_DIRECTION_BACKWARD)
+            plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
+                                            in_rdata, in_idata,
+                                            out_rdata, out_idata,
+                                            FFTW_MEASURE);
+        else
+            plan = fftw_plan_guru_split_dft(1, dims, 1, howmany_dims,
+                                            in_idata, in_rdata,
+                                            out_idata, out_rdata,
+                                            FFTW_MEASURE);
+        g_return_if_fail(plan);
+        fftw_execute(plan);
+        fftw_destroy_plan(plan);
+    }
+    gwy_data_line_multiply(rdest, 1.0/sqrt(newres));
+    gwy_data_line_multiply(idest, 1.0/sqrt(newres));
+#else
+    gwy_fft_simple(direction, newres,
+                   1, in_rdata, in_idata,
+                   1, out_rdata, out_idata);
+#endif
 
-    if (preserverms == TRUE) {
-        multra = gwy_data_line_duplicate(rsrc);
-        multia = gwy_data_line_duplicate(isrc);
+    if (preserverms) {
+        rmsb = 0.0;
+        for (i = 1; i <= newres/2; i++)
+            rmsb += out_rdata[i]*out_rdata[i] + out_idata[i]*out_idata[i];
+        rmsb = sqrt(2.0*rmsb)/newres;
 
-        rmsa = gwy_data_line_get_rms(multra);
-
-        gwy_fft_window(multra->res, multra->data, windowing);
-        gwy_fft_window(multia->res, multia->data, windowing);
-
-        gwy_data_line_fft_simple(direction, multra, multia, rdest, idest,
-                                 interpolation);
-
-        rmsb = 0;
-        for (i = 0; i < multra->res/2; i++)
-            rmsb += 2*(rdest->data[i]*rdest->data[i]
-                       + idest->data[i]*idest->data[i])
-                    /(rsrc->res*rsrc->res);
-        rmsb = sqrt(rmsb);
+        if (rmsb == 0.0)
+            rmsb = 1.0;
 
         gwy_data_line_multiply(rdest, rmsa/rmsb);
         gwy_data_line_multiply(idest, rmsa/rmsb);
-        g_object_unref(multra);
-        g_object_unref(multia);
     }
-    else {
-        gwy_fft_window(rsrc->res, rsrc->data, windowing);
-        gwy_fft_window(rsrc->res, isrc->data, windowing);
 
-        gwy_data_line_fft_simple(direction, rsrc, isrc, rdest, idest,
-                              interpolation);
-    }
+    gwy_data_line_resample(rdest, len, interpolation);
+    gwy_data_line_resample(idest, len, interpolation);
+
+    g_object_unref(rbuf);
+    g_object_unref(ibuf);
 }
 
 /**
@@ -772,8 +745,10 @@ gwy_data_field_2dfft_humanize(GwyDataField *data_field)
  * @iout: Imaginary output data field, it will be resized to area size.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
- * @width: Area width (number of columns), must be at least 4.
- * @height: Area height (number of rows), must be at least 4.
+ * @width: Area width (number of columns), must be at least 4 for horizontal
+ *         transforms.
+ * @height: Area height (number of rows), must be at least 4 for vertical
+ *          transforms.
  * @orientation: Orientation: pass %GWY_ORIENTATION_HORIZONTAL to
  *               transform rows, %GWY_ORIENTATION_VERTICAL to transform
  *               columns.
@@ -1582,39 +1557,6 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_object_unref(iresult_field);
     g_object_unref(dline);
 }
-
-/*FIXME this should be public (somewhere) or removed*/
-static void
-flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
-{
-    gint xres, yres, i, j;
-    gdouble *dd;
-    const gdouble *sd;
-
-    xres = gwy_data_field_get_xres(source);
-    yres = gwy_data_field_get_yres(source);
-    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
-    sd = gwy_data_field_get_data_const(source);
-    dd = gwy_data_field_get_data(dest);
-    if (minor) {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-               dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
-           }
-        }
-    }
-    else {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
-            }
-        }
-    }
-    gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
-    gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
-}
-
-
 
 /************************** Documentation ****************************/
 

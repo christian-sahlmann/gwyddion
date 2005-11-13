@@ -71,6 +71,9 @@ void           gwy_data_line_resample      (GwyDataLine *data_line,
 void           gwy_data_line_resize                (GwyDataLine *data_line,
                                                     gint from,
                                                     gint to);
+GwyDataLine*   gwy_data_line_part_extract          (GwyDataLine *data_line,
+                                                    gint from,
+                                                    gint len);
 void           gwy_data_line_copy                  (GwyDataLine *data_line,
                                                     GwyDataLine *b);
 gdouble*       gwy_data_line_get_data              (GwyDataLine *data_line);

@@ -345,6 +345,35 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
 }
 
 /**
+ * gwy_data_line_part_extract:
+ * @data_line: A data line.
+ * @from: Where to start.
+ * @len: Length of extracted segment.
+ *
+ * Extracts a part of a data line to a new data line.
+ **/
+GwyDataLine*
+gwy_data_line_part_extract(GwyDataLine *data_line,
+                           gint from,
+                           gint len)
+{
+    GwyDataLine *result;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+    g_return_val_if_fail(from >= 0
+                         && len > 0
+                         && from + len <= data_line->res, NULL);
+
+    if (from == 0 && len == data_line->res)
+        return gwy_data_line_duplicate(data_line);
+
+    result = gwy_data_line_new(len, data_line->real*len/data_line->res, FALSE);
+    memcpy(result->data, data_line->data + from, len*sizeof(gdouble));
+
+    return result;
+}
+
+/**
  * gwy_data_line_copy:
  * @data_line: Source data line.
  * @b: Destination data line.
