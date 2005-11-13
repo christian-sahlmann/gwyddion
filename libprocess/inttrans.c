@@ -345,15 +345,13 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 
     if (preserverms) {
         rmsb = 0.0;
-        for (i = 1; i <= newres/2; i++)
+        for (i = 1; i < newres; i++)
             rmsb += out_rdata[i]*out_rdata[i] + out_idata[i]*out_idata[i];
-        rmsb = sqrt(2.0*rmsb)/newres;
-
-        if (rmsb == 0.0)
-            rmsb = 1.0;
-
-        gwy_data_line_multiply(rdest, rmsa/rmsb);
-        gwy_data_line_multiply(idest, rmsa/rmsb);
+        rmsb = sqrt(rmsb)/newres;
+        if (rmsb > 0.0) {
+            gwy_data_line_multiply(rdest, rmsa/rmsb);
+            gwy_data_line_multiply(idest, rmsa/rmsb);
+        }
     }
 
     gwy_data_line_resample(rdest, len, interpolation);
@@ -396,10 +394,10 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
                           GwyInterpolationType interpolation,
                           gboolean preserverms, gboolean level)
 {
-    gint newxres, newyres;
+    gint j, k, newxres, newyres;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble a, bx, by;
+    gdouble a, bx, by, rmsa = 0.0, rmsb;
 
     if (!ia) {
         gwy_data_field_area_2dfft_real(ra, rb, ib,
@@ -433,6 +431,8 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
         gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
+    if (preserverms)
+        rmsa = gwy_data_field_get_rms(rbuf);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
@@ -443,6 +443,8 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
         gwy_data_field_fit_plane(ibuf, &a,  &bx, &by);
         gwy_data_field_plane_level(ibuf, a, bx, by);
     }
+    if (preserverms)
+        rmsa = hypot(rmsa, gwy_data_field_get_rms(ibuf));
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(ibuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(ibuf, newxres, newyres, interpolation);
@@ -480,8 +482,6 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
 #else
     {
-        gint k;
-
         for (k = 0; k < newyres; k++) {
             gwy_fft_simple(direction, newxres,
                            1, in_rdata + k*newxres, in_idata + k*newxres,
@@ -497,6 +497,21 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
         }
     }
 #endif
+
+    if (preserverms) {
+        /* Ignore coefficient [0,0] */
+        rmsb = -(out_rdata[0]*out_rdata[0] + out_idata[0]*out_idata[0]);
+        for (j = 0; j < newyres; j++) {
+            for (k = 0; k < newxres; k++)
+                rmsb += (out_rdata[j*newxres + k]*out_rdata[j*newxres + k]
+                         + out_idata[j*newxres + k]*out_idata[j*newxres + k]);
+        }
+        rmsb = sqrt(rmsb)/(newxres*newyres);
+        if (rmsb > 0.0) {
+            gwy_data_field_multiply(rb, rmsa/rmsb);
+            gwy_data_field_multiply(ib, rmsa/rmsb);
+        }
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
@@ -541,7 +556,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     gint newxres, newyres, j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble a, bx, by;
+    gdouble a, bx, by, rmsa = 0.0, rmsb;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(ra));
     g_return_if_fail(GWY_IS_DATA_FIELD(rb));
@@ -565,6 +580,8 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
         gwy_data_field_fit_plane(rbuf, &a,  &bx, &by);
         gwy_data_field_plane_level(rbuf, a, bx, by);
     }
+    if (preserverms)
+        rmsa = gwy_data_field_get_rms(rbuf);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_HORIZONTAL, windowing);
     gwy_fft_window_data_field(rbuf, GWY_ORIENTATION_VERTICAL, windowing);
     gwy_data_field_resample(rbuf, newxres, newyres, interpolation);
@@ -652,6 +669,21 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
         }
     }
 #endif
+
+    if (preserverms) {
+        /* Ignore coefficient [0,0] */
+        rmsb = -(out_rdata[0]*out_rdata[0] + out_idata[0]*out_idata[0]);
+        for (j = 0; j < newyres; j++) {
+            for (k = 0; k < newxres; k++)
+                rmsb += (out_rdata[j*newxres + k]*out_rdata[j*newxres + k]
+                         + out_idata[j*newxres + k]*out_idata[j*newxres + k]);
+        }
+        rmsb = sqrt(rmsb)/(newxres*newyres);
+        if (rmsb > 0.0) {
+            gwy_data_field_multiply(rb, rmsa/rmsb);
+            gwy_data_field_multiply(ib, rmsa/rmsb);
+        }
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
