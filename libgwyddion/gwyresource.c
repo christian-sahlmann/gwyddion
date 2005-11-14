@@ -611,14 +611,16 @@ gwy_resource_modified(GwyResource *resource)
 void
 gwy_resource_class_load(GwyResourceClass *klass)
 {
-    gchar *path;
+    gchar *path, *datadir;
 
     g_return_if_fail(GWY_IS_RESOURCE_CLASS(klass));
     g_return_if_fail(klass->inventory);
 
     gwy_inventory_forget_order(klass->inventory);
 
-    path = g_build_filename(gwy_find_self_dir("data"), klass->name, NULL);
+    datadir = gwy_find_self_dir("data");
+    path = g_build_filename(datadir, klass->name, NULL);
+    g_free(datadir);
     gwy_resource_class_load_dir(path, klass, TRUE);
     g_free(path);
 

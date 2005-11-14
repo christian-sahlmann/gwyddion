@@ -180,12 +180,15 @@ gwy_unitool_use(GwyUnitoolState *state,
 static void
 gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 {
+    gchar *title;
+
     gwy_debug(" ");
     if (!state->windowname)
         return;
 
-    gtk_label_set_text(GTK_LABEL(state->windowname),
-                       gwy_data_window_get_base_name(state->data_window));
+    title = gwy_data_window_get_base_name(state->data_window);
+    gtk_label_set_text(GTK_LABEL(state->windowname), title);
+    g_free(title);
 }
 
 static void
