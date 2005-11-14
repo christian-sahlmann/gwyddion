@@ -102,6 +102,14 @@ static void  gwy_data_field_mult_wav       (GwyDataField *real_field,
 static void  gwy_level_simple              (gint n,
                                             gint stride,
                                             gdouble *data);
+static void  gwy_preserve_rms_simple       (gint nsrc,
+                                            gint stridesrc,
+                                            const gdouble *src1,
+                                            const gdouble *src2,
+                                            gint ndata,
+                                            gint stridedata,
+                                            gdouble *data1,
+                                            gdouble *data2);
 static gdouble edist                       (gint xc1,
                                             gint yc1,
                                             gint xc2,
@@ -270,10 +278,9 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                        gboolean preserverms,
                        gboolean level)
 {
-    gint newres, i;
+    gint newres;
     GwyDataLine *rbuf, *ibuf;
     gdouble *in_rdata, *in_idata, *out_rdata, *out_idata;
-    gdouble rmsa = 0.0, rmsb;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(GWY_IS_DATA_LINE(isrc));
@@ -295,8 +302,6 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     rbuf = gwy_data_line_part_extract(rsrc, from, len);
     if (level)
         gwy_level_simple(len, 1, rbuf->data);
-    if (preserverms)
-        rmsa = gwy_data_line_get_rms(rbuf);
     gwy_fft_window(len, rbuf->data, windowing);
     gwy_data_line_resample(rbuf, newres, interpolation);
     in_rdata = rbuf->data;
@@ -304,8 +309,6 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     ibuf = gwy_data_line_part_extract(isrc, from, len);
     if (level)
         gwy_level_simple(len, 1, ibuf->data);
-    if (preserverms)
-        rmsa = hypot(rmsa, gwy_data_line_get_rms(ibuf));
     gwy_fft_window(len, ibuf->data, windowing);
     gwy_data_line_resample(ibuf, newres, interpolation);
     in_idata = ibuf->data;
@@ -343,16 +346,9 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                    1, out_rdata, out_idata);
 #endif
 
-    if (preserverms) {
-        rmsb = 0.0;
-        for (i = 1; i < newres; i++)
-            rmsb += out_rdata[i]*out_rdata[i] + out_idata[i]*out_idata[i];
-        rmsb = sqrt(rmsb)/newres;
-        if (rmsb > 0.0) {
-            gwy_data_line_multiply(rdest, rmsa/rmsb);
-            gwy_data_line_multiply(idest, rmsa/rmsb);
-        }
-    }
+    if (preserverms)
+        gwy_preserve_rms_simple(len, 1, rsrc->data + from, isrc->data + from,
+                                newres, 1, out_rdata, out_idata);
 
     gwy_data_line_resample(rdest, len, interpolation);
     gwy_data_line_resample(idest, len, interpolation);
@@ -481,20 +477,18 @@ gwy_data_field_area_2dfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_multiply(rb, 1.0/sqrt(newxres*newyres));
     gwy_data_field_multiply(ib, 1.0/sqrt(newxres*newyres));
 #else
-    {
-        for (k = 0; k < newyres; k++) {
-            gwy_fft_simple(direction, newxres,
-                           1, in_rdata + k*newxres, in_idata + k*newxres,
-                           1, out_rdata + k*newxres, out_idata + k*newxres);
-        }
-        /* FIXME: this is a bit cruel */
-        gwy_data_field_copy(rb, rbuf, FALSE);
-        gwy_data_field_copy(ib, ibuf, FALSE);
-        for (k = 0; k < newxres; k++) {
-            gwy_fft_simple(direction, newyres,
-                           newxres, in_rdata + k, in_idata + k,
-                           newxres, out_rdata + k, out_idata + k);
-        }
+    for (k = 0; k < newyres; k++) {
+        gwy_fft_simple(direction, newxres,
+                       1, in_rdata + k*newxres, in_idata + k*newxres,
+                       1, out_rdata + k*newxres, out_idata + k*newxres);
+    }
+    /* FIXME: this is a bit cruel */
+    gwy_data_field_copy(rb, rbuf, FALSE);
+    gwy_data_field_copy(ib, ibuf, FALSE);
+    for (k = 0; k < newxres; k++) {
+        gwy_fft_simple(direction, newyres,
+                       newxres, in_rdata + k, in_idata + k,
+                       newxres, out_rdata + k, out_idata + k);
     }
 #endif
 
@@ -637,37 +631,34 @@ gwy_data_field_area_2dfft_real(GwyDataField *ra,
     else
         gwy_data_field_multiply(ib, -1.0/sqrt(newxres*newyres));
 #else
-    {
-        for (k = 0; k < newyres; k += 2) {
-            gdouble *re, *im, *r0, *r1, *i0, *i1;
+    for (k = 0; k < newyres; k += 2) {
+        gdouble *re, *im, *r0, *r1, *i0, *i1;
 
-            re = out_rdata + k*newxres;
-            im = out_rdata + (k + 1)*newxres;
-            r0 = in_rdata + k*newxres;
-            r1 = in_rdata + (k + 1)*newxres;
-            i0 = in_idata + k*newxres;
-            i1 = in_idata + (k + 1)*newxres;
+        re = out_rdata + k*newxres;
+        im = out_rdata + (k + 1)*newxres;
+        r0 = in_rdata + k*newxres;
+        r1 = in_rdata + (k + 1)*newxres;
+        i0 = in_idata + k*newxres;
+        i1 = in_idata + (k + 1)*newxres;
 
-            gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
+        gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
 
-            /* Disentangle transforms of the row couples */
-            r0[0] = re[0];
-            i0[0] = 0.0;
-            r1[0] = im[0];
-            i1[0] = 0.0;
-            for (j = 1; j < newxres; j++) {
-                r0[j] = (re[j] + re[newxres - j])/2.0;
-                i0[j] = (im[j] - im[newxres - j])/2.0;
-                r1[j] = (im[j] + im[newxres - j])/2.0;
-                i1[j] = (-re[j] + re[newxres - j])/2.0;
-            }
-        }
-        for (k = 0; k < newxres; k++) {
-            gwy_fft_simple(direction, newyres,
-                           newxres, in_rdata + k, in_idata + k,
-                           newxres, out_rdata + k, out_idata + k);
+        /* Disentangle transforms of the row couples */
+        r0[0] = re[0];
+        i0[0] = 0.0;
+        r1[0] = im[0];
+        i1[0] = 0.0;
+        for (j = 1; j < newxres; j++) {
+            r0[j] = (re[j] + re[newxres - j])/2.0;
+            i0[j] = (im[j] - im[newxres - j])/2.0;
+            r1[j] = (im[j] + im[newxres - j])/2.0;
+            i1[j] = (-re[j] + re[newxres - j])/2.0;
         }
     }
+    for (k = 0; k < newxres; k++)
+        gwy_fft_simple(direction, newyres,
+                       newxres, in_rdata + k, in_idata + k,
+                       newxres, out_rdata + k, out_idata + k);
 #endif
 
     if (preserverms) {
@@ -1023,16 +1014,21 @@ gwy_data_field_area_xfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_multiply(rb, 1.0/sqrt(newxres));
     gwy_data_field_multiply(ib, 1.0/sqrt(newxres));
 #else
-    {
-        gint k;
-
-        for (k = 0; k < height; k++) {
-            gwy_fft_simple(direction, newxres,
-                           1, in_rdata + k*newxres, in_idata + k*newxres,
-                           1, out_rdata + k*newxres, out_idata + k*newxres);
-        }
-    }
+    for (k = 0; k < height; k++)
+        gwy_fft_simple(direction, newxres,
+                       1, in_rdata + k*newxres, in_idata + k*newxres,
+                       1, out_rdata + k*newxres, out_idata + k*newxres);
 #endif
+
+    if (preserverms) {
+        for (k = 0; k < height; k++)
+            gwy_preserve_rms_simple(width, 1,
+                                    ra->data + ra->xres*(row + k) + col,
+                                    ia->data + ia->xres*(row + k) + col,
+                                    newxres, 1,
+                                    rb->data + newxres*k,
+                                    ib->data + newxres*k);
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
@@ -1144,36 +1140,43 @@ gwy_data_field_area_xfft_real(GwyDataField *ra, GwyDataField *rb,
     else
         gwy_data_field_multiply(ib, -1.0/sqrt(newxres));
 #else
-    {
-        for (k = 0; k < height; k += 2) {
-            gdouble *re, *im, *r0, *r1, *i0, *i1;
+    for (k = 0; k < height; k += 2) {
+        gdouble *re, *im, *r0, *r1, *i0, *i1;
 
-            re = in_idata + k*newxres;
-            im = in_idata + (k + 1)*newxres;
-            r0 = in_rdata + k*newxres;
-            r1 = in_rdata + (k + 1)*newxres;
+        re = in_idata + k*newxres;
+        im = in_idata + (k + 1)*newxres;
+        r0 = in_rdata + k*newxres;
+        r1 = in_rdata + (k + 1)*newxres;
 
-            gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
+        gwy_fft_simple(direction, newxres, 1, r0, r1, 1, re, im);
 
-            r0 = out_rdata + k*newxres;
-            r1 = out_rdata + (k + 1)*newxres;
-            i0 = out_idata + k*newxres;
-            i1 = out_idata + (k + 1)*newxres;
+        r0 = out_rdata + k*newxres;
+        r1 = out_rdata + (k + 1)*newxres;
+        i0 = out_idata + k*newxres;
+        i1 = out_idata + (k + 1)*newxres;
 
-            /* Disentangle transforms of the row couples */
-            r0[0] = re[0];
-            i0[0] = 0.0;
-            r1[0] = im[0];
-            i1[0] = 0.0;
-            for (j = 1; j < newxres; j++) {
-                r0[j] = (re[j] + re[newxres - j])/2.0;
-                i0[j] = (im[j] - im[newxres - j])/2.0;
-                r1[j] = (im[j] + im[newxres - j])/2.0;
-                i1[j] = (-re[j] + re[newxres - j])/2.0;
-            }
+        /* Disentangle transforms of the row couples */
+        r0[0] = re[0];
+        i0[0] = 0.0;
+        r1[0] = im[0];
+        i1[0] = 0.0;
+        for (j = 1; j < newxres; j++) {
+            r0[j] = (re[j] + re[newxres - j])/2.0;
+            i0[j] = (im[j] - im[newxres - j])/2.0;
+            r1[j] = (im[j] + im[newxres - j])/2.0;
+            i1[j] = (-re[j] + re[newxres - j])/2.0;
         }
     }
 #endif
+
+    if (preserverms) {
+        for (k = 0; k < height; k++)
+            gwy_preserve_rms_simple(width, 1,
+                                    ra->data + ra->xres*(row + k) + col, NULL,
+                                    newxres, 1,
+                                    rb->data + newxres*k,
+                                    ib->data + newxres*k);
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
@@ -1286,14 +1289,21 @@ gwy_data_field_area_yfft(GwyDataField *ra, GwyDataField *ia,
     gwy_data_field_multiply(rb, 1.0/sqrt(newyres));
     gwy_data_field_multiply(ib, 1.0/sqrt(newyres));
 #else
-    {
-        for (k = 0; k < width; k++) {
-            gwy_fft_simple(direction, newyres,
-                           width, in_rdata + k, in_idata + k,
-                           width, out_rdata + k, out_idata + k);
-        }
-    }
+    for (k = 0; k < width; k++)
+        gwy_fft_simple(direction, newyres,
+                       width, in_rdata + k, in_idata + k,
+                       width, out_rdata + k, out_idata + k);
 #endif
+
+    if (preserverms) {
+        for (k = 0; k < width; k++)
+            gwy_preserve_rms_simple(height, ra->xres,
+                                    ra->data + ra->xres*row + col + k,
+                                    ia->data + ia->xres*row + col + k,
+                                    newyres, width,
+                                    rb->data + k,
+                                    ib->data + k);
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
@@ -1405,38 +1415,45 @@ gwy_data_field_area_yfft_real(GwyDataField *ra, GwyDataField *rb,
     else
         gwy_data_field_multiply(ib, -1.0/sqrt(newyres));
 #else
-    {
-        for (k = 0; k < width; k += 2) {
-            gdouble *re, *im, *r0, *r1, *i0, *i1;
+    for (k = 0; k < width; k += 2) {
+        gdouble *re, *im, *r0, *r1, *i0, *i1;
 
-            re = in_idata + k;
-            im = in_idata + (k + 1);
-            r0 = in_rdata + k;
-            r1 = in_rdata + (k + 1);
+        re = in_idata + k;
+        im = in_idata + (k + 1);
+        r0 = in_rdata + k;
+        r1 = in_rdata + (k + 1);
 
-            /* FIXME: we could achieve better data locality by using the in
-             * arrays `rotated'. */
-            gwy_fft_simple(direction, newyres, width, r0, r1, width, re, im);
+        /* FIXME: we could achieve better data locality by using the in
+         * arrays `rotated'. */
+        gwy_fft_simple(direction, newyres, width, r0, r1, width, re, im);
 
-            r0 = out_rdata + k;
-            r1 = out_rdata + (k + 1);
-            i0 = out_idata + k;
-            i1 = out_idata + (k + 1);
+        r0 = out_rdata + k;
+        r1 = out_rdata + (k + 1);
+        i0 = out_idata + k;
+        i1 = out_idata + (k + 1);
 
-            /* Disentangle transforms of the row couples */
-            r0[0] = re[0];
-            i0[0] = 0.0;
-            r1[0] = im[0];
-            i1[0] = 0.0;
-            for (j = 1; j < newyres; j++) {
-                r0[width*j] = (re[width*j] + re[width*(newyres - j)])/2.0;
-                i0[width*j] = (im[width*j] - im[width*(newyres - j)])/2.0;
-                r1[width*j] = (im[width*j] + im[width*(newyres - j)])/2.0;
-                i1[width*j] = (-re[width*j] + re[width*(newyres - j)])/2.0;
-            }
+        /* Disentangle transforms of the row couples */
+        r0[0] = re[0];
+        i0[0] = 0.0;
+        r1[0] = im[0];
+        i1[0] = 0.0;
+        for (j = 1; j < newyres; j++) {
+            r0[width*j] = (re[width*j] + re[width*(newyres - j)])/2.0;
+            i0[width*j] = (im[width*j] - im[width*(newyres - j)])/2.0;
+            r1[width*j] = (im[width*j] + im[width*(newyres - j)])/2.0;
+            i1[width*j] = (-re[width*j] + re[width*(newyres - j)])/2.0;
         }
     }
 #endif
+
+    if (preserverms) {
+        for (k = 0; k < width; k++)
+            gwy_preserve_rms_simple(height, ra->xres,
+                                    ra->data + ra->xres*row + col + k, NULL,
+                                    newyres, width,
+                                    rb->data + k,
+                                    ib->data + k);
+    }
 
     gwy_data_field_resample(rb, width, height, interpolation);
     gwy_data_field_resample(ib, width, height, interpolation);
@@ -1464,10 +1481,9 @@ gwy_level_simple(gint n,
     sumsi = sumsixi = 0.0;
 
     pdata = data;
-    for (i = n; i; i--) {
+    for (i = n; i; i--, pdata += stride) {
         sumsi += *pdata;
         sumsixi += *pdata * i;
-        pdata += stride;
     }
     sumsi /= n;
     sumsixi /= n;
@@ -1476,10 +1492,59 @@ gwy_level_simple(gint n,
     a = (sumsi*sumxixi - sumxi*sumsixi)/(sumxixi - sumxi*sumxi);
 
     pdata = data;
-    for (i = n; i; i--) {
+    for (i = n; i; i--, pdata += stride)
         *pdata -= a + b*i;
-        pdata += stride;
+}
+
+static void
+gwy_preserve_rms_simple(gint nsrc,
+                        gint stridesrc,
+                        const gdouble *src1,
+                        const gdouble *src2,
+                        gint ndata,
+                        gint stridedata,
+                        gdouble *data1,
+                        gdouble *data2)
+{
+    gdouble sum2, sum0, sum02, a, b, q;
+    gdouble *pdata;
+    gint i;
+
+    /* Calculate original RMS */
+    sum0 = sum02 = 0.0;
+    for (i = nsrc; i; i--, src1 += stridesrc) {
+        sum0 += *src1;
+        sum02 += *src1 * *src1;
     }
+    a = sum02 - sum0*sum0/nsrc;
+    if (src2) {
+        sum0 = sum02 = 0.0;
+        for (i = nsrc; i; i--, src1 += stridesrc) {
+            sum0 += *src2;
+            sum02 += *src2 * *src2;
+        }
+        a += sum02 - sum0*sum0/nsrc;
+    }
+    if (a <= 0.0)
+        return;
+    a = sqrt(a/nsrc);
+
+    /* Calculare new RMS ignoring 0th elements that correspond to constants */
+    sum2 = 0.0;
+    for (i = ndata-1, pdata = data1 + 1; i; i--, pdata += stridedata)
+        sum2 += *pdata * *pdata;
+    for (i = ndata-1, pdata = data2 + 1; i; i--, pdata += stridedata)
+        sum2 += *pdata * *pdata;
+    if (sum2 == 0.0)
+        return;
+    b = sqrt(sum2/ndata);
+
+    /* Multiply output to get the same RMS */
+    q = a/b;
+    for (i = ndata, pdata = data1; i; i--, pdata += stridedata)
+        *pdata *= q;
+    for (i = ndata, pdata = data2; i; i--, pdata += stridedata)
+        *pdata *= q;
 }
 
 static inline gdouble
