@@ -515,6 +515,7 @@ GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
     GtkWidget *frame, *label, *image, *hbox;
+    gchar *title;
     GwyDataView *data_view;
 
     g_return_val_if_fail(state, NULL);
@@ -530,7 +531,9 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     image = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
 
-    label = gtk_label_new(gwy_data_window_get_base_name(state->data_window));
+    title = gwy_data_window_get_base_name(state->data_window);
+    label = gtk_label_new(title);
+    g_free(title);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     state->windowname = label;

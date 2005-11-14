@@ -83,10 +83,16 @@ gwy_app_init(int *argc,
                         "widget \"*.toolboxmenubar\" style \"toolboxmenubar\"\n"
                         "\n");
 #ifdef ENABLE_NLS
-    bindtextdomain(PACKAGE, gwy_find_self_dir("locale"));
-    textdomain(PACKAGE);
-    if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
-        g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
+    {
+        gchar *locdir;
+
+        locdir = gwy_find_self_dir("locale");
+        bindtextdomain(PACKAGE, locdir);
+        g_free(locdir);
+        textdomain(PACKAGE);
+        if (!bind_textdomain_codeset(PACKAGE, "UTF-8"))
+            g_critical("Cannot bind gettext `%s' codeset to UTF-8", PACKAGE);
+    }
 #endif  /* ENABLE_NLS */
 }
 
