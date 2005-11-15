@@ -178,7 +178,6 @@ gwy_shader_new(const gchar *gradient)
 {
     GwyShader *shader;
 
-    gwy_debug("");
     shader = (GwyShader*)g_object_new(GWY_TYPE_SHADER, NULL);
 
     shader->gradient = gwy_gradients_get_gradient(gradient);
@@ -219,7 +218,6 @@ gwy_shader_unrealize(GtkWidget *widget)
 
     shader = GWY_SHADER(widget);
 
-    gwy_debug(" ");
     gwy_object_unref(shader->pixbuf);
     shader->radius = 0;
 
@@ -366,7 +364,7 @@ gwy_shader_set_update_policy(GwyShader *shader,
 
     shader->update_policy = update_policy;
     /* FIXME: what about pending updates? */
-    g_object_notify(G_OBJECT(shader), "update_policy");
+    g_object_notify(G_OBJECT(shader), "update-policy");
 }
 
 /**
@@ -479,6 +477,7 @@ gwy_shader_set_gradient(GwyShader *shader,
                                    G_CALLBACK(gwy_shader_update), shader);
 
     gwy_shader_update(shader);
+    g_object_notify(G_OBJECT(shader), "gradient");
 }
 
 static void
@@ -487,9 +486,6 @@ gwy_shader_realize(GtkWidget *widget)
     GwyShader *shader;
     GdkWindowAttr attributes;
     gint attributes_mask;
-
-    gwy_debug("realizing a GwyShader (%ux%u)",
-              widget->allocation.x, widget->allocation.height);
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
     shader = GWY_SHADER(widget);
@@ -526,8 +522,6 @@ gwy_shader_size_request(GtkWidget *widget,
 {
     gint focus_width, focus_pad;
 
-    gwy_debug("");
-
     gtk_widget_style_get(widget,
                          "focus-line-width", &focus_width,
                          "focus-padding", &focus_pad,
@@ -546,7 +540,6 @@ gwy_shader_size_allocate(GtkWidget *widget,
 {
     GwyShader *shader;
 
-    gwy_debug("");
     widget->allocation = *allocation;
 
     if (GTK_WIDGET_REALIZED(widget)) {
