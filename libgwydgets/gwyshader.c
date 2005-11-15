@@ -500,6 +500,7 @@ gwy_shader_realize(GtkWidget *widget)
                             | GDK_EXPOSURE_MASK
                             | GDK_BUTTON_PRESS_MASK
                             | GDK_BUTTON_RELEASE_MASK
+                            | GDK_KEY_PRESS_MASK
                             | GDK_POINTER_MOTION_MASK
                             | GDK_POINTER_MOTION_HINT_MASK;
     attributes.visual = gtk_widget_get_visual(widget);

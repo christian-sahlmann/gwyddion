@@ -35,6 +35,7 @@ libgwydgetsinclude_HEADERS = \
 	gwygraphlabeldialog.h \
 	gwygraphlabel.h \
 	gwygraphselections.h \
+	gwyhmarkerbox.h \
 	gwyhruler.h \
 	gwyinventorystore.h \
 	gwylayer-basic.h \
@@ -103,6 +104,7 @@ libgwydgets_la_SOURCES = \
 	gwygraphlabeldialog.c \
 	gwygraphlabel.c \
 	gwygraphselections.c \
+	gwyhmarkerbox.c \
 	gwyhruler.c \
 	gwyinventorystore.c \
 	gwylayer-basic.c \

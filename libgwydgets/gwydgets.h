@@ -51,6 +51,7 @@
 #include <libgwydgets/gwygraphlabel.h>
 #include <libgwydgets/gwygraphwindow.h>
 #include <libgwydgets/gwygraphwindowmeasuredialog.h>
+#include <libgwydgets/gwyhmarkerbox.h>
 #include <libgwydgets/gwyhruler.h>
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwylayer-basic.h>
