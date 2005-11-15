@@ -25,6 +25,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_MARKER_OPERATION_MOVE,
+    GWY_MARKER_OPERATION_ADD,
+    GWY_MARKER_OPERATION_REMOVE
+} GwyMarkerOperationType;
+
 #define GWY_TYPE_HMARKER_BOX            (gwy_hmarker_box_get_type())
 #define GWY_HMARKER_BOX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_HMARKER_BOX, GwyHMarkerBox))
 #define GWY_HMARKER_BOX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_HMARKER_BOX, GwyHMarkerBoxClass))
@@ -36,6 +42,7 @@ typedef struct _GwyHMarkerBox      GwyHMarkerBox;
 typedef struct _GwyHMarkerBoxClass GwyHMarkerBoxClass;
 
 typedef gboolean (*GwyMarkerValidateFunc)(GwyHMarkerBox *hmbox,
+                                          GwyMarkerOperationType optype,
                                           gint i,
                                           gdouble *pos);
 
@@ -62,12 +69,16 @@ struct _GwyHMarkerBoxClass {
                             gint i);
     void (*marker_moved)(GwyHMarkerBox *hmbox,
                          gint i);
+    void (*marker_added)(GwyHMarkerBox *hmbox,
+                         gint i);
+    void (*marker_removed)(GwyHMarkerBox *hmbox,
+                           gint i);
 
     gpointer reserved1;
 };
 
-GType      gwy_selection_marker_get_type (void) G_GNUC_CONST;
-GType      gwy_hmarker_box_get_type      (void) G_GNUC_CONST;
+GType      gwy_selection_marker_get_type      (void) G_GNUC_CONST;
+GType      gwy_hmarker_box_get_type           (void) G_GNUC_CONST;
 GtkWidget* gwy_hmarker_box_new                (void);
 gint       gwy_hmarker_box_get_selected_marker(GwyHMarkerBox *hmbox);
 void       gwy_hmarker_box_set_selected_marker(GwyHMarkerBox *hmbox,
@@ -77,6 +88,10 @@ gdouble    gwy_hmarker_box_get_marker_position(GwyHMarkerBox *hmbox,
 gboolean   gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
                                                gint i,
                                                gdouble pos);
+gint       gwy_hmarker_box_add_marker         (GwyHMarkerBox *hmbox,
+                                               gdouble pos);
+gboolean   gwy_hmarker_box_remove_marker      (GwyHMarkerBox *hmbox,
+                                               gint i);
 void       gwy_hmarker_box_set_flipped        (GwyHMarkerBox *hmbox,
                                                gboolean flipped);
 gboolean   gwy_hmarker_box_get_flipped        (GwyHMarkerBox *hmbox);

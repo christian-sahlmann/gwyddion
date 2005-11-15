@@ -18,18 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 #define DEBUG 1
-#include <gtk/gtkmain.h>
-#include <gtk/gtksignal.h>
-#include <glib-object.h>
-
+#include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwyhmarkerbox.h>
 
-enum {
-    OBJECT_SIZE = 1,
-    HMARKER_BOX_HEIGHT = 8
-};
+enum { HMARKER_BOX_HEIGHT = 8 };
 
 enum {
     PROP_0,
@@ -40,6 +34,8 @@ enum {
 enum {
     MARKER_SELECTED,
     MARKER_MOVED,
+    MARKER_ADDED,
+    MARKER_REMOVED,
     LAST_SIGNAL
 };
 
@@ -134,19 +130,30 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
                        NULL, NULL,
                        g_cclosure_marshal_VOID__INT,
                        G_TYPE_NONE, 1, G_TYPE_INT);
+
+    hmarker_box_signals[MARKER_ADDED]
+        = g_signal_new("marker-added",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyHMarkerBoxClass, marker_added),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__INT,
+                       G_TYPE_NONE, 1, G_TYPE_INT);
+
+    hmarker_box_signals[MARKER_REMOVED]
+        = g_signal_new("marker-removed",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyHMarkerBoxClass, marker_removed),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__INT,
+                       G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 static void
 gwy_hmarker_box_init(GwyHMarkerBox *hmbox)
 {
-    gdouble v;
-
     hmbox->markers = g_array_new(FALSE, FALSE, sizeof(gdouble));
-    /* XXX */
-    v = 0.0;
-    g_array_append_val(hmbox->markers, v);
-    v = 1.0;
-    g_array_append_val(hmbox->markers, v);
     hmbox->selected = -1;
 }
 
@@ -408,11 +415,22 @@ gwy_hmarker_box_button_press(GtkWidget *widget,
 
     x = (gint)event->x;
     y = (gint)event->y;
-    i = gwy_hmarker_box_find_nearest(hmbox, x, y);
+    width = widget->allocation.width;
+    if ((event->state & GDK_SHIFT_MASK)) {
+        pos = (x - hmbox->offset)/(widget->allocation.width - 1.0);
+        i = gwy_hmarker_box_add_marker(hmbox, pos);
+    }
+    else
+        i = gwy_hmarker_box_find_nearest(hmbox, x, y);
+
     if (i < 0)
         return FALSE;
 
-    width = widget->allocation.width;
+    if ((event->state & GDK_CONTROL_MASK)) {
+        gwy_hmarker_box_remove_marker(hmbox, i);
+        return FALSE;
+    }
+
     pos = g_array_index(hmbox->markers, gdouble, i);
     ipos = ROUND(pos*(width - 1));
     hmbox->button = event->button;
@@ -549,7 +567,7 @@ gwy_hmarker_box_set_selected_marker(GwyHMarkerBox *hmbox,
                                     gint i)
 {
     g_return_if_fail(GWY_IS_HMARKER_BOX(hmbox));
-    g_return_if_fail(i < hmbox->markers->len);
+    g_return_if_fail(i < (gint)hmbox->markers->len);
 
     /* Negative value means no selection */
     if (i < 0)
@@ -559,7 +577,8 @@ gwy_hmarker_box_set_selected_marker(GwyHMarkerBox *hmbox,
         return;
 
     hmbox->selected = i;
-    gtk_widget_queue_draw(GTK_WIDGET(hmbox));
+    if (GTK_WIDGET_REALIZED(hmbox))
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
     g_signal_emit(hmbox, hmarker_box_signals[MARKER_SELECTED], 0, i);
 }
 
@@ -573,6 +592,17 @@ gwy_hmarker_box_get_marker_position(GwyHMarkerBox *hmbox,
     return g_array_index(hmbox->markers, gdouble, i);
 }
 
+/**
+ * gwy_hmarker_box_set_marker_position:
+ * @hmbox: A horizontal marker box.
+ * @i: Index of marker to move.
+ * @pos: The new marker position.
+ *
+ * Moves a marker in a horizontal marker box.
+ *
+ * Returns: %TRUE on success. If the move does not validate, %FALSE is returned
+ *          and the marker position does not change.
+ **/
 gboolean
 gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
                                     gint i,
@@ -586,8 +616,8 @@ gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
     g_return_val_if_fail(i >= 0 && i < hmbox->markers->len, FALSE);
 
     currpos = g_array_index(hmbox->markers, gdouble, i);
-    pos = CLAMP(pos, 0.0, 1.0);
-    if ((hmbox->validate && !hmbox->validate(hmbox, i, &pos))
+    if ((hmbox->validate
+         && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_MOVE, i, &pos))
         || pos == currpos)
         return FALSE;
 
@@ -595,9 +625,105 @@ gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
     needs_redraw = (ROUND(pos*(width - 1)) != ROUND(currpos*(width - 1)));
 
     g_array_index(hmbox->markers, gdouble, i) = pos;
-    if (needs_redraw)
+    if (needs_redraw && GTK_WIDGET_REALIZED(hmbox))
         gtk_widget_queue_draw(GTK_WIDGET(hmbox));
     g_signal_emit(hmbox, hmarker_box_signals[MARKER_MOVED], 0, i);
+
+    return TRUE;
+}
+
+/**
+ * gwy_hmarker_box_add_marker:
+ * @hmbox: A horizontal marker box.
+ * @pos: Position to insert marker to.
+ *
+ * Adds a marker to a horizontal marker box.
+ *
+ * Returns: On success, the index the marker was added at.  If the insertion
+ *          does not validate, -1 is returned and no marker is added.
+ **/
+gint
+gwy_hmarker_box_add_marker(GwyHMarkerBox *hmbox,
+                           gdouble pos)
+{
+    gboolean selection_changed = FALSE;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), -1);
+
+    if (pos < 0.0 || pos > 1.0)
+        return -1;
+
+    for (i = 0; i < hmbox->markers->len; i++) {
+        if (pos > g_array_index(hmbox->markers, gdouble, i))
+            break;
+    }
+    if (hmbox->validate
+        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_ADD, i, &pos))
+        return -1;
+
+    if (i == hmbox->markers->len)
+        g_array_append_val(hmbox->markers, pos);
+    else
+        g_array_insert_val(hmbox->markers, i, pos);
+
+    if (i <= hmbox->selected) {
+        hmbox->selected++;
+        selection_changed = TRUE;
+    }
+
+    if (GTK_WIDGET_REALIZED(hmbox))
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
+
+    g_signal_emit(hmbox, hmarker_box_signals[MARKER_ADDED], 0, i);
+    if (selection_changed)
+        g_signal_emit(hmbox, hmarker_box_signals[MARKER_SELECTED], 0,
+                      hmbox->selected);
+
+    return i;
+}
+
+/**
+ * gwy_hmarker_box_remove_marker:
+ * @hmbox: A horizontal marker box.
+ * @i: Index of marker to remove.
+ *
+ * Removes a marker from a horizontal marker box.
+ *
+ * Returns: %TRUE on success. If the removal does not validate, %FALSE is
+ *          returned and the marker is kept.
+ **/
+gboolean
+gwy_hmarker_box_remove_marker(GwyHMarkerBox *hmbox,
+                              gint i)
+{
+    gboolean selection_changed = FALSE;
+    gdouble pos;
+
+    g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), FALSE);
+    g_return_val_if_fail(i >= 0 && i < hmbox->markers->len, FALSE);
+
+    pos = g_array_index(hmbox->markers, gdouble, i);
+    if (hmbox->validate
+        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_REMOVE, i, &pos))
+        return FALSE;
+
+    if (i == hmbox->selected)
+        gwy_hmarker_box_set_selected_marker(hmbox, -1);
+
+    g_array_remove_index(hmbox->markers, i);
+    if (i < hmbox->selected) {
+        hmbox->selected--;
+        selection_changed = TRUE;
+    }
+
+    if (GTK_WIDGET_REALIZED(hmbox))
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
+
+    g_signal_emit(hmbox, hmarker_box_signals[MARKER_REMOVED], 0, i);
+    if (selection_changed)
+        g_signal_emit(hmbox, hmarker_box_signals[MARKER_SELECTED], 0,
+                      hmbox->selected);
 
     return TRUE;
 }
