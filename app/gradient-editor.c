@@ -28,6 +28,7 @@
 #include <app/settings.h>
 #include <app/gradient-editor.h>
 #include <libgwydgets/gwycurve.h>
+#include <libgwydgets/gwyhmarkerbox.h>
 #include <glib/gstdio.h>
 
 /* For late objectzation... */
@@ -309,7 +310,7 @@ gwy_gradient_editor_edit(GwyGradientEditor *editor)
 static void
 gwy_gradient_editor_construct(GwyGradientEditor *editor)
 {
-    GtkWidget *hbox, *vbox, *curve, *button;
+    GtkWidget *hbox, *vbox, *vvbox, *curve, *button, *hmbox;
 
     g_return_if_fail(editor->edit_window == NULL);
 
@@ -321,8 +322,11 @@ gwy_gradient_editor_construct(GwyGradientEditor *editor)
     g_signal_connect_swapped(editor->edit_window, "destroy",
                              G_CALLBACK(gwy_gradient_editor_closed), editor);
 
+    vvbox = gtk_vbox_new(FALSE, 5);
+    gtk_container_add(GTK_CONTAINER(editor->edit_window), vvbox);
+
     hbox = gtk_hbox_new(FALSE, 5);
-    gtk_container_add(GTK_CONTAINER(editor->edit_window), hbox);
+    gtk_container_add(GTK_CONTAINER(vvbox), hbox);
 
     curve = gwy_curve_new();
     gwy_curve_set_range(GWY_CURVE(curve), 0, 1, 0, 1);
@@ -341,7 +345,10 @@ gwy_gradient_editor_construct(GwyGradientEditor *editor)
                              G_CALLBACK(gwy_gradient_editor_reset), editor);
     editor->button_reset = button;
 
-    gtk_widget_show_all(hbox);
+    hmbox = gwy_hmarker_box_new();
+    gtk_box_pack_start(GTK_BOX(vvbox), hmbox, FALSE, FALSE, 0);
+
+    gtk_widget_show_all(vvbox);
 }
 
 static void
