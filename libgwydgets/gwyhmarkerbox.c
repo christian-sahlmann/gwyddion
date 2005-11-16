@@ -655,9 +655,10 @@ gwy_hmarker_box_add_marker(GwyHMarkerBox *hmbox,
         return -1;
 
     for (i = 0; i < hmbox->markers->len; i++) {
-        if (pos > g_array_index(hmbox->markers, gdouble, i))
+        if (pos < g_array_index(hmbox->markers, gdouble, i))
             break;
     }
+    gwy_debug("%f %d", pos, i);
     if (hmbox->validate
         && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_ADD, i, &pos))
         return -1;
@@ -726,6 +727,39 @@ gwy_hmarker_box_remove_marker(GwyHMarkerBox *hmbox,
                       hmbox->selected);
 
     return TRUE;
+}
+
+gint
+gwy_hmarker_box_get_nmarkers(GwyHMarkerBox *hmbox)
+{
+    g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), 0);
+
+    return hmbox->markers->len;
+}
+
+void
+gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
+                            gint n,
+                            const gdouble *markers)
+{
+    gint i;
+
+    g_return_if_fail(GWY_IS_HMARKER_BOX(hmbox));
+    g_return_if_fail(n >= 0);
+    g_return_if_fail(!n || markers);
+
+    if (n == hmbox->markers->len) {
+        for (i = 0; i < n; i++) {
+            if (g_array_index(hmbox->markers, gdouble, i) == markers[i])
+                break;
+        }
+        if (i == n)
+            return;
+    }
+
+    gwy_hmarker_box_set_selected_marker(hmbox, -1);
+    g_array_set_size(hmbox->markers, 0);
+    g_array_append_vals(hmbox->markers, markers, n);
 }
 
 void

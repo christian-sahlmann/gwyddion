@@ -75,6 +75,9 @@ struct _GwyHMarkerBoxClass {
                            gint i);
 
     gpointer reserved1;
+    gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GType      gwy_selection_marker_get_type      (void) G_GNUC_CONST;
@@ -92,6 +95,10 @@ gint       gwy_hmarker_box_add_marker         (GwyHMarkerBox *hmbox,
                                                gdouble pos);
 gboolean   gwy_hmarker_box_remove_marker      (GwyHMarkerBox *hmbox,
                                                gint i);
+gint       gwy_hmarker_box_get_nmarkers       (GwyHMarkerBox *hmbox);
+void       gwy_hmarker_box_set_markers        (GwyHMarkerBox *hmbox,
+                                               gint n,
+                                               const gdouble *markers);
 void       gwy_hmarker_box_set_flipped        (GwyHMarkerBox *hmbox,
                                                gboolean flipped);
 gboolean   gwy_hmarker_box_get_flipped        (GwyHMarkerBox *hmbox);
