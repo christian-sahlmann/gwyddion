@@ -90,8 +90,7 @@ gint              gwy_gradient_insert_point_sorted   (GwyGradient *gradient,
 void              gwy_gradient_delete_point          (GwyGradient *gradient,
                                                       gint index_);
 void              gwy_gradient_reset                 (GwyGradient *gradient);
-const
-GwyGradientPoint* gwy_gradient_get_points            (GwyGradient *gradient,
+const GwyGradientPoint* gwy_gradient_get_points      (GwyGradient *gradient,
                                                       gint *npoints);
 void              gwy_gradient_set_points            (GwyGradient *gradient,
                                                       gint npoints,
