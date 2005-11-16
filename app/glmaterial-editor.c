@@ -68,6 +68,9 @@ static void  gwy_gl_material_editor_construct   (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_apply       (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_switch      (GwyResourceEditor *res_editor);
 static void  gwy_gl_material_editor_preview_new (GwyGLMaterialEditor *editor);
+static void  gwy_gl_material_editor_save_view   (GwyContainer *container);
+static void  gwy_gl_material_editor_set_view    (GwyContainer *container,
+                                                 gboolean save);
 static void  gwy_gl_material_editor_make_data   (GwyDataField *dfield1);
 static void  gwy_gl_material_editor_update      (GwyGLMaterialEditor *editor);
 static void  gwy_gl_material_editor_component_cb(GtkWidget *widget,
@@ -218,6 +221,7 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+    gwy_gl_material_editor_set_view(container, FALSE);
 
     view = gwy_3d_view_new(container);
     g_object_unref(container);
@@ -230,8 +234,55 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
                  NULL);
     adj = gwy_3d_view_get_view_scale_adjustment(GWY_3D_VIEW(view));
     gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
+    g_signal_connect_swapped(view, "destroy",
+                             G_CALLBACK(gwy_gl_material_editor_save_view),
+                             container);
 
     editor->preview = view;
+}
+
+static void
+gwy_gl_material_editor_save_view(GwyContainer *container)
+{
+    gwy_gl_material_editor_set_view(container, TRUE);
+}
+
+static void
+gwy_gl_material_editor_set_view(GwyContainer *container,
+                                gboolean save)
+{
+    static const gchar *keys[] = { "rot_x", "rot_y" };
+    static const gchar *ctemplate = "/0/3d/%s";
+    static const gchar *stemplate = "/app/%s/editor/3d/%s";
+    GwyContainer *from, *to;
+    GwyResourceClass *klass;
+    const gchar *name;
+    GString *src, *dest;
+    gdouble val;
+    guint i;
+
+    klass = g_type_class_ref(GWY_TYPE_GL_MATERIAL);
+    name = gwy_resource_class_get_name(klass);
+    g_type_class_unref(klass);
+
+    from = gwy_app_settings_get();
+    to = container;
+    if (save)
+        GWY_SWAP(GwyContainer*, from, to);
+
+    src = g_string_new("");
+    dest = g_string_new("");
+    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
+        g_string_printf(src, stemplate, name, keys[i]);
+        g_string_printf(dest, ctemplate, keys[i]);
+        if (save)
+            GWY_SWAP(GString*, src, dest);
+        if (gwy_container_gis_double_by_name(from, src->str, &val))
+            gwy_container_set_double_by_name(to, dest->str, val);
+    }
+
+    g_string_free(src, TRUE);
+    g_string_free(dest, TRUE);
 }
 
 static void
