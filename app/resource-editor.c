@@ -570,6 +570,7 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
         g_string_assign(editor->edited_resource, newname);
         gwy_resource_editor_update_title(editor);
     }
+    gwy_resource_tree_view_set_active(editor->treeview, newname);
 }
 
 /**
