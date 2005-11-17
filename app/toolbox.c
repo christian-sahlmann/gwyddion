@@ -794,17 +794,17 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             NULL 
         },
         {
-            N_("/G_L Materials..."),
+            N_("/Color _Gradients..."),
             NULL,
-            gwy_app_gl_material_editor,
+            gwy_app_gradient_editor,
             1,
             NULL,
             NULL 
         },
         {
-            N_("/Color _Gradients..."),
+            N_("/G_L Materials..."),
             NULL,
-            gwy_app_gradient_editor,
+            gwy_app_gl_material_editor,
             1,
             NULL,
             NULL 

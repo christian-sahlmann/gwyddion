@@ -31,7 +31,7 @@
 #include <libgwydgets/gwydgetutils.h>
 
 enum {
-    COMMIT_TIMEOUT = 150
+    COMMIT_TIMEOUT = 120
 };
 
 static void     gwy_resource_editor_finalize      (GObject *object);
@@ -574,7 +574,7 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
 }
 
 /**
- * gwy_resource_editor_queue_save:
+ * gwy_resource_editor_queue_commit:
  * @editor: A resource editor.
  *
  * Queues commit of resource changes, marking the currently edited resource
@@ -582,6 +582,9 @@ gwy_resource_editor_name_edited(GwyResourceEditor *editor,
  *
  * Call this method in particular resource editor subclass whenever user
  * changes some editor property.
+ *
+ * To flush pending commit, call gwy_resource_editor_commit().  To immediately
+ * commit a change, call this method and then gwy_resource_editor_commit().
  **/
 void
 gwy_resource_editor_queue_commit(GwyResourceEditor *editor)
@@ -682,7 +685,6 @@ gwy_resource_editor_update_title(GwyResourceEditor *editor)
     GwyResourceEditorClass *klass;
     gchar *title;
 
-    gwy_debug("");
     klass = GWY_RESOURCE_EDITOR_GET_CLASS(editor);
     title = g_strdup_printf(klass->editor_title, editor->edited_resource->str);
     gtk_window_set_title(GTK_WINDOW(editor->edit_window), title);

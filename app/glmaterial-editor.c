@@ -87,7 +87,7 @@ gwy_gl_material_editor_class_init(GwyGLMaterialEditorClass *klass)
     editor_class->resource_type = GWY_TYPE_GL_MATERIAL;
     editor_class->base_resource = GWY_GL_MATERIAL_DEFAULT;
     editor_class->window_title = _("GL Material Editor");
-    editor_class->editor_title = _("GL Material %s");
+    editor_class->editor_title = _("GL Material  `%s'");
     editor_class->construct_treeview = gwy_gl_material_tree_view_new;
     editor_class->construct_editor = gwy_gl_material_editor_construct;
     editor_class->apply_changes = gwy_gl_material_editor_apply;
@@ -324,9 +324,15 @@ gwy_gl_material_editor_update(GwyGLMaterialEditor *editor)
     }
     colorsel = GTK_COLOR_SELECTION(editor->colorsel);
     gwy_rgba_to_gdk_color(color, &gdkcolor);
+    g_signal_handlers_block_by_func(colorsel,
+                                    &gwy_resource_editor_queue_commit,
+                                    editor);
     gtk_color_selection_set_current_color(colorsel, &gdkcolor);
     gwy_rgba_to_gdk_color(&editor->old[editor->last_component], &gdkcolor);
     gtk_color_selection_set_previous_color(colorsel, &gdkcolor);
+    g_signal_handlers_unblock_by_func(colorsel,
+                                      &gwy_resource_editor_queue_commit,
+                                      editor);
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(editor->shininess),
                              gwy_gl_material_get_shininess(material));

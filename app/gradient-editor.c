@@ -31,6 +31,10 @@
 #include <app/gradient-editor.h>
 
 enum {
+    GWY_MARKER_OPERATION_NONE = -1
+};
+
+enum {
     PREVIEW_HEIGHT = 30,
     MARKER_HEIGHT = 12,
     BITS_PER_SAMPLE = 8
@@ -46,10 +50,18 @@ enum {
 typedef struct _GwyGradientEditor      GwyGradientEditor;
 typedef struct _GwyGradientEditorClass GwyGradientEditorClass;
 
+typedef struct {
+    GwyMarkerOperationType optype;
+    gint i;
+} PendingOperation;
+
 struct _GwyGradientEditor {
     GwyResourceEditor parent_instance;
 
-    gint last_marker;
+    GwyGradient *gradient;
+    gulong gradient_id;
+
+    PendingOperation pendop;
     GtkWidget *colorsel;
     GtkWidget *markers;
     GtkWidget *preview;
@@ -61,12 +73,23 @@ struct _GwyGradientEditorClass {
     GwyResourceEditorClass parent_class;
 };
 
-static GType gwy_gradient_editor_get_type     (void) G_GNUC_CONST;
-static void gwy_gradient_editor_construct     (GwyResourceEditor *res_editor);
-static void gwy_gradient_editor_preview_expose(GwyGradientEditor *editor);
-static void gwy_gradient_editor_apply         (GwyResourceEditor *res_editor);
-static void gwy_gradient_editor_switch        (GwyResourceEditor *res_editor);
-static void gwy_gradient_editor_update        (GwyGradientEditor *editor);
+static GType gwy_gradient_editor_get_type       (void) G_GNUC_CONST;
+static void gwy_gradient_editor_destroy         (GtkObject *object);
+static void gwy_gradient_editor_construct       (GwyResourceEditor *res_editor);
+static void gwy_gradient_editor_preview_expose  (GwyGradientEditor *editor);
+static void gwy_gradient_editor_apply           (GwyResourceEditor *res_editor);
+static void gwy_gradient_editor_switch          (GwyResourceEditor *res_editor);
+static void gwy_gradient_editor_update          (GwyGradientEditor *editor);
+static void gwy_gradient_editor_marker_selected (GwyGradientEditor *editor,
+                                                 gint i);
+static void gwy_gradient_editor_color_changed   (GwyGradientEditor *editor);
+static void gwy_gradient_editor_marker_moved    (GwyGradientEditor *editor,
+                                                 gint i);
+static void gwy_gradient_editor_marker_added    (GwyGradientEditor *editor,
+                                                 gint i);
+static void gwy_gradient_editor_marker_removed  (GwyGradientEditor *editor,
+                                                 gint i);
+static void gwy_resource_editor_gradient_changed(GwyGradientEditor *editor);
 
 G_DEFINE_TYPE(GwyGradientEditor, gwy_gradient_editor,
               GWY_TYPE_RESOURCE_EDITOR)
@@ -75,11 +98,14 @@ static void
 gwy_gradient_editor_class_init(GwyGradientEditorClass *klass)
 {
     GwyResourceEditorClass *editor_class = GWY_RESOURCE_EDITOR_CLASS(klass);
+    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
+
+    object_class->destroy = gwy_gradient_editor_destroy;
 
     editor_class->resource_type = GWY_TYPE_GRADIENT;
     editor_class->base_resource = GWY_GRADIENT_DEFAULT;
     editor_class->window_title = _("Color Gradient Editor");
-    editor_class->editor_title = _("Color Gradient %s");
+    editor_class->editor_title = _("Color Gradient `%s'");
     editor_class->construct_treeview = gwy_gradient_tree_view_new;
     editor_class->construct_editor = gwy_gradient_editor_construct;
     editor_class->apply_changes = gwy_gradient_editor_apply;
@@ -90,6 +116,21 @@ gwy_gradient_editor_class_init(GwyGradientEditorClass *klass)
 static void
 gwy_gradient_editor_init(GwyGradientEditor *editor)
 {
+}
+
+static void
+gwy_gradient_editor_destroy(GtkObject *object)
+{
+    GwyGradientEditor *editor;
+
+    editor = GWY_GRADIENT_EDITOR(object);
+    if (editor->gradient_id) {
+        g_signal_handler_disconnect(editor->gradient, editor->gradient_id);
+        editor->gradient_id = 0;
+        editor->gradient = NULL;
+    }
+
+    GTK_OBJECT_CLASS(gwy_gradient_editor_parent_class)->destroy(object);
 }
 
 /**
@@ -151,7 +192,7 @@ static void
 gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
 {
     static const gdouble default_markers[] = { 0.0, 1.0 };
-    GtkWidget *vbox, *colorsel;
+    GtkWidget *vbox, *vvbox, *colorsel;
     GwyGradientEditor *editor;
 
     g_return_if_fail(GTK_IS_WINDOW(res_editor->edit_window));
@@ -160,7 +201,7 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     gtk_container_set_border_width(GTK_CONTAINER(res_editor->edit_window),
                                    4);
 
-    vbox = gtk_vbox_new(FALSE, 0);
+    vbox = gtk_vbox_new(FALSE, 12);
     gtk_container_add(GTK_CONTAINER(res_editor->edit_window), vbox);
 
     colorsel = editor->colorsel = gtk_color_selection_new();
@@ -170,24 +211,40 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
                                                 FALSE);
     gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(colorsel), FALSE);
     g_signal_connect_swapped(colorsel, "color-changed",
-                             G_CALLBACK(gwy_resource_editor_queue_commit),
+                             G_CALLBACK(gwy_gradient_editor_color_changed),
                              res_editor);
     gtk_widget_set_sensitive(colorsel, FALSE);
 
+    vvbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), vvbox, FALSE, FALSE, 0);
+
     editor->markers = gwy_hmarker_box_new();
+    gtk_widget_set_size_request(editor->markers, -1, MARKER_HEIGHT);
     gwy_hmarker_box_set_markers(GWY_HMARKER_BOX(editor->markers),
                                 G_N_ELEMENTS(default_markers), default_markers);
     gwy_hmarker_box_set_flipped(GWY_HMARKER_BOX(editor->markers), TRUE);
     gwy_hmarker_box_set_validator(GWY_HMARKER_BOX(editor->markers),
                                   &gwy_gradient_editor_validate_marker);
-    gtk_box_pack_start(GTK_BOX(vbox), editor->markers, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vvbox), editor->markers, FALSE, FALSE, 0);
+    g_signal_connect_swapped(editor->markers, "marker-selected",
+                             G_CALLBACK(gwy_gradient_editor_marker_selected),
+                             editor);
+    g_signal_connect_swapped(editor->markers, "marker-moved",
+                             G_CALLBACK(gwy_gradient_editor_marker_moved),
+                             editor);
+    g_signal_connect_swapped(editor->markers, "marker-added",
+                             G_CALLBACK(gwy_gradient_editor_marker_added),
+                             editor);
+    g_signal_connect_swapped(editor->markers, "marker-removed",
+                             G_CALLBACK(gwy_gradient_editor_marker_removed),
+                             editor);
 
     editor->preview = gtk_drawing_area_new();
     gtk_widget_set_size_request(editor->preview, -1, PREVIEW_HEIGHT);
     g_signal_connect_swapped(editor->preview, "expose-event",
                              G_CALLBACK(gwy_gradient_editor_preview_expose),
                              editor);
-    gtk_box_pack_start(GTK_BOX(vbox), editor->preview, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vvbox), editor->preview, FALSE, FALSE, 0);
 
     gtk_widget_show_all(vbox);
 
@@ -248,81 +305,61 @@ gwy_gradient_editor_update(GwyGradientEditor *editor)
         positions[i] = points[i].x;
     gwy_hmarker_box_set_markers(GWY_HMARKER_BOX(editor->markers),
                                 npoints, positions);
-
-#if 0
-    switch (editor->last_component) {
-        case GRADIENT_AMBIENT:
-        color = gwy_gradient_get_ambient(gradient);
-        break;
-
-        case GRADIENT_DIFFUSE:
-        color = gwy_gradient_get_diffuse(gradient);
-        break;
-
-        case GRADIENT_SPECULAR:
-        color = gwy_gradient_get_specular(gradient);
-        break;
-
-        case GRADIENT_EMISSION:
-        color = gwy_gradient_get_emission(gradient);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
-    colorsel = GTK_COLOR_SELECTION(editor->colorsel);
-    gwy_rgba_to_gdk_color(color, &gdkcolor);
-    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
-    gwy_rgba_to_gdk_color(&editor->old[editor->last_component], &gdkcolor);
-    gtk_color_selection_set_previous_color(colorsel, &gdkcolor);
-#endif
 }
 
 static void
 gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
 {
-#if 0
     GwyGradientEditor *editor;
+    GtkColorSelection *colorsel;
+    GwyHMarkerBox *hmbox;
+    GwyGradientPoint point, prev, next;
     GwyGradient *gradient;
-    GwyRGBA color;
     GdkColor gdkcolor;
-    gdouble val;
+    gdouble q;
+    gint i;
 
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(gradient
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(gradient)));
 
     editor = GWY_GRADIENT_EDITOR(res_editor);
-    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(editor->colorsel),
-                                          &gdkcolor);
-    gwy_rgba_from_gdk_color(&color, &gdkcolor);
-    color.a = 1.0;    /* FIXME */
-    switch (editor->last_component) {
-        case GRADIENT_AMBIENT:
-        gwy_gradient_set_ambient(gradient, &color);
+    colorsel = GTK_COLOR_SELECTION(editor->colorsel);
+    hmbox = GWY_HMARKER_BOX(editor->markers);
+    i = editor->pendop.i;
+    switch (editor->pendop.optype)  {
+        /* This is both actual move and color change. */
+        case GWY_MARKER_OPERATION_MOVE:
+        point.x = gwy_hmarker_box_get_marker_position(hmbox, i);
+        gtk_color_selection_get_current_color(colorsel, &gdkcolor);
+        gwy_rgba_from_gdk_color(&point.color, &gdkcolor);
+        point.color.a = 1.0;    /* FIXME */
+        gwy_gradient_set_point(gradient, i, &point);
         break;
 
-        case GRADIENT_DIFFUSE:
-        gwy_gradient_set_diffuse(gradient, &color);
+        case GWY_MARKER_OPERATION_ADD:
+        point.x = gwy_hmarker_box_get_marker_position(hmbox, i);
+        prev = gwy_gradient_get_point(gradient, i-1);
+        /* This is would-be-(i+1)-th point, but it's still at i-th position */
+        next = gwy_gradient_get_point(gradient, i);
+        if (prev.x == next.x)
+            q = 0.5;
+        else
+            q = (point.x - prev.x)/(next.x - prev.x);
+        gwy_rgba_interpolate(&prev.color, &next.color, q, &point.color);
+        gwy_gradient_insert_point(gradient, i, &point);
         break;
 
-        case GRADIENT_SPECULAR:
-        gwy_gradient_set_specular(gradient, &color);
-        break;
-
-        case GRADIENT_EMISSION:
-        gwy_gradient_set_emission(gradient, &color);
+        case GWY_MARKER_OPERATION_REMOVE:
+        gwy_gradient_delete_point(gradient, i);
         break;
 
         default:
-        g_assert_not_reached();
+        editor->pendop.optype = GWY_MARKER_OPERATION_NONE;
+        g_return_if_reached();
         break;
     }
-
-    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(editor->shininess));
-    gwy_gradient_set_shininess(gradient, val);
-#endif
+    editor->pendop.optype = GWY_MARKER_OPERATION_NONE;
 }
 
 static void
@@ -332,22 +369,115 @@ gwy_gradient_editor_switch(GwyResourceEditor *res_editor)
     GwyGradientEditor *editor;
 
     editor = GWY_GRADIENT_EDITOR(res_editor);
+    if (editor->gradient_id) {
+        g_signal_handler_disconnect(editor->gradient, editor->gradient_id);
+        editor->gradient_id = 0;
+        editor->gradient = NULL;
+    }
 
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(gradient
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(gradient)));
-
-    /*
-    if (gwy_app_gl_is_ok())
-        gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
-                                 gwy_resource_get_name(GWY_RESOURCE(gradient)));
-
-    editor->old[GRADIENT_AMBIENT] = *gwy_gradient_get_ambient(gradient);
-    editor->old[GRADIENT_DIFFUSE] = *gwy_gradient_get_diffuse(gradient);
-    editor->old[GRADIENT_SPECULAR] = *gwy_gradient_get_specular(gradient);
-    editor->old[GRADIENT_EMISSION] = *gwy_gradient_get_emission(gradient);
-    */
+    editor->gradient_id = g_signal_connect_swapped
+                              (gradient, "data-changed",
+                               G_CALLBACK(gwy_resource_editor_gradient_changed),
+                               editor);
+    editor->gradient = gradient;
     gwy_gradient_editor_update(editor);
+    gtk_widget_queue_draw(editor->preview);
+}
+
+static void
+gwy_gradient_editor_marker_selected(GwyGradientEditor *editor,
+                                    gint i)
+{
+    GwyResourceEditor *res_editor;
+    GwyGradient *gradient;
+    GwyGradientPoint point;
+    GtkColorSelection *colorsel;
+    GdkColor gdkcolor;
+    gboolean selected;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    gwy_resource_editor_commit(res_editor);
+
+    selected = (i >= 0);
+    gtk_widget_set_sensitive(editor->colorsel, selected);
+    if (!selected)
+        return;
+
+    colorsel = GTK_COLOR_SELECTION(editor->colorsel);
+    gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
+    point = gwy_gradient_get_point(gradient, i);
+    gwy_rgba_to_gdk_color(&point.color, &gdkcolor);
+    g_signal_handlers_block_by_func(colorsel,
+                                    &gwy_gradient_editor_color_changed,
+                                    editor);
+    gtk_color_selection_set_current_color(colorsel, &gdkcolor);
+    gtk_color_selection_set_previous_color(colorsel, &gdkcolor);
+    g_signal_handlers_unblock_by_func(colorsel,
+                                      &gwy_gradient_editor_color_changed,
+                                      editor);
+}
+
+static void
+gwy_gradient_editor_color_changed(GwyGradientEditor *editor)
+{
+    g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
+                     || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);
+    editor->pendop.optype = GWY_MARKER_OPERATION_MOVE;
+    editor->pendop.i = gwy_hmarker_box_get_selected_marker
+                                            (GWY_HMARKER_BOX(editor->markers));
+    gwy_resource_editor_queue_commit(GWY_RESOURCE_EDITOR(editor));
+}
+
+static void
+gwy_gradient_editor_marker_moved(GwyGradientEditor *editor,
+                                 gint i)
+{
+    g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
+                     || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);
+    editor->pendop.optype = GWY_MARKER_OPERATION_MOVE;
+    editor->pendop.i = i;
+    gwy_resource_editor_queue_commit(GWY_RESOURCE_EDITOR(editor));
+}
+
+static void
+gwy_gradient_editor_marker_added(GwyGradientEditor *editor,
+                                 gint i)
+{
+    GwyResourceEditor *res_editor;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    gwy_resource_editor_commit(res_editor);
+
+    editor->pendop.optype = GWY_MARKER_OPERATION_ADD;
+    editor->pendop.i = i;
+    /* Commit immediately */
+    gwy_resource_editor_queue_commit(res_editor);
+    gwy_resource_editor_commit(res_editor);
+}
+
+static void
+gwy_gradient_editor_marker_removed(GwyGradientEditor *editor,
+                                   gint i)
+{
+    GwyResourceEditor *res_editor;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    gwy_resource_editor_commit(res_editor);
+
+    editor->pendop.optype = GWY_MARKER_OPERATION_REMOVE;
+    editor->pendop.i = i;
+    /* Commit immediately */
+    gwy_resource_editor_queue_commit(res_editor);
+    gwy_resource_editor_commit(res_editor);
+}
+
+static void
+gwy_resource_editor_gradient_changed(GwyGradientEditor *editor)
+{
+    gtk_widget_queue_draw(editor->preview);
 }
 
 /************************** Documentation ****************************/
@@ -355,7 +485,7 @@ gwy_gradient_editor_switch(GwyResourceEditor *res_editor)
 /**
  * SECTION:gradient-editor
  * @title: GwyGradientEditor
- * @short_description: OpenGL gradient editor
+ * @short_description: Color gradient editor
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
