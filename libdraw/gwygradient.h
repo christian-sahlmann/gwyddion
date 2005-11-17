@@ -84,9 +84,9 @@ void              gwy_gradient_set_point_color       (GwyGradient *gradient,
                                                       const GwyRGBA *color);
 void              gwy_gradient_insert_point          (GwyGradient *gradient,
                                                       gint index_,
-                                                      GwyGradientPoint *point);
+                                                      const GwyGradientPoint *point);
 gint              gwy_gradient_insert_point_sorted   (GwyGradient *gradient,
-                                                      GwyGradientPoint *point);
+                                                      const GwyGradientPoint *point);
 void              gwy_gradient_delete_point          (GwyGradient *gradient,
                                                       gint index_);
 void              gwy_gradient_reset                 (GwyGradient *gradient);

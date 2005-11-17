@@ -440,7 +440,7 @@ gwy_gradient_fix_position(GArray *points,
  *
  * Sets a single color point in a color gradient.
  *
- * It is an error to try to move points beyond is neighbours, or to move first
+ * It is an error to try to move points beyond its neighbours, or to move first
  * (or last) point from 0 (or 1).
  **/
 void
@@ -500,7 +500,7 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
 void
 gwy_gradient_insert_point(GwyGradient *gradient,
                           gint index_,
-                          GwyGradientPoint *point)
+                          const GwyGradientPoint *point)
 {
     GwyGradientPoint pt;
 
@@ -547,7 +547,7 @@ gwy_gradient_insert_point(GwyGradient *gradient,
  **/
 gint
 gwy_gradient_insert_point_sorted(GwyGradient *gradient,
-                                 GwyGradientPoint *point)
+                                 const GwyGradientPoint *point)
 {
     GArray *points;
     GwyGradientPoint pt;
