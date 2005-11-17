@@ -760,6 +760,9 @@ gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
     gwy_hmarker_box_set_selected_marker(hmbox, -1);
     g_array_set_size(hmbox->markers, 0);
     g_array_append_vals(hmbox->markers, markers, n);
+
+    if (GTK_WIDGET_REALIZED(hmbox))
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
 }
 
 void
