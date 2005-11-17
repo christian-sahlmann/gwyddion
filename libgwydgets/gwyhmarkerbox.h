@@ -80,7 +80,6 @@ struct _GwyHMarkerBoxClass {
     gpointer reserved4;
 };
 
-GType      gwy_selection_marker_get_type      (void) G_GNUC_CONST;
 GType      gwy_hmarker_box_get_type           (void) G_GNUC_CONST;
 GtkWidget* gwy_hmarker_box_new                (void);
 gint       gwy_hmarker_box_get_selected_marker(GwyHMarkerBox *hmbox);
