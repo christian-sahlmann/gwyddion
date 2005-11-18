@@ -172,7 +172,6 @@ static void     gwy_recent_file_update_thumbnail     (GwyRecentFile *rf,
 static void  gwy_recent_file_free                    (GwyRecentFile *rf);
 static gchar* gwy_recent_file_thumbnail_name         (const gchar *uri);
 static G_CONST_RETURN gchar* gwy_recent_file_thumbnail_dir (void);
-static void  gwy_app_file_list_store_free            (void);
 
 static guint remember_recent_files = 512;
 
@@ -578,7 +577,6 @@ gwy_app_recent_file_list_load(const gchar *filename)
 
     g_return_val_if_fail(gcontrols.store == NULL, FALSE);
     gcontrols.store = gtk_list_store_new(1, G_TYPE_POINTER);
-    g_atexit(gwy_app_file_list_store_free);
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         g_clear_error(&err);
@@ -679,7 +677,7 @@ gwy_app_recent_file_list_free(void)
             gwy_recent_file_free(rf);
         } while (gtk_list_store_remove(gcontrols.store, &iter));
     }
-    gcontrols.store = NULL;
+    gwy_object_unref(gcontrols.store);
 
     g_list_free(gcontrols.recent_file_list);
     gcontrols.recent_file_list = NULL;
@@ -1080,12 +1078,6 @@ gwy_recent_file_thumbnail_dir(void)
 
     thumbnail_dir = g_build_filename(gwy_get_home_dir(), thumbdir, NULL);
     return thumbnail_dir;
-}
-
-static void
-gwy_app_file_list_store_free(void)
-{
-    gwy_object_unref(gcontrols.store);
 }
 
 /************************** Documentation ****************************/
