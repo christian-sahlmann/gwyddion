@@ -168,16 +168,16 @@ gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
                                     gint *i,
                                     gdouble *pos)
 {
-    gdouble prev, next;
+    const gdouble *markers;
     gint j, n;
 
     n = gwy_hmarker_box_get_nmarkers(hmbox);
 
     /* Insertions are sorted an cannot happen outside border markers */
     if (optype == GWY_MARKER_OPERATION_ADD) {
+        markers = gwy_hmarker_box_get_markers(hmbox);
         for (j = 0; j < n; j++) {
-            next = gwy_hmarker_box_get_marker_position(hmbox, j);
-            if (*pos < next)
+            if (*pos < markers[j])
                 break;
         }
         if (j == 0 || j == n)
@@ -192,9 +192,8 @@ gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
 
     /* Inner markers can be moved only from previous to next */
     if (optype == GWY_MARKER_OPERATION_MOVE) {
-        prev = gwy_hmarker_box_get_marker_position(hmbox, *i - 1);
-        next = gwy_hmarker_box_get_marker_position(hmbox, *i + 1);
-        *pos = CLAMP(*pos, prev, next);
+        markers = gwy_hmarker_box_get_markers(hmbox);
+        *pos = CLAMP(*pos, markers[*i - 1], markers[*i + 1]);
     }
     return TRUE;
 }
