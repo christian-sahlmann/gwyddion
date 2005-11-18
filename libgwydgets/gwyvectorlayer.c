@@ -84,7 +84,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
      *
      * The :selection-key property is the container key used to identify
      * displayed #GwySelection in container.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_SELECTION_KEY,

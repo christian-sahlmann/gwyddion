@@ -124,7 +124,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
      * GwyDataView:zoom:
      *
      * The :zoom property is the ratio between displayed and real data size.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_ZOOM,
@@ -140,7 +140,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
      * The ::redrawn signal is emitted when #GwyDataView redraws pixbufs after
      * an update.  That is, when it's the right time to get a new pixbuf from
      * gwy_data_view_get_thumbnail() or gwy_data_view_get_pixbuf().
-     */
+     **/
     data_view_signals[REDRAWN]
         = g_signal_new("redrawn",
                        G_OBJECT_CLASS_TYPE(object_class),

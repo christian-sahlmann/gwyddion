@@ -93,7 +93,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
      *
      * The :gradient-key property is the container key used to identify
      * #GwyGradient data is colored with.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_GRADIENT_KEY,
@@ -107,7 +107,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
      *
      * The :range-type-key property is the container key used to identify
      * color range type.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_RANGE_TYPE_KEY,
@@ -121,7 +121,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
      *
      * The :min-max-key property is the container key prefix used to identify
      * fixed range minimum and maximum.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_MIN_MAX_KEY,

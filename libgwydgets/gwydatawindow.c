@@ -104,7 +104,7 @@ gwy_data_window_class_init(GwyDataWindowClass *klass)
      *
      * The ::title-changed signal is emitted when the title of #GwyDataWindow
      * changes.
-     */
+     **/
     data_window_signals[TITLE_CHANGED] =
         g_signal_new("title-changed",
                      G_OBJECT_CLASS_TYPE(object_class),

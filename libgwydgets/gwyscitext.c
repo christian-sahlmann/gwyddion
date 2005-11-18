@@ -112,7 +112,7 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
      * GwySciText:has-preview:
      *
      * The :has-preview property controls whether a #GwySciText has a preview.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_HAS_PREVIEW,
@@ -129,7 +129,7 @@ gwy_sci_text_class_init(GwySciTextClass *klass)
      * to a valid markup.  If you need to react to all changes in entry
      * contents, you can use gwy_sci_text_get_entry() to get the entry and
      * connect to its signal.
-     */
+     **/
     sci_text_signals[EDITED]
         = g_signal_new("edited",
                        G_OBJECT_CLASS_TYPE(gobject_class),

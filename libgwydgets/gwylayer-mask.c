@@ -70,7 +70,7 @@ gwy_layer_mask_class_init(GwyLayerMaskClass *klass)
      *
      * The :color-key property is the container key used to identify mask color
      * in container.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_COLOR_KEY,

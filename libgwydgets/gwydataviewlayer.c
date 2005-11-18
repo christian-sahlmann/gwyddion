@@ -67,7 +67,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     *
     * The ::plugged signal is emitted when a #GwyDataViewLayer is plugged into
     * a #GwyDataView.
-    */
+    **/
     data_view_layer_signals[PLUGGED] =
         g_signal_new("plugged",
                      G_OBJECT_CLASS_TYPE(gobject_class),
@@ -83,7 +83,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
     *
     * The ::unplugged signal is emitted when a #GwyDataViewLayer is removed
     * from its #GwyDataView.
-    */
+    **/
     data_view_layer_signals[UNPLUGGED] =
         g_signal_new("unplugged",
                      G_OBJECT_CLASS_TYPE(gobject_class),
@@ -99,7 +99,7 @@ gwy_data_view_layer_class_init(GwyDataViewLayerClass *klass)
      *
      * The ::updated signal is emitted when a #GwyDataViewLayer is updated;
      * the exact means how a layer can be updated depends its type.
-     */
+     **/
     data_view_layer_signals[UPDATED] =
         g_signal_new("updated",
                      G_OBJECT_CLASS_TYPE(gobject_class),

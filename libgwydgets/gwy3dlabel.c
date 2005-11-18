@@ -104,7 +104,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
      *
      * The :delta-x property represents horizontal label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_DELTA_X,
@@ -118,7 +118,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
      *
      * The :delta-y property represents vertical label offset in pixels
      * (in screen coordinates after mapping from 3D to 2D).
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_DELTA_Y,
@@ -132,7 +132,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
      *
      * The :rotation property represents label rotation in radians,
      * counterclokwise (on screen, after mapping from 3D to 2D).
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_ROTATION,
@@ -146,7 +146,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
      *
      * The :size property represents label size in pixels.  When :fixed_size
      * is %FALSE, its value is overwritten with automatic size.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_SIZE,
@@ -160,7 +160,7 @@ gwy_3d_label_class_init(Gwy3DLabelClass *klass)
      *
      * The :fixed-size property controls whether the :size property is kept and
      * honoured, or conversely ignored and overwritten with automatic size.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_FIXED_SIZE,

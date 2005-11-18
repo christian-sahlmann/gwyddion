@@ -110,7 +110,7 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
      * If this property is set to %TRUE, the color swatch on the button is
      * rendered against a checkerboard background to show its opacity and
      * the opacity slider is displayed in the color selection dialog.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_USE_ALPHA,
@@ -125,7 +125,7 @@ gwy_color_button_class_init(GwyColorButtonClass *klass)
      * GwyColorButton:color:
      *
      * The selected color.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_COLOR,

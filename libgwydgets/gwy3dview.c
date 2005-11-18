@@ -219,7 +219,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
      *
      * The :movement-type property represents type of action on user pointer
      * drag.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_MOVEMENT,
@@ -234,7 +234,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
      * Gwy3DView:projection:
      *
      * The :projection property represents type of 3D to 2D projection.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_PROJECTION,
@@ -249,7 +249,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
      * Gwy3DView:show-axes:
      *
      * The :show-axes property determines whether axes around data are shown.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_SHOW_AXES,
@@ -263,7 +263,7 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
      *
      * The :show-labels property determines whether axis labels are shown.
      * Note when axes themselves are not shown, neither are labels.
-     */
+     **/
     g_object_class_install_property
         (gobject_class,
          PROP_SHOW_LABELS,
