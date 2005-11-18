@@ -43,7 +43,7 @@ typedef struct _GwyHMarkerBoxClass GwyHMarkerBoxClass;
 
 typedef gboolean (*GwyMarkerValidateFunc)(GwyHMarkerBox *hmbox,
                                           GwyMarkerOperationType optype,
-                                          gint i,
+                                          gint *i,
                                           gdouble *pos);
 
 struct _GwyHMarkerBox {
@@ -91,6 +91,7 @@ gboolean   gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
                                                gint i,
                                                gdouble pos);
 gint       gwy_hmarker_box_add_marker         (GwyHMarkerBox *hmbox,
+                                               gint i,
                                                gdouble pos);
 gboolean   gwy_hmarker_box_remove_marker      (GwyHMarkerBox *hmbox,
                                                gint i);

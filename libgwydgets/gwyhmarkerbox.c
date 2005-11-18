@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -418,7 +418,7 @@ gwy_hmarker_box_button_press(GtkWidget *widget,
     width = widget->allocation.width;
     if ((event->state & GDK_SHIFT_MASK)) {
         pos = (x - hmbox->offset)/(widget->allocation.width - 1.0);
-        i = gwy_hmarker_box_add_marker(hmbox, pos);
+        i = gwy_hmarker_box_add_marker(hmbox, hmbox->markers->len, pos);
     }
     else
         i = gwy_hmarker_box_find_nearest(hmbox, x, y);
@@ -554,6 +554,16 @@ gwy_hmarker_box_find_nearest(GwyHMarkerBox *hmbox,
     return ABS(ipos - x) <= y/GWY_SQRT3 ? ii : -1;
 }
 
+/**
+ * gwy_hmarker_box_get_selected_marker:
+ * @hmbox: A horizontal marker box.
+ *
+ * Gets the index of the currently selected marker in a horizontal marker
+ * box.
+ *
+ * Returns: The index of currently selected marker, -1 when none is
+ *          selected.
+ **/
 gint
 gwy_hmarker_box_get_selected_marker(GwyHMarkerBox *hmbox)
 {
@@ -562,6 +572,13 @@ gwy_hmarker_box_get_selected_marker(GwyHMarkerBox *hmbox)
     return hmbox->selected;
 }
 
+/**
+ * gwy_hmarker_box_set_selected_marker:
+ * @hmbox: A horizontal marker box.
+ * @i: The index of marker to select.  Pass -1 to unselect.
+ *
+ * Selects a marker in a horizontal marker box.
+ **/
 void
 gwy_hmarker_box_set_selected_marker(GwyHMarkerBox *hmbox,
                                     gint i)
@@ -582,6 +599,15 @@ gwy_hmarker_box_set_selected_marker(GwyHMarkerBox *hmbox,
     g_signal_emit(hmbox, hmarker_box_signals[MARKER_SELECTED], 0, i);
 }
 
+/**
+ * gwy_hmarker_box_get_marker_position:
+ * @hmbox: A horizontal marker box.
+ * @i: The index of marker to get position of.
+ *
+ * Gets the position of a marker in a horizontal marker box.
+ *
+ * Returns: The marker position, in the range [0.0, 1.0].
+ **/
 gdouble
 gwy_hmarker_box_get_marker_position(GwyHMarkerBox *hmbox,
                                     gint i)
@@ -596,7 +622,7 @@ gwy_hmarker_box_get_marker_position(GwyHMarkerBox *hmbox,
  * gwy_hmarker_box_set_marker_position:
  * @hmbox: A horizontal marker box.
  * @i: Index of marker to move.
- * @pos: The new marker position.
+ * @pos: The new marker position, in the range [0.0, 1.0].
  *
  * Moves a marker in a horizontal marker box.
  *
@@ -610,14 +636,15 @@ gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
 {
     gdouble currpos;
     gboolean needs_redraw;
-    gint width;
+    gint j, width;
 
     g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), FALSE);
     g_return_val_if_fail(i >= 0 && i < hmbox->markers->len, FALSE);
 
     currpos = g_array_index(hmbox->markers, gdouble, i);
+    j = i;
     if ((hmbox->validate
-         && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_MOVE, i, &pos))
+         && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_MOVE, &j, &pos))
         || pos == currpos)
         return FALSE;
 
@@ -635,7 +662,8 @@ gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
 /**
  * gwy_hmarker_box_add_marker:
  * @hmbox: A horizontal marker box.
- * @pos: Position to insert marker to.
+ * @i: Index to insert marker at.
+ * @pos: Position to insert marker to, in the range [0.0, 1.0].
  *
  * Adds a marker to a horizontal marker box.
  *
@@ -644,23 +672,19 @@ gwy_hmarker_box_set_marker_position(GwyHMarkerBox *hmbox,
  **/
 gint
 gwy_hmarker_box_add_marker(GwyHMarkerBox *hmbox,
+                           gint i,
                            gdouble pos)
 {
     gboolean selection_changed = FALSE;
-    gint i;
 
     g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), -1);
+    g_return_val_if_fail(i >= 0 && i <= hmbox->markers->len, -1);
 
     if (pos < 0.0 || pos > 1.0)
         return -1;
 
-    for (i = 0; i < hmbox->markers->len; i++) {
-        if (pos < g_array_index(hmbox->markers, gdouble, i))
-            break;
-    }
-    gwy_debug("%f %d", pos, i);
     if (hmbox->validate
-        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_ADD, i, &pos))
+        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_ADD, &i, &pos))
         return -1;
 
     if (i == hmbox->markers->len)
@@ -700,13 +724,15 @@ gwy_hmarker_box_remove_marker(GwyHMarkerBox *hmbox,
 {
     gboolean selection_changed = FALSE;
     gdouble pos;
+    gint j;
 
     g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), FALSE);
     g_return_val_if_fail(i >= 0 && i < hmbox->markers->len, FALSE);
 
     pos = g_array_index(hmbox->markers, gdouble, i);
+    j = i;
     if (hmbox->validate
-        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_REMOVE, i, &pos))
+        && !hmbox->validate(hmbox, GWY_MARKER_OPERATION_REMOVE, &j, &pos))
         return FALSE;
 
     if (i == hmbox->selected)
@@ -729,6 +755,14 @@ gwy_hmarker_box_remove_marker(GwyHMarkerBox *hmbox,
     return TRUE;
 }
 
+/**
+ * gwy_hmarker_box_get_nmarkers:
+ * @hmbox: A horizontal marker box.
+ *
+ * Gets the number of markers in a horizontal marker box.
+ *
+ * Returns: The number of markers.
+ **/
 gint
 gwy_hmarker_box_get_nmarkers(GwyHMarkerBox *hmbox)
 {
@@ -737,6 +771,16 @@ gwy_hmarker_box_get_nmarkers(GwyHMarkerBox *hmbox)
     return hmbox->markers->len;
 }
 
+/**
+ * gwy_hmarker_box_set_markers:
+ * @hmbox: A horizontal marker box.
+ * @n: The number of markers to set.  If it's zero, @markers can be %NULL.
+ * @markers: Markers position.
+ *
+ * Sets positions of all markers.
+ *
+ * No validation is performed, even if validator is set.
+ **/
 void
 gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
                             gint n,
@@ -765,6 +809,13 @@ gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
         gtk_widget_queue_draw(GTK_WIDGET(hmbox));
 }
 
+/**
+ * gwy_hmarker_box_set_flipped:
+ * @hmbox: A horizontal marker box.
+ * @flipped: %TRUE to draw markers upside down.
+ *
+ * Sets whether a horizontal marker box is drawn upside down.
+ **/
 void
 gwy_hmarker_box_set_flipped(GwyHMarkerBox *hmbox,
                             gboolean flipped)
@@ -781,6 +832,14 @@ gwy_hmarker_box_set_flipped(GwyHMarkerBox *hmbox,
     g_object_notify(G_OBJECT(hmbox), "flipped");
 }
 
+/**
+ * gwy_hmarker_box_get_flipped:
+ * @hmbox: A horizontal marker box.
+ *
+ * Returns whether a horizontal marker box is drawn upside down.
+ *
+ * Returns: %TRUE if markers are drawn upside down.
+ **/
 gboolean
 gwy_hmarker_box_get_flipped(GwyHMarkerBox *hmbox)
 {
@@ -789,6 +848,13 @@ gwy_hmarker_box_get_flipped(GwyHMarkerBox *hmbox)
     return hmbox->flipped;
 }
 
+/**
+ * gwy_hmarker_box_set_validator:
+ * @hmbox: A horizontal marker box.
+ * @validate: Marker validation function.  Pass %NULL to disable validation.
+ *
+ * Sets marker validation function.
+ **/
 void
 gwy_hmarker_box_set_validator(GwyHMarkerBox *hmbox,
                               GwyMarkerValidateFunc validate)
@@ -801,6 +867,14 @@ gwy_hmarker_box_set_validator(GwyHMarkerBox *hmbox,
     hmbox->validate = validate;
 }
 
+/**
+ * gwy_hmarker_box_get_validator:
+ * @hmbox: A horizontal marker box.
+ *
+ * Gets the marker validation function currently in use.
+ *
+ * Returns: The marker validation function.
+ **/
 GwyMarkerValidateFunc
 gwy_hmarker_box_get_validator(GwyHMarkerBox *hmbox)
 {
@@ -815,6 +889,93 @@ gwy_hmarker_box_get_validator(GwyHMarkerBox *hmbox)
  * SECTION:gwyhmarkerbox
  * @title: GwyHMarkerBox
  * @short_description: A box with movable horizontal markers.
+ *
+ * #GwyHMarkerBox is a horizontal box with triangular markers that can be
+ * moved, added, and/or deleted.  One marker is always selected, unless no
+ * marker is selected.
+ *
+ * Marker coordinates are always from the range [0.0, 1.0].
+ *
+ * It is possible to fully control where and how user can move, add, and/or
+ * delete markers with marker validation function set with
+ * gwy_hmarker_box_set_validator().  By default, no validator is in effect
+ * and user can change markers completely freely.
+ *
+ * There is no associated #GwyVMarkerBox widget and #GwyMarkerBox base class,
+ * but it probably should be.
+ **/
+
+/**
+ * GwyMarkerValidateFunc:
+ * @hmbox: The #GwyHMarkerBox to validate markers for.
+ * @optype: Marker operation to validate.
+ * @i: Pointer to index of marker to validate.  For insertion, it's the
+ *     position the marker would be inserted to (but it's not there yet),
+ *     for removal it's the position where it still is.  The validator can
+ *     change the index, but it has an effect only when a marker is being
+ *     added.
+ * @pos: Pointer to requested marker position. The validator can change the
+ *       position and the marker will be then moved or inserted to the changed
+ *       position. For removal, its changes have no effect.
+ *
+ * Marker validation function.
+ *
+ * It is called for each single-marker change, both by user and by
+ * #GwyHMarkerBox methods.  However, it is NOT called upon
+ * gwy_hmarker_box_set_markers() as it is unclear how the validation should
+ * proceed.
+ *
+ * Marker validation that assures markers are sorted and there is always
+ * a marker at 0.0 and another at 1.0 could look:
+ * <informalexample><programlisting>
+ * static gboolean
+ * validate_marker(GwyHMarkerBox *hmbox,
+ *                 GwyMarkerOperationType optype,
+ *                 gint *i,
+ *                 gdouble *pos)
+ * {
+ *     gdouble prev, next;
+ *     gint j, n;
+ *     <!-- Hello, gtk-doc! -->
+ *     n = gwy_hmarker_box_get_nmarkers(hmbox);
+ *     <!-- Hello, gtk-doc! -->
+ *     /<!-- -->* Insertions are sorted *<!-- -->/
+ *     if (optype == GWY_MARKER_OPERATION_ADD) {
+ *         for (j = 0; j < n; j++) {
+ *             next = gwy_hmarker_box_get_marker_position(hmbox, j);
+ *             if (*pos < next)
+ *                 break;
+ *         }
+ *         if (j == 0 || j == n)
+ *             return FALSE;
+ *         *i = j;
+ *         return TRUE;
+ *     }
+ *     <!-- Hello, gtk-doc! -->
+ *     /<!-- -->* Nothing at all can be done with border markers *<!-- -->/
+ *     if (*i == 0 || *i == n-1)
+ *         return FALSE;
+ *     <!-- Hello, gtk-doc! -->
+ *     /<!-- -->* Inner markers can be moved only from previous to next *<!-- -->/
+ *     if (optype == GWY_MARKER_OPERATION_MOVE) {
+ *         prev = gwy_hmarker_box_get_marker_position(hmbox, *i - 1);
+ *         next = gwy_hmarker_box_get_marker_position(hmbox, *i + 1);
+ *         *pos = CLAMP(*pos, prev, next);
+ *     }
+ *     return TRUE;
+ * }
+ * </programlisting></informalexample>
+ *
+ * Returns: %TRUE to allow requested the operation, %FALSE to disallow it.
+ **/
+
+/**
+ * GwyMarkerOperationType:
+ * @GWY_MARKER_OPERATION_MOVE: Marker is moved.
+ * @GWY_MARKER_OPERATION_ADD: Marker is added.
+ * @GWY_MARKER_OPERATION_REMOVE: Marker is removed.
+ *
+ * Marker operation type (for validation).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

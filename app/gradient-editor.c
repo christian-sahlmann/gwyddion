@@ -165,24 +165,35 @@ gwy_app_gradient_editor(void)
 static gboolean
 gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
                                     GwyMarkerOperationType optype,
-                                    gint i,
+                                    gint *i,
                                     gdouble *pos)
 {
     gdouble prev, next;
-    gint n;
+    gint j, n;
+
+    n = gwy_hmarker_box_get_nmarkers(hmbox);
+
+    /* Insertions are sorted an cannot happen outside border markers */
+    if (optype == GWY_MARKER_OPERATION_ADD) {
+        for (j = 0; j < n; j++) {
+            next = gwy_hmarker_box_get_marker_position(hmbox, j);
+            if (*pos < next)
+                break;
+        }
+        if (j == 0 || j == n)
+            return FALSE;
+        *i = j;
+        return TRUE;
+    }
 
     /* Nothing at all can be done with border markers */
-    if (i == 0)
-        return FALSE;
-    n = gwy_hmarker_box_get_nmarkers(hmbox);
-    if ((optype == GWY_MARKER_OPERATION_ADD && i == n)
-        || (optype != GWY_MARKER_OPERATION_ADD && i == n-1))
+    if (*i == 0 || *i == n-1)
         return FALSE;
 
-    /* Other markers can be moved only from previous to next */
+    /* Inner markers can be moved only from previous to next */
     if (optype == GWY_MARKER_OPERATION_MOVE) {
-        prev = gwy_hmarker_box_get_marker_position(hmbox, i-1);
-        next = gwy_hmarker_box_get_marker_position(hmbox, i+1);
+        prev = gwy_hmarker_box_get_marker_position(hmbox, *i - 1);
+        next = gwy_hmarker_box_get_marker_position(hmbox, *i + 1);
         *pos = CLAMP(*pos, prev, next);
     }
     return TRUE;
