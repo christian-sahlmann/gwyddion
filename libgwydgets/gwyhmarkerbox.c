@@ -535,6 +535,7 @@ gwy_hmarker_box_motion_notify(GtkWidget *widget,
                               GdkEventMotion *event)
 {
     GwyHMarkerBox *hmbox;
+    gboolean ghost;
     gdouble pos;
     gint x, y;
 
@@ -556,8 +557,13 @@ gwy_hmarker_box_motion_notify(GtkWidget *widget,
                                             CLAMP(pos, 0.0, 1.0)))
         hmbox->moved = TRUE;
 
-    hmbox->ghost = (y > 3*widget->allocation.height/2 + 2
-                    || y < -widget->allocation.height/2 - 2);
+    ghost = (y > 3*widget->allocation.height/2 + 2
+             || y < -widget->allocation.height/2 - 2);
+    if (ghost != hmbox->ghost
+        && GTK_WIDGET_REALIZED(widget)) {
+        hmbox->ghost = ghost;
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
+    }
 
     return FALSE;
 }
