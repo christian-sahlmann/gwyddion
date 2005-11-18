@@ -129,6 +129,7 @@ gwy_gradient_editor_destroy(GtkObject *object)
         editor->gradient_id = 0;
         editor->gradient = NULL;
     }
+    gwy_object_unref(editor->preview_pixbuf);
 
     GTK_OBJECT_CLASS(gwy_gradient_editor_parent_class)->destroy(object);
 }
