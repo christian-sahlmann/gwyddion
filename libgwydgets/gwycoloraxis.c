@@ -91,7 +91,7 @@ gwy_color_axis_new_with_range(GtkOrientation orientation,
 {
     GwyColorAxis *axis;
 
-    axis = gtk_type_new(gwy_color_axis_get_type());
+    axis = g_object_new(GWY_TYPE_COLOR_AXIS, NULL);
     axis->orientation = orientation;
     axis->min = MIN(min, max);
     axis->max = MAX(min, max);
