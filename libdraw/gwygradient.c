@@ -502,7 +502,7 @@ gwy_gradient_insert_point(GwyGradient *gradient,
                           gint index_,
                           const GwyGradientPoint *point)
 {
-    GwyGradientPoint pt;
+    GwyGradientPoint pt, tmp;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
     g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
@@ -527,9 +527,8 @@ gwy_gradient_insert_point(GwyGradient *gradient,
     }
 
     /* duplicate point at index_ for position checking */
-    g_array_insert_val(gradient->points, index_,
-                       g_array_index(gradient->points, GwyGradientPoint,
-                                     index_));
+    tmp = g_array_index(gradient->points, GwyGradientPoint, index_);
+    g_array_insert_val(gradient->points, index_, tmp);
     pt.x = gwy_gradient_fix_position(gradient->points, index_, point->x);
     g_array_index(gradient->points, GwyGradientPoint, index_) = pt;
 
