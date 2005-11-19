@@ -44,7 +44,8 @@
  *
  * Returns: The newly created radio button group (a #GSList).  Iterate over
  *          the list and pack the widgets (the order is the same as in
- *          @entries).
+ *          @entries).  The group is owned by the buttons and must not be
+ *          freed.
  **/
 GSList*
 gwy_radio_buttons_create(const GwyEnum *entries,
