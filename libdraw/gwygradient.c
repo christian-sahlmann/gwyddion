@@ -448,7 +448,7 @@ gwy_gradient_set_point(GwyGradient *gradient,
                        gint index_,
                        const GwyGradientPoint *point)
 {
-    GwyGradientPoint pt;
+    GwyGradientPoint pt, *gradpt;
 
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
     g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
@@ -457,8 +457,14 @@ gwy_gradient_set_point(GwyGradient *gradient,
 
     pt.color = gwy_gradient_fix_rgba(&point->color);
     pt.x = gwy_gradient_fix_position(gradient->points, index_, point->x);
-    g_array_index(gradient->points, GwyGradientPoint, index_) = pt;
+    gradpt = &g_array_index(gradient->points, GwyGradientPoint, index_);
+    if (gradpt->x == pt.x
+        && gradpt->color.r == pt.color.r
+        && gradpt->color.g == pt.color.g
+        && gradpt->color.b == pt.color.b)
+        return;
 
+    *gradpt = pt;
     gwy_gradient_changed(gradient);
 }
 
@@ -475,14 +481,22 @@ gwy_gradient_set_point_color(GwyGradient *gradient,
                              gint index_,
                              const GwyRGBA *color)
 {
+    GwyGradientPoint *gradpt;
+    GwyRGBA rgba;
+
     g_return_if_fail(GWY_IS_GRADIENT(gradient));
     g_return_if_fail(!GWY_RESOURCE(gradient)->is_const);
     g_return_if_fail(color);
     g_return_if_fail(index_ >= 0 && index_ < gradient->points->len);
 
-    g_array_index(gradient->points, GwyGradientPoint, index_).color
-        = gwy_gradient_fix_rgba(color);;
+    gradpt = &g_array_index(gradient->points, GwyGradientPoint, index_);
+    rgba = gwy_gradient_fix_rgba(color);
+    if (gradpt->color.r == rgba.r
+        && gradpt->color.g == rgba.g
+        && gradpt->color.b == rgba.b)
+        return;
 
+    gradpt->color = rgba;
     gwy_gradient_changed(gradient);
 }
 
