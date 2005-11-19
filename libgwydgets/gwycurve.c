@@ -561,6 +561,8 @@ gwy_curve_expose(GwyCurve *c)
     w = GTK_WIDGET(c);
     width = w->allocation.width - RADIUS * 2;
     height = w->allocation.height - RADIUS * 2;
+    if (width <= 0 || height <= 0)
+        return TRUE;
 
     if (!c->pixmap)
         c->pixmap = gdk_pixmap_new(w->window,
