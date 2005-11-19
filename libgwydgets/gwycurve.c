@@ -158,7 +158,7 @@ gwy_curve_class_init (GwyCurveClass *class)
 
   g_object_class_install_property (gobject_class,
                    PROP_CURVE_TYPE,
-                   g_param_spec_enum ("curve_type",
+                   g_param_spec_enum ("curve-type",
                               "Curve type",
                   "Is this curve linear, spline interpolated, or free-form",
                               GWY_TYPE_CURVE_TYPE,
@@ -167,7 +167,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                               G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class,
                    PROP_MIN_X,
-                   g_param_spec_float ("min_x",
+                   g_param_spec_float ("min-x",
                                "Minimum X",
                                "Minimum possible value for X",
                                -G_MAXFLOAT,
@@ -177,7 +177,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                                G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class,
                    PROP_MAX_X,
-                   g_param_spec_float ("max_x",
+                   g_param_spec_float ("max-x",
                                "Maximum X",
                                "Maximum possible X value",
                                -G_MAXFLOAT,
@@ -187,7 +187,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                                G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class,
                    PROP_MIN_Y,
-                   g_param_spec_float ("min_y",
+                   g_param_spec_float ("min-y",
                                "Minimum Y",
                                "Minimum possible value for Y",
                                                        -G_MAXFLOAT,
@@ -197,7 +197,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                                G_PARAM_WRITABLE));
   g_object_class_install_property (gobject_class,
                    PROP_MAX_Y,
-                   g_param_spec_float ("max_y",
+                   g_param_spec_float ("max-y",
                                "Maximum Y",
                                "Maximum possible value for Y",
                                -G_MAXFLOAT,
@@ -207,7 +207,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                                G_PARAM_WRITABLE));
 
     curve_type_changed_signal =
-        g_signal_new ("curve_type_changed",
+        g_signal_new ("curve-type-changed",
                       G_OBJECT_CLASS_TYPE (gobject_class),
                       G_SIGNAL_RUN_FIRST,
                       G_STRUCT_OFFSET (GwyCurveClass, curve_type_changed),
@@ -216,7 +216,7 @@ gwy_curve_class_init (GwyCurveClass *class)
                       G_TYPE_NONE, 0);
 
     curve_edited_signal =
-        g_signal_new ("curve_edited",
+        g_signal_new ("curve-edited",
                       G_OBJECT_CLASS_TYPE (gobject_class),
                       G_SIGNAL_RUN_FIRST,
                       G_STRUCT_OFFSET (GwyCurveClass, curve_edited),
