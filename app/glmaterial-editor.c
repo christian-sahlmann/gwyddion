@@ -134,10 +134,10 @@ static void
 gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
 {
     static const GwyEnum color_components[] = {
-        { N_("Ambient"),  GL_MATERIAL_AMBIENT,  },
-        { N_("Diffuse"),  GL_MATERIAL_DIFFUSE,  },
-        { N_("Specular"), GL_MATERIAL_SPECULAR, },
-        /*{ N_("Emission"), GL_MATERIAL_EMISSION, },*/
+        { N_("_Ambient"),  GL_MATERIAL_AMBIENT,  },
+        { N_("_Diffuse"),  GL_MATERIAL_DIFFUSE,  },
+        { N_("Spe_cular"), GL_MATERIAL_SPECULAR, },
+        /*{ N_("_Emission"), GL_MATERIAL_EMISSION, },*/
     };
     GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table, *spin;
     GwyGLMaterialEditor *editor;
@@ -186,7 +186,7 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     adj = gtk_adjustment_new(0.0, 0.0, 1.0, 0.001, 0.1, 0.0);
     editor->shininess = adj;
-    spin = gwy_table_attach_hscale(table, 0, _("Shininess:"), NULL,
+    spin = gwy_table_attach_hscale(table, 0, _("Sh_ininess:"), NULL,
                                    adj, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(adj, "value-changed",
                              G_CALLBACK(gwy_resource_editor_queue_commit),
@@ -384,6 +384,8 @@ gwy_gl_material_editor_make_data(GwyDataField *dfield1)
     gwy_data_field_area_fill(dfield2, 5*n/6, 0, 7*n/8+1, n, 0.07);
     gwy_data_field_filter_mean(dfield2, 3);
     gwy_data_field_sum_fields(dfield1, dfield1, dfield2);
+
+    g_object_unref(dfield2);
 
     g_rand_free(rng);
 }
