@@ -40,6 +40,11 @@ enum {
     BITS_PER_SAMPLE = 8
 };
 
+typedef enum {
+    EDITING_MODE_POINTS,
+    EDITING_MODE_CURVE
+} EditingMode;
+
 #define GWY_TYPE_GRADIENT_EDITOR             (gwy_gradient_editor_get_type())
 #define GWY_GRADIENT_EDITOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_GRADIENT_EDITOR, GwyGradientEditor))
 #define GWY_GRADIENT_EDITOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_GRADIENT_EDITOR, GwyGradientEditorClass))
@@ -61,7 +66,9 @@ struct _GwyGradientEditor {
     GwyGradient *gradient;
     gulong gradient_id;
 
+    GSList *mode_group;
     PendingOperation pendop;
+    GtkWidget *curve;
     GtkWidget *colorsel;
     GtkWidget *markers;
     GtkWidget *preview;
@@ -79,6 +86,7 @@ static void gwy_gradient_editor_construct       (GwyResourceEditor *res_editor);
 static void gwy_gradient_editor_preview_expose  (GwyGradientEditor *editor);
 static void gwy_gradient_editor_apply           (GwyResourceEditor *res_editor);
 static void gwy_gradient_editor_switch          (GwyResourceEditor *res_editor);
+static void gwy_gradient_editor_update_curve    (GwyGradientEditor *editor);
 static void gwy_gradient_editor_update          (GwyGradientEditor *editor);
 static void gwy_gradient_editor_marker_selected (GwyGradientEditor *editor,
                                                  gint i);
@@ -90,6 +98,9 @@ static void gwy_gradient_editor_marker_added    (GwyGradientEditor *editor,
 static void gwy_gradient_editor_marker_removed  (GwyGradientEditor *editor,
                                                  gint i);
 static void gwy_resource_editor_gradient_changed(GwyGradientEditor *editor);
+static void gwy_gradient_editor_mode_changed    (GtkWidget *toggle,
+                                                 GwyGradientEditor *editor);
+static void gwy_gradient_editor_curve_edited    (GwyGradientEditor *editor);
 
 G_DEFINE_TYPE(GwyGradientEditor, gwy_gradient_editor,
               GWY_TYPE_RESOURCE_EDITOR)
@@ -114,7 +125,7 @@ gwy_gradient_editor_class_init(GwyGradientEditorClass *klass)
 }
 
 static void
-gwy_gradient_editor_init(GwyGradientEditor *editor)
+gwy_gradient_editor_init(G_GNUC_UNUSED GwyGradientEditor *editor)
 {
 }
 
@@ -202,8 +213,13 @@ gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
 static void
 gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
 {
+    static const GwyEnum editing_modes[] = {
+        { N_("_Points"), EDITING_MODE_POINTS, },
+        { N_("_Curve"),  EDITING_MODE_CURVE,  },
+    };
     static const gdouble default_markers[] = { 0.0, 1.0 };
-    GtkWidget *vbox, *vvbox, *colorsel;
+    GtkWidget *vbox, *vvbox, *hbox, *colorsel;
+    GSList *group, *l;
     GwyGradientEditor *editor;
 
     g_return_if_fail(GTK_IS_WINDOW(res_editor->edit_window));
@@ -212,11 +228,35 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     gtk_container_set_border_width(GTK_CONTAINER(res_editor->edit_window),
                                    4);
 
-    vbox = gtk_vbox_new(FALSE, 12);
+    vbox = gtk_vbox_new(FALSE, 4);
     gtk_container_add(GTK_CONTAINER(res_editor->edit_window), vbox);
 
+    hbox = gtk_hbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    group = gwy_radio_buttons_create
+                        (editing_modes, G_N_ELEMENTS(editing_modes),
+                         "editing-mode",
+                         G_CALLBACK(gwy_gradient_editor_mode_changed),
+                         /* TODO: remember mode */
+                         editor, EDITING_MODE_POINTS);
+    for (l = group; l; l = g_slist_next(l)) {
+        gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(l->data), FALSE);
+        gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(l->data),
+                           FALSE, FALSE, 0);
+    }
+    editor->mode_group = group;
+
+    editor->curve = gwy_curve_new();
+    gwy_curve_set_range(GWY_CURVE(editor->curve), 0, 1, 0, 1);
+    gtk_box_pack_start(GTK_BOX(vbox), editor->curve, TRUE, TRUE, 0);
+    gtk_widget_set_size_request(editor->curve, 300, 200);
+    g_signal_connect_swapped(editor->curve, "curve-edited",
+                             G_CALLBACK(gwy_gradient_editor_curve_edited),
+                             editor);
+
     colorsel = editor->colorsel = gtk_color_selection_new();
-    gtk_box_pack_start(GTK_BOX(vbox), colorsel, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), colorsel, TRUE, FALSE, 0);
     /* XXX */
     gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(colorsel),
                                                 FALSE);
@@ -257,6 +297,8 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
                              editor);
     gtk_box_pack_start(GTK_BOX(vvbox), editor->preview, FALSE, FALSE, 0);
 
+    /* TODO: remember mode, show appropriate widgets */
+    gtk_widget_set_no_show_all(editor->curve, TRUE);
     gtk_widget_show_all(vbox);
 
     /* switch */
@@ -294,18 +336,11 @@ gwy_gradient_editor_update(GwyGradientEditor *editor)
 {
     GwyResourceEditor *res_editor;
     const GwyGradientPoint *points;
-    GtkColorSelection *colorsel;
     GwyGradient *gradient;
-    GdkColor gdkcolor;
-    const GwyRGBA *color;
     gdouble *positions;
     gint i, npoints;
 
     res_editor = GWY_RESOURCE_EDITOR(editor);
-    /*
-    editor->last_component = gwy_radio_buttons_get_current(editor->components,
-                                                           "color-component");
-                                                           */
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(gradient
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(gradient)));
@@ -316,6 +351,8 @@ gwy_gradient_editor_update(GwyGradientEditor *editor)
         positions[i] = points[i].x;
     gwy_hmarker_box_set_markers(GWY_HMARKER_BOX(editor->markers),
                                 npoints, positions);
+
+    gwy_gradient_editor_update_curve(editor);
 }
 
 static void
@@ -395,7 +432,49 @@ gwy_gradient_editor_switch(GwyResourceEditor *res_editor)
                                editor);
     editor->gradient = gradient;
     gwy_gradient_editor_update(editor);
-    gtk_widget_queue_draw(editor->preview);
+    if (GTK_WIDGET_VISIBLE(editor->preview))
+        gtk_widget_queue_draw(editor->preview);
+}
+
+static void
+gwy_gradient_editor_update_curve(GwyGradientEditor *editor)
+{
+    GwyResourceEditor *res_editor;
+    const GwyGradientPoint *grad_points;
+    GwyChannelData *channel_data;
+    GwyGradient *gradient;
+    GwyPoint *points;
+    gint c_index, i, point_count;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
+    grad_points = gwy_gradient_get_points(gradient, &point_count);
+
+    channel_data = g_new(GwyChannelData, 3);
+    for (c_index = 0; c_index < 3; c_index++) {
+        points = g_new(GwyPoint, point_count);
+        for (i = 0; i < point_count; i++) {
+            points[i].x = grad_points[i].x;
+            /* FIXME: shouldn't the 0, 1, 2 be some enum values? */
+            if (c_index == 0)
+                points[i].y = grad_points[i].color.r;
+            else if (c_index == 1)
+                points[i].y = grad_points[i].color.g;
+            else if (c_index == 2)
+                points[i].y = grad_points[i].color.b;
+        }
+        channel_data[c_index].ctlpoints = points;
+        channel_data[c_index].num_ctlpoints = point_count;
+    }
+
+    /* Send these control points to the GwyCuve. Note that GwyCurve will
+       copy out the channel data, so we must still free the array */
+    gwy_curve_set_control_points(GWY_CURVE(editor->curve), channel_data);
+
+    for (i = 0; i < 3; i++) {
+        g_free(channel_data[i].ctlpoints);
+    }
+    g_free(channel_data);
 }
 
 static void
@@ -488,7 +567,58 @@ gwy_gradient_editor_marker_removed(GwyGradientEditor *editor,
 static void
 gwy_resource_editor_gradient_changed(GwyGradientEditor *editor)
 {
-    gtk_widget_queue_draw(editor->preview);
+    if (GTK_WIDGET_VISIBLE(editor->preview))
+        gtk_widget_queue_draw(editor->preview);
+}
+
+static void
+gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
+                                 GwyGradientEditor *editor)
+{
+    EditingMode mode;
+
+    mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
+    switch (mode) {
+        case EDITING_MODE_POINTS:
+        /* TODO: update points */
+        gtk_widget_set_no_show_all(editor->curve, TRUE);
+        gtk_widget_hide(editor->curve);
+        gtk_widget_set_no_show_all(editor->markers, FALSE);
+        gtk_widget_show(editor->markers);
+        gtk_widget_set_no_show_all(editor->colorsel, FALSE);
+        gtk_widget_show(editor->colorsel);
+        break;
+
+        case EDITING_MODE_CURVE:
+        gwy_gradient_editor_update_curve(editor);
+        gtk_widget_set_no_show_all(editor->colorsel, TRUE);
+        gtk_widget_hide(editor->colorsel);
+        gtk_widget_set_no_show_all(editor->markers, TRUE);
+        gtk_widget_hide(editor->markers);
+        gtk_widget_set_no_show_all(editor->curve, FALSE);
+        gtk_widget_show(editor->curve);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+}
+
+static void
+gwy_gradient_editor_curve_edited(GwyGradientEditor *editor)
+{
+    GwyResourceEditor *res_editor;
+    GwyGradient *gradient;
+    GwyChannelData *channel_data;
+
+    res_editor = GWY_RESOURCE_EDITOR(editor);
+    gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
+
+    /* Get a pointer to the Curve channel data */
+    /*gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);*/
+
+    /* TODO */
 }
 
 /************************** Documentation ****************************/
