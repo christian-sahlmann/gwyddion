@@ -100,6 +100,8 @@ static void gwy_gradient_editor_marker_removed  (GwyGradientEditor *editor,
 static void gwy_resource_editor_gradient_changed(GwyGradientEditor *editor);
 static void gwy_gradient_editor_mode_changed    (GtkWidget *toggle,
                                                  GwyGradientEditor *editor);
+static void gwy_gradient_editor_save_view       (GwyGradientEditor *editor);
+static void gwy_gradient_editor_load_view       (GwyGradientEditor *editor);
 static void gwy_gradient_editor_curve_edited    (GwyGradientEditor *editor);
 
 G_DEFINE_TYPE(GwyGradientEditor, gwy_gradient_editor,
@@ -233,12 +235,13 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
 
     hbox = gtk_hbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+    g_signal_connect_swapped(hbox, "destroy",
+                             G_CALLBACK(gwy_gradient_editor_save_view), editor);
 
     group = gwy_radio_buttons_create
                         (editing_modes, G_N_ELEMENTS(editing_modes),
                          "editing-mode",
                          G_CALLBACK(gwy_gradient_editor_mode_changed),
-                         /* TODO: remember mode */
                          editor, EDITING_MODE_POINTS);
     for (l = group; l; l = g_slist_next(l)) {
         gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(l->data), FALSE);
@@ -297,11 +300,8 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
                              editor);
     gtk_box_pack_start(GTK_BOX(vvbox), editor->preview, FALSE, FALSE, 0);
 
-    /* TODO: remember mode, show appropriate widgets */
-    gtk_widget_set_no_show_all(editor->curve, TRUE);
+    gwy_gradient_editor_load_view(editor);
     gtk_widget_show_all(vbox);
-
-    /* switch */
     gwy_gradient_editor_switch(res_editor);
 }
 
@@ -603,6 +603,54 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
         g_return_if_reached();
         break;
     }
+}
+
+static void
+gwy_gradient_editor_save_view(GwyGradientEditor *editor)
+{
+    GwyResourceClass *klass;
+    GwyContainer *settings;
+    EditingMode mode;
+    const gchar *name;
+    GString *key;
+
+    klass = g_type_class_ref(GWY_TYPE_GRADIENT);
+    name = gwy_resource_class_get_name(klass);
+    g_type_class_unref(klass);
+
+    key = g_string_new("");
+    g_string_printf(key, "/app/%s/editor/mode", name);
+
+    settings = gwy_app_settings_get();
+    mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
+    gwy_container_set_enum_by_name(settings, key->str, mode);
+    g_string_free(key, TRUE);
+}
+
+static void
+gwy_gradient_editor_load_view(GwyGradientEditor *editor)
+{
+    GwyResourceClass *klass;
+    GwyContainer *settings;
+    EditingMode mode;
+    const gchar *name;
+    GString *key;
+
+    klass = g_type_class_ref(GWY_TYPE_GRADIENT);
+    name = gwy_resource_class_get_name(klass);
+    g_type_class_unref(klass);
+
+    key = g_string_new("");
+    g_string_printf(key, "/app/%s/editor/mode", name);
+
+    settings = gwy_app_settings_get();
+    mode = EDITING_MODE_POINTS;
+    gwy_container_gis_enum_by_name(settings, key->str, &mode);
+    g_string_free(key, TRUE);
+
+    gwy_radio_buttons_set_current(editor->mode_group, "editing-mode", mode);
+    /* The button doesn't emit anything when it's already in the right state. */
+    gwy_gradient_editor_mode_changed(NULL, editor);
 }
 
 static void
