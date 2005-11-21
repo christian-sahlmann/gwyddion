@@ -23,6 +23,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtkwidget.h>
+#include <libdraw/gwydrawenums.h>
 #include <libdraw/gwyselection.h>
 #include <libgwydgets/gwydataviewlayer.h>
 
@@ -62,35 +63,43 @@ struct _GwyVectorLayerClass {
     GType selection_type;
 
     /* Virtual table */
-    void (*draw)(GwyVectorLayer *layer, GdkDrawable *drawable);
-    gboolean (*button_press)(GwyVectorLayer *layer, GdkEventButton *event);
-    gboolean (*button_release)(GwyVectorLayer *layer, GdkEventButton *event);
-    gboolean (*motion_notify)(GwyVectorLayer *layer, GdkEventMotion *event);
-    gboolean (*key_press)(GwyVectorLayer *layer, GdkEventKey *event);
-    gboolean (*key_release)(GwyVectorLayer *layer, GdkEventKey *event);
+    void (*draw)(GwyVectorLayer *layer,
+                 GdkDrawable *drawable,
+                 GwyRenderingTarget target);
+    gboolean (*button_press)(GwyVectorLayer *layer,
+                             GdkEventButton *event);
+    gboolean (*button_release)(GwyVectorLayer *layer,
+                               GdkEventButton *event);
+    gboolean (*motion_notify)(GwyVectorLayer *layer,
+                              GdkEventMotion *event);
+    gboolean (*key_press)(GwyVectorLayer *layer,
+                          GdkEventKey *event);
+    gboolean (*key_release)(GwyVectorLayer *layer,
+                            GdkEventKey *event);
 
     gpointer reserved1;
     gpointer reserved2;
 };
 
-GType            gwy_vector_layer_get_type           (void) G_GNUC_CONST;
-GwySelection*    gwy_vector_layer_get_selection      (GwyVectorLayer *layer);
-void             gwy_vector_layer_set_selection_key  (GwyVectorLayer *layer,
-                                                      const gchar *key);
-const gchar*     gwy_vector_layer_get_selection_key  (GwyVectorLayer *layer);
+GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;
+GwySelection* gwy_vector_layer_get_selection    (GwyVectorLayer *layer);
+void          gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
+                                                 const gchar *key);
+const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);
 
-void             gwy_vector_layer_draw               (GwyVectorLayer *layer,
-                                                      GdkDrawable *drawable);
-gboolean         gwy_vector_layer_button_press       (GwyVectorLayer *layer,
-                                                      GdkEventButton *event);
-gboolean         gwy_vector_layer_button_release     (GwyVectorLayer *layer,
-                                                      GdkEventButton *event);
-gboolean         gwy_vector_layer_motion_notify      (GwyVectorLayer *layer,
-                                                      GdkEventMotion *event);
-gboolean         gwy_vector_layer_key_press          (GwyVectorLayer *layer,
-                                                      GdkEventKey *event);
-gboolean         gwy_vector_layer_key_release        (GwyVectorLayer *layer,
-                                                      GdkEventKey *event);
+void          gwy_vector_layer_draw             (GwyVectorLayer *layer,
+                                                 GdkDrawable *drawable,
+                                                 GwyRenderingTarget target);
+gboolean      gwy_vector_layer_button_press     (GwyVectorLayer *layer,
+                                                 GdkEventButton *event);
+gboolean      gwy_vector_layer_button_release   (GwyVectorLayer *layer,
+                                                 GdkEventButton *event);
+gboolean      gwy_vector_layer_motion_notify    (GwyVectorLayer *layer,
+                                                 GdkEventMotion *event);
+gboolean      gwy_vector_layer_key_press        (GwyVectorLayer *layer,
+                                                 GdkEventKey *event);
+gboolean      gwy_vector_layer_key_release      (GwyVectorLayer *layer,
+                                                 GdkEventKey *event);
 
 G_END_DECLS
 

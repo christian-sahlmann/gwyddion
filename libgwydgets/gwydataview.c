@@ -118,8 +118,6 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     widget_class->key_press_event = gwy_data_view_key_press;
     widget_class->key_release_event = gwy_data_view_key_release;
 
-    klass->redrawn = NULL;
-
     /**
      * GwyDataView:zoom:
      *
@@ -590,7 +588,8 @@ gwy_data_view_expose(GtkWidget *widget,
 
     if (data_view->top_layer)
         gwy_vector_layer_draw(GWY_VECTOR_LAYER(data_view->top_layer),
-                              widget->window);
+                              widget->window,
+                              GWY_RENDERING_TARGET_SCREEN);
 
     if (emit_redrawn)
         g_signal_emit(data_view, data_view_signals[REDRAWN], 0);

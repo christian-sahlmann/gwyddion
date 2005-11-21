@@ -100,7 +100,8 @@ static void     gwy_selection_axis_clone          (GObject *source,
 static void     gwy_selection_axis_set_orientation(GwySelectionAxis *selection,
                                                    GwyOrientation orientation);
 static void     gwy_layer_axis_draw               (GwyVectorLayer *layer,
-                                                   GdkDrawable *drawable);
+                                                   GdkDrawable *drawable,
+                                                   GwyRenderingTarget target);
 static void     gwy_layer_axis_draw_object        (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable,
                                                    gint i);
@@ -358,7 +359,8 @@ gwy_selection_axis_set_orientation(GwySelectionAxis *selection,
 
 static void
 gwy_layer_axis_draw(GwyVectorLayer *layer,
-                    GdkDrawable *drawable)
+                    GdkDrawable *drawable,
+                    GwyRenderingTarget target)
 {
     gint i, n;
 

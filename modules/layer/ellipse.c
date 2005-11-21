@@ -90,7 +90,8 @@ static void     gwy_layer_ellipse_get_property   (GObject*object,
                                                   GValue *value,
                                                   GParamSpec *pspec);
 static void     gwy_layer_ellipse_draw           (GwyVectorLayer *layer,
-                                                  GdkDrawable *drawable);
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target);
 static void     gwy_layer_ellipse_draw_object    (GwyVectorLayer *layer,
                                                   GdkDrawable *drawable,
                                                   gint i);
@@ -239,7 +240,8 @@ gwy_layer_ellipse_get_property(GObject*object,
 
 static void
 gwy_layer_ellipse_draw(GwyVectorLayer *layer,
-                       GdkDrawable *drawable)
+                       GdkDrawable *drawable,
+                       GwyRenderingTarget target)
 {
     gint i, n;
 
@@ -501,10 +503,12 @@ gwy_layer_ellipse_set_reflection(GwyLayerEllipse *layer,
         return;
 
     if (parent)
-        gwy_layer_ellipse_undraw(vector_layer, parent->window);
+        gwy_layer_ellipse_undraw(vector_layer, parent->window,
+                                 GWY_RENDERING_TARGET_SCREEN);
     layer->draw_reflection = draw_reflection;
     if (parent)
-        gwy_layer_ellipse_draw(vector_layer, parent->window);
+        gwy_layer_ellipse_draw(vector_layer, parent->window,
+                               GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-reflection");
 }
 

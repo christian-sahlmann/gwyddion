@@ -92,7 +92,8 @@ static void     gwy_layer_rectangle_get_property   (GObject*object,
                                                     GValue *value,
                                                     GParamSpec *pspec);
 static void     gwy_layer_rectangle_draw           (GwyVectorLayer *layer,
-                                                    GdkDrawable *drawable);
+                                                    GdkDrawable *drawable,
+                                                    GwyRenderingTarget target);
 static void     gwy_layer_rectangle_draw_object    (GwyVectorLayer *layer,
                                                     GdkDrawable *drawable,
                                                     gint i);
@@ -261,7 +262,8 @@ gwy_layer_rectangle_get_property(GObject*object,
 
 static void
 gwy_layer_rectangle_draw(GwyVectorLayer *layer,
-                         GdkDrawable *drawable)
+                         GdkDrawable *drawable,
+                         GwyRenderingTarget target)
 {
     gint i, n;
 
@@ -535,10 +537,12 @@ gwy_layer_rectangle_set_is_crop(GwyLayerRectangle *layer,
         return;
 
     if (parent)
-        gwy_layer_rectangle_undraw(vector_layer, parent->window);
+        gwy_layer_rectangle_undraw(vector_layer, parent->window,
+                                   GWY_RENDERING_TARGET_SCREEN);
     layer->is_crop = is_crop;
     if (parent)
-        gwy_layer_rectangle_draw(vector_layer, parent->window);
+        gwy_layer_rectangle_draw(vector_layer, parent->window,
+                                 GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "is-crop");
 }
 
@@ -557,10 +561,12 @@ gwy_layer_rectangle_set_reflection(GwyLayerRectangle *layer,
         return;
 
     if (parent)
-        gwy_layer_rectangle_undraw(vector_layer, parent->window);
+        gwy_layer_rectangle_undraw(vector_layer, parent->window,
+                                   GWY_RENDERING_TARGET_SCREEN);
     layer->draw_reflection = draw_reflection;
     if (parent)
-        gwy_layer_rectangle_draw(vector_layer, parent->window);
+        gwy_layer_rectangle_draw(vector_layer, parent->window,
+                                 GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-reflection");
 }
 

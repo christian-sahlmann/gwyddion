@@ -104,7 +104,8 @@ static void     gwy_layer_line_get_property    (GObject*object,
                                                 GValue *value,
                                                 GParamSpec *pspec);
 static void     gwy_layer_line_draw            (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable);
+                                                GdkDrawable *drawable,
+                                                GwyRenderingTarget target);
 static void     gwy_layer_line_draw_object     (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
                                                 gint i);
@@ -272,16 +273,19 @@ gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
         return;
 
     if (parent)
-        gwy_layer_line_undraw(vector_layer, parent->window);
+        gwy_layer_line_undraw(vector_layer, parent->window,
+                              GWY_RENDERING_TARGET_SCREEN);
     layer->line_numbers = line_numbers;
     if (parent)
-        gwy_layer_line_draw(vector_layer, parent->window);
+        gwy_layer_line_draw(vector_layer, parent->window,
+                            GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "line-numbers");
 }
 
 static void
 gwy_layer_line_draw(GwyVectorLayer *layer,
-                    GdkDrawable *drawable)
+                    GdkDrawable *drawable,
+                    GwyRenderingTarget target)
 {
     gint i, n;
 

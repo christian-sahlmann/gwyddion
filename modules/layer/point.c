@@ -88,7 +88,8 @@ static void     gwy_layer_point_get_property   (GObject*object,
                                                 GValue *value,
                                                 GParamSpec *pspec);
 static void     gwy_layer_point_draw           (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable);
+                                                GdkDrawable *drawable,
+                                                GwyRenderingTarget target);
 static void     gwy_layer_point_draw_object    (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
                                                 gint i);
@@ -231,7 +232,8 @@ gwy_layer_point_get_property(GObject*object,
 
 static void
 gwy_layer_point_draw(GwyVectorLayer *layer,
-                     GdkDrawable *drawable)
+                     GdkDrawable *drawable,
+                     GwyRenderingTarget target)
 {
     gint i, n;
 
@@ -432,10 +434,12 @@ gwy_layer_point_set_draw_marker(GwyLayerPoint *layer,
         return;
 
     if (parent)
-        gwy_layer_point_undraw(vector_layer, parent->window);
+        gwy_layer_point_undraw(vector_layer, parent->window,
+                               GWY_RENDERING_TARGET_SCREEN);
     layer->draw_marker = draw_marker;
     if (parent)
-        gwy_layer_point_draw(vector_layer, parent->window);
+        gwy_layer_point_draw(vector_layer, parent->window,
+                             GWY_RENDERING_TARGET_SCREEN);
     g_object_notify(G_OBJECT(layer), "draw-marker");
 }
 

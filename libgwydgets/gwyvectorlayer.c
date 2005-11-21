@@ -156,18 +156,20 @@ gwy_vector_layer_get_property(GObject *object,
  * gwy_vector_layer_draw:
  * @layer: A vector data view layer.
  * @drawable: A drawable to draw on.
+ * @target: Rendering target.
  *
  * Draws @layer on given drawable (which should be a #GwyDataView window).
  **/
 void
 gwy_vector_layer_draw(GwyVectorLayer *layer,
-                      GdkDrawable *drawable)
+                      GdkDrawable *drawable,
+                      GwyRenderingTarget target)
 {
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
 
     g_assert(layer_class);
     g_return_if_fail(layer_class->draw);
-    layer_class->draw(layer, drawable);
+    layer_class->draw(layer, drawable, target);
 }
 
 /**
