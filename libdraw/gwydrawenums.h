@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,22 +18,22 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_GWYDRAW_H__
-#define __GWY_GWYDRAW_H__
+#ifndef __GWY_DRAW_ENUMS_H__
+#define __GWY_DRAW_ENUMS_H__
 
-#include <libdraw/gwydrawenums.h>
-#include <libdraw/gwyglmaterial.h>
-#include <libdraw/gwygradient.h>
-#include <libdraw/gwypixfield.h>
-#include <libdraw/gwyrgba.h>
-#include <libdraw/gwyselection.h>
+#include <glib/gmacros.h>
+#include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS
 
-void gwy_draw_type_init(void);
+/* `rendering intent' is a term meaning something else, avoid it */
+typedef enum {
+    GWY_RENDERING_TARGET_SCREEN,
+    GWY_RENDERING_TARGET_PIXMAP_IMAGE
+} GwyRenderingTarget;
 
 G_END_DECLS
 
-#endif /* __GWY_GWYDRAW_H__ */
+#endif /*__GWY_DRAW_ENUMS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

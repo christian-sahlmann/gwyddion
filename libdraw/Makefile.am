@@ -7,6 +7,7 @@ libgwydrawincludedir = $(pkgincludedir)/libdraw
 
 libgwydrawinclude_HEADERS = \
 	gwydraw.h \
+	gwydrawenums.h \
 	gwyglmaterial.h \
 	gwygradient.h \
 	gwypixfield.h \
