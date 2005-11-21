@@ -2262,7 +2262,7 @@ gwy_data_field_renormalize(GwyDataField *data_field,
     }
 
     min = gwy_data_field_get_min(data_field);
-    max = gwy_data_field_get_min(data_field);
+    max = gwy_data_field_get_max(data_field);
     if (min == max) {
         gwy_data_field_fill(data_field, offset);
         return;
