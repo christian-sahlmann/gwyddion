@@ -135,6 +135,7 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
             dval = (gint)((*(row++) - minimum)*cor + 0.5);
             /* simply index to the guchar samples, it's faster and no one
              * can tell the difference... */
+            dval = CLAMP(dval, 0, palsize-1);
             s = samples + 4*dval;
             *(line++) = *(s++);
             *(line++) = *(s++);
