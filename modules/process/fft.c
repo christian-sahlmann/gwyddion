@@ -197,7 +197,7 @@ fft(GwyContainer *data, GwyRunType run)
         || args.out == GWY_FFT_OUTPUT_REAL) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
         gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
-        fft_create_output(data, dfield, _("FFT Real"));
+        fft_create_output(data, tmp, _("FFT Real"));
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
