@@ -298,7 +298,7 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
 
     gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, xy);
     if (GWY_LAYER_RECTANGLE(layer)->draw_reflection) {
-        gwy_data_view_get_real_sizes(data_view, &xreal, &yreal);
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         xy[0] = xreal - xy[0];
         xy[1] = yreal - xy[1];
         xy[2] = xreal - xy[2];

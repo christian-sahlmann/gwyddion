@@ -65,7 +65,6 @@ static void     simple_gdk_pixbuf_composite        (GdkPixbuf *source,
 static void     simple_gdk_pixbuf_scale_or_copy    (GdkPixbuf *source,
                                                     GdkPixbuf *dest);
 static void     gwy_data_view_make_pixmap          (GwyDataView *data_view);
-static GwyDataField* gwy_data_view_get_base_field  (GwyDataView *data_view);
 static void     gwy_data_view_paint                (GwyDataView *data_view);
 static gboolean gwy_data_view_expose               (GtkWidget *widget,
                                                     GdkEventExpose *event);
@@ -351,7 +350,6 @@ gwy_data_view_size_request(GtkWidget *widget,
 {
     GwyDataView *data_view;
     GwyContainer *data;
-    GwyDataField *data_field;
     const gchar *key;
 
     gwy_debug(" ");
@@ -364,13 +362,8 @@ gwy_data_view_size_request(GtkWidget *widget,
     key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
     if (!key)
         return;
-    data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
-    if (!data_field)
-        return;
-    requisition->width = data_view->newzoom
-                         * gwy_data_field_get_xres(data_field);
-    requisition->height = data_view->newzoom
-                          * gwy_data_field_get_yres(data_field);
+    requisition->width = data_view->newzoom * data_view->xres;
+    requisition->height = data_view->newzoom * data_view->yres;
 
     data_view->size_requested = TRUE;
     gwy_debug("requesting %d x %d",
@@ -412,25 +405,20 @@ static void
 gwy_data_view_make_pixmap(GwyDataView *data_view)
 {
     GtkWidget *widget;
-    GwyDataField *data_field;
-    gint width, height, scwidth, scheight, src_width, src_height;
-
-    data_field = gwy_data_view_get_base_field(data_view);
-    g_return_if_fail(data_field);
-    src_width = gwy_data_field_get_xres(data_field);
-    src_height = gwy_data_field_get_yres(data_field);
+    gint width, height, scwidth, scheight;
 
     if (data_view->base_pixbuf) {
         width = gdk_pixbuf_get_width(data_view->base_pixbuf);
         height = gdk_pixbuf_get_height(data_view->base_pixbuf);
-        if (width != src_width || height != src_height)
+        if (width != data_view->xres || height != data_view->yres)
             gwy_object_unref(data_view->base_pixbuf);
     }
     if (!data_view->base_pixbuf) {
         data_view->base_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,
                                                 FALSE,
                                                 BITS_PER_SAMPLE,
-                                                src_width, src_height);
+                                                data_view->xres,
+                                                data_view->yres);
         gwy_debug_objects_creation(G_OBJECT(data_view->base_pixbuf));
     }
 
@@ -442,12 +430,10 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         width = height = -1;
 
     widget = GTK_WIDGET(data_view);
-    data_view->zoom = MIN((gdouble)widget->allocation.width/src_width,
-                          (gdouble)widget->allocation.height/src_height);
-    scwidth = floor(src_width * data_view->zoom + 0.000001);
-    scheight = floor(src_height * data_view->zoom + 0.000001);
-    data_view->xreal = gwy_data_field_get_xreal(data_field);
-    data_view->yreal = gwy_data_field_get_yreal(data_field);
+    data_view->zoom = MIN((gdouble)widget->allocation.width/data_view->xres,
+                          (gdouble)widget->allocation.height/data_view->yres);
+    scwidth = floor(data_view->xres * data_view->zoom + 0.000001);
+    scheight = floor(data_view->yres * data_view->zoom + 0.000001);
     data_view->xmeasure = data_view->xreal/scwidth;
     data_view->ymeasure = data_view->yreal/scheight;
     data_view->xoff = (widget->allocation.width - scwidth)/2;
@@ -462,18 +448,6 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
         gdk_pixbuf_fill(data_view->pixbuf, 0x00000000);
         gwy_data_view_paint(data_view);
     }
-}
-
-static GwyDataField*
-gwy_data_view_get_base_field(GwyDataView *data_view)
-{
-    const gchar *key;
-    gpointer *data_field;
-
-    key = gwy_pixmap_layer_get_data_key(data_view->base_layer);
-    data_field = gwy_container_get_object_by_name(data_view->data, key);
-
-    return GWY_DATA_FIELD(data_field);
 }
 
 static void
@@ -679,24 +653,32 @@ gwy_data_view_update(GwyDataView *data_view)
 {
     GtkWidget *widget;
     GwyDataField *data_field;
-    gint dxres, dyres, pxres, pyres;
+    const gchar *key;
+    gint pxres, pyres;
     gboolean need_resize = FALSE;
 
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 
+    if (!data_view->base_layer
+        || !(key = gwy_pixmap_layer_get_data_key(data_view->base_layer))
+        || !(data_field = gwy_container_get_object_by_name(data_view->data,
+                                                           key)))
+        return;
+
+    data_view->xres = gwy_data_field_get_xres(data_field);
+    data_view->yres = gwy_data_field_get_yres(data_field);
+    data_view->xreal = gwy_data_field_get_xreal(data_field);
+    data_view->yreal = gwy_data_field_get_yreal(data_field);
     widget = GTK_WIDGET(data_view);
     if (!widget->window)
         return;
 
-    data_field = gwy_data_view_get_base_field(data_view);
-    g_return_if_fail(data_field);    /* Fail hard as widget->window exists */
-    dxres = gwy_data_field_get_xres(data_field);
-    dyres = gwy_data_field_get_yres(data_field);
     if (data_view->base_pixbuf) {
         pxres = gdk_pixbuf_get_width(data_view->base_pixbuf);
         pyres = gdk_pixbuf_get_height(data_view->base_pixbuf);
-        gwy_debug("field: %dx%d, pixbuf: %dx%d", dxres, dyres, pxres, pyres);
-        if (pxres != dxres || pyres != dyres)
+        gwy_debug("field: %dx%d, pixbuf: %dx%d",
+                  data_view->xres, data_view->yres, pxres, pyres);
+        if (pxres != data_view->xres || pyres != data_view->yres)
             need_resize = TRUE;
     }
 
@@ -1117,24 +1099,47 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
 /**
  * gwy_data_view_get_real_sizes:
  * @data_view: A data view.
+ * @xres: Location to store x-resolution of displayed data (or %NULL).
+ * @yres: Location to store y-resolution of displayed data (or %NULL).
+ *
+ * Obtains pixel dimensions of data displayed by a data view.
+ *
+ * This is a convenience method, the same values could be obtained
+ * by gwy_data_field_get_xres() and gwy_data_field_get_yres() of the data
+ * field displayed by base layer.
+ **/
+void
+gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
+                                   gint *xres,
+                                   gint *yres)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    if (xres)
+        *xres = data_view->xres;
+    if (yres)
+        *yres = data_view->yres;
+}
+
+/**
+ * gwy_data_view_get_real_sizes:
+ * @data_view: A data view.
  * @xreal: Location to store physical x-dimension of the displayed data
  *         without excess (or %NULL).
  * @yreal: Location to store physical y-dimension of the displayed data
  *         without excess (or %NULL).
  *
- * Obtains the physical dimensions of the displayed data.
+ * Obtains physical dimensions of data displayed by a data view.
  *
  * Physical coordinates are always taken from data field displayed by base
  * layer.  This is a convenience method, the same values could be obtained
  * by gwy_data_field_get_xreal() and gwy_data_field_get_yreal() of the data
- * field displayed by base layer.  Except this method returns the current
- * values in use by @data_view, if the data field has changed but has not been
- * drawn yet, the old dimensions are returned.
+ * field displayed by base layer.
  **/
 void
-gwy_data_view_get_real_sizes(GwyDataView *data_view,
-                             gdouble *xreal,
-                             gdouble *yreal)
+gwy_data_view_get_real_data_sizes(GwyDataView *data_view,
+                                  gdouble *xreal,
+                                  gdouble *yreal)
 {
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
 

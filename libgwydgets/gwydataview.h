@@ -61,10 +61,13 @@ struct _GwyDataView {
     gdouble newzoom;    /* requested (ideal) zoom value */
     gdouble xmeasure;    /* physical units per pixel */
     gdouble ymeasure;    /* physical units per pixel */
-    gdouble xreal;
-    gdouble yreal;
     gint xoff;    /* x offset of the pixbuf from widget->allocation.x */
     gint yoff;    /* y offset of the pixbuf from widget->allocation.y */
+
+    gint xres;
+    gint yres;
+    gdouble xreal;
+    gdouble yreal;
 
     GdkPixbuf *pixbuf;      /* everything, this is drawn on the screen */
     GdkPixbuf *base_pixbuf; /* unscaled base (lower layers) */
@@ -81,46 +84,48 @@ struct _GwyDataViewClass {
     gpointer reserved2;
 };
 
-GtkWidget*        gwy_data_view_new               (GwyContainer *data);
-GType             gwy_data_view_get_type          (void) G_GNUC_CONST;
-
-GwyPixmapLayer*   gwy_data_view_get_base_layer    (GwyDataView *data_view);
-GwyPixmapLayer*   gwy_data_view_get_alpha_layer   (GwyDataView *data_view);
-GwyVectorLayer*   gwy_data_view_get_top_layer     (GwyDataView *data_view);
-void              gwy_data_view_set_base_layer    (GwyDataView *data_view,
+GType           gwy_data_view_get_type            (void) G_GNUC_CONST;
+GtkWidget*      gwy_data_view_new                 (GwyContainer *data);
+GwyPixmapLayer* gwy_data_view_get_base_layer      (GwyDataView *data_view);
+GwyPixmapLayer* gwy_data_view_get_alpha_layer     (GwyDataView *data_view);
+GwyVectorLayer* gwy_data_view_get_top_layer       (GwyDataView *data_view);
+void            gwy_data_view_set_base_layer      (GwyDataView *data_view,
                                                    GwyPixmapLayer *layer);
-void              gwy_data_view_set_alpha_layer   (GwyDataView *data_view,
+void            gwy_data_view_set_alpha_layer     (GwyDataView *data_view,
                                                    GwyPixmapLayer *layer);
-void              gwy_data_view_set_top_layer     (GwyDataView *data_view,
+void            gwy_data_view_set_top_layer       (GwyDataView *data_view,
                                                    GwyVectorLayer *layer);
-gdouble           gwy_data_view_get_hexcess       (GwyDataView* data_view);
-gdouble           gwy_data_view_get_vexcess       (GwyDataView* data_view);
-void              gwy_data_view_set_zoom          (GwyDataView *data_view,
+gdouble         gwy_data_view_get_hexcess         (GwyDataView* data_view);
+gdouble         gwy_data_view_get_vexcess         (GwyDataView* data_view);
+void            gwy_data_view_set_zoom            (GwyDataView *data_view,
                                                    gdouble zoom);
-gdouble           gwy_data_view_get_zoom          (GwyDataView *data_view);
-gdouble           gwy_data_view_get_real_zoom     (GwyDataView *data_view);
-GwyContainer*     gwy_data_view_get_data          (GwyDataView *data_view);
-void              gwy_data_view_coords_xy_clamp   (GwyDataView *data_view,
+gdouble         gwy_data_view_get_zoom            (GwyDataView *data_view);
+gdouble         gwy_data_view_get_real_zoom       (GwyDataView *data_view);
+GwyContainer*   gwy_data_view_get_data            (GwyDataView *data_view);
+void            gwy_data_view_coords_xy_clamp     (GwyDataView *data_view,
                                                    gint *xscr,
                                                    gint *yscr);
-void              gwy_data_view_coords_xy_to_real (GwyDataView *data_view,
+void            gwy_data_view_coords_xy_to_real   (GwyDataView *data_view,
                                                    gint xscr,
                                                    gint yscr,
                                                    gdouble *xreal,
                                                    gdouble *yreal);
-void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
+void            gwy_data_view_coords_real_to_xy   (GwyDataView *data_view,
                                                    gdouble xreal,
                                                    gdouble yreal,
                                                    gint *xscr,
                                                    gint *yscr);
-gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
-gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
-void              gwy_data_view_get_real_sizes    (GwyDataView *data_view,
+gdouble         gwy_data_view_get_xmeasure        (GwyDataView *data_view);
+gdouble         gwy_data_view_get_ymeasure        (GwyDataView *data_view);
+void            gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
+                                                   gint *xres,
+                                                   gint *yres);
+void            gwy_data_view_get_real_data_sizes (GwyDataView *data_view,
                                                    gdouble *xreal,
                                                    gdouble *yreal);
-GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
+GdkPixbuf*      gwy_data_view_get_thumbnail       (GwyDataView *data_view,
                                                    gint size);
-GdkPixbuf*        gwy_data_view_get_pixbuf        (GwyDataView *data_view,
+GdkPixbuf*      gwy_data_view_get_pixbuf          (GwyDataView *data_view,
                                                    gint max_width,
                                                    gint max_height);
 
