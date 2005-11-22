@@ -92,6 +92,7 @@ static void     gwy_layer_point_draw           (GwyVectorLayer *layer,
                                                 GwyRenderingTarget target);
 static void     gwy_layer_point_draw_object    (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
+                                                GwyRenderingTarget target,
                                                 gint i);
 static gboolean gwy_layer_point_motion_notify  (GwyVectorLayer *layer,
                                                 GdkEventMotion *event);
@@ -245,17 +246,18 @@ gwy_layer_point_draw(GwyVectorLayer *layer,
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_point_draw_object(layer, drawable, i);
+        gwy_layer_point_draw_object(layer, drawable, target, i);
 }
 
 static void
 gwy_layer_point_draw_object(GwyVectorLayer *layer,
                             GdkDrawable *drawable,
+                            GwyRenderingTarget target,
                             gint i)
 {
     GwyDataView *data_view;
-    gint xc, yc, xmin, xmax, ymin, ymax;
-    gdouble xy[OBJECT_SIZE];
+    gint xc, yc, xmin, xmax, ymin, ymax, width, height, size;
+    gdouble xy[OBJECT_SIZE], xreal, yreal, zoom;
     gboolean has_object;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -268,13 +270,38 @@ gwy_layer_point_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xc, &yc);
-    xmin = xc - CROSS_SIZE + 1;
-    xmax = xc + CROSS_SIZE - 1;
-    ymin = yc - CROSS_SIZE + 1;
-    ymax = yc + CROSS_SIZE - 1;
-    gwy_data_view_coords_xy_clamp(data_view, &xmin, &ymin);
-    gwy_data_view_coords_xy_clamp(data_view, &xmax, &ymax);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xc, &yc);
+        xmin = xc - CROSS_SIZE + 1;
+        xmax = xc + CROSS_SIZE - 1;
+        ymin = yc - CROSS_SIZE + 1;
+        ymax = yc + CROSS_SIZE - 1;
+        gwy_data_view_coords_xy_clamp(data_view, &xmin, &ymin);
+        gwy_data_view_coords_xy_clamp(data_view, &xmax, &ymax);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gwy_data_view_get_pixel_data_sizes(data_view, &xmax, &ymax);
+        gdk_drawable_get_size(drawable, &width, &height);
+        zoom = sqrt(((gdouble)(width*height))/(xmax*ymax));
+        size = ROUND(MAX(zoom*(CROSS_SIZE - 1), 1.0));
+
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+        xc = floor(xy[0]*width/xreal);
+        yc = floor(xy[1]*height/yreal);
+
+        xmin = xc - size;
+        xmax = xc + size;
+        ymin = yc - size;
+        ymax = yc + size;
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
     gdk_draw_line(drawable, layer->gc, xmin, yc, xmax, yc);
     gdk_draw_line(drawable, layer->gc, xc, ymin, xc, ymax);
 }
@@ -358,7 +385,9 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_point_near_point(layer, xreal, yreal);
     if (i >= 0) {
         layer->selecting = i;
-        gwy_layer_point_undraw_object(layer, window, layer->selecting);
+        gwy_layer_point_undraw_object(layer, window,
+                                      GWY_RENDERING_TARGET_SCREEN,
+                                      layer->selecting);
     }
     else {
         /* add an object, or do nothing when maximum is reached */
@@ -367,7 +396,8 @@ gwy_layer_point_button_pressed(GwyVectorLayer *layer,
             if (gwy_selection_get_max_objects(layer->selection) > 1)
                 return FALSE;
             i = 0;
-            gwy_layer_point_undraw_object(layer, window, i);
+            gwy_layer_point_undraw_object(layer, window,
+                                          GWY_RENDERING_TARGET_SCREEN, i);
         }
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
@@ -407,7 +437,7 @@ gwy_layer_point_button_released(GwyVectorLayer *layer,
     xy[0] = xreal;
     xy[1] = yreal;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_point_draw_object(layer, window, i);
+    gwy_layer_point_draw_object(layer, window, GWY_RENDERING_TARGET_SCREEN, i);
 
     layer->selecting = -1;
     klass = GWY_LAYER_POINT_GET_CLASS(layer);

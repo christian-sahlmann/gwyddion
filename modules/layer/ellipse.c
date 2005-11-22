@@ -94,10 +94,12 @@ static void     gwy_layer_ellipse_draw           (GwyVectorLayer *layer,
                                                   GwyRenderingTarget target);
 static void     gwy_layer_ellipse_draw_object    (GwyVectorLayer *layer,
                                                   GdkDrawable *drawable,
+                                                  GwyRenderingTarget target,
                                                   gint i);
 static void     gwy_layer_ellipse_draw_ellipse   (GwyVectorLayer *layer,
                                                   GwyDataView *data_view,
                                                   GdkDrawable *drawable,
+                                                  GwyRenderingTarget target,
                                                   const gdouble *xy);
 static gboolean gwy_layer_ellipse_motion_notify  (GwyVectorLayer *layer,
                                                   GdkEventMotion *event);
@@ -254,12 +256,13 @@ gwy_layer_ellipse_draw(GwyVectorLayer *layer,
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_ellipse_draw_object(layer, drawable, i);
+        gwy_layer_ellipse_draw_object(layer, drawable, target, i);
 }
 
 static void
 gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
                               GdkDrawable *drawable,
+                              GwyRenderingTarget target,
                               gint i)
 {
     GwyDataView *data_view;
@@ -274,14 +277,14 @@ gwy_layer_ellipse_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, xy);
+    gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, target, xy);
     if (GWY_LAYER_ELLIPSE(layer)->draw_reflection) {
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         xy[0] = xreal - xy[0];
         xy[1] = yreal - xy[1];
         xy[2] = xreal - xy[2];
         xy[3] = yreal - xy[3];
-        gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, xy);
+        gwy_layer_ellipse_draw_ellipse(layer, data_view, drawable, target, xy);
     }
 }
 
@@ -289,12 +292,32 @@ static void
 gwy_layer_ellipse_draw_ellipse(GwyVectorLayer *layer,
                                GwyDataView *data_view,
                                GdkDrawable *drawable,
+                               GwyRenderingTarget target,
                                const gdouble *xy)
 {
-    gint xmin, ymin, xmax, ymax;
+    gint xmin, ymin, xmax, ymax, width, height;
+    gdouble xreal, yreal;
 
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
-    gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
+        gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+        gwy_data_view_get_pixel_data_sizes(data_view, &width, &height);
+        xmin = floor(xy[0]*width/xreal);
+        ymin = floor(xy[1]*height/yreal);
+        xmax = floor(xy[2]*width/xreal);
+        ymax = floor(xy[3]*height/yreal);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+
     if (xmax < xmin)
         GWY_SWAP(gint, xmin, xmax);
     if (ymax < ymin)
@@ -347,7 +370,8 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
 
     g_assert(layer->selecting != -1);
     GWY_LAYER_ELLIPSE(layer)->circle = circle;
-    gwy_layer_ellipse_undraw_object(layer, window, i);
+    gwy_layer_ellipse_undraw_object(layer, window,
+                                    GWY_RENDERING_TARGET_SCREEN, i);
     if (circle)
         gwy_layer_ellipse_squarize(data_view, x, y, xy);
     else {
@@ -355,7 +379,8 @@ gwy_layer_ellipse_motion_notify(GwyVectorLayer *layer,
         xy[3] = yreal;
     }
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_ellipse_draw_object(layer, window, i);
+    gwy_layer_ellipse_draw_object(layer, window,
+                                  GWY_RENDERING_TARGET_SCREEN, i);
 
     return FALSE;
 }
@@ -393,7 +418,9 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_ellipse_near_point(layer, xreal, yreal);
     if (i >= 0) {
         layer->selecting = i/4;
-        gwy_layer_ellipse_undraw_object(layer, window, layer->selecting);
+        gwy_layer_ellipse_undraw_object(layer, window,
+                                        GWY_RENDERING_TARGET_SCREEN,
+                                        layer->selecting);
 
         gwy_selection_get_object(layer->selection, layer->selecting, xy);
         if (i/2)
@@ -424,14 +451,17 @@ gwy_layer_ellipse_button_pressed(GwyVectorLayer *layer,
             if (gwy_selection_get_max_objects(layer->selection) > 1)
                 return FALSE;
             i = 0;
-            gwy_layer_ellipse_undraw_object(layer, window, i);
+            gwy_layer_ellipse_undraw_object(layer, window,
+                                            GWY_RENDERING_TARGET_SCREEN, i);
         }
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     GWY_LAYER_ELLIPSE(layer)->circle = circle;
     layer->button = event->button;
-    gwy_layer_ellipse_draw_object(layer, window, layer->selecting);
+    gwy_layer_ellipse_draw_object(layer, window,
+                                  GWY_RENDERING_TARGET_SCREEN,
+                                  layer->selecting);
 
     klass = GWY_LAYER_ELLIPSE_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->resize_cursor);
@@ -463,7 +493,8 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_layer_ellipse_undraw_object(layer, window, i);
+    gwy_layer_ellipse_undraw_object(layer, window,
+                                    GWY_RENDERING_TARGET_SCREEN, i);
     gwy_selection_get_object(layer->selection, i, xy);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xx, &yy);
     gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, xx, yy);
@@ -483,7 +514,8 @@ gwy_layer_ellipse_button_released(GwyVectorLayer *layer,
             GWY_SWAP(gdouble, xy[1], xy[3]);
 
         gwy_selection_set_object(layer->selection, i, xy);
-        gwy_layer_ellipse_draw_object(layer, window, i);
+        gwy_layer_ellipse_draw_object(layer, window,
+                                      GWY_RENDERING_TARGET_SCREEN, i);
     }
 
     layer->selecting = -1;

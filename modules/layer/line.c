@@ -108,6 +108,7 @@ static void     gwy_layer_line_draw            (GwyVectorLayer *layer,
                                                 GwyRenderingTarget target);
 static void     gwy_layer_line_draw_object     (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
+                                                GwyRenderingTarget target,
                                                 gint i);
 static void     gwy_layer_line_setup_label     (GwyLayerLine *layer,
                                                 GdkDrawable *drawable,
@@ -294,18 +295,19 @@ gwy_layer_line_draw(GwyVectorLayer *layer,
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_line_draw_object(layer, drawable, i);
+        gwy_layer_line_draw_object(layer, drawable, target, i);
 }
 
 static void
 gwy_layer_line_draw_object(GwyVectorLayer *layer,
                            GdkDrawable *drawable,
+                           GwyRenderingTarget target,
                            gint i)
 {
     GwyDataView *data_view;
     GwyLayerLine *layer_line;
-    gint xi0, yi0, xi1, yi1, xt, yt;
-    gdouble xy[OBJECT_SIZE];
+    gint xi0, yi0, xi1, yi1, xt, yt, width, height;
+    gdouble xy[OBJECT_SIZE], xreal, yreal;
     gboolean has_object;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -314,16 +316,34 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi0, &yi0);
-    gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xi1, &yi1);
-    gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
-    gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi0, &yi0);
+        gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xi1, &yi1);
+        gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
+        gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+        gwy_data_view_get_pixel_data_sizes(data_view, &width, &height);
+        xi0 = floor(xy[0]*width/xreal);
+        yi0 = floor(xy[1]*height/yreal);
+        xi1 = floor(xy[2]*width/xreal);
+        yi1 = floor(xy[3]*height/yreal);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
     gdk_draw_line(drawable, layer->gc, xi0, yi0, xi1, yi1);
 
     layer_line = GWY_LAYER_LINE(layer);
     if (!layer_line->line_numbers)
         return;
 
+    /* TODO: GWY_RENDERING_TARGET_PIXMAP_IMAGE */
     gwy_layer_line_setup_label(layer_line, drawable, i);
     xt = (xi0 + xi1)/2 + 1;
     yt = (yi0 + yi1)/2;
@@ -456,7 +476,8 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
 
     g_assert(layer->selecting != -1);
     GWY_LAYER_LINE(layer)->restricted = restricted;
-    gwy_layer_line_undraw_object(layer, window, i/2);
+    gwy_layer_line_undraw_object(layer, window,
+                                 GWY_RENDERING_TARGET_SCREEN, i/2);
     if (restricted)
         gwy_layer_line_restrict_angle(data_view, i % 2,
                                       event->x, event->y, xy);
@@ -465,7 +486,8 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
         xy[2*(i % 2) + 1] = yreal;
     }
     gwy_selection_set_object(layer->selection, i/2, xy);
-    gwy_layer_line_draw_object(layer, window, i/2);
+    gwy_layer_line_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, i/2);
 
     return FALSE;
 }
@@ -516,10 +538,12 @@ gwy_layer_line_move_line(GwyVectorLayer *layer,
     if (coords[0] == xy[0] && coords[1] == xy[1])
         return FALSE;
 
-    gwy_layer_line_undraw_object(layer, window, i);
+    gwy_layer_line_undraw_object(layer, window,
+                                 GWY_RENDERING_TARGET_SCREEN, i);
     gwy_debug("%d %g %g %g %g", i, coords[0], coords[1], coords[2], coords[3]);
     gwy_selection_set_object(layer->selection, i, coords);
-    gwy_layer_line_draw_object(layer, window, i);
+    gwy_layer_line_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, i);
 
     return FALSE;
 }
@@ -561,7 +585,8 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     if (i == -1 && j >= 0) {
         gwy_selection_get_object(layer->selection, j, xy);
         layer->selecting = i = 2*j;
-        gwy_layer_line_undraw_object(layer, window, j);
+        gwy_layer_line_undraw_object(layer, window,
+                                     GWY_RENDERING_TARGET_SCREEN, j);
         layer_line->moving_line = TRUE;
         layer_line->lmove_x = xy[0] - xreal;
         layer_line->lmove_y = xy[1] - yreal;
@@ -569,7 +594,8 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     else {
         if (i >= 0) {
             layer->selecting = i;
-            gwy_layer_line_undraw_object(layer, window, i/2);
+            gwy_layer_line_undraw_object(layer, window,
+                                         GWY_RENDERING_TARGET_SCREEN, i/2);
             if (restricted)
                 gwy_layer_line_restrict_angle(data_view, i % 2,
                                               event->x, event->y, xy);
@@ -588,7 +614,8 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
                 if (gwy_selection_get_max_objects(layer->selection) > 1)
                     return FALSE;
                 i = 0;
-                gwy_layer_line_undraw_object(layer, window, i/2);
+                gwy_layer_line_undraw_object(layer, window,
+                                             GWY_RENDERING_TARGET_SCREEN, i/2);
             }
             layer->selecting = 0;    /* avoid "update" signal emission */
             layer->selecting = gwy_selection_set_object(layer->selection, i/2,
@@ -599,7 +626,8 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     }
     GWY_LAYER_LINE(layer)->restricted = restricted;
     layer->button = event->button;
-    gwy_layer_line_draw_object(layer, window, layer->selecting/2);
+    gwy_layer_line_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, layer->selecting/2);
 
     klass = GWY_LAYER_LINE_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->move_cursor);
@@ -635,7 +663,8 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
         gwy_layer_line_move_line(layer, xreal, yreal);
     else {
         gwy_selection_get_object(layer->selection, i/2, xy);
-        gwy_layer_line_undraw_object(layer, window, i/2);
+        gwy_layer_line_undraw_object(layer, window,
+                                     GWY_RENDERING_TARGET_SCREEN, i/2);
         if (GWY_LAYER_LINE(layer)->restricted)
             gwy_layer_line_restrict_angle(data_view, i % 2,
                                           event->x, event->y, xy);
@@ -647,7 +676,8 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
         if (xy[0] == xy[2] && xy[1] == xy[3])
             gwy_selection_delete_object(layer->selection, i/2);
         else
-            gwy_layer_line_draw_object(layer, window, i/2);
+            gwy_layer_line_draw_object(layer, window,
+                                       GWY_RENDERING_TARGET_SCREEN, i/2);
     }
 
     GWY_LAYER_LINE(layer)->moving_line = FALSE;

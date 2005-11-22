@@ -104,6 +104,7 @@ static void     gwy_layer_axis_draw               (GwyVectorLayer *layer,
                                                    GwyRenderingTarget target);
 static void     gwy_layer_axis_draw_object        (GwyVectorLayer *layer,
                                                    GdkDrawable *drawable,
+                                                   GwyRenderingTarget target,
                                                    gint i);
 static gboolean gwy_layer_axis_motion_notify      (GwyVectorLayer *layer,
                                                    GdkEventMotion *event);
@@ -369,17 +370,18 @@ gwy_layer_axis_draw(GwyVectorLayer *layer,
 
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_axis_draw_object(layer, drawable, i);
+        gwy_layer_axis_draw_object(layer, drawable, target, i);
 }
 
 static void
 gwy_layer_axis_draw_object(GwyVectorLayer *layer,
                            GdkDrawable *drawable,
+                           GwyRenderingTarget target,
                            gint i)
 {
     GwyDataView *data_view;
-    gint coord, width, height;
-    gdouble xy[OBJECT_SIZE];
+    gint coord, width, height, res;
+    gdouble xy[OBJECT_SIZE], real;
     gboolean has_object;
 
     g_return_if_fail(GWY_IS_LAYER_AXIS(layer));
@@ -392,12 +394,42 @@ gwy_layer_axis_draw_object(GwyVectorLayer *layer,
     gdk_drawable_get_size(drawable, &width, &height);
     switch (GWY_SELECTION_AXIS(layer->selection)->orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        gwy_data_view_coords_real_to_xy(data_view, 0.0, xy[0], NULL, &coord);
+        switch (target) {
+            case GWY_RENDERING_TARGET_SCREEN:
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            0.0, xy[0], NULL, &coord);
+            break;
+
+            case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+            gwy_data_view_get_real_data_sizes(data_view, &real, NULL);
+            gwy_data_view_get_pixel_data_sizes(data_view, &res, NULL);
+            coord = floor(xy[0]*res/real);
+            break;
+
+            default:
+            g_return_if_reached();
+            break;
+        }
         gdk_draw_line(drawable, layer->gc, 0, coord, width, coord);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
-        gwy_data_view_coords_real_to_xy(data_view, xy[0], 0.0, &coord, NULL);
+        switch (target) {
+            case GWY_RENDERING_TARGET_SCREEN:
+            gwy_data_view_coords_real_to_xy(data_view,
+                                            xy[0], 0.0, &coord, NULL);
+            break;
+
+            case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+            gwy_data_view_get_real_data_sizes(data_view, NULL, &real);
+            gwy_data_view_get_pixel_data_sizes(data_view, NULL, &res);
+            coord = floor(xy[0]*res/real);
+            break;
+
+            default:
+            g_return_if_reached();
+            break;
+        }
         gdk_draw_line(drawable, layer->gc, coord, 0, coord, height);
         break;
 
@@ -447,10 +479,12 @@ gwy_layer_axis_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(layer->selecting != -1);
-    gwy_layer_axis_undraw_object(layer, window, i);
+    gwy_layer_axis_undraw_object(layer, window,
+                                 GWY_RENDERING_TARGET_SCREEN, i);
     xy[0] = rcoord;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_axis_draw_object(layer, window, i);
+    gwy_layer_axis_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, i);
 
     return FALSE;
 }
@@ -489,7 +523,9 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_axis_near_point(layer, xreal, yreal);
     if (i >= 0) {
         layer->selecting = i;
-        gwy_layer_axis_undraw_object(layer, window, layer->selecting);
+        gwy_layer_axis_undraw_object(layer, window,
+                                     GWY_RENDERING_TARGET_SCREEN,
+                                     layer->selecting);
     }
     else {
         /* add an object, or do nothing when maximum is reached */
@@ -498,13 +534,15 @@ gwy_layer_axis_button_pressed(GwyVectorLayer *layer,
             if (gwy_selection_get_max_objects(layer->selection) > 1)
                 return FALSE;
             i = 0;
-            gwy_layer_axis_undraw_object(layer, window, i);
+            gwy_layer_axis_undraw_object(layer, window,
+                                         GWY_RENDERING_TARGET_SCREEN, i);
         }
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     layer->button = event->button;
-    gwy_layer_axis_draw_object(layer, window, layer->selecting);
+    gwy_layer_axis_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->move_cursor);
@@ -537,11 +575,13 @@ gwy_layer_axis_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_layer_axis_undraw_object(layer, window, i);
+    gwy_layer_axis_undraw_object(layer, window,
+                                 GWY_RENDERING_TARGET_SCREEN, i);
     orientation = GWY_SELECTION_AXIS(layer->selection)->orientation;
     xy[0] = (orientation == GWY_ORIENTATION_VERTICAL) ? xreal : yreal;
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_axis_draw_object(layer, window, i);
+    gwy_layer_axis_draw_object(layer, window,
+                               GWY_RENDERING_TARGET_SCREEN, i);
 
     layer->selecting = -1;
     klass = GWY_LAYER_AXIS_GET_CLASS(layer);

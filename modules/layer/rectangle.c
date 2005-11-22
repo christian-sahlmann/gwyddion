@@ -271,42 +271,14 @@ gwy_layer_rectangle_draw(GwyVectorLayer *layer,
                          GdkDrawable *drawable,
                          GwyRenderingTarget target)
 {
-    GdkGC *gc = NULL;
     gint i, n;
 
     g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
-    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
-        GwyDataView *data_view;
-        GdkGCValues gcvalues;
-        gint xres, yres, w, h;
-        gdouble zoom;
-
-        data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-        g_return_if_fail(data_view);
-
-        gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
-        gdk_drawable_get_size(drawable, &w, &h);
-        zoom = sqrt(((gdouble)(w*h))/(xres*yres));
-
-        gc = gdk_gc_new(drawable);
-        gdk_gc_get_values(gc, &gcvalues);
-        gcvalues.line_width = ROUND(MAX(zoom, 1.0));
-        gcvalues.function = GDK_SET;
-        gdk_gc_set_values(gc, &gcvalues, GDK_GC_LINE_WIDTH | GDK_GC_FUNCTION);
-
-        GWY_SWAP(GdkGC*, layer->gc, gc);
-    }
-
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
         gwy_layer_rectangle_draw_object(layer, drawable, target, i);
-
-    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
-        GWY_SWAP(GdkGC*, layer->gc, gc);
-        g_object_unref(gc);
-    }
 }
 
 static void
@@ -347,24 +319,27 @@ gwy_layer_rectangle_draw_rectangle(GwyVectorLayer *layer,
                                    const gdouble *xy)
 {
     gint xmin, ymin, xmax, ymax, width, height;
+    gdouble xreal, yreal;
 
-    if (target == GWY_RENDERING_TARGET_SCREEN) {
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
         gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
         gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
-    }
-    else if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
-        gdouble xreal, yreal;
+        break;
 
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         gwy_data_view_get_pixel_data_sizes(data_view, &width, &height);
         xmin = floor(xy[0]*width/xreal);
         ymin = floor(xy[1]*height/yreal);
         xmax = floor(xy[2]*width/xreal);
         ymax = floor(xy[3]*height/yreal);
-        gwy_debug("(%d,%d) (%d,%d)", xmin, ymin, xmax, ymax);
-    }
-    else
+        break;
+
+        default:
         g_return_if_reached();
+        break;
+    }
 
     if (xmax < xmin)
         GWY_SWAP(gint, xmin, xmax);
