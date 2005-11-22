@@ -581,7 +581,7 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
     mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
     switch (mode) {
         case EDITING_MODE_POINTS:
-        /* TODO: update points */
+        /*TODO: update points */
         gtk_widget_set_no_show_all(editor->curve, TRUE);
         gtk_widget_hide(editor->curve);
         gtk_widget_set_no_show_all(editor->markers, FALSE);
@@ -662,7 +662,6 @@ gwy_gradient_editor_curve_edited(GwyGradientEditor *editor)
     GwyChannelData *channel_data;
     GwyGradientPoint *points;
     gint i, num_pts;
-    GwyRGBA color;
 
     res_editor = GWY_RESOURCE_EDITOR(editor);
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));

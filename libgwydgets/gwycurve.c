@@ -1117,19 +1117,126 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
     }
 }
 
+gint
+compare_func(gconstpointer a, gconstpointer b)
+{
+    gfloat val1, val2;
+
+    val1 = *((gfloat*)a);
+    val2 = *((gfloat*)b);
+
+    if (val1 < val2)
+        return -1;
+    if (val1 == val2)
+        return 0;
+    if (val1 > val2)
+        return 1;
+    return 0;
+}
+
+void
+remove_repeats(GArray *array)
+{
+    GArray *new_array;
+    gint i;
+    gfloat last = -1;
+    gfloat val;
+
+    /* Store array values into new_array, leaving out repeats */
+    new_array = g_array_new(FALSE, TRUE, sizeof(gfloat));
+    for (i=0; i < array->len; i++) {
+        val = g_array_index(array, gfloat, i);
+        if (val != last)
+            g_array_append_val(new_array, val);
+        last = val;
+    }
+
+    /* Empty out array */
+    g_array_remove_range(array, 0, array->len);
+
+    /* Copy cleaned values into array */
+    for (i=0; i < new_array->len; i++) {
+        val = g_array_index(new_array, gfloat, i);
+        g_array_append_val(array, val);
+    }
+
+}
+
 void
 gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 {
-    gint c_index, i;
+    GArray *x_array;
     GwyChannelData *channel;
     GwyChannelData *curve_channel;
+    gint c_index, i, j, num_pts;
+    gfloat val;
+    GtkWidget *w;
+    gint width, height, x, y;
+    gfloat rx, ry;
 
-    /*Loop through each channel*/
+    /* get the widget size */
+    w = GTK_WIDGET(curve);
+    width = w->allocation.width - RADIUS * 2;
+    height = w->allocation.height - RADIUS * 2;
+
+    /* First, store the x values of each control
+    point from each channel into an array:*/
+    x_array = g_array_new(FALSE, TRUE, sizeof(gfloat));
+    for (c_index=0; c_index<3; c_index++) {
+        curve_channel = &curve->channel_data[c_index];
+        for (i=0; i < curve_channel->num_ctlpoints; i++)
+            g_array_append_val(x_array, curve_channel->ctlpoints[i].x);
+    }
+
+    /* Sort the array, smallest to largest */
+    g_array_sort(x_array, compare_func);
+
+    /* Remove any repeated x-values */
+    remove_repeats(x_array);
+    num_pts = x_array->len;
+
+    /* Create control point triplets within channel_data for each x-value: */
     for (c_index=0; c_index<3; c_index++) {
         channel = &channel_data[c_index];
         curve_channel = &curve->channel_data[c_index];
+        channel->num_ctlpoints = num_pts;
+        channel->ctlpoints = g_new(GwyPoint, num_pts);
 
-        /* Copy the ctlpoints out of the gwycurve into channel_data */
+        for (i=0; i < num_pts; i++) {
+            val = g_array_index(x_array, gfloat, i);
+            channel->ctlpoints[i].x = val;
+            channel->ctlpoints[i].y = 0;
+
+            for (j=0; j < curve_channel->num_points; j++) {
+                x = CLAMP((curve_channel->points[j].x - RADIUS), 0, width-1);
+                y = CLAMP((curve_channel->points[j].y - RADIUS), 0, height-1);
+                rx = unproject(x, curve->min_x, curve->max_x, width);
+                ry = unproject(height - y, curve->min_y, curve->max_y, height);
+
+                if (rx == val) {
+                    g_debug("Made it inside!");
+                    channel->ctlpoints[i].y = ry;
+                    break;
+                }
+            }
+        }
+    }
+
+
+    /* Dump array */
+    g_debug("\n\n\n\n");
+    for (i=0; i<x_array->len; i++) {
+        val = g_array_index(x_array, gfloat, i);
+        g_debug("i: %i, val: %f", i, val);
+    }
+
+
+
+    /* Copy the ctlpoints out of the gwycurve into channel_data */
+    /*XXX: Old, remove later:
+    for (c_index=0; c_index<3; c_index++) {
+        channel = &channel_data[c_index];
+        curve_channel = &curve->channel_data[c_index];
         channel->num_ctlpoints = curve_channel->num_ctlpoints;
         channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
         for (i=0; i<channel->num_ctlpoints; i++) {
@@ -1137,6 +1244,7 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
             channel->ctlpoints[i].y = curve_channel->ctlpoints[i].y;
         }
     }
+    */
 }
 
 /*XXX - fixme
