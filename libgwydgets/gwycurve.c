@@ -55,6 +55,7 @@
 /*TODO: Fix warnings (unused variables, etc) */
 /*TODO: Deal with freehand mode */
 /*TODO: Change end-point behavior: hold constant value, don't go to zero */
+/*TODO: Do something about problem of selecting end points (always gets red) */
 
 #include <config.h>
 #include <stdlib.h>
@@ -457,6 +458,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     gint x, y;
     GdkGC *gc;
     GdkColor colors[3];
+    gint lastx, lasty;
 
     if (!c->pixmap)
         return;
@@ -502,10 +504,16 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
         gdk_gc_set_rgb_fg_color(gc, &colors[c_index]);
 
         channel = &c->channel_data[c_index];
+        lastx = lasty = -1;
         for (i=0; i<channel->num_points; i++) {
-            gdk_draw_point(c->pixmap, gc,
-                           (gint)channel->points[i].x,
-                           (gint)channel->points[i].y);
+            if (lastx > -1 && lasty > -1) {
+                gdk_draw_line(c->pixmap, gc,
+                              lastx, lasty,
+                              (gint)channel->points[i].x,
+                              (gint)channel->points[i].y);
+            }
+            lastx = (gint)channel->points[i].x;
+            lasty = (gint)channel->points[i].y;
         }
     }
 
