@@ -97,6 +97,10 @@ static void     gwy_layer_rectangle_draw           (GwyVectorLayer *layer,
 static void     gwy_layer_rectangle_draw_object    (GwyVectorLayer *layer,
                                                     GdkDrawable *drawable,
                                                     gint i);
+static void     gwy_layer_rectangle_draw_rectangle (GwyVectorLayer *layer,
+                                                    GwyDataView *data_view,
+                                                    GdkDrawable *drawable,
+                                                    const gdouble *xy);
 static gboolean gwy_layer_rectangle_motion_notify  (GwyVectorLayer *layer,
                                                     GdkEventMotion *event);
 static gboolean gwy_layer_rectangle_button_pressed (GwyVectorLayer *layer,
@@ -281,15 +285,35 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
                                 gint i)
 {
     GwyDataView *data_view;
-    gint xmin, ymin, xmax, ymax;
     gdouble xy[OBJECT_SIZE];
+    gdouble xreal, yreal;
     gboolean has_object;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
     data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+    g_return_if_fail(data_view);
 
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
+
+    gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, xy);
+    if (GWY_LAYER_RECTANGLE(layer)->draw_reflection) {
+        gwy_data_view_get_real_sizes(data_view, &xreal, &yreal);
+        xy[0] = xreal - xy[0];
+        xy[1] = yreal - xy[1];
+        xy[2] = xreal - xy[2];
+        xy[3] = yreal - xy[3];
+        gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, xy);
+    }
+}
+
+static void
+gwy_layer_rectangle_draw_rectangle(GwyVectorLayer *layer,
+                                   GwyDataView *data_view,
+                                   GdkDrawable *drawable,
+                                   const gdouble *xy)
+{
+    gint xmin, ymin, xmax, ymax, width, height;
 
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
     gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
@@ -299,8 +323,6 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
         GWY_SWAP(gint, ymin, ymax);
 
     if (GWY_LAYER_RECTANGLE(layer)->is_crop) {
-        gint width, height;
-
         gdk_drawable_get_size(drawable, &width, &height);
         gdk_draw_line(drawable, layer->gc, 0, ymin, width, ymin);
         if (ymin != ymax)
@@ -309,24 +331,9 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
         if (xmin != xmax)
             gdk_draw_line(drawable, layer->gc, xmax, 0, xmax, height);
     }
-    else {
+    else
         gdk_draw_rectangle(drawable, layer->gc, FALSE,
                            xmin, ymin, xmax - xmin, ymax - ymin);
-
-        if (GWY_LAYER_RECTANGLE(layer)->draw_reflection) {
-            gint xs, ys, xe, ye;
-
-            /* FIXME: this is somewhat dirty, add some get-size method to
-             * DataView? */
-            xs = ys = G_MININT;
-            gwy_data_view_coords_xy_clamp(data_view, &xs, &ys);
-            xe = ye = G_MAXINT;
-            gwy_data_view_coords_xy_clamp(data_view, &xe, &ye);
-            gdk_draw_rectangle(drawable, layer->gc, FALSE,
-                               xs + xe - xmax, ys + ye - ymax,
-                               xmax - xmin, ymax - ymin);
-        }
-    }
 }
 
 static gboolean

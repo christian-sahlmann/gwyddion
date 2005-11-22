@@ -61,6 +61,8 @@ struct _GwyDataView {
     gdouble newzoom;    /* requested (ideal) zoom value */
     gdouble xmeasure;    /* physical units per pixel */
     gdouble ymeasure;    /* physical units per pixel */
+    gdouble xreal;
+    gdouble yreal;
     gint xoff;    /* x offset of the pixbuf from widget->allocation.x */
     gint yoff;    /* y offset of the pixbuf from widget->allocation.y */
 
@@ -113,6 +115,9 @@ void              gwy_data_view_coords_real_to_xy (GwyDataView *data_view,
                                                    gint *yscr);
 gdouble           gwy_data_view_get_xmeasure      (GwyDataView *data_view);
 gdouble           gwy_data_view_get_ymeasure      (GwyDataView *data_view);
+void              gwy_data_view_get_real_sizes    (GwyDataView *data_view,
+                                                   gdouble *xreal,
+                                                   gdouble *yreal);
 GdkPixbuf*        gwy_data_view_get_thumbnail     (GwyDataView *data_view,
                                                    gint size);
 GdkPixbuf*        gwy_data_view_get_pixbuf        (GwyDataView *data_view,

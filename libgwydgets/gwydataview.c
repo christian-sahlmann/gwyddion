@@ -446,8 +446,10 @@ gwy_data_view_make_pixmap(GwyDataView *data_view)
                           (gdouble)widget->allocation.height/src_height);
     scwidth = floor(src_width * data_view->zoom + 0.000001);
     scheight = floor(src_height * data_view->zoom + 0.000001);
-    data_view->xmeasure = gwy_data_field_get_xreal(data_field)/scwidth;
-    data_view->ymeasure = gwy_data_field_get_yreal(data_field)/scheight;
+    data_view->xreal = gwy_data_field_get_xreal(data_field);
+    data_view->yreal = gwy_data_field_get_yreal(data_field);
+    data_view->xmeasure = data_view->xreal/scwidth;
+    data_view->ymeasure = data_view->yreal/scheight;
     data_view->xoff = (widget->allocation.width - scwidth)/2;
     data_view->yoff = (widget->allocation.height - scheight)/2;
     if (scwidth != width || scheight != height) {
@@ -1110,6 +1112,36 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
         *xscr = floor(xreal/data_view->xmeasure) + data_view->xoff;
     if (yscr)
         *yscr = floor(yreal/data_view->ymeasure) + data_view->yoff;
+}
+
+/**
+ * gwy_data_view_get_real_sizes:
+ * @data_view: A data view.
+ * @xreal: Location to store physical x-dimension of the displayed data
+ *         without excess (or %NULL).
+ * @yreal: Location to store physical y-dimension of the displayed data
+ *         without excess (or %NULL).
+ *
+ * Obtains the physical dimensions of the displayed data.
+ *
+ * Physical coordinates are always taken from data field displayed by base
+ * layer.  This is a convenience method, the same values could be obtained
+ * by gwy_data_field_get_xreal() and gwy_data_field_get_yreal() of the data
+ * field displayed by base layer.  Except this method returns the current
+ * values in use by @data_view, if the data field has changed but has not been
+ * drawn yet, the old dimensions are returned.
+ **/
+void
+gwy_data_view_get_real_sizes(GwyDataView *data_view,
+                             gdouble *xreal,
+                             gdouble *yreal)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    if (xreal)
+        *xreal = data_view->xreal;
+    if (yreal)
+        *yreal = data_view->yreal;
 }
 
 /**
