@@ -25,7 +25,9 @@
 #include <glib-object.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwydataview.h>
 
 #define connect_swapped_after(obj, signal, cb, data) \
     g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
@@ -166,10 +168,39 @@ gwy_vector_layer_draw(GwyVectorLayer *layer,
                       GwyRenderingTarget target)
 {
     GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
+    GdkGC *gc = NULL;
 
     g_assert(layer_class);
     g_return_if_fail(layer_class->draw);
+
+    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
+        GwyDataView *data_view;
+        GdkGCValues gcvalues;
+        gint xres, yres, w, h;
+        gdouble zoom;
+
+        data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+        g_return_if_fail(data_view);
+
+        gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
+        gdk_drawable_get_size(drawable, &w, &h);
+        zoom = sqrt(((gdouble)(w*h))/(xres*yres));
+
+        gc = gdk_gc_new(drawable);
+        gdk_gc_get_values(gc, &gcvalues);
+        gcvalues.line_width = ROUND(MAX(zoom, 1.0));
+        gcvalues.function = GDK_SET;
+        gdk_gc_set_values(gc, &gcvalues, GDK_GC_LINE_WIDTH | GDK_GC_FUNCTION);
+
+        GWY_SWAP(GdkGC*, layer->gc, gc);
+    }
+
     layer_class->draw(layer, drawable, target);
+
+    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
+        GWY_SWAP(GdkGC*, layer->gc, gc);
+        g_object_unref(gc);
+    }
 }
 
 /**
