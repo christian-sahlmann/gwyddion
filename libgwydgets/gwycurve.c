@@ -116,8 +116,7 @@ static gboolean gwy_curve_button_press   (GtkWidget *widget,
 static gboolean gwy_curve_button_release (GtkWidget *widget,
                                           GdkEventButton *event,
                                           GwyCurve *c);
-static gboolean gwy_curve_motion_notify  (GwyCurve *c,
-                                          GdkEventMotion *event);
+static gboolean gwy_curve_motion_notify  (GwyCurve *c);
 
 GType
 gwy_curve_get_type (void)
@@ -663,13 +662,14 @@ gwy_curve_button_press(GtkWidget *widget,
         gwy_curve_interpolate(c, width, height);
         break;
 
-        /*
         case GWY_CURVE_TYPE_FREE:
+        /*TODO: Add freehand mode?
         c->point[x].x = RADIUS + x;
         c->point[x].y = RADIUS + y;
         c->grab_point = x;
         c->last = y;
-        break;*/
+        */
+        break;
     }
     gwy_curve_draw(c, width, height);
 
@@ -728,17 +728,17 @@ gwy_curve_button_release(GtkWidget *widget,
 }
 
 static gboolean
-gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
+gwy_curve_motion_notify(GwyCurve *c)
 {
     GdkCursorType new_type = c->cursor_type;
     gint tx, ty, x, y, cx, width, height;
-    gint i, leftbound, rightbound;
-    gint x_1, x_2, y_1, y_2;
+    gint i, j, leftbound, rightbound;
     gfloat rx, ry;
-    guint distance = ~0U;
-    gint closest_point = 0;
     GtkWidget *w;
     GwyChannelData *channel;
+    guint distance, distance2;
+    gint closest_point = 0;
+    gint closest_channel = 0;
 
     /* get the widget size */
     w = GTK_WIDGET(c);
@@ -750,6 +750,31 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
     x = CLAMP((tx - RADIUS), 0, width-1);
     y = CLAMP((ty - RADIUS), 0, height-1);
 
+    /* determine closest channel to pointer */
+    for (i=0, distance=~0U; i<3; i++) {
+        channel = &c->channel_data[i];
+        for (j=0, distance2=~0U; j<channel->num_points; j++) {
+           if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
+                distance2 = abs(x - (guint)channel->points[j].x);
+                closest_point = j;
+            }
+        }
+        if ((guint)abs(y-(guint)channel->points[closest_point].y) < distance) {
+            distance = abs(y - (guint)channel->points[closest_point].y);
+            closest_channel = i;
+        }
+    }
+    closest_point = 0;
+    channel = &c->channel_data[closest_channel];
+
+    /* determine closest control point to pointer */
+    for (i=0, distance = ~0U; i<channel->num_ctlpoints; ++i) {
+        cx = project(channel->ctlpoints[i].x, c->min_x, c->max_x, width);
+        if ((guint) abs(x - cx) < distance) {
+            distance = abs(x - cx);
+            closest_point = i;
+        }
+    }
     /* determine closest control point to pointer */
     /*
     for (i=0; i<c->num_ctlpoints; ++i) {
@@ -765,10 +790,7 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_LINEAR:
         case GWY_CURVE_TYPE_SPLINE:
-        if (c->grab_channel == -1) {
-            /* XXX: fix distance above
-            if (c->grab_point == -1) { */
-            /* if no point is grabbed...  */
+        if (c->grab_point == -1) {
             if (distance <= MIN_DISTANCE)
                 new_type = GDK_FLEUR;
             else
@@ -806,8 +828,9 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
         }
         break;
 
-        /*
+
         case GWY_CURVE_TYPE_FREE:
+        /*TODO: Add a free hand mode?
         if(c->grab_point != -1) {
             if (c->grab_point > x) {
                 x_1 = x;
@@ -840,8 +863,8 @@ gwy_curve_motion_notify(GwyCurve *c, GdkEventMotion *event)
             new_type = GDK_TCROSS;
         else
             new_type = GDK_PENCIL;
-        break;
         */
+        break;
     }
     if (new_type != (GdkCursorType)c->cursor_type) {
         GdkCursor *cursor;
