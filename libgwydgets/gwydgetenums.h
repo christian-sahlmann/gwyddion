@@ -142,6 +142,12 @@ typedef enum {
     GWY_CURVE_TYPE_FREE
 } GwyCurveType;
 
+typedef enum {
+    GWY_CURVE_CHANNEL_RED,
+    GWY_CURVE_CHANNEL_GREEN,
+    GWY_CURVE_CHANNEL_BLUE
+} GwyCurveChannel;
+
 const GwyEnum* gwy_graph_curve_type_get_enum(void) G_GNUC_CONST;
 
 G_END_DECLS

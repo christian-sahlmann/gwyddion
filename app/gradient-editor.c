@@ -455,12 +455,11 @@ gwy_gradient_editor_update_curve(GwyGradientEditor *editor)
         points = g_new(GwyPoint, point_count);
         for (i = 0; i < point_count; i++) {
             points[i].x = grad_points[i].x;
-            /* FIXME: shouldn't the 0, 1, 2 be some enum values? */
-            if (c_index == 0)
+            if (c_index == GWY_CURVE_CHANNEL_RED)
                 points[i].y = grad_points[i].color.r;
-            else if (c_index == 1)
+            else if (c_index == GWY_CURVE_CHANNEL_GREEN)
                 points[i].y = grad_points[i].color.g;
-            else if (c_index == 2)
+            else if (c_index == GWY_CURVE_CHANNEL_BLUE)
                 points[i].y = grad_points[i].color.b;
         }
         channel_data[c_index].ctlpoints = points;
@@ -659,14 +658,45 @@ gwy_gradient_editor_curve_edited(GwyGradientEditor *editor)
     GwyResourceEditor *res_editor;
     GwyGradient *gradient;
     GwyChannelData *channel_data;
+    GwyGradientPoint *points;
+    gint i, num_pts;
+    GwyRGBA color;
 
     res_editor = GWY_RESOURCE_EDITOR(editor);
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
 
-    /* Get a pointer to the Curve channel data */
-    /*gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);*/
+    /* Get gwycurve channel information */
+    channel_data = g_new(GwyChannelData, 3);
+    gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);
 
-    /* TODO */
+    /* Copy the channel info into the gradient */
+    num_pts = channel_data[0].num_ctlpoints; /*FIXME*/
+    points = g_new(GwyGradientPoint, num_pts);
+    for (i=0; i<num_pts; i++) {
+        points[i].x = channel_data[0].ctlpoints[i].x; /*FIXME*/
+        points[i].color.r =
+                    channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y;
+        points[i].color.g =
+                    channel_data[GWY_CURVE_CHANNEL_GREEN].ctlpoints[i].y;
+        points[i].color.b =
+                    channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y;
+
+        g_debug("r: %f  g: %f  b: %f", points[i].color.r,
+                                       points[i].color.g,
+                                       points[i].color.b);
+    }
+    gwy_gradient_set_points(gradient, num_pts, points);
+
+    /*FIXME: free up points?*/
+
+    /* Free up channel_data */
+    for (i = 0; i < 3; i++) {
+        g_free(channel_data[i].ctlpoints);
+    }
+    g_free(channel_data);
+
+
+    /* TODO: Copy data out of gwycurve back into gradient */
 }
 
 /************************** Documentation ****************************/

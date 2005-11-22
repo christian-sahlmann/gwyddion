@@ -54,6 +54,7 @@
 /*TODO: Fix cursor changes */
 /*TODO: Fix warnings (unused variables, etc) */
 /*TODO: Deal with freehand mode */
+/*TODO: Change end-point behavior: hold constant value, don't go to zero */
 
 #include <config.h>
 #include <stdlib.h>
@@ -606,9 +607,6 @@ gwy_curve_button_press(GtkWidget *widget,
                 closest_point = j;
             }
         }
-
-        g_debug("y: %i   point y: %f", y, channel->points[closest_point].y);
-
         if ((guint)abs(y-(guint)channel->points[closest_point].y) < distance) {
             distance = abs(y - (guint)channel->points[closest_point].y);
             closest_channel = i;
@@ -625,9 +623,6 @@ gwy_curve_button_press(GtkWidget *widget,
             closest_point = i;
         }
     }
-
-    g_debug("closest_point: %i   closest_channel: %i",
-            closest_point, closest_channel);
 
     /* either add new point, or grab closest one */
     gtk_grab_add(widget);
@@ -1094,7 +1089,23 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 void
 gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 {
-    channel_data = &curve->channel_data;
+    gint c_index, i;
+    GwyChannelData *channel;
+    GwyChannelData *curve_channel;
+
+    /*Loop through each channel*/
+    for (c_index=0; c_index<3; c_index++) {
+        channel = &channel_data[c_index];
+        curve_channel = &curve->channel_data[c_index];
+
+        /* Copy the ctlpoints out of the gwycurve into channel_data */
+        channel->num_ctlpoints = curve_channel->num_ctlpoints;
+        channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
+        for (i=0; i<channel->num_ctlpoints; i++) {
+            channel->ctlpoints[i].x = curve_channel->ctlpoints[i].x;
+            channel->ctlpoints[i].y = curve_channel->ctlpoints[i].y;
+        }
+    }
 }
 
 /*XXX - fixme
