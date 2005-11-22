@@ -96,10 +96,12 @@ static void     gwy_layer_rectangle_draw           (GwyVectorLayer *layer,
                                                     GwyRenderingTarget target);
 static void     gwy_layer_rectangle_draw_object    (GwyVectorLayer *layer,
                                                     GdkDrawable *drawable,
+                                                    GwyRenderingTarget target,
                                                     gint i);
 static void     gwy_layer_rectangle_draw_rectangle (GwyVectorLayer *layer,
                                                     GwyDataView *data_view,
                                                     GdkDrawable *drawable,
+                                                    GwyRenderingTarget target,
                                                     const gdouble *xy);
 static gboolean gwy_layer_rectangle_motion_notify  (GwyVectorLayer *layer,
                                                     GdkEventMotion *event);
@@ -269,19 +271,48 @@ gwy_layer_rectangle_draw(GwyVectorLayer *layer,
                          GdkDrawable *drawable,
                          GwyRenderingTarget target)
 {
+    GdkGC *gc = NULL;
     gint i, n;
 
     g_return_if_fail(GWY_IS_LAYER_RECTANGLE(layer));
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
 
+    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
+        GwyDataView *data_view;
+        GdkGCValues gcvalues;
+        gint xres, yres, w, h;
+        gdouble zoom;
+
+        data_view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
+        g_return_if_fail(data_view);
+
+        gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
+        gdk_drawable_get_size(drawable, &w, &h);
+        zoom = sqrt(((gdouble)(w*h))/(xres*yres));
+
+        gc = gdk_gc_new(drawable);
+        gdk_gc_get_values(gc, &gcvalues);
+        gcvalues.line_width = ROUND(MAX(zoom, 1.0));
+        gcvalues.function = GDK_SET;
+        gdk_gc_set_values(gc, &gcvalues, GDK_GC_LINE_WIDTH | GDK_GC_FUNCTION);
+
+        GWY_SWAP(GdkGC*, layer->gc, gc);
+    }
+
     n = gwy_selection_get_data(layer->selection, NULL);
     for (i = 0; i < n; i++)
-        gwy_layer_rectangle_draw_object(layer, drawable, i);
+        gwy_layer_rectangle_draw_object(layer, drawable, target, i);
+
+    if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
+        GWY_SWAP(GdkGC*, layer->gc, gc);
+        g_object_unref(gc);
+    }
 }
 
 static void
 gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
                                 GdkDrawable *drawable,
+                                GwyRenderingTarget target,
                                 gint i)
 {
     GwyDataView *data_view;
@@ -296,14 +327,15 @@ gwy_layer_rectangle_draw_object(GwyVectorLayer *layer,
     has_object = gwy_selection_get_object(layer->selection, i, xy);
     g_return_if_fail(has_object);
 
-    gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, xy);
+    gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, target, xy);
     if (GWY_LAYER_RECTANGLE(layer)->draw_reflection) {
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
         xy[0] = xreal - xy[0];
         xy[1] = yreal - xy[1];
         xy[2] = xreal - xy[2];
         xy[3] = yreal - xy[3];
-        gwy_layer_rectangle_draw_rectangle(layer, data_view, drawable, xy);
+        gwy_layer_rectangle_draw_rectangle(layer, data_view,
+                                           drawable, target, xy);
     }
 }
 
@@ -311,12 +343,29 @@ static void
 gwy_layer_rectangle_draw_rectangle(GwyVectorLayer *layer,
                                    GwyDataView *data_view,
                                    GdkDrawable *drawable,
+                                   GwyRenderingTarget target,
                                    const gdouble *xy)
 {
     gint xmin, ymin, xmax, ymax, width, height;
 
-    gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
-    gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
+    if (target == GWY_RENDERING_TARGET_SCREEN) {
+        gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xmin, &ymin);
+        gwy_data_view_coords_real_to_xy(data_view, xy[2], xy[3], &xmax, &ymax);
+    }
+    else if (target == GWY_RENDERING_TARGET_PIXMAP_IMAGE) {
+        gdouble xreal, yreal;
+
+        gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
+        gwy_data_view_get_pixel_data_sizes(data_view, &width, &height);
+        xmin = floor(xy[0]*width/xreal);
+        ymin = floor(xy[1]*height/yreal);
+        xmax = floor(xy[2]*width/xreal);
+        ymax = floor(xy[3]*height/yreal);
+        gwy_debug("(%d,%d) (%d,%d)", xmin, ymin, xmax, ymax);
+    }
+    else
+        g_return_if_reached();
+
     if (xmax < xmin)
         GWY_SWAP(gint, xmin, xmax);
     if (ymax < ymin)
@@ -378,7 +427,8 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
 
     g_assert(layer->selecting != -1);
     GWY_LAYER_RECTANGLE(layer)->square = square;
-    gwy_layer_rectangle_undraw_object(layer, window, i);
+    gwy_layer_rectangle_undraw_object(layer, window,
+                                      GWY_RENDERING_TARGET_SCREEN, i);
     if (square)
         gwy_layer_rectangle_squarize(data_view, x, y, xy);
     else {
@@ -386,7 +436,8 @@ gwy_layer_rectangle_motion_notify(GwyVectorLayer *layer,
         xy[3] = yreal;
     }
     gwy_selection_set_object(layer->selection, i, xy);
-    gwy_layer_rectangle_draw_object(layer, window, i);
+    gwy_layer_rectangle_draw_object(layer, window,
+                                    GWY_RENDERING_TARGET_SCREEN, i);
 
     return FALSE;
 }
@@ -424,7 +475,9 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_rectangle_near_point(layer, xreal, yreal);
     if (i >= 0) {
         layer->selecting = i/4;
-        gwy_layer_rectangle_undraw_object(layer, window, layer->selecting);
+        gwy_layer_rectangle_undraw_object(layer, window,
+                                          GWY_RENDERING_TARGET_SCREEN,
+                                          layer->selecting);
 
         gwy_selection_get_object(layer->selection, layer->selecting, xy);
         if (i/2)
@@ -455,14 +508,17 @@ gwy_layer_rectangle_button_pressed(GwyVectorLayer *layer,
             if (gwy_selection_get_max_objects(layer->selection) > 1)
                 return FALSE;
             i = 0;
-            gwy_layer_rectangle_undraw_object(layer, window, i);
+            gwy_layer_rectangle_undraw_object(layer, window,
+                                              GWY_RENDERING_TARGET_SCREEN, i);
         }
         layer->selecting = 0;    /* avoid "update" signal emission */
         layer->selecting = gwy_selection_set_object(layer->selection, i, xy);
     }
     GWY_LAYER_RECTANGLE(layer)->square = square;
     layer->button = event->button;
-    gwy_layer_rectangle_draw_object(layer, window, layer->selecting);
+    gwy_layer_rectangle_draw_object(layer, window,
+                                    GWY_RENDERING_TARGET_SCREEN,
+                                    layer->selecting);
 
     klass = GWY_LAYER_RECTANGLE_GET_CLASS(layer);
     gdk_window_set_cursor(window, klass->resize_cursor);
@@ -494,7 +550,8 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    gwy_layer_rectangle_undraw_object(layer, window, i);
+    gwy_layer_rectangle_undraw_object(layer, window,
+                                      GWY_RENDERING_TARGET_SCREEN, i);
     gwy_selection_get_object(layer->selection, i, xy);
     gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xx, &yy);
     gwy_debug("event: [%f, %f], xy: [%d, %d]", event->x, event->y, xx, yy);
@@ -514,7 +571,8 @@ gwy_layer_rectangle_button_released(GwyVectorLayer *layer,
             GWY_SWAP(gdouble, xy[1], xy[3]);
 
         gwy_selection_set_object(layer->selection, i, xy);
-        gwy_layer_rectangle_draw_object(layer, window, i);
+        gwy_layer_rectangle_draw_object(layer, window,
+                                        GWY_RENDERING_TARGET_SCREEN, i);
     }
 
     layer->selecting = -1;
