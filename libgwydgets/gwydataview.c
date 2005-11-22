@@ -497,19 +497,16 @@ gwy_data_view_paint(GwyDataView *data_view)
      */
     if (!data_view->alpha_layer) {
         /* scale base directly to final pixbuf */
-        src_pixbuf
-            = gwy_pixmap_layer_paint(GWY_PIXMAP_LAYER(data_view->base_layer));
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
         simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->pixbuf);
     }
     else {
         /* base */
-        src_pixbuf
-            = gwy_pixmap_layer_paint(GWY_PIXMAP_LAYER(data_view->base_layer));
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
         simple_gdk_pixbuf_scale_or_copy(src_pixbuf, data_view->base_pixbuf);
 
         /* composite with alpha */
-        src_pixbuf
-            = gwy_pixmap_layer_paint(GWY_PIXMAP_LAYER(data_view->alpha_layer));
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
         simple_gdk_pixbuf_composite(src_pixbuf, data_view->base_pixbuf);
 
         /* scale both */
@@ -563,8 +560,7 @@ gwy_data_view_expose(GtkWidget *widget,
                     0, 0);
 
     if (data_view->top_layer)
-        gwy_vector_layer_draw(GWY_VECTOR_LAYER(data_view->top_layer),
-                              widget->window,
+        gwy_vector_layer_draw(data_view->top_layer, widget->window,
                               GWY_RENDERING_TARGET_SCREEN);
 
     if (emit_redrawn)
@@ -578,14 +574,12 @@ gwy_data_view_button_press(GtkWidget *widget,
                            GdkEventButton *event)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
-    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_button_press(vector_layer, event);
+    return gwy_vector_layer_button_press(data_view->top_layer, event);
 }
 
 static gboolean
@@ -593,14 +587,12 @@ gwy_data_view_button_release(GtkWidget *widget,
                              GdkEventButton *event)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
-    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_button_release(vector_layer, event);
+    return gwy_vector_layer_button_release(data_view->top_layer, event);
 }
 
 static gboolean
@@ -608,14 +600,12 @@ gwy_data_view_motion_notify(GtkWidget *widget,
                             GdkEventMotion *event)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
-    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_motion_notify(vector_layer, event);
+    return gwy_vector_layer_motion_notify(data_view->top_layer, event);
 }
 
 static gboolean
@@ -623,14 +613,12 @@ gwy_data_view_key_press(GtkWidget *widget,
                         GdkEventKey *event)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
-    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_key_press(vector_layer, event);
+    return gwy_vector_layer_key_press(data_view->top_layer, event);
 }
 
 static gboolean
@@ -638,14 +626,12 @@ gwy_data_view_key_release(GtkWidget *widget,
                           GdkEventKey *event)
 {
     GwyDataView *data_view;
-    GwyVectorLayer *vector_layer;
 
     data_view = GWY_DATA_VIEW(widget);
     if (!data_view->top_layer)
         return FALSE;
-    vector_layer = GWY_VECTOR_LAYER(data_view->top_layer);
 
-    return gwy_vector_layer_key_release(vector_layer, event);
+    return gwy_vector_layer_key_release(data_view->top_layer, event);
 }
 
 static void
@@ -705,7 +691,7 @@ gwy_data_view_get_base_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
 
-    return GWY_PIXMAP_LAYER(data_view->base_layer);
+    return data_view->base_layer;
 }
 
 /**
@@ -722,7 +708,7 @@ gwy_data_view_get_alpha_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
 
-    return GWY_PIXMAP_LAYER(data_view->alpha_layer);
+    return data_view->alpha_layer;
 }
 
 /**
@@ -739,7 +725,7 @@ gwy_data_view_get_top_layer(GwyDataView *data_view)
 {
     g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
 
-    return GWY_VECTOR_LAYER(data_view->top_layer);
+    return data_view->top_layer;
 }
 
 static void
@@ -1236,6 +1222,81 @@ gwy_data_view_get_pixbuf(GwyDataView *data_view,
     gdk_pixbuf_scale(data_view->pixbuf, pixbuf, 0, 0,
                      width_scaled, height_scaled, 0.0, 0.0,
                      scale, scale, GDK_INTERP_TILES);
+
+    return pixbuf;
+}
+
+/* A few more pixbuf exporting functions and we will be out of names... */
+/**
+ * gwy_data_view_export_pixbuf:
+ * @data_view: A data view.
+ * @zoom: Zoom to export data with (unrelated to data view zoom).
+ * @draw_alpha: %TRUE to draw alpha layer (mask).
+ * @draw_top: %TRUE to draw top layer (selection).
+ *
+ * Exports data view to a pixbuf.
+ *
+ * Returns: A newly created pixbuf, it must be freed by caller.
+ **/
+GdkPixbuf*
+gwy_data_view_export_pixbuf(GwyDataView *data_view,
+                            gdouble zoom,
+                            gboolean draw_alpha,
+                            gboolean draw_top)
+{
+    GdkPixbuf *src_pixbuf, *pixbuf, *aux_pixbuf;
+    GdkDrawable *drawable;
+    gint width, height, rowstride, i;
+    guchar *src, *dst;
+
+    g_return_val_if_fail(GWY_IS_DATA_VIEW(data_view), NULL);
+    g_return_val_if_fail(GTK_WIDGET_REALIZED(data_view), NULL);
+    g_return_val_if_fail(zoom >= 0.0626 && zoom <= 16.0, NULL);
+    g_return_val_if_fail(data_view->base_layer, NULL);
+
+    width = MAX(data_view->xres * zoom, 2);
+    height = MAX(data_view->yres * zoom, 2);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, BITS_PER_SAMPLE,
+                            width, height);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
+
+    /* Pixmap layers */
+    if (!draw_alpha || !data_view->alpha_layer) {
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
+        simple_gdk_pixbuf_scale_or_copy(src_pixbuf, pixbuf);
+    }
+    else {
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->base_layer);
+        aux_pixbuf = gdk_pixbuf_copy(src_pixbuf);
+
+        src_pixbuf = gwy_pixmap_layer_paint(data_view->alpha_layer);
+        simple_gdk_pixbuf_composite(src_pixbuf, aux_pixbuf);
+
+        simple_gdk_pixbuf_scale_or_copy(aux_pixbuf, pixbuf);
+        g_object_unref(aux_pixbuf);
+    }
+
+    if (!draw_top || !data_view->top_layer)
+        return pixbuf;
+
+    /* XXX: Now the ugly part begins, use Gdk to draw selection on Xserver
+     * and fetch it back */
+    drawable = gdk_pixmap_new(GTK_WIDGET(data_view)->window, width, height, -1);
+    gdk_draw_rectangle(drawable, GTK_WIDGET(data_view)->style->black_gc,
+                       TRUE, 0, 0, width, height);
+    gwy_vector_layer_draw(data_view->top_layer, drawable,
+                          GWY_RENDERING_TARGET_PIXMAP_IMAGE);
+    aux_pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
+                                              0, 0, 0, 0, width, height);
+    gdk_pixbuf_save(aux_pixbuf, "aux.png", "png", NULL, NULL);
+
+    src = gdk_pixbuf_get_pixels(aux_pixbuf);
+    dst = gdk_pixbuf_get_pixels(pixbuf);
+    rowstride = gdk_pixbuf_get_rowstride(aux_pixbuf);
+    g_assert(rowstride == gdk_pixbuf_get_rowstride(pixbuf));
+    for (i = height*rowstride; i; i--, src++, dst++)
+        *dst ^= *src;
+    g_object_unref(aux_pixbuf);
 
     return pixbuf;
 }

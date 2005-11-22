@@ -128,6 +128,10 @@ GdkPixbuf*      gwy_data_view_get_thumbnail       (GwyDataView *data_view,
 GdkPixbuf*      gwy_data_view_get_pixbuf          (GwyDataView *data_view,
                                                    gint max_width,
                                                    gint max_height);
+GdkPixbuf*      gwy_data_view_export_pixbuf       (GwyDataView *data_view,
+                                                   gdouble zoom,
+                                                   gboolean draw_alpha,
+                                                   gboolean draw_top);
 
 G_END_DECLS
 
