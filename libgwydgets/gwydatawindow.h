@@ -76,6 +76,7 @@ struct _GwyDataWindowClass {
 GtkWidget*    gwy_data_window_new                  (GwyDataView *data_view);
 GType         gwy_data_window_get_type             (void) G_GNUC_CONST;
 GwyDataView*  gwy_data_window_get_data_view        (GwyDataWindow *data_window);
+GtkWidget*    gwy_data_window_get_color_axis       (GwyDataWindow *data_window);
 GwyContainer* gwy_data_window_get_data             (GwyDataWindow *data_window);
 void          gwy_data_window_set_zoom             (GwyDataWindow *data_window,
                                                     gint izoom);

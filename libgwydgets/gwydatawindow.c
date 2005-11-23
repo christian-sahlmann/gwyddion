@@ -282,9 +282,9 @@ gwy_data_window_new(GwyDataView *data_view)
  * gwy_data_window_get_data_view:
  * @data_window: A data view window.
  *
- * Returns the data view widget this data window currently shows.
+ * Returns the data view widget a data window currently shows.
  *
- * Returns: The currently shown #GwyDataView.
+ * Returns: The currently shown data view.
  **/
 GwyDataView*
 gwy_data_window_get_data_view(GwyDataWindow *data_window)
@@ -295,10 +295,26 @@ gwy_data_window_get_data_view(GwyDataWindow *data_window)
 }
 
 /**
+ * gwy_data_window_get_color_axis:
+ * @data_window: A data view window.
+ *
+ * Returns the color axis widget displayed by a data window.
+ *
+ * Returns: The color axis.
+ **/
+GtkWidget*
+gwy_data_window_get_color_axis(GwyDataWindow *data_window)
+{
+    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
+
+    return data_window->coloraxis;
+}
+
+/**
  * gwy_data_window_get_data:
  * @data_window: A data view window.
  *
- * Returns the data for the data view this data window currently shows.
+ * Returns the data for the data view a data window currently shows.
  *
  * Returns: The data as #GwyContainer.
  **/
