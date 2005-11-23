@@ -1,11 +1,14 @@
-
+1.99.4cvs20051123
 
 1.99.5
 Application:
 - Unix installations are relocatable via environment variables.
-- OpenGL material editor works.
+- FFTW3 is recommended now.
+- Color gradient and GL material editors actually work.
 
 Library:
+- libprocess: FFTW integration was finished, all integral transform methods
+  can use FFTW backend now (with some API changes to accommodate that).
 - libgwydgets: Broken graph curve removal was fixed.
 - libgwydgets: Crashes and other problems with multiple 3D views were fixed
   (bug #53).
@@ -15,7 +18,12 @@ Library:
   formats when they are suitable.
 - libgwydgets: Just moving mouse over data windows should consume much less
   CPU.
+- libgwydgets: Changes in data view and vector layers to enable drawing
+  selections on exported images.
 - libgwyapp: Unitool rectangular selection info supports lateral offsets.
+- libgwyapp: Utility GwyResourceEditor base class resource editors are based
+  on now.
+- libgwydgets: GwyHMarkerBox widget, a horizontal box with movable markers.
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
@@ -26,11 +34,17 @@ Modules:
 - EZDfile: Explict support for NID files was added, some bugs fixed.
 - MI file: Updated to reflect format changes.
 - Rawfile: Always black preview was fixed.
+- Pixmap: Can draw selection on exported image, checkboxes for mask and
+  selection were added.
 - Lines layer: Jagged line number edges were fixed.
+- Layer modules: Support for exporting selections to pixmap images.
 - Level3, Read value: Display properly lateral offsets.
 - Crop: Allows to either keep lateral offsets where the data was cut, or
   reset them to zero.
 - Calibrate: Can set lateral offsets too.
+
+Other:
+- Developer documentation was moved from tmpl files to source code.
 
 
 1.99.4 (2005-10-06)
