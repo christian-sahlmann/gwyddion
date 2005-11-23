@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -326,7 +326,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
 
         case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
         gwy_data_view_get_real_data_sizes(data_view, &xreal, &yreal);
-        gwy_data_view_get_pixel_data_sizes(data_view, &width, &height);
+        gdk_drawable_get_size(drawable, &width, &height);
         xi0 = floor(xy[0]*width/xreal);
         yi0 = floor(xy[1]*height/yreal);
         xi1 = floor(xy[2]*width/xreal);

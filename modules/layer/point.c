@@ -118,7 +118,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };

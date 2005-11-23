@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.0",
+    "2.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -402,7 +402,7 @@ gwy_layer_axis_draw_object(GwyVectorLayer *layer,
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
             gwy_data_view_get_real_data_sizes(data_view, &real, NULL);
-            gwy_data_view_get_pixel_data_sizes(data_view, &res, NULL);
+            gdk_drawable_get_size(drawable, &res, NULL);
             coord = floor(xy[0]*res/real);
             break;
 
@@ -422,7 +422,7 @@ gwy_layer_axis_draw_object(GwyVectorLayer *layer,
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
             gwy_data_view_get_real_data_sizes(data_view, NULL, &real);
-            gwy_data_view_get_pixel_data_sizes(data_view, NULL, &res);
+            gdk_drawable_get_size(drawable, NULL, &res);
             coord = floor(xy[0]*res/real);
             break;
 
