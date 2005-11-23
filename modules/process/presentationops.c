@@ -22,7 +22,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
-#include <libprocess/stats.h>
+#include <libprocess/filters.h>
 #include <app/gwyapp.h>
 
 #define PRESENTATIONOPS_RUN_MODES \

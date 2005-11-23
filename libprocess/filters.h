@@ -25,6 +25,10 @@
 
 G_BEGIN_DECLS
 
+void gwy_data_field_normalize                  (GwyDataField *data_field);
+void gwy_data_field_renormalize                (GwyDataField *data_field,
+                                                gdouble range,
+                                                gdouble offset);
 void gwy_data_field_convolve                   (GwyDataField *data_field,
                                                 GwyDataField *kernel_field);
 void gwy_data_field_area_convolve              (GwyDataField *data_field,

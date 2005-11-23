@@ -27,11 +27,152 @@
 #include <libprocess/filters.h>
 #include <libprocess/stats.h>
 
+/* Cache operations */
+#define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
+#define CBIT(b)             (1 << GWY_DATA_FIELD_CACHE_##b)
+#define CTEST(datafield, b) ((datafield)->cached & CBIT(b))
+
 static gint thin_data_field(GwyDataField *data_field);
 static void gwy_data_field_area_fix_3x3_filter_edges(GwyDataField *data_field,
                                                      GwyOrientation orientation,
                                                      gint col, gint row,
                                                      gint width, gint height);
+
+/**
+ * gwy_data_field_normalize:
+ * @data_field: A data field.
+ *
+ * Normalizes data in a data field to range 0.0 to 1.0.
+ *
+ * It is equivalent to gwy_data_field_renormalize(@data_field, 1.0, 0.0);
+ *
+ * If @data_field is filled with only one value, it is changed to 0.0.
+ **/
+void
+gwy_data_field_normalize(GwyDataField *data_field)
+{
+    gdouble min, max;
+    gdouble *p;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    min = gwy_data_field_get_min(data_field);
+    max = gwy_data_field_get_max(data_field);
+
+    if (min == max) {
+        gwy_data_field_clear(data_field);
+        return;
+    }
+    if (!min) {
+        if (max != 1.0)
+            gwy_data_field_multiply(data_field, 1.0/max);
+        return;
+    }
+
+    /* The general case */
+    max -= min;
+    xres = data_field->xres;
+    yres = data_field->yres;
+    for (i = xres*yres, p = data_field->data; i; i--, p++)
+        *p = (*p - min)/max;
+
+    /* We can transform stats */
+    data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                          | CBIT(MED) | CBIT(ARF) | CBIT(ART);
+    CVAL(data_field, MIN) = 0.0;
+    CVAL(data_field, MAX) = 1.0;
+    CVAL(data_field, SUM) /= (CVAL(data_field, SUM) - xres*yres*min)/max;
+    CVAL(data_field, RMS) /= max;
+    CVAL(data_field, MED) = (CVAL(data_field, MED) - min)/max;
+    CVAL(data_field, ART) = (CVAL(data_field, ART) - min)/max;
+    CVAL(data_field, ARF) = (CVAL(data_field, ARF) - min)/max;
+}
+
+/**
+ * gwy_data_field_renormalize:
+ * @data_field: A data field.
+ * @range: New data interval size.
+ * @offset: New data interval offset.
+ *
+ * Transforms data in a data field with first linear function to given range.
+ *
+ * When @range is positive, the new data range is (@offset, @offset+@range);
+ * when @range is negative, the new data range is (@offset-@range, @offset).
+ * In neither case the data are flipped, negative range only means different
+ * selection of boundaries.
+ *
+ * When @range is zero, this method is equivalent to
+ * gwy_data_field_fill(@data_field, @offset).
+ **/
+void
+gwy_data_field_renormalize(GwyDataField *data_field,
+                           gdouble range,
+                           gdouble offset)
+{
+    gdouble min, max, v;
+    gdouble *p;
+    gint xres, yres, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    if (!range) {
+        gwy_data_field_fill(data_field, offset);
+        return;
+    }
+
+    min = gwy_data_field_get_min(data_field);
+    max = gwy_data_field_get_max(data_field);
+    if (min == max) {
+        gwy_data_field_fill(data_field, offset);
+        return;
+    }
+
+    if ((range > 0 && min == offset && min + range == max)
+        || (range < 0 && max == offset && min - range == max))
+        return;
+
+    /* The general case */
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    if (range > 0) {
+        max -= min;
+        for (i = xres*yres, p = data_field->data; i; i--, p++)
+            *p = (*p - min)/max*range + offset;
+
+        /* We can transform stats */
+        data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                              | CBIT(MED);
+        CVAL(data_field, MIN) = offset;
+        CVAL(data_field, MAX) = offset + range;
+        v = CVAL(data_field, SUM);
+        CVAL(data_field, SUM) = (v - xres*yres*min)/max*range
+                                + offset*xres*yres;
+        CVAL(data_field, RMS) = CVAL(data_field, RMS)/max*range;
+        CVAL(data_field, MED) = (CVAL(data_field, MED) - min)/max*range
+                                + offset;
+        /* FIXME: we can recompute ARF and ART too */
+    }
+    else {
+        min = max - min;
+        for (i = xres*yres, p = data_field->data; i; i--, p++)
+            *p = (max - *p)/min*range + offset;
+
+        /* We can transform stats */
+        data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
+                              | CBIT(MED);
+        CVAL(data_field, MIN) = offset + range;
+        CVAL(data_field, MAX) = offset;
+        v = CVAL(data_field, SUM);
+        CVAL(data_field, SUM) = (xres*yres*max - v)/min*range
+                                + offset*xres*yres;
+        CVAL(data_field, RMS) = CVAL(data_field, RMS)/min*(-range);
+        CVAL(data_field, MED) = (max - CVAL(data_field, MED))/min*range
+                                + offset;
+        /* FIXME: we can recompute ARF and ART too */
+    }
+}
 
 /**
  * gwy_data_field_area_convolve:
