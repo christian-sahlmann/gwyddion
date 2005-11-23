@@ -45,6 +45,8 @@
  *
  * Finds the maximum value of a data field.
  *
+ * This quantity is cached.
+ *
  * Returns: The maximum value.
  **/
 gdouble
@@ -125,6 +127,8 @@ gwy_data_field_area_get_max(GwyDataField *dfield,
  * @data_field: A data field.
  *
  * Finds the minimum value of a data field.
+ *
+ * This quantity is cached.
  *
  * Returns: The minimum value.
  **/
@@ -207,6 +211,8 @@ gwy_data_field_area_get_min(GwyDataField *dfield,
  *
  * Sums all values in a data field.
  *
+ * This quantity is cached.
+ *
  * Returns: The sum of all values.
  **/
 gdouble
@@ -280,6 +286,8 @@ gwy_data_field_area_get_sum(GwyDataField *dfield,
  *
  * Computes average value of a data field.
  *
+ * This quantity is cached.
+ *
  * Returns: The average value.
  **/
 gdouble
@@ -314,6 +322,8 @@ gwy_data_field_area_get_avg(GwyDataField *dfield,
  * @data_field: A data field.
  *
  * Computes root mean square value of a data field.
+ *
+ * This quantity is cached.
  *
  * Returns: The root mean square value.
  **/
@@ -412,6 +422,8 @@ gwy_data_field_area_get_rms(GwyDataField *dfield,
  * subject to changes.
  *
  * However, it is guaranteed minimum <= @from <= @to <= maximum.
+ *
+ * This quantity is cached.
  **/
 void
 gwy_data_field_get_autorange(GwyDataField *data_field,
@@ -1730,6 +1742,8 @@ square_area1(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  *
  * Computes surface area of a data field.
  *
+ * This quantity is cached.
+ *
  * Returns: surface area
  **/
 gdouble
@@ -1981,6 +1995,8 @@ gwy_data_field_area_get_median(GwyDataField *dfield,
  * @data_field: A data field.
  *
  * Computes median value of a data field.
+ *
+ * This quantity is cached.
  *
  * Returns: The median value.
  **/
