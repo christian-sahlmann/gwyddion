@@ -27,6 +27,7 @@
 #include <pango/pangoft2.h>
 
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwydebugobjects.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -92,50 +93,58 @@ struct _GwySelectionLineClass {
     GwySelectionClass parent_class;
 };
 
-static gboolean module_register                (const gchar *name);
-static GType    gwy_layer_line_get_type        (void) G_GNUC_CONST;
-static GType    gwy_selection_line_get_type    (void) G_GNUC_CONST;
-static void     gwy_layer_line_set_property    (GObject *object,
-                                                guint prop_id,
-                                                const GValue *value,
-                                                GParamSpec *pspec);
-static void     gwy_layer_line_get_property    (GObject*object,
-                                                guint prop_id,
-                                                GValue *value,
-                                                GParamSpec *pspec);
-static void     gwy_layer_line_draw            (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable,
-                                                GwyRenderingTarget target);
-static void     gwy_layer_line_draw_object     (GwyVectorLayer *layer,
-                                                GdkDrawable *drawable,
-                                                GwyRenderingTarget target,
-                                                gint i);
-static void     gwy_layer_line_setup_label     (GwyLayerLine *layer,
-                                                GdkDrawable *drawable,
-                                                gint i);
-static gboolean gwy_layer_line_motion_notify   (GwyVectorLayer *layer,
-                                                GdkEventMotion *event);
-static gboolean gwy_layer_line_move_line       (GwyVectorLayer *layer,
-                                                gdouble xreal,
-                                                gdouble yreal);
-static gboolean gwy_layer_line_button_pressed  (GwyVectorLayer *layer,
-                                                GdkEventButton *event);
-static gboolean gwy_layer_line_button_released (GwyVectorLayer *layer,
-                                                GdkEventButton *event);
-static void     gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
-                                                gboolean line_numbers);
-static void     gwy_layer_line_realize         (GwyDataViewLayer *layer);
-static void     gwy_layer_line_unrealize       (GwyDataViewLayer *layer);
-static gint     gwy_layer_line_near_line       (GwyVectorLayer *layer,
-                                                gdouble xreal,
-                                                gdouble yreal);
-static gint     gwy_layer_line_near_point      (GwyVectorLayer *layer,
-                                                gdouble xreal,
-                                                gdouble yreal);
-static void     gwy_layer_line_restrict_angle  (GwyDataView *data_view,
-                                                gint endpoint,
-                                                gint x, gint y,
-                                                gdouble *xy);
+static gboolean   module_register                (const gchar *name);
+static GType      gwy_layer_line_get_type        (void) G_GNUC_CONST;
+static GType      gwy_selection_line_get_type    (void) G_GNUC_CONST;
+static void       gwy_layer_line_set_property    (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void       gwy_layer_line_get_property    (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
+static void       gwy_layer_line_draw            (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target);
+static void       gwy_layer_line_draw_object     (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  GwyRenderingTarget target,
+                                                  gint i);
+static void       gwy_layer_line_setup_label     (GwyLayerLine *layer,
+                                                  GdkDrawable *drawable,
+                                                  gint i);
+static void       gwy_layer_line_draw_label      (GwyVectorLayer *layer,
+                                                  GdkDrawable *drawable,
+                                                  gdouble zoom,
+                                                  gint i,
+                                                  gint xt,
+                                                  gint yt);
+static GdkPixbuf* gwy_layer_line_layout_to_pixbuf(PangoLayout *layout);
+static gboolean   gwy_layer_line_motion_notify   (GwyVectorLayer *layer,
+                                                  GdkEventMotion *event);
+static gboolean   gwy_layer_line_move_line       (GwyVectorLayer *layer,
+                                                  gdouble xreal,
+                                                  gdouble yreal);
+static gboolean   gwy_layer_line_button_pressed  (GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static gboolean   gwy_layer_line_button_released (GwyVectorLayer *layer,
+                                                  GdkEventButton *event);
+static void       gwy_layer_line_set_line_numbers(GwyLayerLine *layer,
+                                                  gboolean line_numbers);
+static void       gwy_layer_line_realize         (GwyDataViewLayer *layer);
+static void       gwy_layer_line_unrealize       (GwyDataViewLayer *layer);
+static gint       gwy_layer_line_near_line       (GwyVectorLayer *layer,
+                                                  gdouble xreal,
+                                                  gdouble yreal);
+static gint       gwy_layer_line_near_point      (GwyVectorLayer *layer,
+                                                  gdouble xreal,
+                                                  gdouble yreal);
+static void       gwy_layer_line_restrict_angle  (GwyDataView *data_view,
+                                                  gint endpoint,
+                                                  gint x,
+                                                  gint y,
+                                                  gdouble *xy);
 
 /* Allow to express intent. */
 #define gwy_layer_line_undraw        gwy_layer_line_draw
@@ -307,7 +316,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GwyLayerLine *layer_line;
     gint xi0, yi0, xi1, yi1, xt, yt, width, height;
-    gdouble xy[OBJECT_SIZE], xreal, yreal;
+    gdouble xy[OBJECT_SIZE], xreal, yreal, zoom;
     gboolean has_object;
 
     g_return_if_fail(GDK_IS_DRAWABLE(drawable));
@@ -343,13 +352,28 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
     if (!layer_line->line_numbers)
         return;
 
-    /* TODO: GWY_RENDERING_TARGET_PIXMAP_IMAGE */
-    gwy_layer_line_setup_label(layer_line, drawable, i);
     xt = (xi0 + xi1)/2 + 1;
     yt = (yi0 + yi1)/2;
-    gdk_draw_drawable(drawable, layer->gc,
-                      g_ptr_array_index(layer_line->line_labels, i),
-                      0, 0, xt, yt, -1, -1);
+    switch (target) {
+        case GWY_RENDERING_TARGET_SCREEN:
+        gwy_layer_line_setup_label(layer_line, drawable, i);
+        gdk_draw_drawable(drawable, layer->gc,
+                          g_ptr_array_index(layer_line->line_labels, i),
+                          0, 0, xt, yt, -1, -1);
+        break;
+
+        case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gwy_data_view_get_pixel_data_sizes(data_view, &xi1, &yi1);
+        gdk_drawable_get_size(drawable, &width, &height);
+        zoom = sqrt(((gdouble)(width*height))/(xi1*yi1));
+
+        gwy_layer_line_draw_label(layer, drawable, zoom, i, xt, yt);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
@@ -358,14 +382,10 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
                            gint i)
 {
     GwyVectorLayer *layer;
-    FT_Bitmap bitmap;
-    PangoRectangle rect;
     GdkPixmap *pixmap;
     GdkPixbuf *pixbuf;
-    GdkGC *gc;
-    guchar *pixels;
     gchar buffer[8];
-    gint j, k, rowstride;
+    GdkGC *gc;
 
     if (!layer_line->line_labels)
         layer_line->line_labels = g_ptr_array_new();
@@ -386,7 +406,64 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
 
     g_snprintf(buffer, sizeof(buffer), "%d", i+1);
     pango_layout_set_text(layer->layout, buffer, -1);
-    pango_layout_get_pixel_extents(layer->layout, NULL, &rect);
+    pixbuf = gwy_layer_line_layout_to_pixbuf(layer->layout);
+    pixmap = gdk_pixmap_new(drawable,
+                            gdk_pixbuf_get_width(pixbuf),
+                            gdk_pixbuf_get_height(pixbuf),
+                            -1);
+    g_ptr_array_index(layer_line->line_labels, i) = pixmap;
+
+    gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
+    gdk_gc_set_function(gc, GDK_COPY);
+    gdk_draw_pixbuf(pixmap, gc, pixbuf, 0, 0, 0, 0, -1, -1,
+                    GDK_RGB_DITHER_NONE, 0, 0);
+    g_object_unref(gc);
+    g_object_unref(pixbuf);
+}
+
+static void
+gwy_layer_line_draw_label(GwyVectorLayer *layer,
+                          GdkDrawable *drawable,
+                          gdouble zoom,
+                          gint i,
+                          gint xt,
+                          gint yt)
+{
+    GwyLayerLine *layer_line;
+    GdkGCValues gcvalues;
+    GdkPixbuf *pixbuf;
+    gchar buffer[48];
+
+    layer_line = GWY_LAYER_LINE(layer);
+    if (!layer->layout) {
+        layer->layout = pango_layout_new(layer_line->ft2_context);
+        pango_layout_set_width(layer->layout, -1);
+        pango_layout_set_alignment(layer->layout, PANGO_ALIGN_LEFT);
+    }
+
+    g_snprintf(buffer, sizeof(buffer), "<span size=\"%d\">%d</span>",
+               ROUND(MAX(2048.0, zoom*12*1024)), i+1);
+    pango_layout_set_markup(layer->layout, buffer, -1);
+    pixbuf = gwy_layer_line_layout_to_pixbuf(layer->layout);
+
+    gdk_gc_get_values(layer->gc, &gcvalues);
+    gdk_gc_set_function(layer->gc, GDK_XOR);
+    gdk_draw_pixbuf(drawable, layer->gc, pixbuf, 0, 0, xt, yt, -1, -1,
+                    GDK_RGB_DITHER_NONE, 0, 0);
+    gdk_gc_set_values(layer->gc, &gcvalues, GDK_GC_FUNCTION);
+    g_object_unref(pixbuf);
+}
+
+static GdkPixbuf*
+gwy_layer_line_layout_to_pixbuf(PangoLayout *layout)
+{
+    FT_Bitmap bitmap;
+    PangoRectangle rect;
+    guchar *pixels;
+    gint j, k, rowstride;
+    GdkPixbuf *pixbuf;
+
+    pango_layout_get_pixel_extents(layout, NULL, &rect);
 
     bitmap.rows = rect.height;
     bitmap.width = rect.width;
@@ -396,12 +473,13 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
     bitmap.num_grays = 2;
     bitmap.buffer = g_malloc0(bitmap.rows * bitmap.pitch);
 
-    pango_ft2_render_layout(&bitmap, layer->layout, -rect.x, 0);
+    pango_ft2_render_layout(&bitmap, layout, -rect.x, 0);
 
     /* Draw via a pixbuf detour because we don't want to draw pixel by
      * pixel to a server-side GdkDrawable */
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                             bitmap.width, bitmap.rows);
+    gwy_debug_objects_creation(G_OBJECT(pixbuf));
     gdk_pixbuf_fill(pixbuf, 0);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
@@ -415,15 +493,7 @@ gwy_layer_line_setup_label(GwyLayerLine *layer_line,
     }
     g_free(bitmap.buffer);
 
-    pixmap = gdk_pixmap_new(drawable, rect.width, rect.height, -1);
-    g_ptr_array_index(layer_line->line_labels, i) = pixmap;
-
-    gc = gdk_gc_new(GDK_DRAWABLE(pixmap));
-    gdk_gc_set_function(gc, GDK_COPY);
-    gdk_draw_pixbuf(pixmap, gc, pixbuf, 0, 0, 0, 0, bitmap.width, bitmap.rows,
-                    GDK_RGB_DITHER_NONE, 0, 0);
-    g_object_unref(gc);
-    g_object_unref(pixbuf);
+    return pixbuf;
 }
 
 static gboolean
