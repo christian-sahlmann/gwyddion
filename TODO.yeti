@@ -1,12 +1,13 @@
 HEAD
+- ValUnit:
+  - fix tip Blind and Model to use something else, ValUnit has been probably
+    broken by metric unit option menu -> combo changes anyway
 - FFT
-  - Fix PSDF real sizes
-  - Simplify API:
-    - allow to pass NULL as imaginary data field in complex FFTs turning them
-      to R2C
-    - changed xfft and yfft to 1dfft with orientation argument
+  - fix PSDF values
+- Files: store type in container on successful load/save, attempt to save
+  only as this type on Ctrl-S
 - Ruler:
-  - When all range is negative, units are not placed anywhere
+  - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
 - Should GwyDataLine have units?  Set data line offsets in stat functions.
 - 3D View still not MVCized
@@ -33,7 +34,6 @@ HEAD
 - Check whether we always emit notification when object properties change
 - Fix Indentor analysis
 - Add preview to: artithmetic
-- It should be possible to export images with selections drawn
 - It should be possible to export measurement from Distance tool (and the
   number of lines should be increased)
 - Invent some initialization for Laplace solver so that it can only converge
