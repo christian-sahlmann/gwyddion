@@ -1288,7 +1288,6 @@ gwy_data_view_export_pixbuf(GwyDataView *data_view,
                           GWY_RENDERING_TARGET_PIXMAP_IMAGE);
     aux_pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                               0, 0, 0, 0, width, height);
-    gdk_pixbuf_save(aux_pixbuf, "aux.png", "png", NULL, NULL);
 
     src = gdk_pixbuf_get_pixels(aux_pixbuf);
     dst = gdk_pixbuf_get_pixels(pixbuf);
