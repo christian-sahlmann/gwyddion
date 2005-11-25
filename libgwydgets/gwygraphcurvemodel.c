@@ -715,6 +715,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
     xdata = (gdouble *)g_malloc(sizeof(gdouble)*res);
     ydata = (gdouble *)g_malloc(sizeof(gdouble)*res);
 
+    
     offset = gwy_data_line_get_offset(dline);
 
     for (i=0; i<res; i++)
@@ -728,6 +729,8 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
                                    ydata,
                                    res);
 
+    g_free(xdata);
+    g_free(ydata);
     gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
 

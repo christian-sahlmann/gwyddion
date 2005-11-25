@@ -927,7 +927,7 @@ gwy_axis_normalscale(GwyAxis *a)
     do {
         mjt.t.value = majorbase;
         mjt.ttext = g_string_new(" ");
-        g_array_append_val(a->mjticks, mjt);
+        a->mjticks = g_array_append_val(a->mjticks, mjt);
         majorbase += tickstep;
         i++;
     } while ((majorbase - tickstep) < a->reqmax && i<(2*a->par.major_maxticks));
@@ -939,7 +939,7 @@ gwy_axis_normalscale(GwyAxis *a)
     do {
         mit.value = minorbase;
         /*printf("gwyaxis.c:893: appending %f (%dth)\n", (gdouble)mit.value, i);*/
-        g_array_append_val(a->miticks, mit);
+        a->miticks = g_array_append_val(a->miticks, mit);
         minorbase += minortickstep;
         i++;
     } while (minorbase <= a->max && i < 20*a->par.major_maxticks);
