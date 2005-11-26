@@ -102,15 +102,18 @@ static void        data_window_cb             (GtkWidget *item,
 static void        tip_update                 (TipBlindControls *controls,
                                                TipBlindArgs *args);
 static void        tip_blind_dialog_abandon   (TipBlindControls *controls);
+static void        sci_entry_set_value        (GtkAdjustment *adj,
+                                               GtkComboBox *metric,
+                                               gdouble val);
 static void        prepare_fields             (GwyDataField *tipfield,
                                                GwyDataField *surface,
                                                gint xres,
                                                gint yres);
 
 TipBlindArgs tip_blind_defaults = {
-    100,
-    100,
-    0.0000000001,
+    10,
+    10,
+    1e-10,
     FALSE,
     TRUE,
     NULL,
@@ -122,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Blind estimation of SPM tip using Villarubia's algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -280,10 +283,10 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_attach(GTK_TABLE(table), controls.threshold_spin,
                      2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    label = gtk_label_new_with_mnemonic(_("Threshold:"));
+    label = gtk_label_new_with_mnemonic(_("Noise suppression _threshold:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.threshold_spin);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     unit = gwy_data_field_get_si_unit_z(dfield);
     controls.threshold_unit
@@ -295,6 +298,9 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.threshold, "value-changed",
                      G_CALLBACK(thresh_changed_cb), &controls);
+    sci_entry_set_value(GTK_ADJUSTMENT(controls.threshold),
+                        GTK_COMBO_BOX(controls.threshold_unit),
+                        args->thresh);
     row++;
 
     controls.boundaries
@@ -356,6 +362,23 @@ tip_blind_dialog_abandon(TipBlindControls *controls)
     /*if dialog was cancelled, free also tip data*/
     if (!controls->tipdone)
         g_object_unref(controls->tip);
+}
+
+static void
+sci_entry_set_value(GtkAdjustment *adj,
+                    GtkComboBox *metric,
+                    gdouble val)
+{
+    gint mag;
+
+    mag = 3*(gint)floor(log10(val)/3.0);
+    mag = CLAMP(mag, -12, -3);
+    g_signal_handlers_block_matched(metric, G_SIGNAL_MATCH_FUNC,
+                                    0, 0, 0, thresh_changed_cb, 0);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(metric), mag);
+    g_signal_handlers_unblock_matched(metric, G_SIGNAL_MATCH_FUNC,
+                                      0, 0, 0, thresh_changed_cb, 0);
+    gtk_adjustment_set_value(adj, val/pow10(mag));
 }
 
 static void
