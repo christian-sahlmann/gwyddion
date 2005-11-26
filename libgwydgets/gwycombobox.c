@@ -75,6 +75,7 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
     g_object_unref(inventory);
     model = GTK_TREE_MODEL(store);
     combo = gtk_combo_box_new_with_model(model);
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 1);
     g_object_unref(store);
     layout = GTK_CELL_LAYOUT(combo);
 
