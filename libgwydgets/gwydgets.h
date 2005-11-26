@@ -66,7 +66,6 @@
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwyvruler.h>
-#include <libgwydgets/gwyvalunit.h>
 
 #ifdef GWYDDION_HAS_OPENGL
 #include <gdk/gdkgl.h>

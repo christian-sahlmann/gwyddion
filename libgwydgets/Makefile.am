@@ -50,7 +50,6 @@ libgwydgetsinclude_HEADERS = \
 	gwystock.h \
 	gwyvectorlayer.h \
 	gwyvruler.h \
-	gwyvalunit.h \
 	gwycurve.h
 
 lib_LTLIBRARIES = libgwydgets.la
@@ -119,7 +118,6 @@ libgwydgets_la_SOURCES = \
 	gwystock.c \
 	gwyvectorlayer.c \
 	gwyvruler.c \
-	gwyvalunit.c \
 	gwycurve.c
 
 INCLUDES = -I$(top_srcdir)

@@ -42,11 +42,15 @@ typedef struct {
 } TipModelArgs;
 
 typedef struct {
+    TipModelArgs *args;
     GtkWidget *view;
     GtkWidget *data;
     GwyDataWindow *data_window;
     GtkWidget *type;
-    GtkWidget *radius;
+    GtkObject *radius;
+    GtkWidget *radius_spin;
+    GtkWidget *radius_unit;
+    GtkWidget *radius_label;
     GtkObject *angle;
     GtkObject *theta;
     GtkObject *nsides;
@@ -80,7 +84,7 @@ static void        tip_model_save_args             (GwyContainer *container,
                                                     TipModelArgs *args);
 static void        tip_model_sanitize_args         (TipModelArgs *args);
 static void        tip_type_cb                     (GtkWidget *combo,
-                                                    TipModelArgs *args);
+                                                    TipModelControls *controls);
 static void        data_window_cb                  (GtkWidget *item,
                                                     TipModelControls *controls);
 static GtkWidget*  create_preset_menu              (GCallback callback,
@@ -88,8 +92,8 @@ static GtkWidget*  create_preset_menu              (GCallback callback,
                                                     gint current);
 static void        tip_update                      (TipModelControls *controls,
                                                     TipModelArgs *args);
-static void        radius_changed_cb               (GwyValUnit *valunit,
-                                                    TipModelArgs *args);
+static void        radius_changed_cb               (gpointer object,
+                                                    TipModelControls *controls);
 static void        tip_model_dialog_abandon        (TipModelControls *controls);
 
 
@@ -101,8 +105,6 @@ TipModelArgs tip_model_defaults = {
     0,
     NULL,
 };
-
-TipModelControls *pcontrols;
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -158,21 +160,16 @@ tip_model(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 {
-    static const GwyEnum tip_type[] = {
-        { N_("Pyramide (general)"),   GWY_TIP_PYRAMIDE    },
-        { N_("Contact etched"),       GWY_TIP_CONTACT     },
-        { N_("Noncontact etched"),    GWY_TIP_NONCONTACT  },
-        { N_("Delta function"),       GWY_TIP_DELTA       },
-    };
-    GtkWidget *dialog, *table, *hbox, *spin;
-    TipModelControls controls;
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_PREVIEW = 2
     };
-    gint response, row;
+    GtkWidget *dialog, *table, *hbox, *spin;
+    TipModelControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
+    GwySIUnit *unit;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Model Tip"), NULL, 0,
                                          _("_Update Preview"), RESPONSE_PREVIEW,
@@ -187,7 +184,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    pcontrols = &controls;
+    controls.args = args;
     controls.vxres = 200;
     controls.vyres = 200;
 
@@ -230,7 +227,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     row++;
 
     controls.type = create_preset_menu(G_CALLBACK(tip_type_cb),
-                                       args, args->type);
+                                       &controls, args->type);
     gwy_table_attach_hscale(table, row, _("Tip _type:"), NULL,
                             GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
     row++;
@@ -252,13 +249,26 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
     row++;
 
-    controls.radius = gwy_val_unit_new(_("Tip _apex radius:"),
-                                       gwy_data_field_get_si_unit_xy(dfield));
+    controls.radius = gtk_adjustment_new(1.0, 0.01, 1000.0, 0.01, 1.0, 0.0);
+    controls.radius_spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.radius),
+                                               0.1, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_spin, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    controls.radius_label = gtk_label_new_with_mnemonic(_("Tip _apex radius:"));
+    gtk_misc_set_alignment(GTK_MISC(controls.radius_label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(controls.radius_label),
+                                  controls.radius_spin);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    controls.radius_unit
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(radius_changed_cb),
+                                        &controls,
+                                        -12, -3, unit, -9);
+    gtk_table_attach(GTK_TABLE(table), controls.radius_unit, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.radius, "value-changed",
-                     G_CALLBACK(radius_changed_cb), args);
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.radius), args->radius);
-    gtk_table_attach(GTK_TABLE(table), controls.radius, 0, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 2);
+                     G_CALLBACK(radius_changed_cb), &controls);
     row++;
 
     controls.labsize = gtk_label_new(_("Resolution will be determined "
@@ -323,10 +333,10 @@ tip_model_dialog_abandon(TipModelControls *controls)
 }
 
 static void
-tip_type_cb(GtkWidget *combo, TipModelArgs *args)
+tip_type_cb(GtkWidget *combo, TipModelControls *controls)
 {
-    args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    tip_model_dialog_update_controls(pcontrols, args);
+    controls->args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    tip_model_dialog_update_controls(controls, controls->args);
 }
 
 static void
@@ -514,9 +524,15 @@ tip_process(TipModelArgs *args,
 }
 
 static void
-radius_changed_cb(GwyValUnit *valunit, TipModelArgs *args)
+radius_changed_cb(G_GNUC_UNUSED gpointer object,
+                  TipModelControls *controls)
 {
-    args->radius = gwy_val_unit_get_value(valunit);
+    gint p10;
+    gdouble val;
+
+    p10 = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->radius_unit));
+    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->radius));
+    controls->args->radius = val * pow10(p10);
 }
 
 static const gchar *nsides_key = "/module/tip_model/nsides";

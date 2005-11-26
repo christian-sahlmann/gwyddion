@@ -54,7 +54,9 @@ typedef struct {
     GtkWidget *data;
     GwyDataWindow *data_window;
     GtkWidget *type;
-    GtkWidget *threshold;
+    GtkObject *threshold;
+    GtkWidget *threshold_spin;
+    GtkWidget *threshold_unit;
     GtkWidget *boundaries;
     GwyContainer *tip;
     GwyContainer *vtip;
@@ -89,8 +91,8 @@ static void        width_changed_cb           (GtkAdjustment *adj,
                                                TipBlindControls *controls);
 static void        height_changed_cb          (GtkAdjustment *adj,
                                                TipBlindControls *controls);
-static void        thresh_changed_cb          (GwyValUnit *valunit,
-                                               TipBlindArgs *args);
+static void        thresh_changed_cb          (gpointer object,
+                                               TipBlindControls *controls);
 static void        bound_changed_cb           (GtkToggleButton *button,
                                                TipBlindArgs *args);
 static void        same_resolution_changed_cb (GtkToggleButton *button,
@@ -163,17 +165,17 @@ tip_blind(GwyContainer *data, GwyRunType run)
 static gboolean
 tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
 {
-    GtkWidget *dialog, *table, *hbox;
-    TipBlindControls controls;
     enum {
         RESPONSE_RESET = 1,
         RESPONSE_PARTIAL,
         RESPONSE_FULL
     };
-    gint response, row;
+    GtkWidget *dialog, *table, *hbox, *label;
+    TipBlindControls controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
-    GtkWidget *label;
+    GwySIUnit *unit;
+    gint response, row;
 
     dialog = gtk_dialog_new_with_buttons(_("Blind Tip Estimation"), NULL, 0,
                                          _("Run _Partial"), RESPONSE_PARTIAL,
@@ -241,7 +243,7 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new_with_mnemonic(_("Estimated Tip Size"));
+    label = gtk_label_new(_("Estimated Tip Size"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 4, row, row+1,
                      GTK_FILL, 0, 2, 2);
@@ -272,14 +274,27 @@ tip_blind_dialog(TipBlindArgs *args, GwyContainer *data)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    /* FIXME: get rid of valunit */
-    controls.threshold = gwy_val_unit_new(_("_Threshold:"),
-                                          gwy_data_field_get_si_unit_z(dfield));
-    gtk_table_attach(GTK_TABLE(table), controls.threshold,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 2, 2);
-    gwy_val_unit_set_value(GWY_VAL_UNIT(controls.threshold), args->thresh);
+    controls.threshold = gtk_adjustment_new(1.0, 0.01, 1000.0, 0.01, 1.0, 0.0);
+    controls.threshold_spin
+        = gtk_spin_button_new(GTK_ADJUSTMENT(controls.threshold), 0.1, 2);
+    gtk_table_attach(GTK_TABLE(table), controls.threshold_spin,
+                     2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    label = gtk_label_new_with_mnemonic(_("Threshold:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.threshold_spin);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    controls.threshold_unit
+        = gwy_combo_box_metric_unit_new(G_CALLBACK(thresh_changed_cb),
+                                        &controls,
+                                        -12, -3, unit, -9);
+    gtk_table_attach(GTK_TABLE(table), controls.threshold_unit,
+                     3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
     g_signal_connect(controls.threshold, "value-changed",
-                     G_CALLBACK(thresh_changed_cb), args);
+                     G_CALLBACK(thresh_changed_cb), &controls);
     row++;
 
     controls.boundaries
@@ -388,10 +403,15 @@ height_changed_cb(GtkAdjustment *adj,
 }
 
 static void
-thresh_changed_cb(GwyValUnit *valunit,
-                  TipBlindArgs *args)
+thresh_changed_cb(G_GNUC_UNUSED gpointer object,
+                  TipBlindControls *controls)
 {
-    args->thresh = gwy_val_unit_get_value(valunit);
+    gdouble val;
+    gint p10;
+
+    val = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold));
+    p10 = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->threshold_unit));
+    controls->args->thresh = val * pow10(p10);
 }
 
 static void
