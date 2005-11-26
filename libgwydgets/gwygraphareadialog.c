@@ -314,6 +314,7 @@ gwy_graph_combo_box_new(GtkWidget *parent,
     }
 
     combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 1);
     g_object_unref(store);
 
     renderer = gtk_cell_renderer_pixbuf_new();
