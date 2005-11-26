@@ -83,6 +83,9 @@ static void        tip_model_load_args             (GwyContainer *container,
 static void        tip_model_save_args             (GwyContainer *container,
                                                     TipModelArgs *args);
 static void        tip_model_sanitize_args         (TipModelArgs *args);
+static void        sci_entry_set_value             (GtkAdjustment *adj,
+                                                    GtkComboBox *metric,
+                                                    gdouble val);
 static void        tip_type_cb                     (GtkWidget *combo,
                                                     TipModelControls *controls);
 static void        data_window_cb                  (GtkWidget *item,
@@ -112,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Models SPM tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -271,8 +274,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
                      G_CALLBACK(radius_changed_cb), &controls);
     row++;
 
-    controls.labsize = gtk_label_new(_("Resolution will be determined "
-                                       "according to tip type."));
+    controls.labsize = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.labsize), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.labsize, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -280,6 +282,7 @@ tip_model_dialog(TipModelArgs *args, GwyContainer *data)
 
     controls.tipdone = FALSE;
     tip_model_dialog_update_controls(&controls, args);
+    preview(&controls, args);
 
     gtk_widget_show_all(dialog);
     do {
@@ -333,6 +336,23 @@ tip_model_dialog_abandon(TipModelControls *controls)
 }
 
 static void
+sci_entry_set_value(GtkAdjustment *adj,
+                    GtkComboBox *metric,
+                    gdouble val)
+{
+    gint mag;
+
+    mag = 3*(gint)floor(log10(val)/3.0);
+    mag = CLAMP(mag, -12, -3);
+    g_signal_handlers_block_matched(metric, G_SIGNAL_MATCH_FUNC,
+                                    0, 0, 0, radius_changed_cb, 0);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(metric), mag);
+    g_signal_handlers_unblock_matched(metric, G_SIGNAL_MATCH_FUNC,
+                                      0, 0, 0, radius_changed_cb, 0);
+    gtk_adjustment_set_value(adj, val/pow10(mag));
+}
+
+static void
 tip_type_cb(GtkWidget *combo, TipModelControls *controls)
 {
     controls->args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
@@ -376,36 +396,39 @@ static void
 tip_model_dialog_update_controls(TipModelControls *controls,
                                  TipModelArgs *args)
 {
+    gboolean all_sensitive = FALSE, contact_sensitive = FALSE;
+
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->type), args->type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nsides),
                              args->nsides);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->angle),
                              args->angle);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->theta),
                              args->theta);
-    switch (args->type)
-    {
+    sci_entry_set_value(GTK_ADJUSTMENT(controls->radius),
+                        GTK_COMBO_BOX(controls->radius_unit),
+                        args->radius);
+    switch (args->type) {
         case GWY_TIP_PYRAMIDE:
-        gwy_table_hscale_set_sensitive(controls->angle, TRUE);
-        gwy_table_hscale_set_sensitive(controls->theta, TRUE);
-        gwy_table_hscale_set_sensitive(controls->nsides, TRUE);
-        break;
-
+        all_sensitive = TRUE;
         case GWY_TIP_CONTACT:
         case GWY_TIP_NONCONTACT:
-        gwy_table_hscale_set_sensitive(controls->angle, FALSE);
-        gwy_table_hscale_set_sensitive(controls->theta, TRUE);
-        gwy_table_hscale_set_sensitive(controls->nsides, FALSE);
+        contact_sensitive = TRUE;
         break;
 
         case GWY_TIP_DELTA:
-        gwy_table_hscale_set_sensitive(controls->angle, FALSE);
-        gwy_table_hscale_set_sensitive(controls->theta, FALSE);
-        gwy_table_hscale_set_sensitive(controls->nsides, FALSE);
         break;
 
         default:
+        g_return_if_reached();
         break;
     }
+    gwy_table_hscale_set_sensitive(controls->angle, all_sensitive);
+    gwy_table_hscale_set_sensitive(controls->theta, contact_sensitive);
+    gwy_table_hscale_set_sensitive(controls->nsides, all_sensitive);
+    gtk_widget_set_sensitive(controls->radius_spin, contact_sensitive);
+    gtk_widget_set_sensitive(controls->radius_unit, contact_sensitive);
+    gtk_widget_set_sensitive(controls->radius_label, contact_sensitive);
 }
 
 static void
