@@ -49,7 +49,8 @@ static GtkWidget* gwy_app_menu_create_graph_menu(GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_file_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_menu_create_edit_menu (GtkAccelGroup *accel_group);
 static GtkWidget* gwy_app_toolbox_create_label (const gchar *text,
-                                                const gchar *id);
+                                                const gchar *id,
+                                                gboolean *pvisible);
 static void       gwy_app_toolbox_showhide_cb  (GtkWidget *button,
                                                 GtkWidget *widget);
 static void       gwy_app_rerun_process_func_cb(gpointer user_data);
@@ -300,10 +301,11 @@ gwy_app_toolbox_create(void)
     GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
     GList *list;
-    GSList *labels = NULL, *l;
     GSList *toolbars = NULL;    /* list of all toolbars for sensitivity */
     GSList *menus = NULL;    /* list of all menus for sensitivity */
+    GSList *l;
     const gchar *first_tool;
+    gboolean visible;
     guint i, j;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -342,12 +344,12 @@ gwy_app_toolbox_create(void)
     gwy_app_menu_set_sensitive_recursive(container, &sens_data_all);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("View"), "zoom");
+    label = gwy_app_toolbox_create_label(_("View"), "zoom", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-    labels = g_slist_append(labels, label);
 
     toolbar = gtk_table_new(1, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
+    gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     for (i = 0; i < G_N_ELEMENTS(view_actions); i++)
@@ -360,12 +362,12 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Data Process"), "proc");
+    label = gwy_app_toolbox_create_label(_("Data Process"), "proc", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-    labels = g_slist_append(labels, label);
 
     toolbar = gtk_table_new(4, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
+    gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     for (j = i = 0; i < G_N_ELEMENTS(proc_actions); i++) {
@@ -386,12 +388,12 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Graph"), "graph");
+    label = gwy_app_toolbox_create_label(_("Graph"), "graph", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-    labels = g_slist_append(labels, label);
 
     toolbar = gtk_table_new(1, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
+    gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     for (j = i = 0; i < G_N_ELEMENTS(graph_actions); i++) {
@@ -408,13 +410,13 @@ gwy_app_toolbox_create(void)
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
 
     /***************************************************************/
-    label = gwy_app_toolbox_create_label(_("Tools"), "tool");
+    label = gwy_app_toolbox_create_label(_("Tools"), "tool", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
-    labels = g_slist_append(labels, label);
 
     toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
                                           4, tooltips, &first_tool);
     toolbars = g_slist_append(toolbars, toolbar);
+    gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
@@ -444,17 +446,15 @@ gwy_app_toolbox_create(void)
 
     gtk_widget_show_all(toolbox);
     gwy_app_main_window_restore_position();
+    for (l = toolbars; l; l = g_slist_next(l))
+        gtk_widget_set_no_show_all(GTK_WIDGET(l->data), FALSE);
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
-    for (l = labels; l; l = g_slist_next(l))
-        g_signal_emit_by_name(l->data, "clicked");
-    g_slist_free(labels);
-
     g_object_set_data_full(G_OBJECT(toolbox), "toolbars", toolbars,
-                           (GDestroyNotify)g_list_free);
+                           (GDestroyNotify)g_slist_free);
     g_object_set_data_full(G_OBJECT(toolbox), "menus", menus,
-                           (GDestroyNotify)g_list_free);
+                           (GDestroyNotify)g_slist_free);
 
     return toolbox;
 }
@@ -862,23 +862,24 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
 
 static GtkWidget*
 gwy_app_toolbox_create_label(const gchar *text,
-                             const gchar *id)
+                             const gchar *id,
+                             gboolean *pvisible)
 {
     GwyContainer *settings;
     GtkWidget *label, *hbox, *button, *arrow;
     gboolean visible = TRUE;
     gchar *s, *key;
+    GQuark quark;
 
     settings = gwy_app_settings_get();
     key = g_strconcat("/app/toolbox/visible/", id, NULL);
-    if (gwy_container_contains_by_name(settings, key))
-        visible = gwy_container_get_boolean_by_name(settings, key);
-    gwy_container_set_boolean_by_name(settings, key, !visible);
+    quark = g_quark_from_string(key);
+    g_free(key);
+    gwy_container_gis_boolean(settings, quark, &visible);
 
     hbox = gtk_hbox_new(FALSE, 2);
 
-    /* note we create the label in the OTHER state, then call showhide */
-    arrow = gtk_arrow_new(visible ? GTK_ARROW_RIGHT : GTK_ARROW_DOWN,
+    arrow = gtk_arrow_new(visible ? GTK_ARROW_DOWN : GTK_ARROW_RIGHT,
                           GTK_SHADOW_ETCHED_IN);
     gtk_box_pack_start(GTK_BOX(hbox), arrow, FALSE, FALSE, 0);
 
@@ -896,8 +897,9 @@ gwy_app_toolbox_create_label(const gchar *text,
     gtk_container_add(GTK_CONTAINER(button), hbox);
 
     g_object_set_data(G_OBJECT(button), "arrow", arrow);
-    g_object_set_data(G_OBJECT(button), "key", key);
-    g_signal_connect_swapped(button, "destroy", G_CALLBACK(g_free), key);
+    g_object_set_data(G_OBJECT(button), "key", GUINT_TO_POINTER(quark));
+
+    *pvisible = visible;
 
     return button;
 }
@@ -909,18 +911,18 @@ gwy_app_toolbox_showhide_cb(GtkWidget *button,
     GwyContainer *settings;
     GtkWidget *arrow;
     gboolean visible;
-    const gchar *key;
+    GQuark quark;
 
     settings = gwy_app_settings_get();
-    key = (const gchar*)g_object_get_data(G_OBJECT(button), "key");
-    visible = gwy_container_get_boolean_by_name(settings, key);
+    quark = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "key"));
+    visible = gwy_container_get_boolean(settings, quark);
     arrow = GTK_WIDGET(g_object_get_data(G_OBJECT(button), "arrow"));
     g_assert(GTK_IS_ARROW(arrow));
     visible = !visible;
-    gwy_container_set_boolean_by_name(settings, key, visible);
+    gwy_container_set_boolean(settings, quark, visible);
 
     if (visible)
-        gtk_widget_show(widget);
+        gtk_widget_show_all(widget);
     else
         gtk_widget_hide(widget);
     g_object_set(arrow, "arrow-type",
