@@ -705,6 +705,7 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
     g_array_set_size(clone->objects, 0);
     g_array_append_vals(clone->objects,
                         selection->objects->data, selection->n*object_size);
+    clone->n = selection->n;
     g_array_set_size(clone->objects, selection->objects->len);
 
     g_signal_emit(clone, selection_signals[CHANGED], 0, -1);
