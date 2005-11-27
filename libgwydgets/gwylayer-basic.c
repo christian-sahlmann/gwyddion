@@ -33,6 +33,7 @@
 enum {
     PROP_0,
     PROP_GRADIENT_KEY,
+    PROP_PRESENTATION_KEY,
     PROP_RANGE_TYPE_KEY,
     PROP_MIN_MAX_KEY
 };
@@ -59,11 +60,15 @@ static void gwy_layer_basic_get_fixed_range      (GwyLayerBasic *basic_layer,
 static void gwy_layer_basic_reconnect_fixed      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_connect_fixed        (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_disconnect_fixed     (GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_item_changed         (GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_show_field_connect   (GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_show_field_disconnect(GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_container_connect    (GwyLayerBasic *basic_layer,
                                                   const gchar *data_key_string,
                                                   gulong *id,
                                                   GCallback callback);
 static void gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer);
+static void gwy_layer_basic_show_changed         (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_min_max_changed      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
@@ -100,6 +105,20 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
          g_param_spec_string("gradient-key",
                              "Gradient key",
                              "Key identifying gradient in container",
+                             NULL, G_PARAM_READWRITE));
+
+    /**
+     * GwyLayerBasic:presentation-key:
+     *
+     * The :presentation-key property is the container key used to identify
+     * presentation data field .
+     **/
+    g_object_class_install_property
+        (gobject_class,
+         PROP_PRESENTATION_KEY,
+         g_param_spec_string("presentation-key",
+                             "Presentation key",
+                             "Key identifying presentation data in container",
                              NULL, G_PARAM_READWRITE));
 
     /**
@@ -157,21 +176,26 @@ gwy_layer_basic_set_property(GObject *object,
                              const GValue *value,
                              GParamSpec *pspec)
 {
-    GwyLayerBasic *layer_basic = GWY_LAYER_BASIC(object);
+    GwyLayerBasic *basic_layer = GWY_LAYER_BASIC(object);
 
     switch (prop_id) {
         case PROP_GRADIENT_KEY:
-        gwy_layer_basic_set_gradient_key(layer_basic,
+        gwy_layer_basic_set_gradient_key(basic_layer,
+                                         g_value_get_string(value));
+        break;
+
+        case PROP_PRESENTATION_KEY:
+        gwy_layer_basic_set_presentation_key(basic_layer,
                                          g_value_get_string(value));
         break;
 
         case PROP_RANGE_TYPE_KEY:
-        gwy_layer_basic_set_range_type_key(layer_basic,
+        gwy_layer_basic_set_range_type_key(basic_layer,
                                            g_value_get_string(value));
         break;
 
         case PROP_MIN_MAX_KEY:
-        gwy_layer_basic_set_min_max_key(layer_basic,
+        gwy_layer_basic_set_min_max_key(basic_layer,
                                         g_value_get_string(value));
         break;
 
@@ -182,27 +206,32 @@ gwy_layer_basic_set_property(GObject *object,
 }
 
 static void
-gwy_layer_basic_get_property(GObject*object,
+gwy_layer_basic_get_property(GObject *object,
                              guint prop_id,
                              GValue *value,
                              GParamSpec *pspec)
 {
-    GwyLayerBasic *layer_basic = GWY_LAYER_BASIC(object);
+    GwyLayerBasic *basic_layer = GWY_LAYER_BASIC(object);
 
     switch (prop_id) {
         case PROP_GRADIENT_KEY:
         g_value_set_static_string(value,
-                                  g_quark_to_string(layer_basic->gradient_key));
+                                  g_quark_to_string(basic_layer->gradient_key));
+        break;
+
+        case PROP_PRESENTATION_KEY:
+        g_value_set_static_string(value,
+                                  g_quark_to_string(basic_layer->show_key));
         break;
 
         case PROP_RANGE_TYPE_KEY:
         g_value_set_static_string(value,
-                                  g_quark_to_string(layer_basic->range_type_key));
+                                  g_quark_to_string(basic_layer->range_type_key));
         break;
 
         case PROP_MIN_MAX_KEY:
         g_value_set_static_string(value,
-                                  g_quark_to_string(layer_basic->fixed_key));
+                                  g_quark_to_string(basic_layer->fixed_key));
         break;
 
         default:
@@ -240,13 +269,13 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
     basic_layer = GWY_LAYER_BASIC(layer);
     data = GWY_DATA_VIEW_LAYER(layer)->data;
 
-    /* TODO: We were special-casing "/0/show" here to ignore fixed range.
-     * Move the logic where it belongs... */
     data_field = GWY_DATA_FIELD(layer->data_field);
+    if (basic_layer->show_field)
+        data_field = GWY_DATA_FIELD(basic_layer->show_field);
     g_return_val_if_fail(data && data_field, NULL);
 
     range_type = GWY_LAYER_BASIC_RANGE_FULL;
-    if (basic_layer->range_type_key)
+    if (!basic_layer->show_field && basic_layer->range_type_key)
         gwy_container_gis_enum(data, basic_layer->range_type_key, &range_type);
 
     /* Special-case full range, as gwy_pixbuf_draw_data_field() is simplier,
@@ -311,6 +340,12 @@ gwy_layer_basic_plugged(GwyDataViewLayer *layer)
 
     gwy_layer_basic_container_connect
                             (basic_layer,
+                             g_quark_to_string(basic_layer->show_key),
+                             &basic_layer->show_item_id,
+                             G_CALLBACK(gwy_layer_basic_item_changed));
+    gwy_layer_basic_show_field_connect(basic_layer);
+    gwy_layer_basic_container_connect
+                            (basic_layer,
                              g_quark_to_string(basic_layer->gradient_key),
                              &basic_layer->gradient_item_id,
                              G_CALLBACK(gwy_layer_basic_gradient_item_changed));
@@ -340,9 +375,13 @@ gwy_layer_basic_unplugged(GwyDataViewLayer *layer)
     if (basic_layer->gradient_item_id)
         g_signal_handler_disconnect(layer->data, basic_layer->gradient_item_id);
     gwy_layer_basic_gradient_disconnect(basic_layer);
+    if (basic_layer->show_item_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->show_item_id);
+    gwy_layer_basic_show_field_disconnect(basic_layer);
 
     basic_layer->range_type_id = 0;
     basic_layer->gradient_item_id = 0;
+    basic_layer->show_item_id = 0;
 
     gwy_object_unref(pixmap_layer->pixbuf);
     GWY_DATA_VIEW_LAYER_CLASS(gwy_layer_basic_parent_class)->unplugged(layer);
@@ -512,14 +551,17 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
                           gdouble *min,
                           gdouble *max)
 {
+    GwyPixmapLayer *pixmap_layer;
     GwyContainer *data;
     GwyDataField *data_field;
     GwyLayerBasicRangeType range_type;
     gdouble rmin, rmax;
 
+    /* FIXME: Should we return something else for presentations? */
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
     data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
-    data_field = GWY_DATA_FIELD(GWY_PIXMAP_LAYER(basic_layer)->data_field);
+    pixmap_layer = GWY_PIXMAP_LAYER(basic_layer);
+    data_field = GWY_DATA_FIELD(pixmap_layer->data_field);
     g_return_if_fail(data && data_field);
 
     range_type = GWY_LAYER_BASIC_RANGE_FULL;
@@ -581,6 +623,76 @@ gwy_layer_basic_get_fixed_range(GwyLayerBasic *basic_layer,
     strcpy(key + len + 1, "max");
     if (!gwy_container_gis_double_by_name(container, key, rmax))
         *rmax = gwy_data_field_get_max(data_field);
+}
+
+/**
+ * gwy_layer_basic_set_presentation_key:
+ * @basic_layer: A basic data view layer.
+ * @key: Container string key identifying the data field to actually display.
+ *
+ * Sets the data field to actually display by a basic layer.
+ *
+ * The data field set with gwy_pixmap_layer_get_data_key() is used to obtain
+ * values, it determines physical dimensions, etc.  When a data field is set
+ * with this method, it is displayed instead of the actual data.
+ **/
+void
+gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
+                                     const gchar *key)
+{
+    GwyDataViewLayer *layer;
+    GQuark quark;
+
+    g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
+
+    quark = key ? g_quark_from_string(key) : 0;
+    if (basic_layer->show_key == quark)
+        return;
+
+    layer = GWY_DATA_VIEW_LAYER(basic_layer);
+    if (!layer->data) {
+        basic_layer->show_key = quark;
+        g_object_notify(G_OBJECT(basic_layer), "presentation-key");
+        return;
+    }
+
+    if (basic_layer->show_id)
+        g_signal_handler_disconnect(layer->data, basic_layer->show_id);
+    basic_layer->show_id = 0;
+    gwy_layer_basic_show_field_disconnect(basic_layer);
+    basic_layer->show_key = quark;
+    gwy_layer_basic_show_field_connect(basic_layer);
+    gwy_layer_basic_container_connect(basic_layer, key,
+                                      &basic_layer->show_item_id,
+                                      G_CALLBACK(gwy_layer_basic_item_changed));
+
+    GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
+    g_object_notify(G_OBJECT(basic_layer), "presentation-key");
+    gwy_data_view_layer_updated(layer);
+}
+
+/**
+ * gwy_layer_basic_get_presentation_key:
+ * @basic_layer: A basic data view layer.
+ *
+ * Gets the key identifying data field this pixmap layer actually displays.
+ *
+ * See gwy_layer_basic_set_presentation_key() for details.
+ *
+ * Returns: The string key, or %NULL if it isn't set.
+ **/
+const gchar*
+gwy_layer_basic_get_presentation_key(GwyLayerBasic *basic_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), NULL);
+    return g_quark_to_string(basic_layer->show_key);
+}
+
+gboolean
+gwy_layer_basic_get_has_presentation(GwyLayerBasic *basic_layer)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), FALSE);
+    return basic_layer->show_key && basic_layer->show_field;
 }
 
 /**
@@ -652,6 +764,70 @@ gwy_layer_basic_disconnect_fixed(GwyLayerBasic *basic_layer)
     basic_layer->max_id = 0;
 }
 
+/**
+ * gwy_layer_basic_item_changed:
+ * @layer: A basic data view layer.
+ * @data: Container with the presentation data field this basic layer display.
+ *
+ * Reconnects signals to a new data field when it was replaced in the
+ * container.
+ **/
+static void
+gwy_layer_basic_item_changed(GwyLayerBasic *basic_layer)
+{
+    gwy_layer_basic_show_field_disconnect(basic_layer);
+    gwy_layer_basic_show_field_connect(basic_layer);
+    GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+}
+
+/**
+ * gwy_layer_basic_show_field_connect:
+ * @basic_layer: A basic layer.
+ *
+ * Eventually connects to new data field's "data-changed" signal.
+ **/
+static void
+gwy_layer_basic_show_field_connect(GwyLayerBasic *basic_layer)
+{
+    GwyDataViewLayer *layer;
+
+    g_return_if_fail(!basic_layer->show_field);
+    if (!basic_layer->show_key)
+        return;
+
+    layer = GWY_DATA_VIEW_LAYER(basic_layer);
+    if (!gwy_container_gis_object(layer->data, basic_layer->show_key,
+                                  &basic_layer->show_field))
+        return;
+
+    g_object_ref(basic_layer->show_field);
+    basic_layer->show_id
+        = g_signal_connect_swapped(basic_layer->show_field,
+                                   "data-changed",
+                                   G_CALLBACK(gwy_layer_basic_show_changed),
+                                   layer);
+}
+
+/**
+ * gwy_layer_basic_show_field_disconnect:
+ * @basic_layer: A basic layer.
+ *
+ * Disconnects from all data field's signals and drops reference to it.
+ **/
+static void
+gwy_layer_basic_show_field_disconnect(GwyLayerBasic *basic_layer)
+{
+    if (!basic_layer->show_field)
+        return;
+
+    if (basic_layer->show_id)
+        g_signal_handler_disconnect(basic_layer->show_field,
+                                    basic_layer->show_id);
+    basic_layer->show_id = 0;
+    gwy_object_unref(basic_layer->show_field);
+}
+
 static void
 gwy_layer_basic_container_connect(GwyLayerBasic *basic_layer,
                                   const gchar *data_key_string,
@@ -677,6 +853,13 @@ gwy_layer_basic_gradient_item_changed(GwyLayerBasic *basic_layer)
 {
     gwy_layer_basic_gradient_disconnect(basic_layer);
     gwy_layer_basic_gradient_connect(basic_layer);
+    GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
+    gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
+}
+
+static void
+gwy_layer_basic_show_changed(GwyLayerBasic *basic_layer)
+{
     GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }

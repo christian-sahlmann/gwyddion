@@ -50,6 +50,11 @@ struct _GwyLayerBasic {
     gulong gradient_id;
     gulong gradient_item_id;
 
+    GQuark show_key;
+    GObject *show_field;
+    gulong show_id;
+    gulong show_item_id;
+
     GQuark fixed_key;
     gulong min_id;
     gulong max_id;
@@ -73,6 +78,10 @@ void            gwy_layer_basic_get_range          (GwyLayerBasic *basic_layer,
 void            gwy_layer_basic_set_gradient_key   (GwyLayerBasic *basic_layer,
                                                     const gchar *key);
 const gchar*    gwy_layer_basic_get_gradient_key   (GwyLayerBasic *basic_layer);
+void           gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
+                                                    const gchar *key);
+const gchar*   gwy_layer_basic_get_presentation_key(GwyLayerBasic *basic_layer);
+gboolean       gwy_layer_basic_get_has_presentation(GwyLayerBasic *basic_layer);
 void            gwy_layer_basic_set_min_max_key    (GwyLayerBasic *basic_layer,
                                                     const gchar *prefix);
 const gchar*    gwy_layer_basic_get_min_max_key    (GwyLayerBasic *basic_layer);
