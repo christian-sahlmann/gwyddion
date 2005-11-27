@@ -682,6 +682,7 @@ gwy_selection_duplicate_default(GObject *object)
     g_array_set_size(duplicate->objects, 0);
     g_array_append_vals(duplicate->objects,
                         selection->objects->data, selection->n*object_size);
+    duplicate->n = selection->n;
     g_array_set_size(duplicate->objects, selection->objects->len);
 
     return (GObject*)duplicate;
