@@ -55,6 +55,7 @@ struct _GwyGLMaterialEditor {
     GSList *components;
     GtkWidget *colorsel;
     GtkObject *shininess;
+    GwyContainer *container;
     GtkWidget *preview;
     GwyRGBA old[GL_MATERIAL_N];
 };
@@ -206,7 +207,6 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
 {
     enum { N = 96 };
     GtkWidget *view;
-    GwyContainer *container;
     GwyDataField *dfield;
     GtkAdjustment *adj;
 
@@ -218,13 +218,14 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     dfield = gwy_data_field_new(N, N, 1.0, 1.0, FALSE);
     gwy_gl_material_editor_make_data(dfield);
 
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    editor->container = gwy_container_new();
+    gwy_container_set_object_by_name(editor->container, "/0/data", dfield);
     g_object_unref(dfield);
-    gwy_gl_material_editor_set_view(container, FALSE);
+    gwy_gl_material_editor_set_view(editor->container, FALSE);
 
-    view = gwy_3d_view_new(container);
-    g_object_unref(container);
+    view = gwy_3d_view_new(editor->container);
+    gwy_3d_view_set_material_key(GWY_3D_VIEW(view), "/0/3d/material");
+    g_object_unref(editor->container);
     g_object_set(view,
                  "movement-type", GWY_3D_MOVEMENT_ROTATION,
                  "visualization", GWY_3D_VISUALIZATION_LIGHTING,
@@ -236,7 +237,7 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     gtk_adjustment_set_value(adj, 1.4*gtk_adjustment_get_value(adj));
     g_signal_connect_swapped(view, "destroy",
                              G_CALLBACK(gwy_gl_material_editor_save_view),
-                             container);
+                             editor->container);
 
     editor->preview = view;
 }
@@ -454,9 +455,11 @@ gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
     g_return_if_fail(material
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
 
-    if (gwy_app_gl_is_ok())
-        gwy_3d_view_set_material(GWY_3D_VIEW(editor->preview),
-                                 gwy_resource_get_name(GWY_RESOURCE(material)));
+    if (gwy_app_gl_is_ok()) {
+        gwy_container_set_string_by_name
+                               (editor->container, "/0/3d/material",
+                                gwy_resource_get_name(GWY_RESOURCE(material)));
+    }
 
     editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
     editor->old[GL_MATERIAL_DIFFUSE] = *gwy_gl_material_get_diffuse(material);

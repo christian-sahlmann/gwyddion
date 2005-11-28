@@ -940,6 +940,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
 
     gwy3dview = gwy_3d_view_new(data);
     gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), "/0/3d/palette");
+    gwy_3d_view_set_material_key(GWY_3D_VIEW(gwy3dview), "/0/3d/material");
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
     gtk_window_add_accel_group
         (GTK_WINDOW(gwy3dwindow),

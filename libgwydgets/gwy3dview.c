@@ -80,7 +80,9 @@ enum {
 
 /* Changed components */
 enum {
-    GWY_3D_GRADIENT = 1 << 0
+    GWY_3D_GRADIENT = 1 << 0,
+    GWY_3D_MATERIAL = 1 << 1,
+    GWY_3D_MASK     = 0x03
 };
 
 enum {
@@ -124,6 +126,9 @@ static void          gwy_3d_view_gradient_item_changed(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_gradient_connect(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_material_item_changed(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_material_connect(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_material_disconnect(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_material_changed(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_realize_gl     (Gwy3DView *widget);
@@ -313,7 +318,7 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
 
     gwy3dview->view_scale_max        = 3.0f;
     gwy3dview->view_scale_min        = 0.5f;
-    gwy3dview->movement              = GWY_3D_MOVEMENT_ROTATION;
+    gwy3dview->movement              = GWY_3D_MOVEMENT_NONE;
     gwy3dview->show_axes             = TRUE;
     gwy3dview->show_labels           = TRUE;
 
@@ -340,11 +345,7 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->light_y);
 
     gwy_3d_view_gradient_disconnect(gwy3dview);
-
-    if (gwy3dview->material) {
-        gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
-        gwy3dview->material = NULL;
-    }
+    gwy_3d_view_material_disconnect(gwy3dview);
 
     if (gwy3dview->shape_list_base > 0)
         gwy_3d_view_release_lists(gwy3dview);
@@ -463,10 +464,6 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-    if (gwy3dview->material_id)
-        g_signal_handler_disconnect(gwy3dview->material,
-                                    gwy3dview->material_id);
-
     gwy_3d_view_release_lists(gwy3dview);
     g_object_unref(gwy3dview->ft2_context);
     g_object_unref(gwy3dview->ft2_font_map);
@@ -491,9 +488,7 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    const guchar *name;
     GwyDataField *dfield;
-    gulong id;
     guint i;
 
     gwy_debug(" ");
@@ -543,6 +538,13 @@ gwy_3d_view_new(GwyContainer *data)
                              g_quark_to_string(gwy3dview->gradient_key),
                              &gwy3dview->gradient_item_id,
                              G_CALLBACK(gwy_3d_view_gradient_item_changed));
+    gwy_3d_view_gradient_connect(gwy3dview);
+    gwy_3d_view_container_connect
+                            (gwy3dview,
+                             g_quark_to_string(gwy3dview->material_key),
+                             &gwy3dview->material_item_id,
+                             G_CALLBACK(gwy_3d_view_material_item_changed));
+    gwy_3d_view_material_connect(gwy3dview);
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
@@ -558,14 +560,6 @@ gwy_3d_view_new(GwyContainer *data)
                                       &gwy3dview->show_axes);
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
                                       &gwy3dview->show_labels);
-
-    gwy_container_gis_string_by_name(data, "/0/3d/material", &name);
-    gwy3dview->material = gwy_gl_materials_get_gl_material(name);
-    gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
-    id = g_signal_connect_swapped(gwy3dview->material, "data-changed",
-                                  G_CALLBACK(gwy_3d_view_material_changed),
-                                  gwy3dview);
-    gwy3dview->material_id = id;
 
     /* should be always true */
     if (gwy3dview->data_field != NULL) {
@@ -587,10 +581,6 @@ gwy_3d_view_new(GwyContainer *data)
                                 rx,
                                 ry,
                                 GWY_INTERPOLATION_BILINEAR);
-
-
-        gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data_field);
-        gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data_field);
     }
     gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
                                  glconfig,
@@ -822,64 +812,96 @@ gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 }
 
 /**
- * gwy_3d_view_get_material:
+ * gwy_3d_view_get_material_key:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns a name of GL material used to draw data with lights on.
+ * Gets key identifying GL material.
  *
- * Returns: A GL material name as a string owned by the material.
+ * Returns: The string key, or %NULL if it isn't set.
  **/
 const gchar*
-gwy_3d_view_get_material(Gwy3DView *gwy3dview)
+gwy_3d_view_get_material_key(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->material));
+    return g_quark_to_string(gwy3dview->material_key);
 }
 
 /**
- * gwy_3d_view_set_material:
+ * gwy_3d_view_set_material_key:
  * @gwy3dview: A 3D data view widget.
- * @material: A #GwyGLMaterial name to render data with lights on.
+ * @key: Container string key identifying the color material to use for
+ *       material visualization mode.
  *
- * Sets the material of the surface.
+ * Sets the GL material to use to visualize data in a 3D view.
  **/
 void
-gwy_3d_view_set_material(Gwy3DView *gwy3dview,
-                         const gchar *material)
+gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
+                            const gchar *key)
 {
-    GwyGLMaterial *glmat, *old;
-    gchar *gradstr;
-    gulong id;
+    GQuark quark;
 
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%s", material);
 
-    glmat = gwy_gl_materials_get_gl_material(material);
-    old = gwy3dview->material;
-    if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(old)), material))
+    quark = key ? g_quark_from_string(key) : 0;
+    if (!gwy3dview->data || gwy3dview->material_key == quark) {
+        gwy3dview->material_key = quark;
+        return;
+    }
+
+    if (gwy3dview->material_item_id)
+        g_signal_handler_disconnect(gwy3dview->data,
+                                    gwy3dview->material_item_id);
+    gwy3dview->material_item_id = 0;
+    gwy_3d_view_material_disconnect(gwy3dview);
+    gwy3dview->material_key = quark;
+    gwy_3d_view_material_connect(gwy3dview);
+    gwy_3d_view_container_connect
+                            (gwy3dview, key,
+                             &gwy3dview->material_item_id,
+                             G_CALLBACK(gwy_3d_view_material_item_changed));
+    gwy_3d_view_material_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_material_item_changed(Gwy3DView *gwy3dview)
+{
+    gwy_3d_view_material_disconnect(gwy3dview);
+    gwy_3d_view_material_connect(gwy3dview);
+    gwy_3d_view_material_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_material_connect(Gwy3DView *gwy3dview)
+{
+    const guchar *s = NULL;
+
+    g_return_if_fail(!gwy3dview->material);
+    if (gwy3dview->material_key)
+        gwy_container_gis_string(gwy3dview->data, gwy3dview->material_key, &s);
+    gwy3dview->material = gwy_gl_materials_get_gl_material(s);
+    gwy_resource_use(GWY_RESOURCE(gwy3dview->material));
+    gwy3dview->material_id
+        = g_signal_connect_swapped(gwy3dview->material, "data-changed",
+                                   G_CALLBACK(gwy_3d_view_material_changed),
+                                   gwy3dview);
+}
+
+static void
+gwy_3d_view_material_disconnect(Gwy3DView *gwy3dview)
+{
+    if (!gwy3dview->material)
         return;
 
-    gradstr = g_strdup(material);
-    if (gwy3dview->material_id)
-        g_signal_handler_disconnect(gwy3dview->material,
-                                    gwy3dview->material_id);
-    gwy_resource_use(GWY_RESOURCE(glmat));
-    gwy3dview->material = glmat;
-    id = g_signal_connect_swapped(gwy3dview->material, "data-changed",
-                                  G_CALLBACK(gwy_3d_view_material_changed),
-                                  gwy3dview);
-    gwy3dview->material_id = id;
-    gwy_container_set_string_by_name(gwy3dview->data, "/0/3d/material",
-                                     gradstr);
-    gwy_resource_release(GWY_RESOURCE(old));
-
-    if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING)
-        gwy_3d_view_update_lists(gwy3dview);
+    g_signal_handler_disconnect(gwy3dview->material, gwy3dview->material_id);
+    gwy3dview->material_id = 0;
+    gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
+    gwy3dview->material = NULL;
 }
 
 static void
 gwy_3d_view_material_changed(Gwy3DView *gwy3dview)
 {
+    gwy3dview->changed |= GWY_3D_MATERIAL;
     if (gwy3dview->visual == GWY_3D_VISUALIZATION_LIGHTING)
         gwy_3d_view_update_lists(gwy3dview);
 }
@@ -1968,6 +1990,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                  gint shape)
 {
    gint i, j, xres, yres, res;
+   gdouble data_min, data_max;
    GLdouble zdifr;
    Gwy3DVector *normals;
    const gdouble *data;
@@ -1976,6 +1999,8 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
    xres = gwy_data_field_get_xres(dfield);
    yres = gwy_data_field_get_yres(dfield);
+   data_min = gwy_data_field_get_min(dfield);
+   data_max = gwy_data_field_get_max(dfield);
    data = gwy_data_field_get_data_const(dfield);
    res  = xres > yres ? xres : yres;
    grad = gwy3dview->gradient;
@@ -1984,10 +2009,9 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
    glPushMatrix();
    glTranslatef(-(xres/(double)res), -(yres/(double)res),
                 GWY_3D_Z_DISPLACEMENT);
-   glScalef(2.0/res, 2.0/res,
-            GWY_3D_Z_TRANSFORMATION/(gwy3dview->data_max - gwy3dview->data_min));
-   glTranslatef(0.0, 0.0, -gwy3dview->data_min);
-   zdifr = 1.0/(gwy3dview->data_max - gwy3dview->data_min);
+   glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
+   glTranslatef(0.0, 0.0, -data_min);
+   zdifr = 1.0/(data_max - data_min);
    normals = g_new(Gwy3DVector, xres * yres);
    if (!gwy_3d_make_normals(dfield, normals)) {
        /*TODO solve not enough momory problem*/
@@ -2003,15 +2027,13 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
            glNormal3d(normals[j*xres+i].x,
                       normals[j*xres+i].y,
                       normals[j*xres+i].z);
-           gwy_gradient_get_color(grad, (a - gwy3dview->data_min) * zdifr,
-                                  &color);
+           gwy_gradient_get_color(grad, (a - data_min)*zdifr, &color);
            glColor3d(color.r , color.g, color.b);
            glVertex3d((double)i, (double)j, a);
            glNormal3d(normals[(j+1)*xres+i].x,
                       normals[(j+1)*xres+i].y,
                       normals[(j+1)*xres+i].z);
-           gwy_gradient_get_color(grad, (b - gwy3dview->data_min) * zdifr,
-                                  &color);
+           gwy_gradient_get_color(grad, (b - data_min)*zdifr, &color);
            glColor3d(color.r , color.g, color.b);
            glVertex3d((double)i, (double)(j+1), b);
        }
@@ -2027,6 +2049,7 @@ static void
 gwy_3d_draw_axes(Gwy3DView *widget)
 {
     GLfloat rx, Ax, Ay, Bx, By, Cx, Cy;
+    gdouble data_min, data_max;
     gint xres, yres, res;
     gboolean yfirst;
     GwyGLMaterial *mat_none;
@@ -2035,6 +2058,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
     xres = gwy_data_field_get_xres(widget->data_field);
     yres = gwy_data_field_get_yres(widget->data_field);
+    data_min = gwy_data_field_get_min(widget->data_field);
+    data_max = gwy_data_field_get_max(widget->data_field);
     res  = xres > yres ? xres : yres;
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
@@ -2049,9 +2074,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glPushMatrix();
     glTranslatef(-(xres/(double)res), -(yres/(double)res),
                  GWY_3D_Z_DISPLACEMENT);
-    glScalef(2.0/res,
-             2.0/res,
-             GWY_3D_Z_TRANSFORMATION/(widget->data_max - widget->data_min));
+    glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
     gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
                         gwy_gl_material_get_ambient(mat_none));
     gwy_3d_view_rgba_dv(GL_FRONT, GL_DIFFUSE,
@@ -2087,7 +2110,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
         glVertex3f(Ax, Ay, 0.0f);
         glVertex3f(Bx, By, 0.0f);
         glVertex3f(Cx, Cy, 0.0f);
-        glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
+        glVertex3f(Cx, Cy, data_max - data_min);
     glEnd();
     glBegin(GL_LINES);
         glVertex3f(Ax, Ay, 0.0f);
@@ -2107,12 +2130,12 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     glEnd();
 
     glBegin(GL_LINES);
-        glVertex3f(Cx, Cy, widget->data_max - widget->data_min);
+        glVertex3f(Cx, Cy, data_max - data_min);
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
-                 widget->data_max - widget->data_min);
-        glVertex3f(Cx, Cy, (widget->data_max - widget->data_min)/2);
+                 data_max - data_min);
+        glVertex3f(Cx, Cy, (data_max - data_min)/2);
         glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02,
-                   (widget->data_max-widget->data_min)/2);
+                   (data_max - data_min)/2);
     glEnd();
 
     /*
@@ -2142,7 +2165,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
         gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MAX,
                           Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          (widget->data_max - widget->data_min),
+                          (data_max - data_min),
                           size, 0, -1);
 
         gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MIN,
@@ -2156,11 +2179,16 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 static void
 gwy_3d_draw_light_position(Gwy3DView *widget)
 {
-    int i;
-    GLfloat plane_z;
     GwyGLMaterial *mat_none;
+    GLfloat plane_z;
+    gdouble data_min, data_max, data_mean;
+    int i;
 
     gwy_debug(" ");
+
+    data_min = gwy_data_field_get_min(widget->data_field);
+    data_max = gwy_data_field_get_max(widget->data_field);
+    data_mean = gwy_data_field_get_avg(widget->data_field);
 
     mat_none = gwy_gl_materials_get_gl_material(GWY_GL_MATERIAL_NONE);
     gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
@@ -2173,8 +2201,7 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
                 (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
     glPushMatrix();
     plane_z = GWY_3D_Z_TRANSFORMATION
-              * (widget->data_mean - widget->data_min)
-              / (widget->data_max  - widget->data_min)
+              *(data_mean - data_min)/(data_max  - data_min)
               + GWY_3D_Z_DISPLACEMENT;
 
     glTranslatef(0.0f, 0.0f, plane_z);
@@ -2688,15 +2715,15 @@ gwy_3d_view_set_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview,
 
 
 const gchar*
-gwy_3d_view_get_material(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+gwy_3d_view_get_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
     return NULL;
 }
 
 void
-gwy_3d_view_set_material(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                         G_GNUC_UNUSED const gchar *material)
+gwy_3d_view_set_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED const gchar *material)
 {
     g_critical("OpenGL support was not compiled in.");
 }

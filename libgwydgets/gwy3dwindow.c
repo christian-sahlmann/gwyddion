@@ -457,7 +457,6 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     };
     Gwy3DWindow *gwy3dwindow;
     GtkRequisition size_req;
-    const gchar *name;
     GtkWidget *vbox, *hbox, *hbox2, *table, *spin, *button, *omenu, *combo,
               *label, *check, *entry;
     Gwy3DLabel *gwy3dlabel;
@@ -485,6 +484,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     g_signal_connect_swapped(gwy3dwindow->gwy3dview, "button-press-event",
                              G_CALLBACK(gwy_3d_window_view_clicked),
                              gwy3dwindow);
+    gwy_3d_view_set_movement_type(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
+                                  GWY_3D_MOVEMENT_ROTATION);
 
     /* Small toolbar */
     gwy3dwindow->vbox_small = gtk_vbox_new(FALSE, 0);
@@ -622,9 +623,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    name = gwy_3d_view_get_material(gwy3dview);
+    /* TODO: get selected from 3D view */
     omenu = gwy_gl_material_selection_new(G_CALLBACK(gwy_3d_window_set_material),
-                                          gwy3dwindow, name);
+                                          gwy3dwindow, NULL);
     gwy3dwindow->material_menu = omenu;
     gtk_widget_set_sensitive(omenu, visual == GWY_3D_VISUALIZATION_LIGHTING);
     gtk_table_attach(GTK_TABLE(table), omenu,
@@ -928,14 +929,19 @@ static void
 gwy_3d_window_set_material(GtkTreeSelection *selection,
                            Gwy3DWindow *gwy3dwindow)
 {
+    Gwy3DView *view;
     GwyResource *resource;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    const gchar *name;
 
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter, 0, &resource, -1);
-        gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                                 gwy_resource_get_name(resource));
+        view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
+        name = gwy_resource_get_name(resource);
+        gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
+                                         gwy_3d_view_get_material_key(view),
+                                         g_strdup(name));
     }
 }
 
@@ -1177,13 +1183,17 @@ static void
 gwy_3d_window_material_selected(GtkWidget *item,
                                 Gwy3DWindow *gwy3dwindow)
 {
+    Gwy3DView *view;
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "gl-material-name");
     gwy_gl_material_selection_set_active(gwy3dwindow->material_menu, name);
     /* FIXME: Double update if tree view is visible. Remove once selection
      * buttons can emit signals. */
-    gwy_3d_view_set_material(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
+    view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
+    gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
+                                     gwy_3d_view_get_material_key(view),
+                                     g_strdup(name));
 }
 
 /************************** Documentation ****************************/

@@ -49,30 +49,32 @@ typedef struct _Gwy3DViewClass Gwy3DViewClass;
 struct _Gwy3DView {
     GtkWidget parent_instance;
 
+    Gwy3DMovement movement;
+    Gwy3DProjection projection;
+    Gwy3DVisualization visual;
+    gboolean show_axes;
+    gboolean show_labels;
+    guint reduced_size;
+
     GwyContainer *data;           /* Container with data */
     GwyDataField *data_field;     /* Data to be shown */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
-
-    gint changed;
 
     GwyGradient *gradient;
     GQuark gradient_key;
     gulong gradient_id;
     gulong gradient_item_id;
 
-    gdouble data_min;             /* minimal z-value of the heights */
-    gdouble data_max;             /* maximal z-value od the heights */
-    gdouble data_mean;            /* mean z-value od the heights */
+    GwyGLMaterial *material;
+    GQuark material_key;
+    gulong material_id;
+    gulong material_item_id;
 
-    Gwy3DMovement movement;       /* What to do, if mouse is moving */
+    gint changed;
 
     gint shape_list_base;         /* Base index of scene display lists */
     guint shape_current;          /* Actually shown shape in the scene
                                      (full or reduced data) */
-
-
-    guint reduced_size;           /* Resolution of the surface while rotations
-                                     etc. */
 
     GtkAdjustment *rot_x;         /* First angle of ratation of the scene */
     GtkAdjustment *rot_y;         /* Second angle of ratation of the scene */
@@ -84,16 +86,6 @@ struct _Gwy3DView {
                                      light */
     gdouble view_scale_max;       /* Maximum zoom of the scene */
     gdouble view_scale_min;       /* Minimum zoom of the scene */
-
-    Gwy3DProjection projection;   /* Orthographic or perspectine projection */
-    Gwy3DVisualization visual;    /* Visualization type */
-    gboolean show_axes;           /* Whether show axes wihin the scene */
-    gboolean show_labels;         /* Whether show axes labels, only if axes
-                                     are shown */
-
-    GwyGLMaterial *material;      /* Current material (influences the color
-                                     of the object, lights must be on) */
-    gulong material_id;
 
     gdouble mouse_begin_x;        /* Start x-coordinate of mouse */
     gdouble mouse_begin_y;        /* Start y-coordinate of mouse */
@@ -138,6 +130,9 @@ GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 const gchar*      gwy_3d_view_get_gradient_key  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_gradient_key  (Gwy3DView *gwy3dview,
                                                  const gchar *key);
+const gchar*      gwy_3d_view_get_material_key  (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_material_key  (Gwy3DView *gwy3dview,
+                                                 const gchar *key);
 
 Gwy3DMovement     gwy_3d_view_get_movement_type (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_movement_type (Gwy3DView *gwy3dview,
@@ -160,10 +155,6 @@ void              gwy_3d_view_set_visualization (Gwy3DView *gwy3dview,
 guint             gwy_3d_view_get_reduced_size  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_reduced_size  (Gwy3DView *gwy3dview,
                                                  guint reduced_size);
-
-const gchar*      gwy_3d_view_get_material      (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_material      (Gwy3DView *gwy3dview,
-                                                 const gchar *material);
 
 GdkPixbuf*        gwy_3d_view_get_pixbuf        (Gwy3DView *gwy3dview);
 Gwy3DLabel*       gwy_3d_view_get_label         (Gwy3DView *gwy3dview,
