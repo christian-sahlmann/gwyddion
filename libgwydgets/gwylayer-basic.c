@@ -328,13 +328,10 @@ static void
 gwy_layer_basic_gradient_connect(GwyLayerBasic *basic_layer)
 {
     GwyDataViewLayer *layer;
-    const guchar *s;
+    const guchar *s = NULL;
 
     g_return_if_fail(!basic_layer->gradient);
     layer = GWY_DATA_VIEW_LAYER(basic_layer);
-    /* FIXME: original implementation set /0/base/palette to default value
-     * if unset. */
-    s = NULL;
     if (basic_layer->gradient_key)
         gwy_container_gis_string(layer->data, basic_layer->gradient_key, &s);
     basic_layer->gradient = gwy_gradients_get_gradient(s);

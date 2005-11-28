@@ -655,9 +655,9 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
                      0, 3, row, row+1, GTK_FILL, 0, 2, 2);
     row++;
 
-    name = gwy_3d_view_get_gradient(gwy3dview);
+    /* TODO: get selected from 3D view */
     omenu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
-                                       gwy3dwindow, name);
+                                       gwy3dwindow, NULL);
     gtk_widget_set_sensitive(omenu, visual == GWY_3D_VISUALIZATION_GRADIENT);
     gwy3dwindow->gradient_menu = omenu;
     gtk_table_attach(GTK_TABLE(table), omenu,
@@ -908,14 +908,19 @@ static void
 gwy_3d_window_set_gradient(GtkTreeSelection *selection,
                            Gwy3DWindow *gwy3dwindow)
 {
+    Gwy3DView *view;
     GwyResource *resource;
     GtkTreeModel *model;
     GtkTreeIter iter;
+    const gchar *name;
 
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
         gtk_tree_model_get(model, &iter, 0, &resource, -1);
-        gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview),
-                                 gwy_resource_get_name(resource));
+        view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
+        name = gwy_resource_get_name(resource);
+        gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
+                                         gwy_3d_view_get_gradient_key(view),
+                                         g_strdup(name));
     }
 }
 
@@ -1155,13 +1160,17 @@ static void
 gwy_3d_window_gradient_selected(GtkWidget *item,
                                 Gwy3DWindow *gwy3dwindow)
 {
+    Gwy3DView *view;
     const gchar *name;
 
     name = g_object_get_data(G_OBJECT(item), "gradient-name");
     gwy_gradient_selection_set_active(gwy3dwindow->gradient_menu, name);
     /* FIXME: Double update if tree view is visible. Remove once selection
      * buttons can emit signals. */
-    gwy_3d_view_set_gradient(GWY_3D_VIEW(gwy3dwindow->gwy3dview), name);
+    view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
+    gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
+                                     gwy_3d_view_get_gradient_key(view),
+                                     g_strdup(name));
 }
 
 static void

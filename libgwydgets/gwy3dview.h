@@ -49,11 +49,16 @@ typedef struct _Gwy3DViewClass Gwy3DViewClass;
 struct _Gwy3DView {
     GtkWidget parent_instance;
 
-    GwyContainer *container;      /* Container with data */
-    GwyDataField *data;           /* Data to be shown */
+    GwyContainer *data;           /* Container with data */
+    GwyDataField *data_field;     /* Data to be shown */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
-    GwyGradient  *gradient;
+
+    gint changed;
+
+    GwyGradient *gradient;
+    GQuark gradient_key;
     gulong gradient_id;
+    gulong gradient_item_id;
 
     gdouble data_min;             /* minimal z-value of the heights */
     gdouble data_max;             /* maximal z-value od the heights */
@@ -130,13 +135,9 @@ struct _Gwy3DViewClass {
 GtkWidget*        gwy_3d_view_new               (GwyContainer *data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
-#ifndef GWY_DISABLE_DEPRECATED
-void              gwy_3d_view_update            (Gwy3DView *gwy3dview);
-#endif
-
-const gchar*      gwy_3d_view_get_gradient      (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_gradient      (Gwy3DView *gwy3dview,
-                                                 const gchar *gradient);
+const gchar*      gwy_3d_view_get_gradient_key  (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_gradient_key  (Gwy3DView *gwy3dview,
+                                                 const gchar *key);
 
 Gwy3DMovement     gwy_3d_view_get_movement_type (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_movement_type (Gwy3DView *gwy3dview,

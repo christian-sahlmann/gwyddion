@@ -839,7 +839,7 @@ gwy_app_graph_window_create(GwyGraph *graph,
 
     current_graph = g_list_append(current_graph, window);
 
-    gtk_window_set_default_size(window, 500, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
     gtk_widget_show_all(window);
     gtk_window_present(GTK_WINDOW(window));
 
@@ -939,6 +939,7 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
 
     gwy3dview = gwy_3d_view_new(data);
+    gwy_3d_view_set_gradient_key(GWY_3D_VIEW(gwy3dview), "/0/3d/palette");
     gwy3dwindow = gwy_3d_window_new(GWY_3D_VIEW(gwy3dview));
     gtk_window_add_accel_group
         (GTK_WINDOW(gwy3dwindow),
@@ -973,8 +974,6 @@ gwy_app_3d_window_create(GwyDataWindow *data_window)
      */
     g_signal_connect(data_window, "title-changed",
                      G_CALLBACK(gwy_app_3d_window_title_changed), gwy3dwindow);
-    g_signal_connect_swapped(view, "redrawn",
-                             G_CALLBACK(gwy_3d_view_update), gwy3dview);
     g_signal_connect(data_window, "destroy",
                      G_CALLBACK(gwy_app_3d_window_orphaned), gwy3dwindow);
     g_signal_connect(gwy3dwindow, "focus-in-event",
@@ -1106,9 +1105,6 @@ static void
 gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
                             GtkWidget *data_window)
 {
-    GwyDataView *view;
-    GtkWidget *gwy3dview;
-
     g_signal_handlers_disconnect_matched(data_window,
                                          G_SIGNAL_MATCH_FUNC
                                          | G_SIGNAL_MATCH_DATA,
@@ -1121,14 +1117,6 @@ gwy_app_3d_window_destroyed(GtkWidget *gwy3dwindow,
                                          0, 0, NULL,
                                          gwy_app_3d_window_orphaned,
                                          gwy3dwindow);
-    view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(data_window));
-    gwy3dview = gwy_3d_window_get_3d_view(GWY_3D_WINDOW(gwy3dwindow));
-    g_signal_handlers_disconnect_matched(view,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gwy_3d_view_update,
-                                         gwy3dview);
     gwy_app_3d_window_remove(gwy3dwindow);
 }
 

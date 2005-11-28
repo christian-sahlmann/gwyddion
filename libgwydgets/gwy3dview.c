@@ -63,6 +63,10 @@
 
 #define GWY_3D_TIMEOUT_DELAY      1000
 
+#define connect_swapped_after(obj, signal, cb, data) \
+    g_signal_connect_object(obj, signal, G_CALLBACK(cb), data, \
+                            G_CONNECT_SWAPPED | G_CONNECT_AFTER);
+
 enum {
     GWY_3D_VIEW_DEFAULT_SIZE_X = 260,
     GWY_3D_VIEW_DEFAULT_SIZE_Y = 260
@@ -72,6 +76,11 @@ enum {
     GWY_3D_SHAPE_AFM = 0,
     GWY_3D_SHAPE_REDUCED = 1,
     GWY_3D_N_LISTS
+};
+
+/* Changed components */
+enum {
+    GWY_3D_GRADIENT = 1 << 0
 };
 
 enum {
@@ -95,8 +104,6 @@ typedef struct {
     guint64 pool;
 } Gwy3DListPool;
 
-/* Forward declarations */
-
 static void          gwy_3d_view_destroy        (GtkObject *object);
 static void          gwy_3d_view_finalize       (GObject *object);
 static void          gwy_3d_view_set_property   (GObject *object,
@@ -109,6 +116,13 @@ static void          gwy_3d_view_get_property   (GObject*object,
                                                  GParamSpec *pspec);
 static void          gwy_3d_view_realize        (GtkWidget *widget);
 static void          gwy_3d_view_unrealize      (GtkWidget *widget);
+static void          gwy_3d_view_container_connect(Gwy3DView *gwy3dview,
+                                                   const gchar *data_key_string,
+                                                   gulong *id,
+                                                   GCallback callback);
+static void          gwy_3d_view_gradient_item_changed(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_gradient_connect(Gwy3DView *gwy3dview);
+static void          gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_material_changed(Gwy3DView *gwy3dview);
 static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
@@ -163,8 +177,6 @@ static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
 static void          gwy_3d_view_class_make_list_pool(Gwy3DListPool *pool);
 static void          gwy_3d_view_assign_lists   (Gwy3DView *gwy3dview);
 static void          gwy_3d_view_release_lists  (Gwy3DView *gwy3dview);
-
-/* Local data */
 
 static GQuark container_key_quark = 0;
 
@@ -317,9 +329,9 @@ gwy_3d_view_destroy(GtkObject *object)
 
     gwy3dview = GWY_3D_VIEW(object);
 
-    gwy_object_unref(gwy3dview->data);
+    gwy_object_unref(gwy3dview->data_field);
     gwy_object_unref(gwy3dview->downsampled);
-    gwy_object_unref(gwy3dview->container);
+    gwy_object_unref(gwy3dview->data);
     gwy_object_unref(gwy3dview->rot_x);
     gwy_object_unref(gwy3dview->rot_y);
     gwy_object_unref(gwy3dview->view_scale);
@@ -327,10 +339,7 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->light_z);
     gwy_object_unref(gwy3dview->light_y);
 
-    if (gwy3dview->gradient) {
-        gwy_resource_release(GWY_RESOURCE(gwy3dview->gradient));
-        gwy3dview->gradient = NULL;
-    }
+    gwy_3d_view_gradient_disconnect(gwy3dview);
 
     if (gwy3dview->material) {
         gwy_resource_release(GWY_RESOURCE(gwy3dview->material));
@@ -454,11 +463,6 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy3dview = GWY_3D_VIEW(widget);
 
-    gwy_debug(" ");
-
-    if (gwy3dview->gradient_id)
-        g_signal_handler_disconnect(gwy3dview->gradient,
-                                    gwy3dview->gradient_id);
     if (gwy3dview->material_id)
         g_signal_handler_disconnect(gwy3dview->material,
                                     gwy3dview->material_id);
@@ -506,8 +510,8 @@ gwy_3d_view_new(GwyContainer *data)
     widget = gtk_widget_new(GWY_TYPE_3D_VIEW, NULL);
     gwy3dview = (Gwy3DView*)widget;
 
-    gwy3dview->container = data;
-    gwy3dview->data = dfield;
+    gwy3dview->data = data;
+    gwy3dview->data_field = dfield;
 
     gwy3dview->rot_x
         = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/rot_x",
@@ -534,15 +538,11 @@ gwy_3d_view_new(GwyContainer *data)
                                         0.0, -G_MAXDOUBLE, G_MAXDOUBLE,
                                         1.0, 15.0);
 
-    name = NULL;
-    if (!gwy_container_gis_string_by_name(data, "/0/3d/palette", &name))
-        gwy_container_gis_string_by_name(data, "/0/base/palette", &name);
-    gwy3dview->gradient = gwy_gradients_get_gradient(name);
-    gwy_resource_use(GWY_RESOURCE(gwy3dview->gradient));
-    id = g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
-                                  G_CALLBACK(gwy_3d_view_gradient_changed),
-                                  gwy3dview);
-    gwy3dview->gradient_id = id;
+    gwy_3d_view_container_connect
+                            (gwy3dview,
+                             g_quark_to_string(gwy3dview->gradient_key),
+                             &gwy3dview->gradient_item_id,
+                             G_CALLBACK(gwy_3d_view_gradient_item_changed));
 
     gwy_container_gis_int32_by_name(data, "/0/3d/reduced_size",
                                     &gwy3dview->reduced_size);
@@ -568,10 +568,10 @@ gwy_3d_view_new(GwyContainer *data)
     gwy3dview->material_id = id;
 
     /* should be always true */
-    if (gwy3dview->data != NULL) {
+    if (gwy3dview->data_field != NULL) {
         guint rx, ry;
 
-        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
+        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data_field);
         rx = gwy_data_field_get_xres(gwy3dview->downsampled);
         ry = gwy_data_field_get_yres(gwy3dview->downsampled);
         if (rx > ry) {
@@ -589,8 +589,8 @@ gwy_3d_view_new(GwyContainer *data)
                                 GWY_INTERPOLATION_BILINEAR);
 
 
-        gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data);
-        gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data);
+        gwy3dview->data_min  = gwy_data_field_get_min(gwy3dview->data_field);
+        gwy3dview->data_max  = gwy_data_field_get_max(gwy3dview->data_field);
     }
     gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
                                  glconfig,
@@ -632,15 +632,15 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
     gdouble xreal, yreal, data_min, data_max, range, maximum;
     gchar buffer[32], *s;
 
-    xreal = gwy_data_field_get_xreal(gwy3dview->data);
-    yreal = gwy_data_field_get_yreal(gwy3dview->data);
-    data_min = gwy_data_field_get_min(gwy3dview->data);
-    data_max = gwy_data_field_get_max(gwy3dview->data);
+    xreal = gwy_data_field_get_xreal(gwy3dview->data_field);
+    yreal = gwy_data_field_get_yreal(gwy3dview->data_field);
+    data_min = gwy_data_field_get_min(gwy3dview->data_field);
+    data_max = gwy_data_field_get_max(gwy3dview->data_field);
     range = fabs(data_max - data_min);
     maximum = MAX(fabs(data_min), fabs(data_max));
 
     /* $x */
-    unit = gwy_data_field_get_si_unit_xy(gwy3dview->data);
+    unit = gwy_data_field_get_si_unit_xy(gwy3dview->data_field);
     format = gwy_si_unit_get_format_with_resolution(unit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     xreal, xreal/12, NULL);
@@ -660,7 +660,7 @@ gwy_3d_view_update_labels(Gwy3DView *gwy3dview)
         g_hash_table_insert(gwy3dview->variables, "y", g_strdup(buffer));
 
     /* $max */
-    unit = gwy_data_field_get_si_unit_z(gwy3dview->data);
+    unit = gwy_data_field_get_si_unit_z(gwy3dview->data_field);
     gwy_si_unit_get_format_with_resolution(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                            maximum, range/12, format);
     g_snprintf(buffer, sizeof(buffer), "%.*f %s",
@@ -695,7 +695,7 @@ gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
         container_key_quark = g_quark_from_string("gwy3dview-container-key");
 
     quark = g_quark_from_string(key);
-    gwy_container_gis_double(gwy3dview->container, quark, &value);
+    gwy_container_gis_double(gwy3dview->data, quark, &value);
     adj = gtk_adjustment_new(value, lower, upper, step, page, 0.0);
     g_object_ref(adj);
     gtk_object_sink(adj);
@@ -707,140 +707,116 @@ gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
     return (GtkAdjustment*)adj;
 }
 
-/**
- * gwy_3d_view_update:
- * @gwy3dview: A 3D data view widget.
- *
- * Instructs a 3D data view to update self and repaint.
- * Data, palette, etc. are updated from container @container. If necessary new
- * @downsampled data are created.
- *
- * The display lists are recreated if the widget is realized. This may
- * take a great amount of processor time (seconds).
- **/
-void
-gwy_3d_view_update(Gwy3DView *gwy3dview)
+static void
+gwy_3d_view_container_connect(Gwy3DView *gwy3dview,
+                              const gchar *data_key_string,
+                              gulong *id,
+                              GCallback callback)
 {
-    GwyDataField *datafield;
-    gboolean update_data = FALSE;
-    gboolean update_due_to_gradient = FALSE;
-    const guchar *grad_name = NULL;
+    gchar *detailed_signal;
 
-    gwy_debug(" ");
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-    datafield = gwy3dview->data;
-    gwy_container_gis_object_by_name(gwy3dview->container, "/0/data",
-                                     &gwy3dview->data);
-    g_object_ref(gwy3dview->data);
-    g_object_unref(datafield);
-    /* FIXME: we should watch data changes */
-    update_data = TRUE;
-
-    /* FIXME: we should watch gradient changes */
-    if (!gwy_container_gis_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                          &grad_name)) {
-        if (!gwy_container_gis_string_by_name(gwy3dview->container,
-                                              "/0/base/palette",
-                                              &grad_name))
-            grad_name = gwy_inventory_get_default_item_name(gwy_gradients());
+    if (!data_key_string || !gwy3dview->data) {
+        *id = 0;
+        return;
     }
-    if (!gwy_strequal(grad_name,
-                      gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient)))) {
-        update_due_to_gradient = TRUE;
-        gwy_3d_view_set_gradient(gwy3dview, grad_name);
-    }
-
-    if (update_data) {
-        /* make the dowsampled preview */
-        guint rx, ry;
-
-        gwy_object_unref(gwy3dview->downsampled);
-        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
-        rx = gwy_data_field_get_xres(gwy3dview->downsampled);
-        ry = gwy_data_field_get_yres(gwy3dview->downsampled);
-        if (rx > ry) {
-            ry = (guint)((gdouble)ry / (gdouble)rx
-                         * (gdouble)gwy3dview->reduced_size);
-            rx = gwy3dview->reduced_size;
-        } else {
-            rx = (guint)((gdouble)rx / (gdouble)ry
-                         * (gdouble)gwy3dview->reduced_size);
-            ry = gwy3dview->reduced_size;
-        }
-        gwy_data_field_resample(gwy3dview->downsampled,
-                                rx,
-                                ry,
-                                GWY_INTERPOLATION_BILINEAR);
-
-        gwy3dview->data_min = gwy_data_field_get_min(gwy3dview->data);
-        gwy3dview->data_max = gwy_data_field_get_max(gwy3dview->data);
-        gwy_3d_view_update_labels(gwy3dview);
-    }
-
-    if (!update_due_to_gradient && update_data)
-        gwy_3d_view_update_lists(gwy3dview);
+    detailed_signal = g_newa(gchar, sizeof("item-changed::")
+                                    + strlen(data_key_string));
+    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), data_key_string);
+    *id = connect_swapped_after(gwy3dview->data, detailed_signal,
+                                callback, gwy3dview);
 }
 
 /**
- * gwy_3d_view_get_gradient:
+ * gwy_3d_view_get_gradient_key:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns the color gradient a 3D data view uses.
+ * Gets key identifying color gradient.
  *
- * Returns: The color gradient.
+ * Returns: The string key, or %NULL if it isn't set.
  **/
 const gchar*
-gwy_3d_view_get_gradient(Gwy3DView *gwy3dview)
+gwy_3d_view_get_gradient_key(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy_resource_get_name(GWY_RESOURCE(gwy3dview->gradient));
+    return g_quark_to_string(gwy3dview->gradient_key);
 }
 
 /**
- * gwy_3d_view_set_gradient:
+ * gwy_3d_view_set_gradient_key:
  * @gwy3dview: A 3D data view widget.
- * @gradient: Name of gradient @gwy3dview should use.  It should exist.
+ * @key: Container string key identifying the color gradient to use for
+ *       gradient visualization mode.
  *
- * Sets the color gradient a 3D data view should use.
+ * Sets the color gradient to use to visualize data in a 3D view.
  **/
 void
-gwy_3d_view_set_gradient(Gwy3DView *gwy3dview,
-                         const gchar *gradient)
+gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
+                             const gchar *key)
 {
-    GwyGradient *grad, *old;
-    gchar *gradstr;
-    gulong id;
+    GQuark quark;
 
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%s", gradient);
 
-    grad = gwy_gradients_get_gradient(gradient);
-    old = gwy3dview->gradient;
-    if (gwy_strequal(gwy_resource_get_name(GWY_RESOURCE(old)), gradient))
+    quark = key ? g_quark_from_string(key) : 0;
+    if (!gwy3dview->data || gwy3dview->gradient_key == quark) {
+        gwy3dview->gradient_key = quark;
+        return;
+    }
+
+    if (gwy3dview->gradient_item_id)
+        g_signal_handler_disconnect(gwy3dview->data,
+                                    gwy3dview->gradient_item_id);
+    gwy3dview->gradient_item_id = 0;
+    gwy_3d_view_gradient_disconnect(gwy3dview);
+    gwy3dview->gradient_key = quark;
+    gwy_3d_view_gradient_connect(gwy3dview);
+    gwy_3d_view_container_connect
+                            (gwy3dview, key,
+                             &gwy3dview->gradient_item_id,
+                             G_CALLBACK(gwy_3d_view_gradient_item_changed));
+    gwy_3d_view_gradient_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_gradient_item_changed(Gwy3DView *gwy3dview)
+{
+    gwy_3d_view_gradient_disconnect(gwy3dview);
+    gwy_3d_view_gradient_connect(gwy3dview);
+    gwy_3d_view_gradient_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_gradient_connect(Gwy3DView *gwy3dview)
+{
+    const guchar *s = NULL;
+
+    g_return_if_fail(!gwy3dview->gradient);
+    if (gwy3dview->gradient_key)
+        gwy_container_gis_string(gwy3dview->data, gwy3dview->gradient_key, &s);
+    gwy3dview->gradient = gwy_gradients_get_gradient(s);
+    gwy_resource_use(GWY_RESOURCE(gwy3dview->gradient));
+    gwy3dview->gradient_id
+        = g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
+                                   G_CALLBACK(gwy_3d_view_gradient_changed),
+                                   gwy3dview);
+}
+
+static void
+gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview)
+{
+    if (!gwy3dview->gradient)
         return;
 
-    gradstr = g_strdup(gradient);
-    if (gwy3dview->gradient_id)
-        g_signal_handler_disconnect(gwy3dview->gradient,
-                                    gwy3dview->gradient_id);
-    gwy_resource_use(GWY_RESOURCE(grad));
-    gwy3dview->gradient = grad;
-    id = g_signal_connect_swapped(gwy3dview->gradient, "data-changed",
-                                  G_CALLBACK(gwy_3d_view_gradient_changed),
-                                  gwy3dview);
-    gwy3dview->gradient_id = id;
-    gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/palette",
-                                     gradstr);
-    gwy_resource_release(GWY_RESOURCE(old));
-
-    if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
-        gwy_3d_view_update_lists(gwy3dview);
+    g_signal_handler_disconnect(gwy3dview->gradient, gwy3dview->gradient_id);
+    gwy3dview->gradient_id = 0;
+    gwy_resource_release(GWY_RESOURCE(gwy3dview->gradient));
+    gwy3dview->gradient = NULL;
 }
 
 static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
+    gwy3dview->changed |= GWY_3D_GRADIENT;
     if (gwy3dview->visual == GWY_3D_VISUALIZATION_GRADIENT)
         gwy_3d_view_update_lists(gwy3dview);
 }
@@ -893,7 +869,7 @@ gwy_3d_view_set_material(Gwy3DView *gwy3dview,
                                   G_CALLBACK(gwy_3d_view_material_changed),
                                   gwy3dview);
     gwy3dview->material_id = id;
-    gwy_container_set_string_by_name(gwy3dview->container, "/0/3d/material",
+    gwy_container_set_string_by_name(gwy3dview->data, "/0/3d/material",
                                      gradstr);
     gwy_resource_release(GWY_RESOURCE(old));
 
@@ -915,7 +891,7 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
         return;
 
     gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data, GWY_3D_SHAPE_AFM);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, GWY_3D_SHAPE_AFM);
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
 
@@ -985,7 +961,7 @@ gwy_3d_view_set_projection(Gwy3DView *gwy3dview,
     if (projection == gwy3dview->projection)
         return;
     gwy3dview->projection = projection;
-    gwy_container_set_enum_by_name(gwy3dview->container, "/0/3d/projection",
+    gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/projection",
                                    projection);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
@@ -1022,7 +998,7 @@ gwy_3d_view_set_show_axes(Gwy3DView *gwy3dview,
     if (show_axes == gwy3dview->show_axes)
         return;
     gwy3dview->show_axes = show_axes;
-    gwy_container_set_boolean_by_name(gwy3dview->container,
+    gwy_container_set_boolean_by_name(gwy3dview->data,
                                       "/0/3d/show_axes",
                                       show_axes);
 
@@ -1063,7 +1039,7 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
      if (show_labels == gwy3dview->show_labels)
          return;
      gwy3dview->show_labels = show_labels;
-     gwy_container_set_boolean_by_name(gwy3dview->container,
+     gwy_container_set_boolean_by_name(gwy3dview->data,
                                        "/0/3d/show_labels",
                                        show_labels);
 
@@ -1102,7 +1078,7 @@ gwy_3d_view_set_visualization(Gwy3DView *gwy3dview,
     if (visual == gwy3dview->visual)
         return;
     gwy3dview->visual = visual;
-    gwy_container_set_enum_by_name(gwy3dview->container, "/0/3d/visualization",
+    gwy_container_set_enum_by_name(gwy3dview->data, "/0/3d/visualization",
                                    visual);
 
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
@@ -1152,7 +1128,7 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
         return;
     gwy3dview->reduced_size = reduced_size;
     gwy_object_unref(gwy3dview->downsampled);
-    gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data);
+    gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data_field);
     rx = gwy_data_field_get_xres(gwy3dview->downsampled);
     ry = gwy_data_field_get_yres(gwy3dview->downsampled);
     if (rx > ry) {
@@ -1246,7 +1222,7 @@ GwyContainer*
 gwy_3d_view_get_data(Gwy3DView *gwy3dview)
 {
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
-    return gwy3dview->container;
+    return gwy3dview->data;
 }
 
 /**
@@ -1463,8 +1439,8 @@ gwy_3d_timeout_start(Gwy3DView *gwy3dview,
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
-    if (gwy_data_field_get_xres(gwy3dview->data) <= gwy3dview->reduced_size
-        && gwy_data_field_get_yres(gwy3dview->data) <= gwy3dview->reduced_size)
+    if (gwy_data_field_get_xres(gwy3dview->data_field) <= gwy3dview->reduced_size
+        && gwy_data_field_get_yres(gwy3dview->data_field) <= gwy3dview->reduced_size)
         immediate = TRUE;
 
     if (immediate)
@@ -1509,7 +1485,7 @@ gwy_3d_adjustment_value_changed(GtkAdjustment *adjustment,
 
     if ((quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(adjustment),
                                                      container_key_quark))))
-        gwy_container_set_double(gwy3dview->container, quark,
+        gwy_container_set_double(gwy3dview->data, quark,
                                  gtk_adjustment_get_value(adjustment));
     gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
 }
@@ -2057,8 +2033,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
 
     gwy_debug(" ");
 
-    xres = gwy_data_field_get_xres(widget->data);
-    yres = gwy_data_field_get_yres(widget->data);
+    xres = gwy_data_field_get_xres(widget->data_field);
+    yres = gwy_data_field_get_yres(widget->data_field);
     res  = xres > yres ? xres : yres;
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
@@ -2266,7 +2242,7 @@ gwy_3d_view_realize_gl(Gwy3DView *widget)
 
     /* Shape display lists */
     gwy_3d_view_assign_lists(widget);
-    gwy_3d_make_list(widget, widget->data, GWY_3D_SHAPE_AFM);
+    gwy_3d_make_list(widget, widget->data_field, GWY_3D_SHAPE_AFM);
     gwy_3d_make_list(widget, widget->downsampled, GWY_3D_SHAPE_REDUCED);
 
     gdk_gl_drawable_gl_end(gldrawable);
@@ -2612,15 +2588,15 @@ gwy_3d_view_update(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 }
 
 const gchar*
-gwy_3d_view_get_gradient(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+gwy_3d_view_get_gradient_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
     return NULL;
 }
 
 void
-gwy_3d_view_set_gradient(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                         G_GNUC_UNUSED const gchar *gradient)
+gwy_3d_view_set_gradient_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED const gchar *gradient)
 {
     g_critical("OpenGL support was not compiled in.");
 }
