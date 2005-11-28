@@ -31,7 +31,8 @@
 #include <app/gradient-editor.h>
 
 enum {
-    GWY_MARKER_OPERATION_NONE = -1
+    GWY_MARKER_OPERATION_NONE = -1,
+    GWY_MARKER_OPERATION_CURVE = -2 /*XXX: works for now */
 };
 
 enum {
@@ -363,9 +364,11 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
     GwyHMarkerBox *hmbox;
     GwyGradientPoint point, prev, next;
     GwyGradient *gradient;
+    GwyChannelData *channel_data;
+    GwyGradientPoint *points;
     GdkColor gdkcolor;
     gdouble q;
-    gint i;
+    gint i, num_pts;;
 
     gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
     g_return_if_fail(gradient
@@ -400,6 +403,44 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
 
         case GWY_MARKER_OPERATION_REMOVE:
         gwy_gradient_delete_point(gradient, i);
+        break;
+
+        case GWY_MARKER_OPERATION_CURVE:
+        /* Get gwycurve channel information */
+        channel_data = g_new(GwyChannelData, 3);
+        gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);
+
+        /* Copy the channel info into the gradient */
+        /*
+        color.r = channel_data[0].ctlpoints[1].y;
+        color.g = channel_data[1].ctlpoints[1].y;
+        color.b = channel_data[2].ctlpoints[1].y;
+        color.a = 1;
+        g_debug("r: %f  g: %f  b: %f", color.r, color.g, color.b);
+        gwy_gradient_set_point_color(gradient, 1, &color);
+        */
+
+        num_pts = channel_data[0].num_ctlpoints;
+        points = g_new(GwyGradientPoint, num_pts);
+        for (i=0; i<num_pts; i++) {
+            points[i].x = channel_data[0].ctlpoints[i].x;
+            points[i].color.r =
+                    channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y;
+            points[i].color.g =
+                    channel_data[GWY_CURVE_CHANNEL_GREEN].ctlpoints[i].y;
+            points[i].color.b =
+                    channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y;
+            points[i].color.a = 1;
+        }
+        //gwy_gradient_reset(gradient); /*XXX */
+        gwy_gradient_set_points(gradient, num_pts, points);
+
+        /* Free up structures */
+        g_free(points);
+        for (i = 0; i < 3; i++) {
+            g_free(channel_data[i].ctlpoints);
+        }
+        g_free(channel_data);
         break;
 
         default:
@@ -476,6 +517,17 @@ gwy_gradient_editor_update_curve(GwyGradientEditor *editor)
         g_free(channel_data[i].ctlpoints);
     }
     g_free(channel_data);
+}
+
+static void
+gwy_gradient_editor_curve_edited(GwyGradientEditor *editor)
+{
+    /* XXX Does this need to be here? */
+    /*g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
+    || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);*/
+
+    editor->pendop.optype = GWY_MARKER_OPERATION_CURVE;
+    gwy_resource_editor_queue_commit(GWY_RESOURCE_EDITOR(editor));
 }
 
 static void
@@ -652,57 +704,6 @@ gwy_gradient_editor_load_view(GwyGradientEditor *editor)
     gwy_radio_buttons_set_current(editor->mode_group, "editing-mode", mode);
     /* The button doesn't emit anything when it's already in the right state. */
     gwy_gradient_editor_mode_changed(NULL, editor);
-}
-
-static void
-gwy_gradient_editor_curve_edited(GwyGradientEditor *editor)
-{
-    GwyResourceEditor *res_editor;
-    GwyGradient *gradient;
-    GwyChannelData *channel_data;
-    GwyGradientPoint *points;
-    gint i, num_pts;
-
-    res_editor = GWY_RESOURCE_EDITOR(editor);
-    gradient = GWY_GRADIENT(gwy_resource_editor_get_edited(res_editor));
-    g_return_if_fail(gradient
-            && gwy_resource_get_is_modifiable(GWY_RESOURCE(gradient)));
-
-    /* Get gwycurve channel information */
-    channel_data = g_new(GwyChannelData, 3);
-    gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);
-
-    /* Copy the channel info into the gradient */
-    /*
-    color.r = channel_data[0].ctlpoints[1].y;
-    color.g = channel_data[1].ctlpoints[1].y;
-    color.b = channel_data[2].ctlpoints[1].y;
-    color.a = 1;
-    g_debug("r: %f  g: %f  b: %f", color.r, color.g, color.b);
-    gwy_gradient_set_point_color(gradient, 1, &color);
-    */
-
-    num_pts = channel_data[0].num_ctlpoints;
-    points = g_new(GwyGradientPoint, num_pts);
-    for (i=0; i<num_pts; i++) {
-        points[i].x = channel_data[0].ctlpoints[i].x;
-        points[i].color.r =
-                    channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y;
-        points[i].color.g =
-                    channel_data[GWY_CURVE_CHANNEL_GREEN].ctlpoints[i].y;
-        points[i].color.b =
-                    channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y;
-        points[i].color.a = 1;
-    }
-    gwy_gradient_set_points(gradient, num_pts, points);
-
-    g_free(points);
-
-    /* Free up channel_data */
-    for (i = 0; i < 3; i++) {
-        g_free(channel_data[i].ctlpoints);
-    }
-    g_free(channel_data);
 }
 
 /************************** Documentation ****************************/

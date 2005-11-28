@@ -50,12 +50,15 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
+ /*XXX: GET RID OF ABS! It is truncating everything to int! use fabs*/
+
 /*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Fix cursor changes */
 /*TODO: Fix warnings (unused variables, etc) */
 /*TODO: Deal with freehand mode */
 /*TODO: Change end-point behavior: hold constant value, don't go to zero */
 /*TODO: Do something about problem of selecting end points (always gets red) */
+
 
 #include <config.h>
 #include <stdlib.h>
@@ -79,6 +82,12 @@
                      GDK_BUTTON_PRESS_MASK |    \
                      GDK_BUTTON_RELEASE_MASK |  \
                      GDK_BUTTON1_MOTION_MASK)
+
+#define find_slope(x1, y1, x2, y2) ((y2-y1)/(x2-x1))
+
+#define SLOPE_TOLERANCE 0.02
+#define compare_slopes(slope1, slope2) (abs(slope1 - slope2) < SLOPE_TOLERANCE)
+
 
 enum {
   PROP_0,
@@ -1085,6 +1094,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 {
     gint width, height;
     gint c_index, i;
+    gfloat slope1, slope2;
     GwyChannelData *channel;
 
     for (c_index=0; c_index<3; c_index++) {
@@ -1100,6 +1110,31 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
             channel->ctlpoints[i].y = channel_data[c_index].ctlpoints[i].y;
         }
     }
+
+    /* Show the slopes of each line segment for red */
+    g_debug("\n\n\n\n\n\nSLOPES:");
+    channel = &curve->channel_data[0];
+    for (i=0; i<channel->num_ctlpoints-1; i++) {
+        g_debug("Slope: %f",
+        find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
+                   channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y));
+    }
+
+    /* Clean up */
+    /*
+    for (i=0; i<channel->num_ctlpoints-2; i++) {
+        slope1 =
+        find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
+                   channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
+        slope2 =
+        find_slope(channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y,
+                   channel->ctlpoints[i+2].x,channel->ctlpoints[i+2].y);
+
+        if (compare_slopes(slope1, slope2))
+            channel->ctlpoints[i+1].x = -1;
+    }
+    */
+
 
     if (curve->pixmap) {
         width = GTK_WIDGET(curve)->allocation.width - RADIUS * 2;
@@ -1172,7 +1207,7 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
     gfloat val;
     GtkWidget *w;
     gint width, height, x, y;
-    gfloat rx, ry;
+    gfloat rx, ry, distance, min_distance, y_val;
 
     /* get the widget size */
     w = GTK_WIDGET(curve);
@@ -1202,34 +1237,39 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
         channel->num_ctlpoints = num_pts;
         channel->ctlpoints = g_new(GwyPoint, num_pts);
 
+        /* For each control point to be created, set its y-value based on the
+        actual point that is nearest it */
         for (i=0; i < num_pts; i++) {
             val = g_array_index(x_array, gfloat, i);
             channel->ctlpoints[i].x = val;
-            channel->ctlpoints[i].y = 0;
+            channel->ctlpoints[i].y = 1;
 
+            min_distance = -1;
+            y_val = 0;
             for (j=0; j < curve_channel->num_points; j++) {
                 x = CLAMP((curve_channel->points[j].x - RADIUS), 0, width-1);
                 y = CLAMP((curve_channel->points[j].y - RADIUS), 0, height-1);
                 rx = unproject(x, curve->min_x, curve->max_x, width);
                 ry = unproject(height - y, curve->min_y, curve->max_y, height);
-
-                if (rx == val) {
-                    g_debug("Made it inside!");
-                    channel->ctlpoints[i].y = ry;
-                    break;
+                distance = fabs(rx - val);
+                if (min_distance == -1 || distance < min_distance) {
+                    min_distance = distance;
+                    y_val = ry;
                 }
             }
+            channel->ctlpoints[i].y = y_val;
         }
     }
 
+    g_array_free(x_array, FALSE);
 
-    /* Dump array */
+    /* Dump array
     g_debug("\n\n\n\n");
     for (i=0; i<x_array->len; i++) {
         val = g_array_index(x_array, gfloat, i);
         g_debug("i: %i, val: %f", i, val);
     }
-
+    */
 
 
     /* Copy the ctlpoints out of the gwycurve into channel_data */
