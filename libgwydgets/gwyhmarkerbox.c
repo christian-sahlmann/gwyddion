@@ -537,7 +537,7 @@ gwy_hmarker_box_motion_notify(GtkWidget *widget,
     GwyHMarkerBox *hmbox;
     gboolean ghost;
     gdouble pos;
-    gint x, y;
+    gint x, y, j;
 
     gwy_debug("motion event: (%f, %f)", event->x, event->y);
 
@@ -559,6 +559,11 @@ gwy_hmarker_box_motion_notify(GtkWidget *widget,
 
     ghost = (y > 3*widget->allocation.height/2 + 2
              || y < -widget->allocation.height/2 - 2);
+    if (ghost && hmbox->validate) {
+        j = hmbox->selected;
+        if (!hmbox->validate(hmbox, GWY_MARKER_OPERATION_REMOVE, &j, &pos))
+            ghost = FALSE;
+    }
     if (ghost != hmbox->ghost
         && GTK_WIDGET_REALIZED(widget)) {
         hmbox->ghost = ghost;
@@ -1013,6 +1018,9 @@ gwy_hmarker_box_get_validator(GwyHMarkerBox *hmbox)
  * #GwyHMarkerBox methods.  However, it is NOT called upon
  * gwy_hmarker_box_set_markers() as it is unclear how the validation should
  * proceed.
+ *
+ * The function must not have any side-effects, that is it must not assume the
+ * operation will be actually performed when it returns %TRUE.
  *
  * Marker validation that assures markers are sorted and there is always
  * a marker at 0.0 and another at 1.0 could look:
