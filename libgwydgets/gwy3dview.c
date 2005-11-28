@@ -80,9 +80,10 @@ enum {
 
 /* Changed components */
 enum {
-    GWY_3D_GRADIENT = 1 << 0,
-    GWY_3D_MATERIAL = 1 << 1,
-    GWY_3D_MASK     = 0x03
+    GWY_3D_GRADIENT   = 1 << 0,
+    GWY_3D_MATERIAL   = 1 << 1,
+    GWY_3D_DATA_FIELD = 1 << 2,
+    GWY_3D_MASK       = 0x07
 };
 
 enum {
@@ -106,82 +107,87 @@ typedef struct {
     guint64 pool;
 } Gwy3DListPool;
 
-static void          gwy_3d_view_destroy        (GtkObject *object);
-static void          gwy_3d_view_finalize       (GObject *object);
-static void          gwy_3d_view_set_property   (GObject *object,
-                                                 guint prop_id,
-                                                 const GValue *value,
-                                                 GParamSpec *pspec);
-static void          gwy_3d_view_get_property   (GObject*object,
-                                                 guint prop_id,
-                                                 GValue *value,
-                                                 GParamSpec *pspec);
-static void          gwy_3d_view_realize        (GtkWidget *widget);
-static void          gwy_3d_view_unrealize      (GtkWidget *widget);
-static void          gwy_3d_view_container_connect(Gwy3DView *gwy3dview,
-                                                   const gchar *data_key_string,
-                                                   gulong *id,
-                                                   GCallback callback);
-static void          gwy_3d_view_gradient_item_changed(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_gradient_connect(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_gradient_disconnect(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_material_item_changed(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_material_connect(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_material_disconnect(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_material_changed(Gwy3DView *gwy3dview);
-static void          gwy_3d_view_update_lists   (Gwy3DView *gwy3dview);
-static void          gwy_3d_view_realize_gl     (Gwy3DView *widget);
-static void          gwy_3d_view_size_request   (GtkWidget *widget,
-                                                 GtkRequisition *requisition);
-static void          gwy_3d_view_size_allocate  (GtkWidget *widget,
-                                                 GtkAllocation *allocation);
-static gboolean      gwy_3d_view_expose         (GtkWidget *widget,
-                                                 GdkEventExpose *event);
-static gboolean      gwy_3d_view_configure      (GtkWidget *widget,
-                                                 GdkEventConfigure *event);
-static void          gwy_3d_view_send_configure (Gwy3DView *gwy3dview);
-static gboolean      gwy_3d_view_button_press   (GtkWidget *widget,
-                                                 GdkEventButton *event);
-static gboolean      gwy_3d_view_button_release (GtkWidget *widget,
-                                                 GdkEventButton *event);
-static gboolean      gwy_3d_view_motion_notify  (GtkWidget *widget,
-                                                 GdkEventMotion *event);
-static Gwy3DVector*  gwy_3d_make_normals        (GwyDataField *dfield,
-                                                 Gwy3DVector *normals);
-static void          gwy_3d_make_list           (Gwy3DView *gwy3D,
-                                                 GwyDataField *dfield,
-                                                 gint shape);
-static void          gwy_3d_draw_axes           (Gwy3DView *gwy3dview);
-static void          gwy_3d_draw_light_position (Gwy3DView *gwy3dview);
-static void          gwy_3d_set_projection      (Gwy3DView *gwy3dview);
-static void          gwy_3d_view_update_labels  (Gwy3DView *gwy3dview);
-static GtkAdjustment* gwy_3d_view_create_adjustment (Gwy3DView *gwy3dview,
-                                                     const gchar *key,
-                                                     gdouble value,
-                                                     gdouble lower,
-                                                     gdouble upper,
-                                                     gdouble step,
-                                                     gdouble page);
-static void          gwy_3d_adjustment_value_changed (GtkAdjustment *adjustment,
-                                                      Gwy3DView *gwy3dview);
-static void          gwy_3d_label_changed       (Gwy3DView *gwy3dview);
-static void          gwy_3d_timeout_start       (Gwy3DView *gwy3dview,
-                                                 gboolean immediate,
-                                                 gboolean invalidate_now);
-static gboolean      gwy_3d_timeout_func        (gpointer user_data);
-static void          gwy_3d_pango_ft2_render_layout (PangoLayout *layout);
-static void          gwy_3d_print_text          (Gwy3DView     *gwy3dview,
-                                                 Gwy3DViewLabel   id,
-                                                 GLfloat        raster_x,
-                                                 GLfloat        raster_y,
-                                                 GLfloat        raster_z,
-                                                 guint          size,
-                                                 gint           vjustify,
-                                                 gint           hjustify);
-static void          gwy_3d_view_class_make_list_pool(Gwy3DListPool *pool);
-static void          gwy_3d_view_assign_lists   (Gwy3DView *gwy3dview);
-static void          gwy_3d_view_release_lists  (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_destroy              (GtkObject *object);
+static void     gwy_3d_view_finalize             (GObject *object);
+static void     gwy_3d_view_set_property         (GObject *object,
+                                                  guint prop_id,
+                                                  const GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_3d_view_get_property         (GObject*object,
+                                                  guint prop_id,
+                                                  GValue *value,
+                                                  GParamSpec *pspec);
+static void     gwy_3d_view_realize              (GtkWidget *widget);
+static void     gwy_3d_view_unrealize            (GtkWidget *widget);
+static GtkAdjustment* gwy_3d_view_create_adjustment(Gwy3DView *gwy3dview,
+                                                    const gchar *key,
+                                                    gdouble value,
+                                                    gdouble lower,
+                                                    gdouble upper,
+                                                    gdouble step,
+                                                    gdouble page);
+static void     gwy_3d_view_container_connect    (Gwy3DView *gwy3dview,
+                                                  const gchar *data_key_string,
+                                                  gulong *id,
+                                                  GCallback callback);
+static void     gwy_3d_view_data_item_changed    (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_data_field_connect   (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview);
+static void     gwy_3d_view_data_field_changed   (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_gradient_item_changed(Gwy3DView *gwy3dview);
+static void     gwy_3d_view_gradient_connect     (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_gradient_disconnect  (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_gradient_changed     (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_material_item_changed(Gwy3DView *gwy3dview);
+static void     gwy_3d_view_material_connect     (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_material_disconnect  (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_material_changed     (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_update_lists         (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_downsample_data      (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_realize_gl           (Gwy3DView *widget);
+static void     gwy_3d_view_size_request         (GtkWidget *widget,
+                                                  GtkRequisition *requisition);
+static void     gwy_3d_view_size_allocate        (GtkWidget *widget,
+                                                  GtkAllocation *allocation);
+static gboolean gwy_3d_view_expose               (GtkWidget *widget,
+                                                  GdkEventExpose *event);
+static gboolean gwy_3d_view_configure            (GtkWidget *widget,
+                                                  GdkEventConfigure *event);
+static void     gwy_3d_view_send_configure       (Gwy3DView *gwy3dview);
+static gboolean gwy_3d_view_button_press         (GtkWidget *widget,
+                                                  GdkEventButton *event);
+static gboolean gwy_3d_view_button_release       (GtkWidget *widget,
+                                                  GdkEventButton *event);
+static Gwy3DVector* gwy_3d_make_normals          (GwyDataField *dfield,
+                                                  Gwy3DVector *normals);
+static gboolean gwy_3d_view_motion_notify        (GtkWidget *widget,
+                                                  GdkEventMotion *event);
+static void     gwy_3d_make_list                 (Gwy3DView *gwy3D,
+                                                  GwyDataField *dfield,
+                                                  gint shape);
+static void     gwy_3d_draw_axes                 (Gwy3DView *gwy3dview);
+static void     gwy_3d_draw_light_position       (Gwy3DView *gwy3dview);
+static void     gwy_3d_set_projection            (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_update_labels        (Gwy3DView *gwy3dview);
+static void     gwy_3d_adjustment_value_changed  (GtkAdjustment *adjustment,
+                                                  Gwy3DView *gwy3dview);
+static void     gwy_3d_label_changed             (Gwy3DView *gwy3dview);
+static void     gwy_3d_timeout_start             (Gwy3DView *gwy3dview,
+                                                  gboolean immediate,
+                                                  gboolean invalidate_now);
+static gboolean gwy_3d_timeout_func              (gpointer user_data);
+static void     gwy_3d_pango_ft2_render_layout   (PangoLayout *layout);
+static void     gwy_3d_print_text                (Gwy3DView *gwy3dview,
+                                                  Gwy3DViewLabel id,
+                                                  GLfloat raster_x,
+                                                  GLfloat raster_y,
+                                                  GLfloat raster_z,
+                                                  guint size,
+                                                  gint vjustify,
+                                                  gint hjustify);
+static void     gwy_3d_view_class_make_list_pool (Gwy3DListPool *pool);
+static void     gwy_3d_view_assign_lists         (Gwy3DView *gwy3dview);
+static void     gwy_3d_view_release_lists        (Gwy3DView *gwy3dview);
 
 static GQuark container_key_quark = 0;
 
@@ -312,8 +318,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 static void
 gwy_3d_view_init(Gwy3DView *gwy3dview)
 {
-    gwy_debug(" ");
-
     gwy3dview->reduced_size          = 100;
 
     gwy3dview->view_scale_max        = 3.0f;
@@ -488,25 +492,18 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    GwyDataField *dfield;
     guint i;
 
-    gwy_debug(" ");
-
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     glconfig = gwy_widgets_get_gl_config();
     g_return_val_if_fail(glconfig, NULL);
 
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-    gwy_container_gis_object_by_name(data, "/0/data", &dfield);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), NULL);
     g_object_ref(data);
-    g_object_ref(dfield);
 
-    widget = gtk_widget_new(GWY_TYPE_3D_VIEW, NULL);
-    gwy3dview = (Gwy3DView*)widget;
+    gwy3dview = (Gwy3DView*)g_object_new(GWY_TYPE_3D_VIEW, NULL);
+    widget = GTK_WIDGET(gwy3dview);
 
     gwy3dview->data = data;
-    gwy3dview->data_field = dfield;
 
     gwy3dview->rot_x
         = gwy_3d_view_create_adjustment(gwy3dview, "/0/3d/rot_x",
@@ -535,6 +532,12 @@ gwy_3d_view_new(GwyContainer *data)
 
     gwy_3d_view_container_connect
                             (gwy3dview,
+                             g_quark_to_string(gwy3dview->data_key),
+                             &gwy3dview->data_item_id,
+                             G_CALLBACK(gwy_3d_view_data_item_changed));
+    gwy_3d_view_data_field_connect(gwy3dview);
+    gwy_3d_view_container_connect
+                            (gwy3dview,
                              g_quark_to_string(gwy3dview->gradient_key),
                              &gwy3dview->gradient_item_id,
                              G_CALLBACK(gwy_3d_view_gradient_item_changed));
@@ -561,27 +564,6 @@ gwy_3d_view_new(GwyContainer *data)
     gwy_container_gis_boolean_by_name(data, "/0/3d/show_labels",
                                       &gwy3dview->show_labels);
 
-    /* should be always true */
-    if (gwy3dview->data_field != NULL) {
-        guint rx, ry;
-
-        gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data_field);
-        rx = gwy_data_field_get_xres(gwy3dview->downsampled);
-        ry = gwy_data_field_get_yres(gwy3dview->downsampled);
-        if (rx > ry) {
-           ry = (guint)((gdouble)ry / (gdouble)rx
-                   * (gdouble)gwy3dview->reduced_size);
-           rx = gwy3dview->reduced_size;
-        } else {
-           rx = (guint)((gdouble)rx / (gdouble)ry
-                   * (gdouble)gwy3dview->reduced_size);
-           ry = gwy3dview->reduced_size;
-        }
-        gwy_data_field_resample(gwy3dview->downsampled,
-                                rx,
-                                ry,
-                                GWY_INTERPOLATION_BILINEAR);
-    }
     gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
                                  glconfig,
                                  NULL,
@@ -609,7 +591,6 @@ gwy_3d_view_new(GwyContainer *data)
                                        G_CALLBACK(gwy_3d_label_changed),
                                        gwy3dview);
     }
-    gwy_3d_view_update_labels(gwy3dview);
 
     return widget;
 }
@@ -716,6 +697,86 @@ gwy_3d_view_container_connect(Gwy3DView *gwy3dview,
                                 callback, gwy3dview);
 }
 
+void
+gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
+                         const gchar *key)
+{
+    GQuark quark;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
+
+    quark = key ? g_quark_from_string(key) : 0;
+    if (gwy3dview->data_key == quark)
+        return;
+
+    if (gwy3dview->data_id)
+        g_signal_handler_disconnect(gwy3dview->data, gwy3dview->data_id);
+    gwy3dview->data_id = 0;
+    gwy_3d_view_data_field_disconnect(gwy3dview);
+    gwy3dview->data_key = quark;
+    gwy_3d_view_data_field_connect(gwy3dview);
+    gwy_3d_view_container_connect(gwy3dview, key,
+                                  &gwy3dview->data_item_id,
+                                  G_CALLBACK(gwy_3d_view_data_item_changed));
+    /*g_object_notify(G_OBJECT(gwy3dview), "data-key");*/
+    gwy_3d_view_data_field_changed(gwy3dview);
+}
+
+const gchar*
+gwy_3d_view_get_data_key(Gwy3DView *gwy3dview)
+{
+    g_return_val_if_fail(GWY_IS_LAYER_BASIC(gwy3dview), NULL);
+    return g_quark_to_string(gwy3dview->data_key);
+}
+
+static void
+gwy_3d_view_data_item_changed(Gwy3DView *gwy3dview)
+{
+    gwy_3d_view_data_field_disconnect(gwy3dview);
+    gwy_3d_view_data_field_connect(gwy3dview);
+    gwy_3d_view_data_field_changed(gwy3dview);
+}
+
+static void
+gwy_3d_view_data_field_connect(Gwy3DView *gwy3dview)
+{
+    g_return_if_fail(!gwy3dview->data_field);
+    if (!gwy3dview->data_key)
+        return;
+
+    if (!gwy_container_gis_object(gwy3dview->data, gwy3dview->data_key,
+                                  &gwy3dview->data_field))
+        return;
+
+    g_object_ref(gwy3dview->data_field);
+    gwy3dview->data_id
+        = g_signal_connect_swapped(gwy3dview->data_field,
+                                   "data-changed",
+                                   G_CALLBACK(gwy_3d_view_data_field_changed),
+                                   gwy3dview);
+}
+
+static void
+gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview)
+{
+    if (!gwy3dview->data_field)
+        return;
+
+    if (gwy3dview->data_id)
+        g_signal_handler_disconnect(gwy3dview->data_field,
+                                    gwy3dview->data_id);
+    gwy3dview->data_id = 0;
+    gwy_object_unref(gwy3dview->data_field);
+}
+
+static void
+gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
+{
+    gwy3dview->changed |= GWY_3D_DATA_FIELD;
+    gwy_3d_view_update_labels(gwy3dview);
+    gwy_3d_view_update_lists(gwy3dview);
+}
+
 /**
  * gwy_3d_view_get_gradient_key:
  * @gwy3dview: A 3D data view widget.
@@ -748,10 +809,8 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     quark = key ? g_quark_from_string(key) : 0;
-    if (!gwy3dview->data || gwy3dview->gradient_key == quark) {
-        gwy3dview->gradient_key = quark;
+    if (gwy3dview->gradient_key == quark)
         return;
-    }
 
     if (gwy3dview->gradient_item_id)
         g_signal_handler_disconnect(gwy3dview->data,
@@ -764,6 +823,7 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
                             (gwy3dview, key,
                              &gwy3dview->gradient_item_id,
                              G_CALLBACK(gwy_3d_view_gradient_item_changed));
+    /*g_object_notify(G_OBJECT(gwy3dview), "gradient-key");*/
     gwy_3d_view_gradient_changed(gwy3dview);
 }
 
@@ -843,10 +903,8 @@ gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     quark = key ? g_quark_from_string(key) : 0;
-    if (!gwy3dview->data || gwy3dview->material_key == quark) {
-        gwy3dview->material_key = quark;
+    if (gwy3dview->material_key == quark)
         return;
-    }
 
     if (gwy3dview->material_item_id)
         g_signal_handler_disconnect(gwy3dview->data,
@@ -859,6 +917,7 @@ gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
                             (gwy3dview, key,
                              &gwy3dview->material_item_id,
                              G_CALLBACK(gwy_3d_view_material_item_changed));
+    /*g_object_notify(G_OBJECT(gwy3dview), "material-key");*/
     gwy_3d_view_material_changed(gwy3dview);
 }
 
@@ -909,6 +968,8 @@ gwy_3d_view_material_changed(Gwy3DView *gwy3dview)
 static void
 gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 {
+    gwy_3d_view_downsample_data(gwy3dview);
+
     if (!GTK_WIDGET_REALIZED(gwy3dview))
         return;
 
@@ -1061,8 +1122,7 @@ gwy_3d_view_set_show_labels(Gwy3DView *gwy3dview,
      if (show_labels == gwy3dview->show_labels)
          return;
      gwy3dview->show_labels = show_labels;
-     gwy_container_set_boolean_by_name(gwy3dview->data,
-                                       "/0/3d/show_labels",
+     gwy_container_set_boolean_by_name(gwy3dview->data, "/0/3d/show_labels",
                                        show_labels);
 
      gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
@@ -1119,8 +1179,7 @@ gwy_3d_view_set_visualization(Gwy3DView *gwy3dview,
 guint
 gwy_3d_view_get_reduced_size(Gwy3DView *gwy3dview)
 {
-     gwy_debug(" ");
-     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), FALSE);
 
     return gwy3dview->reduced_size;
 }
@@ -1141,16 +1200,33 @@ void
 gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
                              guint reduced_size)
 {
-    guint rx, ry;
-
-    gwy_debug(" ");
     g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (reduced_size == gwy3dview->reduced_size)
         return;
+
     gwy3dview->reduced_size = reduced_size;
-    gwy_object_unref(gwy3dview->downsampled);
-    gwy3dview->downsampled = gwy_data_field_duplicate(gwy3dview->data_field);
+    gwy_3d_view_downsample_data(gwy3dview);
+    if (GTK_WIDGET_REALIZED(gwy3dview)) {
+        gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
+                         GWY_3D_SHAPE_REDUCED);
+        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
+    }
+    g_object_notify(G_OBJECT(gwy3dview), "reduced-size");
+}
+
+static void
+gwy_3d_view_downsample_data(Gwy3DView *gwy3dview)
+{
+    gint rx, ry;
+
+    if (!gwy3dview->downsampled)
+        gwy3dview->downsampled
+            = gwy_data_field_duplicate(gwy3dview->data_field);
+    else
+        gwy_serializable_clone(G_OBJECT(gwy3dview->data_field),
+                               G_OBJECT(gwy3dview->downsampled));
+
     rx = gwy_data_field_get_xres(gwy3dview->downsampled);
     ry = gwy_data_field_get_yres(gwy3dview->downsampled);
     if (rx > ry) {
@@ -1164,14 +1240,6 @@ gwy_3d_view_set_reduced_size(Gwy3DView *gwy3dview,
     }
     gwy_data_field_resample(gwy3dview->downsampled, rx, ry,
                             GWY_INTERPOLATION_BILINEAR);
-
-    if (GTK_WIDGET_REALIZED(gwy3dview)) {
-        gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
-                         GWY_3D_SHAPE_REDUCED);
-
-        gwy_3d_timeout_start(gwy3dview, FALSE, TRUE);
-    }
-
 }
 
 Gwy3DLabel*
@@ -1201,8 +1269,6 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
     int width, height, rowstride, n_channels, i, j;
     guchar *pixels, *a, *b, z;
     GdkPixbuf * pixbuf;
-
-    gwy_debug(" ");
 
     g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     g_return_val_if_fail(GTK_WIDGET_REALIZED(gwy3dview), NULL);
@@ -2615,6 +2681,20 @@ gwy_3d_view_update(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 }
 
 const gchar*
+gwy_3d_view_get_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_data_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                         G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+const gchar*
 gwy_3d_view_get_gradient_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
@@ -2623,7 +2703,21 @@ gwy_3d_view_get_gradient_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 
 void
 gwy_3d_view_set_gradient_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                             G_GNUC_UNUSED const gchar *gradient)
+                             G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+const gchar*
+gwy_3d_view_get_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
+{
+    g_critical("OpenGL support was not compiled in.");
+    return NULL;
+}
+
+void
+gwy_3d_view_set_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                             G_GNUC_UNUSED const gchar *key)
 {
     g_critical("OpenGL support was not compiled in.");
 }
@@ -2684,7 +2778,6 @@ gwy_3d_view_set_show_labels(G_GNUC_UNUSED Gwy3DView *gwy3dview,
     g_critical("OpenGL support was not compiled in.");
 }
 
-
 Gwy3DVisualization
 gwy_3d_view_get_visualization(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
@@ -2713,22 +2806,6 @@ gwy_3d_view_set_reduced_size(G_GNUC_UNUSED Gwy3DView *gwy3dview,
     g_critical("OpenGL support was not compiled in.");
 }
 
-
-const gchar*
-gwy_3d_view_get_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview)
-{
-    g_critical("OpenGL support was not compiled in.");
-    return NULL;
-}
-
-void
-gwy_3d_view_set_material_key(G_GNUC_UNUSED Gwy3DView *gwy3dview,
-                             G_GNUC_UNUSED const gchar *material)
-{
-    g_critical("OpenGL support was not compiled in.");
-}
-
-
 GdkPixbuf*
 gwy_3d_view_get_pixbuf(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
@@ -2756,7 +2833,6 @@ gwy_3d_view_reset_view(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 {
     g_critical("OpenGL support was not compiled in.");
 }
-
 
 GtkAdjustment*
 gwy_3d_view_get_rot_x_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
@@ -2799,7 +2875,6 @@ gwy_3d_view_get_light_y_adjustment(G_GNUC_UNUSED Gwy3DView *gwy3dview)
     g_critical("OpenGL support was not compiled in.");
     return NULL;
 }
-
 
 gdouble
 gwy_3d_view_get_max_view_scale(G_GNUC_UNUSED Gwy3DView *gwy3dview)

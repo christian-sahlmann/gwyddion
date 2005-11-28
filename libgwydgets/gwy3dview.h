@@ -57,8 +57,12 @@ struct _Gwy3DView {
     guint reduced_size;
 
     GwyContainer *data;           /* Container with data */
-    GwyDataField *data_field;     /* Data to be shown */
     GwyDataField *downsampled;    /* Downsampled data for faster rendering */
+
+    GwyDataField *data_field;
+    GQuark data_key;
+    gulong data_id;
+    gulong data_item_id;
 
     GwyGradient *gradient;
     GQuark gradient_key;
@@ -70,7 +74,7 @@ struct _Gwy3DView {
     gulong material_id;
     gulong material_item_id;
 
-    gint changed;
+    gint changed;                 /* What has changed, XXX: not used */
 
     gint shape_list_base;         /* Base index of scene display lists */
     guint shape_current;          /* Actually shown shape in the scene
@@ -127,6 +131,9 @@ struct _Gwy3DViewClass {
 GtkWidget*        gwy_3d_view_new               (GwyContainer *data);
 GType             gwy_3d_view_get_type          (void) G_GNUC_CONST;
 
+const gchar*      gwy_3d_view_get_data_key      (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_data_key      (Gwy3DView *gwy3dview,
+                                                 const gchar *key);
 const gchar*      gwy_3d_view_get_gradient_key  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_gradient_key  (Gwy3DView *gwy3dview,
                                                  const gchar *key);

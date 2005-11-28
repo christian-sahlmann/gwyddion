@@ -224,6 +224,7 @@ gwy_gl_material_editor_preview_new(GwyGLMaterialEditor *editor)
     gwy_gl_material_editor_set_view(editor->container, FALSE);
 
     view = gwy_3d_view_new(editor->container);
+    gwy_3d_view_set_data_key(GWY_3D_VIEW(view), "/0/data");
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view), "/0/3d/material");
     g_object_unref(editor->container);
     g_object_set(view,
@@ -447,6 +448,7 @@ static void
 gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
 {
     GwyGLMaterial *material;
+    const gchar *name;
     GwyGLMaterialEditor *editor;
 
     editor = GWY_GL_MATERIAL_EDITOR(res_editor);
@@ -456,9 +458,9 @@ gwy_gl_material_editor_switch(GwyResourceEditor *res_editor)
                      && gwy_resource_get_is_modifiable(GWY_RESOURCE(material)));
 
     if (gwy_app_gl_is_ok()) {
-        gwy_container_set_string_by_name
-                               (editor->container, "/0/3d/material",
-                                gwy_resource_get_name(GWY_RESOURCE(material)));
+        name = gwy_resource_get_name(GWY_RESOURCE(material));
+        gwy_container_set_string_by_name(editor->container, "/0/3d/material",
+                                         g_strdup(name));
     }
 
     editor->old[GL_MATERIAL_AMBIENT] = *gwy_gl_material_get_ambient(material);
