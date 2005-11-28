@@ -66,6 +66,9 @@ struct _GwyLayerBasic {
 struct _GwyLayerBasicClass {
     GwyPixmapLayerClass parent_class;
 
+    /* signals */
+    void (*presentation_switched)(GwyLayerBasic *basic_layer);
+
     gpointer reserved1;
     gpointer reserved2;
 };

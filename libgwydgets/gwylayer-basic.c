@@ -31,6 +31,11 @@
                             G_CONNECT_SWAPPED | G_CONNECT_AFTER);
 
 enum {
+    PRESENTATION_SWITCHED,
+    LAST_SIGNAL
+};
+
+enum {
     PROP_0,
     PROP_GRADIENT_KEY,
     PROP_PRESENTATION_KEY,
@@ -72,6 +77,8 @@ static void gwy_layer_basic_show_changed         (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_range_type_changed   (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_min_max_changed      (GwyLayerBasic *basic_layer);
 static void gwy_layer_basic_changed              (GwyPixmapLayer *pixmap_layer);
+
+static guint basic_layer_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE(GwyLayerBasic, gwy_layer_basic, GWY_TYPE_PIXMAP_LAYER)
 
@@ -149,6 +156,26 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
                              "Key prefix identifying fixed range minimum and "
                              "maximum in container",
                              NULL, G_PARAM_READWRITE));
+
+
+    /**
+     * GwyLayerBasic::presentation-switched:
+     * @gwydataview: The #GwyLayerBasic which received the signal.
+     *
+     * The ::presentation-switched signal is emitted when the presentation
+     * state changes, that is when a layer which displayed data directly
+     * starts displaying a presentation, or conversely when it stops displaying
+     * a presentation.
+     **/
+    basic_layer_signals[PRESENTATION_SWITCHED]
+        = g_signal_new("presentation-switched",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyLayerBasicClass,
+                                       presentation_switched),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -642,6 +669,7 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
 {
     GwyDataViewLayer *layer;
     GQuark quark;
+    gboolean presentation_switched;
 
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
 
@@ -656,6 +684,7 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
         return;
     }
 
+    presentation_switched = !!basic_layer->show_field;
     if (basic_layer->show_id)
         g_signal_handler_disconnect(layer->data, basic_layer->show_id);
     basic_layer->show_id = 0;
@@ -665,9 +694,13 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
     gwy_layer_basic_container_connect(basic_layer, key,
                                       &basic_layer->show_item_id,
                                       G_CALLBACK(gwy_layer_basic_item_changed));
+    presentation_switched ^= !!basic_layer->show_field;
 
     GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
     g_object_notify(G_OBJECT(basic_layer), "presentation-key");
+    if (presentation_switched)
+        g_signal_emit(basic_layer,
+                      basic_layer_signals[PRESENTATION_SWITCHED], 0);
     gwy_data_view_layer_updated(layer);
 }
 
@@ -692,7 +725,7 @@ gboolean
 gwy_layer_basic_get_has_presentation(GwyLayerBasic *basic_layer)
 {
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(basic_layer), FALSE);
-    return basic_layer->show_key && basic_layer->show_field;
+    return basic_layer->show_field != NULL;
 }
 
 /**
@@ -775,9 +808,16 @@ gwy_layer_basic_disconnect_fixed(GwyLayerBasic *basic_layer)
 static void
 gwy_layer_basic_item_changed(GwyLayerBasic *basic_layer)
 {
+    gboolean presentation_switched;
+
+    presentation_switched = !!basic_layer->show_field;
     gwy_layer_basic_show_field_disconnect(basic_layer);
     gwy_layer_basic_show_field_connect(basic_layer);
+    presentation_switched ^= !!basic_layer->show_field;
     GWY_PIXMAP_LAYER(basic_layer)->wants_repaint = TRUE;
+    if (presentation_switched)
+        g_signal_emit(basic_layer,
+                      basic_layer_signals[PRESENTATION_SWITCHED], 0);
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(basic_layer));
 }
 
