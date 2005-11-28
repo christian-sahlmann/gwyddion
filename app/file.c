@@ -111,26 +111,28 @@ gwy_app_file_save_cb(void)
 void
 gwy_app_file_duplicate_cb(void)
 {
-    GtkWidget *data_window;
-    GwyContainer *data, *duplicate;
+    GwyDataWindow *data_window;
+    GwyDataView *data_view;
+    GwyLayerBasic *layer;
+    GwyContainer *data;
     GObject *show;
+    const gchar *key;
 
-    data = gwy_app_get_current_data();
-    g_return_if_fail(GWY_IS_CONTAINER(data));
-    duplicate = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
-    g_return_if_fail(GWY_IS_CONTAINER(duplicate));
+    data_window = gwy_app_data_window_get_current();
+    data_view = gwy_data_window_get_data_view(data_window);
+    layer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
+    data = gwy_container_duplicate(gwy_data_view_get_data(data_view));
     /* XXX: An ugly and largery undocumented hack: if a presentation has
      * "is_preview" set, it is a preview and is not duplicated.  But at least
      * it works ... so we are better than Gimp! Better than Gimp! :o)  */
-    if (gwy_container_gis_object_by_name(data, "/0/show", &show)) {
+    if (gwy_layer_basic_get_has_presentation(layer)) {
+        key = gwy_layer_basic_get_presentation_key(layer);
+        show = gwy_container_get_object_by_name(data, key);
         if (g_object_get_data(show, "is_preview"))
-            gwy_container_remove_by_name(duplicate, "/0/show");
+            gwy_container_remove_by_name(data, key);
     }
-    data_window = gwy_app_data_window_create(duplicate);
-    /* XXX: This never worked anyway...
-    g_object_set_data(G_OBJECT(duplicate), "gwy-app-modified",
-                      GINT_TO_POINTER(1)); */
-    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    data_window = GWY_DATA_WINDOW(gwy_app_data_window_create(data));
+    gwy_app_data_window_set_untitled(data_window, NULL);
 }
 
 void

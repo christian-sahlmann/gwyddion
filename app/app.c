@@ -54,8 +54,7 @@ static void       gwy_app_data_view_setup_layers   (GwyDataView *data_view,
 static void       gwy_app_data_view_mask_changed   (GwyContainer *data,
                                                     const gchar *key,
                                                     GwyDataView *data_view);
-static void       gwy_app_data_view_show_changed   (GwyContainer *data,
-                                                    const gchar *key,
+static void       gwy_app_data_view_show_changed   (GwyLayerBasic *basic_layer,
                                                     GwyDataView *data_view);
 static void       gwy_app_container_setup_mask     (GwyContainer *data);
 static void       gwy_app_data_window_list_updated (void);
@@ -297,6 +296,8 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
         GWY_MENU_FLAG_DATA
     };
     static GwyDataWindow *already_current = NULL;
+    GwyDataView *data_view;
+    GwyPixmapLayer *layer;
     GList *item;
     GwyContainer *data;
 
@@ -319,16 +320,18 @@ gwy_app_data_window_set_current(GwyDataWindow *window)
     if (current_tool)
         gwy_tool_func_use(current_tool, window, GWY_TOOL_SWITCH_WINDOW);
 
-    data = gwy_data_window_get_data(window);
+    data_view = gwy_data_window_get_data_view(window);
+    data = gwy_data_view_get_data(data_view);
     if (gwy_undo_container_has_undo(data))
         sens_data.set_to |= GWY_MENU_FLAG_UNDO;
     if (gwy_undo_container_has_redo(data))
         sens_data.set_to |= GWY_MENU_FLAG_REDO;
 
-    if (gwy_container_contains_by_name(data, "/0/mask"))
-        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
-    if (gwy_container_contains_by_name(data, "/0/show"))
+    layer = gwy_data_view_get_base_layer(data_view);
+    if (gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer)))
         sens_data.set_to |= GWY_MENU_FLAG_DATA_SHOW;
+    if (gwy_data_view_get_alpha_layer(data_view))
+        sens_data.set_to |= GWY_MENU_FLAG_DATA_MASK;
 
     gwy_app_toolbox_update_state(&sens_data);
     already_current = window;
@@ -482,6 +485,7 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
     layer = gwy_layer_basic_new();
     blayer = GWY_LAYER_BASIC(layer);
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_presentation_key(blayer, "/0/show");
     gwy_layer_basic_set_gradient_key(blayer, "/0/base/palette");
     gwy_layer_basic_set_range_type_key(blayer, "/0/base/range-type");
     gwy_layer_basic_set_min_max_key(blayer, "/0/base");
@@ -489,11 +493,11 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
 
     /* force sync */
     gwy_app_data_view_mask_changed(data, "/0/mask", data_view);
-    gwy_app_data_view_show_changed(data, "/0/show", data_view);
+    gwy_app_data_view_show_changed(blayer, data_view);
 
     g_signal_connect(data, "item-changed::/0/mask",
                      G_CALLBACK(gwy_app_data_view_mask_changed), data_view);
-    g_signal_connect(data, "item-changed::/0/show",
+    g_signal_connect(blayer, "presentation-switched",
                      G_CALLBACK(gwy_app_data_view_show_changed), data_view);
 }
 
@@ -535,39 +539,19 @@ gwy_app_data_view_mask_changed(GwyContainer *data,
     }
 }
 
-/**
- * gwy_app_data_view_show_changed:
- * @data: A container coreesponding to @data_view.
- * @data_view: A data view.
- *
- * Sets base layer data key depending on container contents.
- **/
 static void
-gwy_app_data_view_show_changed(GwyContainer *data,
-                               const gchar *key,
+gwy_app_data_view_show_changed(GwyLayerBasic *basic_layer,
                                GwyDataView *data_view)
 {
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_SHOW, 0 };
-    gboolean has_dfield, has_layer;
-    GwyPixmapLayer *layer;
-    const gchar *data_key;
+    gboolean has_show;
 
-    has_dfield = gwy_container_contains_by_name(data, key);
-    layer = gwy_data_view_get_base_layer(data_view);
-    data_key = gwy_pixmap_layer_get_data_key(layer);
-    has_layer = gwy_strequal(data_key, key);
-    gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
+    if (gwy_data_view_get_data(data_view) != gwy_app_get_current_data())
+        return;
 
-    if (has_dfield && !has_layer)
-        gwy_pixmap_layer_set_data_key(layer, key);
-    else if (!has_dfield && has_layer)
-        gwy_pixmap_layer_set_data_key(layer, "/0/data");
-
-    if (has_dfield != has_layer
-        && data == gwy_app_get_current_data()) {
-        sens_data.set_to = has_dfield ? GWY_MENU_FLAG_DATA_SHOW : 0;
-        gwy_app_toolbox_update_state(&sens_data);
-    }
+    has_show = gwy_layer_basic_get_has_presentation(basic_layer);
+    sens_data.set_to = has_show ? GWY_MENU_FLAG_DATA_SHOW : 0;
+    gwy_app_toolbox_update_state(&sens_data);
 }
 
 /**
@@ -1557,17 +1541,21 @@ gwy_app_mask_kill_cb(void)
 void
 gwy_app_show_kill_cb(void)
 {
+    GwyLayerBasic *layer;
     GwyDataWindow *data_window;
     GwyDataView *data_view;
     GwyContainer *data;
+    const gchar *key;
 
     data_window = gwy_app_data_window_get_current();
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = gwy_data_window_get_data_view(data_window);
-    data = gwy_data_view_get_data(data_view);
-    if (gwy_container_contains_by_name(data, "/0/show")) {
-        gwy_app_undo_checkpoint(data, "/0/show", NULL);
-        gwy_container_remove_by_name(data, "/0/show");
+    layer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
+    if (gwy_layer_basic_get_has_presentation(layer)) {
+        key = gwy_layer_basic_get_presentation_key(layer);
+        data = gwy_data_view_get_data(data_view);
+        gwy_app_undo_checkpoint(data, key, NULL);
+        gwy_container_remove_by_name(data, key);
     }
 }
 
