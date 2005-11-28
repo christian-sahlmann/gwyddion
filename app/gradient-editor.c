@@ -432,7 +432,6 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
                     channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y;
             points[i].color.a = 1;
         }
-        //gwy_gradient_reset(gradient); /*XXX */
         gwy_gradient_set_points(gradient, num_pts, points);
 
         /* Free up structures */
@@ -633,7 +632,7 @@ gwy_gradient_editor_mode_changed(G_GNUC_UNUSED GtkWidget *toggle,
     mode = gwy_radio_buttons_get_current(editor->mode_group, "editing-mode");
     switch (mode) {
         case EDITING_MODE_POINTS:
-        /*TODO: update points */
+        gwy_gradient_editor_update(editor);
         gtk_widget_set_no_show_all(editor->curve, TRUE);
         gtk_widget_hide(editor->curve);
         gtk_widget_set_no_show_all(editor->markers, FALSE);

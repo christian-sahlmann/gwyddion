@@ -50,15 +50,12 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
- /*XXX: GET RID OF ABS! It is truncating everything to int! use fabs*/
-
 /*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Fix cursor changes */
 /*TODO: Fix warnings (unused variables, etc) */
 /*TODO: Deal with freehand mode */
 /*TODO: Change end-point behavior: hold constant value, don't go to zero */
 /*TODO: Do something about problem of selecting end points (always gets red) */
-
 
 #include <config.h>
 #include <stdlib.h>
@@ -85,8 +82,8 @@
 
 #define find_slope(x1, y1, x2, y2) ((y2-y1)/(x2-x1))
 
-#define SLOPE_TOLERANCE 0.02
-#define compare_slopes(slope1, slope2) (abs(slope1 - slope2) < SLOPE_TOLERANCE)
+#define SLOPE_TOLERANCE 0.05
+#define compare_slopes(slope1, slope2) (fabs(slope1 - slope2) < SLOPE_TOLERANCE)
 
 
 enum {
@@ -1092,11 +1089,14 @@ gwy_curve_set_range (GwyCurve *curve,
 void
 gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 {
+    GArray *remove_points;
     gint width, height;
-    gint c_index, i;
+    gint c_index, i, val;
+    gint src, dst;
     gfloat slope1, slope2;
     GwyChannelData *channel;
 
+    /* Copy the control point data out of channel_data into our curve */
     for (c_index=0; c_index<3; c_index++) {
         channel = &curve->channel_data[c_index];
 
@@ -1120,22 +1120,59 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
                    channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y));
     }
 
-    /* Clean up */
-    /*
-    for (i=0; i<channel->num_ctlpoints-2; i++) {
-        slope1 =
-        find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
-                   channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
-        slope2 =
-        find_slope(channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y,
-                   channel->ctlpoints[i+2].x,channel->ctlpoints[i+2].y);
+    g_debug("Compare:");
 
-        if (compare_slopes(slope1, slope2))
-            channel->ctlpoints[i+1].x = -1;
+    /* Redundant Control Point Pruning: */
+    for (c_index=0; c_index<3; c_index++) {
+        channel = &curve->channel_data[c_index];
+
+        /* Mark redundant control points for removal (by comparing slopes) */
+        remove_points = g_array_new(FALSE, TRUE, sizeof(gint));
+        for (i=0; i<channel->num_ctlpoints-2; i++) {
+            slope1 =
+            find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
+                       channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
+            slope2 =
+            find_slope(channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y,
+                       channel->ctlpoints[i+2].x, channel->ctlpoints[i+2].y);
+
+            if (c_index==0) {
+                g_debug("Slope1: %f  Slope2: %f  diff: %f", slope1, slope2,
+                        fabs(slope1 - slope2));
+            }
+
+            if (compare_slopes(slope1, slope2)) {
+                val = i+1;
+                g_array_append_val(remove_points, val);
+            }
+        }
+
+        /* Delete marked control points: */
+        for (i=0; i < remove_points->len; i++) {
+            val = g_array_index(remove_points, gint, i);
+            channel->ctlpoints[val].x = -1;
+        }
+        g_array_free(remove_points, FALSE);
+        for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
+            if (channel->ctlpoints[src].x >= curve->min_x) {
+                memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
+                    sizeof(GwyPoint));
+                ++dst;
+            }
+        }
+        if (dst < src) {
+            channel->num_ctlpoints -= (src - dst);
+            if (channel->num_ctlpoints <= 0) {
+                channel->num_ctlpoints = 1;
+                channel->ctlpoints[0].x = curve->min_x;
+                channel->ctlpoints[0].y = curve->min_y;
+            }
+            channel->ctlpoints = g_realloc(channel->ctlpoints,
+                                channel->num_ctlpoints * sizeof(GwyPoint));
+        }
     }
-    */
 
-
+    /* Update */
     if (curve->pixmap) {
         width = GTK_WIDGET(curve)->allocation.width - RADIUS * 2;
         height = GTK_WIDGET(curve)->allocation.height - RADIUS * 2;
@@ -1247,8 +1284,8 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
             min_distance = -1;
             y_val = 0;
             for (j=0; j < curve_channel->num_points; j++) {
-                x = CLAMP((curve_channel->points[j].x - RADIUS), 0, width-1);
-                y = CLAMP((curve_channel->points[j].y - RADIUS), 0, height-1);
+                x = CLAMP((curve_channel->points[j].x - RADIUS), 0, width);
+                y = CLAMP((curve_channel->points[j].y - RADIUS), 0, height);
                 rx = unproject(x, curve->min_x, curve->max_x, width);
                 ry = unproject(height - y, curve->min_y, curve->max_y, height);
                 distance = fabs(rx - val);
