@@ -227,8 +227,8 @@ gwy_axis_finalize(GObject *object)
     if (axis->dialog) gtk_widget_destroy(axis->dialog);
 
     g_object_unref(axis->gc);
-    g_object_unref(axis->par.major_font);
-    g_object_unref(axis->par.label_font);
+    g_free(axis->par.major_font);
+    g_free(axis->par.label_font);
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
 }
 
