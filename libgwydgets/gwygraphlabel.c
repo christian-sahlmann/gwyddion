@@ -178,7 +178,7 @@ gwy_graph_label_realize(GtkWidget *widget)
     s->bg[4] = widget->style->white;
 
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
-
+    g_object_unref(s);
 }
 
 
@@ -390,6 +390,7 @@ gwy_graph_label_draw_label(GtkWidget *widget)
                                              0, 0, winwidth, winheight,
                                              label);
     g_object_unref((GObject *)mygc);
+    g_object_unref(layout);
 
 }
 

@@ -157,7 +157,7 @@ gwy_graph_corner_realize(GtkWidget *widget)
         s->bg[4] = widget->style->white;
 
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
-
+    g_object_unref(s);
 }
 
 static void

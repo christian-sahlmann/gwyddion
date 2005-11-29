@@ -226,6 +226,9 @@ gwy_axis_finalize(GObject *object)
 
     if (axis->dialog) gtk_widget_destroy(axis->dialog);
 
+    g_object_unref(axis->gc);
+    g_object_unref(axis->par.major_font);
+    g_object_unref(axis->par.label_font);
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
 }
 
@@ -1186,7 +1189,11 @@ gwy_axis_formatticks(GwyAxis *a)
         totalheight += rect.height;
     }
 
-    if (format) g_free(format->units);
+    if (format) {
+        g_free(format->units);
+        g_free(format);
+    }
+    
 
     /*guess whether we dont have too many or not enough ticks*/
     if (a->orientation == GTK_POS_LEFT
