@@ -219,8 +219,8 @@ gwy_axis_finalize(GObject *object)
     axis = GWY_AXIS(object);
 
     g_string_free(axis->label_text, TRUE);
-    g_array_free(axis->mjticks, FALSE);
-    g_array_free(axis->miticks, FALSE);
+    g_array_free(axis->mjticks, TRUE);
+    g_array_free(axis->miticks, TRUE);
 
     gwy_object_unref(axis->unit);
 
@@ -300,6 +300,7 @@ gwy_axis_realize(GtkWidget *widget)
     gtk_style_set_background (s, widget->window, GTK_STATE_NORMAL);
 
     axis->gc = gdk_gc_new(widget->window);
+    g_object_unref(s);
 
     /*compute ticks*/
     gwy_axis_adjust(axis, widget->allocation.width, widget->allocation.height);
@@ -931,6 +932,7 @@ gwy_axis_normalscale(GwyAxis *a)
         mjt.t.value = majorbase;
         mjt.ttext = g_string_new(" ");
         a->mjticks = g_array_append_val(a->mjticks, mjt);
+        g_free(mjt.ttext);
         majorbase += tickstep;
         i++;
     } while ((majorbase - tickstep) < a->reqmax && i<(2*a->par.major_maxticks));
@@ -941,7 +943,6 @@ gwy_axis_normalscale(GwyAxis *a)
     /*minor tics*/
     do {
         mit.value = minorbase;
-        /*printf("gwyaxis.c:893: appending %f (%dth)\n", (gdouble)mit.value, i);*/
         a->miticks = g_array_append_val(a->miticks, mit);
         minorbase += minortickstep;
         i++;
