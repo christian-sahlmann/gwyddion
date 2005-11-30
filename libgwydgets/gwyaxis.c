@@ -932,7 +932,6 @@ gwy_axis_normalscale(GwyAxis *a)
         mjt.t.value = majorbase;
         mjt.ttext = g_string_new(" ");
         a->mjticks = g_array_append_val(a->mjticks, mjt);
-        g_free(mjt.ttext);
         majorbase += tickstep;
         i++;
     } while ((majorbase - tickstep) < a->reqmax && i<(2*a->par.major_maxticks));
@@ -1044,8 +1043,8 @@ gwy_axis_scale(GwyAxis *a)
         mjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
         g_string_free(mjt->ttext, TRUE);
     }
-    g_array_free(a->mjticks, FALSE);
-    g_array_free(a->miticks, FALSE);
+    g_array_free(a->mjticks, TRUE);
+    g_array_free(a->miticks, TRUE);
 
     a->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
     a->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
