@@ -1043,12 +1043,9 @@ gwy_axis_scale(GwyAxis *a)
         mjt = &g_array_index(a->mjticks, GwyAxisLabeledTick, i);
         g_string_free(mjt->ttext, TRUE);
     }
-    g_array_free(a->mjticks, TRUE);
-    g_array_free(a->miticks, TRUE);
-
-    a->mjticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisLabeledTick));
-    a->miticks = g_array_new(FALSE, FALSE, sizeof(GwyAxisTick));
-
+    g_array_set_size(a->mjticks, 0);
+    g_array_set_size(a->miticks, 0);
+    
     /*find tick positions*/
     if (!a->is_logarithmic)
         gwy_axis_normalscale(a);
