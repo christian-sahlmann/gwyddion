@@ -1152,7 +1152,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
             val = g_array_index(remove_points, gint, i);
             channel->ctlpoints[val].x = -1;
         }
-        g_array_free(remove_points, FALSE);
+        g_array_free(remove_points, TRUE);
         for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
             if (channel->ctlpoints[src].x >= curve->min_x) {
                 memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
@@ -1224,7 +1224,7 @@ remove_repeats(GArray *array)
     }
 
     /* Empty out array */
-    g_array_remove_range(array, 0, array->len);
+    g_array_set_size(array, 0);
 
     /* Copy cleaned values into array */
     for (i=0; i < new_array->len; i++) {
@@ -1232,11 +1232,18 @@ remove_repeats(GArray *array)
         g_array_append_val(array, val);
     }
 
+    /* Free up new_array */
+    g_array_free(new_array, TRUE);
 }
 
 void
 gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
 {
+    /* WILL BE TRYING NEW IDEA FOR THIS */
+
+    /* Copy curve->channel_data into channel_data */
+
+    /* THIS IS THE OLD VERSION */
     GArray *x_array;
     GwyChannelData *channel;
     GwyChannelData *curve_channel;
@@ -1298,7 +1305,7 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
         }
     }
 
-    g_array_free(x_array, FALSE);
+    g_array_free(x_array, TRUE);
 
     /* Dump array
     g_debug("\n\n\n\n");
