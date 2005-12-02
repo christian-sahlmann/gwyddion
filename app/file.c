@@ -275,6 +275,7 @@ file_real_open(const gchar *filename_sys,
     else {
         /* TODO: show some warning */
         g_warning("Open of <%s> failed", filename_utf8);
+        g_free(filename_utf8);
     }
 
     return data != NULL;
