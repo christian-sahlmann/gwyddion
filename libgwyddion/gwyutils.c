@@ -43,8 +43,6 @@
 #ifdef G_OS_WIN32
 #include <windows.h>
 
-static gchar *dll_name = NULL;
-
 G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
 #endif
 
