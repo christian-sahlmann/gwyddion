@@ -403,13 +403,13 @@ _______EOF
   fi
 
   if test x$gwy_have_acosh = xno; then
-    echo 'static inline double acosh(double x) { return log(x+sqrt(x*x - 1); }' >>$outfile
+    echo 'static inline double acosh(double x) { return log(x+sqrt(x*x - 1)); }' >>$outfile
   else
     echo '/* acosh() is defined */' >>$outfile
   fi
 
   if test x$gwy_have_asinh = xno; then
-    echo 'static inline double asinh(double x) { return log(x+sqrt(x*x + 1); }' >>$outfile
+    echo 'static inline double asinh(double x) { return log(x+sqrt(x*x + 1)); }' >>$outfile
   else
     echo '/* asinh() is defined */' >>$outfile
   fi
