@@ -21,7 +21,6 @@
 #include "config.h"
 #include <string.h>
 #include <gdk/gdkkeysyms.h>
-#include <gwyconfig.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule.h>
