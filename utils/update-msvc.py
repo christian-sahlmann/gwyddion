@@ -106,7 +106,7 @@ def expand_template(makefile, name):
     if name == 'DATA':
         lst = get_list(makefile, '\w+_DATA')
         list_part = name + ' =' + ' \\\n\t'.join([''] + lst)
-        inst_part = [('$(INSTALL) %s "$(DEST_DIR)\$(DATA_TYPE)"' % x)
+        inst_part = [('$(INSTALL) %s "$(DEST_DIR)\data\$(DATA_TYPE)"' % x)
                      for x in lst]
         inst_part = '\n\t'.join(['install-data: data'] + inst_part)
         return list_part + '\n\n' + inst_part

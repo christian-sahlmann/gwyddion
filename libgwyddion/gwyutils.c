@@ -375,6 +375,8 @@ gwy_find_self_dir(const gchar *dirname)
 
     if (!basedir)
         basedir = g_win32_get_package_installation_directory(NULL, dll_name);
+    if (gwy_strequal(dirname, "data"))
+        dirname = NULL;
 
     return g_build_filename(basedir, dirname, NULL);
 #endif    /* G_OS_WIN32 */
