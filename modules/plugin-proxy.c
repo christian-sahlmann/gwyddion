@@ -239,7 +239,7 @@ create_user_plugin_dirs(void)
     for (i = 0; i < G_N_ELEMENTS(dir); i++) {
         if (!g_file_test(dir[i], G_FILE_TEST_IS_DIR)) {
             gwy_debug("Trying to create user plugin directory %s", dir[i]);
-            if (mkdir(dir[i], 0700)) {
+            if (g_mkdir(dir[i], 0700)) {
                 g_warning("Cannot create user plugin directory %s: %s",
                         dir[i], g_strerror(errno));
                 ok = FALSE;

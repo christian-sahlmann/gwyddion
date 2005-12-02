@@ -228,7 +228,7 @@ create_config_dir_real(const gchar *cfgdir)
 
     if (!ok) {
         gwy_debug("Trying to create user config directory %s", cfgdir);
-        ok = !mkdir(cfgdir, 0700);
+        ok = !g_mkdir(cfgdir, 0700);
         if (!ok) {
             g_warning("Cannot create user config directory %s: %s",
                       cfgdir, g_strerror(errno));
@@ -240,7 +240,7 @@ create_config_dir_real(const gchar *cfgdir)
             if (g_file_test(moddirs[i], G_FILE_TEST_IS_DIR))
                 continue;
             gwy_debug("Trying to create user module directory %s", moddirs[i]);
-            if (mkdir(moddirs[i], 0700))
+            if (g_mkdir(moddirs[i], 0700))
                 g_warning("Cannot create user module directory %s: %s",
                           moddirs[i], g_strerror(errno));
         }

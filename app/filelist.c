@@ -800,13 +800,13 @@ gwy_app_recent_file_create_dirs(void)
     base = gwy_recent_file_thumbnail_dir();
     if (!g_file_test(base, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Creating base thumbnail directory <%s>", base);
-        mkdir(base, 0700);
+        g_mkdir(base, 0700);
     }
 
     dir = g_build_filename(base, "normal", NULL);
     if (!g_file_test(dir, G_FILE_TEST_IS_DIR)) {
         gwy_debug("Creating normal thumbnail directory <%s>", dir);
-        mkdir(dir, 0700);
+        g_mkdir(dir, 0700);
     }
     g_free(dir);
 }
