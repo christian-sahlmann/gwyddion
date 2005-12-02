@@ -994,15 +994,20 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
     for (n = 0; file_list[n] && file_list[n][0]; n++)
         ;
 
-    containers = g_new0(GwyContainer*, n);
+    containers = g_newa(GwyContainer*, n);
     for (i = 0; i < n; i++) {
+        containers[i] = NULL;
         filename = g_strstrip(file_list[i]);
         if (g_str_has_prefix(filename, "file://"))
             filename += sizeof("file://") - 1;
         gwy_debug("filename = %s", filename);
         if (g_file_test(filename, G_FILE_TEST_IS_REGULAR
                                   | G_FILE_TEST_IS_SYMLINK)) {
+            /* FIXME: what about charset conversion? */
             containers[i] = gwy_file_load(filename);
+            if (containers[i])
+                gwy_container_set_string_by_name(containers[i], "/filename",
+                                                 g_strdup(filename));
             ok = TRUE;    /* FIXME: what if we accept only some? */
         }
     }
@@ -1014,7 +1019,6 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         data_window = gwy_app_data_window_create(containers[i]);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
-    g_free(containers);
 
     return;
 }
