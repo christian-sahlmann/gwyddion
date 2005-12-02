@@ -1377,7 +1377,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                              + im[i*width + j]*im[i*width + j];
         }
         gwy_data_line_multiply(target_line,
-                               data_field->xreal/xres/(2*G_PI*height*width));
+                               data_field->xreal/xres/(2*G_PI*height));
         gwy_data_line_set_real(target_line, G_PI*xres/data_field->xreal);
         break;
 
@@ -1397,7 +1397,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                              + im[j*width + i]*im[j*width + i];
         }
         gwy_data_line_multiply(target_line,
-                               data_field->yreal/yres/(2*G_PI*height*width));
+                               data_field->yreal/yres/(2*G_PI*width));
         gwy_data_line_set_real(target_line, G_PI*yres/data_field->yreal);
         break;
     }
