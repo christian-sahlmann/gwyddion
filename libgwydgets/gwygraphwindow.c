@@ -158,7 +158,7 @@ gwy_graph_window_new(GwyGraph *graph)
     graphwindow->button_measure_points = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_measure_points),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, FALSE, FALSE, 0);
     gwy_graph_window_set_tooltip(graphwindow->button_measure_points, "Measure distances in graph");
     g_signal_connect_swapped(graphwindow->button_measure_points, "clicked",
                            G_CALLBACK(gwy_graph_window_measure_cb),
@@ -176,15 +176,15 @@ gwy_graph_window_new(GwyGraph *graph)
 
     graphwindow->button_zoom_out = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_zoom_out),
-                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_OUT, GTK_ICON_SIZE_BUTTON));
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out, FALSE, FALSE, 4);
+                      gtk_image_new_from_stock(GWY_STOCK_GRAPH_ZOOM_FIT, GTK_ICON_SIZE_BUTTON));
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_zoom_out, FALSE, FALSE, 0);
     gwy_graph_window_set_tooltip(graphwindow->button_zoom_out, "Zoom out to full curve.");
     g_signal_connect_swapped(graphwindow->button_zoom_out, "clicked",
                            G_CALLBACK(gwy_graph_window_zoom_out_cb),
                            graphwindow);
 
 
-    graphwindow->button_x_log = gtk_button_new();
+    graphwindow->button_x_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_x_log),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_X_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_x_log, FALSE, FALSE, 0);
@@ -195,7 +195,7 @@ gwy_graph_window_new(GwyGraph *graph)
     gtk_widget_set_sensitive(graphwindow->button_x_log,
                 gwy_graph_model_x_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
      
-    graphwindow->button_y_log = gtk_button_new();
+    graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log, FALSE, FALSE, 0);
@@ -370,8 +370,6 @@ gwy_graph_window_zoom_in_cb(GwyGraphWindow *graphwindow)
     }
     else
         gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), last_status);
-
-
 }
 
 static void
@@ -400,7 +398,8 @@ gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
 static void 
 gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
 {
-    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
+    
+     gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
                                               GTK_ORIENTATION_VERTICAL,
                    !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
                                                                            GTK_ORIENTATION_VERTICAL));
