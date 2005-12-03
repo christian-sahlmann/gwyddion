@@ -26,6 +26,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <string.h>
 #include "app.h"
+#include "menu.h"
 #include "unitool.h"
 #include "menu-windowlist.h"
 
@@ -180,6 +181,8 @@ gwy_unitool_use(GwyUnitoolState *state,
 static void
 gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 {
+    GtkTooltips *tooltips;
+    GtkWidget *ebox;
     gchar *title;
 
     gwy_debug(" ");
@@ -188,6 +191,9 @@ gwy_unitool_name_changed_cb(GwyUnitoolState *state)
 
     title = gwy_data_window_get_base_name(state->data_window);
     gtk_label_set_text(GTK_LABEL(state->windowname), title);
+    ebox = gtk_widget_get_ancestor(state->windowname, GTK_TYPE_EVENT_BOX);
+    tooltips = gwy_app_tooltips_get();
+    gtk_tooltips_set_tip(tooltips, ebox, title, NULL);
     g_free(title);
 }
 
@@ -517,15 +523,19 @@ gwy_unitool_apply_set_sensitive(GwyUnitoolState *state,
 GtkWidget*
 gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
 {
-    GtkWidget *frame, *label, *image, *hbox;
+    GtkWidget *frame, *label, *image, *hbox, *ebox;
+    GtkTooltips *tooltips;
     gchar *title;
     GwyDataView *data_view;
 
     g_return_val_if_fail(state, NULL);
     g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
 
+    ebox = gtk_event_box_new();
+
     frame = gtk_frame_new(NULL);
     gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_OUT);
+    gtk_container_add(GTK_CONTAINER(ebox), frame);
 
     hbox = gtk_hbox_new(FALSE, 4);
     gtk_container_add(GTK_CONTAINER(frame), hbox);
@@ -534,9 +544,13 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
     image = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
 
+    tooltips = gwy_app_tooltips_get();
     title = gwy_data_window_get_base_name(state->data_window);
+    gtk_tooltips_set_tip(tooltips, ebox, title, NULL);
+
     label = gtk_label_new(title);
     g_free(title);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     state->windowname = label;
@@ -548,13 +562,7 @@ gwy_unitool_windowname_frame_create(GwyUnitoolState *state)
                                    G_CALLBACK(gwy_unitool_update_thumbnail),
                                    state);
 
-    return frame;
-    /*
-    g_return_val_if_fail(state, NULL);
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(state->data_window), NULL);
-    return gwy_option_menu_data_window(NULL, NULL, NULL,
-                                       GTK_WIDGET(state->data_window));
-    */
+    return ebox;
 }
 
 /**
