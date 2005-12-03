@@ -155,7 +155,7 @@ gwy_graph_window_new(GwyGraph *graph)
 
     hbox = gtk_hbox_new(FALSE, 0);
 
-    graphwindow->button_measure_points = gtk_button_new();
+    graphwindow->button_measure_points = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_measure_points),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_MEASURE, GTK_ICON_SIZE_BUTTON));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_measure_points, FALSE, FALSE, 0);
@@ -336,11 +336,18 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 static void
 gwy_graph_window_measure_cb(GwyGraphWindow *graphwindow)
 {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
-    gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
-    gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
-    gwy_graph_signal_selected(GWY_GRAPH(graphwindow->graph));
-    gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points)))
+    {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
+        gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_XLINES);
+        gtk_widget_queue_draw(GTK_WIDGET(graphwindow->graph));
+        gwy_graph_signal_selected(GWY_GRAPH(graphwindow->graph));
+        gtk_widget_show_all(GTK_WIDGET(graphwindow->measure_dialog));
+    }
+    else
+    {
+        gwy_graph_window_measure_finished_cb(graphwindow, 0);
+    }
 }
 
 
@@ -352,6 +359,7 @@ gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
     gwy_graph_set_status(GWY_GRAPH(graphwindow->graph), GWY_GRAPH_STATUS_PLAIN);
 
