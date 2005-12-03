@@ -34,6 +34,7 @@
 #include "gwydgetutils.h"
 #include "gwygraphselections.h"
 
+#include "stdio.h"
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
@@ -264,12 +265,10 @@ gwy_graph_area_finalize(GObject *object)
 }
 
 static void
-gwy_graph_area_adjust_label(GwyGraphArea *area)
+gwy_graph_area_adjust_label(GwyGraphArea *area, gint x, gint y)
 {
-    /*GtkAllocation *lab_alloc;
-    lab_alloc = &GTK_WIDGET(area->lab)->allocation;*/
-    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
-                    GTK_WIDGET(area)->allocation.width - area->lab->reqwidth - 5, 5);
+    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+                    x, y);
     area->newline = 0;
 }
 
@@ -279,18 +278,33 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     GwyGraphArea *area;
     GtkAllocation *lab_alloc;
     gwy_debug("");
+    gdouble rx, ry;
 
     area = GWY_GRAPH_AREA(widget);
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
+    
+    rx = (gdouble)lab_alloc->x/area->old_width;
+    ry = (gdouble)lab_alloc->y/area->old_height;
+    
+    if (rx < 0.1) rx = 0.1;
+    else if (rx > 0.9) rx = 0.9;
+    if (ry < 0.1) ry = 0.1;
+    else if (ry > 0.9) ry = 0.9;
+ 
+    
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->size_allocate(widget,
                                                                  allocation);
+
+    
     if (((area->old_width != widget->allocation.width
           || area->old_height != widget->allocation.height)
          || area->newline == 1)
         && (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
             || lab_alloc->y != 5)) {
-        gwy_graph_area_adjust_label(area);
+        gwy_graph_area_adjust_label(area, 
+                                    (gint)(rx*widget->allocation.width), 
+                                    (gint)(ry*widget->allocation.height));
         area->newline = 0;
     }
 
@@ -1126,7 +1140,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 
         gwy_graph_label_refresh(area->lab);
         /*re-adjust label position*/
-        gwy_graph_area_adjust_label(area);
+        //gwy_graph_area_adjust_label(area, wi, 5);
     }
     else
         gtk_widget_hide(GTK_WIDGET(area->lab));
