@@ -4,7 +4,7 @@
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandrake-release; echo $?)}
 %{expand:%global distro_is_aurox %(test ! -f /etc/aurox-release; echo $?)}
 
-Summary: A SPM data analysis framework.
+Summary: An SPM data analysis framework.
 Name: @PACKAGE_TARNAME@
 Version: @RPM_VERSION@
 Release: @RPM_RELEASE@
