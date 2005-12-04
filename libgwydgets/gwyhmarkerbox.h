@@ -51,6 +51,7 @@ struct _GwyHMarkerBox {
 
     /* properties */
     gboolean flipped;
+    gboolean highlight;
     GwyMarkerValidateFunc validate;
 
     /* state */
@@ -74,6 +75,7 @@ struct _GwyHMarkerBoxClass {
                          gint i);
     void (*marker_removed)(GwyHMarkerBox *hmbox,
                            gint i);
+    void (*markers_set)(GwyHMarkerBox *hmbox);
 
     gpointer reserved1;
     gpointer reserved2;
@@ -104,6 +106,9 @@ void        gwy_hmarker_box_set_markers        (GwyHMarkerBox *hmbox,
 void        gwy_hmarker_box_set_flipped        (GwyHMarkerBox *hmbox,
                                                 gboolean flipped);
 gboolean    gwy_hmarker_box_get_flipped        (GwyHMarkerBox *hmbox);
+void     gwy_hmarker_box_set_highlight_selected(GwyHMarkerBox *hmbox,
+                                                gboolean highlight);
+gboolean gwy_hmarker_box_get_highlight_selected(GwyHMarkerBox *hmbox);
 void        gwy_hmarker_box_set_validator      (GwyHMarkerBox *hmbox,
                                                 GwyMarkerValidateFunc validate);
 GwyMarkerValidateFunc gwy_hmarker_box_get_validator(GwyHMarkerBox *hmbox);

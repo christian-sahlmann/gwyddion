@@ -28,6 +28,7 @@ enum { HMARKER_BOX_HEIGHT = 8 };
 enum {
     PROP_0,
     PROP_FLIPPED,
+    PROP_HIGHLIGHT_SELECTED,
     PROP_SELECTED_MARKER,
     PROP_LAST
 };
@@ -37,6 +38,7 @@ enum {
     MARKER_MOVED,
     MARKER_ADDED,
     MARKER_REMOVED,
+    MARKERS_SET,
     LAST_SIGNAL
 };
 
@@ -117,6 +119,16 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
 
     g_object_class_install_property(
         gobject_class,
+        PROP_FLIPPED,
+        g_param_spec_boolean("highlight-selected",
+                             "Highlight selected",
+                             "Whether to visually differentiate selected "
+                             "marker.",
+                             TRUE,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property(
+        gobject_class,
         PROP_SELECTED_MARKER,
         g_param_spec_int("selected-marker",
                          "Selected marker",
@@ -127,7 +139,7 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
     /**
      * GwyHMarkerBox::marker-selected:
      * @arg1: The index of selected marker, -1 when marker was unselected.
-     * @gwydataview: The #GwyHMarkerBox which received the signal.
+     * @gwyhmarkerbox: The #GwyHMarkerBox which received the signal.
      *
      * The ::marker-selected signal is emitted when marker selection changes.
      **/
@@ -143,7 +155,7 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
     /**
      * GwyHMarkerBox::marker-moved:
      * @arg1: The index of moved marker.
-     * @gwydataview: The #GwyHMarkerBox which received the signal.
+     * @gwyhmarkerbox: The #GwyHMarkerBox which received the signal.
      *
      * The ::marker-moved signal is emitted when a marker is moved.
      **/
@@ -159,7 +171,7 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
     /**
      * GwyHMarkerBox::marker-added:
      * @arg1: The index a marker was added at.
-     * @gwydataview: The #GwyHMarkerBox which received the signal.
+     * @gwyhmarkerbox: The #GwyHMarkerBox which received the signal.
      *
      * The ::marker-added signal is emitted when a marker is added.
      **/
@@ -175,7 +187,7 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
     /**
      * GwyHMarkerBox::marker-removed:
      * @arg1: The index a marker was removed from.
-     * @gwydataview: The #GwyHMarkerBox which received the signal.
+     * @gwyhmarkerbox: The #GwyHMarkerBox which received the signal.
      *
      * The ::marker-removed signal is emitted when a marker is removed.
      **/
@@ -187,6 +199,22 @@ gwy_hmarker_box_class_init(GwyHMarkerBoxClass *klass)
                        NULL, NULL,
                        g_cclosure_marshal_VOID__INT,
                        G_TYPE_NONE, 1, G_TYPE_INT);
+
+    /**
+     * GwyHMarkerBox::markers-set:
+     * @gwyhmarkerbox: The #GwyHMarkerBox which received the signal.
+     *
+     * The ::markers-set signal is emitted when markers are explicitly set
+     * with gwy_hmarker_box_set_markers().
+     **/
+    hmarker_box_signals[MARKERS_SET]
+        = g_signal_new("markers-set",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyHMarkerBoxClass, markers_set),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__VOID,
+                       G_TYPE_NONE, 0);
 }
 
 static void
@@ -194,6 +222,7 @@ gwy_hmarker_box_init(GwyHMarkerBox *hmbox)
 {
     hmbox->markers = g_array_new(FALSE, FALSE, sizeof(gdouble));
     hmbox->selected = -1;
+    hmbox->highlight = TRUE;
 }
 
 /**
@@ -259,6 +288,11 @@ gwy_hmarker_box_set_property(GObject *object,
         gwy_hmarker_box_set_flipped(hmbox, g_value_get_boolean(value));
         break;
 
+        case PROP_HIGHLIGHT_SELECTED:
+        gwy_hmarker_box_set_highlight_selected(hmbox,
+                                               g_value_get_boolean(value));
+        break;
+
         case PROP_SELECTED_MARKER:
         gwy_hmarker_box_set_selected_marker(hmbox, g_value_get_int(value));
         break;
@@ -280,6 +314,10 @@ gwy_hmarker_box_get_property(GObject*object,
     switch (prop_id) {
         case PROP_FLIPPED:
         g_value_set_boolean(value, hmbox->flipped);
+        break;
+
+        case PROP_HIGHLIGHT_SELECTED:
+        g_value_set_boolean(value, hmbox->highlight);
         break;
 
         case PROP_SELECTED_MARKER:
@@ -374,13 +412,13 @@ gwy_hmarker_box_paint(GwyHMarkerBox *hmbox)
                        TRUE, 0, 0, width, height);
 
     for (i = 0; i < hmbox->markers->len; i++) {
-        if (i == hmbox->selected)
+        if (hmbox->highlight && i == hmbox->selected)
             continue;
         pos = g_array_index(hmbox->markers, gdouble, i);
         gwy_hmarker_box_draw_marker(widget, pos, FALSE, FALSE, hmbox->flipped);
     }
     /* Draw selected last, `over' other markers */
-    if (hmbox->selected >= 0) {
+    if (hmbox->highlight && hmbox->selected >= 0) {
         pos = g_array_index(hmbox->markers, gdouble, hmbox->selected);
         gwy_hmarker_box_draw_marker(widget, pos,
                                     TRUE, hmbox->ghost, hmbox->flipped);
@@ -873,7 +911,8 @@ gwy_hmarker_box_get_markers(GwyHMarkerBox *hmbox)
  *
  * Sets positions of all markers.
  *
- * No validation is performed, even if validator is set.
+ * No validation is performed, even if validator is set.  It's up to caller to
+ * set markers that do not logically conflict with the validator.
  **/
 void
 gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
@@ -898,6 +937,7 @@ gwy_hmarker_box_set_markers(GwyHMarkerBox *hmbox,
     gwy_hmarker_box_set_selected_marker(hmbox, -1);
     g_array_set_size(hmbox->markers, 0);
     g_array_append_vals(hmbox->markers, markers, n);
+    g_signal_emit(hmbox, hmarker_box_signals[MARKERS_SET], 0);
 
     if (GTK_WIDGET_REALIZED(hmbox))
         gtk_widget_queue_draw(GTK_WIDGET(hmbox));
@@ -943,11 +983,56 @@ gwy_hmarker_box_get_flipped(GwyHMarkerBox *hmbox)
 }
 
 /**
+ * gwy_hmarker_box_set_highlight_selected:
+ * @hmbox: A horizontal marker box.
+ * @highlight: %TRUE to visually differentiate selected marker, %FALSE to
+ *             draw markers uniformly.
+ *
+ * Sets whether a horizontal marker box highlights selected marker.
+ **/
+void
+gwy_hmarker_box_set_highlight_selected(GwyHMarkerBox *hmbox,
+                                       gboolean highlight)
+{
+    g_return_if_fail(GWY_IS_HMARKER_BOX(hmbox));
+
+    highlight = !!highlight;
+    if (highlight == hmbox->highlight)
+        return;
+
+    hmbox->highlight = highlight;
+    if (hmbox->selected >= 0 && GTK_WIDGET_REALIZED(hmbox))
+        gtk_widget_queue_draw(GTK_WIDGET(hmbox));
+    g_object_notify(G_OBJECT(hmbox), "highlight-selected");
+}
+
+/**
+ * gwy_hmarker_box_get_highlight_selected:
+ * @hmbox: A horizontal marker box.
+ *
+ * Returns whether a horizontal marker box highlights selected marker.
+ *
+ * Returns: %TRUE if selected marker is visually differentiated, %FALSE if
+ *          markers are drawn uniformly.
+ **/
+gboolean
+gwy_hmarker_box_get_highlight_selected(GwyHMarkerBox *hmbox)
+{
+    g_return_val_if_fail(GWY_IS_HMARKER_BOX(hmbox), FALSE);
+
+    return hmbox->highlight;
+}
+
+/**
  * gwy_hmarker_box_set_validator:
  * @hmbox: A horizontal marker box.
  * @validate: Marker validation function.  Pass %NULL to disable validation.
  *
  * Sets marker validation function.
+ *
+ * It is used the next time an attempt to change markers is made, no
+ * revalidation is done immediately.  It's up to caller to set a validator
+ * that do not logically conflict with the distribution of markers.
  **/
 void
 gwy_hmarker_box_set_validator(GwyHMarkerBox *hmbox,
@@ -1022,7 +1107,23 @@ gwy_hmarker_box_get_validator(GwyHMarkerBox *hmbox)
  * The function must not have any side-effects, that is it must not assume the
  * operation will be actually performed when it returns %TRUE.
  *
- * Marker validation that assures markers are sorted and there is always
+ * Marker validator that allows free marker movement but disables insertion
+ * and removal could look:
+ * <informalexample><programlisting>
+ * static gboolean
+ * validate_marker(GwyHMarkerBox *hmbox,
+ *                 GwyMarkerOperationType optype,
+ *                 gint *i,
+ *                 gdouble *pos)
+ * {
+ *     if (optype == GWY_MARKER_OPERATION_ADD
+ *         || optype == GWY_MARKER_OPERATION_REMOVE)
+ *         return FALSE;
+ *     return TRUE;
+ * }
+ * </programlisting></informalexample>
+ *
+ * Marker validator that assures markers are sorted and there is always
  * a marker at 0.0 and another at 1.0 could look:
  * <informalexample><programlisting>
  * static gboolean
