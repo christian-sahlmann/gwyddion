@@ -253,7 +253,7 @@ file_real_open(const gchar *filename_sys,
                const gchar *name)
 {
     GtkWidget *data_window;
-    const gchar *filename_utf8;  /* in UTF-8 */
+    gchar *filename_utf8;  /* in UTF-8 */
     GwyContainer *data;
 
     if (name)
