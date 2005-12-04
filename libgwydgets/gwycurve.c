@@ -51,8 +51,6 @@
  */
 
 /*TODO: Clean up code style to match gwyddion standards */
-/*TODO: Fix cursor changes */
-/*TODO: Fix warnings (unused variables, etc) */
 /*TODO: Deal with freehand mode */
 /*TODO: Change end-point behavior: hold constant value, don't go to zero */
 /*TODO: Do something about problem of selecting end points (always gets red) */
@@ -825,26 +823,20 @@ gwy_curve_motion_notify(GwyCurve *c)
                 rightbound = project(channel->ctlpoints[c->grab_point + 1].x,
                                      c->min_x, c->max_x, width);
 
-            if (tx <= leftbound || tx >= rightbound
-                || ty > height + RADIUS * 2 + MIN_DISTANCE
-                || ty < -MIN_DISTANCE)
-                channel->ctlpoints[c->grab_point].x = c->min_x - 1.0;
-            else {
-                if (c->grab_point == 0)
-                    rx = 0;
-                else if (c->grab_point == channel->num_ctlpoints-1)
-                    rx = 1;
-                else
-                    rx = unproject(x, c->min_x, c->max_x, width);
-                ry = unproject(height - y, c->min_y, c->max_y, height);
+            ry = unproject(height - y, c->min_y, c->max_y, height);
+            if (c->grab_point == 0)
+                rx = 0;
+            else if (c->grab_point == channel->num_ctlpoints-1)
+                rx = 1;
+            else if (tx <= leftbound || tx >= rightbound
+                     || ty > height + RADIUS * 2 + MIN_DISTANCE
+                     || ty < -MIN_DISTANCE)
+                rx = c->min_x - 1.0;
+            else
+                rx = unproject(x, c->min_x, c->max_x, width);
 
-                channel->ctlpoints[c->grab_point].x = rx;
-                channel->ctlpoints[c->grab_point].y = ry;
-            }
-
-
-
-
+            channel->ctlpoints[c->grab_point].x = rx;
+            channel->ctlpoints[c->grab_point].y = ry;
 
             gwy_curve_interpolate(c, width, height);
             gwy_curve_draw(c, width, height);
