@@ -90,6 +90,7 @@ static void     gwy_graph_label_entry_cb          (GwyGraphLabelDialog *dialog,
                                                      gint arg1,
                                                      gpointer user_data);
 
+static void    gwy_graph_area_adjust_label          (GwyGraphArea *area, gint x, gint y);
 /*static void     zoom                                (GtkWidget *widget);*/
 /* Local data */
 
@@ -204,7 +205,9 @@ gwy_graph_area_init(GwyGraphArea *area)
     gwy_graph_area_set_selection_limit(area, 10);
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
-    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 90, 90);
+    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+                   GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
+                   5);
 
     klass = GWY_GRAPH_AREA_GET_CLASS(area);
     gwy_gdk_cursor_new_or_ref(&klass->cross_cursor, GDK_CROSS);
@@ -238,7 +241,8 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
     g_signal_connect(area->label_dialog, "response",
                      G_CALLBACK(gwy_graph_label_entry_cb), area);
 
-    return GTK_WIDGET(area);
+    
+     return GTK_WIDGET(area);
 }
 
 static void
@@ -1139,8 +1143,10 @@ gwy_graph_area_refresh(GwyGraphArea *area)
         gtk_widget_show(GTK_WIDGET(area->lab));
 
         gwy_graph_label_refresh(area->lab);
-        /*re-adjust label position*/
-        //gwy_graph_area_adjust_label(area, wi, 5);
+        if (area->x0 == 0 && area->y0 == 0)
+        gwy_graph_area_adjust_label(area, 
+                GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
+                5);
     }
     else
         gtk_widget_hide(GTK_WIDGET(area->lab));
