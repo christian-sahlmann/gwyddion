@@ -43,11 +43,8 @@ gwy_statusbar_class_init(GwyStatusbarClass *klass)
 }
 
 static void
-gwy_statusbar_init(GwyStatusbar *statusbar)
+gwy_statusbar_init(G_GNUC_UNUSED GwyStatusbar *statusbar)
 {
-    statusbar->context_id
-        = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar),
-                                       "GwyStatusbar-global-context");
 }
 
 /**
@@ -101,6 +98,14 @@ gwy_statusbar_set_markup(GwyStatusbar *statusbar,
     guint id;
 
     sbar = GTK_STATUSBAR(statusbar);
+    if (!statusbar->context_id) {
+        if (sbar->keys)
+            g_warning("gwy_statusbar_set_markup() does not mix with "
+                      "full stacks-and-context GwyStatusbar API");
+        statusbar->context_id
+            = gtk_statusbar_get_context_id(sbar, "GwyStatusbar-global-context");
+    }
+
     id = gtk_statusbar_push(sbar, statusbar->context_id, markup);
     if (statusbar->message_id)
         gtk_statusbar_remove(sbar, statusbar->context_id,
