@@ -68,6 +68,7 @@
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtktable.h>
 #include "gwydgettypes.h"
+#include "../libdraw/gwyrgba.h"
 
 #define RADIUS          3   /* radius of the control points */
 #define MIN_DISTANCE    8   /* min distance between control points */
@@ -462,7 +463,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     gboolean flag;
     gint x, y;
     GdkGC *gc;
-    GdkColor colors[3];
+    GwyRGBA colors[3];
     gint lastx, lasty;
 
     if (!c->pixmap)
@@ -500,13 +501,13 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
 
     /* Setup colors */
     gc = gdk_gc_new(c->pixmap);
-    colors[0]= get_color_from_rgb(255, 0, 0);
-    colors[1] = get_color_from_rgb(0, 255, 0);
-    colors[2] = get_color_from_rgb(0, 0, 255);
+    colors[0].r = 1; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
+    colors[1].r = 0; colors[1].g = 1; colors[1].b = 0; colors[0].a = 1;
+    colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[0].a = 1;
 
     /* Draw the curve points (for each channel) */
     for (c_index=0; c_index<3; c_index++) {
-        gdk_gc_set_rgb_fg_color(gc, &colors[c_index]);
+        gwy_rgba_set_gdk_gc_fg(&colors[c_index], gc);
 
         channel = &c->channel_data[c_index];
         lastx = lasty = -1;
