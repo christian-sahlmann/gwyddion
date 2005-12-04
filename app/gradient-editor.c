@@ -178,7 +178,7 @@ gwy_app_gradient_editor(void)
 }
 
 static gboolean
-gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
+gwy_gradient_editor_validate_marker(GwyMarkerBox *hmbox,
                                     GwyMarkerOperationType optype,
                                     gint *i,
                                     gdouble *pos)
@@ -186,11 +186,11 @@ gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
     const gdouble *markers;
     gint j, n;
 
-    n = gwy_hmarker_box_get_nmarkers(hmbox);
+    n = gwy_marker_box_get_nmarkers(hmbox);
 
     /* Insertions are sorted an cannot happen outside border markers */
     if (optype == GWY_MARKER_OPERATION_ADD) {
-        markers = gwy_hmarker_box_get_markers(hmbox);
+        markers = gwy_marker_box_get_markers(hmbox);
         for (j = 0; j < n; j++) {
             if (*pos < markers[j])
                 break;
@@ -207,7 +207,7 @@ gwy_gradient_editor_validate_marker(GwyHMarkerBox *hmbox,
 
     /* Inner markers can be moved only from previous to next */
     if (optype == GWY_MARKER_OPERATION_MOVE) {
-        markers = gwy_hmarker_box_get_markers(hmbox);
+        markers = gwy_marker_box_get_markers(hmbox);
         *pos = CLAMP(*pos, markers[*i - 1], markers[*i + 1]);
     }
     return TRUE;
@@ -275,11 +275,11 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
 
     editor->markers = gwy_hmarker_box_new();
     gtk_widget_set_size_request(editor->markers, -1, MARKER_HEIGHT);
-    gwy_hmarker_box_set_markers(GWY_HMARKER_BOX(editor->markers),
-                                G_N_ELEMENTS(default_markers), default_markers);
-    gwy_hmarker_box_set_flipped(GWY_HMARKER_BOX(editor->markers), TRUE);
-    gwy_hmarker_box_set_validator(GWY_HMARKER_BOX(editor->markers),
-                                  &gwy_gradient_editor_validate_marker);
+    gwy_marker_box_set_markers(GWY_MARKER_BOX(editor->markers),
+                               G_N_ELEMENTS(default_markers), default_markers);
+    gwy_marker_box_set_flipped(GWY_MARKER_BOX(editor->markers), TRUE);
+    gwy_marker_box_set_validator(GWY_MARKER_BOX(editor->markers),
+                                 &gwy_gradient_editor_validate_marker);
     gtk_box_pack_start(GTK_BOX(vvbox), editor->markers, FALSE, FALSE, 0);
     g_signal_connect_swapped(editor->markers, "marker-selected",
                              G_CALLBACK(gwy_gradient_editor_marker_selected),
@@ -350,8 +350,8 @@ gwy_gradient_editor_update(GwyGradientEditor *editor)
     positions = g_newa(gdouble, npoints);
     for (i = 0; i < npoints; i++)
         positions[i] = points[i].x;
-    gwy_hmarker_box_set_markers(GWY_HMARKER_BOX(editor->markers),
-                                npoints, positions);
+    gwy_marker_box_set_markers(GWY_MARKER_BOX(editor->markers),
+                               npoints, positions);
 
     gwy_gradient_editor_update_curve(editor);
 }
@@ -361,7 +361,7 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
 {
     GwyGradientEditor *editor;
     GtkColorSelection *colorsel;
-    GwyHMarkerBox *hmbox;
+    GwyMarkerBox *hmbox;
     GwyGradientPoint point, prev, next;
     GwyGradient *gradient;
     GwyChannelData *channel_data;
@@ -376,12 +376,12 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
 
     editor = GWY_GRADIENT_EDITOR(res_editor);
     colorsel = GTK_COLOR_SELECTION(editor->colorsel);
-    hmbox = GWY_HMARKER_BOX(editor->markers);
+    hmbox = GWY_MARKER_BOX(editor->markers);
     i = editor->pendop.i;
     switch (editor->pendop.optype)  {
         /* This is both actual move and color change. */
         case GWY_MARKER_OPERATION_MOVE:
-        point.x = gwy_hmarker_box_get_marker_position(hmbox, i);
+        point.x = gwy_marker_box_get_marker_position(hmbox, i);
         gtk_color_selection_get_current_color(colorsel, &gdkcolor);
         gwy_rgba_from_gdk_color(&point.color, &gdkcolor);
         point.color.a = 1.0;    /* FIXME */
@@ -389,7 +389,7 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
         break;
 
         case GWY_MARKER_OPERATION_ADD:
-        point.x = gwy_hmarker_box_get_marker_position(hmbox, i);
+        point.x = gwy_marker_box_get_marker_position(hmbox, i);
         prev = gwy_gradient_get_point(gradient, i-1);
         /* This is would-be-(i+1)-th point, but it's still at i-th position */
         next = gwy_gradient_get_point(gradient, i);
@@ -568,8 +568,8 @@ gwy_gradient_editor_color_changed(GwyGradientEditor *editor)
     g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
                      || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);
     editor->pendop.optype = GWY_MARKER_OPERATION_MOVE;
-    editor->pendop.i = gwy_hmarker_box_get_selected_marker
-                                            (GWY_HMARKER_BOX(editor->markers));
+    editor->pendop.i = gwy_marker_box_get_selected_marker
+                                             (GWY_MARKER_BOX(editor->markers));
     gwy_resource_editor_queue_commit(GWY_RESOURCE_EDITOR(editor));
 }
 

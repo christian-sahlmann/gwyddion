@@ -27,6 +27,7 @@ gwy_hruler_get_type
 gwy_inventory_store_get_type
 gwy_layer_basic_get_type
 gwy_layer_mask_get_type
+gwy_marker_box_get_type
 gwy_pixmap_layer_get_type
 gwy_ruler_get_type
 gwy_sci_text_get_type

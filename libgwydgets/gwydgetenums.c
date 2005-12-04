@@ -143,6 +143,15 @@ gwy_graph_curve_type_get_enum(void)
  **/
 
 /**
+ * GwyMarkerOperationType:
+ * @GWY_MARKER_OPERATION_MOVE: Marker is being moved.
+ * @GWY_MARKER_OPERATION_ADD: Marker is being added.
+ * @GWY_MARKER_OPERATION_REMOVE: Marker is being removed.
+ *
+ * Marker box operation type (for validation).
+ **/
+
+/**
  * SECTION:gwydgetenums
  * @title: gwydgetenums
  * @short_description: Common enumerations

@@ -150,6 +150,12 @@ typedef enum {
 
 const GwyEnum* gwy_graph_curve_type_get_enum(void) G_GNUC_CONST;
 
+typedef enum {
+    GWY_MARKER_OPERATION_MOVE,
+    GWY_MARKER_OPERATION_ADD,
+    GWY_MARKER_OPERATION_REMOVE
+} GwyMarkerOperationType;
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_ENUMS_H__ */

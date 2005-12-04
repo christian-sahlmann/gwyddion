@@ -56,6 +56,7 @@
 #include <libgwydgets/gwyinventorystore.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwymarkerbox.h>
 #include <libgwydgets/gwyoptionmenus.h>
 #include <libgwydgets/gwypixmaplayer.h>
 #include <libgwydgets/gwyradiobuttons.h>

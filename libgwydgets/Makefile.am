@@ -40,6 +40,7 @@ libgwydgetsinclude_HEADERS = \
 	gwyinventorystore.h \
 	gwylayer-basic.h \
 	gwylayer-mask.h \
+	gwymarkerbox.h \
 	gwyoptionmenus.h \
 	gwypixmaplayer.h \
 	gwyradiobuttons.h \
@@ -108,6 +109,7 @@ libgwydgets_la_SOURCES = \
 	gwyinventorystore.c \
 	gwylayer-basic.c \
 	gwylayer-mask.c \
+	gwymarkerbox.c \
 	gwyoptionmenus.c \
 	gwypixmaplayer.c \
 	gwyradiobuttons.c \
