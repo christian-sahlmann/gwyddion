@@ -39,6 +39,9 @@ typedef struct _GwyStatusbarClass GwyStatusbarClass;
 struct _GwyStatusbar {
     GtkStatusbar parent_instance;
 
+    guint context_id;
+    guint message_id;
+
     gpointer reserved1;
     gpointer reserved2;
 };
@@ -52,6 +55,8 @@ struct _GwyStatusbarClass {
 
 GtkWidget*       gwy_statusbar_new              (void);
 GType            gwy_statusbar_get_type         (void) G_GNUC_CONST;
+void             gwy_statusbar_set_markup       (GwyStatusbar *statusbar,
+                                                 const gchar *markup);
 
 G_END_DECLS
 

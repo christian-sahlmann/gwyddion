@@ -43,8 +43,11 @@ gwy_statusbar_class_init(GwyStatusbarClass *klass)
 }
 
 static void
-gwy_statusbar_init(G_GNUC_UNUSED GwyStatusbar *statusbar)
+gwy_statusbar_init(GwyStatusbar *statusbar)
 {
+    statusbar->context_id
+        = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar),
+                                       "GwyStatusbar-global-context");
 }
 
 /**
@@ -77,6 +80,34 @@ gwy_statusbar_update_markup(GtkStatusbar *statusbar,
     gtk_label_set_markup(GTK_LABEL(statusbar->label), text);
 }
 
+/**
+ * gwy_statusbar_set_markup:
+ * @statusbar: A statusbar.
+ * @markup: Text message to display in the statusbar.  It can contain Pango
+ *          markup.
+ *
+ * Sets the text to display in a status bar.
+ *
+ * This method is intended for simple status bars that do not have stacks and
+ * do not need contexts.  It does not mix with gtk_status_bar_push().  You can
+ * use either this simple interface or the full stacks-and-contexts API with
+ * #GwyStatusbar, but not both in the same status bar.
+ **/
+void
+gwy_statusbar_set_markup(GwyStatusbar *statusbar,
+                         const gchar *markup)
+{
+    GtkStatusbar *sbar;
+    guint id;
+
+    sbar = GTK_STATUSBAR(statusbar);
+    id = gtk_statusbar_push(sbar, statusbar->context_id, markup);
+    if (statusbar->message_id)
+        gtk_statusbar_remove(sbar, statusbar->context_id,
+                             statusbar->message_id);
+    statusbar->message_id = id;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -84,8 +115,13 @@ gwy_statusbar_update_markup(GtkStatusbar *statusbar,
  * @title: GwyStatusbar
  * @short_description: Statusbar with Pango markup support
  *
- * This widget is completely identical to #GtkStatusbar except that it
+ * This widget is almost identical to #GtkStatusbar except that it
  * interprets Pango markup in its messages.
+ *
+ * It also provides a simple context-free message method
+ * gwy_statusbar_set_markup() for status bars that do not need all the
+ * complexity of #GtkStatusbar stacks.
+ * 
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

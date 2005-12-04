@@ -213,9 +213,6 @@ gwy_data_window_new(GwyDataView *data_view)
     /***** statusbar *****/
     data_window->statusbar = gwy_statusbar_new();
     gtk_box_pack_start(GTK_BOX(vbox), data_window->statusbar, FALSE, FALSE, 0);
-    data_window->statusbar_context_id
-        = gtk_statusbar_get_context_id(GTK_STATUSBAR(data_window->statusbar),
-                                       "coordinates");
     g_signal_connect(data_view, "motion-notify-event",
                      G_CALLBACK(gwy_data_window_update_statusbar), data_window);
 
@@ -518,9 +515,7 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
     static gchar label[128];
     GwyContainer *data;
     GwyDataField *dfield;
-    GtkStatusbar *sbar = GTK_STATUSBAR(data_window->statusbar);
     const gchar *k;
-    guint id;
     gdouble xreal, yreal, xoff, yoff, value;
     gint x, y;
 
@@ -560,12 +555,7 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
                value/data_window->value_format->magnitude,
                strlen(data_window->value_format->units) ? " " : "",
                data_window->value_format->units);
-    id = gtk_statusbar_push(sbar, data_window->statusbar_context_id, label);
-    if (data_window->statusbar_message_id)
-        gtk_statusbar_remove(sbar,
-                             data_window->statusbar_context_id,
-                             data_window->statusbar_message_id);
-    data_window->statusbar_message_id = id;
+    gwy_statusbar_set_markup(GWY_STATUSBAR(data_window->statusbar), label);
 
     return FALSE;
 }
