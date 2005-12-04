@@ -438,19 +438,6 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
     g_free (vector);
 }
 
-static GdkColor
-get_color_from_rgb(gint red, gint green, gint blue)
-{
-    GdkColor col;
-
-    col.red = 256 * red;
-    col.green = 256 * green;
-    col.blue = 256 * blue;
-    col.pixel = 0;
-
-    return col;
-}
-
 static void
 gwy_curve_draw(GwyCurve *c, gint width, gint height)
 {
