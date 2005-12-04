@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <math.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <glib-object.h>
 #include <gdk/gdk.h>
@@ -713,7 +714,7 @@ gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
 
     plotlabel = g_string_new(axis->label_text->str);
 
-    if (axis->has_unit) {
+    if (axis->has_unit && axis->magnification_string->len > 0 && strlen(gwy_si_unit_get_unit_string(axis->unit))>0) {
         g_string_append(plotlabel, " [");
         if (axis->magnification_string) g_string_append(plotlabel, axis->magnification_string->str);
         else g_string_append(plotlabel, gwy_si_unit_get_unit_string(axis->unit));
@@ -1121,7 +1122,8 @@ gwy_axis_formatticks(GwyAxis *a)
     else
     {
         average = 0;
-        range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));
+        /*range = fabs(pow(10, mjx.t.value) - pow(10, mji.t.value));*/
+        range = 1;
     }
 
     /*move exponents to axis label*/
@@ -1164,14 +1166,14 @@ gwy_axis_formatticks(GwyAxis *a)
             else if (value < 1 && value > 1e-4)
                 g_string_printf(pmjt->ttext,"%.*f", (int)fabs(log10(value)), value);
             else
-                g_string_printf(pmjt->ttext,"%.1E", value);
+                g_string_printf(pmjt->ttext,"%.1e", value);
         }
         else {
             if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_AUTO) {
                 g_string_printf(pmjt->ttext, "%.*f", format->precision, value);
             }
             else if (a->par.major_printmode == GWY_AXIS_SCALE_FORMAT_EXP) {
-                g_string_printf(pmjt->ttext,"%.1E", value);
+                g_string_printf(pmjt->ttext,"%.1e", value);
                 if (value == 0)
                 g_string_printf(pmjt->ttext,"0");
             }
