@@ -59,11 +59,9 @@ static void     gwy_hmarker_box_size_request     (GtkWidget *widget,
 static void     gwy_hmarker_box_size_allocate    (GtkWidget *widget,
                                                   GtkAllocation *allocation);
 static void     gwy_hmarker_box_paint            (GwyHMarkerBox *hmbox);
-static void     gwy_hmarker_box_draw_marker      (GtkWidget *widget,
-                                                  gdouble pos,
-                                                  gboolean selected,
-                                                  gboolean ghost,
-                                                  gboolean flipped);
+static void     gwy_hmarker_box_draw_box         (GwyHMarkerBox *hmbox);
+static void     gwy_hmarker_box_draw_marker      (GwyHMarkerBox *hmbox,
+                                                  gint i);
 static gint     gwy_hmarker_box_find_nearest     (GwyHMarkerBox *hmbox,
                                                   gint x,
                                                   gint y);
@@ -392,11 +390,26 @@ gwy_hmarker_box_size_allocate(GtkWidget *widget,
 static void
 gwy_hmarker_box_paint(GwyHMarkerBox *hmbox)
 {
+    guint i;
+
+    gwy_hmarker_box_draw_box(hmbox);
+
+    for (i = 0; i < hmbox->markers->len; i++) {
+        if (hmbox->highlight && i == hmbox->selected)
+            continue;
+        gwy_hmarker_box_draw_marker(hmbox, i);
+    }
+    /* Draw selected last, `over' other markers */
+    if (hmbox->highlight && hmbox->selected >= 0)
+        gwy_hmarker_box_draw_marker(hmbox, hmbox->selected);
+}
+
+static void
+gwy_hmarker_box_draw_box(GwyHMarkerBox *hmbox)
+{
     GtkWidget *widget;
     GtkStateType state, gcstate;
     gint height, width;
-    gdouble pos;
-    guint i;
 
     widget = GTK_WIDGET(hmbox);
     state = GTK_WIDGET_STATE(widget);
@@ -410,37 +423,29 @@ gwy_hmarker_box_paint(GwyHMarkerBox *hmbox)
         gcstate = GTK_STATE_NORMAL;
     gdk_draw_rectangle(widget->window, widget->style->bg_gc[gcstate],
                        TRUE, 0, 0, width, height);
-
-    for (i = 0; i < hmbox->markers->len; i++) {
-        if (hmbox->highlight && i == hmbox->selected)
-            continue;
-        pos = g_array_index(hmbox->markers, gdouble, i);
-        gwy_hmarker_box_draw_marker(widget, pos, FALSE, FALSE, hmbox->flipped);
-    }
-    /* Draw selected last, `over' other markers */
-    if (hmbox->highlight && hmbox->selected >= 0) {
-        pos = g_array_index(hmbox->markers, gdouble, hmbox->selected);
-        gwy_hmarker_box_draw_marker(widget, pos,
-                                    TRUE, hmbox->ghost, hmbox->flipped);
-    }
 }
 
 static void
-gwy_hmarker_box_draw_marker(GtkWidget *widget,
-                            gdouble pos,
-                            gboolean selected,
-                            gboolean ghost,
-                            gboolean flipped)
+gwy_hmarker_box_draw_marker(GwyHMarkerBox *hmbox,
+                            gint i)
 {
+    GtkWidget *widget;
     GtkStateType state, gcstate;
+    gboolean ghost, selected;
     GdkPoint points[3];
     gint height, width;
+    gdouble pos;
     gint iw, ipos;
 
+    widget = GTK_WIDGET(hmbox);
     state = GTK_WIDGET_STATE(widget);
-
     width = widget->allocation.width;
     height = widget->allocation.height;
+
+    selected = (i == hmbox->selected);
+    ghost = selected && hmbox->ghost;
+    selected = selected && hmbox->highlight;
+    pos = g_array_index(hmbox->markers, gdouble, i);
 
     if (ghost)
         gcstate = GTK_STATE_INSENSITIVE;
@@ -454,7 +459,7 @@ gwy_hmarker_box_draw_marker(GtkWidget *widget,
     points[0].x = ipos - iw;
     points[1].x = ipos + iw;
     points[2].x = ipos;
-    if (flipped) {
+    if (hmbox->flipped) {
         points[0].y = 0;
         points[1].y = 0;
         points[2].y = height-1;
