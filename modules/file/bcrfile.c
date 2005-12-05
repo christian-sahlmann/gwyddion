@@ -72,7 +72,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -221,7 +221,7 @@ file_load_real(const guchar *buffer,
 
     if ((s = g_hash_table_lookup(meta, "ylength"))
         && (q = g_ascii_strtod(s, NULL)) > 0) {
-        if ((s = g_hash_table_lookup(meta, "yunit")))
+        if (!(s = g_hash_table_lookup(meta, "yunit")))
             s = "nm";
 
         siunit2 = gwy_si_unit_new_parse(s, &power10);
