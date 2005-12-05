@@ -127,7 +127,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -315,6 +315,7 @@ fill_data_fields(APEFile *apefile,
                  const guchar *buffer)
 {
     GwyDataField *dfield;
+    GwySIUnit *unit;
     gdouble *data;
     guint n, i, j;
 
@@ -322,6 +323,11 @@ fill_data_fields(APEFile *apefile,
     for (n = 0; n < apefile->ndata; n++) {
         dfield = gwy_data_field_new(apefile->res, apefile->res,
                                     apefile->xreal, apefile->yreal, FALSE);
+        unit = gwy_data_field_get_si_unit_xy(dfield);
+        gwy_si_unit_set_unit_string(unit, "m");
+        unit = gwy_data_field_get_si_unit_z(dfield);
+        gwy_si_unit_set_unit_string(unit, "m");
+
         data = gwy_data_field_get_data(dfield);
         buffer += (apefile->res + 1)*sizeof(float);
         for (i = 0; i < apefile->res; i++) {
