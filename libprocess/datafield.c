@@ -212,9 +212,9 @@ gwy_data_field_serialize(GObject *obj,
 
     data_field = GWY_DATA_FIELD(obj);
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("m");
+        data_field->si_unit_xy = gwy_si_unit_new("");
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("m");
+        data_field->si_unit_z = gwy_si_unit_new("");
     datasize = data_field->xres*data_field->yres;
     cachesize = GWY_DATA_FIELD_CACHE_SIZE;
     cache = data_field->cache;
@@ -252,9 +252,9 @@ gwy_data_field_get_size(GObject *obj)
 
     data_field = GWY_DATA_FIELD(obj);
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("m");
+        data_field->si_unit_xy = gwy_si_unit_new("");
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("m");
+        data_field->si_unit_z = gwy_si_unit_new("");
     datasize = data_field->xres*data_field->yres;
     cache = data_field->cache;
     cachesize = GWY_DATA_FIELD_CACHE_SIZE;
@@ -302,9 +302,6 @@ gwy_data_field_deserialize(const guchar *buffer,
     };
 
     gwy_debug("");
-
-    si_unit_z = NULL;
-    si_unit_xy = NULL;
 
     g_return_val_if_fail(buffer, NULL);
 
@@ -997,7 +994,7 @@ gwy_data_field_set_xoffset(GwyDataField *data_field, gdouble xoff)
  * Sets the Y offset of a data field origin.
  *
  * Note offsets don't affect any calculation, nor functions like
- * gwy_data_field_roti().
+ * gwy_data_field_rtoi().
  **/
 void
 gwy_data_field_set_yoffset(GwyDataField *data_field, gdouble yoff)
@@ -1021,7 +1018,7 @@ gwy_data_field_get_si_unit_xy(GwyDataField *data_field)
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
 
     if (!data_field->si_unit_xy)
-        data_field->si_unit_xy = gwy_si_unit_new("m");
+        data_field->si_unit_xy = gwy_si_unit_new("");
 
     return data_field->si_unit_xy;
 }
@@ -1041,7 +1038,7 @@ gwy_data_field_get_si_unit_z(GwyDataField *data_field)
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
 
     if (!data_field->si_unit_z)
-        data_field->si_unit_z = gwy_si_unit_new("m");
+        data_field->si_unit_z = gwy_si_unit_new("");
 
     return data_field->si_unit_z;
 }

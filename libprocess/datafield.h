@@ -21,10 +21,7 @@
 #ifndef __GWY_DATAFIELD_H__
 #define __GWY_DATAFIELD_H__
 
-#include <glib.h>
-#include <libprocess/gwyprocessenums.h>
 #include <libprocess/dataline.h>
-#include <libgwyddion/gwysiunit.h>
 
 G_BEGIN_DECLS
 
