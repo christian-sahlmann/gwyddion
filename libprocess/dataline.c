@@ -100,6 +100,8 @@ gwy_data_line_finalize(GObject *object)
 {
     GwyDataLine *data_line = (GwyDataLine*)object;
 
+    gwy_object_unref(data_line->si_unit_x);
+    gwy_object_unref(data_line->si_unit_z);
     g_free(data_line->data);
 
     G_OBJECT_CLASS(gwy_data_line_parent_class)->finalize(object);
@@ -139,6 +141,11 @@ gwy_data_line_new_alike(GwyDataLine *model,
     else
         data_line->data = g_new(gdouble, data_line->res);
 
+    if (model->si_unit_x)
+        data_line->si_unit_x = gwy_si_unit_duplicate(model->si_unit_x);
+    if (model->si_unit_z)
+        data_line->si_unit_z = gwy_si_unit_duplicate(model->si_unit_z);
+
     return data_line;
 }
 
@@ -154,12 +161,18 @@ gwy_data_line_serialize(GObject *obj,
     g_return_val_if_fail(GWY_IS_DATA_LINE(obj), NULL);
 
     data_line = GWY_DATA_LINE(obj);
+    if (!data_line->si_unit_x)
+        data_line->si_unit_x = gwy_si_unit_new("");
+    if (!data_line->si_unit_z)
+        data_line->si_unit_z = gwy_si_unit_new("");
     poff = data_line->off ? &data_line->off : NULL;
     {
         GwySerializeSpec spec[] = {
             { 'i', "res", &data_line->res, NULL, },
             { 'd', "real", &data_line->real, NULL, },
             { 'd', "off", poff, NULL, },
+            { 'o', "si_unit_x", &data_line->si_unit_x, NULL, },
+            { 'o', "si_unit_z", &data_line->si_unit_z, NULL, },
             { 'D', "data", &data_line->data, &data_line->res, },
         };
 
@@ -178,11 +191,17 @@ gwy_data_line_get_size(GObject *obj)
     g_return_val_if_fail(GWY_IS_DATA_LINE(obj), 0);
 
     data_line = GWY_DATA_LINE(obj);
+    if (!data_line->si_unit_x)
+        data_line->si_unit_x = gwy_si_unit_new("");
+    if (!data_line->si_unit_z)
+        data_line->si_unit_z = gwy_si_unit_new("");
     {
         GwySerializeSpec spec[] = {
             { 'i', "res", &data_line->res, NULL, },
             { 'd', "real", &data_line->real, NULL, },
             { 'd', "off", &data_line->off, NULL, },
+            { 'o', "si_unit_x", &data_line->si_unit_x, NULL, },
+            { 'o', "si_unit_z", &data_line->si_unit_z, NULL, },
             { 'D', "data", &data_line->data, &data_line->res, },
         };
 
@@ -199,11 +218,14 @@ gwy_data_line_deserialize(const guchar *buffer,
     guint32 fsize;
     gint res;
     gdouble real, off = 0.0, *data = NULL;
+    GwySIUnit *si_unit_x = NULL, *si_unit_z = NULL;
     GwyDataLine *data_line;
     GwySerializeSpec spec[] = {
       { 'i', "res", &res, NULL, },
       { 'd', "real", &real, NULL, },
       { 'd', "off", &off, NULL, },
+      { 'o', "si_unit_x", &si_unit_x, NULL, },
+      { 'o', "si_unit_z", &si_unit_z, NULL, },
       { 'D', "data", &data, &fsize, },
     };
 
@@ -214,12 +236,16 @@ gwy_data_line_deserialize(const guchar *buffer,
                                             GWY_DATA_LINE_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
+        gwy_object_unref(si_unit_x);
+        gwy_object_unref(si_unit_z);
         return NULL;
     }
     if (fsize != (guint)res) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_DATA_LINE_TYPE_NAME, fsize, res);
         g_free(data);
+        gwy_object_unref(si_unit_x);
+        gwy_object_unref(si_unit_z);
         return NULL;
     }
 
@@ -229,6 +255,16 @@ gwy_data_line_deserialize(const guchar *buffer,
     data_line->res = res;
     data_line->off = off;
     data_line->data = data;
+    if (si_unit_z) {
+        if (data_line->si_unit_z != NULL)
+            gwy_object_unref(data_line->si_unit_z);
+        data_line->si_unit_z = si_unit_z;
+    }
+    if (si_unit_x) {
+        if (data_line->si_unit_x != NULL)
+            gwy_object_unref(data_line->si_unit_x);
+        data_line->si_unit_x = si_unit_x;
+    }
 
     return (GObject*)data_line;
 }
@@ -263,6 +299,23 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
     }
     clone->real = data_line->real;
     memcpy(clone->data, data_line->data, data_line->res*sizeof(gdouble));
+
+    /* SI Units can be NULL */
+    if (data_line->si_unit_x && clone->si_unit_x)
+        gwy_serializable_clone(G_OBJECT(data_line->si_unit_x),
+                               G_OBJECT(clone->si_unit_x));
+    else if (data_line->si_unit_x && !clone->si_unit_x)
+        clone->si_unit_x = gwy_si_unit_duplicate(data_line->si_unit_x);
+    else if (!data_line->si_unit_x && clone->si_unit_x)
+        gwy_object_unref(clone->si_unit_x);
+
+    if (data_line->si_unit_z && clone->si_unit_z)
+        gwy_serializable_clone(G_OBJECT(data_line->si_unit_z),
+                               G_OBJECT(clone->si_unit_z));
+    else if (data_line->si_unit_z && !clone->si_unit_z)
+        clone->si_unit_z = gwy_si_unit_duplicate(data_line->si_unit_z);
+    else if (!data_line->si_unit_z && clone->si_unit_z)
+        gwy_object_unref(clone->si_unit_z);
 }
 
 /**
@@ -370,6 +423,11 @@ gwy_data_line_part_extract(GwyDataLine *data_line,
     result = gwy_data_line_new(len, data_line->real*len/data_line->res, FALSE);
     memcpy(result->data, data_line->data + from, len*sizeof(gdouble));
 
+    if (data_line->si_unit_x)
+        result->si_unit_x = gwy_si_unit_duplicate(data_line->si_unit_x);
+    if (data_line->si_unit_z)
+        result->si_unit_z = gwy_si_unit_duplicate(data_line->si_unit_z);
+
     return result;
 }
 
@@ -380,6 +438,9 @@ gwy_data_line_part_extract(GwyDataLine *data_line,
  *
  * Copies the contents of a data line to another already allocated data line
  * of the same size.
+ *
+ * <warning>Semantic of method differs from gwy_data_field_copy(), it copies
+ * only data.  It will be probably changed.</warning>
  **/
 void
 gwy_data_line_copy(GwyDataLine *a, GwyDataLine *b)
@@ -563,7 +624,7 @@ gwy_data_line_get_offset(GwyDataLine *data_line)
  * Sets the offset of a data line origin.
  *
  * Note offsets don't affect any calculation, nor functions like
- * gwy_data_line_roti().
+ * gwy_data_line_rtoi().
  **/
 void
 gwy_data_line_set_offset(GwyDataLine *data_line,
@@ -571,6 +632,157 @@ gwy_data_line_set_offset(GwyDataLine *data_line,
 {
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     data_line->off = offset;
+}
+
+/**
+ * gwy_data_line_get_si_unit_x:
+ * @data_line: A data line.
+ *
+ * Returns lateral SI unit of a data line.
+ *
+ * Returns: SI unit corresponding to the lateral (X) dimension of the data
+ *          line.  Its reference count is not incremented.
+ **/
+GwySIUnit*
+gwy_data_line_get_si_unit_x(GwyDataLine *data_line)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+
+    if (!data_line->si_unit_x)
+        data_line->si_unit_x = gwy_si_unit_new("");
+
+    return data_line->si_unit_x;
+}
+
+/**
+ * gwy_data_line_get_si_unit_z:
+ * @data_line: A data line.
+ *
+ * Returns value SI unit of a data line.
+ *
+ * Returns: SI unit corresponding to the "height" (Z) dimension of the data
+ *          line.  Its reference count is not incremented.
+ **/
+GwySIUnit*
+gwy_data_line_get_si_unit_z(GwyDataLine *data_line)
+{
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+
+    if (!data_line->si_unit_z)
+        data_line->si_unit_z = gwy_si_unit_new("");
+
+    return data_line->si_unit_z;
+}
+
+/**
+ * gwy_data_line_set_si_unit_x:
+ * @data_line: A data line.
+ * @si_unit: SI unit to be set.
+ *
+ * Sets the SI unit corresponding to the lateral (X) dimension of a data
+ * line.
+ *
+ * It does not assume a reference on @si_unit, instead it adds its own
+ * reference.
+ **/
+void
+gwy_data_line_set_si_unit_x(GwyDataLine *data_line,
+                            GwySIUnit *si_unit)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
+    if (data_line->si_unit_x == si_unit)
+        return;
+
+    gwy_object_unref(data_line->si_unit_x);
+    g_object_ref(si_unit);
+    data_line->si_unit_x = si_unit;
+}
+
+/**
+ * gwy_data_line_set_si_unit_z:
+ * @data_line: A data line.
+ * @si_unit: SI unit to be set.
+ *
+ * Sets the SI unit corresponding to the "height" (Z) dimension of a data
+ * line.
+ *
+ * It does not assume a reference on @si_unit, instead it adds its own
+ * reference.
+ **/
+void
+gwy_data_line_set_si_unit_z(GwyDataLine *data_line,
+                            GwySIUnit *si_unit)
+{
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_SI_UNIT(si_unit));
+    if (data_line->si_unit_z == si_unit)
+        return;
+
+    gwy_object_unref(data_line->si_unit_z);
+    g_object_ref(si_unit);
+    data_line->si_unit_z = si_unit;
+}
+
+/**
+ * gwy_data_line_get_value_format_x:
+ * @data_line: A data line.
+ * @style: Unit format style.
+ * @format: A SI value format to modify, or %NULL to allocate a new one.
+ *
+ * Finds value format good for displaying coordinates of a data line.
+ *
+ * Returns: The value format.  If @format is %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_data_line_get_value_format_x(GwyDataLine *data_line,
+                                   GwySIUnitFormatStyle style,
+                                   GwySIValueFormat *format)
+{
+    gdouble max, unit;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+
+    max = data_line->real;
+    unit = data_line->real/data_line->res;
+    return gwy_si_unit_get_format_with_resolution
+                                   (gwy_data_line_get_si_unit_x(data_line),
+                                    style, max, unit, format);
+}
+
+/**
+ * gwy_data_line_get_value_format_z:
+ * @data_line: A data line.
+ * @style: Unit format style.
+ * @format: A SI value format to modify, or %NULL to allocate a new one.
+ *
+ * Finds value format good for displaying values of a data line.
+ *
+ * Note this functions searches for minimum and maximum value in @data_line,
+ * therefore it's relatively slow.
+ *
+ * Returns: The value format.  If @format is %NULL, a newly allocated format
+ *          is returned, otherwise (modified) @format itself is returned.
+ **/
+GwySIValueFormat*
+gwy_data_line_get_value_format_z(GwyDataLine *data_line,
+                                  GwySIUnitFormatStyle style,
+                                  GwySIValueFormat *format)
+{
+    gdouble max, min;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), NULL);
+
+    max = gwy_data_line_get_max(data_line);
+    min = gwy_data_line_get_min(data_line);
+    if (max == min) {
+        max = ABS(max);
+        min = 0.0;
+    }
+
+    return gwy_si_unit_get_format(gwy_data_line_get_si_unit_z(data_line),
+                                  style, max - min, format);
 }
 
 /**
