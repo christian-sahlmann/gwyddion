@@ -132,11 +132,11 @@ export_dialog(GwyGraph *graph)
 {
     controls.model = graph->graph_model;
     
-    dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
+    dialog = gtk_dialog_new_with_buttons(_("Export ASCII"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
