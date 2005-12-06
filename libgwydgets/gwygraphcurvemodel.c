@@ -27,6 +27,7 @@
 #include "gwygraphcurvemodel.h"
 #include "gwydgettypes.h"
 
+
 #define GWY_GRAPH_CURVE_MODEL_TYPE_NAME "GwyGraphCurveModel"
 
 static void     gwy_graph_curve_model_finalize         (GObject *object);

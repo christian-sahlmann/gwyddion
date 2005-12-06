@@ -284,6 +284,7 @@ gwy_graph_refresh(GwyGraph *graph)
     const gdouble *xdata, *ydata;
     gboolean has_data;
 
+    
     if (graph->graph_model == NULL)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);

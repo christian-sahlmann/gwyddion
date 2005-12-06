@@ -34,7 +34,6 @@
 #include "gwydgetutils.h"
 #include "gwygraphselections.h"
 
-#include "stdio.h"
 enum {
     SELECTED_SIGNAL,
     ZOOMED_SIGNAL,
@@ -91,8 +90,7 @@ static void     gwy_graph_label_entry_cb          (GwyGraphLabelDialog *dialog,
                                                      gpointer user_data);
 
 static void    gwy_graph_area_adjust_label          (GwyGraphArea *area, gint x, gint y);
-/*static void     zoom                                (GtkWidget *widget);*/
-/* Local data */
+static void    gwy_graph_area_repos_label           (GwyGraphArea *area);
 
 
 typedef struct _GtkLayoutChild   GtkLayoutChild;
@@ -281,7 +279,6 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GwyGraphArea *area;
     GtkAllocation *lab_alloc;
-    gwy_debug("");
     gdouble rx, ry;
 
     area = GWY_GRAPH_AREA(widget);
@@ -1128,6 +1125,14 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 }
 
 
+static void
+gwy_graph_area_repos_label(GwyGraphArea *area)
+{
+    gwy_graph_area_adjust_label(area, 
+           GTK_WIDGET(area)->allocation.width - GWY_GRAPH_LABEL(area->lab)->reqwidth - 5,//GTK_WIDGET(area->lab)->allocation.width - 5,
+           5);
+}
+
 /**
  * gwy_graph_area_signal_refresh:
  * @area: graph area
@@ -1137,21 +1142,28 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
+    gint i;
+
     /*refresh label*/
     if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
     {
         gtk_widget_show(GTK_WIDGET(area->lab));
-
         gwy_graph_label_refresh(area->lab);
-        if (area->x0 == 0 && area->y0 == 0)
-        gwy_graph_area_adjust_label(area, 
-                GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
-                5);
+
+        if (area->x0 == 0 && area->y0 == 0) 
+                gwy_graph_area_adjust_label(area, 
+                    GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
+                    5);
     }
     else
         gtk_widget_hide(GTK_WIDGET(area->lab));
 
-
+    /*reconnect signals?*/
+    g_signal_connect_swapped(
+              GWY_GRAPH_MODEL(area->graph_model),
+              "notify",
+              G_CALLBACK(gwy_graph_area_repos_label), area);
+ 
     /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
@@ -1166,8 +1178,19 @@ gwy_graph_area_refresh(GwyGraphArea *area)
 void
 gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
 {
+    gint i;
+    
     area->graph_model = gmodel;
     gwy_graph_label_set_model(area->lab, gmodel);
+
+    for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
+    {
+        g_signal_connect_swapped(
+                             gwy_graph_model_get_curve_by_index(GWY_GRAPH_MODEL(gmodel), i), 
+                             "notify",
+                             G_CALLBACK(gwy_graph_area_repos_label), area);
+    }
+       
     gwy_graph_area_refresh(area);
 }
 
