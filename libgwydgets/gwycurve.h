@@ -148,9 +148,11 @@ void        gwy_curve_set_channels          (GwyCurve *c,
                                              GwyRGBA *colors);
 
 void        gwy_curve_set_control_points    (GwyCurve *curve,
-                                             GwyChannelData *channel_data);
+                                             GwyChannelData *channel_data,
+                                             gboolean prune);
 void        gwy_curve_get_control_points    (GwyCurve *curve,
-                                             GwyChannelData *channel_data);
+                                             GwyChannelData *channel_data,
+                                             gboolean triplets);
 
 G_END_DECLS
 

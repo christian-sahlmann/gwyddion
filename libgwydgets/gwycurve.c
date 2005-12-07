@@ -893,7 +893,8 @@ gwy_curve_set_channels(GwyCurve *c, gint num_channels, GwyRGBA *colors)
 }
 
 void
-gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
+gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
+                             gboolean prune)
 {
     GArray *remove_points;
     gint width, height;
@@ -903,7 +904,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
     GwyChannelData *channel;
 
     /* Copy the control point data out of channel_data into our curve */
-    for (c_index=0; c_index<3; c_index++) {
+    for (c_index=0; c_index<curve->num_channels; c_index++) {
         channel = &curve->channel_data[c_index];
 
         if (channel->ctlpoints)
@@ -917,64 +918,51 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data)
         }
     }
 
-    /* Show the slopes of each line segment for red */
-    g_debug("\n\n\n\n\n\nSLOPES:");
-    channel = &curve->channel_data[0];
-    for (i=0; i<channel->num_ctlpoints-1; i++) {
-        g_debug("Slope: %f",
-        find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
-                   channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y));
-    }
-
-    g_debug("Compare:");
-
     /* Redundant Control Point Pruning: */
-    for (c_index=0; c_index<3; c_index++) {
-        channel = &curve->channel_data[c_index];
+    if (prune) {
+        for (c_index=0; c_index<curve->num_channels; c_index++) {
+            channel = &curve->channel_data[c_index];
 
-        /* Mark redundant control points for removal (by comparing slopes) */
-        remove_points = g_array_new(FALSE, TRUE, sizeof(gint));
-        for (i=0; i<channel->num_ctlpoints-2; i++) {
-            slope1 =
-            find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
-                       channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
-            slope2 =
-            find_slope(channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y,
-                       channel->ctlpoints[i+2].x, channel->ctlpoints[i+2].y);
+            /* Mark redundant control points for removal
+               (by comparing slopes) */
+            remove_points = g_array_new(FALSE, TRUE, sizeof(gint));
+            for (i=0; i<channel->num_ctlpoints-2; i++) {
+                slope1 =
+                find_slope(channel->ctlpoints[i].x, channel->ctlpoints[i].y,
+                        channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y);
+                slope2 =
+                find_slope(channel->ctlpoints[i+1].x, channel->ctlpoints[i+1].y,
+                        channel->ctlpoints[i+2].x, channel->ctlpoints[i+2].y);
 
-            if (c_index==0) {
-                g_debug("Slope1: %f  Slope2: %f  diff: %f", slope1, slope2,
-                        fabs(slope1 - slope2));
+                if (compare_slopes(slope1, slope2)) {
+                    val = i+1;
+                    g_array_append_val(remove_points, val);
+                }
             }
 
-            if (compare_slopes(slope1, slope2)) {
-                val = i+1;
-                g_array_append_val(remove_points, val);
+            /* Delete marked control points: */
+            for (i=0; i < remove_points->len; i++) {
+                val = g_array_index(remove_points, gint, i);
+                channel->ctlpoints[val].x = -1;
             }
-        }
-
-        /* Delete marked control points: */
-        for (i=0; i < remove_points->len; i++) {
-            val = g_array_index(remove_points, gint, i);
-            channel->ctlpoints[val].x = -1;
-        }
-        g_array_free(remove_points, TRUE);
-        for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
-            if (channel->ctlpoints[src].x >= curve->min_x) {
-                memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
-                    sizeof(GwyPoint));
-                ++dst;
+            g_array_free(remove_points, TRUE);
+            for (src = dst = 0; src < channel->num_ctlpoints; ++src) {
+                if (channel->ctlpoints[src].x >= curve->min_x) {
+                    memcpy(channel->ctlpoints + dst, channel->ctlpoints + src,
+                        sizeof(GwyPoint));
+                    ++dst;
+                }
             }
-        }
-        if (dst < src) {
-            channel->num_ctlpoints -= (src - dst);
-            if (channel->num_ctlpoints <= 0) {
-                channel->num_ctlpoints = 1;
-                channel->ctlpoints[0].x = curve->min_x;
-                channel->ctlpoints[0].y = curve->min_y;
+            if (dst < src) {
+                channel->num_ctlpoints -= (src - dst);
+                if (channel->num_ctlpoints <= 0) {
+                    channel->num_ctlpoints = 1;
+                    channel->ctlpoints[0].x = curve->min_x;
+                    channel->ctlpoints[0].y = curve->min_y;
+                }
+                channel->ctlpoints = g_realloc(channel->ctlpoints,
+                                    channel->num_ctlpoints * sizeof(GwyPoint));
             }
-            channel->ctlpoints = g_realloc(channel->ctlpoints,
-                                channel->num_ctlpoints * sizeof(GwyPoint));
         }
     }
 
@@ -1012,7 +1000,8 @@ ctlpoint_compare_func(gconstpointer a, gconstpointer b)
 }
 
 void
-gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
+gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
+                             gboolean triplets)
 {
     GwyChannelData *channel, *curve_channel, *other_channel;
     gint c_index, i, j, k;

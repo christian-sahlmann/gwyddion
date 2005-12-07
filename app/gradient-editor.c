@@ -515,7 +515,7 @@ gwy_gradient_editor_update_curve(GwyGradientEditor *editor)
 
     /* Send these control points to the GwyCuve. Note that GwyCurve will
        copy out the channel data, so we must still free the array */
-    gwy_curve_set_control_points(GWY_CURVE(editor->curve), channel_data);
+    gwy_curve_set_control_points(GWY_CURVE(editor->curve), channel_data, TRUE);
 
     for (i = 0; i < 3; i++) {
         g_free(channel_data[i].ctlpoints);
