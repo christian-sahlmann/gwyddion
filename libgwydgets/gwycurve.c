@@ -50,6 +50,9 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
+/*TODO: Cleanup curve creation, add constructor parameters, deal with
+        curve_init, range set, channel set*/
+/*TODO: Update Devel documentation */
 /*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
@@ -234,7 +237,7 @@ gwy_curve_class_init (GwyCurveClass *class)
 static void
 gwy_curve_init(GwyCurve *curve)
 {
-    GwyRGBA colors[3];
+    GwyRGBA color;
     gint old_mask;
     gint i;
 
@@ -244,11 +247,9 @@ gwy_curve_init(GwyCurve *curve)
     curve->height = 0;
     curve->grab_point = -1;
     curve->grab_channel = -1;
-    curve->num_channels = 3; /*Red, Green, Blue*/
+    curve->num_channels = 3;
 
-    colors[0].r = 1; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
-    colors[1].r = 0; colors[1].g = 1; colors[1].b = 0; colors[0].a = 1;
-    colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[0].a = 1;
+    color.r = 0; color.b = 0; color.g = 0; color.a = 1;
 
     curve->channel_data = g_new(GwyChannelData, curve->num_channels);
     for (i=0; i<curve->num_channels; i++) {
@@ -256,7 +257,7 @@ gwy_curve_init(GwyCurve *curve)
         curve->channel_data[i].points = NULL;
         curve->channel_data[i].num_ctlpoints = 0;
         curve->channel_data[i].ctlpoints = NULL;
-        curve->channel_data[i].color = colors[i];
+        curve->channel_data[i].color = color;
     }
 
     curve->min_x = 0.0;
@@ -1086,6 +1087,55 @@ gwy_curve_set_range (GwyCurve *curve,
 
   gwy_curve_size_graph (curve);
   gwy_curve_reset_vector (curve);
+}
+
+void
+gwy_curve_set_channels(GwyCurve *c, gint num_channels, GwyRGBA *colors)
+{
+    gint width, height;
+    gint i;
+    GwyRGBA color;
+
+    if (c->num_channels != num_channels) {
+
+        /* Free up old channels */
+        for (i=0; i<c->num_channels; i++) {
+            if (c->channel_data[i].points)
+                g_free(c->channel_data[i].points);
+            if (c->channel_data[i].ctlpoints)
+                g_free(c->channel_data[i].ctlpoints);
+        }
+        g_free(c->channel_data);
+
+        /* Create new channels and reset them */
+        c->num_channels = num_channels;
+        color.r = 1; color.b = 0; color.g = 0; color.a = 1;
+
+        c->channel_data = g_new(GwyChannelData, c->num_channels);
+        for (i=0; i<c->num_channels; i++) {
+            c->channel_data[i].num_points = 0;
+            c->channel_data[i].points = NULL;
+            c->channel_data[i].num_ctlpoints = 2;
+            c->channel_data[i].ctlpoints = g_new(GwyPoint, 2);
+            c->channel_data[i].ctlpoints[0].x = c->min_x;
+            c->channel_data[i].ctlpoints[0].y = c->min_y;
+            c->channel_data[i].ctlpoints[1].x = c->max_x;
+            c->channel_data[i].ctlpoints[1].y = c->max_y;
+            c->channel_data[i].color = color;
+        }
+    }
+
+    if (colors)
+        for (i=0; i<c->num_channels; i++)
+            c->channel_data[i].color = colors[i];
+
+    if (c->pixmap) {
+        width = GTK_WIDGET(c)->allocation.width - RADIUS * 2;
+        height = GTK_WIDGET(c)->allocation.height - RADIUS * 2;
+
+        gwy_curve_interpolate(c, width, height);
+        gwy_curve_draw(c, width, height);
+    }
 }
 
 void
