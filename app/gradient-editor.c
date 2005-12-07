@@ -259,7 +259,7 @@ gwy_gradient_editor_construct(GwyResourceEditor *res_editor)
     colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[2].a = 1;
     gwy_curve_set_channels(GWY_CURVE(editor->curve), 3, colors);
     gtk_box_pack_start(GTK_BOX(vbox), editor->curve, TRUE, TRUE, 0);
-    gtk_widget_set_size_request(editor->curve, 300, 200);
+    gtk_widget_set_size_request(editor->curve, 400, 200);
     g_signal_connect_swapped(editor->curve, "curve-edited",
                              G_CALLBACK(gwy_gradient_editor_curve_edited),
                              editor);

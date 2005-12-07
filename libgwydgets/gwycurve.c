@@ -50,10 +50,7 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
-/*TODO: Cleanup curve creation, add constructor parameters, deal with
-        curve_init, range set, channel set*/
 /*TODO: Update Devel documentation */
-/*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
 /*BUG: Last line on right side sometimes draws to zero for no reason? */
@@ -89,12 +86,12 @@
 #define wrap(val) if (val > 2) val-=3;
 
 enum {
-  PROP_0,
-  PROP_CURVE_TYPE,
-  PROP_MIN_X,
-  PROP_MAX_X,
-  PROP_MIN_Y,
-  PROP_MAX_Y
+    PROP_0,
+    PROP_CURVE_TYPE,
+    PROP_MIN_X,
+    PROP_MAX_X,
+    PROP_MIN_Y,
+    PROP_MAX_Y
 };
 
 static GtkDrawingAreaClass *parent_class = NULL;
@@ -102,118 +99,112 @@ static guint curve_type_changed_signal = 0;
 static guint curve_edited_signal = 0;
 
 
-/* forward declarations: */
-static void gwy_curve_class_init    (GwyCurveClass *class);
-static void gwy_curve_init          (GwyCurve *curve);
-static void gwy_curve_get_property  (GObject *object,
-                                     guint param_id,
-                                     GValue *value,
-                                     GParamSpec *pspec);
-static void gwy_curve_set_property  (GObject *object,
-                                     guint param_id,
-                                     const GValue *value,
-                                     GParamSpec *pspec);
-static void gwy_curve_finalize      (GObject *object);
-static void gwy_curve_size_graph    (GwyCurve *curve);
+/* Private Class Functions: */
+static void gwy_curve_class_init            (GwyCurveClass *class);
+static void gwy_curve_get_property          (GObject *object,
+                                             guint param_id,
+                                             GValue *value,
+                                             GParamSpec *pspec);
+static void gwy_curve_set_property          (GObject *object,
+                                             guint param_id,
+                                             const GValue *value,
+                                             GParamSpec *pspec);
 
-static gboolean gwy_curve_configure      (GwyCurve *c);
-static gboolean gwy_curve_expose         (GwyCurve *c);
-static gboolean gwy_curve_button_press   (GtkWidget *widget,
-                                          GdkEventButton *event,
-                                          GwyCurve *c);
-static gboolean gwy_curve_button_release (GtkWidget *widget,
-                                          GdkEventButton *event,
-                                          GwyCurve *c);
-static gboolean gwy_curve_motion_notify  (GwyCurve *c);
+/* Constructor and Destructor */
+static void gwy_curve_init                  (GwyCurve *curve);
+static void gwy_curve_finalize              (GObject *object);
 
-GType
-gwy_curve_get_type (void)
-{
-  static GType curve_type = 0;
+/* Signal Handlers */
+static gboolean gwy_curve_configure         (GwyCurve *c);
+static gboolean gwy_curve_expose            (GwyCurve *c);
+static gboolean gwy_curve_button_press      (GtkWidget *widget,
+                                             GdkEventButton *event,
+                                             GwyCurve *c);
+static gboolean gwy_curve_button_release    (GtkWidget *widget,
+                                             GdkEventButton *event,
+                                             GwyCurve *c);
+static gboolean gwy_curve_motion_notify     (GwyCurve *c);
 
-  if (!curve_type)
-    {
-      static const GTypeInfo curve_info =
-      {
-    sizeof (GwyCurveClass),
-    NULL,       /* base_init */
-    NULL,       /* base_finalize */
-    (GClassInitFunc) gwy_curve_class_init,
-    NULL,       /* class_finalize */
-    NULL,       /* class_data */
-    sizeof (GwyCurve),
-    0,      /* n_preallocs */
-    (GInstanceInitFunc) gwy_curve_init,
-    NULL        /* value_table */
-      };
+/* Private Methods */
+static void     gwy_curve_draw                  (GwyCurve *c,
+                                                 gint width, gint height);
+void            gwy_curve_get_vector            (GwyCurve *c, gint c_index,
+                                                 gint veclen, gfloat vector[]);
+static void     gwy_curve_reset_vector          (GwyCurve *curve);
+static void     gwy_curve_size_graph            (GwyCurve *curve);
 
-      curve_type = g_type_register_static (GTK_TYPE_DRAWING_AREA, "GwyCurve",
-                       &curve_info, 0);
-    }
-  return curve_type;
-}
+/* Helper Functions */
+static void     gwy_curve_interpolate           (GwyCurve *c,
+                                                 gint width, gint height);
+static int      project                         (gfloat value, gfloat min,
+                                                 gfloat max, int norm);
+static gfloat   unproject                       (gint value, gfloat min,
+                                                 gfloat max, int norm);
+static void     spline_solve                    (int n, gfloat x[],
+                                                 gfloat y[], gfloat y2[]);
+static gfloat   spline_eval                     (int n, gfloat x[], gfloat y[],
+                                                 gfloat y2[], gfloat val);
 
+/* Private Class Functions: */
 static void
 gwy_curve_class_init (GwyCurveClass *class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (class);
+    GObjectClass *gobject_class = G_OBJECT_CLASS (class);
+    parent_class = g_type_class_peek_parent (class);
+    gobject_class->finalize = gwy_curve_finalize;
+    gobject_class->set_property = gwy_curve_set_property;
+    gobject_class->get_property = gwy_curve_get_property;
 
-  parent_class = g_type_class_peek_parent (class);
-
-  gobject_class->finalize = gwy_curve_finalize;
-
-  gobject_class->set_property = gwy_curve_set_property;
-  gobject_class->get_property = gwy_curve_get_property;
-
-  g_object_class_install_property (gobject_class,
-                   PROP_CURVE_TYPE,
-                   g_param_spec_enum ("curve-type",
-                              "Curve type",
-                  "Is this curve linear, spline interpolated, or free-form",
-                              GWY_TYPE_CURVE_TYPE,
-                              GWY_CURVE_TYPE_LINEAR,
-                              G_PARAM_READABLE |
-                              G_PARAM_WRITABLE));
-  g_object_class_install_property (gobject_class,
-                   PROP_MIN_X,
-                   g_param_spec_float ("min-x",
-                               "Minimum X",
-                               "Minimum possible value for X",
-                               -G_MAXFLOAT,
-                               G_MAXFLOAT,
-                               0.0,
-                               G_PARAM_READABLE |
-                               G_PARAM_WRITABLE));
-  g_object_class_install_property (gobject_class,
-                   PROP_MAX_X,
-                   g_param_spec_float ("max-x",
-                               "Maximum X",
-                               "Maximum possible X value",
-                               -G_MAXFLOAT,
-                               G_MAXFLOAT,
-                                                       1.0,
-                               G_PARAM_READABLE |
-                               G_PARAM_WRITABLE));
-  g_object_class_install_property (gobject_class,
-                   PROP_MIN_Y,
-                   g_param_spec_float ("min-y",
-                               "Minimum Y",
-                               "Minimum possible value for Y",
-                                                       -G_MAXFLOAT,
-                               G_MAXFLOAT,
-                               0.0,
-                               G_PARAM_READABLE |
-                               G_PARAM_WRITABLE));
-  g_object_class_install_property (gobject_class,
-                   PROP_MAX_Y,
-                   g_param_spec_float ("max-y",
-                               "Maximum Y",
-                               "Maximum possible value for Y",
-                               -G_MAXFLOAT,
-                               G_MAXFLOAT,
-                               1.0,
-                               G_PARAM_READABLE |
-                               G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_CURVE_TYPE,
+                                    g_param_spec_enum("curve-type",
+                                        "Curve type",
+                                        "Is this curve linear, spline "
+                                        "interpolated, or free-form",
+                                        GWY_TYPE_CURVE_TYPE,
+                                        GWY_CURVE_TYPE_LINEAR,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_MIN_X,
+                                    g_param_spec_float("min-x",
+                                        "Minimum X",
+                                        "Minimum possible value for X",
+                                        -G_MAXFLOAT,
+                                        G_MAXFLOAT,
+                                        0.0,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_MAX_X,
+                                    g_param_spec_float("max-x",
+                                        "Maximum X",
+                                        "Maximum possible X value",
+                                        -G_MAXFLOAT,
+                                        G_MAXFLOAT,
+                                        1.0,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_MIN_Y,
+                                    g_param_spec_float("min-y",
+                                        "Minimum Y",
+                                        "Minimum possible value for Y",
+                                        -G_MAXFLOAT,
+                                        G_MAXFLOAT,
+                                        0.0,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
+    g_object_class_install_property(gobject_class,
+                                    PROP_MAX_Y,
+                                    g_param_spec_float ("max-y",
+                                        "Maximum Y",
+                                        "Maximum possible value for Y",
+                                        -G_MAXFLOAT,
+                                        G_MAXFLOAT,
+                                        1.0,
+                                        G_PARAM_READABLE |
+                                        G_PARAM_WRITABLE));
 
     curve_type_changed_signal =
         g_signal_new ("curve-type-changed",
@@ -234,6 +225,79 @@ gwy_curve_class_init (GwyCurveClass *class)
                       G_TYPE_NONE, 0);
 }
 
+static void
+gwy_curve_get_property(GObject *object, guint prop_id,
+                       GValue *value, GParamSpec *pspec)
+{
+    GwyCurve *curve = GWY_CURVE (object);
+
+    switch (prop_id)
+    {
+        case PROP_CURVE_TYPE:
+        g_value_set_enum(value, curve->curve_type);
+        break;
+
+        case PROP_MIN_X:
+        g_value_set_float(value, curve->min_x);
+        break;
+
+        case PROP_MAX_X:
+        g_value_set_float(value, curve->max_x);
+        break;
+
+        case PROP_MIN_Y:
+        g_value_set_float(value, curve->min_y);
+        break;
+
+        case PROP_MAX_Y:
+        g_value_set_float(value, curve->max_y);
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gwy_curve_set_property(GObject *object, guint prop_id,
+                       const GValue *value, GParamSpec *pspec)
+{
+    GwyCurve *curve = GWY_CURVE(object);
+
+    switch (prop_id)
+    {
+        case PROP_CURVE_TYPE:
+        gwy_curve_set_curve_type(curve, g_value_get_enum (value));
+        break;
+
+        case PROP_MIN_X:
+        gwy_curve_set_range(curve, g_value_get_float(value), curve->max_x,
+                            curve->min_y, curve->max_y);
+        break;
+
+        case PROP_MAX_X:
+        gwy_curve_set_range(curve, curve->min_x, g_value_get_float(value),
+                            curve->min_y, curve->max_y);
+        break;
+
+        case PROP_MIN_Y:
+        gwy_curve_set_range(curve, curve->min_x, curve->max_x,
+                            g_value_get_float(value), curve->max_y);
+        break;
+
+        case PROP_MAX_Y:
+        gwy_curve_set_range(curve, curve->min_x, curve->max_x,
+                            curve->min_y, g_value_get_float(value));
+        break;
+
+        default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+/* Constructor and Destructor */
 static void
 gwy_curve_init(GwyCurve *curve)
 {
@@ -283,261 +347,61 @@ gwy_curve_init(GwyCurve *curve)
 }
 
 static void
-gwy_curve_set_property(GObject *object,
-                       guint prop_id,
-                       const GValue *value,
-                       GParamSpec *pspec)
+gwy_curve_finalize (GObject *object)
 {
-  GwyCurve *curve = GWY_CURVE (object);
+    GwyCurve *curve;
+    gint i;
 
-  switch (prop_id)
-    {
-    case PROP_CURVE_TYPE:
-      gwy_curve_set_curve_type (curve, g_value_get_enum (value));
-      break;
-    case PROP_MIN_X:
-      gwy_curve_set_range (curve, g_value_get_float (value), curve->max_x,
-               curve->min_y, curve->max_y);
-      break;
-    case PROP_MAX_X:
-      gwy_curve_set_range (curve, curve->min_x, g_value_get_float (value),
-               curve->min_y, curve->max_y);
-      break;
-    case PROP_MIN_Y:
-      gwy_curve_set_range (curve, curve->min_x, curve->max_x,
-               g_value_get_float (value), curve->max_y);
-      break;
-    case PROP_MAX_Y:
-      gwy_curve_set_range (curve, curve->min_x, curve->max_x,
-               curve->min_y, g_value_get_float (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+    g_return_if_fail(GWY_IS_CURVE(object));
+
+    curve = GWY_CURVE(object);
+    if (curve->pixmap)
+        g_object_unref(curve->pixmap);
+
+    for (i=0; i<curve->num_channels; i++) {
+        if (curve->channel_data[i].points)
+            g_free(curve->channel_data[i].points);
+        if (curve->channel_data[i].ctlpoints)
+            g_free(curve->channel_data[i].ctlpoints);
     }
+    g_free(curve->channel_data);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-static void
-gwy_curve_get_property (GObject              *object,
-            guint                 prop_id,
-            GValue               *value,
-            GParamSpec           *pspec)
+/* Public Class Functions */
+GtkWidget*
+gwy_curve_new(void)
 {
-  GwyCurve *curve = GWY_CURVE (object);
-
-  switch (prop_id)
-    {
-    case PROP_CURVE_TYPE:
-      g_value_set_enum (value, curve->curve_type);
-      break;
-    case PROP_MIN_X:
-      g_value_set_float (value, curve->min_x);
-      break;
-    case PROP_MAX_X:
-      g_value_set_float (value, curve->max_x);
-      break;
-    case PROP_MIN_Y:
-      g_value_set_float (value, curve->min_y);
-      break;
-    case PROP_MAX_Y:
-      g_value_set_float (value, curve->max_y);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    }
+    return g_object_new(GWY_TYPE_CURVE, NULL);
 }
 
-static int
-project (gfloat value, gfloat min, gfloat max, int norm)
+GType
+gwy_curve_get_type(void)
 {
-  return (norm - 1) * ((value - min) / (max - min)) + 0.5;
+    static GType curve_type = 0;
+
+    if (!curve_type) {
+        static const GTypeInfo curve_info = {
+            sizeof (GwyCurveClass),
+            NULL,           /* base_init */
+            NULL,           /* base_finalize */
+            (GClassInitFunc) gwy_curve_class_init,
+            NULL,           /* class_finalize */
+            NULL,           /* class_data */
+            sizeof(GwyCurve),
+            0,              /* n_preallocs */
+            (GInstanceInitFunc)gwy_curve_init,
+            NULL            /* value_table */
+        };
+
+        curve_type = g_type_register_static(GTK_TYPE_DRAWING_AREA, "GwyCurve",
+                                            &curve_info, 0);
+    }
+    return curve_type;
 }
 
-static gfloat
-unproject (gint value, gfloat min, gfloat max, int norm)
-{
-  return value / (gfloat) (norm - 1) * (max - min) + min;
-}
-
-/* Solve the tridiagonal equation system that determines the second
-   derivatives for the interpolation points.  (Based on Numerical
-   Recipies 2nd Edition.) */
-static void
-spline_solve (int n, gfloat x[], gfloat y[], gfloat y2[])
-{
-  gfloat p, sig, *u;
-  gint i, k;
-
-  u = g_malloc ((n - 1) * sizeof (u[0]));
-
-  y2[0] = u[0] = 0.0;   /* set lower boundary condition to "natural" */
-
-  for (i = 1; i < n - 1; ++i)
-    {
-      sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
-      p = sig * y2[i - 1] + 2.0;
-      y2[i] = (sig - 1.0) / p;
-      u[i] = ((y[i + 1] - y[i])
-          / (x[i + 1] - x[i]) - (y[i] - y[i - 1]) / (x[i] - x[i - 1]));
-      u[i] = (6.0 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
-    }
-
-  y2[n - 1] = 0.0;
-  for (k = n - 2; k >= 0; --k)
-    y2[k] = y2[k] * y2[k + 1] + u[k];
-
-  g_free (u);
-}
-
-static gfloat
-spline_eval (int n, gfloat x[], gfloat y[], gfloat y2[], gfloat val)
-{
-  gint k_lo, k_hi, k;
-  gfloat h, b, a;
-
-  /* do a binary search for the right interval: */
-  k_lo = 0; k_hi = n - 1;
-  while (k_hi - k_lo > 1)
-    {
-      k = (k_hi + k_lo) / 2;
-      if (x[k] > val)
-    k_hi = k;
-      else
-    k_lo = k;
-    }
-
-  h = x[k_hi] - x[k_lo];
-  g_assert (h > 0.0);
-
-  a = (x[k_hi] - val) / h;
-  b = (val - x[k_lo]) / h;
-  return a*y[k_lo] + b*y[k_hi] +
-    ((a*a*a - a)*y2[k_lo] + (b*b*b - b)*y2[k_hi]) * (h*h)/6.0;
-}
-
-static void
-gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
-{
-    gfloat *vector;
-    GwyChannelData *channel;
-    int i, c_index;
-
-    vector = g_malloc(width * sizeof (vector[0]));
-
-    for (c_index=0; c_index<c->num_channels; c_index++) {
-        channel = &c->channel_data[c_index];
-
-        gwy_curve_get_vector(c, c_index, width, vector);
-
-        c->height = height;
-        if (channel->num_points != width) {
-            channel->num_points = width;
-            if (channel->points)
-                g_free (channel->points);
-            channel->points = g_malloc(channel->num_points * sizeof(GwyPoint));
-        }
-
-        for (i=0; i<width; ++i) {
-            channel->points[i].x = RADIUS + i;
-            channel->points[i].y =
-                RADIUS+height - project(vector[i], c->min_y, c->max_y, height);
-        }
-    }
-    g_free (vector);
-}
-
-static void
-gwy_curve_draw(GwyCurve *c, gint width, gint height)
-{
-    GtkStateType state;
-    GtkStyle *style;
-    gint i, c_index;
-    GwyChannelData *channel;
-    gboolean flag;
-    gint x, y;
-    GdkGC *gc;
-    gint lastx, lasty;
-
-    if (!c->pixmap)
-        return;
-
-    /* If the dimensions of the graph window have changed, then re-interpolate
-       the curve points to match */
-    flag = FALSE;
-    for (i=0; i<c->num_channels; i++)
-        if (c->channel_data[i].num_points != width)
-            flag = TRUE;
-    if (c->height != height || flag)
-        gwy_curve_interpolate(c, width, height);
-
-    state = GTK_STATE_NORMAL;
-    if (!GTK_WIDGET_IS_SENSITIVE (GTK_WIDGET (c)))
-        state = GTK_STATE_INSENSITIVE;
-
-    style = GTK_WIDGET(c)->style;
-
-    /* clear the pixmap: */
-    gtk_paint_flat_box(style, c->pixmap, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                       NULL, GTK_WIDGET(c), "curve_bg",
-                       0, 0, width + RADIUS * 2, height + RADIUS * 2);
-
-    /* draw the grid lines: (XXX make more meaningful) */
-    for (i = 0; i < 5; i++) {
-        gdk_draw_line(c->pixmap, style->dark_gc[state],
-                      RADIUS, i * (height / 4.0) + RADIUS,
-                      width + RADIUS, i * (height / 4.0) + RADIUS);
-        gdk_draw_line(c->pixmap, style->dark_gc[state],
-                      i * (width / 4.0) + RADIUS, RADIUS,
-                      i * (width / 4.0) + RADIUS, height + RADIUS);
-    }
-
-    /* create gc */
-    gc = gdk_gc_new(c->pixmap);
-
-    /* Draw the curve points (for each channel) */
-    for (c_index=0; c_index<c->num_channels; c_index++) {
-        channel = &c->channel_data[c_index];
-        gwy_rgba_set_gdk_gc_fg(&channel->color, gc);
-
-        lastx = lasty = -1;
-        for (i=0; i<channel->num_points; i++) {
-            if (lastx > -1 && lasty > -1) {
-                gdk_draw_line(c->pixmap, gc,
-                              lastx, lasty,
-                              (gint)channel->points[i].x,
-                              (gint)channel->points[i].y);
-            }
-            lastx = (gint)channel->points[i].x;
-            lasty = (gint)channel->points[i].y;
-        }
-    }
-
-    /* Draw the control points (for each channel) */
-    if (c->curve_type != GWY_CURVE_TYPE_FREE) {
-        for (c_index=0; c_index<c->num_channels; c_index++) {
-            channel = &c->channel_data[c_index];
-            for (i=0; i<channel->num_ctlpoints; ++i) {
-                if (channel->ctlpoints[i].x < c->min_x)
-                    continue;
-                x = project(channel->ctlpoints[i].x,
-                            c->min_x, c->max_x, width);
-                y = height - project(channel->ctlpoints[i].y,
-                                     c->min_y, c->max_y, height);
-
-                /* draw a bullet: */
-                gdk_draw_arc(c->pixmap, style->fg_gc[state], TRUE, x, y,
-                             RADIUS * 2, RADIUS*2, 0, 360*64);
-            }
-        }
-    }
-
-    gdk_draw_drawable(GTK_WIDGET(c)->window, style->fg_gc[state], c->pixmap,
-                      0, 0, 0, 0, width + RADIUS * 2, height + RADIUS * 2);
-
-    g_object_unref(gc);
-}
-
+/* Signal Handlers */
 static gboolean
 gwy_curve_configure(GwyCurve *c)
 {
@@ -779,17 +643,6 @@ gwy_curve_motion_notify(GwyCurve *c)
             closest_point = i;
         }
     }
-    /* determine closest control point to pointer */
-    /*
-    for (i=0; i<c->num_ctlpoints; ++i) {
-        cx = project(c->ctlpoint[i][0], c->min_x, c->max_x, width);
-        if ((guint) abs (x - cx) < distance)
-        {
-            distance = abs (x - cx);
-            closest_point = i;
-        }
-    }
-    */
 
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_LINEAR:
@@ -889,6 +742,50 @@ gwy_curve_motion_notify(GwyCurve *c)
     return TRUE;
 }
 
+/* Public Methods */
+void
+gwy_curve_reset(GwyCurve *c)
+{
+    GwyCurveType old_type;
+
+    old_type = c->curve_type;
+    c->curve_type = GWY_CURVE_TYPE_LINEAR;
+    gwy_curve_reset_vector(c);
+
+    if (old_type != GWY_CURVE_TYPE_LINEAR)
+    {
+        g_signal_emit(c, curve_type_changed_signal, 0);
+        g_object_notify(G_OBJECT(c), "curve-type");
+    }
+}
+
+void
+gwy_curve_set_range(GwyCurve *curve, gfloat min_x, gfloat max_x,
+                    gfloat min_y, gfloat max_y)
+{
+    g_object_freeze_notify(G_OBJECT(curve));
+    if (curve->min_x != min_x) {
+        curve->min_x = min_x;
+        g_object_notify(G_OBJECT(curve), "min-x");
+    }
+    if (curve->max_x != max_x) {
+        curve->max_x = max_x;
+        g_object_notify(G_OBJECT(curve), "max-x");
+    }
+    if (curve->min_y != min_y) {
+        curve->min_y = min_y;
+        g_object_notify(G_OBJECT(curve), "min-y");
+    }
+    if (curve->max_y != max_y) {
+        curve->max_y = max_y;
+        g_object_notify(G_OBJECT(curve), "max-y");
+    }
+    g_object_thaw_notify(G_OBJECT(curve));
+
+    gwy_curve_size_graph (curve);
+    gwy_curve_reset_vector (curve);
+}
+
 void
 gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
 {
@@ -944,149 +841,6 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
         g_object_notify(G_OBJECT(c), "curve-type");
         gwy_curve_draw(c, width, height);
     }
-}
-
-static void
-gwy_curve_size_graph (GwyCurve *curve)
-{
-  gint width, height;
-  gfloat aspect;
-  GdkScreen *screen = gtk_widget_get_screen (GTK_WIDGET (curve));
-
-  width  = (curve->max_x - curve->min_x) + 1;
-  height = (curve->max_y - curve->min_y) + 1;
-  aspect = width / (gfloat) height;
-  if (width > gdk_screen_get_width (screen) / 4)
-    width  = gdk_screen_get_width (screen) / 4;
-  if (height > gdk_screen_get_height (screen) / 4)
-    height = gdk_screen_get_height (screen) / 4;
-
-  if (aspect < 1.0)
-    width  = height * aspect;
-  else
-    height = width / aspect;
-
-  gtk_widget_set_size_request (GTK_WIDGET (curve),
-                   width + RADIUS * 2,
-                   height + RADIUS * 2);
-}
-
-static void
-gwy_curve_reset_vector(GwyCurve *curve)
-{
-    gint width, height;
-    gint c_index;
-    GwyChannelData *channel;
-
-    for (c_index=0; c_index<curve->num_channels; c_index++) {
-        channel = &curve->channel_data[c_index];
-
-        if (channel->ctlpoints)
-            g_free(channel->ctlpoints);
-
-        channel->num_ctlpoints = 2;
-        channel->ctlpoints = g_malloc(2 * sizeof(GwyPoint));
-        channel->ctlpoints[0].x = curve->min_x;
-        channel->ctlpoints[0].y = curve->min_y;
-        channel->ctlpoints[1].x = curve->max_x;
-        channel->ctlpoints[1].y = curve->max_y;
-    }
-
-    if (curve->pixmap) {
-        width = GTK_WIDGET(curve)->allocation.width - RADIUS * 2;
-        height = GTK_WIDGET(curve)->allocation.height - RADIUS * 2;
-
-        if (curve->curve_type == GWY_CURVE_TYPE_FREE) {
-            curve->curve_type = GWY_CURVE_TYPE_LINEAR;
-            gwy_curve_interpolate(curve, width, height);
-            curve->curve_type = GWY_CURVE_TYPE_FREE;
-        }
-        else
-            gwy_curve_interpolate(curve, width, height);
-
-        gwy_curve_draw(curve, width, height);
-    }
-}
-
-void
-gwy_curve_reset (GwyCurve *c)
-{
-  GwyCurveType old_type;
-
-  old_type = c->curve_type;
-  c->curve_type = GWY_CURVE_TYPE_LINEAR;
-  gwy_curve_reset_vector (c);
-
-  if (old_type != GWY_CURVE_TYPE_LINEAR)
-    {
-       g_signal_emit (c, curve_type_changed_signal, 0);
-       g_object_notify (G_OBJECT (c), "curve-type");
-    }
-}
-
-/*XXX - fixme
-void
-gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
-{
-  gfloat x, one_over_gamma, height, one_over_width;
-  GwyCurveType old_type;
-  gint i;
-
-  if (c->num_points < 2)
-    return;
-
-  old_type = c->curve_type;
-  c->curve_type = GWY_CURVE_TYPE_FREE;
-
-  if (gamma_val <= 0)
-    one_over_gamma = 1.0;
-  else
-    one_over_gamma = 1.0 / gamma_val;
-  one_over_width = 1.0 / (c->num_points - 1);
-  height = c->height;
-  for (i = 0; i < c->num_points; ++i)
-    {
-      x = (gfloat) i / (c->num_points - 1);
-      c->point[i].x = RADIUS + i;
-      c->point[i].y =
-    RADIUS + (height * (1.0 - pow (x, one_over_gamma)) + 0.5);
-    }
-
-  if (old_type != GWY_CURVE_TYPE_FREE)
-    g_signal_emit (c, curve_type_changed_signal, 0);
-
-  gwy_curve_draw (c, c->num_points, c->height);
-}
-*/
-
-void
-gwy_curve_set_range (GwyCurve *curve,
-                     gfloat    min_x,
-                     gfloat    max_x,
-                     gfloat    min_y,
-                     gfloat    max_y)
-{
-  g_object_freeze_notify (G_OBJECT (curve));
-  if (curve->min_x != min_x) {
-     curve->min_x = min_x;
-     g_object_notify (G_OBJECT (curve), "min-x");
-  }
-  if (curve->max_x != max_x) {
-     curve->max_x = max_x;
-     g_object_notify (G_OBJECT (curve), "max-x");
-  }
-  if (curve->min_y != min_y) {
-     curve->min_y = min_y;
-     g_object_notify (G_OBJECT (curve), "min-y");
-  }
-  if (curve->max_y != max_y) {
-     curve->max_y = max_y;
-     g_object_notify (G_OBJECT (curve), "max-y");
-  }
-  g_object_thaw_notify (G_OBJECT (curve));
-
-  gwy_curve_size_graph (curve);
-  gwy_curve_reset_vector (curve);
 }
 
 void
@@ -1350,55 +1104,100 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
     }
 }
 
-/*XXX - fixme
-void
-gwy_curve_set_vector (GwyCurve *c, int veclen, gfloat vector[])
+/* Private Methods */
+static void
+gwy_curve_draw(GwyCurve *c, gint width, gint height)
 {
-  GwyCurveType old_type;
-  gfloat rx, dx, ry;
-  gint i, height;
-  GdkScreen *screen = gtk_widget_get_screen (GTK_WIDGET (c));
+    GtkStateType state;
+    GtkStyle *style;
+    gint i, c_index;
+    GwyChannelData *channel;
+    gboolean flag;
+    gint x, y;
+    GdkGC *gc;
+    gint lastx, lasty;
 
-  old_type = c->curve_type;
-  c->curve_type = GWY_CURVE_TYPE_FREE;
+    if (!c->pixmap)
+        return;
 
-  if (c->point)
-    height = GTK_WIDGET (c)->allocation.height - RADIUS * 2;
-  else
-    {
-      height = (c->max_y - c->min_y);
-      if (height > gdk_screen_get_height (screen) / 4)
-    height = gdk_screen_get_height (screen) / 4;
+    /* If the dimensions of the graph window have changed, then re-interpolate
+    the curve points to match */
+    flag = FALSE;
+    for (i=0; i<c->num_channels; i++)
+        if (c->channel_data[i].num_points != width)
+            flag = TRUE;
+    if (c->height != height || flag)
+        gwy_curve_interpolate(c, width, height);
 
-      c->height = height;
-      c->num_points = veclen;
-      c->point = g_malloc (c->num_points * sizeof (c->point[0]));
+    state = GTK_STATE_NORMAL;
+    if (!GTK_WIDGET_IS_SENSITIVE (GTK_WIDGET (c)))
+        state = GTK_STATE_INSENSITIVE;
+
+    style = GTK_WIDGET(c)->style;
+
+    /* clear the pixmap: */
+    gtk_paint_flat_box(style, c->pixmap, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+                       NULL, GTK_WIDGET(c), "curve_bg",
+                       0, 0, width + RADIUS * 2, height + RADIUS * 2);
+
+    /* draw the grid lines: (XXX make more meaningful) */
+    for (i = 0; i < 5; i++) {
+        gdk_draw_line(c->pixmap, style->dark_gc[state],
+                      RADIUS, i * (height / 4.0) + RADIUS,
+                      width + RADIUS, i * (height / 4.0) + RADIUS);
+        gdk_draw_line(c->pixmap, style->dark_gc[state],
+                      i * (width / 4.0) + RADIUS, RADIUS,
+                      i * (width / 4.0) + RADIUS, height + RADIUS);
     }
-  rx = 0;
-  dx = (veclen - 1.0) / (c->num_points - 1.0);
 
-  for (i = 0; i < c->num_points; ++i, rx += dx)
-    {
-      ry = vector[(int) (rx + 0.5)];
-      if (ry > c->max_y) ry = c->max_y;
-      if (ry < c->min_y) ry = c->min_y;
-      c->point[i].x = RADIUS + i;
-      c->point[i].y =
-    RADIUS + height - project (ry, c->min_y, c->max_y, height);
-    }
-  if (old_type != GWY_CURVE_TYPE_FREE)
-    {
-       g_signal_emit (c, curve_type_changed_signal, 0);
-       g_object_notify (G_OBJECT (c), "curve-type");
+    /* create gc */
+    gc = gdk_gc_new(c->pixmap);
+
+    /* Draw the curve points (for each channel) */
+    for (c_index=0; c_index<c->num_channels; c_index++) {
+        channel = &c->channel_data[c_index];
+        gwy_rgba_set_gdk_gc_fg(&channel->color, gc);
+
+        lastx = lasty = -1;
+        for (i=0; i<channel->num_points; i++) {
+            if (lastx > -1 && lasty > -1) {
+                gdk_draw_line(c->pixmap, gc,
+                              lastx, lasty,
+                              (gint)channel->points[i].x,
+                              (gint)channel->points[i].y);
+            }
+            lastx = (gint)channel->points[i].x;
+            lasty = (gint)channel->points[i].y;
+        }
     }
 
-  gwy_curve_draw (c, c->num_points, height);
+    /* Draw the control points (for each channel) */
+    if (c->curve_type != GWY_CURVE_TYPE_FREE) {
+        for (c_index=0; c_index<c->num_channels; c_index++) {
+            channel = &c->channel_data[c_index];
+            for (i=0; i<channel->num_ctlpoints; ++i) {
+                if (channel->ctlpoints[i].x < c->min_x)
+                    continue;
+                x = project(channel->ctlpoints[i].x,
+                            c->min_x, c->max_x, width);
+                y = height - project(channel->ctlpoints[i].y,
+                                     c->min_y, c->max_y, height);
+
+                /* draw a bullet: */
+                gdk_draw_arc(c->pixmap, style->fg_gc[state], TRUE, x, y,
+                             RADIUS * 2, RADIUS*2, 0, 360*64);
+            }
+        }
+    }
+
+    gdk_draw_drawable(GTK_WIDGET(c)->window, style->fg_gc[state], c->pixmap,
+                      0, 0, 0, 0, width + RADIUS * 2, height + RADIUS * 2);
+
+    g_object_unref(gc);
 }
-*/
 
 void
-gwy_curve_get_vector(GwyCurve *c, gint c_index,
-                     gint veclen, gfloat vector[])
+gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gfloat vector[])
 {
     gfloat rx, ry, dx, dy, delta_x, *mem, *xv, *yv, *y2v, prev;
     gint dst, i, x, next, num_active_ctlpoints = 0, first_active = -1;
@@ -1482,9 +1281,9 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index,
 
                 if (next < channel->num_ctlpoints) {
                     delta_x = channel->ctlpoints[next].x -
-                              channel->ctlpoints[i].x;
+                        channel->ctlpoints[i].x;
                     dy = ((channel->ctlpoints[next].y -
-                         channel->ctlpoints[i].y) / delta_x);
+                        channel->ctlpoints[i].y) / delta_x);
                     dy *= dx;
                     ry = channel->ctlpoints[i].y;
                     i = next;
@@ -1501,9 +1300,9 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index,
             dx = channel->num_points / (double) veclen;
             for (x = 0; x < veclen; ++x, rx += dx) {
                 vector[x] = unproject(RADIUS + c->height -
-                                      channel->points[(int)rx].y,
-                                      c->min_y, c->max_y,
-                                      c->height);
+                        channel->points[(int)rx].y,
+                c->min_y, c->max_y,
+                c->height);
             }
         }
         else
@@ -1512,33 +1311,251 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index,
     }
 }
 
-GtkWidget*
-gwy_curve_new (void)
+static void
+gwy_curve_reset_vector(GwyCurve *curve)
 {
-  return g_object_new (GWY_TYPE_CURVE, NULL);
+    gint width, height;
+    gint c_index;
+    GwyChannelData *channel;
+
+    for (c_index=0; c_index<curve->num_channels; c_index++) {
+        channel = &curve->channel_data[c_index];
+
+        if (channel->ctlpoints)
+            g_free(channel->ctlpoints);
+
+        channel->num_ctlpoints = 2;
+        channel->ctlpoints = g_malloc(2 * sizeof(GwyPoint));
+        channel->ctlpoints[0].x = curve->min_x;
+        channel->ctlpoints[0].y = curve->min_y;
+        channel->ctlpoints[1].x = curve->max_x;
+        channel->ctlpoints[1].y = curve->max_y;
+    }
+
+    if (curve->pixmap) {
+        width = GTK_WIDGET(curve)->allocation.width - RADIUS * 2;
+        height = GTK_WIDGET(curve)->allocation.height - RADIUS * 2;
+
+        if (curve->curve_type == GWY_CURVE_TYPE_FREE) {
+            curve->curve_type = GWY_CURVE_TYPE_LINEAR;
+            gwy_curve_interpolate(curve, width, height);
+            curve->curve_type = GWY_CURVE_TYPE_FREE;
+        }
+        else
+            gwy_curve_interpolate(curve, width, height);
+
+        gwy_curve_draw(curve, width, height);
+    }
 }
 
 static void
-gwy_curve_finalize (GObject *object)
+gwy_curve_size_graph(GwyCurve *curve)
 {
-  GwyCurve *curve;
-  gint i;
+    gint width, height;
+    gfloat aspect;
+    GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(curve));
 
-  g_return_if_fail (GWY_IS_CURVE (object));
+    width  = (curve->max_x - curve->min_x) + 1;
+    height = (curve->max_y - curve->min_y) + 1;
 
-  curve = GWY_CURVE (object);
-  if (curve->pixmap)
-    g_object_unref (curve->pixmap);
+    aspect = width / (gfloat) height;
+    if (width > gdk_screen_get_width(screen) / 4)
+        width  = gdk_screen_get_width(screen) / 4;
+    if (height > gdk_screen_get_height(screen) / 4)
+        height = gdk_screen_get_height(screen) / 4;
 
-  for (i=0; i<curve->num_channels; i++) {
-      if (curve->channel_data[i].points)
-          g_free(curve->channel_data[i].points);
-      if (curve->channel_data[i].ctlpoints)
-          g_free(curve->channel_data[i].ctlpoints);
-  }
-  g_free(curve->channel_data);
+    if (aspect < 1.0)
+        width  = height * aspect;
+    else
+        height = width / aspect;
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+    gtk_widget_set_size_request(GTK_WIDGET(curve),
+                                width + RADIUS * 2,
+                                height + RADIUS * 2);
 }
 
+/* Helper Functions */
+static void
+gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
+{
+    gfloat *vector;
+    GwyChannelData *channel;
+    int i, c_index;
+
+    vector = g_malloc(width * sizeof (vector[0]));
+
+    for (c_index=0; c_index<c->num_channels; c_index++) {
+        channel = &c->channel_data[c_index];
+
+        gwy_curve_get_vector(c, c_index, width, vector);
+
+        c->height = height;
+        if (channel->num_points != width) {
+            channel->num_points = width;
+            if (channel->points)
+                g_free (channel->points);
+            channel->points = g_malloc(channel->num_points * sizeof(GwyPoint));
+        }
+
+        for (i=0; i<width; ++i) {
+            channel->points[i].x = RADIUS + i;
+            channel->points[i].y =
+                RADIUS+height - project(vector[i], c->min_y, c->max_y, height);
+        }
+    }
+    g_free (vector);
+}
+
+static int
+project(gfloat value, gfloat min, gfloat max, int norm)
+{
+    return (norm - 1) * ((value - min) / (max - min)) + 0.5;
+}
+
+static gfloat
+unproject(gint value, gfloat min, gfloat max, int norm)
+{
+    return value / (gfloat) (norm - 1) * (max - min) + min;
+}
+
+/* Solve the tridiagonal equation system that determines the second
+   derivatives for the interpolation points.  (Based on Numerical
+   Recipies 2nd Edition.) */
+static void
+spline_solve(int n, gfloat x[], gfloat y[], gfloat y2[])
+{
+    gfloat p, sig, *u;
+    gint i, k;
+
+    u = g_malloc ((n - 1) * sizeof (u[0]));
+
+    y2[0] = u[0] = 0.0;   /* set lower boundary condition to "natural" */
+
+    for (i = 1; i < n - 1; ++i)
+    {
+        sig = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1]);
+        p = sig * y2[i - 1] + 2.0;
+        y2[i] = (sig - 1.0) / p;
+        u[i] = ((y[i + 1] - y[i])
+          / (x[i + 1] - x[i]) - (y[i] - y[i - 1]) / (x[i] - x[i - 1]));
+        u[i] = (6.0 * u[i] / (x[i + 1] - x[i - 1]) - sig * u[i - 1]) / p;
+    }
+
+    y2[n - 1] = 0.0;
+    for (k = n - 2; k >= 0; --k)
+        y2[k] = y2[k] * y2[k + 1] + u[k];
+
+    g_free (u);
+}
+
+static gfloat
+spline_eval(int n, gfloat x[], gfloat y[], gfloat y2[], gfloat val)
+{
+    gint k_lo, k_hi, k;
+    gfloat h, b, a;
+
+    /* do a binary search for the right interval: */
+    k_lo = 0; k_hi = n - 1;
+    while (k_hi - k_lo > 1)
+    {
+        k = (k_hi + k_lo) / 2;
+        if (x[k] > val)
+            k_hi = k;
+        else
+            k_lo = k;
+    }
+
+    h = x[k_hi] - x[k_lo];
+    g_assert (h > 0.0);
+
+    a = (x[k_hi] - val) / h;
+    b = (val - x[k_lo]) / h;
+    return a*y[k_lo] + b*y[k_hi] +
+            ((a*a*a - a)*y2[k_lo] + (b*b*b - b)*y2[k_hi]) * (h*h)/6.0;
+}
+
+
+
+
+
+/*XXX - fixme
+void
+gwy_curve_set_vector (GwyCurve *c, int veclen, gfloat vector[])
+{
+  GwyCurveType old_type;
+  gfloat rx, dx, ry;
+  gint i, height;
+  GdkScreen *screen = gtk_widget_get_screen (GTK_WIDGET (c));
+
+  old_type = c->curve_type;
+  c->curve_type = GWY_CURVE_TYPE_FREE;
+
+  if (c->point)
+    height = GTK_WIDGET (c)->allocation.height - RADIUS * 2;
+  else
+{
+      height = (c->max_y - c->min_y);
+      if (height > gdk_screen_get_height (screen) / 4)
+    height = gdk_screen_get_height (screen) / 4;
+
+      c->height = height;
+      c->num_points = veclen;
+      c->point = g_malloc (c->num_points * sizeof (c->point[0]));
+}
+  rx = 0;
+  dx = (veclen - 1.0) / (c->num_points - 1.0);
+
+  for (i = 0; i < c->num_points; ++i, rx += dx)
+{
+      ry = vector[(int) (rx + 0.5)];
+      if (ry > c->max_y) ry = c->max_y;
+      if (ry < c->min_y) ry = c->min_y;
+      c->point[i].x = RADIUS + i;
+      c->point[i].y =
+    RADIUS + height - project (ry, c->min_y, c->max_y, height);
+}
+  if (old_type != GWY_CURVE_TYPE_FREE)
+{
+       g_signal_emit (c, curve_type_changed_signal, 0);
+       g_object_notify (G_OBJECT (c), "curve-type");
+}
+
+  gwy_curve_draw (c, c->num_points, height);
+}
+*/
+
+/*XXX - fixme
+void
+gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
+{
+  gfloat x, one_over_gamma, height, one_over_width;
+  GwyCurveType old_type;
+  gint i;
+
+  if (c->num_points < 2)
+    return;
+
+  old_type = c->curve_type;
+  c->curve_type = GWY_CURVE_TYPE_FREE;
+
+  if (gamma_val <= 0)
+    one_over_gamma = 1.0;
+  else
+    one_over_gamma = 1.0 / gamma_val;
+  one_over_width = 1.0 / (c->num_points - 1);
+  height = c->height;
+  for (i = 0; i < c->num_points; ++i)
+{
+      x = (gfloat) i / (c->num_points - 1);
+      c->point[i].x = RADIUS + i;
+      c->point[i].y =
+    RADIUS + (height * (1.0 - pow (x, one_over_gamma)) + 0.5);
+}
+
+  if (old_type != GWY_CURVE_TYPE_FREE)
+    g_signal_emit (c, curve_type_changed_signal, 0);
+
+  gwy_curve_draw (c, c->num_points, c->height);
+}
+*/
 #define __GWY_CURVE_C__

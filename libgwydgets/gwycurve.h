@@ -135,30 +135,22 @@ struct _GwyCurveClass
   void (*_gtk_reserved4) (void);
 };
 
+GtkWidget*  gwy_curve_new                   (void);
+GType       gwy_curve_get_type              (void) G_GNUC_CONST;
+void        gwy_curve_reset                 (GwyCurve *curve);
+void        gwy_curve_set_range             (GwyCurve *curve,
+                                             gfloat min_x, gfloat max_x,
+                                             gfloat min_y, gfloat max_y);
+void        gwy_curve_set_curve_type        (GwyCurve *curve,
+                                             GwyCurveType type);
+void        gwy_curve_set_channels          (GwyCurve *c,
+                                             gint num_channels,
+                                             GwyRGBA *colors);
 
-GType       gwy_curve_get_type  (void) G_GNUC_CONST;
-GtkWidget*  gwy_curve_new       (void);
-void        gwy_curve_reset     (GwyCurve *curve);
-void        gwy_curve_set_range (GwyCurve *curve,
-                                 gfloat min_x, gfloat max_x,
-                                 gfloat min_y, gfloat max_y);
-
-void        gwy_curve_set_channels (GwyCurve *c,
-                                    gint num_channels,
-                                    GwyRGBA *colors);
-
-void        gwy_curve_get_vector    (GwyCurve *c, gint channel,
-                                     gint veclen, gfloat vector[]);
-
-
-void        gwy_curve_set_control_points(GwyCurve *curve,
-                                         GwyChannelData *channel_data);
-void        gwy_curve_get_control_points(GwyCurve *curve,
-                                         GwyChannelData *channel_data);
-
-
-void        gwy_curve_set_curve_type (GwyCurve *curve, GwyCurveType type);
-
+void        gwy_curve_set_control_points    (GwyCurve *curve,
+                                             GwyChannelData *channel_data);
+void        gwy_curve_get_control_points    (GwyCurve *curve,
+                                             GwyChannelData *channel_data);
 
 G_END_DECLS
 
