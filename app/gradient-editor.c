@@ -413,7 +413,8 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
         case GWY_MARKER_OPERATION_CURVE:
         /* Get gwycurve channel information */
         channel_data = g_new(GwyChannelData, 3);
-        gwy_curve_get_control_points(GWY_CURVE(editor->curve), channel_data);
+        gwy_curve_get_control_points(GWY_CURVE(editor->curve),
+                                     channel_data, TRUE);
 
         /* Copy the channel info into the gradient */
         /*
