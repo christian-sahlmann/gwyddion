@@ -52,8 +52,8 @@
 
 /*TODO: Clean up code style to match gwyddion standards */
 /*TODO: Deal with freehand mode */
-/*TODO: Change end-point behavior: hold constant value, don't go to zero */
-/*TODO: Do something about problem of selecting end points (always gets red) */
+/*TODO: Some kind of node-snap, or column node-snap */
+/*BUG: Last line on right side sometimes draws to zero for no reason? */
 
 #include <config.h>
 #include <stdlib.h>
@@ -66,7 +66,7 @@
 #include <gtk/gtkradiobutton.h>
 #include <gtk/gtktable.h>
 #include "gwydgettypes.h"
-#include "../libdraw/gwyrgba.h"
+//#include "../libdraw/gwyrgba.h"
 
 #define RADIUS          3   /* radius of the control points */
 #define MIN_DISTANCE    8   /* min distance between control points */
@@ -232,8 +232,9 @@ gwy_curve_class_init (GwyCurveClass *class)
 }
 
 static void
-gwy_curve_init (GwyCurve *curve)
+gwy_curve_init(GwyCurve *curve)
 {
+    GwyRGBA colors[3];
     gint old_mask;
     gint i;
 
@@ -243,12 +244,19 @@ gwy_curve_init (GwyCurve *curve)
     curve->height = 0;
     curve->grab_point = -1;
     curve->grab_channel = -1;
+    curve->num_channels = 3; /*Red, Green, Blue*/
 
-    for (i=0; i<3; i++) {
+    colors[0].r = 1; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
+    colors[1].r = 0; colors[1].g = 1; colors[1].b = 0; colors[0].a = 1;
+    colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[0].a = 1;
+
+    curve->channel_data = g_new(GwyChannelData, curve->num_channels);
+    for (i=0; i<curve->num_channels; i++) {
         curve->channel_data[i].num_points = 0;
         curve->channel_data[i].points = NULL;
         curve->channel_data[i].num_ctlpoints = 0;
         curve->channel_data[i].ctlpoints = NULL;
+        curve->channel_data[i].color = colors[i];
     }
 
     curve->min_x = 0.0;
@@ -270,14 +278,14 @@ gwy_curve_init (GwyCurve *curve)
     g_signal_connect_swapped(curve, "motion-notify-event",
                              G_CALLBACK(gwy_curve_motion_notify), curve);
 
-    gwy_curve_size_graph (curve);
+    gwy_curve_size_graph(curve);
 }
 
 static void
-gwy_curve_set_property (GObject              *object,
-            guint                 prop_id,
-            const GValue         *value,
-            GParamSpec           *pspec)
+gwy_curve_set_property(GObject *object,
+                       guint prop_id,
+                       const GValue *value,
+                       GParamSpec *pspec)
 {
   GwyCurve *curve = GWY_CURVE (object);
 
@@ -416,7 +424,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
 
     vector = g_malloc(width * sizeof (vector[0]));
 
-    for (c_index=0; c_index<3; c_index++) {
+    for (c_index=0; c_index<c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
 
         gwy_curve_get_vector(c, c_index, width, vector);
@@ -448,7 +456,6 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     gboolean flag;
     gint x, y;
     GdkGC *gc;
-    GwyRGBA colors[3];
     gint lastx, lasty;
 
     if (!c->pixmap)
@@ -457,7 +464,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
     /* If the dimensions of the graph window have changed, then re-interpolate
        the curve points to match */
     flag = FALSE;
-    for (i=0; i<3; i++)
+    for (i=0; i<c->num_channels; i++)
         if (c->channel_data[i].num_points != width)
             flag = TRUE;
     if (c->height != height || flag)
@@ -484,17 +491,14 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
                       i * (width / 4.0) + RADIUS, height + RADIUS);
     }
 
-    /* Setup colors */
+    /* create gc */
     gc = gdk_gc_new(c->pixmap);
-    colors[0].r = 1; colors[0].g = 0; colors[0].b = 0; colors[0].a = 1;
-    colors[1].r = 0; colors[1].g = 1; colors[1].b = 0; colors[0].a = 1;
-    colors[2].r = 0; colors[2].g = 0; colors[2].b = 1; colors[0].a = 1;
 
     /* Draw the curve points (for each channel) */
-    for (c_index=0; c_index<3; c_index++) {
-        gwy_rgba_set_gdk_gc_fg(&colors[c_index], gc);
-
+    for (c_index=0; c_index<c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
+        gwy_rgba_set_gdk_gc_fg(&channel->color, gc);
+
         lastx = lasty = -1;
         for (i=0; i<channel->num_points; i++) {
             if (lastx > -1 && lasty > -1) {
@@ -510,7 +514,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
 
     /* Draw the control points (for each channel) */
     if (c->curve_type != GWY_CURVE_TYPE_FREE) {
-        for (c_index=0; c_index<3; c_index++) {
+        for (c_index=0; c_index<c->num_channels; c_index++) {
             channel = &c->channel_data[c_index];
             for (i=0; i<channel->num_ctlpoints; ++i) {
                 if (channel->ctlpoints[i].x < c->min_x)
@@ -598,7 +602,7 @@ gwy_curve_button_press(GtkWidget *widget,
     y = CLAMP((ty - RADIUS), 0, height-1);
 
     /* determine closest channel to pointer */
-    for (i=0, distance=~0U; i<3; i++) {
+    for (i=0, distance=~0U; i<c->num_channels; i++) {
         channel = &c->channel_data[i];
         for (j=0, distance2=~0U; j<channel->num_points; j++) {
            if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
@@ -750,7 +754,7 @@ gwy_curve_motion_notify(GwyCurve *c)
     y = CLAMP((ty - RADIUS), 0, height-1);
 
     /* determine closest channel to pointer */
-    for (i=0, distance=~0U; i<3; i++) {
+    for (i=0, distance=~0U; i<c->num_channels; i++) {
         channel = &c->channel_data[i];
         for (j=0, distance2=~0U; j<channel->num_points; j++) {
            if ((guint)abs(x - (guint)channel->points[j].x) < distance2) {
@@ -905,7 +909,7 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
         else if (c->curve_type == GWY_CURVE_TYPE_FREE) {
             /* Going from freehand, to some other type
             (need to generate control points based on the data): */
-            for (c_index=0; c_index<3; c_index++) {
+            for (c_index=0; c_index<c->num_channels; c_index++) {
                 channel = &c->channel_data[c_index];
 
                 if (channel->ctlpoints)
@@ -973,7 +977,7 @@ gwy_curve_reset_vector(GwyCurve *curve)
     gint c_index;
     GwyChannelData *channel;
 
-    for (c_index=0; c_index<3; c_index++) {
+    for (c_index=0; c_index<curve->num_channels; c_index++) {
         channel = &curve->channel_data[c_index];
 
         if (channel->ctlpoints)
@@ -1226,6 +1230,8 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data)
         }
     }
 
+    /*XXX THIS CODE DOESN'T BELONG IN GWYCURVE. MOVE TO GRADIENT-EDITOR*/
+
     /* Duplicate control points so that we have nothing but RGB triples */
     for (c_index=0; c_index<3; c_index++) {
         others[0] = c_index+1; wrap(others[0]);
@@ -1474,12 +1480,13 @@ gwy_curve_finalize (GObject *object)
   if (curve->pixmap)
     g_object_unref (curve->pixmap);
 
-  for (i=0; i<3; i++) {
+  for (i=0; i<curve->num_channels; i++) {
       if (curve->channel_data[i].points)
           g_free(curve->channel_data[i].points);
       if (curve->channel_data[i].ctlpoints)
           g_free(curve->channel_data[i].ctlpoints);
   }
+  g_free(curve->channel_data);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

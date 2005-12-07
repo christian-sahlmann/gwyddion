@@ -58,6 +58,7 @@
 #include <gtk/gtkdrawingarea.h>
 
 #include <libgwydgets/gwydgetenums.h>
+#include "../libdraw/gwyrgba.h"
 
 G_BEGIN_DECLS
 
@@ -94,6 +95,8 @@ struct _GwyChannelData
     /* control points: */
     gint num_ctlpoints;
     GwyPoint *ctlpoints;
+
+    GwyRGBA color;
 };
 
 struct _GwyCurve
@@ -114,7 +117,8 @@ struct _GwyCurve
 
     /* curve point and control point data
        (3 color channels: red, green, blue) */
-    GwyChannelData channel_data[3];
+    gint num_channels;
+    GwyChannelData *channel_data;
 };
 
 struct _GwyCurveClass
@@ -136,11 +140,11 @@ GType       gwy_curve_get_type  (void) G_GNUC_CONST;
 GtkWidget*  gwy_curve_new       (void);
 void        gwy_curve_reset     (GwyCurve *curve);
 void        gwy_curve_set_range (GwyCurve *curve,
-                      gfloat min_x, gfloat max_x,
-                      gfloat min_y, gfloat max_y);
+                                 gfloat min_x, gfloat max_x,
+                                 gfloat min_y, gfloat max_y);
 
-void    gwy_curve_get_vector    (GwyCurve *c, gint channel,
-                                 gint veclen, gfloat vector[]);
+void        gwy_curve_get_vector    (GwyCurve *c, gint channel,
+                                     gint veclen, gfloat vector[]);
 
 
 void        gwy_curve_set_control_points(GwyCurve *curve,
