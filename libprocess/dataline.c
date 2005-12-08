@@ -737,8 +737,8 @@ gwy_data_line_set_si_unit_z(GwyDataLine *data_line,
  **/
 GwySIValueFormat*
 gwy_data_line_get_value_format_x(GwyDataLine *data_line,
-                                   GwySIUnitFormatStyle style,
-                                   GwySIValueFormat *format)
+                                 GwySIUnitFormatStyle style,
+                                 GwySIValueFormat *format)
 {
     gdouble max, unit;
 
@@ -767,8 +767,8 @@ gwy_data_line_get_value_format_x(GwyDataLine *data_line,
  **/
 GwySIValueFormat*
 gwy_data_line_get_value_format_z(GwyDataLine *data_line,
-                                  GwySIUnitFormatStyle style,
-                                  GwySIValueFormat *format)
+                                 GwySIUnitFormatStyle style,
+                                 GwySIValueFormat *format)
 {
     gdouble max, min;
 

@@ -91,6 +91,12 @@ void           gwy_data_line_set_si_unit_x         (GwyDataLine *data_line,
                                                     GwySIUnit *si_unit);
 void           gwy_data_line_set_si_unit_z         (GwyDataLine *data_line,
                                                     GwySIUnit *si_unit);
+GwySIValueFormat* gwy_data_line_get_value_format_x (GwyDataLine *data_line,
+                                                    GwySIUnitFormatStyle style,
+                                                    GwySIValueFormat *format);
+GwySIValueFormat* gwy_data_line_get_value_format_z (GwyDataLine *data_line,
+                                                    GwySIUnitFormatStyle style,
+                                                    GwySIValueFormat *format);
 gdouble        gwy_data_line_itor                  (GwyDataLine *data_line,
                                                     gdouble pixpos);
 gdouble        gwy_data_line_rtoi                  (GwyDataLine *data_line,
