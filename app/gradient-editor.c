@@ -415,27 +415,20 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
         channel_data = g_new(GwyChannelData, 3);
         gwy_curve_get_control_points(GWY_CURVE(editor->curve),
                                      channel_data, TRUE);
-
-        /* Copy the channel info into the gradient */
-        /*
-        color.r = channel_data[0].ctlpoints[1].y;
-        color.g = channel_data[1].ctlpoints[1].y;
-        color.b = channel_data[2].ctlpoints[1].y;
-        color.a = 1;
-        g_debug("r: %f  g: %f  b: %f", color.r, color.g, color.b);
-        gwy_gradient_set_point_color(gradient, 1, &color);
-        */
-
         num_pts = channel_data[0].num_ctlpoints;
+        /*TODO: Need to go through and exclude points with invalid x vals. The
+                code below works, but is not right. If user drags a point to
+                delete it, they will see wrong gradient until they let go of
+                mouse */
         points = g_new(GwyGradientPoint, num_pts);
         for (i=0; i<num_pts; i++) {
-            points[i].x = channel_data[0].ctlpoints[i].x;
+            points[i].x = CLAMP(channel_data[0].ctlpoints[i].x, 0, 1);
             points[i].color.r =
-                    channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y;
+            CLAMP(channel_data[GWY_CURVE_CHANNEL_RED].ctlpoints[i].y, 0, 1);
             points[i].color.g =
-                    channel_data[GWY_CURVE_CHANNEL_GREEN].ctlpoints[i].y;
+            CLAMP(channel_data[GWY_CURVE_CHANNEL_GREEN].ctlpoints[i].y, 0, 1);
             points[i].color.b =
-                    channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y;
+            CLAMP(channel_data[GWY_CURVE_CHANNEL_BLUE].ctlpoints[i].y, 0, 1);
             points[i].color.a = 1;
         }
         gwy_gradient_set_points(gradient, num_pts, points);

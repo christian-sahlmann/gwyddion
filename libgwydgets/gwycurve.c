@@ -53,7 +53,8 @@
 /*TODO: Update Devel documentation */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
-/*BUG: Last line on right side sometimes draws to zero for no reason? */
+/*TODO: Deal with warnings that emit while dragging ctlpts */
+/*TODO: Last line on right side sometimes draws to zero for no reason? */
 
 #include <config.h>
 #include <stdlib.h>
@@ -437,7 +438,7 @@ gwy_curve_expose(GwyCurve *c)
         c->pixmap = gdk_pixmap_new(w->window,
                                    w->allocation.width,
                                    w->allocation.height, -1);
-    gwy_curve_draw (c, width, height);
+    gwy_curve_draw(c, width, height);
     return TRUE;
 }
 
@@ -615,8 +616,8 @@ gwy_curve_motion_notify(GwyCurve *c)
 
     /*  get the pointer position  */
     gdk_window_get_pointer(w->window, &tx, &ty, NULL);
-    x = CLAMP((tx - RADIUS), 0, width-1);
-    y = CLAMP((ty - RADIUS), 0, height-1);
+    x = CLAMP((tx - RADIUS), 1, width);
+    y = CLAMP((ty - RADIUS), 1, height);
 
     /* determine closest channel to pointer */
     for (i=0, distance=~0U; i<c->num_channels; i++) {
@@ -673,7 +674,7 @@ gwy_curve_motion_notify(GwyCurve *c)
                 rx = 0;
             else if (c->grab_point == channel->num_ctlpoints-1)
                 rx = 1;
-            else if (tx <= leftbound || tx >= rightbound
+            else if (tx <= leftbound + MIN_DISTANCE || tx >= rightbound
                      || ty > height + RADIUS * 2 + MIN_DISTANCE
                      || ty < -MIN_DISTANCE)
                 rx = c->min_x - 1.0;
@@ -1013,7 +1014,7 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
     GwyPoint point, point1, point2;
 
     /* Copy curve->channel_data into ctlpoints */
-    for (c_index=0; c_index<3; c_index++) {
+    for (c_index=0; c_index<curve->num_channels; c_index++) {
         curve_channel = &curve->channel_data[c_index];
         ctlpoints[c_index] = g_array_new(FALSE, FALSE, sizeof(GwyPoint));
         for (i=0; i<curve_channel->num_ctlpoints; i++) {
@@ -1023,64 +1024,66 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
         }
     }
 
-    /*XXX THIS CODE DOESN'T BELONG IN GWYCURVE. MOVE TO GRADIENT-EDITOR*/
-
     /* Duplicate control points so that we have nothing but RGB triples */
-    for (c_index=0; c_index<3; c_index++) {
-        others[0] = c_index+1; wrap(others[0]);
-        others[1] = c_index+2; wrap(others[1]);
-        curve_channel = &curve->channel_data[c_index];
+    if (triplets) {
+        for (c_index=0; c_index<3; c_index++) {
+            others[0] = c_index+1; wrap(others[0]);
+            others[1] = c_index+2; wrap(others[1]);
+            curve_channel = &curve->channel_data[c_index];
 
-        /* Loop through all middle control pts for this channel
-        (we will ignore the endpoints for now) */
-        for (i=1; i<curve_channel->num_ctlpoints - 1; i++) {
-            point = g_array_index(ctlpoints[c_index], GwyPoint, i);
-            x_val = point.x;
+            /* Loop through all middle control pts for this channel
+            (we will ignore the endpoints for now) */
+            for (i=1; i<curve_channel->num_ctlpoints - 1; i++) {
+                point = g_array_index(ctlpoints[c_index], GwyPoint, i);
+                x_val = point.x;
 
-            /* Check other channels to see if ctl points exist at same x_val */
-            for (j=0; j<2; j++) {
-                other_channel = &curve->channel_data[others[j]];
-                point_exists = FALSE;
-                left_point = right_point = -1;
+                /* Check other channels to see if ctl
+                   points exist at same x_val */
+                for (j=0; j<2; j++) {
+                    other_channel = &curve->channel_data[others[j]];
+                    point_exists = FALSE;
+                    left_point = right_point = -1;
 
-                for (k=0; k<ctlpoints[others[j]]->len; k++) {
-                    point = g_array_index(ctlpoints[others[j]], GwyPoint, k);
-                    if (point.x == x_val) {
-                        point_exists = TRUE;
-                        break;
+                    for (k=0; k<ctlpoints[others[j]]->len; k++) {
+                        point = g_array_index(ctlpoints[others[j]],
+                                              GwyPoint, k);
+                        if (point.x == x_val) {
+                            point_exists = TRUE;
+                            break;
+                        }
+                        if (point.x > x_val && left_point == -1) {
+                            right_point = k;
+                            left_point = k-1;
+                        }
                     }
-                    if (point.x > x_val && left_point == -1) {
-                        right_point = k;
-                        left_point = k-1;
+
+                    /* If the point doesn't exist, then create it */
+                    if (!point_exists) {
+                        /* Interpolate to get y-value of new point */
+                        point1 = g_array_index(ctlpoints[others[j]], GwyPoint,
+                                               left_point);
+                        point2 = g_array_index(ctlpoints[others[j]], GwyPoint,
+                                               right_point);
+                        y_val = (((point2.y-point1.y) / (point2.x-point1.x)) *
+                                (x_val - point1.x)) + point1.y;
+
+                        /* Create new point */
+                        point.x = x_val;
+                        point.y = y_val;
+                        g_array_append_val(ctlpoints[others[j]], point);
                     }
-                }
-
-                /* If the point doesn't exist, then create it */
-                if (!point_exists) {
-                    /* Interpolate to get y-value of new point */
-                    point1 = g_array_index(ctlpoints[others[j]], GwyPoint,
-                                           left_point);
-                    point2 = g_array_index(ctlpoints[others[j]], GwyPoint,
-                                           right_point);
-                    y_val = (((point2.y - point1.y) / (point2.x- point1.x)) *
-                            (x_val - point1.x)) + point1.y;
-
-                    /* Create new point */
-                    point.x = x_val;
-                    point.y = y_val;
-                    g_array_append_val(ctlpoints[others[j]], point);
                 }
             }
         }
-    }
 
-    /* Sort control points (in case new ones were added) */
-    for (c_index=0; c_index<3; c_index++) {
-        g_array_sort(ctlpoints[c_index], ctlpoint_compare_func);
+        /* Sort control points (in case new ones were added) */
+        for (c_index=0; c_index<3; c_index++) {
+            g_array_sort(ctlpoints[c_index], ctlpoint_compare_func);
+        }
     }
 
     /* Copy ctlpoints into channel_data */
-    for (c_index=0; c_index<3; c_index++) {
+    for (c_index=0; c_index<curve->num_channels; c_index++) {
         channel = &channel_data[c_index];
         channel->num_ctlpoints = ctlpoints[c_index]->len;
         channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
@@ -1148,7 +1151,7 @@ gwy_curve_draw(GwyCurve *c, gint width, gint height)
         gwy_rgba_set_gdk_gc_fg(&channel->color, gc);
 
         lastx = lasty = -1;
-        for (i=0; i<channel->num_points; i++) {
+        for (i=0; i<channel->num_points-1; i++) {
             if (lastx > -1 && lasty > -1) {
                 gdk_draw_line(c->pixmap, gc,
                               lastx, lasty,
