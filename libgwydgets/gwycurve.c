@@ -53,8 +53,6 @@
 /*TODO: Update Devel documentation */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
-/*TODO: Deal with warnings that emit while dragging ctlpts */
-/*TODO: Last line on right side sometimes draws to zero for no reason? */
 
 #include <config.h>
 #include <stdlib.h>
