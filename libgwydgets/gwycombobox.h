@@ -28,28 +28,6 @@
 
 G_BEGIN_DECLS
 
-/*
-#define GWY_TYPE_COMBO_BOX            (gwy_combo_box_get_type())
-#define GWY_COMBO_BOX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_COMBO_BOX, GwyComboBox))
-#define GWY_COMBO_BOX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_COMBO_BOX, GwyComboBoxClass))
-#define GWY_IS_COMBO_BOX(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_COMBO_BOX))
-#define GWY_IS_COMBO_BOX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_COMBO_BOX))
-#define GWY_COMBO_BOX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_COMBO_BOX, GwyComboBoxClass))
-
-typedef struct _GwyComboBox      GwyComboBox;
-typedef struct _GwyComboBoxClass GwyComboBoxClass;
-
-struct _GwyComboBox {
-    GtkWidget widget;
-
-};
-
-struct _GwyComboBoxClass {
-    GtkWidgetClass parent_class;
-
-};
-*/
-
 GtkWidget* gwy_enum_combo_box_new        (const GwyEnum *entries,
                                           gint nentries,
                                           GCallback callback,
