@@ -812,8 +812,7 @@ gwy_curve_set_curve_type(GwyCurve *c, GwyCurveType new_type)
                 if (channel->ctlpoints)
                     g_free(channel->ctlpoints);
                 channel->num_ctlpoints = 9;
-                channel->ctlpoints =
-                    g_malloc(channel->num_ctlpoints * sizeof(GwyPoint));
+                channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
 
                 rx = 0.0;
                 dx = (width - 1) / (gfloat)(channel->num_ctlpoints - 1);
@@ -910,7 +909,7 @@ gwy_curve_set_control_points(GwyCurve *curve, GwyChannelData *channel_data,
             g_free(channel->ctlpoints);
 
         channel->num_ctlpoints = channel_data[c_index].num_ctlpoints;
-        channel->ctlpoints = g_malloc(channel->num_ctlpoints*sizeof(GwyPoint));
+        channel->ctlpoints = g_new(GwyPoint, channel->num_ctlpoints);
         for (i=0; i<channel->num_ctlpoints; i++) {
             channel->ctlpoints[i].x = channel_data[c_index].ctlpoints[i].x;
             channel->ctlpoints[i].y = channel_data[c_index].ctlpoints[i].y;
@@ -1224,7 +1223,7 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gfloat vector[])
 
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_SPLINE:
-        mem = g_malloc(3 * num_active_ctlpoints * sizeof (gfloat));
+            mem = g_new(gfloat, 3 * num_active_ctlpoints);
         xv  = mem;
         yv  = mem + num_active_ctlpoints;
         y2v = mem + 2*num_active_ctlpoints;
@@ -1315,7 +1314,7 @@ gwy_curve_reset_vector(GwyCurve *curve)
             g_free(channel->ctlpoints);
 
         channel->num_ctlpoints = 2;
-        channel->ctlpoints = g_malloc(2 * sizeof(GwyPoint));
+        channel->ctlpoints = g_new(GwyPoint, 2);
         channel->ctlpoints[0].x = curve->min_x;
         channel->ctlpoints[0].y = curve->min_y;
         channel->ctlpoints[1].x = curve->max_x;
@@ -1372,7 +1371,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
     GwyChannelData *channel;
     int i, c_index;
 
-    vector = g_malloc(width * sizeof (vector[0]));
+    vector = g_new(gfloat, width);
 
     for (c_index=0; c_index<c->num_channels; c_index++) {
         channel = &c->channel_data[c_index];
@@ -1384,7 +1383,7 @@ gwy_curve_interpolate(GwyCurve *c, gint width, gint height)
             channel->num_points = width;
             if (channel->points)
                 g_free (channel->points);
-            channel->points = g_malloc(channel->num_points * sizeof(GwyPoint));
+            channel->points = g_new(GwyPoint, channel->num_points);
         }
 
         for (i=0; i<width; ++i) {
@@ -1417,7 +1416,7 @@ spline_solve(int n, gfloat x[], gfloat y[], gfloat y2[])
     gfloat p, sig, *u;
     gint i, k;
 
-    u = g_malloc ((n - 1) * sizeof (u[0]));
+    u = g_new(gfloat, (n - 1));
 
     y2[0] = u[0] = 0.0;   /* set lower boundary condition to "natural" */
 
