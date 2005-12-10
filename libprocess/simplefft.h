@@ -22,7 +22,6 @@
 #define __GWY_PROCESS_SIMPLEFFT_H__
 
 #include <glib.h>
-#include <gtk/gtk.h>
 #include <libprocess/gwyprocessenums.h>
 #include <libprocess/datafield.h>
 
