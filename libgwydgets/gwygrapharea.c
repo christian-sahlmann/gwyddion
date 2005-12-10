@@ -203,7 +203,7 @@ gwy_graph_area_init(GwyGraphArea *area)
     gwy_graph_area_set_selection_limit(area, 10);
 
     area->lab = GWY_GRAPH_LABEL(gwy_graph_label_new());
-    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+    gtk_layout_put(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                    GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
                    5);
 
@@ -213,6 +213,15 @@ gwy_graph_area_init(GwyGraphArea *area)
 
 }
 
+/**
+ * gwy_graph_area_new:
+ * @hadjustment: XXX - what is this for?
+ * @vadjustment: XXX - what is this for?
+ *
+ * Creates a graph area widget.
+ *
+ * Returns: new #GwyGraphArea widget.
+ **/
 GtkWidget*
 gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
 {
@@ -239,7 +248,7 @@ gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
     g_signal_connect(area->label_dialog, "response",
                      G_CALLBACK(gwy_graph_label_entry_cb), area);
 
-    
+
      return GTK_WIDGET(area);
 }
 
@@ -269,7 +278,7 @@ gwy_graph_area_finalize(GObject *object)
 static void
 gwy_graph_area_adjust_label(GwyGraphArea *area, gint x, gint y)
 {
-    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab), 
+    gtk_layout_move(GTK_LAYOUT(area), GTK_WIDGET(area->lab),
                     x, y);
     area->newline = 0;
 }
@@ -284,27 +293,27 @@ gwy_graph_area_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     area = GWY_GRAPH_AREA(widget);
     lab_alloc = &GTK_WIDGET(area->lab)->allocation;
 
-    
+
     rx = (gdouble)lab_alloc->x/area->old_width;
     ry = (gdouble)lab_alloc->y/area->old_height;
-    
+
     if (rx < 0.1) rx = 0.1;
     else if (rx > 0.9) rx = 0.9;
     if (ry < 0.1) ry = 0.1;
     else if (ry > 0.9) ry = 0.9;
- 
-    
+
+
     GTK_WIDGET_CLASS(gwy_graph_area_parent_class)->size_allocate(widget,
                                                                  allocation);
 
-    
+
     if (((area->old_width != widget->allocation.width
           || area->old_height != widget->allocation.height)
          || area->newline == 1)
         && (lab_alloc->x != widget->allocation.width - lab_alloc->width - 5
             || lab_alloc->y != 5)) {
-        gwy_graph_area_adjust_label(area, 
-                                    (gint)(rx*widget->allocation.width), 
+        gwy_graph_area_adjust_label(area,
+                                    (gint)(rx*widget->allocation.width),
                                     (gint)(ry*widget->allocation.height));
         area->newline = 0;
     }
@@ -397,10 +406,22 @@ gwy_graph_area_expose(GtkWidget *widget,
     return FALSE;
 }
 
+/**
+ * gwy_graph_area_draw_area_on_drawable:
+ * @drawable: a #GdkDrawable
+ * @gc: a #GdkGC XXX: more info on this?
+ * @x: X position in @drawable where the graph area should be drawn
+ * @y: Y position in @drawable where the graph area should be drawn
+ * @width: draw width
+ * @height: draw height
+ * @area: the graph area to draw
+ *
+ * Draws the graph area to a #GdkDrawable.
+ **/
 void
 gwy_graph_area_draw_area_on_drawable(GdkDrawable *drawable, GdkGC *gc,
-                                       gint x, gint y, gint width, gint height,
-                                       GwyGraphArea *area)
+                                     gint x, gint y, gint width, gint height,
+                                     GwyGraphArea *area)
 {
     gint nc, i;
     GwyGraphActiveAreaSpecs specs;
@@ -569,9 +590,9 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
     }
 
 
-    if (gwy_graph_area_get_selection_limit(area) == 1) 
+    if (gwy_graph_area_get_selection_limit(area) == 1)
         gwy_graph_area_clear_selection(area);
-    
+
     if (area->status == GWY_GRAPH_STATUS_POINTS)
     {
         if (event->button == 1 && !gwy_selection_is_full(GWY_SELECTION(area->pointsdata))) /*add selection*/
@@ -1128,13 +1149,13 @@ gwy_graph_area_signal_zoomed(GwyGraphArea *area)
 static void
 gwy_graph_area_repos_label(GwyGraphArea *area)
 {
-    gwy_graph_area_adjust_label(area, 
+    gwy_graph_area_adjust_label(area,
            GTK_WIDGET(area)->allocation.width - GWY_GRAPH_LABEL(area->lab)->reqwidth - 5,//GTK_WIDGET(area->lab)->allocation.width - 5,
            5);
 }
 
 /**
- * gwy_graph_area_signal_refresh:
+ * gwy_graph_area_refresh:
  * @area: graph area
  *
  * Refreshes the area with respect to graph model.
@@ -1150,8 +1171,8 @@ gwy_graph_area_refresh(GwyGraphArea *area)
         gtk_widget_show(GTK_WIDGET(area->lab));
         gwy_graph_label_refresh(area->lab);
 
-        if (area->x0 == 0 && area->y0 == 0) 
-                gwy_graph_area_adjust_label(area, 
+        if (area->x0 == 0 && area->y0 == 0)
+                gwy_graph_area_adjust_label(area,
                     GTK_WIDGET(area)->allocation.width - GTK_WIDGET(area->lab)->allocation.width - 5,
                     5);
     }
@@ -1163,7 +1184,7 @@ gwy_graph_area_refresh(GwyGraphArea *area)
               GWY_GRAPH_MODEL(area->graph_model),
               "notify",
               G_CALLBACK(gwy_graph_area_repos_label), area);
- 
+
     /*repaint area data*/
     gtk_widget_queue_draw(GTK_WIDGET(area));
 }
@@ -1179,18 +1200,18 @@ void
 gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
 {
     gint i;
-    
+
     area->graph_model = gmodel;
     gwy_graph_label_set_model(area->lab, gmodel);
 
     for (i = 0; i < gwy_graph_model_get_n_curves(GWY_GRAPH_MODEL(gmodel)); i++)
     {
         g_signal_connect_swapped(
-                             gwy_graph_model_get_curve_by_index(GWY_GRAPH_MODEL(gmodel), i), 
+                             gwy_graph_model_get_curve_by_index(GWY_GRAPH_MODEL(gmodel), i),
                              "notify",
                              G_CALLBACK(gwy_graph_area_repos_label), area);
     }
-       
+
     gwy_graph_area_refresh(area);
 }
 
@@ -1220,8 +1241,8 @@ gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_d
  * gwy_graph_area_clear_selection:
  * @area: graph area
  *
- * Clear all the selections. If you use grapher area as a part of
- * #GwyGrapher use the #GwyGrapher clear selection function preferably.
+ * Clear all the selections. If you use graph area as a part of
+ * #GwyGraph use the #GwyGraph clear selection function preferably.
  **/
 void
 gwy_graph_area_clear_selection(GwyGraphArea *area)
@@ -1307,7 +1328,7 @@ gwy_graph_area_set_selection(GwyGraphArea *area, GwyGraphStatusType status,
  * @area: graph area
  * @enable: enable/disable user input
  *
- * Enables/disables all the user input dialogs to be invoked by clicking by mouse.
+ * Enables/disables all the user input dialogs (to be invoked by clicking the mouse).
  **/
 void
 gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
@@ -1322,7 +1343,7 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
    * @x_cursor: x value corresponding to cursor position
    * @y_cursor: y value corresponding to cursor position
    *
-   * Gets mouse cursor related values withing graph area
+   * Gets mouse cursor related values within graph area
    */
 void
 gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor)
@@ -1363,6 +1384,12 @@ static gchar *symbols[] =
     "Dia",
 };
 
+/**
+ * gwy_graph_area_export_vector:
+ * @area: the graph area to export
+ *
+ * XXX: Does this need to be public?
+ **/
 GString* gwy_graph_area_export_vector(GwyGraphArea *area,
                                       gint x, gint y,
                                       gint width, gint height)
@@ -1482,17 +1509,16 @@ gwy_graph_area_get_selection_limit(GwyGraphArea *area)
 
 
 /**
-   * gwy_graph_area_get_label:
-   * @area: graph area
-   *
-   * Returns: graph area label
-   */
+ * gwy_graph_area_get_label:
+ * @area: graph area
+ *
+ * Returns: the #GwyGraphLabel within @area (do not free).
+*/
 GtkWidget*
 gwy_graph_area_get_label(GwyGraphArea *area)
 {
     return GTK_WIDGET(area->lab);
 }
-
 
 void
 gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
@@ -1557,7 +1583,7 @@ gwy_graph_area_get_selection_number(GwyGraphArea *area)
 }
 
 /**
-  * gwy_graph_get_selection:
+  * gwy_graph_area_get_selection:
   * @graph: A graph widget.
   * @selection: allocated field of gdoubles
   *
@@ -1630,10 +1656,10 @@ gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
 
         default:
         g_assert_not_reached();
-    }                                                                                    
+    }
 }
-                
-   
+
+
 
 
 /************************** Documentation ****************************/
@@ -1644,7 +1670,7 @@ gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
  * @short_description: Layout for drawing graph curves
  *
  * #GwyGraphArea is the central part of #GwyGraph widget. It plots a set of
- * data curves with a given plot properties.
+ * data curves with the given plot properties.
  *
  * It is recommended to use it within #GwyGraph, however, it can be used
  * separately.

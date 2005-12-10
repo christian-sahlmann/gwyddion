@@ -460,7 +460,7 @@ gwy_graph_model_new_alike(GwyGraphModel *gmodel)
 /**
  * gwy_graph_model_add_curve:
  * @gmodel: A #GwyGraphModel.
- * @curve: A #GwyGraphCurveModel representing curve.
+ * @curve: A #GwyGraphCurveModel representing the curve to add.
  *
  * Adds a new curve to the model. All the curve parameters should be specified
  * within the @curve structure.
@@ -521,7 +521,7 @@ gwy_graph_model_remove_all_curves(GwyGraphModel *gmodel)
 }
 
 /**
- * gwy_graph_model_remove_curve_by_desciption:
+ * gwy_graph_model_remove_curve_by_description:
  * @gmodel: A #GwyGraphModel.
  * @description: curve description (label)
  *
@@ -589,11 +589,11 @@ gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint cindex)
 }
 
 /**
- * gwy_graph_model_get_curve_by_desciption:
+ * gwy_graph_model_get_curve_by_description:
  * @gmodel: A #GwyGraphModel.
  * @description: curve description (label)
  *
- * Returns: First curve that has sescription (label) given by @description.
+ * Returns: First curve that has description (label) given by @description.
  **/
 GwyGraphCurveModel*
 gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
@@ -614,7 +614,7 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_graph_model_get_curve_by_desciption:
+ * gwy_graph_model_get_curve_by_index:
  * @gmodel: A #GwyGraphModel.
  * @cindex: Curve index in graph model.
  *
@@ -629,7 +629,6 @@ gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint cindex)
     return g_ptr_array_index(gmodel->curves, cindex);
 }
 
-
 /**
  * gwy_graph_model_signal_layout_changed:
  * @model: A #GwyGraphModel.
@@ -642,7 +641,6 @@ gwy_graph_model_signal_layout_changed(GwyGraphModel *model)
 {
     g_signal_emit(model, graph_model_signals[LAYOUT_UPDATED], 0);
 }
-
 
 /**
  * gwy_graph_model_set_title:
@@ -680,7 +678,7 @@ gwy_graph_model_set_label_position(GwyGraphModel *model,
  * @model: A #GwyGraphModel.
  * @label_has_frame: label frame mode.
  *
- * Sets whether graph widget label should have frame around. Note that the
+ * Sets whether graph label widget should have a frame around it. Note that the
  * label must be visible (see #gwy_graph_model_set_label_visible())
  * to see label.
  **/
@@ -697,11 +695,9 @@ gwy_graph_model_set_label_has_frame(GwyGraphModel *model,
  * @model: A #GwyGraphModel.
  * @thickness: Label frame thickness (in pixels).
  *
- * Sets the label frame thickness. Note that the
- * both the frame and label must be visible
- * (see #gwy_graph_model_set_label_visible())
- * to see label and label frame.
- *
+ * Sets the label frame thickness. Note that both the frame and label must
+ * be visible (see #gwy_graph_model_set_label_visible()) to see label and label
+ * frame.
  **/
 void
 gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
@@ -715,9 +711,9 @@ gwy_graph_model_set_label_frame_thickness(GwyGraphModel *model, gint thickness)
  * @model: A #GwyGraphModel.
  * @reverse: Label alingment mode.
  *
- * Sets the label alingment (curve samples and their description postion).
- * By setting the @reverse = TRUE you get alingment ("text", "sample"),
- * otherwise you get alingment ("sample", "text").
+ * Sets the label alignment (curve samples and their description postion).
+ * By setting the @reverse = TRUE you get alignment ("text", "sample"),
+ * otherwise you get alignment ("sample", "text").
  **/
 void
 gwy_graph_model_set_label_reverse(GwyGraphModel *model, gboolean reverse)
@@ -812,13 +808,13 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
     return model->label_visible;
 }
 
-
 /**
  * gwy_graph_model_set_x_siunit:
  * @model: A #GwyGraphModel.
  * @siunit: physical unit for x axis
  *
- * Sets the physical unit for graph x axis
+ * Sets the physical unit for graph x axis. The unit is duplicated, so you are
+ * responsible for freeing @siunit.
  **/
 void
 gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
@@ -834,7 +830,8 @@ gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
  * @model: A #GwyGraphModel.
  * @siunit: physical unit for y axis
  *
- * Sets the physical unit for graph y axis
+ * Sets the physical unit for graph y axis. The unit is duplicated, so you are
+ * responsible for freeing @siunit.
  **/
 void
 gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
@@ -849,7 +846,7 @@ gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
  * gwy_graph_model_get_x_siunit:
  * @model: A #GwyGraphModel.
  *
- * Returns: physical unit for graph x axis
+ * Returns: a new #GwySIUnit containing the physical unit for graph x axis
  **/
 GwySIUnit*
 gwy_graph_model_get_x_siunit(GwyGraphModel *model)
@@ -861,7 +858,7 @@ gwy_graph_model_get_x_siunit(GwyGraphModel *model)
  * gwy_graph_model_get_y_siunit:
  * @model: A #GwyGraphModel.
  *
- * Returns: physical unit for graph y axis
+ * Returns: a new #GwySIUnit containing the physical unit for graph y axis
  **/
 GwySIUnit*
 gwy_graph_model_get_y_siunit(GwyGraphModel *model)
@@ -869,7 +866,15 @@ gwy_graph_model_get_y_siunit(GwyGraphModel *model)
     return gwy_si_unit_duplicate(model->y_unit);
 }
 
-
+/**
+ * gwy_graph_model_set_direction_logarithmic:
+ * @model: a #GwyGraphModel.
+ * @direction: axis orientation (e. g. horizontal, vertical).
+ * @is_logarithmic: the logarithmic mode
+ *
+ * Sets data along the axis specified by @direction to display either
+ * logarithmically (@is_logarithmic=TRUE) or normally (@is_logarithmic=FALSE).
+ **/
 void
 gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
                                           GtkOrientation direction,
@@ -883,6 +888,14 @@ gwy_graph_model_set_direction_logarithmic(GwyGraphModel *model,
     gwy_graph_model_signal_layout_changed(model);
 }
 
+/**
+ * gwy_graph_model_get_direction_logarithmic:
+ * @model: a #GwyGraphModel.
+ * @direction: axis orientation (e. g. horizontal, vertical).
+ *
+ * Returns: TRUE if the axis specified by @direction is currently set to display
+ * logarithmically. FALSE if it is set to display normally.
+ **/
 gboolean
 gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
                                           GtkOrientation direction)
@@ -893,6 +906,13 @@ gwy_graph_model_get_direction_logarithmic(GwyGraphModel *model,
     return model->x_is_logarithmic;
 }
 
+/**
+ * gwy_graph_model_x_data_can_be_logarithmed:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns: TRUE if all x-values are greater than zero (thus logarithmic
+ * display of x-data is safe).
+ **/
 gboolean
 gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -912,6 +932,13 @@ gwy_graph_model_x_data_can_be_logarithmed(GwyGraphModel *model)
     return TRUE;
 }
 
+/**
+ * gwy_graph_model_y_data_can_be_logarithmed:
+ * @model: a #GwyGraphModel.
+ *
+ * Returns: TRUE if all y-values are greater than zero (thus logarithmic
+ * display of y-data is safe).
+ **/
 gboolean
 gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
 {
@@ -931,8 +958,6 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
     return TRUE;
 }
 
-
-
 /**
  * gwy_graph_model_export_ascii:
  * @model: A #GwyGraphModel.
@@ -940,9 +965,10 @@ gwy_graph_model_y_data_can_be_logarithmed(GwyGraphModel *model)
  * @export_units: export units in the column header
  * @export_labels: export labels in the column header
  * @export_metadata: export all graph metadata within file header
- * @export_style: style of values export to be readable by cetain program directly.
+ * @export_style: specifies the file format to export to (e. g. plain, csv,
+ * gnuplot, etc.)
  *
- * Exports graph model into a file. The export options are specified by
+ * Exports graph model into a file. The export format is specified by
  * parameter @export_style.
  **/
 void

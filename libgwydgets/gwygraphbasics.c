@@ -351,7 +351,7 @@ gwy_graph_draw_grid(GdkDrawable *drawable,
 
 /**
  * SECTION:gwygraphbasics
- * @title: gwygraphbasics
+ * @title: GwyGraphBasics
  * @short_description: Common graph functions and utilities
  **/
 

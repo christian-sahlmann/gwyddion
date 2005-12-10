@@ -98,7 +98,7 @@ gwy_selection_graph_line_init(GwySelectionGraphLine *selection)
 
 /**
  * SECTION:gwygraphselections
- * @title: gwygraphselections
+ * @title: GwyGraphSelections
  * @short_description: Graph selection types
  **/
 

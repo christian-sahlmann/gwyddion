@@ -284,7 +284,7 @@ gwy_graph_refresh(GwyGraph *graph)
     const gdouble *xdata, *ydata;
     gboolean has_data;
 
-    
+
     if (graph->graph_model == NULL)
         return;
     model = GWY_GRAPH_MODEL(graph->graph_model);
@@ -425,7 +425,8 @@ GwyGraphModel *gwy_graph_get_model(GwyGraph *graph)
  * @graph: A graph widget.
  * @type: Axis orientation
  *
- * Returns: Graph axis of given orientation.
+ * Returns: pointer to the #GwyAxis within @graph of given orientation (do not
+ * free).
  **/
 GwyAxis*
 gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
@@ -450,13 +451,14 @@ gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
 
     g_return_val_if_reached(NULL);
 }
+
 /**
  * gwy_graph_set_axis_visible:
  * @graph: A graph widget.
  * @type: Axis orientation
  * @is_visible: set/unset axis visibility within graph widget
  *
- * Returns: Sets the visibility of graph axis of given orientation.
+ * Sets the visibility of graph axis of given orientation.
  **/
 void
 gwy_graph_set_axis_visible(GwyGraph *graph,
@@ -486,7 +488,7 @@ gwy_graph_set_axis_visible(GwyGraph *graph,
  * gwy_graph_get_area:
  * @graph: A graph widget.
  *
- * Returns: Graph area.
+ * Returns: the #GwyGraphArea within @graph (do not free).
  **/
 GtkWidget*
 gwy_graph_get_area(GwyGraph *graph)
@@ -809,10 +811,10 @@ gwy_graph_get_y_grid_data(GwyGraph *graph)
  * @title: GwyGraph
  * @short_description: Widget for displaying graphs
  *
- * #GwyGraph is basic widget for displaying graphs.
- * It consist of several widgets that can be also used sparately.
+ * #GwyGraph is a basic widget for displaying graphs.
+ * It consists of several widgets that can also be used separately.
  * However, it is recomended (and it should be easy)
- * to use whole #GwyGraph widget and its API for most of the purposes.
+ * to use the whole #GwyGraph widget and its API for most purposes.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

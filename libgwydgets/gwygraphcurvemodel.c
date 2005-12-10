@@ -274,9 +274,6 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
  *
  * Creates a new graph curve model.
  *
- * With current generation of graph widgets it is useless without
- * gwy_graph_curve_model_save_curve().
- *
  * Returns: New empty graph curve model as a #GObject.
  **/
 GwyGraphCurveModel*
@@ -450,9 +447,8 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
 * @ydata: y data points (array of size @n)
 * @n: data array size (number of data points)
 *
-* Sets curve model data. Curve model does not make a copy of the data,
-* therefore you should not free the data unless you know what
-* are you doing.
+* Sets curve model data. Curve model will make a copy of the data, so you
+* are responsible for freeing the original arrays.
 **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
@@ -488,7 +484,8 @@ gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
 * @gcmodel: A #GwyGraphCurveModel.
 * @type: curve type
 *
-* Sets curve type for plotting the curve. This includes setting points, linespoints, line, etc.
+* Sets curve type for plotting the curve (e. g. points, lines, points &
+* lines, etc.).
 **/
 void
 gwy_graph_curve_model_set_curve_type(GwyGraphCurveModel *gcmodel,
@@ -531,9 +528,9 @@ gwy_graph_curve_model_set_curve_point_size(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_line_style:
+* gwy_graph_curve_model_set_curve_line_style:
 * @gcmodel: A #GwyGraphCurveModel.
-* @description: line style to be used for plot
+* @line_style: line style to be used for plot
 *
 * Sets curve line style for plotting the curve. Curve type that is chosen must include
 * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
@@ -547,11 +544,11 @@ gwy_graph_curve_model_set_curve_line_style(GwyGraphCurveModel *gcmodel,
 }
 
 /**
-* gwy_graph_curve_model_set_line_size:
+* gwy_graph_curve_model_set_curve_line_size:
 * @gcmodel: A #GwyGraphCurveModel.
-* @description: line size to be used for plot (in pixels)
+* @line_size: line size to be used for plot (in pixels)
 *
-* Sets curve line size description. Curve type that is chosen must include
+* Sets curve line size (thickness). Curve type that is chosen must include
 * some kind of line plot to see any change (e. g. GWY_GRAPH_CURVE_LINE).
 **/
 void
@@ -620,7 +617,7 @@ gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
 * gwy_graph_curve_model_get_curve_type:
 * @gcmodel: A #GwyGraphCurveModel.
 *
-* Returns: curve plot type (as points, lines, linespoints, etc.)
+* Returns: curve plot type (e. g. points, lines, points & lines, etc.)
 **/
 GwyGraphCurveType
 gwy_graph_curve_model_get_curve_type(GwyGraphCurveModel *gcmodel)
@@ -686,13 +683,13 @@ gwy_graph_curve_model_get_curve_line_size(GwyGraphCurveModel *gcmodel)
 * Sets the curve data from #GwyDataLine. The range of import can be
 * modified using parameters @from_index and @to_index that are
 * interpreted directly as data indices within the #GwyDataLine.
-* In case that @from_index == @to_index full #GwyDataLine is used.
+* In the case that @from_index == @to_index, the full #GwyDataLine is used.
 **/
 void
 gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
-                                            GwyDataLine *dline,
-                                            gint from_index,
-                                            gint to_index)
+                                             GwyDataLine *dline,
+                                             gint from_index,
+                                             gint to_index)
 {
     gdouble *xdata;
     gdouble *ydata;
@@ -713,22 +710,19 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
         realmax = gwy_data_line_itor(dline, to_index);
     }
 
-    xdata = (gdouble *)g_malloc(sizeof(gdouble)*res);
-    ydata = (gdouble *)g_malloc(sizeof(gdouble)*res);
+    xdata = g_new(gdouble, res);
+    ydata = g_new(gdouble, res);
 
-    
     offset = gwy_data_line_get_offset(dline);
 
     for (i=0; i<res; i++)
     {
-        xdata[i] = realmin + (gdouble)i*(realmax - realmin)/(gdouble)res + offset;
+        xdata[i] = realmin +
+                   (gdouble)i*(realmax - realmin)/(gdouble)res + offset;
         ydata[i] = dline->data[i + from_index];
     }
 
-    gwy_graph_curve_model_set_data(gcmodel,
-                                   xdata,
-                                   ydata,
-                                   res);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
 
     g_free(xdata);
     g_free(ydata);
@@ -749,14 +743,15 @@ gwy_graph_curve_model_set_curve_color(GwyGraphCurveModel *gcmodel,
 {
     g_return_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel));
     gcmodel->color = *color;
-    g_object_notify(G_OBJECT(gcmodel), "curve-type");   
+    g_object_notify(G_OBJECT(gcmodel), "curve-type");
 }
 
 /**
 * gwy_graph_curve_model_get_curve_color:
 * @gcmodel: A #GwyGraphCurveModel.
 *
-* Returns: curve color structure (directly used by curve model, not free it after use).
+* Returns: curve color structure (directly used by curve model, do not free it
+* after use).
 **/
 GwyRGBA *
 gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
@@ -782,7 +777,7 @@ gwy_graph_curve_model_signal_layout_changed(GwyGraphCurveModel *model)
 /**
  * SECTION:gwygraphcurvemodel
  * @title: GwyGraphCurveModel
- * @short_description: Representation of a one graph curve
+ * @short_description: Representation of one graph curve
  *
  * #GwyGraphCurveModel represents information about a graph curve necessary to
  * fully reconstruct it.
