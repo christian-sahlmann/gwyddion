@@ -53,11 +53,14 @@ HTML_IMAGES = \
 	$(top_srcdir)/pixmaps/cd_step.png \
 	$(top_srcdir)/pixmaps/cd_rstep.png
 
+# Includes required for types compilation
+TYPES_INCLUDE = \#include \"$(DOC_DIRNAME)/gwydgets.h\"
+
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files = standard-vector-layers.xml
 
 # Other files to distribute.
-extra_files = $(DOC_MODULE).types makefile.msc
+extra_files = makefile.msc
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.

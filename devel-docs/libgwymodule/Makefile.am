@@ -47,6 +47,9 @@ IGNORE_HFILES = gwymoduleinternal.h
 # Images to copy into HTML directory.
 HTML_IMAGES =
 
+# Includes required for types compilation
+TYPES_INCLUDE =
+
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files = \
 	module-tutorial-overview.xml \

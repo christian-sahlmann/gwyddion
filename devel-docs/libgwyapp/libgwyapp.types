@@ -1,3 +1,0 @@
-#include "app/resource-editor.h"
-
-gwy_resource_editor_get_type

@@ -1,4 +1,0 @@
-#include "libprocess/datafield.h"
-
-gwy_data_line_get_type
-gwy_data_field_get_type

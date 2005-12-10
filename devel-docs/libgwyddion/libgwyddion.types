@@ -1,9 +1,0 @@
-#include "libgwyddion/gwyddion.h"
-
-gwy_enum_get_type
-gwy_serializable_get_type
-gwy_container_get_type
-gwy_si_unit_get_type
-gwy_inventory_get_type
-gwy_resource_get_type
-gwy_nlfit_preset_get_type

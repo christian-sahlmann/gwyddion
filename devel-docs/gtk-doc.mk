@@ -5,20 +5,27 @@
 
 TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 
-EXTRA_DIST = 				\
-	$(content_files)		\
-	$(extra_files)			\
-	$(HTML_IMAGES)			\
-	$(DOC_MAIN_SGML_FILE)		\
-	$(DOC_MODULE)-sections.txt	\
-	$(DOC_MODULE)-decl.txt	\
+EXTRA_DIST = \
+	$(content_files) \
+	$(extra_files) \
+	$(HTML_IMAGES) \
+	$(DOC_MAIN_SGML_FILE) \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-decl.txt \
+	$(DOC_MODULE).types \
 	$(DOC_OVERRIDES)
 
-DOC_STAMPS=scan-build.stamp template-build.stamp sgml-build.stamp html-build.stamp \
-	   $(srcdir)/template.stamp $(srcdir)/sgml.stamp $(srcdir)/html.stamp
+DOC_STAMPS = \
+	scan-build.stamp \
+	template-build.stamp \
+	sgml-build.stamp \
+	html-build.stamp \
+	$(srcdir)/template.stamp \
+	$(srcdir)/sgml.stamp \
+	$(srcdir)/html.stamp
 
-SCANOBJ_FILES = 		\
-	$(DOC_MODULE).args 	\
+SCANOBJ_FILES = \
+	$(DOC_MODULE).args \
 	$(DOC_MODULE).hierarchy \
 	$(DOC_MODULE).signals \
 	$(DOC_MODULE).prerequisites \
@@ -34,6 +41,10 @@ docs: html-build.stamp
 
 scan-build.stamp: $(HFILE_GLOB)
 	@echo '*** Scanning header files ***'
+	if test "x$(TYPES_INCLUDE)" != x; then \
+	    echo "$(TYPES_INCLUDE)"; \
+	    IGNORE_HFILES="$(IGNORE_HFILES)" $(top_srcdir)/devel-docs/extract-types.py $(HFILE_GLOB); \
+	fi >$(srcdir)/$(DOC_MODULE).types
 	if test -s $(srcdir)/$(DOC_MODULE).types; then \
 	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" CFLAGS="$(GTKDOC_CFLAGS)" LDFLAGS="$(GTKDOC_LIBS)" gtkdoc-scangobj $(SCANOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(srcdir); \
 	else \
