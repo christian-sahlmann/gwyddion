@@ -9,6 +9,7 @@
 *.prerequisites
 *.signals
 *.stamp
+*.types
 Makefile
 Makefile.in
 html
