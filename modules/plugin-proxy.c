@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1.2",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1030,6 +1030,27 @@ dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
     fprintf(fh, "%s=%s\n", key, g_value_get_string(value));
 }
 
+static inline void
+gwy_byteswapped_copy(const guint8 *source,
+                     guint8 *dest,
+                     gsize size,
+                     gsize len,
+                     gsize byteswap)
+{
+    gsize i, k;
+
+    if (!byteswap) {
+        memcpy(dest, source, size*len);
+        return;
+    }
+
+    for (i = 0; i < len; i++) {
+        guint8 *b = dest + i*size;
+
+        for (k = 0; k < size; k++)
+            b[k ^ byteswap] = *(source++);
+    }
+}
 /**
  * dump_export_data_field:
  * @dfield: A #GwyDataField.
@@ -1041,6 +1062,7 @@ dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
 static void
 dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 {
+    const gdouble *data;
     gchar *unit;
     gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     gint xres, yres;
@@ -1062,7 +1084,20 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
     g_free(unit);
     fprintf(fh, "%s=[\n[", name);
     fflush(fh);
-    fwrite(dfield->data, sizeof(gdouble), xres*yres, fh);
+    data = gwy_data_field_get_data_const(dfield);
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    fwrite(data, sizeof(gdouble), xres*yres, fh);
+#else
+    {
+        guint8 *d;
+
+        d = g_new(guint8, sizeof(gdouble)*xres*yres);
+        gwy_byteswapped_copy((const guint8*)data, d,
+                             sizeof(gdouble), xres*yres, sizeof(gdouble) - 1);
+        fwrite(data, sizeof(gdouble), xres*yres, fh);
+        g_free(d);
+    }
+#endif
     fwrite("]]\n", 1, 3, fh);
     fflush(fh);
 }
@@ -1122,6 +1157,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
     gint xres, yres;
     GwySIUnit *uxy, *uz;
     const guchar *s;
+    gdouble *d;
     gsize n;
 
     if (old_data) {
@@ -1246,7 +1282,13 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         gwy_object_unref(uxy);
         gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(uz));
         gwy_object_unref(uz);
-        memcpy(dfield->data, pos, n);
+        d = gwy_data_field_get_data(dfield);
+#if (G_BYTE_ORDER != G_LITTLE_ENDIAN)
+        memcpy(d, pos, n);
+#else
+        gwy_byteswapped_copy(pos, (guint8*)d,
+                             sizeof(gdouble), n, sizeof(gdouble)-1);
+#endif
         pos += n;
         val = gwy_str_next_line(&pos);
         if (!gwy_strequal(val, "]]")) {
