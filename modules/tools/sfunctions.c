@@ -300,9 +300,11 @@ dialog_update(GwyUnitoolState *state,
 
     gwy_debug("");
 
-    /* XXX */
+    /* XXX: Does not work.  We don't need to update when the dialog is
+     * visible, but we must update when it *becomes visible again* then
     if (!state->is_visible)
         return;
+    */
 
     controls = (ToolControls*)state->user_data;
     gtk_widget_set_sensitive(controls->direction,
