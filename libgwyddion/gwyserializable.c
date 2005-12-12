@@ -368,7 +368,7 @@ gwy_serializable_clone(GObject *source,
  * @len: Number of items to copy.
  * @byteswap: Byte swapping pattern -- if a bit is set, blocks of
  *            corresponding size are swapped.  For byte order reversion,
- *            @byteswap must be equal to 2^@size-1.
+ *            @byteswap must be equal to @size-1.
  *
  * Copies memory, byte swapping meanwhile.
  *
@@ -1559,7 +1559,7 @@ gwy_deserialize_int32_array(const guchar *buffer,
 #else
     value = g_new(gint32, newasize);
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gint32), newasize, (1 << sizeof(gint32)) - 1);
+                         sizeof(gint32), newasize, sizeof(gint32) - 1);
 #endif
     *position += newasize*sizeof(gint32);
     *asize = newasize;
@@ -1634,7 +1634,7 @@ gwy_deserialize_int64_array(const guchar *buffer,
 #else
     value = g_new(gint64, newasize);
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gint64), newasize, (1 << sizeof(gint64)) - 1);
+                         sizeof(gint64), newasize, sizeof(gint64) - 1);
 #endif
     *position += newasize*sizeof(gint64);
     *asize = newasize;
@@ -1671,7 +1671,7 @@ gwy_deserialize_double(const guchar *buffer,
     memcpy(&value, buffer + *position, sizeof(gdouble));
 #else
     gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
-                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
+                         sizeof(gdouble), 1, sizeof(gdouble) - 1);
 #endif
     *position += sizeof(gdouble);
 
@@ -1713,7 +1713,7 @@ gwy_deserialize_double_array(const guchar *buffer,
 #else
     value = g_new(gdouble, newasize);
     gwy_byteswapped_copy(buffer + *position, (guint8*)value,
-                         sizeof(gdouble), newasize, (1 << sizeof(gdouble)) - 1);
+                         sizeof(gdouble), newasize, sizeof(gdouble) - 1);
 #endif
     *position += newasize*sizeof(gdouble);
     *asize = newasize;

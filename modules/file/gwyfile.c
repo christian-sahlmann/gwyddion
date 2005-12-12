@@ -290,7 +290,7 @@ gwy_serialize_unpack_double(const guchar *buffer,
     memcpy(&value, buffer + *position, sizeof(gdouble));
 #else
     gwy_byteswapped_copy(buffer + *position, (guint8*)&value,
-                         sizeof(gdouble), 1, (1 << sizeof(gdouble)) - 1);
+                         sizeof(gdouble), 1, sizeof(gdouble) - 1);
 #endif
     *position += sizeof(gdouble);
 
