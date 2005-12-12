@@ -1283,7 +1283,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         gwy_data_field_set_si_unit_z(dfield, GWY_SI_UNIT(uz));
         gwy_object_unref(uz);
         d = gwy_data_field_get_data(dfield);
-#if (G_BYTE_ORDER != G_LITTLE_ENDIAN)
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         memcpy(d, pos, n);
 #else
         gwy_byteswapped_copy(pos, (guint8*)d,
