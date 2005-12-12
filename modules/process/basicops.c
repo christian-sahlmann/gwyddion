@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <app/gwyapp.h>
@@ -40,6 +41,8 @@ static gboolean    rotate_counterclockwise_90 (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    rotate_180                 (GwyContainer *data,
                                                GwyRunType run);
+static gboolean    square_samples             (GwyContainer *data,
+                                               GwyRunType run);
 static void        flip_xy                    (GwyDataField *source,
                                                GwyDataField *dest,
                                                gboolean minor);
@@ -51,7 +54,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0.1",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -105,6 +108,13 @@ module_register(const gchar *name)
         BASICOPS_RUN_MODES,
         0,
     };
+    static GwyProcessFuncInfo square_samples_func_info = {
+        "square_samples",
+        N_("/_Basic Operations/S_quare Samples"),
+        (GwyProcessFunc)&square_samples,
+        BASICOPS_RUN_MODES,
+        0,
+    };
 
     gwy_process_func_register(name, &flip_horizontally_func_info);
     gwy_process_func_register(name, &flip_vertically_func_info);
@@ -112,6 +122,7 @@ module_register(const gchar *name)
     gwy_process_func_register(name, &rotate_clockwise_90_func_info);
     gwy_process_func_register(name, &rotate_counterclockwise_90_func_info);
     gwy_process_func_register(name, &rotate_180_func_info);
+    gwy_process_func_register(name, &square_samples_func_info);
 
     return TRUE;
 }
@@ -314,6 +325,49 @@ rotate_180(GwyContainer *data, GwyRunType run)
     }
 
     return TRUE;
+}
+
+static gboolean
+square_samples(GwyContainer *data, GwyRunType run)
+{
+    GtkWidget *data_window;
+    GwyDataField *dfield, *old;
+    GwyContainer *newdata;
+    gdouble xreal, yreal, qx, qy;
+    gint xres, yres;
+
+    g_return_val_if_fail(run & BASICOPS_RUN_MODES, FALSE);
+    old = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
+    newdata = gwy_container_duplicate(data);
+    gwy_app_clean_up_data(newdata);
+    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata,
+                                                             "/0/data"));
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    qx = xres/xreal;
+    qy = yres/yreal;
+    /* Ratios are equal, just duplicate */
+    if (fabs(log(qx/qy)) > 1.0/hypot(xres, yres)) {
+        if (qx < qy)
+            xres = MAX(ROUND(xreal*qy), 1);
+        else
+            yres = MAX(ROUND(yreal*qx), 1);
+
+        gwy_data_field_resample(dfield, xres, yres,
+                                GWY_INTERPOLATION_BILINEAR);
+        if (gwy_container_gis_object_by_name(newdata, "/0/mask", &dfield))
+            gwy_data_field_resample(dfield, xres, yres,
+                                    GWY_INTERPOLATION_BILINEAR);
+        if (gwy_container_gis_object_by_name(newdata, "/0/show", &dfield))
+            gwy_data_field_resample(dfield, xres, yres,
+                                    GWY_INTERPOLATION_BILINEAR);
+    }
+    data_window = gwy_app_data_window_create(newdata);
+    gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+
+    return FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
