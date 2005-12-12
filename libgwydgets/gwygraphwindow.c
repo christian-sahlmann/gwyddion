@@ -102,7 +102,7 @@ gwy_graph_window_destroy(GtkObject *object)
  * gwy_graph_window_new:
  * @graph: A GwyGraph object containing the graph.
  *
- * Creates a new window showind graph.
+ * Creates a new window showing @graph.
  *
  * Returns: A newly created widget, as #GtkWidget.
  **/
@@ -130,7 +130,7 @@ gwy_graph_window_new(GwyGraph *graph)
     /*add notebook with graph and text matrix*/
     graphwindow->notebook = gtk_notebook_new();
     if (graph->graph_model->title->str)
-        gtk_window_set_title(GTK_WINDOW(graphwindow), graph->graph_model->title->str);        
+        gtk_window_set_title(GTK_WINDOW(graphwindow), graph->graph_model->title->str);
     else
         gtk_window_set_title(GTK_WINDOW(graphwindow), "Untitled");
 
@@ -191,10 +191,10 @@ gwy_graph_window_new(GwyGraph *graph)
     g_signal_connect_swapped(graphwindow->button_x_log, "clicked",
                            G_CALLBACK(gwy_graph_window_x_log_cb),
                            graphwindow);
-    
+
     gtk_widget_set_sensitive(graphwindow->button_x_log,
                 gwy_graph_model_x_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
-     
+
     graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
                       gtk_image_new_from_stock(GWY_STOCK_GRAPH_Y_LOGARITHMIC, GTK_ICON_SIZE_BUTTON));
@@ -202,10 +202,10 @@ gwy_graph_window_new(GwyGraph *graph)
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
                            G_CALLBACK(gwy_graph_window_y_log_cb),
                            graphwindow);
-    
+
     gtk_widget_set_sensitive(graphwindow->button_y_log,
                 gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
-    
+
 
     graphwindow->label_what = gtk_label_new("Cursor values:");
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, FALSE, FALSE, 4);
@@ -246,12 +246,12 @@ gwy_graph_window_new(GwyGraph *graph)
 }
 
 /**
- * gwy_graph_window_get_3d_view:
- * @gwy3dwindow: A 3D data view window.
+ * gwy_graph_window_get_graph:
+ * @graphwindow: a graph window.
  *
- * Returns the #Gwy3DView widget this 3D window currently shows.
+ * Returns the #GwyGraph widget this graph window currently shows.
  *
- * Returns: The currently shown #GwyDataView.
+ * Returns: The currently shown #GwyGraph.
  **/
 GtkWidget*
 gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
@@ -261,6 +261,7 @@ gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
     return graphwindow->graph;
 }
 
+/*XXX: the "tips" line below is hard to understand */
 /**
  * gwy_graph_window_class_set_tooltips:
  * @tips: Tooltips object #GwyGraphWindow's should use for setting tooltips.
@@ -268,7 +269,7 @@ gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
  *
  * Sets the tooltips object to use for adding tooltips to graph window parts.
  *
- * This is a class method.  It affects only newly cerated graph windows,
+ * This is a class method.  It affects only newly created graph windows,
  * existing graph windows will continue to use the tooltips they were
  * constructed with.
  *
@@ -394,20 +395,20 @@ gwy_graph_window_zoom_finished_cb(GwyGraphWindow *graphwindow)
 }
 
 
-static void 
+static void
 gwy_graph_window_x_log_cb(GwyGraphWindow *graphwindow)
 {
-    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
+    gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
                                               GTK_ORIENTATION_HORIZONTAL,
                    !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
                                                                            GTK_ORIENTATION_HORIZONTAL));
 }
 
-static void 
+static void
 gwy_graph_window_y_log_cb(GwyGraphWindow *graphwindow)
 {
-    
-     gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model, 
+
+     gwy_graph_model_set_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
                                               GTK_ORIENTATION_VERTICAL,
                    !gwy_graph_model_get_direction_logarithmic(GWY_GRAPH(graphwindow->graph)->graph_model,
                                                                            GTK_ORIENTATION_VERTICAL));

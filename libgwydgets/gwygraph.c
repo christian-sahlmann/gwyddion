@@ -36,6 +36,7 @@ enum {
 };
 
 
+static void gwy_graph_refresh      (GwyGraph *graph);
 static void gwy_graph_size_request (GtkWidget *widget,
                                     GtkRequisition *requisition);
 static void gwy_graph_size_allocate(GtkWidget *widget,
@@ -262,18 +263,7 @@ gwy_graph_new(GwyGraphModel *gmodel)
     return GTK_WIDGET(graph);
 }
 
-
-
-/* XXX If this function needs to be public, then either GwyGraph or
- * GwyGraphModel is broken. XXX */
-/**
- * gwy_graph_refresh:
- * @graph: A graph widget.
- *
- * Refresh all the graph widgets according to the model.
- *
- **/
-void
+static void
 gwy_graph_refresh(GwyGraph *graph)
 {
 
@@ -370,7 +360,8 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
  * @gmodel: new graph model
  *
  * Changes the graph model. Everything in graph widgets will
- * be reset to the new data (from the model).
+ * be reset to the new data (from the model). Data is not copied,
+ * so do not free @gmodel.
  *
  **/
 void
@@ -413,7 +404,7 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
  * gwy_graph_get_model:
  * @graph: A graph widget.
  *
- * Returns: GraphModel associated with this graph widget.
+ * Returns: Graph model associated with this graph widget (do not free).
  **/
 GwyGraphModel *gwy_graph_get_model(GwyGraph *graph)
 {
@@ -425,8 +416,7 @@ GwyGraphModel *gwy_graph_get_model(GwyGraph *graph)
  * @graph: A graph widget.
  * @type: Axis orientation
  *
- * Returns: pointer to the #GwyAxis within @graph of given orientation (do not
- * free).
+ * Returns: the #GwyAxis (of given orientation) within @graph (do not free).
  **/
 GwyAxis*
 gwy_graph_get_axis(GwyGraph *graph, GtkPositionType type)
@@ -496,15 +486,13 @@ gwy_graph_get_area(GwyGraph *graph)
     return GTK_WIDGET(graph->area);
 }
 
-
-
 /**
  * gwy_graph_set_status:
  * @graph: A graph widget.
- * @status: new graph model
+ * @status: graph status
  *
- * Set status of the graph widget. Status determines the way how the graph
- * reacts on mouse events, basically. This includes point or area selectiuon and zooming.
+ * Set status of the graph widget. Status determines how the graph
+ * reacts on mouse events. This includes point or area selection and zooming.
  *
  **/
 void
@@ -517,8 +505,8 @@ gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
  * gwy_graph_get_status:
  * @graph: A graph widget.
  *
- * Get status of the graph widget. Status determines the way how the graph
- * reacts on mouse events, basically. This includes point or area selectiuon and zooming.
+ * Get status of the graph widget.Status determines how the graph
+ * reacts on mouse events. This includes point or area selection and zooming.
  *
  * Returns: graph status
  **/
@@ -528,15 +516,16 @@ gwy_graph_get_status(GwyGraph *graph)
     return graph->area->status;
 }
 
+/*XXX: what are the units? */
 /**
  * gwy_graph_request_x_range:
  * @graph: A graph widget.
- * @x_min_req: x minimum requisition
- * @x_max_req: x maximum requisition
+ * @x_min_req: x minimum request
+ * @x_max_req: x maximum request
  *
- * Ask graph for setting the axis and area ranges for requested values.
- * Note that the axis scales to have reasonably aligned ticks, therefore
- * the result does need to match exactly the requsition falues.
+ * Ask graph to set the axis and area ranges to the requested values.
+ * Note that the axis scales must have reasonably aligned ticks, therefore
+ * the result might not exactly match the requested values.
  * Use gwy_graph_get_x_range() if you want to know the result.
  **/
 void
@@ -563,15 +552,15 @@ gwy_graph_request_x_range(GwyGraph *graph,
 /**
  * gwy_graph_request_y_range:
  * @graph: A graph widget.
- * @y_min_req: y minimum requisition
- * @y_max_req: y maximum requisition
+ * @y_min_req: y minimum request
+ * @y_max_req: y maximum request
  *
- * Ask graph for setting the axis and area ranges for requested values.
- * Note that the axis scales to have reasonably aligned ticks, therefore
- * the result does need to match exactly the requsition falues.
+ * Ask graph to set the axis and area ranges to the requested values.
+ * Note that the axis scales must have reasonably aligned ticks, therefore
+ * the result might not exactly match the requested values.
  * Use gwy_graph_get_y_range() if you want to know the result.
  **/
-void
+ void
 gwy_graph_request_y_range(GwyGraph *graph,
                           gdouble y_min_req,
                           gdouble y_max_req)
@@ -622,7 +611,6 @@ gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max)
     *y_max = gwy_axis_get_maximum(graph->axis_left);
 }
 
-
 /**
  * gwy_graph_enable_user_input:
  * @graph: A graph widget.
@@ -641,14 +629,12 @@ gwy_graph_enable_user_input(GwyGraph *graph, gboolean enable)
     gwy_axis_enable_label_edit(graph->axis_right, enable);
 }
 
+/*XXX: Does this need to be public? */
 void
 gwy_graph_signal_selected(GwyGraph *graph)
 {
     g_signal_emit(G_OBJECT(graph), gwygraph_signals[SELECTED_SIGNAL], 0);
 }
-
-/*
-*/
 
 static void
 gwy_graph_signal_zoomed(GwyGraph *graph)

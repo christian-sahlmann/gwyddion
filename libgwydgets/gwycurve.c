@@ -50,7 +50,7 @@
  * can be subject to removal from Gtk+ at some unspecified point in the future.
  */
 
-/*TODO: Update Devel documentation */
+/*TODO: Update documentation */
 /*TODO: Deal with freehand mode */
 /*TODO: Some kind of node-snap, or column node-snap */
 
@@ -369,6 +369,14 @@ gwy_curve_finalize (GObject *object)
 }
 
 /* Public Class Functions */
+
+/**
+ * gwy_curve_new:
+ *
+ * Creates #GwyCurve widget. By default, the widget will have 3 curves.
+ *
+ * Returns: new #GwyCurve widget.
+ **/
 GtkWidget*
 gwy_curve_new(void)
 {
@@ -742,6 +750,14 @@ gwy_curve_motion_notify(GwyCurve *c)
 }
 
 /* Public Methods */
+
+/**
+ * gwy_curve_reset:
+ * @c: a #GwyCurve widget.
+ *
+ * Removes all control points, resetting the curves to their initial state.
+ *
+ **/
 void
 gwy_curve_reset(GwyCurve *c)
 {
@@ -1547,4 +1563,22 @@ gwy_curve_set_gamma (GwyCurve *c, gfloat gamma_val)
   gwy_curve_draw (c, c->num_points, c->height);
 }
 */
+
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwycurve
+ * @title: GwyCurve
+ * @short_description: Widget that displays editable curves
+ *
+ * #GwyCurve is a widget that can display multiple curves.
+ * The user can edit these curves by clicking and dragging control points.
+ * New control points are created when a user clicks on a part of a curve
+ * where there are no control points.
+ * Control points can be deleted by dragging ontop of another control point.
+ **/
+
 #define __GWY_CURVE_C__
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

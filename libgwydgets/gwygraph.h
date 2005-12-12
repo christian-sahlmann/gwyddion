@@ -90,8 +90,6 @@ void       gwy_graph_set_axis_visible(GwyGraph *graph, GtkPositionType type, gbo
 
 GtkWidget *gwy_graph_get_area(GwyGraph *graph);
 
-void       gwy_graph_refresh(GwyGraph *graph);
-
 void       gwy_graph_signal_selected(GwyGraph *graph);
 
 void       gwy_graph_set_model(GwyGraph *graph,
