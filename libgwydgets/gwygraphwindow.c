@@ -207,14 +207,8 @@ gwy_graph_window_new(GwyGraph *graph)
                 gwy_graph_model_y_data_can_be_logarithmed(GWY_GRAPH(graphwindow->graph)->graph_model));
 
 
-    graphwindow->label_what = gtk_label_new("Cursor values:");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_what, FALSE, FALSE, 4);
-
-    graphwindow->label_x = gtk_label_new("          ");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_x, FALSE, FALSE, 4);
-
-    graphwindow->label_y = gtk_label_new("          ");
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->label_y, FALSE, FALSE, 4);
+    graphwindow->statusbar = gwy_statusbar_new();
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->statusbar, TRUE, TRUE, 4);
 
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
@@ -309,7 +303,7 @@ static void
 gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
 {
     gdouble x, y;
-    gchar buffer[100];
+    gchar buffer[200];
     gdouble xmag, ymag;
     GString *xstring, *ystring;
 
@@ -322,14 +316,10 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     ystring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
 
 
-    g_snprintf(buffer, sizeof(buffer), "%.4f", x/xmag);
-    xstring = g_string_prepend(xstring, buffer);
-    gtk_label_set_markup(GTK_LABEL(graphwindow->label_x), xstring->str);
-
-    g_snprintf(buffer, sizeof(buffer), "%.4f", y/ymag);
-    ystring = g_string_prepend(ystring, buffer);
-    gtk_label_set_markup(GTK_LABEL(graphwindow->label_y), ystring->str);
-
+    
+    g_snprintf(buffer, sizeof(buffer), "Cursor values: %.4f %s, %.4f %s", x/xmag, xstring->str, y/ymag, ystring->str);
+    gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), buffer);
+    
     g_string_free(xstring, TRUE);
     g_string_free(ystring, TRUE);
 }

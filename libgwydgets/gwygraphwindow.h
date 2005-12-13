@@ -59,9 +59,7 @@ struct _GwyGraphWindow {
     GtkWidget *button_x_log;
     GtkWidget *button_y_log;
 
-    GtkWidget *label_what;
-    GtkWidget *label_x;
-    GtkWidget *label_y;
+    GtkWidget *statusbar;
 
     GtkWidget *widget1;
     GtkWidget *widget2;

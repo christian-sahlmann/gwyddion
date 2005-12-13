@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
@@ -49,37 +50,22 @@ main(int argc, char *argv[])
     GString *str1, *str2, *str3, *str4, *str5;
     GwyDataLine *dln;
 
-    double xs[100];
-    double ys[100];
-    double xr[10];
-    double yr[10];
     double xp[100];
     double yp[100];
-    double xu[10];
-    double yu[10];
-    double xv[20];
-    double yv[20];
+    double ppow;
 
-    for (i = 0; i < 100; i++) {
-        xs[i] = i - 7;
-        xp[i] = i;
-        ys[i] = 100 + (double)i * i/40;
+    srand(time(0));
 
-        yp[i] = 50 + 20 * sin((double)i * 15100);
-
-        if (i < 20) {
-            xv[i] = 5.0 * i + 12;
-            yv[i] = 20 * sin((double)i * 5.0 * 15100)
-                    - 15 * cos((double)(i * 5.0 - 3) * 15100) - 30;
-        }
-        if (i < 10) {
-            xr[i] = 20 + i * 3;
-            yr[i] = 150 + 4 * i;
-            xu[i] = 20 + i * 7;
-            yu[i] = 50 - (double)i *4;
-        }
+    ppow = 1000*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+    for (i = 0; i < 10; i++) {
+        xp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+        xp[i]*=xp[i]*xp[i]*pow(10, xp[i]*pow(10000000, xp[i]))*ppow;
+        xp[i] -= rand()/RAND_MAX*xp[i];
+        yp[i] =  -1*(rand()-0.5)/rand()*pow(10,10000*rand()/RAND_MAX)*pow(10,100000*rand()/RAND_MAX);
+        yp[i]*=yp[i]*yp[i]*pow(10, yp[i]*pow(10000000, xp[i]))*ppow;
+        yp[i] -= rand()/RAND_MAX*xp[i];
+        printf("%g %g\n", xp[i], yp[i]);
     }
-
     gtk_init(&argc, &argv);
 
    /*window = gtk_window_new(GTK_WINDOW_TOPLEVEL);*/
@@ -111,35 +97,20 @@ main(int argc, char *argv[])
     graph = gwy_graph_new(gmodel);
     
     model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(model, xp, yp, 20);
+    gwy_graph_curve_model_set_data(model, xp, yp, 10);
     gwy_graph_curve_model_set_description(model, "parabola");
 
     gwy_graph_model_add_curve(gmodel, model);
    
-    model = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data(model, xp, ys, 10);
-    gwy_graph_curve_model_set_description(model, "cosi");
-    gwy_graph_curve_model_set_curve_point_type(model, GWY_GRAPH_POINT_CIRCLE);
-    gwy_graph_curve_model_set_curve_point_size(model, 6);
-    gwy_graph_curve_model_set_curve_line_size(model, 3);
-    
-    gwy_graph_model_add_curve(gmodel, model);
-    
     gwy_graph_model_set_label_visible(gmodel, TRUE);
-    
-
-    gwy_graph_export_pixmap(graph, "pokus.png",
-                                TRUE, TRUE,
-                                TRUE);
-        
-        return 0;
     
     gwindow = gwy_graph_window_new(graph);
     
-   /*gtk_container_add (GTK_CONTAINER (window), gwindow);*/
+    //gtk_container_add (GTK_CONTAINER (window), gwindow);
 
    /*gwy_graph_enable_user_input(graph, TRUE);*/
    /*printf("show!\n");*/
+    gtk_widget_set_size_request(gwindow, 600, 400);
     gtk_widget_show (gwindow);
 
     g_signal_connect(G_OBJECT(gwindow), "destroy", G_CALLBACK(destroy), NULL);
