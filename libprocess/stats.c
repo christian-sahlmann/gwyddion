@@ -1609,10 +1609,10 @@ gwy_data_field_minkowski_boundary(GwyDataField *data_field,
  * Calculates Minkowski connectivity functional (Euler characteristics) of
  * a rectangular part of a data field.
  *
- * Volume functional is calculated as the number connected areas of pixels
- * above threhsold (,white`) minus the number of connected areas of pixels
- * below threhsold (,black`) for each threshold value, divided by the total
- * number of samples in the area.
+ * Connectivity functional is calculated as the number connected areas of
+ * pixels above threhsold (,white`) minus the number of connected areas of
+ * pixels below threhsold (,black`) for each threshold value, divided by the
+ * total number of samples in the area.
  **/
 void
 gwy_data_field_area_minkowski_euler(GwyDataField *data_field,
