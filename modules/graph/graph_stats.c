@@ -27,27 +27,25 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-
 /* Data for this function.*/
-
 typedef struct {
+    GtkWidget *graph;
+
+    GtkWidget *dialog;
+    gulong response_id;
+    gulong selection_id;
+
     GtkWidget *selection_start_label;
     GtkWidget *selection_end_label;
     GwyGraphStatusType last_status;
 } StatsControls;
 
-
 static gboolean    module_register             (const gchar *name);
 static gboolean    stats                       (GwyGraph *graph);
-static gboolean    stats_dialog                (GwyGraph *graph);
-static void        selection_updated_cb        (gpointer data);
-static void        stats_dialog_closed_cb      (gpointer data);
-static void        stats_dialog_response_cb    (gpointer data);
-
-static StatsControls controls;
-static GtkWidget *dialog = NULL;
-static gulong response_id = 0;
-static gulong selection_id = 0;
+static gboolean    stats_dialog                (StatsControls *data);
+static void        selection_updated_cb        (StatsControls *data);
+static void        stats_dialog_closed_cb      (StatsControls *data);
+static void        stats_dialog_response_cb    (StatsControls *data);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -81,46 +79,61 @@ module_register(const gchar *name)
 static gboolean
 stats(GwyGraph *graph)
 {
+    StatsControls *data;
+    GwyGraphArea *area;
 
+    data = g_new(StatsControls, 1);
+    data->dialog = NULL;
+
+    /*
     if (!graph) {
         if (dialog)
             gtk_widget_destroy(dialog);
         dialog = NULL;
         return TRUE;
-    }
+    } */
 
-    controls.last_status = gwy_graph_get_status(graph);
+    data->graph = GTK_WIDGET(graph);
+
+
+    data->last_status = gwy_graph_get_status(graph);
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
-    gwy_graph_area_set_selection_limit(gwy_graph_get_area(graph), 1);
-    
-    if (!dialog)
-        stats_dialog(graph);
+
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+    gwy_graph_area_set_selection_limit(area, 1);
+
+    if (!data->dialog)
+        stats_dialog(data);
 
     return TRUE;
 }
 
-
 static gboolean
-stats_dialog(GwyGraph *graph)
+stats_dialog(StatsControls *data)
 {
+    GwyGraph *graph;
+    GtkDialog *dialog;
     GtkWidget *table, *label;
 
-    dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
-                                         NULL,
-                                         GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
-
+    graph = GWY_GRAPH(data->graph);
+    data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
+                                               NULL,
+                                               GTK_DIALOG_DESTROY_WITH_PARENT,
+                                               GTK_STOCK_CLOSE,
+                                               GTK_RESPONSE_CLOSE,
+                                               NULL);
+    dialog = GTK_DIALOG(data->dialog);
+    gtk_dialog_set_has_separator(dialog, FALSE);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_CLOSE);
     g_signal_connect_swapped(dialog, "delete_event",
-                             G_CALLBACK(stats_dialog_closed_cb), graph);
-    response_id = g_signal_connect_swapped(dialog, "response",
-                                           G_CALLBACK(stats_dialog_response_cb),
-                                           graph);
+                             G_CALLBACK(stats_dialog_closed_cb), data);
+    data->response_id =
+        g_signal_connect_swapped(dialog, "response",
+                                 G_CALLBACK(stats_dialog_response_cb),
+                                 data);
 
     g_signal_connect_swapped(graph, "destroy",
-                             G_CALLBACK(stats_dialog_closed_cb), graph);
+                             G_CALLBACK(stats_dialog_closed_cb), data);
 
     table = gtk_table_new(2, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
@@ -142,43 +155,45 @@ stats_dialog(GwyGraph *graph)
     label = gtk_label_new("=");
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, 0, 0, 2, 2);
 
-    controls.selection_start_label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.selection_start_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.selection_start_label, 2, 3, 0, 1,
+    data->selection_start_label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(data->selection_start_label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), data->selection_start_label, 2, 3, 0, 1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    controls.selection_end_label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(controls.selection_end_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.selection_end_label, 2, 3, 1, 2,
+    data->selection_end_label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(data->selection_end_label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    selection_id = g_signal_connect_swapped(graph, "selected",
-                                            G_CALLBACK(selection_updated_cb),
-                                            graph);
+    data->selection_id =
+        g_signal_connect_swapped(graph, "selected",
+                                 G_CALLBACK(selection_updated_cb),
+                                 data);
 
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(GTK_WIDGET(dialog));
 
-    selection_updated_cb(graph);
+    selection_updated_cb(data);
 
     return TRUE;
 }
 
 static void
-selection_updated_cb(gpointer data)
+selection_updated_cb(StatsControls *data)
 {
     GwyGraph *graph;
+    GwyGraphArea *area;
     gdouble selection[2];
     gdouble from, to;
     gchar buffer[100];
     GwySIValueFormat *format;
 
-    graph = (GwyGraph *)data;
+    graph = GWY_GRAPH(data->graph);
     g_return_if_fail(GWY_IS_GRAPH(graph));
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
 
-
-    if (gwy_graph_area_get_selection_number(gwy_graph_get_area(graph)))
+    if (gwy_graph_area_get_selection_number(area))
     {
-        gwy_graph_area_get_selection(gwy_graph_get_area(graph), selection);
+        gwy_graph_area_get_selection(area, selection);
         from = selection[0];
         to = selection[1];
     }
@@ -187,49 +202,54 @@ selection_updated_cb(gpointer data)
         from = gwy_graph_get_model(graph)->x_min;
         to = gwy_graph_get_model(graph)->x_max;
     }
-        
+
     format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->x_unit,
                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     from, NULL);
-        
-        
-    g_snprintf(buffer, sizeof(buffer), "%.3f %s", from/format->magnitude, format->units);
 
-    gtk_label_set_markup(GTK_LABEL(controls.selection_start_label), buffer);
+
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", from/format->magnitude,
+format->units);
+
+    gtk_label_set_markup(GTK_LABEL(data->selection_start_label), buffer);
 
     format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->x_unit,
                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     to, format);
-    
-    g_snprintf(buffer, sizeof(buffer), "%.3f %s", to/format->magnitude, format->units);
 
-    gtk_label_set_markup(GTK_LABEL(controls.selection_end_label), buffer);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", to/format->magnitude,
+format->units);
+
+    gtk_label_set_markup(GTK_LABEL(data->selection_end_label), buffer);
 
     g_free(format->units);
 
+
 }
 
 static void
-stats_dialog_closed_cb(gpointer data)
+stats_dialog_closed_cb(StatsControls *data)
 {
     GwyGraph *graph;
-    graph = (GwyGraph *)data;
+    graph = GWY_GRAPH(data->graph);
 
-    gwy_graph_set_status(graph, controls.last_status);
+    gwy_graph_set_status(graph, data->last_status);
 
-    if (dialog) {
-        g_signal_handler_disconnect(dialog, response_id);
-        g_signal_handler_disconnect(graph->area, selection_id);
-        response_id = 0;
-        selection_id = 0;
-        gtk_widget_destroy(dialog);
-        dialog = NULL;
+    if (data->dialog) {
+        g_signal_handler_disconnect(data->dialog, data->response_id);
+        g_signal_handler_disconnect(data->graph, data->selection_id);
+        data->response_id = 0;
+        data->selection_id = 0;
+        gtk_widget_destroy(data->dialog);
+        data->dialog = NULL;
     }
+
+    g_free(data);
 }
 
 
 static void
-stats_dialog_response_cb(gpointer data)
+stats_dialog_response_cb(StatsControls *data)
 {
     stats_dialog_closed_cb(data);
 }
