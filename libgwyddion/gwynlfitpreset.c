@@ -148,7 +148,7 @@ gauss_psdf_func(gdouble x,
     *fres = TRUE;
     c = x*b[1];
 
-    return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) * exp(-c*c/4);
+    return b[0]*b[0]*b[1]/(2.0*GWY_SQRT_PI) * exp(-c*c/4);
 }
 
 static void
@@ -370,14 +370,14 @@ exp_psdf_func(gdouble x,
 {
     gdouble c;
 
-    if (b[3] == 0) {
+    if (b[1] == 0) {
         *fres = FALSE;
         return 0;
     }
     *fres = TRUE;
     c = x*b[1];
 
-    return b[0]*b[0]*b[1]/(2.0*sqrt(G_PI)) / (1 + c*c);
+    return b[0]*b[0]*b[1]/(2.0*GWY_SQRT_PI)/(1.0 + c*c);
 }
 
 static void
@@ -742,6 +742,87 @@ square_scale(gdouble *param,
     }
 }
 
+/******************* power function ********************************/
+static gdouble
+power_func(gdouble x,
+           G_GNUC_UNUSED gint n_param,
+           const gdouble *b,
+           G_GNUC_UNUSED gpointer user_data,
+           gboolean *fres)
+{
+    if (x < 0.0) {
+        *fres = FALSE;
+        return 0;
+    }
+    if (x == 0.0 && b[3] <= 0.0) {
+        *fres = FALSE;
+        return 0;
+    }
+
+    *fres = TRUE;
+    return b[0] + b[1]*pow(x, b[2]);
+}
+
+static void
+power_guess(gint n_dat,
+            const gdouble *x,
+            const gdouble *y,
+            gdouble *param,
+            gboolean *fres)
+{
+    gint i;
+    gdouble q, la, lb, c1, c2;
+
+    if (n_dat < 4 || x[0] <= 0.0) {
+        *fres = FALSE;
+        return;
+    }
+
+    i = ROUND(sqrt(n_dat-1));
+    i = CLAMP(i, 2, n_dat-2);
+    la = log(x[1]/x[i]);
+    lb = log(x[n_dat-1]/x[i]);
+    q = (y[n_dat-1] - y[i])/(y[i] - y[1]);
+    if (fabs(q) < 0.4)
+        param[2] = -2.0*(q*la + lb)/(q*la*la + lb*lb);
+    else {
+        c1 = log(q)/lb;
+        c2 = -log(q)/la;
+        if (c1 + c2 <= 0.0)
+            param[2] = c2;
+        else
+            param[2] = c1;
+    }
+
+    q = (y[n_dat-1] - y[i])*(y[i] - y[1]);
+    q /= (pow(x[n_dat - 1], param[2]) - pow(x[i], param[2]))
+         /(pow(x[i], param[2]) - pow(x[1], param[2]));
+    param[1] = sqrt(fabs(q));
+
+    if (param[2] >= 0.0)
+        param[0] = y[0] - param[1]*pow(x[0], param[2]);
+    else
+        param[0] = y[n_dat-1] - param[1]*pow(x[n_dat-1], param[2]);
+
+    *fres = TRUE;
+}
+
+static void
+power_scale(gdouble *param,
+            gdouble xscale,
+            gdouble yscale,
+            gint dir)
+{
+    if (dir == 1) {
+        param[0] /= yscale;
+        param[1] *= pow(xscale, param[2])/xscale;
+    }
+    else {
+        param[0] *= yscale;
+        param[1] /= pow(xscale, param[2])/xscale;
+    }
+}
+
 /******************** preset default weights *************************/
 static void
 weights_linear_decrease(gint n_dat,
@@ -795,153 +876,191 @@ static const GwyNLFitParam poly3_params[]= {
 static const GwyNLFitParam square_params[] = {
     { "T" },
     { "s" },
-    { "y<sub>1</sub>" },
-    { "y<sub>2</sub>" },
+    { "t" },
+    { "b" },
 };
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian",
-        "f(x) = y<sub>0</sub> + a*exp(-((x-x<sub>0</sub>)/b)<sup>2</sup>)",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>y</i><sub>0</sub> "
+            "+ <i>a</i> exp[\xe2\x88\x92(<i>x</i> "
+            "\xe2\x88\x92 <i>x</i><sub>0</sub>)<sup>2</sup>"
+            "/b<sup>2</sup>]",
         &gauss_func,
         NULL,
         &gauss_guess,
         &gauss_scale,
         NULL,
-        4,
+        G_N_ELEMENTS(gaussexp_params),
         gaussexp_params,
     },
     {
         "Gaussian (PSDF)",
-        "f(x) = (\xcf\x83<sup>2</sup>T)/(2)*exp(-(x*T/2)<sup>2</sup>)",
+        "<i>f</i>(<i>x</i>) "
+            "= \xcf\x83<sup>2</sup><i>T</i>/2 "
+            "exp[\xe2\x88\x92(<i>x</i><i>T</i>/2)<sup>2</sup>]",
         &gauss_psdf_func,
         NULL,
         &gauss_psdf_guess,
         &gauss_psdf_scale,
         NULL,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Gaussian (ACF)",
-        "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T)<sup>2</sup>)",
+        "<i>f</i>(<i>x</i>) "
+            "= \xcf\x83<sup>2</sup> "
+            "exp[\xe2\x88\x92(<i>x</i>/<i>T</i>)<sup>2</sup>]",
         &gauss_acf_func,
         NULL,
         &gauss_acf_guess,
         &gauss_acf_scale,
         &weights_linear_decrease,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Gaussian (HHCF)",
-        "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)<sup>2</sup>))",
+        "<i>f</i>(<i>x</i>) "
+            "= 2\xcf\x83<sup>2</sup>"
+            "[1 \xe2\x88\x92 exp(\xe2\x88\x92(<i>x</i>/<i>T</i>)<sup>2</sup>)]",
         &gauss_hhcf_func,
         NULL,
         &gauss_hhcf_guess,
         &gauss_hhcf_scale,
         &weights_linear_decrease,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Exponential",
-        "f(x) = y<sub>0</sub> + a*exp(-(b*(x-x<sub>0</sub>)))",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>y</i><sub>0</sub> "
+            "+ <i>a</i> exp[\xe2\x88\x92<i>b</i>(<i>x</i> "
+            "\xe2\x88\x92 <i>x</i><sub>0</sub>)]",
         &exp_func,
         NULL,
         &exp_guess,
         &exp_scale,
         NULL,
-        4,
+        G_N_ELEMENTS(gaussexp_params),
         gaussexp_params,
     },
     {
         "Exponential (PSDF)",
-        "f(x) = (\xcf\x83<sup>2</sup>T)/(2)/(1+((x/T)<sup>2</sup>))))",
+        "<i>f</i>(<i>x</i>) "
+            "= \xcf\x83<sup>2</sup><i>T</i>"
+            "/[2\xcf\x80(1 + (<i>x</i>/<i>T</i>)<sup>2</sup>)]",
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
         &exp_psdf_scale,
         NULL,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Exponential (ACF)",
-        "f(x) = \xcf\x83<sup>2</sup>exp(-(x/T))",
+        "<i>f</i>(<i>x</i>) "
+            "= \xcf\x83<sup>2</sup> exp[\xe2\x88\x92<i>x</i>/<i>T</i>]",
         &exp_acf_func,
         NULL,
         &exp_acf_guess,
         &exp_acf_scale,
         &weights_linear_decrease,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Exponential (HHCF)",
-        "f(x) =  2*\xcf\x83<sup>2</sup>(1 - exp(-(x/T)))",
+        "<i>f</i>(<i>x</i>) "
+            "= 2\xcf\x83<sup>2</sup>"
+            "[1 \xe2\x88\x92 exp(\xe2\x88\x92<i>x</i>/<i>T</i>)]",
         &exp_hhcf_func,
         NULL,
         &exp_hhcf_guess,
         &exp_hhcf_scale,
         &weights_linear_decrease,
-        2,
+        G_N_ELEMENTS(gaussexp_two_params),
         gaussexp_two_params,
     },
     {
         "Polynom (order 0)",
-        "f(x) = a",
+        "<i>f</i>(<i>x</i>) = <i>a</i>",
         &poly_0_func,
         NULL,
         &poly_0_guess,
         &poly_0_scale,
         NULL,
-        1,
+        G_N_ELEMENTS(poly0_params),
         poly0_params,
     },
     {
         "Polynom (order 1)",
-        "f(x) = a + b*x",
+        "<i>f</i>(<i>x</i>) = <i>a</i> + <i>b</i><i>x</i>",
         &poly_1_func,
         NULL,
         &poly_1_guess,
         &poly_1_scale,
         NULL,
-        2,
+        G_N_ELEMENTS(poly1_params),
         poly1_params,
     },
     {
         "Polynom (order 2)",
-        "f(x) = a + b*x + c*x<sup>2</sup>",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup>",
         &poly_2_func,
         NULL,
         &poly_2_guess,
         &poly_2_scale,
         NULL,
-        3,
+        G_N_ELEMENTS(poly2_params),
         poly2_params,
     },
     {
         "Polynom (order 3)",
-        "f(x) = a + b*x + c*x<sup>2</sup> + d*x<sup>3</sup>",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup> "
+            "+ <i>d</i><i>x</i><sup>3</sup>",
         &poly_3_func,
         NULL,
         &poly_3_guess,
         &poly_3_scale,
         NULL,
-        4,
+        G_N_ELEMENTS(poly3_params),
         poly3_params,
     },
     {
         "Square wave",
-        "f(x) = sum{(1/i) * sin(2π*i*(x-s)/T)}",
+        "<i>f</i>(<i>x</i>) "
+            "= (<i>t</i> + <i>b</i>)/2 "
+            "+ 2(<i>t</i> \xe2\x88\x92 <i>b</i>)"
+            "/\xcf\x80 "
+            " \xe2\x88\x91<sub>k</sub> "
+            "sin(2π<i>k</i>(<i>x</i> \xe2\x88\x92 <i>s</i>)/<i>T</i>)/<i>k</i>",
         &square_func,
         NULL,
         &square_guess,
         &square_scale,
         NULL,
-        4,
+        G_N_ELEMENTS(square_params),
         square_params,
+    },
+    {
+        "Power",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>a</i> + <i>b</i><i>x</i><sup><i>c</i></sup>",
+        &power_func,
+        NULL,
+        &power_guess,
+        &power_scale,
+        NULL,
+        G_N_ELEMENTS(poly2_params),
+        poly2_params,
     },
 };
 
@@ -1192,6 +1311,18 @@ gwy_nlfit_presets(void)
  * @title: GwyNLFitPreset
  * @short_description: NL fitter presets
  * @see_also: #GwyNLFitter
+ **/
+
+/**
+ * GWY_SQRT3:
+ *
+ * The square root of 3.
+ **/
+
+/**
+ * GWY_SQRT_PI:
+ *
+ * The square root of &pi;.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

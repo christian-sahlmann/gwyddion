@@ -30,6 +30,7 @@ G_BEGIN_DECLS
 #define ROUND(x) ((gint)floor((x) + 0.5))
 
 #define GWY_SQRT3 1.73205080756887729352744634150587236694280525381038
+#define GWY_SQRT_PI 1.77245385090551602729816748334114518279754945612237
 
 gdouble      gwy_math_humanize_numbers   (gdouble unit,
                                           gdouble maximum,
