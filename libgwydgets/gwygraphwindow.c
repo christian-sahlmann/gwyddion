@@ -208,31 +208,25 @@ gwy_graph_window_new(GwyGraph *graph)
 
 
     graphwindow->statusbar = gwy_statusbar_new();
-    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->statusbar, TRUE, TRUE, 4);
-
+    gtk_widget_set_name(graphwindow->statusbar, "flatstatusbar");
+    gtk_box_pack_start(GTK_BOX(hbox), graphwindow->statusbar, TRUE, TRUE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 
-    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(
-                                                gwy_graph_window_measure_dialog_new(GWY_GRAPH(graphwindow->graph)));
+    graphwindow->measure_dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG
+           (gwy_graph_window_measure_dialog_new(GWY_GRAPH(graphwindow->graph)));
     g_signal_connect_swapped(graphwindow->measure_dialog, "response",
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);
 
-    /*
-    gwy_graph_window_set_tooltip(button, _("Show full controls"));
-
-    g_object_set_data(G_OBJECT(button), "gwy3dwindow", gwy3dwindow);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(gwy_graph_window_select_controls),
-                             GINT_TO_POINTER(FALSE));
-     */
-
-    g_signal_connect_swapped(gwy_graph_get_area(graphwindow->graph), "motion-notify-event",
-                             G_CALLBACK(gwy_graph_cursor_motion_cb), graphwindow);
+    g_signal_connect_swapped(gwy_graph_get_area(graphwindow->graph),
+                             "motion-notify-event",
+                             G_CALLBACK(gwy_graph_cursor_motion_cb),
+                             graphwindow);
 
     g_signal_connect_swapped(graphwindow->graph, "zoomed",
-                             G_CALLBACK(gwy_graph_window_zoom_finished_cb), graphwindow);
+                             G_CALLBACK(gwy_graph_window_zoom_finished_cb),
+                             graphwindow);
 
 
 
@@ -315,11 +309,10 @@ gwy_graph_cursor_motion_cb(GwyGraphWindow *graphwindow)
     ymag = gwy_axis_get_magnification(GWY_GRAPH(graphwindow->graph)->axis_left);
     ystring = gwy_axis_get_magnification_string(GWY_GRAPH(graphwindow->graph)->axis_left);
 
-
-    
-    g_snprintf(buffer, sizeof(buffer), "Cursor values: %.4f %s, %.4f %s", x/xmag, xstring->str, y/ymag, ystring->str);
+    g_snprintf(buffer, sizeof(buffer), "%.4f %s, %.4f %s",
+               x/xmag, xstring->str, y/ymag, ystring->str);
     gwy_statusbar_set_markup(GWY_STATUSBAR(graphwindow->statusbar), buffer);
-    
+
     g_string_free(xstring, TRUE);
     g_string_free(ystring, TRUE);
 }
