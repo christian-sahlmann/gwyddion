@@ -170,8 +170,8 @@ fit(GwyGraph *graph)
     settings = gwy_app_settings_get();
     load_args(settings, &args);
 
-    if ((ok = fit_dialog(&args)))
-        save_args(settings, &args);
+    ok = fit_dialog(&args);
+    save_args(settings, &args);
 
     return ok;
 }
