@@ -54,12 +54,14 @@ typedef struct {
     GtkWidget *interpolation;
     GtkWidget *output;
     GtkWidget *direction;
-    GObject *size;
+    GtkWidget *isnofpoints;
+    GtkObject *size;
     GwyInterpolationType interp;
     GwySFOutputType out;
     GwyOrientation dir;
     gint siz;
     GwyGraphModel *graphmodel;
+    gboolean isnpoints;
 } ToolControls;
 
 static gboolean   module_register      (const gchar *name);
@@ -79,15 +81,12 @@ static void       direction_changed_cb (GtkWidget *combo,
                                         ToolControls *controls);
 static void       size_changed_cb      (GObject *adjustment,
                                         ToolControls *controls);
+static void      isnofpoints_changed_cb(GtkToggleButton *button,
+                                        ToolControls *controls);
 static void       load_args            (GwyContainer *container,
                                         ToolControls *controls);
 static void       save_args            (GwyContainer *container,
                                         ToolControls *controls);
-
-static const gchar *interp_key = "/tool/sfunctions/interp";
-static const gchar *out_key = "/tool/sfunctions/out";
-static const gchar *dir_key = "/tool/sfunctions/dir";
-static const gchar *siz_key = "/tool/sfunctions/siz";
 
 
 /* The module info. */
@@ -98,7 +97,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -255,11 +254,17 @@ dialog_create(GwyUnitoolState *state)
 
     controls->size = gtk_adjustment_new(controls->siz, 20, 1000, 1, 10, 0);
 
-    spin = gwy_table_attach_hscale(table, row, _("Size:"), NULL,
+    spin = gwy_table_attach_hscale(table, row, _("Fix res.:"), NULL,
                                    GTK_OBJECT(controls->size),
-                                   GWY_HSCALE_DEFAULT);
+                                   GWY_HSCALE_CHECK);
     g_signal_connect(controls->size, "value_changed",
                      G_CALLBACK(size_changed_cb), controls);
+    controls->isnofpoints = gwy_table_hscale_get_check(controls->size);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->isnofpoints),
+                                 controls->isnpoints);
+    g_signal_connect(controls->isnofpoints, "toggled",
+                     G_CALLBACK(isnofpoints_changed_cb), controls);
+    gwy_table_hscale_set_sensitive(controls->size, controls->isnpoints);
     row++;
 
     label = gtk_label_new_with_mnemonic(_("Interpolation type:"));
@@ -295,7 +300,7 @@ dialog_update(GwyUnitoolState *state,
     GwyDataField *dfield;
     GwyDataLine *dataline;
     GwyDataViewLayer *layer;
-    gint isel[4], w, h;
+    gint isel[4], w, h, res;
     GString *lab;
 
     gwy_debug("");
@@ -332,67 +337,60 @@ dialog_update(GwyUnitoolState *state,
     w = isel[2] - isel[0];
     h = isel[3] - isel[1];
     if (w >= 4 && h >= 4) {
+        res = controls->isnpoints ? controls->siz : -1;
         switch (controls->out) {
             case GWY_SF_DH:
             gwy_data_field_area_dh(dfield, dataline, isel[0], isel[1], w, h,
-                                   controls->siz);
+                                   res);
             break;
 
             case GWY_SF_CDH:
             gwy_data_field_area_cdh(dfield, dataline, isel[0], isel[1], w, h,
-                                    controls->siz);
+                                    res);
             break;
 
             case GWY_SF_DA:
             gwy_data_field_area_da(dfield, dataline, isel[0], isel[1], w, h,
-                                   controls->dir,
-                                   controls->siz);
+                                   controls->dir, res);
             break;
 
             case GWY_SF_CDA:
             gwy_data_field_area_cda(dfield, dataline, isel[0], isel[1], w, h,
-                                    controls->dir,
-                                    controls->siz);
+                                    controls->dir, res);
             break;
 
             case GWY_SF_ACF:
             gwy_data_field_area_acf(dfield, dataline, isel[0], isel[1], w, h,
-                                    controls->dir,
-                                    controls->interp,
-                                    controls->siz);
+                                    controls->dir, controls->interp, res);
             break;
 
             case GWY_SF_HHCF:
             gwy_data_field_area_hhcf(dfield, dataline, isel[0], isel[1], w, h,
-                                     controls->dir,
-                                     controls->interp,
-                                     controls->siz);
+                                     controls->dir, controls->interp, res);
             break;
 
             case GWY_SF_PSDF:
             gwy_data_field_area_psdf(dfield, dataline, isel[0], isel[1], w, h,
-                                     controls->dir,
-                                     controls->interp,
-                                     GWY_WINDOWING_HANN,
-                                     controls->siz);
+                                     controls->dir, controls->interp,
+                                     GWY_WINDOWING_HANN, res);
             break;
 
             case GWY_SF_MINKOWSKI_VOLUME:
             gwy_data_field_area_minkowski_volume(dfield, dataline,
                                                  isel[0], isel[1], w, h,
-                                                 controls->siz);
+                                                 res);
             break;
 
             case GWY_SF_MINKOWSKI_BOUNDARY:
             gwy_data_field_area_minkowski_boundary(dfield, dataline,
                                                    isel[0], isel[1], w, h,
-                                                   controls->siz);
+                                                   res);
             break;
 
             case GWY_SF_MINKOWSKI_CONNECTIVITY:
             gwy_data_field_area_minkowski_euler(dfield, dataline,
                                                 isel[0], isel[1], w, h,
-                                                controls->siz);
+                                                res);
             break;
         }
 
@@ -466,9 +464,23 @@ direction_changed_cb(GtkWidget *combo, ToolControls *controls)
 static void
 size_changed_cb(GObject *adjustment, ToolControls *controls)
 {
-    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
+    controls->siz = gtk_adjustment_get_value(GTK_ADJUSTMENT(adjustment));
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
+
+static void
+isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
+{
+    controls->isnpoints = gtk_toggle_button_get_active(button);
+    dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
+}
+
+
+static const gchar *interp_key = "/tool/sfunctions/interp";
+static const gchar *out_key = "/tool/sfunctions/out";
+static const gchar *dir_key = "/tool/sfunctions/dir";
+static const gchar *siz_key = "/tool/sfunctions/siz";
+static const gchar *isnpoints_key = "/tool/sfunctions/isnpoints";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)
@@ -477,14 +489,17 @@ load_args(GwyContainer *container, ToolControls *controls)
     controls->out = GWY_SF_DH;
     controls->interp = GWY_INTERPOLATION_BILINEAR;
     controls->siz = 100;
+    controls->isnpoints = FALSE;
 
+    gwy_container_gis_boolean_by_name(container, isnpoints_key,
+                                      &controls->isnpoints);
     gwy_container_gis_enum_by_name(container, dir_key, &controls->dir);
     gwy_container_gis_enum_by_name(container, out_key, &controls->out);
     gwy_container_gis_enum_by_name(container, interp_key, &controls->interp);
     gwy_container_gis_int32_by_name(container, siz_key, &controls->siz);
 
-
     /* sanitize */
+    controls->isnpoints = !!controls->isnpoints;
     controls->dir = MIN(controls->dir, GTK_ORIENTATION_VERTICAL);
     controls->out = MIN(controls->out, GWY_SF_MINKOWSKI_CONNECTIVITY);
     controls->interp = CLAMP(controls->interp,
@@ -494,6 +509,8 @@ load_args(GwyContainer *container, ToolControls *controls)
 static void
 save_args(GwyContainer *container, ToolControls *controls)
 {
+    gwy_container_set_boolean_by_name(container, isnpoints_key,
+                                      controls->isnpoints);
     gwy_container_set_enum_by_name(container, interp_key, controls->interp);
     gwy_container_set_enum_by_name(container, dir_key, controls->dir);
     gwy_container_set_enum_by_name(container, out_key, controls->out);
