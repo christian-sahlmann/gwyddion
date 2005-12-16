@@ -217,8 +217,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
                                                    0.0, 100.0, 0.1, 5, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Height:"), "%",
                                    controls.threshold_height, GWY_HSCALE_CHECK);
-    controls.is_height = g_object_get_data(G_OBJECT(controls.threshold_height),
-                                           "check");
+    controls.is_height = gwy_table_hscale_get_check(controls.threshold_height);
     row++;
 
     controls.threshold_area = gtk_adjustment_new(args->area,
@@ -226,8 +225,7 @@ remove_dialog(RemoveArgs *args, GwyContainer *data)
     spin = gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
                                    controls.threshold_area,
                                    GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
-    controls.is_area = g_object_get_data(G_OBJECT(controls.threshold_area),
-                                         "check");
+    controls.is_area = gwy_table_hscale_get_check(controls.threshold_area);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 

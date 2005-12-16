@@ -273,19 +273,19 @@ dialog_create(GwyUnitoolState *state)
                              G_CALLBACK(size_changed_cb), controls);
     row++;
 
-    controls->nofpoints = gtk_adjustment_new(controls->npoints, 10, 100, 1, 5, 0);
+    controls->nofpoints = gtk_adjustment_new(controls->npoints,
+                                             10, 100, 1, 5, 0);
     gwy_table_attach_hscale(table, row, _("Fix res.:"), NULL,
-                                controls->nofpoints, GWY_HSCALE_CHECK);
+                            controls->nofpoints, GWY_HSCALE_CHECK);
     g_signal_connect_swapped(controls->nofpoints, "value-changed",
                              G_CALLBACK(npoints_changed_cb), controls);
-    controls->isnofpoints = g_object_get_data(G_OBJECT(controls->nofpoints),
-                                              "check");
+    controls->isnofpoints = gwy_table_hscale_get_check(controls->nofpoints);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->isnofpoints),
+                                 controls->isnpoints);
     g_signal_connect(controls->isnofpoints, "toggled",
-                            G_CALLBACK(isnofpoints_changed_cb), controls);
-
+                     G_CALLBACK(isnofpoints_changed_cb), controls);
     gwy_table_hscale_set_sensitive(controls->nofpoints,
-                                         controls->isnpoints);
-
+                                   controls->isnpoints);
     row++;
 
     controls->separation
@@ -398,8 +398,6 @@ dialog_update(GwyUnitoolState *state,
     gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
     gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
     gwy_graph_model_set_title(controls->graphmodel, _("Profiles"));
-
-    controls->isnpoints = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->isnofpoints));
 
     if (nselected) {
         for (i = 0; i < nselected; i++) {
@@ -544,6 +542,7 @@ npoints_changed_cb(ToolControls *controls)
 static void
 isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
 {
+    controls->isnpoints = gtk_toggle_button_get_active(button);
     dialog_update(controls->state, GWY_UNITOOL_UPDATED_CONTROLS);
 }
 
@@ -573,6 +572,7 @@ load_args(GwyContainer *container, ToolControls *controls)
     gwy_container_gis_int32_by_name(container, npoints_key, &controls->npoints);
     /* sanitize */
     controls->separate = !!controls->separate;
+    controls->isnpoints = !!controls->isnpoints;
     controls->interp = CLAMP(controls->interp,
                              GWY_INTERPOLATION_ROUND, GWY_INTERPOLATION_NNA);
     controls->size = CLAMP(controls->size, 1, MAX_WIDTH);
