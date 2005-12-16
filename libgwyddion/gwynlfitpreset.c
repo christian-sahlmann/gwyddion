@@ -796,13 +796,12 @@ power_guess(gint n_dat,
 
     q = (y[n_dat-1] - y[i])*(y[i] - y[1]);
     q /= (pow(x[n_dat - 1], param[2]) - pow(x[i], param[2]))
-         /(pow(x[i], param[2]) - pow(x[1], param[2]));
+         *(pow(x[i], param[2]) - pow(x[1], param[2]));
     param[1] = sqrt(fabs(q));
 
-    if (param[2] >= 0.0)
-        param[0] = y[0] - param[1]*pow(x[0], param[2]);
-    else
-        param[0] = y[n_dat-1] - param[1]*pow(x[n_dat-1], param[2]);
+    param[0] = (y[0] + y[i] + y[n_dat-1]
+                - param[1]*(pow(x[0], param[2]) + pow(x[i], param[2])
+                            + pow(x[n_dat-1], param[2])))/3.0;
 
     *fres = TRUE;
 }
@@ -815,11 +814,11 @@ power_scale(gdouble *param,
 {
     if (dir == 1) {
         param[0] /= yscale;
-        param[1] *= pow(xscale, param[2])/xscale;
+        param[1] /= yscale/pow(xscale, param[2]);
     }
     else {
         param[0] *= yscale;
-        param[1] /= pow(xscale, param[2])/xscale;
+        param[1] *= yscale/pow(xscale, param[2]);
     }
 }
 
