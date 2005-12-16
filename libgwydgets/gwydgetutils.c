@@ -258,9 +258,9 @@ gwy_hscale_checkbutton_cb(GtkToggleButton *check,
  * Attaches a spinbutton with a scale and labels, or something else to a table
  * row.
  *
- * Following object data are set on @pivot to various components:
- * "scale", "check", "label", "units", "middle_widget"
- * (some may be %NULL if not present).
+ * You can use functions gwy_table_hscale_get_scale(),
+ * gwy_table_hscale_get_check(), etc. to get the various widgets from pivot
+ * later.
  *
  * FIXME: What exactly happens with various @style values is quite convoluted.
  *
@@ -408,6 +408,50 @@ gwy_table_attach_hscale(GtkWidget *table,
 
     return middle_widget;
 }
+
+/**
+ * gwy_table_hscale_get_scale:
+ * @pivot: Pivot object passed to gwy_table_attach_hscale().
+ *
+ * Gets the horizontal scale associated with a pivot object.
+ *
+ * May return %NULL if constructed with %GWY_HSCALE_NO_SCALE,
+ * %GWY_HSCALE_WIDGET, or %GWY_HSCALE_WIDGET_NO_EXPAND.
+ **/
+
+/**
+ * gwy_table_hscale_get_check:
+ * @pivot: Pivot object passed to gwy_table_attach_hscale().
+ *
+ * Gets the check button associated with a pivot object.
+ *
+ * May return %NULL if not constructed with %GWY_HSCALE_CHECK.
+ **/
+
+/**
+ * gwy_table_hscale_get_label:
+ * @pivot: Pivot object passed to gwy_table_attach_hscale().
+ *
+ * Gets the (left) label associated with a pivot object.
+ *
+ * May return %NULL if constructed with %GWY_HSCALE_CHECK.
+ **/
+
+/**
+ * gwy_table_hscale_get_units:
+ * @pivot: Pivot object passed to gwy_table_attach_hscale().
+ *
+ * Gets the units label associated with a pivot object.
+ *
+ * May return %NULL if constructed without units.
+ **/
+
+/**
+ * gwy_table_hscale_get_middle_widget:
+ * @pivot: Pivot object passed to gwy_table_attach_hscale().
+ *
+ * Gets the middle widget associated with a pivot object.
+ **/
 
 /************************** Mask colors ****************************/
 

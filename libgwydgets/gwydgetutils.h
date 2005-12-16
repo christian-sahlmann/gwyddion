@@ -49,6 +49,18 @@ GtkWidget*   gwy_table_attach_hscale        (GtkWidget *table,
                                              GwyHScaleStyle style);
 void         gwy_table_hscale_set_sensitive (GtkObject *pivot,
                                              gboolean sensitive);
+
+#define      gwy_table_hscale_get_scale     (pivot) \
+    ((GtkWidget*)(g_object_get_data(G_OBJECT(pivot), "scale")))
+#define      gwy_table_hscale_get_check     (pivot) \
+    ((GtkWidget*)(g_object_get_data(G_OBJECT(pivot), "check")))
+#define      gwy_table_hscale_get_label     (pivot) \
+    ((GtkWidget*)(g_object_get_data(G_OBJECT(pivot), "label")))
+#define      gwy_table_hscale_get_units     (pivot) \
+    ((GtkWidget*)(g_object_get_data(G_OBJECT(pivot), "units")))
+#define      gwy_table_hscale_get_middle_widget(pivot) \
+    ((GtkWidget*)(g_object_get_data(G_OBJECT(pivot), "middle_widget")))
+
 GtkWidget*   gwy_table_get_child_widget     (GtkWidget *table,
                                              gint row,
                                              gint col);
