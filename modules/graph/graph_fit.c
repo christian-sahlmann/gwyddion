@@ -204,7 +204,8 @@ normalize_data(FitArgs *args,
                            GWY_INTERPOLATION_NONE);
 
     func_name = gwy_resource_get_name(GWY_RESOURCE(args->fitfunc));
-    if (gwy_strequal(func_name, "Gaussian (PSDF)"))  /* || something */
+    if (gwy_strequal(func_name, "Gaussian (PSDF)")
+        || gwy_strequal(func_name, "Power"))
         skip_first_point = TRUE;
 
     j = 0;
