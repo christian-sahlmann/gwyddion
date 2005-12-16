@@ -597,15 +597,25 @@ recompute(FitArgs *args, FitControls *controls)
     GwyDataLine *xdata;
     GwyDataLine *ydata;
     GwyNLFitPreset *function;
-    gboolean fixed[4];
+    gboolean fixed[MAX_PARAMS];
     gchar buffer[64];
     gint i, j, nparams;
-    gboolean ok;
+    gboolean ok, allfixed;
     GwyGraphCurveModel *cmodel;
+
+    nparams = gwy_nlfit_preset_get_nparams(function);
+
+    allfixed = TRUE;
+    for (i = 0; i < nparams; i++) {
+        fixed[i] = args->par_fix[i];
+        allfixed &= fixed[i];
+        args->par_res[i] = args->par_init[i];
+    }
+    if (allfixed)
+        return;
 
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
-
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
     if (!normalize_data(args, xdata, ydata, args->curve - 1))
@@ -617,13 +627,6 @@ recompute(FitArgs *args, FitControls *controls)
 
     function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                           args->function_type);
-    nparams = gwy_nlfit_preset_get_nparams(function);
-
-    for (i = 0; i < MAX_PARAMS; i++) {
-        fixed[i] = args->par_fix[i];
-        args->par_res[i] = args->par_init[i];
-    }
-
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
     args->fitter = gwy_nlfit_preset_fit(function, NULL,
