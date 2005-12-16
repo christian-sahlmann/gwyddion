@@ -124,7 +124,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.2",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -357,6 +357,7 @@ fit_dialog(FitArgs *args)
     controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_res[i] = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(controls.param_res[i]), TRUE);
         gtk_table_attach(GTK_TABLE(table), controls.param_res[i],
                          2, 3, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
@@ -366,6 +367,7 @@ fit_dialog(FitArgs *args)
     controls.param_err = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
         controls.param_err[i] = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(controls.param_res[i]), TRUE);
         gtk_table_attach(GTK_TABLE(table), controls.param_err[i],
                          3, 4, i+1, i+2,
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
