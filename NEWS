@@ -1,10 +1,12 @@
-1.99.4cvs20051123
+1.99.4cvs20051216
 
 1.99.5
 Application:
 - Unix installations are relocatable via environment variables.
 - FFTW3 is recommended now.
 - Color gradient and GL material editors actually work.
+- Translations updated: Italian.
+- Names of files drag-and-dropped onto toolbox are preserved.
 
 Library:
 - libprocess: FFTW integration was finished, all integral transform methods
@@ -23,7 +25,18 @@ Library:
 - libgwyapp: Unitool rectangular selection info supports lateral offsets.
 - libgwyapp: Utility GwyResourceEditor base class resource editors are based
   on now.
-- libgwydgets: GwyHMarkerBox widget, a horizontal box with movable markers.
+- libgwydgets: GwyHMarkerBox widget, a horizontal box with movable markers,
+  with GwyMarkerBox base class.
+- libgwydgets: GwyValUnit was finally removed.
+- libgwydgets: Gwy3DView now takes container keys instead of direct objects
+  for some properies, but not for all yet.
+- libprocess: GwyDataLine now carries units, like GwyDataField.
+- libprocess: Default GwyDataField and GwyDataLine units are empty (unitless)
+  instead of meters now.
+- libgwyapp: Too long file names are ellipsized in tool headers, full file
+  name is shown in a tooltip.
+- libgwyddion: Exponential (PSDF) fitting preset was fixed, Power function
+  preset added.
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
@@ -36,12 +49,17 @@ Modules:
 - Rawfile: Always black preview was fixed.
 - Pixmap: Can draw selection on exported image, checkboxes for mask and
   selection were added.
+- BCR file: Wrong y scale on files that do not have explicit units was fixed.
 - Lines layer: Jagged line number edges were fixed.
 - Layer modules: Support for exporting selections to pixmap images.
 - Level3, Read value: Display properly lateral offsets.
 - Crop: Allows to either keep lateral offsets where the data was cut, or
   reset them to zero.
-- Calibrate: Can set lateral offsets too.
+- Calibrate: Can set lateral offsets now.
+- Tip blind estimate, Tip model: Broken controls work again.
+- Basicops: Can resample data in one direction to make samples square.
+- Plugin-proxy: Missing byte reordering on big-endian machines was added
+  (bug #65).
 
 Other:
 - Developer documentation was moved from tmpl files to source code.
