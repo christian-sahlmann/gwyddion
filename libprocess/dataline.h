@@ -45,7 +45,7 @@ struct _GwyDataLine {
     gdouble *data;
 
     GwySIUnit *si_unit_x;
-    GwySIUnit *si_unit_z;
+    GwySIUnit *si_unit_y;
 };
 
 struct _GwyDataLineClass {
@@ -86,15 +86,15 @@ gdouble        gwy_data_line_get_offset            (GwyDataLine *data_line);
 void           gwy_data_line_set_offset            (GwyDataLine *data_line,
                                                     gdouble offset);
 GwySIUnit*     gwy_data_line_get_si_unit_x         (GwyDataLine *data_line);
-GwySIUnit*     gwy_data_line_get_si_unit_z         (GwyDataLine *data_line);
+GwySIUnit*     gwy_data_line_get_si_unit_y         (GwyDataLine *data_line);
 void           gwy_data_line_set_si_unit_x         (GwyDataLine *data_line,
                                                     GwySIUnit *si_unit);
-void           gwy_data_line_set_si_unit_z         (GwyDataLine *data_line,
+void           gwy_data_line_set_si_unit_y         (GwyDataLine *data_line,
                                                     GwySIUnit *si_unit);
 GwySIValueFormat* gwy_data_line_get_value_format_x (GwyDataLine *data_line,
                                                     GwySIUnitFormatStyle style,
                                                     GwySIValueFormat *format);
-GwySIValueFormat* gwy_data_line_get_value_format_z (GwyDataLine *data_line,
+GwySIValueFormat* gwy_data_line_get_value_format_y (GwyDataLine *data_line,
                                                     GwySIUnitFormatStyle style,
                                                     GwySIValueFormat *format);
 gdouble        gwy_data_line_itor                  (GwyDataLine *data_line,
