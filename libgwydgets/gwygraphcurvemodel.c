@@ -454,10 +454,16 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
                                const gdouble *ydata,
                                gint n)
 {
-    g_free(gcmodel->xdata);
+    gdouble *old;
+
+    old = gcmodel->xdata;
     gcmodel->xdata = g_memdup(xdata, n*sizeof(gdouble));
-    g_free(gcmodel->ydata);
+    g_free(old);
+
+    old = gcmodel->ydata;
     gcmodel->ydata = g_memdup(ydata, n*sizeof(gdouble));
+    g_free(old);
+
     gcmodel->n = n;
     gwy_graph_curve_model_signal_layout_changed(gcmodel);
 }
