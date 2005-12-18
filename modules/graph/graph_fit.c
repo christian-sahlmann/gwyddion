@@ -33,7 +33,7 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-#define MAX_PARAMS 4
+enum { MAX_PARAMS = 4 };
 
 typedef struct {
     gint function_type;
@@ -236,6 +236,11 @@ normalize_data(FitArgs *args,
 static gboolean
 fit_dialog(FitArgs *args)
 {
+    enum {
+        RESPONSE_RESET = 1,
+        RESPONSE_FIT = 2,
+        RESPONSE_PLOT = 3
+    };
     GtkWidget *label;
     GtkWidget *table;
     GtkWidget *dialog;
@@ -245,12 +250,6 @@ fit_dialog(FitArgs *args)
     GtkWidget *vbox;
     FitControls controls;
     gint response, i, j;
-
-    enum {
-        RESPONSE_RESET = 1,
-        RESPONSE_FIT = 2,
-        RESPONSE_PLOT = 3
-    };
 
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Fit graph"), NULL, 0, NULL);
@@ -877,7 +876,7 @@ create_preset_menu(GCallback callback,
     store = gwy_inventory_store_new(gwy_nlfit_presets());
 
     combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
-    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 1);
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 2);
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, TRUE);
     i = gwy_inventory_store_get_column_by_name(store, "name");
