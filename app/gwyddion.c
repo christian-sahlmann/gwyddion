@@ -89,7 +89,7 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("stock items"));
     gwy_stock_register_stock_items();
 
-    gwy_app_splash_set_message(_("gradients"));
+    gwy_app_splash_set_message(_("color gradients"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
     gwy_app_splash_set_message(_("GL materials"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));

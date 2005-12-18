@@ -124,7 +124,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     toolbar_buttons[] = {
         {
             GWY_RESOURCE_EDITOR_BUTTON_EDIT,
-            N_("_Edit"), GTK_STOCK_EDIT,
+            N_("verb|_Edit"), GTK_STOCK_EDIT,
             N_("Edit selected item"),
             G_CALLBACK(gwy_resource_editor_edit),
         },
@@ -219,7 +219,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     hbox = gtk_hbox_new(TRUE, 0);
     gtk_box_pack_start(GTK_BOX(editor->vbox), hbox, FALSE, FALSE, 0);
     for (i = 0; i < G_N_ELEMENTS(toolbar_buttons); i++) {
-        button = gwy_tool_like_button_new(toolbar_buttons[i].label,
+        button = gwy_tool_like_button_new(gwy_sgettext(toolbar_buttons[i].label),
                                           toolbar_buttons[i].stock_id);
         editor->buttons[toolbar_buttons[i].id] = button;
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
