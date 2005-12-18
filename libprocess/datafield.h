@@ -127,6 +127,10 @@ GwySIValueFormat* gwy_data_field_get_value_format_xy(GwyDataField *data_field,
 GwySIValueFormat* gwy_data_field_get_value_format_z (GwyDataField *data_field,
                                                      GwySIUnitFormatStyle style,
                                                      GwySIValueFormat *format);
+void          gwy_data_field_copy_units_to_data_line(GwyDataField *data_field,
+                                                     GwyDataLine *data_line);
+void          gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
+                                                     GwyDataField *data_field);
 
 gdouble           gwy_data_field_itor                (GwyDataField *data_field,
                                                       gdouble row);

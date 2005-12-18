@@ -637,6 +637,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
                        gint width, gint height,
                        gint nstats)
 {
+    GwySIUnit *fieldunit, *lineunit;
     gdouble min, max;
     gdouble *drow;
     gint i, j, k;
@@ -657,6 +658,13 @@ gwy_data_field_area_dh(GwyDataField *data_field,
     gwy_data_line_clear(target_line);
     min = gwy_data_field_area_get_min(data_field, col, row, width, height);
     max = gwy_data_field_area_get_max(data_field, col, row, width, height);
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_unit_string(lineunit, "");
 
     /* Handle border cases */
     if (min == max) {
@@ -781,6 +789,7 @@ gwy_data_field_area_da(GwyDataField *data_field,
                        GwyOrientation orientation,
                        gint nstats)
 {
+    GwySIUnit *lineunit;
     GwyDataField *der;
     gdouble *drow, *derrow;
     gdouble q;
@@ -859,6 +868,14 @@ gwy_data_field_area_da(GwyDataField *data_field,
                              q*gwy_data_line_get_offset(target_line));
     gwy_data_line_multiply(target_line, 1.0/q);
     g_object_unref(der);
+
+    /* Set proper units */
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_divide(gwy_data_field_get_si_unit_z(data_field),
+                       gwy_data_field_get_si_unit_xy(data_field),
+                       lineunit);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_unit_string(lineunit, "");
 }
 
 /**
@@ -1192,21 +1209,28 @@ gwy_data_field_area_acf(GwyDataField *data_field,
                         GwyOrientation orientation,
                         GwyInterpolationType interpolation,
                         gint nstats)
-#ifdef HAVE_FFTW3
 {
+    GwySIUnit *fieldunit, *lineunit;
+
+#ifdef HAVE_FFTW3
     gwy_data_field_area_func_fft(data_field, target_line,
                                  &do_fft_acf,
                                  col, row, width, height,
                                  orientation, interpolation, nstats);
-}
 #else
-{
     gwy_data_field_area_func_lame(data_field, target_line,
                                   &gwy_data_line_acf,
                                   col, row, width, height,
                                   orientation, interpolation, nstats);
-}
 #endif  /* HAVE_FFTW3 */
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(gwy_data_field_get_si_unit_z(data_field), 2, lineunit);
+}
 
 /**
  * gwy_data_field_acf:
@@ -1262,20 +1286,27 @@ gwy_data_field_area_hhcf(GwyDataField *data_field,
                          GwyOrientation orientation,
                          GwyInterpolationType interpolation,
                          gint nstats)
-#ifdef HAVE_FFTW3
 {
+    GwySIUnit *fieldunit, *lineunit;
+
+#ifdef HAVE_FFTW3
     gwy_data_field_area_func_fft(data_field, target_line, &do_fft_hhcf,
                                  col, row, width, height,
                                  orientation, interpolation, nstats);
-}
 #else
-{
     gwy_data_field_area_func_lame(data_field, target_line,
                                   &gwy_data_line_hhcf,
                                   col, row, width, height,
                                   orientation, interpolation, nstats);
-}
 #endif  /* HAVE_FFTW3 */
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(gwy_data_field_get_si_unit_z(data_field), 2, lineunit);
+}
 
 /**
  * gwy_data_field_hhcf:
@@ -1335,6 +1366,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                          gint nstats)
 {
     GwyDataField *re_field, *im_field;
+    GwySIUnit *lineunit;
     gdouble *re, *im, *target;
     gint i, j, xres, yres, size;
 
@@ -1406,6 +1438,15 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
 
     g_object_unref(re_field);
     g_object_unref(im_field);
+
+    /* Set proper units */
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_power(gwy_data_field_get_si_unit_xy(data_field), -1, lineunit);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    /* FIXME: God knows what units the discrete PSDF should have.  Or maybe
+     * Petr... */
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_unit_string(lineunit, "");
 }
 
 /**
@@ -1519,6 +1560,7 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
                                        gint width, gint height,
                                        gint nstats)
 {
+    GwySIUnit *fieldunit, *lineunit;
     const gdouble *data;
     gdouble *line;
     gdouble min, max, q;
@@ -1568,6 +1610,13 @@ gwy_data_field_area_minkowski_boundary(GwyDataField *data_field,
     gwy_data_line_multiply(target_line, 1.0/(width*height));
     gwy_data_line_set_real(target_line, max - min);
     gwy_data_line_set_offset(target_line, min);
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_unit_string(lineunit, "");
 }
 
 /**
@@ -1621,6 +1670,7 @@ gwy_data_field_area_minkowski_euler(GwyDataField *data_field,
                                     gint width, gint height,
                                     gint nstats)
 {
+    GwySIUnit *fieldunit, *lineunit;
     GwyDataLine *tmp_line;
     gint i;
 
@@ -1652,6 +1702,13 @@ gwy_data_field_area_minkowski_euler(GwyDataField *data_field,
 
     gwy_data_line_multiply(target_line, 1.0/(width*height));
     gwy_data_line_invert(target_line, TRUE, FALSE);
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_set_unit_string(lineunit, "");
 }
 
 /**

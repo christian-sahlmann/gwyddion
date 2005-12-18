@@ -1940,6 +1940,7 @@ gwy_data_field_get_row(GwyDataField *data_field,
     memcpy(data_line->data,
            data_field->data + row*data_field->xres,
            data_field->xres*sizeof(gdouble));
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
 
@@ -1968,6 +1969,7 @@ gwy_data_field_get_column(GwyDataField *data_field,
     p = data_field->data + col;
     for (k = 0; k < data_field->yres; k++)
         data_line->data[k] = p[k*data_field->xres];
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
 /**
@@ -2000,6 +2002,7 @@ gwy_data_field_get_row_part(GwyDataField *data_field,
     memcpy(data_line->data,
            data_field->data + row*data_field->xres + from,
            (to - from)*sizeof(gdouble));
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
 /**
@@ -2033,6 +2036,7 @@ gwy_data_field_get_column_part(GwyDataField *data_field,
     data_line->real = data_field->yreal*(to - from)/data_field->yres;
     for (k = 0; k < to - from; k++)
         data_line->data[k] = data_field->data[(k+from)*data_field->xres + col];
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
 /**
@@ -2208,6 +2212,7 @@ gwy_data_field_get_data_line(GwyDataField *data_field,
                                                      interpolation);
 
     data_line->real = size*data_field->xreal/data_field->xres;
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 }
 
 /**
@@ -2259,6 +2264,7 @@ gwy_data_field_get_data_line_averaged(GwyDataField *data_field,
                                                      ulrow + 0.5 + k*sina,
                                                      interpolation);
     data_line->real = size*data_field->xreal/data_field->xres;
+    gwy_data_field_copy_units_to_data_line(data_field, data_line);
 
     if (thickness <= 1)
         return;
@@ -2476,6 +2482,48 @@ gwy_data_field_fit_lines(GwyDataField *data_field,
     g_object_unref(hlp);
     gwy_object_unref(xdata);
     gwy_object_unref(ydata);
+}
+
+/**
+ * gwy_data_field_copy_units_to_data_line:
+ * @data_field: A data field to get units from.
+ * @data_line: A data line to set units of.
+ *
+ * Sets lateral and value units of a data line to match a data field.
+ **/
+void
+gwy_data_field_copy_units_to_data_line(GwyDataField *data_field,
+                                       GwyDataLine *data_line)
+{
+    GwySIUnit *fieldunit, *lineunit;
+
+    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(data_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_y(data_line);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+}
+
+/**
+ * gwy_data_line_copy_units_to_data_field:
+ * @data_line: A data line to get units from.
+ * @data_field: A data field to set units of.
+ *
+ * Sets lateral and value units of a data field to match a data line.
+ **/
+void
+gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
+                                       GwyDataField *data_field)
+{
+    GwySIUnit *fieldunit, *lineunit;
+
+    fieldunit = gwy_data_field_get_si_unit_xy(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(data_line);
+    gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
+    fieldunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_y(data_line);
+    gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
 }
 
 /************************** Documentation ****************************/

@@ -542,6 +542,7 @@ void
 gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
                                        GwyDataLine *distribution)
 {
+    GwySIUnit *fieldunit, *lineunit;
     gint i, xres, yres, ngrains, nhist;
     gint maxpnt;
     gint *grain_size;
@@ -588,6 +589,13 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
 
     gwy_data_line_set_real(distribution,
                            gwy_data_field_itor(grain_field, sqrt(maxpnt)));
+
+    /* Set proper units */
+    fieldunit = gwy_data_field_get_si_unit_xy(grain_field);
+    lineunit = gwy_data_line_get_si_unit_x(distribution);
+    gwy_serializable_clone(G_OBJECT(fieldunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(distribution);
+    gwy_si_unit_set_unit_string(lineunit, "");
 }
 
 /**
