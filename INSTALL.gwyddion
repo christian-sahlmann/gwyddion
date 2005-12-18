@@ -28,7 +28,7 @@ Prerequisities:
 Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
 
-Optional, for speed up of some operations:
+Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 or newer, including development files
 
 Optional, for development of plug-in in various languages:
@@ -63,7 +63,7 @@ The prefered way to get all these is to install Gtk+ all-in-one package from
 GladeWin32.
 
 Optional but recommended, for installer creation:
-- Inno Setup 4
+- Inno Setup 4 (or newer)
 
 Unpack tarball with sources, change to the created directory and edit
 make.msc (note it has Unix EOLs so use Wordpad or some full-fledged text
@@ -74,6 +74,8 @@ editor, not Notepad).  Point:
 - GTKGLEXT_TOP to top level directory of your GtkGLExt installation if it
   differs from $GTK_TOP
 - MSC_TOP to top level directory of you MSVC installation
+These variables are set to reasonable defaults, so chances are you will not
+need to change them.
 
 Run command prompt (DOS) in the directory with unpacked sources.  Assure
 MSVC directories are in PATH, this can be done by running vcvars32.bat,
@@ -116,6 +118,7 @@ Prerequisities:
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
 - Perl5
+- pkg-config 0.16 or newer
 - gtk-doc 1.4 or newer
 - GNU gettext 0.12 or newer, including development stuff
 - who knows what else
@@ -131,8 +134,8 @@ There are other things to generate, however.  They can be created only after
 a successful project build.
 - Documentation:
     make -k docs
-  It fails the for first time due to gtk-doc peculiarities, but don't worry
-  and just run it again, it should succeed then.
+  It fails the for the very first time due to gtk-doc peculiarities, but don't
+  worry and just run it again, it should succeed then.
 - MSVC files (makefiles, .def files):
     ./utils/update-msvc.py
 
