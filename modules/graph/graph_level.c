@@ -33,19 +33,18 @@
 #include <app/settings.h>
 #include <app/app.h>
 
-/* Data for this function.*/
+static gboolean module_register(const gchar *name);
+static gboolean level          (GwyGraph *graph);
+static void     level_do       (const gdouble *x,
+                                gdouble *y,
+                                gdouble n);
 
-static gboolean    module_register           (const gchar *name);
-static gboolean    level                     (GwyGraph *graph);
-static void        level_do                  (gdouble *x, gdouble *y, gdouble n);
-
-/* The module info. */
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Level graph by line"),
+    N_("Level graph by line."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1.2",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -72,35 +71,40 @@ static gboolean
 level(GwyGraph *graph)
 {
     GwyGraphCurveModel *cmodel;
-    gboolean ok;
-    gdouble *xdata, *ydata;
-    gint i, ndata;
+    const gdouble *xdata, *ydata;
+    GArray *newydata;
+    gint i, ncurves, ndata;
+    gboolean ok = TRUE;
 
-    for (i=0; i<gwy_graph_model_get_n_curves(gwy_graph_get_model(graph)); i++)
-    {
-        cmodel = gwy_graph_model_get_curve_by_index(gwy_graph_get_model(graph), i);
+    ncurves = gwy_graph_model_get_n_curves(gwy_graph_get_model(graph));
+    newydata = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    for (i = 0; i < ncurves; i++) {
+        cmodel = gwy_graph_model_get_curve_by_index(gwy_graph_get_model(graph),
+                                                    i);
         xdata = gwy_graph_curve_model_get_xdata(cmodel);
         ydata = gwy_graph_curve_model_get_ydata(cmodel);
         ndata = gwy_graph_curve_model_get_ndata(cmodel);
-
-        level_do(xdata, ydata, ndata);
-        gwy_graph_curve_model_signal_layout_changed(cmodel);
+        g_array_set_size(newydata, 0);
+        g_array_append_vals(newydata, ydata, ndata);
+        level_do(xdata, (gdouble*)newydata->data, ndata);
+        gwy_graph_curve_model_set_data(cmodel, xdata, (gdouble*)newydata->data,
+                                       ndata);
     }
+    g_array_free(newydata, TRUE);
 
     return ok;
 }
 
-static void        
-level_do(gdouble *x, gdouble *y, gdouble n)
+static void
+level_do(const gdouble *x, gdouble *y, gdouble n)
 {
-    gint i;
     gdouble result[2];
+    gint i;
+
     gwy_math_fit_polynom(n, x, y, 1, result);
 
-    for (i=0; i<n; i++)
-    {
+    for (i = 0; i < n; i++)
         y[i] -= result[0] + result[1]*x[i];
-    }
 }
 
 
