@@ -54,28 +54,42 @@ static gboolean gwy_axis_button_release       (GtkWidget *widget,
                                                GdkEventButton *event);
 
 /* Forward declarations - axis related*/
-static gdouble  gwy_axis_dbl_raise            (gdouble x, gint y);
-static gdouble  gwy_axis_quantize_normal_tics (gdouble arg, gint guide);
-static gint     gwy_axis_normalscale          (GwyAxis *a);
-static gint     gwy_axis_logscale             (GwyAxis *a);
-static gint     gwy_axis_scale                (GwyAxis *a);
-static gint     gwy_axis_formatticks          (GwyAxis *a);
-static gint     gwy_axis_precompute           (GwyAxis *a,
-                                               gint scrmin,
-                                               gint scrmax);
-static void     gwy_axis_draw_axis          (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
-static void     gwy_axis_draw_ticks           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
-static void     gwy_axis_draw_tlabels         (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
-static void     gwy_axis_draw_label           (GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis);
-static void     gwy_axis_autoset              (GwyAxis *axis,
-                                               gint width,
-                                               gint height);
-static void     gwy_axis_adjust               (GwyAxis *axis,
-                                               gint width,
-                                               gint height);
-static void     gwy_axis_entry                (GwyAxisDialog *dialog,
-                                               gint arg1,
-                                               gpointer user_data);
+static gdouble gwy_axis_dbl_raise           (gdouble x,
+                                             gint y);
+static gdouble gwy_axis_quantize_normal_tics(gdouble arg,
+                                             gint guide);
+static gint    gwy_axis_normalscale         (GwyAxis *a);
+static gint    gwy_axis_logscale            (GwyAxis *a);
+static gint    gwy_axis_scale               (GwyAxis *a);
+static gint    gwy_axis_formatticks         (GwyAxis *a);
+static gint    gwy_axis_precompute          (GwyAxis *a,
+                                             gint scrmin,
+                                             gint scrmax);
+static void    gwy_axis_draw_axis           (GdkDrawable *drawable,
+                                             GdkGC *gc,
+                                             GwyAxisActiveAreaSpecs *specs,
+                                             GwyAxis *axis);
+static void    gwy_axis_draw_ticks          (GdkDrawable *drawable,
+                                             GdkGC *gc,
+                                             GwyAxisActiveAreaSpecs *specs,
+                                             GwyAxis *axis);
+static void    gwy_axis_draw_tlabels        (GdkDrawable *drawable,
+                                             GdkGC *gc,
+                                             GwyAxisActiveAreaSpecs *specs,
+                                             GwyAxis *axis);
+static void    gwy_axis_draw_label          (GdkDrawable *drawable,
+                                             GdkGC *gc,
+                                             GwyAxisActiveAreaSpecs *specs,
+                                             GwyAxis *axis);
+static void    gwy_axis_autoset             (GwyAxis *axis,
+                                             gint width,
+                                             gint height);
+static void    gwy_axis_adjust              (GwyAxis *axis,
+                                             gint width,
+                                             gint height);
+static void    gwy_axis_entry               (GwyAxisDialog *dialog,
+                                             gint arg1,
+                                             gpointer user_data);
 
 /* Local data */
 
@@ -219,15 +233,16 @@ gwy_axis_finalize(GObject *object)
 
     axis = GWY_AXIS(object);
 
+    if (axis->dialog)
+        gtk_widget_destroy(axis->dialog);
+
     g_string_free(axis->label_text, TRUE);
     g_array_free(axis->mjticks, TRUE);
     g_array_free(axis->miticks, TRUE);
 
     gwy_object_unref(axis->unit);
+    gwy_object_unref(axis->gc);
 
-    if (axis->dialog) gtk_widget_destroy(axis->dialog);
-
-    g_object_unref(axis->gc);
     g_free(axis->par.major_font);
     g_free(axis->par.label_font);
     G_OBJECT_CLASS(gwy_axis_parent_class)->finalize(object);
@@ -243,8 +258,6 @@ gwy_axis_unrealize(GtkWidget *widget)
     if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
 }
-
-
 
 static void
 gwy_axis_realize(GtkWidget *widget)
@@ -470,17 +483,20 @@ gwy_axis_expose(GtkWidget *widget,
 
 
     gwy_axis_draw_on_drawable(widget->window,
-                                axis->gc,
-                                0, 0,
-                                widget->allocation.width,
-                                widget->allocation.height,
-                                GWY_AXIS(widget));
+                              axis->gc,
+                              0, 0,
+                              widget->allocation.width,
+                              widget->allocation.height,
+                              GWY_AXIS(widget));
     return FALSE;
 }
 
 void
-gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin, gint width, gint height,
-                    GwyAxis *axis)
+gwy_axis_draw_on_drawable(GdkDrawable *drawable,
+                          GdkGC *gc,
+                          gint xmin, gint ymin,
+                          gint width, gint height,
+                          GwyAxis *axis)
 {
     GwyAxisActiveAreaSpecs specs;
     specs.xmin = xmin;
@@ -490,16 +506,22 @@ gwy_axis_draw_on_drawable(GdkDrawable *drawable, GdkGC *gc, gint xmin, gint ymin
 
     if (axis->is_standalone && axis->is_visible)
         gwy_axis_draw_axis(drawable, gc, &specs, axis);
-    if (axis->is_visible) gwy_axis_draw_ticks(drawable, gc, &specs, axis);
-    if (axis->is_visible) gwy_axis_draw_tlabels(drawable, gc, &specs, axis);
-    if (axis->is_visible) gwy_axis_draw_label(drawable, gc, &specs, axis);
+    if (axis->is_visible)
+        gwy_axis_draw_ticks(drawable, gc, &specs, axis);
+    if (axis->is_visible)
+        gwy_axis_draw_tlabels(drawable, gc, &specs, axis);
+    if (axis->is_visible)
+        gwy_axis_draw_label(drawable, gc, &specs, axis);
 }
 
 static void
-gwy_axis_draw_axis(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_axis(GdkDrawable *drawable,
+                   GdkGC *gc,
+                   GwyAxisActiveAreaSpecs *specs,
+                   GwyAxis *axis)
 {
-    gdk_gc_set_line_attributes (gc, axis->par.line_thickness,
-                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
+    gdk_gc_set_line_attributes(gc, axis->par.line_thickness,
+                               GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
     switch (axis->orientation) {
         case GTK_POS_BOTTOM:
@@ -532,16 +554,18 @@ gwy_axis_draw_axis(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *spe
     }
 }
 
-
 static void
-gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_ticks(GdkDrawable *drawable,
+                    GdkGC *gc,
+                    GwyAxisActiveAreaSpecs *specs,
+                    GwyAxis *axis)
 {
     guint i;
     GwyAxisTick *pmit;
     GwyAxisLabeledTick *pmjt;
 
 
-    gdk_gc_set_line_attributes (gc, axis->par.major_thickness,
+    gdk_gc_set_line_attributes(gc, axis->par.major_thickness,
                                GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_MITER);
 
     for (i = 0; i < axis->mjticks->len; i++) {
@@ -633,7 +657,10 @@ gwy_axis_draw_ticks(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *sp
 }
 
 static void
-gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_tlabels(GdkDrawable *drawable,
+                      GdkGC *gc,
+                      GwyAxisActiveAreaSpecs *specs,
+                      GwyAxis *axis)
 {
     guint i;
     GwyAxisLabeledTick *pmjt;
@@ -698,7 +725,10 @@ gwy_axis_draw_tlabels(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *
 }
 
 static void
-gwy_axis_draw_label(GdkDrawable *drawable, GdkGC *gc, GwyAxisActiveAreaSpecs *specs, GwyAxis *axis)
+gwy_axis_draw_label(GdkDrawable *drawable,
+                    GdkGC *gc,
+                    GwyAxisActiveAreaSpecs *specs,
+                    GwyAxis *axis)
 {
     PangoLayout *layout;
     PangoContext *context;
