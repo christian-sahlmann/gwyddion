@@ -67,6 +67,9 @@ struct _GwyGraph {
     GwyGraphGridType grid_type;
     gboolean enable_user_input;
 
+    gulong notify_id;
+    gulong layout_updated_id;
+
     gpointer reserved1;
     gpointer reserved2;
 };

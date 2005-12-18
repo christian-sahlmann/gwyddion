@@ -124,10 +124,19 @@ static void
 gwy_graph_finalize(GObject *object)
 {
     GwyGraph *graph = GWY_GRAPH(object);
-    if (graph->graph_model)
-    {
-        gwy_object_unref(graph->graph_model);
+
+    if (graph->notify_id) {
+        g_signal_handler_disconnect(graph->graph_model,
+                                    graph->notify_id);
+        graph->notify_id = 0;
     }
+    if (graph->layout_updated_id) {
+        g_signal_handler_disconnect(graph->graph_model,
+                                    graph->layout_updated_id);
+        graph->layout_updated_id = 0;
+    }
+
+    gwy_object_unref(graph->graph_model);
 }
 
 
@@ -142,14 +151,18 @@ gwy_graph_finalize(GObject *object)
 GtkWidget*
 gwy_graph_new(GwyGraphModel *gmodel)
 {
-    GwyGraph *graph = GWY_GRAPH(g_object_new(gwy_graph_get_type(), NULL));
+    GwyGraph *graph;
+
     gwy_debug("");
 
-    if (gmodel != NULL)
-    {
-       graph->graph_model = gmodel;
-       g_object_ref(gmodel);
-    }
+    graph = GWY_GRAPH(g_object_new(gwy_graph_get_type(), NULL));
+
+    graph->area = GWY_GRAPH_AREA(gwy_graph_area_new(NULL, NULL));
+    graph->area->status = GWY_GRAPH_STATUS_PLAIN;
+    graph->enable_user_input = TRUE;
+
+    if (gmodel)
+        gwy_graph_set_model(GWY_GRAPH(graph), gmodel);
 
     gtk_table_resize(GTK_TABLE(graph), 3, 3);
     gtk_table_set_homogeneous(GTK_TABLE(graph), FALSE);
@@ -228,11 +241,6 @@ gwy_graph_new(GwyGraphModel *gmodel)
     gtk_widget_show(GTK_WIDGET(graph->corner_tr));
     gtk_widget_show(GTK_WIDGET(graph->corner_br));
 
-    graph->area = GWY_GRAPH_AREA(gwy_graph_area_new(NULL, NULL));
-
-    graph->area->status = GWY_GRAPH_STATUS_PLAIN;
-    graph->enable_user_input = TRUE;
-
     g_signal_connect_swapped(graph->area, "selected",
                      G_CALLBACK(gwy_graph_signal_selected), graph);
 
@@ -245,17 +253,6 @@ gwy_graph_new(GwyGraphModel *gmodel)
                      0, 0);
 
     gtk_widget_show_all(GTK_WIDGET(graph->area));
-
-    if (gmodel != NULL) {
-       gwy_graph_set_model(GWY_GRAPH(graph), gmodel);
-
-       g_signal_connect_swapped(gmodel, "notify",
-                                G_CALLBACK(gwy_graph_refresh), graph);
-
-       g_signal_connect_swapped(gmodel, "layout-updated",
-                                G_CALLBACK(gwy_graph_refresh), graph);
-
-      }
 
     gwy_graph_refresh(graph);
 
@@ -366,9 +363,31 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 {
+    if (graph->notify_id) {
+        g_signal_handler_disconnect(graph->graph_model,
+                                    graph->notify_id);
+        graph->notify_id = 0;
+    }
+    if (graph->layout_updated_id) {
+        g_signal_handler_disconnect(graph->graph_model,
+                                    graph->layout_updated_id);
+        graph->layout_updated_id = 0;
+    }
+
+    if (gmodel)
+        g_object_ref(gmodel);
+    gwy_object_unref(graph->graph_model);
     graph->graph_model = gmodel;
 
-    g_signal_connect(gmodel, "notify", G_CALLBACK(replot_cb), graph);
+    if (gmodel) {
+        graph->notify_id
+            = g_signal_connect_swapped(gmodel, "notify",
+                                       G_CALLBACK(gwy_graph_refresh), graph);
+        graph->layout_updated_id
+            = g_signal_connect_swapped(gmodel, "layout-updated",
+                                       G_CALLBACK(gwy_graph_refresh), graph);
+    }
+
     gwy_graph_area_set_model(graph->area, gmodel);
 }
 
