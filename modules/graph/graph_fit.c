@@ -605,6 +605,8 @@ recompute(FitArgs *args, FitControls *controls)
     gboolean ok, allfixed;
     GwyGraphCurveModel *cmodel;
 
+    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
+                                          args->function_type);
     nparams = gwy_nlfit_preset_get_nparams(function);
 
     allfixed = TRUE;
@@ -627,8 +629,6 @@ recompute(FitArgs *args, FitControls *controls)
         return;
     }
 
-    function = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
-                                          args->function_type);
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
     args->fitter = gwy_nlfit_preset_fit(function, NULL,
