@@ -822,6 +822,141 @@ power_scale(gdouble *param,
     }
 }
 
+/******************* lorentzian ********************************/
+static gdouble
+lorentz_func(gdouble x,
+             G_GNUC_UNUSED gint n_param,
+             const gdouble *b,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
+{
+    *fres = TRUE;
+    return b[0]/(b[1]*b[1] + (x - b[2])*(x - b[2]));
+}
+
+static void
+lorentz_guess(gint n_dat,
+              const gdouble *x,
+              const gdouble *y,
+              gdouble *param,
+              gboolean *fres)
+{
+    gint i, imin, imax;
+    gdouble c0, c2p, c2m;
+
+    imin = imax = 0;
+    for (i = 1; i < n_dat; i++) {
+        if (G_UNLIKELY(y[imax] < y[i]))
+            imax = i;
+        if (G_UNLIKELY(y[imin] < y[i]))
+            imin = i;
+    }
+
+    c0 = c2p = c2m = 0.0;
+    for (i = 0; i < n_dat; i++) {
+        c0 += y[i];
+        c2p += y[i]*(x[i] - x[imax])*(x[i] - x[imax]);
+        c2m += y[i]*(x[i] - x[imin])*(x[i] - x[imin]);
+    }
+    c0 *= (x[n_dat-1] - x[0])/n_dat;
+    c2p *= (x[n_dat-1] - x[0])/n_dat;
+    c2m *= (x[n_dat-1] - x[0])/n_dat;
+
+    param[0] = c2p/(c0/y[imax] + x[n_dat-1] - x[0]);
+    if (param[0]*y[imax] > 0.0) {
+        param[1] = sqrt(param[0]/y[imax]);
+        param[2] = x[imax];
+    }
+    else {
+        param[0] = c2m/(c0/y[imin] + x[n_dat-1] - x[0]);
+        if (param[0]*y[imin] > 0.0) {
+            param[1] = sqrt(param[0]/y[imin]);
+            param[2] = x[imin];
+        }
+        else {
+            *fres = FALSE;
+            return;
+        }
+    }
+
+    *fres = TRUE;
+}
+
+static void
+lorentz_scale(gdouble *param,
+              gdouble xscale,
+              gdouble yscale,
+              gint dir)
+{
+    if (dir == 1) {
+        param[0] /= yscale*xscale*xscale;
+        param[1] /= xscale;
+        param[2] /= xscale;
+    }
+    else {
+        param[0] *= yscale*xscale*xscale;
+        param[1] *= xscale;
+        param[2] *= xscale;
+    }
+}
+
+/******************* sinc ********************************/
+static gdouble
+sinc_func(gdouble x,
+          G_GNUC_UNUSED gint n_param,
+          const gdouble *b,
+          G_GNUC_UNUSED gpointer user_data,
+          gboolean *fres)
+{
+    *fres = TRUE;
+    x *= b[1];
+    if (x == 0.0)
+        return b[0];
+    return b[0]*sin(x)/x;
+}
+
+static void
+sinc_guess(gint n_dat,
+           const gdouble *x,
+           const gdouble *y,
+           gdouble *param,
+           gboolean *fres)
+{
+    gint i;
+    gdouble max, min, xmin;
+
+    max = min = y[0];
+    xmin = x[0];
+    for (i = 1; i < n_dat; i++) {
+        if (G_UNLIKELY(max < y[i]))
+            max = y[i];
+        if (G_UNLIKELY(min > y[i])) {
+            min = y[i];
+            xmin = x[i];
+        }
+    }
+
+    param[1] = 4.493409457909064175307880927276/xmin;
+    param[0] = max;
+    *fres = TRUE;
+}
+
+static void
+sinc_scale(gdouble *param,
+           gdouble xscale,
+           gdouble yscale,
+           gint dir)
+{
+    if (dir == 1) {
+        param[0] /= yscale;
+        param[1] *= xscale;
+    }
+    else {
+        param[0] *= yscale;
+        param[1] /= xscale;
+    }
+}
+
 /******************** preset default weights *************************/
 static void
 weights_linear_decrease(gint n_dat,
@@ -1060,6 +1195,31 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(poly2_params),
         poly2_params,
+    },
+    {
+        "Lorentzian",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>a</i>/[<i>b</i><sup>2</sup> "
+            "+ (<i>x</i> \xe2\x88\x92 <i>c</i>)<sup>2</sup>]",
+        &lorentz_func,
+        NULL,
+        &lorentz_guess,
+        &lorentz_scale,
+        NULL,
+        G_N_ELEMENTS(poly2_params),
+        poly2_params,
+    },
+    {
+        "Sinc",
+        "<i>f</i>(<i>x</i>) "
+            "= <i>a</i> sinc(<i>b</i><i>x</i>)",
+        &sinc_func,
+        NULL,
+        &sinc_guess,
+        &sinc_scale,
+        NULL,
+        G_N_ELEMENTS(poly1_params),
+        poly1_params,
     },
 };
 

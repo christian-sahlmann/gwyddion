@@ -1,4 +1,4 @@
-1.99.4cvs20051216
+1.99.4cvs20051217
 
 1.99.5
 Application:
@@ -35,8 +35,8 @@ Library:
   instead of meters now.
 - libgwyapp: Too long file names are ellipsized in tool headers, full file
   name is shown in a tooltip.
-- libgwyddion: Exponential (PSDF) fitting preset was fixed, Power function
-  preset added.
+- libgwyddion: Exponential (PSDF) fitting preset was fixed, Power,
+  Lorentzian, sinc function presets added.
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
@@ -60,6 +60,7 @@ Modules:
 - Basicops: Can resample data in one direction to make samples square.
 - Plugin-proxy: Missing byte reordering on big-endian machines was added
   (bug #65).
+- Statistical functions: Resolution can be automatic too, as before.
 
 Other:
 - Developer documentation was moved from tmpl files to source code.
