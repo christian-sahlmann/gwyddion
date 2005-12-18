@@ -210,7 +210,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS ||
         gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES)) return;
 
-    if ((n = gwy_graph_area_get_selection_number(gwy_graph_get_area(graph)))>0)
+    if ((n = gwy_graph_area_get_selection_number(GWY_GRAPH_AREA(gwy_graph_get_area(graph))))>0)
     {
         if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS)
             spoints = (gdouble *) g_malloc(2*n*sizeof(gdouble));
@@ -231,7 +231,7 @@ selection_updated_cb(GwyGraph *graph, GwyGraphWindowMeasureDialog *dialog)
                         gwy_axis_get_magnification_string(GWY_GRAPH(dialog->graph)->axis_left)->str, str);
 
 
-    gwy_graph_area_get_selection(gwy_graph_get_area(graph), spoints);
+    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), spoints);
 
     /*update points data */
     for (i = 0; i < NMAX; i++) {
@@ -452,7 +452,7 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
 {
     dialog->mmethod = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
-    gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
+    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph))));
     if (dialog->mmethod == METHOD_INTERSECTIONS)
         gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
     else

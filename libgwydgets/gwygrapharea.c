@@ -584,7 +584,7 @@ gwy_graph_area_button_press(GtkWidget *widget, GdkEventButton *event)
             gwy_graph_area_dialog_set_curve_data(GTK_WIDGET(area->area_dialog),
                                                  G_OBJECT(cmodel));
             gtk_widget_show_all(GTK_WIDGET(area->area_dialog));
-            gtk_window_present(area->area_dialog);
+            gtk_window_present(GTK_WINDOW(area->area_dialog));
         }
     }
 
@@ -1162,8 +1162,6 @@ gwy_graph_area_repos_label(GwyGraphArea *area)
 void
 gwy_graph_area_refresh(GwyGraphArea *area)
 {
-    gint i;
-
     /*refresh label*/
     if (GWY_GRAPH_MODEL(area->graph_model)->label_visible)
     {
@@ -1601,7 +1599,7 @@ void
 gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
 {
     gint i;
-    gdouble data_value, area_selection[4];
+    gdouble data_value=0, area_selection[4];
 
     if (selection == NULL) return;
 

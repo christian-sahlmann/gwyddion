@@ -219,7 +219,7 @@ gwy_graph_window_new(GwyGraph *graph)
                            G_CALLBACK(gwy_graph_window_measure_finished_cb),
                            graphwindow);
 
-    g_signal_connect_swapped(gwy_graph_get_area(graphwindow->graph),
+    g_signal_connect_swapped(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)),
                              "motion-notify-event",
                              G_CALLBACK(gwy_graph_cursor_motion_cb),
                              graphwindow);
@@ -339,7 +339,7 @@ static void
 gwy_graph_window_measure_finished_cb(GwyGraphWindow *graphwindow, gint response)
 {
 
-    gwy_graph_area_clear_selection(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)));
+    gwy_graph_area_clear_selection(GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph))));
     if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
         return;
 

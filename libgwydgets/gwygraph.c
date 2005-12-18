@@ -689,7 +689,7 @@ zoomed_cb(GwyGraph *graph)
 
     if (graph->area->status != GWY_GRAPH_STATUS_ZOOM)
         return;
-    gwy_graph_area_get_selection(gwy_graph_get_area(graph), selection);
+    gwy_graph_area_get_selection(GWY_GRAPH_AREA(gwy_graph_get_area(graph)), selection);
 
     x_reqmin = selection[0];
     x_reqmax = selection[0] + selection[1];
