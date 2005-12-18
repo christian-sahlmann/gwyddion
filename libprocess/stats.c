@@ -1955,6 +1955,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
                                   GwyDataLine *derdist,
                                   gint kernel_size)
 {
+    GwySIUnit *lineunit;
     gdouble *data, *der;
     gdouble bx, by, phi;
     gint xres, yres, nder;
@@ -1997,6 +1998,14 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
             }
         }
     }
+
+    /* Set proper units */
+    lineunit = gwy_data_line_get_si_unit_x(derdist);
+    gwy_si_unit_set_unit_string(lineunit, "");
+    lineunit = gwy_data_line_get_si_unit_y(derdist);
+    gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
+                       gwy_data_field_get_si_unit_xy(dfield),
+                       lineunit);
 }
 
 /**
