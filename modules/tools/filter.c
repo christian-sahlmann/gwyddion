@@ -122,7 +122,6 @@ module_register(const gchar *name)
         "filter",
         GWY_STOCK_FILTER,
         N_("Basic filters"),
-        49,
         use,
     };
 

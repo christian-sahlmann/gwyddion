@@ -37,7 +37,6 @@ struct _GwyToolFuncInfo {
     const gchar *name;
     const gchar *stock_id;
     const gchar *tooltip;
-    gint toolbox_position;
     GwyToolUseFunc use;
 };
 
@@ -46,11 +45,8 @@ gboolean     gwy_tool_func_register      (const gchar *modname,
 gboolean     gwy_tool_func_use           (const guchar *name,
                                           GwyDataWindow *data_window,
                                           GwyToolSwitchEvent event);
-GtkWidget*   gwy_tool_func_build_toolbox (GCallback item_callback,
-                                          gint max_width,
-                                          GtkTooltips *tooltips,
-                                          const gchar **first_tool);
 const gchar* gwy_tool_func_get_tooltip   (const gchar *name);
+const gchar* gwy_tool_func_get_stock_id  (const gchar *name);
 gboolean     gwy_tool_func_exists        (const gchar *name);
 
 G_END_DECLS

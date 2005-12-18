@@ -94,7 +94,6 @@ module_register(const gchar *name)
         "stats",
         GWY_STOCK_STAT_QUANTITIES,
         N_("Statistical quantities"),
-        67,
         use,
     };
 

@@ -144,7 +144,6 @@ module_register(const gchar *name)
         "spotremove",
         GWY_STOCK_SPOT_REMOVE,
         N_("Manually remove spots"),
-        120,
         use,
     };
 

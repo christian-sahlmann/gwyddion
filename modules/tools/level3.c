@@ -85,7 +85,6 @@ module_register(const gchar *name)
         "level3",
         GWY_STOCK_FIT_TRIANGLE,
         N_("Level data using three points."),
-        50,
         use,
     };
 

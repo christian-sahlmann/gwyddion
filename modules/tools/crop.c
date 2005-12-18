@@ -87,7 +87,6 @@ module_register(const gchar *name)
         "crop",
         GWY_STOCK_CROP,
         N_("Crop data"),
-        20,
         &use,
     };
 

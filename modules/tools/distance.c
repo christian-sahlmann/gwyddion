@@ -87,7 +87,6 @@ module_register(const gchar *name)
         "distance",
         GWY_STOCK_DISTANCE,
         N_("Measure distances between points."),
-        6,
         use,
     };
 

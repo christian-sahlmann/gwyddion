@@ -136,7 +136,6 @@ module_register(const gchar *name)
         "sfunctions",
         GWY_STOCK_GRAPH_HALFGAUSS,
         N_("Compute 1D statistical functions."),
-        77,
         use,
     };
 

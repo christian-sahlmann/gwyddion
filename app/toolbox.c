@@ -40,6 +40,12 @@ typedef struct {
     gconstpointer cbdata;
 } Action;
 
+typedef struct {
+    const gchar *stock_id;
+    const gchar *tooltip;
+    const gchar *name;
+} Action1;
+
 typedef gboolean (*ActionCheckFunc)(gconstpointer);
 
 static GtkWidget* gwy_app_menu_create_meta_menu (GtkAccelGroup *accel_group);
@@ -122,6 +128,33 @@ add_button(GtkWidget *toolbar,
     return button;
 }
 
+static GtkWidget*
+add_rbutton(GtkWidget *toolbar,
+            guint i,
+            const Action *action,
+            GtkRadioButton *group,
+            ActionCheckFunc check_func,
+            GtkTooltips *tips)
+{
+    GtkWidget *button;
+
+    if (check_func && !check_func(action->cbdata))
+        return NULL;
+
+    button = gtk_radio_button_new_from_widget(group);
+    gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
+    gtk_table_attach_defaults(GTK_TABLE(toolbar), button,
+                              i%4, i%4 + 1, i/4, i/4 + 1);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(action->stock_id,
+                                               GTK_ICON_SIZE_BUTTON));
+    g_signal_connect_swapped(button, "clicked",
+                             action->callback, (gpointer)action->cbdata);
+    gtk_tooltips_set_tip(tips, button, _(action->tooltip), NULL);
+
+    return button;
+}
+
 GtkWidget*
 gwy_app_toolbox_create(void)
 {
@@ -151,141 +184,104 @@ gwy_app_toolbox_create(void)
             NULL,
         },
     };
-    static const Action proc_actions[] = {
+    static const Action1 proc_actions[] = {
         {
             GWY_STOCK_FIX_ZERO,
             N_("Fix minimum value to zero"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "fix_zero",
         },
         {
             GWY_STOCK_SCALE,
             N_("Scale data"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "scale",
         },
         {
             GWY_STOCK_ROTATE,
             N_("Rotate by arbitrary angle"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "rotate",
         },
         {
             GWY_STOCK_UNROTATE,
             N_("Automatically correct rotation"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "unrotate",
         },
         {
             GWY_STOCK_FIT_PLANE,
             N_("Automatically level data"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "level",
         },
         {
             GWY_STOCK_FACET_LEVEL,
             N_("Facet-level data"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "facet_level",
         },
         {
             GWY_STOCK_FFT,
             N_("Fast Fourier Transform"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "fft",
         },
         {
             GWY_STOCK_CWT,
             N_("Continuous Wavelet Transform"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "cwt",
         },
         {
             GWY_STOCK_GRAINS,
             N_("Mark grains by threshold"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "mark_threshold",
         },
         {
             GWY_STOCK_GRAINS_WATER,
             N_("Mark grains by watershed"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "wshed_threshold",
         },
         {
             GWY_STOCK_GRAINS_REMOVE,
             N_("Remove grains by threshold"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "remove_threshold",
         },
         {
             GWY_STOCK_GRAINS_GRAPH,
             N_("Grain size distribution"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "grain_dist",
         },
         {
             GWY_STOCK_FRACTAL,
             N_("Calculate fractal dimension"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "fractal",
         },
         {
             GWY_STOCK_SHADER,
             N_("Shade data"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "shade",
         },
         {
             GWY_STOCK_POLYNOM_REMOVE,
             N_("Remove polynomial background"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "poly_level",
         },
         {
             GWY_STOCK_SCARS,
             N_("Remove scars"),
-            G_CALLBACK(gwy_app_run_process_func_cb),
             "scars_remove",
         },
     };
-    static const Action graph_actions[] = {
-        {
-            GWY_STOCK_GRAPH_POINTER,
-            N_("Read coordinates"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
-            "read",
-        },
-        {
-            GWY_STOCK_GRAPH_ZOOM_IN,
-            N_("Zoom a part of graph"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
-            "graph_zoom",
-        },
-        {
-            GWY_STOCK_GRAPH_ZOOM_FIT,
-            N_("Reset zoom to display complete data"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
-            "graph_unzoom",
-        },
-        {
-            GWY_STOCK_GRAPH_RULER,
-            N_("Measure graph point distances"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
-            "graph_points",
-        },
+    static const Action1 graph_actions[] = {
         {
             GWY_STOCK_GRAPH_MEASURE,
             N_("Fit critical dimension"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
             "graph_cd",
         },
         {
             GWY_STOCK_GRAPH_FIT_FUNC,
             N_("Fit functions to graph data"),
-            G_CALLBACK(gwy_app_run_graph_func_cb),
             "graph_fit",
         },
+    };
+    static const gchar *tool_actions[] = {
+        "readvalue", "distance", "polynom", "crop", "filter", "level3",
+        "stats", "sfunctions", "profile", "grain_remove_manually",
+        "spotremove", "icolorange", "maskedit",
     };
     GwyMenuSensData sens_data_data = { GWY_MENU_FLAG_DATA, 0 };
     GwyMenuSensData sens_data_graph = { GWY_MENU_FLAG_GRAPH, 0 };
@@ -297,15 +293,17 @@ gwy_app_toolbox_create(void)
         0
     };
     GtkWidget *toolbox, *vbox, *toolbar, *menu, *label, *button, *container;
+    GtkRadioButton *group;
     GtkTooltips *tooltips;
     GtkAccelGroup *accel_group;
+    Action action;
     GList *list;
     GSList *toolbars = NULL;    /* list of all toolbars for sensitivity */
     GSList *menus = NULL;    /* list of all menus for sensitivity */
     GSList *l;
-    const gchar *first_tool;
+    const gchar *first_tool = NULL;
     gboolean visible;
-    guint i, j;
+    guint i, j, flags;
 
     toolbox = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(toolbox), g_get_application_name());
@@ -369,19 +367,21 @@ gwy_app_toolbox_create(void)
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    action.callback = G_CALLBACK(gwy_app_run_process_func_cb);
     for (j = i = 0; i < G_N_ELEMENTS(proc_actions); i++) {
-        button = add_button(toolbar, j, proc_actions + i,
+        action.stock_id = proc_actions[i].stock_id;
+        action.tooltip = proc_actions[i].tooltip;
+        action.cbdata = proc_actions[i].name;
+        button = add_button(toolbar, j, &action,
                             (ActionCheckFunc)gwy_process_func_get_run_types,
                             tooltips);
         if (!button)
             continue;
-        if (gwy_strequal(proc_actions[i].cbdata, "remove_threshold")
-            || gwy_strequal(proc_actions[i].cbdata, "grain_dist"))
-            gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA_MASK, 0);
+        flags = gwy_process_func_get_sensitivity_flags(proc_actions[i].name);
+        gwy_app_menu_set_sensitive_both(button, GWY_MENU_FLAG_DATA | flags, 0);
         j++;
     }
 
-    gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);
     g_signal_connect(label, "clicked",
                      G_CALLBACK(gwy_app_toolbox_showhide_cb), toolbar);
@@ -395,8 +395,12 @@ gwy_app_toolbox_create(void)
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
 
+    action.callback = G_CALLBACK(gwy_app_run_graph_func_cb);
     for (j = i = 0; i < G_N_ELEMENTS(graph_actions); i++) {
-        button = add_button(toolbar, j, graph_actions + i,
+        action.stock_id = graph_actions[i].stock_id;
+        action.tooltip = graph_actions[i].tooltip;
+        action.cbdata = graph_actions[i].name;
+        button = add_button(toolbar, j, &action,
                             (ActionCheckFunc)gwy_graph_func_exists, tooltips);
         if (!button)
             continue;
@@ -412,11 +416,27 @@ gwy_app_toolbox_create(void)
     label = gwy_app_toolbox_create_label(_("Tools"), "tool", &visible);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    toolbar = gwy_tool_func_build_toolbox(G_CALLBACK(gwy_app_tool_use_cb),
-                                          4, tooltips, &first_tool);
+    toolbar = gtk_table_new(4, 4, TRUE);
     toolbars = g_slist_append(toolbars, toolbar);
     gtk_widget_set_no_show_all(toolbar, !visible);
     gtk_box_pack_start(GTK_BOX(vbox), toolbar, TRUE, TRUE, 0);
+
+    action.callback = G_CALLBACK(gwy_app_tool_use_cb);
+    group = NULL;
+    for (j = i = 0; i < G_N_ELEMENTS(tool_actions); i++) {
+        action.stock_id = gwy_tool_func_get_stock_id(tool_actions[i]);
+        action.tooltip = gwy_tool_func_get_tooltip(tool_actions[i]);
+        action.cbdata = tool_actions[i];
+        button = add_rbutton(toolbar, j, &action, group,
+                             (ActionCheckFunc)gwy_tool_func_exists, tooltips);
+        if (!button)
+            continue;
+        if (!group) {
+            group = GTK_RADIO_BUTTON(button);
+            first_tool = tool_actions[i];
+        }
+        j++;
+    }
 
     gwy_app_menu_set_flags_recursive(toolbar, &sens_data_data);
     gwy_app_menu_set_sensitive_recursive(toolbar, &sens_data_data);

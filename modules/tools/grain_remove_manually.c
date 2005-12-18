@@ -117,7 +117,6 @@ module_register(const gchar *name)
         "grain_remove_manually",
         GWY_STOCK_GRAINS_REMOVE,
         N_("Manually remove grains (continuous parts of mask)"),
-        98,
         &use,
     };
 

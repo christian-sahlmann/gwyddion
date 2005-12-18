@@ -117,7 +117,6 @@ module_register(const gchar *name)
         "icolorange",
         GWY_STOCK_COLOR_RANGE,
         N_("Stretch color range to part of data."),
-        130,
         &use,
     };
 

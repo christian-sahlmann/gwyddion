@@ -97,7 +97,6 @@ module_register(const gchar *name)
         "polynom",
         GWY_STOCK_POLYNOM_REMOVE,
         N_("Fit X or Y profiles by polynom"),
-        14,
         use,
     };
 

@@ -82,10 +82,9 @@ static gboolean
 module_register(const gchar *name)
 {
     static GwyToolFuncInfo func_info = {
-        "pointer",
+        "readvalue",
         GWY_STOCK_POINTER_MEASURE,
         N_("Read value under mouse cursor."),
-        0,
         &use,
     };
 

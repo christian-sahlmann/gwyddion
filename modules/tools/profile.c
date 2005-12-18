@@ -114,7 +114,6 @@ module_register(const gchar *name)
         "profile",
         GWY_STOCK_PROFILE,
         N_("Extract profiles from data."),
-        80,
         use,
     };
 

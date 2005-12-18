@@ -30,8 +30,6 @@
 #include "gwymodule-tool.h"
 
 static void gwy_tool_func_info_free        (gpointer data);
-static gint tool_toolbox_item_compare      (GwyToolFuncInfo *a,
-                                            GwyToolFuncInfo *b);
 
 static GHashTable *tool_funcs = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
@@ -141,83 +139,6 @@ gwy_tool_func_use(const guchar *name,
     return func_info->use(data_window, event);
 }
 
-/**
- * gwy_tool_func_build_toolbox:
- * @item_callback: A callback called when a tool from the toolbox is selected
- *                 with tool name as the user data.
- * @max_width: The number of columns.
- * @tooltips: Tooltip group to add tooltips to.
- * @first_tool: Where name of the first tool in the toolbox should be stored.
- *
- * Creates a toolbox with the tools.
- *
- * Returns: The toolbox as a #GtkWidget.
- **/
-GtkWidget*
-gwy_tool_func_build_toolbox(GCallback item_callback,
-                            gint max_width,
-                            GtkTooltips *tooltips,
-                            const gchar **first_tool)
-{
-    GtkWidget *toolbox, *button;
-    GtkRadioButton *group = NULL;
-    GSList *l, *entries = NULL;
-    guint i;
-
-    if (!tool_funcs) {
-        g_warning("No tool function present to build menu of");
-        entries = NULL;
-    }
-    else
-       g_hash_table_foreach(tool_funcs, gwy_hash_table_to_slist_cb,
-                            &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)tool_toolbox_item_compare);
-
-    *first_tool = NULL;
-    toolbox = gtk_table_new(4, max_width, TRUE);
-    if (!entries)
-        return toolbox;
-
-    i = 0;
-    for (l = entries; l; l = g_slist_next(l)) {
-        GwyToolFuncInfo *func_info = (GwyToolFuncInfo*)l->data;
-
-        button = gtk_radio_button_new_from_widget(group);
-        g_object_set(G_OBJECT(button), "draw-indicator", FALSE, NULL);
-        gtk_table_attach_defaults(GTK_TABLE(toolbox), button,
-                                  i%max_width, i%max_width + 1,
-                                  i/max_width, i/max_width + 1);
-        gtk_container_add(GTK_CONTAINER(button),
-                          gtk_image_new_from_stock(func_info->stock_id,
-                                                   GTK_ICON_SIZE_BUTTON));
-        g_signal_connect_swapped(button, "clicked",
-                                 item_callback, (gpointer)func_info->name);
-        gtk_tooltips_set_tip(tooltips, button, func_info->tooltip, NULL);
-
-        if (!group) {
-            group = GTK_RADIO_BUTTON(button);
-            *first_tool = func_info->name;
-        }
-        i++;
-    }
-
-    g_slist_free(entries);
-
-    return toolbox;
-}
-
-static gint
-tool_toolbox_item_compare(GwyToolFuncInfo *a,
-                          GwyToolFuncInfo *b)
-{
-    if (a->toolbox_position < b->toolbox_position)
-        return -1;
-    else if (a->toolbox_position > b->toolbox_position)
-        return 1;
-
-    return strcmp(a->name, b->name);
-}
-
 gboolean
 _gwy_tool_func_remove(const gchar *name)
 {
@@ -263,6 +184,26 @@ gwy_tool_func_get_tooltip(const gchar *name)
     return func_info->tooltip;
 }
 
+/**
+ * gwy_tool_func_get_stock_id:
+ * @name: Tool function name.
+ *
+ * Gets tool function stock icon id.
+ *
+ * Returns: The stock icon id as a string owned by module loader.
+ **/
+const gchar*
+gwy_tool_func_get_stock_id(const gchar *name)
+{
+    GwyToolFuncInfo *func_info;
+
+    func_info = g_hash_table_lookup(tool_funcs, name);
+    if (!func_info)
+        return NULL;
+
+    return func_info->stock_id;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -279,9 +220,6 @@ gwy_tool_func_get_tooltip(const gchar *name)
  * @name: An unique tool function name.
  * @stock_id: Icon stock id or button label (FIXME: more to be said).
  * @tooltip: Tooltip for this tool.
- * @toolbox_position: Position in the toolbox, the tools are sorted by this
- *                    value (and then alphabetically if they are equal).
- *                    Standard tools are in the range [0,100].
  * @use: The tool use function itself.
  *
  * Information about one tool use function.

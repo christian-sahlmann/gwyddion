@@ -98,7 +98,6 @@ module_register(const gchar *name)
         "maskedit",
         GWY_STOCK_MASK_EDITOR,
         N_("Edit mask"),
-        150,
         &use,
     };
 
