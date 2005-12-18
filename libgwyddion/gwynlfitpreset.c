@@ -980,7 +980,7 @@ static const GwyNLFitParam gaussexp_params[]= {
 };
 
 static const GwyNLFitParam gaussexp_two_params[]= {
-   { "\xcf\x83" },
+   { "σ" },
    { "T" },
 };
 
@@ -1019,8 +1019,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         "Gaussian",
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> "
-            "+ <i>a</i> exp[\xe2\x88\x92(<i>x</i> "
-            "\xe2\x88\x92 <i>x</i><sub>0</sub>)<sup>2</sup>"
+            "+ <i>a</i> exp[−(<i>x</i> "
+            "− <i>x</i><sub>0</sub>)<sup>2</sup>"
             "/b<sup>2</sup>]",
         &gauss_func,
         NULL,
@@ -1033,8 +1033,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian (PSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= \xcf\x83<sup>2</sup><i>T</i>/2 "
-            "exp[\xe2\x88\x92(<i>x</i><i>T</i>/2)<sup>2</sup>]",
+            "= σ<sup>2</sup><i>T</i>/2 "
+            "exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
         &gauss_psdf_func,
         NULL,
         &gauss_psdf_guess,
@@ -1046,8 +1046,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian (ACF)",
         "<i>f</i>(<i>x</i>) "
-            "= \xcf\x83<sup>2</sup> "
-            "exp[\xe2\x88\x92(<i>x</i>/<i>T</i>)<sup>2</sup>]",
+            "= σ<sup>2</sup> "
+            "exp[−(<i>x</i>/<i>T</i>)<sup>2</sup>]",
         &gauss_acf_func,
         NULL,
         &gauss_acf_guess,
@@ -1059,8 +1059,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Gaussian (HHCF)",
         "<i>f</i>(<i>x</i>) "
-            "= 2\xcf\x83<sup>2</sup>"
-            "[1 \xe2\x88\x92 exp(\xe2\x88\x92(<i>x</i>/<i>T</i>)<sup>2</sup>)]",
+            "= 2σ<sup>2</sup>"
+            "[1 − exp(−(<i>x</i>/<i>T</i>)<sup>2</sup>)]",
         &gauss_hhcf_func,
         NULL,
         &gauss_hhcf_guess,
@@ -1073,8 +1073,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         "Exponential",
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> "
-            "+ <i>a</i> exp[\xe2\x88\x92<i>b</i>(<i>x</i> "
-            "\xe2\x88\x92 <i>x</i><sub>0</sub>)]",
+            "+ <i>a</i> exp[−<i>b</i>(<i>x</i> "
+            "− <i>x</i><sub>0</sub>)]",
         &exp_func,
         NULL,
         &exp_guess,
@@ -1086,8 +1086,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (PSDF)",
         "<i>f</i>(<i>x</i>) "
-            "= \xcf\x83<sup>2</sup><i>T</i>"
-            "/[2\xcf\x80(1 + (<i>x</i>/<i>T</i>)<sup>2</sup>)]",
+            "= σ<sup>2</sup><i>T</i>"
+            "/[2π(1 + (<i>x</i>/<i>T</i>)<sup>2</sup>)]",
         &exp_psdf_func,
         NULL,
         &exp_psdf_guess,
@@ -1099,7 +1099,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (ACF)",
         "<i>f</i>(<i>x</i>) "
-            "= \xcf\x83<sup>2</sup> exp[\xe2\x88\x92<i>x</i>/<i>T</i>]",
+            "= σ<sup>2</sup> exp[−<i>x</i>/<i>T</i>]",
         &exp_acf_func,
         NULL,
         &exp_acf_guess,
@@ -1111,8 +1111,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "Exponential (HHCF)",
         "<i>f</i>(<i>x</i>) "
-            "= 2\xcf\x83<sup>2</sup>"
-            "[1 \xe2\x88\x92 exp(\xe2\x88\x92<i>x</i>/<i>T</i>)]",
+            "= 2σ<sup>2</sup>"
+            "[1 − exp(−<i>x</i>/<i>T</i>)]",
         &exp_hhcf_func,
         NULL,
         &exp_hhcf_guess,
@@ -1172,10 +1172,10 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         "Square wave",
         "<i>f</i>(<i>x</i>) "
             "= (<i>t</i> + <i>b</i>)/2 "
-            "+ 2(<i>t</i> \xe2\x88\x92 <i>b</i>)"
-            "/\xcf\x80 "
-            " \xe2\x88\x91<sub>k</sub> "
-            "sin(2π<i>k</i>(<i>x</i> \xe2\x88\x92 <i>s</i>)/<i>T</i>)/<i>k</i>",
+            "+ 2(<i>t</i> − <i>b</i>)"
+            "/π "
+            "∑<sub>k</sub> "
+            "sin(2π<i>k</i>(<i>x</i> − <i>s</i>)/<i>T</i>)/<i>k</i>",
         &square_func,
         NULL,
         &square_guess,
@@ -1200,7 +1200,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         "Lorentzian",
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i>/[<i>b</i><sup>2</sup> "
-            "+ (<i>x</i> \xe2\x88\x92 <i>c</i>)<sup>2</sup>]",
+            "+ (<i>x</i> − <i>c</i>)<sup>2</sup>]",
         &lorentz_func,
         NULL,
         &lorentz_guess,
