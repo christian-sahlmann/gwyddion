@@ -383,7 +383,6 @@ slope_do_graph(GwyContainer *container,
     GwyGraphCurveModel *cmodel;
     GwyDataField *dfield;
     GwyDataLine *dataline;
-    GwySIUnit *siunitx;
     gdouble *xder, *yder, *data;
     gint xres, yres, n, i, iphi;
 
@@ -413,11 +412,7 @@ slope_do_graph(GwyContainer *container,
 
     gmodel = gwy_graph_model_new();
     gwy_graph_model_set_title(gmodel, _("Angular Slope Distribution"));
-    siunitx = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
-                                 gwy_data_field_get_si_unit_xy(dfield),
-                                 NULL);
-    gwy_graph_model_set_x_siunit(gmodel, siunitx);
-    g_object_unref(siunitx);
+    gwy_graph_model_set_units_from_data_line(gmodel, dataline);
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_description(cmodel, "slopes");

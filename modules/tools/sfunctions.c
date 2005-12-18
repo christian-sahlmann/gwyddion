@@ -398,6 +398,8 @@ dialog_update(GwyUnitoolState *state,
         gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
         gwy_graph_model_set_title(controls->graphmodel,
                                   gettext(sf_types[controls->out].name));
+        gwy_graph_model_set_units_from_data_line(controls->graphmodel,
+                                                 dataline);
     }
 
     g_string_free(lab, TRUE);
@@ -416,9 +418,9 @@ apply(GwyUnitoolState *state)
 
     gmodel = gwy_graph_model_duplicate(controls->graphmodel);
     graph = gwy_graph_new(gmodel);
-   
+
     gwy_object_unref(gmodel);
-        
+
     gwy_app_graph_window_create(GWY_GRAPH(graph),
                                 gwy_data_window_get_data(state->data_window));
 }

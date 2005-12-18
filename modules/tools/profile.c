@@ -394,8 +394,6 @@ dialog_update(GwyUnitoolState *state,
                  NULL);
 
     gwy_graph_model_remove_all_curves(controls->graphmodel);
-    gwy_graph_model_set_x_siunit(controls->graphmodel, dfield->si_unit_xy);
-    gwy_graph_model_set_y_siunit(controls->graphmodel, dfield->si_unit_z);
     gwy_graph_model_set_title(controls->graphmodel, _("Profiles"));
 
     if (nselected) {
@@ -425,6 +423,9 @@ dialog_update(GwyUnitoolState *state,
                                                          0, 0);
             gwy_graph_curve_model_set_description(gcmodel,
                                                   ((GString*)(controls->str->pdata[i]))->str);
+            if (i == 0)
+                gwy_graph_model_set_units_from_data_line(controls->graphmodel,
+                                                         controls->dtl->pdata[i]);
 
             color.r = 0;
             color.g = 0;

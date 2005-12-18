@@ -809,7 +809,7 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
 }
 
 /**
- * gwy_graph_model_set_x_siunit:
+ * gwy_graph_model_set_si_unit_x:
  * @model: A #GwyGraphModel.
  * @siunit: physical unit for x axis
  *
@@ -817,16 +817,15 @@ gwy_graph_model_get_label_visible(GwyGraphModel *model)
  * responsible for freeing @siunit.
  **/
 void
-gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
+gwy_graph_model_set_si_unit_x(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    if (model->x_unit)
-        g_object_unref(model->x_unit);
+    gwy_object_unref(model->x_unit);
     model->x_unit = gwy_si_unit_duplicate(siunit);
     gwy_graph_model_signal_layout_changed(model);
 }
 
 /**
- * gwy_graph_model_set_y_siunit:
+ * gwy_graph_model_set_si_unit_y:
  * @model: A #GwyGraphModel.
  * @siunit: physical unit for y axis
  *
@@ -834,34 +833,50 @@ gwy_graph_model_set_x_siunit(GwyGraphModel *model, GwySIUnit *siunit)
  * responsible for freeing @siunit.
  **/
 void
-gwy_graph_model_set_y_siunit(GwyGraphModel *model, GwySIUnit *siunit)
+gwy_graph_model_set_si_unit_y(GwyGraphModel *model, GwySIUnit *siunit)
 {
-    if (model->y_unit)
-        g_object_unref(model->y_unit);
+    gwy_object_unref(model->y_unit);
     model->y_unit = gwy_si_unit_duplicate(siunit);
     gwy_graph_model_signal_layout_changed(model);
 }
 
 /**
- * gwy_graph_model_get_x_siunit:
+ * gwy_graph_model_set_units_from_data_line:
+ * @model: A graph model.
+ * @data_line: A data line to take units from.
+ *
+ * Sets x and y graph model units to match a data line.
+ **/
+void
+gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
+                                         GwyDataLine *data_line)
+{
+    gwy_graph_model_set_si_unit_x(model,
+                                  gwy_data_line_get_si_unit_x(data_line));
+    gwy_graph_model_set_si_unit_y(model,
+                                  gwy_data_line_get_si_unit_y(data_line));
+}
+
+/**
+ * gwy_graph_model_get_si_unit_x:
  * @model: A #GwyGraphModel.
  *
- * Returns: a new #GwySIUnit containing the physical unit for graph x axis
+ * Returns: A new #GwySIUnit containing the physical unit for graph x axis
  **/
 GwySIUnit*
-gwy_graph_model_get_x_siunit(GwyGraphModel *model)
+gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
 {
     return gwy_si_unit_duplicate(model->x_unit);
 }
 
 /**
- * gwy_graph_model_get_y_siunit:
+ * gwy_graph_model_get_si_unit_y:
  * @model: A #GwyGraphModel.
  *
- * Returns: a new #GwySIUnit containing the physical unit for graph y axis
+ * Returns: A new #GwySIUnit containing the physical unit for graph y axis
  **/
 GwySIUnit*
-gwy_graph_model_get_y_siunit(GwyGraphModel *model)
+gwy_graph_model_get_si_unit_y(GwyGraphModel *model)
 {
     return gwy_si_unit_duplicate(model->y_unit);
 }
