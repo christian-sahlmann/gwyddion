@@ -802,7 +802,7 @@ gwy_data_window_show_more_gradients(GwyDataWindow *data_window)
 
     /* Pop up */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), _("Choose Gradient"));
+    gtk_window_set_title(GTK_WINDOW(window), _("Choose Color Gradient"));
     gtk_window_set_default_size(GTK_WINDOW(window), -1, 400);
     gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(data_window));
 
