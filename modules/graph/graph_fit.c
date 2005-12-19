@@ -529,6 +529,7 @@ destroy(FitArgs *args, FitControls *controls)
     g_free(controls->param_res);
     g_free(controls->param_fit);
     g_free(controls->param_err);
+    g_free(controls->param_copy);
     g_free(controls->covar);
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
@@ -703,10 +704,19 @@ static void
 type_changed_cb(GtkWidget *combo, FitControls *controls)
 {
     FitArgs *args = controls->args;
+    gint active, i;
 
-    args->function_type = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
+    active = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
+    if (active == args->function_type)
+        return;
+
+    args->function_type = active;
     args->fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(),
                                                args->function_type);
+    for (i = 0; i < MAX_PARAMS; i++)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->param_fit[i]),
+                                     FALSE);
+
     dialog_update(controls, args);
 }
 
