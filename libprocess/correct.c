@@ -379,6 +379,82 @@ unrotate_refine_correction(GwyDataLine *derdist,
     return phi;
 }
 
+static gdouble
+gwy_data_field_get_row_correlation_score(GwyDataField *data_field,
+                                            gint line1_index,
+                                            gint line1_start,
+                                            gint line2_index,
+                                            gint line2_start,
+                                            gint area_length)
+{
+    gint i;
+    gdouble score=0, avg1=0, avg2=0, rms1=0, rms2=0;
+
+    for (i = 0; i < area_length; i++)
+    {
+        avg1 += data_field->data[i + line1_start + data_field->xres*line1_index];
+        avg2 += data_field->data[i + line2_start + data_field->xres*line2_index];
+    }
+    avg1 /= area_length;
+    avg2 /= area_length;
+
+    for (i = 0; i < area_length; i++)
+    {
+        score += (data_field->data[i + line1_start + data_field->xres*line1_index]-avg1)
+            *(data_field->data[i + line2_start + data_field->xres*line2_index]-avg2);
+
+        rms1 += (data_field->data[i + line1_start + data_field->xres*line1_index]-avg1)
+            *(data_field->data[i + line1_start + data_field->xres*line1_index]-avg1);
+        rms2 += (data_field->data[i + line2_start + data_field->xres*line2_index]-avg2)
+            *(data_field->data[i + line2_start + data_field->xres*line2_index]-avg2);
+    }
+    rms1 = sqrt(rms1/area_length);
+    rms2 = sqrt(rms2/area_length);
+
+    score /= rms1 * rms2 * area_length;
+
+    return score;
+}
+
+
+void
+gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
+                                          GwyDataLine *drift,
+                                          gint skip_tolerance,
+                                          gdouble smoothing)
+{
+    gint col, row, nextrow, colmax;
+    gint maxshift = 10;
+    gdouble maxscore, score;
+
+    if (gwy_data_line_get_res(drift) != (data_field->yres-skip_tolerance))
+        gwy_data_line_resample(drift, data_field->yres-skip_tolerance, GWY_INTERPOLATION_NONE);
+
+    for (row=0; row < (data_field->yres-skip_tolerance); row++)
+    {
+        maxscore = -G_MAXDOUBLE;
+        for (nextrow=0; nextrow < skip_tolerance; nextrow++)
+        {
+            for (col = 0; col < maxshift; col++)
+            {
+                score = gwy_data_field_get_row_correlation_score(data_field,
+                                                            row,
+                                                            0,
+                                                            nextrow,
+                                                            col,
+                                                            data_field->xres - maxshift);
+                if (score > maxscore) {
+                    maxscore = score;
+                    colmax = col;
+                }
+            }
+        }
+        drift->data[row] = gwy_data_field_itor(data_field, colmax);
+    }
+}
+
+
+
 /************************** Documentation ****************************/
 
 /**

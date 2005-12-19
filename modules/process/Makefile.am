@@ -9,6 +9,7 @@ process_LTLIBRARIES = \
 	calibrate.la \
 	crosscor.la \
 	cwt.la \
+	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
 	dwtdenoise.la \
@@ -102,6 +103,9 @@ crosscor_la_LIBADD = $(module_libadd)
 
 cwt_la_SOURCES = cwt.c
 cwt_la_LIBADD = $(module_libadd)
+
+drift_la_SOURCES = drift.c
+drift_la_LIBADD = $(module_libadd)
 
 dwt_la_SOURCES = dwt.c
 dwt_la_LIBADD = $(module_libadd)

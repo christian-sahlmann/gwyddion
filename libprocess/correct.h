@@ -39,6 +39,27 @@ void gwy_data_field_mask_outliers             (GwyDataField *data_field,
 GwyPlaneSymmetry gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
                                                           gdouble *correction);
 
+void gwy_data_field_get_drift_from_isotropy(GwyDataField *data_field,
+                                      GwyDataLine *drift,
+                                      gint window_size,
+                                      gdouble smoothing);
+
+void gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
+                                      GwyDataLine *drift,
+                                      gint skip_tolerance,
+                                      gdouble smoothing);
+
+void gwy_data_field_get_drift_from_sample(GwyDataField *data_field,
+                                          GwyDataField *object_centers,
+                                      GwyDataLine *drift,
+                                      GwyInterpolationType interpolation,
+                                      gdouble smoothing);
+
+void gwy_data_field_correct_drift(GwyDataField *data_field,
+                                  GwyDataLine *drift,
+                                  gboolean crop);
+
+
 G_END_DECLS
 
 #endif /*__GWY_PROCESS_CORRECT__*/
