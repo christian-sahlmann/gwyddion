@@ -165,8 +165,8 @@ gwy_pixmap_layer_paint(GwyPixmapLayer *pixmap_layer)
 
     if (!pixmap_layer->data_field
         || !GWY_IS_DATA_FIELD(pixmap_layer->data_field)) {
-        g_warning("Data field to paint is missing.  "
-                  "That's probably because I didn't implement it yet.");
+        g_critical("No data field to paint. "
+                   "Set data key with gwy_pixmap_layer_set_data_key().");
         pixmap_layer->wants_repaint = FALSE;
         return pixmap_layer->pixbuf;
     }
