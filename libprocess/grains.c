@@ -45,8 +45,6 @@ static void     wdrop_step                   (GwyDataField *data_field,
                                               GwyDataField *grain_field,
                                               gdouble dropsize);
 static void     mark_grain_boundaries        (GwyDataField *grain_field);
-static gint     number_grains                (GwyDataField *mask_field,
-                                              gint *grains);
 static gint*    gwy_data_field_fill_grain    (GwyDataField *data_field,
                                               gint col,
                                               gint row,
@@ -438,7 +436,7 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
     data = grain_field->data;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains(grain_field, grains);
+    ngrains = gwy_data_field_number_grains(grain_field, grains);
 
     /* sum grain sizes */
     grain_size = g_new0(gint, ngrains + 1);
@@ -495,7 +493,7 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                              - gwy_data_field_get_min(data_field))/100.0;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains(grain_field, grains);
+    ngrains = gwy_data_field_number_grains(grain_field, grains);
 
     /* find grains to remove */
     grain_kill = g_new0(gboolean, ngrains + 1);
@@ -555,7 +553,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *grain_field,
     yres = grain_field->yres;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains(grain_field, grains);
+    ngrains = gwy_data_field_number_grains(grain_field, grains);
     if (!ngrains) {
         gwy_data_line_resample(distribution, 2, GWY_INTERPOLATION_NONE);
         gwy_data_line_clear(distribution);
@@ -723,7 +721,7 @@ drop_minima(GwyDataField *water_field, GwyDataField *min_field, gint threshval)
     data = water_field->data;
 
     grains = g_new0(gint, xres*yres);
-    ngrains = number_grains(water_field, grains);
+    ngrains = gwy_data_field_number_grains(water_field, grains);
     grain_size = g_new0(gint, ngrains + 1);
     grain_maxima = g_new(gint, ngrains + 1);
     for (i = 1; i <= ngrains; i++)
@@ -865,7 +863,7 @@ mark_grain_boundaries(GwyDataField *grain_field)
 }
 
 /**
- * number_grains:
+ * gwy_data_field_number_grains:
  * @mask_field: Data field containing positive values in grains, nonpositive
  *              in free space.
  * @grains: Zero-filled array of integers of equal size to @mask_field to put
@@ -877,9 +875,9 @@ mark_grain_boundaries(GwyDataField *grain_field)
  *
  * Returns: The number of last grain (note they are numbered from 1).
  **/
-static gint
-number_grains(GwyDataField *mask_field,
-              gint *grains)
+gint
+gwy_data_field_number_grains(GwyDataField *mask_field,
+                             gint *grains)
 {
     gint *data, *listv, *listh;
     gint xres, yres, n, i, grain_no;

@@ -95,6 +95,9 @@ void gwy_data_field_grains_add(GwyDataField *grain_field,
 void gwy_data_field_grains_intersect(GwyDataField *grain_field,
                                      GwyDataField *intersect_field);
 
+gint gwy_data_field_number_grains(GwyDataField *mask_field,
+                                  gint *grains);
+
 void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      GwyDataLine *target_line,
                                      gint col,
@@ -105,11 +108,10 @@ void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      gint nstats);
 
 gdouble gwy_data_field_grains_get_grain_value(GwyDataField *data_field,
-					  GwyDataField *grain_field,
-					  gint col,
-					  gint row,
-					  GwyGrainValueType type);
-					  
+                                              GwyDataField *grain_field,
+                                              gint col,
+                                              gint row,
+                                              GwyGrainValueType type);
 
 G_END_DECLS
 
