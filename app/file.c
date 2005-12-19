@@ -269,6 +269,7 @@ file_real_open(const gchar *filename_sys,
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
                                         filename_utf8,
                                         filename_sys);
+        g_object_unref(data);
 
         /* change directory to that of the loaded file */
         gwy_app_set_current_directory(filename_sys);
