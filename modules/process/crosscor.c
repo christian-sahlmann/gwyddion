@@ -475,6 +475,7 @@ crosscor_do(CrosscorArgs *args)
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    g_object_unref(data);
 
     g_object_unref(score);
     g_object_unref(dfieldy);

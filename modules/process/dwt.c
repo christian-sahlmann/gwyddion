@@ -157,6 +157,7 @@ dwt(GwyContainer *data, GwyRunType run)
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), "DWT");
+    g_object_unref(data);
 
     g_object_unref(wtcoefs);
     return FALSE;

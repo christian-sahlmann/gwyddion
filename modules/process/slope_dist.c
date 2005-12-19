@@ -165,6 +165,7 @@ slope_dist(GwyContainer *data, GwyRunType run)
             data_window = gwy_app_data_window_create(data);
             gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                              _("Slope"));
+            g_object_unref(data);
             break;
 
             case SLOPE_DIST_GRAPH:

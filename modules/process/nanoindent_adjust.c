@@ -356,8 +356,7 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
     }
-    else
-        g_object_unref(data);
+    g_object_unref(data);
 
     return TRUE;
 }

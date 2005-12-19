@@ -336,6 +336,7 @@ maskcor_do(MaskcorArgs *args)
         gwy_data_field_copy(retfield, scorefield, TRUE);
         data_window = gwy_app_data_window_create(ret);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        g_object_unref(ret);
     }
     else { /*add mask*/
         gwy_app_undo_checkpoint(data, "/0/mask", NULL);

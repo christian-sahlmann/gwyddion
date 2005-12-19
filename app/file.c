@@ -133,6 +133,7 @@ gwy_app_file_duplicate_cb(void)
     }
     data_window = GWY_DATA_WINDOW(gwy_app_data_window_create(data));
     gwy_app_data_window_set_untitled(data_window, NULL);
+    g_object_unref(data);
 }
 
 void

@@ -235,6 +235,7 @@ rotate_clockwise_90(GwyContainer *data, GwyRunType run)
     }
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    g_object_unref(data);
 
     return FALSE;
 }

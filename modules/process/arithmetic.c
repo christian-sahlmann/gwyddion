@@ -413,6 +413,7 @@ arithmetic_do(ArithmeticArgs *args)
 
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+    g_object_unref(data);
 }
 
 static const gchar *expression_key = "/module/arithmetic/expression";

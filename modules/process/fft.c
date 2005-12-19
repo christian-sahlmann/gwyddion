@@ -244,8 +244,8 @@ fft_create_output(GwyContainer *data,
                                          g_strdup(pal));
 
     data_window = gwy_app_data_window_create(newdata);
-    g_object_unref(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), window_name);
+    g_object_unref(newdata);
 }
 
 static void

@@ -198,7 +198,8 @@ sphrev(GwyContainer *data, GwyRunType run)
     gwy_container_set_object_by_name(data, "/0/data", background);
     data_window = gwy_app_data_window_create(data);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
-                                     "Background");
+                                     _("Background"));
+    g_object_unref(data);
 
     return TRUE;
 }

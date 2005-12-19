@@ -122,7 +122,7 @@ module_register(const gchar *name)
     gwy_process_func_register(name, &rms_edge_func_info);
     gwy_process_func_register(name, &nonlinearity_func_info);
     gwy_process_func_register(name, &hough_lines_func_info);
-    
+
     return TRUE;
 }
 
@@ -273,18 +273,18 @@ hough_lines_do(GwyDataField *dfield, GwyDataField *show)
     gdouble *data;
 
     gwy_data_field_copy(dfield, show, FALSE);
-    gwy_data_field_filter_canny(show, 0.1);    
-    
+    gwy_data_field_filter_canny(show, 0.1);
+
     x_gradient = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_sobel(x_gradient, GTK_ORIENTATION_HORIZONTAL);
     y_gradient = gwy_data_field_duplicate(dfield);
     gwy_data_field_filter_sobel(y_gradient, GTK_ORIENTATION_VERTICAL);
-     
+
     xres = gwy_data_field_get_xres(show);
     yres = gwy_data_field_get_yres(show);
 
-    gwy_data_field_hough_circle_strenghten(show, x_gradient, y_gradient, 11, 0.8);
+    gwy_data_field_hough_circle_strenghten(show, x_gradient, y_gradient,
+                                           11, 0.8);
 }
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

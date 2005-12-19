@@ -530,6 +530,7 @@ proc_plugin_proxy_run(GwyContainer *data,
     if (ok && (data = text_dump_import(data, buffer, size))) {
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        g_object_unref(data);
     }
     else {
         g_warning("Cannot run plug-in %s: %s",

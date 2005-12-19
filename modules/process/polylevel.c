@@ -177,6 +177,7 @@ poly_level_do(GwyContainer *data,
     data_window = gwy_app_data_window_create(newdata);
     gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window),
                                      _("Background"));
+    g_object_unref(newdata);
 }
 
 static gboolean
