@@ -435,7 +435,6 @@ gwy_app_data_window_create(GwyContainer *data)
     g_signal_connect(corner, "toggled",
                      G_CALLBACK(gwy_app_graph_list_toggle_cb), data_window);
 
-    current_data = g_list_append(current_data, data_window);
     g_signal_connect_swapped(data_view, "button-press-event",
                              G_CALLBACK(gwy_app_data_popup_menu_popup_mouse),
                              popup_menu);
@@ -444,7 +443,6 @@ gwy_app_data_window_create(GwyContainer *data)
                              popup_menu);
 
     gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
-    /* Take no chances */
     gwy_app_data_window_add(GWY_DATA_WINDOW(data_window));
     gtk_window_present(GTK_WINDOW(data_window));
 
