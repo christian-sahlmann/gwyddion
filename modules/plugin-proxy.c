@@ -126,9 +126,6 @@ static glong           file_pattern_specificity  (const gchar *pattern);
 /* common helpers */
 static FILE*           text_dump_export          (GwyContainer *data,
                                                   gchar **filename);
-static void            dump_export_meta_cb       (gpointer hkey,
-                                                  GValue *value,
-                                                  FILE *fh);
 static void            dump_export_data_field    (GwyDataField *dfield,
                                                   const gchar *name,
                                                   FILE *fh);
@@ -146,7 +143,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -536,8 +533,8 @@ proc_plugin_proxy_run(GwyContainer *data,
     }
     else {
         g_warning("Cannot run plug-in %s: %s",
-                    info->file,
-                    err ? err->message : "it returned garbage.");
+                  info->file,
+                  err ? err->message : "it returned garbage.");
         ok = FALSE;
     }
     g_free(args[3]);
@@ -995,9 +992,6 @@ text_dump_export(GwyContainer *data, gchar **filename)
 
     if (!(fh = open_temporary_file(filename)))
         return NULL;
-    gwy_container_foreach(data, "/meta", (GHFunc)dump_export_meta_cb, fh);
-    gwy_container_foreach(data, "/0/base/palette",
-                          (GHFunc)dump_export_meta_cb, fh);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dump_export_data_field(dfield, "/0/data", fh);
     if (gwy_container_contains_by_name(data, "/0/mask")) {
@@ -1008,26 +1002,6 @@ text_dump_export(GwyContainer *data, gchar **filename)
     fflush(fh);
 
     return fh;
-}
-
-/**
- * dump_export_meta_cb:
- * @hkey: A disguised #GQuark key.
- * @value: A string value.
- * @fh: A filehandle open for writing.
- *
- * Dumps a one string value to @fh.
- **/
-static void
-dump_export_meta_cb(gpointer hkey, GValue *value, FILE *fh)
-{
-    GQuark quark = GPOINTER_TO_UINT(hkey);
-    const gchar *key;
-
-    key = g_quark_to_string(quark);
-    g_return_if_fail(key);
-    g_return_if_fail(G_VALUE_TYPE(value) == G_TYPE_STRING);
-    fprintf(fh, "%s=%s\n", key, g_value_get_string(value));
 }
 
 static inline void
