@@ -17,7 +17,6 @@
 
   <refsect1>
     <title>Overview</title>
-    <warning>This section is outdated.</warning>
     <para>
       Vector layers, implementing means how user can draw on data views, are
       provided by <link linkend="libgwymodule-gwymodule-layer">layer
@@ -26,326 +25,201 @@
       can define their own means of user interaction.
     </para>
     <para>
-      There are several standard layers distributed with <application>Gwyddion</application>, and their
-      features and interface is the subject of this section.
+      There are several standard layers distributed with <application>Gwyddion</application>,
+      and their features and interface is the subject of this section.
       All layers are subclasses of <link linkend="GwyVectorLayer">GwyVectorLayer</link>
       sharing its basic interface.
-      Each layer lets the user draw or select different shapes, has its own
-      format of selection data (that can be fetched with
-      <link linkend="gwy-vector-layer-get-selection">gwy_vector_layer_get_selection()</link>
-      and set with
-      <link linkend="gwy-vector-layer-set-selection">gwy_vector_layer_get_selection()</link>),
-      uses different container keys to store it, and may have some
-      properties (set by <link linkend="g-object-set">g_object_set()</link>)
-      affecting its behaviour.
+      Each layer lets the user draw or select different shapes, therefore each module also
+      defines its own selection object type determining the format of selection data. 
+      All selections are subclasses of <link linkend="GwySelection">GwySelection</link>.
+      By convention, layer type Foo is called GwyLayerFoo and the corresponding selection
+      type GwySelectionFoo.
+    </para>
+    <para>
+      Layers and selections sometimes have additional object properties not present in the
+      base classes, these are described here too.
     </para>
   </refsect1>
   <refsect1>
-    <title>GwyLayerAxes</title>
+    <title>GwyLayerAxis, GwySelectionAxis</title>
     <synopsis>
-<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerAxes"));
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerAxis"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionAxis"), NULL);
     </synopsis>
     <para>
-      Allows to select one or more horizontal or vertical (full-width or
+      Layer allows to select one or more horizontal or vertical (full-width or
       full-height) lines, called axes.  It can be also viewes as a way to
       select separate x or y coordinates.
     </para>
-    <sect2>
-      <title>Properties</title>
-      <variablelist>
-        <varlistentry><term><anchor id="GwyLayerAxes--max-axes"/>&quot;<literal>max_axes</literal>&quot; (gint : Read / Write)</term>
-          <listitem>
-            <para>The maximum number of axes user can select. Default
-              number is 3 axes.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term><anchor id="GwyLayerAxes--orientation"/>&quot;<literal>orientation</literal>&quot; (<link linkend="GtkOrientation">GtkOrientation</link> : Read / Write)</term>
-          <listitem>
-            <para>Line orientation: horizontal or vertical. Default
-              orientation is horizontal.</para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
-    </sect2>
-    <sect2>
-      <title>Selection data</title>
-      <para>
-        Selection data consists of an array of y-coordinates for horizontal
-        axes, or an array of x-coordinates for vertical axes.  Each coordinate
-        itself represents a selected axis.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Container data</title>
-      <variablelist>
-        <varlistentry><term>&quot;<literal>/0/select/axes/nselected</literal>&quot; (gint : Read)</term>
-          <listitem>
-            <para>The number of currently selected axes.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/axes/0/x</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of first vertical axis.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/axes/1/x</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of second vertical axis.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&hellip;</term>
-          <listitem><para>&hellip;</para></listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/axes/0/y</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of first horizontal axis.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/axes/1/y</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of second horizontal axis.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&hellip;</term>
-          <listitem><para>&hellip;</para></listitem>
-        </varlistentry>
-      </variablelist>
-    </sect2>
-  </refsect1>
-  <refsect1>
-    <title>GwyLayerLines</title>
-    <synopsis>
-<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerLines"));
-    </synopsis>
     <para>
-      Allows to select one or more lines of arbitrary orientation and length.
+      Selection data consists of single coordinates.
+      More precisely, of y-coordinates for horizontal axes and x-coordinates for vertical
+      axes.  Each coordinate represents a selected axis.
     </para>
     <sect2>
-      <title>Properties</title>
-      <variablelist>
-        <varlistentry><term><anchor id="GwyLayerLines--max-lines"/>&quot;<literal>max_lines</literal>&quot; (gint : Read / Write)</term>
-          <listitem>
-            <para>The maximum number of lines user can select. Default
-              number is 3 lines.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term><anchor id="GwyLayerLines--line-numbers"/>&quot;<literal>line_numbers</literal>&quot; (gboolean : Read / Write)</term>
-          <listitem>
-            <para>Whether line numbers should be displayed next to them.
-              Default is to show line numbers.</para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
-    </sect2>
-    <sect2>
-      <title>Selection data</title>
-      <para>
-        Selection data consists of an array of coordinates organized to
-        (x0, y0, x1, y1) quadruples, each representing a one selected line.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Container data</title>
-      <variablelist>
-        <varlistentry><term>&quot;<literal>/0/select/lines/nselected</literal>&quot; (gint : Read)</term>
-          <listitem>
-            <para>The number of currently selected lines.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/0/x0</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of the first point of first line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/0/y0</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of the first point of first line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/0/x1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of the second point of first line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/0/y1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of the second point of first line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/1/x0</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of the first point of second line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/1/y0</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of the first point of second line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/1/x1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of the second point of second line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/lines/1/y1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of the second point of second line.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&hellip;</term>
-          <listitem><para>&hellip;</para></listitem>
-        </varlistentry>
-      </variablelist>
-    </sect2>
-  </refsect1>
-  <refsect1>
-    <title>GwyLayerPointer</title>
-    <synopsis>
-<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerPointer"));
-    </synopsis>
-    <para>
-      Allows to temporarily select a point, with no graphical representation
-      on parent data view. Useful for value reading.
-    </para>
-    <sect2>
-      <title>Properties</title>
+      <title>GwyLayerAxis properties</title>
       <para>None.</para>
     </sect2>
     <sect2>
-      <title>Selection data</title>
-      <para>
-        Selection data consists of a single (x, y) coordinate couple
-        representing the selected point.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Container data</title>
+      <title>GwySelectionAxis properties</title>
       <variablelist>
-        <varlistentry><term>&quot;<literal>/0/select/pointer/x</literal>&quot; (gdouble : Read)</term>
+        <varlistentry><term><anchor id="GwySelectionAxis--orientation"/>&quot;<literal>orientation</literal>&quot; (<link linkend="GwyOrientation">GwyOrientation</link> : Read / Write)</term>
           <listitem>
-            <para>The x-coordinate of the selected point.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/pointer/y</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of the selected point.</para>
+            <para>
+              Line orientation: horizontal or vertical.
+              Default orientation is horizontal.
+            </para>
           </listitem>
         </varlistentry>
       </variablelist>
     </sect2>
   </refsect1>
   <refsect1>
-    <title>GwyLayerPoints</title>
+    <title>GwyLayerEllipse, GwySelectionEllipse</title>
     <synopsis>
-<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerPoints"));
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerEllipse"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionEllipse"), NULL);
     </synopsis>
     <para>
-      Allows to select one or more points, represented by crosses on the
-      parent data view.
+      Layer allows to select a number of ellipses.
+    </para>
+    <para>
+      Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
+      y<subscript>0</subscript>, x<subscript>1</subscript>, y<subscript>1</subscript>),
+      each representing one selected ellipse, where
+      x<subscript>0</subscript> and y<subscript>0</subscript> are coordinates of one
+      bounding box corner and x<subscript>1</subscript> and y<subscript>1</subscript>
+      of the opposite corner. Each one can be any of the four bounding box corners, there
+      is no guarantee one is for example always top-left.
     </para>
     <sect2>
-      <title>Properties</title>
+      <title>GwyLayerEllipse properties</title>
       <variablelist>
-        <varlistentry><term><anchor id="GwyLayerPoints--max-points"/>&quot;<literal>max_points</literal>&quot; (gint : Read / Write)</term>
+        <varlistentry><term><anchor id="GwyLayerEllipse--draw-reflection"/>&quot;<literal>draw-reflection</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
-            <para>The maximum number of points user can select. Default
-              number is 3 points.</para>
+            <para>
+              Whether central reflection of selection should be drawn too.
+              The default is to not draw reflection.
+            </para>
           </listitem>
         </varlistentry>
       </variablelist>
     </sect2>
     <sect2>
-      <title>Selection data</title>
-      <para>
-        Selection data consists of an array of coordinates organized to
-        (x, y) couples, each representing a one selected point.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Container data</title>
-      <variablelist>
-        <varlistentry><term>&quot;<literal>/0/select/points/nselected</literal>&quot; (gint : Read)</term>
-          <listitem>
-            <para>The number of currently selected points.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/points/0/x</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of first point.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/points/0/y</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of first point.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/points/1/x</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of second point.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/points/1/y</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of second point.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&hellip;</term>
-          <listitem><para>&hellip;</para></listitem>
-        </varlistentry>
-      </variablelist>
+      <title>GwySelectionEllipse properties</title>
+      <para>None.</para>
     </sect2>
   </refsect1>
   <refsect1>
-    <title>GwyLayerSelect</title>
+    <title>GwyLayerLine, GwySelectionLine</title>
     <synopsis>
-<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerSelect"));
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerLine"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionLine"), NULL);
     </synopsis>
     <para>
-      Allows to select a one rectangle.
+      Layer allows to select one or more lines of arbitrary orientation and length,
+      optionally can display line numbers next to each line.
+    </para>
+    <para>
+      Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
+      y<subscript>0</subscript>, x<subscript>1</subscript>, y<subscript>1</subscript>),
+      each representing one selected line, where
+      x<subscript>0</subscript> and y<subscript>0</subscript> are
+      coordinates of one line end and x<subscript>1</subscript> and y<subscript>1</subscript>
+      of the other end.
     </para>
     <sect2>
-      <title>Properties</title>
+      <title>GwyLayerLine properties</title>
       <variablelist>
-        <varlistentry><term><anchor id="GwyLayerSelect--is-crop"/>&quot;<literal>is_crop</literal>&quot; (gboolean : Read / Write)</term>
+        <varlistentry><term><anchor id="GwyLayerLine--line-numbers"/>&quot;<literal>line-numbers</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
-            <para>Whether lines should be drawn always from border to border,
-              as in the Crop tool. The default is to draw just outline of the
-              selected rectangle.</para>
+            <para>
+              Whether line numbers should be displayed next to them.
+              Default is to show line numbers.
+            </para>
           </listitem>
         </varlistentry>
       </variablelist>
     </sect2>
     <sect2>
-      <title>Selection data</title>
-      <para>
-        Selection data consists of a single quadruple of coordinates
-        (x0, y0, x1, y1), representing corners of selected rectangle.
-      </para>
+      <title>GwySelectionLine properties</title>
+      <para>None.</para>
     </sect2>
+  </refsect1>
+  <refsect1>
+    <title>GwyLayerPoint, GwySelectionPoint</title>
+    <synopsis>
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerPoint"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionPoint"), NULL);
+    </synopsis>
+    <para>
+      Layer allows to select a number of points, either displayed as crosses or with no
+      graphical representation (the latter mainly useful with only one selected point).
+    </para>
+    <para>
+      Selection data consists of coordinate pairs (x, y) representing selected points.
+    </para>
     <sect2>
-      <title>Container data</title>
+      <title>GwyLayerPoint properties</title>
       <variablelist>
-        <varlistentry><term>&quot;<literal>/0/select/rect/x0</literal>&quot; (gdouble : Read)</term>
+        <varlistentry><term><anchor id="GwyLayerPoint--draw-marker"/>&quot;<literal>draw-marker</literal>&quot; (gboolean : Read / Write)</term>
           <listitem>
-            <para>The x-coordinate of first corner.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/rect/y0</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of first corner.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/rect/x1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The x-coordinate of second corner.</para>
-          </listitem>
-        </varlistentry>
-        <varlistentry><term>&quot;<literal>/0/select/rect/y1</literal>&quot; (gdouble : Read)</term>
-          <listitem>
-            <para>The y-coordinate of second corner.</para>
+            <para>
+              Whether points should be displayed as crosses (otherwise they are invisible).
+              Default is to display points.
+            </para>
           </listitem>
         </varlistentry>
       </variablelist>
+    </sect2>
+    <sect2>
+      <title>GwySelectionPoint properties</title>
+      <para>None.</para>
+    </sect2>
+  </refsect1>
+  <refsect1>
+    <title>GwyLayerRectangle, GwySelectionRectangle</title>
+    <synopsis>
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwyLayerRectangle"), NULL);
+<link linkend="GObject">GObject*</link>    <link linkend="g-object-new">g_object_new</link>(<link linkend="g-type-from-name">g_type_from_name</link>("GwySelectionRectangle"), NULL);
+    </synopsis>
+    <para>
+      Layer allows to select a number of rectangles, that can be drawn with a couple of
+      fancy/special styles.
+    </para>
+    <para>
+      Selection data consists of quadruples of coordinates (x<subscript>0</subscript>,
+      y<subscript>0</subscript>, x<subscript>1</subscript>, y<subscript>1</subscript>),
+      each representing one selected rectangle, where
+      x<subscript>0</subscript> and y<subscript>0</subscript> are coordinates of one corner
+      and x<subscript>1</subscript> and y<subscript>1</subscript>
+      of the opposite corner. Each one can be any of the four rectangle corners, there
+      is no guarantee one is for example always top-left.
+    </para>
+    <sect2>
+      <title>GwyLayerRectangle properties</title>
+      <variablelist>
+        <varlistentry><term><anchor id="GwyLayerRectangle--is-crop"/>&quot;<literal>is-crop</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether lines should be drawn always from border to border, as in the Crop tool.
+              The default is to draw just outline of the selected rectangle.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry><term><anchor id="GwyLayerRectangle--draw-reflection"/>&quot;<literal>draw-reflection</literal>&quot; (gboolean : Read / Write)</term>
+          <listitem>
+            <para>
+              Whether central reflection of selection should be drawn too.
+              The default is to not draw reflection.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+    <sect2>
+      <title>GwySelectionRectangle properties</title>
+      <para>None.</para>
     </sect2>
   </refsect1>
 </refentry>
