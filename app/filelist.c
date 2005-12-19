@@ -448,6 +448,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
                                         filename_utf8,
                                         filename_sys);
+        g_object_unref(data);
 
         gwy_app_set_current_directory(filename_sys);
     }
