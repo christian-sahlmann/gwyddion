@@ -89,7 +89,7 @@ gwy_enum_combo_box_new(const GwyEnum *entries,
                                            cell_translate_func, &gwy_sgettext,
                                            NULL);
     else
-        gtk_cell_layout_add_attribute(layout, renderer, "text", 1);
+        gtk_cell_layout_add_attribute(layout, renderer, "markup", 1);
 
     if (!gwy_enum_combo_box_try_set_active(GTK_COMBO_BOX(combo), active))
         gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
@@ -250,7 +250,10 @@ gwy_combo_box_metric_unit_new(GCallback callback,
         format = gwy_si_unit_get_format_for_power10(unit,
                                                     GWY_SI_UNIT_FORMAT_MARKUP,
                                                     3*i, format);
-        entries[i - from].name = g_strdup(format->units);
+        if (*format->units)
+            entries[i - from].name = g_strdup(format->units);
+        else
+            entries[i - from].name = g_strdup("1");
         entries[i - from].value = 3*i;
     }
     entries[n].name = NULL;
