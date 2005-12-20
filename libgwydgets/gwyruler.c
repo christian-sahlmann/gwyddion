@@ -607,8 +607,8 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
         return;
 
     GWY_RULER_GET_CLASS(ruler)->prepare_sizes(ruler);
-    min_label_spacing = ruler->hthickness + MINIMUM_INCR;
     min_tick_spacing = MINIMUM_INCR;
+    min_label_spacing = ruler->hthickness + MINIMUM_INCR;
 
     GWY_RULER_GET_CLASS(ruler)->draw_frame(ruler);
 
@@ -629,22 +629,20 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     state = FIRST_TRY;
     do {
         if (state != LESS_TICKS) {
-            switch (ruler->units_placement && ruler->units) {
-                case GWY_UNITS_PLACEMENT_AT_ZERO:
+            if (ruler->units_placement == GWY_UNITS_PLACEMENT_AT_ZERO
+                && *format->units) {
                 if (lower > 0)
                     g_snprintf(unit_str, unitstr_len, "%.*f %s",
                                format->precision, lower/format->magnitude,
                                format->units);
                 else
                     g_snprintf(unit_str, unitstr_len, "0 %s", format->units);
-                break;
-
-                default:
+            }
+            else
                 g_snprintf(unit_str, unitstr_len, "%.*f",
                            format->precision, max/format->magnitude);
-                break;
-            }
 
+            g_printerr("<%s>\n", unit_str);
             pango_layout_set_markup(ruler->layout, unit_str, -1);
             pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
             ascent = PANGO_ASCENT(rect);
