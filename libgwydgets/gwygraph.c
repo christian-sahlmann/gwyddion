@@ -337,7 +337,6 @@ gwy_graph_refresh(GwyGraph *graph)
 
     /*refresh widgets*/
     gwy_graph_area_refresh(graph->area);
-
 }
 
 static void
@@ -355,10 +354,9 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
  * @graph: A graph widget.
  * @gmodel: new graph model
  *
- * Changes the graph model. Everything in graph widgets will
- * be reset to the new data (from the model). Data is not copied,
- * so do not free @gmodel.
+ * Changes the graph model.
  *
+ * Everything in graph widgets will be reset to reflect the new data.
  **/
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
@@ -394,19 +392,20 @@ gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
 static void
 rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
 {
-    GArray *array = g_array_new(FALSE, FALSE, sizeof(gdouble));
+    GArray *array;
     GwyGraphModel *model;
 
     if (graph->graph_model == NULL)
         return;
+
+    array = g_array_new(FALSE, FALSE, sizeof(gdouble));
     model = GWY_GRAPH_MODEL(graph->graph_model);
     model->x_max = gwy_axis_get_maximum(graph->axis_bottom);
     model->x_min = gwy_axis_get_minimum(graph->axis_bottom);
     model->y_max = gwy_axis_get_maximum(graph->axis_left);
     model->y_min = gwy_axis_get_minimum(graph->axis_left);
 
-    if (graph->grid_type == GWY_GRAPH_GRID_AUTO)
-    {
+    if (graph->grid_type == GWY_GRAPH_GRID_AUTO) {
         gwy_axis_set_grid_data(graph->axis_left, array);
         gwy_graph_area_set_x_grid_data(graph->area, array);
         gwy_axis_set_grid_data(graph->axis_bottom, array);
@@ -424,7 +423,8 @@ rescaled_cb(G_GNUC_UNUSED GtkWidget *widget, GwyGraph *graph)
  *
  * Returns: Graph model associated with this graph widget (do not free).
  **/
-GwyGraphModel *gwy_graph_get_model(GwyGraph *graph)
+GwyGraphModel*
+gwy_graph_get_model(GwyGraph *graph)
 {
     return  graph->graph_model;
 }
