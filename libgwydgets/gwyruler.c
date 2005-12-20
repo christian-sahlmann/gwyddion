@@ -642,7 +642,6 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
                 g_snprintf(unit_str, unitstr_len, "%.*f",
                            format->precision, max/format->magnitude);
 
-            g_printerr("<%s>\n", unit_str);
             pango_layout_set_markup(ruler->layout, unit_str, -1);
             pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
             ascent = PANGO_ASCENT(rect);
