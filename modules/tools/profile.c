@@ -449,6 +449,7 @@ static void
 apply(GwyUnitoolState *state)
 {
     ToolControls *controls;
+    GwyGraphCurveModel *gcmodel;
     GwySelection *selection;
     GwyContainer *data;
     GtkWidget *graph;
@@ -466,20 +467,22 @@ apply(GwyUnitoolState *state)
     if (controls->separate) {
         for (i = 0; i < nselected; i++) {
             model = gwy_graph_model_new_alike(controls->graphmodel);
-            gwy_graph_model_remove_all_curves(model);
-            gwy_graph_model_add_curve(model, gwy_graph_model_get_curve_by_index(controls->graphmodel, i));
-            gwy_graph_model_set_title(model, ((GString*)controls->str->pdata[i])->str);
-             
+            gcmodel = gwy_graph_model_get_curve_by_index(controls->graphmodel,
+                                                         i);
+            gwy_graph_model_add_curve(model, gcmodel);
+            gwy_graph_model_set_title(model,
+                                      ((GString*)controls->str->pdata[i])->str);
+
             graph = gwy_graph_new(model);
-            gwy_object_unref(model);
+            g_object_unref(model);
             gwy_app_graph_window_create(GWY_GRAPH(graph), data);
-            
+
         }
     }
     else {
         model = gwy_graph_model_duplicate(controls->graphmodel);
         graph = gwy_graph_new(model);
-        gwy_object_unref(model);
+        g_object_unref(model);
         gwy_app_graph_window_create(GWY_GRAPH(graph), data);
     }
 }
@@ -502,7 +505,7 @@ dialog_abandon(GwyUnitoolState *state)
     g_ptr_array_free(controls->str, TRUE);
     g_ptr_array_free(controls->positions, TRUE);
 
-    gwy_object_unref(controls->graphmodel);
+    g_object_unref(controls->graphmodel);
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 

@@ -396,6 +396,7 @@ dialog_update(GwyUnitoolState *state,
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dataline, 0, 0);
         gwy_graph_curve_model_set_description(gcmodel, lab->str);
         gwy_graph_model_add_curve(controls->graphmodel, gcmodel);
+        g_object_unref(gcmodel);
         gwy_graph_model_set_title(controls->graphmodel,
                                   gettext(sf_types[controls->out].name));
         gwy_graph_model_set_units_from_data_line(controls->graphmodel,
@@ -418,8 +419,7 @@ apply(GwyUnitoolState *state)
 
     gmodel = gwy_graph_model_duplicate(controls->graphmodel);
     graph = gwy_graph_new(gmodel);
-
-    gwy_object_unref(gmodel);
+    g_object_unref(gmodel);
 
     gwy_app_graph_window_create(GWY_GRAPH(graph),
                                 gwy_data_window_get_data(state->data_window));
@@ -434,6 +434,7 @@ dialog_abandon(GwyUnitoolState *state)
     controls = (ToolControls*)state->user_data;
     settings = gwy_app_settings_get();
     save_args(settings, controls);
+    g_object_unref(controls->graphmodel);
 
     memset(state->user_data, 0, sizeof(ToolControls));
 }
