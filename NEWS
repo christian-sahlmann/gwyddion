@@ -1,11 +1,10 @@
-1.99.4cvs20051217
 
-1.99.5
+1.99.5 (2005-12-20)
 Application:
 - Unix installations are relocatable via environment variables.
 - FFTW3 is recommended now.
 - Color gradient and GL material editors actually work.
-- Translations updated: Italian.
+- Translations updated: Italian, Czech.
 - Names of files drag-and-dropped onto toolbox are preserved.
 
 Library:
@@ -33,10 +32,14 @@ Library:
 - libprocess: GwyDataLine now carries units, like GwyDataField.
 - libprocess: Default GwyDataField and GwyDataLine units are empty (unitless)
   instead of meters now.
+- libprocess: Methods to copy units between GwyDataLine and GwyDataField were
+  added, most functions creating GwyDataLines from GwyDataFields set correct
+  units on the target.
 - libgwyapp: Too long file names are ellipsized in tool headers, full file
   name is shown in a tooltip.
 - libgwyddion: Exponential (PSDF) fitting preset was fixed, Power,
   Lorentzian, sinc function presets added.
+- libgwydgets: Miscellaneous graph widget improvements.
 
 Modules:
 - RHK-SM3 (new): RTH Technology SM3 file import.
@@ -61,6 +64,9 @@ Modules:
 - Plugin-proxy: Missing byte reordering on big-endian machines was added
   (bug #65).
 - Statistical functions: Resolution can be automatic too, as before.
+- Graph function fit: Result param values can be easily copied to initial.
+- Plug-in proxy: No longer writes metadata (but still accepts it back).
+- Grain distribution: Simple grain statistics (count, mean area, ...).
 
 Other:
 - Developer documentation was moved from tmpl files to source code.
