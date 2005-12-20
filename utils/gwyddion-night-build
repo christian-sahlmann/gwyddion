@@ -3,7 +3,7 @@
 disabled=
 pkgname=gwyddion
 basever=1.99.5
-dont_update_version=dontupdateanystinkingversion
+dont_update_version=
 arch=$(uname -m)
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
