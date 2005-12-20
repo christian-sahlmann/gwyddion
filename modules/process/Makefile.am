@@ -9,7 +9,6 @@ process_LTLIBRARIES = \
 	calibrate.la \
 	crosscor.la \
 	cwt.la \
-	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
 	dwtdenoise.la \
@@ -104,8 +103,8 @@ crosscor_la_LIBADD = $(module_libadd)
 cwt_la_SOURCES = cwt.c
 cwt_la_LIBADD = $(module_libadd)
 
-drift_la_SOURCES = drift.c
-drift_la_LIBADD = $(module_libadd)
+#drift_la_SOURCES = drift.c
+#drift_la_LIBADD = $(module_libadd)
 
 dwt_la_SOURCES = dwt.c
 dwt_la_LIBADD = $(module_libadd)
@@ -118,9 +117,6 @@ dwtanisotropy_la_LIBADD = $(module_libadd)
 
 fft_filter_1d_la_SOURCES = fft_filter_1d.c
 fft_filter_1d_la_LIBADD = $(module_libadd)
-
-fractal_la_SOURCES = fractal.c
-fractal_la_LIBADD = $(module_libadd)
 
 dwtdenoise_la_SOURCES = dwtdenoise.c
 dwtdenoise_la_LIBADD = $(module_libadd)
@@ -140,8 +136,8 @@ fit_2d_la_LIBADD = $(module_libadd)
 fft_la_SOURCES = fft.c
 fft_la_LIBADD = $(module_libadd)
 
-#fractal_la_SOURCES = fractal.c
-#fractal_la_LIBADD = $(module_libadd)
+fractal_la_SOURCES = fractal.c
+fractal_la_LIBADD = $(module_libadd)
 
 fraccor_la_SOURCES = fraccor.c
 fraccor_la_LIBADD = $(module_libadd)
@@ -163,7 +159,6 @@ grain_dist_la_LIBADD = $(module_libadd)
 
 hough_la_SOURCES = hough.c
 hough_la_LIBADD = $(module_libadd)
-
 
 #indent_analyze_la_SOURCES = indent_analyze.c
 #indent_analyze_la_LIBADD = $(module_libadd)
@@ -218,9 +213,6 @@ scars_la_LIBADD = $(module_libadd)
 
 shade_la_SOURCES = shade.c
 shade_la_LIBADD = $(module_libadd)
-
-#stary_extract_la_SOURCES = stary_extract.c
-#stary_extract_la_LIBADD = $(module_libadd)
 
 slope_dist_la_SOURCES = slope_dist.c
 slope_dist_la_LIBADD = $(module_libadd)
