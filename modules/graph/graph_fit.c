@@ -461,6 +461,7 @@ fit_dialog(FitArgs *args)
     /*graph*/
     args->graph_model = gwy_graph_model_new();
     controls.graph = gwy_graph_new(args->graph_model);
+    g_object_unref(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gwy_graph_area_set_selection_limit(gwy_graph_get_area(GWY_GRAPH(controls.graph)), 1);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
@@ -587,6 +588,7 @@ plot_inits(FitArgs *args, FitControls *controls)
                              ydata->data,
                              xdata->res);
     gwy_graph_model_add_curve(args->graph_model, cmodel);
+    g_object_unref(cmodel);
     g_object_unref(xdata);
     g_object_unref(ydata);
 
@@ -681,6 +683,7 @@ recompute(FitArgs *args, FitControls *controls)
                                    xdata->res);
     gwy_graph_curve_model_set_description(cmodel, "fit");
     gwy_graph_model_add_curve(args->graph_model, cmodel);
+    g_object_unref(cmodel);
 
     args->is_fitted = TRUE;
     g_object_unref(xdata);

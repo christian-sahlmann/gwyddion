@@ -172,19 +172,22 @@ fit(GwyGraph *graph)
 
 /*extract relevant part of data and normalize it to be fitable*/
 static gint
-normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve)
+normalize_data(FitArgs *args,
+               GwyDataLine *xdata,
+               GwyDataLine *ydata,
+               gint curve)
 {
     gint i, j, ns;
     GwyGraphCurveModel *cmodel;
-    gdouble *xs, *ys; 
-   
+    const gdouble *xs, *ys;
+
     if (curve >= gwy_graph_model_get_n_curves(args->graph_model))
                                   return 0;
     cmodel = gwy_graph_model_get_curve_by_index(args->graph_model, curve);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
-    
+
     gwy_data_line_resample(xdata, ns,
                            GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(ydata, ns,
@@ -192,22 +195,20 @@ normalize_data(FitArgs *args, GwyDataLine *xdata, GwyDataLine *ydata, gint curve
 
 
     j = 0;
-    for (i = 0; i < xdata->res; i++)
-    {
+    for (i = 0; i < xdata->res; i++) {
         if ((xs[i] >= args->from
              && xs[i] <= args->to)
               || (args->from == args->to))
         {
             xdata->data[j] = xs[i];
-            ydata->data[j] = ys[i];                                                                         
+            ydata->data[j] = ys[i];
             j++;
         }
     }
     if (j == 0)
         return 0;
 
-    if (j < xdata->res)
-    {
+    if (j < xdata->res) {
         gwy_data_line_resize(xdata, 0, j);
         gwy_data_line_resize(ydata, 0, j);
     }
@@ -424,6 +425,7 @@ fit_dialog(FitArgs *args)
 
     args->graph_model = gwy_graph_model_new();
     controls.graph = gwy_graph_new(args->graph_model);
+    g_object_unref(args->graph_model);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gwy_graph_area_set_selection_limit(gwy_graph_get_area(GWY_GRAPH(controls.graph)), 1);
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph, FALSE, FALSE, 0);
@@ -431,8 +433,8 @@ fit_dialog(FitArgs *args)
     gwy_graph_set_status(GWY_GRAPH(controls.graph), GWY_GRAPH_STATUS_XSEL);
     g_signal_connect(controls.graph, "selected",
                          G_CALLBACK(graph_selected), args);
-                            
-    
+
+
     args->fitfunc = gwy_cdline_get_preset(args->function_type);
 
     reset(args, &controls);
@@ -511,7 +513,7 @@ plot_inits(FitArgs *args, FitControls *controls)
     gboolean ok;
     gint i;
     GwyGraphCurveModel *cmodel;
-    
+
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
 
@@ -540,7 +542,8 @@ plot_inits(FitArgs *args, FitControls *controls)
                                    ydata->data,
                                    xdata->res);
     gwy_graph_model_add_curve(args->graph_model, cmodel);
-                    
+    g_object_unref(cmodel);
+
     g_object_unref(xdata);
     g_object_unref(ydata);
 
@@ -558,7 +561,7 @@ recompute(FitArgs *args, FitControls *controls)
     gboolean ok;
     gint i, nparams;
     GwyGraphCurveModel *cmodel;
-    
+
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
 
@@ -613,7 +616,8 @@ recompute(FitArgs *args, FitControls *controls)
                                    xdata->res);
     gwy_graph_curve_model_set_description(cmodel, "fit");
     gwy_graph_model_add_curve(args->graph_model, cmodel);
-                    
+    g_object_unref(cmodel);
+
     args->is_fitted = TRUE;
     g_object_unref(xdata);
     g_object_unref(ydata);
@@ -682,13 +686,13 @@ dialog_update(FitControls *controls, FitArgs *args)
 
 
 static void
-graph_update(FitControls *controls, FitArgs *args)
+graph_update(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
 {
     gint i;
 
     /*clear graph*/
     gwy_graph_model_remove_all_curves(args->graph_model);
-                                                                                                                                           
+
     for (i=0; i<gwy_graph_model_get_n_curves(GWY_GRAPH(args->parent_graph)->graph_model); i++)
                   gwy_graph_model_add_curve(args->graph_model,
                                        gwy_graph_model_get_curve_by_index(
@@ -706,14 +710,14 @@ graph_selected(GwyGraph *graph, FitArgs *args)
     gdouble selection[2];
 
     gwy_graph_area_get_selection(gwy_graph_get_area(graph), selection);
-    
+
     if (gwy_graph_area_get_selection_number(gwy_graph_get_area(graph)) <= 0 || selection[0] == selection[1]) {
 
         xmin = args->graph_model->x_min;
         ymin = args->graph_model->y_min;
         xmax = args->graph_model->x_max;
-        ymax = args->graph_model->y_max;                        
-        
+        ymax = args->graph_model->y_max;
+
         args->from = xmin;
         args->to = xmax;
         g_snprintf(buffer, sizeof(buffer), "%.3g", args->from);
@@ -896,7 +900,7 @@ count_really_fitted_points(FitArgs *args)
 {
     gint i, n, curve;
     GwyGraphCurveModel *cmodel;
-    gdouble *xs, *ys;
+    const gdouble *xs, *ys;
     gint ns;
 
     curve = args->curve - 1;
@@ -905,10 +909,11 @@ count_really_fitted_points(FitArgs *args)
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
-                                                                                                                                                                 for (i = 0; i < ns; i++) {
+
+    for (i = 0; i < ns; i++) {
         if ((xs[i] >= args->from
-                  && xs[i] <= args->to)
-                     || (args->from == args->to))
+             && xs[i] <= args->to)
+            || (args->from == args->to))
             n++;
     }
     return n;
@@ -945,7 +950,7 @@ create_results_window(FitArgs *args)
     attach_label(table, _("<b>Data:</b>"), row, 0, 0.0);
     str = g_string_new(gwy_graph_curve_model_get_description(
                     gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
-    
+
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -956,7 +961,7 @@ create_results_window(FitArgs *args)
                     count_really_fitted_points(args),
                     gwy_graph_curve_model_get_ndata(
                      gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
-   
+
     attach_label(table, str->str, row, 1, 0.0);
     row++;
 
@@ -1054,7 +1059,7 @@ create_fit_report(FitArgs *args)
                            count_really_fitted_points(args),
                            gwy_graph_curve_model_get_ndata(
                              gwy_graph_model_get_curve_by_index(args->graph_model, curve)));
-    
+
     g_string_append_printf(report, _("X range:          %g to %g\n"),
                            args->from, args->to);
     g_string_append_printf(report, _("Fitted function:  %s\n"),
