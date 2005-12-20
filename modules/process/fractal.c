@@ -297,6 +297,7 @@ fractal_dialog(FractalArgs *args, GwyContainer *data)
     /*graph*/
     controls.graph_model = gwy_graph_model_new();
     controls.graph = gwy_graph_new(controls.graph_model);
+    g_object_unref(controls.graph_model);
     gtk_widget_set_size_request(controls.graph, 400, 300);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.graph,
@@ -420,6 +421,7 @@ ok_cb(FractalArgs *args,
     data_window = gwy_app_data_window_get_for_data(data);
     gwy_app_graph_window_create(GWY_GRAPH(graph), data);
 }
+
 static gboolean
 update_graph(FractalArgs *args,
              FractalControls *controls,
@@ -456,6 +458,7 @@ update_graph(FractalArgs *args,
     gwy_graph_model_set_title(controls->graph_model,
                               gettext(methods[args->out].name));
     gwy_graph_model_add_curve(controls->graph_model, gcmodel);
+    g_object_unref(gcmodel);
 
     res = gwy_data_line_get_res(xnline);
     if (is_line) {
@@ -467,10 +470,13 @@ update_graph(FractalArgs *args,
             ydata[i] = xdata[i]*a + b;
 
         gcmodel = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_data(gcmodel, xfit->data, yfit->data, xfit->res);
+        gwy_graph_curve_model_set_data(gcmodel,
+                                       xfit->data, yfit->data, xfit->res);
         gwy_graph_curve_model_set_curve_type(gcmodel, GWY_GRAPH_CURVE_LINE);
         gwy_graph_curve_model_set_description(gcmodel, _("Linear fit"));
         gwy_graph_model_add_curve(controls->graph_model, gcmodel);
+        g_object_unref(gcmodel);
+        g_object_unref(yfit);
     }
     g_object_unref(xline);
     g_object_unref(yline);
@@ -479,8 +485,6 @@ update_graph(FractalArgs *args,
 
     return is_line;
 }
-
-
 
 /*(re)compute data and dimension and fits*/
 static void
