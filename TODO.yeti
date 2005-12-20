@@ -1,29 +1,20 @@
 HEAD
-- ValUnit:
-  - fix tip Blind and Model to use something else, ValUnit has been probably
-    broken by metric unit option menu -> combo changes anyway
-- FFT
-  - fix PSDF values
 - Files: store type in container on successful load/save, attempt to save
   only as this type on Ctrl-S
 - Ruler:
   - When range is all negative, units are not placed anywhere
 - Why DWT methods have return values?
-- Should GwyDataLine have units?  Set data line offsets in stat functions.
 - 3D View still not MVCized
 - 3D:
   light source grid not visible on some machines?
 - GwyColorAxis needs overhaul
 - Graphs:
-  units displayed only as a multiplier, no base SI unit
   graph titles don't work
-  silly public signal emitors, mouse-moved
   property get/set not implemented
   kill global last_status in gwygraphwindow
   gwy_graph_model_get_*_siunit return copies -- why? (set() also sets copies)
   selection API is strange and partially duplicated between Graph and GraphArea
   stray "layout-updated" signal in GwyGraphModel
-  old graph modules are still present
 - Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
   complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
