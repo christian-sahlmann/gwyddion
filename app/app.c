@@ -49,8 +49,8 @@ static gboolean   gwy_app_confirm_quit             (void);
 static void       gather_unsaved_cb                (GwyDataWindow *data_window,
                                                     GSList **unsaved);
 static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
-static void       gwy_app_data_view_setup_layers   (GwyDataView *data_view,
-                                                    GwyContainer *data);
+static void       gwy_app_data_view_setup_layers1  (GwyDataView *data_view);
+static void       gwy_app_data_view_setup_layers2  (GwyDataView *data_view);
 static void       gwy_app_data_view_mask_changed   (GwyContainer *data,
                                                     const gchar *key,
                                                     GwyDataView *data_view);
@@ -396,7 +396,10 @@ gwy_app_data_window_create(GwyContainer *data)
 {
     static GtkWidget *popup_menu = NULL;
 
-    GtkWidget *data_window, *data_view, *corner;
+    GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, GWY_MENU_FLAG_DATA };
+    GtkWidget *window, *view, *corner;
+    GwyDataWindow *data_window;
+    GwyDataView *data_view;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     if (!popup_menu) {
@@ -404,11 +407,14 @@ gwy_app_data_window_create(GwyContainer *data)
         gtk_widget_show_all(popup_menu);
     }
 
-    data_view = gwy_data_view_new(data);
-    gwy_app_data_view_setup_layers(GWY_DATA_VIEW(data_view), data);
-    data_window = gwy_data_window_new(GWY_DATA_VIEW(data_view));
+    view = gwy_data_view_new(data);
+    data_view = GWY_DATA_VIEW(view);
+    gwy_app_data_view_setup_layers1(data_view);
+    window = gwy_data_window_new(data_view);
+    data_window = GWY_DATA_WINDOW(window);
+
     gtk_window_add_accel_group
-        (GTK_WINDOW(data_window),
+        (GTK_WINDOW(window),
          g_object_get_data(G_OBJECT(gwy_app_main_window_get()), "accel_group"));
 
     /* FIXME: integrate better to DataWindow? */
@@ -424,8 +430,7 @@ gwy_app_data_window_create(GwyContainer *data)
                           gtk_image_new_from_stock(GWY_STOCK_GRAPH,
                                                    GTK_ICON_SIZE_MENU));
         gtk_widget_show_all(corner);
-        gwy_data_window_set_ul_corner_widget(GWY_DATA_WINDOW(data_window),
-                                            corner);
+        gwy_data_window_set_ul_corner_widget(data_window, corner);
     }
 
     g_signal_connect(data_window, "focus-in-event",
@@ -442,30 +447,25 @@ gwy_app_data_window_create(GwyContainer *data)
                              G_CALLBACK(gwy_app_data_popup_menu_popup_key),
                              popup_menu);
 
-    gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
-    gwy_app_data_window_add(GWY_DATA_WINDOW(data_window));
-    gtk_window_present(GTK_WINDOW(data_window));
+    gwy_data_window_update_title(data_window);
+    gwy_app_data_window_add(data_window);
+    gwy_app_toolbox_update_state(&sens_data);
+    gwy_app_data_view_setup_layers2(data_view);
+    gtk_window_present(GTK_WINDOW(window));
 
     gwy_app_data_window_list_updated();
 
-    return data_window;
+    return window;
 }
 
-/**
- * gwy_app_data_view_setup_layers:
- * @data_view: A data view.
- * @data: A container coreesponding to @data_view.
- *
- * Sets up data view layers according to container conents.
- **/
 static void
-gwy_app_data_view_setup_layers(GwyDataView *data_view,
-                               GwyContainer *data)
+gwy_app_data_view_setup_layers1(GwyDataView *data_view)
 {
     GwyPixmapLayer *layer;
     GwyLayerBasic *blayer;
 
     /* base */
+    gwy_debug("%p %p", data_view, data);
     layer = gwy_layer_basic_new();
     blayer = GWY_LAYER_BASIC(layer);
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
@@ -474,6 +474,16 @@ gwy_app_data_view_setup_layers(GwyDataView *data_view,
     gwy_layer_basic_set_range_type_key(blayer, "/0/base/range-type");
     gwy_layer_basic_set_min_max_key(blayer, "/0/base");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(data_view), layer);
+}
+
+static void
+gwy_app_data_view_setup_layers2(GwyDataView *data_view)
+{
+    GwyLayerBasic *blayer;
+    GwyContainer *data;
+
+    data = gwy_data_view_get_data(data_view);
+    blayer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
 
     /* force sync */
     gwy_app_data_view_mask_changed(data, "/0/mask", data_view);
