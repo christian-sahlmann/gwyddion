@@ -248,10 +248,14 @@ gwy_unitool_dialog_abandon(GwyUnitoolState *state,
             state->func_slots->dialog_abandon(state);
         gtk_widget_destroy(state->dialog);
     }
-    gwy_si_unit_value_format_free(state->coord_format);
-    gwy_si_unit_value_format_free(state->value_format);
-    gwy_si_unit_value_format_free(state->coord_hformat);
-    gwy_si_unit_value_format_free(state->value_hformat);
+    if (state->coord_format)
+        gwy_si_unit_value_format_free(state->coord_format);
+    if (state->value_format)
+        gwy_si_unit_value_format_free(state->value_format);
+    if (state->coord_hformat)
+        gwy_si_unit_value_format_free(state->coord_hformat);
+    if (state->value_hformat)
+        gwy_si_unit_value_format_free(state->value_hformat);
     state->coord_format = NULL;
     state->value_format = NULL;
     state->coord_hformat = NULL;
