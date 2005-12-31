@@ -478,7 +478,6 @@ preview(DriftControls *controls,
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
-    /*set up the mask*/
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
                                                      "/0/mask");
