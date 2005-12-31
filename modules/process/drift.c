@@ -85,6 +85,8 @@ static void        drift_invalidate            (GObject *obj,
                                                DriftControls *controls);
 static void        preview                    (DriftControls *controls,
                                                DriftArgs *args);
+static void        reset                    (DriftControls *controls,
+                                               DriftArgs *args);
 static void        drift_ok                    (DriftControls *controls,
                                                DriftArgs *args,
                                                GwyContainer *data);
@@ -205,7 +207,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gint row;
 
     dialog = gtk_dialog_new_with_buttons(_("Correct drift"), NULL, 0,
-                                         _("_Update Preview"), RESPONSE_PREVIEW,
+                                         _("_Update Result"), RESPONSE_PREVIEW,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -221,6 +223,9 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
     controls.view = gwy_data_view_new(controls.mydata);
     layer = GTK_OBJECT(gwy_layer_basic_new());
+    
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");    
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls.mydata,
@@ -249,9 +254,13 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
    
 
     controls.method = gwy_enum_combo_box_new(methods, G_N_ELEMENTS(methods),
-                                                 G_CALLBACK(drift_invalidate),
-                                                 &controls, args->method, TRUE);
-         
+                                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                                 &args->method, args->method, TRUE);
+   
+    g_signal_connect(controls.method, "value_changed",
+                                      G_CALLBACK(drift_invalidate), &controls);
+    
+    
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.method);
     gtk_table_attach(GTK_TABLE(table), controls.method, 1, 2, row, row+1,
                                  GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -491,15 +500,83 @@ preview(DriftControls *controls,
 
     }
 
+    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
     mask_process(dfield, GWY_DATA_FIELD(maskfield), args, controls);
     controls->computed = TRUE;
+
+    gwy_data_field_data_changed(maskfield);
 }
 
+static void
+reset(DriftControls *controls,
+        DriftArgs *args)
+{
+    GObject *maskfield;
+    
+    if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
+        maskfield = gwy_container_get_object_by_name(controls->mydata,
+                                                           "/0/mask");
+        gwy_data_field_clear(GWY_DATA_FIELD(maskfield));
+    }
+    controls->computed = FALSE;
+
+    gwy_data_field_data_changed(maskfield);
+}
+    
 static void
 drift_ok(DriftControls *controls,
         DriftArgs *args,
         GwyContainer *data)
 {
+
+    GtkWidget *graph;
+    GwyGraphCurveModel *cmodel;
+    GwyGraphModel *gmodel;
+    
+    GwyContainer *newdata;
+    GwyDataField *data_field, *newdata_field;
+    GtkWidget *data_window;
+
+    if (!controls->computed) return;
+   
+    if (args->is_correct)
+    {
+	newdata = gwy_container_duplicate(controls->mydata);
+	gwy_app_clean_up_data(newdata);
+	newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
+	data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
+	
+    	newdata_field = gwy_data_field_correct_drift(
+            data_field,
+	    newdata_field,
+	    controls->result,
+	    args->is_crop);
+
+	gwy_container_remove_by_prefix(newdata, "/0/mask");
+	
+	data_window = gwy_app_data_window_create(newdata);
+	gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+	g_object_unref(newdata);
+    }
+    
+    if (args->is_graph)
+    {
+    	gmodel = gwy_graph_model_new();
+    	cmodel = gwy_graph_curve_model_new();
+    	gwy_graph_model_add_curve(gmodel, cmodel);
+
+    	gwy_graph_model_set_title(gmodel, _("Drift graph"));
+    	gwy_graph_model_set_units_from_data_line(gmodel, controls->result);
+    	gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
+    	gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
+
+    	graph = gwy_graph_new(gmodel);
+    	gwy_object_unref(cmodel);
+    	gwy_object_unref(gmodel);
+    	gwy_object_unref(controls->result);
+    	gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    }
 }
 
 static void
@@ -508,27 +585,33 @@ mask_process(GwyDataField *dfield,
              DriftArgs *args,
              DriftControls *controls)
 {
-    gint i;
-    gwy_data_field_get_drift_from_correlation(dfield, 
+    gint i, j, step, pos;
+
+
+    gwy_data_field_clear(maskfield);
+    gwy_data_line_clear(controls->result);
+
+    if (args->method == GWY_DRIFT_CORRELATION)
+        gwy_data_field_get_drift_from_correlation(dfield, 
                                               controls->result,
-                                              args->sensitivity/10.0,
-                                              args->smoothing);
-    gwy_data_field_fill(maskfield, 0);
-    for (i=0; i<(dfield->yres - args->sensitivity/10.0); i++)
+                                              MAX(1, (gint)(args->sensitivity/10)),
+                                              MAX(1, (gint)(args->smoothing/8)),
+					      1 - args->sensitivity/500.0);
+   
+    step = dfield->yres/10;
+    
+    for (i=0; i<(dfield->yres); i++)
     {
-        printf("%d %d %d\n", i, (gint)gwy_data_field_rtoi(dfield, controls->result->data[i]),
-               (gint)(dfield->xres/2 +
-                gwy_data_field_rtoi(dfield, controls->result->data[i])
-                + 0)
-               );
-        maskfield->data[(gint)(dfield->xres/2 + 
-                               gwy_data_field_rtoi(dfield, controls->result->data[i])
-                               + i*dfield->xres)] 
-            = 1;
-        maskfield->data[(gint)(dfield->xres/2 + 1 + 
-                               gwy_data_field_rtoi(dfield, controls->result->data[i]) 
-                               + i*dfield->xres)] 
-            = 1;
+	for (j=-step; j<(dfield->xres+step); j+=step)
+	{
+		pos = j + gwy_data_field_rtoi(dfield, controls->result->data[i]);
+		if (pos>1 && pos < dfield->xres)
+		{
+		    maskfield->data[(gint)(pos + i*dfield->xres)] = 1;
+		    if (dfield->xres >= 300) 
+			maskfield->data[(gint)(pos - 1 + i*dfield->xres)] = 1;
+		}
+	}
     }
 }
 
@@ -584,4 +667,4 @@ drift_save_args(GwyContainer *container,
     gwy_container_set_enum_by_name(container, method_key, args->method);
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/* VIM: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

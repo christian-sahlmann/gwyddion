@@ -47,7 +47,8 @@ void gwy_data_field_get_drift_from_isotropy(GwyDataField *data_field,
 void gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
                                       GwyDataLine *drift,
                                       gint skip_tolerance,
-                                      gdouble smoothing);
+                                      gint polynom_degree,
+				      gdouble threshold);
 
 void gwy_data_field_get_drift_from_sample(GwyDataField *data_field,
                                           GwyDataField *object_centers,
@@ -55,9 +56,10 @@ void gwy_data_field_get_drift_from_sample(GwyDataField *data_field,
                                       GwyInterpolationType interpolation,
                                       gdouble smoothing);
 
-void gwy_data_field_correct_drift(GwyDataField *data_field,
-                                  GwyDataLine *drift,
-                                  gboolean crop);
+GwyDataField* gwy_data_field_correct_drift(GwyDataField *data_field,
+					   GwyDataField *corrected_field,
+                                           GwyDataLine *drift,
+                                           gboolean crop);
 
 
 G_END_DECLS

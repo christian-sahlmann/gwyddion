@@ -416,41 +416,146 @@ gwy_data_field_get_row_correlation_score(GwyDataField *data_field,
     return score;
 }
 
-
 void
 gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
                                           GwyDataLine *drift,
                                           gint skip_tolerance,
-                                          gdouble smoothing)
+                                          gint polynom_degree,
+                                          gdouble threshold)
 {
-    gint col, row, nextrow, colmax;
+    gint col, row, nextrow, colmax, i;
     gint maxshift = 10;
-    gdouble maxscore, score;
+    gdouble val;
+    gdouble maxscore, coefs[3];
+    GwyDataLine *score;
+    gdouble *shift_rows, *shift_cols, shift_coefs[20];
+    gint shift_ndata;
+    gdouble glob_maxscore, glob_colmax, fit_score, fit_colmax, avg_score;
 
-    if (gwy_data_line_get_res(drift) != (data_field->yres-skip_tolerance))
-        gwy_data_line_resample(drift, data_field->yres-skip_tolerance, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(data_field, data_field->xres*1, data_field->yres, GWY_INTERPOLATION_BILINEAR);
+    
+    if (gwy_data_line_get_res(drift) != (data_field->yres))
+        gwy_data_line_resample(drift, data_field->yres, GWY_INTERPOLATION_NONE);
 
-    for (row=0; row < (data_field->yres-skip_tolerance); row++)
+    score = (GwyDataLine *) gwy_data_line_new(2*maxshift, 2*maxshift, FALSE);
+    shift_cols = (gdouble *)g_malloc((data_field->yres-skip_tolerance)*sizeof(gdouble));
+    shift_rows = (gdouble *)g_malloc((data_field->yres-skip_tolerance)*sizeof(gdouble));
+    shift_ndata= 0;
+    
+    for (row=0; row < (data_field->yres - skip_tolerance - 1); row++)
+        shift_rows[row] = 0;
+    
+    for (row=0; row < (data_field->yres - skip_tolerance - 1); row++)
     {
-        maxscore = -G_MAXDOUBLE;
-        for (nextrow=0; nextrow < skip_tolerance; nextrow++)
+        glob_maxscore = -G_MAXDOUBLE;
+        
+        for (nextrow=1; nextrow <= skip_tolerance; nextrow++)
         {
-            for (col = 0; col < maxshift; col++)
+            maxscore = -G_MAXDOUBLE;    
+            
+            avg_score = 0;
+            for (col = -maxshift; col < maxshift; col++)
             {
-                score = gwy_data_field_get_row_correlation_score(data_field,
+                score->data[col+maxshift] = gwy_data_field_get_row_correlation_score(data_field,
                                                             row,
-                                                            0,
-                                                            nextrow,
-                                                            col,
-                                                            data_field->xres - maxshift);
-                if (score > maxscore) {
-                    maxscore = score;
+                                                            maxshift,
+                                                            row+nextrow,
+                                                            maxshift + col,
+                                                            data_field->xres - 2*maxshift);
+                avg_score += score->data[col+maxshift]/2/maxshift;
+                
+                if (score->data[col+maxshift] > maxscore) {
+                    maxscore = score->data[col+maxshift];
                     colmax = col;
                 }
+                /*printf("%g ", score->data[col+maxshift]);*/
             }
+            /*printf("\n");*/
+            if (colmax <= (-maxshift + 2) || colmax >= (maxshift - 3) || (fabs(maxscore/avg_score)<1.01)) 
+            {
+            /*    printf("NO  %g/%g  = %g\n", maxscore, avg_score, fabs(maxscore/avg_score));*/
+                fit_score = fit_colmax = 0;
+            }
+            else
+            {
+            /*    printf("YES %g/%g  = %g\n", maxscore, avg_score, fabs(maxscore/avg_score));*/
+                gwy_data_line_part_fit_polynom(score, 2, coefs, colmax + maxshift - 2, colmax + maxshift + 2);   
+                fit_colmax = -coefs[1]/2/coefs[2];
+                fit_score = coefs[2]*fit_colmax*fit_colmax + coefs[1]*fit_colmax + coefs[0];
+            }
+     
+            if (fit_score > glob_maxscore) 
+            {
+                glob_maxscore = fit_score;
+                glob_colmax = (fit_colmax - maxshift)/nextrow;
+            }
+            
+            /*printf("fscore %g  fc  %g\n", fit_score, (fit_colmax - maxshift)/nextrow);*/
         }
-        drift->data[row] = gwy_data_field_itor(data_field, colmax);
+        /*printf("glob: %g  (%g)\n", glob_colmax, glob_maxscore);*/
+        if (fit_score>threshold) {
+            shift_rows[shift_ndata] = row;
+            if (shift_ndata)
+                shift_cols[shift_ndata] = shift_cols[shift_ndata - 1] + glob_colmax;
+            else shift_cols[shift_ndata] = glob_colmax;
+  /*           printf("%g %g\n", shift_rows[shift_ndata], shift_cols[shift_ndata]);*/
+            shift_ndata++;
+        }
     }
+    gwy_math_fit_polynom(shift_ndata, shift_rows, shift_cols, polynom_degree, shift_coefs);
+
+/*    for (i=0; i<=polynom_degree; i++) printf("%g\n", shift_coefs[i]);*/
+/*    printf("\n");*/
+    for (row=0; row < (data_field->yres); row++) 
+    {
+        val = 0;
+        for (i = (polynom_degree); i; i--) {
+            val += shift_coefs[i];
+            val *= row;
+        }
+        val += shift_coefs[0];
+        drift->data[row] = gwy_data_field_itor(data_field, val);
+/*        printf("%d %g\n", row, val);*/
+    }
+   
+    g_object_unref(score);
+    g_free(shift_cols);
+    g_free(shift_rows);
+    gwy_data_field_resample(data_field, data_field->xres/1, data_field->yres, GWY_INTERPOLATION_BILINEAR);
+}
+
+GwyDataField*
+gwy_data_field_correct_drift(GwyDataField *data_field,
+                             GwyDataField *corrected_field,
+                             GwyDataLine *drift,
+                             gboolean crop)
+{
+    gint min, max, newxres, col, row;
+    gdouble *newdata, dx, dy;
+
+    min = (gint)gwy_data_line_get_min(drift);
+    max = (gint)gwy_data_line_get_max(drift);
+    newxres = gwy_data_field_get_xres(data_field) + MIN(0, min) + MAX(0, max);
+
+    gwy_data_field_resample(corrected_field, newxres, gwy_data_field_get_yres(data_field),
+                            GWY_INTERPOLATION_NONE);
+    gwy_data_field_fill(corrected_field, gwy_data_field_get_min(data_field));
+    newdata = gwy_data_field_get_data(corrected_field);
+    
+    for (col = 0; col < newxres; col++)
+        for (row = 0; row < gwy_data_field_get_yres(data_field); row++)
+        {
+            dy = row;
+            dx = col + gwy_data_field_rtoi(data_field, drift->data[row]);
+            
+            if (dx > 0 && dx <= (gwy_data_field_get_xres(data_field) - 1))
+                newdata[col + row*newxres] = 
+                    gwy_data_field_get_dval(data_field, dx, dy, GWY_INTERPOLATION_BILINEAR);
+        }
+
+//    if (crop)
+//        gwy_data_field_resize(corrected_field, MAX(0, min), 0, 
+//                              MIN(newxres, max), gwy_data_field_get_yres(data_field));
 }
 
 
