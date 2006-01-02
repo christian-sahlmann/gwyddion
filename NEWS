@@ -327,6 +327,21 @@ Modules:
 - Gwyfile saves new file format (can be read by version 1.7+), loads both.
 
 
+1.15 (2006-01-02)
+Application:
+- Compilation on Mac OS X was fixed (bug #64).
+- Translations updated: Italian.
+
+Modules:
+- BCR file: Wrong y scale on files that do not have explicit units was fixed.
+- Hitachi AFM file: Reading raw data as signed instead of unsinged was fixed.
+- Plugin-proxy: Missing byte reordering on big-endian machines was added
+  (bug #65).
+- Basicops: Can resample data in one direction to make samples square.
+- Grain distribution: Simple grain statistics (count, mean area, ...).
+- Rawfile: Message dialogs forced above main dialog (bug #66).
+
+
 1.14 (2005-11-07)
 Application:
 - Unix installations are relocatable via environment variables.
