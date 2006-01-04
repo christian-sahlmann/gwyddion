@@ -21,11 +21,14 @@
 #include <math.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwyddion.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/settings.h>
 #include <app/app.h>
+
+enum { MAX_PARAMS = 4 };
 
 /* Data for this function.*/
 typedef struct {
@@ -46,6 +49,8 @@ static gboolean    stats_dialog                (StatsControls *data);
 static void        selection_updated_cb        (StatsControls *data);
 static void        stats_dialog_closed_cb      (StatsControls *data);
 static void        stats_dialog_response_cb    (StatsControls *data);
+static gdouble     calc_stats                  (StatsControls *data);
+static void        fit_graph_cb                (StatsControls *data);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -111,9 +116,18 @@ stats(GwyGraph *graph)
 static gboolean
 stats_dialog(StatsControls *data)
 {
+    enum {
+        RESPONSE_FIT = 0,
+    };
+
     GwyGraph *graph;
     GtkDialog *dialog;
     GtkWidget *table, *label;
+    GtkWidget *stat_val;
+    GtkWidget *button;
+    gchar buffer[100];
+    gdouble rms;
+    GwySIValueFormat *format;
 
     graph = GWY_GRAPH(data->graph);
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
@@ -135,7 +149,7 @@ stats_dialog(StatsControls *data)
     g_signal_connect_swapped(graph, "destroy",
                              G_CALLBACK(stats_dialog_closed_cb), data);
 
-    table = gtk_table_new(2, 3, FALSE);
+    table = gtk_table_new(3, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -148,6 +162,13 @@ stats_dialog(StatsControls *data)
     label = gtk_label_new("to");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
+
+    label = gtk_label_new("RMS");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3, 0, 0, 2, 2);
+
+    label = gtk_label_new("=");
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, 0, 0, 2, 2);
 
     label = gtk_label_new("=");
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, 0, 0, 2, 2);
@@ -165,17 +186,196 @@ stats_dialog(StatsControls *data)
     gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
+    rms = calc_stats(data);
+    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
+                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    rms, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", rms/format->magnitude,
+                                                  format->units);
+    stat_val = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(stat_val), buffer);
+    gtk_misc_set_alignment(GTK_MISC(stat_val), 1.0, 0.5);   
+    gtk_table_attach(GTK_TABLE(table), stat_val, 2, 3, 2, 3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
+    button = gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
+    gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(fit_graph_cb), data);
+
     data->selection_id =
         g_signal_connect_swapped(graph, "selected",
                                  G_CALLBACK(selection_updated_cb),
                                  data);
+//     g_signal_connect_swapped(graph, "selected",
+//                              G_CALLBACK(fit_graph_cb),
+//                              data);
 
     gtk_widget_show_all(GTK_WIDGET(dialog));
 
     selection_updated_cb(data);
+    g_free(format->units);
 
     return TRUE;
 }
+
+/* code for calculating statistics (RMS) */
+
+static gdouble
+calc_stats(StatsControls *data)
+{
+    GwyGraph *graph;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *current_cmodel;
+    const gdouble *ydata;
+    gdouble rms, sum, avg;
+    gint ndata, i;
+
+    graph = GWY_GRAPH(data->graph);
+    gmodel = gwy_graph_get_model(graph);
+    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    ydata = gwy_graph_curve_model_get_ydata(current_cmodel);
+    ndata = gwy_graph_curve_model_get_ndata(current_cmodel);
+
+    sum = 0;
+    for (i = 0; i < ndata; i++)
+        sum = sum + (ydata[i] * ydata[i]);
+    avg = sum/ndata;
+    rms = sqrt(avg);
+
+    return rms;
+}
+
+// code for fitting the graphs
+static void
+fit_graph_cb(StatsControls *data)
+{
+    GwyGraph *graph;
+    GwyGraphArea *area;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *current_cmodel, *new_cmodel;
+    const gdouble *xs, *ys, *xvals;
+    GwyDataLine *xdata, *ydata;
+    GwyNLFitPreset *fitfunc;
+    gint i, j, ns;
+    gboolean ok;
+    gdouble from, to;
+    gdouble selection[2];
+    gint ncurves, count;
+    gint selection_start_index, selection_end_index;
+
+    /* NOTE: these will change depending on the deg of poly */
+    gint deg_of_poly = 1;
+    gint fit_func_index = 9;
+    gdouble coeffs[deg_of_poly + 1];
+
+    graph = GWY_GRAPH(data->graph);
+    gmodel = gwy_graph_get_model(graph);
+
+    xdata = gwy_data_line_new(10, 10, FALSE);
+    ydata = gwy_data_line_new(10, 10, FALSE);
+
+    g_debug("here5");
+
+    /* normalize data */
+    /* FIXME: may put this piece of code in a seperate function */
+    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    xvals = gwy_graph_curve_model_get_xdata(current_cmodel);
+
+    /* remove the old fit */
+    ncurves = gwy_graph_model_get_n_curves(gmodel);
+    if (ncurves > 1)
+        gwy_graph_model_remove_curve_by_index(gmodel, 1);    
+
+    /* get selection values */
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+    if (gwy_graph_area_get_selection_number(area))
+    {
+        gwy_graph_area_get_selection(area, selection);
+        from = selection[0];
+        to = selection[1];
+    }
+    else
+    {
+        from = xvals[0];
+        to = xvals[gwy_graph_curve_model_get_ndata(current_cmodel) - 1];
+    }
+
+    xs = gwy_graph_curve_model_get_xdata(current_cmodel);
+    ys = gwy_graph_curve_model_get_ydata(current_cmodel);
+    ns = gwy_graph_curve_model_get_ndata(current_cmodel);
+
+    /* modify 'ns' according to selection */
+    if ((from > xs[0]) || (to < xs[ns-1]))
+    {
+        for (i = 0; i <= ns; i++)
+        {
+            if (from == xs[i])
+                selection_start_index = i;
+
+            if (to == xs[i])
+                selection_end_index = i;
+        }
+
+        count = 0;
+        for (i = selection_start_index; i <= selection_end_index; i++)
+            count = count + 1;
+        ns = count;
+    }
+    g_debug("here6");
+
+    gwy_data_line_resample(xdata, ns, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(ydata, ns, GWY_INTERPOLATION_NONE);
+    g_debug("here61");
+    j = 0;
+    for (i = 0; i < xdata->res; i++)
+    {
+        if ((xs[i] >= from && xs[i] <= to)
+            || (from == to))
+        {
+            if (i == 0)
+                continue;
+
+            xdata->data[j] = xs[i];
+            ydata->data[j] = ys[i];
+            j++;
+        }
+    }
+    g_debug("here62");
+    if (j < xdata->res) {
+        gwy_data_line_resize(xdata, 0, j);
+        gwy_data_line_resize(ydata, 0, j);
+    }
+    /* end normalize */
+
+    g_debug("here7");
+
+    fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(), fit_func_index);
+    gwy_math_fit_polynom(ns, xs, ys, deg_of_poly, coeffs);
+
+    g_debug("xdata->res = %d", xdata->res);
+    for (i = 0; i < xdata->res; i++)
+    {
+        ydata->data[i] = gwy_nlfit_preset_get_value(fitfunc,
+                                                    xdata->data[i],
+                                                    coeffs,
+                                                    &ok);
+    }
+    new_cmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_curve_type(new_cmodel, GWY_GRAPH_CURVE_LINE);
+    gwy_graph_curve_model_set_data(new_cmodel,
+                                   xdata->data,
+                                   ydata->data,
+                                   xdata->res);
+    gwy_graph_curve_model_set_description(new_cmodel, "fit");
+    gwy_graph_model_add_curve(gmodel, new_cmodel);
+
+    g_object_unref(new_cmodel);
+    g_object_unref(xdata);
+    g_object_unref(ydata);
+
+}
+
 
 static void
 selection_updated_cb(StatsControls *data)

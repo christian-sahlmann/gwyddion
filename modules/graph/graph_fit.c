@@ -475,7 +475,10 @@ fit_dialog(FitArgs *args)
 
     reset(args, &controls);
     dialog_update(&controls, args);
+
+    /*XXX Shouldn't need this */
     graph_update(&controls, args);
+
     graph_selected(GWY_GRAPH(controls.graph), &controls);
 
     gtk_widget_show_all(dialog);
@@ -536,6 +539,7 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
+    /*XXX Shouldn't need this */
     graph_update(controls, args);
 
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -578,6 +582,7 @@ plot_inits(FitArgs *args, FitControls *controls)
         ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
                                                     args->par_init, &ok);
 
+    /*XXX Shouldn't need this */
     graph_update(controls, args);
 
     cmodel = gwy_graph_curve_model_new();
@@ -624,12 +629,15 @@ recompute(FitArgs *args, FitControls *controls)
     ydata = gwy_data_line_new(10, 10, FALSE);
 
     args->curve = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->data));
+
+
     if (!normalize_data(args, xdata, ydata, args->curve - 1))
     {
         g_object_unref(xdata);
         g_object_unref(ydata);
         return;
     }
+
 
     if (args->fitter)
         gwy_math_nlfit_free(args->fitter);
@@ -641,7 +649,6 @@ recompute(FitArgs *args, FitControls *controls)
         g_snprintf(buffer, sizeof(buffer), "%2.3g", args->par_res[i]);
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), buffer);
     }
-
 
     if (args->fitter->covar)
     {
@@ -671,8 +678,8 @@ recompute(FitArgs *args, FitControls *controls)
         ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
                                                     args->par_res, &ok);
 
+    /*XXX Shouldn't need this */
     graph_update(controls, args);
-
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
