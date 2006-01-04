@@ -57,6 +57,15 @@ y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
                    - log10(specs->real_ymin)))*((gdouble)specs->height-1));
 }
 
+/**
+ * gwy_graph_draw_curve:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @curvemodel: the curve model object
+ *
+ * Draw a curve on the graph
+ **/
 void
 gwy_graph_draw_curve(GdkDrawable *drawable,
                      GdkGC *gc,
@@ -98,7 +107,20 @@ gwy_graph_draw_curve(GdkDrawable *drawable,
     }
 }
 
-
+/**
+ * gwy_graph_draw_line:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @x_from: x coordinate of the start point of the line
+ * @y_from: y coordinate of the start point of the line
+ * @x_to: x coordinate of the end point of the line
+ * @y_to: y coordinate of the end point of the line
+ * @line_style: graph line style
+ * @size: point size
+ * @color: point color
+ *
+ * Draw a line on the graph.
+ **/
 void
 gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
                     gint x_from, gint y_from,
@@ -121,7 +143,19 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
     gdk_draw_line(drawable, gc, x_from, y_from, x_to, y_to);
 }
 
-
+/**
+ * gwy_graph_draw_point:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @x: x coordinate of the point
+ * @y: y coordinate of the point
+ * @type: graph point type
+ * @size: point size
+ * @color: point color
+ * @clear: 
+ *
+ * Draw a point on the graph.
+ **/
 void
 gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
                      gint x, gint y,
@@ -227,6 +261,15 @@ gwy_graph_draw_point(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
+/**
+ * gwy_graph_draw_selection_points:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @selection: a #GwySelectionGraphPoint structure
+ *
+ * Draw selected points on the graph
+ **/
 void
 gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
                                 GwyGraphActiveAreaSpecs *specs,
@@ -248,6 +291,15 @@ gwy_graph_draw_selection_points(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
+/**
+ * gwy_graph_draw_selection_areas:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @selection: a #GwySelectionGraphArea structure
+ *
+ * Draw selected area on the graph
+ **/
 void
 gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
@@ -279,6 +331,16 @@ gwy_graph_draw_selection_areas(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
+/**
+ * gwy_graph_draw_selection_lines:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @selection: a #GwySelectionGraphLine structure
+ * @orientation: horizontal or vertical orientation
+ *
+ * Draw selected lines on the graph
+ **/
 void
 gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
                                GwyGraphActiveAreaSpecs *specs,
@@ -316,6 +378,16 @@ gwy_graph_draw_selection_lines(GdkDrawable *drawable, GdkGC *gc,
     }
 }
 
+/**
+ * gwy_graph_draw_grid:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (info on graphics output stored here)
+ * @specs: specifications (boundaries) of the active area of the graph
+ * @x_grid_data: array of grid data for the x-axis
+ * @y_grid_data: array of grid data for the y-axis
+ *
+ * Draw grid lines on the graph
+ **/
 void
 gwy_graph_draw_grid(GdkDrawable *drawable,
                     GdkGC *gc,

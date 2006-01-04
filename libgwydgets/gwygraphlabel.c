@@ -80,7 +80,7 @@ gwy_graph_label_init(GwyGraphLabel *label)
  *
  * creates new graph label.
  *
- * Returns: new graph label
+ * Returns: new graph label widget
  **/
 GtkWidget*
 gwy_graph_label_new()
@@ -251,6 +251,19 @@ gwy_graph_label_expose(GtkWidget *widget,
     return FALSE;
 }
 
+/**
+ * gwy_graph_label_draw_label_on_drawable:
+ * @drawable: the #GdkDrawable
+ * @gc: graphics context
+ * @layout: pango layout
+ * @x: x position where label is to be drawn
+ * @y: y position where label is to be drawn
+ * @width: width of the label
+ * @height: hieght of the label
+ * @label: graph label
+ *
+ * draws a graph label on a drawable
+ **/
 void
 gwy_graph_label_draw_label_on_drawable(GdkDrawable *drawable,
                                        GdkGC *gc,
@@ -429,7 +442,12 @@ set_requised_size(GwyGraphLabel *label)
         label->reqheight = 30;
 }
 
-/*synchronize label with information in graphmodel*/
+/**
+ * gwy_graph_label_refresh:
+ * @label: graph label
+ *
+ * synchronize label with information in graphmodel
+ **/
 void
 gwy_graph_label_refresh(GwyGraphLabel *label)
 {
@@ -452,7 +470,13 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
     gtk_widget_queue_draw(GTK_WIDGET(label));
 }
 
-/*set model*/
+/**
+ * gwy_graph_label_refresh:
+ * @label: graph label
+ * @gmodel: pointer to the graph model
+ *
+ * set model of the graph label
+ **/
 void
 gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
 {
@@ -465,14 +489,30 @@ gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
 
 }
 
-
+/**
+ * gwy_graph_label_enable_user_input:
+ * @label: graph label
+ * @enable: whether to enable/disable the user input
+ *
+ * enables/disables user input to the graph label
+ **/
 void
 gwy_graph_label_enable_user_input(GwyGraphLabel *label, gboolean enable)
 {
     label->enable_user_input = enable;
 }
 
-
+/**
+ * gwy_graph_label_export_vector:
+ * @label: graph label
+ * @x: x position of the graph label
+ * @y: y position of the graph label
+ * @width: width of the graph label
+ * @height: hieght of the graph label
+ * @fontsize: fontsize of the label
+ *
+ * Returns: the graph label vector as a string
+ **/
 GString*
 gwy_graph_label_export_vector(GwyGraphLabel *label,
                               gint x, gint y,

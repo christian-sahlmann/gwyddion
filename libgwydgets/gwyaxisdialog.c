@@ -110,6 +110,11 @@ gwy_axis_dialog_init(GwyAxisDialog *dialog)
     gtk_widget_show_all(dialog->sci_text);
 }
 
+/**
+ * gwy_axis_dialog_new:
+ *
+ * Returns: Creates a new axis dialog
+ **/
 GtkWidget*
 gwy_axis_dialog_new()
 {
@@ -117,5 +122,15 @@ gwy_axis_dialog_new()
 
     return GTK_WIDGET(g_object_new(gwy_axis_dialog_get_type(), NULL));
 }
+
+
+/**
+ * SECTION:gwyaxisdialog
+ * @title: GwyAxisDialog
+ * @short_description: Axis properties dialog
+ *
+ * #GwyAxisDialog is used for setting the text properties
+ * of the axis. It is used namely with #GwyAxis.
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

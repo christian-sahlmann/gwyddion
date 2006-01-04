@@ -523,7 +523,7 @@ gwy_graph_set_status(GwyGraph *graph, GwyGraphStatusType status)
  * gwy_graph_get_status:
  * @graph: A graph widget.
  *
- * Get status of the graph widget.Status determines how the graph
+ * Get status of the graph widget. Status determines how the graph
  * reacts on mouse events. This includes point or area selection and zooming.
  *
  * Returns: graph status
@@ -771,6 +771,13 @@ label_updated_cb(GwyAxis *axis, GwyGraph *graph)
     }
 }
 
+/**
+ * gwy_graph_set_grid_type:
+ * @graph: A graph widget.
+ * @grid_type: The type of grid the graph should be set to
+ *
+ * Set the graph to a particular grid type.
+ **/
 void
 gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
 {
@@ -778,30 +785,62 @@ gwy_graph_set_grid_type(GwyGraph *graph, GwyGraphGridType grid_type)
     gwy_graph_refresh(graph);
 }
 
+/**
+ * gwy_graph_get_grid_type:
+ * @graph: A graph widget.
+ *
+ * Return: The grid type of the graph.
+ **/
 GwyGraphGridType
 gwy_graph_get_grid_type(GwyGraph *graph)
 {
     return graph->grid_type;
 }
 
+/**
+ * gwy_graph_set_x_grid_data:
+ * @graph: A graph widget.
+ * @grid_data: An array of grid data
+ *
+ * Set the grid data for the x-axis of the graph area.
+ **/
 void
 gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
 {
     gwy_graph_area_set_x_grid_data(graph->area, grid_data);
 }
 
+/**
+ * gwy_graph_set_y_grid_data:
+ * @graph: A graph widget.
+ * @grid_data: An array of grid data
+ *
+ * Set the grid data for the y-axis of the graph area.
+ **/
 void
 gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
 {
     gwy_graph_area_set_y_grid_data(graph->area, grid_data);
 }
 
+/**
+ * gwy_graph_get_x_grid_data:
+ * @graph: A graph widget.
+ *
+ * Return: Array of grid data for the x-axis of the graph area.
+ **/
 const GArray*
 gwy_graph_get_x_grid_data(GwyGraph *graph)
 {
     return gwy_graph_get_x_grid_data(graph->area);
 }
 
+/**
+ * gwy_graph_get_y_grid_data:
+ * @graph: A graph widget.
+ *
+ * Return: Array of grid data for the y-axis of the graph area.
+ **/
 const GArray*
 gwy_graph_get_y_grid_data(GwyGraph *graph)
 {

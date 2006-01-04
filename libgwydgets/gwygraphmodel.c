@@ -633,7 +633,7 @@ gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint cindex)
  * gwy_graph_model_signal_layout_changed:
  * @model: A #GwyGraphModel.
  *
- * Emits signal that somehing general in graph layout (label settings) was changed.
+ * Emits signal that something general in graph layout (label settings) was changed.
  * Graph widget or other widgets connected to graph model object should react somehow.
  **/
 void
@@ -752,7 +752,7 @@ gwy_graph_model_get_title(GwyGraphModel *model)
  * gwy_graph_model_get_label_position:
  * @model: A #GwyGraphModel.
  *
- * Returns: graph widget label posititon.
+ * Returns: graph widget label position.
  **/
 GwyGraphLabelPosition
 gwy_graph_model_get_label_position(GwyGraphModel *model)
@@ -788,7 +788,7 @@ gwy_graph_model_get_label_frame_thickness(GwyGraphModel *model)
  * gwy_graph_model_get_label_reverse:
  * @model: A #GwyGraphModel.
  *
- * Returns: graph widget label alingment mode.
+ * Returns: graph widget label alignment mode.
  **/
 gboolean
 gwy_graph_model_get_label_reverse(GwyGraphModel *model)

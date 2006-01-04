@@ -214,15 +214,15 @@ gwy_graph_area_init(GwyGraphArea *area)
 
 /**
  * gwy_graph_area_new:
- * @hadjustment: XXX - what is this for?
- * @vadjustment: XXX - what is this for?
+ * @hadjustment: horizontal adjustment
+ * @vadjustment: vertical adjustment
  *
  * Creates a graph area widget.
  *
  * Returns: new #GwyGraphArea widget.
  **/
 GtkWidget*
-gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
+	gwy_graph_area_new(GtkAdjustment *hadjustment, GtkAdjustment *vadjustment)
 {
     GwyGraphArea *area;
 
@@ -408,7 +408,8 @@ gwy_graph_area_expose(GtkWidget *widget,
 /**
  * gwy_graph_area_draw_area_on_drawable:
  * @drawable: a #GdkDrawable
- * @gc: a #GdkGC XXX: more info on this?
+ * @gc: a #GdkGC graphics context. A graphics context encapsulates
+        drawing properties.
  * @x: X position in @drawable where the graph area should be drawn
  * @y: Y position in @drawable where the graph area should be drawn
  * @width: draw width
@@ -1517,6 +1518,13 @@ gwy_graph_area_get_label(GwyGraphArea *area)
     return GTK_WIDGET(area->lab);
 }
 
+/**
+ * gwy_graph_area_set_x_grid_data:
+ * @area: graph area
+ * @grid_data: array of grid data on the x axis
+ *
+ * Sets the grid data on the x-axis of the graph area
+ **/
 void
 gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
 {
@@ -1531,6 +1539,13 @@ gwy_graph_area_set_x_grid_data(GwyGraphArea *area, GArray *grid_data)
     }
 }
 
+/**
+ * gwy_graph_area_set_y_grid_data:
+ * @area: graph area
+ * @grid_data: array of grid data on the y axis
+ *
+ * Sets the grid data on the y-axis of the graph area
+ **/
 void
 gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
 {
@@ -1545,12 +1560,26 @@ gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
     }
 }
 
+/**
+ * gwy_graph_area_get_x_grid_data:
+ * @area: graph area
+ *
+ * Return: the grid data on the x-axis of the graph area
+ * as an array
+ **/
 const GArray*
 gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
 {
     return area->x_grid_data;
 }
 
+/**
+ * gwy_graph_area_get_y_grid_data:
+ * @area: graph area
+ *
+ * Return: the grid data on the y-axis of the graph area
+ * as an array
+ **/
 const GArray*
 gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
 {

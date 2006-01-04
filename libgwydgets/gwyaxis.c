@@ -184,7 +184,7 @@ gwy_axis_init(GwyAxis *axis)
  *
  * Creates new axis.
  *
- * Returns: new axis
+ * Returns: new axis as a #GtkWidget.
  **/
 GtkWidget*
 gwy_axis_new(gint orientation, gdouble min, gdouble max, const gchar *label)
@@ -491,6 +491,18 @@ gwy_axis_expose(GtkWidget *widget,
     return FALSE;
 }
 
+/**
+ * gwy_axis_draw_on_drawable:
+ * @drawable: a #GdkDrawable
+ * @gc: a graphics context (encapsulates drawing properties)
+ * @xmin: minimum x-axis value
+ * @ymin: minimum y-axis value
+ * @width: width of the x-axis
+ * @hieght: hieght of the y-axis
+ * @axis: axis
+ *
+ * Draws the x and y-axis on a drawable
+ **/
 void
 gwy_axis_draw_on_drawable(GdkDrawable *drawable,
                           GdkGC *gc,
@@ -873,7 +885,12 @@ gwy_axis_entry(GwyAxisDialog *dialog, gint arg1, gpointer user_data)
     }
 }
 
-
+/**
+ * gwy_axis_signal_rescaled:
+ * @axis: axis widget
+ *
+ * Signals that the axis has been rescaled
+ **/
 void
 gwy_axis_signal_rescaled(GwyAxis *axis)
 {
@@ -1370,7 +1387,7 @@ gwy_axis_get_reqminimum(GwyAxis *axis)
  * @axis: axis widget
  * @label_text: label to be set
  *
- * sets the label text
+ * sets the label text of the axis
  **/
 void
 gwy_axis_set_label(GwyAxis *axis, GString *label_text)
@@ -1403,7 +1420,7 @@ gwy_axis_get_label(GwyAxis *axis)
  * @unit: axis unit
  *
  * Sets the axis unit. This will be added automatically
- * to the label.
+ * to the label. @unit is duplicated.
  **/
 void
 gwy_axis_set_unit(GwyAxis *axis, GwySIUnit *unit)
@@ -1429,12 +1446,24 @@ gwy_axis_enable_label_edit(GwyAxis *axis, gboolean enable)
     axis->enable_label_edit = enable;
 }
 
+/**
+ * gwy_axis_get_magnification:
+ * @axis: Axis widget
+ *
+ * Returns: Magnification value of the axis
+ **/
 gdouble
 gwy_axis_get_magnification (GwyAxis *axis)
 {
     return axis->magnification;
 }
 
+/**
+ * gwy_axis_get_magnification_string:
+ * @axis: Axis widget
+ *
+ * Returns: Magnification string of the axis
+ **/
 GString*
 gwy_axis_get_magnification_string(GwyAxis *axis)
 {
@@ -1444,6 +1473,17 @@ gwy_axis_get_magnification_string(GwyAxis *axis)
 }
 
 
+/**
+ * gwy_axis_export_vector:
+ * @axis: Axis widget
+ * @xmin: minimum value of x-axis
+ * @ymin: minimum value of y-axis
+ * @width: width of the x-axis
+ * @height: hieght of the y-axis
+ * @fontsize: the fontsize
+ *
+ * Returns: Magnification string of the axis
+ **/
 GString*
 gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
                         gint width, gint height, gint fontsize)
@@ -1616,6 +1656,12 @@ gwy_axis_export_vector (GwyAxis *axis, gint xmin, gint ymin,
     return out;
 }
 
+/**
+ * gwy_axis_set_grid_data:
+ * @array: array of grid data
+ *
+ * Sets the grid data for the axis
+ **/
 void
 gwy_axis_set_grid_data(GwyAxis *axis, GArray *array)
 {

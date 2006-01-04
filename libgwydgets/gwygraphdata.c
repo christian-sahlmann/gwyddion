@@ -70,7 +70,7 @@ gwy_graph_data_init(G_GNUC_UNUSED GwyGraphData *graph_data)
  * gwy_graph_data_new:
  * @gmodel: A graph_data model.
  *
- * Creates graph_data widget based on information in model.
+ * Creates graph_data widget based on information in graph model.
  *
  * Returns: new graph_data widget.
  **/
@@ -270,7 +270,12 @@ GwyGraphModel *gwy_graph_data_get_model(GwyGraphData *graph_data)
     return  graph_data->graph_model;
 }
 
-
+/**
+ * gwy_graph_data_signal_selected:
+ * @graph_data: A graph_data widget.
+ *
+ * Emit signal when graph data is selected
+ **/
 void
 gwy_graph_data_signal_selected(GwyGraphData *graph_data)
 {

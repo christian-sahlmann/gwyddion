@@ -767,7 +767,7 @@ gwy_graph_curve_model_get_curve_color(GwyGraphCurveModel *gcmodel)
   * gwy_graph_curve_model_signal_layout_changed:
   * @model: A #GwyGraphCurveModel.
   *
-  * Emits signal that somehing general in curve layout (plotting style) was changed.
+  * Emits signal that something general in curve layout (plotting style) was changed.
   * Graph widget or other widgets connected to graph model object should react somehow.
   **/
 void

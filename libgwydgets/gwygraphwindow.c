@@ -104,7 +104,7 @@ gwy_graph_window_destroy(GtkObject *object)
  *
  * Creates a new window showing @graph.
  *
- * Returns: A newly created widget, as #GtkWidget.
+ * Returns: A newly created graph window as #GtkWidget.
  **/
 GtkWidget*
 gwy_graph_window_new(GwyGraph *graph)
@@ -239,7 +239,7 @@ gwy_graph_window_new(GwyGraph *graph)
  *
  * Returns the #GwyGraph widget this graph window currently shows.
  *
- * Returns: The currently shown #GwyGraph.
+ * Returns: The currently shown #GwyGraph widget.
  **/
 GtkWidget*
 gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
@@ -252,7 +252,7 @@ gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
 /*XXX: the "tips" line below is hard to understand */
 /**
  * gwy_graph_window_class_set_tooltips:
- * @tips: Tooltips object #GwyGraphWindow's should use for setting tooltips.
+ * @tips: #GtkTooltips object #GwyGraphWindow should use for setting tooltips.
  *        A %NULL value disables tooltips altogether.
  *
  * Sets the tooltips object to use for adding tooltips to graph window parts.
