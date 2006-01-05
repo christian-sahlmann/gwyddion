@@ -309,7 +309,6 @@ gwy_container_remove(GwyContainer *container, GQuark key)
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
     if (!key)
         return FALSE;
-    /* TODO: notify */
 
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!value)
@@ -494,10 +493,12 @@ gwy_container_rename(GwyContainer *container,
 {
     GValue *value, *oldvalue;
 
-    g_return_val_if_fail(key, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
-    /* TODO: notify */
+    g_return_val_if_fail(key, FALSE);
+    if (key == newkey)
+        return TRUE;
 
+    /* TODO: notify */
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!value)
         return FALSE;
