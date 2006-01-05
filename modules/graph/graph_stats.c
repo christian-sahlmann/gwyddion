@@ -56,6 +56,7 @@ static gdouble     calc_stats                  (gdouble *y_actual,
                                                 gdouble *y_fitted,
                                                 gint ndata);
 static void        fit_graph_cb                (StatsControls *data);
+static void        stat_updated_cb             (StatsControls *data);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -129,8 +130,6 @@ stats_dialog(StatsControls *data)
     GtkDialog *dialog;
     GtkWidget *table, *label;
     GtkWidget *button;
-    GwySIValueFormat *format;
-    gchar buffer[100];
 
     graph = GWY_GRAPH(data->graph);
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
@@ -189,19 +188,16 @@ stats_dialog(StatsControls *data)
     gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    data->stat_label = gtk_label_new(NULL);
     button = gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
     gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
-                                    G_CALLBACK(fit_graph_cb),
-                                    data);
+                             G_CALLBACK(fit_graph_cb),
+                             data);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(stat_updated_cb),
+                             data);
 
-    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
-                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                    data->stat, NULL);
-    g_snprintf(buffer, sizeof(buffer), "%.3f %s", data->stat/format->magnitude,
-                                                  format->units);
-    gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
+    data->stat_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(data->stat_label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 2, 3,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -214,6 +210,7 @@ stats_dialog(StatsControls *data)
     gtk_widget_show_all(GTK_WIDGET(dialog));
 
     selection_updated_cb(data);
+    stat_updated_cb(data);
 
     return TRUE;
 }
@@ -252,9 +249,6 @@ fit_graph_cb(StatsControls *data)
     gdouble selection[2];
     gint ncurves, count;
     gint selection_start_index, selection_end_index;
-    gdouble stat;
-    GwySIValueFormat *format;
-    gchar buffer[100];
 
     /* NOTE: these will change depending on the deg of poly */
     gint deg_of_poly = 1;
@@ -358,12 +352,10 @@ fit_graph_cb(StatsControls *data)
     gwy_math_fit_polynom(ns, xdata->data, ydata->data, deg_of_poly, coeffs);
 
     for (i = 0; i < ns; i++)
-    {
         ydata->data[i] = gwy_nlfit_preset_get_value(fitfunc,
                                                     xdata->data[i],
                                                     coeffs,
                                                     &ok);
-    }
     new_cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(new_cmodel, GWY_GRAPH_CURVE_LINE);
     gwy_graph_curve_model_set_data(new_cmodel,
@@ -373,24 +365,38 @@ fit_graph_cb(StatsControls *data)
     gwy_graph_curve_model_set_description(new_cmodel, "fit");
     gwy_graph_model_add_curve(gmodel, new_cmodel);
 
-    /* create the stat_label */
-    stat = calc_stats(y_actual->data, ydata->data, ns);
-    g_debug("stat = %f", (stat * 1000000));
-    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
-                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                    stat, NULL);
-    g_snprintf(buffer, sizeof(buffer), "%.3f %s", stat/format->magnitude,
-                                                  format->units);
-    data->stat_label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
+    data->stat = calc_stats(y_actual->data, ydata->data, ns);
 
     g_object_unref(new_cmodel);
     g_object_unref(xdata);
     g_object_unref(ydata);
     g_object_unref(y_actual);
-    //g_free(format->units);
 }
 
+static void
+stat_updated_cb(StatsControls *data)
+{
+    GwyGraph *graph;
+    GwyGraphModel *gmodel;
+    gchar buffer[100];
+    GwySIValueFormat *format;
+
+    graph = GWY_GRAPH(data->graph);
+    g_return_if_fail(GWY_IS_GRAPH(graph));
+    gmodel = gwy_graph_get_model(graph);
+
+    if ((gwy_graph_model_get_n_curves(gmodel)) > 1)
+    {
+        format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
+                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                        data->stat, NULL);
+        g_snprintf(buffer, sizeof(buffer), "%.3f %s",
+                   data->stat/format->magnitude,                        
+                   format->units);
+        gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
+        g_free(format->units);
+    }
+}
 
 static void
 selection_updated_cb(StatsControls *data)
@@ -421,25 +427,18 @@ selection_updated_cb(StatsControls *data)
     format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->x_unit,
                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     from, NULL);
-
-
     g_snprintf(buffer, sizeof(buffer), "%.3f %s", from/format->magnitude,
-format->units);
-
+               format->units);
     gtk_label_set_markup(GTK_LABEL(data->selection_start_label), buffer);
 
     format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->x_unit,
                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     to, format);
-
     g_snprintf(buffer, sizeof(buffer), "%.3f %s", to/format->magnitude,
-format->units);
-
+               format->units);
     gtk_label_set_markup(GTK_LABEL(data->selection_end_label), buffer);
 
     g_free(format->units);
-
-
 }
 
 static void
