@@ -506,10 +506,10 @@ gwy_container_rename(GwyContainer *container,
     if (oldvalue) {
         if (!force)
             return FALSE;
-        g_assert(gwy_container_remove(container, newkey));
+        gwy_container_remove(container, newkey);
     }
     gwy_container_set_value(container, newkey, value, NULL);
-    g_assert(gwy_container_remove(container, key));
+    gwy_container_remove(container, key);
 
     return TRUE;
 }
