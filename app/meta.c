@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
@@ -30,11 +30,19 @@
 
 enum {
     META_KEY,
-    META_VALUE,
-    META_LAST
+    META_VALUE
 };
 
 typedef struct {
+    GQuark quark;
+    gchar *value;
+    gboolean isok;
+} FixupData;
+
+typedef struct {
+    GwyContainer *container;
+    gulong container_id;
+    gulong item_id;
     GtkWidget *window;
     GtkWidget *treeview;
     GtkWidget *new;
@@ -42,6 +50,7 @@ typedef struct {
     GtkWidget *close;
 } MetadataBrowser;
 
+static GtkWidget* gwy_meta_browser_construct    (MetadataBrowser *browser);
 static void       gwy_meta_cell_edited          (GtkCellRendererText *renderer,
                                                  const gchar *strpath,
                                                  const gchar *text,
@@ -53,12 +62,16 @@ static void       gwy_meta_browser_cell_renderer(GtkTreeViewColumn *column,
                                                  gpointer data);
 static void       gwy_meta_browser_add_line     (gpointer hkey,
                                                  GValue *value,
-                                                 GtkListStore *store);
-static GtkWidget* gwy_meta_browser_construct    (GwyContainer *data,
+                                                 GSList **slist);
+static void       gwy_meta_item_changed         (GwyContainer *container,
+                                                 const gchar *key,
                                                  MetadataBrowser *browser);
-static void       gwy_meta_destroy              (GwyContainer *data);
-static void       gwy_meta_data_finalized       (MetadataBrowser *browser,
-                                                 GwyContainer *data);
+static gboolean   gwy_meta_changed_item_notify  (GtkTreeModel *model,
+                                                 GtkTreePath *path,
+                                                 GtkTreeIter *iter,
+                                                 gpointer data);
+static void       gwy_meta_destroy              (MetadataBrowser *browser);
+static void       gwy_meta_data_finalized       (MetadataBrowser *browser);
 
 /**
  * gwy_meta_browser:
@@ -70,7 +83,7 @@ void
 gwy_app_metadata_browser(GwyDataWindow *data_window)
 {
     MetadataBrowser *browser;
-    GtkWidget *scroll, *vbox, *hbox, *window;
+    GtkWidget *scroll, *vbox, *hbox;
     GtkRequisition request;
     GwyContainer *data;
     gchar *filename, *title;
@@ -84,23 +97,8 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     filename = gwy_data_window_get_base_name(data_window);
 
     browser = g_new0(MetadataBrowser, 1);
-    browser->treeview = gwy_meta_browser_construct(data, browser);
-    if (!browser->treeview) {
-        g_free(browser);
-        window = gtk_message_dialog_new(NULL, 0,
-                                        GTK_MESSAGE_INFO,
-                                        GTK_BUTTONS_OK,
-                                        N_("There is no metadata in %s."),
-                                        filename);
-        g_signal_connect(window, "delete-event",
-                         G_CALLBACK(gtk_widget_destroy), NULL);
-        g_signal_connect(window, "response",
-                         G_CALLBACK(gtk_widget_destroy), NULL);
-        gtk_widget_show_all(window);
-
-        return;
-    }
-
+    browser->container = data;
+    browser->treeview = gwy_meta_browser_construct(browser);
     browser->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     title = g_strdup_printf(_("Metadata of %s (%s)"),
                             filename, g_get_application_name());
@@ -124,8 +122,9 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
     gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(scroll), browser->treeview);
     g_object_set_data(G_OBJECT(data), "metadata-browser", browser);
-    g_signal_connect_swapped(browser->window, "destroy",
-                             G_CALLBACK(gwy_meta_destroy), data);
+    browser->container_id
+        = g_signal_connect_swapped(browser->window, "destroy",
+                                   G_CALLBACK(gwy_meta_destroy), browser);
     g_object_weak_ref(G_OBJECT(data), (GWeakNotify)&gwy_meta_data_finalized,
                       browser);
 
@@ -150,31 +149,27 @@ static gint
 gwy_meta_sort_func(GtkTreeModel *model,
                    GtkTreeIter *a,
                    GtkTreeIter *b,
-                   G_GNUC_UNUSED gpointer user_data)
+                   gpointer userdata)
 {
-    gchar *ka, *kb;
-    gint result;
+    GwyContainer *container = (GwyContainer*)userdata;
+    GQuark qa, qb;
 
-    gtk_tree_model_get(model, a, 0, &ka, -1);
-    gtk_tree_model_get(model, b, 0, &kb, -1);
-    result = strcmp(ka, kb);
-    g_free(ka);
-    g_free(kb);
-
-    return result;
+    gtk_tree_model_get(model, a, META_KEY, &qa, -1);
+    gtk_tree_model_get(model, b, META_KEY, &qb, -1);
+    return g_utf8_collate(gwy_container_get_string(container, qa),
+                          gwy_container_get_string(container, qb));
 }
 
 static GtkWidget*
-gwy_meta_browser_construct(GwyContainer *data,
-                           MetadataBrowser *browser)
+gwy_meta_browser_construct(MetadataBrowser *browser)
 {
     static const struct {
         const gchar *title;
         const guint id;
     }
     columns[] = {
-        { N_("metadata|Key"),   META_KEY },
-        { N_("Value"), META_VALUE },
+        { N_("Name"),  META_KEY,   },
+        { N_("Value"), META_VALUE, },
     };
 
     GtkWidget *tree;
@@ -183,27 +178,37 @@ gwy_meta_browser_construct(GwyContainer *data,
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     GtkTreeIter iter;
+    GSList *fixlist, *l;
     gsize i;
 
-    store = gtk_list_store_new(META_LAST,
-                               G_TYPE_STRING,  /* key */
-                               G_TYPE_STRING   /* value */
-                               );
+    store = gtk_list_store_new(1, G_TYPE_UINT);
+    fixlist = NULL;
+    gwy_container_foreach(browser->container, "/meta",
+                          (GHFunc)(gwy_meta_browser_add_line), &fixlist);
+    /* Commit UTF-8 fixes found by gwy_meta_browser_add_line() */
+    for (l = fixlist; l; l = g_slist_next(l)) {
+        FixupData *fd = (FixupData*)l->data;
 
-    gwy_container_foreach(data, "/meta",
-                          (GHFunc)(gwy_meta_browser_add_line), store);
-    if (!gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &iter)) {
-        g_object_unref(store);
-        return NULL;
+        if (fd->isok || fd->value) {
+            if (!fd->isok)
+                gwy_container_set_string(browser->container,
+                                         fd->quark, fd->value);
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, META_KEY, fd->quark, -1);
+        }
+        else
+            gwy_container_remove(browser->container, fd->quark);
+        g_free(fd);
     }
+    g_slist_free(fixlist);
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
     g_object_unref(store);
-    g_object_set_data(G_OBJECT(store), "container", data);
 
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
-                                    0, gwy_meta_sort_func, NULL, NULL);
+                                    0, gwy_meta_sort_func, browser->container,
+                                    NULL);
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), 0,
                                          GTK_SORT_ASCENDING);
 
@@ -213,13 +218,11 @@ gwy_meta_browser_construct(GwyContainer *data,
                      "editable", TRUE,
                      "editable-set", TRUE,
                      NULL);
-        column = gtk_tree_view_column_new_with_attributes
-                                      (gwy_sgettext(columns[i].title),
-                                       renderer, "text", columns[i].id, NULL);
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
+                                                          renderer, NULL);
         gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                 gwy_meta_browser_cell_renderer,
-                                                GUINT_TO_POINTER(columns[i].id),
-                                                NULL);  /* destroy notify */
+                                                browser->container, NULL);
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
         g_object_set_data(G_OBJECT(renderer), "column",
                           GUINT_TO_POINTER(columns[i].id));
@@ -230,6 +233,9 @@ gwy_meta_browser_construct(GwyContainer *data,
     select = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
     gtk_tree_selection_set_mode(select, GTK_SELECTION_SINGLE);
 
+    g_signal_connect(browser->container, "item-changed",
+                     G_CALLBACK(gwy_meta_item_changed), browser);
+
     return tree;
 }
 
@@ -237,79 +243,145 @@ static void
 gwy_meta_cell_edited(GtkCellRendererText *renderer,
                      const gchar *strpath,
                      const gchar *text,
-                     G_GNUC_UNUSED MetadataBrowser *browser)
+                     MetadataBrowser *browser)
 {
-    gwy_debug("Column %d edited to <%s> (path %s)",
-              GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "column")),
-              text, strpath);
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+    GQuark oldkey;
+    guint col;
+
+    col = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "column"));
+    gwy_debug("Column %d edited to <%s> (path %s)", col, text, strpath);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser->treeview));
+    path = gtk_tree_path_new_from_string(strpath);
+    gtk_tree_model_get_iter(model, &iter, path);
+    gtk_tree_path_free(path);
+
+    gtk_tree_model_get(model, &iter, META_KEY, &oldkey, -1);
+    switch (col) {
+        case META_KEY:
+        break;
+
+        case META_VALUE:
+        if (pango_parse_markup(text, -1, 0, NULL, NULL, NULL, NULL))
+            gwy_container_set_string(browser->container, oldkey,
+                                     g_strdup(text));
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
 gwy_meta_browser_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
-                               GtkCellRenderer *cell,
+                               GtkCellRenderer *renderer,
                                GtkTreeModel *model,
-                               GtkTreeIter *piter,
+                               GtkTreeIter *iter,
                                gpointer userdata)
 {
-    gchar *text;
+    GwyContainer *container = (GwyContainer*)userdata;
+    const gchar *s;
+    GQuark quark;
     gulong id;
 
-    id = GPOINTER_TO_UINT(userdata);
-    /*g_assert(id >= META_KEY && id < META_LAST);*/
-    g_assert(id < META_LAST);
-    gtk_tree_model_get(model, piter, id, &text, -1);
-    g_return_if_fail(text);
-    g_object_set(cell, "markup", text, NULL);
-    g_free(text);
+    id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "column"));
+    gtk_tree_model_get(model, iter, META_KEY, &quark, -1);
+    switch (id) {
+        case META_KEY:
+        g_object_set(renderer, "markup", g_quark_to_string(quark) + 6, NULL);
+        break;
+
+        case META_VALUE:
+        s = gwy_container_get_string(container, quark);
+        g_object_set(renderer, "markup", s, NULL);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
 }
 
 static void
 gwy_meta_browser_add_line(gpointer hkey,
                           GValue *value,
-                          GtkListStore *store)
+                          GSList **slist)
 {
+    FixupData *fd;
     GQuark quark;
-    GtkTreeIter iter;
-    const gchar *key, *val;
+    const gchar *val;
     gchar *s;
 
     g_return_if_fail(G_VALUE_HOLDS_STRING(value));
+    quark = GPOINTER_TO_UINT(hkey);
     val = g_value_get_string(value);
-    if (g_utf8_validate(val, -1 , NULL))
-        s = NULL;
-    else {
-        if (!(s = g_locale_to_utf8(val, -1, NULL, NULL, NULL)))
-            s = g_strdup("???");
+
+    /* Theoretically, modules should assure metadata are in UTF-8 when it's
+     * stored to container.  But in practice we cannot rely on it. */
+    fd = g_new0(FixupData, 1);
+    fd->quark = quark;
+    if (g_utf8_validate(val, -1 , NULL)) {
+        fd->value = (gchar*)val;
+        fd->isok = TRUE;
     }
-    quark = GPOINTER_TO_INT(hkey);
-    key = g_quark_to_string(quark);
-    g_return_if_fail(key);
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       META_KEY, key + sizeof("/meta"),
-                       META_VALUE, s ? s : val,
-                       -1);
-    g_free(s);
+    else if ((s = g_locale_to_utf8(val, -1, NULL, NULL, NULL)))
+        fd->value = s;
+    *slist = g_slist_prepend(*slist, fd);
 }
 
 static void
-gwy_meta_destroy(GwyContainer *data)
+gwy_meta_item_changed(G_GNUC_UNUSED GwyContainer *container,
+                      const gchar *key,
+                      MetadataBrowser *browser)
 {
-    MetadataBrowser *browser;
+    GtkTreeModel *model;
+    GQuark quark;
 
-    browser = g_object_get_data(G_OBJECT(data), "metadata-browser");
-    g_object_weak_unref(G_OBJECT(data), (GWeakNotify)&gwy_meta_data_finalized,
+    if (!g_str_has_prefix(key, "/meta/"))
+        return;
+
+    gwy_debug("Meta item <%s> changed", key);
+    quark = g_quark_try_string(key);
+    g_return_if_fail(quark);
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser->treeview));
+    gtk_tree_model_foreach(model, gwy_meta_changed_item_notify,
+                           GUINT_TO_POINTER(quark));
+}
+
+static gboolean
+gwy_meta_changed_item_notify(GtkTreeModel *model,
+                             GtkTreePath *path,
+                             GtkTreeIter *iter,
+                             gpointer data)
+{
+    GQuark key;
+
+    gtk_tree_model_get(model, iter, META_KEY, &key, -1);
+    if (key != GPOINTER_TO_UINT(data))
+        return FALSE;
+
+    gtk_tree_model_row_changed(model, path, iter);
+    return TRUE;
+}
+
+static void
+gwy_meta_destroy(MetadataBrowser *browser)
+{
+    g_object_weak_unref(G_OBJECT(browser->container),
+                        (GWeakNotify)&gwy_meta_data_finalized,
                         browser);
-    g_object_set_data(G_OBJECT(data), "metadata-browser", NULL);
+    g_object_set_data(G_OBJECT(browser->container), "metadata-browser", NULL);
     g_free(browser);
 }
 
 static void
-gwy_meta_data_finalized(MetadataBrowser *browser,
-                        GwyContainer *data)
+gwy_meta_data_finalized(MetadataBrowser *browser)
 {
-    g_signal_handlers_disconnect_by_func(browser->window, &gwy_meta_destroy,
-                                         data);
+    g_signal_handler_disconnect(browser->window, browser->container_id);
     gtk_widget_destroy(browser->window);
     g_free(browser);
 }
