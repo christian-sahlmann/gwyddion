@@ -349,17 +349,8 @@ maybe_add_mask(GwyUnitoolState *state)
         mask = GWY_DATA_FIELD(gwy_container_get_object_by_name(data,
                                                                "/0/data"));
         mask = gwy_data_field_new_alike(mask, TRUE);
-        siunit = gwy_si_unit_new("");
-        gwy_data_field_set_si_unit_z(mask, siunit);
-        g_object_unref(siunit);
         gwy_container_set_object_by_name(data, "/0/mask", mask);
         g_object_unref(mask);
-    }
-    if (!(layer = gwy_data_view_get_alpha_layer(data_view))) {
-        layer = gwy_layer_mask_new();
-        gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-        gwy_data_view_set_alpha_layer(data_view, layer);
     }
     return mask;
 }
