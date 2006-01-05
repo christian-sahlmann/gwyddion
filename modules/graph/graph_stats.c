@@ -41,6 +41,9 @@ typedef struct {
     GtkWidget *selection_start_label;
     GtkWidget *selection_end_label;
     GwyGraphStatusType last_status;
+
+    GtkWidget *stat_label;
+    gdouble stat;
 } StatsControls;
 
 static gboolean    module_register             (const gchar *name);
@@ -49,7 +52,9 @@ static gboolean    stats_dialog                (StatsControls *data);
 static void        selection_updated_cb        (StatsControls *data);
 static void        stats_dialog_closed_cb      (StatsControls *data);
 static void        stats_dialog_response_cb    (StatsControls *data);
-static gdouble     calc_stats                  (StatsControls *data);
+static gdouble     calc_stats                  (gdouble *y_actual,
+                                                gdouble *y_fitted,
+                                                gint ndata);
 static void        fit_graph_cb                (StatsControls *data);
 
 /* The module info. */
@@ -123,11 +128,9 @@ stats_dialog(StatsControls *data)
     GwyGraph *graph;
     GtkDialog *dialog;
     GtkWidget *table, *label;
-    GtkWidget *stat_val;
     GtkWidget *button;
-    gchar buffer[100];
-    gdouble rms;
     GwySIValueFormat *format;
+    gchar buffer[100];
 
     graph = GWY_GRAPH(data->graph);
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
@@ -163,7 +166,7 @@ stats_dialog(StatsControls *data)
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
 
-    label = gtk_label_new("RMS");
+    label = gtk_label_new("Std Dev");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3, 0, 0, 2, 2);
 
@@ -186,64 +189,50 @@ stats_dialog(StatsControls *data)
     gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
-    rms = calc_stats(data);
-    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
-                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                    rms, NULL);
-    g_snprintf(buffer, sizeof(buffer), "%.3f %s", rms/format->magnitude,
-                                                  format->units);
-    stat_val = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(stat_val), buffer);
-    gtk_misc_set_alignment(GTK_MISC(stat_val), 1.0, 0.5);   
-    gtk_table_attach(GTK_TABLE(table), stat_val, 2, 3, 2, 3,
-                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
-
+    data->stat_label = gtk_label_new(NULL);
     button = gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
     gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(fit_graph_cb), data);
+                                    G_CALLBACK(fit_graph_cb),
+                                    data);
+
+    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
+                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    data->stat, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", data->stat/format->magnitude,
+                                                  format->units);
+    gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
+    gtk_misc_set_alignment(GTK_MISC(data->stat_label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 2, 3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->selection_id =
         g_signal_connect_swapped(graph, "selected",
                                  G_CALLBACK(selection_updated_cb),
                                  data);
-//     g_signal_connect_swapped(graph, "selected",
-//                              G_CALLBACK(fit_graph_cb),
-//                              data);
 
     gtk_widget_show_all(GTK_WIDGET(dialog));
 
     selection_updated_cb(data);
-    g_free(format->units);
 
     return TRUE;
 }
 
-/* code for calculating statistics (RMS) */
+/* code for calculating statistics */
 
 static gdouble
-calc_stats(StatsControls *data)
+calc_stats(gdouble *y_actual, gdouble *y_fitted, gint ndata)
 {
-    GwyGraph *graph;
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *current_cmodel;
-    const gdouble *ydata;
-    gdouble rms, sum, avg;
-    gint ndata, i;
-
-    graph = GWY_GRAPH(data->graph);
-    gmodel = gwy_graph_get_model(graph);
-    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
-    ydata = gwy_graph_curve_model_get_ydata(current_cmodel);
-    ndata = gwy_graph_curve_model_get_ndata(current_cmodel);
+    gdouble stat, sum, avg;
+    gint i;
 
     sum = 0;
     for (i = 0; i < ndata; i++)
-        sum = sum + (ydata[i] * ydata[i]);
-    avg = sum/ndata;
-    rms = sqrt(avg);
+        sum = sum + pow((y_actual[i] - y_fitted[i]), 2.0);
+    avg = sum/(ndata-1);
+    stat = sqrt(avg);
 
-    return rms;
+    return stat;
 }
 
 // code for fitting the graphs
@@ -255,7 +244,7 @@ fit_graph_cb(StatsControls *data)
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *current_cmodel, *new_cmodel;
     const gdouble *xs, *ys, *xvals;
-    GwyDataLine *xdata, *ydata;
+    GwyDataLine *xdata, *ydata, *y_actual;
     GwyNLFitPreset *fitfunc;
     gint i, j, ns;
     gboolean ok;
@@ -263,6 +252,9 @@ fit_graph_cb(StatsControls *data)
     gdouble selection[2];
     gint ncurves, count;
     gint selection_start_index, selection_end_index;
+    gdouble stat;
+    GwySIValueFormat *format;
+    gchar buffer[100];
 
     /* NOTE: these will change depending on the deg of poly */
     gint deg_of_poly = 1;
@@ -274,8 +266,7 @@ fit_graph_cb(StatsControls *data)
 
     xdata = gwy_data_line_new(10, 10, FALSE);
     ydata = gwy_data_line_new(10, 10, FALSE);
-
-    g_debug("here5");
+    y_actual = gwy_data_line_new(10, 10, FALSE);
 
     /* normalize data */
     /* FIXME: may put this piece of code in a seperate function */
@@ -294,6 +285,8 @@ fit_graph_cb(StatsControls *data)
         gwy_graph_area_get_selection(area, selection);
         from = selection[0];
         to = selection[1];
+        if (from > to)
+            GWY_SWAP(gdouble, from, to);
     }
     else
     {
@@ -305,16 +298,33 @@ fit_graph_cb(StatsControls *data)
     ys = gwy_graph_curve_model_get_ydata(current_cmodel);
     ns = gwy_graph_curve_model_get_ndata(current_cmodel);
 
+    gwy_data_line_resample(xdata, ns, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(ydata, ns, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(y_actual, ns, GWY_INTERPOLATION_NONE);
+
+    selection_start_index = 0;
+    selection_end_index = ns-1;
+
     /* modify 'ns' according to selection */
     if ((from > xs[0]) || (to < xs[ns-1]))
     {
-        for (i = 0; i <= ns; i++)
+        for (i = 0; i < ns; i++)
         {
-            if (from == xs[i])
+            /* check if from and xs[i] are approx. equal */
+            if (from <= xs[i])
+            {
                 selection_start_index = i;
-
-            if (to == xs[i])
-                selection_end_index = i;
+                break;
+            }
+        }
+        for (i = 0; i < ns; i++)
+        {
+            /* check if 'to' and 'xs[i]' are approx. equal */
+            if (to <= xs[i])
+            {
+                selection_end_index = i-1;
+                break;
+            }
         }
 
         count = 0;
@@ -322,39 +332,32 @@ fit_graph_cb(StatsControls *data)
             count = count + 1;
         ns = count;
     }
-    g_debug("here6");
 
-    gwy_data_line_resample(xdata, ns, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(ydata, ns, GWY_INTERPOLATION_NONE);
-    g_debug("here61");
     j = 0;
     for (i = 0; i < xdata->res; i++)
     {
-        if ((xs[i] >= from && xs[i] <= to)
-            || (from == to))
+        if ((xs[i] >= from && xs[i] <= to) || (from == to))
         {
             if (i == 0)
                 continue;
 
             xdata->data[j] = xs[i];
             ydata->data[j] = ys[i];
+            y_actual->data[j] = ys[i]; /* will be passed to calc_stats func */
             j++;
         }
     }
-    g_debug("here62");
-    if (j < xdata->res) {
+
+    if (j < ns) {
         gwy_data_line_resize(xdata, 0, j);
         gwy_data_line_resize(ydata, 0, j);
     }
     /* end normalize */
 
-    g_debug("here7");
-
     fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(), fit_func_index);
-    gwy_math_fit_polynom(ns, xs, ys, deg_of_poly, coeffs);
+    gwy_math_fit_polynom(ns, xdata->data, ydata->data, deg_of_poly, coeffs);
 
-    g_debug("xdata->res = %d", xdata->res);
-    for (i = 0; i < xdata->res; i++)
+    for (i = 0; i < ns; i++)
     {
         ydata->data[i] = gwy_nlfit_preset_get_value(fitfunc,
                                                     xdata->data[i],
@@ -366,14 +369,26 @@ fit_graph_cb(StatsControls *data)
     gwy_graph_curve_model_set_data(new_cmodel,
                                    xdata->data,
                                    ydata->data,
-                                   xdata->res);
+                                   ns);
     gwy_graph_curve_model_set_description(new_cmodel, "fit");
     gwy_graph_model_add_curve(gmodel, new_cmodel);
+
+    /* create the stat_label */
+    stat = calc_stats(y_actual->data, ydata->data, ns);
+    g_debug("stat = %f", (stat * 1000000));
+    format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
+                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    stat, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s", stat/format->magnitude,
+                                                  format->units);
+    data->stat_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
 
     g_object_unref(new_cmodel);
     g_object_unref(xdata);
     g_object_unref(ydata);
-
+    g_object_unref(y_actual);
+    //g_free(format->units);
 }
 
 
