@@ -152,7 +152,7 @@ gwy_container_class_init(GwyContainerClass *klass)
     /**
     * GwyContainer::item-changed:
     * @gwycontainer: The #GwyContainer which received the signal.
-    * @arg1: The key identifying the changed item.
+    * @arg1: The quark key identifying the changed item.
     *
     * The ::item-changed signal is emitted whenever a container item is
     * changed.  The detail is the string key identifier.
@@ -164,9 +164,9 @@ gwy_container_class_init(GwyContainerClass *klass)
                            | G_SIGNAL_NO_RECURSE,
                        G_STRUCT_OFFSET(GwyContainerClass, item_changed),
                        NULL, NULL,
-                       g_cclosure_marshal_VOID__STRING,
+                       g_cclosure_marshal_VOID__UINT,
                        G_TYPE_NONE, 1,
-                       G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE);
+                       G_TYPE_UINT);
 }
 
 static void
@@ -329,8 +329,7 @@ gwy_container_remove(GwyContainer *container, GQuark key)
 #endif
 
     g_hash_table_remove(container->values, GUINT_TO_POINTER(key));
-    g_signal_emit(container, container_signals[ITEM_CHANGED], key,
-                  g_quark_to_string(key));
+    g_signal_emit(container, container_signals[ITEM_CHANGED], key, key);
 
     return TRUE;
 }
@@ -367,8 +366,7 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     pfdata.keylist = g_slist_reverse(pfdata.keylist);
     for (l = pfdata.keylist; l; l = g_slist_next(l))
         g_signal_emit(container, container_signals[ITEM_CHANGED],
-                      GPOINTER_TO_UINT(l->data),
-                      g_quark_to_string((GQuark)GPOINTER_TO_UINT(l->data)));
+                      GPOINTER_TO_UINT(l->data), GPOINTER_TO_UINT(l->data));
     g_slist_free(pfdata.keylist);
 
     return pfdata.count;
@@ -511,10 +509,8 @@ gwy_container_rename(GwyContainer *container,
 
     g_hash_table_insert(container->values, GUINT_TO_POINTER(newkey), value);
     g_hash_table_steal(container->values, GUINT_TO_POINTER(key));
-    g_signal_emit(container, container_signals[ITEM_CHANGED], key,
-                  g_quark_to_string(key));
-    g_signal_emit(container, container_signals[ITEM_CHANGED], newkey,
-                  g_quark_to_string(newkey));
+    g_signal_emit(container, container_signals[ITEM_CHANGED], key, key);
+    g_signal_emit(container, container_signals[ITEM_CHANGED], newkey, newkey);
 
     return TRUE;
 }
@@ -1304,8 +1300,7 @@ gwy_container_try_set_one(GwyContainer *container,
         g_value_copy(value, old);
 
     if (changed && !container->in_construction)
-        g_signal_emit(container, container_signals[ITEM_CHANGED], key,
-                      g_quark_to_string(key));
+        g_signal_emit(container, container_signals[ITEM_CHANGED], key, key);
 
     return TRUE;
 }

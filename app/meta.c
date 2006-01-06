@@ -64,7 +64,7 @@ static void       gwy_meta_browser_add_line     (gpointer hkey,
                                                  GValue *value,
                                                  GSList **slist);
 static void       gwy_meta_item_changed         (GwyContainer *container,
-                                                 const gchar *key,
+                                                 GQuark quark,
                                                  MetadataBrowser *browser);
 static void       gwy_meta_new_item             (MetadataBrowser *browser);
 static void       gwy_meta_delete_item          (MetadataBrowser *browser);
@@ -361,20 +361,21 @@ gwy_meta_browser_add_line(gpointer hkey,
 
 static void
 gwy_meta_item_changed(GwyContainer *container,
-                      const gchar *key,
+                      GQuark quark,
                       MetadataBrowser *browser)
 {
     GtkTreeViewColumn *column;
     GtkTreeModel *model;
     GtkTreePath *path;
     GtkTreeIter iter;
-    GQuark quark, q = 0;
+    const gchar *key;
+    GQuark q = 0;
 
+    key = g_quark_to_string(quark);
     if (!g_str_has_prefix(key, "/meta/"))
         return;
 
     gwy_debug("Meta item <%s> changed", key);
-    quark = g_quark_try_string(key);
     g_return_if_fail(quark);
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(browser->treeview));
 
