@@ -475,7 +475,7 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
  * @container: A container.
  * @key: The current key.
  * @newkey: A new key for the value.
- * @force: Whether to delete existing value at @newkey.
+ * @force: Whether to replace existing value at @newkey.
  *
  * Makes a value in @container identified by @key to be identified by @newkey.
  *
@@ -491,17 +491,13 @@ gwy_container_rename(GwyContainer *container,
                      GQuark newkey,
                      gboolean force)
 {
-    GValue *value, *oldvalue;
+    GValue *value;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(container), FALSE);
     g_return_val_if_fail(key, FALSE);
     if (key == newkey)
         return TRUE;
 
-    /* XXX: This is broken because we gwy_container_remove() unsets a value
-     * we already stealed string from with g_value_take_string().  Must
-     * implement this with low level functions */
-    /* TODO: notify */
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!value)
         return FALSE;
@@ -509,11 +505,16 @@ gwy_container_rename(GwyContainer *container,
     if (g_hash_table_lookup(container->values, GUINT_TO_POINTER(newkey))) {
         if (!force)
             return FALSE;
-        gwy_container_try_set_one(container, newkey, value, TRUE, FALSE);
+
+        g_hash_table_remove(container->values, GUINT_TO_POINTER(newkey));
     }
-    else
-        gwy_container_try_set_one(container, newkey, value, FALSE, TRUE);
-    gwy_container_remove(container, key);
+
+    g_hash_table_insert(container->values, GUINT_TO_POINTER(newkey), value);
+    g_hash_table_steal(container->values, GUINT_TO_POINTER(key));
+    g_signal_emit(container, container_signals[ITEM_CHANGED], key,
+                  g_quark_to_string(key));
+    g_signal_emit(container, container_signals[ITEM_CHANGED], newkey,
+                  g_quark_to_string(newkey));
 
     return TRUE;
 }
