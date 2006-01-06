@@ -66,7 +66,8 @@ static void       gwy_meta_browser_add_line     (gpointer hkey,
 static void       gwy_meta_item_changed         (GwyContainer *container,
                                                  const gchar *key,
                                                  MetadataBrowser *browser);
-static void       gwy_meta_delete               (MetadataBrowser *browser);
+static void       gwy_meta_new_item             (MetadataBrowser *browser);
+static void       gwy_meta_delete_item          (MetadataBrowser *browser);
 static void       gwy_meta_destroy              (MetadataBrowser *browser);
 static void       gwy_meta_data_finalized       (MetadataBrowser *browser);
 
@@ -130,11 +131,13 @@ gwy_app_metadata_browser(GwyDataWindow *data_window)
 
     browser->new = gwy_stock_like_button_new(_("_New"), GTK_STOCK_NEW);
     gtk_box_pack_start(GTK_BOX(hbox), browser->new, TRUE, TRUE, 0);
+    g_signal_connect_swapped(browser->new, "clicked",
+                             G_CALLBACK(gwy_meta_new_item), browser);
 
     browser->delete = gwy_stock_like_button_new(_("_Delete"), GTK_STOCK_DELETE);
     gtk_box_pack_start(GTK_BOX(hbox), browser->delete, TRUE, TRUE, 0);
     g_signal_connect_swapped(browser->delete, "clicked",
-                             G_CALLBACK(gwy_meta_delete), browser);
+                             G_CALLBACK(gwy_meta_delete_item), browser);
 
     browser->close = gwy_stock_like_button_new(_("_Close"), GTK_STOCK_CLOSE);
     gtk_box_pack_start(GTK_BOX(hbox), browser->close, TRUE, TRUE, 0);
@@ -239,6 +242,22 @@ gwy_meta_browser_construct(MetadataBrowser *browser)
     return tree;
 }
 
+static gboolean
+gwy_meta_validate_key(const gchar *key)
+{
+    if (!key || !*key)
+        return FALSE;
+
+    while (*key) {
+        gchar c = *key;
+
+        if (c < ' ' || c == '/' || c == '<' || c == '>' || c == '&' || c == 127)
+            return FALSE;
+        key++;
+    }
+    return TRUE;
+}
+
 static void
 gwy_meta_cell_edited(GtkCellRendererText *renderer,
                      const gchar *strpath,
@@ -248,7 +267,8 @@ gwy_meta_cell_edited(GtkCellRendererText *renderer,
     GtkTreeModel *model;
     GtkTreePath *path;
     GtkTreeIter iter;
-    GQuark oldkey;
+    GQuark oldkey, quark;
+    gchar *s;
     guint col;
 
     col = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(renderer), "column"));
@@ -262,6 +282,12 @@ gwy_meta_cell_edited(GtkCellRendererText *renderer,
     gtk_tree_model_get(model, &iter, META_KEY, &oldkey, -1);
     switch (col) {
         case META_KEY:
+        if (gwy_meta_validate_key(text)) {
+            s = g_strconcat("/meta/", text, NULL);
+            quark = g_quark_from_string(s);
+            gwy_container_rename(browser->container, oldkey, quark, FALSE);
+            g_free(s);
+        }
         break;
 
         case META_VALUE:
@@ -338,6 +364,7 @@ gwy_meta_item_changed(GwyContainer *container,
                       const gchar *key,
                       MetadataBrowser *browser)
 {
+    GtkTreeViewColumn *column;
     GtkTreeModel *model;
     GtkTreePath *path;
     GtkTreeIter iter;
@@ -369,10 +396,48 @@ gwy_meta_item_changed(GwyContainer *container,
 
     gtk_list_store_append(GTK_LIST_STORE(model), &iter);
     gtk_list_store_set(GTK_LIST_STORE(model), &iter, META_KEY, quark, -1);
+    path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(browser->treeview), path,
+                                 NULL, FALSE, 0.0, 0.0);
+    column = gtk_tree_view_get_column(GTK_TREE_VIEW(browser->treeview),
+                                      META_KEY);
+    /*
+    gtk_tree_view_set_cursor(GTK_TREE_VIEW(browser->treeview), path,
+                             column, TRUE);
+    gtk_widget_grab_focus(browser->treeview);
+    */
+    gtk_tree_path_free(path);
 }
 
 static void
-gwy_meta_delete(MetadataBrowser *browser)
+gwy_meta_new_item(MetadataBrowser *browser)
+{
+    static const gchar *whatever[] = {
+        "angary", "bistere", "couchant", "dolerite", "envoy", "figwort",
+        "gudgeon", "hidalgo", "ictus", "jibbah", "kenosis", "logie",
+        "maser", "nephology", "ozalid", "parallax", "reduit", "savate",
+        "thyristor", "urate", "versicle", "wapentake", "xystus",
+        "yogh", "zeugma",
+    };
+    static GQuark quark = 0;
+    gchar *s;
+
+    if (!quark) {
+        s = g_strconcat("/meta/", _("New item"), NULL);
+        quark = g_quark_from_string(s);
+        g_free(s);
+    }
+    if (!gwy_container_contains(browser->container, quark)) {
+        if (g_random_int() % 4 == 0)
+            s = g_strdup(whatever[g_random_int() % G_N_ELEMENTS(whatever)]);
+        else
+            s = g_strdup("");
+        gwy_container_set_string(browser->container, quark, s);
+    }
+}
+
+static void
+gwy_meta_delete_item(MetadataBrowser *browser)
 {
     GtkTreeSelection *selection;
     GtkTreeModel *model;
