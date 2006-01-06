@@ -498,18 +498,21 @@ gwy_container_rename(GwyContainer *container,
     if (key == newkey)
         return TRUE;
 
+    /* XXX: This is broken because we gwy_container_remove() unsets a value
+     * we already stealed string from with g_value_take_string().  Must
+     * implement this with low level functions */
     /* TODO: notify */
     value = g_hash_table_lookup(container->values, GUINT_TO_POINTER(key));
     if (!value)
         return FALSE;
 
-    oldvalue = g_hash_table_lookup(container->values, GUINT_TO_POINTER(newkey));
-    if (oldvalue) {
+    if (g_hash_table_lookup(container->values, GUINT_TO_POINTER(newkey))) {
         if (!force)
             return FALSE;
-        gwy_container_remove(container, newkey);
+        gwy_container_try_set_one(container, newkey, value, TRUE, FALSE);
     }
-    gwy_container_set_value(container, newkey, value, NULL);
+    else
+        gwy_container_try_set_one(container, newkey, value, FALSE, TRUE);
     gwy_container_remove(container, key);
 
     return TRUE;
