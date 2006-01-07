@@ -23,61 +23,41 @@
 
 #include <glib.h>
 #include <libprocess/dataline.h>
+#include <libgwyddion/gwyresource.h>
+
 
 G_BEGIN_DECLS
 
-/* XXX: remove, or remove presets.  Both don't make sense */
-typedef enum {
-      GWY_CD_LINE_ULINEHEIGHT  = 0,
-      GWY_CD_LINE_ULINEWIDTH   = 1,
-      GWY_CD_LINE_DLINEHEIGHT  = 2,
-      GWY_CD_LINE_DLINEWIDTH   = 3,
-      GWY_CD_LINE_USTEPHEIGHT  = 4,
-      GWY_CD_LINE_DSTEPHEIGHT  = 5,
-      GWY_CD_LINE_RECTSIGNAL   = 6,
-      GWY_CD_LINE_SAWSIGNAL    = 7,
-      GWY_CD_LINE_SINSIGNAL    = 8,
-      GWY_CD_LINE_PARTICLE     = 9,
-      GWY_CD_LINE_HOLE         = 10
-} GwyCDLineType;
+#define GWY_TYPE_CDLINE_PRESET             (gwy_cdline_preset_get_type())
+#define GWY_CDLINE_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CDLINE_PRESET, GwyCDLinePreset))
+#define GWY_CDLINE_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CDLINE_PRESET, GwyCDLinePresetClass))
+#define GWY_IS_CDLINE_PRESET(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_CDLINE_PRESET))
+#define GWY_IS_CDLINE_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_CDLINE_PRESET))
+#define GWY_CDLINE_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_CDLINE_PRESET, GwyCDLinePresetClass))
 
-typedef gdouble (*GwyCDLineFitFunc)(gdouble x,
-                                    gint n_param,
-                                    gdouble *param,
-                                    gpointer user_data,
-                                    gboolean *fres);
 
-typedef void (*GwyCDLineCDFunc)(const gdouble *x,
-                                const gdouble *y,
-                                gint n_dat,
-                                gdouble *param,
-                                gdouble *err,
-                                gpointer user_data,
-                                gboolean *fres);
-
+typedef struct _GwyCDLinePresetBuiltin  GwyCDLinePresetBuiltin;
 typedef struct _GwyCDLinePreset GwyCDLinePreset;
-typedef struct _GwyCDLineParam GwyCDLineParam;
+typedef struct _GwyCDLinePresetClass GwyCDLinePresetClass;
+
 
 struct _GwyCDLinePreset {
-    const gchar *function_name;
-    const gchar *group_name;
-    const gchar *function_formula;
-    GwyCDLineFitFunc function;
-    GwyCDLineCDFunc function_fit;
-    gint nparams;
-    const GwyCDLineParam *param;
-    gpointer _reserved1;
+    GwyResource parent_instance;
+
+   const GwyCDLinePresetBuiltin *builtin;
+
+   gpointer reserved1;
+   gpointer reserved2;
+};
+
+struct _GwyCDLinePresetClass {
+    GwyResourceClass parent_class;
+
+    gpointer reserved1;
+    gpointer reserved2;
 };
 
 
-gint            gwy_cdline_get_npresets      (void)
-                                              G_GNUC_CONST;
-G_CONST_RETURN
-GwyCDLinePreset* gwy_cdline_get_preset        (gint preset_id)
-                                               G_GNUC_CONST;
-G_CONST_RETURN
-GwyCDLinePreset* gwy_cdline_get_preset_by_name(const gchar *name);
-gint            gwy_cdline_get_preset_id     (const GwyCDLinePreset* preset);
 G_CONST_RETURN
 gchar*          gwy_cdline_get_preset_name   (const GwyCDLinePreset* preset);
 G_CONST_RETURN
@@ -97,6 +77,7 @@ void            gwy_cdline_fit_preset        (const GwyCDLinePreset* preset,
                                               gdouble *err,
                                               const gboolean *fixed_param,
                                               gpointer user_data);
+GwyInventory*   gwy_cdline_presets              (void);
 
 G_END_DECLS
 
