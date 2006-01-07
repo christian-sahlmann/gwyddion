@@ -73,7 +73,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     gdouble c, bx, by, b2;
     gdouble p, progress, maxb2 = 666, eps = 1e-8;
     gint i;
-    gboolean canceled = FALSE;
+    gboolean cancelled = FALSE;
 
     g_return_val_if_fail(run & LEVEL_RUN_MODES, FALSE);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
@@ -103,19 +103,19 @@ facet_level(GwyContainer *data, GwyRunType run)
         progress = MAX(progress, p);
         progress = MAX(progress, i/100.0);
         if (!gwy_app_wait_set_fraction(progress)) {
-            canceled = TRUE;
+            cancelled = TRUE;
             break;
         }
     };
     gwy_app_wait_finish();
-    if (!canceled) {
+    if (!cancelled) {
         gwy_app_undo_checkpoint(data, "/0/data", NULL);
         gwy_data_field_copy(dfield, old, FALSE);
         gwy_data_field_data_changed(old);
     }
     g_object_unref(dfield);
 
-    return !canceled;
+    return !cancelled;
 }
 
 static void

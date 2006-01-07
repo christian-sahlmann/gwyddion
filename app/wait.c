@@ -25,14 +25,14 @@
 
 static void gwy_app_wait_create_dialog (GtkWidget *window,
                                         const gchar *message);
-static void gwy_app_wait_canceled      (void);
+static void gwy_app_wait_cancelled      (void);
 
 static GtkWidget *wait_widget  = NULL;
 static GtkWidget *dialog = NULL;
 static GtkWidget *progress = NULL;
 static GtkWidget *label = NULL;
 static gchar *message_prefix = NULL;
-static gboolean canceled = FALSE;
+static gboolean cancelled = FALSE;
 static gboolean silent_waiting = FALSE;
 
 /**
@@ -57,7 +57,7 @@ gwy_app_wait_start(GtkWidget *window,
         return;
     }
 
-    canceled = FALSE;
+    cancelled = FALSE;
     if (!window)
         silent_waiting = TRUE;
     else
@@ -77,8 +77,8 @@ gwy_app_wait_start(GtkWidget *window,
 void
 gwy_app_wait_finish(void)
 {
-    if (canceled) {
-        canceled = FALSE;
+    if (cancelled) {
+        cancelled = FALSE;
         return;
     }
 
@@ -118,7 +118,7 @@ gwy_app_wait_create_dialog(GtkWidget *window,
                        FALSE, FALSE, 4);
 
     g_signal_connect(dialog, "response",
-                     G_CALLBACK(gwy_app_wait_canceled), NULL);
+                     G_CALLBACK(gwy_app_wait_cancelled), NULL);
 
     gtk_widget_show_all(dialog);
     gtk_window_present(GTK_WINDOW(dialog));
@@ -149,7 +149,7 @@ gwy_app_wait_switch_widget(GtkWidget *window,
 
     while (gtk_events_pending())
         gtk_main_iteration();
-    if (canceled)
+    if (cancelled)
         return FALSE;
 
     wait_widget = window;
@@ -159,7 +159,7 @@ gwy_app_wait_switch_widget(GtkWidget *window,
 
     if (message)
         gwy_app_wait_set_message(message);
-    return !canceled;
+    return !cancelled;
 }
 
 /**
@@ -182,7 +182,7 @@ gwy_app_wait_set_message(const gchar *message)
 
     while (gtk_events_pending())
         gtk_main_iteration();
-    if (canceled)
+    if (cancelled)
         return FALSE;
 
     g_return_val_if_fail(dialog, FALSE);
@@ -197,7 +197,7 @@ gwy_app_wait_set_message(const gchar *message)
     while (gtk_events_pending())
         gtk_main_iteration();
 
-    return !canceled;
+    return !cancelled;
 }
 
 /**
@@ -216,7 +216,7 @@ gwy_app_wait_set_message_prefix(const gchar *prefix)
 {
     if (silent_waiting)
         return TRUE;
-    if (canceled)
+    if (cancelled)
         return FALSE;
 
     g_return_val_if_fail(dialog, FALSE);
@@ -226,7 +226,7 @@ gwy_app_wait_set_message_prefix(const gchar *prefix)
     while (gtk_events_pending())
         gtk_main_iteration();
 
-    return !canceled;
+    return !cancelled;
 }
 
 /**
@@ -248,7 +248,7 @@ gwy_app_wait_set_fraction(gdouble fraction)
 
     while (gtk_events_pending())
         gtk_main_iteration();
-    if (canceled)
+    if (cancelled)
         return FALSE;
 
     g_return_val_if_fail(dialog, FALSE);
@@ -263,14 +263,14 @@ gwy_app_wait_set_fraction(gdouble fraction)
     while (gtk_events_pending())
         gtk_main_iteration();
 
-    return !canceled;
+    return !cancelled;
 }
 
 static void
-gwy_app_wait_canceled(void)
+gwy_app_wait_cancelled(void)
 {
     gwy_app_wait_finish();
-    canceled = TRUE;
+    cancelled = TRUE;
 }
 
 /************************** Documentation ****************************/
