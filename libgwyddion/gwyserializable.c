@@ -1013,8 +1013,8 @@ gwy_serialize_spec_get_size(const GwySerializeSpec *sp)
  **/
 static inline gint32
 gwy_deserialize_int32(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
+                      gsize size,
+                      gsize *position)
 {
     gint32 value;
 
@@ -1045,8 +1045,8 @@ gwy_deserialize_int32(const guchar *buffer,
  **/
 static inline guchar
 gwy_deserialize_char(const guchar *buffer,
-                          gsize size,
-                          gsize *position)
+                     gsize size,
+                     gsize *position)
 {
     guchar value;
 
@@ -1471,8 +1471,8 @@ gwy_deserialize_hash_items(const guchar *buffer,
  **/
 static inline gboolean
 gwy_deserialize_boolean(const guchar *buffer,
-                             gsize size,
-                             gsize *position)
+                        gsize size,
+                        gsize *position)
 {
     gboolean value;
 
@@ -1503,9 +1503,9 @@ gwy_deserialize_boolean(const guchar *buffer,
  **/
 static inline guchar*
 gwy_deserialize_char_array(const guchar *buffer,
-                                gsize size,
-                                gsize *position,
-                                gsize *asize)
+                           gsize size,
+                           gsize *position,
+                           gsize *asize)
 {
     guchar *value;
     gsize newasize;
@@ -1540,9 +1540,9 @@ gwy_deserialize_char_array(const guchar *buffer,
  **/
 static inline gint32*
 gwy_deserialize_int32_array(const guchar *buffer,
-                                 gsize size,
-                                 gsize *position,
-                                 gsize *asize)
+                            gsize size,
+                            gsize *position,
+                            gsize *asize)
 {
     gint32 *value;
     gsize newasize;
@@ -1582,8 +1582,8 @@ gwy_deserialize_int32_array(const guchar *buffer,
  **/
 static inline gint64
 gwy_deserialize_int64(const guchar *buffer,
-                           gsize size,
-                           gsize *position)
+                      gsize size,
+                      gsize *position)
 {
     gint64 value;
 
@@ -1615,9 +1615,9 @@ gwy_deserialize_int64(const guchar *buffer,
  **/
 static inline gint64*
 gwy_deserialize_int64_array(const guchar *buffer,
-                                 gsize size,
-                                 gsize *position,
-                                 gsize *asize)
+                            gsize size,
+                            gsize *position,
+                            gsize *asize)
 {
     gint64 *value;
     gsize newasize;
@@ -1657,8 +1657,8 @@ gwy_deserialize_int64_array(const guchar *buffer,
  **/
 static inline gdouble
 gwy_deserialize_double(const guchar *buffer,
-                            gsize size,
-                            gsize *position)
+                       gsize size,
+                       gsize *position)
 {
     gdouble value;
 
@@ -1694,9 +1694,9 @@ gwy_deserialize_double(const guchar *buffer,
  **/
 static inline gdouble*
 gwy_deserialize_double_array(const guchar *buffer,
-                                  gsize size,
-                                  gsize *position,
-                                  gsize *asize)
+                             gsize size,
+                             gsize *position,
+                             gsize *asize)
 {
     gdouble *value;
     gsize newasize;
@@ -1736,8 +1736,8 @@ gwy_deserialize_double_array(const guchar *buffer,
  **/
 static inline guchar*
 gwy_deserialize_string(const guchar *buffer,
-                            gsize size,
-                            gsize *position)
+                       gsize size,
+                       gsize *position)
 {
     guchar *value;
     const guchar *p;

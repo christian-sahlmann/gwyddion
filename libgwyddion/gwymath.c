@@ -243,7 +243,7 @@ gwy_math_lin_solve_rewrite(gint n, gdouble *matrix,
         piv = row[pivj];
         perm[i] = pivj;
 
-        /* substract */
+        /* subtract */
         for (j = i+1; j < n; j++) {
             gdouble *jrow = matrix + j*n;
             gdouble q = jrow[pivj]/piv;
