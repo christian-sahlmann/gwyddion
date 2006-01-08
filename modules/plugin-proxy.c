@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
     GwyFileFuncInfo func;
-    GwyFileOperation run;
+    GwyFileOperationType run;
     gchar *glob;
     GPatternSpec **pattern;
     glong *specificity;
@@ -110,15 +110,19 @@ static GList*          file_register_plugins     (GList *plugins,
                                                   const gchar *dir,
                                                   gchar *buffer);
 static GwyContainer*   file_plugin_proxy_load    (const gchar *filename,
+                                                  GwyRunType mode,
+                                                  GError **error,
                                                   const gchar *name);
 static gboolean        file_plugin_proxy_save    (GwyContainer *data,
                                                   const gchar *filename,
+                                                  GwyRunType mode,
+                                                  GError **error,
                                                   const gchar *name);
 static gint        file_plugin_proxy_detect  (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name,
                                               const gchar *name);
 static FilePluginInfo* file_find_plugin          (const gchar *name,
-                                                  GwyFileOperation run);
+                                                  GwyFileOperationType run);
 static GPatternSpec**  file_patternize_globs     (const gchar *glob);
 static glong*          file_glob_specificities   (const gchar *glob);
 static glong           file_pattern_specificity  (const gchar *pattern);
@@ -143,7 +147,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.3",
+    "3.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -165,8 +169,8 @@ static const GwyEnum run_mode_names[] = {
 };
 
 static const GwyEnum file_op_names[] = {
-    { "load", GWY_FILE_LOAD },
-    { "save", GWY_FILE_SAVE },
+    { "load", GWY_FILE_OPERATION_LOAD   },
+    { "save", GWY_FILE_OPERATION_EXPORT },
     { NULL,   -1 }
 };
 
@@ -603,7 +607,7 @@ file_register_plugins(GList *plugins,
 {
     FilePluginInfo *info;
     gchar *pname = NULL, *file_desc = NULL, *run_modes = NULL, *glob = NULL;
-    GwyFileOperation run;
+    GwyFileOperationType run;
 
     gwy_debug("buffer: <<<%s>>>", buffer);
     while (buffer) {
@@ -620,10 +624,10 @@ file_register_plugins(GList *plugins,
             info->func.name = g_strdup(pname);
             info->func.file_desc = g_strdup(file_desc);
             info->func.detect = file_plugin_proxy_detect;
-            info->func.load = (run & GWY_FILE_LOAD) ? file_plugin_proxy_load
-                                                    : NULL;
-            info->func.save = (run & GWY_FILE_SAVE) ? file_plugin_proxy_save
-                                                    : NULL;
+            info->func.load = (run & GWY_FILE_OPERATION_LOAD)
+                              ? file_plugin_proxy_load : NULL;
+            info->func.save = (run & GWY_FILE_OPERATION_EXPORT)
+                              ? file_plugin_proxy_save : NULL;
             if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 info->run = run;
@@ -653,6 +657,8 @@ file_register_plugins(GList *plugins,
 /**
  * file_plugin_proxy_load:
  * @filename. A file name to load.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  * @name: Plug-in name (i.e. file-loading function) to run.
  *
  * The plug-in proxy itself, runs file-loading plug-in @name to load @filename.
@@ -662,6 +668,8 @@ file_register_plugins(GList *plugins,
  **/
 static GwyContainer*
 file_plugin_proxy_load(const gchar *filename,
+                       GwyRunType mode,
+                       GError **error,
                        const gchar *name)
 {
     FilePluginInfo *info;
@@ -676,13 +684,20 @@ file_plugin_proxy_load(const gchar *filename,
     gboolean ok;
 
     gwy_debug("called as %s with file `%s'", name, filename);
-    if (!(info = file_find_plugin(name, GWY_FILE_LOAD)))
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Plugin-proxy must be run as interactive"));
+        return NULL;
+    }
+    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_LOAD)))
         return FALSE;
 
     if (!(fh = open_temporary_file(&tmpname)))
         return FALSE;
     args[0] = info->file;
-    args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_LOAD, file_op_names, -1));
+    args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_OPERATION_LOAD,
+                                          file_op_names, -1));
     args[2] = tmpname;
     args[3] = decode_glib_encoded_filename(filename);
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
@@ -721,6 +736,8 @@ file_plugin_proxy_load(const gchar *filename,
  * file_plugin_proxy_save:
  * @data: A data container to save.
  * @filename: A file name to save @data to.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  * @name: Plug-in name (i.e. file-saving function) to run.
  *
  * The plug-in proxy itself, runs file-saving plug-in @name to save @filename.
@@ -730,6 +747,8 @@ file_plugin_proxy_load(const gchar *filename,
 static gboolean
 file_plugin_proxy_save(GwyContainer *data,
                        const gchar *filename,
+                       GwyRunType mode,
+                       GError **error,
                        const gchar *name)
 {
     FilePluginInfo *info;
@@ -741,13 +760,20 @@ file_plugin_proxy_save(GwyContainer *data,
     gboolean ok;
 
     gwy_debug("called as %s with file `%s'", name, filename);
-    if (!(info = file_find_plugin(name, GWY_FILE_SAVE)))
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Plugin-proxy must be run as interactive"));
+        return FALSE;
+    }
+    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_EXPORT)))
         return FALSE;
 
     fh = text_dump_export(data, &tmpname);
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
-    args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_SAVE, file_op_names, -1));
+    args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_OPERATION_EXPORT,
+                                          file_op_names, -1));
     args[2] = tmpname;
     args[3] = decode_glib_encoded_filename(filename);
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
@@ -793,7 +819,7 @@ file_plugin_proxy_detect(const GwyFileDetectInfo *fileinfo,
     gint i, max;
 
     gwy_debug("called as %s with file `%s'", name, fileinfo->name);
-    if (!(info = file_find_plugin(name, GWY_FILE_MASK)))
+    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_MASK)))
         return 0;
 
     max = G_MININT;
@@ -820,7 +846,7 @@ file_plugin_proxy_detect(const GwyFileDetectInfo *fileinfo,
  **/
 static FilePluginInfo*
 file_find_plugin(const gchar *name,
-                 GwyFileOperation run)
+                 GwyFileOperationType run)
 {
     FilePluginInfo *info;
     GList *l;

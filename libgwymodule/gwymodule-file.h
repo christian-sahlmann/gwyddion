@@ -21,13 +21,23 @@
 #ifndef __GWY_MODULE_FILE_H__
 #define __GWY_MODULE_FILE_H__
 
-#include <gtk/gtkobject.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libgwymodule/gwymoduleenums.h>
 
 G_BEGIN_DECLS
 
 #define GWY_FILE_DETECT_BUFFER_SIZE 4096U
+
+#define GWY_MODULE_FILE_ERROR gwy_module_file_error_quark()
+
+typedef enum {
+    GWY_MODULE_FILE_ERROR_CANCELLED,
+    GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+    GWY_MODULE_FILE_ERROR_IO,
+    GWY_MODULE_FILE_ERROR_CORRUPTED,
+    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+    GWY_MODULE_FILE_ERROR_SPECIFIC
+} GwyModuleFileError;
 
 typedef struct {
     const gchar *name;
@@ -43,9 +53,13 @@ typedef gint           (*GwyFileDetectFunc) (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name,
                                              const gchar *name);
 typedef GwyContainer*  (*GwyFileLoadFunc)   (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error,
                                              const gchar *name);
 typedef gboolean       (*GwyFileSaveFunc)   (GwyContainer *data,
                                              const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error,
                                              const gchar *name);
 
 struct _GwyFileFuncInfo {
@@ -54,33 +68,53 @@ struct _GwyFileFuncInfo {
     GwyFileDetectFunc detect;
     GwyFileLoadFunc load;
     GwyFileSaveFunc save;
+    GwyFileSaveFunc export_;
 };
 
-gboolean          gwy_file_func_register        (const gchar *modname,
-                                                 GwyFileFuncInfo *func_info);
-gint              gwy_file_func_run_detect      (const gchar *name,
-                                                 const gchar *filename,
-                                                 gboolean only_name);
-GwyContainer*     gwy_file_func_run_load        (const gchar *name,
-                                                 const gchar *filename);
-gboolean          gwy_file_func_run_save        (const gchar *name,
-                                                 GwyContainer *data,
-                                                 const gchar *filename);
-GwyFileOperation  gwy_file_func_get_operations  (const gchar *name);
-const gchar*      gwy_file_func_get_description (const gchar *name);
-/* high-level interface */
-G_CONST_RETURN
-gchar*          gwy_file_detect             (const gchar *filename,
-                                             gboolean only_name,
-                                             GwyFileOperation operations);
-GwyContainer*   gwy_file_load               (const gchar *filename);
-gboolean        gwy_file_save               (GwyContainer *data,
-                                             const gchar *filename);
+/* low-level interface */
+gboolean      gwy_file_func_register  (const gchar *modname,
+                                       const GwyFileFuncInfo *func_info);
+gint          gwy_file_func_run_detect(const gchar *name,
+                                       const gchar *filename,
+                                       gboolean only_name);
+GwyContainer* gwy_file_func_run_load  (const gchar *name,
+                                       const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+gboolean      gwy_file_func_run_save  (const gchar *name,
+                                       GwyContainer *data,
+                                       const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
+gboolean      gwy_file_func_run_export(const gchar *name,
+                                       GwyContainer *data,
+                                       const gchar *filename,
+                                       GwyRunType mode,
+                                       GError **error);
 
+GwyFileOperationType gwy_file_func_get_operations (const gchar *name);
+const gchar*         gwy_file_func_get_description(const gchar *name);
+
+/* high-level interface */
+const gchar*  gwy_file_detect(const gchar *filename,
+                              gboolean only_name,
+                              GwyFileOperationType operations);
+GwyContainer* gwy_file_load  (const gchar *filename,
+                              GwyRunType mode,
+                              GError **error);
+gboolean      gwy_file_save  (GwyContainer *data,
+                              const gchar *filename,
+                              GwyRunType mode,
+                              GError **error);
+
+GQuark gwy_module_file_error_quark(void);
+
+/* FIXME: kill this */
+#include <gtk/gtkobject.h>
 GtkObject*      gwy_file_func_build_menu    (GtkObject *item_factory,
                                              const gchar *prefix,
                                              GCallback item_callback,
-                                             GwyFileOperation type);
+                                             GwyFileOperationType type);
 
 G_END_DECLS
 

@@ -26,23 +26,28 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    GWY_FILE_NONE   = 0,
-    GWY_FILE_LOAD   = 1 << 0,
-    GWY_FILE_SAVE   = 1 << 1,
-    GWY_FILE_DETECT = 1 << 2,
-    GWY_FILE_MASK   = 0x07
-} GwyFileOperation;
+    GWY_FILE_OPERATION_DETECT = 1 << 0,
+    GWY_FILE_OPERATION_LOAD   = 1 << 1,
+    GWY_FILE_OPERATION_SAVE   = 1 << 2,
+    GWY_FILE_OPERATION_EXPORT = 1 << 3,
+    GWY_FILE_OPERATION_MASK   = 0x0f
+} GwyFileOperationType;
 
+/* FIXME: remove, more detailed interface needed */
 typedef enum {
     GWY_TOOL_SWITCH_WINDOW = 1,
     GWY_TOOL_SWITCH_TOOL
 } GwyToolSwitchEvent;
 
+/* FIXME: should have only two values: INTERACTIVE, NONINTERACTIVE, remove
+ * the rest (plugin-proxy must still accept all the names, but map the
+ * unimplemented to these two). */
 typedef enum {
     GWY_RUN_NONE           = 0,
     GWY_RUN_WITH_DEFAULTS  = 1 << 0,
     GWY_RUN_NONINTERACTIVE = 1 << 1,
     GWY_RUN_MODAL          = 1 << 2,
+    GWY_RUN_INTERACTIVE    = GWY_RUN_MODAL,
     GWY_RUN_MASK           = 0x0f
 } GwyRunType;
 

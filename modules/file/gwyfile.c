@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <errno.h>
 
 #include <glib/gstdio.h>
 
@@ -41,9 +42,13 @@
 static gboolean      module_register         (const gchar *name);
 static gint          gwyfile_detect          (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
-static GwyContainer* gwyfile_load            (const gchar *filename);
+static GwyContainer* gwyfile_load            (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
 static gboolean      gwyfile_save            (GwyContainer *data,
-                                              const gchar *filename);
+                                              const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
 static GObject*      gwy_container_deserialize_old (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position);
@@ -55,7 +60,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -73,6 +78,7 @@ module_register(const gchar *name)
         (GwyFileDetectFunc)&gwyfile_detect,
         (GwyFileLoadFunc)&gwyfile_load,
         (GwyFileSaveFunc)&gwyfile_save,
+        NULL,
     };
 
     gwy_file_func_register(name, &gwyfile_func_info);
@@ -98,23 +104,29 @@ gwyfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-gwyfile_load(const gchar *filename)
+gwyfile_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
-    GObject *object, *dfield;
+    GObject *object;
     GError *err = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
     gsize pos = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (size < MAGIC_SIZE
         || (memcmp(buffer, MAGIC, MAGIC_SIZE)
             && memcmp(buffer, MAGIC2, MAGIC_SIZE))) {
-        g_warning("File %s doesn't seem to be a .gwy file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_CORRUPTED,
+                    _("File does not seem to be a .gwy file."));
         if (!gwy_file_abandon_contents(buffer, size, &err)) {
             g_critical("%s", err->message);
             g_clear_error(&err);
@@ -134,38 +146,57 @@ gwyfile_load(const gchar *filename)
         g_clear_error(&err);
     }
     if (!object) {
-        g_warning("File %s deserialization failed", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_CORRUPTED,
+                    _("Data deserialization failed."));
         return NULL;
     }
     if (!GWY_IS_CONTAINER(object)) {
-        g_warning("File %s contains some strange object", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_CORRUPTED,
+                    _("Data deserialization succeeded, but resulted in "
+                      "an unexpected object %s."),
+                    g_type_name(G_TYPE_FROM_INSTANCE(object)));
         g_object_unref(object);
         return NULL;
     }
+
+    /* XXX: This should be no longer a hard error, though it's still unexpected
     dfield = gwy_container_get_object_by_name(GWY_CONTAINER(object), "/0/data");
     if (!dfield || !GWY_IS_DATA_FIELD(dfield)) {
         g_warning("File %s contains no data field", filename);
         g_object_unref(object);
         return NULL;
     }
+    */
 
     return (GwyContainer*)object;
 }
 
 static gboolean
 gwyfile_save(GwyContainer *data,
-             const gchar *filename)
+             const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GByteArray *buffer;
     FILE *fh;
     gboolean ok = TRUE;
 
-    if (!(fh = g_fopen(filename, "wb")))
+    if (!(fh = g_fopen(filename, "wb"))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot open file: %s"), g_strerror(errno));
         return FALSE;
+    }
+
     buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot write to file: %s"), g_strerror(errno));
         g_unlink(filename);
     }
     fclose(fh);

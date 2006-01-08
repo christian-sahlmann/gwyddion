@@ -710,9 +710,12 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items1), menu_items1, NULL);
     gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Export To"),
-                             G_CALLBACK(gwy_app_file_export_cb), GWY_FILE_SAVE);
+                             G_CALLBACK(gwy_app_file_export_cb),
+                             GWY_FILE_OPERATION_SAVE
+                             | GWY_FILE_OPERATION_EXPORT);
     gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Import From"),
-                             G_CALLBACK(gwy_app_file_import_cb), GWY_FILE_LOAD);
+                             G_CALLBACK(gwy_app_file_import_cb),
+                             GWY_FILE_OPERATION_LOAD);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items2), menu_items2, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<file>");
@@ -1024,7 +1027,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         if (g_file_test(filename, G_FILE_TEST_IS_REGULAR
                                   | G_FILE_TEST_IS_SYMLINK)) {
             /* FIXME: what about charset conversion? */
-            containers[i] = gwy_file_load(filename);
+            containers[i] = gwy_file_load(filename, GWY_RUN_INTERACTIVE, NULL);
             if (containers[i])
                 gwy_container_set_string_by_name(containers[i], "/filename",
                                                  g_strdup(filename));

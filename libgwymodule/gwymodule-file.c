@@ -37,7 +37,7 @@ typedef struct {
     const gchar *winner;
     gint score;
     gboolean only_name;
-    GwyFileOperation mode;
+    GwyFileOperationType mode;
     GwyFileDetectInfo *fileinfo;
 } FileDetectData;
 
@@ -56,8 +56,10 @@ static void     file_detect_max_score_cb   (const gchar *key,
                                             FileDetectData *ddata);
 static gint     file_menu_entry_compare    (FileFuncInfo *a,
                                             FileFuncInfo *b);
+static GwyFileOperationType get_operations (const FileFuncInfo *func_info);
 
 static GHashTable *file_funcs = NULL;
+static GQuark data_type_key = 0;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 /**
@@ -67,14 +69,11 @@ static void (*func_register_callback)(const gchar *fullname) = NULL;
  *
  * Registeres a file type function.
  *
- * To keep compatibility with old versions @func_info should not be an
- * automatic variable.  However, since 1.6 it keeps a copy of @func_info.
- *
  * Returns: %TRUE on success, %FALSE on failure.
  **/
 gboolean
 gwy_file_func_register(const gchar *modname,
-                       GwyFileFuncInfo *func_info)
+                       const GwyFileFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
     FileFuncInfo *ftinfo;
@@ -89,11 +88,15 @@ gwy_file_func_register(const gchar *modname,
         gwy_debug("Initializing...");
         file_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
                                            NULL, &gwy_file_func_info_free);
+        data_type_key = g_quark_from_static_string("gwy-module-file-data-type");
     }
 
     iinfo = _gwy_module_get_module_info(modname);
     g_return_val_if_fail(iinfo, FALSE);
-    g_return_val_if_fail(func_info->load || func_info->save, FALSE);
+    g_return_val_if_fail(func_info->load
+                         || func_info->save
+                         || func_info->export_,
+                         FALSE);
     g_return_val_if_fail(func_info->name, FALSE);
     if (g_hash_table_lookup(file_funcs, func_info->name)) {
         g_warning("Duplicate function %s, keeping only first", func_info->name);
@@ -103,6 +106,7 @@ gwy_file_func_register(const gchar *modname,
     ftinfo = g_new0(FileFuncInfo, 1);
     ftinfo->info = *func_info;
     ftinfo->info.name = g_strdup(func_info->name);
+    /* FIXME: remove */
     ftinfo->menu_path_translated = _(func_info->file_desc);
     ftinfo->menu_path_factory
         = gwy_strkill(g_strdup(ftinfo->menu_path_translated), "_");
@@ -127,7 +131,8 @@ gwy_file_func_info_free(gpointer data)
 {
     FileFuncInfo *ftinfo = (FileFuncInfo*)data;
 
-    g_free((gpointer)ftinfo->info.name);
+    /* FIXME: this could make data type set on container dangling */
+    /*g_free((gpointer)ftinfo->info.name);*/
     g_free((gpointer)ftinfo->info.file_desc);
     g_free((gpointer)ftinfo->menu_path_factory);
     g_free(ftinfo);
@@ -181,6 +186,8 @@ gwy_file_func_run_detect(const gchar *name,
  * gwy_file_func_run_load:
  * @name: A file load function name.
  * @filename: A file name to load data from.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Runs a file load function identified by @name.
  *
@@ -191,16 +198,25 @@ gwy_file_func_run_detect(const gchar *name,
  **/
 GwyContainer*
 gwy_file_func_run_load(const gchar *name,
-                       const gchar *filename)
+                       const gchar *filename,
+                       GwyRunType mode,
+                       GError **error)
 {
     FileFuncInfo *func_info;
+    GwyContainer *data;
 
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->info.load, NULL);
 
-    return func_info->info.load(filename, name);
+    data = func_info->info.load(filename, mode, error, name);
+
+    if (data)
+        g_object_set_qdata(G_OBJECT(data), data_type_key,
+                           GUINT_TO_POINTER(g_quark_from_string(name)));
+
+    return data;
 }
 
 /**
@@ -208,6 +224,8 @@ gwy_file_func_run_load(const gchar *name,
  * @name: A file save function name.
  * @data: A #GwyContainer to save.
  * @filename: A file name to save @data as.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Runs a file save function identified by @name.
  *
@@ -222,23 +240,66 @@ gwy_file_func_run_load(const gchar *name,
 gboolean
 gwy_file_func_run_save(const gchar *name,
                        GwyContainer *data,
-                       const gchar *filename)
+                       const gchar *filename,
+                       GwyRunType mode,
+                       GError **error)
 {
     FileFuncInfo *func_info;
-    GwyDataField *dfield;
     gboolean status;
 
     g_return_val_if_fail(filename, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
     g_return_val_if_fail(func_info->info.save, FALSE);
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
-    dfield = (GwyDataField*)gwy_container_get_object_by_name(data, "/0/data");
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
+
     g_object_ref(data);
-    g_object_ref(dfield);
-    status = func_info->info.save(data, filename, name);
-    g_object_unref(dfield);
+    status = func_info->info.save(data, filename, mode, error, name);
+    g_object_unref(data);
+
+    if (status)
+        g_object_set_qdata(G_OBJECT(data), data_type_key,
+                           GUINT_TO_POINTER(g_quark_from_string(name)));
+
+    return status;
+}
+
+/**
+ * gwy_file_func_run_export:
+ * @name: A file save function name.
+ * @data: A #GwyContainer to save.
+ * @filename: A file name to save @data as.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
+ *
+ * Runs a file export function identified by @name.
+ *
+ * It guarantees the container lifetime spans through the actual file saving,
+ * so the module function doesn't have to care about it.
+ *
+ * This is a low-level function, consider using gwy_file_save() if you
+ * simply want to save a file.
+ *
+ * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ **/
+gboolean
+gwy_file_func_run_export(const gchar *name,
+                         GwyContainer *data,
+                         const gchar *filename,
+                         GwyRunType mode,
+                         GError **error)
+{
+    FileFuncInfo *func_info;
+    gboolean status;
+
+    g_return_val_if_fail(filename, FALSE);
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
+    func_info = g_hash_table_lookup(file_funcs, name);
+    g_return_val_if_fail(func_info, FALSE);
+    g_return_val_if_fail(func_info->info.export_, FALSE);
+
+    g_object_ref(data);
+    status = func_info->info.export_(data, filename, mode, error, name);
     g_object_unref(data);
 
     return status;
@@ -255,9 +316,11 @@ file_detect_max_score_cb(const gchar *key,
 
     if (!func_info->info.detect)
         return;
-    if ((ddata->mode & GWY_FILE_LOAD) && !func_info->info.load)
+    if ((ddata->mode & GWY_FILE_OPERATION_LOAD) && !func_info->info.load)
         return;
-    if ((ddata->mode & GWY_FILE_SAVE) && !func_info->info.save)
+    if ((ddata->mode & GWY_FILE_OPERATION_SAVE) && !func_info->info.save)
+        return;
+    if ((ddata->mode & GWY_FILE_OPERATION_EXPORT) && !func_info->info.export_)
         return;
 
     score = func_info->info.detect(ddata->fileinfo, ddata->only_name,
@@ -273,7 +336,8 @@ file_detect_max_score_cb(const gchar *key,
  * @filename: A file name to detect type of.
  * @only_name: Whether to use only file name for a guess, or try to actually
  *             access the file.
- * @operations: The file operations (all of them) the file type should support.
+ * @operations: The file operations the file type must support (it must
+ *              support all of them to be considered).
  *
  * Detects file type of file @filename.
  *
@@ -281,15 +345,16 @@ file_detect_max_score_cb(const gchar *key,
  *          e.g. gwy_run_file_load_func()) of most probable type of @filename,
  *          or %NULL if there's no probable one.
  **/
-G_CONST_RETURN gchar*
+const gchar*
 gwy_file_detect(const gchar *filename,
                 gboolean only_name,
-                GwyFileOperation operations)
+                GwyFileOperationType operations)
 {
     FileDetectData ddata;
     GwyFileDetectInfo fileinfo;
 
-    g_return_val_if_fail(file_funcs, NULL);
+    if (!file_funcs)
+        return NULL;
 
     fileinfo.name = filename;
     /* File must exist if not only_name */
@@ -357,43 +422,59 @@ gwy_file_detect_free_info(GwyFileDetectInfo *fileinfo)
 
 /**
  * gwy_file_load:
- * @filename: A file name to load data from.
+ * @filename: A file name to load data from, in GLib encoding.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Loads a data file, autodetecting its type.
  *
  * Returns: A new #GwyContainer with data from @filename, or %NULL.
  **/
 GwyContainer*
-gwy_file_load(const gchar *filename)
+gwy_file_load(const gchar *filename,
+              GwyRunType mode,
+              GError **error)
 {
     const gchar *winner;
 
-    g_return_val_if_fail(file_funcs, NULL);
+    g_return_val_if_fail(filename, NULL);
 
-    winner = gwy_file_detect(filename, FALSE, GWY_FILE_LOAD);
-    if (!winner)
+    winner = gwy_file_detect(filename, FALSE, GWY_FILE_OPERATION_LOAD);
+    if (!winner) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                    _("No module can load this file type."));
         return NULL;
+    }
 
-    return gwy_file_func_run_load(winner, filename);
+    return gwy_file_func_run_load(winner, filename, mode, error);
 }
 
 /**
  * gwy_file_save:
  * @data: A #GwyContainer to save.
- * @filename: A file name to save the data as.
+ * @filename: A file name to save the data as, in GLib encoding.
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Saves a data file, deciding to save as what type from the file name.
+ *
+ * It tries to find a module implementing %GWY_FILE_OPERATION_SAVE first, when
+ * it does not succeed, it falls back to %GWY_FILE_OPERATION_EXPORT.
  *
  * Returns: %TRUE if file save succeeded, %FALSE otherwise.
  **/
 gboolean
 gwy_file_save(GwyContainer *data,
-              const gchar *filename)
+              const gchar *filename,
+              GwyRunType mode,
+              GError **error)
 {
     FileDetectData ddata;
     GwyFileDetectInfo fileinfo;
 
-    g_return_val_if_fail(file_funcs, FALSE);
+    if (!file_funcs)
+        goto gwy_file_save_fail;
 
     fileinfo.name = filename;
     gwy_file_detect_fill_info(&fileinfo, TRUE);
@@ -402,14 +483,30 @@ gwy_file_save(GwyContainer *data,
     ddata.winner = NULL;
     ddata.score = 0;
     ddata.only_name = TRUE;
-    ddata.mode = GWY_FILE_SAVE;
+    ddata.mode = GWY_FILE_OPERATION_SAVE;
+    g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
+
+    if (ddata.winner) {
+        gwy_file_detect_free_info(&fileinfo);
+        return gwy_file_func_run_save(ddata.winner,
+                                      data, filename, mode, error);
+    }
+
+    ddata.mode = GWY_FILE_OPERATION_EXPORT;
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
     gwy_file_detect_free_info(&fileinfo);
 
-    if (!ddata.winner)
-        return FALSE;
+    if (ddata.winner) {
+        return gwy_file_func_run_export(ddata.winner,
+                                        data, filename, mode, error);
+    }
 
-    return gwy_file_func_run_save(ddata.winner, data, filename);
+gwy_file_save_fail:
+    g_set_error(error, GWY_MODULE_FILE_ERROR,
+                GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                _("No module can save to this file type."));
+
+    return FALSE;
 }
 
 /**
@@ -430,7 +527,7 @@ GtkObject*
 gwy_file_func_build_menu(GtkObject *item_factory,
                          const gchar *prefix,
                          GCallback item_callback,
-                         GwyFileOperation type)
+                         GwyFileOperationType type)
 {
     GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
     GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
@@ -466,11 +563,9 @@ gwy_file_func_build_menu(GtkObject *item_factory,
 
     for (l = entries; l; l = g_slist_next(l)) {
         FileFuncInfo *func_info = (FileFuncInfo*)l->data;
-        GwyFileOperation capable = 0;
+        GwyFileOperationType capable;
 
-        capable |= func_info->info.load ? GWY_FILE_LOAD : 0;
-        capable |= func_info->info.save ? GWY_FILE_SAVE : 0;
-        capable |= func_info->info.detect ? GWY_FILE_DETECT : 0;
+        capable = get_operations(func_info);
         if (!(capable & type))
             continue;
 
@@ -506,22 +601,27 @@ file_menu_entry_compare(FileFuncInfo *a,
  *
  * Returns: The file operation bit mask, zero if @name does not exist.
  **/
-GwyFileOperation
+GwyFileOperationType
 gwy_file_func_get_operations(const gchar *name)
 {
-    FileFuncInfo *func_info;
-    GwyFileOperation capable = 0;
-
     if (!file_funcs)
         return 0;
 
-    func_info = g_hash_table_lookup(file_funcs, name);
-    if (!func_info)
-        return 0;
+    return get_operations(g_hash_table_lookup(file_funcs, name));
+}
 
-    capable |= func_info->info.load ? GWY_FILE_LOAD : 0;
-    capable |= func_info->info.save ? GWY_FILE_SAVE : 0;
-    capable |= func_info->info.detect ? GWY_FILE_DETECT : 0;
+static GwyFileOperationType
+get_operations(const FileFuncInfo *func_info)
+{
+    GwyFileOperationType capable = 0;
+
+    if (!func_info)
+        return capable;
+
+    capable |= func_info->info.load ? GWY_FILE_OPERATION_LOAD : 0;
+    capable |= func_info->info.save ? GWY_FILE_OPERATION_SAVE : 0;
+    capable |= func_info->info.export_ ? GWY_FILE_OPERATION_EXPORT : 0;
+    capable |= func_info->info.detect ? GWY_FILE_OPERATION_DETECT : 0;
 
     return capable;
 }
@@ -559,6 +659,26 @@ _gwy_file_func_remove(const gchar *name)
     return TRUE;
 }
 
+/**
+ * gwy_module_file_error_quark:
+ *
+ * Returns error domain for file module functions.
+ *
+ * See and use %GWY_MODULE_FILE_ERROR.
+ *
+ * Returns: The error domain.
+ **/
+GQuark
+gwy_module_file_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("gwy-module-file-error-quark");
+
+    return error_domain;
+}
+
 /************************** Documentation ****************************/
 
 /**
@@ -585,6 +705,7 @@ _gwy_file_func_remove(const gchar *name)
  * @detect: The file type detecting function.
  * @load: The file loading function.
  * @save: The file saving function.
+ * @export_: The file exporting function.
  *
  * Information about set of functions for one file type.
  **/
@@ -594,8 +715,8 @@ _gwy_file_func_remove(const gchar *name)
  * @fileinfo: Information about file to detect the filetype of,
  *            see #GwyFileDetectInfo.
  * @only_name: Whether the type should be guessed only from file name.
- * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
- *        this argument)
+ * @name: Function name from #GwyFileFuncInfo (functions implementing only
+ *        one file type can safely ignore this argument)
  *
  * The type of file type detection function.
  *
@@ -608,20 +729,24 @@ _gwy_file_func_remove(const gchar *name)
 /**
  * GwyFileLoadFunc:
  * @filename: A file name to load data from.
- * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
- *        this argument)
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
+ * @name: Function name from #GwyFileFuncInfo (functions implementing only
+ *        one file type can safely ignore this argument)
  *
  * The type of file loading function.
  *
- * Returns: A newly created data container or %NULL.
+ * Returns: A newly created data container, or %NULL on failure.
  **/
 
 /**
  * GwyFileSaveFunc:
  * @data: A #GwyContainer to save.
  * @filename: A file name to save @data as.
- * @name: Function name from #GwyFileFuncInfo (most modules can safely ignore
- *        this argument)
+ * @mode: Run mode.
+ * @error: Return location for a #GError (or %NULL).
+ * @name: Function name from #GwyFileFuncInfo (functions implementing only
+ *        one file type can safely ignore this argument)
  *
  * The type of file saving function.
  *
@@ -629,14 +754,20 @@ _gwy_file_func_remove(const gchar *name)
  **/
 
 /**
- * GwyFileOperation:
- * @GWY_FILE_NONE: None.
- * @GWY_FILE_LOAD: Posibility to load files of this type.
- * @GWY_FILE_SAVE: Posibility to save files of this type.
- * @GWY_FILE_DETECT: Posibility to detect files are of this file type,
- * @GWY_FILE_MASK: The mask for all the flags.
+ * GwyFileOperationType:
+ * @GWY_FILE_OPERATION_DETECT: Posibility to detect files are of this file type,
+ * @GWY_FILE_OPERATION_LOAD: Posibility to load files of this type.
+ * @GWY_FILE_OPERATION_SAVE: Posibility to save files of this type.
+ * @GWY_FILE_OPERATION_EXPORT: Posibility to export files of this type.
+ * @GWY_FILE_OPERATION_MASK: The mask for all the flags.
  *
  * File type function file operations (capabilities).
+ *
+ * The difference between save and export is that save is supposed to create
+ * a file containing fairly complete representation of the container, while
+ * export is the possibility to write some information so given file type.
+ * Generally only native file format module implements
+ * %GWY_FILE_OPERATION_SAVE, all others implement %GWY_FILE_OPERATION_EXPORT.
  **/
 
 /**

@@ -102,7 +102,9 @@ gwy_app_file_save_cb(void)
     }
     gwy_debug("%s", filename_utf8);
     filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
-    if (!filename_sys || !*filename_sys || !gwy_file_save(data, filename_sys))
+    if (!filename_sys
+        || !*filename_sys
+        || !gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, NULL))
         gwy_app_file_save_as_cb();
     else
         gwy_undo_container_set_unmodified(data);
@@ -258,9 +260,10 @@ file_real_open(const gchar *filename_sys,
     GwyContainer *data;
 
     if (name)
-        data = gwy_file_func_run_load(name, filename_sys);
+        data = gwy_file_func_run_load(name, filename_sys,
+                                      GWY_RUN_INTERACTIVE, NULL);
     else
-        data = gwy_file_load(filename_sys);
+        data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, NULL);
 
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
     if (data) {
@@ -291,7 +294,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     const gchar *filename_sys;  /* in system (disk) encoding */
     GwyContainer *data;
     const gchar *name;
-    gboolean ok;
+    gboolean oksave = TRUE;
 
     data = GWY_CONTAINER(g_object_get_data(G_OBJECT(selector), "data"));
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -312,17 +315,28 @@ file_save_as_ok_cb(GtkFileSelection *selector)
         return;
     }
 
+    /* FIXME: why we do not just run gwy_file_save()? */
     if (!name) {
-        name = gwy_file_detect(filename_sys, TRUE, GWY_FILE_SAVE);
+        name = gwy_file_detect(filename_sys, TRUE, GWY_FILE_OPERATION_SAVE);
+        if (!name) {
+            name = gwy_file_detect(filename_sys, TRUE,
+                                   GWY_FILE_OPERATION_EXPORT);
+            oksave = FALSE;
+        }
         if (!name)
             return;
     }
 
-    ok = gwy_file_func_run_save(name, data, filename_sys);
-    if (!ok)
-        return;
+    if (!gwy_file_func_run_save(name, data, filename_sys,
+                                GWY_RUN_INTERACTIVE, NULL)) {
+        oksave = FALSE;
+        if (!gwy_file_func_run_export(name, data, filename_sys,
+                                      GWY_RUN_INTERACTIVE, NULL))
+            return;
+    }
 
-    if (gwy_file_func_get_operations(name) & GWY_FILE_LOAD) {
+    if (oksave
+        && gwy_file_func_get_operations(name) & GWY_FILE_OPERATION_LOAD) {
         gwy_undo_container_set_unmodified(data);
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");

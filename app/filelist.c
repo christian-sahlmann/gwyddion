@@ -440,7 +440,7 @@ gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
                                         -1, NULL, NULL, NULL);
     g_return_if_fail(filename_sys);
 
-    data = gwy_file_load(filename_sys);
+    data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, NULL);
     if (data) {
         gwy_container_set_string_by_name(data, "/filename",
                                          g_strdup(filename_utf8));
