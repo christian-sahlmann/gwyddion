@@ -50,7 +50,7 @@ typedef struct {
 struct _GwyCDLineBuiltin {
     const gchar *function_name;
     const gchar *group_name;
-    const gchar *function_formula;
+    const gchar *function_definition;
     GwyCDLineFitFunc function;
     GwyCDLineCDFunc function_fit;
     gint nparams;
@@ -423,9 +423,9 @@ gwy_cdline_get_name(const GwyCDLine* cdline)
  * Returns: The cdline function definition.
  **/
 const gchar*
-gwy_cdline_get_formula(const GwyCDLine* cdline)
+gwy_cdline_get_definition(const GwyCDLine* cdline)
 {
-    return cdline->builtin->function_formula;
+    return cdline->builtin->function_definition;
 }
 
 /**
