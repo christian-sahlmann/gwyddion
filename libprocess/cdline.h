@@ -58,16 +58,16 @@ struct _GwyCDLinePresetClass {
 };
 
 
-G_CONST_RETURN
-gchar*          gwy_cdline_get_preset_name   (const GwyCDLinePreset* preset);
-G_CONST_RETURN
-gchar*          gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset);
-G_CONST_RETURN
-gchar*          gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
+const
+gchar*          gwy_cdline_preset_get_name   (const GwyCDLinePreset* preset);
+const
+gchar*          gwy_cdline_preset_get_formula(const GwyCDLinePreset* preset);
+const
+gchar*          gwy_cdline_preset_get_param_name(const GwyCDLinePreset* preset,
                                                      gint param);
-gdouble         gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
+gdouble         gwy_cdline_preset_get_param_default(const GwyCDLinePreset* preset,
                                                     gint param);
-gint            gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset);
+gint            gwy_cdline_preset_get_nparams(const GwyCDLinePreset* preset);
 void            gwy_cdline_fit_preset        (const GwyCDLinePreset* preset,
                                               gint n_dat,
                                               const gdouble *x,

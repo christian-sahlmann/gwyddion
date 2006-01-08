@@ -22,7 +22,6 @@
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/dataline.h>
 #include <libprocess/cdline.h>
 #include <libgwyddion/gwydebugobjects.h>
 
@@ -56,7 +55,6 @@ struct _GwyCDLinePresetBuiltin {
     GwyCDLineCDFunc function_fit;
     gint nparams;
     const GwyCDLineParam *param;
-    gpointer _reserved1;
 };
 
 
@@ -414,8 +412,8 @@ static const GwyCDLinePresetBuiltin fitting_presets[] = {
  *
  * Returns: The preset name.
  **/
-G_CONST_RETURN gchar*
-gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
+const gchar*
+gwy_cdline_preset_get_name(const GwyCDLinePreset* preset)
 {
     return preset->builtin->function_name;
 }
@@ -428,8 +426,8 @@ gwy_cdline_get_preset_name(const GwyCDLinePreset* preset)
  *
  * Returns: The preset function formula.
  **/
-G_CONST_RETURN gchar*
-gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
+const gchar*
+gwy_cdline_preset_get_formula(const GwyCDLinePreset* preset)
 {
     return preset->builtin->function_formula;
 }
@@ -445,8 +443,8 @@ gwy_cdline_get_preset_formula(const GwyCDLinePreset* preset)
  *
  * Returns: The name of parameter @param.
  **/
-G_CONST_RETURN gchar*
-gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
+const gchar*
+gwy_cdline_preset_get_param_name(const GwyCDLinePreset* preset,
                                      gint param)
 {
     const GwyCDLineParam *par;
@@ -469,7 +467,7 @@ gwy_cdline_get_preset_param_name(const GwyCDLinePreset* preset,
  * Returns: The default parameter value.
  **/
 gdouble
-gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
+gwy_cdline_preset_get_param_default(const GwyCDLinePreset* preset,
                                         gint param)
 {
     const GwyCDLineParam *par;
@@ -489,7 +487,7 @@ gwy_cdline_get_preset_param_default(const GwyCDLinePreset* preset,
  * Returns: The number of function parameters.
  **/
 gint
-gwy_cdline_get_preset_nparams(const GwyCDLinePreset* preset)
+gwy_cdline_preset_get_nparams(const GwyCDLinePreset* preset)
 {
     return preset->builtin->nparams;
 }
