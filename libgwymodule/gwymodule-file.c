@@ -47,6 +47,12 @@ typedef struct {
     gchar *menu_path_factory;
 } FileFuncInfo;
 
+typedef struct {
+    gpointer container;
+    GQuark name;
+    gchar *filename_sys;
+} FileTypeInfo;
+
 static void     gwy_file_func_info_free    (gpointer data);
 static gboolean gwy_file_detect_fill_info  (GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
@@ -57,8 +63,16 @@ static void     file_detect_max_score_cb   (const gchar *key,
 static gint     file_menu_entry_compare    (FileFuncInfo *a,
                                             FileFuncInfo *b);
 static GwyFileOperationType get_operations (const FileFuncInfo *func_info);
+static void     gwy_file_type_info_set     (GwyContainer *data,
+                                            const gchar *name,
+                                            const gchar *filename_sys);
+static FileTypeInfo* gwy_file_type_info_get(GwyContainer *data,
+                                            gboolean do_create);
+static void    gwy_file_container_finalized(gpointer userdata,
+                                            GObject *deceased_data);
 
 static GHashTable *file_funcs = NULL;
+static GList *container_list = NULL;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 /**
@@ -200,13 +214,18 @@ gwy_file_func_run_load(const gchar *name,
                        GError **error)
 {
     FileFuncInfo *func_info;
+    GwyContainer *data;
 
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->info.load, NULL);
 
-    return func_info->info.load(filename, mode, error, name);
+    data = func_info->info.load(filename, mode, error, name);
+    if (data)
+        gwy_file_type_info_set(data, name, filename);
+
+    return data;
 }
 
 /**
@@ -245,6 +264,8 @@ gwy_file_func_run_save(const gchar *name,
 
     g_object_ref(data);
     status = func_info->info.save(data, filename, mode, error, name);
+    if (status)
+        gwy_file_type_info_set(data, name, filename);
     g_object_unref(data);
 
     return status;
@@ -651,6 +672,42 @@ _gwy_file_func_remove(const gchar *name)
 }
 
 /**
+ * gwy_file_get_data_info:
+ * @data: A #GwyContainer.
+ * @name: Location to store file type of @data, or %NULL.  The returned string
+ *        is owned by module system.
+ * @filename: Location to store file name of @data, or %NULL.  The returned
+ *            string is owned by module system and is valid only until the
+ *            container is destroyed or saved again.
+ *
+ * Gets file information about a data.
+ *
+ * The information is set on two ocasions: file load and successful file save.
+ * File export does not set it.
+ *
+ * Returns: %TRUE if information about @data was found and @name and/or
+ *          @filename was filled.
+ **/
+gboolean
+gwy_file_get_data_info(GwyContainer *data,
+                       const gchar **name,
+                       const gchar **filename)
+{
+    FileTypeInfo *fti;
+
+    fti = gwy_file_type_info_get(data, FALSE);
+    if (!fti)
+        return FALSE;
+
+    if (name)
+        *name = g_quark_to_string(fti->name);
+    if (filename)
+        *filename = fti->filename_sys;
+
+    return TRUE;
+}
+
+/**
  * gwy_module_file_error_quark:
  *
  * Returns error domain for file module functions.
@@ -668,6 +725,69 @@ gwy_module_file_error_quark(void)
         error_domain = g_quark_from_static_string("gwy-module-file-error-quark");
 
     return error_domain;
+}
+
+static void
+gwy_file_type_info_set(GwyContainer *data,
+                       const gchar *name,
+                       const gchar *filename_sys)
+{
+    FileTypeInfo *fti;
+
+    fti = gwy_file_type_info_get(data, TRUE);
+    fti->name = g_quark_from_string(name);
+    if (fti->filename_sys)
+        g_free(fti->filename_sys);
+    fti->filename_sys = g_strdup(filename_sys);
+}
+
+static FileTypeInfo*
+gwy_file_type_info_get(GwyContainer *data,
+                       gboolean do_create)
+{
+    FileTypeInfo *fti;
+    GList *l;
+
+    for (l = container_list; l; l = g_list_next(l)) {
+        fti = (FileTypeInfo*)l->data;
+        if ((gpointer)data == fti->container)
+            break;
+    }
+    if (!l) {
+        if (!do_create)
+            return NULL;
+
+        fti = g_new0(FileTypeInfo, 1);
+        fti->container = data;
+        container_list = g_list_prepend(container_list, fti);
+        g_object_weak_ref(G_OBJECT(data), gwy_file_container_finalized, NULL);
+
+        return fti;
+    }
+
+    /* move container to head */
+    if (l != container_list) {
+        container_list = g_list_remove_link(container_list, l);
+        container_list = g_list_concat(l, container_list);
+    }
+
+    return fti;
+}
+
+static void
+gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
+                             GObject *deceased_data)
+{
+    FileTypeInfo *fti;
+
+    /* must not typecast with GWY_CONTAINER(), it doesn't exist any more */
+    fti = gwy_file_type_info_get((GwyContainer*)deceased_data, FALSE);
+    g_return_if_fail(fti);
+    /* gwy_file_type_info_get() moves the item to list head */
+    g_assert(fti == container_list->data);
+    container_list = g_list_delete_link(container_list, container_list);
+    g_free(fti->filename_sys);
+    g_free(fti);
 }
 
 /************************** Documentation ****************************/
@@ -784,6 +904,34 @@ gwy_module_file_error_quark(void)
  *
  * The size of #GwyFileDetectInfo buffer for initial part of file.  It should
  * be enough for any normal kind of magic header test.
+ **/
+
+/**
+ * GWY_MODULE_FILE_ERROR:
+ *
+ * Error domain for file module operations.  Errors in this domain will be from
+ * the #GwyModuleFileError enumeration. See #GError for information on
+ * error domains.
+ **/
+
+/**
+ * GwyModuleFileError:
+ * @GWY_MODULE_FILE_ERROR_CANCELLED: Interactive operation was cancelled by
+ *                                   user.
+ * @GWY_MODULE_FILE_ERROR_UNIMPLEMENTED: No module implements requested
+ *                                       operation.
+ * @GWY_MODULE_FILE_ERROR_IO: Input/output error occured.
+ * @GWY_MODULE_FILE_ERROR_DATA: Data is corrupted or in an unsupported format.
+ * @GWY_MODULE_FILE_ERROR_INTERACTIVE: Operation requires user input, but
+ *                                     it was run as GWY_RUN_NONINTERACTIVE.
+ * @GWY_MODULE_FILE_ERROR_SPECIFIC: Special module errors that do not fall into
+ *                                  any other category.  Should be rarely used.
+ *
+ * Error codes returned by file module operations.
+ *
+ * File module functions can return any of these codes, except
+ * @GWY_MODULE_FILE_ERROR_UNIMPLEMENTED which is only returned by high-level
+ * functions gwy_file_load() and gwy_file_save().
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

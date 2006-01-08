@@ -37,10 +37,13 @@
 static gboolean      module_register    (const gchar *name);
 static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
-static GwyContainer* spmlab_load        (const gchar *filename);
+static GwyContainer* spmlab_load        (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
 static GwyDataField* read_data_field    (const guchar *buffer,
                                          guint size,
-                                         guchar version);
+                                         guchar version,
+                                         GError **error);
 
 
 /* The module info. */
@@ -49,7 +52,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -66,6 +69,7 @@ module_register(const gchar *name)
         N_("Thermicroscopes SpmLab R4, R5, R6 files"),
         (GwyFileDetectFunc)&spmlab_detect,
         (GwyFileLoadFunc)&spmlab_load,
+        NULL,
         NULL
     };
 
@@ -113,7 +117,9 @@ spmlab_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-spmlab_load(const gchar *filename)
+spmlab_load(const gchar *filename,
+            GwyRunType mode,
+            GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
@@ -122,14 +128,17 @@ spmlab_load(const gchar *filename)
     GwyDataField *dfield = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
-        return NULL;
     }
     /* 2048 is wrong. moreover it differs for r5 and r4, kasigra uses 5752 for
      * r5 */
     if (size < 2048 || buffer[0] != '#' || buffer[1] != 'R') {
-        g_warning("File %s is not a Thermicroscopes SpmLab file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not a Thermicroscopes SpmLab file."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -138,11 +147,13 @@ spmlab_load(const gchar *filename)
         case '4':
         case '5':
         case '6':
-        dfield = read_data_field(buffer, size, buffer[2]);
+        dfield = read_data_field(buffer, size, buffer[2], error);
         break;
 
         default:
-        g_warning("Uknown file version %c", buffer[2]);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unknown file version %c."), buffer[2]);
         break;
     }
 
@@ -158,7 +169,10 @@ spmlab_load(const gchar *filename)
 }
 
 static GwyDataField*
-read_data_field(const guchar *buffer, guint size, guchar version)
+read_data_field(const guchar *buffer,
+                guint size,
+                guchar version,
+                GError **error)
 {
     enum { MIN_REMAINDER = 2620 };
     /* information offsets in different versions, in r5+ relative to data
@@ -229,7 +243,9 @@ read_data_field(const guchar *buffer, guint size, guchar version)
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
-        g_warning("Truncated data?");
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Truncated data."));
         return NULL;
     }
 

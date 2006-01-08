@@ -7,7 +7,9 @@ endif
 
 filedir = $(pkglibdir)/modules/file
 
-file_LTLIBRARIES = gwyfile.la
+file_LTLIBRARIES = \
+	gwyfile.la \
+	spmlab.la
 
 #file_LTLIBRARIES = \
 #	asciiexport.la \
@@ -70,9 +72,6 @@ else
 MODULE_LIBTIFF =
 endif
 
-gwyfile_la_SOURCES = gwyfile.c
-gwyfile_la_LIBADD = $(module_libadd)
-
 
 #asciiexport_la_SOURCES = asciiexport.c
 #asciiexport_la_LIBADD = $(module_libadd)
@@ -91,10 +90,10 @@ gwyfile_la_LIBADD = $(module_libadd)
 #
 #ezdfile_la_SOURCES = ezdfile.c
 #ezdfile_la_LIBADD = $(module_libadd)
-#
-#gwyfile_la_SOURCES = gwyfile.c
-#gwyfile_la_LIBADD = $(module_libadd)
-#
+
+gwyfile_la_SOURCES = gwyfile.c
+gwyfile_la_LIBADD = $(module_libadd)
+
 #hitachi_afm_la_SOURCES = hitachi-afm.c
 #hitachi_afm_la_LIBADD = $(module_libadd)
 #
@@ -129,10 +128,10 @@ gwyfile_la_LIBADD = $(module_libadd)
 #
 #sis_la_SOURCES = sis.c
 #sis_la_LIBADD = $(module_libadd)
-#
-#spmlab_la_SOURCES = spmlab.c
-#spmlab_la_LIBADD = $(module_libadd)
-#
+
+spmlab_la_SOURCES = spmlab.c
+spmlab_la_LIBADD = $(module_libadd)
+
 #stmprg_la_SOURCES = stmprg.c
 #stmprg_la_LIBADD = $(module_libadd)
 #
