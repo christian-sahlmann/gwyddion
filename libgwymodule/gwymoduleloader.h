@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-#define GWY_MODULE_ABI_VERSION 1
+#define GWY_MODULE_ABI_VERSION 2
 
 #define _GWY_MODULE_QUERY _gwy_module_query
 #define GWY_MODULE_QUERY(mod_info) \
