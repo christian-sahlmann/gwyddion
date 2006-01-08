@@ -47,7 +47,7 @@ typedef struct {
 } GwyCDLineParam;
 
 
-struct _GwyCDLinePresetBuiltin {
+struct _GwyCDLineBuiltin {
     const gchar *function_name;
     const gchar *group_name;
     const gchar *function_formula;
@@ -59,10 +59,10 @@ struct _GwyCDLinePresetBuiltin {
 
 
 
-static GwyCDLinePreset*
-gwy_cdline_preset_new_static(const GwyCDLinePresetBuiltin *data);
+static GwyCDLine*
+gwy_cdline_new_static(const GwyCDLineBuiltin *data);
 
-G_DEFINE_TYPE(GwyCDLinePreset, gwy_cdline_preset, GWY_TYPE_RESOURCE)
+G_DEFINE_TYPE(GwyCDLine, gwy_cdline, GWY_TYPE_RESOURCE)
 
 
 
@@ -342,7 +342,7 @@ func_stepheight(gdouble x,
         return param[1];
 }
 
-/************************** presets ****************************/
+/************************** cdlines ****************************/
 
 static const GwyCDLineParam stepheight_pars[]= {
    {"h", " ", 1 },
@@ -360,7 +360,7 @@ static const GwyCDLineParam edgeheight_pars[]= {
 };
 
 
-static const GwyCDLinePresetBuiltin fitting_presets[] = {
+static const GwyCDLineBuiltin cdlines[] = {
     {
         "Edge height (right)",
         "Edge",
@@ -368,8 +368,7 @@ static const GwyCDLinePresetBuiltin fitting_presets[] = {
         &func_edgeheight,
         &cd_uedgeheight,
         4,
-        edgeheight_pars,
-        NULL
+        edgeheight_pars
     },
     {
         "Edge height (left)",
@@ -378,8 +377,7 @@ static const GwyCDLinePresetBuiltin fitting_presets[] = {
         &func_edgeheight,
         &cd_ledgeheight,
         4,
-        edgeheight_pars,
-        NULL
+        edgeheight_pars
     },
     {
         "Step height (positive)", /*ISO 5436*/
@@ -388,8 +386,7 @@ static const GwyCDLinePresetBuiltin fitting_presets[] = {
         &func_stepheight,
         &cd_stepheight,
         5,
-        stepheight_pars,
-        NULL
+        stepheight_pars
     },
     {
         "Step height (negative)",
@@ -398,66 +395,65 @@ static const GwyCDLinePresetBuiltin fitting_presets[] = {
         &func_stepheight,
         &cd_rstepheight,
         5,
-        stepheight_pars,
-        NULL
+        stepheight_pars
     },
 };
 
 
 /**
- * gwy_cdline_get_preset_name:
- * @preset: A NL fitter function preset.
+ * gwy_cdline_get_name:
+ * @cdline: A NL fitter function cdline.
  *
- * Return preset name (its unique identifier).
+ * Return cdline name (its unique identifier).
  *
- * Returns: The preset name.
+ * Returns: The cdline name.
  **/
 const gchar*
-gwy_cdline_preset_get_name(const GwyCDLinePreset* preset)
+gwy_cdline_get_name(const GwyCDLine* cdline)
 {
-    return preset->builtin->function_name;
+    return cdline->builtin->function_name;
 }
 
 /**
- * gwy_cdline_get_preset_formula:
- * @preset: A CD preset.
+ * gwy_cdline_get_definition:
+ * @cdline: A CD cdline.
  *
- * Returns function formula of @preset (with Pango markup).
+ * Returns function definition of @cdline (as pixmap).
  *
- * Returns: The preset function formula.
+ * Returns: The cdline function definition.
  **/
 const gchar*
-gwy_cdline_preset_get_formula(const GwyCDLinePreset* preset)
+gwy_cdline_get_formula(const GwyCDLine* cdline)
 {
-    return preset->builtin->function_formula;
+    return cdline->builtin->function_formula;
 }
 
 /**
- * gwy_cdline_get_preset_param_name:
- * @preset: A CD preset.
+ * gwy_cdline_get_param_name:
+ * @cdline: A CD cdline.
  * @param: A parameter number.
  *
- * Returns the name of parameter number @param of preset @preset.
+ * Returns the name of parameter number @param of cdline @cdline.
  *
  * The name may contain Pango markup.
  *
  * Returns: The name of parameter @param.
  **/
 const gchar*
-gwy_cdline_preset_get_param_name(const GwyCDLinePreset* preset,
+gwy_cdline_get_param_name(const GwyCDLine* cdline,
                                      gint param)
 {
     const GwyCDLineParam *par;
 
-    g_return_val_if_fail(param >= 0 && param < preset->builtin->nparams, NULL);
-    par = preset->builtin->param + param;
+    g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, NULL);
+    par = cdline->builtin->param + param;
 
     return par->name;
 }
 
 /**
- * gwy_cdline_get_preset_param_default:
- * @preset: A CD preset.
+ * gwy_cdline_get_param_default:
+ * @cdline: A CD cdline.
  * @param: A parameter number.
  *
  * Returns a suitable constant default parameter value.
@@ -467,34 +463,34 @@ gwy_cdline_preset_get_param_name(const GwyCDLinePreset* preset,
  * Returns: The default parameter value.
  **/
 gdouble
-gwy_cdline_preset_get_param_default(const GwyCDLinePreset* preset,
+gwy_cdline_get_param_default(const GwyCDLine* cdline,
                                         gint param)
 {
     const GwyCDLineParam *par;
 
-    g_return_val_if_fail(param >= 0 && param < preset->builtin->nparams, G_MAXDOUBLE);
-    par = preset->builtin->param + param;
+    g_return_val_if_fail(param >= 0 && param < cdline->builtin->nparams, G_MAXDOUBLE);
+    par = cdline->builtin->param + param;
 
     return par->default_init;
 }
 
 /**
- * gwy_cdline_get_preset_nparams:
- * @preset: A CD preset.
+ * gwy_cdline_get_nparams:
+ * @cdline: A CD cdline.
  *
- * Return the number of parameters of @preset.
+ * Return the number of parameters of @cdline.
  *
  * Returns: The number of function parameters.
  **/
 gint
-gwy_cdline_preset_get_nparams(const GwyCDLinePreset* preset)
+gwy_cdline_get_nparams(const GwyCDLine* cdline)
 {
-    return preset->builtin->nparams;
+    return cdline->builtin->nparams;
 }
 
 /**
- * gwy_nlfit_fit_preset:
- * @preset:
+ * gwy_nlfit_fit:
+ * @cdline:
  * @n_dat:
  * @x:
  * @y:
@@ -509,7 +505,7 @@ gwy_cdline_preset_get_nparams(const GwyCDLinePreset* preset)
  * Returns:
  **/
 void
-gwy_cdline_fit_preset(const GwyCDLinePreset* preset,
+gwy_cdline_fit(const GwyCDLine* cdline,
                       gint n_dat, const gdouble *x, const gdouble *y,
                       G_GNUC_UNUSED gint n_param,
                       gdouble *param, gdouble *err,
@@ -518,79 +514,79 @@ gwy_cdline_fit_preset(const GwyCDLinePreset* preset,
 {
     gboolean fres;
     fres = TRUE;
-    preset->builtin->function_fit(x, y, n_dat, param, err, user_data, &fres);
+    cdline->builtin->function_fit(x, y, n_dat, param, err, user_data, &fres);
 }
 
 
 static void
-gwy_cdline_preset_class_init(GwyCDLinePresetClass *klass)
+gwy_cdline_class_init(GwyCDLineClass *klass)
 {
     GwyResourceClass *parent_class, *res_class = GWY_RESOURCE_CLASS(klass);
 
-    parent_class = GWY_RESOURCE_CLASS(gwy_cdline_preset_parent_class);
+    parent_class = GWY_RESOURCE_CLASS(gwy_cdline_parent_class);
     res_class->item_type = *gwy_resource_class_get_item_type(parent_class);
 
     res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
 
-    res_class->name = "cdlinepresets";
+    res_class->name = "cdlinecdlines";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     gwy_inventory_forget_order(res_class->inventory);
 }
 
 static void
-gwy_cdline_preset_init(GwyCDLinePreset *preset)
+gwy_cdline_init(GwyCDLine *cdline)
 {
-    gwy_debug_objects_creation(G_OBJECT(preset));
+    gwy_debug_objects_creation(G_OBJECT(cdline));
 }
 
-static GwyCDLinePreset*
-gwy_cdline_preset_new_static(const GwyCDLinePresetBuiltin *data)
+static GwyCDLine*
+gwy_cdline_new_static(const GwyCDLineBuiltin *data)
 {
-    GwyCDLinePreset *preset;
+    GwyCDLine *cdline;
 
-    preset = g_object_new(GWY_TYPE_CDLINE_PRESET, "is-const", TRUE, NULL);
-    preset->builtin = data;
-    g_string_assign(GWY_RESOURCE(preset)->name, data->function_name);
+    cdline = g_object_new(GWY_TYPE_CDLINE, "is-const", TRUE, NULL);
+    cdline->builtin = data;
+    g_string_assign(GWY_RESOURCE(cdline)->name, data->function_name);
 
-    return preset;
+    return cdline;
 }
 
 void
-_gwy_cdline_preset_class_setup_presets(void)
+_gwy_cdline_class_setups(void)
 {
     GwyResourceClass *klass;
-    GwyCDLinePreset *preset;
+    GwyCDLine *cdline;
     guint i;
 
     /* Force class instantiation, this function is called before it's first
      * referenced. */
-    klass = g_type_class_ref(GWY_TYPE_CDLINE_PRESET);
+    klass = g_type_class_ref(GWY_TYPE_CDLINE);
 
-    for (i = 0; i < G_N_ELEMENTS(fitting_presets); i++) {
-        preset = gwy_cdline_preset_new_static(fitting_presets + i);
-        gwy_inventory_insert_item(klass->inventory, preset);
-        g_object_unref(preset);
+    for (i = 0; i < G_N_ELEMENTS(cdlines); i++) {
+        cdline = gwy_cdline_new_static(cdlines + i);
+        gwy_inventory_insert_item(klass->inventory, cdline);
+        g_object_unref(cdline);
     }
     gwy_inventory_restore_order(klass->inventory);
 
-    /* The presets added a reference so we can safely unref it again */
+    /* The cdlines added a reference so we can safely unref it again */
     g_type_class_unref(klass);
 }
 
 
 
 /**
- * gwy_cdline_presets:
+ * gwy_cdlines:
  *
- * Gets inventory with all the CDLine presets.
+ * Gets inventory with all the CDLine cdlines.
  *
- * Returns: CDLine preset inventory.
+ * Returns: CDLine cdline inventory.
  **/
 GwyInventory*
-gwy_cdline_presets(void)
+gwy_cdlines(void)
 {
     return
-        GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE_PRESET))->inventory;
+        GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE))->inventory;
 }
 
 

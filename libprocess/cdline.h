@@ -28,29 +28,29 @@
 
 G_BEGIN_DECLS
 
-#define GWY_TYPE_CDLINE_PRESET             (gwy_cdline_preset_get_type())
-#define GWY_CDLINE_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CDLINE_PRESET, GwyCDLinePreset))
-#define GWY_CDLINE_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CDLINE_PRESET, GwyCDLinePresetClass))
-#define GWY_IS_CDLINE_PRESET(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_CDLINE_PRESET))
-#define GWY_IS_CDLINE_PRESET_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_CDLINE_PRESET))
-#define GWY_CDLINE_PRESET_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_CDLINE_PRESET, GwyCDLinePresetClass))
+#define GWY_TYPE_CDLINE             (gwy_cdline_get_type())
+#define GWY_CDLINE(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CDLINE, GwyCDLine))
+#define GWY_CDLINE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_CDLINE, GwyCDLineClass))
+#define GWY_IS_CDLINE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_CDLINE))
+#define GWY_IS_CDLINE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GWY_TYPE_CDLINE))
+#define GWY_CDLINE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_CDLINE, GwyCDLineClass))
 
 
-typedef struct _GwyCDLinePresetBuiltin  GwyCDLinePresetBuiltin;
-typedef struct _GwyCDLinePreset GwyCDLinePreset;
-typedef struct _GwyCDLinePresetClass GwyCDLinePresetClass;
+typedef struct _GwyCDLineBuiltin  GwyCDLineBuiltin;
+typedef struct _GwyCDLine GwyCDLine;
+typedef struct _GwyCDLineClass GwyCDLineClass;
 
 
-struct _GwyCDLinePreset {
+struct _GwyCDLine {
     GwyResource parent_instance;
 
-   const GwyCDLinePresetBuiltin *builtin;
+   const GwyCDLineBuiltin *builtin;
 
    gpointer reserved1;
    gpointer reserved2;
 };
 
-struct _GwyCDLinePresetClass {
+struct _GwyCDLineClass {
     GwyResourceClass parent_class;
 
     gpointer reserved1;
@@ -59,16 +59,16 @@ struct _GwyCDLinePresetClass {
 
 
 const
-gchar*          gwy_cdline_preset_get_name   (const GwyCDLinePreset* preset);
+gchar*          gwy_cdline_get_name   (const GwyCDLine* preset);
 const
-gchar*          gwy_cdline_preset_get_formula(const GwyCDLinePreset* preset);
+gchar*          gwy_cdline_get_definition(const GwyCDLine* preset);
 const
-gchar*          gwy_cdline_preset_get_param_name(const GwyCDLinePreset* preset,
+gchar*          gwy_cdline_get_param_name(const GwyCDLine* preset,
                                                      gint param);
-gdouble         gwy_cdline_preset_get_param_default(const GwyCDLinePreset* preset,
+gdouble         gwy_cdline_get_param_default(const GwyCDLine* preset,
                                                     gint param);
-gint            gwy_cdline_preset_get_nparams(const GwyCDLinePreset* preset);
-void            gwy_cdline_fit_preset        (const GwyCDLinePreset* preset,
+gint            gwy_cdline_get_nparams(const GwyCDLine* preset);
+void            gwy_cdline_fit        (const GwyCDLine* preset,
                                               gint n_dat,
                                               const gdouble *x,
                                               const gdouble *y,
@@ -77,7 +77,9 @@ void            gwy_cdline_fit_preset        (const GwyCDLinePreset* preset,
                                               gdouble *err,
                                               const gboolean *fixed_param,
                                               gpointer user_data);
-GwyInventory*   gwy_cdline_presets              (void);
+GwyInventory*   gwy_cdlines              (void);
+
+GType           gwy_cdline_get_type      (void) G_GNUC_CONST;
 
 G_END_DECLS
 
