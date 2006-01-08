@@ -96,16 +96,16 @@ GwyFileOperationType gwy_file_func_get_operations (const gchar *name);
 const gchar*         gwy_file_func_get_description(const gchar *name);
 
 /* high-level interface */
-const gchar*  gwy_file_detect(const gchar *filename,
-                              gboolean only_name,
-                              GwyFileOperationType operations);
-GwyContainer* gwy_file_load  (const gchar *filename,
-                              GwyRunType mode,
-                              GError **error);
-gboolean      gwy_file_save  (GwyContainer *data,
-                              const gchar *filename,
-                              GwyRunType mode,
-                              GError **error);
+const gchar*         gwy_file_detect(const gchar *filename,
+                                     gboolean only_name,
+                                     GwyFileOperationType operations);
+GwyContainer*        gwy_file_load  (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+GwyFileOperationType gwy_file_save  (GwyContainer *data,
+                                     const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
 
 GQuark gwy_module_file_error_quark(void);
 

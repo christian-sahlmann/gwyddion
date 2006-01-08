@@ -294,7 +294,7 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     const gchar *filename_sys;  /* in system (disk) encoding */
     GwyContainer *data;
     const gchar *name;
-    gboolean oksave = TRUE;
+    GwyFileOperationType saveop;
 
     data = GWY_CONTAINER(g_object_get_data(G_OBJECT(selector), "data"));
     g_return_if_fail(GWY_IS_CONTAINER(data));
@@ -316,27 +316,24 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     }
 
     /* FIXME: why we do not just run gwy_file_save()? */
-    if (!name) {
-        name = gwy_file_detect(filename_sys, TRUE, GWY_FILE_OPERATION_SAVE);
-        if (!name) {
-            name = gwy_file_detect(filename_sys, TRUE,
-                                   GWY_FILE_OPERATION_EXPORT);
-            oksave = FALSE;
+    if (name) {
+        if (gwy_file_func_run_save(name, data, filename_sys,
+                                   GWY_RUN_INTERACTIVE, NULL))
+            saveop = GWY_FILE_OPERATION_SAVE;
+        else {
+            if (!gwy_file_func_run_export(name, data, filename_sys,
+                                          GWY_RUN_INTERACTIVE, NULL))
+                return;
+            saveop = GWY_FILE_OPERATION_EXPORT;
         }
-        if (!name)
+    }
+    else {
+        saveop = gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, NULL);
+        if (!saveop)
             return;
     }
 
-    if (!gwy_file_func_run_save(name, data, filename_sys,
-                                GWY_RUN_INTERACTIVE, NULL)) {
-        oksave = FALSE;
-        if (!gwy_file_func_run_export(name, data, filename_sys,
-                                      GWY_RUN_INTERACTIVE, NULL))
-            return;
-    }
-
-    if (oksave
-        && gwy_file_func_get_operations(name) & GWY_FILE_OPERATION_LOAD) {
+    if (saveop = GWY_FILE_OPERATION_SAVE) {
         gwy_undo_container_set_unmodified(data);
         gwy_container_set_string_by_name(data, "/filename", filename_utf8);
         gwy_container_remove_by_name(data, "/filename/untitled");

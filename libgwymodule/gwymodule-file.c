@@ -59,7 +59,6 @@ static gint     file_menu_entry_compare    (FileFuncInfo *a,
 static GwyFileOperationType get_operations (const FileFuncInfo *func_info);
 
 static GHashTable *file_funcs = NULL;
-static GQuark data_type_key = 0;
 static void (*func_register_callback)(const gchar *fullname) = NULL;
 
 /**
@@ -88,7 +87,6 @@ gwy_file_func_register(const gchar *modname,
         gwy_debug("Initializing...");
         file_funcs = g_hash_table_new_full(g_str_hash, g_str_equal,
                                            NULL, &gwy_file_func_info_free);
-        data_type_key = g_quark_from_static_string("gwy-module-file-data-type");
     }
 
     iinfo = _gwy_module_get_module_info(modname);
@@ -131,8 +129,7 @@ gwy_file_func_info_free(gpointer data)
 {
     FileFuncInfo *ftinfo = (FileFuncInfo*)data;
 
-    /* FIXME: this could make data type set on container dangling */
-    /*g_free((gpointer)ftinfo->info.name);*/
+    g_free((gpointer)ftinfo->info.name);
     g_free((gpointer)ftinfo->info.file_desc);
     g_free((gpointer)ftinfo->menu_path_factory);
     g_free(ftinfo);
@@ -203,20 +200,13 @@ gwy_file_func_run_load(const gchar *name,
                        GError **error)
 {
     FileFuncInfo *func_info;
-    GwyContainer *data;
 
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
     g_return_val_if_fail(func_info->info.load, NULL);
 
-    data = func_info->info.load(filename, mode, error, name);
-
-    if (data)
-        g_object_set_qdata(G_OBJECT(data), data_type_key,
-                           GUINT_TO_POINTER(g_quark_from_string(name)));
-
-    return data;
+    return func_info->info.load(filename, mode, error, name);
 }
 
 /**
@@ -256,10 +246,6 @@ gwy_file_func_run_save(const gchar *name,
     g_object_ref(data);
     status = func_info->info.save(data, filename, mode, error, name);
     g_object_unref(data);
-
-    if (status)
-        g_object_set_qdata(G_OBJECT(data), data_type_key,
-                           GUINT_TO_POINTER(g_quark_from_string(name)));
 
     return status;
 }
@@ -462,9 +448,10 @@ gwy_file_load(const gchar *filename,
  * It tries to find a module implementing %GWY_FILE_OPERATION_SAVE first, when
  * it does not succeed, it falls back to %GWY_FILE_OPERATION_EXPORT.
  *
- * Returns: %TRUE if file save succeeded, %FALSE otherwise.
+ * Returns: The save operation that was actually realized on success, zero
+ *          on failure.
  **/
-gboolean
+GwyFileOperationType
 gwy_file_save(GwyContainer *data,
               const gchar *filename,
               GwyRunType mode,
@@ -488,8 +475,10 @@ gwy_file_save(GwyContainer *data,
 
     if (ddata.winner) {
         gwy_file_detect_free_info(&fileinfo);
-        return gwy_file_func_run_save(ddata.winner,
-                                      data, filename, mode, error);
+        if (gwy_file_func_run_save(ddata.winner,
+                                   data, filename, mode, error))
+            return ddata.mode;
+        return 0;
     }
 
     ddata.mode = GWY_FILE_OPERATION_EXPORT;
@@ -497,8 +486,10 @@ gwy_file_save(GwyContainer *data,
     gwy_file_detect_free_info(&fileinfo);
 
     if (ddata.winner) {
-        return gwy_file_func_run_export(ddata.winner,
-                                        data, filename, mode, error);
+        if (gwy_file_func_run_export(ddata.winner,
+                                     data, filename, mode, error))
+            return ddata.mode;
+        return 0;
     }
 
 gwy_file_save_fail:
@@ -506,7 +497,7 @@ gwy_file_save_fail:
                 GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
                 _("No module can save to this file type."));
 
-    return FALSE;
+    return 0;
 }
 
 /**
