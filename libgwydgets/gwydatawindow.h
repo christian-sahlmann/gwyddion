@@ -78,7 +78,6 @@ GtkWidget*    gwy_data_window_get_color_axis       (GwyDataWindow *data_window);
 GwyContainer* gwy_data_window_get_data             (GwyDataWindow *data_window);
 void          gwy_data_window_set_zoom             (GwyDataWindow *data_window,
                                                     gint izoom);
-void          gwy_data_window_update_title         (GwyDataWindow *data_window);
 gchar*        gwy_data_window_get_base_name        (GwyDataWindow *data_window);
 GtkWidget*    gwy_data_window_get_ul_corner_widget (GwyDataWindow *data_window);
 void          gwy_data_window_set_ul_corner_widget (GwyDataWindow *data_window,

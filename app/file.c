@@ -343,7 +343,6 @@ file_save_as_ok_cb(GtkFileSelection *selector)
     }
 
     gtk_widget_destroy(GTK_WIDGET(selector));
-    gwy_data_window_update_title(GWY_DATA_WINDOW(data_window));
 
     /* change directory to that of the saved file */
     gwy_app_set_current_directory(filename_sys);

@@ -54,6 +54,7 @@ static void     gwy_data_window_update_units      (GwyDataWindow *data_window);
 static gboolean gwy_data_window_update_statusbar  (GwyDataView *data_view,
                                                    GdkEventMotion *event,
                                                    GwyDataWindow *data_window);
+static void     gwy_data_window_update_title      (GwyDataWindow *data_window);
 static void     gwy_data_window_zoom_changed      (GwyDataWindow *data_window);
 static gboolean gwy_data_window_key_pressed       (GwyDataWindow *data_window,
                                                    GdkEventKey *event);
@@ -143,11 +144,16 @@ static void
 gwy_data_window_destroy(GtkObject *object)
 {
     GwyDataWindow *data_window;
+    GwyContainer *data;
 
     data_window = GWY_DATA_WINDOW(object);
     if (data_window->grad_selector) {
         gtk_widget_destroy(gtk_widget_get_toplevel(data_window->grad_selector));
         data_window->grad_selector = NULL;
+
+        data = gwy_data_view_get_data(GWY_DATA_VIEW(data_window->data_view));
+        g_signal_handlers_disconnect_by_func(data, gwy_data_window_update_title,
+                                             data_window);
     }
 
     GTK_OBJECT_CLASS(gwy_data_window_parent_class)->destroy(object);
@@ -192,6 +198,16 @@ gwy_data_window_new(GwyDataView *data_view)
                                   GDK_HINT_MIN_SIZE);
     gwy_data_window_fit_to_screen(data_window, data_view);
     data = gwy_data_view_get_data(data_view);
+
+    g_signal_connect_swapped(data, "item-changed::/filename",
+                             G_CALLBACK(gwy_data_window_update_title),
+                             data_window);
+    g_signal_connect_swapped(data, "item-changed::/filename/title",
+                             G_CALLBACK(gwy_data_window_update_title),
+                             data_window);
+    g_signal_connect_swapped(data, "item-changed::/filename/untitled",
+                             G_CALLBACK(gwy_data_window_update_title),
+                             data_window);
 
     /***** data view *****/
     data_window->data_view = (GtkWidget*)data_view;
@@ -565,11 +581,8 @@ gwy_data_window_update_statusbar(GwyDataView *data_view,
  * @data_window: A data window.
  *
  * Updates the title of @data_window to reflect current state.
- *
- * FIXME: (a) the window title format should be configurable (b) this
- * should probably happen automatically(?).
  **/
-void
+static void
 gwy_data_window_update_title(GwyDataWindow *data_window)
 {
     gchar *window_title, *filename;

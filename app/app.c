@@ -447,7 +447,6 @@ gwy_app_data_window_create(GwyContainer *data)
                              G_CALLBACK(gwy_app_data_popup_menu_popup_key),
                              popup_menu);
 
-    gwy_data_window_update_title(data_window);
     gwy_app_data_window_add(data_window);
     gwy_app_toolbox_update_state(&sens_data);
     gwy_app_data_view_setup_layers2(data_view);
@@ -1216,7 +1215,6 @@ gwy_app_data_window_set_untitled(GwyDataWindow *window,
         }
     }
     gwy_container_set_string_by_name(data, "/filename/untitled", title);
-    gwy_data_window_update_title(window);
 
     return untitled_no;
 }
