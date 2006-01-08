@@ -427,35 +427,6 @@ gwy_app_recent_file_list_prune(Controls *controls)
 }
 
 static void
-gwy_app_recent_file_list_open_file(const gchar *filename_utf8)
-{
-    GwyContainer *data;
-    GtkWidget *data_window;
-    gchar *filename_sys;
-
-    /* XXX: this is copied from file_real_open().
-     * Need an API for doing such things.
-     * Especially when one has to include the silly MS headers */
-    filename_sys = g_filename_from_utf8(filename_utf8,
-                                        -1, NULL, NULL, NULL);
-    g_return_if_fail(filename_sys);
-
-    data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, NULL);
-    if (data) {
-        gwy_container_set_string_by_name(data, "/filename",
-                                         g_strdup(filename_utf8));
-        data_window = gwy_app_data_window_create(data);
-        gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        filename_utf8,
-                                        filename_sys);
-        g_object_unref(data);
-
-        gwy_app_set_current_directory(filename_sys);
-    }
-    g_free(filename_sys);
-}
-
-static void
 gwy_app_recent_file_list_row_activated(GtkTreeView *treeview,
                                        GtkTreePath *path,
                                        G_GNUC_UNUSED GtkTreeViewColumn *column,
@@ -468,7 +439,7 @@ gwy_app_recent_file_list_row_activated(GtkTreeView *treeview,
     model = gtk_tree_view_get_model(treeview);
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_model_get(model, &iter, FILELIST_RAW, &rf, -1);
-    gwy_app_recent_file_list_open_file(rf->file_utf8);
+    gwy_app_file_load(rf->file_utf8, rf->file_sys, NULL);
 }
 
 static void
@@ -483,7 +454,7 @@ gwy_app_recent_file_list_open(GtkWidget *list)
     if (!gtk_tree_selection_get_selected(selection, &store, &iter))
         return;
     gtk_tree_model_get(store, &iter, FILELIST_RAW, &rf, -1);
-    gwy_app_recent_file_list_open_file(rf->file_utf8);
+    gwy_app_file_load(rf->file_utf8, rf->file_sys, NULL);
 }
 
 static void
@@ -705,8 +676,14 @@ gwy_app_recent_file_list_update(GwyDataWindow *data_window,
 {
     g_return_if_fail(gcontrols.store);
 
+    /* Prepare argument to be eaten */
     if (!filename_utf8 && filename_sys)
         filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+    else
+        filename_utf8 = g_strdup(filename_utf8);
+
+    if (filename_sys)
+        filename_sys = g_strdup(filename_sys);
 
     if (filename_utf8) {
         GtkTreeIter iter;

@@ -42,27 +42,24 @@ typedef struct {
 } FileDetectData;
 
 typedef struct {
-    GwyFileFuncInfo info;
-    const gchar *menu_path_translated;
-    gchar *menu_path_factory;
-} FileFuncInfo;
-
-typedef struct {
     gpointer container;
     GQuark name;
     gchar *filename_sys;
 } FileTypeInfo;
+
+typedef struct {
+    GFunc function;
+    gpointer user_data;
+} FileFuncForeachData;
 
 static void     gwy_file_func_info_free    (gpointer data);
 static gboolean gwy_file_detect_fill_info  (GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static void     gwy_file_detect_free_info  (GwyFileDetectInfo *fileinfo);
 static void     file_detect_max_score_cb   (const gchar *key,
-                                            FileFuncInfo *func_info,
+                                            GwyFileFuncInfo *func_info,
                                             FileDetectData *ddata);
-static gint     file_menu_entry_compare    (FileFuncInfo *a,
-                                            FileFuncInfo *b);
-static GwyFileOperationType get_operations (const FileFuncInfo *func_info);
+static GwyFileOperationType get_operations (const GwyFileFuncInfo *func_info);
 static void     gwy_file_type_info_set     (GwyContainer *data,
                                             const gchar *name,
                                             const gchar *filename_sys);
@@ -89,7 +86,7 @@ gwy_file_func_register(const gchar *modname,
                        const GwyFileFuncInfo *func_info)
 {
     _GwyModuleInfoInternal *iinfo;
-    FileFuncInfo *ftinfo;
+    GwyFileFuncInfo *ftinfo;
     gchar *canon_name;
 
     gwy_debug("");
@@ -115,16 +112,13 @@ gwy_file_func_register(const gchar *modname,
         return FALSE;
     }
 
-    ftinfo = g_new0(FileFuncInfo, 1);
-    ftinfo->info = *func_info;
-    ftinfo->info.name = g_strdup(func_info->name);
-    /* FIXME: remove */
-    ftinfo->menu_path_translated = _(func_info->file_desc);
-    ftinfo->menu_path_factory
-        = gwy_strkill(g_strdup(ftinfo->menu_path_translated), "_");
+    ftinfo = g_new(GwyFileFuncInfo, 1);
+    *ftinfo = *func_info;
+    ftinfo->name = g_strdup(func_info->name);
+    ftinfo->file_desc = g_strdup(func_info->file_desc);
 
-    g_hash_table_insert(file_funcs, (gpointer)ftinfo->info.name, ftinfo);
-    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->info.name, NULL);
+    g_hash_table_insert(file_funcs, (gpointer)ftinfo->name, ftinfo);
+    canon_name = g_strconcat(GWY_MODULE_PREFIX_FILE, ftinfo->name, NULL);
     iinfo->funcs = g_slist_append(iinfo->funcs, canon_name);
     if (func_register_callback)
         func_register_callback(canon_name);
@@ -141,11 +135,10 @@ _gwy_file_func_set_register_callback(void (*callback)(const gchar *fullname))
 static void
 gwy_file_func_info_free(gpointer data)
 {
-    FileFuncInfo *ftinfo = (FileFuncInfo*)data;
+    GwyFileFuncInfo *ftinfo = (GwyFileFuncInfo*)data;
 
-    g_free((gpointer)ftinfo->info.name);
-    g_free((gpointer)ftinfo->info.file_desc);
-    g_free((gpointer)ftinfo->menu_path_factory);
+    g_free((gpointer)ftinfo->name);
+    g_free((gpointer)ftinfo->file_desc);
     g_free(ftinfo);
 }
 
@@ -173,20 +166,20 @@ gwy_file_func_run_detect(const gchar *name,
                          const gchar *filename,
                          gboolean only_name)
 {
-    FileFuncInfo *func_info;
+    GwyFileFuncInfo *func_info;
     GwyFileDetectInfo fileinfo;
     gint score = 0;
 
     g_return_val_if_fail(filename, 0);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, 0);
-    if (!func_info->info.detect)
+    if (!func_info->detect)
         return 0;
 
     fileinfo.name = filename;
     /* File must exist if not only_name */
     if (gwy_file_detect_fill_info(&fileinfo, only_name)) {
-        score = func_info->info.detect(&fileinfo, only_name, name);
+        score = func_info->detect(&fileinfo, only_name, name);
         gwy_file_detect_free_info(&fileinfo);
     }
 
@@ -213,15 +206,15 @@ gwy_file_func_run_load(const gchar *name,
                        GwyRunType mode,
                        GError **error)
 {
-    FileFuncInfo *func_info;
+    GwyFileFuncInfo *func_info;
     GwyContainer *data;
 
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
-    g_return_val_if_fail(func_info->info.load, NULL);
+    g_return_val_if_fail(func_info->load, NULL);
 
-    data = func_info->info.load(filename, mode, error, name);
+    data = func_info->load(filename, mode, error, name);
     if (data)
         gwy_file_type_info_set(data, name, filename);
 
@@ -253,17 +246,17 @@ gwy_file_func_run_save(const gchar *name,
                        GwyRunType mode,
                        GError **error)
 {
-    FileFuncInfo *func_info;
+    GwyFileFuncInfo *func_info;
     gboolean status;
 
     g_return_val_if_fail(filename, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
-    g_return_val_if_fail(func_info->info.save, FALSE);
+    g_return_val_if_fail(func_info->save, FALSE);
 
     g_object_ref(data);
-    status = func_info->info.save(data, filename, mode, error, name);
+    status = func_info->save(data, filename, mode, error, name);
     if (status)
         gwy_file_type_info_set(data, name, filename);
     g_object_unref(data);
@@ -296,17 +289,17 @@ gwy_file_func_run_export(const gchar *name,
                          GwyRunType mode,
                          GError **error)
 {
-    FileFuncInfo *func_info;
+    GwyFileFuncInfo *func_info;
     gboolean status;
 
     g_return_val_if_fail(filename, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, FALSE);
-    g_return_val_if_fail(func_info->info.export_, FALSE);
+    g_return_val_if_fail(func_info->export_, FALSE);
 
     g_object_ref(data);
-    status = func_info->info.export_(data, filename, mode, error, name);
+    status = func_info->export_(data, filename, mode, error, name);
     g_object_unref(data);
 
     return status;
@@ -314,26 +307,26 @@ gwy_file_func_run_export(const gchar *name,
 
 static void
 file_detect_max_score_cb(const gchar *key,
-                         FileFuncInfo *func_info,
+                         GwyFileFuncInfo *func_info,
                          FileDetectData *ddata)
 {
     gint score;
 
-    g_assert(gwy_strequal(key, func_info->info.name));
+    g_assert(gwy_strequal(key, func_info->name));
 
-    if (!func_info->info.detect)
+    if (!func_info->detect)
         return;
-    if ((ddata->mode & GWY_FILE_OPERATION_LOAD) && !func_info->info.load)
+    if ((ddata->mode & GWY_FILE_OPERATION_LOAD) && !func_info->load)
         return;
-    if ((ddata->mode & GWY_FILE_OPERATION_SAVE) && !func_info->info.save)
+    if ((ddata->mode & GWY_FILE_OPERATION_SAVE) && !func_info->save)
         return;
-    if ((ddata->mode & GWY_FILE_OPERATION_EXPORT) && !func_info->info.export_)
+    if ((ddata->mode & GWY_FILE_OPERATION_EXPORT) && !func_info->export_)
         return;
 
-    score = func_info->info.detect(ddata->fileinfo, ddata->only_name,
-                                   func_info->info.name);
+    score = func_info->detect(ddata->fileinfo, ddata->only_name,
+                                   func_info->name);
     if (score > ddata->score) {
-        ddata->winner = func_info->info.name;
+        ddata->winner = func_info->name;
         ddata->score = score;
     }
 }
@@ -521,84 +514,28 @@ gwy_file_save_fail:
     return 0;
 }
 
-/**
- * gwy_file_func_build_menu:
- * @item_factory: A #GtkItemFactory to add items to.
- * @prefix: Where to add the menu items to the factory.
- * @item_callback: A #GtkItemFactoryCallback1 called when an item from the
- *                 menu is selected.
- * @type: Only function providing this file operation are included in the
- *        menu.
- *
- * Creates #GtkItemFactory for a file type menu with all registered file type
- * functions.
- *
- * Returns: The menu item factory as a #GtkObject.
- **/
-GtkObject*
-gwy_file_func_build_menu(GtkObject *item_factory,
-                         const gchar *prefix,
-                         GCallback item_callback,
-                         GwyFileOperationType type)
+static void
+gwy_file_func_user_cb(gpointer key,
+                      G_GNUC_UNUSED gpointer value,
+                      gpointer user_data)
 {
-    GtkItemFactoryEntry branch = { NULL, NULL, NULL, 0, "<Branch>", NULL };
-    GtkItemFactoryEntry tearoff = { NULL, NULL, NULL, 0, "<Tearoff>", NULL };
-    GtkItemFactoryEntry item = { NULL, NULL, item_callback, 0, "<Item>", NULL };
-    GtkItemFactory *factory;
-    GString *path;
-    GSList *l, *entries = NULL;
-    gint dp_len;
+    FileFuncForeachData *fffd = (FileFuncForeachData*)user_data;
 
-    g_return_val_if_fail(GTK_IS_ITEM_FACTORY(item_factory), NULL);
-    factory = GTK_ITEM_FACTORY(item_factory);
-
-    if (!file_funcs) {
-        g_warning("No file function present to build menu of");
-        entries = NULL;
-    }
-    else
-        g_hash_table_foreach(file_funcs, gwy_hash_table_to_slist_cb,
-                             &entries);
-    entries = g_slist_sort(entries, (GCompareFunc)file_menu_entry_compare);
-
-    dp_len = strlen(prefix);
-
-    /* the root branch */
-    path = g_string_new(prefix);
-    branch.path = path->str;
-    gtk_item_factory_create_item(factory, &branch, NULL, 1);
-
-    /* the root tearoff */
-    g_string_append(path, "/---");
-    tearoff.path = path->str;
-    gtk_item_factory_create_item(factory, &tearoff, NULL, 1);
-
-    for (l = entries; l; l = g_slist_next(l)) {
-        FileFuncInfo *func_info = (FileFuncInfo*)l->data;
-        GwyFileOperationType capable;
-
-        capable = get_operations(func_info);
-        if (!(capable & type))
-            continue;
-
-        g_string_truncate(path, dp_len + 1);
-        g_string_append(path, func_info->menu_path_translated);
-        item.path = path->str;
-        gtk_item_factory_create_item(factory, &item,
-                                     (gpointer)func_info->info.name, 1);
-    }
-
-    g_string_free(path, TRUE);
-    g_slist_free(entries);
-
-    return item_factory;
+    fffd->function(key, fffd->user_data);
 }
 
-static gint
-file_menu_entry_compare(FileFuncInfo *a,
-                        FileFuncInfo *b)
+void
+gwy_file_func_foreach(GFunc function,
+                      gpointer user_data)
 {
-    return g_utf8_collate(a->menu_path_factory, b->menu_path_factory);
+    FileFuncForeachData fffd;
+
+    if (!file_funcs)
+        return;
+
+    fffd.user_data = user_data;
+    fffd.function = function;
+    g_hash_table_foreach(file_funcs, gwy_file_func_user_cb, &fffd);
 }
 
 /**
@@ -623,17 +560,17 @@ gwy_file_func_get_operations(const gchar *name)
 }
 
 static GwyFileOperationType
-get_operations(const FileFuncInfo *func_info)
+get_operations(const GwyFileFuncInfo *func_info)
 {
     GwyFileOperationType capable = 0;
 
     if (!func_info)
         return capable;
 
-    capable |= func_info->info.load ? GWY_FILE_OPERATION_LOAD : 0;
-    capable |= func_info->info.save ? GWY_FILE_OPERATION_SAVE : 0;
-    capable |= func_info->info.export_ ? GWY_FILE_OPERATION_EXPORT : 0;
-    capable |= func_info->info.detect ? GWY_FILE_OPERATION_DETECT : 0;
+    capable |= func_info->load ? GWY_FILE_OPERATION_LOAD : 0;
+    capable |= func_info->save ? GWY_FILE_OPERATION_SAVE : 0;
+    capable |= func_info->export_ ? GWY_FILE_OPERATION_EXPORT : 0;
+    capable |= func_info->detect ? GWY_FILE_OPERATION_DETECT : 0;
 
     return capable;
 }
@@ -651,13 +588,13 @@ get_operations(const FileFuncInfo *func_info)
 const gchar*
 gwy_file_func_get_description(const gchar *name)
 {
-    FileFuncInfo *func_info;
+    GwyFileFuncInfo *func_info;
 
     func_info = g_hash_table_lookup(file_funcs, name);
     if (!func_info)
         return NULL;
 
-    return func_info->info.file_desc;
+    return func_info->file_desc;
 }
 
 gboolean

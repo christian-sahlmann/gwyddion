@@ -32,6 +32,7 @@
 #include <libgwydgets/gwydgets.h>
 #include <libprocess/cdline.h>
 #include <app/settings.h>
+#include <app/file.h>
 #include <app/app.h>
 
 #define MAX_PARAMS 5

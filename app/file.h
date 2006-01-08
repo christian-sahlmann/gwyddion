@@ -18,24 +18,23 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_APP_GWYAPP_H__
-#define __GWY_APP_GWYAPP_H__
+#ifndef __GWY_APP_FILE_H__
+#define __GWY_APP_FILE_H__
 
-#include <app/app.h>
-#include <app/file.h>
-#include <app/filelist.h>
-#include <app/glmaterial-editor.h>
-#include <app/gradient-editor.h>
-#include <app/graphlist.h>
-#include <app/menu.h>
-#include <app/menu-windowlist.h>
-#include <app/resource-editor.h>
-#include <app/settings.h>
-#include <app/unitool.h>
-#include <app/undo.h>
-#include <app/wait.h>
+#include <libgwyddion/gwycontainer.h>
 
-#endif /* __GWY_APP_GWYAPP_H__ */
+G_BEGIN_DECLS
+
+const gchar*  gwy_app_get_current_directory(void);
+void          gwy_app_set_current_directory(const gchar *directory);
+GwyContainer* gwy_app_file_load            (const gchar *filename_utf8,
+                                            const gchar *filename_sys,
+                                            const gchar *name);
+void          gwy_app_file_open            (const gchar *title);
+
+G_END_DECLS
+
+#endif /* __GWY_APP_FILE_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

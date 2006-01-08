@@ -72,6 +72,7 @@ static void       delete_app_window            (void);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
+static void       gwy_app_file_open_cb         (void);
 
 static GtkTargetEntry dnd_target_table[] = {
   { "STRING",     0, DND_TARGET_STRING },
@@ -698,7 +699,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         "/Save", "/Save As", "/Close", NULL
     };
     GtkItemFactory *item_factory;
-    GtkWidget *menu, *item;
+    GtkWidget *menu;
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA, 0 };
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<file>", accel_group);
@@ -709,13 +710,6 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
 #endif
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items1), menu_items1, NULL);
-    gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Export To"),
-                             G_CALLBACK(gwy_app_file_export_cb),
-                             GWY_FILE_OPERATION_SAVE
-                             | GWY_FILE_OPERATION_EXPORT);
-    gwy_file_func_build_menu(GTK_OBJECT(item_factory), N_("/_Import From"),
-                             G_CALLBACK(gwy_app_file_import_cb),
-                             GWY_FILE_OPERATION_LOAD);
     gtk_item_factory_create_items(item_factory,
                                   G_N_ELEMENTS(menu_items2), menu_items2, NULL);
     menu = gtk_item_factory_get_widget(item_factory, "<file>");
@@ -723,8 +717,6 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     /* set up sensitivity  */
     gwy_app_menu_set_sensitive_array(item_factory, "file", items_need_data,
                                      sens_data.flags);
-    item = gtk_item_factory_get_item(item_factory, "<file>/Export To");
-    gwy_app_menu_set_flags_recursive(item, &sens_data);
     gwy_app_menu_set_recent_files_menu(
         gtk_item_factory_get_widget(item_factory, "<file>/Open Recent"));
 
@@ -995,8 +987,6 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
 {
     gchar *filename;
     gchar **file_list;
-    GwyContainer **containers;
-    GtkWidget *data_window;
     gboolean ok = FALSE;
     gint i, n;
 
@@ -1017,9 +1007,7 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
     for (n = 0; file_list[n] && file_list[n][0]; n++)
         ;
 
-    containers = g_newa(GwyContainer*, n);
     for (i = 0; i < n; i++) {
-        containers[i] = NULL;
         filename = g_strstrip(file_list[i]);
         if (g_str_has_prefix(filename, "file://"))
             filename += sizeof("file://") - 1;
@@ -1027,24 +1015,12 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         if (g_file_test(filename, G_FILE_TEST_IS_REGULAR
                                   | G_FILE_TEST_IS_SYMLINK)) {
             /* FIXME: what about charset conversion? */
-            containers[i] = gwy_file_load(filename, GWY_RUN_INTERACTIVE, NULL);
-            if (containers[i])
-                gwy_container_set_string_by_name(containers[i], "/filename",
-                                                 g_strdup(filename));
-            ok = TRUE;    /* FIXME: what if we accept only some? */
+            if (gwy_app_file_load(filename, NULL, NULL))
+                ok = TRUE;    /* FIXME: what if we accept only some? */
         }
     }
     g_strfreev(file_list);
     gtk_drag_finish(context, ok, FALSE, time);
-    for (i = 0; i < n; i++) {
-        if (!containers[i])
-            continue;
-        data_window = gwy_app_data_window_create(containers[i]);
-        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-        g_object_unref(containers[i]);
-    }
-
-    return;
 }
 
 static void
@@ -1114,6 +1090,12 @@ gwy_app_gl_view_maybe_cb(void)
     g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     g_object_add_weak_pointer(G_OBJECT(dialog), (gpointer*)&dialog);
     gtk_widget_show(dialog);
+}
+
+static void
+gwy_app_file_open_cb(void)
+{
+    gwy_app_file_open(NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -70,9 +70,6 @@ gboolean       gwy_app_quit                        (void);
 /* FIXME: ugly. to be moved somewhere? refactored? */
 void            gwy_app_clean_up_data                (GwyContainer *data);
 
-const gchar*   gwy_app_get_current_directory       (void);
-void           gwy_app_set_current_directory       (const gchar *directory);
-
 G_END_DECLS
 
 #endif /* __GWY_APP_APP_H__ */

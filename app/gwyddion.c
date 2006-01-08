@@ -46,9 +46,11 @@ static void logger(const gchar *log_domain,
                    const gchar *message,
                    gpointer user_data);
 #endif  /* LOG_TO_FILE */
-static void print_help(void);
-static void process_preinit_options(int *argc,
-                                    char ***argv);
+static void open_command_line_files  (gchar **args,
+                                      gint n);
+static void print_help               (void);
+static void process_preinit_options  (int *argc,
+                                      char ***argv);
 static void warn_broken_settings_file(GtkWidget *parent,
                                       const gchar *settings_file);
 
@@ -110,7 +112,7 @@ main(int argc, char *argv[])
     gwy_app_recent_file_list_update(NULL, NULL, NULL);
     gwy_app_splash_close();
 
-    gwy_app_file_open_initial(argv + 1, argc - 1);
+    open_command_line_files(argv + 1, argc - 1);
     if (has_settings && !settings_ok)
         warn_broken_settings_file(toolbox, settings_file);
 
@@ -287,5 +289,24 @@ logger(const gchar *log_domain,
     fflush(logfile);
 }
 #endif  /* LOG_TO_FILE */
+
+static void
+open_command_line_files(gchar **args, gint n)
+{
+    gchar **p;
+    gchar *cwd, *filename;
+
+    /* FIXME: cwd is in GLib encoding. And args? */
+    cwd = g_get_current_dir();
+    for (p = args; n; p++, n--) {
+        if (g_path_is_absolute(*p))
+            filename = g_strdup(*p);
+        else
+            filename = g_build_filename(cwd, *p, NULL);
+        gwy_app_file_load(NULL, filename, NULL);
+        g_free(filename);
+    }
+    g_free(cwd);
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

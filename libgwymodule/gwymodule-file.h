@@ -94,6 +94,8 @@ gboolean      gwy_file_func_run_export(const gchar *name,
 
 GwyFileOperationType gwy_file_func_get_operations (const gchar *name);
 const gchar*         gwy_file_func_get_description(const gchar *name);
+void                 gwy_file_func_foreach        (GFunc function,
+                                                   gpointer user_data);
 
 /* high-level interface */
 const gchar*         gwy_file_detect       (const gchar *filename,
@@ -111,13 +113,6 @@ gboolean             gwy_file_get_data_info(GwyContainer *data,
                                             const gchar **filename);
 
 GQuark gwy_module_file_error_quark(void);
-
-/* FIXME: kill this */
-#include <gtk/gtkobject.h>
-GtkObject*      gwy_file_func_build_menu    (GtkObject *item_factory,
-                                             const gchar *prefix,
-                                             GCallback item_callback,
-                                             GwyFileOperationType type);
 
 G_END_DECLS
 

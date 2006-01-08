@@ -35,6 +35,7 @@
 #include <libgwydgets/gwydgets.h>
 #include "app.h"
 #include "menu.h"
+#include "file.h"
 #include "filelist.h"
 #include "gwyappinternal.h"
 
@@ -50,6 +51,7 @@
         set_sensitive_state(item, state); \
     } while (0)
 
+static void       gwy_app_file_open_recent_cb       (GObject *item);
 static void       gwy_app_update_last_process_func  (GtkWidget *menu,
                                                      const gchar *name);
 static void       setup_sensitivity_keys            (void);
@@ -543,6 +545,16 @@ gwy_app_menu_set_recent_files_menu(GtkWidget *menu)
 
     recent_files_menu = menu;
     g_object_add_weak_pointer(G_OBJECT(menu), (gpointer*)&recent_files_menu);
+}
+
+static void
+gwy_app_file_open_recent_cb(GObject *item)
+{
+    const gchar *filename_utf8;  /* in UTF-8 */
+
+    filename_utf8 = g_object_get_data(G_OBJECT(item), "filename");
+    g_return_if_fail(filename_utf8);
+    gwy_app_file_load(filename_utf8, NULL, NULL);
 }
 
 /**
