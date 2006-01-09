@@ -43,7 +43,7 @@ gwy_data_line_get_max(GwyDataLine *data_line)
 
     max = data_line->data[0];
     for (i = 1; i < data_line->res; i++) {
-        if (G_UNLIKELY(data_line->data[i] < max))
+        if (G_UNLIKELY(data_line->data[i] > max))
             max = data_line->data[i];
     }
     return max;

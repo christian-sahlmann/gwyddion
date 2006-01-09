@@ -524,6 +524,7 @@ gwy_data_field_get_drift_from_correlation(GwyDataField *data_field,
     gwy_data_field_resample(data_field, data_field->xres/1, data_field->yres, GWY_INTERPOLATION_BILINEAR);
 }
 
+
 GwyDataField*
 gwy_data_field_correct_drift(GwyDataField *data_field,
                              GwyDataField *corrected_field,
@@ -533,10 +534,10 @@ gwy_data_field_correct_drift(GwyDataField *data_field,
     gint min, max, newxres, col, row;
     gdouble *newdata, dx, dy;
 
-    min = (gint)gwy_data_line_get_min(drift);
-    max = (gint)gwy_data_line_get_max(drift);
+    min = (gint)gwy_data_field_rtoi(data_field, gwy_data_line_get_min(drift));
+    max = (gint)gwy_data_field_rtoi(data_field, gwy_data_line_get_max(drift));
     newxres = gwy_data_field_get_xres(data_field) + MIN(0, min) + MAX(0, max);
-
+    
     gwy_data_field_resample(corrected_field, newxres, gwy_data_field_get_yres(data_field),
                             GWY_INTERPOLATION_NONE);
     gwy_data_field_fill(corrected_field, gwy_data_field_get_min(data_field));
@@ -552,10 +553,13 @@ gwy_data_field_correct_drift(GwyDataField *data_field,
                 newdata[col + row*newxres] = 
                     gwy_data_field_get_dval(data_field, dx, dy, GWY_INTERPOLATION_BILINEAR);
         }
-
-//    if (crop)
-//        gwy_data_field_resize(corrected_field, MAX(0, min), 0, 
-//                              MIN(newxres, max), gwy_data_field_get_yres(data_field));
+/*printf("min %d (%g) max %d (%g)\n", min, gwy_data_line_get_min(drift), max, gwy_data_line_get_max(drift));
+printf("%d %d %d %d\n",                        MAX(0, -min), 0, 
+                              MIN(newxres, gwy_data_field_get_xres(data_field) - max), gwy_data_field_get_yres(data_field));
+*/
+    if (crop)
+        gwy_data_field_resize(corrected_field, MAX(0, -min), 0, 
+                              MIN(newxres, gwy_data_field_get_xres(data_field) - max), gwy_data_field_get_yres(data_field));
 }
 
 

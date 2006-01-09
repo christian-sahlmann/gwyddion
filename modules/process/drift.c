@@ -88,8 +88,7 @@ static void        preview                    (DriftControls *controls,
 static void        reset                    (DriftControls *controls,
                                                DriftArgs *args);
 static void        drift_ok                    (DriftControls *controls,
-                                               DriftArgs *args,
-                                               GwyContainer *data);
+                                               DriftArgs *args);
 static void        crop                        (DriftControls *controls,
                                                 DriftArgs *args);
 static void        drift_load_args              (GwyContainer *container,
@@ -169,7 +168,7 @@ drift(GwyContainer *data, GwyRunType run)
         drift_save_args(gwy_app_settings_get(), &args);
     }
     else
-        drift_ok(NULL, &args, data);
+        drift_ok(NULL, &args);
 
     return ok;
 }
@@ -220,11 +219,11 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
 
-    controls.mydata = GWY_CONTAINER(gwy_serializable_duplicate(G_OBJECT(data)));
+    controls.mydata = gwy_container_duplicate_by_prefix(data, "/0/data", NULL);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = GTK_OBJECT(gwy_layer_basic_new());
     
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");    
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view),
                                  GWY_PIXMAP_LAYER(layer));
@@ -257,8 +256,8 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
                                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                                  &args->method, args->method, TRUE);
    
-    g_signal_connect(controls.method, "value_changed",
-                                      G_CALLBACK(drift_invalidate), &controls);
+ //   g_signal_connect(controls.method, "value_changed",
+ //                                     G_CALLBACK(drift_invalidate), &controls);
     
     
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.method);
@@ -388,7 +387,7 @@ drift_dialog(DriftArgs *args, GwyContainer *data)
     save_mask_color(controls.color_button, data);
     drift_dialog_update_values(&controls, args);
     gtk_widget_destroy(dialog);
-    drift_ok(&controls, args, data);
+    drift_ok(&controls, args);
     g_object_unref(controls.mydata);
 
     return TRUE;
@@ -504,7 +503,7 @@ preview(DriftControls *controls,
     mask_process(dfield, GWY_DATA_FIELD(maskfield), args, controls);
     controls->computed = TRUE;
 
-    gwy_data_field_data_changed(maskfield);
+    gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
 }
 
 static void
@@ -520,13 +519,12 @@ reset(DriftControls *controls,
     }
     controls->computed = FALSE;
 
-    gwy_data_field_data_changed(maskfield);
+    gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
 }
     
 static void
 drift_ok(DriftControls *controls,
-        DriftArgs *args,
-        GwyContainer *data)
+        DriftArgs *args)
 {
 
     GtkWidget *graph;
@@ -541,7 +539,7 @@ drift_ok(DriftControls *controls,
    
     if (args->is_correct)
     {
-	newdata = gwy_container_duplicate(controls->mydata);
+	newdata = gwy_container_duplicate_by_prefix(controls->mydata, "/0/data", NULL);
 	gwy_app_clean_up_data(newdata);
 	newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
 	data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
@@ -552,8 +550,6 @@ drift_ok(DriftControls *controls,
 	    controls->result,
 	    args->is_crop);
 
-	gwy_container_remove_by_prefix(newdata, "/0/mask");
-	
 	data_window = gwy_app_data_window_create(newdata);
 	gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
 	g_object_unref(newdata);
@@ -574,7 +570,7 @@ drift_ok(DriftControls *controls,
     	gwy_object_unref(cmodel);
     	gwy_object_unref(gmodel);
     	gwy_object_unref(controls->result);
-    	gwy_app_graph_window_create(GWY_GRAPH(graph), data);
+    	gwy_app_graph_window_create(GWY_GRAPH(graph), controls->mydata);
     }
 }
 
@@ -594,7 +590,7 @@ mask_process(GwyDataField *dfield,
         gwy_data_field_get_drift_from_correlation(dfield, 
                                               controls->result,
                                               MAX(1, (gint)(args->sensitivity/10)),
-                                              MAX(1, (gint)(args->smoothing/8)),
+                                              100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
 					      1 - args->sensitivity/500.0);
    
     step = dfield->yres/10;
