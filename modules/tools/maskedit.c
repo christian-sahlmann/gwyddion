@@ -340,8 +340,6 @@ maybe_add_mask(GwyUnitoolState *state)
     GwyDataField *mask;
     GwyContainer *data;
     GwyDataView *data_view;
-    GwyPixmapLayer *layer;
-    GwySIUnit *siunit;
 
     data_view = gwy_data_window_get_data_view(state->data_window);
     data = gwy_data_view_get_data(data_view);
