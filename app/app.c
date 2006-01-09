@@ -240,6 +240,115 @@ gwy_app_confirm_quit_dialog(GSList *unsaved)
 
 /*****************************************************************************
  *                                                                           *
+ *     Data Browser                                                          *
+ *                                                                           *
+ *****************************************************************************/
+
+/**
+ * gwy_app_data_browser_create:
+ * @data: A data container.
+ *
+ * Creates a new data browser window. Right now it will only list @data,
+ * but eventually should be able to list all data channels.
+ *
+ * Also calls gtk_window_present() on it.
+ *
+ * Returns: The newly created data browser window.
+ **/
+GtkWidget*
+gwy_app_data_browser_create(GwyContainer *data)
+{
+    GtkWidget *window, *notebook;
+    GtkWidget *box_page;
+    GtkWidget *label;
+
+    GtkListStore *store;
+    GtkTreeIter iter;
+    GtkWidget *tree;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+
+    const guchar *filename = NULL;
+    const guchar *channel_title = NULL;
+    gchar *base_name;
+    gchar *window_title;
+
+    enum {
+        VIS_COLUMN,
+        TITLE_COLUMN,
+        N_COLUMNS
+    };
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+
+
+    /*XXX: much of this code must be moved elsewhere later, but its
+    convenient to dump it all here for now */
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(window), 300, 300);
+    window_title = g_strdup("Data Browser");
+    if (gwy_container_gis_string_by_name(data, "/filename", &filename)) {
+        base_name = g_path_get_basename(filename);
+        window_title = g_strconcat(window_title, ": ", base_name, NULL);
+        g_free(base_name);
+    }
+    gtk_window_set_title(GTK_WINDOW(window), window_title);
+    g_free(window_title);
+
+    notebook = gtk_notebook_new();
+
+    /* Construct the GtkTreeView that will display data channels */
+    store = gtk_list_store_new(N_COLUMNS, G_TYPE_BOOLEAN, G_TYPE_STRING);
+    /*XXX: Actually add list of Channels here */
+    gtk_list_store_append(store, &iter);
+    gwy_container_gis_string_by_name(data, "/filename/title",
+                                     &channel_title);
+    gtk_list_store_set(store, &iter,
+                       VIS_COLUMN, TRUE,
+                       TITLE_COLUMN, channel_title,
+                       -1);
+    tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    renderer = gtk_cell_renderer_toggle_new();
+    column = gtk_tree_view_column_new_with_attributes("Title",
+            renderer,
+            "active", VIS_COLUMN,
+            NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes("Title",
+                                                      renderer,
+                                                      "text", TITLE_COLUMN,
+                                                      NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+    /* Create the notebook tabs */
+    box_page = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box_page), tree, FALSE, FALSE, 0);
+    label = gtk_label_new("Data Channels");
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), box_page, label);
+
+    box_page = gtk_vbox_new(FALSE, 0);
+    label = gtk_label_new("Graphs");
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), box_page, label);
+
+    box_page = gtk_vbox_new(FALSE, 0);
+    label = gtk_label_new("Masks");
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), box_page, label);
+
+    gtk_container_add(GTK_CONTAINER(GTK_WINDOW(window)), notebook);
+
+    //g_signal_connect(data_window, "destroy",
+    //                 G_CALLBACK(gwy_app_data_window_remove), NULL);
+
+    gtk_widget_show_all(notebook);
+    gtk_window_present(GTK_WINDOW(window));
+    return window;
+}
+
+/*****************************************************************************
+ *                                                                           *
  *     Data window list management                                           *
  *                                                                           *
  *****************************************************************************/
@@ -714,7 +823,7 @@ gwy_app_graph_window_get_current(void)
 /**
  * gwy_app_graph_window_set_current:
  * @window: A graph window.
- * 
+ *
  * Makes a graph window current.
  *
  * Eventually adds @window it to the graph window list if it isn't present
@@ -1001,7 +1110,7 @@ gwy_app_3d_window_get_current(void)
 /**
  * gwy_app_3d_window_set_current:
  * @window: A 3D view window.
- * 
+ *
  * Makes a 3D view window current.
  *
  * Eventually adds @window it to the 3D view window list if it isn't present
@@ -1433,7 +1542,7 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
 {
     GwyContainer *data;
     GtkWidget *dialog, *gwy3dview;
-    const gchar *filename_utf8;
+    const guchar *filename_utf8;
     gchar *filename_sys;
     gboolean need_free_utf = FALSE;
 
@@ -1444,7 +1553,7 @@ gwy_app_3d_window_export(Gwy3DWindow *gwy3dwindow)
                                       "gwy-app-export-filename");
     if (!filename_utf8) {
         if (gwy_container_gis_string_by_name(data, "/filename",
-                                             (const guchar**)&filename_utf8)) {
+                                             &filename_utf8)) {
             /* FIXME: this is ugly, invent a better filename */
             filename_utf8 = g_strconcat(filename_utf8, ".png", NULL);
             need_free_utf = TRUE;

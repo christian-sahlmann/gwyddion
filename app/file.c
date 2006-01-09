@@ -374,7 +374,7 @@ gwy_app_file_load(const gchar *filename_utf8,
                   const gchar *filename_sys,
                   const gchar *name)
 {
-    GtkWidget *data_window, *dialog;
+    GtkWidget *data_window, *dialog, *data_browser;
     gboolean free_utf8 = FALSE, free_sys = FALSE;
     GwyContainer *data;
     GError *err = NULL;
@@ -413,6 +413,8 @@ gwy_app_file_load(const gchar *filename_utf8,
 
         /* TODO: replace by browser construction */
         data_window = gwy_app_data_window_create(data);
+        data_browser = gwy_app_data_browser_create(data);
+
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
                                         filename_utf8,
                                         filename_sys);
