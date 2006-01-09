@@ -34,11 +34,15 @@ enum {
     COLUMN_LABEL
 };
 
+typedef struct {
+    GSList *list;
+    GwyFileOperationType fileop;
+} TypeListData;
+
 static gboolean confirm_overwrite     (GtkWidget *chooser);
 static void     gwy_app_file_add_types(GtkListStore *store,
                                        GwyFileOperationType fileop);
 
-static GQuark fileop_quark = 0;
 static gchar *current_dir = NULL;
 
 /*** Queer stuff that maybe even doesn't belong here ***********************/
@@ -280,7 +284,7 @@ gwy_app_file_open(void)
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(store, &iter,
                        COLUMN_FILETYPE, "",
-                       COLUMN_LABEL, _("Detect automatically"),
+                       COLUMN_LABEL, _("Automatically detected"),
                        -1);
     gwy_app_file_add_types(store, GWY_FILE_OPERATION_LOAD);
     types = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
@@ -292,11 +296,9 @@ gwy_app_file_open(void)
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(types), renderer, TRUE);
     gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(types), renderer,
                                   "text", COLUMN_LABEL);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
-                                         COLUMN_FILETYPE, GTK_SORT_ASCENDING);
 
     hbox = gtk_hbox_new(FALSE, 4);
-    label = gtk_label_new_with_mnemonic(_("_File format:"));
+    label = gtk_label_new_with_mnemonic(_("File _type:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), types, TRUE, TRUE, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), types);
@@ -513,11 +515,9 @@ gwy_app_file_save_as(void)
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(types), renderer, TRUE);
     gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(types), renderer,
                                   "text", COLUMN_LABEL);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
-                                         COLUMN_FILETYPE, GTK_SORT_ASCENDING);
 
     hbox = gtk_hbox_new(FALSE, 4);
-    label = gtk_label_new_with_mnemonic(_("_File format:"));
+    label = gtk_label_new_with_mnemonic(_("File _type:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), types, TRUE, TRUE, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), types);
@@ -525,6 +525,7 @@ gwy_app_file_save_as(void)
     gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(dialog), hbox);
 
     filename_sys = NULL;
+    name = NULL;
     while (TRUE) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         if (response != GTK_RESPONSE_OK)
@@ -599,34 +600,45 @@ confirm_overwrite(GtkWidget *chooser)
 
 static void
 gwy_app_file_add_type(const gchar *name,
-                      GtkListStore *store)
+                      TypeListData *data)
 {
-    GwyFileOperationType fileop;
-    GtkTreeIter iter;
-
-    fileop = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(store),
-                                                 fileop_quark));
-    if (!(gwy_file_func_get_operations(name) & fileop))
+    if (!(gwy_file_func_get_operations(name) & data->fileop))
         return;
 
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       COLUMN_FILETYPE, name,
-                       COLUMN_LABEL,
-                       gettext(gwy_file_func_get_description(name)),
-                       -1);
+    data->list = g_slist_prepend(data->list, (gpointer)name);
+}
+
+static gint
+gwy_app_file_type_compare(gconstpointer a,
+                          gconstpointer b)
+{
+    return g_utf8_collate(_(gwy_file_func_get_description((const gchar*)a)),
+                          _(gwy_file_func_get_description((const gchar*)b)));
 }
 
 static void
 gwy_app_file_add_types(GtkListStore *store,
                        GwyFileOperationType fileop)
 {
-    if (!fileop_quark)
-        fileop_quark = g_quark_from_static_string("fileop");
+    TypeListData tldata;
+    GtkTreeIter iter;
+    GSList *l;
 
-    g_object_set_qdata(G_OBJECT(store), fileop_quark, GUINT_TO_POINTER(fileop));
-    gwy_file_func_foreach((GFunc)gwy_app_file_add_type, store);
-    g_object_set_qdata(G_OBJECT(store), fileop_quark, NULL);
+    tldata.list = NULL;
+    tldata.fileop = fileop;
+    gwy_file_func_foreach((GFunc)gwy_app_file_add_type, &tldata);
+    tldata.list = g_slist_sort(tldata.list, gwy_app_file_type_compare);
+
+    for (l = tldata.list; l; l = g_slist_next(l)) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                           COLUMN_FILETYPE, l->data,
+                           COLUMN_LABEL,
+                           gettext(gwy_file_func_get_description(l->data)),
+                           -1);
+    }
+
+    g_slist_free(tldata.list);
 }
 
 /************************** Documentation ****************************/
