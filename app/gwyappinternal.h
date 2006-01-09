@@ -47,7 +47,6 @@ void         gwy_app_run_process_func_in_mode    (gchar *name,
                                                   GwyRunType run);
 void         gwy_app_run_graph_func_cb           (gchar *name);
 void         gwy_app_file_duplicate_cb           (void);
-void         gwy_app_file_close_cb               (void);
 
 G_END_DECLS
 

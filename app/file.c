@@ -47,21 +47,6 @@ static gchar *current_dir = NULL;
 
 /*** Queer stuff that maybe even doesn't belong here ***********************/
 
-/* FIXME: I'd like to close Ctrl-W also other windows, but 3D View hangs
- * (again), and sending "delete_event" signal does nothing. */
-void
-gwy_app_file_close_cb(void)
-{
-    GtkWidget *window;
-
-    window = gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_ANY);
-    gwy_debug("current is %p: %s", window,
-              g_type_name(G_TYPE_FROM_INSTANCE(window)));
-    if (!GWY_IS_DATA_WINDOW(window))
-        return;
-    gtk_widget_destroy(window);
-}
-
 void
 gwy_app_file_duplicate_cb(void)
 {

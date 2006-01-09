@@ -71,6 +71,7 @@ static void       gwy_app_meta_browser         (void);
 static void       delete_app_window            (void);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
+static void       gwy_app_close_cb             (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
 
 static GtkTargetEntry dnd_target_table[] = {
@@ -670,9 +671,9 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
     };
     static GtkItemFactoryEntry menu_items2[] = {
         {
-            N_("/_Close"),
+            N_("/Close _Window"),
             "<control>W",
-            gwy_app_file_close_cb,
+            gwy_app_close_cb,
             0,
             "<StockItem>",
             GTK_STOCK_CLOSE
@@ -695,7 +696,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         },
     };
     static const gchar *items_need_data[] = {
-        "/Save", "/Save As", "/Close", NULL
+        "/Save", "/Save As", "/Close Window", NULL
     };
     GtkItemFactory *item_factory;
     GtkWidget *menu;
@@ -1033,7 +1034,7 @@ delete_app_window(void)
 {
     gboolean boo;
 
-    g_signal_emit_by_name(gwy_app_main_window_get(), "delete_event",
+    g_signal_emit_by_name(gwy_app_main_window_get(), "delete-event",
                           NULL, &boo);
 }
 
@@ -1053,6 +1054,16 @@ gwy_app_redo_cb(void)
 
     if ((data = gwy_data_window_get_data(gwy_app_data_window_get_current())))
         gwy_app_undo_redo_container(data);
+}
+
+static void
+gwy_app_close_cb(void)
+{
+    GtkWidget *window;
+    gboolean boo;
+
+    if ((window = gwy_app_get_current_window(GWY_APP_WINDOW_TYPE_ANY)))
+        g_signal_emit_by_name(window, "delete-event", NULL, &boo);
 }
 
 static void
