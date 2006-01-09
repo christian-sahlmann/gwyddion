@@ -27,14 +27,17 @@ G_BEGIN_DECLS
 
 const gchar*  gwy_app_get_current_directory(void);
 void          gwy_app_set_current_directory(const gchar *directory);
+
 GwyContainer* gwy_app_file_load            (const gchar *filename_utf8,
                                             const gchar *filename_sys,
                                             const gchar *name);
-void          gwy_app_file_open            (const gchar *title);
+void          gwy_app_file_open            (void);
 gboolean      gwy_app_file_write           (GwyContainer *data,
                                             const gchar *filename_utf8,
                                             const gchar *filename_sys,
                                             const gchar *name);
+void          gwy_app_file_save            (void);
+void          gwy_app_file_save_as         (void);
 
 G_END_DECLS
 

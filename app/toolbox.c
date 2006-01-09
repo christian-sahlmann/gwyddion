@@ -72,7 +72,6 @@ static void       delete_app_window            (void);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
 static void       gwy_app_gl_view_maybe_cb     (void);
-static void       gwy_app_file_open_cb         (void);
 
 static GtkTargetEntry dnd_target_table[] = {
   { "STRING",     0, DND_TARGET_STRING },
@@ -631,7 +630,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         {
             N_("/_Open"),
             "<control>O",
-            gwy_app_file_open_cb,
+            gwy_app_file_open,
             0,
             "<StockItem>",
             GTK_STOCK_OPEN
@@ -655,7 +654,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         {
             N_("/_Save"),
             "<control>S",
-            gwy_app_file_save_cb,
+            gwy_app_file_save,
             0,
             "<StockItem>",
             GTK_STOCK_SAVE
@@ -663,7 +662,7 @@ gwy_app_menu_create_file_menu(GtkAccelGroup *accel_group)
         {
             N_("/Save _As"),
             "<control><shift>S",
-            gwy_app_file_save_as_cb,
+            gwy_app_file_save_as,
             0,
             "<StockItem>",
             GTK_STOCK_SAVE_AS
@@ -1090,12 +1089,6 @@ gwy_app_gl_view_maybe_cb(void)
     g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     g_object_add_weak_pointer(G_OBJECT(dialog), (gpointer*)&dialog);
     gtk_widget_show(dialog);
-}
-
-static void
-gwy_app_file_open_cb(void)
-{
-    gwy_app_file_open(NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

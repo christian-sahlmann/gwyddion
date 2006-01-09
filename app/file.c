@@ -26,8 +26,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
-#include <gtk/gtkfilesel.h>
-#include <gtk/gtkmessagedialog.h>
+#include <gtk/gtk.h>
 #include "gwyapp.h"
 
 enum {
@@ -35,15 +34,14 @@ enum {
     COLUMN_LABEL
 };
 
-static void              file_save_as_ok_cb    (GtkFileSelection *selector);
-static GtkFileSelection* create_save_as_dialog (const gchar *title,
-                                                GCallback ok_callback);
-static gboolean          confirm_overwrite     (GtkWindow *parent,
-                                                const gchar *filename);
-static void              remove_data_window_callback (GtkWidget *selector,
-                                                      GwyDataWindow *data_window);
+static gboolean confirm_overwrite     (GtkWidget *chooser);
+static void     gwy_app_file_add_types(GtkListStore *store,
+                                       GwyFileOperationType fileop);
 
+static GQuark fileop_quark = 0;
 static gchar *current_dir = NULL;
+
+/*** Queer stuff that maybe even doesn't belong here ***********************/
 
 /* FIXME: I'd like to close Ctrl-W also other windows, but 3D View hangs
  * (again), and sending "delete_event" signal does nothing. */
@@ -58,46 +56,6 @@ gwy_app_file_close_cb(void)
     if (!GWY_IS_DATA_WINDOW(window))
         return;
     gtk_widget_destroy(window);
-}
-
-void
-gwy_app_file_save_as_cb(void)
-{
-    GtkFileSelection *selector;
-
-    selector = create_save_as_dialog(_("Save File"),
-                                     G_CALLBACK(file_save_as_ok_cb));
-    if (!selector)
-        return;
-    gtk_widget_show_all(GTK_WIDGET(selector));
-}
-
-void
-gwy_app_file_save_cb(void)
-{
-    GwyContainer *data;
-    const gchar *filename_utf8;  /* in UTF-8 */
-    const gchar *filename_sys;  /* in GLib encoding */
-
-    /* FIXME: if a graph window is active, save its associated data (cannot
-     * do until 1.6), if a 3D window is active, save its associated data */
-    data = gwy_app_get_current_data();
-    g_return_if_fail(GWY_IS_CONTAINER(data));
-
-    if (gwy_container_contains_by_name(data, "/filename"))
-        filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
-    else {
-        gwy_app_file_save_as_cb();
-        return;
-    }
-    gwy_debug("%s", filename_utf8);
-    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
-    if (!filename_sys
-        || !*filename_sys
-        || !gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, NULL))
-        gwy_app_file_save_as_cb();
-    else
-        gwy_undo_container_set_unmodified(data);
 }
 
 void
@@ -126,163 +84,6 @@ gwy_app_file_duplicate_cb(void)
     data_window = GWY_DATA_WINDOW(gwy_app_data_window_create(data));
     gwy_app_data_window_set_untitled(data_window, NULL);
     g_object_unref(data);
-}
-
-void
-gwy_app_file_export_cb(const gchar *name)
-{
-    GtkFileSelection *selector;
-
-    selector = create_save_as_dialog(_("Export Data"),
-                                     G_CALLBACK(file_save_as_ok_cb));
-    if (!selector)
-        return;
-    gtk_file_selection_set_filename(selector, gwy_app_get_current_directory());
-    g_object_set_data(G_OBJECT(selector), "file-type", (gpointer)name);
-    gtk_widget_show_all(GTK_WIDGET(selector));
-}
-
-static GtkFileSelection*
-create_save_as_dialog(const gchar *title,
-                      GCallback ok_callback)
-{
-    GtkFileSelection *selector;
-    GwyDataWindow *data_window;
-    GwyContainer *data;
-    const gchar *filename_utf8;  /* in UTF-8 */
-
-    data_window = gwy_app_data_window_get_current();
-    g_return_val_if_fail(GWY_IS_DATA_WINDOW(data_window), NULL);
-    data = gwy_app_get_current_data();
-    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
-
-    selector = GTK_FILE_SELECTION(gtk_file_selection_new(title));
-    if (gwy_container_contains_by_name(data, "/filename")) {
-        gchar *filename_sys;
-
-        filename_utf8 = gwy_container_get_string_by_name(data, "/filename");
-        filename_sys = g_filename_from_utf8(filename_utf8, -1,
-                                            NULL, NULL, NULL);
-        gtk_file_selection_set_filename(selector, filename_sys);
-        g_free(filename_sys);
-    }
-    else
-        gtk_file_selection_set_filename(selector,
-                                        gwy_app_get_current_directory());
-    g_object_set_data(G_OBJECT(selector), "data", data);
-    g_object_set_data(G_OBJECT(selector), "window", data_window);
-
-    g_signal_connect_swapped(selector->ok_button, "clicked",
-                             ok_callback, selector);
-    g_signal_connect_swapped(selector->cancel_button, "clicked",
-                             G_CALLBACK(gtk_widget_destroy), selector);
-    g_signal_connect(selector, "destroy",
-                     G_CALLBACK(remove_data_window_callback), data_window);
-    g_signal_connect_swapped(data_window, "destroy",
-                             G_CALLBACK(gtk_widget_destroy), selector);
-
-    return selector;
-}
-
-static void
-file_save_as_ok_cb(GtkFileSelection *selector)
-{
-    GtkWindow *data_window;
-    const gchar *filename_utf8;  /* in UTF-8 */
-    const gchar *filename_sys;  /* in GLib encoding */
-    GwyContainer *data;
-    const gchar *name;
-    GwyFileOperationType saveop;
-
-    data = GWY_CONTAINER(g_object_get_data(G_OBJECT(selector), "data"));
-    g_return_if_fail(GWY_IS_CONTAINER(data));
-    data_window = GTK_WINDOW(g_object_get_data(G_OBJECT(selector), "window"));
-    g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
-
-    name = (const gchar*)g_object_get_data(G_OBJECT(selector), "file-type");
-
-    filename_sys = gtk_file_selection_get_filename(selector);
-    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-    if (g_file_test(filename_sys,
-                     G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK)) {
-        if (!confirm_overwrite(GTK_WINDOW(selector), filename_utf8))
-            return;
-    }
-    else if (g_file_test(filename_sys, G_FILE_TEST_EXISTS)) {
-        g_warning("Not a regular file `%s'", filename_utf8);
-        return;
-    }
-
-    /* FIXME: why we do not just run gwy_file_save()? */
-    if (name) {
-        if (gwy_file_func_run_save(name, data, filename_sys,
-                                   GWY_RUN_INTERACTIVE, NULL))
-            saveop = GWY_FILE_OPERATION_SAVE;
-        else {
-            if (!gwy_file_func_run_export(name, data, filename_sys,
-                                          GWY_RUN_INTERACTIVE, NULL))
-                return;
-            saveop = GWY_FILE_OPERATION_EXPORT;
-        }
-    }
-    else {
-        saveop = gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, NULL);
-        if (!saveop)
-            return;
-    }
-
-    if (saveop == GWY_FILE_OPERATION_SAVE) {
-        gwy_undo_container_set_unmodified(data);
-        gwy_container_set_string_by_name(data, "/filename", filename_utf8);
-        gwy_container_remove_by_name(data, "/filename/untitled");
-        gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
-                                        filename_utf8,
-                                        filename_sys);
-    }
-
-    gtk_widget_destroy(GTK_WIDGET(selector));
-
-    /* change directory to that of the saved file */
-    gwy_app_set_current_directory(filename_sys);
-}
-
-static gboolean
-confirm_overwrite(GtkWindow *parent,
-                  const gchar *filename)
-{
-    GtkWidget *dialog;
-    gint response;
-
-    dialog = gtk_message_dialog_new(parent,
-                                    GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_QUESTION,
-                                    GTK_BUTTONS_YES_NO,
-                                    _("File %s already exists. Overwrite?"),
-                                    filename);
-    gtk_window_set_title(GTK_WINDOW(dialog), _("Overwrite?"));
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
-
-    return response == GTK_RESPONSE_YES;
-}
-
-static void
-remove_data_window_callback(GtkWidget *selector,
-                            GwyDataWindow *data_window)
-{
-    g_signal_handlers_disconnect_matched(selector,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         remove_data_window_callback,
-                                         data_window);
-    g_signal_handlers_disconnect_matched(data_window,
-                                         G_SIGNAL_MATCH_FUNC
-                                         | G_SIGNAL_MATCH_DATA,
-                                         0, 0, NULL,
-                                         gtk_widget_destroy,
-                                         selector);
-
 }
 
 /*** Current directory handling ********************************************/
@@ -446,25 +247,13 @@ gwy_app_file_load(const gchar *filename_utf8,
     return data;
 }
 
-static void
-gwy_app_file_load_add(const gchar *name,
-                      GtkListStore *store)
-{
-    GtkTreeIter iter;
-
-    if (!(gwy_file_func_get_operations(name) & GWY_FILE_OPERATION_LOAD))
-        return;
-
-    gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter,
-                       COLUMN_FILETYPE, name,
-                       COLUMN_LABEL,
-                       gettext(gwy_file_func_get_description(name)),
-                       -1);
-}
-
+/**
+ * gwy_app_file_open:
+ *
+ * Opens a user-selected file (very high-level app function).
+ **/
 void
-gwy_app_file_open(const gchar *title)
+gwy_app_file_open(void)
 {
     GtkListStore *store;
     GtkCellRenderer *renderer;
@@ -474,13 +263,12 @@ gwy_app_file_open(const gchar *title)
     gchar *name;
     gint response;
 
-    if (!title)
-        title = _("Open File");
-    dialog = gtk_file_chooser_dialog_new(title, NULL,
+    dialog = gtk_file_chooser_dialog_new(_("Open File"), NULL,
                                          GTK_FILE_CHOOSER_ACTION_OPEN,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OPEN, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     /* XXX: UTF-8 conversion missing */
@@ -494,7 +282,7 @@ gwy_app_file_open(const gchar *title)
                        COLUMN_FILETYPE, "",
                        COLUMN_LABEL, _("Detect automatically"),
                        -1);
-    gwy_file_func_foreach((GFunc)gwy_app_file_load_add, store);
+    gwy_app_file_add_types(store, GWY_FILE_OPERATION_LOAD);
     types = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
     gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(types), 1);
     /* TODO: remember in settings */
@@ -508,7 +296,7 @@ gwy_app_file_open(const gchar *title)
                                          COLUMN_FILETYPE, GTK_SORT_ASCENDING);
 
     hbox = gtk_hbox_new(FALSE, 4);
-    label = gtk_label_new_with_mnemonic(_("File _type:"));
+    label = gtk_label_new_with_mnemonic(_("_File format:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), types, TRUE, TRUE, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), types);
@@ -644,6 +432,201 @@ gwy_app_file_write(GwyContainer *data,
         g_free((gpointer)filename_utf8);
 
     return saveok != 0;
+}
+
+/**
+ * gwy_app_file_save:
+ *
+ * Saves current data to a file (very high-level app function).
+ *
+ * May fall back to gwy_app_file_save_as() when current data has no file name
+ * associated with it, or the format it was loaded from is not saveable.
+ **/
+void
+gwy_app_file_save(void)
+{
+    GwyFileOperationType saveops;
+    const gchar *name, *filename_sys;
+    GwyContainer *data;
+
+    data = gwy_app_get_current_data();
+    g_return_if_fail(data);
+    gwy_file_get_data_info(data, &name, &filename_sys);
+    if (!name || !filename_sys) {
+        gwy_app_file_save_as();
+        return;
+    }
+    saveops = gwy_file_func_get_operations(name);
+    if (!(saveops & (GWY_FILE_OPERATION_SAVE | GWY_FILE_OPERATION_EXPORT))) {
+        gwy_app_file_save_as();
+        return;
+    }
+
+    gwy_app_file_write(data, NULL, filename_sys, name);
+}
+
+/**
+ * gwy_app_file_save:
+ *
+ * Saves current data to a user-selected file (very high-level app function).
+ **/
+void
+gwy_app_file_save_as(void)
+{
+    GtkListStore *store;
+    GtkCellRenderer *renderer;
+    GtkWidget *dialog, *types, *hbox, *label;
+    GtkTreeIter iter;
+    gchar *name, *filename_sys;
+    gint response;
+    GwyContainer *data;
+
+    data = gwy_app_get_current_data();
+    g_return_if_fail(data);
+
+    dialog = gtk_file_chooser_dialog_new(_("Save File"), NULL,
+                                         GTK_FILE_CHOOSER_ACTION_SAVE,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
+    /* XXX: UTF-8 conversion missing */
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gwy_app_get_current_directory());
+
+    /* TODO: This needs usability improvements */
+    store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+                       COLUMN_FILETYPE, "",
+                       COLUMN_LABEL, _("Automatic by extension"),
+                       -1);
+    gwy_app_file_add_types(store, GWY_FILE_OPERATION_SAVE);
+    gwy_app_file_add_types(store, GWY_FILE_OPERATION_EXPORT);
+    types = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(types), 1);
+    /* TODO: remember in settings */
+    gtk_combo_box_set_active(GTK_COMBO_BOX(types), 0);
+
+    renderer = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(types), renderer, TRUE);
+    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(types), renderer,
+                                  "text", COLUMN_LABEL);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
+                                         COLUMN_FILETYPE, GTK_SORT_ASCENDING);
+
+    hbox = gtk_hbox_new(FALSE, 4);
+    label = gtk_label_new_with_mnemonic(_("_File format:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), types, TRUE, TRUE, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), types);
+    gtk_widget_show_all(hbox);
+    gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(dialog), hbox);
+
+    filename_sys = NULL;
+    while (TRUE) {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        if (response != GTK_RESPONSE_OK)
+            break;
+
+        gtk_combo_box_get_active_iter(GTK_COMBO_BOX(types), &iter);
+        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+                           COLUMN_FILETYPE, &name,
+                           -1);
+        if (!*name) {
+            g_free(name);
+            name = NULL;
+        }
+        filename_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        if (filename_sys
+            && (!g_file_test(filename_sys, G_FILE_TEST_EXISTS)
+                || confirm_overwrite(dialog))) {
+            gwy_app_file_write(data, NULL, filename_sys, name);
+            break;
+        }
+        g_free(filename_sys);
+        filename_sys = NULL;
+    }
+    gtk_widget_destroy(dialog);
+    g_free(filename_sys);
+    g_object_unref(store);
+    g_free(name);
+}
+
+static gboolean
+confirm_overwrite(GtkWidget *chooser)
+{
+    GtkWidget *dialog;
+    gchar *filename_sys, *filename_utf8, *dirname_sys, *dirname_utf8,
+          *fullname_sys;
+    gint response;
+
+    fullname_sys = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(chooser));
+    g_return_val_if_fail(fullname_sys, FALSE);
+
+    filename_sys = g_path_get_basename(fullname_sys);
+    dirname_sys = g_path_get_dirname(fullname_sys);
+    filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+    dirname_utf8 = g_filename_to_utf8(dirname_sys, -1, NULL, NULL, NULL);
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(chooser),
+                                    GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_QUESTION,
+                                    GTK_BUTTONS_YES_NO,
+                                    _("File `%s' already exists.  Replace?"),
+                                    filename_utf8);
+    gtk_message_dialog_format_secondary_text
+        (GTK_MESSAGE_DIALOG(dialog),
+         _("The file already exists in `%s'.  "
+           "Replacing it will overwrite its contents."),
+         dirname_utf8);
+    gtk_window_set_title(GTK_WINDOW(dialog), _("Replace File?"));
+
+    g_free(fullname_sys);
+    g_free(filename_sys);
+    g_free(dirname_sys);
+    g_free(filename_utf8);
+    g_free(dirname_utf8);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+    return response == GTK_RESPONSE_YES;
+}
+
+/*** Common ****************************************************************/
+
+static void
+gwy_app_file_add_type(const gchar *name,
+                      GtkListStore *store)
+{
+    GwyFileOperationType fileop;
+    GtkTreeIter iter;
+
+    fileop = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(store),
+                                                 fileop_quark));
+    if (!(gwy_file_func_get_operations(name) & fileop))
+        return;
+
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+                       COLUMN_FILETYPE, name,
+                       COLUMN_LABEL,
+                       gettext(gwy_file_func_get_description(name)),
+                       -1);
+}
+
+static void
+gwy_app_file_add_types(GtkListStore *store,
+                       GwyFileOperationType fileop)
+{
+    if (!fileop_quark)
+        fileop_quark = g_quark_from_static_string("fileop");
+
+    g_object_set_qdata(G_OBJECT(store), fileop_quark, GUINT_TO_POINTER(fileop));
+    gwy_file_func_foreach((GFunc)gwy_app_file_add_type, store);
+    g_object_set_qdata(G_OBJECT(store), fileop_quark, NULL);
 }
 
 /************************** Documentation ****************************/

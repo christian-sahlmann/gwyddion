@@ -46,11 +46,8 @@ guint        gwy_app_run_process_func_cb         (gchar *name);
 void         gwy_app_run_process_func_in_mode    (gchar *name,
                                                   GwyRunType run);
 void         gwy_app_run_graph_func_cb           (gchar *name);
-void         gwy_app_file_save_as_cb             (void);
-void         gwy_app_file_save_cb                (void);
 void         gwy_app_file_duplicate_cb           (void);
 void         gwy_app_file_close_cb               (void);
-void         gwy_app_file_export_cb              (const gchar *name);
 
 G_END_DECLS
 
