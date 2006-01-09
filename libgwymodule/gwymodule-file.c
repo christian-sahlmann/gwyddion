@@ -611,11 +611,11 @@ _gwy_file_func_remove(const gchar *name)
 /**
  * gwy_file_get_data_info:
  * @data: A #GwyContainer.
- * @name: Location to store file type of @data, or %NULL.  The returned string
- *        is owned by module system.
- * @filename: Location to store file name of @data, or %NULL.  The returned
- *            string is owned by module system and is valid only until the
- *            container is destroyed or saved again.
+ * @name: Location to store file type (that is file function name) of @data,
+ *        or %NULL.  The returned string is owned by module system.
+ * @filename_sys: Location to store file name of @data (in GLib encoding), or
+ *                %NULL.  The returned string is owned by module system and is
+ *                valid only until the container is destroyed or saved again.
  *
  * Gets file information about a data.
  *
@@ -628,7 +628,7 @@ _gwy_file_func_remove(const gchar *name)
 gboolean
 gwy_file_get_data_info(GwyContainer *data,
                        const gchar **name,
-                       const gchar **filename)
+                       const gchar **filename_sys)
 {
     FileTypeInfo *fti;
 
@@ -638,8 +638,8 @@ gwy_file_get_data_info(GwyContainer *data,
 
     if (name)
         *name = g_quark_to_string(fti->name);
-    if (filename)
-        *filename = fti->filename_sys;
+    if (filename_sys)
+        *filename_sys = fti->filename_sys;
 
     return TRUE;
 }

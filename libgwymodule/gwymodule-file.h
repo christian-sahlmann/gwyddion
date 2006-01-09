@@ -110,7 +110,7 @@ GwyFileOperationType gwy_file_save         (GwyContainer *data,
                                             GError **error);
 gboolean             gwy_file_get_data_info(GwyContainer *data,
                                             const gchar **name,
-                                            const gchar **filename);
+                                            const gchar **filename_sys);
 
 GQuark gwy_module_file_error_quark(void);
 
