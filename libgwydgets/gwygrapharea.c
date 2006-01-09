@@ -215,7 +215,11 @@ gwy_graph_area_init(GwyGraphArea *area)
 /**
  * gwy_graph_area_new:
  * @hadjustment: horizontal adjustment
+ *               (assigns lower and upper bounds as well as increments
+ *               to the horizontal axis of the new graph area)
  * @vadjustment: vertical adjustment
+ *               (assigns lower and upper bounds as well as increments
+ *               to the vertical axis of the new graph area)
  *
  * Creates a graph area widget.
  *
@@ -407,13 +411,12 @@ gwy_graph_area_expose(GtkWidget *widget,
 
 /**
  * gwy_graph_area_draw_area_on_drawable:
- * @drawable: a #GdkDrawable
- * @gc: a #GdkGC graphics context. A graphics context encapsulates
-        drawing properties.
+ * @drawable: a #GdkDrawable (destination for graphics operations)
+ * @gc: a #GdkGC graphics context
  * @x: X position in @drawable where the graph area should be drawn
  * @y: Y position in @drawable where the graph area should be drawn
- * @width: draw width
- * @height: draw height
+ * @width: width of the graph area on the drawable
+ * @height: height of the graph area on the drawable
  * @area: the graph area to draw
  *
  * Draws the graph area to a #GdkDrawable.
@@ -1192,7 +1195,8 @@ gwy_graph_area_refresh(GwyGraphArea *area)
  * @area: graph area
  * @gmodel: new graph model
  *
- * Changes the graph model. Calls refresh afterwards.
+ * Changes the graph model. Calls refresh afterwards. @gmodel
+ * is duplicated.
  **/
 void
 gwy_graph_area_set_model(GwyGraphArea *area, gpointer gmodel)
@@ -1240,7 +1244,7 @@ gwy_graph_label_entry_cb(GwyGraphLabelDialog *dialog, gint arg1, gpointer user_d
  * @area: graph area
  *
  * Clear all the selections. If you use graph area as a part of
- * #GwyGraph use the #GwyGraph clear selection function preferably.
+ * #GwyGraph, use the #GwyGraph clear selection function preferably.
  **/
 void
 gwy_graph_area_clear_selection(GwyGraphArea *area)
@@ -1341,7 +1345,7 @@ gwy_graph_area_enable_user_input(GwyGraphArea *area, gboolean enable)
    * @x_cursor: x value corresponding to cursor position
    * @y_cursor: y value corresponding to cursor position
    *
-   * Gets mouse cursor related values within graph area
+   * Gets mouse cursor related values within graph area.
    */
 void
 gwy_graph_area_get_cursor(GwyGraphArea *area, gdouble *x_cursor, gdouble *y_cursor)
@@ -1564,8 +1568,8 @@ gwy_graph_area_set_y_grid_data(GwyGraphArea *area, GArray *grid_data)
  * gwy_graph_area_get_x_grid_data:
  * @area: graph area
  *
- * Return: the grid data on the x-axis of the graph area
- * as an array
+ * Returns: the grid data on the x-axis of the graph area
+ * as a #GArray (do not free).
  **/
 const GArray*
 gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
@@ -1577,8 +1581,8 @@ gwy_graph_area_get_x_grid_data(GwyGraphArea *area)
  * gwy_graph_area_get_y_grid_data:
  * @area: graph area
  *
- * Return: the grid data on the y-axis of the graph area
- * as an array
+ * Returns: the grid data on the y-axis of the graph area
+ * as a #GArray (do not free).
  **/
 const GArray*
 gwy_graph_area_get_y_grid_data(GwyGraphArea *area)
@@ -1698,7 +1702,7 @@ gwy_graph_area_get_selection(GwyGraphArea *area, gdouble *selection)
  * #GwyGraphArea is the central part of #GwyGraph widget. It plots a set of
  * data curves with the given plot properties.
  *
- * It is recommended to use it within #GwyGraph, however, it can be used
+ * It is recommended to use it within #GwyGraph, however, it can also be used
  * separately.
  **/
 

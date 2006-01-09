@@ -254,7 +254,7 @@ gwy_graph_label_expose(GtkWidget *widget,
 /**
  * gwy_graph_label_draw_label_on_drawable:
  * @drawable: the #GdkDrawable
- * @gc: graphics context
+ * @gc: a #GdkGC graphics context.
  * @layout: pango layout
  * @x: x position where label is to be drawn
  * @y: y position where label is to be drawn
@@ -471,11 +471,11 @@ gwy_graph_label_refresh(GwyGraphLabel *label)
 }
 
 /**
- * gwy_graph_label_refresh:
+ * gwy_graph_label_set_model:
  * @label: graph label
  * @gmodel: pointer to the graph model
  *
- * set model of the graph label
+ * set model of the graph label. @gmodel is duplicated.
  **/
 void
 gwy_graph_label_set_model(GwyGraphLabel *label, gpointer gmodel)
@@ -594,7 +594,7 @@ gwy_graph_label_export_vector(GwyGraphLabel *label,
  * @title: GwyGraphLabel
  * @short_description: Graph curve legend
  *
- * #GwyGraphLabel it a part of #GwyGraph, it renders frame with graph curve
+ * #GwyGraphLabel is a part of #GwyGraph, it renders frame with graph curve
  * legend.  It can be probabaly used only within #GwyGraph.
  **/
 

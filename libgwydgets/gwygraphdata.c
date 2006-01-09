@@ -247,7 +247,7 @@ clean_gtk_tree_view (GtkTreeView *widget)
  * @gmodel: new graph_data model
  *
  * Changes the graph_data model. Everything in graph_data widgets will
- * be reset to the new data (from the model).
+ * be reset to the new data (from the model). (@gmodel is duplicated).
  *
  **/
 void
@@ -264,6 +264,7 @@ gwy_graph_data_change_model(GwyGraphData *graph_data, GwyGraphModel *gmodel)
  * @graph_data: A graph_data widget.
  *
  * Returns: GraphModel associated with this graph_data widget.
+            (Do not free).
  **/
 GwyGraphModel *gwy_graph_data_get_model(GwyGraphData *graph_data)
 {

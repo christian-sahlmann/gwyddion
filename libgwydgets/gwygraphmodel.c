@@ -594,6 +594,7 @@ gwy_graph_model_remove_curve_by_index(GwyGraphModel *gmodel, gint cindex)
  * @description: curve description (label)
  *
  * Returns: First curve that has description (label) given by @description.
+ *          Do not free the curve model, it is associated with graph model.
  **/
 GwyGraphCurveModel*
 gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
@@ -618,7 +619,8 @@ gwy_graph_model_get_curve_by_description(GwyGraphModel *gmodel,
  * @gmodel: A #GwyGraphModel.
  * @cindex: Curve index in graph model.
  *
- * Returns: Curve with given index.
+ * Returns: Curve with given index. Do not free the curve model. It's
+ *          associated with the graph model.
  **/
 GwyGraphCurveModel*
 gwy_graph_model_get_curve_by_index(GwyGraphModel *gmodel, gint cindex)
@@ -647,7 +649,7 @@ gwy_graph_model_signal_layout_changed(GwyGraphModel *model)
  * @model: A #GwyGraphModel.
  * @title: A new graphmodel title.
  *
- * Sets new title for the graph model.
+ * Sets new title for the graph model. @title is duplicated.
  **/
 
 void
@@ -861,7 +863,8 @@ gwy_graph_model_set_units_from_data_line(GwyGraphModel *model,
  * gwy_graph_model_get_si_unit_x:
  * @model: A #GwyGraphModel.
  *
- * Returns: A new #GwySIUnit containing the physical unit for graph x axis
+ * Returns: A #GwySIUnit containing the physical unit of the x-axis of @model.
+ *          (Do not free).
  **/
 GwySIUnit*
 gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
@@ -873,7 +876,8 @@ gwy_graph_model_get_si_unit_x(GwyGraphModel *model)
  * gwy_graph_model_get_si_unit_y:
  * @model: A #GwyGraphModel.
  *
- * Returns: A new #GwySIUnit containing the physical unit for graph y axis
+ * Returns: A #GwySIUnit containing the physical unit of the y-axis of @model.
+ *          (Do not free).
  **/
 GwySIUnit*
 gwy_graph_model_get_si_unit_y(GwyGraphModel *model)

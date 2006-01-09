@@ -239,7 +239,7 @@ gwy_graph_window_new(GwyGraph *graph)
  *
  * Returns the #GwyGraph widget this graph window currently shows.
  *
- * Returns: The currently shown #GwyGraph widget.
+ * Returns: The currently shown #GwyGraph widget. (Do not free).
  **/
 GtkWidget*
 gwy_graph_window_get_graph(GwyGraphWindow *graphwindow)
@@ -285,7 +285,7 @@ gwy_graph_window_class_set_tooltips(GtkTooltips *tips)
  *
  * Gets the tooltips object used for adding tooltips to Graph window parts.
  *
- * Returns: The #GtkTooltips object.
+ * Returns: The #GtkTooltips object. (Do not free).
  **/
 GtkTooltips*
 gwy_graph_window_class_get_tooltips(void)

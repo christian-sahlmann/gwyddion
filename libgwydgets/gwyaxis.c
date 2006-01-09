@@ -178,8 +178,8 @@ gwy_axis_init(GwyAxis *axis)
 /**
  * gwy_axis_new:
  * @orientation:  axis orientation
- * @min: minimum value
- * @max: maximum value
+ * @min: minimum value of the axis
+ * @max: maximum value of the axis
  * @label: axis label
  *
  * Creates new axis.
@@ -449,8 +449,8 @@ gwy_axis_autoset(GwyAxis *axis, gint width, gint height)
 
 /**
  * gwy_axis_set_logarithmic:
- * @axis: axis
- * @is_logarithmic: logarithimc mode
+ * @axis: graph axis
+ * @is_logarithmic: logarithmic mode
  *
  * Sets logarithmic mode. Untested.
  **/
@@ -494,7 +494,7 @@ gwy_axis_expose(GtkWidget *widget,
 /**
  * gwy_axis_draw_on_drawable:
  * @drawable: a #GdkDrawable
- * @gc: a graphics context (encapsulates drawing properties)
+ * @gc: a #GdkGC graphics context
  * @xmin: minimum x-axis value
  * @ymin: minimum y-axis value
  * @width: width of the x-axis
@@ -1290,8 +1290,8 @@ gwy_axis_set_auto(GwyAxis *axis, gboolean is_auto)
 /**
  * gwy_axis_set_req:
  * @axis: axis widget
- * @min: minimum requisistion
- * @max: maximum requisition
+ * @min: minimum requisition (min boundary value)
+ * @max: maximum requisition (max boundary value)
  *
  * Set requisition of axis boundaries. Axis will fix the boundaries
  * to satisfy requisition but still have reasonable tick values and spacing.
@@ -1385,9 +1385,9 @@ gwy_axis_get_reqminimum(GwyAxis *axis)
 /**
  * gwy_axis_set_label:
  * @axis: axis widget
- * @label_text: label to be set
+ * @label_text: label text to be set
  *
- * sets the label text of the axis
+ * sets the label text of the axis. @label_text is duplicated.
  **/
 void
 gwy_axis_set_label(GwyAxis *axis, GString *label_text)
@@ -1406,7 +1406,7 @@ gwy_axis_set_label(GwyAxis *axis, GString *label_text)
  *
  *
  *
- * Returns: axis label string
+ * Returns: axis label string. (Do not free).
  **/
 GString*
 gwy_axis_get_label(GwyAxis *axis)
@@ -1462,7 +1462,7 @@ gwy_axis_get_magnification (GwyAxis *axis)
  * gwy_axis_get_magnification_string:
  * @axis: Axis widget
  *
- * Returns: Magnification string of the axis
+ * Returns: Magnification string of the axis.(Do not free).
  **/
 GString*
 gwy_axis_get_magnification_string(GwyAxis *axis)

@@ -357,6 +357,7 @@ replot_cb(G_GNUC_UNUSED GObject *gobject,
  * Changes the graph model.
  *
  * Everything in graph widgets will be reset to reflect the new data.
+ * @gmodel is duplicated.
  **/
 void
 gwy_graph_set_model(GwyGraph *graph, GwyGraphModel *gmodel)
@@ -620,7 +621,8 @@ gwy_graph_get_x_range(GwyGraph *graph, gdouble *x_min, gdouble *x_max)
  * @y_min: y minimum
  * @y_max: y maximum
  *
- * Get the actual boudaries of graph area and axis in the y direction.
+ * Get the actual boudaries of graph area and axis in the y direction
+ * and store them in y_min and y_max.
  **/
 void
 gwy_graph_get_y_range(GwyGraph *graph, gdouble *y_min, gdouble *y_max)
@@ -667,7 +669,7 @@ gwy_graph_signal_zoomed(GwyGraph *graph)
  * @y_cursor: y position of cursor
  *
  * Get the mouse pointer position within the graph area. Values are
- * in physical units corresponding to the graph axes.
+ * in physical units corresponding to the graph axis.
  **/
 void
 gwy_graph_get_cursor(GwyGraph *graph, gdouble *x_cursor, gdouble *y_cursor)
@@ -802,7 +804,8 @@ gwy_graph_get_grid_type(GwyGraph *graph)
  * @graph: A graph widget.
  * @grid_data: An array of grid data
  *
- * Set the grid data for the x-axis of the graph area.
+ * Set the grid data for the x-axis of the graph area. @grid_data
+ * is duplicated.
  **/
 void
 gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
@@ -815,7 +818,8 @@ gwy_graph_set_x_grid_data(GwyGraph *graph, GArray *grid_data)
  * @graph: A graph widget.
  * @grid_data: An array of grid data
  *
- * Set the grid data for the y-axis of the graph area.
+ * Set the grid data for the y-axis of the graph area. @grid_data
+ * is duplicated.
  **/
 void
 gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
@@ -827,7 +831,7 @@ gwy_graph_set_y_grid_data(GwyGraph *graph, GArray *grid_data)
  * gwy_graph_get_x_grid_data:
  * @graph: A graph widget.
  *
- * Return: Array of grid data for the x-axis of the graph area.
+ * Return: Array of grid data for the x-axis of the graph area (do not free).
  **/
 const GArray*
 gwy_graph_get_x_grid_data(GwyGraph *graph)
@@ -839,7 +843,7 @@ gwy_graph_get_x_grid_data(GwyGraph *graph)
  * gwy_graph_get_y_grid_data:
  * @graph: A graph widget.
  *
- * Return: Array of grid data for the y-axis of the graph area.
+ * Return: Array of grid data for the y-axis of the graph area (do not free).
  **/
 const GArray*
 gwy_graph_get_y_grid_data(GwyGraph *graph)

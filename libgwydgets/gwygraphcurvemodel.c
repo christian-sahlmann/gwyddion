@@ -473,7 +473,8 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
 * @gcmodel: A #GwyGraphCurveModel.
 * @description: curve description text
 *
-* Sets curve model description. The description should appear on graph label, for example.
+* Sets curve model description. The description should appear on graph label,
+* for example. @description is duplicated.
 **/
 void
 gwy_graph_curve_model_set_description(GwyGraphCurveModel *gcmodel,
@@ -608,7 +609,7 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
 * @gcmodel: A #GwyGraphCurveModel.
 *
 * Returns: Curve data description (what appears as curve label on graph) as
-*          a string owned by curve.
+*          a string owned by curve (do not free).
 **/
 const gchar*
 gwy_graph_curve_model_get_description(GwyGraphCurveModel *gcmodel)
@@ -738,6 +739,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 * gwy_graph_curve_model_set_curve_color:
 * @gcmodel: A #GwyGraphCurveModel.
 * @color: Color to use for this curve (both line and symbols).
+          @color is duplicated.
 *
 * Sets the curve color.
 **/
