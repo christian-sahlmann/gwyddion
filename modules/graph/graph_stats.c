@@ -42,6 +42,8 @@ typedef struct {
     GtkWidget *selection_end_label;
     GwyGraphStatusType last_status;
 
+    GtkWidget *area_under_curve_label;
+    gdouble area_under_curve;
     GtkWidget *stat_label;
     gdouble stat;
 } StatsControls;
@@ -55,6 +57,11 @@ static void        stats_dialog_response_cb    (StatsControls *data);
 static gdouble     calc_stats                  (gdouble *y_actual,
                                                 gdouble *y_fitted,
                                                 gint ndata);
+static gdouble     calc_integral_stats         (gdouble *xs,
+                                                gdouble *ys,
+                                                gint ns);
+static gdouble     calc_integral_stats_whole_curve
+                                               (StatsControls *data);
 static void        fit_graph_cb                (StatsControls *data);
 static void        stat_updated_cb             (StatsControls *data);
 
@@ -116,6 +123,8 @@ stats(GwyGraph *graph)
     if (!data->dialog)
         stats_dialog(data);
 
+    g_debug("in stats");
+
     return TRUE;
 }
 
@@ -130,6 +139,9 @@ stats_dialog(StatsControls *data)
     GtkDialog *dialog;
     GtkWidget *table, *label;
     GtkWidget *button;
+    gchar buffer[100];
+    GwySIValueFormat *format;
+    GwySIUnit *si_unit;
 
     graph = GWY_GRAPH(data->graph);
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
@@ -165,9 +177,16 @@ stats_dialog(StatsControls *data)
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
 
-    label = gtk_label_new("Std Dev");
+    label = gtk_label_new("Area under curve");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3, 0, 0, 2, 2);
+
+    label = gtk_label_new("Std Dev");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, 0, 0, 2, 2);
+
+    label = gtk_label_new("=");
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 3, 4, 0, 0, 2, 2);
 
     label = gtk_label_new("=");
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 2, 3, 0, 0, 2, 2);
@@ -188,6 +207,18 @@ stats_dialog(StatsControls *data)
     gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
+    data->area_under_curve = calc_integral_stats_whole_curve(data);
+    si_unit = gwy_si_unit_duplicate(gwy_graph_get_model(graph)->x_unit);
+    gwy_si_unit_power(si_unit, 2, si_unit);
+    format = gwy_si_unit_get_format(si_unit,
+                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                    data->area_under_curve, NULL);
+    g_snprintf(buffer, sizeof(buffer), "%.3f %s",
+               data->area_under_curve/format->magnitude,
+               format->units);
+    data->area_under_curve_label = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(data->area_under_curve_label), buffer);
+
     button = gwy_stock_like_button_new(_("_Fit"), GTK_STOCK_EXECUTE);
     gtk_box_pack_end(GTK_BOX(dialog->action_area), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
@@ -197,9 +228,15 @@ stats_dialog(StatsControls *data)
                              G_CALLBACK(stat_updated_cb),
                              data);
 
+    gtk_misc_set_alignment(GTK_MISC(data->area_under_curve_label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table),
+                     data->area_under_curve_label,
+                     2, 3, 2, 3,
+                     GTK_EXPAND | GTK_FILL, 0, 2, 2);
+
     data->stat_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(data->stat_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 2, 3,
+    gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 3, 4,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->selection_id =
@@ -212,11 +249,54 @@ stats_dialog(StatsControls *data)
     selection_updated_cb(data);
     stat_updated_cb(data);
 
+    g_free(format->units);
+    g_debug("in stats dialog");
+
     return TRUE;
 }
 
-/* code for calculating statistics */
+/* code for calculating area under the WHOLE curve */
+static gdouble
+calc_integral_stats_whole_curve(StatsControls *data)
+{
+    GwyGraph *graph;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    const gdouble *xs, *ys;
+    gint ns, i;
+    gdouble sum;
 
+    graph = GWY_GRAPH(data->graph);
+    gmodel = gwy_graph_get_model(graph);
+    gcmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    xs = gwy_graph_curve_model_get_xdata(gcmodel);
+    ys = gwy_graph_curve_model_get_ydata(gcmodel);
+    ns = gwy_graph_curve_model_get_ndata(gcmodel);
+
+    sum = 0;
+    /* to calc initial step size, take i = 1 instead of 0 */
+    for (i = 1; i < ns; i++)
+        sum = sum + (ys[i] * (xs[i] - xs[i-1]));
+
+    return sum;
+}
+
+/* code for calculating area under the selection */
+static gdouble
+calc_integral_stats(gdouble *xs, gdouble *ys, gint ns)
+{
+    gdouble sum;
+    gint i;
+
+    sum = 0;
+    /* to calc initial step size, take i = 1 instead of 0 */
+    for (i = 1; i < ns; i++)
+        sum = sum + (ys[i] * (xs[i] - xs[i-1]));
+
+    return sum;
+}
+
+/* code for calculating statistics (std dev) */
 static gdouble
 calc_stats(gdouble *y_actual, gdouble *y_fitted, gint ndata)
 {
@@ -232,7 +312,7 @@ calc_stats(gdouble *y_actual, gdouble *y_fitted, gint ndata)
     return stat;
 }
 
-// code for fitting the graphs
+/* code for fitting the graphs */
 static void
 fit_graph_cb(StatsControls *data)
 {
@@ -247,13 +327,14 @@ fit_graph_cb(StatsControls *data)
     gboolean ok;
     gdouble from, to;
     gdouble selection[2];
-    gint ncurves, count;
+    gint ncurves, count, ndata;
     gint selection_start_index, selection_end_index;
 
     /* NOTE: these will change depending on the deg of poly */
+    const gchar *fit_func_name = "Polynom (order 1)";
     gint deg_of_poly = 1;
-    gint fit_func_index = 9;
     gdouble coeffs[deg_of_poly + 1];
+    gint fit_func_index;
 
     graph = GWY_GRAPH(data->graph);
     gmodel = gwy_graph_get_model(graph);
@@ -270,8 +351,8 @@ fit_graph_cb(StatsControls *data)
     /* remove the old fit */
     ncurves = gwy_graph_model_get_n_curves(gmodel);
     if (ncurves > 1)
-        gwy_graph_model_remove_curve_by_index(gmodel, 1);    
-
+        gwy_graph_model_remove_curve_by_index(gmodel, 1);
+    
     /* get selection values */
     area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
     if (gwy_graph_area_get_selection_number(area))
@@ -281,6 +362,12 @@ fit_graph_cb(StatsControls *data)
         to = selection[1];
         if (from > to)
             GWY_SWAP(gdouble, from, to);
+        ndata = gwy_graph_curve_model_get_ndata(current_cmodel);
+        if ((from > xvals[ndata - 1]) && (to > xvals[ndata - 1]))
+        {
+            from = xvals[0];
+            to = xvals[ndata - 1];
+        }
     }
     else
     {
@@ -304,7 +391,7 @@ fit_graph_cb(StatsControls *data)
     {
         for (i = 0; i < ns; i++)
         {
-            /* check if from and xs[i] are approx. equal */
+            /* check if 'from' and xs[i] are approx. equal */
             if (from <= xs[i])
             {
                 selection_start_index = i;
@@ -348,8 +435,12 @@ fit_graph_cb(StatsControls *data)
     }
     /* end normalize */
 
+    fit_func_index = gwy_inventory_get_item_position(gwy_nlfit_presets(),
+                                                     fit_func_name);
     fitfunc = gwy_inventory_get_nth_item(gwy_nlfit_presets(), fit_func_index);
     gwy_math_fit_polynom(ns, xdata->data, ydata->data, deg_of_poly, coeffs);
+
+    data->area_under_curve = calc_integral_stats(xdata->data, ydata->data, ns);
 
     for (i = 0; i < ns; i++)
         ydata->data[i] = gwy_nlfit_preset_get_value(fitfunc,
@@ -380,6 +471,7 @@ stat_updated_cb(StatsControls *data)
     GwyGraphModel *gmodel;
     gchar buffer[100];
     GwySIValueFormat *format;
+    GwySIUnit *si_unit;
 
     graph = GWY_GRAPH(data->graph);
     g_return_if_fail(GWY_IS_GRAPH(graph));
@@ -394,6 +486,17 @@ stat_updated_cb(StatsControls *data)
                    data->stat/format->magnitude,                        
                    format->units);
         gtk_label_set_markup(GTK_LABEL(data->stat_label), buffer);
+
+        si_unit = gwy_si_unit_duplicate(gwy_graph_get_model(graph)->x_unit);
+        gwy_si_unit_power(si_unit, 2, si_unit);
+        format = gwy_si_unit_get_format(si_unit,
+                                        GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                        data->area_under_curve, format);
+        g_snprintf(buffer, sizeof(buffer), "%.3f %s",
+                   data->area_under_curve/format->magnitude,
+                   format->units);
+        gtk_label_set_markup(GTK_LABEL(data->area_under_curve_label), buffer);
+
         g_free(format->units);
     }
 }

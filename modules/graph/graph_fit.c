@@ -518,7 +518,6 @@ fit_dialog(FitArgs *args)
         }
     } while (response != GTK_RESPONSE_OK);
 
-
     return TRUE;
 }
 
