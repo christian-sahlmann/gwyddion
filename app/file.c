@@ -421,7 +421,7 @@ gwy_app_file_load(const gchar *filename_utf8,
     }
     else {
         if (err->code != GWY_MODULE_FILE_ERROR_CANCELLED) {
-            dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_NO_SEPARATOR,
+            dialog = gtk_message_dialog_new(NULL, 0,
                                             GTK_MESSAGE_ERROR,
                                             GTK_BUTTONS_CLOSE,
                                             _("Opening of `%s' failed"),
@@ -469,6 +469,7 @@ gwy_app_file_open(const gchar *title)
     GtkWidget *dialog, *types, *hbox, *label;
     GtkTreeIter iter;
     GSList *filenames = NULL, *l;
+    gchar *name;
     gint response;
 
     if (!title)
@@ -493,8 +494,8 @@ gwy_app_file_open(const gchar *title)
                        -1);
     gwy_file_func_foreach((GFunc)gwy_app_file_load_add, store);
     types = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
-    g_object_unref(store);
     gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(types), 1);
+    /* TODO: remember in settings */
     gtk_combo_box_set_active(GTK_COMBO_BOX(types), 0);
 
     renderer = gtk_cell_renderer_text_new();
@@ -513,16 +514,26 @@ gwy_app_file_open(const gchar *title)
     gtk_file_chooser_set_extra_widget(GTK_FILE_CHOOSER(dialog), hbox);
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
-    /* TODO: Get filetype selection */
-    if (response == GTK_RESPONSE_OK)
+    if (response == GTK_RESPONSE_OK) {
+        gtk_combo_box_get_active_iter(GTK_COMBO_BOX(types), &iter);
+        gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+                           COLUMN_FILETYPE, &name,
+                           -1);
+        if (!*name) {
+            g_free(name);
+            name = NULL;
+        }
         filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
+    }
     gtk_widget_destroy(dialog);
 
     for (l = filenames; l; l = g_slist_next(l)) {
-        gwy_app_file_load(NULL, (const gchar*)l->data, NULL);
+        gwy_app_file_load(NULL, (const gchar*)l->data, name);
         g_free(l->data);
     }
     g_slist_free(filenames);
+    g_object_unref(store);
+    g_free(name);
 }
 
 /************************** Documentation ****************************/
