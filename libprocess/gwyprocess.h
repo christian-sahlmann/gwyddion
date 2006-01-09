@@ -25,6 +25,7 @@
 #include <libprocess/gwyprocesstypes.h>
 
 #include <libprocess/arithmetic.h>
+#include <libprocess/cdline.h>
 #include <libprocess/correct.h>
 #include <libprocess/correlation.h>
 #include <libprocess/cwt.h>
