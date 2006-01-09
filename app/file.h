@@ -31,6 +31,10 @@ GwyContainer* gwy_app_file_load            (const gchar *filename_utf8,
                                             const gchar *filename_sys,
                                             const gchar *name);
 void          gwy_app_file_open            (const gchar *title);
+gboolean      gwy_app_file_write           (GwyContainer *data,
+                                            const gchar *filename_utf8,
+                                            const gchar *filename_sys,
+                                            const gchar *name);
 
 G_END_DECLS
 

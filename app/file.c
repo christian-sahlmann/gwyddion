@@ -354,10 +354,10 @@ gwy_app_set_current_directory(const gchar *directory)
 
 /**
  * gwy_app_file_load:
- * @filename_utf8: Name of file to open, in UTF-8.
- * @filename_sys: Name of file to open, in GLib encoding.
+ * @filename_utf8: Name of file to load, in UTF-8.
+ * @filename_sys: Name of file to load, in GLib encoding.
  * @name: File type to open file as, but normally %NULL to automatically
- *        detect.
+ *        detect from file contents.
  *
  * Loads a file into application (a high-level function).
  *
@@ -534,6 +534,114 @@ gwy_app_file_open(const gchar *title)
     g_slist_free(filenames);
     g_object_unref(store);
     g_free(name);
+}
+
+/*** File saving ***********************************************************/
+
+/**
+ * gwy_app_file_write:
+ * @data: Data to write.
+ * @filename_utf8: Name of file to write data to, in UTF-8.
+ * @filename_sys: Name of file to write data to, in GLib encoding.
+ * @name: File type to open file as, but normally %NULL to automatically detect
+ *        from file name.
+ *
+ * Writes container to a file (a high-level function).
+ *
+ * At least one of @filename_utf8, @filename_sys must be non-%NULL.
+ *
+ * The file is saved in interactive mode, modules can ask for argument.
+ * If the write fails, an error dialog is presented.
+ *
+ * Returns: %TRUE on success.
+ **/
+gboolean
+gwy_app_file_write(GwyContainer *data,
+                   const gchar *filename_utf8,
+                   const gchar *filename_sys,
+                   const gchar *name)
+{
+    GtkWidget *dialog;
+    gboolean free_utf8 = FALSE, free_sys = FALSE;
+    GwyFileOperationType saveok;
+    GError *err = NULL;
+
+    g_return_val_if_fail(filename_utf8 || filename_sys, FALSE);
+    if (!filename_sys) {
+        filename_sys = g_filename_from_utf8(filename_utf8, -1,
+                                            NULL, NULL, NULL);
+        if (!filename_sys) {
+            g_warning("FIXME: file name not convertible to system encoding");
+            return FALSE;
+        }
+        free_sys = TRUE;
+    }
+
+    if (!filename_utf8) {
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1,
+                                           NULL, NULL, NULL);
+        free_utf8 = TRUE;
+    }
+
+    if (name) {
+        saveok = gwy_file_func_get_operations(name);
+        if (saveok & GWY_FILE_OPERATION_SAVE
+            && gwy_file_func_run_save(name, data, filename_sys,
+                                      GWY_RUN_INTERACTIVE, &err))
+            saveok = GWY_FILE_OPERATION_SAVE;
+        else if (saveok & GWY_FILE_OPERATION_EXPORT
+                 && gwy_file_func_run_export(name, data, filename_sys,
+                                             GWY_RUN_INTERACTIVE, &err))
+            saveok = GWY_FILE_OPERATION_EXPORT;
+        else
+            saveok = 0;
+    }
+    else
+        saveok = gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, &err);
+
+    switch (saveok) {
+        case GWY_FILE_OPERATION_SAVE:
+        if (free_utf8) {
+            gwy_container_set_string_by_name(data, "/filename", filename_utf8);
+            free_utf8 = FALSE;
+        }
+        else
+            gwy_container_set_string_by_name(data, "/filename",
+                                             g_strdup(filename_utf8));
+
+        /* FIXME: get rid of GwyDataWindowism */
+        gwy_app_recent_file_list_update(gwy_app_data_window_get_for_data(data),
+                                        filename_utf8,
+                                        filename_sys);
+
+        case GWY_FILE_OPERATION_EXPORT:
+        gwy_app_set_current_directory(filename_sys);
+        break;
+
+        default:
+        if (err->code != GWY_MODULE_FILE_ERROR_CANCELLED) {
+            dialog = gtk_message_dialog_new(NULL, 0,
+                                            GTK_MESSAGE_ERROR,
+                                            GTK_BUTTONS_CLOSE,
+                                            _("Saving of `%s' failed"),
+                                            filename_utf8);
+            gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                                                     "%s", err->message);
+            g_signal_connect(dialog, "response",
+                             G_CALLBACK(gtk_widget_destroy), NULL);
+            gtk_widget_show_all(dialog);
+            gtk_window_present(GTK_WINDOW(dialog));
+            g_clear_error(&err);
+        }
+        break;
+    }
+
+    if (free_sys)
+        g_free((gpointer)filename_sys);
+    if (free_utf8)
+        g_free((gpointer)filename_utf8);
+
+    return saveok != 0;
 }
 
 /************************** Documentation ****************************/
