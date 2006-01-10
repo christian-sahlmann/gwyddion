@@ -2526,6 +2526,56 @@ gwy_data_line_copy_units_to_data_field(GwyDataLine *data_line,
     gwy_serializable_clone(G_OBJECT(lineunit), G_OBJECT(fieldunit));
 }
 
+/**
+ * gwy_data_field_elliptic_area_fill:
+ * @data_field: A data field.
+ * @ulcol: Upper-left column coordinate.
+ * @ulrow: Upper-left row coordinate.
+ * @brcol: Bottom-right column coordinate + 1.
+ * @brrow: Bottom-right row coordinate + 1.
+ * @value: Value to be entered
+ *
+ * Fills an elliptic region of a data field with given value.
+ **/
+void
+gwy_data_field_elliptic_area_fill(GwyDataField *data_field,
+                                  gint ulcol, gint ulrow,
+                                  gint brcol, gint brrow,
+                                  gdouble value)
+{
+    gint i, j, xres;
+    gdouble x, y;
+    gdouble a, b, a2, b2;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    if (ulcol > brcol)
+        GWY_SWAP(gint, ulcol, brcol);
+    if (ulrow > brrow)
+        GWY_SWAP(gint, ulrow, brrow);
+
+    g_return_if_fail(ulcol >= 0 && ulrow >= 0
+            && brcol <= data_field->xres && brrow <= data_field->yres);
+
+    a = (gdouble)(brcol - ulcol)/2;
+    a2 = a*a;
+    b = (gdouble)(brrow - ulrow)/2;
+    b2 = a*a;
+    xres = data_field->xres;
+
+    for (i = 0; i < brcol - ulcol; i++) {
+        for (j = 0; j < brrow - ulrow; j++) {
+            x = (gdouble)i - a;
+            y = (gdouble)j - b;
+
+            if (x*x/a2 + y*y/b2 <= 1)
+                *(data_field->data + (j+ulrow)*xres + ulcol+i) = value;
+        }
+    }
+
+    gwy_data_field_invalidate(data_field);
+}
+
 /************************** Documentation ****************************/
 
 /**

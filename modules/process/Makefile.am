@@ -18,6 +18,7 @@ process_LTLIBRARIES = \
 	facet_analysis.la \
 	fft.la \
 	fft_filter_1d.la \
+	fft_filter_2d.la \
 	fit_2d.la \
 	fraccor.la \
 	fractal.la \
@@ -118,6 +119,9 @@ dwtanisotropy_la_LIBADD = $(module_libadd)
 
 fft_filter_1d_la_SOURCES = fft_filter_1d.c
 fft_filter_1d_la_LIBADD = $(module_libadd)
+
+fft_filter_2d_la_SOURCES = fft_filter_2d.c
+fft_filter_2d_la_LIBADD = $(module_libadd)
 
 dwtdenoise_la_SOURCES = dwtdenoise.c
 dwtdenoise_la_LIBADD = $(module_libadd)
@@ -242,3 +246,4 @@ unrotate_la_LIBADD = $(module_libadd)
 
 clean-local:
 	rm -f core.* *~
+
