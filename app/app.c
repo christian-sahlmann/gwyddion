@@ -52,7 +52,7 @@ static gboolean   gwy_app_confirm_quit_dialog      (GSList *unsaved);
 static void       gwy_app_data_view_setup_layers1  (GwyDataView *data_view);
 static void       gwy_app_data_view_setup_layers2  (GwyDataView *data_view);
 static void       gwy_app_data_view_mask_changed   (GwyContainer *data,
-                                                    const gchar *key,
+                                                    GQuark quark,
                                                     GwyDataView *data_view);
 static void       gwy_app_data_view_show_changed   (GwyLayerBasic *basic_layer,
                                                     GwyDataView *data_view);
@@ -594,7 +594,8 @@ gwy_app_data_view_setup_layers2(GwyDataView *data_view)
     blayer = GWY_LAYER_BASIC(gwy_data_view_get_base_layer(data_view));
 
     /* force sync */
-    gwy_app_data_view_mask_changed(data, "/0/mask", data_view);
+    gwy_app_data_view_mask_changed(data, g_quark_from_string("/0/mask"),
+                                   data_view);
     gwy_app_data_view_show_changed(blayer, data_view);
 
     g_signal_connect(data, "item-changed::/0/mask",
@@ -612,18 +613,20 @@ gwy_app_data_view_setup_layers2(GwyDataView *data_view)
  **/
 static void
 gwy_app_data_view_mask_changed(GwyContainer *data,
-                               const gchar *key,
+                               GQuark quark,
                                GwyDataView *data_view)
 {
     GwyMenuSensData sens_data = { GWY_MENU_FLAG_DATA_MASK, 0 };
     gboolean has_dfield, has_layer;
+    const gchar *key;
     GwyPixmapLayer *layer;
 
-    has_dfield = gwy_container_contains_by_name(data, key);
+    has_dfield = gwy_container_contains(data, quark);
     has_layer = gwy_data_view_get_alpha_layer(data_view) != NULL;
     gwy_debug("has_dfield: %d, has_layer: %d\n", has_dfield, has_layer);
 
     if (has_dfield && !has_layer) {
+        key = g_quark_to_string(quark);
         gwy_app_container_setup_mask(data);
         layer = gwy_layer_mask_new();
         gwy_pixmap_layer_set_data_key(layer, key);
