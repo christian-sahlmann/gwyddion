@@ -272,6 +272,9 @@ gwy_app_data_browser_create(GwyContainer *data)
     const guchar *channel_title = NULL;
     gchar *base_name;
     gchar *window_title;
+    gchar *channel_key = NULL;
+    gint data_count = -1;
+    gint i;
 
     enum {
         VIS_COLUMN,
@@ -298,19 +301,36 @@ gwy_app_data_browser_create(GwyContainer *data)
 
     notebook = gtk_notebook_new();
 
-    /* Construct the GtkTreeView that will display data channels */
+    /* Create a list store to hold the channel data */
     store = gtk_list_store_new(N_COLUMNS, G_TYPE_BOOLEAN, G_TYPE_STRING);
-    /*XXX: Actually add list of Channels here */
-    gtk_list_store_append(store, &iter);
-    gwy_container_gis_string_by_name(data, "/filename/title",
-                                     &channel_title);
-    gtk_list_store_set(store, &iter,
-                       VIS_COLUMN, TRUE,
-                       TITLE_COLUMN, channel_title,
-                       -1);
+
+    /* Add channels to list */
+    data_count = gwy_container_get_int32_by_name(data, "/data_count");
+    if (data_count == -1) {
+        /*XXX: It would appear that this file is old (1.x), so handle it
+        as single data file */
+    } else {
+        for (i=0; i<data_count; i++) {
+            channel_key = g_strdup_printf("/%i/data/title", i);
+            channel_title = NULL;
+            gwy_container_gis_string_by_name(data, channel_key, &channel_title);
+
+            if (channel_title) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter,
+                                   VIS_COLUMN, TRUE,
+                                   TITLE_COLUMN, channel_title,
+                                   -1);
+            } else {
+                /*XXX: This shouldn't happen. Make up a channel name?*/
+            }
+        }
+    }
+
+    /* Construct the GtkTreeView that will display data channels */
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     renderer = gtk_cell_renderer_toggle_new();
-    column = gtk_tree_view_column_new_with_attributes("Title",
+    column = gtk_tree_view_column_new_with_attributes("Visible",
             renderer,
             "active", VIS_COLUMN,
             NULL);

@@ -25,6 +25,7 @@
  */
 
 #include "config.h"
+#include <glib/gprintf.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -79,7 +80,9 @@ typedef struct {
 static gboolean      module_register       (const gchar *name);
 static gint          stpfile_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* stpfile_load          (const gchar *filename);
+static GwyContainer* stpfile_load          (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static guint         find_data_start       (const guchar *buffer,
                                             gsize size);
 static void          stpfile_free          (STPFile *stpfile);
@@ -89,10 +92,8 @@ static guint         file_read_header      (STPFile *stpfile,
                                             gchar *buffer);
 static void          process_metadata      (STPFile *stpfile,
                                             guint id,
-                                            GwyContainer *container);
-static guint         select_which_data     (STPFile *stpfile);
-static void          selection_changed     (GtkWidget *button,
-                                            STPControls *controls);
+                                            GwyContainer *container,
+                                            const gchar *container_key);
 
 static const GwyEnum channels[] = {
     { N_("Topography"),                           1  },
@@ -129,7 +130,8 @@ module_register(const gchar *name)
         N_("STP files (.stp)"),
         (GwyFileDetectFunc)&stpfile_detect,
         (GwyFileLoadFunc)&stpfile_load,
-        NULL
+        NULL,
+        NULL,
     };
 
     gwy_file_func_register(name, &stpfile_func_info);
@@ -154,7 +156,9 @@ stpfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-stpfile_load(const gchar *filename)
+stpfile_load(const gchar *filename,
+                G_GNUC_UNUSED GwyRunType mode,
+                GError **error)
 {
     STPFile *stpfile;
     GwyContainer *container = NULL;
@@ -166,17 +170,20 @@ stpfile_load(const gchar *filename)
     gchar *p;
     gboolean ok;
     guint i = 0, pos;
+    gchar *container_key = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || size <= DATA_MAGIC_SIZE
         || !(header_size = find_data_start(buffer, size))) {
-        g_warning("File %s is not a STP file", filename);
-        gwy_file_abandon_contents(buffer, size, NULL);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not an STP file."));
+        gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
     }
 
@@ -193,26 +200,28 @@ stpfile_load(const gchar *filename)
             gwy_debug("buffer %i pos: %u", i, pos);
             pos += 2*stpfile->buffers[i].xres * stpfile->buffers[i].yres;
         }
+        /*XXX: its stupid to have two identical loops here */
+        for (i=0; i < stpfile->n; i++) {
 
-        i = select_which_data(stpfile);
-        if (i == (guint)-1)
-            ok = FALSE;
+            dfield = gwy_data_field_new(stpfile->buffers[i].xres,
+                                        stpfile->buffers[i].yres,
+                                        1.0, 1.0, FALSE);
+            read_data_field(dfield, stpfile->buffers + i);
+
+            if (!container)
+                container = gwy_container_new();
+
+            container_key = g_strdup_printf("/%i/data", i);
+            gwy_container_set_object_by_name(container, container_key, dfield);
+            g_object_unref(dfield);
+            process_metadata(stpfile, i, container, container_key);
+            g_free(container_key);
+        }
+
+        gwy_container_set_int32_by_name(container, "/data_count", stpfile->n);
     }
 
-    if (ok) {
-        dfield = gwy_data_field_new(stpfile->buffers[i].xres,
-                                    stpfile->buffers[i].yres,
-                                    1.0, 1.0, FALSE);
-        read_data_field(dfield, stpfile->buffers + i);
-    }
     gwy_file_abandon_contents(buffer, size, NULL);
-
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        g_object_unref(dfield);
-        process_metadata(stpfile, i, container);
-    }
     stpfile_free(stpfile);
 
     return container;
@@ -312,7 +321,8 @@ stpfile_get_double(GHashTable *meta,
 static void
 process_metadata(STPFile *stpfile,
                  guint id,
-                 GwyContainer *container)
+                 GwyContainer *container,
+                 const gchar *container_key)
 {
     static const MetaDataFormat global_metadata[] = {
         { "software", "Software", "%s" },
@@ -340,17 +350,21 @@ process_metadata(STPFile *stpfile,
     GString *key, *value;
     gint power10;
     guint mode, i;
+    gchar *channel_key = NULL;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
-                                                             "/0/data"));
+                                                             container_key));
 
     data = stpfile->buffers + id;
     if ((p = g_hash_table_lookup(data->meta, "source_mode"))) {
         mode = atol(p);
         title = gwy_enum_to_string(mode, channels, G_N_ELEMENTS(channels));
-        if (title)
-            gwy_container_set_string_by_name(container, "/filename/title",
+        if (title) {
+            channel_key = g_strdup_printf("%s/title", container_key);
+            gwy_container_set_string_by_name(container, channel_key,
                                              g_strdup(title));
+            g_free(channel_key);
+        }
     }
     else
         mode = 1;
@@ -494,142 +508,6 @@ read_data_field(GwyDataField *dfield,
     }
 }
 
-static guint
-select_which_data(STPFile *stpfile)
-{
-    STPControls controls;
-    STPData *data;
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
-    GwyDataField *dfield;
-    GwyEnum *choices;
-    GwyPixmapLayer *layer;
-    GSList *radio, *rl;
-    guint i, b, mode;
-    gchar *p;
-    const gchar *title;
-
-    if (!stpfile->n)
-        return (guint)-1;
-
-    if (stpfile->n == 1)
-        return 0;
-
-    controls.file = stpfile;
-    choices = g_new(GwyEnum, stpfile->n);
-    for (i = 0; i < stpfile->n; i++) {
-        data = stpfile->buffers + i;
-        choices[i].value = i;
-        title = NULL;
-        if ((p = g_hash_table_lookup(data->meta, "source_mode"))) {
-            mode = atol(p);
-            title = gwy_enum_to_string(mode, channels, G_N_ELEMENTS(channels));
-        }
-        if (title)
-            choices[i].name = g_strdup_printf(_("Buffer %u (%s)"),
-                                              stpfile->buffers[i].id, title);
-        else
-            choices[i].name = g_strdup_printf(_("Buffer %u"),
-                                              stpfile->buffers[i].id);
-    }
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, stpfile->n, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     0);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    controls.data = gwy_container_new();
-    dfield = gwy_data_field_new(stpfile->buffers[0].xres,
-                                stpfile->buffers[0].yres,
-                                1.0, 1.0, FALSE);
-    read_data_field(dfield, stpfile->buffers);
-    gwy_container_set_object_by_name(controls.data, "data", dfield);
-    gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-    g_object_unref(dfield);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/MAX(stpfile->buffers[0].xres,
-                                     stpfile->buffers[0].yres));
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
-        case GTK_RESPONSE_CANCEL:
-        case GTK_RESPONSE_DELETE_EVENT:
-        gtk_widget_destroy(dialog);
-        case GTK_RESPONSE_NONE:
-        b = (guint)-1;
-        break;
-
-        case GTK_RESPONSE_OK:
-        b = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
-        gtk_widget_destroy(dialog);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    for (i = 0; i < stpfile->n; i++)
-        g_free((gpointer)choices[i].name);
-    g_free(choices);
-
-    return b;
-}
-
-static void
-selection_changed(GtkWidget *button,
-                  STPControls *controls)
-{
-    STPFile *stpfile;
-    GwyDataField *dfield;
-    guint i;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (guint)-1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "data"));
-    stpfile = controls->file;
-    read_data_field(dfield, stpfile->buffers + i);
-    gwy_data_field_data_changed(dfield);
-}
-
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/* vim: set cin et ts=4 sw=4
+cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 

@@ -13,7 +13,8 @@ file_LTLIBRARIES = \
 	createc.la \
 	gwyfile.la \
 	hitachi-afm.la \
-	spmlab.la
+	spmlab.la \
+	stpfile.la
 
 #file_LTLIBRARIES = \
 #	apefile.la \
@@ -132,10 +133,10 @@ spmlab_la_LIBADD = $(module_libadd)
 
 #stmprg_la_SOURCES = stmprg.c
 #stmprg_la_LIBADD = $(module_libadd)
-#
-#stpfile_la_SOURCES = stpfile.c
-#stpfile_la_LIBADD = $(module_libadd)
-#
+
+stpfile_la_SOURCES = stpfile.c
+stpfile_la_LIBADD = $(module_libadd)
+
 #unisoku_la_SOURCES = unisoku.c
 #unisoku_la_LIBADD = $(module_libadd)
 #
