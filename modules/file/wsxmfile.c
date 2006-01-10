@@ -48,13 +48,16 @@ typedef struct {
 static gboolean      module_register       (const gchar *name);
 static gint          wsxmfile_detect       (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* wsxmfile_load         (const gchar *filename);
+static GwyContainer* wsxmfile_load         (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static GwyDataField* read_data_field       (const guchar *buffer,
                                             gint xres,
                                             gint yres,
                                             WSxMDataType type);
 static gboolean      file_read_meta        (GHashTable *meta,
-                                            gchar *buffer);
+                                            gchar *buffer,
+                                            GError **error);
 static void          process_metadata      (GHashTable *meta,
                                             GwyContainer *container);
 
@@ -64,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3.1",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -81,6 +84,7 @@ module_register(const gchar *name)
         N_("WSXM files (.tom)"),
         (GwyFileDetectFunc)&wsxmfile_detect,
         (GwyFileLoadFunc)&wsxmfile_load,
+        NULL,
         NULL
     };
 
@@ -106,7 +110,9 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-wsxmfile_load(const gchar *filename)
+wsxmfile_load(const gchar *filename,
+              G_GNUC_UNUSED GwyRunType mode,
+              GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
@@ -121,50 +127,61 @@ wsxmfile_load(const gchar *filename)
     gint xres = 0, yres = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || sscanf(buffer + MAGIC_SIZE,
                   "Image header size: %u", &header_size) < 1) {
-        g_warning("File %s is not a WSXM file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not an WSXM file."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
     if (size < header_size) {
-        g_warning("File %s shorter than header size", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     meta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     p = g_strndup(buffer, header_size);
-    ok = file_read_meta(meta, p);
+    ok = file_read_meta(meta, p, error);
     g_free(p);
 
-    if (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
-        || (xres = atol(p)) <= 0) {
-        g_warning("Missing or invalid number of columns");
+    if (ok &&
+        (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
+         || (xres = atol(p)) <= 0)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid number of columns."));
         ok = FALSE;
     }
 
-    if (!(p = g_hash_table_lookup(meta, "General Info::Number of rows"))
-        || (yres = atol(p)) <= 0) {
-        g_warning("Missing or invalid number of rows");
+    if (ok &&
+        (!(p = g_hash_table_lookup(meta, "General Info::Number of rows"))
+         || (yres = atol(p)) <= 0)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid number of rows."));
         ok = FALSE;
     }
 
-    if ((p = g_hash_table_lookup(meta, "General Info::Image Data Type"))) {
+    if (ok
+        && (p = g_hash_table_lookup(meta, "General Info::Image Data Type"))) {
         if (gwy_strequal(p, "double"))
             type = WSXM_DATA_DOUBLE;
         else
-            g_warning("Unknown data type %s", p);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Unknown data type `%s'."), p);
     }
 
-    if ((guint)size - header_size < 2*xres*yres) {
-        g_warning("Expected data size %u, but it's %u",
-                  2*xres*yres, (guint)size - header_size);
+    if (ok && (guint)size - header_size < 2*xres*yres) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected data size %u bytes, but found %u bytes."),
+                    2*xres*yres, (guint)size - header_size);
         ok = FALSE;
     }
 
@@ -185,7 +202,8 @@ wsxmfile_load(const gchar *filename)
 
 static gboolean
 file_read_meta(GHashTable *meta,
-               gchar *buffer)
+               gchar *buffer,
+               GError **error)
 {
     gchar *p, *line, *key, *value, *section = NULL;
     guint len;
@@ -226,8 +244,9 @@ file_read_meta(GHashTable *meta,
         gwy_debug("<%s> = <%s>", key, value);
         g_hash_table_replace(meta, key, value);
     }
-    if (strcmp(section, "Header end")) {
-        g_warning("Missed end of file header");
+    if (!gwy_strequal(section, "Header end")) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing end of file header marker."));
         return FALSE;
     }
 

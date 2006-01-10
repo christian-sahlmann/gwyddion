@@ -98,15 +98,19 @@ typedef struct {
 static gboolean      module_register        (const gchar *name);
 static gint          unisoku_detect         (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
-static GwyContainer* unisoku_load           (const gchar *filename);
+static GwyContainer* unisoku_load           (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
 static gboolean      unisoku_read_header    (gchar *buffer,
-                                             UnisokuFile *ufile);
+                                             UnisokuFile *ufile,
+                                             GError **error);
 static gint          unisoku_sscanf         (const gchar *str,
                                              const gchar *format,
                                              ...);
 static GwyDataField* unisoku_read_data_field(const guchar *buffer,
                                              gsize size,
-                                             UnisokuFile *ufile);
+                                             UnisokuFile *ufile,
+                                             GError **error);
 static void          unisoku_store_metadata (UnisokuFile *ufile,
                                              GwyContainer *container);
 static gchar*        unisoku_find_data_name (const gchar *header_name);
@@ -118,7 +122,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Unisoku data files (two-part .hdr + .dat)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -137,6 +141,7 @@ module_register(const gchar *name)
         N_("Unisoku files (.hdr + .dat)"),
         (GwyFileDetectFunc)&unisoku_detect,
         (GwyFileLoadFunc)&unisoku_load,
+        NULL,
         NULL
     };
 
@@ -170,7 +175,9 @@ unisoku_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-unisoku_load(const gchar *filename)
+unisoku_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     UnisokuFile ufile;
     GwyContainer *container = NULL;
@@ -182,13 +189,14 @@ unisoku_load(const gchar *filename)
     gchar *data_name;
 
     if (!g_file_get_contents(filename, &text, NULL, &err)) {
-        g_warning("Cannot read file `%s'", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
 
     memset(&ufile, 0, sizeof(UnisokuFile));
-    if (!unisoku_read_header(text, &ufile)) {
+    if (!unisoku_read_header(text, &ufile, error)) {
         unisoku_file_free(&ufile);
         g_free(text);
         return NULL;
@@ -198,29 +206,31 @@ unisoku_load(const gchar *filename)
     if (ufile.data_type < UNISOKU_UINT8
         || ufile.data_type > UNISOKU_FLOAT
         || type_sizes[ufile.data_type] == 0) {
-        g_warning("Uknown data type: %d", ufile.data_type);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Uknown data type: %d."), ufile.data_type);
         unisoku_file_free(&ufile);
         return NULL;
     }
 
     if (!(data_name = unisoku_find_data_name(filename))) {
-        g_warning("No data file found for header file `%s'", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("No corresponding data file was found for header file."));
         unisoku_file_free(&ufile);
         return NULL;
     }
 
     if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
-        g_warning("Cannot read file `%s'", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         unisoku_file_free(&ufile);
         g_clear_error(&err);
         return NULL;
     }
 
-    dfield = unisoku_read_data_field(buffer, size, &ufile);
+    dfield = unisoku_read_data_field(buffer, size, &ufile, error);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     if (!dfield) {
-        g_warning("Failed to read data from `%s'", filename);
         unisoku_file_free(&ufile);
         return NULL;
     }
@@ -234,10 +244,12 @@ unisoku_load(const gchar *filename)
     return container;
 }
 
-#define NEXT(buffer, line) \
+#define NEXT(buffer, line, err) \
     do { \
         if (!(line = gwy_str_next_line(&buffer))) { \
-            g_warning("Unexpected end of header"); \
+            g_set_error(error, GWY_MODULE_FILE_ERROR, \
+                        GWY_MODULE_FILE_ERROR_DATA, \
+                        _("File header ended unexpectedly.")); \
             return FALSE; \
         } \
     } while (g_str_has_prefix(line, "\t:")); \
@@ -245,7 +257,8 @@ unisoku_load(const gchar *filename)
 
 static gboolean
 unisoku_read_header(gchar *buffer,
-                    UnisokuFile *ufile)
+                    UnisokuFile *ufile,
+                    GError **error)
 {
     gchar *line;
     gint type1, type2;
@@ -254,81 +267,107 @@ unisoku_read_header(gchar *buffer,
     if (!line)
         return FALSE;
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     /* garbage */
 
-    NEXT(buffer, line);
-    if (unisoku_sscanf(line, "i", &ufile->format_version) != 1)
+    NEXT(buffer, line, error);
+    if (unisoku_sscanf(line, "i", &ufile->format_version) != 1) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid format version."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->date = g_strdup(line);
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->time = g_strdup(line);
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->sample_name = g_strdup(line);
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->remark = g_strdup(line);
 
-    NEXT(buffer, line);
-    if (unisoku_sscanf(line, "ii", &ufile->ascii_flag, &type1) != 2)
+    NEXT(buffer, line, error);
+    if (unisoku_sscanf(line, "ii", &ufile->ascii_flag, &type1) != 2) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid format flags."));
         return FALSE;
+    }
     ufile->data_type = type1;
 
-    NEXT(buffer, line);
-    if (unisoku_sscanf(line, "ii", &ufile->xres, &ufile->yres) != 2)
+    NEXT(buffer, line, error);
+    if (unisoku_sscanf(line, "ii", &ufile->xres, &ufile->yres) != 2) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid resolution."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
-    if (unisoku_sscanf(line, "ii", &type1, &type2) != 2)
+    NEXT(buffer, line, error);
+    if (unisoku_sscanf(line, "ii", &type1, &type2) != 2) {
+        /* FIXME */
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid some integers heaven knows what "
+                      "they mean but that should be here."));
         return FALSE;
+    }
     ufile->dim_x = type1;
     ufile->dim_y = type2;
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->unit_x = g_strdup(line);
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ddi",
                        &ufile->start_x, &ufile->end_x,
-                       &ufile->log_flag_x) != 3)
+                       &ufile->log_flag_x) != 3) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid x scale parameters."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->unit_y = g_strdup(line);
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ddii",
                        &ufile->start_y, &ufile->end_y,
-                       &ufile->ineq_flag, &ufile->log_flag_y) != 4)
+                       &ufile->ineq_flag, &ufile->log_flag_y) != 4) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid y scale parameters."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->unit_z = g_strdup(line);
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ddddi",
                        &ufile->max_raw_z, &ufile->min_raw_z,
                        &ufile->max_z, &ufile->min_z,
-                       &ufile->log_flag_z) != 5)
+                       &ufile->log_flag_z) != 5) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid z scale parameters."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "dddi",
                        &ufile->stm_voltage, &ufile->stm_current,
-                       &ufile->scan_time, &ufile->accum) != 4)
+                       &ufile->scan_time, &ufile->accum) != 4) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing or invalid data type parameters."));
         return FALSE;
+    }
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     /* reserved */
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->stm_voltage_unit = g_strdup(line);
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->stm_current_unit = g_strdup(line);
 
-    NEXT(buffer, line);
+    NEXT(buffer, line, error);
     ufile->ad_name = g_strdup(line);
 
     /* There is more stuff after that, but heaven knows what it means... */
@@ -380,7 +419,8 @@ unisoku_sscanf(const gchar *str,
 static GwyDataField*
 unisoku_read_data_field(const guchar *buffer,
                         gsize size,
-                        UnisokuFile *ufile)
+                        UnisokuFile *ufile,
+                        GError **error)
 {
     gint i, n, power10;
     const gchar *unit;
@@ -391,7 +431,9 @@ unisoku_read_data_field(const guchar *buffer,
 
     n = ufile->xres * ufile->yres;
     if (n*type_sizes[ufile->data_type] > size) {
-        g_warning("Data file is truncated");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected data size %u bytes, but found %u bytes."),
+                    n*type_sizes[ufile->data_type], size);
         return NULL;
     }
 

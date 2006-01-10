@@ -385,7 +385,7 @@ read_binary_data(gint n, gdouble *data,
 
         default:
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unimplemented number of bits per pixel: %d."), bpp);
+                    _("Unimplemented number of bits per sample: %d."), bpp);
         return FALSE;
         break;
     }

@@ -14,7 +14,10 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hitachi-afm.la \
 	spmlab.la \
-	stpfile.la
+	stmprg.la \
+	stpfile.la \
+	unisoku.la \
+	wsxmfile.la
 
 #file_LTLIBRARIES = \
 #	apefile.la \
@@ -29,11 +32,8 @@ file_LTLIBRARIES = \
 #	rhk-spm32.la \
 #	sdfile.la \
 #	sis.la \
-#	stmprg.la \
 #	stpfile.la \
-#	unisoku.la \
 #	witfile.la \
-#	wsxmfile.la \
 #	$(tiff_modules)
 
 
@@ -131,8 +131,8 @@ hitachi_afm_la_LIBADD = $(module_libadd)
 spmlab_la_SOURCES = spmlab.c
 spmlab_la_LIBADD = $(module_libadd)
 
-#stmprg_la_SOURCES = stmprg.c
-#stmprg_la_LIBADD = $(module_libadd)
+stmprg_la_SOURCES = stmprg.c
+stmprg_la_LIBADD = $(module_libadd)
 
 stpfile_la_SOURCES = stpfile.c
 stpfile_la_LIBADD = $(module_libadd)
@@ -142,9 +142,9 @@ stpfile_la_LIBADD = $(module_libadd)
 #
 #witfile_la_SOURCES = witfile.c
 #witfile_la_LIBADD = $(module_libadd)
-#
-#wsxmfile_la_SOURCES = wsxmfile.c
-#wsxmfile_la_LIBADD = $(module_libadd)
+
+wsxmfile_la_SOURCES = wsxmfile.c
+wsxmfile_la_LIBADD = $(module_libadd)
 
 
 clean-local:

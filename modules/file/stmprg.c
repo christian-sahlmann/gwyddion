@@ -50,7 +50,9 @@
 static gboolean      module_register     (const gchar *name);
 static gint          stmprg_detect       (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
-static GwyContainer* stmprg_load         (const gchar *filename);
+static GwyContainer* stmprg_load         (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
 static gboolean      read_binary_ubedata (gint n,
                                           gdouble *data,
                                           guchar *buffer,
@@ -68,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.3",
+    "0.4",
     "Rok Zitko",
     "2004",
 };
@@ -85,6 +87,7 @@ module_register(const gchar *name)
         N_("Omicron STMPRG files (tp ta)"),
         (GwyFileDetectFunc)&stmprg_detect,
         (GwyFileLoadFunc)&stmprg_load,
+        NULL,
         NULL
     };
 
@@ -129,8 +132,8 @@ read_parameters(gchar *buffer, guint size)
     return TRUE;
 }
 
-static GwyDataField *
-read_datafield(gchar *buffer, guint size)
+static GwyDataField*
+read_datafield(gchar *buffer, guint size, GError **error)
 {
     gint xres, yres, bpp;
     gdouble xreal, yreal, q;
@@ -151,10 +154,17 @@ read_datafield(gchar *buffer, guint size)
         gwy_debug("Broken ta file. size = %i, should be %i\n", size,
                   bpp * xres * yres);
     }
+    if (size < bpp*xres*yres) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Data file is too short."));
+        return NULL;
+    }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     if (!read_binary_ubedata(xres * yres, data, buffer, bpp)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unimplemented number of bits per sample: %d."), bpp);
         g_object_unref(dfield);
         return NULL;
     }
@@ -168,7 +178,8 @@ read_datafield(gchar *buffer, guint size)
     /* Assuming we are reading channel1... */
     switch (control.channel1) {
         case STMPRG_CHANNEL_OFF:
-        g_warning("Channel switched off!");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("First channel is switched off."));
         return NULL;
 
         case STMPRG_CHANNEL_Z:
@@ -226,42 +237,42 @@ ByteSwapFloat(float x)
     return x;
 }
 
-#define GFLOAT_FROM_BE(val) \
+#define FLOAT_FROM_BE(val) \
     (G_BYTE_ORDER == G_LITTLE_ENDIAN ? ByteSwapFloat(val) : (val))
 /* Other order conversion macros are defined in glib! */
 
 static void
 byteswap_and_dump_parameters()
 {                               /* below we insert the output from conv.pl ! */
-    mainfield.start_X = GFLOAT_FROM_BE(mainfield.start_X);
+    mainfield.start_X = FLOAT_FROM_BE(mainfield.start_X);
     gwy_debug("start_X=%f\n", mainfield.start_X);
-    mainfield.start_Y = GFLOAT_FROM_BE(mainfield.start_Y);
+    mainfield.start_Y = FLOAT_FROM_BE(mainfield.start_Y);
     gwy_debug("start_Y=%f\n", mainfield.start_Y);
-    mainfield.field_x = GFLOAT_FROM_BE(mainfield.field_x);
+    mainfield.field_x = FLOAT_FROM_BE(mainfield.field_x);
     gwy_debug("field_x=%f\n", mainfield.field_x);
-    mainfield.field_y = GFLOAT_FROM_BE(mainfield.field_y);
+    mainfield.field_y = FLOAT_FROM_BE(mainfield.field_y);
     gwy_debug("field_y=%f\n", mainfield.field_y);
-    mainfield.inc_x = GFLOAT_FROM_BE(mainfield.inc_x);
+    mainfield.inc_x = FLOAT_FROM_BE(mainfield.inc_x);
     gwy_debug("inc_x=%f\n", mainfield.inc_x);
-    mainfield.inc_y = GFLOAT_FROM_BE(mainfield.inc_y);
+    mainfield.inc_y = FLOAT_FROM_BE(mainfield.inc_y);
     gwy_debug("inc_y=%f\n", mainfield.inc_y);
     mainfield.points = GINT32_FROM_BE(mainfield.points);
     gwy_debug("points=%i\n", mainfield.points);
     mainfield.lines = GINT32_FROM_BE(mainfield.lines);
     gwy_debug("lines=%i\n", mainfield.lines);
-    mainfield.angle = GFLOAT_FROM_BE(mainfield.angle);
+    mainfield.angle = FLOAT_FROM_BE(mainfield.angle);
     gwy_debug("angle=%f\n", mainfield.angle);
-    mainfield.sol_x = GFLOAT_FROM_BE(mainfield.sol_x);
+    mainfield.sol_x = FLOAT_FROM_BE(mainfield.sol_x);
     gwy_debug("sol_x=%f\n", mainfield.sol_x);
-    mainfield.sol_y = GFLOAT_FROM_BE(mainfield.sol_y);
+    mainfield.sol_y = FLOAT_FROM_BE(mainfield.sol_y);
     gwy_debug("sol_y=%f\n", mainfield.sol_y);
-    mainfield.sol_z = GFLOAT_FROM_BE(mainfield.sol_z);
+    mainfield.sol_z = FLOAT_FROM_BE(mainfield.sol_z);
     gwy_debug("sol_z=%f\n", mainfield.sol_z);
-    mainfield.sol_ext1 = GFLOAT_FROM_BE(mainfield.sol_ext1);
+    mainfield.sol_ext1 = FLOAT_FROM_BE(mainfield.sol_ext1);
     gwy_debug("sol_ext1=%f\n", mainfield.sol_ext1);
-    mainfield.sol_ext2 = GFLOAT_FROM_BE(mainfield.sol_ext2);
+    mainfield.sol_ext2 = FLOAT_FROM_BE(mainfield.sol_ext2);
     gwy_debug("sol_ext2=%f\n", mainfield.sol_ext2);
-    mainfield.sol_h = GFLOAT_FROM_BE(mainfield.sol_h);
+    mainfield.sol_h = FLOAT_FROM_BE(mainfield.sol_h);
     gwy_debug("sol_h=%f\n", mainfield.sol_h);
     control.type = GINT16_FROM_BE(control.type);
     gwy_debug("type=%i\n", control.type);
@@ -271,9 +282,9 @@ byteswap_and_dump_parameters()
     gwy_debug("steps_y=%i\n", control.steps_y);
     control.dac_speed = GINT32_FROM_BE(control.dac_speed);
     gwy_debug("dac_speed=%i\n", control.dac_speed);
-    control.poi_inc = GFLOAT_FROM_BE(control.poi_inc);
+    control.poi_inc = FLOAT_FROM_BE(control.poi_inc);
     gwy_debug("poi_inc=%f\n", control.poi_inc);
-    control.lin_inc = GFLOAT_FROM_BE(control.lin_inc);
+    control.lin_inc = FLOAT_FROM_BE(control.lin_inc);
     gwy_debug("lin_inc=%f\n", control.lin_inc);
     control.ad1_reads = GINT32_FROM_BE(control.ad1_reads);
     gwy_debug("ad1_reads=%i\n", control.ad1_reads);
@@ -285,55 +296,55 @@ byteswap_and_dump_parameters()
     gwy_debug("analog_ave=%i\n", control.analog_ave);
     control.speed = GINT32_FROM_BE(control.speed);
     gwy_debug("speed=%i\n", control.speed);
-    control.voltage = GFLOAT_FROM_BE(control.voltage);
+    control.voltage = FLOAT_FROM_BE(control.voltage);
     gwy_debug("voltage=%f\n", control.voltage);
-    control.voltage_l = GFLOAT_FROM_BE(control.voltage_l);
+    control.voltage_l = FLOAT_FROM_BE(control.voltage_l);
     gwy_debug("voltage_l=%f\n", control.voltage_l);
-    control.voltage_r = GFLOAT_FROM_BE(control.voltage_r);
+    control.voltage_r = FLOAT_FROM_BE(control.voltage_r);
     gwy_debug("voltage_r=%f\n", control.voltage_r);
     control.volt_flag = GINT32_FROM_BE(control.volt_flag);
     gwy_debug("volt_flag=%i\n", control.volt_flag);
     control.volt_region = GINT32_FROM_BE(control.volt_region);
     gwy_debug("volt_region=%i\n", control.volt_region);
-    control.current = GFLOAT_FROM_BE(control.current);
+    control.current = FLOAT_FROM_BE(control.current);
     gwy_debug("current=%f\n", control.current);
-    control.current_l = GFLOAT_FROM_BE(control.current_l);
+    control.current_l = FLOAT_FROM_BE(control.current_l);
     gwy_debug("current_l=%f\n", control.current_l);
-    control.current_r = GFLOAT_FROM_BE(control.current_r);
+    control.current_r = FLOAT_FROM_BE(control.current_r);
     gwy_debug("current_r=%f\n", control.current_r);
     control.curr_flag = GINT32_FROM_BE(control.curr_flag);
     gwy_debug("curr_flag=%i\n", control.curr_flag);
     control.curr_region = GINT32_FROM_BE(control.curr_region);
     gwy_debug("curr_region=%i\n", control.curr_region);
-    control.spec_lstart = GFLOAT_FROM_BE(control.spec_lstart);
+    control.spec_lstart = FLOAT_FROM_BE(control.spec_lstart);
     gwy_debug("spec_lstart=%f\n", control.spec_lstart);
-    control.spec_lend = GFLOAT_FROM_BE(control.spec_lend);
+    control.spec_lend = FLOAT_FROM_BE(control.spec_lend);
     gwy_debug("spec_lend=%f\n", control.spec_lend);
-    control.spec_linc = GFLOAT_FROM_BE(control.spec_linc);
+    control.spec_linc = FLOAT_FROM_BE(control.spec_linc);
     gwy_debug("spec_linc=%f\n", control.spec_linc);
     control.spec_lsteps = GLONG_FROM_BE(control.spec_lsteps);
     gwy_debug("spec_lsteps=%li\n", control.spec_lsteps);
-    control.spec_rstart = GFLOAT_FROM_BE(control.spec_rstart);
+    control.spec_rstart = FLOAT_FROM_BE(control.spec_rstart);
     gwy_debug("spec_rstart=%f\n", control.spec_rstart);
-    control.spec_rend = GFLOAT_FROM_BE(control.spec_rend);
+    control.spec_rend = FLOAT_FROM_BE(control.spec_rend);
     gwy_debug("spec_rend=%f\n", control.spec_rend);
-    control.spec_rinc = GFLOAT_FROM_BE(control.spec_rinc);
+    control.spec_rinc = FLOAT_FROM_BE(control.spec_rinc);
     gwy_debug("spec_rinc=%f\n", control.spec_rinc);
     control.spec_rsteps = GLONG_FROM_BE(control.spec_rsteps);
     gwy_debug("spec_rsteps=%li\n", control.spec_rsteps);
-    control.version = GFLOAT_FROM_BE(control.version);
+    control.version = FLOAT_FROM_BE(control.version);
     gwy_debug("version=%f\n", control.version);
-    control.free_lend = GFLOAT_FROM_BE(control.free_lend);
+    control.free_lend = FLOAT_FROM_BE(control.free_lend);
     gwy_debug("free_lend=%f\n", control.free_lend);
-    control.free_linc = GFLOAT_FROM_BE(control.free_linc);
+    control.free_linc = FLOAT_FROM_BE(control.free_linc);
     gwy_debug("free_linc=%f\n", control.free_linc);
     control.free_lsteps = GLONG_FROM_BE(control.free_lsteps);
     gwy_debug("free_lsteps=%li\n", control.free_lsteps);
-    control.free_rstart = GFLOAT_FROM_BE(control.free_rstart);
+    control.free_rstart = FLOAT_FROM_BE(control.free_rstart);
     gwy_debug("free_rstart=%f\n", control.free_rstart);
-    control.free_rend = GFLOAT_FROM_BE(control.free_rend);
+    control.free_rend = FLOAT_FROM_BE(control.free_rend);
     gwy_debug("free_rend=%f\n", control.free_rend);
-    control.free_rinc = GFLOAT_FROM_BE(control.free_rinc);
+    control.free_rinc = FLOAT_FROM_BE(control.free_rinc);
     gwy_debug("free_rinc=%f\n", control.free_rinc);
     control.free_rsteps = GLONG_FROM_BE(control.free_rsteps);
     gwy_debug("free_rsteps=%li\n", control.free_rsteps);
@@ -347,7 +358,7 @@ byteswap_and_dump_parameters()
     gwy_debug("timer4=%li\n", control.timer4);
     control.m_time = GLONG_FROM_BE(control.m_time);
     gwy_debug("m_time=%li\n", control.m_time);
-    control.u_divider = GFLOAT_FROM_BE(control.u_divider);
+    control.u_divider = FLOAT_FROM_BE(control.u_divider);
     gwy_debug("u_divider=%f\n", control.u_divider);
     control.fb_control = GINT32_FROM_BE(control.fb_control);
     gwy_debug("fb_control=%i\n", control.fb_control);
@@ -379,7 +390,7 @@ byteswap_and_dump_parameters()
     gwy_debug("fm_speed=%i\n", control.fm_speed);
     control.fm_reads = GINT16_FROM_BE(control.fm_reads);
     gwy_debug("fm_reads=%i\n", control.fm_reads);
-    other_ctrl.version = GFLOAT_FROM_BE(other_ctrl.version);
+    other_ctrl.version = FLOAT_FROM_BE(other_ctrl.version);
     gwy_debug("version=%f\n", other_ctrl.version);
     other_ctrl.adc_data_l = GINT32_FROM_BE(other_ctrl.adc_data_l);
     gwy_debug("adc_data_l=%i\n", other_ctrl.adc_data_l);
@@ -389,7 +400,7 @@ byteswap_and_dump_parameters()
     gwy_debug("first_zp=%i\n", other_ctrl.first_zp);
     other_ctrl.last_zp = GUINT16_FROM_BE(other_ctrl.last_zp);
     gwy_debug("last_zp=%i\n", other_ctrl.last_zp);
-    other_ctrl.zdrift = GFLOAT_FROM_BE(other_ctrl.zdrift);
+    other_ctrl.zdrift = FLOAT_FROM_BE(other_ctrl.zdrift);
     gwy_debug("zdrift=%f\n", other_ctrl.zdrift);
     other_ctrl.savememory = GINT32_FROM_BE(other_ctrl.savememory);
     gwy_debug("savememory=%i\n", other_ctrl.savememory);
@@ -399,11 +410,11 @@ byteswap_and_dump_parameters()
     gwy_debug("spec_loop=%i\n", other_ctrl.spec_loop);
     other_ctrl.ext_c = GINT32_FROM_BE(other_ctrl.ext_c);
     gwy_debug("ext_c=%i\n", other_ctrl.ext_c);
-    other_ctrl.fm_zlift = GFLOAT_FROM_BE(other_ctrl.fm_zlift);
+    other_ctrl.fm_zlift = FLOAT_FROM_BE(other_ctrl.fm_zlift);
     gwy_debug("fm_zlift=%f\n", other_ctrl.fm_zlift);
     other_ctrl.ext_a = GINT32_FROM_BE(other_ctrl.ext_a);
     gwy_debug("ext_a=%i\n", other_ctrl.ext_a);
-    other_ctrl.vme_release = GFLOAT_FROM_BE(other_ctrl.vme_release);
+    other_ctrl.vme_release = FLOAT_FROM_BE(other_ctrl.vme_release);
     gwy_debug("vme_release=%f\n", other_ctrl.vme_release);
 }
 
@@ -440,7 +451,9 @@ store_metadata(GwyContainer *data)
 }
 
 static GwyContainer*
-stmprg_load(const gchar *filename)
+stmprg_load(const gchar *filename,
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     GwyContainer *container = NULL;
     gchar *buffer = NULL;
@@ -450,17 +463,21 @@ stmprg_load(const gchar *filename)
     char *filename_ta, *ptr;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
-        g_warning("File %s is not an Omicron STMPRG image file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not an Omicron STMPRG image file."));
         g_free(buffer);
         return NULL;
     }
 
     if (!read_parameters(buffer, size)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Parameter file is too short."));
         g_free(buffer);
         return NULL;
     }
@@ -476,16 +493,15 @@ stmprg_load(const gchar *filename)
         *ptr = 'a';
 
     if (!g_file_get_contents(filename_ta, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename_ta);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
 
-    dfield = read_datafield(buffer, size);
-    if (!dfield) {
-        g_warning("Couldn't read file %s", filename_ta);
+    dfield = read_datafield(buffer, size, error);
+    if (!dfield)
         return NULL;
-    }
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -534,7 +550,6 @@ read_binary_ubedata(gint n, gdouble *data, guchar *buffer, gint bpp)
         break;
 
         default:
-        g_warning("bpp = %d unimplemented", bpp);
         return FALSE;
         break;
     }
