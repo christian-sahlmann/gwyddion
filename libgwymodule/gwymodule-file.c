@@ -673,6 +673,9 @@ gwy_file_type_info_set(GwyContainer *data,
 
     fti = gwy_file_type_info_get(data, TRUE);
     fti->name = g_quark_from_string(name);
+    /* filename_sys can be *physically* the same string as fti->filename_sys */
+    if (fti->filename_sys == filename_sys)
+        return;
     if (fti->filename_sys)
         g_free(fti->filename_sys);
     fti->filename_sys = g_strdup(filename_sys);
