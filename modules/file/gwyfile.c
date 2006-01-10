@@ -115,8 +115,7 @@ gwyfile_load(const gchar *filename,
     gsize pos = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_IO,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     "%s", err->message);
         g_clear_error(&err);
         return NULL;
@@ -124,8 +123,7 @@ gwyfile_load(const gchar *filename,
     if (size < MAGIC_SIZE
         || (memcmp(buffer, MAGIC, MAGIC_SIZE)
             && memcmp(buffer, MAGIC2, MAGIC_SIZE))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("File is not a Gwyddion native file."));
         gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
@@ -140,14 +138,12 @@ gwyfile_load(const gchar *filename,
 
     gwy_file_abandon_contents(buffer, size, &err);
     if (!object) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Data deserialization failed."));
         return NULL;
     }
     if (!GWY_IS_CONTAINER(object)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Data deserialization succeeded, but resulted in "
                       "an unexpected object %s."),
                     g_type_name(G_TYPE_FROM_INSTANCE(object)));
@@ -178,9 +174,8 @@ gwyfile_save(GwyContainer *data,
     gboolean ok = TRUE;
 
     if (!(fh = g_fopen(filename, "wb"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_IO,
-                    _("Cannot open file: %s"), g_strerror(errno));
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot open file for writing: %s"), g_strerror(errno));
         return FALSE;
     }
 
@@ -188,8 +183,7 @@ gwyfile_save(GwyContainer *data,
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_IO,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Cannot write to file: %s"), g_strerror(errno));
         g_unlink(filename);
     }

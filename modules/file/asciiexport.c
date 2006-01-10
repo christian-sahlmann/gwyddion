@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <errno.h>
 #include <string.h>
 
 #include <glib/gstdio.h>
@@ -38,8 +39,10 @@
 static gboolean      module_register     (const gchar *name);
 static gint          asciiexport_detect  (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
-static gboolean      asciiexport_save    (GwyContainer *data,
-                                          const gchar *filename);
+static gboolean      asciiexport_export  (GwyContainer *data,
+                                          const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -47,7 +50,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -64,7 +67,8 @@ module_register(const gchar *name)
         N_("ASCII data matrix (.txt)"),
         (GwyFileDetectFunc)&asciiexport_detect,
         NULL,
-        (GwyFileSaveFunc)&asciiexport_save,
+        NULL,
+        (GwyFileSaveFunc)&asciiexport_export,
     };
 
     gwy_file_func_register(name, &asciiexport_func_info);
@@ -80,28 +84,34 @@ asciiexport_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static gboolean
-asciiexport_save(GwyContainer *data,
-                 const gchar *filename)
+asciiexport_export(GwyContainer *data,
+                   const gchar *filename,
+                   G_GNUC_UNUSED GwyRunType mode,
+                   GError **error)
 {
     GwyDataField *dfield;
-    gint xres, yres, i, j;
+    gint xres, yres, i;
     gdouble *d;
     FILE *fh;
 
-    if (!(fh = g_fopen(filename, "w")))
+    if (!(fh = g_fopen(filename, "w"))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot open file for writing: %s"), g_strerror(errno));
         return FALSE;
+    }
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(dfield);
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            if (fprintf(fh, "%g%c", d[i*xres + j],
-                        j == xres-1 ? '\n' : '\t') < 2) {
-                g_unlink(filename);
-                return FALSE;
-            }
+    for (i = 0; i < xres*yres; i++) {
+        if (fprintf(fh, "%g%c", d[i],
+                    (i + 1) % xres ? '\t' : '\n') < 2) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                        _("Cannot write to file: %s"), g_strerror(errno));
+            fclose(fh);
+            g_unlink(filename);
+            return FALSE;
         }
     }
     fclose(fh);

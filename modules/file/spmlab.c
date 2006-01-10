@@ -118,7 +118,7 @@ spmlab_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 spmlab_load(const gchar *filename,
-            GwyRunType mode,
+            G_GNUC_UNUSED GwyRunType mode,
             GError **error)
 {
     GwyContainer *container = NULL;
@@ -128,16 +128,15 @@ spmlab_load(const gchar *filename,
     GwyDataField *dfield = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_IO,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     "%s", err->message);
         g_clear_error(&err);
+        return NULL;
     }
     /* 2048 is wrong. moreover it differs for r5 and r4, kasigra uses 5752 for
      * r5 */
     if (size < 2048 || buffer[0] != '#' || buffer[1] != 'R') {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("File is not a Thermicroscopes SpmLab file."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -151,8 +150,7 @@ spmlab_load(const gchar *filename,
         break;
 
         default:
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unknown file version %c."), buffer[2]);
         break;
     }
@@ -243,8 +241,7 @@ read_data_field(const guchar *buffer,
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_DATA,
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Truncated data."));
         return NULL;
     }

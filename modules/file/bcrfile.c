@@ -52,10 +52,13 @@ typedef enum {
 static gboolean      module_register       (const gchar *name);
 static gint          bcrfile_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* bcrfile_load          (const gchar *filename);
+static GwyContainer* bcrfile_load          (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static GwyDataField* file_load_real        (const guchar *buffer,
                                             gsize size,
-                                            GHashTable *meta);
+                                            GHashTable *meta,
+                                            GError **error);
 static GwyDataField* read_data_field       (const guchar *buffer,
                                             gint xres,
                                             gint yres,
@@ -72,7 +75,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -89,6 +92,7 @@ module_register(const gchar *name)
         N_("BCR files (.bcr, .bcrf)"),
         (GwyFileDetectFunc)&bcrfile_detect,
         (GwyFileLoadFunc)&bcrfile_load,
+        NULL,
         NULL
     };
 
@@ -117,7 +121,9 @@ bcrfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-bcrfile_load(const gchar *filename)
+bcrfile_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
@@ -127,18 +133,20 @@ bcrfile_load(const gchar *filename)
     GHashTable *meta = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (size < HEADER_SIZE) {
-        g_warning("File %s is not a BCR file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     meta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    dfield = file_load_real(buffer, size, meta);
+    dfield = file_load_real(buffer, size, meta, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (dfield) {
         container = gwy_container_new();
@@ -154,7 +162,8 @@ bcrfile_load(const gchar *filename)
 static GwyDataField*
 file_load_real(const guchar *buffer,
                gsize size,
-               GHashTable *meta)
+               GHashTable *meta,
+               GError **error)
 {
     GwyDataField *dfield;
     GwySIUnit *siunit1 = NULL, *siunit2 = NULL;
@@ -170,7 +179,8 @@ file_load_real(const guchar *buffer,
     g_free(s);
 
     if (!(s = g_hash_table_lookup(meta, "fileformat"))) {
-        g_warning("File is not a BCR file");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not a BCR/BCRF file."));
         return NULL;
     }
 
@@ -179,19 +189,22 @@ file_load_real(const guchar *buffer,
     else if (gwy_strequal(s, "bcrf"))
         type = BCR_FILE_FLOAT;
     else {
-        g_warning("Cannot understand file type header `%s'", s);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unknown file type header: `%s'."), s);
         return NULL;
     }
     gwy_debug("File type: %u", type);
 
     if (!(s = g_hash_table_lookup(meta, "xpixels"))) {
-        g_warning("No xpixels (x resolution) info");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing `xpixels' (x resolution) field."));
         return NULL;
     }
     xres = atol(s);
 
     if (!(s = g_hash_table_lookup(meta, "ypixels"))) {
-        g_warning("No ypixels (y resolution) info");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing `ypixels' (y resolution) field."));
         return NULL;
     }
     yres = atol(s);
@@ -200,8 +213,9 @@ file_load_real(const guchar *buffer,
         intelmode = !!atol(s);
 
     if (size < HEADER_SIZE + xres*yres*type) {
-        g_warning("Expected data size %u, but it's %u",
-                  xres*yres*type, (guint)(size - HEADER_SIZE));
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected data size %u bytes, but found %u bytes."),
+                    xres*yres*type, (guint)(size - HEADER_SIZE));
         return NULL;
     }
 

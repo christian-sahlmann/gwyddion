@@ -21,10 +21,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TO DO:
+/* TODO:
  * - multiple images / selection dialog
  * - constant height or current
  * - saving
+ *
+ * (Yeti):
+ * FIXME: I do not have specs.
 */
 
 #include "config.h"
@@ -44,14 +47,18 @@
 static gboolean      module_register      (const gchar *name);
 static gint          createc_detect       (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
-static GwyContainer* createc_load         (const gchar *filename);
+static GwyContainer* createc_load         (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
 static GHashTable*   read_hash            (gchar *buffer);
 static GwyDataField* hash_to_data_field   (GHashTable *hash,
-                                           gchar *buffer);
+                                           gchar *buffer,
+                                           GError **error);
 static gboolean      read_binary_data     (gint n,
                                            gdouble *data,
                                            gchar *buffer,
-                                           gint bpp);
+                                           gint bpp,
+                                           GError **error);
 static void          store_metadata       (GwyContainer *data,
                                            GHashTable *hash);
 
@@ -61,7 +68,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.4",
+    "0.5",
     "Rok Zitko",
     "2004",
 };
@@ -78,6 +85,7 @@ module_register(const gchar *name)
         N_("Createc files (.dat)"),
         (GwyFileDetectFunc)&createc_detect,
         (GwyFileLoadFunc)&createc_load,
+        NULL,
         NULL
     };
 
@@ -103,7 +111,9 @@ createc_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-createc_load(const gchar *filename)
+createc_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GwyContainer *container = NULL;
     gchar *buffer = NULL;
@@ -113,37 +123,34 @@ createc_load(const gchar *filename)
     GwyDataField *dfield;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
-        g_warning("File %s is not a Createc image file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not a Createc image file."));
         g_free(buffer);
         return NULL;
     }
 
     hash = read_hash(buffer);
 
-    dfield = hash_to_data_field(hash, buffer);
+    dfield = hash_to_data_field(hash, buffer, error);
 
     if (dfield) {
-      container = gwy_container_new();
-      gwy_container_set_object_by_name(container, "/0/data", dfield);
-      g_object_unref(dfield);
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
 
-      store_metadata(container, hash);
+        store_metadata(container, hash);
 
-      g_hash_table_destroy(hash);
-      g_free(buffer);
-
-      return container;
-    } else {
-      g_hash_table_destroy(hash);
-      g_free(buffer);
-
-      return NULL;
     }
+    g_hash_table_destroy(hash);
+    g_free(buffer);
+
+    return container;
 }
 
 /* Read the ASCII header and fill the hash with key/value pairs */
@@ -187,34 +194,37 @@ fail:
 
 /* Macros to extract integer/double variables in hash_to_data_field() */
 /* Any missing keyword/value pair is fatal, so we return a NULL pointer. */
-#define HASH_GET(key, var, typeconv) \
+#define HASH_GET(key, var, typeconv, err) \
     if (!(s = g_hash_table_lookup(hash, key))) { \
-        g_warning("Fatal: %s not found", key); \
+        g_set_error(err, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
+                    _("Missing `%s' field."), key); \
         return NULL; \
     } \
     var = typeconv(s)
 
 /* Support for alternative keywords in some versions of dat files */
-#define HASH_GET2(key1, key2, var, typeconv) \
+#define HASH_GET2(key1, key2, var, typeconv, err) \
     if (!(s = g_hash_table_lookup(hash, key1))) { \
       if (!(s = g_hash_table_lookup(hash, key2))) { \
-        g_warning("Fatal: Neither %s nor %s found.", key1, key2); \
+          g_set_error(err, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
+                      _("Neither `%s' nor `%s' field found."), key1, key2); \
         return NULL; \
       } \
     } \
     var = typeconv(s)
 
-#define HASH_INT(key, var)    HASH_GET(key, var, atoi)
-#define HASH_DOUBLE(key, var) HASH_GET(key, var, createc_atof)
-#define HASH_STRING(key, var) HASH_GET(key, var, /* */)
+#define HASH_INT(key, var, err)    HASH_GET(key, var, atoi, err)
+#define HASH_DOUBLE(key, var, err) HASH_GET(key, var, createc_atof, err)
+#define HASH_STRING(key, var, err) HASH_GET(key, var, /* */, err)
 
-#define HASH_INT2(key1, key2, var)    HASH_GET2(key1, key2, var, atoi)
-#define HASH_DOUBLE2(key1, key2, var) HASH_GET2(key1, key2, var, createc_atof)
-#define HASH_STRING2(key1, key2, var) HASH_GET2(key1, key2, var, /* */)
+#define HASH_INT2(key1, key2, var, err)    HASH_GET2(key1, key2, var, atoi, err)
+#define HASH_DOUBLE2(key1, key2, var, err) HASH_GET2(key1, key2, var, createc_atof, err)
+#define HASH_STRING2(key1, key2, var, err) HASH_GET2(key1, key2, var, /* */, err)
 
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
-                   gchar *buffer)
+                   gchar *buffer,
+                   GError **error)
 {
     GwyDataField *dfield;
     GwySIUnit *unit;
@@ -230,32 +240,32 @@ hash_to_data_field(GHashTable *hash,
     offset = 16384 + 2; /* header + 2 offset bytes */
     is_current = FALSE;
 
-    HASH_INT2("Num.X", "Num.X / Num.X", xres);
-    HASH_INT2("Num.Y", "Num.Y / Num.Y", yres);
+    HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
+    HASH_INT2("Num.Y", "Num.Y / Num.Y", yres, error);
 
-    HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1);
-    HASH_INT2("GainX", "GainX / GainX", ti2);
-    HASH_DOUBLE("Xpiezoconst", td); /* lowcase p, why? */
+    HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1, error);
+    HASH_INT2("GainX", "GainX / GainX", ti2, error);
+    HASH_DOUBLE("Xpiezoconst", td, error); /* lowcase p, why? */
     xreal = xres * ti1; /* dacs */
     xreal *= 20.0/65536.0 * ti2; /* voltage per dac */
     xreal *= td * 1.0e-10; /* piezoconstant [A/V] */
 
-    HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1);
-    HASH_INT2("GainY", "GainY / GainY", ti2);
-    HASH_DOUBLE("YPiezoconst", td); /* upcase P */
+    HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1, error);
+    HASH_INT2("GainY", "GainY / GainY", ti2, error);
+    HASH_DOUBLE("YPiezoconst", td, error); /* upcase P */
     yreal = yres * ti1;
     yreal *= 20.0/65536.0 * ti2;
     yreal *= td * 1.0e-10;
 
-    HASH_INT2("GainZ", "GainZ / GainZ", ti2);
-    HASH_DOUBLE("ZPiezoconst", td); /* upcase P */
+    HASH_INT2("GainZ", "GainZ / GainZ", ti2, error);
+    HASH_DOUBLE("ZPiezoconst", td, error); /* upcase P */
     q = 1.0; /* unity dac */
     q *= 20.0/65536.0 * ti2; /* voltage per dac */
     q *= td * 1.0e-10; /* piezoconstant [A/V] */
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    if (!read_binary_data(xres*yres, data, buffer + offset, bpp)) {
+    if (!read_binary_data(xres*yres, data, buffer + offset, bpp, error)) {
         g_object_unref(dfield);
         return NULL;
     }
@@ -341,7 +351,8 @@ store_metadata(GwyContainer *data, GHashTable *hash)
 static gboolean
 read_binary_data(gint n, gdouble *data,
                  gchar *buffer,
-                 gint bpp)
+                 gint bpp,
+                 GError **error)
 {
     gint i;
     gdouble q;
@@ -373,7 +384,8 @@ read_binary_data(gint n, gdouble *data,
         break;
 
         default:
-        g_warning("bpp = %d unimplemented", bpp);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unimplemented number of bits per pixel: %d."), bpp);
         return FALSE;
         break;
     }

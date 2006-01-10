@@ -8,18 +8,17 @@ endif
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
+	asciiexport.la \
+	bcrfile.la \
+	createc.la \
 	gwyfile.la \
+	hitachi-afm.la \
 	spmlab.la
 
 #file_LTLIBRARIES = \
-#	asciiexport.la \
 #	apefile.la \
 #	assing-afm.la \
-#	bcrfile.la \
-#	createc.la \
 #	ezdfile.la \
-#	gwyfile.la \
-#	hitachi-afm.la \
 #	nanoscope.la \
 #	nt-mdt.la \
 #	mifile.la \
@@ -29,7 +28,6 @@ file_LTLIBRARIES = \
 #	rhk-spm32.la \
 #	sdfile.la \
 #	sis.la \
-#	spmlab.la \
 #	stmprg.la \
 #	stpfile.la \
 #	unisoku.la \
@@ -73,30 +71,30 @@ MODULE_LIBTIFF =
 endif
 
 
-#asciiexport_la_SOURCES = asciiexport.c
-#asciiexport_la_LIBADD = $(module_libadd)
-#
+asciiexport_la_SOURCES = asciiexport.c
+asciiexport_la_LIBADD = $(module_libadd)
+
 #apefile_la_SOURCES = apefile.c
 #apefile_la_LIBADD = $(module_libadd)
 #
 #assing_afm_la_SOURCES = assing-afm.c
 #assing_afm_la_LIBADD = $(module_libadd)
-#
-#bcrfile_la_SOURCES = bcrfile.c
-#bcrfile_la_LIBADD = $(module_libadd)
-#
-#createc_la_SOURCES = createc.c
-#createc_la_LIBADD = $(module_libadd)
-#
+
+bcrfile_la_SOURCES = bcrfile.c
+bcrfile_la_LIBADD = $(module_libadd)
+
+createc_la_SOURCES = createc.c
+createc_la_LIBADD = $(module_libadd)
+
 #ezdfile_la_SOURCES = ezdfile.c
 #ezdfile_la_LIBADD = $(module_libadd)
 
 gwyfile_la_SOURCES = gwyfile.c
 gwyfile_la_LIBADD = $(module_libadd)
 
-#hitachi_afm_la_SOURCES = hitachi-afm.c
-#hitachi_afm_la_LIBADD = $(module_libadd)
-#
+hitachi_afm_la_SOURCES = hitachi-afm.c
+hitachi_afm_la_LIBADD = $(module_libadd)
+
 #if HAVE_TIFF
 #jpkscan_la_SOURCES = jpk.h jpkscan.c
 #jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)

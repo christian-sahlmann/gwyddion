@@ -44,9 +44,12 @@ enum { HEADER_SIZE = 640 };
 static gboolean      module_register(const gchar *name);
 static gint          hitachi_detect (const GwyFileDetectInfo *fileinfo,
                                      gboolean only_name);
-static GwyContainer* hitachi_load   (const gchar *filename);
+static GwyContainer* hitachi_load   (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
 static GwyDataField* read_data_field(const guchar *buffer,
-                                     guint size);
+                                     guint size,
+                                     GError **error);
 
 
 /* The module info. */
@@ -55,7 +58,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hitachi AFM files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -72,6 +75,7 @@ module_register(const gchar *name)
         N_("Hitachi AFM files"),
         (GwyFileDetectFunc)&hitachi_detect,
         (GwyFileLoadFunc)&hitachi_load,
+        NULL,
         NULL
     };
 
@@ -98,7 +102,9 @@ hitachi_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-hitachi_load(const gchar *filename)
+hitachi_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
@@ -107,17 +113,19 @@ hitachi_load(const gchar *filename)
     GwyDataField *dfield = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     if (size < HEADER_SIZE + 2) {
-        g_warning("File %s is truncated", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
-    dfield = read_data_field(buffer, size);
+    dfield = read_data_field(buffer, size, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (!dfield)
         return NULL;
@@ -130,7 +138,9 @@ hitachi_load(const gchar *filename)
 }
 
 static GwyDataField*
-read_data_field(const guchar *buffer, guint size)
+read_data_field(const guchar *buffer,
+                guint size,
+                GError **error)
 {
     enum {
         XREAL_OFFSET  = 0x16c,
@@ -155,8 +165,9 @@ read_data_field(const guchar *buffer, guint size)
 
     n = xres*yres;
     if (size != 2*n + HEADER_SIZE) {
-        g_warning("File size doesn't match, expecting %d, got %u",
-                  2*n + HEADER_SIZE, size);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected data size %u bytes, but found %u bytes."),
+                    2*n + HEADER_SIZE, size);
         return NULL;
     }
 
