@@ -30,6 +30,13 @@
 
 enum { MAX_PARAMS = 4 };
 
+enum {
+    PROFILE_1,
+    PROFILE_2,
+    PROFILE_3,
+    PROFILE_4
+};
+
 /* Data for this function.*/
 typedef struct {
     GtkWidget *graph;
@@ -37,6 +44,7 @@ typedef struct {
     GtkWidget *dialog;
     gulong response_id;
     gulong selection_id;
+    gulong destroy_id;
 
     GtkWidget *selection_start_label;
     GtkWidget *selection_end_label;
@@ -46,6 +54,9 @@ typedef struct {
     gdouble area_under_curve;
     GtkWidget *stat_label;
     gdouble stat;
+
+    gint ncurves;
+    gint curve_index;
 } StatsControls;
 
 static gboolean    module_register             (const gchar *name);
@@ -64,6 +75,8 @@ static gdouble     calc_integral_stats_whole_curve
                                                (StatsControls *data);
 static void        fit_graph_cb                (StatsControls *data);
 static void        stat_updated_cb             (StatsControls *data);
+static void        combo_box_cb                (GtkWidget *combo,
+                                                StatsControls *data);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -99,6 +112,7 @@ stats(GwyGraph *graph)
 {
     StatsControls *data;
     GwyGraphArea *area;
+    GwyGraphModel *gmodel;
 
     data = g_new(StatsControls, 1);
     data->dialog = NULL;
@@ -113,6 +127,9 @@ stats(GwyGraph *graph)
 
     data->graph = GTK_WIDGET(graph);
 
+    gmodel = gwy_graph_get_model(graph);
+    /* data->ncurves used in fit_graph_cb() */
+    data->ncurves = gwy_graph_model_get_n_curves(gmodel);
 
     data->last_status = gwy_graph_get_status(graph);
     gwy_graph_set_status(graph, GWY_GRAPH_STATUS_XSEL);
@@ -123,27 +140,58 @@ stats(GwyGraph *graph)
     if (!data->dialog)
         stats_dialog(data);
 
-    g_debug("in stats");
-
     return TRUE;
 }
 
 static gboolean
 stats_dialog(StatsControls *data)
 {
+    static const GwyEnum profiles1[] = {
+        { N_("Profile 1"),  PROFILE_1,  },
+    };
+
+    static const GwyEnum profiles2[] = {
+        { N_("Profile 1"),  PROFILE_1,  },
+        { N_("Profile 2"),  PROFILE_2,  },
+    };
+
+    static const GwyEnum profiles3[] = {
+        { N_("Profile 1"),  PROFILE_1,  },
+        { N_("Profile 2"),  PROFILE_2,  },
+        { N_("Profile 3"),  PROFILE_3,  },
+    };
+
+    static const GwyEnum profiles4[] = {
+        { N_("Profile 1"),  PROFILE_1,  },
+        { N_("Profile 2"),  PROFILE_2,  },
+        { N_("Profile 3"),  PROFILE_3,  },
+        { N_("Profile 4"),  PROFILE_4,  },
+    };
+
     enum {
         RESPONSE_FIT = 0,
     };
 
     GwyGraph *graph;
+    GwyGraphModel *gmodel;
+    
     GtkDialog *dialog;
     GtkWidget *table, *label;
     GtkWidget *button;
     gchar buffer[100];
     GwySIValueFormat *format;
     GwySIUnit *si_unit;
+    gint i;
 
+    data->curve_index = 0;
     graph = GWY_GRAPH(data->graph);
+    gmodel = gwy_graph_get_model(graph);
+
+//     for (i = 0; i < data->ncurves; i++)
+//     {
+//         curve_desc[i] = 
+//     }
+
     data->dialog = gtk_dialog_new_with_buttons(_("Graph statistics"),
                                                NULL,
                                                GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -160,30 +208,64 @@ stats_dialog(StatsControls *data)
                                  G_CALLBACK(stats_dialog_response_cb),
                                  data);
 
-    g_signal_connect_swapped(graph, "destroy",
-                             G_CALLBACK(stats_dialog_closed_cb), data);
+    data->destroy_id =
+        g_signal_connect_swapped(graph, "destroy", 
+                                 G_CALLBACK(stats_dialog_closed_cb),
+                                 data);
 
-    table = gtk_table_new(3, 3, FALSE);
+    table = gtk_table_new(5, 3, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
 
-    label = gtk_label_new("from");
-    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1, 0, 0, 2, 2);
+    label = gtk_label_new(NULL);
+    switch (data->ncurves) {
+        case 4:
+        label = gwy_enum_combo_box_new(profiles4, 4,
+                                       G_CALLBACK(combo_box_cb),
+                                       data, 0, FALSE);
+        break;
 
-    label = gtk_label_new("to");
+        case 3:
+        label = gwy_enum_combo_box_new(profiles3, 3,
+                                       G_CALLBACK(combo_box_cb),
+                                       data, 0, FALSE);
+        break;
+
+        case 2:
+        label = gwy_enum_combo_box_new(profiles2, 2,
+                                       G_CALLBACK(combo_box_cb),
+                                       data, 0, FALSE);
+        break;
+
+        default:
+        label = gwy_enum_combo_box_new(profiles1, 1,
+                                       G_CALLBACK(combo_box_cb),
+                                       data, 0, FALSE);
+        break;
+    }
+
+    gwy_table_attach_row(table, 0, _("Select Curve"), NULL, label);
+
+    label = gtk_label_new("from");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 1, 2, 0, 0, 2, 2);
 
-    label = gtk_label_new("Area under curve");
+    label = gtk_label_new("to");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 2, 3, 0, 0, 2, 2);
 
-    label = gtk_label_new("Std Dev");
+    label = gtk_label_new("Area under curve");
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 3, 4, 0, 0, 2, 2);
+
+    label = gtk_label_new("Std Dev");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 1, 4, 5, 0, 0, 2, 2);
+
+    label = gtk_label_new("=");
+    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 4, 5, 0, 0, 2, 2);
 
     label = gtk_label_new("=");
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 3, 4, 0, 0, 2, 2);
@@ -194,17 +276,14 @@ stats_dialog(StatsControls *data)
     label = gtk_label_new("=");
     gtk_table_attach(GTK_TABLE(table), label, 1, 2, 1, 2, 0, 0, 2, 2);
 
-    label = gtk_label_new("=");
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1, 0, 0, 2, 2);
-
     data->selection_start_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(data->selection_start_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), data->selection_start_label, 2, 3, 0, 1,
+    gtk_table_attach(GTK_TABLE(table), data->selection_start_label, 2, 3, 1, 2,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->selection_end_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(data->selection_end_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 1, 2,
+    gtk_table_attach(GTK_TABLE(table), data->selection_end_label, 2, 3, 2, 3,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->area_under_curve = calc_integral_stats_whole_curve(data);
@@ -231,12 +310,12 @@ stats_dialog(StatsControls *data)
     gtk_misc_set_alignment(GTK_MISC(data->area_under_curve_label), 1.0, 0.5);
     gtk_table_attach(GTK_TABLE(table),
                      data->area_under_curve_label,
-                     2, 3, 2, 3,
+                     2, 3, 3, 4,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->stat_label = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(data->stat_label), 1.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 3, 4,
+    gtk_table_attach(GTK_TABLE(table), data->stat_label, 2, 3, 4, 5,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
 
     data->selection_id =
@@ -250,9 +329,18 @@ stats_dialog(StatsControls *data)
     stat_updated_cb(data);
 
     g_free(format->units);
-    g_debug("in stats dialog");
 
     return TRUE;
+}
+
+/* callback function for combo box */
+static void
+combo_box_cb(GtkWidget *combo, StatsControls *data)
+{
+    gint id;
+
+    id = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    data->curve_index = id;
 }
 
 /* code for calculating area under the WHOLE curve */
@@ -327,8 +415,9 @@ fit_graph_cb(StatsControls *data)
     gboolean ok;
     gdouble from, to;
     gdouble selection[2];
-    gint ncurves, count, ndata;
+    gint count, ndata;
     gint selection_start_index, selection_end_index;
+    gint ncurves;
 
     /* NOTE: these will change depending on the deg of poly */
     const gchar *fit_func_name = "Polynom (order 1)";
@@ -345,14 +434,18 @@ fit_graph_cb(StatsControls *data)
 
     /* normalize data */
     /* FIXME: may put this piece of code in a seperate function */
-    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel, 0);
+    current_cmodel = gwy_graph_model_get_curve_by_index(gmodel,
+                                                        data->curve_index);
     xvals = gwy_graph_curve_model_get_xdata(current_cmodel);
 
     /* remove the old fit */
     ncurves = gwy_graph_model_get_n_curves(gmodel);
-    if (ncurves > 1)
-        gwy_graph_model_remove_curve_by_index(gmodel, 1);
-    
+    if (ncurves > data->ncurves)
+    {
+        for (i = ncurves-1; i > data->ncurves-1; i--)
+            gwy_graph_model_remove_curve_by_index(gmodel, i);
+    }
+
     /* get selection values */
     area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
     if (gwy_graph_area_get_selection_number(area))
@@ -477,7 +570,7 @@ stat_updated_cb(StatsControls *data)
     g_return_if_fail(GWY_IS_GRAPH(graph));
     gmodel = gwy_graph_get_model(graph);
 
-    if ((gwy_graph_model_get_n_curves(gmodel)) > 1)
+    if ((gwy_graph_model_get_n_curves(gmodel)) > data->ncurves)
     {
         format = gwy_si_unit_get_format((gwy_graph_get_model(graph))->y_unit,
                                         GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -553,6 +646,7 @@ stats_dialog_closed_cb(StatsControls *data)
     gwy_graph_set_status(graph, data->last_status);
 
     if (data->dialog) {
+        g_signal_handler_disconnect(data->graph, data->destroy_id);
         g_signal_handler_disconnect(data->dialog, data->response_id);
         g_signal_handler_disconnect(data->graph, data->selection_id);
         data->response_id = 0;
@@ -571,4 +665,5 @@ stats_dialog_response_cb(StatsControls *data)
     stats_dialog_closed_cb(data);
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/* vim: set cin et ts=4 sw=4
+cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
