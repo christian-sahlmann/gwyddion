@@ -36,7 +36,6 @@ typedef enum {
 } GwyAppWindowType;
 
 GwyContainer*  gwy_app_get_current_data            (void);
-GtkWidget*     gwy_app_data_browser_create         (GwyContainer *data);
 GwyDataWindow* gwy_app_data_window_get_current     (void);
 gboolean       gwy_app_data_window_set_current     (GwyDataWindow *window);
 void           gwy_app_data_window_remove          (GwyDataWindow *window);

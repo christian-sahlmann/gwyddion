@@ -354,7 +354,6 @@ process_metadata(STPFile *stpfile,
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(container,
                                                              container_key));
-
     data = stpfile->buffers + id;
     if ((p = g_hash_table_lookup(data->meta, "source_mode"))) {
         mode = atol(p);
@@ -364,6 +363,12 @@ process_metadata(STPFile *stpfile,
             gwy_container_set_string_by_name(container, channel_key,
                                              g_strdup(title));
             g_free(channel_key);
+
+            /* If this is the first channel, store the title under
+               /filename/title as well for compatability with 1.x. */
+            if (id == 0)
+                gwy_container_set_string_by_name(container, "/filename/title",
+                                                 g_strdup(title));
         }
     }
     else

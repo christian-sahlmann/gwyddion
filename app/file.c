@@ -28,6 +28,7 @@
 #include <libgwydgets/gwylayer-mask.h>
 #include <gtk/gtk.h>
 #include "gwyapp.h"
+#include "data-browser.h"
 
 enum {
     COLUMN_FILETYPE,
@@ -203,7 +204,8 @@ gwy_app_file_load(const gchar *filename_utf8,
 
         /* TODO: replace by browser construction */
         data_window = gwy_app_data_window_create(data);
-        data_browser = gwy_app_data_browser_create(data);
+        //data_browser = gwy_app_data_browser_create(data);
+        gwy_app_data_browser(data);
 
         gwy_app_recent_file_list_update(GWY_DATA_WINDOW(data_window),
                                         filename_utf8,

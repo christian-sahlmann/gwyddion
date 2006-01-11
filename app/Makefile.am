@@ -10,6 +10,7 @@ libgwyappincludedir = $(pkgincludedir)/app
 
 libgwyappinclude_HEADERS = \
 	app.h \
+	data-browser.h \
 	file.h \
 	filelist.h \
 	glmaterial-editor.h \
@@ -53,6 +54,7 @@ libgwyapp_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyapp_la_CFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp_la_SOURCES = \
 	app.c \
+	data-browser.c \
 	file.c \
 	filelist.c \
 	glmaterial-editor.c \
