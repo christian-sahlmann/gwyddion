@@ -13,6 +13,7 @@ file_LTLIBRARIES = \
 	createc.la \
 	gwyfile.la \
 	hitachi-afm.la \
+	nanoscope.la \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
@@ -23,7 +24,6 @@ file_LTLIBRARIES = \
 #	apefile.la \
 #	assing-afm.la \
 #	ezdfile.la \
-#	nanoscope.la \
 #	nt-mdt.la \
 #	mifile.la \
 #	pixmap.la \
@@ -100,10 +100,10 @@ hitachi_afm_la_LIBADD = $(module_libadd)
 #jpkscan_la_SOURCES = jpk.h jpkscan.c
 #jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 #endif
-#
-#nanoscope_la_SOURCES = nanoscope.c
-#nanoscope_la_LIBADD = $(module_libadd)
-#
+
+nanoscope_la_SOURCES = nanoscope.c
+nanoscope_la_LIBADD = $(module_libadd)
+
 #nt_mdt_la_SOURCES = nt-mdt.c
 #nt_mdt_la_LIBADD = $(module_libadd)
 #

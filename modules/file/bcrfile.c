@@ -31,10 +31,6 @@
 
 #include "get.h"
 
-#ifndef HAVE_POW10
-#define pow10(x) (exp(G_LN10*(x)))
-#endif
-
 #define HEADER_SIZE 2048
 
 #define MAGIC1 "fileformat = bcrstm\n"

@@ -83,7 +83,9 @@ typedef struct {
 static gboolean        module_register     (const gchar *name);
 static gint            nanoscope_detect    (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer*   nanoscope_load      (const gchar *filename);
+static GwyContainer*   nanoscope_load      (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static GwyDataField*   hash_to_data_field  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
@@ -92,17 +94,20 @@ static GwyDataField*   hash_to_data_field  (GHashTable *hash,
                                             gchar *buffer,
                                             gint gxres,
                                             gint gyres,
-                                            gchar **p);
-static NanoscopeData*  select_which_data   (GList *list);
+                                            gchar **p,
+                                            GError **error);
 static gboolean        read_ascii_data     (gint n,
                                             gdouble *data,
                                             gchar **buffer,
-                                            gint bpp);
+                                            gint bpp,
+                                            GError **error);
 static gboolean        read_binary_data    (gint n,
                                             gdouble *data,
                                             gchar *buffer,
-                                            gint bpp);
-static GHashTable*     read_hash           (gchar **buffer);
+                                            gint bpp,
+                                            GError **error);
+static GHashTable*     read_hash           (gchar **buffer,
+                                            GError **error);
 
 static void            get_scan_list_res   (GHashTable *hash,
                                             gint *xres,
@@ -110,13 +115,15 @@ static void            get_scan_list_res   (GHashTable *hash,
 static GwySIUnit*      get_physical_scale  (GHashTable *hash,
                                             GHashTable *scannerlist,
                                             GHashTable *scanlist,
-                                            gdouble *scale);
+                                            gdouble *scale,
+                                            GError **error);
 static void            fill_metadata       (GwyContainer *data,
                                             GHashTable *hash,
                                             GList *list);
 static NanoscopeValue* parse_value         (const gchar *key,
                                             gchar *line);
 static gboolean        require_keys        (GHashTable *hash,
+                                            GError **error,
                                             ...);
 
 /* The module info. */
@@ -125,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Veeco Nanoscope data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -143,6 +150,7 @@ module_register(const gchar *name)
         (GwyFileDetectFunc)&nanoscope_detect,
         (GwyFileLoadFunc)&nanoscope_load,
         NULL,
+        NULL
     };
 
     gwy_file_func_register(name, &nanoscope_func_info);
@@ -168,7 +176,9 @@ nanoscope_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-nanoscope_load(const gchar *filename)
+nanoscope_load(const gchar *filename,
+               G_GNUC_UNUSED GwyRunType mode,
+               GError **error)
 {
     GwyContainer *container = NULL;
     GError *err = NULL;
@@ -181,11 +191,12 @@ nanoscope_load(const gchar *filename)
     NanoscopeValue *val;
     GHashTable *hash, *scannerlist = NULL, *scanlist = NULL;
     GList *l, *list = NULL;
-    gint xres = 0, yres = 0;
+    gint i, xres = 0, yres = 0;
     gboolean ok;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
@@ -197,7 +208,9 @@ nanoscope_load(const gchar *filename)
             file_type = NANOSCOPE_FILE_TYPE_BIN;
     }
     if (!file_type) {
-        g_warning("File %s doesn't seem to be a nanoscope file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is not a Nanoscope file, "
+                      "or it is a unknown subtype."));
         g_free(buffer);
         return NULL;
     }
@@ -206,12 +219,18 @@ nanoscope_load(const gchar *filename)
     *buffer = '\\';
 
     p = buffer;
-    while ((hash = read_hash(&p))) {
+    while ((hash = read_hash(&p, &err))) {
         ndata = g_new0(NanoscopeData, 1);
         ndata->hash = hash;
         list = g_list_append(list, ndata);
     }
-    ok = TRUE;
+    if (err) {
+        g_propagate_error(error, err);
+        ok = FALSE;
+    }
+    else
+        ok = TRUE;
+
     for (l = list; ok && l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
         hash = ndata->hash;
@@ -235,32 +254,44 @@ nanoscope_load(const gchar *filename)
         ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
                                                file_type, size, buffer,
                                                xres, yres,
-                                               &p);
+                                               &p, error);
         ok = ok && ndata->data_field;
     }
 
-    /* select (let user select) which data to load */
-    ndata = ok ? select_which_data(list) : NULL;
-    if (ndata) {
+    if (ok) {
+        gchar key[32];
+
+        i = 0;
         container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data",
-                                         ndata->data_field);
-        if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
-            && val->soft_scale)
-            gwy_container_set_string_by_name(container, "/filename/title",
-                                             g_strdup(val->soft_scale));
-        fill_metadata(container, ndata->hash, list);
+        for (l = list; l; l = g_list_next(l)) {
+            ndata = (NanoscopeData*)l->data;
+            if (ndata->data_field) {
+                g_snprintf(key, sizeof(key), "/%d/data", i);
+                gwy_container_set_object_by_name(container, key,
+                                                 ndata->data_field);
+                if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
+                    && val->soft_scale) {
+                    g_snprintf(key, sizeof(key), "/%d/data/title", i);
+                    gwy_container_set_string_by_name(container, key,
+                                                     g_strdup(val->soft_scale));
+                }
+                i++;
+            }
+        }
+        /* FIXME: which metadata to put where? */
+        /* fill_metadata(container, ndata->hash, list); */
+        if (!i)
+            gwy_object_unref(container);
     }
 
-    /* unref all data fields, the container already keeps a reference to the
-     * right one */
-    g_free(buffer);
     for (l = list; l; l = g_list_next(l)) {
         ndata = (NanoscopeData*)l->data;
-        g_hash_table_destroy(ndata->hash);
         gwy_object_unref(ndata->data_field);
+        if (ndata->hash)
+            g_hash_table_destroy(ndata->hash);
         g_free(ndata);
     }
+    g_free(buffer);
     g_list_free(list);
 
     return container;
@@ -349,7 +380,8 @@ hash_to_data_field(GHashTable *hash,
                    gchar *buffer,
                    gint gxres,
                    gint gyres,
-                   gchar **p)
+                   gchar **p,
+                   GError **error)
 {
     NanoscopeValue *val;
     GwyDataField *dfield;
@@ -360,7 +392,7 @@ hash_to_data_field(GHashTable *hash,
     gdouble xreal, yreal, q;
     gdouble *data;
 
-    if (!require_keys(hash, "Samps/line", "Number of lines",
+    if (!require_keys(hash, error, "Samps/line", "Number of lines",
                       "Scan size", "Data offset", "Data length", NULL))
         return NULL;
 
@@ -377,7 +409,8 @@ hash_to_data_field(GHashTable *hash,
     val = g_hash_table_lookup(hash, "Scan size");
     xreal = g_ascii_strtod(val->hard_value_str, &end);
     if (errno || *end != ' ') {
-        g_warning("Cannot parse <Scan size>: <%s>", val->hard_value_str);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot parse `Scan size' field."));
         return NULL;
     }
     s = end+1;
@@ -390,7 +423,8 @@ hash_to_data_field(GHashTable *hash,
         return NULL;*/
     }
     if (sscanf(end+1, "%4s", un) != 1) {
-        g_warning("Cannot parse <Scan size>: <%s>", s);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot parse `Scan size' field."));
         return NULL;
     }
     unitxy = gwy_si_unit_new_parse(un, &power10);
@@ -416,20 +450,25 @@ hash_to_data_field(GHashTable *hash,
                 yres = gyres;
             }
             if (size != bpp*xres*yres) {
-               g_warning("Data size %d != %d bpp*xres*yres",
-                         size, bpp*xres*yres);
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Expected data size %u bytes, "
+                              "but found %u bytes."),
+                            (guint)size, (guint)(bpp*xres*yres));
                 return NULL;
             }
         }
 
         if (offset + size > (gint)bufsize) {
-            g_warning("Data don't fit to the file");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Data don't fit to the file"));
             return NULL;
         }
     }
 
     q = 1.0;
-    unitz = get_physical_scale(hash, scannerlist, scanlist, &q);
+    unitz = get_physical_scale(hash, scannerlist, scanlist, &q, error);
     if (!unitz)
         return NULL;
 
@@ -437,14 +476,14 @@ hash_to_data_field(GHashTable *hash,
     data = gwy_data_field_get_data(dfield);
     switch (file_type) {
         case NANOSCOPE_FILE_TYPE_TXT:
-        if (!read_ascii_data(xres*yres, data, p, bpp)) {
+        if (!read_ascii_data(xres*yres, data, p, bpp, error)) {
             g_object_unref(dfield);
             return NULL;
         }
         break;
 
         case NANOSCOPE_FILE_TYPE_BIN:
-        if (!read_binary_data(xres*yres, data, buffer + offset, bpp)) {
+        if (!read_binary_data(xres*yres, data, buffer + offset, bpp, error)) {
             g_object_unref(dfield);
             return NULL;
         }
@@ -469,7 +508,8 @@ static GwySIUnit*
 get_physical_scale(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
-                   gdouble *scale)
+                   gdouble *scale,
+                   GError **error)
 {
     GwySIUnit *siunit, *siunit2;
     NanoscopeValue *val, *sval;
@@ -479,7 +519,8 @@ get_physical_scale(GHashTable *hash,
     /* XXX: This is a damned heuristics.  For some value types we try to guess
      * a different quantity scale to look up. */
     if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
-        g_warning("`@2:Z scale' not found");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing `@2:Z scale' (value scale) field."));
         return NULL;
     }
     key = g_strdup_printf("@%s", val->soft_scale);
@@ -517,159 +558,11 @@ get_physical_scale(GHashTable *hash,
     return siunit;
 }
 
-static void
-selection_changed(GtkWidget *button,
-                  NanoscopeDialogControls *controls)
-{
-    guint i;
-    GList *l;
-    GwyDataField *dfield;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    gwy_debug("%u", i);
-    g_assert(i != (guint)-1);
-    l = g_list_nth(controls->list, i);
-    dfield = ((NanoscopeData*)l->data)->data_field;
-    gwy_container_set_object_by_name(controls->data, "data", dfield);
-}
-
-static NanoscopeData*
-select_which_data(GList *list)
-{
-    NanoscopeData *ndata, *ndata0;
-    NanoscopeDialogControls controls;
-    NanoscopeValue *val;
-    GwyPixmapLayer *layer;
-    GwyDataField *dfield;
-    GtkWidget *dialog, *label, *hbox, *vbox, *align;
-    GwyEnum *choices;
-    GList *l;
-    GSList *radio, *rl;
-    gint i, count, response;
-    gint xres, yres;
-    gdouble zoomval;
-
-    count = 0;
-    ndata0 = NULL;
-    l = NULL;
-    while (list) {
-        ndata = (NanoscopeData*)list->data;
-        if (ndata->data_field) {
-            count++;
-            l = g_list_append(l, ndata);
-            if (!ndata0)
-                ndata0 = ndata;
-        }
-        list = g_list_next(list);
-    }
-    controls.list = l;
-    if (count == 0 || count == 1) {
-        g_list_free(controls.list);
-        return ndata0;
-    }
-
-    choices = g_new(GwyEnum, count);
-    i = 0;
-    for (l = controls.list; l; l = g_list_next(l)) {
-        ndata = (NanoscopeData*)l->data;
-        val = g_hash_table_lookup(ndata->hash, "@2:Image Data");
-        choices[i].name = val->hard_value_str;
-        choices[i].value = i;
-        i++;
-    }
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, count, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     0);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    l = g_list_nth(controls.list, 0);
-    dfield = ((NanoscopeData*)l->data)->data_field;
-    controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "data", dfield);
-    gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    zoomval = 120.0/MAX(xres, yres);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
-            case GTK_RESPONSE_NONE:
-            g_free(choices);
-            g_list_free(list);
-            return FALSE;
-            break;
-
-            case GTK_RESPONSE_OK:
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
-
-    response = GPOINTER_TO_INT(gwy_radio_buttons_get_current(radio, "data"));
-    gtk_widget_destroy(dialog);
-
-    l = g_list_nth(controls.list, response);
-    ndata0 = (NanoscopeData*)l->data;
-
-    g_free(choices);
-    g_list_free(controls.list);
-
-    return ndata0;
-}
-
 static gboolean
 read_ascii_data(gint n, gdouble *data,
                 gchar **buffer,
-                gint bpp)
+                gint bpp,
+                GError **error)
 {
     gint i;
     gdouble q;
@@ -686,7 +579,9 @@ read_ascii_data(gint n, gdouble *data,
         max = MAX(l, max);
         data[i] = q*l;
         if (end == *buffer) {
-            g_warning("Garbage after data sample #%d", i);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Garbage after data sample #%d."), i);
             return FALSE;
         }
         *buffer = end;
@@ -700,7 +595,8 @@ read_ascii_data(gint n, gdouble *data,
 static gboolean
 read_binary_data(gint n, gdouble *data,
                  gchar *buffer,
-                 gint bpp)
+                 gint bpp,
+                 GError **error)
 {
     gint i;
     gdouble q;
@@ -731,7 +627,8 @@ read_binary_data(gint n, gdouble *data,
         break;
 
         default:
-        g_warning("bpp = %d unimplemented", bpp);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unimplemented number of bits per sample: %d."), bpp);
         return FALSE;
         break;
     }
@@ -740,7 +637,8 @@ read_binary_data(gint n, gdouble *data,
 }
 
 static GHashTable*
-read_hash(gchar **buffer)
+read_hash(gchar **buffer,
+          GError **error)
 {
     GHashTable *hash;
     NanoscopeValue *value;
@@ -760,7 +658,9 @@ read_hash(gchar **buffer)
     while ((*buffer)[0] == '\\' && (*buffer)[1] && (*buffer)[1] != '*') {
         line = gwy_str_next_line(buffer) + 1;
         if (!line || !line[0] || !line[1] || !line[2]) {
-            g_warning("Truncated line <%s>", line ? line : "(null)");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Truncated header line."));
             goto fail;
         }
         colon = line;
@@ -768,7 +668,9 @@ read_hash(gchar **buffer)
             colon = line+3;
         colon = strchr(colon, ':');
         if (!colon || !g_ascii_isspace(colon[1])) {
-            g_warning("No colon in line <%s>", line);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing colon in header line."));
             goto fail;
         }
         *colon = '\0';
@@ -934,15 +836,18 @@ parse_value(const gchar *key, gchar *line)
 
 static gboolean
 require_keys(GHashTable *hash,
+             GError **error,
              ...)
 {
     va_list ap;
     const gchar *key;
 
-    va_start(ap, hash);
+    va_start(ap, error);
     while ((key = va_arg(ap, const gchar *))) {
         if (!g_hash_table_lookup(hash, key)) {
-            g_warning("Parameter <%s> not found", key);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing `%s' field."), key);
             va_end(ap);
             return FALSE;
         }

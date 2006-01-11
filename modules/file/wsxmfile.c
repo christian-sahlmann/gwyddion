@@ -136,7 +136,7 @@ wsxmfile_load(const gchar *filename,
         || sscanf(buffer + MAGIC_SIZE,
                   "Image header size: %u", &header_size) < 1) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not an WSXM file."));
+                    _("File is not a WSXM file."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
