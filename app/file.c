@@ -210,7 +210,7 @@ gwy_app_file_load(const gchar *filename_utf8,
 
         /*XXX: This code is total crap, but handy for now */
         /*
-        channel_count = gwy_browser_get_num_channels(data);
+        channel_count = gwy_browser_get_n_channels(data);
         for (i=0; i<channel_count; i++) {
             channel_key = gwy_browser_get_channel_key(i);
 

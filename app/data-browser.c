@@ -131,7 +131,7 @@ static GtkWidget* gwy_browser_construct_channels(DataBrowser *browser)
     browser->channel_store = store;
 
     /* Add channels to list store */
-    data_count = gwy_browser_get_num_channels(browser->container);
+    data_count = gwy_browser_get_n_channels(browser->container);
     for (i=0; i<data_count; i++) {
         channel_title = gwy_browser_get_channel_title(browser->container, i);
         gtk_list_store_append(store, &iter);
@@ -196,7 +196,7 @@ gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
 
 
 /**
- * gwy_browser_get_num_channels:
+ * gwy_browser_get_n_channels:
  * @data: A data container.
  *
  * Used to get the number of data channels stored within the @data
@@ -208,7 +208,7 @@ gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
  * Returns: the number of channels as a #gint.
  **/
 gint
-gwy_browser_get_num_channels(GwyContainer *data)
+gwy_browser_get_n_channels(GwyContainer *data)
 {
     gint data_count;
 
