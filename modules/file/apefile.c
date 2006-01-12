@@ -26,10 +26,6 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
-#include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydataview.h>
-#include <libgwydgets/gwylayer-basic.h>
-#include <app/gwyapp.h>
 
 #include <string.h>
 #include <stdlib.h>

@@ -33,7 +33,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule.h>
-#include <libgwydgets/gwydgets.h>
 
 #include "err.h"
 

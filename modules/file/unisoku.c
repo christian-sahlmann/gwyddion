@@ -25,7 +25,6 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
-#include <app/gwyapp.h>
 
 #include <string.h>
 #include <stdlib.h>
