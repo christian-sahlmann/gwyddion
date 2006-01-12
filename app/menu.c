@@ -638,7 +638,7 @@ gwy_app_tooltips_get(void)
  * @GWY_MENU_FLAG_LAST_GRAPH: There is a last-run graph function to rerun.
  * @GWY_MENU_FLAG_DATA_MASK: There is a mask on the data.
  * @GWY_MENU_FLAG_DATA_SHOW: There is a presentation on the data.
- * @GWY_MENU_FLAG_GL_OK: OpenGL is available.
+ * @GWY_MENU_FLAG_3D: A 3D view is present.
  * @GWY_MENU_FLAG_MASK: All the bits combined.
  *
  * Menu sensitivity flags.
