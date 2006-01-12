@@ -103,14 +103,13 @@ typedef struct {
 static gboolean      module_register    (const gchar *name);
 static gint          apefile_detect     (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);
-static GwyContainer* apefile_load       (const gchar *filename);
+static GwyContainer* apefile_load       (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
 static void          fill_data_fields   (APEFile *apefile,
                                          const guchar *buffer);
 static void          store_metadata     (APEFile *apefile,
                                          GwyContainer *container);
-static guint         select_which_data  (APEFile *apefile);
-static void          selection_changed  (GtkWidget *button,
-                                         APEControls *controls);
 static gchar*        format_vt_date     (gdouble vt_date);
 
 static const GwyEnum spm_modes[] = {
@@ -127,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -144,6 +143,7 @@ module_register(const gchar *name)
         N_("APE files (.dat)"),
         (GwyFileDetectFunc)&apefile_detect,
         (GwyFileLoadFunc)&apefile_load,
+        NULL,
         NULL
     };
 
@@ -183,7 +183,9 @@ apefile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-apefile_load(const gchar *filename)
+apefile_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     APEFile apefile;
     GwyContainer *container = NULL;
@@ -195,14 +197,16 @@ apefile_load(const gchar *filename)
     guint b, n;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
     p = buffer;
     apefile.version = *(p++);
     if (size < 1294) {
-        g_warning("File %s is not a APE file", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -283,27 +287,27 @@ apefile_load(const gchar *filename)
         g_warning("Expected data size %u, but it's %u.",
                   n*apefile.ndata, (guint)(size - (p - buffer)));
         apefile.ndata = MIN(apefile.ndata, (size - (p - buffer))/n);
-        if (!apefile.ndata) {
-            g_warning("No data");
-            gwy_file_abandon_contents(buffer, size, NULL);
-
-            return NULL;
-        }
+    }
+    if (!apefile.ndata) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File contains no data."));
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
     }
     fill_data_fields(&apefile, p);
     gwy_file_abandon_contents(buffer, size, NULL);
 
-    n = select_which_data(&apefile);
-    if (n != (guint)-1)
-        dfield = apefile.data[n];
+    container = gwy_container_new();
+    for (n = 0; n < apefile.ndata; n++) {
+        gchar key[24];
 
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        store_metadata(&apefile, container);
+        g_snprintf(key, sizeof(key), "/%d/data", n);
+        dfield = apefile.data[n];
+        gwy_container_set_object_by_name(container, key, dfield);
+        g_object_unref(apefile.data[n]);
     }
-    for (b = 0; b < apefile.ndata; b++)
-        g_object_unref(apefile.data[b]);
+    /* All metadata seems to be per-file (global) */
+    store_metadata(&apefile, container);
 
     g_free(apefile.remark);
 
@@ -367,122 +371,6 @@ store_metadata(APEFile *apefile,
                                      G_N_ELEMENTS(spm_modes))));
     gwy_container_set_string_by_name(container, "/meta/Date",
                                      format_vt_date(apefile->scan_date));
-}
-
-static guint
-select_which_data(APEFile *apefile)
-{
-    APEControls controls;
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
-    GwyEnum *choices;
-    GwyPixmapLayer*layer;
-    GSList *radio, *rl;
-    guint i, b;
-
-    if (!apefile->ndata)
-        return (guint)-1;
-
-    if (apefile->ndata == 1)
-        return 0;
-
-    controls.file = apefile;
-    choices = g_new(GwyEnum, apefile->ndata);
-    b = 0;
-    for (i = 0; i < apefile->ndata; i++) {
-        while (!((1 << b) & apefile->channels))
-            b++;
-        b++;
-        choices[i].value = i;
-        choices[i].name = g_strdup_printf(_("Channel %u"), b);
-    }
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, apefile->ndata, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     0);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    controls.data = gwy_container_new();
-    gwy_container_set_object_by_name(controls.data, "data",
-                                     apefile->data[0]);
-    gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/apefile->res);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
-        case GTK_RESPONSE_CANCEL:
-        case GTK_RESPONSE_DELETE_EVENT:
-        gtk_widget_destroy(dialog);
-        case GTK_RESPONSE_NONE:
-        b = (guint)-1;
-        break;
-
-        case GTK_RESPONSE_OK:
-        b = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
-        gtk_widget_destroy(dialog);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    for (i = 0; i < apefile->ndata; i++)
-        g_free((gpointer)choices[i].name);
-    g_free(choices);
-
-    return b;
-}
-
-static void
-selection_changed(GtkWidget *button,
-                  APEControls *controls)
-{
-    guint i;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (guint)-1);
-    gwy_container_set_object_by_name(controls->data, "data",
-                                     controls->file->data[i]);
 }
 
 /******************** Wine date conversion code *****************************/

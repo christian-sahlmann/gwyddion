@@ -8,6 +8,7 @@ endif
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
+	apefile.la \
 	asciiexport.la \
 	bcrfile.la \
 	createc.la \
@@ -22,7 +23,6 @@ file_LTLIBRARIES = \
 	wsxmfile.la
 
 #file_LTLIBRARIES = \
-#	apefile.la \
 #	assing-afm.la \
 #	ezdfile.la \
 #	nt-mdt.la \
@@ -75,9 +75,9 @@ endif
 asciiexport_la_SOURCES = asciiexport.c
 asciiexport_la_LIBADD = $(module_libadd)
 
-#apefile_la_SOURCES = apefile.c
-#apefile_la_LIBADD = $(module_libadd)
-#
+apefile_la_SOURCES = apefile.c
+apefile_la_LIBADD = $(module_libadd)
+
 #assing_afm_la_SOURCES = assing-afm.c
 #assing_afm_la_LIBADD = $(module_libadd)
 
