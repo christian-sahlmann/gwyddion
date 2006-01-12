@@ -73,12 +73,6 @@ typedef struct {
 } EZDSection;
 
 typedef struct {
-    GPtrArray *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} EZDControls;
-
-typedef struct {
     GString *str;
     GwyContainer *container;
 } StoreMetaData;

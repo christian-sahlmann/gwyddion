@@ -91,12 +91,6 @@ typedef struct {
     GwyDataField **data;
 } APEFile;
 
-typedef struct {
-    APEFile *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} APEControls;
-
 static gboolean      module_register    (const gchar *name);
 static gint          apefile_detect     (const GwyFileDetectInfo *fileinfo,
                                          gboolean only_name);

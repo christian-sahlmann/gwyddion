@@ -65,12 +65,6 @@ typedef struct {
 } STPFile;
 
 typedef struct {
-    STPFile *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} STPControls;
-
-typedef struct {
     const gchar *key;
     const gchar *meta;
     const gchar *format;

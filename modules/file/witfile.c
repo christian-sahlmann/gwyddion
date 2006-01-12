@@ -160,12 +160,6 @@ typedef struct {
     WITecImageOptions image_options;
 } WITecFile;
 
-typedef struct {
-    WITecFile *file;
-    GwyContainer *data;
-    GtkWidget *data_view;
-} WITecControls;
-
 static gboolean      module_register          (const gchar *name);
 static gint          witec_detect            (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);

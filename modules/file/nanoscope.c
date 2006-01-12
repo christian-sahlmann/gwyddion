@@ -75,12 +75,6 @@ typedef struct {
     GwyDataField *data_field;
 } NanoscopeData;
 
-typedef struct {
-    GtkWidget *data_view;
-    GwyContainer *data;
-    GList *list;
-} NanoscopeDialogControls;
-
 static gboolean        module_register     (const gchar *name);
 static gint            nanoscope_detect    (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
