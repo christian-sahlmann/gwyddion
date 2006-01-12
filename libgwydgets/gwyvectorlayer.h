@@ -52,6 +52,7 @@ struct _GwyVectorLayer {
 
     gint button;    /* XXX: duplicates @selecting? */
     gint selecting;
+    gint focus;
 
     gpointer reserved1;
     gpointer reserved2;
@@ -76,9 +77,13 @@ struct _GwyVectorLayerClass {
                           GdkEventKey *event);
     gboolean (*key_release)(GwyVectorLayer *layer,
                             GdkEventKey *event);
+    gboolean (*set_focus)(GwyVectorLayer *layer,
+                          gint object);
 
     gpointer reserved1;
     gpointer reserved2;
+    gpointer reserved3;
+    gpointer reserved4;
 };
 
 GType         gwy_vector_layer_get_type         (void) G_GNUC_CONST;
@@ -86,6 +91,9 @@ GwySelection* gwy_vector_layer_get_selection    (GwyVectorLayer *layer);
 void          gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
                                                  const gchar *key);
 const gchar*  gwy_vector_layer_get_selection_key(GwyVectorLayer *layer);
+gint          gwy_vector_layer_get_focus        (GwyVectorLayer *layer);
+gboolean      gwy_vector_layer_set_focus        (GwyVectorLayer *layer,
+                                                 gint focus);
 
 void          gwy_vector_layer_draw             (GwyVectorLayer *layer,
                                                  GdkDrawable *drawable,

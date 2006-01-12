@@ -38,8 +38,6 @@ enum {
     PROP_SELECTION_KEY
 };
 
-/* Forward declarations */
-
 static void gwy_vector_layer_destroy             (GtkObject *object);
 static void gwy_vector_layer_set_property        (GObject *object,
                                                   guint prop_id,
@@ -100,6 +98,7 @@ static void
 gwy_vector_layer_init(GwyVectorLayer *layer)
 {
     layer->selecting = -1;
+    layer->focus = -1;
 }
 
 static void
@@ -152,6 +151,50 @@ gwy_vector_layer_get_property(GObject *object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
+}
+
+/**
+ * gwy_vector_layer_set_focus:
+ * @layer: A vector data view layer.
+ * @focus: Index of object to focus on, use -1 to unfocus (allow interaction
+ *          with any object).
+ *
+ * Focues on one selection object.
+ *
+ * When a selection object is focused, it becomes the only one user can
+ * interact with, the others are inert.
+ *
+ * <warning>This method is largely unimplemented in layers.</warning>
+ *
+ * Returns: %TRUE if the object was focused, %FALSE on failure.  Failure can
+ *          be caused by user currently moving another object, wrong object
+ *          index, or the feature being unimplemented in @layer.
+ **/
+gboolean
+gwy_vector_layer_set_focus(GwyVectorLayer *layer,
+                           gint focus)
+{
+    GwyVectorLayerClass *layer_class = GWY_VECTOR_LAYER_GET_CLASS(layer);
+
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), FALSE);
+    if (layer_class->set_focus)
+        return layer_class->set_focus(layer, focus);
+    return FALSE;
+}
+
+/**
+ * gwy_vector_layer_get_focus:
+ * @layer: A vector data view layer.
+ *
+ * Gets focused object index.
+ *
+ * Returns: Focued object index, or -1 if no object is focused.
+ **/
+gint
+gwy_vector_layer_get_focus(GwyVectorLayer *layer)
+{
+    g_return_val_if_fail(GWY_IS_VECTOR_LAYER(layer), -1);
+    return layer->focus;
 }
 
 /**
