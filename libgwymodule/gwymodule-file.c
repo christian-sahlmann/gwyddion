@@ -209,6 +209,7 @@ gwy_file_func_run_load(const gchar *name,
     GwyFileFuncInfo *func_info;
     GwyContainer *data;
 
+    g_return_val_if_fail(!error || !*error, NULL);
     g_return_val_if_fail(filename, NULL);
     func_info = g_hash_table_lookup(file_funcs, name);
     g_return_val_if_fail(func_info, NULL);
@@ -249,6 +250,7 @@ gwy_file_func_run_save(const gchar *name,
     GwyFileFuncInfo *func_info;
     gboolean status;
 
+    g_return_val_if_fail(!error || !*error, FALSE);
     g_return_val_if_fail(filename, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
@@ -292,6 +294,7 @@ gwy_file_func_run_export(const gchar *name,
     GwyFileFuncInfo *func_info;
     gboolean status;
 
+    g_return_val_if_fail(!error || !*error, FALSE);
     g_return_val_if_fail(filename, FALSE);
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
     func_info = g_hash_table_lookup(file_funcs, name);
