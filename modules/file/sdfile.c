@@ -72,17 +72,27 @@ typedef struct {
 static gboolean      module_register        (const gchar *name);
 static gint          sdfile_detect          (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
-static GwyContainer* sdfile_load            (const gchar *filename);
+static GwyContainer* sdfile_load            (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static gboolean      check_params           (const SDFile *sdfile,
+                                             guint len,
+                                             GError **error);
 static gboolean      sdfile_read_header_bin (const guchar **p,
                                              gsize *len,
-                                             SDFile *sdfile);
+                                             SDFile *sdfile,
+                                             GError **error);
 static gboolean      sdfile_read_header_text(const guchar **buffer,
                                              gsize *len,
-                                             SDFile *sdfile);
+                                             SDFile *sdfile,
+                                             gint *steps,
+                                             GError **error);
 static gchar*        sdfile_next_line       (gchar **buffer,
-                                             const gchar *key);
+                                             const gchar *key,
+                                             GError **error);
 static GwyDataField* sdfile_read_data_bin   (SDFile *sdfile);
-static GwyDataField* sdfile_read_data_text  (SDFile *sdfile);
+static GwyDataField* sdfile_read_data_text  (SDFile *sdfile,
+                                             GError **error);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -90,7 +100,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -109,6 +119,7 @@ module_register(const gchar *name)
         N_("Surfstand SDF files"),
         (GwyFileDetectFunc)&sdfile_detect,
         (GwyFileLoadFunc)&sdfile_load,
+        NULL,
         NULL
     };
 
@@ -124,13 +135,14 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
     SDFile sdfile;
     const guchar *p;
     gsize len;
+    gint steps;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
 
     p = fileinfo->buffer;
     len = fileinfo->buffer_len;
-    if (sdfile_read_header_bin(&p, &len, &sdfile)
+    if (sdfile_read_header_bin(&p, &len, &sdfile, NULL)
         && SDF_HEADER_SIZE_BIN + sdfile.expected_size == fileinfo->file_size
         && !sdfile.compression
         && !sdfile.check_type)
@@ -138,7 +150,7 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
 
     p = fileinfo->buffer;
     len = fileinfo->buffer_len;
-    if (sdfile_read_header_text(&p, &len, &sdfile)
+    if (sdfile_read_header_text(&p, &len, &sdfile, &steps, NULL)
         && sdfile.expected_size <= fileinfo->file_size
         && !sdfile.compression
         && !sdfile.check_type)
@@ -148,7 +160,9 @@ sdfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-sdfile_load(const gchar *filename)
+sdfile_load(const gchar *filename,
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     SDFile sdfile;
     GwyContainer *container = NULL;
@@ -158,34 +172,33 @@ sdfile_load(const gchar *filename)
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwySIUnit *siunit;
+    gint steps;
 
+    steps = 0;
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file `%s'", filename);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    "%s", err->message);
         g_clear_error(&err);
         return NULL;
     }
-    p = buffer;
     len = size;
-    if (sdfile_read_header_bin(&p, &len, &sdfile)
-        && sdfile.expected_size == len
-        && !sdfile.compression
-        && !sdfile.check_type)
-        dfield = sdfile_read_data_bin(&sdfile);
-    else {
+    p = buffer;
+    if (sdfile_read_header_text(&p, &len, &sdfile, &steps, error)) {
+        if (check_params(&sdfile, len, error))
+            dfield = sdfile_read_data_text(&sdfile, error);
+    }
+    else if (steps == 0) {
         p = buffer;
         len = size;
-        if (sdfile_read_header_text(&p, &len, &sdfile)
-            && sdfile.expected_size <= len
-            && !sdfile.compression
-            && !sdfile.check_type)
-            dfield = sdfile_read_data_text(&sdfile);
+        if (sdfile_read_header_bin(&p, &len, &sdfile, error)) {
+            if (check_params(&sdfile, len, error))
+                dfield = sdfile_read_data_bin(&sdfile);
+        }
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
-    if (!dfield) {
-        g_warning("Failed to read data from `%s'", filename);
+    if (!dfield)
         return NULL;
-    }
 
     gwy_data_field_multiply(dfield, sdfile.zscale);
 
@@ -205,12 +218,49 @@ sdfile_load(const gchar *filename)
 }
 
 static gboolean
+check_params(const SDFile *sdfile,
+             guint len,
+             GError **error)
+{
+    if (sdfile->data_type >= SDF_NTYPES) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unsupported value of DataType: %u."),
+                    sdfile->data_type);
+        return FALSE;
+    }
+    if (sdfile->expected_size > len) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Expected data size %u bytes, but found %u bytes."),
+                    sdfile->expected_size, len);
+        return FALSE;
+    }
+    if (sdfile->compression) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unsupported value of Compression: %d."),
+                    sdfile->compression);
+        return FALSE;
+    }
+    if (sdfile->check_type) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unsupported value of CheckType: %d."),
+                    sdfile->check_type);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
 sdfile_read_header_bin(const guchar **p,
                        gsize *len,
-                       SDFile *sdfile)
+                       SDFile *sdfile,
+                       GError **error)
 {
-    if (*len < SDF_HEADER_SIZE_BIN)
+    if (*len < SDF_HEADER_SIZE_BIN) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         return FALSE;
+    }
 
     memset(sdfile, 0, sizeof(SDFile));
     get_CHARARRAY(sdfile->version, p);
@@ -241,18 +291,53 @@ sdfile_read_header_bin(const guchar **p,
     return TRUE;
 }
 
+#define NEXT(line, key, val, error) \
+    if (!(val = sdfile_next_line(&line, key, error))) { \
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
+                    _("Missing `%s' header field."), key); \
+        return FALSE; \
+    }
+
+#define READ_STRING(line, key, val, field, error) \
+    NEXT(line, key, val, error) \
+    strncpy(field, val, sizeof(field));
+
+#define READ_INT(line, key, val, field, check, error) \
+    NEXT(line, key, val, error) \
+    field = atoi(val); \
+    if (check && field <= 0) { \
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
+                    _("Wrong `%s' value: %d."), key, field); \
+        return FALSE; \
+    }
+
+#define READ_FLOAT(line, key, val, field, check, error) \
+    NEXT(line, key, val, error) \
+    field = g_ascii_strtod(val, NULL); \
+    if (check && field <= 0.0) { \
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
+                    _("Wrong `%s' value: %g."), key, field); \
+        return FALSE; \
+    }
+
 static gboolean
 sdfile_read_header_text(const guchar **buffer,
                         gsize *len,
-                        SDFile *sdfile)
+                        SDFile *sdfile,
+                        gint *steps,
+                        GError **error)
 {
     enum { PING_SIZE = 400 };
     gchar *val, *p, *header;
     gsize size;
 
     /* We do not need exact lenght of the minimum file */
-    if (*len < 160)
+    *steps = 0;
+    if (*len < 160) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is too short."));
         return FALSE;
+    }
 
     /* Make a nul-terminated copy */
     size = MIN(*len+1, PING_SIZE);
@@ -266,63 +351,22 @@ sdfile_read_header_text(const guchar **buffer,
     val = g_strstrip(gwy_str_next_line(&p));
     strncpy(sdfile->version, val, sizeof(sdfile->version));
 
-    if (!(val = sdfile_next_line(&p, "ManufacID")))
-        return FALSE;
-    strncpy(sdfile->manufacturer, val, sizeof(sdfile->manufacturer));
-
-    if (!(val = sdfile_next_line(&p, "CreateDate")))
-        return FALSE;
-    strncpy(sdfile->creation, val, sizeof(sdfile->creation));
-
-    if (!(val = sdfile_next_line(&p, "ModDate")))
-        return FALSE;
-    strncpy(sdfile->modification, val, sizeof(sdfile->modification));
-
-    if (!(val = sdfile_next_line(&p, "NumPoints")))
-        return FALSE;
-    sdfile->xres = atoi(val);
-    if (sdfile->xres <= 0)
-        return FALSE;
-
-    if (!(val = sdfile_next_line(&p, "NumProfiles")))
-        return FALSE;
-    sdfile->yres = atoi(val);
-    if (sdfile->yres <= 0)
-        return FALSE;
-
-    if (!(val = sdfile_next_line(&p, "Xscale")))
-        return FALSE;
-    sdfile->xscale = g_ascii_strtod(val, NULL);
-    if (sdfile->xscale <= 0.0)
-        return FALSE;
-
-    if (!(val = sdfile_next_line(&p, "Yscale")))
-        return FALSE;
-    sdfile->yscale = g_ascii_strtod(val, NULL);
-    if (sdfile->yscale <= 0.0)
-        return FALSE;
-
-    if (!(val = sdfile_next_line(&p, "Zscale")))
-        return FALSE;
-    sdfile->zscale = g_ascii_strtod(val, NULL);
-    if (sdfile->zscale <= 0.0)
-        return FALSE;
-
-    if (!(val = sdfile_next_line(&p, "Zresolution")))
-        return FALSE;
-    sdfile->zres = g_ascii_strtod(val, NULL);
-
-    if (!(val = sdfile_next_line(&p, "Compression")))
-        return FALSE;
-    sdfile->compression = atoi(val);
-
-    if (!(val = sdfile_next_line(&p, "DataType")))
-        return FALSE;
-    sdfile->data_type = atoi(val);
-
-    if (!(val = sdfile_next_line(&p, "CheckType")))
-        return FALSE;
-    sdfile->check_type = atoi(val);
+    READ_STRING(p, "ManufacID", val, sdfile->manufacturer, error)
+    (*steps)++;
+    READ_STRING(p, "CreateDate", val, sdfile->creation, error)
+    READ_STRING(p, "ModDate", val, sdfile->modification, error)
+    READ_INT(p, "NumPoints", val, sdfile->xres, TRUE, error)
+    READ_INT(p, "NumProfiles", val, sdfile->yres, TRUE, error)
+    (*steps)++;
+    READ_FLOAT(p, "Xscale", val, sdfile->xscale, TRUE, error)
+    READ_FLOAT(p, "Yscale", val, sdfile->yscale, TRUE, error)
+    READ_FLOAT(p, "Zscale", val, sdfile->zscale, TRUE, error)
+    READ_FLOAT(p, "Zresolution", val, sdfile->zres, FALSE, error)
+    (*steps)++;
+    READ_INT(p, "Compression", val, sdfile->compression, FALSE, error)
+    READ_INT(p, "DataType", val, sdfile->data_type, FALSE, error)
+    READ_INT(p, "CheckType", val, sdfile->check_type, FALSE, error)
+    (*steps)++;
 
     /* at least */
     if (sdfile->data_type < SDF_NTYPES)
@@ -331,8 +375,11 @@ sdfile_read_header_text(const guchar **buffer,
         sdfile->expected_size = -1;
 
     val = g_strstrip(gwy_str_next_line(&p));
-    if (!val || *val != '*')
+    if (!val || *val != '*') {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing data start marker (*)."));
         return FALSE;
+    }
 
     *buffer += p - header;
     *len -= p - header;
@@ -342,19 +389,26 @@ sdfile_read_header_text(const guchar **buffer,
 
 static gchar*
 sdfile_next_line(gchar **buffer,
-                 const gchar *key)
+                 const gchar *key,
+                 GError **error)
 {
     guint klen;
     gchar *value, *line;
 
     line = gwy_str_next_line(buffer);
-    if (!line)
+    if (!line) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("End of file reached when looking for `%s' field."), key);
         return NULL;
+    }
 
     klen = strlen(key);
     if (strncmp(line, key, klen) != 0
-        || !g_ascii_isspace(line[klen]))
+        || !g_ascii_isspace(line[klen])) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Invalid line found when looking for `%s' field."), key);
         return NULL;
+    }
 
     value = line + klen;
     g_strstrip(value);
@@ -447,7 +501,8 @@ sdfile_read_data_bin(SDFile *sdfile)
 }
 
 static GwyDataField*
-sdfile_read_data_text(SDFile *sdfile)
+sdfile_read_data_text(SDFile *sdfile,
+                      GError **error)
 {
     gint i, n;
     GwyDataField *dfield;
@@ -472,6 +527,10 @@ sdfile_read_data_text(SDFile *sdfile)
             data[i] = strtol(p, (gchar**)&end, 10);
             if (p == end) {
                 g_object_unref(dfield);
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("End of file reached when reading sample #%d "
+                              "of %d"), i, n);
                 return NULL;
             }
             p = end;
@@ -485,6 +544,10 @@ sdfile_read_data_text(SDFile *sdfile)
             data[i] = g_ascii_strtod(p, (gchar**)&end);
             if (p == end) {
                 g_object_unref(dfield);
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("End of file reached when reading sample #%d "
+                              "of %d"), i, n);
                 return NULL;
             }
             p = end;

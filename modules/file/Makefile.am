@@ -14,6 +14,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hitachi-afm.la \
 	nanoscope.la \
+	sdfile.la \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
@@ -30,7 +31,6 @@ file_LTLIBRARIES = \
 #	rawfile.la \
 #	rhk-sm3.la \
 #	rhk-spm32.la \
-#	sdfile.la \
 #	sis.la \
 #	stpfile.la \
 #	witfile.la \
@@ -121,10 +121,10 @@ nanoscope_la_LIBADD = $(module_libadd)
 #
 #rhk_spm32_la_SOURCES = rhk-spm32.c
 #rhk_spm32_la_LIBADD = $(module_libadd)
-#
-#sdfile_la_SOURCES = sdfile.c
-#sdfile_la_LIBADD = $(module_libadd)
-#
+
+sdfile_la_SOURCES = sdfile.c
+sdfile_la_LIBADD = $(module_libadd)
+
 #sis_la_SOURCES = sis.c
 #sis_la_LIBADD = $(module_libadd)
 
