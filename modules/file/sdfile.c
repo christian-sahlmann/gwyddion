@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define EXTENSION ".sdf"
@@ -176,9 +177,7 @@ sdfile_load(const gchar *filename,
 
     steps = 0;
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     len = size;
@@ -223,27 +222,19 @@ check_params(const SDFile *sdfile,
              GError **error)
 {
     if (sdfile->data_type >= SDF_NTYPES) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unsupported value of DataType: %u."),
-                    sdfile->data_type);
+        err_UNSUPPORTED(error, "DataType");
         return FALSE;
     }
     if (sdfile->expected_size > len) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Expected data size %u bytes, but found %u bytes."),
-                    sdfile->expected_size, len);
+        err_SIZE_MISMATCH(error, sdfile->expected_size, len);
         return FALSE;
     }
     if (sdfile->compression) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unsupported value of Compression: %d."),
-                    sdfile->compression);
+        err_UNSUPPORTED(error, "Compression");
         return FALSE;
     }
     if (sdfile->check_type) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unsupported value of CheckType: %d."),
-                    sdfile->check_type);
+        err_UNSUPPORTED(error, "CheckType");
         return FALSE;
     }
 
@@ -257,8 +248,7 @@ sdfile_read_header_bin(const guchar **p,
                        GError **error)
 {
     if (*len < SDF_HEADER_SIZE_BIN) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         return FALSE;
     }
 
@@ -293,8 +283,7 @@ sdfile_read_header_bin(const guchar **p,
 
 #define NEXT(line, key, val, error) \
     if (!(val = sdfile_next_line(&line, key, error))) { \
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
-                    _("Missing `%s' header field."), key); \
+        err_MISSING_FIELD(error, key); \
         return FALSE; \
     }
 
@@ -307,7 +296,7 @@ sdfile_read_header_bin(const guchar **p,
     field = atoi(val); \
     if (check && field <= 0) { \
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
-                    _("Wrong `%s' value: %d."), key, field); \
+                    _("Invalid `%s' value: %d."), key, field); \
         return FALSE; \
     }
 
@@ -316,7 +305,7 @@ sdfile_read_header_bin(const guchar **p,
     field = g_ascii_strtod(val, NULL); \
     if (check && field <= 0.0) { \
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
-                    _("Wrong `%s' value: %g."), key, field); \
+                    _("Invalid `%s' value: %g."), key, field); \
         return FALSE; \
     }
 
@@ -334,8 +323,7 @@ sdfile_read_header_text(const guchar **buffer,
     /* We do not need exact lenght of the minimum file */
     *steps = 0;
     if (*len < 160) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         return FALSE;
     }
 

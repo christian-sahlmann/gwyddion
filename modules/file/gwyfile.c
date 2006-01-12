@@ -34,6 +34,8 @@
 #include <unistd.h>
 #endif
 
+#include "err.h"
+
 #define EXTENSION ".gwy"
 #define MAGIC "GWYO"
 #define MAGIC2 "GWYP"
@@ -115,16 +117,13 @@ gwyfile_load(const gchar *filename,
     gsize pos = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (size < MAGIC_SIZE
         || (memcmp(buffer, MAGIC, MAGIC_SIZE)
             && memcmp(buffer, MAGIC2, MAGIC_SIZE))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not a Gwyddion native file."));
+        err_FILE_TYPE(error, "Gwyddion");
         gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
     }
@@ -174,8 +173,7 @@ gwyfile_save(GwyContainer *data,
     gboolean ok = TRUE;
 
     if (!(fh = g_fopen(filename, "wb"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Cannot open file for writing: %s"), g_strerror(errno));
+        err_OPEN_WRITE(error);
         return FALSE;
     }
 
@@ -183,8 +181,7 @@ gwyfile_save(GwyContainer *data,
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
         ok = FALSE;
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Cannot write to file: %s"), g_strerror(errno));
+        err_WRITE(error);
         g_unlink(filename);
     }
     fclose(fh);

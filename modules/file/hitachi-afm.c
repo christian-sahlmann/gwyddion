@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define MAGIC "AFM/Ver. "
@@ -113,14 +114,12 @@ hitachi_load(const gchar *filename,
     GwyDataField *dfield = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
+        err_GET_FILE_CONTENTS(error, &err);
         g_clear_error(&err);
         return NULL;
     }
     if (size < HEADER_SIZE + 2) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -165,9 +164,7 @@ read_data_field(const guchar *buffer,
 
     n = xres*yres;
     if (size != 2*n + HEADER_SIZE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Expected data size %u bytes, but found %u bytes."),
-                    2*n + HEADER_SIZE, size);
+        err_SIZE_MISMATCH(error, 2*n + HEADER_SIZE, size);
         return NULL;
     }
 

@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define MAGIC "[DataSet]\r\n"
@@ -88,25 +89,25 @@ typedef struct {
 static gboolean      module_register       (const gchar *name);
 static gint          ezdfile_detect        (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* ezdfile_load          (const gchar *filename);
+static GwyContainer* ezdfile_load          (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static guint         find_data_start       (const guchar *buffer,
                                             gsize size);
 static void          ezdfile_free          (GPtrArray *ezdfile);
 static void          read_data_field       (GwyDataField *dfield,
                                             EZDSection *section);
 static gboolean      file_read_header      (GPtrArray *ezdfile,
-                                            gchar *buffer);
+                                            gchar *buffer,
+                                            GError **error);
 static guint         find_data_offsets     (const gchar *buffer,
                                             gsize size,
-                                            GPtrArray *ezdfile);
+                                            GPtrArray *ezdfile,
+                                            GError **error);
 static void          process_metadata      (GPtrArray *ezdfile,
                                             GwyContainer *container);
 static void          fix_scales            (EZDSection *section,
                                             GwyContainer *container);
-static guint         select_which_data     (GPtrArray *ezdfile,
-                                            guint ndata);
-static void          selection_changed     (GtkWidget *button,
-                                            EZDControls *controls);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -114,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -131,6 +132,7 @@ module_register(const gchar *name)
         N_("Nanosurf files (.ezd, .nid)"),
         (GwyFileDetectFunc)&ezdfile_detect,
         (GwyFileLoadFunc)&ezdfile_load,
+        NULL,
         NULL
     };
 
@@ -158,7 +160,9 @@ ezdfile_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-ezdfile_load(const gchar *filename)
+ezdfile_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
@@ -167,47 +171,58 @@ ezdfile_load(const gchar *filename)
     EZDSection *section = NULL;
     GwyDataField *dfield = NULL;
     GPtrArray *ezdfile;
-    guint header_size, i;
+    guint header_size, n;
+    gint i;
     gchar *p;
-    gboolean ok;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || !(header_size = find_data_start(buffer, size))) {
-        g_warning("File %s is not a EZD/NID file", filename);
+        err_FILE_TYPE(error, "EZD/NID");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     ezdfile = g_ptr_array_new();
     p = g_strndup(buffer, header_size - DATA_MAGIC_SIZE);
-    ok = file_read_header(ezdfile, p);
+    if (!file_read_header(ezdfile, p, error)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        g_free(p);
+        return NULL;
+    }
     g_free(p);
 
-    if (ok) {
-        if ((i = find_data_offsets(buffer + header_size, size - header_size,
-                                   ezdfile))) {
-            if ((i = select_which_data(ezdfile, i)) != (guint)-1) {
-                section = (EZDSection*)g_ptr_array_index(ezdfile, i);
-                dfield = gwy_data_field_new(section->xres, section->yres,
-                                            1.0, 1.0, FALSE);
-                read_data_field(dfield, section);
-            }
-        }
+    n = find_data_offsets(buffer + header_size, size - header_size, ezdfile,
+                          error);
+    if (!n) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
     }
-    gwy_file_abandon_contents(buffer, size, NULL);
 
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
+    container = gwy_container_new();
+    i = 0;
+    for (n = 0; n < ezdfile->len; n++) {
+        gchar key[24];
+
+        section = (EZDSection*)g_ptr_array_index(ezdfile, n);
+        if (!section->data)
+            continue;
+
+        dfield = gwy_data_field_new(section->xres, section->yres,
+                                    1.0, 1.0, FALSE);
+        read_data_field(dfield, section);
+        g_snprintf(key, sizeof(key), "/%d/data", i);
+        gwy_container_set_object_by_name(container, key, dfield);
         g_object_unref(dfield);
         fix_scales(section, container);
-        process_metadata(ezdfile, container);
+        /* FIXME: not yet:
+         * process_metadata(ezdfile, container); */
+        i++;
     }
+    gwy_file_abandon_contents(buffer, size, NULL);
     ezdfile_free(ezdfile);
 
     return container;
@@ -252,7 +267,8 @@ ezdfile_free(GPtrArray *ezdfile)
 
 static gboolean
 file_read_header(GPtrArray *ezdfile,
-                 gchar *buffer)
+                 gchar *buffer,
+                 GError **error)
 {
     EZDSection *section = NULL;
     gchar *p, *line;
@@ -273,8 +289,10 @@ file_read_header(GPtrArray *ezdfile,
             continue;
         }
         if (!section) {
-            g_warning("Garbage before header");
-            continue;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Garbage before first header section."));
+            return FALSE;
         }
         /* Skip comments */
         if (g_str_has_prefix(line, "--"))
@@ -282,8 +300,10 @@ file_read_header(GPtrArray *ezdfile,
 
         p = strchr(line, '=');
         if (!p) {
-            g_warning("Cannot parse line <%s>", line);
-            continue;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Malformed header line (missing =)."));
+            return FALSE;
         }
         *p = '\0';
         p++;
@@ -350,7 +370,8 @@ file_read_header(GPtrArray *ezdfile,
 static guint
 find_data_offsets(const gchar *buffer,
                   gsize size,
-                  GPtrArray *ezdfile)
+                  GPtrArray *ezdfile,
+                  GError **error)
 {
     EZDSection *dataset, *section;
     GString *grkey;
@@ -361,18 +382,19 @@ find_data_offsets(const gchar *buffer,
 
     /* Sanity check */
     if (!ezdfile->len) {
-        g_warning("No section found");
+        err_NO_DATA(error);
         return 0;
     }
     dataset = (EZDSection*)g_ptr_array_index(ezdfile, 0);
     if (strcmp(dataset->name, "DataSet")) {
-        g_warning("First section isn't DataSet");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("First section isn't DataSet"));
         return 0;
     }
 
     if (!(p = g_hash_table_lookup(dataset->meta, "GroupCount"))
         || (ngroups = atol(p)) <= 0) {
-        g_warning("No or invalid GroupCount in [DataSet]");
+        err_INVALID(error, _("GroupCount in [DataSet]"));
         return 0;
     }
 
@@ -432,6 +454,9 @@ find_data_offsets(const gchar *buffer,
         }
     }
     g_string_free(grkey, TRUE);
+
+    if (!ndata)
+        err_NO_DATA(error);
 
     return ndata;
 }
@@ -563,150 +588,6 @@ read_data_field(GwyDataField *dfield,
     }
     else
         g_warning("Damn! Bit depth %d is not implemented", section->bitdepth);
-}
-
-static guint
-select_which_data(GPtrArray *ezdfile,
-                  guint ndata)
-{
-    EZDControls controls;
-    EZDSection *section;
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
-    GwyDataField *dfield;
-    GwyEnum *choices;
-    GwyPixmapLayer *layer;
-    GSList *radio, *rl;
-    guint i, b;
-    const gchar *s;
-
-    if (!ndata)
-        return (guint)-1;
-
-    if (ndata == 1)
-        return 0;
-
-    controls.file = ezdfile;
-    choices = g_new(GwyEnum, ndata);
-    for (i = b = 0; i < ezdfile->len; i++) {
-        section = (EZDSection*)g_ptr_array_index(ezdfile, i);
-        if (!section->data)
-            continue;
-        choices[b].value = i;
-        switch (section->direction) {
-            case SCAN_FORWARD:
-            s = " forward";
-            break;
-
-            case SCAN_BACKWARD:
-            s = " backward";
-            break;
-
-            default:
-            s = "";
-            break;
-        }
-        choices[b].name = g_strdup_printf(_("Group %d, Channel %d (%s%s)"),
-                                          section->group, section->channel,
-                                          section->zrange.name, s);
-        b++;
-    }
-    b = choices[0].value;
-    section = (EZDSection*)g_ptr_array_index(ezdfile, b);
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, ndata, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     b);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    controls.data = gwy_container_new();
-    dfield = gwy_data_field_new(section->xres, section->yres, 1.0, 1.0, FALSE);
-    read_data_field(dfield, section);
-    gwy_container_set_object_by_name(controls.data, "data", dfield);
-    gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-    g_object_unref(dfield);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view),
-                           120.0/MAX(section->xres, section->yres));
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    switch (gtk_dialog_run(GTK_DIALOG(dialog))) {
-        case GTK_RESPONSE_CANCEL:
-        case GTK_RESPONSE_DELETE_EVENT:
-        gtk_widget_destroy(dialog);
-        case GTK_RESPONSE_NONE:
-        b = (guint)-1;
-        break;
-
-        case GTK_RESPONSE_OK:
-        b = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
-        gtk_widget_destroy(dialog);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    for (i = 0; i < ndata; i++)
-        g_free((gpointer)choices[i].name);
-    g_free(choices);
-
-    return b;
-}
-
-static void
-selection_changed(GtkWidget *button,
-                  EZDControls *controls)
-{
-    GPtrArray *ezdfile;
-    GwyDataField *dfield;
-    guint i;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (guint)-1);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->data,
-                                                             "data"));
-    ezdfile = controls->file;
-    read_data_field(dfield, (EZDSection*)g_ptr_array_index(ezdfile, i));
-    gwy_data_field_data_changed(dfield);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -43,6 +43,7 @@
 #include <sys/time.h>
 #endif
 
+#include "err.h"
 #include "get.h"
 
 /* Just guessing, format has no real magic header */
@@ -197,16 +198,13 @@ apefile_load(const gchar *filename,
     guint b, n;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     p = buffer;
     apefile.version = *(p++);
     if (size < 1294) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -289,8 +287,7 @@ apefile_load(const gchar *filename,
         apefile.ndata = MIN(apefile.ndata, (size - (p - buffer))/n);
     }
     if (!apefile.ndata) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File contains no data."));
+        err_NO_DATA(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }

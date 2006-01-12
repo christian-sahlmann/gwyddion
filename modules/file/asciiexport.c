@@ -34,6 +34,8 @@
 #include <unistd.h>
 #endif
 
+#include "err.h"
+
 #define EXTENSION ".txt"
 
 static gboolean      module_register     (const gchar *name);
@@ -95,8 +97,7 @@ asciiexport_export(GwyContainer *data,
     FILE *fh;
 
     if (!(fh = g_fopen(filename, "w"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Cannot open file for writing: %s"), g_strerror(errno));
+        err_OPEN_WRITE(error);
         return FALSE;
     }
 
@@ -107,10 +108,9 @@ asciiexport_export(GwyContainer *data,
     for (i = 0; i < xres*yres; i++) {
         if (fprintf(fh, "%g%c", d[i],
                     (i + 1) % xres ? '\t' : '\n') < 2) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                        _("Cannot write to file: %s"), g_strerror(errno));
-            fclose(fh);
+            err_WRITE(error);
             g_unlink(filename);
+            fclose(fh);
             return FALSE;
         }
     }

@@ -35,6 +35,8 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 
+#include "err.h"
+
 #define MAGIC_BIN "\\*File list\r\n"
 #define MAGIC_TXT "?*File list\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
@@ -195,9 +197,7 @@ nanoscope_load(const gchar *filename,
     gboolean ok;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     file_type = NANOSCOPE_FILE_TYPE_NONE;
@@ -450,19 +450,13 @@ hash_to_data_field(GHashTable *hash,
                 yres = gyres;
             }
             if (size != bpp*xres*yres) {
-                g_set_error(error, GWY_MODULE_FILE_ERROR,
-                            GWY_MODULE_FILE_ERROR_DATA,
-                            _("Expected data size %u bytes, "
-                              "but found %u bytes."),
-                            (guint)size, (guint)(bpp*xres*yres));
+                err_SIZE_MISMATCH(error, size, bpp*xres*yres);
                 return NULL;
             }
         }
 
         if (offset + size > (gint)bufsize) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Data don't fit to the file"));
+            err_SIZE_MISMATCH(error, offset + size, bufsize);
             return NULL;
         }
     }
@@ -519,8 +513,7 @@ get_physical_scale(GHashTable *hash,
     /* XXX: This is a damned heuristics.  For some value types we try to guess
      * a different quantity scale to look up. */
     if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing `@2:Z scale' (value scale) field."));
+        err_MISSING_FIELD(error, "@2:Z scale");
         return NULL;
     }
     key = g_strdup_printf("@%s", val->soft_scale);
@@ -627,8 +620,7 @@ read_binary_data(gint n, gdouble *data,
         break;
 
         default:
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unimplemented number of bits per sample: %d."), bpp);
+        err_BPP(error, bpp);
         return FALSE;
         break;
     }
@@ -845,9 +837,7 @@ require_keys(GHashTable *hash,
     va_start(ap, error);
     while ((key = va_arg(ap, const gchar *))) {
         if (!g_hash_table_lookup(hash, key)) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Missing `%s' field."), key);
+            err_MISSING_FIELD(error, key);
             va_end(ap);
             return FALSE;
         }

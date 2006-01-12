@@ -41,6 +41,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
+
 #define MAGIC_TXT "[Parameter]"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
@@ -123,14 +125,11 @@ createc_load(const gchar *filename,
     GwyDataField *dfield;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not a Createc image file."));
+        err_FILE_TYPE(error, "Createc");
         g_free(buffer);
         return NULL;
     }
@@ -196,8 +195,7 @@ fail:
 /* Any missing keyword/value pair is fatal, so we return a NULL pointer. */
 #define HASH_GET(key, var, typeconv, err) \
     if (!(s = g_hash_table_lookup(hash, key))) { \
-        g_set_error(err, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
-                    _("Missing `%s' field."), key); \
+        err_MISSING_FIELD(err, key); \
         return NULL; \
     } \
     var = typeconv(s)
@@ -207,7 +205,8 @@ fail:
     if (!(s = g_hash_table_lookup(hash, key1))) { \
       if (!(s = g_hash_table_lookup(hash, key2))) { \
           g_set_error(err, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
-                      _("Neither `%s' nor `%s' field found."), key1, key2); \
+                      _("Neither `%s' nor `%s' header field found."), \
+                      key1, key2); \
         return NULL; \
       } \
     } \
@@ -384,8 +383,7 @@ read_binary_data(gint n, gdouble *data,
         break;
 
         default:
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unimplemented number of bits per sample: %d."), bpp);
+        err_BPP(error, bpp);
         return FALSE;
         break;
     }

@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "stmprg.h"
 
 #define MAGIC_TXT "MPAR"
@@ -155,16 +156,14 @@ read_datafield(gchar *buffer, guint size, GError **error)
                   bpp * xres * yres);
     }
     if (size < bpp*xres*yres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Data file is too short."));
+        err_SIZE_MISMATCH(error, bpp*xres*yres, size);
         return NULL;
     }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
     if (!read_binary_ubedata(xres * yres, data, buffer, bpp)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unimplemented number of bits per sample: %d."), bpp);
+        err_BPP(error, bpp);
         g_object_unref(dfield);
         return NULL;
     }
@@ -463,14 +462,11 @@ stmprg_load(const gchar *filename,
     char *filename_ta, *ptr;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not an Omicron STMPRG image file."));
+        err_FILE_TYPE(error, "Omicron STMPRG");
         g_free(buffer);
         return NULL;
     }
@@ -493,9 +489,7 @@ stmprg_load(const gchar *filename,
         *ptr = 'a';
 
     if (!g_file_get_contents(filename_ta, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 

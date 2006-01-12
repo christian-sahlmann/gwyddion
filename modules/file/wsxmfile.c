@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define MAGIC "WSxM file copyright Nanotec Electronica\r\n" \
@@ -127,22 +128,18 @@ wsxmfile_load(const gchar *filename,
     gint xres = 0, yres = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || sscanf(buffer + MAGIC_SIZE,
                   "Image header size: %u", &header_size) < 1) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not a WSXM file."));
+        err_FILE_TYPE(error, "WSXM");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
     if (size < header_size) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -155,16 +152,14 @@ wsxmfile_load(const gchar *filename,
     if (ok &&
         (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
          || (xres = atol(p)) <= 0)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid number of columns."));
+        err_INVALID(error, _("number of columns"));
         ok = FALSE;
     }
 
     if (ok &&
         (!(p = g_hash_table_lookup(meta, "General Info::Number of rows"))
          || (yres = atol(p)) <= 0)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid number of rows."));
+        err_INVALID(error, _("number of rows"));
         ok = FALSE;
     }
 
@@ -179,9 +174,7 @@ wsxmfile_load(const gchar *filename,
     }
 
     if (ok && (guint)size - header_size < 2*xres*yres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Expected data size %u bytes, but found %u bytes."),
-                    2*xres*yres, (guint)size - header_size);
+        err_SIZE_MISMATCH(error, 2*xres*yres, (guint)size - header_size);
         ok = FALSE;
     }
 

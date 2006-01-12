@@ -34,6 +34,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 
+#include "err.h"
 #include "get.h"
 
 #define EXTENSION ".afm"
@@ -49,12 +50,16 @@ typedef struct {
 static gboolean      module_register       (const gchar *name);
 static gint          aafm_detect           (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
-static GwyContainer* aafm_load             (const gchar *filename);
+static GwyContainer* aafm_load             (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 static gboolean      read_binary_data      (guint res,
                                             gdouble *data,
                                             const guchar *buffer);
-static gboolean      aafm_save             (GwyContainer *data,
-                                            const gchar *filename);
+static gboolean      aafm_export           (GwyContainer *data,
+                                            const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -62,7 +67,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -79,7 +84,8 @@ module_register(const gchar *name)
         N_("Assing AFM files (.afm)"),
         (GwyFileDetectFunc)&aafm_detect,
         (GwyFileLoadFunc)&aafm_load,
-        (GwyFileSaveFunc)&aafm_save,
+        NULL,
+        (GwyFileSaveFunc)&aafm_export,
     };
 
     gwy_file_func_register(name, &aafm_func_info);
@@ -106,7 +112,9 @@ aafm_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-aafm_load(const gchar *filename)
+aafm_load(const gchar *filename,
+          G_GNUC_UNUSED GwyRunType mode,
+          GError **error)
 {
     GwySIUnit *unit;
     GwyContainer *container = NULL;
@@ -119,14 +127,13 @@ aafm_load(const gchar *filename)
     gdouble min, max;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
+        err_GET_FILE_CONTENTS(error, &err);
         g_clear_error(&err);
         return NULL;
     }
     if (size < 12) {
-        g_warning("File %s is not a Createc image file", filename);
-        gwy_file_abandon_contents(buffer, size, &err);
-        g_clear_error(&err);
+        err_TOO_SHORT(error);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
@@ -134,9 +141,8 @@ aafm_load(const gchar *filename)
     afmfile.res = get_WORD(&p);
     afmfile.real = Angstrom*get_FLOAT(&p);
     if (size < afmfile.res * afmfile.res + 10) {
-        g_warning("Truncated file `%s'", filename);
-        gwy_file_abandon_contents(buffer, size, &err);
-        g_clear_error(&err);
+        err_SIZE_MISMATCH(error, afmfile.res * afmfile.res + 10, size);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
@@ -165,8 +171,7 @@ aafm_load(const gchar *filename)
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    gwy_file_abandon_contents(buffer, size, &err);
-    g_clear_error(&err);
+    gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
 }
@@ -188,8 +193,10 @@ read_binary_data(guint res,
 }
 
 static gboolean
-aafm_save(GwyContainer *data,
-          const gchar *filename)
+aafm_export(GwyContainer *data,
+            const gchar *filename,
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     union { guchar pp[4]; float f; } z;
     guint16 res, r;
@@ -202,8 +209,10 @@ aafm_save(GwyContainer *data,
     FILE *fh;
     gboolean ok = TRUE;
 
-    if (!(fh = g_fopen(filename, "wb")))
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
         return FALSE;
+    }
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     d = gwy_data_field_get_data_const(dfield);
@@ -240,9 +249,11 @@ aafm_save(GwyContainer *data,
             x[i*res + j] = GINT16_TO_LE(v);
         }
     }
-    /* FIXME */
-    if (!(ok = (fwrite(x, 1, 2*n, fh) == 2*n)))
+
+    if (!(ok = (fwrite(x, 1, 2*n, fh) == 2*n))) {
+        err_WRITE(error);
         g_unlink(filename);
+    }
     else {
         z.f = (max - min)/Angstrom;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)

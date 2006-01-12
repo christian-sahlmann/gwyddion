@@ -17,8 +17,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#ifndef __GWY_GET_H__
-#define __GWY_GET_H__
+#ifndef __GWY_FILE_GET_H__
+#define __GWY_GILE_GET_H__
 
 static inline gsize
 get_WORD(const guchar **p)
@@ -92,8 +92,6 @@ get_DOUBLE(const guchar **p)
     return z.d;
 }
 
-#endif
-
 static inline void
 get_CHARS(gchar *dest, const guchar **p, guint size)
 {
@@ -121,5 +119,7 @@ get_BBOOLEAN(const guchar **p)
     (*p)++;
     return b;
 }
+
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

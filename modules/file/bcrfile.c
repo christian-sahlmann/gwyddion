@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define HEADER_SIZE 2048
@@ -129,14 +130,11 @@ bcrfile_load(const gchar *filename,
     GHashTable *meta = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (size < HEADER_SIZE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is too short."));
+        err_TOO_SHORT(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -175,8 +173,7 @@ file_load_real(const guchar *buffer,
     g_free(s);
 
     if (!(s = g_hash_table_lookup(meta, "fileformat"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not a BCR/BCRF file."));
+        err_FILE_TYPE(error, "BCR/BCFR");
         return NULL;
     }
 
@@ -192,15 +189,13 @@ file_load_real(const guchar *buffer,
     gwy_debug("File type: %u", type);
 
     if (!(s = g_hash_table_lookup(meta, "xpixels"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing `xpixels' (x resolution) field."));
+        err_MISSING_FIELD(error, "xpixels");
         return NULL;
     }
     xres = atol(s);
 
     if (!(s = g_hash_table_lookup(meta, "ypixels"))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing `ypixels' (y resolution) field."));
+        err_MISSING_FIELD(error, "ypixels");
         return NULL;
     }
     yres = atol(s);
@@ -209,9 +204,7 @@ file_load_real(const guchar *buffer,
         intelmode = !!atol(s);
 
     if (size < HEADER_SIZE + xres*yres*type) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Expected data size %u bytes, but found %u bytes."),
-                    xres*yres*type, (guint)(size - HEADER_SIZE));
+        err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - HEADER_SIZE));
         return NULL;
     }
 

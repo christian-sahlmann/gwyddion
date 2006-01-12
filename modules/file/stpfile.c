@@ -39,6 +39,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
+
 #define MAGIC "UK SOFT\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
@@ -173,16 +175,13 @@ stpfile_load(const gchar *filename,
     gchar *container_key = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (strncmp(buffer, MAGIC, MAGIC_SIZE)
         || size <= DATA_MAGIC_SIZE
         || !(header_size = find_data_start(buffer, size))) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not an STP file."));
+        err_FILE_TYPE(error, "STP");
         gwy_file_abandon_contents(buffer, size, &err);
         return NULL;
     }
@@ -223,6 +222,9 @@ stpfile_load(const gchar *filename,
 
     gwy_file_abandon_contents(buffer, size, NULL);
     stpfile_free(stpfile);
+
+    if (!container)
+        err_NO_DATA(error);
 
     return container;
 }

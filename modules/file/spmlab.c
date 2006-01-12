@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 static gboolean      module_register    (const gchar *name);
@@ -128,16 +129,18 @@ spmlab_load(const gchar *filename,
     GwyDataField *dfield = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     /* 2048 is wrong. moreover it differs for r5 and r4, kasigra uses 5752 for
      * r5 */
-    if (size < 2048 || buffer[0] != '#' || buffer[1] != 'R') {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is not a Thermicroscopes SpmLab file."));
+    if (size < 2048) {
+        err_TOO_SHORT(error);
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+    if (buffer[0] != '#' || buffer[1] != 'R') {
+        err_FILE_TYPE(error, "Thermicroscopes SpmLab");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
@@ -151,7 +154,7 @@ spmlab_load(const gchar *filename,
 
         default:
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unknown file version %c."), buffer[2]);
+                    _("Unknown format version %c."), buffer[2]);
         break;
     }
 
@@ -241,8 +244,7 @@ read_data_field(const guchar *buffer,
 
     p = buffer + doffset;
     if (size - (p - buffer) < 2*xres*yres) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Truncated data."));
+        err_SIZE_MISMATCH(error, 2*xres*yres, size - (p - buffer));
         return NULL;
     }
 

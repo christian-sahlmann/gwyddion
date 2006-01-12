@@ -32,6 +32,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "err.h"
 #include "get.h"
 
 #define MAGIC ":STM data\r\n"
@@ -189,9 +190,7 @@ unisoku_load(const gchar *filename,
     gchar *data_name;
 
     if (!g_file_get_contents(filename, &text, NULL, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
@@ -206,8 +205,7 @@ unisoku_load(const gchar *filename,
     if (ufile.data_type < UNISOKU_UINT8
         || ufile.data_type > UNISOKU_FLOAT
         || type_sizes[ufile.data_type] == 0) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Uknown data type: %d."), ufile.data_type);
+        err_UNSUPPORTED(error, _("data type"));
         unisoku_file_free(&ufile);
         return NULL;
     }
@@ -220,10 +218,8 @@ unisoku_load(const gchar *filename,
     }
 
     if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    "%s", err->message);
+        err_GET_FILE_CONTENTS(error, &err);
         unisoku_file_free(&ufile);
-        g_clear_error(&err);
         return NULL;
     }
 
@@ -272,8 +268,7 @@ unisoku_read_header(gchar *buffer,
 
     NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "i", &ufile->format_version) != 1) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid format version."));
+        err_UNSUPPORTED(error, _("format version"));
         return FALSE;
     }
 
@@ -288,16 +283,14 @@ unisoku_read_header(gchar *buffer,
 
     NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ii", &ufile->ascii_flag, &type1) != 2) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid format flags."));
+        err_INVALID(error, _("format flags"));
         return FALSE;
     }
     ufile->data_type = type1;
 
     NEXT(buffer, line, error);
     if (unisoku_sscanf(line, "ii", &ufile->xres, &ufile->yres) != 2) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid resolution."));
+        err_INVALID(error, _("resolution"));
         return FALSE;
     }
 
@@ -319,8 +312,7 @@ unisoku_read_header(gchar *buffer,
     if (unisoku_sscanf(line, "ddi",
                        &ufile->start_x, &ufile->end_x,
                        &ufile->log_flag_x) != 3) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid x scale parameters."));
+        err_INVALID(error, _("x scale parameters"));
         return FALSE;
     }
 
@@ -331,8 +323,7 @@ unisoku_read_header(gchar *buffer,
     if (unisoku_sscanf(line, "ddii",
                        &ufile->start_y, &ufile->end_y,
                        &ufile->ineq_flag, &ufile->log_flag_y) != 4) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid y scale parameters."));
+        err_INVALID(error, _("y scale parameters"));
         return FALSE;
     }
 
@@ -344,8 +335,7 @@ unisoku_read_header(gchar *buffer,
                        &ufile->max_raw_z, &ufile->min_raw_z,
                        &ufile->max_z, &ufile->min_z,
                        &ufile->log_flag_z) != 5) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid z scale parameters."));
+        err_INVALID(error, _("z scale parameters"));
         return FALSE;
     }
 
@@ -353,8 +343,7 @@ unisoku_read_header(gchar *buffer,
     if (unisoku_sscanf(line, "dddi",
                        &ufile->stm_voltage, &ufile->stm_current,
                        &ufile->scan_time, &ufile->accum) != 4) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing or invalid data type parameters."));
+        err_INVALID(error, _("data type parameters"));
         return FALSE;
     }
 
@@ -431,9 +420,7 @@ unisoku_read_data_field(const guchar *buffer,
 
     n = ufile->xres * ufile->yres;
     if (n*type_sizes[ufile->data_type] > size) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Expected data size %u bytes, but found %u bytes."),
-                    n*type_sizes[ufile->data_type], size);
+        err_SIZE_MISMATCH(error, n*type_sizes[ufile->data_type], size);
         return NULL;
     }
 

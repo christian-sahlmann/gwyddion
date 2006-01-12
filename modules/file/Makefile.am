@@ -8,10 +8,12 @@ endif
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
+	assing-afm.la \
 	apefile.la \
 	asciiexport.la \
 	bcrfile.la \
 	createc.la \
+	ezdfile.la \
 	gwyfile.la \
 	hitachi-afm.la \
 	nanoscope.la \
@@ -23,8 +25,6 @@ file_LTLIBRARIES = \
 	wsxmfile.la
 
 #file_LTLIBRARIES = \
-#	assing-afm.la \
-#	ezdfile.la \
 #	nt-mdt.la \
 #	mifile.la \
 #	pixmap.la \
@@ -38,6 +38,7 @@ file_LTLIBRARIES = \
 
 
 noinst_HEADERS = \
+	err.h \
 	get.h \
 	stmprg.h
 
@@ -78,8 +79,8 @@ asciiexport_la_LIBADD = $(module_libadd)
 apefile_la_SOURCES = apefile.c
 apefile_la_LIBADD = $(module_libadd)
 
-#assing_afm_la_SOURCES = assing-afm.c
-#assing_afm_la_LIBADD = $(module_libadd)
+assing_afm_la_SOURCES = assing-afm.c
+assing_afm_la_LIBADD = $(module_libadd)
 
 bcrfile_la_SOURCES = bcrfile.c
 bcrfile_la_LIBADD = $(module_libadd)
@@ -87,8 +88,8 @@ bcrfile_la_LIBADD = $(module_libadd)
 createc_la_SOURCES = createc.c
 createc_la_LIBADD = $(module_libadd)
 
-#ezdfile_la_SOURCES = ezdfile.c
-#ezdfile_la_LIBADD = $(module_libadd)
+ezdfile_la_SOURCES = ezdfile.c
+ezdfile_la_LIBADD = $(module_libadd)
 
 gwyfile_la_SOURCES = gwyfile.c
 gwyfile_la_LIBADD = $(module_libadd)
