@@ -57,7 +57,8 @@ static void gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
 static void gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
 static void gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
 static void gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
-static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer);
+static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer,
+                                                  gint hint);
 
 G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer,
                        GWY_TYPE_DATA_VIEW_LAYER)
@@ -163,6 +164,10 @@ gwy_vector_layer_get_property(GObject *object,
  *
  * When a selection object is focused, it becomes the only one user can
  * interact with, the others are inert.
+ *
+ * Focus is reset whenever selection is globally changed, that is: cleared,
+ * set anew with gwy_selection_set_data(), swapped with another selection
+ * object, and when the selection key in container changes.
  *
  * <warning>This method is largely unimplemented in layers.</warning>
  *
@@ -476,6 +481,7 @@ gwy_vector_layer_selection_connect(GwyVectorLayer *layer)
     else
         g_object_ref(layer->selection);
 
+    layer->focus = layer->selecting = -1;
     layer->selection_changed_id
         = g_signal_connect_swapped(layer->selection,
                                    "changed",
@@ -499,6 +505,7 @@ gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer)
         g_signal_handler_disconnect(layer->selection,
                                     layer->selection_changed_id);
     layer->selection_changed_id = 0;
+    layer->focus = layer->selecting = -1;
     gwy_object_unref(layer->selection);
 }
 
@@ -620,11 +627,14 @@ gwy_vector_layer_item_changed(GwyVectorLayer *vector_layer)
 }
 
 static void
-gwy_vector_layer_selection_changed(GwyVectorLayer *layer)
+gwy_vector_layer_selection_changed(GwyVectorLayer *layer,
+                                   gint hint)
 {
     gwy_debug("selecting: %d", layer->selecting);
     if (layer->selecting >= 0)
         return;
+    if (hint < 0)
+        layer->focus = -1;
     gwy_data_view_layer_updated(GWY_DATA_VIEW_LAYER(layer));
 }
 
