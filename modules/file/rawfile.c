@@ -40,9 +40,12 @@
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/stats.h>
 #include <libdraw/gwypixfield.h>
-#include <libgwydgets/gwydgets.h>
-#include <app/app.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <app/settings.h>
+
+#include "err.h"
 
 /* Predefined common binary formats */
 typedef enum {
@@ -92,6 +95,8 @@ typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
 
 /* note: size, skip, and rowskip are in bits */
 typedef struct {
+    gboolean takeover;
+
     gint format;  /* binary, text */
     RawFileBuiltin builtin;
     guint32 offset;  /* offset from file start, in bytes */
@@ -130,6 +135,7 @@ typedef struct {
 
 typedef struct {
     GtkWidget *dialog;
+    GtkWidget *takeover;
     GSList *format;
     GtkWidget *builtin;
     GtkWidget *offset;
@@ -165,7 +171,9 @@ typedef struct {
 
 static gboolean      module_register               (const gchar *name);
 static gint          rawfile_detect                (void);
-static GwyContainer* rawfile_load                  (const gchar *filename);
+static GwyContainer* rawfile_load                  (const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static GwyDataField* rawfile_dialog                (RawFileArgs *args,
                                                     RawFileFile *file);
 static GtkWidget*    rawfile_dialog_preview_box    (RawFileControls *controls);
@@ -250,7 +258,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6.1",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -391,6 +399,7 @@ static const GwyEnum builtin_menu[] = {
 };
 
 static const RawFileArgs rawfile_defaults = {
+    FALSE,                          /* takeover */
     RAW_BINARY,                     /* format */
     RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
     FALSE, FALSE, FALSE, 0,         /* binary options */
@@ -400,6 +409,8 @@ static const RawFileArgs rawfile_defaults = {
     1.0, -6,                        /* z-scale */
     NULL,                           /* preset name */
 };
+
+static const gchar *takeover_key = "/module/rawfile/takeover";
 
 /* for read_ascii_data() error reporting */
 static GQuark error_domain = 0;
@@ -417,6 +428,7 @@ module_register(const gchar *name)
         (GwyFileDetectFunc)&rawfile_detect,
         (GwyFileLoadFunc)&rawfile_load,
         NULL,
+        NULL
     };
 
     gwy_file_func_register(name, &rawfile_func_info);
@@ -427,12 +439,22 @@ module_register(const gchar *name)
 static gint
 rawfile_detect(void)
 {
+    GwyContainer *settings;
+    gboolean takeover = rawfile_defaults.takeover;
+
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, takeover_key, &takeover);
+
     /* Claim ownership of anything, with lowest possible priority */
-    return 1;
+    if (takeover)
+        return 1;
+    return 0;
 }
 
 static GwyContainer*
-rawfile_load(const gchar *filename)
+rawfile_load(const gchar *filename,
+             GwyRunType mode,
+             GError **error)
 {
     RawFileArgs *args;
     RawFileFile file;
@@ -441,24 +463,34 @@ rawfile_load(const gchar *filename)
     GError *err = NULL;
     gsize size = 0;
 
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Rawfile must be run as interactive."));
+        return FALSE;
+    }
+
     args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
     /*gwy_container_remove_by_prefix(settings, "/module/rawfile/presets");*/
     rawfile_load_args(settings, args);
     file.buffer = NULL;
     if (!g_file_get_contents(filename, (gchar**)&file.buffer, &size, &err)) {
-        g_warning("Cannot read file %s", filename);
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     data = NULL;
     file.filename = filename;
     file.filesize = size;
     if ((dfield = rawfile_dialog(args, &file))) {
-        data = GWY_CONTAINER(gwy_container_new());
+        data = gwy_container_new();
         gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
     }
+    else
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_CANCELLED,
+                    _("Import cancelled by user."));
     rawfile_save_args(settings, args);
     g_free(file.buffer);
     g_free(args->delimiter);
@@ -647,7 +679,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
 
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
 
-    table = gtk_table_new(14, 3, FALSE);
+    table = gtk_table_new(16, 3, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
@@ -764,6 +796,17 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 2, 2);
     g_object_unref(unit);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    table_attach_heading(table, _("<b>Options</b>"), row);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("_Automatically offer raw "
+                                                  "data import of unknown "
+                                                  "files"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls->takeover = button;
     row++;
 
     return vbox;
@@ -1166,7 +1209,7 @@ rawfile_read_data_field(GtkWidget *parent,
         if (!rawfile_read_ascii(args, file->buffer,
                                 gwy_data_field_get_data(dfield), &err)) {
             rawfile_warn_parse_error(parent, file, err);
-            g_object_unref(G_OBJECT(dfield));
+            g_object_unref(dfield);
             g_clear_error(&err);
             return NULL;
         }
@@ -1193,13 +1236,16 @@ rawfile_warn_too_short_file(GtkWidget *parent,
                                     | GTK_DIALOG_MODAL,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_OK,
-                                    _("The format would require %u bytes "
-                                      "long file (at least), "
-                                      "but the length of `%s' "
-                                      "is only %u bytes."),
-                                    reqsize, file->filename, file->filesize),
+                                    _("Too short file."));
+    gtk_message_dialog_format_secondary_text
+        (GTK_MESSAGE_DIALOG(dialog),
+         _("The format would require %u bytes long file (at least), "
+           "but the length of `%s' is only %u bytes."),
+         reqsize, file->filename, file->filesize);
+    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
 }
 
 static void
@@ -1214,11 +1260,14 @@ rawfile_warn_parse_error(GtkWidget *parent,
                                     | GTK_DIALOG_MODAL,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_OK,
-                                    _("Parsing of %s failed:\n"
-                                      "%s."),
-                                     file->filename, err->message),
+                                    _("Parsing of %s failed."),
+                                    file->filename);
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
+                                             "%s.", err->message);
+    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
 }
 
 static void
@@ -1541,22 +1590,25 @@ preset_validate_name(RawFileControls *controls,
                      const gchar *name,
                      gboolean show_warning)
 {
-    GtkWidget *dlg;
+    GtkWidget *dialog, *parent;
 
     if (*name && !strchr(name, '/'))
         return TRUE;
     if (!show_warning)
         return FALSE;
 
-    dlg = gtk_message_dialog_new(GTK_WINDOW(controls->dialog),
+    parent = controls->dialog;
+    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
                                     GTK_DIALOG_MODAL
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_CLOSE,
                                     _("The name `%s' is invalid."),
                                     name);
-    gtk_dialog_run(GTK_DIALOG(dlg));
-    gtk_widget_destroy(dlg);
+    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
 
     return FALSE;
 }
@@ -1622,6 +1674,9 @@ update_dialog_controls(RawFileControls *controls)
     gtk_adjustment_set_value(adj, args->zscale);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
                                   args->zexponent);
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
+                                 args->takeover);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->offset);
@@ -1775,6 +1830,9 @@ update_dialog_values(RawFileControls *controls)
     args->builtin
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->builtin));
     args->format = gwy_radio_buttons_get_current(controls->format, "format");
+
+    args->takeover
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->takeover));
 
     rawfile_sanitize_args(args);
 }
@@ -2275,6 +2333,7 @@ gwy_comma_strtod(const gchar *nptr, gchar **endptr)
 static void
 rawfile_sanitize_args(RawFileArgs *args)
 {
+    args->takeover = !!args->takeover;
     if (!args->delimiter)
         args->delimiter = g_strdup("");
     args->decomma = !!args->decomma;
@@ -2380,6 +2439,7 @@ rawfile_load_args(GwyContainer *settings,
                   RawFileArgs *args)
 {
     rawfile_load_preset(settings, NULL, args);
+    gwy_container_gis_boolean_by_name(settings, takeover_key, &args->takeover);
 }
 
 static void
@@ -2429,6 +2489,7 @@ rawfile_save_args(GwyContainer *settings,
                   RawFileArgs *args)
 {
     rawfile_save_preset(settings, NULL, args);
+    gwy_container_set_boolean_by_name(settings, takeover_key, args->takeover);
 }
 
 static void
