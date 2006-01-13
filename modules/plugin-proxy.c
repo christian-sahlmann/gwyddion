@@ -113,7 +113,7 @@ static GwyContainer*   file_plugin_proxy_load    (const gchar *filename,
                                                   GwyRunType mode,
                                                   GError **error,
                                                   const gchar *name);
-static gboolean        file_plugin_proxy_save    (GwyContainer *data,
+static gboolean        file_plugin_proxy_export  (GwyContainer *data,
                                                   const gchar *filename,
                                                   GwyRunType mode,
                                                   GError **error,
@@ -129,14 +129,17 @@ static glong           file_pattern_specificity  (const gchar *pattern);
 
 /* common helpers */
 static FILE*           text_dump_export          (GwyContainer *data,
-                                                  gchar **filename);
+                                                  gchar **filename,
+                                                  GError **error);
 static void            dump_export_data_field    (GwyDataField *dfield,
                                                   const gchar *name,
                                                   FILE *fh);
-static FILE*           open_temporary_file       (gchar **filename);
+static FILE*           open_temporary_file       (gchar **filename,
+                                                  GError **error);
 static GwyContainer*   text_dump_import          (GwyContainer *old_data,
                                                   gchar *buffer,
-                                                  gsize size);
+                                                  gsize size,
+                                                  GError **error);
 static gchar*        decode_glib_encoded_filename(const gchar *filename);
 
 /* The module info. */
@@ -147,7 +150,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -161,17 +164,19 @@ static GList *proc_plugins = NULL;
 static GList *file_plugins = NULL;
 
 static const GwyEnum run_mode_names[] = {
-    { "noninteractive", GWY_RUN_NONINTERACTIVE },
-    { "modal",          GWY_RUN_MODAL },
-    { "interactive",    GWY_RUN_MODAL },
-    { "with_defaults",  GWY_RUN_WITH_DEFAULTS },
-    { NULL,             -1 }
+    { "noninteractive", GWY_RUN_NONINTERACTIVE, },
+    { "modal",          GWY_RUN_INTERACTIVE,    },
+    { "interactive",    GWY_RUN_INTERACTIVE,    },
+    { "with_defaults",  GWY_RUN_NONINTERACTIVE, },
+    { NULL,             -1,                     },
 };
 
+/* For plug-ins, save always means export */
 static const GwyEnum file_op_names[] = {
-    { "load", GWY_FILE_OPERATION_LOAD   },
-    { "save", GWY_FILE_OPERATION_EXPORT },
-    { NULL,   -1 }
+    { "load",   GWY_FILE_OPERATION_LOAD,   },
+    { "save",   GWY_FILE_OPERATION_EXPORT, },
+    { "export", GWY_FILE_OPERATION_EXPORT, },
+    { NULL,     -1,                        },
 };
 
 static gboolean
@@ -517,7 +522,7 @@ proc_plugin_proxy_run(GwyContainer *data,
     if (!(info = proc_find_plugin(name, run)))
         return FALSE;
 
-    fh = text_dump_export(data, &filename);
+    fh = text_dump_export(data, &filename, NULL);
     g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
     args[2] = g_strdup(gwy_enum_to_string(run, run_mode_names, -1));
@@ -531,7 +536,7 @@ proc_plugin_proxy_run(GwyContainer *data,
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
     ok &= !exit_status;
-    if (ok && (data = text_dump_import(data, buffer, size))) {
+    if (ok && (data = text_dump_import(data, buffer, size, NULL))) {
         data_window = gwy_app_data_window_create(data);
         gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
         g_object_unref(data);
@@ -620,14 +625,14 @@ file_register_plugins(GList *plugins,
             && (run_modes = gwy_str_next_line(&buffer))
             && (run = gwy_string_to_flags(run_modes,
                                           file_op_names, -1, NULL))) {
-            info = g_new(FilePluginInfo, 1);
+            info = g_new0(FilePluginInfo, 1);
             info->func.name = g_strdup(pname);
             info->func.file_desc = g_strdup(file_desc);
             info->func.detect = file_plugin_proxy_detect;
             info->func.load = (run & GWY_FILE_OPERATION_LOAD)
                               ? file_plugin_proxy_load : NULL;
-            info->func.save = (run & GWY_FILE_OPERATION_EXPORT)
-                              ? file_plugin_proxy_save : NULL;
+            info->func.export_ = (run & GWY_FILE_OPERATION_EXPORT)
+                                 ? file_plugin_proxy_export : NULL;
             if (gwy_file_func_register(name, &info->func)) {
                 info->file = g_strdup(file);
                 info->run = run;
@@ -687,14 +692,18 @@ file_plugin_proxy_load(const gchar *filename,
     if (mode != GWY_RUN_INTERACTIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Plugin-proxy must be run as interactive"));
+                    _("Plugin-proxy must be run as interactive."));
         return NULL;
     }
-    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_LOAD)))
-        return FALSE;
+    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_LOAD))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                    _("Plug-in `%s' does not implement file loading."), name);
+        return NULL;
+    }
+    if (!(fh = open_temporary_file(&tmpname, error)))
+        return NULL;
 
-    if (!(fh = open_temporary_file(&tmpname)))
-        return FALSE;
     args[0] = info->file;
     args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_OPERATION_LOAD,
                                           file_op_names, -1));
@@ -703,29 +712,45 @@ file_plugin_proxy_load(const gchar *filename,
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
-    if (!err)
-        ok &= g_file_get_contents(tmpname, &buffer, &size, &err);
+    if (ok) {
+        ok = g_file_get_contents(tmpname, &buffer, &size, &err);
+        if (!ok) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                        _("Cannot read temporary file: %s."), err->message);
+            g_clear_error(&err);
+        }
+    }
+    else {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cannot execute plug-in `%s': %s."), name, err->message);
+        g_clear_error(&err);
+    }
     g_unlink(tmpname);
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
-    ok &= !exit_status;
-    if (!ok || !(data = text_dump_import(data, buffer, size))) {
-        g_warning("Cannot run plug-in %s: %s",
-                    info->file,
-                    err ? err->message : "it returned garbage.");
-        data = NULL;
+    if (ok && exit_status) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Plug-in `%s' returned non-zero exit status: %d."),
+                    name, exit_status);
         ok = FALSE;
     }
-    if (data
+    if (ok) {
+        data = text_dump_import(data, buffer, size, error);
+        if (!data)
+            ok = FALSE;
+    }
+    if (ok
         && (!gwy_container_gis_object_by_name(data, "/0/data", &dfield)
             || !GWY_IS_DATA_FIELD(dfield))) {
-        g_warning("Output from %s plug-in contains no \"/0/data\" data field",
-                  info->file);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Plug-in `%s' did not return any meaningful data."),
+                    name);
         gwy_object_unref(data);
     }
     g_free(args[1]);
     g_free(args[3]);
-    g_clear_error(&err);
     g_free(buffer);
     g_free(tmpname);
 
@@ -733,7 +758,7 @@ file_plugin_proxy_load(const gchar *filename,
 }
 
 /**
- * file_plugin_proxy_save:
+ * file_plugin_proxy_export:
  * @data: A data container to save.
  * @filename: A file name to save @data to.
  * @mode: Run mode.
@@ -745,11 +770,11 @@ file_plugin_proxy_load(const gchar *filename,
  * Returns: Whether it succeeded saving the data.
  **/
 static gboolean
-file_plugin_proxy_save(GwyContainer *data,
-                       const gchar *filename,
-                       GwyRunType mode,
-                       GError **error,
-                       const gchar *name)
+file_plugin_proxy_export(GwyContainer *data,
+                         const gchar *filename,
+                         GwyRunType mode,
+                         GError **error,
+                         const gchar *name)
 {
     FilePluginInfo *info;
     gchar *tmpname = NULL;
@@ -763,14 +788,20 @@ file_plugin_proxy_save(GwyContainer *data,
     if (mode != GWY_RUN_INTERACTIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Plugin-proxy must be run as interactive"));
+                    _("Plugin-proxy must be run as interactive."));
         return FALSE;
     }
-    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_EXPORT)))
+    if (!(info = file_find_plugin(name, GWY_FILE_OPERATION_EXPORT))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_UNIMPLEMENTED,
+                    _("Plug-in `%s' does not implement file saving."), name);
+        return FALSE;
+    }
+
+    fh = text_dump_export(data, &tmpname, error);
+    if (!fh)
         return FALSE;
 
-    fh = text_dump_export(data, &tmpname);
-    g_return_val_if_fail(fh, FALSE);
     args[0] = info->file;
     args[1] = g_strdup(gwy_enum_to_string(GWY_FILE_OPERATION_EXPORT,
                                           file_op_names, -1));
@@ -779,19 +810,24 @@ file_plugin_proxy_save(GwyContainer *data,
     gwy_debug("%s %s %s %s", args[0], args[1], args[2], args[3]);
     ok = g_spawn_sync(NULL, args, NULL, 0, NULL, NULL,
                       NULL, NULL, &exit_status, &err);
+    if (!ok) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cannot execute plug-in `%s': %s."), name, err->message);
+        g_clear_error(&err);
+    }
     g_unlink(tmpname);
     fclose(fh);
     gwy_debug("ok = %d, exit_status = %d, err = %p", ok, exit_status, err);
-    ok &= !exit_status;
-    if (!ok) {
-        g_warning("Cannot run plug-in %s: %s",
-                    info->file,
-                    err ? err->message : "it returned garbage.");
+    if (ok && exit_status) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Plug-in `%s' returned non-zero exit status: %d."),
+                    name, exit_status);
         ok = FALSE;
     }
     g_free(args[1]);
     g_free(args[3]);
-    g_clear_error(&err);
     g_free(tmpname);
 
     return ok;
@@ -1003,6 +1039,7 @@ file_pattern_specificity(const gchar *pattern)
  * text_dump_export:
  * @data: A %GwyContainer to dump.
  * @filename: File name to dump the container to.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Dumps data container to a file @filename.
  *
@@ -1012,12 +1049,14 @@ file_pattern_specificity(const gchar *pattern)
  * Returns: A filehandle of the dump file open in "wb" mode.
  **/
 static FILE*
-text_dump_export(GwyContainer *data, gchar **filename)
+text_dump_export(GwyContainer *data,
+                 gchar **filename,
+                 GError **error)
 {
     GwyDataField *dfield;
     FILE *fh;
 
-    if (!(fh = open_temporary_file(filename)))
+    if (!(fh = open_temporary_file(filename, error)))
         return NULL;
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     dump_export_data_field(dfield, "/0/data", fh);
@@ -1106,6 +1145,7 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
 /**
  * open_temporary_file:
  * @filename: Where the filename is to be stored.
+ * @error: Return location for a #GError (or %NULL).
  *
  * Open a temporary file in "wb" mode, return the stream handle.
  *
@@ -1115,7 +1155,8 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
  * Returns: The filehandle of the open file.
  **/
 static FILE*
-open_temporary_file(gchar **filename)
+open_temporary_file(gchar **filename,
+                    GError **error)
 {
     FILE *fh;
 #ifdef G_OS_WIN32
@@ -1130,26 +1171,36 @@ open_temporary_file(gchar **filename)
 
     fh = g_fopen(*filename, "wb");
     if (!fh)
-        g_warning("Cannot create a temporary file: %s", g_strerror(errno));
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot create a temporary file: %s."),
+                    g_strerror(errno));
 #else
     GError *err = NULL;
     int fd;
 
     fd = g_file_open_tmp("gwydXXXXXXXX", filename, &err);
     if (fd < 0) {
-        g_warning("Cannot create a temporary file: %s", err->message);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot create a temporary file: %s."),
+                    err->message);
         g_clear_error(&err);
         return NULL;
     }
     fh = fdopen(fd, "wb");
-    g_assert(fh != NULL);
+    if (!fh)
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot fdopen() already open file: %s."),
+                    g_strerror(errno));
 #endif
 
     return fh;
 }
 
 static GwyContainer*
-text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
+text_dump_import(GwyContainer *old_data,
+                 gchar *buffer,
+                 gsize size,
+                 GError **error)
 {
     gchar *val, *key, *pos, *line;
     GwyContainer *data;
@@ -1176,7 +1227,9 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             continue;
         }
         if ((gsize)(val - buffer) + 1 > size) {
-            g_warning("Unexpected end of file (value expected).");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached when value was expected."));
             goto fail;
         }
         *val = '\0';
@@ -1203,7 +1256,9 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             xres = gwy_data_field_get_xres(dfield);
         else {
-            g_warning("Broken dump doesn't specify data field width.");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing data field width."));
             goto fail;
         }
         g_free(key);
@@ -1214,7 +1269,9 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             yres = gwy_data_field_get_yres(dfield);
         else {
-            g_warning("Broken dump doesn't specify data field height.");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing data field height."));
             goto fail;
         }
         g_free(key);
@@ -1225,8 +1282,8 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             xreal = gwy_data_field_get_xreal(dfield);
         else {
-            g_warning("Broken dump doesn't specify real data field width.");
-            xreal = 1;   /* 0 could cause troubles */
+            g_warning("Missing real data field width.");
+            xreal = 1.0;   /* 0 could cause troubles */
         }
         g_free(key);
 
@@ -1236,13 +1293,15 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         else if (dfield)
             yreal = gwy_data_field_get_yreal(dfield);
         else {
-            g_warning("Broken dump doesn't specify real data field height.");
-            yreal = 1;   /* 0 could cause troubles */
+            g_warning("Missing real data field height.");
+            yreal = 1.0;   /* 0 could cause troubles */
         }
         g_free(key);
 
         if (!(xres > 0 && yres > 0 && xreal > 0 && yreal > 0)) {
-            g_warning("Broken dump has nonpositive data field dimensions");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Data field dimensions are not positive numbers."));
             goto fail;
         }
 
@@ -1254,7 +1313,7 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             uxy = gwy_si_unit_duplicate(uxy);
         }
         else {
-            g_warning("Broken dump doesn't specify lateral units.");
+            g_warning("Missing lateral units.");
             uxy = gwy_si_unit_new("m");
         }
         g_free(key);
@@ -1267,14 +1326,16 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
             uz = gwy_si_unit_duplicate(uz);
         }
         else {
-            g_warning("Broken dump doesn't specify value units.");
+            g_warning("Missing value units.");
             uz = gwy_si_unit_new("m");
         }
         g_free(key);
 
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
-            g_warning("Unexpected end of file (truncated datafield).");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached inside a data field."));
             goto fail;
         }
         dfield = GWY_DATA_FIELD(gwy_data_field_new(xres, yres, xreal, yreal,
@@ -1293,7 +1354,9 @@ text_dump_import(GwyContainer *old_data, gchar *buffer, gsize size)
         pos += n;
         val = gwy_str_next_line(&pos);
         if (!gwy_strequal(val, "]]")) {
-            g_warning("Missed end of data field.");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing end of data field marker."));
             gwy_object_unref(dfield);
             goto fail;
         }
