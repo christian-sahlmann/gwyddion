@@ -87,6 +87,8 @@ static void     gwy_layer_point_get_property   (GObject*object,
                                                 guint prop_id,
                                                 GValue *value,
                                                 GParamSpec *pspec);
+static gboolean gwy_layer_point_set_focus      (GwyVectorLayer *layer,
+                                                gint focus);
 static void     gwy_layer_point_draw           (GwyVectorLayer *layer,
                                                 GdkDrawable *drawable,
                                                 GwyRenderingTarget target);
@@ -166,6 +168,7 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
     layer_class->unrealize = gwy_layer_point_unrealize;
 
     vector_class->selection_type = GWY_TYPE_SELECTION_POINT;
+    vector_class->set_focus = gwy_layer_point_set_focus;
     vector_class->draw = gwy_layer_point_draw;
     vector_class->motion_notify = gwy_layer_point_motion_notify;
     vector_class->button_press = gwy_layer_point_button_pressed;
@@ -229,6 +232,27 @@ gwy_layer_point_get_property(GObject*object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
     }
+}
+
+static gboolean
+gwy_layer_point_set_focus(GwyVectorLayer *layer,
+                          gint focus)
+{
+    GwyVectorLayer *vector_layer;
+
+    vector_layer = GWY_VECTOR_LAYER(layer);
+    /* Unfocus is always possible */
+    if (focus < 0) {
+        vector_layer->focus = -1;
+        return TRUE;
+    }
+    /* Setting focus is possible only when user is selecting nothing or the
+     * same object */
+    if (layer->selecting < 0 || focus == layer->selecting) {
+        vector_layer->focus = focus;
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static void
@@ -505,16 +529,26 @@ gwy_layer_point_near_point(GwyVectorLayer *layer,
                            gdouble xreal, gdouble yreal)
 {
     GwyDataView *view;
-    gdouble d2min, *xy;
+    gdouble d2min;
     gint i, n;
 
     if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    xy = g_newa(gdouble, n*OBJECT_SIZE);
-    gwy_selection_get_data(layer->selection, xy);
+    if (layer->focus >= 0) {
+        gdouble xy[OBJECT_SIZE];
 
-    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, n, xy);
+        i = layer->focus;
+        gwy_selection_get_object(layer->selection, i, xy);
+        d2min = (xreal - xy[0])*(xreal - xy[0])
+                 + (yreal - xy[1])*(yreal - xy[1]);
+    }
+    else {
+        gdouble *xy = g_newa(gdouble, n*OBJECT_SIZE);
+
+        gwy_selection_get_data(layer->selection, xy);
+        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, n, xy);
+    }
 
     view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
     /* FIXME: this is simply nonsense when x measure != y measure */
