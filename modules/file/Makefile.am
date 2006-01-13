@@ -17,6 +17,7 @@ file_LTLIBRARIES = \
 	gwyfile.la \
 	hitachi-afm.la \
 	nanoscope.la \
+	nt-mdt.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
 	sdfile.la \
@@ -28,7 +29,6 @@ file_LTLIBRARIES = \
 	wsxmfile.la
 
 #file_LTLIBRARIES = \
-#	nt-mdt.la \
 #	mifile.la \
 #	pixmap.la \
 #	rawfile.la \
@@ -105,9 +105,9 @@ hitachi_afm_la_LIBADD = $(module_libadd)
 nanoscope_la_SOURCES = nanoscope.c
 nanoscope_la_LIBADD = $(module_libadd)
 
-#nt_mdt_la_SOURCES = nt-mdt.c
-#nt_mdt_la_LIBADD = $(module_libadd)
-#
+nt_mdt_la_SOURCES = nt-mdt.c
+nt_mdt_la_LIBADD = $(module_libadd)
+
 #mifile_la_SOURCES = mifile.c
 #mifile_la_LIBADD = $(module_libadd)
 #
