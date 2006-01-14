@@ -59,16 +59,16 @@ struct _GwyCDLineClass {
 
 
 const
-gchar*          gwy_cdline_get_name   (const GwyCDLine* preset);
+gchar*          gwy_cdline_get_name   (GwyCDLine* preset);
 const
-gchar*          gwy_cdline_get_definition(const GwyCDLine* preset);
+gchar*          gwy_cdline_get_definition(GwyCDLine* preset);
 const
-gchar*          gwy_cdline_get_param_name(const GwyCDLine* preset,
+gchar*          gwy_cdline_get_param_name(GwyCDLine* preset,
                                                      gint param);
-gdouble         gwy_cdline_get_param_default(const GwyCDLine* preset,
+gdouble         gwy_cdline_get_param_default(GwyCDLine* preset,
                                                     gint param);
-gint            gwy_cdline_get_nparams(const GwyCDLine* preset);
-void            gwy_cdline_fit        (const GwyCDLine* preset,
+gint            gwy_cdline_get_nparams(GwyCDLine* preset);
+void            gwy_cdline_fit        (GwyCDLine* preset,
                                               gint n_dat,
                                               const gdouble *x,
                                               const gdouble *y,
@@ -77,6 +77,11 @@ void            gwy_cdline_fit        (const GwyCDLine* preset,
                                               gdouble *err,
                                               const gboolean *fixed_param,
                                               gpointer user_data);
+gdouble         gwy_cdline_get_value         (GwyCDLine *preset,
+                                              gdouble x,
+                                              const gdouble *params,
+                                              gboolean *fres);
+
 GwyInventory*   gwy_cdlines              (void);
 
 GType           gwy_cdline_get_type      (void) G_GNUC_CONST;

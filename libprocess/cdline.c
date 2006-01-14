@@ -409,7 +409,7 @@ static const GwyCDLineBuiltin cdlines[] = {
  * Returns: The cdline name.
  **/
 const gchar*
-gwy_cdline_get_name(const GwyCDLine* cdline)
+gwy_cdline_get_name(GwyCDLine* cdline)
 {
     return cdline->builtin->function_name;
 }
@@ -423,7 +423,7 @@ gwy_cdline_get_name(const GwyCDLine* cdline)
  * Returns: The cdline function definition.
  **/
 const gchar*
-gwy_cdline_get_definition(const GwyCDLine* cdline)
+gwy_cdline_get_definition(GwyCDLine* cdline)
 {
     return cdline->builtin->function_definition;
 }
@@ -440,7 +440,7 @@ gwy_cdline_get_definition(const GwyCDLine* cdline)
  * Returns: The name of parameter @param.
  **/
 const gchar*
-gwy_cdline_get_param_name(const GwyCDLine* cdline,
+gwy_cdline_get_param_name(GwyCDLine* cdline,
                                      gint param)
 {
     const GwyCDLineParam *par;
@@ -463,7 +463,7 @@ gwy_cdline_get_param_name(const GwyCDLine* cdline,
  * Returns: The default parameter value.
  **/
 gdouble
-gwy_cdline_get_param_default(const GwyCDLine* cdline,
+gwy_cdline_get_param_default(GwyCDLine* cdline,
                                         gint param)
 {
     const GwyCDLineParam *par;
@@ -483,7 +483,7 @@ gwy_cdline_get_param_default(const GwyCDLine* cdline,
  * Returns: The number of function parameters.
  **/
 gint
-gwy_cdline_get_nparams(const GwyCDLine* cdline)
+gwy_cdline_get_nparams(GwyCDLine* cdline)
 {
     return cdline->builtin->nparams;
 }
@@ -505,7 +505,7 @@ gwy_cdline_get_nparams(const GwyCDLine* cdline)
  * Returns:
  **/
 void
-gwy_cdline_fit(const GwyCDLine* cdline,
+gwy_cdline_fit(GwyCDLine* cdline,
                       gint n_dat, const gdouble *x, const gdouble *y,
                       G_GNUC_UNUSED gint n_param,
                       gdouble *param, gdouble *err,
@@ -528,7 +528,7 @@ gwy_cdline_class_init(GwyCDLineClass *klass)
 
     res_class->item_type.type = G_TYPE_FROM_CLASS(klass);
 
-    res_class->name = "cdlinecdlines";
+    res_class->name = "cdlines";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     gwy_inventory_forget_order(res_class->inventory);
 }
@@ -552,7 +552,7 @@ gwy_cdline_new_static(const GwyCDLineBuiltin *data)
 }
 
 void
-_gwy_cdline_class_setups(void)
+_gwy_cdline_class_setup(void)
 {
     GwyResourceClass *klass;
     GwyCDLine *cdline;
@@ -587,6 +587,15 @@ gwy_cdlines(void)
 {
     return
         GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_CDLINE))->inventory;
+}
+
+
+gdouble         
+gwy_cdline_get_value(GwyCDLine *preset, gdouble x,
+                     const gdouble *params, gboolean *fres)
+{
+    return preset->builtin->function(x, preset->builtin->nparams, params,
+                                                                          NULL, fres);
 }
 
 
