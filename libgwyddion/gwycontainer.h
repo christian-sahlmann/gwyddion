@@ -76,6 +76,11 @@ guint         gwy_container_remove_by_prefix      (GwyContainer *container,
                                                    const gchar *prefix);
 GwyContainer* gwy_container_duplicate_by_prefix   (GwyContainer *container,
                                                    ...);
+gint          gwy_container_transfer              (GwyContainer *source,
+                                                   GwyContainer *dest,
+                                                   const gchar *source_prefix,
+                                                   const gchar *dest_prefix,
+                                                   gboolean force);
 gboolean      gwy_container_rename                (GwyContainer *container,
                                                    GQuark key,
                                                    GQuark newkey,

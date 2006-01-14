@@ -119,6 +119,9 @@ static GwyContainer*
 static void     hash_prefix_duplicate_func       (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
+static void     hash_find_keys_func              (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
 
 static int      pstring_compare_callback         (const void *p,
                                                   const void *q);
@@ -359,8 +362,8 @@ gwy_container_remove_by_prefix(GwyContainer *container, const gchar *prefix)
     pfdata.count = 0;
     pfdata.keylist = NULL;
     pfdata.closed_prefix = !pfdata.prefix_length
-                           || prefix[pfdata.prefix_length - 1]
-                              == GWY_CONTAINER_PATHSEP;
+                           || (prefix[pfdata.prefix_length - 1]
+                               == GWY_CONTAINER_PATHSEP);
     g_hash_table_foreach_remove(container->values, hash_remove_prefix_func,
                                 &pfdata);
     pfdata.keylist = g_slist_reverse(pfdata.keylist);
@@ -424,8 +427,8 @@ gwy_container_foreach(GwyContainer *container,
     pfdata.prefix = prefix;
     pfdata.prefix_length = prefix ? strlen(pfdata.prefix) : 0;
     pfdata.closed_prefix = !pfdata.prefix_length
-                           || prefix[pfdata.prefix_length - 1]
-                              == GWY_CONTAINER_PATHSEP;
+                           || (prefix[pfdata.prefix_length - 1]
+                               == GWY_CONTAINER_PATHSEP);
     pfdata.count = 0;
     pfdata.keylist = NULL;
     pfdata.func = function;
@@ -1929,6 +1932,9 @@ hash_duplicate_func(gpointer hkey, gpointer hvalue, gpointer hdata)
  *
  * Duplicates a container keeping only values under given prefixes.
  *
+ * Like gwy_container_duplicate(), this method creates a deep copy, that is
+ * contained object are physically duplicated too, not just referenced again.
+ *
  * Returns: A newly created container.
  **/
 GwyContainer*
@@ -2129,6 +2135,119 @@ hash_text_serialize_func(gpointer hkey, gpointer hvalue, gpointer hdata)
     if (v)
         g_ptr_array_add(pa, v);
     g_free(k);
+}
+
+/**
+ * gwy_container_transfer:
+ * @source: Source container.
+ * @dest: Destination container. It may be the same container as @source, but
+ *        @source_prefix and @dest_prefix may not overlap then.
+ * @source_prefix: Prefix in @source to take values from.
+ * @dest_prefix: Prefix in @dest to put values to.
+ * @force: %TRUE to replace existing values in @dest.
+ *
+ * Copies a items from one place in container to another place.
+ *
+ * The copies are shallow, objects are not physically duplicated, only
+ * referenced in @dest.
+ *
+ * Returns: The number of actually transferred items.
+ **/
+gint
+gwy_container_transfer(GwyContainer *source,
+                       GwyContainer *dest,
+                       const gchar *source_prefix,
+                       const gchar *dest_prefix,
+                       gboolean force)
+{
+    PrefixData pfdata;
+    GValue *val, *copy;
+    GString *key;
+    GQuark quark;
+    guint dpflen;
+    GSList *l;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(source), 0);
+    g_return_val_if_fail(GWY_IS_CONTAINER(dest), 0);
+    g_return_val_if_fail(source_prefix, 0);
+    g_return_val_if_fail(dest_prefix, 0);
+    if (source == dest) {
+        if (gwy_strequal(source_prefix, dest_prefix))
+            return 0;
+
+        g_return_val_if_fail(!g_str_has_prefix(source_prefix, dest_prefix), 0);
+        g_return_val_if_fail(!g_str_has_prefix(dest_prefix, source_prefix), 0);
+    }
+
+    pfdata.container = source;
+    pfdata.prefix = source_prefix;
+    pfdata.prefix_length = strlen(pfdata.prefix);
+    pfdata.count = 0;
+    pfdata.keylist = NULL;
+    pfdata.closed_prefix = !pfdata.prefix_length
+                           || (source_prefix[pfdata.prefix_length - 1]
+                               == GWY_CONTAINER_PATHSEP);
+    g_hash_table_foreach(source->values, hash_find_keys_func, &pfdata);
+    if (!pfdata.keylist)
+        return 0;
+
+    pfdata.keylist = g_slist_reverse(pfdata.keylist);
+    key = g_string_new(dest_prefix);
+    dpflen = strlen(dest_prefix);
+    if (dest_prefix[dpflen - 1] == GWY_CONTAINER_PATHSEP)
+        dpflen--;
+    if (pfdata.closed_prefix)
+        pfdata.prefix_length--;
+
+    pfdata.count = 0;
+    for (l = pfdata.keylist; l; l = g_slist_next(l)) {
+        val = (GValue*)g_hash_table_lookup(source->values, l->data);
+        if (!val) {
+            g_critical("Container contents changed during "
+                       "gwy_container_transfer().");
+            break;
+        }
+        if (!force && g_hash_table_lookup(dest->values, l->data))
+            continue;
+
+        copy = g_new0(GValue, 1);
+        g_value_init(copy, G_VALUE_TYPE(val));
+        g_value_copy(val, copy);
+
+        g_string_truncate(key, dpflen);
+        g_string_append(key,
+                        g_quark_to_string(GPOINTER_TO_UINT(l->data))
+                        + pfdata.prefix_length);
+        quark = g_quark_from_string(key->str);
+        g_hash_table_insert(dest->values, GUINT_TO_POINTER(quark), copy);
+        g_signal_emit(dest, container_signals[ITEM_CHANGED], quark, quark);
+        pfdata.count++;
+    }
+    g_slist_free(pfdata.keylist);
+    g_string_free(key, TRUE);
+
+    return pfdata.count;
+}
+
+static void
+hash_find_keys_func(gpointer hkey,
+                    G_GNUC_UNUSED gpointer hvalue,
+                    gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    PrefixData *pfdata = (PrefixData*)hdata;
+    const gchar *name;
+
+    if (pfdata->prefix
+        && (!(name = g_quark_to_string(key))
+            || !g_str_has_prefix(name, pfdata->prefix)
+            || (!pfdata->closed_prefix
+                && name[pfdata->prefix_length] != GWY_CONTAINER_PATHSEP)))
+        return;
+
+    pfdata->count++;
+    pfdata->keylist = g_slist_prepend(pfdata->keylist,
+                                      GUINT_TO_POINTER(hkey));
 }
 
 static int
