@@ -44,7 +44,7 @@ enum {
 
 static GtkWidget* gwy_browser_construct_channels(DataBrowser *browser);
 
-void   gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
+static void   gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
                                    gchar *path_str,
                                    DataBrowser *browser);
 
@@ -122,23 +122,28 @@ static GtkWidget* gwy_browser_construct_channels(DataBrowser *browser)
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
 
+    GArray *chan_numbers;
     gchar *channel_title = NULL;
-    gint data_count;
-    gint i;
+    gint i, number;
 
     /* Create a list store to hold the channel data */
     store = gtk_list_store_new(N_COLUMNS, G_TYPE_BOOLEAN, G_TYPE_STRING);
     browser->channel_store = store;
 
     /* Add channels to list store */
-    data_count = gwy_browser_get_n_channels(browser->container);
-    for (i=0; i<data_count; i++) {
-        channel_title = gwy_browser_get_channel_title(browser->container, i);
+    chan_numbers = gwy_browser_get_channel_numbers(browser->container);
+    for (i=0; i<chan_numbers->len; i++) {
+        g_debug("num: %i", g_array_index(chan_numbers, gint, i));
+
+        number = g_array_index(chan_numbers, gint, i);
+        channel_title = gwy_browser_get_channel_title(browser->container,
+                                                      number);
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter, VIS_COLUMN, TRUE,
-                                         TITLE_COLUMN, channel_title, -1);
+                           TITLE_COLUMN, channel_title, -1);
         g_free(channel_title);
     }
+    g_array_free(chan_numbers, TRUE);
 
     /* Construct the GtkTreeView that will display data channels */
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
@@ -169,8 +174,8 @@ static GtkWidget* gwy_browser_construct_channels(DataBrowser *browser)
     return tree;
 }
 
-void
-gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
+static void
+gwy_browser_channel_toggled(G_GNUC_UNUSED GtkCellRendererToggle *cell_renderer,
                             gchar *path_str,
                             DataBrowser *browser)
 {
@@ -193,8 +198,6 @@ gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
     gtk_tree_path_free(path);
 }
 
-
-
 /**
  * gwy_browser_get_n_channels:
  * @data: A data container.
@@ -202,22 +205,14 @@ gwy_browser_channel_toggled(GtkCellRendererToggle *cell_renderer,
  * Used to get the number of data channels stored within the @data
  * container.
  *
- * This value should be stored under the key "/data_count". If it can't be
- * found, a count of 1 will be returned.
  *
  * Returns: the number of channels as a #gint.
  **/
 gint
 gwy_browser_get_n_channels(GwyContainer *data)
 {
-    gint data_count;
-
-    if (gwy_container_gis_int32_by_name(data,
-                                        "/data_count",
-                                        &data_count))
-        return data_count;
-    else
-        return 1;
+    /*XXX: is this needed at all?*/
+    return 0;
 }
 
 /**
@@ -268,6 +263,70 @@ gwy_browser_get_channel_key(guint channel)
 
     return channel_key;
 }
+
+static void
+gwy_browser_extract_channel_number(GQuark key,
+                                   G_GNUC_UNUSED GValue *value,
+                                   GArray *numbers)
+{
+    const gchar* str;
+    gchar **tokens;
+    gchar *delimiter;
+    gdouble d_num;
+    gint i_num;
+
+    str = g_quark_to_string(key);
+    if (g_str_has_suffix(str, "/data")) {
+        delimiter = g_strdup("/");
+        tokens = g_strsplit(str, delimiter, 3);
+        d_num = g_ascii_strtod(tokens[1], NULL);
+        i_num = (gint)d_num;
+        g_array_append_val(numbers, i_num);
+        g_free(delimiter);
+        g_strfreev(tokens);
+    }
+}
+
+static gint
+gwy_browser_sort_channels(gconstpointer a, gconstpointer b)
+{
+    gint num1, num2;
+    num1 = *(gint*)a;
+    num2 = *(gint*)b;
+
+    if (num1 < num2)
+        return -1;
+    else if (num2 < num1)
+        return 1;
+    else
+        return 0;
+}
+
+/**
+ * gwy_browser_get_channel_numbers:
+ * @data: the data container.
+ *
+ * Used to find out what the reference numbers are for all the channels stored
+ * within @data. Channels are stored under the key: "/N/data", where N
+ * represents the channel reference number. Checking the "len" member of the
+ * returned #GArray will tell you how many channels are stored within @data.
+ *
+ * Returns: a new #GArray containing the channel numbers as #gint (free the
+ * #GArray after use).
+ **/
+GArray*
+gwy_browser_get_channel_numbers(GwyContainer *data)
+{
+    GArray *numbers;
+
+    numbers = g_array_new(FALSE, TRUE, sizeof(gint));
+    gwy_container_foreach(data, "/",
+                          (GHFunc)gwy_browser_extract_channel_number,
+                          numbers);
+    g_array_sort(numbers, (GCompareFunc)gwy_browser_sort_channels);
+    return numbers;
+}
+
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

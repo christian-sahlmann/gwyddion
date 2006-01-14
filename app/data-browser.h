@@ -29,6 +29,7 @@ void    gwy_app_data_browser            (GwyContainer *data);
 gint    gwy_browser_get_n_channels      (GwyContainer *data);
 gchar*  gwy_browser_get_channel_title   (GwyContainer *data, guint channel);
 gchar*  gwy_browser_get_channel_key     (guint channel);
+GArray* gwy_browser_get_channel_numbers (GwyContainer *data);
 
 G_END_DECLS
 

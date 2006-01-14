@@ -207,8 +207,6 @@ stpfile_load(const gchar *filename,
             process_metadata(stpfile, i, container, container_key);
             g_free(container_key);
         }
-
-        gwy_container_set_int32_by_name(container, "/data_count", stpfile->n);
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
