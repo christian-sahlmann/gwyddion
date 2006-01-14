@@ -184,7 +184,7 @@ gwy_app_settings_load(const gchar *filename)
                                                        + strlen(magic_header));
     g_free(buffer);
     if (!GWY_IS_CONTAINER(new_settings)) {
-        g_object_unref(new_settings);
+        gwy_object_unref(new_settings);
         return FALSE;
     }
     gwy_app_settings_free();

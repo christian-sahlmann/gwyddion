@@ -155,6 +155,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     };
 
     GwyResourceEditorClass *klass;
+    GwyResourceClass *rklass;
     GtkTreeViewColumn *column;
     GwyInventory *inventory;
     GtkTreeModel *model;
@@ -178,6 +179,11 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     settings = gwy_app_settings_get();
     name = klass->base_resource;
     gwy_container_gis_string(settings, klass->current_key, &name);
+
+    rklass = g_type_class_ref(klass->resource_type);
+    /* TODO: handle errors */
+    gwy_resource_class_mkdir(rklass);
+    g_type_class_unref(rklass);
 
     /* Window setup */
     gtk_window_set_resizable(GTK_WINDOW(editor), TRUE);
