@@ -109,6 +109,7 @@ gwy_table_attach_row(GtkWidget *table,
                      1, 2, row, row+1, GTK_FILL, 0, 2, 2);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), middle_widget);
     g_object_set_data(G_OBJECT(middle_widget), "label", label);
+    g_object_set_data(G_OBJECT(middle_widget), "middle_widget", middle_widget);
 
     if (units) {
         label = gtk_label_new(units);
@@ -219,6 +220,9 @@ gwy_hscale_update_sq(GtkAdjustment *adj, GtkAdjustment *slave)
  *
  * Do not use with %GWY_HSCALE_CHECK, simply set state of the check button
  * in such a case.
+ *
+ * This function can be used with rows created by gwy_table_attach_spinbutton()
+ * too if the spinbutton is passed as @pivot.
  **/
 void
 gwy_table_hscale_set_sensitive(GtkObject *pivot,
