@@ -1,3 +1,24 @@
+1.99.5cvs20060113
+
+1.99.6
+Application:
+- New file selection dialogs, with embedded file type options (replacing
+  File Export and Import menus).
+- File loading/saving errors are reported in the GUI instead of being printed
+  to console.
+- Metadata is editable.
+
+Libraries:
+- libgwyddion: gwy_container_rename() actually works.
+- libgwydgets: API to focus one selection object added to vector layers.
+- libgwymodule: Save operations were split to save and export, the latter
+  does not cause file name change.
+- libgwymodule: File modules report errors via GError, have interactive/
+  /noninteractive run modes.
+
+Modules:
+- Rawfile: It is possible to switch off automatic import of uknown files as
+  raw data
 
 
 1.99.5 (2005-12-20)
