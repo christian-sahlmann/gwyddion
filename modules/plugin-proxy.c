@@ -388,11 +388,8 @@ find_plugin_executables(const gchar *dir,
     }
     gwy_debug("Scanning directory %s", dir);
     while ((filename = g_dir_read_name(gdir))) {
-        if (g_str_has_prefix(filename, ".")
-            || g_str_has_suffix(filename, "~")
-            || g_str_has_suffix(filename, ".BAK")
-            || g_str_has_suffix(filename, ".bak")) {
-            gwy_debug("Ignoring %s (bad extension)", filename);
+        if (gwy_filename_ignore(filename)) {
+            gwy_debug("Ignoring %s (ignorable file)", filename);
             continue;
         }
         pluginname = g_build_filename(dir, filename, NULL);
