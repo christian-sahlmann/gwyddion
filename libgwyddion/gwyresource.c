@@ -646,10 +646,7 @@ gwy_resource_class_load_dir(const gchar *path,
         return;
 
     while ((name = g_dir_read_name(dir))) {
-        if (name[0] == '.'
-            || g_str_has_suffix(name, "~")
-            || g_str_has_suffix(name, ".bak")
-            || g_str_has_suffix(name, ".BAK"))
+        if (gwy_filename_ignore(name))
             continue;
 
         if (gwy_inventory_get_item(klass->inventory, name)) {

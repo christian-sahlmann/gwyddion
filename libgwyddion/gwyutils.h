@@ -50,6 +50,7 @@ gchar*       gwy_find_self_dir         (const gchar *dirname);
 const gchar* gwy_get_user_dir          (void);
 const gchar* gwy_get_home_dir          (void);
 gchar*       gwy_canonicalize_path     (const gchar *path);
+gboolean     gwy_filename_ignore       (const gchar *filename_sys);
 gchar*       gwy_sgettext              (const gchar *msgid);
 gchar*       gwy_str_next_line         (gchar **buffer);
 

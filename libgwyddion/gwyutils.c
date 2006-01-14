@@ -613,6 +613,32 @@ gwy_canonicalize_path(const gchar *path)
 }
 
 /**
+ * gwy_filename_ignore:
+ * @filename_sys: File name in GLib encoding.
+ *
+ * Checks whether file should be ignored.
+ *
+ * This function checks for common file names indicating files that should
+ * be normally ignored.  Currently it means backup files (ending with ~ or
+ * .bak) and Unix hidden files (starting with a dot).
+ *
+ * Returns: %TRUE to ignore this file, %FALSE otherwise.
+ **/
+gboolean
+gwy_filename_ignore(const gchar *filename_sys)
+{
+    if (!filename_sys
+        || !*filename_sys
+        || filename_sys[0] == '.'
+        || g_str_has_suffix(filename_sys, "~")
+        || g_str_has_suffix(filename_sys, ".bak")
+        || g_str_has_suffix(filename_sys, ".BAK"))
+        return TRUE;
+
+    return FALSE;
+}
+
+/**
  * gwy_str_next_line:
  * @buffer: A character buffer containing some text.
  *
