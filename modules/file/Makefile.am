@@ -38,8 +38,7 @@ file_LTLIBRARIES = \
 
 noinst_HEADERS = \
 	err.h \
-	get.h \
-	stmprg.h
+	get.h
 
 EXTRA_DIST = \
 	makefile.msc \
@@ -113,7 +112,7 @@ nt_mdt_la_LIBADD = $(module_libadd)
 #pixmap_la_SOURCES = pixmap.c
 #pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
-rawfile_la_SOURCES = rawfile.c
+rawfile_la_SOURCES = rawfile.c rawfileresets.h
 rawfile_la_LIBADD = $(module_libadd)
 
 rhk_sm3_la_SOURCES = rhk-sm3.c
@@ -131,7 +130,7 @@ sdfile_la_LIBADD = $(module_libadd)
 spmlab_la_SOURCES = spmlab.c
 spmlab_la_LIBADD = $(module_libadd)
 
-stmprg_la_SOURCES = stmprg.c
+stmprg_la_SOURCES = stmprg.c stmprg.h
 stmprg_la_LIBADD = $(module_libadd)
 
 stpfile_la_SOURCES = stpfile.c

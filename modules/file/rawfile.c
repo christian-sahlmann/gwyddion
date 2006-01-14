@@ -17,19 +17,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 
+#include <glib/gstdio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <errno.h>
-
-/* define GENRTABLE and compile as a standalone program to get a RTABLE
- * generator */
-#ifndef GENRTABLE
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -46,26 +43,9 @@
 #include <app/settings.h>
 
 #include "err.h"
+#include "rawfilepreset.h"
 
-/* Predefined common binary formats */
-typedef enum {
-    RAW_NONE = 0,
-    RAW_SIGNED_BYTE,
-    RAW_UNSIGNED_BYTE,
-    RAW_SIGNED_WORD16,
-    RAW_UNSIGNED_WORD16,
-    RAW_SIGNED_WORD32,
-    RAW_UNSIGNED_WORD32,
-    RAW_IEEE_FLOAT,
-    RAW_IEEE_DOUBLE,
-    RAW_LAST
-} RawFileBuiltin;
-
-/* Text or binary data? */
-typedef enum {
-    RAW_BINARY,
-    RAW_TEXT
-} RawFileFormat;
+#define EPS 1e-6
 
 /* Special-cased text data delimiters */
 enum {
@@ -94,47 +74,12 @@ enum {
 typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
 
 typedef struct {
-    gchar *presetname;
-
-    RawFileFormat format;  /* binary, text */
-
-    /* Information, common */
-    guint32 xres;
-    guint32 yres;
-    gboolean xyreseq;
-    gdouble xreal;
-    gdouble yreal;
-    gboolean xymeasureeq;
-    gint xyexponent;
-    gdouble zscale;
-    gint zexponent;
-    gchar *xyunit;
-    gchar *zunit;
-
-    /* Binary */
-    RawFileBuiltin builtin;
-    guint32 offset;  /* offset from file start, in bytes */
-    guint32 size;  /* data sample size (auto if builtin) */
-    guint32 skip;  /* skip after each sample (multiple of 8 if builtin) */
-    guint32 rowskip;  /* extra skip after each sample row (multiple of 8 if
-                         builtin) */
-    gboolean sign;  /* take the number as signed? (unused if not integer) */
-    gboolean revsample;  /* reverse bit order in samples? */
-    gboolean revbyte;  /* reverse bit order in bytes as we read them? */
-    guint32 byteswap;  /* swap bytes (relative to HOST order), bit set means
-                          swap blocks of this size (only for builtin) */
-
-    /* Text */
-    guint32 lineoffset;  /* start reading from this line (ASCII) */
-    guchar *delimiter;  /* field delimiter (ASCII) */
-    guint32 skipfields;  /* skip this number of fields at line start (ASCII) */
-    gboolean decomma;  /* decimal separator is comma */
-} RawFilePreset;
-
-/* note: size, skip, and rowskip are in bits */
-typedef struct {
     gboolean takeover;
-    RawFilePreset p;
+    GString *preset;
+    /* FIXME */
+    gboolean xyreseq;
+    gboolean xymeasureeq;
+    GwyRawFilePresetData p;
 } RawFileArgs;
 
 typedef struct {
@@ -224,12 +169,6 @@ static void          preset_delete_cb              (RawFileControls *controls);
 static gboolean      preset_validate_name          (RawFileControls *controls,
                                                     const gchar *name,
                                                     gboolean show_warning);
-static gboolean      preset_find_by_name           (GtkTreeModel *store,
-                                                    const gchar *preset_name,
-                                                    GtkTreeIter *iter);
-static gint          preset_compare_func           (GtkTreeModel *store,
-                                                    GtkTreeIter *itera,
-                                                    GtkTreeIter *iterb);
 static void          update_dialog_controls        (RawFileControls *controls);
 static void          update_dialog_values          (RawFileControls *controls);
 static GtkWidget*    table_attach_heading          (GtkWidget *table,
@@ -250,16 +189,10 @@ static gdouble       gwy_comma_strtod              (const gchar *nptr,
 static void          rawfile_sanitize_args         (RawFileArgs *args);
 static void          rawfile_load_args             (GwyContainer *settings,
                                                     RawFileArgs *args);
-static void          rawfile_load_preset           (GwyContainer *settings,
-                                                    const gchar *presetname,
-                                                    RawFileArgs *args);
 static void          rawfile_save_args             (GwyContainer *settings,
-                                                    RawFileArgs *args);
-static void          rawfile_save_preset           (GwyContainer *settings,
-                                                    const gchar *presetname,
-                                                    RawFileArgs *args);
-static void          rawfile_save_list_of_presets  (GtkTreeModel *store);
+                                                    const RawFileArgs *args);
 static guint         rawfile_compute_required_size (RawFileArgs *args);
+static void          rawfile_import_1x_presets     (GwyContainer *settings);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -268,14 +201,9 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
-};
-
-/* sizes of RawFile built-in types */
-static const guint BUILTIN_SIZE[] = {
-    0, 8, 8, 16, 16, 32, 32, 32, 64,
 };
 
 /* precomputed bitmask up to 32 bits */
@@ -290,112 +218,6 @@ static const guint32 BITMASK[] = {
     0x1fffffffUL, 0x3fffffffUL, 0x7fffffffUL, 0xffffffffUL,
 };
 
-/* precomputed reverted bitorders up to 8 bits */
-static const guint32 RTABLE_0[] = {
-    0x0,
-};
-
-static const guint32 RTABLE_1[] = {
-    0x0, 0x1,
-};
-
-static const guint32 RTABLE_2[] = {
-    0x0, 0x2, 0x1, 0x3,
-};
-
-static const guint32 RTABLE_3[] = {
-    0x0, 0x4, 0x2, 0x6, 0x1, 0x5, 0x3, 0x7,
-};
-
-static const guint32 RTABLE_4[] = {
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf,
-};
-
-static const guint32 RTABLE_5[] = {
-    0x00, 0x10, 0x08, 0x18, 0x04, 0x14, 0x0c, 0x1c,
-    0x02, 0x12, 0x0a, 0x1a, 0x06, 0x16, 0x0e, 0x1e,
-    0x01, 0x11, 0x09, 0x19, 0x05, 0x15, 0x0d, 0x1d,
-    0x03, 0x13, 0x0b, 0x1b, 0x07, 0x17, 0x0f, 0x1f,
-};
-
-static const guint32 RTABLE_6[] = {
-    0x00, 0x20, 0x10, 0x30, 0x08, 0x28, 0x18, 0x38,
-    0x04, 0x24, 0x14, 0x34, 0x0c, 0x2c, 0x1c, 0x3c,
-    0x02, 0x22, 0x12, 0x32, 0x0a, 0x2a, 0x1a, 0x3a,
-    0x06, 0x26, 0x16, 0x36, 0x0e, 0x2e, 0x1e, 0x3e,
-    0x01, 0x21, 0x11, 0x31, 0x09, 0x29, 0x19, 0x39,
-    0x05, 0x25, 0x15, 0x35, 0x0d, 0x2d, 0x1d, 0x3d,
-    0x03, 0x23, 0x13, 0x33, 0x0b, 0x2b, 0x1b, 0x3b,
-    0x07, 0x27, 0x17, 0x37, 0x0f, 0x2f, 0x1f, 0x3f,
-};
-
-static const guint32 RTABLE_7[] = {
-    0x00, 0x40, 0x20, 0x60, 0x10, 0x50, 0x30, 0x70,
-    0x08, 0x48, 0x28, 0x68, 0x18, 0x58, 0x38, 0x78,
-    0x04, 0x44, 0x24, 0x64, 0x14, 0x54, 0x34, 0x74,
-    0x0c, 0x4c, 0x2c, 0x6c, 0x1c, 0x5c, 0x3c, 0x7c,
-    0x02, 0x42, 0x22, 0x62, 0x12, 0x52, 0x32, 0x72,
-    0x0a, 0x4a, 0x2a, 0x6a, 0x1a, 0x5a, 0x3a, 0x7a,
-    0x06, 0x46, 0x26, 0x66, 0x16, 0x56, 0x36, 0x76,
-    0x0e, 0x4e, 0x2e, 0x6e, 0x1e, 0x5e, 0x3e, 0x7e,
-    0x01, 0x41, 0x21, 0x61, 0x11, 0x51, 0x31, 0x71,
-    0x09, 0x49, 0x29, 0x69, 0x19, 0x59, 0x39, 0x79,
-    0x05, 0x45, 0x25, 0x65, 0x15, 0x55, 0x35, 0x75,
-    0x0d, 0x4d, 0x2d, 0x6d, 0x1d, 0x5d, 0x3d, 0x7d,
-    0x03, 0x43, 0x23, 0x63, 0x13, 0x53, 0x33, 0x73,
-    0x0b, 0x4b, 0x2b, 0x6b, 0x1b, 0x5b, 0x3b, 0x7b,
-    0x07, 0x47, 0x27, 0x67, 0x17, 0x57, 0x37, 0x77,
-    0x0f, 0x4f, 0x2f, 0x6f, 0x1f, 0x5f, 0x3f, 0x7f,
-};
-
-static const guint32 RTABLE_8[] = {
-    0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
-    0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
-    0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
-    0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
-    0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4,
-    0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
-    0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec,
-    0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
-    0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2,
-    0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
-    0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea,
-    0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
-    0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6,
-    0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
-    0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee,
-    0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
-    0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1,
-    0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
-    0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9,
-    0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
-    0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5,
-    0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
-    0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed,
-    0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
-    0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3,
-    0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
-    0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb,
-    0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
-    0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7,
-    0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
-    0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
-    0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
-};
-
-static const guint32 *const RTABLE[] = {
-    RTABLE_0,
-    RTABLE_1,
-    RTABLE_2,
-    RTABLE_3,
-    RTABLE_4,
-    RTABLE_5,
-    RTABLE_6,
-    RTABLE_7,
-    RTABLE_8,
-};
-
 static const GwyEnum builtin_menu[] = {
     { N_("User-specified"),       RAW_NONE            },
     { N_("Signed byte"),          RAW_SIGNED_BYTE     },
@@ -408,22 +230,37 @@ static const GwyEnum builtin_menu[] = {
     { N_("IEEE double"),          RAW_IEEE_DOUBLE     },
 };
 
-static const RawFileArgs rawfile_defaults = {
-    FALSE,                          /* takeover */
-    {
-        NULL,                           /* preset name */
-        RAW_BINARY,                     /* format */
-        500, 500, TRUE,                 /* xres, yres */
-        100.0, 100.0, TRUE, -6,         /* physical dimensions */
-        1.0, -6,                        /* z-scale */
-        NULL, NULL,                     /* units */
-        RAW_UNSIGNED_BYTE, 0, 8, 0, 0,  /* binary parameters */
-        FALSE, FALSE, FALSE, 0,         /* binary options */
-        0, NULL, 0, FALSE,              /* text parameters */
-    }
-};
+static const gboolean takeover_default    = FALSE;
+static const gboolean xyreseq_default     = TRUE;
+static const gboolean xymeasureeq_default = TRUE;
 
-static const gchar *takeover_key = "/module/rawfile/takeover";
+static const gchar *builtin_key     = "/module/rawfile/builtin";
+static const gchar *byteswap_key    = "/module/rawfile/byteswap";
+static const gchar *decomma_key     = "/module/rawfile/decomma";
+static const gchar *delimiter_key   = "/module/rawfile/delimiter";
+static const gchar *format_key      = "/module/rawfile/format";
+static const gchar *lineoffset_key  = "/module/rawfile/lineoffset";
+static const gchar *offset_key      = "/module/rawfile/offset";
+static const gchar *preset_key      = "/module/rawfile/preset";
+static const gchar *revbyte_key     = "/module/rawfile/revbyte";
+static const gchar *revsample_key   = "/module/rawfile/revsample";
+static const gchar *rowskip_key     = "/module/rawfile/rowskip";
+static const gchar *sign_key        = "/module/rawfile/sign";
+static const gchar *size_key        = "/module/rawfile/size";
+static const gchar *skip_key        = "/module/rawfile/skip";
+static const gchar *skipfields_key  = "/module/rawfile/skipfields";
+static const gchar *takeover_key    = "/module/rawfile/takeover";
+static const gchar *xreal_key       = "/module/rawfile/xreal";
+static const gchar *xres_key        = "/module/rawfile/xres";
+static const gchar *xyexponent_key  = "/module/rawfile/xyexponent";
+static const gchar *xymeasureeq_key = "/module/rawfile/xymeasureeq";
+static const gchar *xyreseq_key     = "/module/rawfile/xyreseq";
+static const gchar *xyunit_key      = "/module/rawfile/xyunit";
+static const gchar *yreal_key       = "/module/rawfile/yreal";
+static const gchar *yres_key        = "/module/rawfile/yres";
+static const gchar *zexponent_key   = "/module/rawfile/zexponent";
+static const gchar *zscale_key      = "/module/rawfile/zscale";
+static const gchar *zunit_key       = "/module/rawfile/zunit";
 
 /* for read_ascii_data() error reporting */
 static GQuark error_domain = 0;
@@ -443,7 +280,16 @@ module_register(const gchar *name)
         NULL,
         NULL
     };
+    static gint types_initialized = 0;
 
+    if (!types_initialized) {
+        GwyResourceClass *klass;
+
+        types_initialized += gwy_raw_file_preset_get_type();
+        klass = g_type_class_ref(GWY_TYPE_RAW_FILE_PRESET);
+        gwy_resource_class_load(klass);
+        g_type_class_unref(klass);
+    }
     gwy_file_func_register(name, &rawfile_func_info);
 
     return TRUE;
@@ -453,7 +299,7 @@ static gint
 rawfile_detect(void)
 {
     GwyContainer *settings;
-    gboolean takeover = rawfile_defaults.takeover;
+    gboolean takeover = takeover_default;
 
     settings = gwy_app_settings_get();
     gwy_container_gis_boolean_by_name(settings, takeover_key, &takeover);
@@ -469,7 +315,7 @@ rawfile_load(const gchar *filename,
              GwyRunType mode,
              GError **error)
 {
-    RawFileArgs *args;
+    RawFileArgs args;
     RawFileFile file;
     GwyContainer *settings, *data;
     GwyDataField *dfield;
@@ -483,10 +329,9 @@ rawfile_load(const gchar *filename,
         return FALSE;
     }
 
-    args = g_new0(RawFileArgs, 1);
     settings = gwy_app_settings_get();
-    /*gwy_container_remove_by_prefix(settings, "/module/rawfile/presets");*/
-    rawfile_load_args(settings, args);
+    rawfile_import_1x_presets(settings);
+    rawfile_load_args(settings, &args);
     file.buffer = NULL;
     if (!g_file_get_contents(filename, (gchar**)&file.buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -495,7 +340,7 @@ rawfile_load(const gchar *filename,
     data = NULL;
     file.filename = filename;
     file.filesize = size;
-    if ((dfield = rawfile_dialog(args, &file))) {
+    if ((dfield = rawfile_dialog(&args, &file))) {
         data = gwy_container_new();
         gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
@@ -504,13 +349,12 @@ rawfile_load(const gchar *filename,
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_CANCELLED,
                     _("Import cancelled by user."));
-    rawfile_save_args(settings, args);
+    rawfile_save_args(settings, &args);
     g_free(file.buffer);
-    g_free(args->p.delimiter);
-    g_free(args->p.presetname);
-    g_free(args->p.xyunit);
-    g_free(args->p.zunit);
-    g_free(args);
+    g_string_free(args.preset, TRUE);
+    g_free(args.p.delimiter);
+    g_free(args.p.xyunit);
+    g_free(args.p.zunit);
 
     return data;
 }
@@ -607,8 +451,6 @@ rawfile_dialog(RawFileArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            rawfile_save_list_of_presets
-                (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
             gtk_widget_destroy(dialog);
             gwy_resource_release(GWY_RESOURCE(controls.gradient));
             case GTK_RESPONSE_NONE:
@@ -622,20 +464,8 @@ rawfile_dialog(RawFileArgs *args,
             break;
 
             case RESPONSE_RESET:
-            {
-                const gchar *filename = file->filename;
-                guint filesize = file->filesize;
-
-                /* free delimiter and presetname */
-                g_free(args->p.delimiter);
-                g_free(args->p.presetname);
-                g_free(args->p.xyunit);
-                g_free(args->p.zunit);
-                *args = rawfile_defaults;
-                file->filename = filename;
-                file->filesize = filesize;
-                rawfile_sanitize_args(args);
-            }
+            gwy_raw_file_preset_data_copy(&rawfilepresetdata_default, &args->p);
+            /* TODO: Set xyeq, preset name */
             break;
 
             default:
@@ -644,8 +474,6 @@ rawfile_dialog(RawFileArgs *args,
         }
         update_dialog_controls(&controls);
     } while (response != GTK_RESPONSE_OK);
-    rawfile_save_list_of_presets
-        (gtk_tree_view_get_model(GTK_TREE_VIEW(controls.presetlist)));
     gwy_resource_release(GWY_RESOURCE(controls.gradient));
     gtk_widget_destroy(dialog);
 
@@ -834,8 +662,8 @@ rawfile_dialog_format_page(RawFileArgs *args,
                            RawFileControls *controls)
 {
     static const GwyEnum formats[] = {
-        { N_("_Text data"),   RAW_TEXT },
-        { N_("_Binary data"), RAW_BINARY },
+        { N_("_Text data"),   RAW_TEXT,   },
+        { N_("_Binary data"), RAW_BINARY, },
     };
     static const GwyEnum delimiter_menu[] = {
         { N_("Any whitespace"),       RAW_DELIM_ANY_WHITESPACE  },
@@ -990,63 +818,42 @@ rawfile_preset_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
                              GtkTreeIter *piter,
                              gpointer data)
 {
-    static const gchar *prefix = "/module/rawfile/preset/";
-    GwyContainer *settings;
+    GwyRawFilePreset *preset;
     gulong id;
-    gchar *name, *s;
     const gchar *delim;
-    guint xres, yres;
-    RawFileFormat format;
+    gchar *s;
 
     id = GPOINTER_TO_UINT(data);
     g_assert(id < RAW_PRESET_LAST);
-    gtk_tree_model_get(model, piter, RAW_PRESET_NAME, &name, -1);
-    settings = gwy_app_settings_get();
+    gtk_tree_model_get(model, piter, 0, &preset, -1);
     switch (id) {
         case RAW_PRESET_NAME:
-        g_object_set(cell, "text", name, NULL);
-        break;
-
-        case RAW_PRESET_TYPE:
-        s = g_strconcat(prefix, name, "/format", NULL);
-        format = gwy_container_get_int32_by_name(settings, s);
-        g_free(s);
-        g_object_set(cell, "text",
-                     format == RAW_BINARY ? _("Binary") : _("Text"),
+        g_object_set(cell, "text", gwy_resource_get_name(GWY_RESOURCE(preset)),
                      NULL);
         break;
 
+        case RAW_PRESET_TYPE:
+        s = preset->data.format == RAW_BINARY ? _("Binary") : _("Text"),
+        g_object_set(cell, "text", s, NULL);
+        break;
+
         case RAW_PRESET_SIZE:
-        s = g_strconcat(prefix, name, "/xres", NULL);
-        xres = gwy_container_get_int32_by_name(settings, s);
-        g_free(s);
-        s = g_strconcat(prefix, name, "/yres", NULL);
-        yres = gwy_container_get_int32_by_name(settings, s);
-        g_free(s);
-        s = g_strdup_printf("%u×%u", xres, yres);
+        s = g_strdup_printf("%u×%u", preset->data.xres, preset->data.yres);
         g_object_set(cell, "text", s, NULL);
         g_free(s);
         break;
 
         case RAW_PRESET_INFO:
-        s = g_strconcat(prefix, name, "/format", NULL);
-        format = gwy_container_get_int32_by_name(settings, s);
-        g_free(s);
-        switch (format) {
+        switch (preset->data.format) {
             case RAW_BINARY:
-            s = g_strconcat(prefix, name, "/builtin", NULL);
-            format = gwy_container_get_int32_by_name(settings, s);
-            g_free(s);
             g_object_set(cell, "text",
-                         gwy_enum_to_string(format, builtin_menu,
+                         gwy_enum_to_string(preset->data.builtin, builtin_menu,
                                             G_N_ELEMENTS(builtin_menu)),
                          NULL);
             break;
 
             case RAW_TEXT:
-            s = g_strconcat(prefix, name, "/delimiter", NULL);
-            delim = gwy_container_get_string_by_name(settings, s);
-            g_free(s);
+            delim = preset->data.delimiter;
             if (!delim || !*delim)
                 g_object_set(cell, "text", _("Delimiter: whitespace"), NULL);
             else {
@@ -1081,13 +888,12 @@ rawfile_dialog_preset_page(RawFileArgs *args,
         { N_("Size"), RAW_PRESET_SIZE },
         { N_("Info"), RAW_PRESET_INFO },
     };
-    GtkListStore *store;
+    GwyInventoryStore *store;
     GtkTreeSelection *tselect;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     GtkTreeIter iter;
     GtkWidget *vbox, *label, *table, *button, *scroll, *bbox;
-    const guchar *presets;
     guint i, row;
 
     row = 0;
@@ -1098,28 +904,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
-    store = gtk_list_store_new(1, G_TYPE_STRING);
-    if (gwy_container_gis_string_by_name(gwy_app_settings_get(),
-                                         "/module/rawfile/presets",
-                                         &presets)) {
-        gchar **s;
-
-        s = g_strsplit(presets, "\n", 0);
-        for (i = 0; s[i]; i++) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, RAW_PRESET_NAME, s[i], -1);
-        }
-        g_strfreev(s);
-    }
-    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
-                                    RAW_PRESET_NAME,
-                                    (GtkTreeIterCompareFunc)preset_compare_func,
-                                    NULL,  /* user data */
-                                    NULL);  /* destroy notify */
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
-                                         RAW_PRESET_NAME,
-                                         GTK_SORT_ASCENDING);
-
+    store = gwy_inventory_store_new(gwy_raw_file_presets());
     controls->presetlist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(controls->presetlist), TRUE);
     g_object_unref(store);
@@ -1140,7 +925,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     }
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
-    if (preset_find_by_name(GTK_TREE_MODEL(store), args->p.presetname, &iter))
+    if (gwy_inventory_store_get_iter(store, args->preset->str, &iter))
         gtk_tree_selection_select_iter(tselect, &iter);
 
     scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -1180,8 +965,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     row = 0;
 
     controls->presetname = gtk_entry_new();
-    if (args->p.presetname)
-        gtk_entry_set_text(GTK_ENTRY(controls->presetname), args->p.presetname);
+    gtk_entry_set_text(GTK_ENTRY(controls->presetname), args->preset->str);
     gwy_table_attach_row(table, row, _("Preset _name:"), "",
                          controls->presetname);
     gtk_entry_set_max_length(GTK_ENTRY(controls->presetname), 40);
@@ -1366,7 +1150,7 @@ xyres_changed_cb(GtkAdjustment *adj,
         controls->args->p.yres = (gint)(value + 0.499);
     }
 
-    if (!in_update && controls->args->p.xyreseq) {
+    if (!in_update && controls->args->xyreseq) {
         in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(radj), value);
         in_update = FALSE;
@@ -1374,7 +1158,7 @@ xyres_changed_cb(GtkAdjustment *adj,
 
     /* FIXME: this way of synchrnonization may be contrainituitive.
      * but which one *is* intuitive? */
-    if (controls->args->p.xymeasureeq)
+    if (controls->args->xymeasureeq)
         xyreal_changed_cb(gtk_spin_button_get_adjustment(
                               GTK_SPIN_BUTTON(controls->xreal)),
                           controls);
@@ -1383,9 +1167,9 @@ xyres_changed_cb(GtkAdjustment *adj,
 static void
 xyreseq_changed_cb(RawFileControls *controls)
 {
-    controls->args->p.xyreseq
+    controls->args->xyreseq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
-    if (controls->args->p.xyreseq) {
+    if (controls->args->xyreseq) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
     }
@@ -1413,7 +1197,7 @@ xyreal_changed_cb(GtkAdjustment *adj,
         value *= controls->args->p.xres/(gdouble)controls->args->p.yres;
     }
 
-    if (!in_update && controls->args->p.xymeasureeq) {
+    if (!in_update && controls->args->xymeasureeq) {
         in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(radj), value);
         in_update = FALSE;
@@ -1423,9 +1207,9 @@ xyreal_changed_cb(GtkAdjustment *adj,
 static void
 xymeasureeq_changed_cb(RawFileControls *controls)
 {
-    controls->args->p.xymeasureeq = gtk_toggle_button_get_active(
-                                      GTK_TOGGLE_BUTTON(controls->xymeasureeq));
-    if (controls->args->p.xymeasureeq) {
+    controls->args->xymeasureeq = gtk_toggle_button_get_active
+                                    (GTK_TOGGLE_BUTTON(controls->xymeasureeq));
+    if (controls->args->xymeasureeq) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
     }
@@ -1475,10 +1259,11 @@ preview_cb(RawFileControls *controls)
 static void
 preset_selected_cb(RawFileControls *controls)
 {
+    GwyRawFilePreset *preset;
     GtkTreeModel *store;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
-    gchar *name;
+    const gchar *name;
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     g_return_if_fail(tselect);
@@ -1487,120 +1272,146 @@ preset_selected_cb(RawFileControls *controls)
         return;
     }
 
-    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
+    gtk_tree_model_get(store, &iter, 0, &preset, -1);
+    name = gwy_resource_get_name(GWY_RESOURCE(preset));
     gtk_entry_set_text(GTK_ENTRY(controls->presetname), name);
+    g_string_assign(controls->args->preset, name);
 }
 
 static void
 preset_load_cb(RawFileControls *controls)
 {
+    GwyRawFilePreset *preset;
+    RawFileArgs *args;
     GtkTreeModel *store;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
-    gchar *name;
+    gdouble expected_yreal;
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
-    g_return_if_fail(tselect);
     if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
         return;
 
-    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
-    gwy_debug("Now I'm loading `%s'", name);
-    rawfile_load_preset(gwy_app_settings_get(), name, controls->args);
+    gtk_tree_model_get(store, &iter, 0, &preset, -1);
+    args = controls->args;
+    gwy_raw_file_preset_data_copy(&preset->data, &args->p);
+    args->xyreseq = (args->p.xres == args->p.yres);
+    expected_yreal = args->p.xreal/args->p.xres*args->p.yres;
+    args->xymeasureeq = (fabs(log(expected_yreal/args->p.yreal)) < EPS);
     update_dialog_controls(controls);
 }
 
 static void
 preset_store_cb(RawFileControls *controls)
 {
-    GtkTreeModel *store;
+    GwyRawFilePreset *preset;
+    GtkTreeModel *model;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
     const gchar *name;
+    gchar *filename;
+    GString *str;
+    FILE *fh;
 
-    store = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
+    update_dialog_values(controls);
     name = gtk_entry_get_text(GTK_ENTRY(controls->presetname));
     if (!preset_validate_name(controls, name, TRUE))
         return;
-    update_dialog_values(controls);
     gwy_debug("Now I'm saving `%s'", name);
-    rawfile_save_preset(gwy_app_settings_get(), name, controls->args);
-    if (!preset_find_by_name(store, name, &iter)) {
+    preset = gwy_inventory_get_item(gwy_raw_file_presets(), name);
+    if (!preset) {
         gwy_debug("Appending `%s'", name);
-        gtk_list_store_append(GTK_LIST_STORE(store), &iter);
+        preset = gwy_raw_file_preset_new(name, &controls->args->p, FALSE);
+        gwy_inventory_insert_item(gwy_raw_file_presets(), preset);
+        g_object_unref(preset);
     }
-    gwy_debug("Setting `%s'", name);
-    gtk_list_store_set(GTK_LIST_STORE(store), &iter, RAW_PRESET_NAME, name, -1);
-    gwy_debug("Done saving `%s'", name);
+    else {
+        gwy_debug("Setting `%s'", name);
+        gwy_raw_file_preset_data_copy(&controls->args->p, &preset->data);
+        gwy_resource_data_changed(GWY_RESOURCE(preset));
+    }
+
+    filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_warning("Cannot save preset: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    str = gwy_resource_dump(GWY_RESOURCE(preset));
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), name, &iter);
     gtk_tree_selection_select_iter(tselect, &iter);
 }
 
 static void
 preset_rename_cb(RawFileControls *controls)
 {
-    GtkTreeModel *store;
+    GwyRawFilePreset *preset;
+    GwyInventory *inventory;
+    GtkTreeModel *model;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
-    GwyContainer *settings;
-    RawFileArgs *args;
-    gchar *name, *s;
-    const gchar *newname;
+    const gchar *newname, *oldname;
+    gchar *oldfilename, *newfilename;
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
-    g_return_if_fail(tselect);
-    if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
+    if (!gtk_tree_selection_get_selected(tselect, &model, &iter))
         return;
 
-    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
+    inventory = gwy_raw_file_presets();
+    gtk_tree_model_get(model, &iter, 0, &preset, -1);
+    oldname = gwy_resource_get_name(GWY_RESOURCE(preset));
     newname = gtk_entry_get_text(GTK_ENTRY(controls->presetname));
-    if (gwy_strequal(newname, name)
-        || !preset_validate_name(controls, newname, TRUE))
+    if (gwy_strequal(newname, oldname)
+        || !preset_validate_name(controls, newname, TRUE)
+        || gwy_inventory_get_item(inventory, newname))
         return;
 
-    gwy_debug("Now I will rename `%s' to `%s'", name, newname);
-    if (!preset_find_by_name(store, name, &iter)) {
-        g_critical("Cannot find preset `%s'", name);
-        return;
+    gwy_debug("Now I will rename `%s' to `%s'", oldname, newname);
+
+    oldfilename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    gwy_inventory_rename_item(inventory, oldname, newname);
+    newfilename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    if (g_rename(oldfilename, newfilename) != 0) {
+        g_warning("Cannot rename preset %s to %s", oldfilename, newfilename);
+        gwy_inventory_rename_item(inventory, newname, oldname);
     }
-    args = g_new0(RawFileArgs, 1);
-    settings = gwy_app_settings_get();
-    rawfile_load_preset(settings, name, args);
-    rawfile_save_preset(settings, newname, args);
-    g_free(args);
-    s = g_strconcat("/module/rawfile/presets/", name, NULL);
-    gwy_container_remove_by_prefix(settings, s);
-    g_free(s);
-    gtk_list_store_set(GTK_LIST_STORE(store), &iter,
-                       RAW_PRESET_NAME, newname, -1);
-    g_free(name);
+    g_free(oldfilename);
+    g_free(newfilename);
+
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), newname, &iter);
+    gtk_tree_selection_select_iter(tselect, &iter);
 }
 
 static void
 preset_delete_cb(RawFileControls *controls)
 {
-    GtkTreeModel *store;
+    GwyRawFilePreset *preset;
+    GtkTreeModel *model;
     GtkTreeSelection *tselect;
     GtkTreeIter iter;
-    gchar *name, *s;
+    gchar *filename;
+    const gchar *name;
 
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
-    g_return_if_fail(tselect);
-    if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
+    if (!gtk_tree_selection_get_selected(tselect, &model, &iter))
         return;
 
-    gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &name, -1);
-    gwy_debug("Now I will delete `%s'", name);
-    if (!preset_find_by_name(store, name, &iter)) {
-        g_critical("Cannot find preset `%s'", name);
-        return;
-    }
-    if (gtk_list_store_remove(GTK_LIST_STORE(store), &iter))
-        gtk_tree_selection_select_iter(tselect, &iter);
-    s = g_strconcat("/module/rawfile/presets/", name, NULL);
-    gwy_container_remove_by_prefix(gwy_app_settings_get(), s);
-    g_free(s);
-    g_free(name);
+    gtk_tree_model_get(model, &iter, 0, &preset, -1);
+    name = gwy_resource_get_name(GWY_RESOURCE(preset));
+    filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+    if (g_remove(filename))
+        g_warning("Cannot remove preset %s", filename);
+    g_free(filename);
+    gwy_inventory_delete_item(gwy_raw_file_presets(), name);
 }
 
 static gboolean
@@ -1631,41 +1442,13 @@ preset_validate_name(RawFileControls *controls,
     return FALSE;
 }
 
-static gboolean
-preset_find_by_name(GtkTreeModel *store,
-                    const gchar *preset_name,
-                    GtkTreeIter *iter)
-{
-    const gchar *name;
-
-    if (!preset_name || !gtk_tree_model_get_iter_first(store, iter))
-        return FALSE;
-
-    do {
-        gtk_tree_model_get(store, iter, RAW_PRESET_NAME, &name, -1);
-        if (gwy_strequal(name, preset_name))
-            return TRUE;
-    } while (gtk_tree_model_iter_next(store, iter));
-
-    return FALSE;
-}
-
-static gint
-preset_compare_func(GtkTreeModel *store,
-                    GtkTreeIter *itera,
-                    GtkTreeIter *iterb)
-{
-    gchar *namea, *nameb;
-
-    gtk_tree_model_get(store, itera, RAW_PRESET_NAME, &namea, -1);
-    gtk_tree_model_get(store, iterb, RAW_PRESET_NAME, &nameb, -1);
-    return strcmp(namea, nameb);
-}
-
 static void
 update_dialog_controls(RawFileControls *controls)
 {
     RawFileArgs *args;
+    GtkTreeSelection *tselect;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
     GtkAdjustment *adj;
     gchar buf[16];
     RawFileBuiltin builtin;
@@ -1678,13 +1461,13 @@ update_dialog_controls(RawFileControls *controls)
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yres));
     gtk_adjustment_set_value(adj, args->p.yres);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xyreseq),
-                                 args->p.xyreseq);
+                                 args->xyreseq);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
     gtk_adjustment_set_value(adj, args->p.xreal);
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
     gtk_adjustment_set_value(adj, args->p.yreal);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
-                                 args->p.xymeasureeq);
+                                 args->xymeasureeq);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
                                   args->p.xyexponent);
 
@@ -1695,6 +1478,8 @@ update_dialog_controls(RawFileControls *controls)
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->takeover),
                                  args->takeover);
+
+    gwy_radio_buttons_set_current(controls->format, "format", args->p.format);
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->offset));
     gtk_adjustment_set_value(adj, args->p.offset);
@@ -1734,9 +1519,12 @@ update_dialog_controls(RawFileControls *controls)
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->builtin),
                                   args->p.builtin);
-    gwy_radio_buttons_set_current(controls->format, "format", args->p.format);
 
-    /* TODO: set selected preset */
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
+    if (gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model),
+                                     args->preset->str, &iter))
+        gtk_tree_selection_select_iter(tselect, &iter);
 
     builtin = args->p.builtin;
     switch (args->p.format) {
@@ -1801,13 +1589,13 @@ update_dialog_values(RawFileControls *controls)
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->xres));
     args->p.yres
         = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(controls->yres));
-    args->p.xyreseq
+    args->xyreseq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
     args->p.xreal
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->xreal));
     args->p.yreal
         = gtk_spin_button_get_value(GTK_SPIN_BUTTON(controls->yreal));
-    args->p.xymeasureeq
+    args->xymeasureeq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq));
     args->p.xyexponent
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->xyexponent));
@@ -1878,9 +1666,6 @@ reverse_bits(guint32 x, guint n)
 {
     gulong y = 0;
 
-    if (n < G_N_ELEMENTS(RTABLE))
-        return RTABLE[n][x];
-
     while (n--) {
         y <<= 1;
         y |= x&1;
@@ -1895,15 +1680,29 @@ rawfile_read_bits(RawFileArgs *args,
                   guchar *buffer,
                   gdouble *data)
 {
+    guchar *rtable = NULL;
+    guchar *rtable8 = NULL;
     guint i, j, nb;
     guint32 b, bucket, x, rem;
 
     g_assert(args->p.size <= 24);
     g_assert(args->p.size > 1 || !args->p.sign);
 
+    if (args->p.revsample && args->p.size <= 8) {
+        rtable = g_new(guchar, 1 << args->p.size);
+        for (i = 0; i < 1 << args->p.size; i++)
+            rtable[i] = reverse_bits(i, args->p.size);
+    }
+    if (args->p.revbyte) {
+        rtable8 = g_new(guchar, 1 << 8);
+        for (i = 0; i < 1 << 8; i++)
+            rtable8[i] = reverse_bits(i, 8);
+    }
+
     buffer += args->p.offset;
     nb = 0;
     bucket = 0;
+
     for (i = args->p.yres; i; i--) {
         for (j = args->p.xres; j; j--) {
             /* gather enough bits, new bits are put to the least significant
@@ -1911,7 +1710,7 @@ rawfile_read_bits(RawFileArgs *args,
             while (nb < args->p.size) {
                 b = *(buffer++);
                 if (args->p.revbyte)
-                    b = RTABLE_8[b];
+                    b = rtable8[b];
                 bucket <<= 8;
                 bucket |= b;
                 nb += 8;
@@ -1921,8 +1720,12 @@ rawfile_read_bits(RawFileArgs *args,
             rem = nb - args->p.size;
             /* x is the data sample (in the most significat part of  bucket) */
             x = bucket >> rem;
-            if (args->p.revsample)
-                x = reverse_bits(x, args->p.size);
+            if (args->p.revsample) {
+                if (rtable)
+                    x = rtable[x];
+                else
+                    x = reverse_bits(x, args->p.size);
+            }
             /* rem bits remains in bucket */
             bucket &= BITMASK[rem];
             nb = rem;
@@ -1946,7 +1749,7 @@ rawfile_read_bits(RawFileArgs *args,
                 nb = 8 - rem;  /* so this number of bits will be in bucket */
                 b = *(buffer++);
                 if (args->p.revbyte)
-                    b = RTABLE_8[b];
+                    b = rtable8[b];
                 bucket = b & BITMASK[nb];
             }
             else {
@@ -1966,7 +1769,7 @@ rawfile_read_bits(RawFileArgs *args,
             nb = 8 - rem;  /* so this number of bits will be in bucket */
             b = *(buffer++);
             if (args->p.revbyte)
-                b = RTABLE_8[b];
+                b = rtable8[b];
             bucket = b & BITMASK[nb];
         }
         else {
@@ -1976,6 +1779,8 @@ rawfile_read_bits(RawFileArgs *args,
             bucket &= BITMASK[nb];
         }
     }
+    g_free(rtable8);
+    g_free(rtable);
 }
 
 static void
@@ -1983,6 +1788,7 @@ rawfile_read_builtin(RawFileArgs *args,
                      guchar *buffer,
                      gdouble *data)
 {
+    guchar *rtable8 = NULL;
     guint i, j, k, size, skip, rowskip;
     double good_alignment;
     guchar *b;
@@ -1991,6 +1797,12 @@ rawfile_read_builtin(RawFileArgs *args,
     g_assert(args->p.size <= 64 && args->p.size % 8 == 0);
     g_assert(args->p.skip % 8 == 0);
     g_assert(args->p.rowskip % 8 == 0);
+
+    if (args->p.revbyte) {
+        rtable8 = g_new(guchar, 1 << 8);
+        for (i = 0; i < 1 << 8; i++)
+            rtable8[i] = reverse_bits(i, 8);
+    }
 
     buffer += args->p.offset;
     size = args->p.size/8;
@@ -2005,7 +1817,7 @@ rawfile_read_builtin(RawFileArgs *args,
              * byteswap */
             if (args->p.revbyte) {
                 for (k = 0; k < size; k++)
-                    b[k ^ args->p.byteswap] = RTABLE_8[*(buffer++)];
+                    b[k ^ args->p.byteswap] = rtable8[*(buffer++)];
             }
             else {
                 for (k = 0; k < size; k++)
@@ -2053,6 +1865,7 @@ rawfile_read_builtin(RawFileArgs *args,
         }
         buffer += rowskip;
     }
+    g_free(rtable8);
 }
 
 static gboolean
@@ -2352,31 +2165,10 @@ static void
 rawfile_sanitize_args(RawFileArgs *args)
 {
     args->takeover = !!args->takeover;
-    if (!args->p.delimiter)
-        args->p.delimiter = g_strdup("");
-    if (!args->p.xyunit)
-        args->p.xyunit = g_strdup("");
-    if (!args->p.zunit)
-        args->p.zunit = g_strdup("");
-    args->p.decomma = !!args->p.decomma;
-    args->p.builtin = MIN(args->p.builtin, RAW_LAST-1);
-    if (args->p.builtin) {
-        args->p.size = BUILTIN_SIZE[args->p.builtin];
-        args->p.sign = (args->p.builtin == RAW_SIGNED_BYTE)
-                    || (args->p.builtin == RAW_SIGNED_WORD16)
-                    || (args->p.builtin == RAW_SIGNED_WORD32);
-        args->p.skip = ((args->p.skip + 7)/8)*8;
-        args->p.rowskip = ((args->p.rowskip + 7)/8)*8;
-        args->p.byteswap = MIN(args->p.byteswap, args->p.size/8-1);
-        args->p.revsample = FALSE;
-    }
-    else {
-        args->p.builtin = MIN(args->p.builtin, 24);
-        args->p.byteswap = 0;
-    }
-    if (args->p.xyreseq)
+    gwy_raw_file_preset_data_sanitize(&args->p);
+    if (args->xyreseq)
         args->p.yres = args->p.xres;
-    if (args->p.xymeasureeq)
+    if (args->xymeasureeq)
         args->p.yreal = args->p.xreal/args->p.xres*args->p.yres;
 }
 
@@ -2407,255 +2199,191 @@ rawfile_compute_required_size(RawFileArgs *args)
     return 0;
 }
 
-static gchar*
-fmtkey(GString *s,
-       const gchar *key,
-       const gchar *prefix)
-{
-    g_string_assign(s, prefix);
-    g_string_append(s, key);
-
-    return s->str;
-}
-
-#define sget(k, t) \
-    gwy_container_gis_##t##_by_name(settings, fmtkey(s, #k, prefix), &p->k)
-#define sset(k, t) \
-    gwy_container_set_##t##_by_name(settings, fmtkey(s, #k, prefix), p->k)
-
-#define sgetstr(k) \
-    gwy_container_gis_string_by_name(settings, fmtkey(s, #k, prefix), \
-                                     (const guchar**)&p->k)
-
 static void
 rawfile_load_args(GwyContainer *settings,
                   RawFileArgs *args)
 {
-    rawfile_load_preset(settings, NULL, args);
+    GwyRawFilePresetData *data = &args->p;
+    const guchar *s = NULL;
+
+    args->preset = g_string_new("");
+    args->takeover = takeover_default;
+    args->xyreseq = xyreseq_default;
+    args->xymeasureeq = xymeasureeq_default;
+    memset(&args->p, 0, sizeof(GwyRawFilePresetData));
+    gwy_raw_file_preset_data_copy(&rawfilepresetdata_default, data);
+
     gwy_container_gis_boolean_by_name(settings, takeover_key, &args->takeover);
-}
+    gwy_container_gis_string_by_name(settings, preset_key, &s);
+    if (s)
+        g_string_assign(args->preset, s);
+    gwy_container_gis_boolean_by_name(settings, xyreseq_key, &args->xyreseq);
+    gwy_container_gis_boolean_by_name(settings, xymeasureeq_key,
+                                      &args->xymeasureeq);
 
-static void
-rawfile_load_preset(GwyContainer *settings,
-                    const gchar *presetname,
-                    RawFileArgs *args)
-{
-    GString *s;
-    gchar *prefix;
-    RawFilePreset *p = &args->p;
+    gwy_container_gis_enum_by_name(settings, format_key, &data->format);
 
-    g_free(p->delimiter);
-    g_free(p->presetname);
-    g_free(p->xyunit);
-    g_free(p->zunit);
-    *args = rawfile_defaults;
+    /* Information */
+    gwy_container_gis_int32_by_name(settings, xres_key, &data->xres);
+    gwy_container_gis_int32_by_name(settings, yres_key, &data->yres);
+    gwy_container_gis_int32_by_name(settings, xyexponent_key,
+                                    &data->xyexponent);
+    gwy_container_gis_int32_by_name(settings, zexponent_key, &data->zexponent);
+    gwy_container_gis_double_by_name(settings, xreal_key, &data->xreal);
+    gwy_container_gis_double_by_name(settings, yreal_key, &data->yreal);
+    gwy_container_gis_double_by_name(settings, zscale_key, &data->zscale);
+    gwy_container_gis_string_by_name(settings, xyunit_key,
+                                     (const guchar**)&data->xyunit);
+    gwy_container_gis_string_by_name(settings, zunit_key,
+                                     (const guchar**)&data->zunit);
 
-    s = g_string_new("");
-    if (presetname)
-        prefix = g_strconcat("/module/rawfile/preset/", presetname, "/", NULL);
-    else
-        prefix = g_strdup("/module/rawfile/");
+    data->xyunit = g_strdup(data->xyunit);
+    data->zunit = g_strdup(data->zunit);
 
-    sget(format, enum);
-    sget(builtin, enum);
-    sget(offset, int32);
-    sget(size, int32);
-    sget(skip, int32);
-    sget(rowskip, int32);
-    sget(byteswap, int32);
-    sget(lineoffset, int32);
-    sget(skipfields, int32);
-    sgetstr(delimiter);
-    sget(decomma, boolean);
-    sget(sign, boolean);
-    sget(revsample, boolean);
-    sget(revbyte, boolean);
+    /* Binary */
+    gwy_container_gis_enum_by_name(settings, builtin_key, &data->builtin);
+    gwy_container_gis_int32_by_name(settings, offset_key, &data->offset);
+    gwy_container_gis_int32_by_name(settings, size_key, &data->size);
+    gwy_container_gis_int32_by_name(settings, skip_key, &data->skip);
+    gwy_container_gis_int32_by_name(settings, rowskip_key, &data->rowskip);
+    gwy_container_gis_int32_by_name(settings, byteswap_key, &data->byteswap);
+    gwy_container_gis_boolean_by_name(settings, sign_key, &data->sign);
+    gwy_container_gis_boolean_by_name(settings, revsample_key,
+                                      &data->revsample);
+    gwy_container_gis_boolean_by_name(settings, revbyte_key, &data->revbyte);
 
-    sget(xres, int32);
-    sget(yres, int32);
-    sget(xyreseq, boolean);
+    /* Text */
+    gwy_container_gis_boolean_by_name(settings, decomma_key, &data->decomma);
+    gwy_container_gis_int32_by_name(settings, lineoffset_key,
+                                    &data->lineoffset);
+    gwy_container_gis_int32_by_name(settings, skipfields_key,
+                                    &data->skipfields);
+    gwy_container_gis_string_by_name(settings, delimiter_key,
+                                    (const guchar**) &data->delimiter);
 
-    sget(xreal, double);
-    sget(yreal, double);
-    sget(xymeasureeq, boolean);
-    sget(xyexponent, int32);
-
-    sget(zscale, double);
-    sget(zexponent, int32);
-
-    g_free(prefix);
-    g_string_free(s, TRUE);
-
-    p->delimiter = g_strdup(p->delimiter);
-    p->presetname = g_strdup(p->presetname);
-    p->xyunit = g_strdup(p->xyunit);
-    p->zunit = g_strdup(p->zunit);
+    data->delimiter = g_strdup(data->delimiter);
 
     rawfile_sanitize_args(args);
 }
 
 static void
 rawfile_save_args(GwyContainer *settings,
-                  RawFileArgs *args)
+                  const RawFileArgs *args)
 {
-    rawfile_save_preset(settings, NULL, args);
+    const GwyRawFilePresetData *data = &args->p;
+
     gwy_container_set_boolean_by_name(settings, takeover_key, args->takeover);
+    gwy_container_set_boolean_by_name(settings, xyreseq_key, args->xyreseq);
+    gwy_container_set_boolean_by_name(settings, xymeasureeq_key,
+                                      args->xymeasureeq);
+    gwy_container_set_string_by_name(settings, preset_key,
+                                     g_strdup(args->preset->str));
+
+    gwy_container_set_enum_by_name(settings, format_key, data->format);
+
+    /* Information */
+    gwy_container_set_int32_by_name(settings, xres_key, data->xres);
+    gwy_container_set_int32_by_name(settings, yres_key, data->yres);
+    gwy_container_set_int32_by_name(settings, xyexponent_key, data->xyexponent);
+    gwy_container_set_int32_by_name(settings, zexponent_key, data->zexponent);
+    gwy_container_set_double_by_name(settings, xreal_key, data->xreal);
+    gwy_container_set_double_by_name(settings, yreal_key, data->yreal);
+    gwy_container_set_double_by_name(settings, zscale_key, data->zscale);
+    gwy_container_set_string_by_name(settings, xyunit_key,
+                                     g_strdup(data->xyunit));
+    gwy_container_set_string_by_name(settings, zunit_key,
+                                     g_strdup(data->zunit));
+
+    /* Binary */
+    gwy_container_set_enum_by_name(settings, builtin_key, data->builtin);
+    gwy_container_set_int32_by_name(settings, offset_key, data->offset);
+    gwy_container_set_int32_by_name(settings, size_key, data->size);
+    gwy_container_set_int32_by_name(settings, skip_key, data->skip);
+    gwy_container_set_int32_by_name(settings, rowskip_key, data->rowskip);
+    gwy_container_set_int32_by_name(settings, byteswap_key, data->byteswap);
+    gwy_container_set_boolean_by_name(settings, sign_key, data->sign);
+    gwy_container_set_boolean_by_name(settings, revsample_key, data->revsample);
+    gwy_container_set_boolean_by_name(settings, revbyte_key, data->revbyte);
+
+    /* Text */
+    gwy_container_set_boolean_by_name(settings, decomma_key, data->decomma);
+    gwy_container_set_int32_by_name(settings, lineoffset_key, data->lineoffset);
+    gwy_container_set_int32_by_name(settings, skipfields_key, data->skipfields);
+    gwy_container_set_string_by_name(settings, delimiter_key,
+                                     g_strdup(data->delimiter));
 }
 
 static void
-rawfile_save_preset(GwyContainer *settings,
-                    const gchar *presetname,
-                    RawFileArgs *args)
+rawfile_import_1x_presets(GwyContainer *settings)
 {
-    GString *s;
-    gchar *prefix;
-    RawFilePreset *p = &args->p;
-
-    rawfile_sanitize_args(args);
-    s = g_string_new("");
-    if (presetname)
-        prefix = g_strconcat("/module/rawfile/preset/", presetname, "/", NULL);
-    else
-        prefix = g_strdup("/module/rawfile/");
-
-    sset(format, int32);
-    sset(builtin, enum);
-    sset(offset, int32);
-    sset(size, int32);
-    sset(skip, int32);
-    sset(rowskip, int32);
-    sset(byteswap, int32);
-    sset(lineoffset, int32);
-    sset(skipfields, int32);
-    sset(delimiter, string);
-    sset(decomma, boolean);
-    sset(sign, boolean);
-    sset(revsample, boolean);
-    sset(revbyte, boolean);
-
-    sset(xres, int32);
-    sset(yres, int32);
-    sset(xyreseq, boolean);
-    sset(xreal, double);
-    sset(yreal, double);
-    sset(xyexponent, int32);
-    sset(xymeasureeq, boolean);
-    sset(zscale, double);
-    sset(zexponent, int32);
-
-    g_free(prefix);
-    g_string_free(s, TRUE);
-
-    p->delimiter = g_strdup(p->delimiter);
-    p->presetname = g_strdup(p->presetname);
-    p->xyunit = g_strdup(p->xyunit);
-    p->zunit = g_strdup(p->zunit);
-}
-
-static void
-rawfile_save_list_of_presets(GtkTreeModel *store)
-{
-    GtkTreeIter iter;
-    gint i, n;
-    gchar *s;
-    gchar **presets;
-
-    if (!gtk_tree_model_get_iter_first(store, &iter)) {
-        gwy_container_remove_by_name(gwy_app_settings_get(),
-                                     "/module/rawfile/presets");
-        return;
-    }
-
-    n = 0;
-    do {
-        n++;
-        gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, &s, -1);
-    } while (gtk_tree_model_iter_next(store, &iter));
-    presets = g_new0(gchar*, n+1);
-    gtk_tree_model_get_iter_first(store, &iter);
-    for (i = 0; i < n; i++) {
-        gtk_tree_model_get(store, &iter, RAW_PRESET_NAME, presets + i, -1);
-        gtk_tree_model_iter_next(store, &iter);
-    }
-    presets[n] = NULL;
-    s = g_strjoinv("\n", presets);
-    g_strfreev(presets);
-    gwy_container_set_string_by_name(gwy_app_settings_get(),
-                                     "/module/rawfile/presets", s);
-}
-
-#if 0
-static gboolean
-rawfile_xsave_preset(const RawFilePreset *preset)
-{
-    gchar *filename_sys, *filename_utf8;
+    GwyResourceClass *rklass;
+    GwyRawFilePreset *preset;
+    GwyInventory *inventory;
+    GwyContainer *container;
+    RawFileArgs args;
+    const guchar *presets = NULL;
+    GString *from, *str;
+    gchar **preset_list;
+    gchar *filename;
     FILE *fh;
+    guint i;
 
-    filename_utf8 = g_build_filename(gwy_get_user_dir(), "rawfile",
-                                     preset->p.name, NULL);
-    filename_sys = g_filename_from_utf8(filename_utf8, -1, NULL, NULL, NULL);
-    if (!filename_sys)
-        return FALSE;
+    rklass = g_type_class_ref(GWY_TYPE_RAW_FILE_PRESET);
+    gwy_resource_class_mkdir(rklass);
+    g_type_class_unref(rklass);
 
-    fh = g_fopen(filename_sys, "w");
-    if (!fh)
-        return FALSE;
+    gwy_container_gis_string_by_name(settings, "/module/rawfile/presets",
+                                     &presets);
+    if (!presets)
+        return;
 
-    /* This is not an object, but it can be someday */
-    fwrite(fh, "Gwyddion resource GwyRawFilePreset\n");
-
-    fclose(fh);
-}
-#endif
-
-#else /* not GENRTABLE */
-/************************ RTABLE generator **************************/
-/* compile as a standalone file with -DGENRTABLE */
-
-int
-main(int argc, char *argv[])
-{
-    static const char *tab = "    ";
-    unsigned long int i, j, k;
-    int s, t, m = 8, w;
-
-    if (argc > 1) {
-        m = atoi(argv[1]);
-        if (m < 0 || m > 16)
-            m = 8;
-    }
-
-    for (s = 0; s <= m; s++) {
-        w = (s + 3)/4;
-        printf("static const guint32 RTABLE_%d[] = {\n", s);
-        for (i = 0; i < (1 << s); i++) {
-            if (i % 8 == 0)
-                printf(tab);
-            t = s;
-            k = i;
-            j = 0;
-            while (t--) {
-                j <<= 1;
-                j |= k&1;
-                k >>= 1;
-            }
-            printf("0x%0*x, ", w, j);
-            if ((i + 1) % 8 == 0)
-                printf("\n");
+    inventory = gwy_raw_file_presets();
+    preset_list = g_strsplit(presets, "\n", 0);
+    from = g_string_new("");
+    for (i = 0; preset_list[i]; i++) {
+        if (gwy_inventory_get_item(inventory, preset_list[i])) {
+            g_warning("Preset `%s' already exists, cannot import from 1.x.",
+                      preset_list[i]);
+            continue;
         }
-        if (i % 8 != 0)
-            printf("\n");
-        printf("};\n\n");
+        gwy_debug("Importing `%s' from 1.x", preset_list[i]);
+        g_string_assign(from, "/module/rawfile/preset/");
+        g_string_append(from, preset_list[i]);
+
+        /* This is inefficient, but we do not care, it will be run only once. */
+        container = gwy_container_new();
+        gwy_container_transfer(settings, container,
+                               from->str, "/module/rawfile", TRUE);
+        memset(&args, 0, sizeof(RawFileArgs));
+        rawfile_load_args(container, &args);
+        preset = gwy_raw_file_preset_new(preset_list[i], &args.p, FALSE);
+        gwy_inventory_insert_item(inventory, preset);
+
+        g_object_unref(preset);
+        g_object_unref(container);
+        g_string_free(args.preset, TRUE);
+        g_free(args.p.delimiter);
+        g_free(args.p.xyunit);
+        g_free(args.p.zunit);
+
+        filename = gwy_resource_build_filename(GWY_RESOURCE(preset));
+        fh = g_fopen(filename, "w");
+        if (!fh) {
+            g_warning("Cannot save preset: %s", filename);
+            g_free(filename);
+            continue;
+        }
+
+        str = gwy_resource_dump(GWY_RESOURCE(preset));
+        fwrite(str->str, 1, str->len, fh);
+        fclose(fh);
+        g_string_free(str, TRUE);
     }
+    g_string_free(from, TRUE);
+    g_strfreev(preset_list);
 
-    printf("static const guint32 *const RTABLE[] = {\n");
-    for (s = 0; s <= m; s++)
-        printf("%sRTABLE_%d,\n", tab, s);
-    printf("};\n\n");
-
-    return 0;
+    gwy_container_remove_by_prefix(settings, "/module/rawfile/preset");
+    gwy_container_remove_by_name(settings, "/module/rawfile/presets");
 }
-
-#endif /* not GENRTABLE */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
