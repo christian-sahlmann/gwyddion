@@ -704,6 +704,36 @@ gwy_resource_build_filename(GwyResource *resource)
                             klass->name, resource->name->str, NULL);
 }
 
+/**
+ * gwy_resource_class_mkdir:
+ * @klass: A resource class.
+ *
+ * Creates directory for user resources if it does not exist.
+ *
+ * Returns: %TRUE if the directory exists or has been successfully created.
+ *          %FALSE if it doesn't exist and cannot be created, consult errno
+ *          for reason.
+ **/
+gboolean
+gwy_resource_class_mkdir(GwyResourceClass *klass)
+{
+    gchar *path;
+    gint ok;
+
+    g_return_val_if_fail(GWY_IS_RESOURCE_CLASS(klass), FALSE);
+
+    path = g_build_filename(gwy_get_user_dir(), klass->name, NULL);
+    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+        g_free(path);
+        return TRUE;
+    }
+
+    ok = !g_mkdir(path, 0700);
+    g_free(path);
+
+    return ok;
+}
+
 /************************** Documentation ****************************/
 
 /**
