@@ -486,12 +486,13 @@ gwy_app_file_save_as(void)
     GtkCellRenderer *renderer;
     GtkWidget *dialog, *types, *hbox, *label;
     GtkTreeIter iter;
-    gchar *name, *filename_sys;
+    gchar *name, *filename_sys = NULL, *filename_utf8;
     gint response;
     GwyContainer *data;
 
     data = gwy_app_get_current_data();
     g_return_if_fail(data);
+    gwy_file_get_data_info(data, NULL, &filename_sys);
 
     dialog = gtk_file_chooser_dialog_new(_("Save File"), NULL,
                                          GTK_FILE_CHOOSER_ACTION_SAVE,
@@ -503,6 +504,14 @@ gwy_app_file_save_as(void)
     /* XXX: UTF-8 conversion missing */
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
                                         gwy_app_get_current_directory());
+    if (filename_sys) {
+        filename_sys = g_path_get_basename(filename_sys);
+        filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
+        gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
+                                          filename_utf8);
+        g_free(filename_utf8);
+        g_free(filename_sys);
+    }
 
     /* TODO: This needs usability improvements */
     store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
