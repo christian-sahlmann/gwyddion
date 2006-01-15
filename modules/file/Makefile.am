@@ -112,7 +112,7 @@ nt_mdt_la_LIBADD = $(module_libadd)
 #pixmap_la_SOURCES = pixmap.c
 #pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
-rawfile_la_SOURCES = rawfile.c rawfileresets.h
+rawfile_la_SOURCES = rawfile.c rawfilepreset.h
 rawfile_la_LIBADD = $(module_libadd)
 
 rhk_sm3_la_SOURCES = rhk-sm3.c
