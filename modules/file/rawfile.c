@@ -332,7 +332,7 @@ rawfile_load(const gchar *filename,
     if (mode != GWY_RUN_INTERACTIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Rawfile must be run as interactive."));
+                    _("Raw data import must be run as interactive."));
         return FALSE;
     }
 
@@ -353,9 +353,7 @@ rawfile_load(const gchar *filename,
         g_object_unref(dfield);
     }
     else
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_CANCELLED,
-                    _("Import cancelled by user."));
+        err_CANCELLED(error);
     rawfile_save_args(settings, &args);
     g_free(file.buffer);
     g_string_free(args.preset, TRUE);

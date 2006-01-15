@@ -18,6 +18,7 @@ file_LTLIBRARIES = \
 	hitachi-afm.la \
 	nanoscope.la \
 	nt-mdt.la \
+	pixmap.la \
 	rawfile.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
@@ -32,7 +33,6 @@ file_LTLIBRARIES = \
 
 #file_LTLIBRARIES = \
 #	mifile.la \
-#	pixmap.la \
 #	$(tiff_modules)
 
 
@@ -108,9 +108,9 @@ nt_mdt_la_LIBADD = $(module_libadd)
 
 #mifile_la_SOURCES = mifile.c
 #mifile_la_LIBADD = $(module_libadd)
-#
-#pixmap_la_SOURCES = pixmap.c
-#pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
+
+pixmap_la_SOURCES = pixmap.c
+pixmap_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
 
 rawfile_la_SOURCES = rawfile.c rawfilepreset.h
 rawfile_la_LIBADD = $(module_libadd)

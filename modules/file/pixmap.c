@@ -21,6 +21,7 @@
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <string.h>
+#include <errno.h>
 #include <math.h>
 
 #include <glib/gstdio.h>
@@ -41,15 +42,17 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 
+#include "err.h"
+
 #define BITS_PER_SAMPLE 8
 
 #define TICK_LENGTH 10
 
-#define GWY_PNG_EXTENSIONS ".png"
-#define GWY_JPEG_EXTENSIONS ".jpeg,.jpg,.jpe"
-#define GWY_TIFF_EXTENSIONS ".tiff,.tif"
-#define GWY_PPM_EXTENSIONS ".ppm,.pnm"
-#define GWY_BMP_EXTENSIONS ".bmp"
+#define GWY_PNG_EXTENSIONS   ".png"
+#define GWY_JPEG_EXTENSIONS  ".jpeg,.jpg,.jpe"
+#define GWY_TIFF_EXTENSIONS  ".tiff,.tif"
+#define GWY_PPM_EXTENSIONS   ".ppm,.pnm"
+#define GWY_BMP_EXTENSIONS   ".bmp"
 #define GWY_TARGA_EXTENSIONS ".tga,.targa"
 
 #define ZOOM2LW(x) ((x) > 1 ? ((x) + 0.4) : 1)
@@ -127,6 +130,8 @@ static gint              pixmap_detect       (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name,
                                               const gchar *name);
 static GwyContainer*     pixmap_load               (const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error,
                                                     const gchar *name);
 static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     const gchar *name,
@@ -148,26 +153,40 @@ static GtkWidget*        table_attach_heading      (GtkWidget *table,
                                                     const gchar *text,
                                                     gint row);
 static GdkPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
-                                                    const gchar *format_name);
+                                                    const gchar *format_name,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static GdkPixbuf*        pixmap_real_draw_pixbuf   (GwyContainer *data,
                                                     PixmapSaveArgs *args);
 static gboolean          pixmap_save_dialog        (GwyContainer *data,
                                                     PixmapSaveArgs *args,
                                                     const gchar *name);
 static gboolean          pixmap_save_png           (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static gboolean          pixmap_save_jpeg          (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 #ifdef HAVE_TIFF
 static gboolean          pixmap_save_tiff          (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 #endif
 static gboolean          pixmap_save_ppm           (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static gboolean          pixmap_save_bmp           (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static gboolean          pixmap_save_targa         (GwyContainer *data,
-                                                    const gchar *filename);
+                                                    const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
 static GdkPixbuf*        hruler                    (gint size,
                                                     gint extra,
                                                     gdouble real,
@@ -273,7 +292,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "5.0",
+    "5.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -324,7 +343,7 @@ module_register(const gchar *name)
             if (gwy_strequal(fmtname, saveable_formats[i].name)) {
                 gwy_debug("Found GdkPixbuf loader for known type: %s", fmtname);
                 func_info->file_desc = saveable_formats[i].description;
-                func_info->save = saveable_formats[i].save;
+                func_info->export_ = saveable_formats[i].save;
                 format_info->extensions = saveable_formats[i].extensions;
                 registered[i] = TRUE;
                 break;
@@ -358,7 +377,7 @@ module_register(const gchar *name)
         func_info = g_new0(GwyFileFuncInfo, 1);
         func_info->name = saveable_formats[i].name;
         func_info->file_desc = saveable_formats[i].description;
-        func_info->save = saveable_formats[i].save;
+        func_info->export_ = saveable_formats[i].save;
         func_info->detect = &pixmap_detect;
         format_info = g_new0(PixmapFormatInfo, 1);
         format_info->func_info = func_info;
@@ -471,6 +490,8 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 pixmap_load(const gchar *filename,
+            GwyRunType mode,
+            GError **error,
             const gchar *name)
 {
     enum { buffer_length = 4096 };
@@ -478,6 +499,7 @@ pixmap_load(const gchar *filename,
     PixmapFormatInfo *format_info;
     GdkPixbufLoader *loader;
     GwyDataField *dfield;
+    GwySIUnit *siunit;
     GwyContainer *data, *settings;
     GdkPixbuf *pixbuf;
     GError *err = NULL;
@@ -492,14 +514,29 @@ pixmap_load(const gchar *filename,
 
     gwy_debug("Loading <%s> as %s", filename, name);
 
+    /* Someday we can load pixmaps with default settings */
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Pixmap image import must be run as interactive."));
+        return FALSE;
+    }
+
     format_info = find_format(name);
     g_return_val_if_fail(format_info, 0);
 
-    if (!(fh = g_fopen(filename, "rb")))
+    if (!(fh = g_fopen(filename, "rb"))) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Cannot open file for reading: %s."), g_strerror(errno));
         return NULL;
+    }
 
-    loader = gdk_pixbuf_loader_new_with_type(name, NULL);
+    loader = gdk_pixbuf_loader_new_with_type(name, &err);
     if (!loader) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cannot get pixbuf loader: %s."), err->message);
+        g_clear_error(&err);
         fclose(fh);
         return NULL;
     }
@@ -508,7 +545,9 @@ pixmap_load(const gchar *filename,
         n = fread(pixmap_buf, 1, buffer_length, fh);
         gwy_debug("loaded %u bytes", n);
         if (!gdk_pixbuf_loader_write(loader, pixmap_buf, n, &err)) {
-            g_warning("%s", err->message);
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Pixbuf loader refused data: %s."), err->message);
             g_clear_error(&err);
             g_object_unref(loader);
             return NULL;
@@ -516,7 +555,9 @@ pixmap_load(const gchar *filename,
     } while (n == buffer_length);
 
     if (!gdk_pixbuf_loader_close(loader, &err)) {
-        g_warning("%s", err->message);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Pixbuf loader refused data: %s."), err->message);
         g_clear_error(&err);
         g_object_unref(loader);
         return NULL;
@@ -572,6 +613,7 @@ pixmap_load(const gchar *filename,
     ok = pixmap_load_dialog(&args, name, width, height, maptype_known);
     pixmap_load_save_args(settings, &args);
     if (!ok) {
+        err_CANCELLED(error);
         g_object_unref(pixbuf);
         return NULL;
     }
@@ -619,7 +661,14 @@ pixmap_load(const gchar *filename,
     gwy_data_field_set_xreal(dfield, args.xreal*pow10(args.xyexponent));
     gwy_data_field_set_yreal(dfield, args.yreal*pow10(args.xyexponent));
     gwy_data_field_multiply(dfield, args.zreal*pow10(args.zexponent));
-    data = GWY_CONTAINER(gwy_container_new());
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    data = gwy_container_new();
     gwy_container_set_object_by_name(data, "/0/data", dfield);
     g_object_unref(dfield);
 
@@ -1010,19 +1059,22 @@ table_attach_heading(GtkWidget *table,
 
 static gboolean
 pixmap_save_png(GwyContainer *data,
-                const gchar *filename)
+                const gchar *filename,
+                GwyRunType mode,
+                GError **error)
 {
     GdkPixbuf *pixbuf;
     GError *err = NULL;
     gboolean ok;
 
-    pixbuf = pixmap_draw_pixbuf(data, "PNG");
+    pixbuf = pixmap_draw_pixbuf(data, "PNG", mode, error);
     if (!pixbuf)
         return FALSE;
 
     ok = gdk_pixbuf_save(pixbuf, filename, "png", &err, NULL);
     if (!ok) {
-        g_warning("PNG `%s' write failed: %s", filename, err->message);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Pixbuf save failed: %s."), err->message);
         g_clear_error(&err);
     }
     g_object_unref(pixbuf);
@@ -1032,19 +1084,22 @@ pixmap_save_png(GwyContainer *data,
 
 static gboolean
 pixmap_save_jpeg(GwyContainer *data,
-                 const gchar *filename)
+                 const gchar *filename,
+                 GwyRunType mode,
+                 GError **error)
 {
     GdkPixbuf *pixbuf;
     GError *err = NULL;
     gboolean ok;
 
-    pixbuf = pixmap_draw_pixbuf(data, "JPEG");
+    pixbuf = pixmap_draw_pixbuf(data, "JPEG", mode, error);
     if (!pixbuf)
         return FALSE;
 
     ok = gdk_pixbuf_save(pixbuf, filename, "jpeg", &err, "quality", "98", NULL);
     if (!ok) {
-        g_warning("JPEG `%s' write failed: %s", filename, err->message);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("Pixbuf save failed: %s."), err->message);
         g_clear_error(&err);
     }
     g_object_unref(pixbuf);
@@ -1055,16 +1110,19 @@ pixmap_save_jpeg(GwyContainer *data,
 #ifdef HAVE_TIFF
 static gboolean
 pixmap_save_tiff(GwyContainer *data,
-                 const gchar *filename)
+                 const gchar *filename,
+                 GwyRunType mode,
+                 GError **error)
 {
     GdkPixbuf *pixbuf;
     TIFF *out;
     guchar *pixels = NULL;
     guint rowstride, i, width, height;
-    /* TODO: error handling */
+    /* TODO: error handling (ugly, requires global variables for
+     * communication) */
     gboolean ok = TRUE;
 
-    pixbuf = pixmap_draw_pixbuf(data, "TIFF");
+    pixbuf = pixmap_draw_pixbuf(data, "TIFF", mode, error);
     if (!pixbuf)
         return FALSE;
 
@@ -1074,6 +1132,12 @@ pixmap_save_tiff(GwyContainer *data,
     height = gdk_pixbuf_get_height(pixbuf);
 
     out = TIFFOpen(filename, "w");
+    if (!out) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("TIFFOpen() function failed."));
+        g_object_unref(pixbuf);
+        return FALSE;
+    }
 
     TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
     TIFFSetField(out, TIFFTAG_IMAGELENGTH, height);
@@ -1083,11 +1147,12 @@ pixmap_save_tiff(GwyContainer *data,
     TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
     TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
 
-    g_assert(TIFFScanlineSize(out) <= (glong)rowstride);
+    g_return_val_if_fail(TIFFScanlineSize(out) <= (glong)rowstride, FALSE);
     TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(out, 3*width));
     for (i = 0; i < height; i++) {
         if (TIFFWriteScanline(out, pixels + i*rowstride, i, 0) < 0) {
-            g_warning("TIFF `%s' write failed!", filename);
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                        _("TIFFWriteScanline() function failed."));
             ok = FALSE;
             break;
         }
@@ -1101,7 +1166,9 @@ pixmap_save_tiff(GwyContainer *data,
 
 static gboolean
 pixmap_save_ppm(GwyContainer *data,
-                const gchar *filename)
+                const gchar *filename,
+                GwyRunType mode,
+                GError **error)
 {
     static const gchar *ppm_header = "P6\n%u\n%u\n255\n";
     GdkPixbuf *pixbuf;
@@ -1111,7 +1178,7 @@ pixmap_save_ppm(GwyContainer *data,
     gchar *ppmh = NULL;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "PPM");
+    pixbuf = pixmap_draw_pixbuf(data, "PPM", mode, error);
     if (!pixbuf)
         return FALSE;
 
@@ -1122,18 +1189,22 @@ pixmap_save_ppm(GwyContainer *data,
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
-        g_warning("PPM `%s' write failed!", filename);
+        err_OPEN_WRITE(error);
         g_object_unref(pixbuf);
         return FALSE;
     }
 
     ppmh = g_strdup_printf(ppm_header, width, height);
-    if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh))
+    if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh)) {
+        err_WRITE(error);
         goto end;
+    }
 
     for (i = 0; i < height; i++) {
-        if (fwrite(pixels + i*rowstride, 1, 3*width, fh) != 3*width)
+        if (fwrite(pixels + i*rowstride, 1, 3*width, fh) != 3*width) {
+            err_WRITE(error);
             goto end;
+        }
     }
 
     ok = TRUE;
@@ -1147,7 +1218,9 @@ end:
 
 static gboolean
 pixmap_save_bmp(GwyContainer *data,
-                const gchar *filename)
+                const gchar *filename,
+                GwyRunType mode,
+                GError **error)
 {
     static guchar bmp_head[] = {
         'B', 'M',    /* magic */
@@ -1173,7 +1246,7 @@ pixmap_save_bmp(GwyContainer *data,
     gboolean ok = FALSE;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "BMP");
+    pixbuf = pixmap_draw_pixbuf(data, "BMP", mode, error);
     if (!pixbuf)
         return FALSE;
 
@@ -1186,7 +1259,7 @@ pixmap_save_bmp(GwyContainer *data,
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
-        g_warning("PPM `%s' write failed!", filename);
+        err_OPEN_WRITE(error);
         g_object_unref(pixbuf);
         return FALSE;
     }
@@ -1195,8 +1268,10 @@ pixmap_save_bmp(GwyContainer *data,
     *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(bmprowstride/3);
     *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(height);
     *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(height*bmprowstride);
-    if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head))
+    if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head)) {
+        err_WRITE(error);
         goto end;
+    }
 
     /* The ugly part: BMP uses BGR instead of RGB and is written upside down,
      * this silliness may originate nowhere else than in MS... */
@@ -1211,8 +1286,10 @@ pixmap_save_bmp(GwyContainer *data,
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, bmprowstride, fh) != bmprowstride)
+        if (fwrite(buffer, 1, bmprowstride, fh) != bmprowstride) {
+            err_WRITE(error);
             goto end;
+        }
     }
 
     ok = TRUE;
@@ -1226,7 +1303,9 @@ end:
 
 static gboolean
 pixmap_save_targa(GwyContainer *data,
-                  const gchar *filename)
+                  const gchar *filename,
+                  GwyRunType mode,
+                  GError **error)
 {
    static guchar targa_head[] = {
      0,           /* idlength */
@@ -1246,7 +1325,7 @@ pixmap_save_targa(GwyContainer *data,
     gboolean ok = FALSE;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "TARGA");
+    pixbuf = pixmap_draw_pixbuf(data, "TARGA", mode, error);
     if (!pixbuf)
         return FALSE;
 
@@ -1257,7 +1336,8 @@ pixmap_save_targa(GwyContainer *data,
     targarowstride = 12*((width + 3)/4);
 
     if (height > 65535 || width > 65535) {
-        g_warning("Image too large to be stored as TARGA");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Image is too large to be stored as TARGA."));
         return FALSE;
     }
     targa_head[12] = (targarowstride/3) & 0xff;
@@ -1267,13 +1347,15 @@ pixmap_save_targa(GwyContainer *data,
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
-        g_warning("TARGA `%s' write failed!", filename);
+        err_OPEN_WRITE(error);
         g_object_unref(pixbuf);
         return FALSE;
     }
 
-    if (fwrite(targa_head, 1, sizeof(targa_head), fh) != sizeof(targa_head))
+    if (fwrite(targa_head, 1, sizeof(targa_head), fh) != sizeof(targa_head)) {
+        err_WRITE(error);
         goto end;
+    }
 
     /* The ugly part: TARGA uses BGR instead of RGB */
     buffer = g_new(guchar, targarowstride);
@@ -1287,8 +1369,10 @@ pixmap_save_targa(GwyContainer *data,
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, targarowstride, fh) != targarowstride)
+        if (fwrite(buffer, 1, targarowstride, fh) != targarowstride) {
+            err_WRITE(error);
             goto end;
+        }
     }
 
     ok = TRUE;
@@ -1308,16 +1392,25 @@ end:
 
 static GdkPixbuf*
 pixmap_draw_pixbuf(GwyContainer *data,
-                   const gchar *format_name)
+                   const gchar *format_name,
+                   GwyRunType mode,
+                   GError **error)
 {
     GdkPixbuf *pixbuf;
     GwyContainer *settings;
     PixmapSaveArgs args;
 
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Pixmap image export must be run as interactive."));
+        return FALSE;
+    }
+
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
     if (!pixmap_save_dialog(data, &args, format_name)) {
-        pixmap_save_save_args(settings, &args);
+        err_CANCELLED(error);
         return NULL;
     }
     pixbuf = pixmap_real_draw_pixbuf(data, &args);

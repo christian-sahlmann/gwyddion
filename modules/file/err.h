@@ -106,6 +106,14 @@ err_NO_DATA(GError **error)
                 _("File contains no (importable) data."));
 }
 
+/* Cancelled */
+static inline void
+err_CANCELLED(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_CANCELLED,
+                _("File import was cancelled by user."));
+}
+
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
