@@ -18,6 +18,7 @@ libgwyprocessinclude_HEADERS = \
 	fractals.h \
 	grains.h \
 	gwyprocess.h \
+	gwyprocessinternal.h \
 	gwyprocessenums.h \
 	gwyprocesstypes.h \
 	hough.h \

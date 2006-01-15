@@ -552,7 +552,7 @@ gwy_cdline_new_static(const GwyCDLineBuiltin *data)
 }
 
 void
-_gwy_cdline_class_setup(void)
+_gwy_cdline_class_setup_presets(void)
 {
     GwyResourceClass *klass;
     GwyCDLine *cdline;
