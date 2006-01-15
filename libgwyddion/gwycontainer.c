@@ -1357,7 +1357,7 @@ gwy_container_try_set_valist(GwyContainer *container,
 /**
  * gwy_container_set_value:
  * @container: A container.
- * @...: A %NULL-terminated list of #GQuark keys and #GValue values.
+ * @...: A zero-terminated list of #GQuark keys and #GValue values.
  *
  * Inserts or updates several values in @container.
  **/
