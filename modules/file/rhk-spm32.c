@@ -119,7 +119,8 @@ static gint          rhkspm32_detect         (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* rhkspm32_load           (const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
-static gboolean      rhkspm32_read_header    (RHKPage *rhkpage);
+static gboolean      rhkspm32_read_header    (RHKPage *rhkpage,
+                                              GError **error);
 static gboolean      rhkspm32_read_range     (const gchar *buffer,
                                               const gchar *name,
                                               RHKRange *range);
@@ -209,9 +210,8 @@ rhkspm32_load(const gchar *filename,
         g_array_set_size(rhkfile, rhkfile->len + 1);
         rhkpage = &g_array_index(rhkfile, RHKPage, rhkfile->len - 1);
         rhkpage->buffer = buffer + totalpos;
-        if (!rhkspm32_read_header(rhkpage)) {
+        if (!rhkspm32_read_header(rhkpage, &err)) {
             g_array_set_size(rhkfile, rhkfile->len - 1);
-            /*message = "Cannot parse file header";*/
             break;
         }
 
@@ -220,19 +220,24 @@ rhkspm32_load(const gchar *filename,
         if (size < totalpos + pagesize) {
             rhkspm32_free(rhkpage);
             g_array_set_size(rhkfile, rhkfile->len - 1);
-            /*message = "Truncated file";*/
             break;
         }
 
         totalpos += pagesize;
     }
 
+    /* Be tolerant and don't fail when we were able to import at least
+     * something */
     if (!rhkfile->len) {
-        err_NO_DATA(error);
+        if (err)
+            g_propagate_error(error, err);
+        else
+            err_NO_DATA(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         g_array_free(rhkfile, TRUE);
         return NULL;
     }
+    g_clear_error(&err);
 
     container = gwy_container_new();
     key = g_string_new("");
@@ -242,6 +247,9 @@ rhkspm32_load(const gchar *filename,
         g_string_printf(key, "/%d/data", i);
         gwy_container_set_object_by_name(container, key->str, dfield);
         g_object_unref(dfield);
+        g_string_append(key, "/title");
+        gwy_container_set_string_by_name(container, key->str,
+                                         g_strdup(rhkpage->label));
         /* FIXME: not yet
         rhkspm32_store_metadata(rhkpage, container); */
     }
@@ -256,7 +264,8 @@ rhkspm32_load(const gchar *filename,
 }
 
 static gboolean
-rhkspm32_read_header(RHKPage *rhkpage)
+rhkspm32_read_header(RHKPage *rhkpage,
+                     GError **error)
 {
     const gchar *buffer;
     gchar *end;
@@ -271,59 +280,83 @@ rhkspm32_read_header(RHKPage *rhkpage)
                &rhkpage->line_type,
                &rhkpage->xres, &rhkpage->yres, &rhkpage->size,
                (gint*)&rhkpage->page_type) != 7
-        || rhkpage->xres <= 0 || rhkpage->yres <= 0)
+        || rhkpage->xres <= 0 || rhkpage->yres <= 0) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Invalid file header."));
         return FALSE;
+    }
     gwy_debug("type = %u, data = %u, line = %u, image = %u",
               rhkpage->type, rhkpage->data_type, rhkpage->line_type,
               rhkpage->page_type);
     gwy_debug("xres = %d, yres = %d", rhkpage->xres, rhkpage->yres);
 
     if (rhkpage->type != RHK_TYPE_IMAGE) {
-        g_warning("Cannot read non-image files");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Non-image files are not supported."));
         return FALSE;
     }
     /* FIXME */
     if (rhkpage->data_type != RHK_DATA_INT16) {
-        g_warning("Cannot read images with data type != int16");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unsupported or invalid data type %d."),
+                    rhkpage->data_type);
         return FALSE;
     }
     rhkpage->item_size = 2;
 
     if (!rhkspm32_read_range(buffer + 0x40, "X", &rhkpage->x)
         || !rhkspm32_read_range(buffer + 0x60, "Y", &rhkpage->y)
-        || !rhkspm32_read_range(buffer + 0x80, "Z", &rhkpage->z))
+        || !rhkspm32_read_range(buffer + 0x80, "Z", &rhkpage->z)) {
+        err_INVALID(error, _("data ranges"));
         return FALSE;
+    }
 
-    if (!g_str_has_prefix(buffer + 0xa0, "XY "))
+    if (!g_str_has_prefix(buffer + 0xa0, "XY ")) {
+        err_MISSING_FIELD(error, "XY");
         return FALSE;
+    }
     pos = 0xa0 + sizeof("XY");
     rhkpage->xyskew = g_ascii_strtod(buffer + pos, &end);
-    if (end == buffer + pos)
+    if (end == buffer + pos) {
+        err_INVALID(error, "XY");
         return FALSE;
+    }
     pos = (end - buffer) + 2;
     rhkpage->alpha = g_ascii_strtod(buffer + pos, &end);
-    if (end == buffer + pos)
+    if (end == buffer + pos) {
+        err_INVALID(error, "alpha");
         return FALSE;
+    }
 
-    if (!rhkspm32_read_range(buffer + 0xc0, "IV", &rhkpage->iv))
+    if (!rhkspm32_read_range(buffer + 0xc0, "IV", &rhkpage->iv)) {
+        err_INVALID(error, "IV");
         return FALSE;
+    }
 
     if (!g_str_has_prefix(buffer + 0xe0, "scan "))
-    pos = 0xe0 + sizeof("scan");
+        pos = 0xe0 + sizeof("scan");
     rhkpage->scan = strtol(buffer + pos, &end, 10);
-    if (end == buffer + pos)
+    if (end == buffer + pos) {
+        err_INVALID(error, "scan");
         return FALSE;
+    }
     pos = (end - buffer);
     rhkpage->period = g_ascii_strtod(buffer + pos, &end);
-    if (end == buffer + pos)
+    if (end == buffer + pos) {
+        err_INVALID(error, "period");
         return FALSE;
+    }
 
     if (sscanf(buffer + 0x100, "id %u %u",
-               &rhkpage->id, &rhkpage->data_offset) != 2)
+               &rhkpage->id, &rhkpage->data_offset) != 2) {
+        err_INVALID(error, "id");
         return FALSE;
+    }
     gwy_debug("data_offset = %u", rhkpage->data_offset);
-    if (rhkpage->data_offset < HEADER_SIZE)
+    if (rhkpage->data_offset < HEADER_SIZE) {
+        err_INVALID(error, _("data offset"));
         return FALSE;
+    }
 
     rhkpage->label = g_strstrip(g_strndup(buffer + 0x140, 0x20));
     rhkpage->comment = g_strstrip(g_strndup(buffer + 0x160,
@@ -424,8 +457,6 @@ rhkspm32_store_metadata(RHKPage *rhkpage,
                                          g_strdup(rhkpage->comment));
     if (rhkpage->label && *rhkpage->label) {
         gwy_container_set_string_by_name(container, "/meta/Label",
-                                         g_strdup(rhkpage->label));
-        gwy_container_set_string_by_name(container, "/filename/title",
                                          g_strdup(rhkpage->label));
     }
 

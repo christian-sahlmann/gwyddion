@@ -333,8 +333,8 @@ rhk_sm3_page_free(RHKPage *page)
 
 static RHKPage*
 rhk_sm3_read_page(const guchar **buffer,
-                  gsize *len)
-
+                  gsize *len,
+                  GError **error)
 {
     RHKPage *page;
     const guchar *p = *buffer;
@@ -344,11 +344,12 @@ rhk_sm3_read_page(const guchar **buffer,
         return NULL;
 
     if (*len < HEADER_SIZE + 4) {
-        g_warning("Page header truncated");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("End of file reached in page header."));
         return NULL;
     }
     if (memcmp(*buffer, MAGIC, MAGIC_SIZE) != 0) {
-        g_warning("Magic doesn't match");
+        err_INVALID(error, _("magic page header"));
         return NULL;
     }
 
@@ -356,7 +357,8 @@ rhk_sm3_read_page(const guchar **buffer,
     page->param_size = get_WORD(&p);
     gwy_debug("param_size = %u", page->param_size);
     if (*len < page->param_size + 4) {
-        g_warning("Real page header truncated");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("End of file reached in page header."));
         goto FAIL;
     }
     /* Convert to UTF-8 */
@@ -413,7 +415,9 @@ rhk_sm3_read_page(const guchar **buffer,
         gwy_debug("position %04x", p - *buffer);
         s = rhk_sm3_read_string(&p, *len - (p - *buffer));
         if (!s) {
-            g_warning("String truncated");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached in string #%u."), i);
             goto FAIL;
         }
         if (i < RHK_STRING_NSTRINGS)
@@ -425,7 +429,7 @@ rhk_sm3_read_page(const guchar **buffer,
     expected = page->x_size * page->y_size * sizeof(gint32);
     gwy_debug("expecting %u bytes of page data now", expected);
     if (*len < (p - *buffer) + expected) {
-        g_warning("Page data truncated");
+        err_SIZE_MISMATCH(error, expected, *len - (p - *buffer));
         goto FAIL;
     }
 
@@ -437,13 +441,17 @@ rhk_sm3_read_page(const guchar **buffer,
 
     if (page->type == RHK_TYPE_IMAGE) {
         if (*len < (p - *buffer) + 4) {
-            g_warning("Color data header truncated");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached in color data header."));
             goto FAIL;
         }
         /* Info size includes itself */
         page->color_info.size = get_DWORD(&p) - 2;
         if (*len < (p - *buffer) + page->color_info.size) {
-            g_warning("Color data truncated");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached in color data."));
             goto FAIL;
         }
 
@@ -539,7 +547,7 @@ rhk_sm3_load(const gchar *filename,
     p = buffer;
     count = 0;
     gwy_debug("position %04x", p - buffer);
-    while ((rhkpage = rhk_sm3_read_page(&p, &size))) {
+    while ((rhkpage = rhk_sm3_read_page(&p, &size, &err))) {
         gwy_debug("Page #%u read OK", count);
         count++;
         rhkpage->pageno = count;
@@ -552,12 +560,18 @@ rhk_sm3_load(const gchar *filename,
         g_ptr_array_add(rhkfile, rhkpage);
     }
 
+    /* Be tolerant and don't fail when we were able to import at least
+     * something */
     if (!rhkfile->len) {
-        err_NO_DATA(error);
+        if (err)
+            g_propagate_error(error, err);
+        else
+            err_NO_DATA(error);
         gwy_file_abandon_contents(buffer, size, NULL);
         g_ptr_array_free(rhkfile, TRUE);
         return NULL;
     }
+    g_clear_error(&err);
 
     container = gwy_container_new();
     key = g_string_new("");
@@ -567,6 +581,11 @@ rhk_sm3_load(const gchar *filename,
         g_string_printf(key, "/%d/data", i);
         gwy_container_set_object_by_name(container, key->str, dfield);
         g_object_unref(dfield);
+        p = rhkpage->strings[RHK_STRING_LABEL];
+        if (p && *p) {
+            g_string_append(key, "/title");
+            gwy_container_set_string_by_name(container, key->str, g_strdup(p));
+        }
         /* FIXME: not yet
         rhk_sm3_store_metadata(rhkpage, container); */
     }
@@ -622,8 +641,6 @@ rhk_sm3_store_metadata(RHKPage *rhkpage,
     s = rhkpage->strings[RHK_STRING_LABEL];
     if (s && *s) {
         gwy_container_set_string_by_name(container, "/meta/Label", g_strdup(s));
-        gwy_container_set_string_by_name(container, "/filename/title",
-                                         g_strdup(s));
     }
 
     s = rhkpage->strings[RHK_STRING_PATH];
