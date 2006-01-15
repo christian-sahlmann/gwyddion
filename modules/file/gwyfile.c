@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <glib/gstdio.h>
 
@@ -41,6 +42,14 @@
 #define MAGIC2 "GWYP"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
+typedef struct {
+    GArray *map;
+    gint len;
+    gint *rmap;
+    GwyContainer *target;
+    GString *str;
+} CompressIdData;
+
 static gboolean      module_register         (const gchar *name);
 static gint          gwyfile_detect          (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
@@ -51,6 +60,7 @@ static gboolean      gwyfile_save            (GwyContainer *data,
                                               const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
+static GwyContainer* gwyfile_compress_data_ids(GwyContainer *data);
 static GObject*      gwy_container_deserialize_old (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position);
@@ -62,7 +72,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Loads and saves Gwyddion native data files (serialized objects)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -168,6 +178,7 @@ gwyfile_save(GwyContainer *data,
              G_GNUC_UNUSED GwyRunType mode,
              GError **error)
 {
+    GwyContainer *compressed;
     GByteArray *buffer;
     FILE *fh;
     gboolean ok = TRUE;
@@ -177,19 +188,186 @@ gwyfile_save(GwyContainer *data,
         return FALSE;
     }
 
-    buffer = gwy_serializable_serialize(G_OBJECT(data), NULL);
+    compressed = gwyfile_compress_data_ids(data);
+    buffer = gwy_serializable_serialize(G_OBJECT(compressed), NULL);
     if (fwrite(MAGIC2, 1, MAGIC_SIZE, fh) != MAGIC_SIZE
         || fwrite(buffer->data, 1, buffer->len, fh) != buffer->len) {
-        ok = FALSE;
         err_WRITE(error);
+        ok = FALSE;
         g_unlink(filename);
     }
     fclose(fh);
     g_byte_array_free(buffer, TRUE);
+    g_object_unref(compressed);
 
     return ok;
 }
 
+static gint
+key_get_int_prefix(const gchar *strkey,
+                   guint *len)
+{
+    guint i;
+
+    if (strkey[0] != GWY_CONTAINER_PATHSEP)
+        return -1;
+    for (i = 0; g_ascii_isdigit(strkey[i + 1]); i++)
+        ;
+    if (!i || strkey[i + 1] != GWY_CONTAINER_PATHSEP)
+        return -1;
+
+    *len = i + 2;
+    return atoi(strkey + 1);
+}
+
+/* Check whether hash key matches "/[0-9]+/data" */
+static void
+hash_data_find_func(gpointer key,
+                    gpointer value,
+                    gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GValue *gvalue = (GValue*)value;
+    GArray *array = (GArray*)user_data;
+    const gchar *strkey;
+    guint len;
+    gint i;
+
+    strkey = g_quark_to_string(quark);
+    i = key_get_int_prefix(strkey, &len);
+    if (i < 0)
+        return;
+    if (!gwy_strequal(strkey + len, "data"))
+        return;
+
+    g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
+    g_array_append_val(array, i);
+}
+
+/* Remap /N/data, /N/mask, /N/show, /N/select
+ * trees elsewhere. copying other values to the same keys */
+static void
+hash_data_index_map_func(gpointer key,
+                         gpointer value,
+                         gpointer user_data)
+{
+    GQuark quark = GPOINTER_TO_UINT(key);
+    GValue *copy, *gvalue = (GValue*)value;
+    CompressIdData *cidd = (CompressIdData*)user_data;
+    const gchar *strkey;
+    gboolean remap = FALSE;
+    guint len;
+    gint i;
+
+    strkey = g_quark_to_string(quark);
+    i = key_get_int_prefix(strkey, &len);
+    copy = g_new0(GValue, 1);
+    g_value_init(copy, G_VALUE_TYPE(gvalue));
+    g_value_copy(gvalue, copy);
+    if (G_VALUE_HOLDS_OBJECT(gvalue))
+        g_object_unref(g_value_get_object(gvalue));
+
+    if (i < 0) {
+        gwy_debug("<%s> -> <%s> (no number)", strkey, strkey);
+        gwy_container_set_value(cidd->target, quark, copy, 0);
+        return;
+    }
+
+    if (i >= cidd->len || cidd->rmap[i] == -1) {
+        gwy_debug("<%s> -> <%s> (eccentric data id)", strkey, strkey);
+        gwy_container_set_value(cidd->target, quark, copy, 0);
+        return;
+    }
+
+    if (cidd->rmap[i] == i) {
+        gwy_debug("<%s> -> <%s> (identity)", strkey, strkey);
+        gwy_container_set_value(cidd->target, quark, copy, 0);
+        return;
+    }
+
+    if ((g_str_has_prefix(strkey + len, "data")
+         || g_str_has_prefix(strkey + len, "mask")
+         || g_str_has_prefix(strkey + len, "show"))
+        && (strkey[len + 4] == '\0'
+            || strkey[len + 4] == GWY_CONTAINER_PATHSEP))
+        remap = TRUE;
+    else if (g_str_has_prefix(strkey + len, "select")
+        && (strkey[len + 6] == '\0'
+            || strkey[len + 6] == GWY_CONTAINER_PATHSEP))
+        remap = TRUE;
+
+    if (remap) {
+        g_string_printf(cidd->str, "/%d/%s", cidd->rmap[i], strkey + len);
+        gwy_debug("<%s> -> <%s> (REMAP)", strkey, cidd->str->str);
+        gwy_container_set_value_by_name(cidd->target, cidd->str->str, copy,
+                                        NULL);
+    }
+    else {
+        gwy_debug("<%s> -> <%s> (nothing matched)", strkey, strkey);
+        gwy_container_set_value(cidd->target, quark, copy, 0);
+    }
+}
+
+static gint
+compare_integers(gconstpointer a,
+                 gconstpointer b)
+{
+    gint ia = *(const gint*)a;
+    gint ib = *(const gint*)b;
+
+    return ia - ib;
+}
+
+static GwyContainer*
+gwyfile_compress_data_ids(GwyContainer *data)
+{
+    CompressIdData cidd;
+    guint i;
+
+    cidd.map = g_array_new(FALSE, FALSE, sizeof(gint));
+    gwy_container_foreach(data, NULL, hash_data_find_func, cidd.map);
+    g_array_sort(cidd.map, compare_integers);
+
+    /* When the data indices look like we want them, don't bother with
+     * temporary containers. */
+#ifdef DEBUG
+    for (i = 0; i < cidd.map->len; i++)
+        gwy_debug("Map: %d -> %d", i, g_array_index(cidd.map, gint, i));
+#endif
+    for (i = 0; i < cidd.map->len; i++) {
+        if (g_array_index(cidd.map, gint, i) != i)
+            break;
+    }
+    if (i == cidd.map->len) {
+        g_array_free(cidd.map, TRUE);
+        g_object_ref(data);
+        return data;
+    }
+
+    cidd.len = g_array_index(cidd.map, gint, cidd.map->len - 1) + 1;
+    cidd.rmap = g_new(gint, cidd.len);
+    for (i = 0; i < cidd.len; i++)
+        cidd.rmap[i] = -1;
+    for (i = 0; i < cidd.map->len; i++)
+        cidd.rmap[g_array_index(cidd.map, gint, i)] = i;
+#ifdef DEBUG
+    for (i = 0; i < cidd.len; i++)
+        gwy_debug("Rmap: %d -> %d", i, cidd.rmap[i]);
+#endif
+
+    cidd.target = gwy_container_new();
+    cidd.str = g_string_new("");
+
+    gwy_container_foreach(data, NULL, hash_data_index_map_func, &cidd);
+
+    g_free(cidd.rmap);
+    g_string_free(cidd.str, TRUE);
+    g_array_free(cidd.map, TRUE);
+
+    return cidd.target;
+}
+
+/* Low-level deserialization functions for 1.x file import {{{ */
 static inline void
 gwy_byteswapped_copy(const guint8 *source,
                      guint8 *dest,
@@ -424,5 +602,6 @@ gwy_container_deserialize_old(const guchar *buffer,
 
     return (GObject*)container;
 }
+/* }}} */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
