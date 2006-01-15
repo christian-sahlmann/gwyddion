@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 
@@ -76,7 +76,6 @@ typedef gdouble (*RawStrtodFunc)(const gchar *nptr, gchar **endptr);
 typedef struct {
     gboolean takeover;
     GString *preset;
-    /* FIXME */
     gboolean xyreseq;
     gboolean xymeasureeq;
     GwyRawFilePresetData p;
@@ -89,6 +88,7 @@ typedef struct {
 } RawFileFile;
 
 typedef struct {
+    gboolean in_update;
     GtkWidget *dialog;
     GtkWidget *takeover;
     GSList *format;
@@ -101,9 +101,12 @@ typedef struct {
     GtkWidget *revbyte;
     GtkWidget *revsample;
     GtkWidget *byteswap;
+    GtkWidget *byteswap_label;
     GtkWidget *lineoffset;
     GtkWidget *delimmenu;
+    GtkWidget *delim_label;
     GtkWidget *delimiter;
+    GtkWidget *otherdelim_label;
     GtkWidget *skipfields;
     GtkWidget *decomma;
     GtkWidget *xres;
@@ -119,6 +122,10 @@ typedef struct {
     GtkWidget *presetname;
     GtkWidget *preview;
     GtkWidget *do_preview;
+    GtkWidget *save;
+    GtkWidget *load;
+    GtkWidget *delete;
+    GtkWidget *rename;
     GwyGradient *gradient;
     RawFileArgs *args;
     RawFileFile *file;
@@ -381,6 +388,7 @@ rawfile_dialog(RawFileArgs *args,
     controls.file = file;
     controls.gradient = gwy_gradients_get_gradient(NULL);
     gwy_resource_use(GWY_RESOURCE(controls.gradient));
+    controls.in_update = FALSE;
 
     vbox = GTK_DIALOG(dialog)->vbox;
 
@@ -434,10 +442,6 @@ rawfile_dialog(RawFileArgs *args,
     adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
     g_signal_connect(adj2, "value-changed",
                      G_CALLBACK(xyreal_changed_cb), &controls);
-
-    /* presets */
-    g_signal_connect_swapped(controls.presetlist, "cursor-changed",
-                             G_CALLBACK(preset_selected_cb), &controls);
 
     /* preview */
     g_signal_connect_swapped(controls.do_preview, "clicked",
@@ -707,6 +711,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Field delimiter:"));
+    controls->delim_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -721,6 +726,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     row++;
 
     label = gtk_label_new_with_mnemonic(_("_Other delimiter:"));
+    controls->otherdelim_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -751,6 +757,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     row++;
 
     label = gtk_label_new_with_mnemonic(_("Byte s_wap pattern:"));
+    controls->byteswap_label = label;
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 2, 2);
@@ -923,10 +930,6 @@ rawfile_dialog_preset_page(RawFileArgs *args,
         gtk_tree_view_append_column(GTK_TREE_VIEW(controls->presetlist),
                                     column);
     }
-    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
-    gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
-    if (gwy_inventory_store_get_iter(store, args->preset->str, &iter))
-        gtk_tree_selection_select_iter(tselect, &iter);
 
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
@@ -940,21 +943,25 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
 
     button = gtk_button_new_with_mnemonic(_("_Load"));
+    controls->load = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_load_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Store"));
+    controls->save = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_store_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Rename"));
+    controls->rename = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_rename_cb), controls);
 
     button = gtk_button_new_with_mnemonic(_("_Delete"));
+    controls->delete = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_delete_cb), controls);
@@ -970,6 +977,18 @@ rawfile_dialog_preset_page(RawFileArgs *args,
                          controls->presetname);
     gtk_entry_set_max_length(GTK_ENTRY(controls->presetname), 40);
     row++;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
+    gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
+    g_signal_connect_swapped(tselect, "changed",
+                             G_CALLBACK(preset_selected_cb), controls);
+    if (gwy_inventory_store_get_iter(store, args->preset->str, &iter))
+        gtk_tree_selection_select_iter(tselect, &iter);
+    else {
+        gtk_widget_set_sensitive(controls->load, FALSE);
+        gtk_widget_set_sensitive(controls->delete, FALSE);
+        gtk_widget_set_sensitive(controls->rename, FALSE);
+    }
 
     return vbox;
 }
@@ -1080,7 +1099,8 @@ builtin_changed_cb(GtkWidget *combo,
     GtkAdjustment *adj;
 
     builtin = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
-    update_dialog_values(controls);
+    if (!controls->in_update)
+        update_dialog_values(controls);
     if (builtin) {
         rawfile_sanitize_args(controls->args);
 
@@ -1109,7 +1129,8 @@ builtin_changed_cb(GtkWidget *combo,
         adj->step_increment = 1.0;
         gtk_adjustment_changed(adj);
     }
-    update_dialog_controls(controls);
+    if (!controls->in_update)
+        update_dialog_controls(controls);
 }
 
 static void
@@ -1169,7 +1190,7 @@ xyreseq_changed_cb(RawFileControls *controls)
 {
     controls->args->xyreseq
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xyreseq));
-    if (controls->args->xyreseq) {
+    if (!controls->in_update && controls->args->xyreseq) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
     }
@@ -1209,7 +1230,7 @@ xymeasureeq_changed_cb(RawFileControls *controls)
 {
     controls->args->xymeasureeq = gtk_toggle_button_get_active
                                     (GTK_TOGGLE_BUTTON(controls->xymeasureeq));
-    if (controls->args->xymeasureeq) {
+    if (!controls->in_update && controls->args->xymeasureeq) {
         update_dialog_values(controls);
         update_dialog_controls(controls);
     }
@@ -1219,8 +1240,10 @@ static void
 bintext_changed_cb(G_GNUC_UNUSED GtkWidget *button,
                    RawFileControls *controls)
 {
-    update_dialog_values(controls);
-    update_dialog_controls(controls);
+    if (!controls->in_update) {
+        update_dialog_values(controls);
+        update_dialog_controls(controls);
+    }
 }
 
 static void
@@ -1268,6 +1291,10 @@ preset_selected_cb(RawFileControls *controls)
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     g_return_if_fail(tselect);
     if (!gtk_tree_selection_get_selected(tselect, &store, &iter)) {
+        g_string_assign(controls->args->preset, "");
+        gtk_widget_set_sensitive(controls->load, FALSE);
+        gtk_widget_set_sensitive(controls->delete, FALSE);
+        gtk_widget_set_sensitive(controls->rename, FALSE);
         gwy_debug("Nothing is selected");
         return;
     }
@@ -1276,6 +1303,10 @@ preset_selected_cb(RawFileControls *controls)
     name = gwy_resource_get_name(GWY_RESOURCE(preset));
     gtk_entry_set_text(GTK_ENTRY(controls->presetname), name);
     g_string_assign(controls->args->preset, name);
+
+    gtk_widget_set_sensitive(controls->load, TRUE);
+    gtk_widget_set_sensitive(controls->delete, TRUE);
+    gtk_widget_set_sensitive(controls->rename, TRUE);
 }
 
 static void
@@ -1453,7 +1484,12 @@ update_dialog_controls(RawFileControls *controls)
     gchar buf[16];
     RawFileBuiltin builtin;
     int delim;
+    gboolean bin;
 
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
     args = controls->args;
 
     adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xres));
@@ -1526,46 +1562,44 @@ update_dialog_controls(RawFileControls *controls)
                                      args->preset->str, &iter))
         gtk_tree_selection_select_iter(tselect, &iter);
 
+    bin = (args->p.format == RAW_BINARY);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->offset), bin);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->skip), bin);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->rowskip), bin);
+    gtk_widget_set_sensitive(controls->builtin, bin);
+    gtk_widget_set_sensitive(controls->revbyte, bin);
+    gtk_widget_set_sensitive(controls->byteswap, bin);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->lineoffset), !bin);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->skipfields), !bin);
+    gtk_widget_set_sensitive(controls->delimmenu, !bin);
+    gtk_widget_set_sensitive(controls->delim_label, !bin);
+    gtk_widget_set_sensitive(controls->decomma, !bin);
+
     builtin = args->p.builtin;
     switch (args->p.format) {
         case RAW_BINARY:
-        gtk_widget_set_sensitive(controls->lineoffset, FALSE);
         gtk_widget_set_sensitive(controls->delimiter, FALSE);
-        gtk_widget_set_sensitive(controls->delimmenu, FALSE);
-        gtk_widget_set_sensitive(controls->skipfields, FALSE);
-        gtk_widget_set_sensitive(controls->decomma, FALSE);
-
-        gtk_widget_set_sensitive(controls->builtin, TRUE);
-        gtk_widget_set_sensitive(controls->offset, TRUE);
-        gtk_widget_set_sensitive(controls->skip, TRUE);
-        gtk_widget_set_sensitive(controls->rowskip, TRUE);
-        gtk_widget_set_sensitive(controls->revbyte, TRUE);
-        gtk_widget_set_sensitive(controls->byteswap, TRUE);
-
+        gtk_widget_set_sensitive(controls->otherdelim_label, FALSE);
         gtk_widget_set_sensitive(controls->byteswap,
                                  builtin
                                  && builtin != RAW_UNSIGNED_BYTE
                                  && builtin != RAW_SIGNED_BYTE);
-        gtk_widget_set_sensitive(controls->size, !builtin);
+        gtk_widget_set_sensitive(controls->byteswap_label,
+                                 builtin
+                                 && builtin != RAW_UNSIGNED_BYTE
+                                 && builtin != RAW_SIGNED_BYTE);
+        gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->size), !builtin);
         gtk_widget_set_sensitive(controls->sign, !builtin);
         gtk_widget_set_sensitive(controls->revsample, !builtin);
         break;
 
         case RAW_TEXT:
-        gtk_widget_set_sensitive(controls->lineoffset, TRUE);
         gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
-        gtk_widget_set_sensitive(controls->delimmenu, TRUE);
-        gtk_widget_set_sensitive(controls->skipfields, TRUE);
-        gtk_widget_set_sensitive(controls->decomma, TRUE);
-
-        gtk_widget_set_sensitive(controls->builtin, FALSE);
-        gtk_widget_set_sensitive(controls->offset, FALSE);
-        gtk_widget_set_sensitive(controls->skip, FALSE);
-        gtk_widget_set_sensitive(controls->rowskip, FALSE);
-        gtk_widget_set_sensitive(controls->revbyte, FALSE);
+        gtk_widget_set_sensitive(controls->otherdelim_label,
+                                 delim == RAW_DELIM_OTHER);
         gtk_widget_set_sensitive(controls->byteswap, FALSE);
-        gtk_widget_set_sensitive(controls->byteswap, FALSE);
-        gtk_widget_set_sensitive(controls->size, FALSE);
+        gtk_widget_set_sensitive(controls->byteswap_label, FALSE);
+        gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->size), FALSE);
         gtk_widget_set_sensitive(controls->sign, FALSE);
         gtk_widget_set_sensitive(controls->revsample, FALSE);
         break;
@@ -1574,6 +1608,8 @@ update_dialog_controls(RawFileControls *controls)
         g_assert_not_reached();
         break;
     }
+
+    controls->in_update = FALSE;
 }
 
 static void
