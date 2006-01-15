@@ -30,6 +30,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libprocess/stats.h>
 
+#include "err.h"
 #include "jpk.h"
 
 
@@ -37,11 +38,15 @@ static gboolean       module_register    (const gchar             *name);
 
 static gint           jpkscan_detect     (const GwyFileDetectInfo *fileinfo,
                                           gboolean                 only_name);
-static GwyContainer * jpkscan_load       (const gchar             *filename);
-static GwyContainer * jpkscan_load_tiff  (const gchar             *filename);
+static GwyContainer * jpkscan_load       (const gchar             *filename,
+                                          GwyRunType               mode,
+                                          GError                 **error);
+static GwyContainer * jpkscan_load_tiff  (const gchar             *filename,
+                                          GError                 **error);
 
 static gboolean       tiff_check_version       (gint               macro,
-                                                gint               micro);
+                                                gint               micro,
+                                                GError           **error);
 
 static void           tiff_load_channel        (TIFF              *tif,
                                                 GwyContainer      *container,
@@ -91,13 +96,6 @@ static void           meta_store_double        (GwyContainer       *container,
                                                 gdouble             value,
                                                 const gchar        *unit);
 
-static gint           jpkscan_dialog           (GwyContainer       *container,
-                                                const gchar        *filename,
-                                                gint                idx);
-static void           jpkscan_error_dialog     (const gchar        *title,
-                                                const gchar        *format,
-                                                ...) G_GNUC_PRINTF(2, 3);
-
 
 /* The module info. */
 static GwyModuleInfo module_info =
@@ -106,7 +104,7 @@ static GwyModuleInfo module_info =
   module_register,
   N_("Imports JPK image scans."),
   "Sven Neumann <neumann@jpk.com>",
-  "0.2",
+  "0.3",
   "JPK Instruments AG",
   "2005",
 };
@@ -125,7 +123,8 @@ module_register (const gchar *name)
     N_("JPK image scans (.jpk)"),
     (GwyFileDetectFunc) jpkscan_detect,
     (GwyFileLoadFunc)   jpkscan_load,
-      NULL
+    NULL,
+    NULL
   };
 
   gwy_file_func_register (name, &jpkscan_func_info);
@@ -157,59 +156,29 @@ jpkscan_detect (const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer *
-jpkscan_load (const gchar *filename)
+jpkscan_load (const gchar              *filename,
+              G_GNUC_UNUSED GwyRunType  mode,
+              GError                  **error)
 {
   GwyContainer *container;
-  GObject      *object;
-  GQuark        key = g_quark_from_string ("/0/data");
-  gint          idx = 0;
 
   gwy_debug ("Loading <%s>", filename);
 
   /*  Handling of custom tags was introduced with LibTIFF version 3.6.0  */
-  if (! tiff_check_version (3, 6))
+  if (! tiff_check_version (3, 6, error))
     return NULL;
 
   TIFFSetWarningHandler (tiff_warning);
   TIFFSetErrorHandler (tiff_error);
 
-  container = jpkscan_load_tiff (filename);
-  if (! container)
-    return NULL;
-
-  /*  if there's more than one channel, present a dialog  */
-  if (gwy_container_contains (container, jpkscan_data_key (1)))
-    {
-      idx = jpkscan_dialog (container, filename, idx);
-    }
-
-  if (idx < 0)  /*  user cancelled loading   */
-    {
-      g_object_unref (container);
-      return NULL;
-    }
-
-  /*  rename the selected channel to "/0/data"  */
-  gwy_container_rename (container, jpkscan_data_key (idx), key, TRUE);
-
-  /*  remove the other channels  */
-  gwy_container_remove_by_prefix (container, "/jpk/");
-
-  /*  add the name of the selected channel to the container meta data  */
-  object = gwy_container_get_object (container, key);
-  if (object)
-    {
-      const gchar *name = g_object_get_data (object, "channel-name");
-
-      gwy_container_set_string (container,
-                                jpkscan_meta_key ("Channel"), g_strdup (name));
-    }
+  container = jpkscan_load_tiff (filename, error);
 
   return container;
 }
 
 static GwyContainer *
-jpkscan_load_tiff (const gchar *filename)
+jpkscan_load_tiff (const gchar  *filename,
+                   GError      **error)
 {
   GwyContainer *container = NULL;
   TIFF         *tif;
@@ -222,24 +191,26 @@ jpkscan_load_tiff (const gchar *filename)
   gdouble       ulen, vlen;
 
   tif = TIFFOpen (filename, "r");
+  if (! tif) {
+      /* This can be I/O too, but it's hard to tell the difference. */
+      err_FILE_TYPE (error, _("JPK scan"));
+      return NULL;
+  }
 
-  if (! tif ||
-      /*  sanity check, grid dimensions must be present!  */
-      ! (tiff_get_custom_double (tif, JPK_TIFFTAG_Grid_uLength, &ulen) &&
+  /*  sanity check, grid dimensions must be present!  */
+  if (! (tiff_get_custom_double (tif, JPK_TIFFTAG_Grid_uLength, &ulen) &&
          tiff_get_custom_double (tif, JPK_TIFFTAG_Grid_vLength, &vlen)))
     {
-      if (tif)
-        TIFFClose (tif);
-
-      jpkscan_error_dialog (_("Cannot load JPK Scan!"),
-                            _("Either the file you are trying to open is not "
-                              "a JPK scan file, or it is somehow corrupt."));
+      TIFFClose (tif);
+      g_set_error (error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                   _("File does not contain grid dimensions."));
       return NULL;
     }
 
   container = gwy_container_new ();
 
-  tiff_load_meta (tif, container);
+  /* FIXME: not yet, must sort file vs. channel
+  tiff_load_meta (tif, container); */
 
   gwy_debug ("ulen: %g vlen: %g", ulen, vlen);
 
@@ -293,8 +264,9 @@ jpkscan_load_tiff (const gchar *filename)
 }
 
 static gboolean
-tiff_check_version (gint required_macro,
-                    gint required_micro)
+tiff_check_version (gint     required_macro,
+                    gint     required_micro,
+                    GError **error)
 {
   gchar    *version = g_strdup (TIFFGetVersion ());
   gchar    *ptr;
@@ -320,10 +292,11 @@ tiff_check_version (gint required_macro,
     {
       result = FALSE;
 
-      jpkscan_error_dialog (_("LibTIFF too old!"),
-                            _("You are using %s. Please update to "
-                              "libtiff version %d.%d or newer."),
-                            version, required_macro, required_micro);
+      g_set_error (error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
+                   _("LibTIFF too old!\n\n"
+                     "You are using %s. Please update to "
+                     "libtiff version %d.%d or newer."),
+                   version, required_macro, required_micro);
     }
 
   g_free (version);
@@ -331,6 +304,9 @@ tiff_check_version (gint required_macro,
   return result;
 }
 
+/* FIXME: this function could use some sort of failure indication, if the
+ * file is damaged and no data field can be loaded, suspicionless caller can
+ * return empty Container */
 static void
 tiff_load_channel (TIFF         *tif,
                    GwyContainer *container,
@@ -341,6 +317,8 @@ tiff_load_channel (TIFF         *tif,
                    gdouble       vlen)
 {
   GwyDataField *dfield;
+  GwySIUnit    *siunit;
+  GString      *key;
   gdouble      *data;
   guchar       *buffer;
   gchar        *channel;
@@ -403,10 +381,13 @@ tiff_load_channel (TIFF         *tif,
 
   dfield = gwy_data_field_new (ilen, jlen, ulen, vlen, FALSE);
 
+  siunit = gwy_si_unit_new ("m");
+  gwy_data_field_set_si_unit_xy (dfield, siunit);
+  g_object_unref (siunit);
+
   if (unit)
     {
-      GwySIUnit *siunit = gwy_si_unit_new (unit);
-
+      siunit = gwy_si_unit_new (unit);
       gwy_data_field_set_si_unit_z (dfield, siunit);
       g_object_unref (siunit);
     }
@@ -444,12 +425,14 @@ tiff_load_channel (TIFF         *tif,
 
   /*  add the GwyDataField to the container  */
 
-  gwy_container_set_object (container, jpkscan_data_key (idx), dfield);
+  key = g_string_new ("");
+  g_string_printf (key, "/%d/data", idx);
+  gwy_container_set_object_by_name (container, key->str, dfield);
   g_object_unref (dfield);
 
-  g_object_set_data_full (G_OBJECT (dfield),
-                          "channel-name", channel,
-                          (GDestroyNotify) g_free);
+  g_string_append (key, "/title");
+  gwy_container_set_string_by_name (container, key->str, channel);
+  g_string_free (key, TRUE);
 }
 
 static void
@@ -652,6 +635,7 @@ tiff_warning (const gchar *module G_GNUC_UNUSED,
   /*  ignore  */
 }
 
+/* TODO: pass the error message upstream, somehow */
 static void
 tiff_error (const gchar *module G_GNUC_UNUSED,
             const gchar *format,
@@ -679,17 +663,6 @@ meta_store_double (GwyContainer *container,
 }
 
 static GQuark
-jpkscan_data_key (gint idx)
-{
-  gchar  *key   = g_strdup_printf ("/jpk/%d/data", idx);
-  GQuark  quark = g_quark_from_string (key);
-
-  g_free (key);
-
-  return quark;
-}
-
-static GQuark
 jpkscan_meta_key (const gchar *desc)
 {
   GQuark  quark;
@@ -702,156 +675,3 @@ jpkscan_meta_key (const gchar *desc)
   return quark;
 }
 
-/*  dialog  */
-
-static void
-jpkscan_combo_changed (GtkComboBox *combo,
-                       GwyDataView *view)
-{
-  gint   idx = gtk_combo_box_get_active (combo);
-  GQuark key = jpkscan_data_key (idx);
-
-  gwy_pixmap_layer_set_data_key (gwy_data_view_get_base_layer (view),
-                                 g_quark_to_string (key));
-}
-
-static gint
-jpkscan_dialog (GwyContainer *container,
-                const gchar  *filename,
-                gint          idx)
-{
-  GtkWidget *dialog;
-  GtkWidget *hbox;
-  GtkWidget *vbox;
-  GtkWidget *hbox2;
-  GtkWidget *vbox2;
-  GtkWidget *label;
-  GtkWidget *combo;
-  GtkWidget *view;
-  gchar     *name;
-  gchar     *text;
-  gint       i;
-
-  GwyPixmapLayer *layer;
-
-  dialog = gtk_dialog_new_with_buttons (_("Open JPK Image"), 0, 0,
-                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                        GTK_STOCK_OPEN,   GTK_RESPONSE_OK,
-                                        NULL);
-
-  gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
-  gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
-
-  vbox = gtk_vbox_new (FALSE, 12);
-  gtk_container_set_border_width (GTK_CONTAINER (vbox), 12);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), vbox, TRUE, TRUE, 0);
-  gtk_widget_show (vbox);
-
-  name = g_filename_display_basename (filename);
-  text = g_strdup_printf (_("Select a channel to load from\n"
-                            "<b>%s</b>"), name);
-  g_free (name);
-
-  label = g_object_new (GTK_TYPE_LABEL,
-                        "label",      text,
-                        "use-markup", TRUE,
-                        "xalign",     0.0,
-                        NULL);
-  g_free (text);
-
-  gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 0);
-  gtk_widget_show (label);
-
-  hbox = gtk_hbox_new (FALSE, 12);
-  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
-  gtk_widget_show (hbox);
-
-  vbox2 = gtk_vbox_new (FALSE, 6);
-  gtk_box_pack_start (GTK_BOX (hbox), vbox2, TRUE, TRUE, 0);
-  gtk_widget_show (vbox2);
-
-  hbox2 = gtk_hbox_new (FALSE, 6);
-  gtk_box_pack_start (GTK_BOX (vbox2), hbox2, FALSE, FALSE, 0);
-  gtk_widget_show (hbox2);
-
-  label = gtk_label_new_with_mnemonic (_("Ch_annel:"));
-  gtk_box_pack_start (GTK_BOX (hbox2), label, FALSE, FALSE, 0);
-  gtk_widget_show (label);
-
-  combo = gtk_combo_box_new_text ();
-  gtk_box_pack_start (GTK_BOX (hbox2), combo, TRUE, TRUE, 0);
-  gtk_widget_show (combo);
-
-  gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
-
-  view = gwy_data_view_new (container);
-  gtk_box_pack_start (GTK_BOX (hbox), view, FALSE, FALSE, 0);
-  gtk_widget_show (view);
-
-  layer = gwy_layer_basic_new ();
-  gwy_data_view_set_base_layer (GWY_DATA_VIEW (view), layer);
-
-  g_signal_connect (combo, "changed",
-                    G_CALLBACK (jpkscan_combo_changed),
-                    view);
-
-  for (i = 0;; i++)
-    {
-      GObject *object;
-      GQuark   key = jpkscan_data_key (i);
-
-      if (! gwy_container_contains (container, key))
-        break;
-
-      object = gwy_container_get_object (container, key);
-
-      gtk_combo_box_append_text (GTK_COMBO_BOX (combo),
-                                 g_object_get_data (object, "channel-name"));
-
-      if (i == 0)
-        {
-          gint xres = gwy_data_field_get_xres (GWY_DATA_FIELD (object));
-          gint yres = gwy_data_field_get_yres (GWY_DATA_FIELD (object));
-
-          gwy_data_view_set_zoom (GWY_DATA_VIEW (view),
-                                  120.0 / MAX (xres, yres));
-        }
-    }
-
-  gtk_combo_box_set_active (GTK_COMBO_BOX (combo), idx);
-
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
-    idx = gtk_combo_box_get_active (GTK_COMBO_BOX (combo));
-  else
-    idx = -1;
-
-  gtk_widget_destroy (dialog);
-
-  return idx;
-}
-
-static void
-jpkscan_error_dialog (const gchar *title,
-                      const gchar *format,
-                      ...)
-{
-  GtkWidget *dialog;
-  gchar     *message;
-  va_list    args;
-
-  dialog = gtk_message_dialog_new (NULL,
-                                   GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR,
-                                   GTK_BUTTONS_OK,
-                                   title);
-
-  va_start (args, format);
-  message = g_strdup_vprintf (format, args);
-  va_end (args);
-
-  gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
-                                            message);
-  g_free (message);
-
-  gtk_dialog_run (GTK_DIALOG (dialog));
-  gtk_widget_destroy (dialog);
-}

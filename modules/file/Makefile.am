@@ -16,6 +16,7 @@ file_LTLIBRARIES = \
 	ezdfile.la \
 	gwyfile.la \
 	hitachi-afm.la \
+	$(tiff_modules) \
 	nanoscope.la \
 	nt-mdt.la \
 	pixmap.la \
@@ -33,8 +34,7 @@ file_LTLIBRARIES = \
 
 #file_LTLIBRARIES = \
 #	mifile.la \
-#	$(tiff_modules)
-
+#
 
 noinst_HEADERS = \
 	err.h \
@@ -95,10 +95,10 @@ gwyfile_la_LIBADD = $(module_libadd)
 hitachi_afm_la_SOURCES = hitachi-afm.c
 hitachi_afm_la_LIBADD = $(module_libadd)
 
-#if HAVE_TIFF
-#jpkscan_la_SOURCES = jpk.h jpkscan.c
-#jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
-#endif
+if HAVE_TIFF
+jpkscan_la_SOURCES = jpk.h jpkscan.c
+jpkscan_la_LIBADD = $(module_libadd) $(MODULE_LIBTIFF)
+endif
 
 nanoscope_la_SOURCES = nanoscope.c
 nanoscope_la_LIBADD = $(module_libadd)
