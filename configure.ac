@@ -1,6 +1,6 @@
 # @(#) $Id$
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(Gwyddion, 1.99.5, [http://trific.ath.cx/bugzilla/])
+AC_INIT(Gwyddion, 1.99.5cvs20060115, [http://trific.ath.cx/bugzilla/])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 LIBRARY_RELEASE=1.99.6
@@ -86,6 +86,19 @@ case x"$target" in
     target_or_host="$target" ;;
 esac
 AC_MSG_RESULT([$target_or_host])
+
+AC_MSG_CHECKING([for 32bit])
+case "$target_or_host" in
+  # Highly incomplete
+  i@<:@3456@:>@86-*)
+    arch_32bit=yes
+    ;;
+  *)
+    # The trouble is, we cannot reliably detect things like CFLAGS=-m32
+    arch_32bit="maybe not"
+    ;;
+esac
+AC_MSG_RESULT([$arch_32bit])
 
 #############################################################################
 # Win32.
@@ -242,11 +255,16 @@ AC_CHECK_LIB(m,sqrt,,[])
 GWY_WITH([fftw3],,[FFTW3 library])
 if test "x$enable_fftw3" != "xno"; then
   PKG_CHECK_MODULES(FFTW3, [fftw3],
-                    [AC_DEFINE(HAVE_FFTW3,1,
-                               [Define if we have the FFTW3 package.])],
-                    enable_fftw3=no)
+    [AC_DEFINE(HAVE_FFTW3,1,[Define if we have the FFTW3 package.])],
+    enable_fftw3=no)
 fi
 if test "x$enable_fftw3" != "xno"; then
+  if test "x$arch_32bit" != "xyes"; then
+    PKG_CHECK_MODULES(FFTW3_DUMMY,[fftw3 >= 3.1],[:],
+      AC_MSG_WARN([FFTW3 older than 3.1 may cause crashes on 64bit systems.
+                    Consider installation of FFTW3 at least 3.1.  Alternatively
+                    you can disable FFTW3 with --without-fftw3.]))
+  fi
   FFTW3_DEPENDENCY=fftw3
 else
   FFTW3_DEPENDENCY=
