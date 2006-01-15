@@ -22,6 +22,7 @@ file_LTLIBRARIES = \
 	rhk-sm3.la \
 	rhk-spm32.la \
 	sdfile.la \
+	sis.la \
 	spmlab.la \
 	stmprg.la \
 	stpfile.la \
@@ -32,7 +33,6 @@ file_LTLIBRARIES = \
 #file_LTLIBRARIES = \
 #	mifile.la \
 #	pixmap.la \
-#	sis.la \
 #	$(tiff_modules)
 
 
@@ -124,8 +124,8 @@ rhk_spm32_la_LIBADD = $(module_libadd)
 sdfile_la_SOURCES = sdfile.c
 sdfile_la_LIBADD = $(module_libadd)
 
-#sis_la_SOURCES = sis.c
-#sis_la_LIBADD = $(module_libadd)
+sis_la_SOURCES = sis.c
+sis_la_LIBADD = $(module_libadd)
 
 spmlab_la_SOURCES = spmlab.c
 spmlab_la_LIBADD = $(module_libadd)

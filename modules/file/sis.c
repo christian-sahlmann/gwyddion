@@ -29,6 +29,7 @@
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 
+#include "err.h"
 #include "get.h"
 
 #define MAGIC "SIS&STB  SIScan"
@@ -329,20 +330,21 @@ typedef struct {
 static gboolean       module_register     (const gchar *name);
 static gint           sis_detect          (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
-static GwyContainer*  sis_load            (const gchar *filename);
-static guint          select_which_data   (SISFile *sisfile,
-                                           GwyEnum *choices,
-                                           guint n);
+static GwyContainer*  sis_load            (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
 static GwyDataField*  extract_data        (SISFile *sisfile,
                                            guint ch,
-                                           guint im);
+                                           guint im,
+                                           GError **error);
 static void           add_metadata        (SISFile *sisfile,
                                            guint ch,
                                            guint im,
                                            GwyContainer *data);
 static gboolean       sis_real_load       (const guchar *buffer,
                                            guint size,
-                                           SISFile *sisfile);
+                                           SISFile *sisfile,
+                                           GError **error);
 
 /* The module info. */
 static GwyModuleInfo module_info = {
@@ -350,7 +352,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SIS (Surface Imaging Systems) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -368,6 +370,7 @@ module_register(const gchar *name)
         (GwyFileDetectFunc)&sis_detect,
         (GwyFileLoadFunc)&sis_load,
         NULL,
+        NULL
     };
 
     gwy_file_func_register(name, &sis_func_info);
@@ -392,7 +395,9 @@ sis_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-sis_load(const gchar *filename)
+sis_load(const gchar *filename,
+         G_GNUC_UNUSED GwyRunType mode,
+         GError **error)
 {
     guchar *buffer;
     gsize size;
@@ -401,54 +406,61 @@ sis_load(const gchar *filename)
     GwyContainer *data = NULL;
     SISFile sisfile;
     SISImage *image;
-    GwyEnum *choices = NULL;
+    GString *key;
+    const gchar *s;
     guint n;
     guint i, j;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        g_clear_error(&err);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     n = 0;
     memset(&sisfile, 0, sizeof(sisfile));
     sisfile.params = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                            NULL, g_free);
-    if (sis_real_load(buffer, size, &sisfile)) {
+    if (sis_real_load(buffer, size, &sisfile, error)) {
+        data = gwy_container_new();
+        key = g_string_new("");
         for (i = 0; i < sisfile.nchannels; i++) {
             for (j = 0; j < sisfile.channels[i].nimages; j++) {
                 image = sisfile.channels[i].images + j;
-                if (image->image_data) {
+                if (!image->image_data)
+                    continue;
+
+                dfield = extract_data(&sisfile, i, j, &err);
+                if (dfield) {
+                    g_clear_error(&err);
+                    g_string_printf(key, "/%u/data", n);
+                    gwy_container_set_object_by_name(data, key->str, dfield);
+                    g_object_unref(dfield);
+                    g_string_append(key, "/title");
+                    s = gwy_enum_to_string(sisfile.channels[i].data_type,
+                                           sis_data_types,
+                                           G_N_ELEMENTS(sis_data_types));
+                    if (!s || !*s)
+                        s = "Unknown";
+                    gwy_container_set_string_by_name(data, key->str,
+                                                     g_strdup(s));
+                    /* FIXME: not yet
+                    add_metadata(&sisfile, i, j, data); */
                     n++;
-                    gwy_debug("Available data: Channel #%u image #%u",
-                              i+1, j+1);
-                    choices = g_renew(GwyEnum, choices, n);
-                    choices[n-1].value = 1024*i + j;
-                    choices[n-1].name = g_strdup_printf("Channel %u, image %u "
-                                                        "(%u×%u)",
-                                                        i+1, j+1,
-                                                        image->width,
-                                                        image->height);
                 }
             }
         }
-        i = select_which_data(&sisfile, choices, n);
-        gwy_debug("Selected %u:%u", i/1024, i % 1024);
-        if (i != (guint)-1) {
-            dfield = extract_data(&sisfile, i/1024, i % 1024);
-            if (dfield) {
-                data = GWY_CONTAINER(gwy_container_new());
-                gwy_container_set_object_by_name(data, "/0/data", dfield);
-                g_object_unref(dfield);
-                add_metadata(&sisfile, i/1024, i %1024, data);
-            }
+        g_string_free(key, TRUE);
+
+        if (!n) {
+            if (err)
+                g_propagate_error(error, err);
+            else
+                err_NO_DATA(error);
+            gwy_object_unref(data);
         }
     }
 
     gwy_file_abandon_contents(buffer, size, NULL);
     g_hash_table_destroy(sisfile.params);
-    for (i = 0; i < n; i++)
-        g_free((gpointer)choices[i].name);
-    g_free(choices);
     for (i = 0; i < sisfile.nchannels; i++)
         g_free(sisfile.channels[i].images);
     g_free(sisfile.channels);
@@ -456,131 +468,14 @@ sis_load(const gchar *filename)
     return data;
 }
 
-static void
-selection_changed(GtkWidget *button,
-                  SISDialogControls *controls)
-{
-    guint i;
-    GwyDataField *dfield;
-
-    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
-        return;
-
-    i = gwy_radio_buttons_get_current_from_widget(button, "data");
-    g_assert(i != (guint)-1);
-    dfield = extract_data(controls->sisfile, i/1024, i % 1024);
-    gwy_container_set_object_by_name(controls->data, "data", dfield);
-    g_object_unref(dfield);
-}
-
-static guint
-select_which_data(SISFile *sisfile,
-                  GwyEnum *choices,
-                  guint n)
-{
-    GtkWidget *dialog, *label, *vbox, *hbox, *align;
-    SISDialogControls controls;
-    GwyDataField *dfield;
-    gint xres, yres;
-    gdouble zoomval;
-    GwyPixmapLayer *layer;
-    GSList *radio, *rl;
-    gint response;
-    guint i;
-
-    if (!n)
-        return (guint)-1;
-
-    if (n == 1)
-        return choices[0].value;
-
-    controls.sisfile = sisfile;
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Data"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    hbox = gtk_hbox_new(FALSE, 20);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 6);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
-
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    vbox = gtk_vbox_new(TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(align), vbox);
-
-    label = gtk_label_new(_("Data to load:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0);
-
-    radio = gwy_radio_buttons_create(choices, n, "data",
-                                     G_CALLBACK(selection_changed), &controls,
-                                     0);
-    for (i = 0, rl = radio; rl; i++, rl = g_slist_next(rl))
-        gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(rl->data), TRUE, TRUE, 0);
-
-    /* preview */
-    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
-
-    i = choices[0].value;
-    dfield = extract_data(sisfile, i/1024, i % 1024);
-    controls.data = GWY_CONTAINER(gwy_container_new());
-    gwy_container_set_object_by_name(controls.data, "data", dfield);
-    gwy_container_set_enum_by_name(controls.data, "range-type",
-                                   GWY_LAYER_BASIC_RANGE_AUTO);
-    g_object_unref(dfield);
-    add_metadata(sisfile, i/1024, i %1024, controls.data);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    zoomval = 120.0/MAX(xres, yres);
-
-    controls.data_view = gwy_data_view_new(controls.data);
-    g_object_unref(controls.data);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.data_view), zoomval);
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "data");
-    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), "range-type");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
-    gtk_container_add(GTK_CONTAINER(align), controls.data_view);
-
-    gtk_widget_show_all(dialog);
-    gtk_window_present(GTK_WINDOW(dialog));
-    do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
-            case GTK_RESPONSE_NONE:
-            return (guint)-1;
-            break;
-
-            case GTK_RESPONSE_OK:
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
-
-    i = GPOINTER_TO_UINT(gwy_radio_buttons_get_current(radio, "data"));
-    gtk_widget_destroy(dialog);
-
-    return i;
-}
-
 static GwyDataField*
 extract_data(SISFile *sisfile,
              guint ch,
-             guint im)
+             guint im,
+             GError **error)
 {
     GwyDataField *dfield;
+    GwySIUnit *siunit;
     SISChannel *channel;
     SISImage *image;
     gdouble xreal, yreal, zreal;
@@ -590,7 +485,7 @@ extract_data(SISFile *sisfile,
     channel = sisfile->channels + ch;
     image = channel->images + im;
     if (image->bpp != 1 && image->bpp != 2 && image->bpp != 4) {
-        g_warning("Cannot extract image of bpp = %u", image->bpp);
+        err_BPP(error, image->bpp);
         return NULL;
     }
 
@@ -634,6 +529,25 @@ extract_data(SISFile *sisfile,
     }
     for (i = 0; i < image->width*image->height; i++)
         d[i] *= zreal;
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    gwy_object_unref(siunit);
+
+    switch (channel->data_type) {
+        case SIS_DATA_TYPE_TOPOGRAPHY:
+        siunit = gwy_si_unit_new("m");
+        break;
+
+        default:
+        /* FIXME */
+        break;
+    }
+
+    if (siunit) {
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        g_object_unref(siunit);
+    }
 
     return dfield;
 }
@@ -711,11 +625,6 @@ add_metadata(SISFile *sisfile,
         gwy_container_set_string_by_name(data, "/meta/Aqusition type", value);
     }
 
-    value = g_strdup(gwy_enum_to_string(channel->data_type,
-                                        sis_data_types,
-                                        G_N_ELEMENTS(sis_data_types)));
-    gwy_container_set_string_by_name(data, "/meta/Data type", value);
-
     value = g_strdup(gwy_enum_to_string(channel->signal_source,
                                         sis_signal_sources,
                                         G_N_ELEMENTS(sis_signal_sources)));
@@ -727,7 +636,8 @@ add_metadata(SISFile *sisfile,
 static gboolean
 sis_real_load(const guchar *buffer,
               guint size,
-              SISFile *sisfile)
+              SISFile *sisfile,
+              GError **error)
 {
     const SISParameter *sisparam;
     const SISProcessingStep *procstep;
@@ -741,14 +651,14 @@ sis_real_load(const guchar *buffer,
 
     p = memchr(buffer, '\x1a', size);
     if (!p) {
-        gwy_debug("FAILED: Cannot find start of binary part");
+        err_FILE_TYPE(error, "SIS");
         return FALSE;
     }
     start = p-buffer + 1;
     gwy_debug("%.*s", start, buffer);
 
     if (size - start < 6) {
-        gwy_debug("FAILED: Binary part shorter than its header");
+        err_TOO_SHORT(error);
         return FALSE;
     }
 
@@ -756,7 +666,8 @@ sis_real_load(const guchar *buffer,
     id = get_WORD(&p);
     gwy_debug("block id = %u", id);
     if (id != SIS_BLOCK_DOCUMENT) {
-        gwy_debug("FAILED: Block not a document block");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Block not a document block."));
         return FALSE;
     }
 
@@ -764,7 +675,8 @@ sis_real_load(const guchar *buffer,
     gwy_debug("doc info size = %u", docinfosize);
     if (size - (p - buffer) < docinfosize - 6
         || docinfosize < 8) {
-        gwy_debug("FAILED: Too short document info size");
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Too short document info."));
         return FALSE;
     }
 
@@ -776,14 +688,16 @@ sis_real_load(const guchar *buffer,
     sisfile->nchannels = get_WORD(&p);
     gwy_debug("nparams = %d, nchannels = %d", nparams, sisfile->nchannels);
     if (!sisfile->nchannels) {
-        gwy_debug("FAILED: No channels");
+        err_NO_DATA(error);
         return FALSE;
     }
     sisfile->channels = g_new0(SISChannel, sisfile->nchannels);
 
     for (i = 0; i < nparams; i++) {
         if (size - (p - buffer) < 4) {
-            gwy_debug("FAILED: Too short parameter info");
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Too short parameter info."));
             return FALSE;
         }
         id = get_WORD(&p);
@@ -815,7 +729,8 @@ sis_real_load(const guchar *buffer,
         switch (sisparam->type) {
             case G_TYPE_STRING:
             g_hash_table_insert(sisfile->params, idp, g_strndup(p, len));
-            gwy_debug("Value = %s", g_hash_table_lookup(sisfile->params, idp));
+            gwy_debug("Value = %s",
+                      (gchar*)g_hash_table_lookup(sisfile->params, idp));
             p += len;
             break;
 
@@ -841,7 +756,7 @@ sis_real_load(const guchar *buffer,
     }
 
     for (i = 0; i <= sisfile->nchannels; ) {
-        gwy_debug("%06x", p - buffer);
+        gwy_debug("0x%06x", p - buffer);
         /* this looks like end-of-data */
         if (i == sisfile->nchannels
             && channel->nimages == channel->processing_steps) {
@@ -856,6 +771,7 @@ sis_real_load(const guchar *buffer,
                 sisfile->nchannels = i-1;
                 return TRUE;
             }
+            err_FILE_TYPE(error, "SIS");
             return FALSE;
         }
 
@@ -869,6 +785,7 @@ sis_real_load(const guchar *buffer,
                 sisfile->nchannels = i;
                 return TRUE;
             }
+            err_FILE_TYPE(error, "SIS");
             return FALSE;
         }
 
@@ -884,8 +801,12 @@ sis_real_load(const guchar *buffer,
                                       channel->nimages);
             image = channel->images + channel->nimages-1;
             gwy_debug("Image #%u of channel %u", channel->nimages, i);
-            if (!i || !channel || len < 26)
+            if (!i || !channel || len < 26) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Unexpected image block."));
                 return FALSE;
+            }
             /* This is really a guchar[4], not int32 */
             get_CHARARRAY(image->processing_step, &p);
             procstep = NULL;
@@ -911,8 +832,12 @@ sis_real_load(const guchar *buffer,
             image->parent_processing_step_index = get_WORD(&p);
             image->parent_processing_step_channel_index = get_WORD(&p);
             p += procstep ? procstep->data_size : 0;
-            if (size - (p - buffer) < 10)
+            if (size - (p - buffer) < 10) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("End of file reached in image block."));
                 return FALSE;
+            }
 
             image->width = get_WORD(&p);
             image->height = get_WORD(&p);
@@ -934,8 +859,12 @@ sis_real_load(const guchar *buffer,
             else {
                 len = image->width * image->height * image->bpp;
                 gwy_debug("assuming data of size %u", len);
-                if (size - (p - buffer) < len)
+                if (size - (p - buffer) < len) {
+                    g_set_error(error, GWY_MODULE_FILE_ERROR,
+                                GWY_MODULE_FILE_ERROR_DATA,
+                                _("End of file reached in image block."));
                     return FALSE;
+                }
                 image->image_data = p;
                 p += len;
             }
@@ -944,8 +873,12 @@ sis_real_load(const guchar *buffer,
             case SIS_BLOCK_CHANNEL:
             i++;
             gwy_debug("Channel %u", i);
-            if (len < 8)
+            if (len < 8) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("End of file reached in channel block."));
                 return FALSE;
+            }
             channel = sisfile->channels + i-1;
             channel->data_type = get_WORD(&p);
             channel->signal_source = get_WORD(&p);
@@ -966,6 +899,8 @@ sis_real_load(const guchar *buffer,
         }
     }
 
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("End of file reached when another channel was expected."));
     return FALSE;
 }
 
