@@ -442,7 +442,7 @@ gwy_app_file_save(void)
 }
 
 /**
- * gwy_app_file_save:
+ * gwy_app_file_save_as:
  *
  * Saves current data to a user-selected file (very high-level app function).
  **/

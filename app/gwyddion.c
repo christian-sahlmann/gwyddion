@@ -303,7 +303,12 @@ open_command_line_files(gchar **args, gint n)
             filename = g_strdup(*p);
         else
             filename = g_build_filename(cwd, *p, NULL);
-        gwy_app_file_load(NULL, filename, NULL);
+        if (g_file_test(filename, G_FILE_TEST_IS_DIR)) {
+            gwy_app_set_current_directory(filename);
+            gwy_app_file_open();
+        }
+        else
+            gwy_app_file_load(NULL, filename, NULL);
         g_free(filename);
     }
     g_free(cwd);
