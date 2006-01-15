@@ -215,6 +215,7 @@ gwy_si_unit_serialize(GObject *obj,
                       GByteArray *buffer)
 {
     GwySIUnit *si_unit;
+    GByteArray *retval;
 
     g_return_val_if_fail(GWY_IS_SI_UNIT(obj), NULL);
 
@@ -225,10 +226,11 @@ gwy_si_unit_serialize(GObject *obj,
             { 's', "unitstr", &unitstr, NULL, },
         };
         gwy_debug("unitstr = <%s>", unitstr);
-        return gwy_serialize_pack_object_struct(buffer,
-                                                GWY_SI_UNIT_TYPE_NAME,
-                                                G_N_ELEMENTS(spec), spec);
+        retval = gwy_serialize_pack_object_struct(buffer,
+                                                  GWY_SI_UNIT_TYPE_NAME,
+                                                  G_N_ELEMENTS(spec), spec);
         g_free(unitstr);
+        return retval;
     }
 }
 
