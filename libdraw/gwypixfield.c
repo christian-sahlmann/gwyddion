@@ -74,7 +74,7 @@ gwy_pixbuf_draw_data_field_with_range(GdkPixbuf *pixbuf,
         row = data + i*xres;
         for (j = 0; j < xres; j++) {
             dval = (gint)((*(row++) - minimum)*cor + 0.5);
-            dval = CLAMP(dval, 0, palsize-1);
+            dval = GWY_CLAMP(dval, 0, palsize-1);
             /* simply index to the guchar samples, it's faster and no one
              * can tell the difference... */
             s = samples + 4*dval;
@@ -135,7 +135,7 @@ gwy_pixbuf_draw_data_field(GdkPixbuf *pixbuf,
             dval = (gint)((*(row++) - minimum)*cor + 0.5);
             /* simply index to the guchar samples, it's faster and no one
              * can tell the difference... */
-            dval = CLAMP(dval, 0, palsize-1);
+            dval = GWY_CLAMP(dval, 0, palsize-1);
             s = samples + 4*dval;
             *(line++) = *(s++);
             *(line++) = *(s++);
@@ -189,7 +189,7 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
         cdh[i] = xres*yres/(2*CDH_SIZE);
     for (i = 0; i < xres*yres; i++) {
         h = (gint)((data[i] - min)*q + 1);
-        cdh[CLAMP(h, 0, CDH_SIZE-1)]++;
+        cdh[GWY_CLAMP(h, 0, CDH_SIZE-1)]++;
     }
     for (i = 1; i < CDH_SIZE; i++)
         cdh[i] += cdh[i-1];
@@ -205,7 +205,7 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
         row = data + i*xres;
         for (j = 0; j < xres; j++) {
             v = (row[j] - min)*q;
-            v = CLAMP(v, 0.0, CDH_SIZE-1.000001);
+            v = GWY_CLAMP(v, 0.0, CDH_SIZE-1.000001);
             h = (gint)v;
             v -= h;
             h = (gint)((cdh[h]*(1.0 - v) + cdh[h+1]*v)*cor + 0.5);
@@ -269,7 +269,7 @@ gwy_pixbuf_draw_data_field_as_mask(GdkPixbuf *pixbuf,
         line = pixels + i*rowstride + 3;
         row = data + i*xres;
         for (j = 0; j < xres; j++, row++) {
-            gdouble val = CLAMP(*row, 0.0, 1.0);
+            gdouble val = GWY_CLAMP(*row, 0.0, 1.0);
 
             *line = (guchar)(cor*val);
             line += 4;

@@ -59,7 +59,11 @@
     G_PARAM_SPEC_##spectype(g_object_class_find_property \
                                 (G_OBJECT_CLASS(g_type_class_peek(type)), id))
 
-#define gwy_strequal(a, b) (!strcmp((a), (b)))
+#define gwy_strequal(a, b) \
+    (!strcmp((a), (b)))
+
+#define GWY_CLAMP(x, low, hi) \
+    (G_UNLIKELY((x) > (hi)) ? (hi) : (G_UNLIKELY((x) < (low)) ? (low) : (x)))
 
 G_BEGIN_DECLS
 

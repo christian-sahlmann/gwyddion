@@ -744,5 +744,22 @@ gwy_str_next_line(gchar **buffer)
  * Expands to %TRUE if strings are equal, to %FALSE otherwise.
  **/
 
+/**
+ * GWY_CLAMP:
+ * @x: The value to clamp.
+ * @low: The minimum value allowed.
+ * @hi: The maximum value allowed.
+ *
+ * Ensures that @x is between the limits set by @low and @hi.
+ *
+ * This macro differs from GLib's CLAMP() by G_UNLIKELY() assertions on the
+ * tests that @x is smaller than @low and larger than @hi.  This makes @x
+ * already being in the right range the fast code path.
+ *
+ * It is supposed to be used on results of floating-point operations that
+ * should fall to a known range but may occasionaly fail to due to rounding
+ * errors and in similar situations.  Under normal circumstances, use CLAMP().
+ **/
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
