@@ -333,9 +333,9 @@ angle_changed_cb(GtkObject *adj,
     rotate_preview_draw(controls, args);
 }
 
-static const gchar *angle_key = "/module/rotate/angle";
-static const gchar *interp_key = "/module/rotate/interp";
-static const gchar *expand_key = "/module/rotate/expand";
+static const gchar angle_key[]  = "/module/rotate/angle";
+static const gchar interp_key[] = "/module/rotate/interp";
+static const gchar expand_key[] = "/module/rotate/expand";
 
 static void
 rotate_sanitize_args(RotateArgs *args)

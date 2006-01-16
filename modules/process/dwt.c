@@ -247,7 +247,7 @@ preserve_changed_cb(GtkToggleButton *button, DWTArgs *args)
 
 static void
 dwt_dialog_update(DWTControls *controls,
-                     DWTArgs *args)
+                  DWTArgs *args)
 {
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
@@ -258,9 +258,9 @@ dwt_dialog_update(DWTControls *controls,
 }
 
 
-static const gchar *preserve_key = "/module/dwt/preserve";
-static const gchar *interp_key = "/module/dwt/interp";
-static const gchar *wavelet_key = "/module/dwt/window";
+static const gchar preserve_key[] = "/module/dwt/preserve";
+static const gchar interp_key[]   = "/module/dwt/interp";
+static const gchar wavelet_key[]  = "/module/dwt/window";
 
 static void
 dwt_sanitize_args(DWTArgs *args)

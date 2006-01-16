@@ -469,11 +469,11 @@ make_datafield(G_GNUC_UNUSED GwyDataField *old,
     return dfield;
 }
 
-static const gchar *size_key = "/module/angle_dist/size";
-static const gchar *steps_key = "/module/angle_dist/steps";
-static const gchar *logscale_key = "/module/angle_dist/logscale";
-static const gchar *fit_plane_key = "/module/angle_dist/fit_plane";
-static const gchar *kernel_size_key = "/module/angle_dist/kernel_size";
+static const gchar size_key[]        = "/module/angle_dist/size";
+static const gchar steps_key[]       = "/module/angle_dist/steps";
+static const gchar logscale_key[]    = "/module/angle_dist/logscale";
+static const gchar fit_plane_key[]   = "/module/angle_dist/fit_plane";
+static const gchar kernel_size_key[] = "/module/angle_dist/kernel_size";
 
 static void
 sanitize_args(AngleArgs *args)

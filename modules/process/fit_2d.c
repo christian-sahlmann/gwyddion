@@ -913,8 +913,8 @@ gwy_math_nlfit_fit_2d(GwyNLFitFunc ff,
 }
 
 
-static const gchar *function_key = "/module/fit_2d/function";
-static const gchar *display_key = "/module/fit_2d/display";
+static const gchar function_key[] = "/module/fit_2d/function";
+static const gchar display_key[]  = "/module/fit_2d/display";
 
 static void
 fit_2d_sanitize_args(Fit2DArgs *args)

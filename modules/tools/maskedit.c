@@ -368,7 +368,7 @@ dialog_abandon(GwyUnitoolState *state)
     memset(state->user_data, 0, sizeof(ToolControls));
 }
 
-static const gchar *mode_key = "/tool/maskedit/mode";
+static const gchar mode_key[] = "/tool/maskedit/mode";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)

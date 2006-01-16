@@ -572,12 +572,12 @@ mask_process(GwyDataField *dfield, GwyDataField *maskfield, WshedArgs *args,
     return status.state == GWY_WATERSHED_STATE_FINISHED;
 }
 
-static const gchar *inverted_key = "/module/mark_wshed/inverted";
-static const gchar *locate_steps_key = "/module/mark_wshed/locate_steps";
-static const gchar *locate_thresh_key = "/module/mark_wshed/locate_thresh";
-static const gchar *locate_dropsize_key = "/module/mark_wshed/locate_dropsize";
-static const gchar *wshed_steps_key = "/module/mark_wshed/wshed_steps";
-static const gchar *wshed_dropsize_key = "/module/mark_wshed/wshed_dropsize";
+static const gchar inverted_key[]        = "/module/mark_wshed/inverted";
+static const gchar locate_steps_key[]    = "/module/mark_wshed/locate_steps";
+static const gchar locate_thresh_key[]   = "/module/mark_wshed/locate_thresh";
+static const gchar locate_dropsize_key[] = "/module/mark_wshed/locate_dropsize";
+static const gchar wshed_steps_key[]     = "/module/mark_wshed/wshed_steps";
+static const gchar wshed_dropsize_key[]  = "/module/mark_wshed/wshed_dropsize";
 
 static void
 wshed_sanitize_args(WshedArgs *args)

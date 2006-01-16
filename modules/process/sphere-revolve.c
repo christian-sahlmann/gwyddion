@@ -631,9 +631,9 @@ sphrev_make_sphere(gdouble radius, gint maxres)
     return dline;
 }
 
-static const gchar *radius_key = "/module/arc_revolve/radius";
-static const gchar *direction_key = "/module/arc_revolve/direction";
-static const gchar *do_extract_key = "/module/arc_revolve/do_extract";
+static const gchar radius_key[]     = "/module/arc_revolve/radius";
+static const gchar direction_key[]  = "/module/arc_revolve/direction";
+static const gchar do_extract_key[] = "/module/arc_revolve/do_extract";
 
 static void
 sphrev_sanitize_args(Sphrev1DArgs *args)

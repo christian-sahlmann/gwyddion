@@ -592,8 +592,8 @@ remove_datapoints(GwyDataLine *xline, GwyDataLine *yline,
     return TRUE;
 }
 
-static const gchar *interp_key = "/module/fractal/interp";
-static const gchar *out_key = "/module/fractal/out";
+static const gchar interp_key[] = "/module/fractal/interp";
+static const gchar out_key[]    = "/module/fractal/out";
 
 static void
 fractal_sanitize_args(FractalArgs *args)

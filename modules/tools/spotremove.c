@@ -610,7 +610,7 @@ algorithm_changed_cb(GtkWidget *combo, GwyUnitoolState *state)
     controls->algorithm = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 }
 
-static const gchar *algorithm_key = "/tool/spotremove/algorithm";
+static const gchar algorithm_key[] = "/tool/spotremove/algorithm";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)

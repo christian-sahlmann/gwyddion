@@ -288,10 +288,10 @@ dwt_anisotropy_dialog_update(DWTAnisotropyControls *controls,
 }
 
 
-static const gchar *interp_key = "/module/dwt_anisotropy/interp";
-static const gchar *wavelet_key = "/module/dwt_anisotropy/wavelet";
-static const gchar *ratio_key = "/module/dwt_anisotropy/ratio";
-static const gchar *lowlimit_key = "/module/dwt_anisotropy/lowlimit";
+static const gchar interp_key[]   = "/module/dwt_anisotropy/interp";
+static const gchar wavelet_key[]  = "/module/dwt_anisotropy/wavelet";
+static const gchar ratio_key[]    = "/module/dwt_anisotropy/ratio";
+static const gchar lowlimit_key[] = "/module/dwt_anisotropy/lowlimit";
 
 static void
 dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args)

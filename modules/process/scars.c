@@ -651,11 +651,11 @@ preview(ScarsControls *controls,
     gwy_data_field_data_changed(mask);
 }
 
-static const gchar *inverted_key = "/module/scars/inverted";
-static const gchar *threshold_low_key = "/module/scars/threshold_low";
-static const gchar *threshold_high_key = "/module/scars/threshold_high";
-static const gchar *min_len_key= "/module/scars/min_len";
-static const gchar *max_width_key= "/module/scars/max_width";
+static const gchar inverted_key[]       = "/module/scars/inverted";
+static const gchar threshold_low_key[]  = "/module/scars/threshold_low";
+static const gchar threshold_high_key[] = "/module/scars/threshold_high";
+static const gchar min_len_key[]        = "/module/scars/min_len";
+static const gchar max_width_key[]      = "/module/scars/max_width";
 
 static void
 scars_mark_sanitize_args(ScarsArgs *args)

@@ -553,14 +553,14 @@ mask_process(GwyDataField *dfield,
     g_object_unref(output_field);
 }
 
-static const gchar *inverted_key = "/module/mark_height/inverted";
-static const gchar *isheight_key = "/module/mark_height/isheight";
-static const gchar *isslope_key = "/module/mark_height/isslope";
-static const gchar *islap_key = "/module/mark_height/islap";
-static const gchar *height_key = "/module/mark_height/height";
-static const gchar *slope_key = "/module/mark_height/slope";
-static const gchar *lap_key = "/module/mark_height/lap";
-static const gchar *mergetype_key = "/module/mark_height/merge_type";
+static const gchar inverted_key[]  = "/module/mark_height/inverted";
+static const gchar isheight_key[]  = "/module/mark_height/isheight";
+static const gchar isslope_key[]   = "/module/mark_height/isslope";
+static const gchar islap_key[]     = "/module/mark_height/islap";
+static const gchar height_key[]    = "/module/mark_height/height";
+static const gchar slope_key[]     = "/module/mark_height/slope";
+static const gchar lap_key[]       = "/module/mark_height/lap";
+static const gchar mergetype_key[] = "/module/mark_height/merge_type";
 
 static void
 mark_sanitize_args(MarkArgs *args)

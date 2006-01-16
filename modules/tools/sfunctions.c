@@ -478,11 +478,11 @@ isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
 }
 
 
-static const gchar *interp_key = "/tool/sfunctions/interp";
-static const gchar *out_key = "/tool/sfunctions/out";
-static const gchar *dir_key = "/tool/sfunctions/dir";
-static const gchar *siz_key = "/tool/sfunctions/siz";
-static const gchar *isnpoints_key = "/tool/sfunctions/isnpoints";
+static const gchar interp_key[]    = "/tool/sfunctions/interp";
+static const gchar out_key[]       = "/tool/sfunctions/out";
+static const gchar dir_key[]       = "/tool/sfunctions/dir";
+static const gchar siz_key[]       = "/tool/sfunctions/siz";
+static const gchar isnpoints_key[] = "/tool/sfunctions/isnpoints";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)

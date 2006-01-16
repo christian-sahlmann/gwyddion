@@ -355,8 +355,8 @@ unrotate_interp_cb(GtkWidget *combo,
     unrotate_dialog_update(controls, controls->args);
 }
 
-static const gchar *interp_key = "/module/unrotate/interp";
-static const gchar *symmetry_key = "/module/unrotate/symmetry";
+static const gchar interp_key[]   = "/module/unrotate/interp";
+static const gchar symmetry_key[] = "/module/unrotate/symmetry";
 
 static void
 sanitize_args(UnrotateArgs *args)

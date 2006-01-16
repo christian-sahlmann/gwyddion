@@ -508,69 +508,69 @@ preview(DriftControls *controls,
 
 static void
 reset(DriftControls *controls,
-        DriftArgs *args)
+      DriftArgs *args)
 {
     GObject *maskfield;
-    
+
     if (gwy_container_contains_by_name(controls->mydata, "/0/mask")) {
         maskfield = gwy_container_get_object_by_name(controls->mydata,
-                                                           "/0/mask");
+                                                     "/0/mask");
         gwy_data_field_clear(GWY_DATA_FIELD(maskfield));
     }
     controls->computed = FALSE;
 
     gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
 }
-    
+
 static void
 drift_ok(DriftControls *controls,
-        DriftArgs *args)
+         DriftArgs *args)
 {
 
     GtkWidget *graph;
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-    
+
     GwyContainer *newdata;
     GwyDataField *data_field, *newdata_field;
     GtkWidget *data_window;
 
     if (!controls->computed) return;
-   
+
     if (args->is_correct)
     {
-	newdata = gwy_container_duplicate_by_prefix(controls->mydata, "/0/data", NULL);
-	gwy_app_clean_up_data(newdata);
-	newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
-	data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
-	
-    	newdata_field = gwy_data_field_correct_drift(
-            data_field,
-	    newdata_field,
-	    controls->result,
-	    args->is_crop);
+        newdata = gwy_container_duplicate_by_prefix(controls->mydata, "/0/data", NULL);
+        gwy_app_clean_up_data(newdata);
+        newdata_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(newdata, "/0/data"));
+        data_field = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata, "/0/data"));
 
-	data_window = gwy_app_data_window_create(newdata);
-	gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
-	g_object_unref(newdata);
+        newdata_field = gwy_data_field_correct_drift(
+                                                     data_field,
+                                                     newdata_field,
+                                                     controls->result,
+                                                     args->is_crop);
+
+        data_window = gwy_app_data_window_create(newdata);
+        gwy_app_data_window_set_untitled(GWY_DATA_WINDOW(data_window), NULL);
+        g_object_unref(newdata);
     }
-    
+
     if (args->is_graph)
     {
-    	gmodel = gwy_graph_model_new();
-    	cmodel = gwy_graph_curve_model_new();
-    	gwy_graph_model_add_curve(gmodel, cmodel);
+        gmodel = gwy_graph_model_new();
+        cmodel = gwy_graph_curve_model_new();
+        gwy_graph_model_add_curve(gmodel, cmodel);
 
-    	gwy_graph_model_set_title(gmodel, _("Drift graph"));
-    	gwy_graph_model_set_units_from_data_line(gmodel, controls->result);
-    	gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
-    	gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
+        gwy_graph_model_set_title(gmodel, _("Drift graph"));
+        gwy_graph_model_set_units_from_data_line(gmodel, controls->result);
+        gwy_graph_curve_model_set_description(cmodel, "x-axis drift");
+        gwy_graph_curve_model_set_data_from_dataline(cmodel, controls->result, 0, 0);
 
-    	graph = gwy_graph_new(gmodel);
-    	gwy_object_unref(cmodel);
-    	gwy_object_unref(gmodel);
-    	gwy_object_unref(controls->result);
-    	gwy_app_graph_window_create(GWY_GRAPH(graph), controls->mydata);
+        graph = gwy_graph_new(gmodel);
+        gwy_object_unref(cmodel);
+        gwy_object_unref(gmodel);
+        gwy_object_unref(controls->result);
+        gwy_app_graph_window_create(GWY_GRAPH(graph), controls->mydata);
     }
 }
 
@@ -588,35 +588,35 @@ mask_process(GwyDataField *dfield,
 
     if (args->method == GWY_DRIFT_CORRELATION)
         gwy_data_field_get_drift_from_correlation(dfield, 
-                                              controls->result,
-                                              MAX(1, (gint)(args->sensitivity/10)),
-                                              100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
-					      1 - args->sensitivity/500.0);
-   
+                                                  controls->result,
+                                                  MAX(1, (gint)(args->sensitivity/10)),
+                                                  100.0/8.0 - MAX(1, (gint)(args->smoothing/8)),
+                                                  1 - args->sensitivity/500.0);
+
     step = dfield->yres/10;
-    
+
     for (i=0; i<(dfield->yres); i++)
     {
-	for (j=-step; j<(dfield->xres+step); j+=step)
-	{
-		pos = j + gwy_data_field_rtoi(dfield, controls->result->data[i]);
-		if (pos>1 && pos < dfield->xres)
-		{
-		    maskfield->data[(gint)(pos + i*dfield->xres)] = 1;
-		    if (dfield->xres >= 300) 
-			maskfield->data[(gint)(pos - 1 + i*dfield->xres)] = 1;
-		}
-	}
+        for (j=-step; j<(dfield->xres+step); j+=step)
+        {
+            pos = j + gwy_data_field_rtoi(dfield, controls->result->data[i]);
+            if (pos>1 && pos < dfield->xres)
+            {
+                maskfield->data[(gint)(pos + i*dfield->xres)] = 1;
+                if (dfield->xres >= 300) 
+                    maskfield->data[(gint)(pos - 1 + i*dfield->xres)] = 1;
+            }
+        }
     }
 }
 
-static const gchar *iscorrect_key = "/module/drift/iscorrect";
-static const gchar *isgraph_key = "/module/drift/isgraph";
-static const gchar *iscrop_key = "/module/drift/iscrop";
-static const gchar *sensitivity_key = "/module/drift/sensitivity";
-static const gchar *smoothing_key = "/module/drift/smoothing";
-static const gchar *method_key = "/module/drift/method";
-static const gchar *interpolation_key = "/module/drift/interpolation";
+static const gchar iscorrect_key[]     = "/module/drift/iscorrect";
+static const gchar isgraph_key[]       = "/module/drift/isgraph";
+static const gchar iscrop_key[]        = "/module/drift/iscrop";
+static const gchar sensitivity_key[]   = "/module/drift/sensitivity";
+static const gchar smoothing_key[]     = "/module/drift/smoothing";
+static const gchar method_key[]        = "/module/drift/method";
+static const gchar interpolation_key[] = "/module/drift/interpolation";
 
 static void
 drift_sanitize_args(DriftArgs *args)

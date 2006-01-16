@@ -358,9 +358,9 @@ maskcor_do(MaskcorArgs *args)
     return TRUE;
 }
 
-static const gchar *result_key = "/module/maskcor/result";
-static const gchar *method_key = "/module/maskcor/method";
-static const gchar *threshold_key = "/module/maskcor/threshold";
+static const gchar result_key[]    = "/module/maskcor/result";
+static const gchar method_key[]    = "/module/maskcor/method";
+static const gchar threshold_key[] = "/module/maskcor/threshold";
 
 static void
 maskcor_sanitize_args(MaskcorArgs *args)

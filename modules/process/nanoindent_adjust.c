@@ -502,10 +502,10 @@ gwy_nanoindent_adjust(GwyDataField *model, GwyDataField *sample,
 }
 
 
-static const gchar *interp_key = "/module/nanoindent_adjust/interp";
-static const gchar *expand_key = "/module/nanoindent_adjust/expand";
-static const gchar *rotate_key = "/module/nanoindent_adjust/rotate";
-static const gchar *move_key = "/module/nanoindent_adjust/move";
+static const gchar interp_key[] = "/module/nanoindent_adjust/interp";
+static const gchar expand_key[] = "/module/nanoindent_adjust/expand";
+static const gchar rotate_key[] = "/module/nanoindent_adjust/rotate";
+static const gchar move_key[]   = "/module/nanoindent_adjust/move";
 
 
 static void

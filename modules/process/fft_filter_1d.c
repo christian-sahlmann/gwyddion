@@ -619,11 +619,11 @@ interpolation_changed_cb(GtkWidget *combo,
     update_view(pcontrols, args);
 }
 
-static const gchar *suppress_key = "/module/fftf_1d/suppress";
-static const gchar *update_key = "/module/fftf_1d/update";
-static const gchar *view_key = "/module/fftf_1d/view";
-static const gchar *direction_key = "/module/fftf_1d/direction";
-static const gchar *interpolation_key = "/module/fftf_1d/interpolation";
+static const gchar suppress_key[]      = "/module/fftf_1d/suppress";
+static const gchar update_key[]        = "/module/fftf_1d/update";
+static const gchar view_key[]          = "/module/fftf_1d/view";
+static const gchar direction_key[]     = "/module/fftf_1d/direction";
+static const gchar interpolation_key[] = "/module/fftf_1d/interpolation";
 
 static void
 fftf_1d_sanitize_args(Fftf1dArgs *args)

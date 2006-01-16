@@ -559,11 +559,11 @@ radius_changed_cb(G_GNUC_UNUSED gpointer object,
     controls->args->radius = val * pow10(p10);
 }
 
-static const gchar *nsides_key = "/module/tip_model/nsides";
-static const gchar *angle_key = "/module/tip_model/angle";
-static const gchar *radius_key = "/module/tip_model/radius";
-static const gchar *theta_key = "/module/tip_model/theta";
-static const gchar *type_key = "/module/tip_model/tip_type";
+static const gchar nsides_key[] = "/module/tip_model/nsides";
+static const gchar angle_key[]  = "/module/tip_model/angle";
+static const gchar radius_key[] = "/module/tip_model/radius";
+static const gchar theta_key[]  = "/module/tip_model/theta";
+static const gchar type_key[]   = "/module/tip_model/tip_type";
 
 static void
 tip_model_sanitize_args(TipModelArgs *args)

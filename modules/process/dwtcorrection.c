@@ -234,8 +234,8 @@ dwt_correction_dialog_update(DWTCorrectionControls *controls,
 }
 
 
-static const gchar *interp_key = "/module/dwt_correction/interp";
-static const gchar *wavelet_key = "/module/dwt_correction/wavelet";
+static const gchar interp_key[]  = "/module/dwt_correction/interp";
+static const gchar wavelet_key[] = "/module/dwt_correction/wavelet";
 
 static void
 dwt_correction_sanitize_args(DWTCorrectionArgs *args)

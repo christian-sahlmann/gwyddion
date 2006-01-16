@@ -342,9 +342,9 @@ exclude_changed_cb(GtkToggleButton *button, GwyUnitoolState *state)
 }
 
 
-static const gchar *exc_key = "/tool/polynom/exclude";
-static const gchar *fit_key = "/tool/polynom/fitting";
-static const gchar *dir_key = "/tool/polynom/direction";
+static const gchar exc_key[] = "/tool/polynom/exclude";
+static const gchar fit_key[] = "/tool/polynom/fitting";
+static const gchar dir_key[] = "/tool/polynom/direction";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)

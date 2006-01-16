@@ -262,10 +262,10 @@ cwt_dialog_update(CWTControls *controls,
                                   args->wavelet);
 }
 
-static const gchar *preserve_key = "/module/cwt/preserve";
-static const gchar *interp_key = "/module/cwt/interp";
-static const gchar *wavelet_key = "/module/cwt/wavelet";
-static const gchar *scale_key = "/module/cwt/scale";
+static const gchar preserve_key[] = "/module/cwt/preserve";
+static const gchar interp_key[]   = "/module/cwt/interp";
+static const gchar wavelet_key[]  = "/module/cwt/wavelet";
+static const gchar scale_key[]    = "/module/cwt/scale";
 
 static void
 cwt_sanitize_args(CWTArgs *args)

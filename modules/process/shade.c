@@ -349,8 +349,8 @@ shade_dialog_update(ShadeControls *controls,
     gwy_data_field_data_changed(shader);
 }
 
-static const gchar *theta_key = "/module/shade/theta";
-static const gchar *phi_key = "/module/shade/phi";
+static const gchar theta_key[] = "/module/shade/theta";
+static const gchar phi_key[]   = "/module/shade/phi";
 
 static void
 shade_sanitize_args(ShadeArgs *args)

@@ -550,12 +550,11 @@ isnofpoints_changed_cb(GtkToggleButton *button, ToolControls *controls)
 }
 
 
-static const gchar *separate_key = "/tool/profile/separate";
-static const gchar *interp_key = "/tool/profile/interp";
-static const gchar *size_key = "/tool/profile/size";
-static const gchar *npoints_key = "/tool/profile/npoints";
-static const gchar *isnpoints_key = "/tool/profile/isnpoints";
-
+static const gchar separate_key[]  = "/tool/profile/separate";
+static const gchar interp_key[]    = "/tool/profile/interp";
+static const gchar size_key[]      = "/tool/profile/size";
+static const gchar npoints_key[]   = "/tool/profile/npoints";
+static const gchar isnpoints_key[] = "/tool/profile/isnpoints";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)

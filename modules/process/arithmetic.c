@@ -416,7 +416,7 @@ arithmetic_do(ArithmeticArgs *args)
     g_object_unref(data);
 }
 
-static const gchar *expression_key = "/module/arithmetic/expression";
+static const gchar expression_key[] = "/module/arithmetic/expression";
 
 static void
 arithmetic_load_args(GwyContainer *settings,

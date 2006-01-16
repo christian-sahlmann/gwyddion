@@ -338,7 +338,7 @@ mask_shrink_do(GwyDataField *dfield,
     gwy_data_field_data_changed(dfield);
 }
 
-static const gchar *pixels_key = "/module/%s/pixels";
+static const gchar pixels_key[] = "/module/%s/pixels";
 
 static void
 mask_grow_load_args(GwyContainer *container,

@@ -421,8 +421,8 @@ laplace_interpolation(GwyDataField *dfield,
     g_object_unref(area);
 }
 
-static const gchar *mode_key = "/tool/grain_remove_manually/mode";
-static const gchar *algorithm_key = "/tool/grain_remove_manually/algorithm";
+static const gchar mode_key[]      = "/tool/grain_remove_manually/mode";
+static const gchar algorithm_key[] = "/tool/grain_remove_manually/algorithm";
 
 static void
 load_args(GwyContainer *container, ToolControls *controls)

@@ -793,7 +793,7 @@ create_preset_menu(GCallback callback,
 
 }
 
-static const gchar *preset_key = "/module/graph_cd/preset";
+static const gchar preset_key[] = "/module/graph_cd/preset";
 
 static void
 load_args(GwyContainer *container,

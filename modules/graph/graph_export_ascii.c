@@ -45,33 +45,29 @@ typedef struct {
 } ExportControls;
 
 
-static gboolean    module_register             (const gchar *name);
-static gboolean    export                      (GwyGraph *graph);
-static gboolean    export_dialog                (GwyGraph *graph);
-static void        export_dialog_closed_cb      (GwyGraph *graph);
-static void        export_dialog_response_cb    (GtkDialog *pdialog, 
-                                                 gint response, 
-                                                 GwyGraph *graph);
-static void        units_changed_cb             (ExportControls *pcontrols);
-
-static void        labels_changed_cb            (ExportControls *pcontrols);
-
-static void        metadata_changed_cb          (ExportControls *pcontrols);
-
-static void        style_cb                     (GtkWidget *combo);
-static void        load_args                    (GwyContainer *container,
-                                                 ExportControls *pcontrols);
-static void        save_args                    (GwyContainer *container,
-                                                 ExportControls *pcontrols);
+static gboolean module_register          (const gchar *name);
+static gboolean export                   (GwyGraph *graph);
+static gboolean export_dialog            (GwyGraph *graph);
+static void     export_dialog_closed_cb  (GwyGraph *graph);
+static void     export_dialog_response_cb(GtkDialog *pdialog,
+                                          gint response,
+                                          GwyGraph *graph);
+static void     units_changed_cb         (ExportControls *pcontrols);
+static void     labels_changed_cb        (ExportControls *pcontrols);
+static void     metadata_changed_cb      (ExportControls *pcontrols);
+static void     style_cb                 (GtkWidget *combo);
+static void     load_args                (GwyContainer *container,
+                                          ExportControls *pcontrols);
+static void     save_args                (GwyContainer *container,
+                                          ExportControls *pcontrols);
 
 
 GwyEnum style_type[] = {
-   {N_("Plain text"),             GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN   },
-   {N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT },
-   {N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV     },
-   {N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN  },
+   { N_("Plain text"),             GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN,   },
+   { N_("Gnuplot friendly"),       GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT, },
+   { N_("Comma separated values"), GWY_GRAPH_MODEL_EXPORT_ASCII_CSV,     },
+   { N_("Origin friendly"),        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN,  },
 };
-
 
 static GtkWidget *dialog = NULL;
 static ExportControls controls;
@@ -118,8 +114,8 @@ export(GwyGraph *graph)
     }
     settings = gwy_app_settings_get();
     load_args(settings, &controls);
-    
-    
+
+
     if (!dialog)
         export_dialog(graph);
 
@@ -131,7 +127,7 @@ static gboolean
 export_dialog(GwyGraph *graph)
 {
     controls.model = graph->graph_model;
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Export ASCII"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -156,8 +152,8 @@ export_dialog(GwyGraph *graph)
                                                        controls.style, TRUE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
                                                        controls.preference);
-        
-    
+
+
     controls.check_labels = gtk_check_button_new_with_mnemonic(_("Export _labels"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.check_labels), controls.labels);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox),
@@ -182,7 +178,7 @@ export_dialog(GwyGraph *graph)
     gtk_widget_show(controls.check_units);
     gtk_widget_show(controls.check_labels);
     gtk_widget_show(controls.check_metadata);
-                        
+
     gtk_widget_show_all(dialog);
 
     return TRUE;
@@ -206,7 +202,7 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
     GtkDialog *filedialog;
     GwyContainer *settings;
     gchar *filename;
-    
+
     if (response == GTK_RESPONSE_OK)
     {
         filedialog = GTK_DIALOG(gtk_file_chooser_dialog_new ("Export to ASCII File",
@@ -222,11 +218,11 @@ export_dialog_response_cb(GtkDialog *pdialog, gint response, GwyGraph *graph)
                                          controls.units, controls.labels, controls.metadata,
                                          controls.style);
         }
-        gtk_widget_destroy(GTK_WIDGET(filedialog));    
+        gtk_widget_destroy(GTK_WIDGET(filedialog));
         settings = gwy_app_settings_get();
         save_args(settings, &controls);
     }
-    
+
     export_dialog_closed_cb(graph);
 }
 
@@ -256,17 +252,14 @@ style_cb(GtkWidget *combo)
 
 
 
-
-
-static const gchar *style_key = "/module/graph_export_ascii/style";
-static const gchar *labels_key = "/module/graph_export_ascii/labels";
-static const gchar *units_key = "/module/graph_export_ascii/units";
-static const gchar *metadata_key = "/module/graph_export_ascii/metadata";
-
+static const gchar style_key[]    = "/module/graph_export_ascii/style";
+static const gchar labels_key[]   = "/module/graph_export_ascii/labels";
+static const gchar units_key[]    = "/module/graph_export_ascii/units";
+static const gchar metadata_key[] = "/module/graph_export_ascii/metadata";
 
 static void
 load_args(GwyContainer *container,
-                    ExportControls *pcontrols)
+          ExportControls *pcontrols)
 {
     gwy_container_gis_boolean_by_name(container, labels_key, &pcontrols->labels);
     gwy_container_gis_boolean_by_name(container, units_key, &pcontrols->units);
@@ -277,19 +270,12 @@ load_args(GwyContainer *container,
 
 static void
 save_args(GwyContainer *container,
-                    ExportControls *pcontrols)
+          ExportControls *pcontrols)
 {
     gwy_container_set_boolean_by_name(container, labels_key, pcontrols->labels);
     gwy_container_set_boolean_by_name(container, units_key, pcontrols->units);
     gwy_container_set_boolean_by_name(container, metadata_key, pcontrols->metadata);
     gwy_container_set_enum_by_name(container, style_key, pcontrols->style);
 }
-
-
-
-
-
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

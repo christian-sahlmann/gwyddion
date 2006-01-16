@@ -336,9 +336,9 @@ contrast_do(GwyContainer *data, ContrastArgs *args)
     return TRUE;
 }
 
-static const gchar *size_key = "/module/local_contrast/size";
-static const gchar *depth_key = "/module/local_contrast/depth";
-static const gchar *weight_key = "/module/local_contrast/weight";
+static const gchar size_key[]   = "/module/local_contrast/size";
+static const gchar depth_key[]  = "/module/local_contrast/depth";
+static const gchar weight_key[] = "/module/local_contrast/weight";
 
 static void
 sanitize_args(ContrastArgs *args)

@@ -731,10 +731,10 @@ calibrate_dialog_update(CalibrateControls *controls,
     gtk_label_set_markup(GTK_LABEL(controls->zpower10), buffer);
 }
 
-static const gchar *xratio_key = "/module/calibrate/xratio";
-static const gchar *yratio_key = "/module/calibrate/yratio";
-static const gchar *zratio_key = "/module/calibrate/zratio";
-static const gchar *square_key = "/module/calibrate/square";
+static const gchar xratio_key[] = "/module/calibrate/xratio";
+static const gchar yratio_key[] = "/module/calibrate/yratio";
+static const gchar zratio_key[] = "/module/calibrate/zratio";
+static const gchar square_key[] = "/module/calibrate/square";
 
 static void
 calibrate_sanitize_args(CalibrateArgs *args)

@@ -2102,10 +2102,10 @@ find_format(const gchar *name)
     return NULL;
 }
 
-static const gchar *zoom_key = "/module/pixmap/zoom";
-static const gchar *otype_key = "/module/pixmap/otype";
-static const gchar *draw_mask_key = "/module/pixmap/draw_mask";
-static const gchar *draw_selection_key = "/module/pixmap/draw_selection";
+static const gchar zoom_key[]           = "/module/pixmap/zoom";
+static const gchar otype_key[]          = "/module/pixmap/otype";
+static const gchar draw_mask_key[]      = "/module/pixmap/draw_mask";
+static const gchar draw_selection_key[] = "/module/pixmap/draw_selection";
 
 static void
 pixmap_save_sanitize_args(PixmapSaveArgs *args)
@@ -2143,13 +2143,13 @@ pixmap_save_save_args(GwyContainer *container,
                                       args->draw_selection);
 }
 
-static const gchar *xreal_key = "/module/pixmap/xreal";
-static const gchar *yreal_key = "/module/pixmap/yreal";
-static const gchar *xyexponent_key = "/module/pixmap/xyexponent";
-static const gchar *xymeasureeq_key = "/module/pixmap/xymeasureeq";
-static const gchar *zreal_key = "/module/pixmap/zreal";
-static const gchar *zexponent_key = "/module/pixmap/zexponent";
-static const gchar *maptype_key = "/module/pixmap/maptype";
+static const gchar xreal_key[]       = "/module/pixmap/xreal";
+static const gchar yreal_key[]       = "/module/pixmap/yreal";
+static const gchar xyexponent_key[]  = "/module/pixmap/xyexponent";
+static const gchar xymeasureeq_key[] = "/module/pixmap/xymeasureeq";
+static const gchar zreal_key[]       = "/module/pixmap/zreal";
+static const gchar zexponent_key[]   = "/module/pixmap/zexponent";
+static const gchar maptype_key[]     = "/module/pixmap/maptype";
 
 static void
 pixmap_load_sanitize_args(PixmapLoadArgs *args)

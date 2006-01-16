@@ -539,10 +539,10 @@ size_changed_cb(GwyUnitoolState *state)
 }
 
 
-static const gchar *upd_key = "/tool/filter/update";
-static const gchar *siz_key = "/tool/filter/size";
-static const gchar *fil_key = "/tool/filter/filter";
-static const gchar *dir_key = "/tool/filter/direction";
+static const gchar upd_key[] = "/tool/filter/update";
+static const gchar siz_key[] = "/tool/filter/size";
+static const gchar fil_key[] = "/tool/filter/filter";
+static const gchar dir_key[] = "/tool/filter/direction";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)

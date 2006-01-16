@@ -1236,14 +1236,13 @@ dialog_update(IndentAnalyzeControls *controls,
                                   args->indentor);
 }
 
-static const gchar *what_mark_key = "/module/nanoindent/what_mark";
-static const gchar *how_mark_key = "/module/nanoindent/how_mark";
-static const gchar *plane_correct_key = "/module/nanoindent/plane_correct";
-static const gchar *indentor_key = "/module/nanoindent/indentor";
-
-static const gchar *plane_tol_key = "/module/nanoindent/plane_tol";
-static const gchar *phi_tol_key = "/module/nanoindent/phi_tol";
-static const gchar *theta_tol_key = "/module/nanoindent/theta_tol";
+static const gchar what_mark_key[]     = "/module/nanoindent/what_mark";
+static const gchar how_mark_key[]      = "/module/nanoindent/how_mark";
+static const gchar plane_correct_key[] = "/module/nanoindent/plane_correct";
+static const gchar indentor_key[]      = "/module/nanoindent/indentor";
+static const gchar plane_tol_key[]     = "/module/nanoindent/plane_tol";
+static const gchar phi_tol_key[]       = "/module/nanoindent/phi_tol";
+static const gchar theta_tol_key[]     = "/module/nanoindent/theta_tol";
 
 static void
 sanitize_args(IndentAnalyzeArgs *args)

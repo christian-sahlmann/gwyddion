@@ -395,10 +395,10 @@ fft_dialog_update(FFTControls *controls,
                                  args->preserve);
 }
 
-static const gchar *preserve_key = "/module/fft/preserve";
-static const gchar *interp_key = "/module/fft/interp";
-static const gchar *window_key = "/module/fft/window";
-static const gchar *out_key = "/module/fft/out";
+static const gchar preserve_key[] = "/module/fft/preserve";
+static const gchar interp_key[]   = "/module/fft/interp";
+static const gchar window_key[]   = "/module/fft/window";
+static const gchar out_key[]      = "/module/fft/out";
 
 static void
 fft_sanitize_args(FFTArgs *args)

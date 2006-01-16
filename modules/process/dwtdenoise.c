@@ -270,10 +270,10 @@ dwt_denoise_dialog_update(DWTDenoiseControls *controls,
 }
 
 
-static const gchar *preserve_key = "/module/dwt_denoise/preserve";
-static const gchar *interp_key = "/module/dwt_denoise/interp";
-static const gchar *wavelet_key = "/module/dwt_denoise/wavelet";
-static const gchar *method_key = "/module/dwt_denoise/method";
+static const gchar preserve_key[] = "/module/dwt_denoise/preserve";
+static const gchar interp_key[]   = "/module/dwt_denoise/interp";
+static const gchar wavelet_key[]  = "/module/dwt_denoise/wavelet";
+static const gchar method_key[]   = "/module/dwt_denoise/method";
 
 static void
 dwt_denoise_sanitize_args(DWTDenoiseArgs *args)

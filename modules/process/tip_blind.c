@@ -602,11 +602,11 @@ tip_blind_do(TipBlindControls *controls,
     controls->tipdone = TRUE;
 }
 
-static const gchar *xres_key = "/module/tip_blind/xres";
-static const gchar *yres_key = "/module/tip_blind/yres";
-static const gchar *thresh_key = "/module/tip_blind/threshold";
-static const gchar *use_boundaries_key = "/module/tip_blind/use_boundaries";
-static const gchar *same_resolution_key = "/module/tip_blind/same_resolution";
+static const gchar xres_key[]            = "/module/tip_blind/xres";
+static const gchar yres_key[]            = "/module/tip_blind/yres";
+static const gchar thresh_key[]          = "/module/tip_blind/threshold";
+static const gchar use_boundaries_key[]  = "/module/tip_blind/use_boundaries";
+static const gchar same_resolution_key[] = "/module/tip_blind/same_resolution";
 
 static void
 tip_blind_sanitize_args(TipBlindArgs *args)

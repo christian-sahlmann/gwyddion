@@ -386,8 +386,8 @@ median_make_circle(gint radius)
     return data;
 }
 
-static const gchar *radius_key = "/module/median_bg/radius";
-static const gchar *do_extract_key = "/module/median_bg/do_extract";
+static const gchar radius_key[]     = "/module/median_bg/radius";
+static const gchar do_extract_key[] = "/module/median_bg/do_extract";
 
 static void
 median_sanitize_args(MedianBgArgs *args)

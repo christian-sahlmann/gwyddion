@@ -484,15 +484,15 @@ crosscor_do(CrosscorArgs *args)
 }
 
 
-static const gchar *result_key = "/module/crosscor/result";
-static const gchar *search_x_key = "/module/crosscor/search_x";
-static const gchar *search_y_key = "/module/crosscor/search_y";
-static const gchar *window_x_key = "/module/crosscor/window_x";
-static const gchar *window_y_key = "/module/crosscor/window_y";
-static const gchar *add_ls_mask_key = "/module/crosscor/add_ls_mask";
-static const gchar *threshold_key = "/module/crosscor/threshold";
-static const gchar *rot_pos_key = "/module/crosscor/rot_pos";
-static const gchar *rot_neg_key = "/module/crosscor/rot_neg";
+static const gchar result_key[]      = "/module/crosscor/result";
+static const gchar search_x_key[]    = "/module/crosscor/search_x";
+static const gchar search_y_key[]    = "/module/crosscor/search_y";
+static const gchar window_x_key[]    = "/module/crosscor/window_x";
+static const gchar window_y_key[]    = "/module/crosscor/window_y";
+static const gchar add_ls_mask_key[] = "/module/crosscor/add_ls_mask";
+static const gchar threshold_key[]   = "/module/crosscor/threshold";
+static const gchar rot_pos_key[]     = "/module/crosscor/rot_pos";
+static const gchar rot_neg_key[]     = "/module/crosscor/rot_neg";
 
 static void
 crosscor_sanitize_args(CrosscorArgs *args)

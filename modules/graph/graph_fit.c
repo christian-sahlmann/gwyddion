@@ -914,7 +914,7 @@ create_preset_menu(GCallback callback,
     return combo;
 }
 
-static const gchar *preset_key = "/module/graph_fit/preset";
+static const gchar preset_key[] = "/module/graph_fit/preset";
 
 static void
 load_args(GwyContainer *container,

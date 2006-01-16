@@ -530,11 +530,11 @@ make_datafield(GwyDataField *old,
     return dfield;
 }
 
-static const gchar *output_type_key = "/module/slope_dist/output_type";
-static const gchar *size_key = "/module/slope_dist/size";
-static const gchar *logscale_key = "/module/slope_dist/logscale";
-static const gchar *fit_plane_key = "/module/slope_dist/fit_plane";
-static const gchar *kernel_size_key = "/module/slope_dist/kernel_size";
+static const gchar output_type_key[] = "/module/slope_dist/output_type";
+static const gchar size_key[]        = "/module/slope_dist/size";
+static const gchar logscale_key[]    = "/module/slope_dist/logscale";
+static const gchar fit_plane_key[]   = "/module/slope_dist/fit_plane";
+static const gchar kernel_size_key[] = "/module/slope_dist/kernel_size";
 
 static void
 sanitize_args(SlopeArgs *args)

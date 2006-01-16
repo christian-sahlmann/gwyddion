@@ -255,7 +255,7 @@ apply(GwyUnitoolState *state)
               gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield));
 }
 
-static const gchar *keep_offsets_key = "/tool/crop/keep_offsets";
+static const gchar keep_offsets_key[] = "/tool/crop/keep_offsets";
 
 static void
 save_args(GwyContainer *container, ToolControls *controls)

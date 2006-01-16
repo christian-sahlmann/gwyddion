@@ -360,10 +360,10 @@ poly_level_degree_changed(GtkObject *spin,
     controls->in_update = FALSE;
 }
 
-static const gchar *col_degree_key = "/module/poly_level/col_degree";
-static const gchar *row_degree_key = "/module/poly_level/row_degree";
-static const gchar *do_extract_key = "/module/poly_level/do_extract";
-static const gchar *same_degree_key = "/module/poly_level/same_degree";
+static const gchar col_degree_key[]  = "/module/poly_level/col_degree";
+static const gchar row_degree_key[]  = "/module/poly_level/row_degree";
+static const gchar do_extract_key[]  = "/module/poly_level/do_extract";
+static const gchar same_degree_key[] = "/module/poly_level/same_degree";
 
 static void
 sanitize_args(PolyLevelArgs *args)

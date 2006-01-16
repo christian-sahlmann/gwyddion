@@ -307,8 +307,8 @@ scale_dialog_update(ScaleControls *controls,
                                   args->interp);
 }
 
-static const gchar *ratio_key = "/module/scale/ratio";
-static const gchar *interp_key = "/module/scale/interp";
+static const gchar ratio_key[]  = "/module/scale/ratio";
+static const gchar interp_key[] = "/module/scale/interp";
 
 static void
 scale_sanitize_args(ScaleArgs *args)

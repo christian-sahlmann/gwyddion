@@ -962,7 +962,7 @@ facets_mark_fdata(FacetsArgs *args,
     gwy_data_field_data_changed(mask);
 }
 
-static const gchar *tolerance_key = "/module/facet_analysis/tolerance";
+static const gchar tolerance_key[] = "/module/facet_analysis/tolerance";
 
 static void
 facets_sanitize_args(FacetsArgs *args)
