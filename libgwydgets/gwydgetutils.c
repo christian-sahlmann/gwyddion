@@ -129,12 +129,13 @@ gwy_table_attach_row(GtkWidget *table,
  *
  * Finds a widget in #GtkTable by its coordinates.
  *
- * By widget at (@col, @row) is meant a widget that either contains this
- * corner or is attached by its left side, top side, or top left cornder to
- * it.
+ * Coordinates (@col, @row) are taken as coordinates of widget top left corner.
+ * More precisely, the returned widget either contains the specified grid
+ * point or it is attached by its left side, top side, or top left corner to
+ * this point.
  *
- * If there are multiple matches due to overlapping widgets, an arbitrary of
- * them is returned.
+ * If there are multiple matches due to overlapping widgets, a random
+ * match is returned.
  *
  * Returns: The widget at (@col, @row) or %NULL if there is no such widget.
  **/
