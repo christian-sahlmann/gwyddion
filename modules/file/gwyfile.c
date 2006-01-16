@@ -286,6 +286,7 @@ hash_data_index_map_func(gpointer key,
     }
 
     if ((g_str_has_prefix(strkey + len, "data")
+         || g_str_has_prefix(strkey + len, "base")
          || g_str_has_prefix(strkey + len, "mask")
          || g_str_has_prefix(strkey + len, "show"))
         && (strkey[len + 4] == '\0'
