@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/cdline.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include "gwyprocessinternal.h"
 
 typedef gdouble (*GwyCDLineFitFunc)(gdouble x,
                                     gint n_param,

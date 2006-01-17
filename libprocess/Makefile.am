@@ -18,7 +18,6 @@ libgwyprocessinclude_HEADERS = \
 	fractals.h \
 	grains.h \
 	gwyprocess.h \
-	gwyprocessinternal.h \
 	gwyprocessenums.h \
 	gwyprocesstypes.h \
 	hough.h \
@@ -30,7 +29,9 @@ libgwyprocessinclude_HEADERS = \
 	stats.h \
 	tip.h
 
-noinst_HEADERS = morph_lib.h
+noinst_HEADERS = \
+	morph_lib.h \
+	gwyprocessinternal.h
 
 built_sources = \
 	gwyprocesstypes.h \
