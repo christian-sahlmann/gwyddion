@@ -820,13 +820,12 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
             selection_areadata[3] = dy;
 
          gwy_selection_set_object(GWY_SELECTION(area->areasdata), GWY_SELECTION(area->areasdata)->n - 1, selection_areadata);
-         gtk_widget_queue_draw(GTK_WIDGET(area));
+         //gtk_widget_queue_draw(GTK_WIDGET(area));
     }
 
     if (area->selecting && (area->status == GWY_GRAPH_STATUS_XLINES || area->status == GWY_GRAPH_STATUS_YLINES)
         && GWY_SELECTION(area->linesdata)->n)
     {
-        gwy_selection_get_object(GWY_SELECTION(area->linesdata), GWY_SELECTION(area->linesdata)->n - 1, &selection_linedata);
         if (area->status == GWY_GRAPH_STATUS_XLINES)
             selection_linedata = dx;
         else
@@ -839,7 +838,6 @@ gwy_graph_area_motion_notify(GtkWidget *widget, GdkEventMotion *event)
 
     if (area->selecting && area->status == GWY_GRAPH_STATUS_POINTS)
     {
-        gwy_selection_get_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
         selection_data[0] = dx;
         selection_data[1] = dy;
         gwy_selection_set_object(GWY_SELECTION(area->pointsdata), GWY_SELECTION(area->pointsdata)->n - 1, selection_data);
