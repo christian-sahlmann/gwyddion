@@ -24,6 +24,7 @@
 #include <stdlib.h>
 
 #include <glib/gstdio.h>
+#include <stdio.h>
 
 #include <gtk/gtk.h>
 
@@ -46,8 +47,6 @@ typedef struct {
     GtkObject *data;
     GtkWidget *selector;
     GtkWidget **param_des;
-    GtkWidget **param_fit;
-    GtkWidget **param_init;
     GtkWidget **param_res;
     GtkWidget **param_err;
     GtkWidget *criterium;
@@ -246,11 +245,6 @@ fit_dialog(FitArgs *args)
                                  gwy_stock_like_button_new(_("_Fit"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
-/*    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Reset inits"), RESPONSE_RESET);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Plot inits"), RESPONSE_PLOT);
-                          */
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -299,12 +293,6 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    /*label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Initial</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 1, 2, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    */
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), "<b>Result</b>");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -317,12 +305,6 @@ fit_dialog(FitArgs *args)
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    /*label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Fix</b>");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label, 4, 5, 0, 1,
-                     GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    */
 
     controls.param_des = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -333,19 +315,6 @@ fit_dialog(FitArgs *args)
                          GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
     }
 
-    /*controls.param_init = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
-        controls.param_init[i] = gtk_entry_new();
-        gtk_entry_set_max_length(GTK_ENTRY(controls.param_init[i]), 12);
-        gtk_entry_set_width_chars(GTK_ENTRY(controls.param_init[i]), 12);
-        g_signal_connect(controls.param_init[i], "changed",
-                         G_CALLBACK(double_entry_changed_cb),
-                         &args->par_init[i]);
-        gtk_table_attach(GTK_TABLE(table), controls.param_init[i],
-                         1, 2, i+1, i+2,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    }*/
 
     controls.param_res = g_new(GtkWidget*, MAX_PARAMS);
     for (i = 0; i < MAX_PARAMS; i++)
@@ -367,17 +336,6 @@ fit_dialog(FitArgs *args)
 
     }
 
-    /*
-    controls.param_fit = g_new(GtkWidget*, MAX_PARAMS);
-    for (i = 0; i < MAX_PARAMS; i++)
-    {
-        controls.param_fit[i] = gtk_check_button_new();
-        g_signal_connect(controls.param_fit[i], "toggled",
-                         G_CALLBACK(toggle_changed_cb), &args->par_fix[i]);
-        gtk_table_attach(GTK_TABLE(table), controls.param_fit[i],
-                         4, 5, i+1, i+2,
-                         GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
-    }*/
 
     gtk_container_add(GTK_CONTAINER(vbox), table);
 
@@ -442,8 +400,11 @@ fit_dialog(FitArgs *args)
 
     reset(args, &controls);
     dialog_update(&controls, args);
-    graph_update(&controls, args);
     graph_selected(GWY_GRAPH(controls.graph), args);
+
+    /*XXX Shouldn't need this, however, needs. */
+    graph_update(&controls, args);
+
 
     gtk_widget_show_all(dialog);
 
@@ -488,9 +449,7 @@ fit_dialog(FitArgs *args)
 static void
 destroy(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
-    /*g_free(controls->param_init);*/
     g_free(controls->param_res);
-    /*g_free(controls->param_fit);*/
     g_free(controls->param_err);
 }
 
@@ -499,7 +458,9 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i;
 
+    /*XXX Shouldn't need this, however somehow it doesn't work without now */
     graph_update(controls, args);
+
 
     for (i = 0; i < MAX_PARAMS; i++) {
         gtk_label_set_markup(GTK_LABEL(controls->param_res[i]), " ");
@@ -540,7 +501,6 @@ plot_inits(FitArgs *args, FitControls *controls)
                                             args->par_res, &ok);
 
 
-    graph_update(controls, args);
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
@@ -616,7 +576,6 @@ recompute(FitArgs *args, FitControls *controls)
         ydata->data[i] = gwy_cdline_get_value(function, xdata->data[i],
                                             args->par_res, &ok);
 
-    graph_update(controls, args);
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
@@ -659,6 +618,9 @@ type_changed_cb(GtkWidget *combo, FitArgs *args)
     p = gwy_find_self_dir("pixmaps");
     filename = g_build_filename(p, gwy_cdline_get_definition(args->fitfunc),
                                 NULL);
+
+    printf("filename: %s (%s) (%d)\n", filename, gwy_cdline_get_definition(args->fitfunc),
+           args->function_type);
     g_free(p);
 
     gtk_image_set_from_file(GTK_IMAGE(pcontrols->image), filename);
@@ -701,23 +663,29 @@ dialog_update(FitControls *controls, FitArgs *args)
 
 }
 
-
+/*
+ * XXX XXX XXX: Get rid of this brain damage XXX XXX XXX
+ * No one any longer needs to update graphs this way.
+ */
 static void
 graph_update(G_GNUC_UNUSED FitControls *controls, FitArgs *args)
 {
-    gint i;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    gint i, n;
 
     /*clear graph*/
     gwy_graph_model_remove_all_curves(args->graph_model);
 
-    for (i=0; i<gwy_graph_model_get_n_curves(GWY_GRAPH(args->parent_graph)->graph_model); i++)
-                  gwy_graph_model_add_curve(args->graph_model,
-                                       gwy_graph_model_get_curve_by_index(
-                                             GWY_GRAPH(args->parent_graph)->graph_model, i));
-
+    gmodel = gwy_graph_get_model(GWY_GRAPH(args->parent_graph));
+    n = gwy_graph_model_get_n_curves(gmodel);
+    for (i = 0; i < n; i++) {
+        gcmodel = gwy_graph_model_get_curve_by_index(gmodel, i);
+        gwy_graph_model_add_curve(args->graph_model, gcmodel);
+    }
     args->is_fitted = FALSE;
-
 }
+
 
 static void
 graph_selected(GwyGraph *graph, FitArgs *args)

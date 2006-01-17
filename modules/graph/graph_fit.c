@@ -477,7 +477,7 @@ fit_dialog(FitArgs *args)
     reset(args, &controls);
     dialog_update(&controls, args);
 
-    /*XXX Shouldn't need this */
+    /*XXX Shouldn't need this, however, needs. */
     graph_update(&controls, args);
 
     graph_selected(GWY_GRAPH(controls.graph), &controls);
@@ -539,7 +539,7 @@ clear(G_GNUC_UNUSED FitArgs *args, FitControls *controls)
 {
     gint i, j;
 
-    /*XXX Shouldn't need this */
+    /*XXX Shouldn't need this, however somehow it doesn't work without now */
     graph_update(controls, args);
 
     for (i = 0; i < MAX_PARAMS; i++) {
@@ -581,9 +581,6 @@ plot_inits(FitArgs *args, FitControls *controls)
     for (i = 0; i < xdata->res; i++)
         ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
                                                     args->par_init, &ok);
-
-    /*XXX Shouldn't need this */
-    graph_update(controls, args);
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
@@ -678,8 +675,6 @@ recompute(FitArgs *args, FitControls *controls)
         ydata->data[i] = gwy_nlfit_preset_get_value(function, xdata->data[i],
                                                     args->par_res, &ok);
 
-    /*XXX Shouldn't need this */
-    graph_update(controls, args);
 
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_curve_model_set_curve_type(cmodel, GWY_GRAPH_CURVE_LINE);
