@@ -26,6 +26,7 @@
 #include <gtk/gtkwidget.h>
 
 #include <libgwyddion/gwycontainer.h>
+#include <libgwydgets/gwydgetenums.h>
 #include <libgwydgets/gwyvectorlayer.h>
 #include <libgwydgets/gwypixmaplayer.h>
 
@@ -80,7 +81,12 @@ struct _GwyDataViewClass {
     GtkWidgetClass parent_class;
 
     void (*redrawn)(GwyDataView *data_view);
+    void (*layer_plugged)(GwyDataView *data_view,
+                          GwyDataViewLayerType layer);
+    void (*layer_unplugged)(GwyDataView *data_view,
+                            GwyDataViewLayerType layer);
 
+    gpointer reserved1;
     gpointer reserved2;
 };
 

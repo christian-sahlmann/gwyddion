@@ -32,8 +32,9 @@
 #define BITS_PER_SAMPLE 8
 
 enum {
-    UPDATED,
     REDRAWN,
+    LAYER_PLUGGED,
+    LAYER_UNPLUGGED,
     LAST_SIGNAL
 };
 
@@ -81,7 +82,8 @@ static gboolean gwy_data_view_key_release          (GtkWidget *widget,
 static void     gwy_data_view_set_layer            (GwyDataView *data_view,
                                                     gpointer which,
                                                     gulong *hid,
-                                                    GwyDataViewLayer *layer);
+                                                    GwyDataViewLayer *layer,
+                                                    GwyDataViewLayerType type);
 
 /* Local data */
 
@@ -146,6 +148,48 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                        NULL, NULL,
                        g_cclosure_marshal_VOID__VOID,
                        G_TYPE_NONE, 0);
+
+    /**
+     * GwyDataView::layer-plugged:
+     * @arg1: Which layer was plugged (a #GwyDataViewLayerType value).
+     * @gwydataview: The #GwyDataView which received the signal.
+     *
+     * The ::layer-plugged signal is emitted when a layer is plugged into
+     * a #GwyDataView.
+     *
+     * When a layer replaces an existing layer, ::layer-unplugged is emitted
+     * once the old layer is unplugged, then ::layer-plugged when the new
+     * is plugged.
+     **/
+    data_view_signals[LAYER_PLUGGED]
+        = g_signal_new("layer-plugged",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataViewClass, layer_plugged),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__ENUM,
+                       G_TYPE_NONE, 1, G_TYPE_ENUM);
+
+    /**
+     * GwyDataView::layer-unplugged:
+     * @arg1: Which layer was unplugged (a #GwyDataViewLayerType value).
+     * @gwydataview: The #GwyDataView which received the signal.
+     *
+     * The ::layer-unplugged signal is emitted when a layer is unplugged from
+     * a #GwyDataView.
+     *
+     * When a layer replaces an existing layer, ::layer-unplugged is emitted
+     * once the old layer is unplugged, then ::layer-plugged when the new
+     * is plugged.
+     **/
+    data_view_signals[LAYER_UNPLUGGED]
+        = g_signal_new("layer-unplugged",
+                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_SIGNAL_RUN_FIRST,
+                       G_STRUCT_OFFSET(GwyDataViewClass, layer_unplugged),
+                       NULL, NULL,
+                       g_cclosure_marshal_VOID__ENUM,
+                       G_TYPE_NONE, 1, G_TYPE_ENUM);
 }
 
 static void
@@ -200,11 +244,14 @@ gwy_data_view_destroy(GtkObject *object)
     g_return_if_fail(GWY_IS_DATA_VIEW(object));
 
     data_view = GWY_DATA_VIEW(object);
-    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL, NULL);
+    gwy_data_view_set_layer(data_view, &data_view->top_layer, NULL, NULL,
+                            GWY_DATA_VIEW_LAYER_TOP);
     gwy_data_view_set_layer(data_view, &data_view->alpha_layer,
-                            &data_view->alpha_hid, NULL);
+                            &data_view->alpha_hid, NULL,
+                            GWY_DATA_VIEW_LAYER_ALPHA);
     gwy_data_view_set_layer(data_view, &data_view->base_layer,
-                            &data_view->base_hid, NULL);
+                            &data_view->base_hid, NULL,
+                            GWY_DATA_VIEW_LAYER_BASE);
 
     if (GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)
         (*GTK_OBJECT_CLASS(gwy_data_view_parent_class)->destroy)(object);
@@ -732,7 +779,8 @@ static void
 gwy_data_view_set_layer(GwyDataView *data_view,
                         gpointer which,
                         gulong *hid,
-                        GwyDataViewLayer *layer)
+                        GwyDataViewLayer *layer,
+                        GwyDataViewLayerType type)
 {
     GwyDataViewLayer **which_layer;
 
@@ -752,6 +800,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
         gwy_data_view_layer_unplugged(*which_layer);
         (*which_layer)->parent = NULL;
         g_object_unref(*which_layer);
+        g_signal_emit(data_view, data_view_signals[LAYER_UNPLUGGED], 0, type);
     }
     if (layer) {
         g_assert(layer->parent == NULL);
@@ -768,6 +817,7 @@ gwy_data_view_set_layer(GwyDataView *data_view,
     }
     data_view->layers_changed = TRUE;
     *which_layer = layer;
+    g_signal_emit(data_view, data_view_signals[LAYER_PLUGGED], 0, type);
     gwy_data_view_update(data_view);
 }
 
@@ -791,7 +841,8 @@ gwy_data_view_set_base_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view,
                             &data_view->base_layer,
                             &data_view->base_hid,
-                            GWY_DATA_VIEW_LAYER(layer));
+                            GWY_DATA_VIEW_LAYER(layer),
+                            GWY_DATA_VIEW_LAYER_BASE);
     gtk_widget_queue_resize(GTK_WIDGET(data_view));
 }
 
@@ -815,7 +866,8 @@ gwy_data_view_set_alpha_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view,
                             &data_view->alpha_layer,
                             &data_view->alpha_hid,
-                            GWY_DATA_VIEW_LAYER(layer));
+                            GWY_DATA_VIEW_LAYER(layer),
+                            GWY_DATA_VIEW_LAYER_ALPHA);
 }
 
 /**
@@ -838,7 +890,8 @@ gwy_data_view_set_top_layer(GwyDataView *data_view,
     gwy_data_view_set_layer(data_view,
                             &data_view->top_layer,
                             &data_view->top_hid,
-                            GWY_DATA_VIEW_LAYER(layer));
+                            GWY_DATA_VIEW_LAYER(layer),
+                            GWY_DATA_VIEW_LAYER_TOP);
 }
 
 /**

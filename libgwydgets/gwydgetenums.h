@@ -156,6 +156,12 @@ typedef enum {
     GWY_MARKER_OPERATION_REMOVE
 } GwyMarkerOperationType;
 
+typedef enum {
+    GWY_DATA_VIEW_LAYER_BASE,
+    GWY_DATA_VIEW_LAYER_ALPHA,
+    GWY_DATA_VIEW_LAYER_TOP
+} GwyDataViewLayerType;
+
 G_END_DECLS
 
 #endif /* __GWY_GWYDGET_ENUMS_H__ */
