@@ -611,7 +611,7 @@ type_changed_cb(GtkWidget *combo, FitArgs *args)
                 return;
         
     
-    args->function_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
+    args->function_type = active;
     args->fitfunc = gwy_inventory_get_nth_item(gwy_cdlines(),
                                              args->function_type);
 
@@ -749,6 +749,7 @@ create_preset_menu(GCallback callback,
     store = gwy_inventory_store_new(gwy_cdlines());
 
     combo = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(store);
     gtk_combo_box_set_wrap_width(GTK_COMBO_BOX(combo), 2);
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, TRUE);
