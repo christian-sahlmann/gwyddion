@@ -131,7 +131,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -646,27 +646,39 @@ static int
 gwy_layer_rectangle_near_point(GwyVectorLayer *layer,
                                gdouble xreal, gdouble yreal)
 {
-    GwyDataView *view;
-    gdouble *coords, d2min, xy[OBJECT_SIZE];
+    gdouble d2min, xy[OBJECT_SIZE], metric[4];
     gint i, n;
 
     if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    coords = g_newa(gdouble, 8*n);
-    for (i = 0; i < n; i++) {
-        gwy_selection_get_object(layer->selection, i, xy);
-        coords[8*i + 0] = coords[8*i + 2] = xy[0];
-        coords[8*i + 1] = coords[8*i + 5] = xy[1];
-        coords[8*i + 4] = coords[8*i + 6] = xy[2];
-        coords[8*i + 3] = coords[8*i + 7] = xy[3];
+    gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
+                             metric);
+    if (layer->focus >= 0) {
+        gdouble coords[8];
+
+        g_return_val_if_fail(layer->focus < n, -1);
+        gwy_selection_get_object(layer->selection, layer->focus, xy);
+        coords[0] = coords[2] = xy[0];
+        coords[1] = coords[5] = xy[1];
+        coords[4] = coords[6] = xy[2];
+        coords[3] = coords[7] = xy[3];
+        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords,
+                                        metric);
     }
-    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4, coords);
+    else {
+        gdouble *coords = g_newa(gdouble, 8*n);
 
-    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-    /* FIXME: this is simply nonsense when x measure != y measure */
-    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
-
+        for (i = 0; i < n; i++) {
+            gwy_selection_get_object(layer->selection, i, xy);
+            coords[8*i + 0] = coords[8*i + 2] = xy[0];
+            coords[8*i + 1] = coords[8*i + 5] = xy[1];
+            coords[8*i + 4] = coords[8*i + 6] = xy[2];
+            coords[8*i + 3] = coords[8*i + 7] = xy[3];
+        }
+        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 4*n, coords,
+                                        metric);
+    }
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;

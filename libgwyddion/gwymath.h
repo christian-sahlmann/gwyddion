@@ -39,12 +39,14 @@ gint         gwy_math_find_nearest_line  (gdouble x,
                                           gdouble y,
                                           gdouble *d2min,
                                           gint n,
-                                          gdouble *coords);
+                                          const gdouble *coords,
+                                          const gdouble *metric);
 gint         gwy_math_find_nearest_point (gdouble x,
                                           gdouble y,
                                           gdouble *d2min,
                                           gint n,
-                                          gdouble *coords);
+                                          const gdouble *coords,
+                                          const gdouble *metric);
 gdouble*     gwy_math_lin_solve          (gint n,
                                           const gdouble *matrix,
                                           const gdouble *rhs,

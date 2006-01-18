@@ -34,8 +34,8 @@ static void        gwy_serialize_skip_type         (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
                                                     guchar ctype);;
-static void        gwy_serializable_base_init          (gpointer g_class);
-static GObject*    gwy_serializable_duplicate_hard_way (GObject *object);
+static void        gwy_serializable_base_init      (gpointer g_class);
+static GObject*    gwy_serializable_duplicate_hard_way(GObject *object);
 
 static GByteArray* gwy_serialize_spec              (GByteArray *buffer,
                                                     const GwySerializeSpec *sp);
@@ -44,9 +44,9 @@ static gboolean    gwy_deserialize_spec_value      (const guchar *buffer,
                                                     gsize size,
                                                     gsize *position,
                                                     GwySerializeSpec *sp);
-static GwySerializeItem* gwy_deserialize_hash_items  (const guchar *buffer,
-                                                      gsize size,
-                                                      gsize *nitems);
+static GwySerializeItem* gwy_deserialize_hash_items(const guchar *buffer,
+                                                    gsize size,
+                                                    gsize *nitems);
 
 static inline gsize ctype_size     (guchar ctype);
 
@@ -77,7 +77,6 @@ gwy_serializable_get_type(void)
         g_type_interface_add_prerequisite(gwy_serializable_type, G_TYPE_OBJECT);
     }
 
-    gwy_debug("%lu", gwy_serializable_type);
     return gwy_serializable_type;
 }
 
@@ -86,7 +85,6 @@ gwy_serializable_base_init(G_GNUC_UNUSED gpointer g_class)
 {
     static gboolean initialized = FALSE;
 
-    gwy_debug("initialized = %d", initialized);
     if (initialized)
         return;
     initialized = TRUE;

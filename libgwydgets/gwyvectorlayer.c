@@ -38,27 +38,29 @@ enum {
     PROP_SELECTION_KEY
 };
 
-static void gwy_vector_layer_destroy             (GtkObject *object);
-static void gwy_vector_layer_set_property        (GObject *object,
-                                                  guint prop_id,
-                                                  const GValue *value,
-                                                  GParamSpec *pspec);
-static void gwy_vector_layer_get_property        (GObject *object,
-                                                  guint prop_id,
-                                                  GValue *value,
-                                                  GParamSpec *pspec);
-static void gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
-static void gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
-static void gwy_vector_layer_realize             (GwyDataViewLayer *layer);
-static void gwy_vector_layer_unrealize           (GwyDataViewLayer *layer);
-static void gwy_vector_layer_update_context      (GwyVectorLayer *layer);
-static void gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
-                                                  const gchar *selection_key_string);
-static void gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
-static void gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
-static void gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
-static void gwy_vector_layer_selection_changed   (GwyVectorLayer *layer,
-                                                  gint hint);
+static void     gwy_vector_layer_destroy             (GtkObject *object);
+static void     gwy_vector_layer_set_property        (GObject *object,
+                                                      guint prop_id,
+                                                      const GValue *value,
+                                                      GParamSpec *pspec);
+static void     gwy_vector_layer_get_property        (GObject *object,
+                                                      guint prop_id,
+                                                      GValue *value,
+                                                      GParamSpec *pspec);
+static gboolean gwy_vector_layer_set_focus_default   (GwyVectorLayer *layer,
+                                                      gint focus);
+static void     gwy_vector_layer_plugged             (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_unplugged           (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_realize             (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_unrealize           (GwyDataViewLayer *layer);
+static void     gwy_vector_layer_update_context      (GwyVectorLayer *layer);
+static void     gwy_vector_layer_container_connect   (GwyVectorLayer *layer,
+                                                      const gchar *key);
+static void     gwy_vector_layer_selection_connect   (GwyVectorLayer *layer);
+static void     gwy_vector_layer_selection_disconnect(GwyVectorLayer *layer);
+static void     gwy_vector_layer_item_changed        (GwyVectorLayer *layer);
+static void     gwy_vector_layer_selection_changed   (GwyVectorLayer *layer,
+                                                      gint hint);
 
 G_DEFINE_ABSTRACT_TYPE(GwyVectorLayer, gwy_vector_layer,
                        GWY_TYPE_DATA_VIEW_LAYER)
@@ -79,6 +81,8 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
     layer_class->unplugged = gwy_vector_layer_unplugged;
     layer_class->realize = gwy_vector_layer_realize;
     layer_class->unrealize = gwy_vector_layer_unrealize;
+
+    klass->set_focus = gwy_vector_layer_set_focus_default;
 
     /**
      * GwyVectorLayer:selection-key:
@@ -154,6 +158,26 @@ gwy_vector_layer_get_property(GObject *object,
     }
 }
 
+/* Most layers want this unchanged.  They should reset the method to NULL if
+ * they don't implement focus though */
+static gboolean
+gwy_vector_layer_set_focus_default(GwyVectorLayer *layer,
+                                   gint focus)
+{
+    /* Unfocus is always possible */
+    if (focus < 0) {
+        layer->focus = -1;
+        return TRUE;
+    }
+    /* Setting focus is possible only when user is selecting nothing or the
+     * same object */
+    if (layer->selecting < 0 || focus == layer->selecting) {
+        layer->focus = focus;
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /**
  * gwy_vector_layer_set_focus:
  * @layer: A vector data view layer.
@@ -168,8 +192,6 @@ gwy_vector_layer_get_property(GObject *object,
  * Focus is reset whenever selection is globally changed, that is: cleared,
  * set anew with gwy_selection_set_data(), swapped with another selection
  * object, and when the selection key in container changes.
- *
- * <warning>This method is largely unimplemented in layers.</warning>
  *
  * Returns: %TRUE if the object was focused, %FALSE on failure.  Failure can
  *          be caused by user currently moving another object, wrong object
@@ -438,16 +460,15 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
 
 static void
 gwy_vector_layer_container_connect(GwyVectorLayer *layer,
-                                   const gchar *selection_key_string)
+                                   const gchar *key)
 {
     GwyDataViewLayer *view_layer;
     gchar *detailed_signal;
 
-    g_return_if_fail(selection_key_string);
+    g_return_if_fail(key);
     view_layer = GWY_DATA_VIEW_LAYER(layer);
-    detailed_signal = g_newa(gchar, sizeof("item-changed::")
-                                    + strlen(selection_key_string));
-    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), selection_key_string);
+    detailed_signal = g_newa(gchar, sizeof("item-changed::") + strlen(key));
+    g_stpcpy(g_stpcpy(detailed_signal, "item-changed::"), key);
 
     layer->item_changed_id
         = connect_swapped_after(view_layer->data, detailed_signal,

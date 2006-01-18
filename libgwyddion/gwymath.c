@@ -72,6 +72,10 @@ gwy_math_humanize_numbers(gdouble unit,
  * @d2min: Where to store the squared minimal distance, or %NULL.
  * @n: The number of lines (i.e. @coords has 4@n items).
  * @coords: Line coordinates stored as x00, y00, x01, y01, x10, y10, etc.
+ * @metric: Metric matrix (2x2, but stored sequentially by rows: m11, m12,
+ *          m21, m22), it must be positive definite.  Vector norm is then
+ *          calculated as m11*x*x + (m12 + m21)*x*y + m22*y*y.
+ *          It can be %NULL, standard Euclidean metric is then used.
  *
  * Finds the line from @coords nearest to the point (@x, @y).
  *
@@ -81,35 +85,67 @@ gwy_math_humanize_numbers(gdouble unit,
 gint
 gwy_math_find_nearest_line(gdouble x, gdouble y,
                            gdouble *d2min,
-                           gint n, gdouble *coords)
+                           gint n, const gdouble *coords,
+                           const gdouble *metric)
 {
     gint i, m;
-    gdouble d2m = G_MAXDOUBLE;
+    gdouble vx, vy, d, d2m = G_MAXDOUBLE;
 
     g_return_val_if_fail(n > 0, d2m);
     g_return_val_if_fail(coords, d2m);
 
     m = -1;
-    for (i = 0; i < n; i++) {
-        gdouble xl0 = *(coords++);
-        gdouble yl0 = *(coords++);
-        gdouble xl1 = *(coords++);
-        gdouble yl1 = *(coords++);
-        gdouble vx, vy, d;
+    if (metric) {
+        for (i = 0; i < n; i++) {
+            gdouble xx = x - (coords[0] + coords[2])/2;
+            gdouble yy = y - (coords[1] + coords[3])/2;
 
-        vx = yl1 - yl0;
-        vy = xl0 - xl1;
-        if (vx*(y - yl0) < vy*(x - xl0))
-            continue;
-        if (vx*(yl1 - y) < vy*(xl1 - x))
-            continue;
-        if (vx == 0.0 && vy == 0.0)
-            continue;
-        d = vx*(x - xl0) + vy*(y - yl0);
-        d *= d/(vx*vx + vy*vy);
-        if (d < d2m) {
-            d2m = d;
-            m = i;
+            vx = (coords[2] - coords[0])/2;
+            vy = (coords[3] - coords[1])/2;
+            coords += 4;
+            if (vx == 0.0 && vy == 0.0)
+                continue;
+            d = metric[0]*vx*vx + (metric[1] + metric[2])*vx*vy
+                + metric[3]*vy*vy;
+            if (d <= 0.0) {
+                g_warning("Metric does not evaluate as positive definite");
+                continue;
+            }
+            d = -(metric[0]*vx*xx + (metric[1] + metric[2])*(vx*yy + vy*xx)/2
+                  + metric[3]*vy*yy)/d;
+            /* Out of orthogonal stripe */
+            if (d < -1.0 || d > 1.0)
+                continue;
+            d = metric[0]*(xx + vx*d)*(xx + vx*d)
+                + (metric[1] + metric[2])*(xx + vx*d)*(yy + vy*d)
+                + metric[3]*(yy + vy*d)*(yy + vy*d);
+            if (d < d2m) {
+                d2m = d;
+                m = i;
+            }
+        }
+    }
+    else {
+        for (i = 0; i < n; i++) {
+            gdouble xl0 = *(coords++);
+            gdouble yl0 = *(coords++);
+            gdouble xl1 = *(coords++);
+            gdouble yl1 = *(coords++);
+
+            vx = yl1 - yl0;
+            vy = xl0 - xl1;
+            if (vx == 0.0 && vy == 0.0)
+                continue;
+            if (vx*(y - yl0) < vy*(x - xl0))
+                continue;
+            if (vx*(yl1 - y) < vy*(xl1 - x))
+                continue;
+            d = vx*(x - xl0) + vy*(y - yl0);
+            d *= d/(vx*vx + vy*vy);
+            if (d < d2m) {
+                d2m = d;
+                m = i;
+            }
         }
     }
     if (d2min)
@@ -122,9 +158,13 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
  * gwy_math_find_nearest_point:
  * @x: X-coordinate of the point to search.
  * @y: Y-coordinate of the point to search.
- * @d2min: Where to store the squared minimal distance, or %NULL.
+ * @d2min: Location to store the squared minimal distance to, or %NULL.
  * @n: The number of points (i.e. @coords has 2@n items).
  * @coords: Point coordinates stored as x0, y0, x1, y1, x2, y2, etc.
+ * @metric: Metric matrix (2x2, but stored sequentially by rows: m11, m12,
+ *          m21, m22).  Vector norm is then calculated as
+ *          m11*x*x + (m12 + m21)*x*y + m22*y*y.
+ *          It can be %NULL, standard Euclidean metric is then used.
  *
  * Finds the point from @coords nearest to the point (@x, @y).
  *
@@ -133,24 +173,37 @@ gwy_math_find_nearest_line(gdouble x, gdouble y,
 gint
 gwy_math_find_nearest_point(gdouble x, gdouble y,
                             gdouble *d2min,
-                            gint n, gdouble *coords)
+                            gint n, const gdouble *coords,
+                            const gdouble *metric)
 {
     gint i, m;
-    gdouble d2m = G_MAXDOUBLE;
+    gdouble d, xd, yd, d2m = G_MAXDOUBLE;
 
     g_return_val_if_fail(n > 0, d2m);
     g_return_val_if_fail(coords, d2m);
 
     m = 0;
-    for (i = 0; i < n; i++) {
-        gdouble xx = *(coords++);
-        gdouble yy = *(coords++);
-        gdouble d;
-
-        d = (xx - x)*(xx - x) + (yy - y)*(yy - y);
-        if (d < d2m) {
-            d2m = d;
-            m = i;
+    if (metric) {
+        for (i = 0; i < n; i++) {
+            xd = *(coords++) - x;
+            yd = *(coords++) - y;
+            d = metric[0]*xd*xd + (metric[1] + metric[2])*xd*yd
+                + metric[3]*yd*yd;
+            if (d < d2m) {
+                d2m = d;
+                m = i;
+            }
+        }
+    }
+    else {
+        for (i = 0; i < n; i++) {
+            xd = *(coords++) - x;
+            yd = *(coords++) - y;
+            d = xd*xd + yd*yd;
+            if (d < d2m) {
+                d2m = d;
+                m = i;
+            }
         }
     }
     if (d2min)
@@ -742,6 +795,12 @@ jump_over:;
  * GWY_SQRT3:
  *
  * The square root of 3.
+ **/
+
+/**
+ * GWY_SQRT_PI:
+ *
+ * The square root of pi.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

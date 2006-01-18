@@ -27,7 +27,8 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/datafield.h>
-#include "gwydataview.h"
+#include <libgwydgets/gwydgettypes.h>
+#include <libgwydgets/gwydataview.h>
 
 #define BITS_PER_SAMPLE 8
 
@@ -168,7 +169,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                        G_STRUCT_OFFSET(GwyDataViewClass, layer_plugged),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__ENUM,
-                       G_TYPE_NONE, 1, G_TYPE_ENUM);
+                       G_TYPE_NONE, 1, GWY_TYPE_DATA_VIEW_LAYER_TYPE);
 
     /**
      * GwyDataView::layer-unplugged:
@@ -189,7 +190,7 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
                        G_STRUCT_OFFSET(GwyDataViewClass, layer_unplugged),
                        NULL, NULL,
                        g_cclosure_marshal_VOID__ENUM,
-                       G_TYPE_NONE, 1, G_TYPE_ENUM);
+                       G_TYPE_NONE, 1, GWY_TYPE_DATA_VIEW_LAYER_TYPE);
 }
 
 static void
@@ -1136,7 +1137,7 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
 }
 
 /**
- * gwy_data_view_get_real_sizes:
+ * gwy_data_view_get_pixel_data_sizes:
  * @data_view: A data view.
  * @xres: Location to store x-resolution of displayed data (or %NULL).
  * @yres: Location to store y-resolution of displayed data (or %NULL).
@@ -1161,7 +1162,7 @@ gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
 }
 
 /**
- * gwy_data_view_get_real_sizes:
+ * gwy_data_view_get_real_data_sizes:
  * @data_view: A data view.
  * @xreal: Location to store physical x-dimension of the displayed data
  *         without excess (or %NULL).
@@ -1186,6 +1187,31 @@ gwy_data_view_get_real_data_sizes(GwyDataView *data_view,
         *xreal = data_view->xreal;
     if (yreal)
         *yreal = data_view->yreal;
+}
+
+/**
+ * gwy_data_view_get_metric:
+ * @data_view: A data view.
+ * @metric: Metric matrix 2x2 (stored in sequentially by rows: m11, m12, m12,
+ *          m22).
+ *
+ * Fills metric matrix for a data view.
+ *
+ * The metric matrix essentially transforms distances in physical coordinates
+ * to screen distances.  It is to be used with functions like
+ * gwy_math_find_nearest_point() and gwy_math_find_nearest_line() when the
+ * distance should be screen-Euclidean.
+ **/
+void
+gwy_data_view_get_metric(GwyDataView *data_view,
+                         gdouble *metric)
+{
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+    g_return_if_fail(metric);
+
+    metric[0] = 1.0/(data_view->xmeasure*data_view->xmeasure);
+    metric[1] = metric[2] = 0.0;
+    metric[3] = 1.0/(data_view->ymeasure*data_view->ymeasure);
 }
 
 /**

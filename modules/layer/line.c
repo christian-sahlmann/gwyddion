@@ -18,9 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* XXX: This layer uses @selecting field to index _endpoints_ not objects.
- * When whole line is moving, @selecting is imply 2*line_number. */
-
 #include "config.h"
 #include <string.h>
 
@@ -70,6 +67,10 @@ struct _GwyLayerLine {
     PangoFontMap *ft2_font_map;
 
     /* Dynamic state */
+    gint endpoint;  /* We need information which endpoint is moving; old
+                       versions abused @selecting for that, but it's confusing
+                       when one layer uses it for something else than all
+                       others. */
     gboolean moving_line;
     gboolean restricted;
     gdouble lmove_x;
@@ -155,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -501,6 +502,7 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
                              GdkEventMotion *event)
 {
     GwyDataView *data_view;
+    GwyLayerLine *layer_line;
     GwyLayerLineClass *klass;
     GdkWindow *window;
     gint x, y, i, j;
@@ -522,11 +524,12 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     gwy_debug("x = %d, y = %d", x, y);
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    if (layer->button && GWY_LAYER_LINE(layer)->moving_line)
+    layer_line = GWY_LAYER_LINE(layer);
+    if (layer->button && layer_line->moving_line)
         return gwy_layer_line_move_line(layer, xreal, yreal);
 
     if (i > -1)
-        gwy_selection_get_object(layer->selection, i/2, xy);
+        gwy_selection_get_object(layer->selection, i, xy);
     /* here is normally something like
     if (i > -1 && xreal == xy[2] && yreal == xy[3])
         return FALSE;
@@ -536,7 +539,7 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     if (!layer->button) {
         j = gwy_layer_line_near_line(layer, xreal, yreal);
         i = gwy_layer_line_near_point(layer, xreal, yreal);
-        klass = GWY_LAYER_LINE_GET_CLASS(layer);
+        klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
         if (i == -1 && j >= 0)
             gdk_window_set_cursor(window, klass->nearline_cursor);
         else
@@ -545,19 +548,17 @@ gwy_layer_line_motion_notify(GwyVectorLayer *layer,
     }
 
     g_assert(layer->selecting != -1);
-    GWY_LAYER_LINE(layer)->restricted = restricted;
-    gwy_layer_line_undraw_object(layer, window,
-                                 GWY_RENDERING_TARGET_SCREEN, i/2);
+    layer_line->restricted = restricted;
+    gwy_layer_line_undraw_object(layer, window, GWY_RENDERING_TARGET_SCREEN, i);
     if (restricted)
-        gwy_layer_line_restrict_angle(data_view, i % 2,
+        gwy_layer_line_restrict_angle(data_view, layer_line->endpoint,
                                       event->x, event->y, xy);
     else {
-        xy[2*(i % 2) + 0] = xreal;
-        xy[2*(i % 2) + 1] = yreal;
+        xy[2*layer_line->endpoint + 0] = xreal;
+        xy[2*layer_line->endpoint + 1] = yreal;
     }
-    gwy_selection_set_object(layer->selection, i/2, xy);
-    gwy_layer_line_draw_object(layer, window,
-                               GWY_RENDERING_TARGET_SCREEN, i/2);
+    gwy_selection_set_object(layer->selection, i, xy);
+    gwy_layer_line_draw_object(layer, window, GWY_RENDERING_TARGET_SCREEN, i);
 
     return FALSE;
 }
@@ -575,7 +576,7 @@ gwy_layer_line_move_line(GwyVectorLayer *layer,
     window = GTK_WIDGET(data_view)->window;
     g_return_val_if_fail(layer->selecting != -1, FALSE);
 
-    i = layer->selecting/2;
+    i = layer->selecting;
     gwy_selection_get_object(layer->selection, i, xy);
 
     /* calculate wanted new coordinates of the first endpoint */
@@ -654,7 +655,7 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     i = gwy_layer_line_near_point(layer, xreal, yreal);
     if (i == -1 && j >= 0) {
         gwy_selection_get_object(layer->selection, j, xy);
-        layer->selecting = i = 2*j;
+        layer->selecting = j;
         gwy_layer_line_undraw_object(layer, window,
                                      GWY_RENDERING_TARGET_SCREEN, j);
         layer_line->moving_line = TRUE;
@@ -663,15 +664,17 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
     }
     else {
         if (i >= 0) {
+            layer_line->endpoint = i % 2;
+            i /= 2;
             layer->selecting = i;
             gwy_layer_line_undraw_object(layer, window,
-                                         GWY_RENDERING_TARGET_SCREEN, i/2);
+                                         GWY_RENDERING_TARGET_SCREEN, i);
             if (restricted)
-                gwy_layer_line_restrict_angle(data_view, i % 2,
+                gwy_layer_line_restrict_angle(data_view, layer_line->endpoint,
                                               event->x, event->y, xy);
             else {
-                xy[2*(i % 2) + 0] = xreal;
-                xy[2*(i % 2) + 1] = yreal;
+                xy[2*layer_line->endpoint + 0] = xreal;
+                xy[2*layer_line->endpoint + 1] = yreal;
             }
         }
         else {
@@ -685,21 +688,21 @@ gwy_layer_line_button_pressed(GwyVectorLayer *layer,
                     return FALSE;
                 i = 0;
                 gwy_layer_line_undraw_object(layer, window,
-                                             GWY_RENDERING_TARGET_SCREEN, i/2);
+                                             GWY_RENDERING_TARGET_SCREEN, i);
             }
             layer->selecting = 0;    /* avoid "update" signal emission */
-            layer->selecting = gwy_selection_set_object(layer->selection, i/2,
+            layer->selecting = gwy_selection_set_object(layer->selection, i,
                                                         xy);
             /* When we start a new selection, second endpoint is moving */
-            layer->selecting = 2*layer->selecting + 1;
+            layer_line->endpoint = 1;
         }
     }
-    GWY_LAYER_LINE(layer)->restricted = restricted;
+    layer_line->restricted = restricted;
     layer->button = event->button;
     gwy_layer_line_draw_object(layer, window,
-                               GWY_RENDERING_TARGET_SCREEN, layer->selecting/2);
+                               GWY_RENDERING_TARGET_SCREEN, layer->selecting);
 
-    klass = GWY_LAYER_LINE_GET_CLASS(layer);
+    klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
     gdk_window_set_cursor(window, klass->move_cursor);
 
     return FALSE;
@@ -712,6 +715,7 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
     GwyDataView *data_view;
     GdkWindow *window;
     GwyLayerLineClass *klass;
+    GwyLayerLine *layer_line;
     gint x, y, i, j;
     gdouble xreal, yreal, xy[OBJECT_SIZE];
     gboolean outside;
@@ -729,30 +733,31 @@ gwy_layer_line_button_released(GwyVectorLayer *layer,
     gwy_data_view_coords_xy_clamp(data_view, &x, &y);
     outside = (event->x != x) || (event->y != y);
     gwy_data_view_coords_xy_to_real(data_view, x, y, &xreal, &yreal);
-    if (GWY_LAYER_LINE(layer)->moving_line)
+    layer_line = GWY_LAYER_LINE(layer);
+    if (layer_line->moving_line)
         gwy_layer_line_move_line(layer, xreal, yreal);
     else {
-        gwy_selection_get_object(layer->selection, i/2, xy);
+        gwy_selection_get_object(layer->selection, i, xy);
         gwy_layer_line_undraw_object(layer, window,
-                                     GWY_RENDERING_TARGET_SCREEN, i/2);
-        if (GWY_LAYER_LINE(layer)->restricted)
-            gwy_layer_line_restrict_angle(data_view, i % 2,
+                                     GWY_RENDERING_TARGET_SCREEN, i);
+        if (layer_line->restricted)
+            gwy_layer_line_restrict_angle(data_view, layer_line->endpoint,
                                           event->x, event->y, xy);
         else {
-            xy[2*(i % 2) + 0] = xreal;
-            xy[2*(i % 2) + 1] = yreal;
+            xy[2*layer_line->endpoint + 0] = xreal;
+            xy[2*layer_line->endpoint + 1] = yreal;
         }
         /* XXX this can happen also with rounding errors */
         if (xy[0] == xy[2] && xy[1] == xy[3])
-            gwy_selection_delete_object(layer->selection, i/2);
+            gwy_selection_delete_object(layer->selection, i);
         else
             gwy_layer_line_draw_object(layer, window,
-                                       GWY_RENDERING_TARGET_SCREEN, i/2);
+                                       GWY_RENDERING_TARGET_SCREEN, i);
     }
 
-    GWY_LAYER_LINE(layer)->moving_line = FALSE;
+    layer_line->moving_line = FALSE;
     layer->selecting = -1;
-    klass = GWY_LAYER_LINE_GET_CLASS(layer);
+    klass = GWY_LAYER_LINE_GET_CLASS(layer_line);
     j = gwy_layer_line_near_line(layer, xreal, yreal);
     i = gwy_layer_line_near_point(layer, xreal, yreal);
     if (outside)
@@ -829,23 +834,26 @@ static gint
 gwy_layer_line_near_line(GwyVectorLayer *layer,
                          gdouble xreal, gdouble yreal)
 {
-    GwyDataView *view;
-    gdouble d2min, *xy;
+    gdouble d2min, metric[4];
     gint i, n;
 
     if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    xy = g_newa(gdouble, OBJECT_SIZE*n);
-    gwy_selection_get_data(layer->selection, xy);
-    i = gwy_math_find_nearest_line(xreal, yreal, &d2min, n, xy);
-    if (i == -1)
-        return -1;
+    gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
+                             metric);
+    if (layer->focus >= 0) {
+        gdouble xy[OBJECT_SIZE];
 
-    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-    /* FIXME: this is simply nonsense when x measure != y measure */
-    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
+        gwy_selection_get_object(layer->selection, layer->focus, xy);
+        i = gwy_math_find_nearest_line(xreal, yreal, &d2min, 1, xy, metric);
+    }
+    else {
+        gdouble *xy = g_newa(gdouble, OBJECT_SIZE*n);
 
+        gwy_selection_get_data(layer->selection, xy);
+        i = gwy_math_find_nearest_line(xreal, yreal, &d2min, n, xy, metric);
+    }
     if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
@@ -855,23 +863,28 @@ static gint
 gwy_layer_line_near_point(GwyVectorLayer *layer,
                           gdouble xreal, gdouble yreal)
 {
-    GwyDataView *view;
-    gdouble d2min, *xy;
+    gdouble d2min, metric[4];
     gint i, n;
 
     if (!(n = gwy_selection_get_data(layer->selection, NULL)))
         return -1;
 
-    xy = g_newa(gdouble, OBJECT_SIZE*n);
-    gwy_selection_get_data(layer->selection, xy);
-    /* note we search for an endpoint, that is a half of a line */
-    i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 2*n, xy);
+    gwy_data_view_get_metric(GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent),
+                             metric);
+    if (layer->focus >= 0) {
+        gdouble xy[OBJECT_SIZE];
 
-    view = GWY_DATA_VIEW(GWY_DATA_VIEW_LAYER(layer)->parent);
-    /* FIXME: this is simply nonsense when x measure != y measure */
-    d2min /= gwy_data_view_get_xmeasure(view)*gwy_data_view_get_ymeasure(view);
+        g_return_val_if_fail(layer->focus < n, -1);
+        gwy_selection_get_object(layer->selection, layer->focus, xy);
+        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 2, xy, metric);
+    }
+    else {
+        gdouble *xy = g_newa(gdouble, OBJECT_SIZE*n);
 
-    if (d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
+        gwy_selection_get_data(layer->selection, xy);
+        i = gwy_math_find_nearest_point(xreal, yreal, &d2min, 2*n, xy, metric);
+    }
+    if (i < 0 || d2min > PROXIMITY_DISTANCE*PROXIMITY_DISTANCE)
         return -1;
     return i;
 }
