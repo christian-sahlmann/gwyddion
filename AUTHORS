@@ -54,6 +54,10 @@ The Wine project
     VT_DATE to normal unix date conversion in APE file module was copied
     from Wine (with minor formal modifications).
 
+The GNU C library
+    gwy_math_sort() is a direct specialization of glibc's quicksort(), written
+    by Douglas C. Schmidt, for doubles, see libgwyddion/gwymath.c for more.
+
 Percy Zahl, Andreas Klust, and other GXSM authors, see file AUTHORS in GXSM
 source tarball.
     RHK SPM32 plug-in helped us in writing our rhk-spm32 import module,

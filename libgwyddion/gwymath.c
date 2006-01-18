@@ -566,8 +566,8 @@ typedef struct {
  *
  * Sorts an array of doubles using a quicksort algorithm.
  *
- * This is usually about twice as fast as generic quicksort function thanks to
- * specialization for doubles.
+ * This is usually about twice as fast as the generic quicksort function
+ * thanks to specialization for doubles.
  **/
 void
 gwy_math_sort(gsize n,
